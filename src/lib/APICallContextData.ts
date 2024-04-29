@@ -14,7 +14,7 @@ const ORDER = [
 
 const SPACE = 2
 
-export default abstract class APICallContextData {
+export default abstract class {
   public readonly method: InternalAxiosRequestConfig['method']
 
   public readonly params: InternalAxiosRequestConfig['params']
