@@ -1,0 +1,53 @@
+name: Build
+on:
+  push:
+    branches: main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci --force
+      - name: Lint and fix errors
+        run: npm run lint:fix
+      - name: Format code
+        run: npm run format:fix
+      - name: Build package
+        run: npm run build
+      - name: Generate documentation
+        run: npm run docs
+      - name: Commit changes
+        run: |
+          git config --local user.name "GitHub Actions"
+          git config --local user.email "actions@github.com"
+          git add -A
+          if ! git diff --cached --exit-code; then
+            git commit -m "Code maintenance: bump version, lint, format and generate docs"
+            if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
+              echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
+              BRANCH_NAME="maintenance-$(date +'%Y%m%d%H%M%S')"
+              git checkout -b "$BRANCH_NAME"
+              git push origin "$BRANCH_NAME"
+              gh pr create --base main --head "$BRANCH_NAME" --title "Maintenance PR" --body "Automatic code maintenance: bump version, lint, format and generate docs."
+              gh pr merge --auto --squash --delete-branch ${{ github.event.pull_request.html_url }}
+            else
+              git pull origin ${{ github.head_ref }} --rebase
+              git push origin HEAD:${{ github.head_ref }}
+            fi
+          else
+            echo "No changes to commit."
+          fi
