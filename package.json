@@ -1,8 +1,23 @@
 {
-  "name": "melcloud",
+  "name": "@olivierzal/melcloud-api",
   "version": "1.0.0",
+  "description": "MELCloud API for NodeJS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OlivierZal/melcloud-api.git"
+  },
+  "keywords": [
+    "melcloud",
+    "api"
+  ],
+  "author": "Olivier Zalmanski",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OlivierZal/melcloud-api/issues"
+  },
+  "homepage": "https://github.com/OlivierZal/melcloud-api#readme",
   "prettier": {
     "experimentalTernaries": true,
     "semi": false,
@@ -18,17 +33,17 @@
     "prepare": "npm run build"
   },
   "devDependencies": {
-    "@stylistic/eslint-plugin": "^1.7.2",
+    "@stylistic/eslint-plugin": "^1.8.0",
     "@types/luxon": "^3.4.2",
-    "@types/node": "^20.12.7",
-    "eslint": "^9.1.1",
+    "@types/node": "^20.12.8",
+    "eslint": "^9.2.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
-    "globals": "^15.0.0",
+    "globals": "^15.1.0",
     "prettier": "^3.2.5",
     "typescript": "^5.4.5",
-    "typescript-eslint": "^7.7.1"
+    "typescript-eslint": "^7.8.0"
   },
   "dependencies": {
     "axios": "^1.6.8",
