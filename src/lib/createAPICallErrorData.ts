@@ -17,11 +17,7 @@ const withErrorMessage = <T extends new (...args: any[]) => APICallContextData>(
     public readonly errorMessage = error.message
   }
 
-const createAPICallErrorData = (
-  error: AxiosError,
-): APICallContextDataWithErrorMessage =>
+export default (error: AxiosError): APICallContextDataWithErrorMessage =>
   typeof error.response === 'undefined' ?
     new (withErrorMessage(APICallRequestData, error))(error.config)
   : new (withErrorMessage(APICallResponseData, error))(error.response)
-
-export default createAPICallErrorData

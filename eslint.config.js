@@ -1,6 +1,7 @@
 const eslint = require('@eslint/js')
 const globals = require('globals')
 const importPlugin = require('eslint-plugin-import')
+const jsdoc = require('eslint-plugin-jsdoc')
 const prettier = require('eslint-config-prettier')
 const stylistic = require('@stylistic/eslint-plugin')
 const tsEslint = require('typescript-eslint')
@@ -9,6 +10,7 @@ module.exports = tsEslint.config(
   { ignores: ['dist/'] },
   eslint.configs.all,
   ...tsEslint.configs.all,
+  jsdoc.configs['flat/recommended-typescript-error'],
   {
     languageOptions: { parserOptions: { project: true } },
     linterOptions: { reportUnusedDisableDirectives: true },

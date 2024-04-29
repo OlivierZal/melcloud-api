@@ -1,5 +1,4 @@
 /* eslint-disable max-lines */
-export const APP_VERSION = '1.32.1.0'
 export const FLAG_UNCHANGED = 0x0
 
 export type NonEffectiveFlagsKeyOf<T> = Exclude<keyof T, 'EffectiveFlags'>
@@ -9,6 +8,36 @@ export enum DeviceType {
   Ata = 0,
   Atw = 1,
   Erv = 3,
+}
+
+export enum Language {
+  en = 0,
+  bg = 1,
+  cs = 2,
+  da = 3,
+  de = 4,
+  et = 5,
+  es = 6,
+  fr = 7,
+  hy = 8,
+  lv = 9,
+  lt = 10,
+  hu = 11,
+  nl = 12,
+  no = 13,
+  pl = 14,
+  pt = 15,
+  ru = 16,
+  fi = 17,
+  sv = 18,
+  it = 19,
+  uk = 20,
+  tr = 21,
+  el = 22,
+  hr = 23,
+  ro = 24,
+  sl = 25,
+  sq = 26,
 }
 
 export enum FanSpeed {
@@ -303,10 +332,12 @@ export interface LoginCredentials {
   readonly username: string
 }
 export interface LoginPostData {
-  readonly AppVersion: typeof APP_VERSION
+  readonly CaptchaResponse?: null
+  readonly Language?: number
+  readonly Persist?: boolean
+  readonly AppVersion: string
   readonly Email: string
   readonly Password: string
-  readonly Persist: true
 }
 export interface LoginData {
   readonly LoginData: {
@@ -316,7 +347,11 @@ export interface LoginData {
 }
 
 export interface FrostProtectionPostData {
-  readonly BuildingIds: [number]
+  readonly AreaIds?: readonly number[]
+  readonly BuildingIds?: readonly number[]
+  readonly DeviceIds?: readonly number[]
+  readonly FloorIds?: readonly number[]
+  readonly SkipPage1?: boolean
   readonly Enabled: boolean
   readonly MaximumTemperature: number
   readonly MinimumTemperature: number
@@ -328,6 +363,7 @@ export interface FrostProtectionData {
 }
 
 export interface HolidayModePostData {
+  readonly SkipPage1?: boolean
   readonly Enabled: boolean
   readonly EndDate: {
     readonly Day: number
@@ -337,7 +373,13 @@ export interface HolidayModePostData {
     readonly Second: number
     readonly Year: number
   } | null
-  readonly HMTimeZones: [{ readonly Buildings: [number] }]
+  readonly HMTimeZones: readonly {
+    readonly Areas?: readonly number[]
+    readonly Buildings?: readonly number[]
+    readonly Devices?: readonly number[]
+    readonly Floors?: readonly number[]
+    readonly TimeZone?: number
+  }[]
   readonly StartDate: {
     readonly Day: number
     readonly Hour: number
@@ -348,19 +390,46 @@ export interface HolidayModePostData {
   } | null
 }
 export interface HolidayModeData {
+  readonly EndDate: {
+    readonly Day: number
+    readonly Hour: number
+    readonly Minute: number
+    readonly Month: number
+    readonly Second: number
+    readonly Year: number
+  }
   readonly HMEnabled: boolean
   readonly HMEndDate: string | null
   readonly HMStartDate: string | null
+  readonly StartDate: {
+    readonly Day: number
+    readonly Hour: number
+    readonly Minute: number
+    readonly Month: number
+    readonly Second: number
+    readonly Year: number
+  }
+  readonly TimeZone: number
 }
 
-export interface SuccessData {
+export interface BaseSuccessData {
+  readonly AttributeErrors: Record<string, readonly string[]> | null
+  readonly Data: null
+  readonly GlobalErrors: null
+  readonly Success: boolean
+}
+export interface SuccessData extends BaseSuccessData {
   readonly AttributeErrors: null
+  readonly Success: true
 }
-export interface FailureData {
+export interface FailureData extends BaseSuccessData {
   readonly AttributeErrors: Record<string, readonly string[]>
+  readonly Success: false
 }
 
-export interface BuildingData extends FrostProtectionData, HolidayModeData {}
+export interface BuildingData
+  extends FrostProtectionData,
+    Omit<HolidayModeData, 'EndDate' | 'StartDate'> {}
 export interface BaseListDevice {
   readonly BuildingID: number
   readonly DeviceID: number
