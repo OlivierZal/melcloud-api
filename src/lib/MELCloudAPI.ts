@@ -1,7 +1,12 @@
 import {
-  APICallRequestData,
-  APICallResponseData,
-  APP_VERSION,
+  type AxiosError,
+  type AxiosInstance,
+  type AxiosResponse,
+  HttpStatusCode,
+  type InternalAxiosRequestConfig,
+  create as createAxiosInstance,
+} from 'axios'
+import {
   type Building,
   type DeviceData,
   type DeviceDataFromGet,
@@ -13,6 +18,7 @@ import {
   type FrostProtectionPostData,
   type HolidayModeData,
   type HolidayModePostData,
+  Language,
   type LoginCredentials,
   type LoginData,
   type LoginPostData,
@@ -20,31 +26,25 @@ import {
   type ReportData,
   type ReportPostData,
   type SuccessData,
-  createAPICallErrorData,
 } from '..'
-import {
-  type AxiosError,
-  type AxiosInstance,
-  type AxiosResponse,
-  HttpStatusCode,
-  type InternalAxiosRequestConfig,
-  create as createAxiosInstance,
-} from 'axios'
 import { DateTime, Duration } from 'luxon'
+import APICallRequestData from './APICallRequestData'
+import APICallResponseData from './APICallResponseData'
+import createAPICallErrorData from './createAPICallErrorData'
 
-interface APISettings {
+export interface APISettings {
   readonly contextKey?: string | null
   readonly expiry?: string | null
   readonly password?: string | null
   readonly username?: string | null
 }
 
-interface Logger {
+export interface Logger {
   readonly error: Console['error']
   readonly log: Console['log']
 }
 
-interface SettingManager {
+export interface SettingManager {
   get: <K extends keyof APISettings>(
     key: K,
   ) => APISettings[K] | null | undefined
@@ -54,7 +54,9 @@ interface SettingManager {
 const LIST_URL = '/User/ListDevices'
 const LOGIN_URL = '/Login/ClientLogin'
 
-export default class MELCloudAPI {
+export default class {
+  public readonly language: Language
+
   #holdAPIListUntil = DateTime.now()
 
   #retry = true
@@ -67,9 +69,17 @@ export default class MELCloudAPI {
 
   readonly #settingManager: SettingManager
 
-  public constructor(settingManager: SettingManager, logger: Logger = console) {
+  public constructor(
+    settingManager: SettingManager,
+    logger: Logger = console,
+    language = 'en',
+  ) {
     this.#settingManager = settingManager
     this.#logger = logger
+    this.language =
+      language in Language ?
+        Language[language as keyof typeof Language]
+      : Language.en
     this.#api = createAxiosInstance({
       baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
     })
@@ -80,7 +90,7 @@ export default class MELCloudAPI {
     data?: LoginCredentials,
     onSuccess?: () => Promise<void>,
   ): Promise<boolean> {
-    const { password, username } = data ?? {
+    const { username, password } = data ?? {
       password: this.#settingManager.get('password') ?? '',
       username: this.#settingManager.get('username') ?? '',
     }
@@ -88,8 +98,9 @@ export default class MELCloudAPI {
       try {
         const { LoginData: loginData } = (
           await this.login({
-            AppVersion: APP_VERSION,
+            AppVersion: '1.32.0.0',
             Email: username,
+            Language: this.language,
             Password: password,
             Persist: true,
           })
@@ -107,6 +118,12 @@ export default class MELCloudAPI {
     return false
   }
 
+  /**
+   * Ezdzefd
+   * @param postData azdzad
+   * @param postData.Email azdzad
+   * @returns azadadz
+   */
   public async errors(
     postData: ErrorLogPostData,
   ): Promise<{ data: ErrorLogData[] | FailureData }> {

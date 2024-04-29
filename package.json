@@ -1,8 +1,27 @@
 {
-  "name": "melcloud",
+  "name": "@olivierzal/melcloud-api",
   "version": "1.0.0",
+  "description": "MELCloud API for Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "src/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OlivierZal/melcloud-api.git"
+  },
+  "keywords": [
+    "melcloud",
+    "api"
+  ],
+  "author": "Olivier Zalmanski",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/OlivierZal/melcloud-api/issues"
+  },
+  "homepage": "https://github.com/OlivierZal/melcloud-api#readme",
   "prettier": {
     "experimentalTernaries": true,
     "semi": false,
@@ -10,6 +29,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "docs": "typedoc",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
     "lint": "eslint .",
@@ -18,20 +38,24 @@
     "prepare": "npm run build"
   },
   "devDependencies": {
-    "@stylistic/eslint-plugin": "^1.7.2",
+    "@eslint/js": "^9.3.0",
+    "@stylistic/eslint-plugin": "^2.1.0",
     "@types/luxon": "^3.4.2",
-    "@types/node": "^20.12.7",
-    "eslint": "^9.1.1",
+    "@types/node": "^20.12.12",
+    "eslint": "^9.3.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
-    "globals": "^15.0.0",
+    "eslint-plugin-jsdoc": "^48.2.5",
+    "globals": "^15.3.0",
     "prettier": "^3.2.5",
-    "typescript": "^5.4.5",
-    "typescript-eslint": "^7.7.1"
+    "typedoc": "^0.25.13",
+    "typedoc-plugin-markdown": "^4.0.2",
+    "typescript": "^5.5.0-dev.20240520",
+    "typescript-eslint": "^8.0.0-alpha.14"
   },
   "dependencies": {
-    "axios": "^1.6.8",
+    "axios": "^1.7.1",
     "luxon": "^3.4.4",
     "source-map-support": "^0.5.21"
   }
