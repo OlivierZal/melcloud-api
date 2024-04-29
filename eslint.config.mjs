@@ -1,23 +1,53 @@
-const eslint = require('@eslint/js')
-const globals = require('globals')
-const importPlugin = require('eslint-plugin-import')
-const prettier = require('eslint-config-prettier')
-const stylistic = require('@stylistic/eslint-plugin')
-const tsEslint = require('typescript-eslint')
+// @ts-check
+import eslint from '@eslint/js'
+import importPlugin from 'eslint-plugin-import'
+import jsdoc from 'eslint-plugin-jsdoc'
+import prettier from 'eslint-config-prettier'
+import stylistic from '@stylistic/eslint-plugin'
+import tsEslint from 'typescript-eslint'
 
-module.exports = tsEslint.config(
-  { ignores: ['dist/'] },
-  eslint.configs.all,
-  ...tsEslint.configs.all,
+export default tsEslint.config(
   {
-    languageOptions: { parserOptions: { project: true } },
-    linterOptions: { reportUnusedDisableDirectives: true },
-    plugins: { '@stylistic': stylistic, import: importPlugin },
+    ignores: ['dist/'],
   },
   {
+    extends: [
+      eslint.configs.all,
+      ...tsEslint.configs.all,
+      importPlugin.configs.typescript,
+      jsdoc.configs['flat/recommended-typescript-error'],
+      prettier,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: true,
+      },
+    },
+    linterOptions: {
+      reportUnusedDisableDirectives: true,
+    },
+    plugins: {
+      '@stylistic': stylistic,
+      import: importPlugin,
+    },
     rules: {
       // ...importPlugin.configs.recommended.rules,
-      '@stylistic/lines-between-class-members': 'error',
+      '@stylistic/lines-between-class-members': ['error', 'always'],
+      '@stylistic/spaced-comment': [
+        'error',
+        'always',
+        {
+          block: {
+            balanced: true,
+            exceptions: ['*'],
+            markers: ['!'],
+          },
+          line: {
+            exceptions: ['/', '#'],
+            markers: ['/'],
+          },
+        },
+      ],
       '@typescript-eslint/member-ordering': [
         'error',
         {
@@ -154,15 +184,6 @@ module.exports = tsEslint.config(
           selector: 'enumMember',
         },
         {
-          filter: {
-            match: true,
-            regex:
-              '^[a-z]+(?:_[a-z0-9]+)*\\.(?:[a-z0-9]+_)*(([a-z0-9]+|zone(1|2)))?$',
-          },
-          format: null,
-          selector: ['objectLiteralProperty', 'typeProperty'],
-        },
-        {
           format: ['camelCase', 'PascalCase', 'snake_case'],
           selector: ['objectLiteralProperty', 'typeProperty'],
         },
@@ -193,49 +214,66 @@ module.exports = tsEslint.config(
         },
         {
           format: ['camelCase'],
+          leadingUnderscore: 'allow',
           selector: 'default',
         },
       ],
-      '@typescript-eslint/no-explicit-any': ['error', { ignoreRestArgs: true }],
-      '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true }],
+      '@typescript-eslint/no-explicit-any': [
+        'error',
+        {
+          ignoreRestArgs: true,
+        },
+      ],
+      '@typescript-eslint/no-magic-numbers': [
+        'error',
+        {
+          ignoreEnums: true,
+        },
+      ],
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { varsIgnorePattern: 'onHomeyReady' },
+        {
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
       ],
       '@typescript-eslint/prefer-readonly-parameter-types': 'off',
       camelcase: 'off',
+      'import/no-duplicates': [
+        'error',
+        {
+          'prefer-inline': true,
+        },
+      ],
+      'max-lines': 'off',
+      'no-bitwise': 'off',
+      'no-empty': [
+        'error',
+        {
+          allowEmptyCatch: true,
+        },
+      ],
       'no-ternary': 'off',
-      'no-underscore-dangle': ['error', { allow: ['__'] }],
-      'one-var': 'off',
-      'sort-keys': ['error', 'asc', { natural: true }],
-    },
-  },
-  {
-    files: ['**/*.ts'],
-    rules: {
-      ...importPlugin.configs.typescript.rules,
-      'import/no-duplicates': ['error', { 'prefer-inline': true }],
+      'one-var': ['error', 'never'],
+      'sort-keys': [
+        'error',
+        'asc',
+        {
+          natural: true,
+        },
+      ],
     },
     settings: {
-      ...importPlugin.configs.typescript.settings,
       'import/resolver': {
         ...importPlugin.configs.typescript.settings['import/resolver'],
-        typescript: { alwaysTryTypes: true },
+        typescript: {
+          alwaysTryTypes: true,
+        },
       },
     },
   },
   {
-    files: ['**/*.js'],
-    languageOptions: {
-      globals: globals.node,
-      parserOptions: { sourceType: 'script' },
-    },
-    rules: {
-      ...tsEslint.configs.disableTypeChecked.rules,
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/no-var-requires': 'off',
-    },
+    files: ['**/*.mjs'],
+    ...tsEslint.configs.disableTypeChecked,
   },
-  prettier,
 )
