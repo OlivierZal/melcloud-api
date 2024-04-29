@@ -1,10 +1,10 @@
 import 'source-map-support/register'
 import {
-  APP_VERSION,
   type BaseDeviceData,
   type BaseDeviceDataFromList,
   type BaseListDevice,
   type BasePostData,
+  type BaseSuccessData,
   type Building,
   type BuildingData,
   type DeviceData,
@@ -30,6 +30,7 @@ import {
   type HolidayModeData,
   type HolidayModePostData,
   Horizontal,
+  Language,
   type ListDevice,
   type ListDeviceAny,
   type ListDeviceAta,
@@ -62,35 +63,33 @@ import {
   effectiveFlagsAtw,
   effectiveFlagsErv,
 } from './types'
-import APICallContextData from './lib/APICallContextData'
-import APICallRequestData from './lib/APICallRequestData'
-import APICallResponseData from './lib/APICallResponseData'
-import MELCloudAPI from './lib/MELCloudAPI'
-import createAPICallErrorData from './lib/APICallErrorData'
+import MELCloudAPI, {
+  type APISettings,
+  type Logger,
+  type SettingManager,
+} from './lib/MELCloudAPI'
 
 export {
   MELCloudAPI as default,
-  APICallContextData,
-  APICallRequestData,
-  APICallResponseData,
-  createAPICallErrorData,
-  APP_VERSION,
   DeviceType,
-  FLAG_UNCHANGED,
   FanSpeed,
   Horizontal,
+  Language,
   OperationMode,
   OperationModeState,
   OperationModeZone,
   VentilationMode,
   Vertical,
+  FLAG_UNCHANGED,
   effectiveFlagsAta,
   effectiveFlagsAtw,
   effectiveFlagsErv,
+  type APISettings,
   type BaseDeviceData,
   type BaseDeviceDataFromList,
   type BaseListDevice,
   type BasePostData,
+  type BaseSuccessData,
   type Building,
   type BuildingData,
   type DeviceData,
@@ -117,6 +116,7 @@ export {
   type ListDeviceAta,
   type ListDeviceAtw,
   type ListDeviceErv,
+  type Logger,
   type LoginCredentials,
   type LoginData,
   type LoginPostData,
@@ -134,5 +134,6 @@ export {
   type SetDeviceDataAta,
   type SetDeviceDataAtw,
   type SetDeviceDataErv,
+  type SettingManager,
   type SuccessData,
 }
