@@ -14,7 +14,7 @@ module.exports = {
   propertiesFormat: 'table',
   readme: 'none',
   textContentMappings: {
-    'title.indexPage': 'Heatzy API for Node.js',
+    'title.indexPage': 'MELCloud API for Node.js',
   },
   typeDeclarationFormat: 'table',
   useCodeBlocks: true,
