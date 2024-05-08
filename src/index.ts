@@ -63,12 +63,15 @@ import {
   effectiveFlagsAtw,
   effectiveFlagsErv,
 } from './types'
-import MELCloudAPI from './lib/MELCloudAPI'
+import MELCloudAPI, {
+  type APISettings,
+  type Logger,
+  type SettingManager,
+} from './lib/MELCloudAPI'
 
 export {
   MELCloudAPI as default,
   DeviceType,
-  FLAG_UNCHANGED,
   FanSpeed,
   Horizontal,
   Language,
@@ -77,9 +80,11 @@ export {
   OperationModeZone,
   VentilationMode,
   Vertical,
+  FLAG_UNCHANGED,
   effectiveFlagsAta,
   effectiveFlagsAtw,
   effectiveFlagsErv,
+  type APISettings,
   type BaseDeviceData,
   type BaseDeviceDataFromList,
   type BaseListDevice,
@@ -111,6 +116,7 @@ export {
   type ListDeviceAta,
   type ListDeviceAtw,
   type ListDeviceErv,
+  type Logger,
   type LoginCredentials,
   type LoginData,
   type LoginPostData,
@@ -128,5 +134,6 @@ export {
   type SetDeviceDataAta,
   type SetDeviceDataAtw,
   type SetDeviceDataErv,
+  type SettingManager,
   type SuccessData,
 }
