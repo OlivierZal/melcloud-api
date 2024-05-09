@@ -391,23 +391,23 @@ export interface HolidayModePostData {
 }
 export interface HolidayModeData {
   readonly EndDate: {
-    Day: number
-    Hour: number
-    Minute: number
-    Month: number
-    Second: number
-    Year: number
+    readonly Day: number
+    readonly Hour: number
+    readonly Minute: number
+    readonly Month: number
+    readonly Second: number
+    readonly Year: number
   }
   readonly HMEnabled: boolean
   readonly HMEndDate: string | null
   readonly HMStartDate: string | null
   readonly StartDate: {
-    Day: number
-    Hour: number
-    Minute: number
-    Month: number
-    Second: number
-    Year: number
+    readonly Day: number
+    readonly Hour: number
+    readonly Minute: number
+    readonly Month: number
+    readonly Second: number
+    readonly Year: number
   }
   readonly TimeZone: number
 }
