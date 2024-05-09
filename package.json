@@ -38,15 +38,15 @@
     "prepare": "npm run build"
   },
   "devDependencies": {
-    "@stylistic/eslint-plugin": "^2.0.0",
+    "@stylistic/eslint-plugin": "^2.1.0",
     "@types/luxon": "^3.4.2",
     "@types/node": "^20.12.11",
     "eslint": "^9.2.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-jsdoc": "^48.2.3",
-    "globals": "^15.1.0",
+    "eslint-plugin-jsdoc": "^48.2.4",
+    "globals": "^15.2.0",
     "prettier": "^3.2.5",
     "typedoc": "^0.25.13",
     "typedoc-plugin-markdown": "^4.0.1",
