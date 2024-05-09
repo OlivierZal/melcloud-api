@@ -357,7 +357,6 @@ export interface FrostProtectionPostData {
   readonly MinimumTemperature: number
 }
 export interface FrostProtectionData {
-  readonly FPDefined: boolean
   readonly FPEnabled: boolean
   readonly FPMaxTemperature: number
   readonly FPMinTemperature: number
@@ -399,7 +398,6 @@ export interface HolidayModeData {
     Second: number
     Year: number
   }
-  readonly HMDefined: boolean
   readonly HMEnabled: boolean
   readonly HMEndDate: string | null
   readonly HMStartDate: string | null
