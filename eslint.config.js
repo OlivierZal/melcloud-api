@@ -19,7 +19,15 @@ module.exports = tsEslint.config(
   {
     rules: {
       // ...importPlugin.configs.recommended.rules,
-      '@stylistic/lines-between-class-members': 'error',
+      '@stylistic/lines-between-class-members': ['error', 'always'],
+      '@stylistic/spaced-comment': [
+        'error',
+        'always',
+        {
+          block: { balanced: true, exceptions: ['*'], markers: ['!'] },
+          line: { exceptions: ['/', '#'], markers: ['/'] },
+        },
+      ],
       '@typescript-eslint/member-ordering': [
         'error',
         {
