@@ -1,3 +1,4 @@
+// @ts-check
 const eslint = require('@eslint/js')
 const globals = require('globals')
 const importPlugin = require('eslint-plugin-import')
@@ -7,16 +8,28 @@ const stylistic = require('@stylistic/eslint-plugin')
 const tsEslint = require('typescript-eslint')
 
 module.exports = tsEslint.config(
-  { ignores: ['dist/'] },
-  eslint.configs.all,
-  ...tsEslint.configs.all,
-  jsdoc.configs['flat/recommended-typescript-error'],
   {
-    languageOptions: { parserOptions: { project: true } },
-    linterOptions: { reportUnusedDisableDirectives: true },
-    plugins: { '@stylistic': stylistic, import: importPlugin },
+    ignores: ['dist/'],
   },
   {
+    extends: [
+      eslint.configs.recommended,
+      ...tsEslint.configs.strictTypeChecked,
+      ...tsEslint.configs.stylisticTypeChecked,
+      jsdoc.configs['flat/recommended-typescript-error'],
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: true,
+      },
+    },
+    linterOptions: {
+      reportUnusedDisableDirectives: true,
+    },
+    plugins: {
+      '@stylistic': stylistic,
+      import: importPlugin,
+    },
     rules: {
       // ...importPlugin.configs.recommended.rules,
       '@stylistic/lines-between-class-members': ['error', 'always'],
@@ -24,8 +37,15 @@ module.exports = tsEslint.config(
         'error',
         'always',
         {
-          block: { balanced: true, exceptions: ['*'], markers: ['!'] },
-          line: { exceptions: ['/', '#'], markers: ['/'] },
+          block: {
+            balanced: true,
+            exceptions: ['*'],
+            markers: ['!'],
+          },
+          line: {
+            exceptions: ['/', '#'],
+            markers: ['/'],
+          },
         },
       ],
       '@typescript-eslint/member-ordering': [
@@ -206,44 +226,66 @@ module.exports = tsEslint.config(
           selector: 'default',
         },
       ],
-      '@typescript-eslint/no-explicit-any': ['error', { ignoreRestArgs: true }],
-      '@typescript-eslint/no-magic-numbers': ['error', { ignoreEnums: true }],
+      '@typescript-eslint/no-explicit-any': [
+        'error',
+        {
+          ignoreRestArgs: true,
+        },
+      ],
+      '@typescript-eslint/no-magic-numbers': [
+        'error',
+        {
+          ignoreEnums: true,
+        },
+      ],
       '@typescript-eslint/no-unused-vars': [
         'error',
-        { varsIgnorePattern: 'onHomeyReady' },
+        {
+          varsIgnorePattern: 'onHomeyReady',
+        },
       ],
-      '@typescript-eslint/prefer-readonly-parameter-types': 'off',
-      camelcase: 'off',
-      'no-ternary': 'off',
-      'no-underscore-dangle': ['error', { allow: ['__'] }],
-      'one-var': 'off',
-      'sort-keys': ['error', 'asc', { natural: true }],
+      'no-underscore-dangle': [
+        'error',
+        {
+          allow: ['__'],
+        },
+      ],
+      'sort-keys': [
+        'error',
+        'asc',
+        {
+          natural: true,
+        },
+      ],
     },
   },
   {
+    extends: [importPlugin.configs.typescript],
     files: ['**/*.ts'],
     rules: {
-      ...importPlugin.configs.typescript.rules,
-      'import/no-duplicates': ['error', { 'prefer-inline': true }],
+      'import/no-duplicates': [
+        'error',
+        {
+          'prefer-inline': true,
+        },
+      ],
     },
     settings: {
-      ...importPlugin.configs.typescript.settings,
       'import/resolver': {
         ...importPlugin.configs.typescript.settings['import/resolver'],
-        typescript: { alwaysTryTypes: true },
+        typescript: {
+          alwaysTryTypes: true,
+        },
       },
     },
   },
   {
+    extends: [tsEslint.configs.disableTypeChecked],
     files: ['**/*.js'],
     languageOptions: {
       globals: globals.node,
-      parserOptions: { sourceType: 'script' },
     },
     rules: {
-      ...tsEslint.configs.disableTypeChecked.rules,
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/no-require-imports': 'off',
       '@typescript-eslint/no-var-requires': 'off',
     },
   },

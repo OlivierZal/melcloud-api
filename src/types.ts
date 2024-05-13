@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 export const FLAG_UNCHANGED = 0x0
 
 export type NonEffectiveFlagsKeyOf<T> = Exclude<keyof T, 'EffectiveFlags'>
