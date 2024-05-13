@@ -1,7 +1,7 @@
 // @ts-check
 module.exports = {
   cleanOutputDir: false,
-  entryPoints: ['./src/index.ts'],
+  entryPoints: ['src/index.ts'],
   enumMembersFormat: 'table',
   excludePrivate: true,
   expandObjects: true,
