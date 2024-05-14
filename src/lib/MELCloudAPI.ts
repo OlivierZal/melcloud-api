@@ -119,6 +119,12 @@ export default class MELCloudAPI {
     return false
   }
 
+  /**
+   * Ezdzefd
+   * @param postData azdzad
+   * @param postData.Email azdzad
+   * @returns azadadz
+   */
   public async errors(
     postData: ErrorLogPostData,
   ): Promise<{ data: ErrorLogData[] | FailureData }> {
