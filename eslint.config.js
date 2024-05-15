@@ -17,7 +17,9 @@ module.exports = tsEslint.config(
     extends: [
       eslint.configs.all,
       ...tsEslint.configs.all,
+      importPlugin.configs.typescript,
       jsdoc.configs['flat/recommended-typescript-error'],
+      prettier,
     ],
     languageOptions: {
       parserOptions: {
@@ -238,6 +240,12 @@ module.exports = tsEslint.config(
       ],
       '@typescript-eslint/prefer-readonly-parameter-types': 'off',
       camelcase: 'off',
+      'import/no-duplicates': [
+        'error',
+        {
+          'prefer-inline': true,
+        },
+      ],
       'max-lines': 'off',
       'no-bitwise': 'off',
       'no-empty': [
@@ -262,18 +270,6 @@ module.exports = tsEslint.config(
         },
       ],
     },
-  },
-  {
-    extends: [importPlugin.configs.typescript],
-    files: ['**/*.ts'],
-    rules: {
-      'import/no-duplicates': [
-        'error',
-        {
-          'prefer-inline': true,
-        },
-      ],
-    },
     settings: {
       'import/resolver': {
         ...importPlugin.configs.typescript.settings['import/resolver'],
@@ -295,5 +291,4 @@ module.exports = tsEslint.config(
       '@typescript-eslint/no-var-requires': 'off',
     },
   },
-  prettier,
 )
