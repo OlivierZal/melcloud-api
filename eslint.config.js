@@ -292,6 +292,7 @@ module.exports = tsEslint.config(
     files: ['**/*.js'],
     languageOptions: {
       globals: globals.node,
+      sourceType: 'commonjs',
     },
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
