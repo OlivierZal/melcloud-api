@@ -54,7 +54,7 @@ export interface SettingManager {
 const LIST_URL = '/User/ListDevices'
 const LOGIN_URL = '/Login/ClientLogin'
 
-export default class MELCloudAPI {
+export default class {
   public readonly language: Language
 
   #holdAPIListUntil = DateTime.now()
