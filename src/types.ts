@@ -331,7 +331,6 @@ export interface LoginCredentials {
   readonly username: string
 }
 export interface LoginPostData {
-  readonly CaptchaResponse?: null
   readonly Language?: number
   readonly Persist?: boolean
   readonly AppVersion: string
@@ -350,7 +349,6 @@ export interface FrostProtectionPostData {
   readonly BuildingIds?: readonly number[]
   readonly DeviceIds?: readonly number[]
   readonly FloorIds?: readonly number[]
-  readonly SkipPage1?: boolean
   readonly Enabled: boolean
   readonly MaximumTemperature: number
   readonly MinimumTemperature: number
@@ -362,7 +360,6 @@ export interface FrostProtectionData {
 }
 
 export interface HolidayModePostData {
-  readonly SkipPage1?: boolean
   readonly Enabled: boolean
   readonly EndDate: {
     readonly Day: number

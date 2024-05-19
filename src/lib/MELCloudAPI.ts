@@ -99,7 +99,6 @@ export default class {
         const { LoginData: loginData } = (
           await this.login({
             AppVersion: '1.32.0.0',
-            CaptchaResponse: null,
             Email: username,
             Language: this.language,
             Password: password,
