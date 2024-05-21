@@ -22,7 +22,7 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci --force
-      - name: Lint and fix errors
+      - name: Lint code and fix errors
         run: npm run lint:fix
       - name: Format code
         run: npm run format:fix
@@ -30,6 +30,11 @@ jobs:
         run: npm run build
       - name: Generate documentation
         run: npm run docs
+      - name: Lint documentation
+        uses: DavidAnson/markdownlint-cli2-action@v16.0.0
+        with:
+          fix: true
+          globs: 'README.md'
       - name: Commit changes
         run: |
           git config --local user.name "GitHub Actions"

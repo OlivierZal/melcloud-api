@@ -31,6 +31,7 @@ import { DateTime, Duration } from 'luxon'
 import APICallRequestData from './APICallRequestData'
 import APICallResponseData from './APICallResponseData'
 import createAPICallErrorData from './createAPICallErrorData'
+import https from 'https'
 
 export interface APISettings {
   readonly contextKey?: string | null
@@ -55,26 +56,45 @@ const LIST_URL = '/User/ListDevices'
 const LOGIN_URL = '/Login/ClientLogin'
 
 export default class {
+  readonly #settingManager?: SettingManager
+
   public readonly language: Language
 
+  #contextKey = ''
+
+  #expiry = ''
+
   #holdAPIListUntil = DateTime.now()
+
+  #password = ''
 
   #retry = true
 
   #retryTimeout!: NodeJS.Timeout
 
+  #username = ''
+
   readonly #api: AxiosInstance
 
   readonly #logger: Logger
 
-  readonly #settingManager: SettingManager
-
   public constructor(
-    settingManager: SettingManager,
-    logger: Logger = console,
-    language = 'en',
+    config: {
+      language?: string
+      logger?: Logger
+      settingManager?: SettingManager
+      shouldVerifySSL?: boolean
+    } = {},
   ) {
-    this.#settingManager = settingManager
+    const {
+      language = 'en',
+      logger = console,
+      settingManager,
+      shouldVerifySSL = true,
+    } = config
+    if (settingManager) {
+      this.#settingManager = settingManager
+    }
     this.#logger = logger
     this.language =
       language in Language ?
@@ -82,8 +102,55 @@ export default class {
       : Language.en
     this.#api = createAxiosInstance({
       baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: shouldVerifySSL,
+      }),
     })
     this.#setupAxiosInterceptors()
+  }
+
+  private get contextKey(): string {
+    return this.#settingManager?.get('contextKey') ?? this.#contextKey
+  }
+
+  private set contextKey(value: string) {
+    this.#contextKey = value
+    if (this.#settingManager) {
+      this.#settingManager.set('contextKey', this.#contextKey)
+    }
+  }
+
+  private get expiry(): string {
+    return this.#settingManager?.get('expiry') ?? this.#expiry
+  }
+
+  private set expiry(value: string) {
+    this.#expiry = value
+    if (this.#settingManager) {
+      this.#settingManager.set('expiry', this.#expiry)
+    }
+  }
+
+  private get password(): string {
+    return this.#settingManager?.get('password') ?? this.#password
+  }
+
+  private set password(value: string) {
+    this.#password = value
+    if (this.#settingManager) {
+      this.#settingManager.set('password', this.#password)
+    }
+  }
+
+  private get username(): string {
+    return this.#settingManager?.get('username') ?? this.#username
+  }
+
+  private set username(value: string) {
+    this.#username = value
+    if (this.#settingManager) {
+      this.#settingManager.set('username', this.#username)
+    }
   }
 
   public async applyLogin(
@@ -91,8 +158,8 @@ export default class {
     onSuccess?: () => Promise<void>,
   ): Promise<boolean> {
     const { username, password } = data ?? {
-      password: this.#settingManager.get('password') ?? '',
-      username: this.#settingManager.get('username') ?? '',
+      password: this.password,
+      username: this.username,
     }
     if (username && password) {
       try {
@@ -118,12 +185,6 @@ export default class {
     return false
   }
 
-  /**
-   * Ezdzefd
-   * @param postData azdzad
-   * @param postData.Email azdzad
-   * @returns azadadz
-   */
   public async errors(
     postData: ErrorLogPostData,
   ): Promise<{ data: ErrorLogData[] | FailureData }> {
@@ -163,10 +224,10 @@ export default class {
   public async login(postData: LoginPostData): Promise<{ data: LoginData }> {
     const response = await this.#api.post<LoginData>(LOGIN_URL, postData)
     if (response.data.LoginData) {
-      this.#settingManager.set('username', postData.Email)
-      this.#settingManager.set('password', postData.Password)
-      this.#settingManager.set('contextKey', response.data.LoginData.ContextKey)
-      this.#settingManager.set('expiry', response.data.LoginData.Expiry)
+      this.username = postData.Email
+      this.password = postData.Password
+      this.contextKey = response.data.LoginData.ContextKey
+      this.expiry = response.data.LoginData.Expiry
     }
     return response
   }
@@ -235,14 +296,11 @@ export default class {
       )
     }
     if (newConfig.url !== LOGIN_URL) {
-      const expiry = this.#settingManager.get('expiry') ?? ''
+      const { contextKey, expiry } = this
       if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
         await this.applyLogin()
       }
-      newConfig.headers.set(
-        'X-MitsContextKey',
-        this.#settingManager.get('contextKey'),
-      )
+      newConfig.headers.set('X-MitsContextKey', contextKey)
     }
     this.#logger.log(String(new APICallRequestData(newConfig)))
     return newConfig

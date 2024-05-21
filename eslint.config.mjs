@@ -48,6 +48,12 @@ export default tsEslint.config(
           },
         },
       ],
+      '@typescript-eslint/max-params': [
+        'error',
+        {
+          max: 4,
+        },
+      ],
       '@typescript-eslint/member-ordering': [
         'error',
         {
