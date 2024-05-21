@@ -22,7 +22,7 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm ci --force
-      - name: Lint and fix errors
+      - name: Lint code and fix errors
         run: npm run lint:fix
       - name: Format code
         run: npm run format:fix
