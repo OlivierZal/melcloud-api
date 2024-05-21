@@ -1,4 +1,3 @@
-// @ts-check
 export default {
   cleanOutputDir: false,
   entryPoints: ['src/index.ts'],
