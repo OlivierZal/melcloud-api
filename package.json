@@ -47,15 +47,14 @@
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsdoc": "^48.2.5",
-    "globals": "^15.3.0",
     "prettier": "^3.2.5",
     "typedoc": "^0.25.13",
     "typedoc-plugin-markdown": "^4.0.2",
-    "typescript": "^5.5.0-dev.20240520",
+    "typescript": "^5.4.5",
     "typescript-eslint": "^8.0.0-alpha.14"
   },
   "dependencies": {
-    "axios": "^1.7.1",
+    "axios": "^1.7.2",
     "luxon": "^3.4.4",
     "source-map-support": "^0.5.21"
   }

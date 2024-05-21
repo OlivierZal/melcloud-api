@@ -1,7 +1,5 @@
 // @ts-check
-'use strict'
-
-module.exports = {
+export default {
   cleanOutputDir: false,
   entryPoints: ['src/index.ts'],
   enumMembersFormat: 'table',

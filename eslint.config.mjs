@@ -1,15 +1,12 @@
 // @ts-check
-'use strict'
+import eslint from '@eslint/js'
+import importPlugin from 'eslint-plugin-import'
+import jsdoc from 'eslint-plugin-jsdoc'
+import prettier from 'eslint-config-prettier'
+import stylistic from '@stylistic/eslint-plugin'
+import tsEslint from 'typescript-eslint'
 
-const eslint = require('@eslint/js')
-const globals = require('globals')
-const importPlugin = require('eslint-plugin-import')
-const jsdoc = require('eslint-plugin-jsdoc')
-const prettier = require('eslint-config-prettier')
-const stylistic = require('@stylistic/eslint-plugin')
-const tsEslint = require('typescript-eslint')
-
-module.exports = tsEslint.config(
+export default tsEslint.config(
   {
     ignores: ['dist/'],
   },
@@ -281,14 +278,6 @@ module.exports = tsEslint.config(
   },
   {
     extends: [tsEslint.configs.disableTypeChecked],
-    files: ['**/*.js'],
-    languageOptions: {
-      globals: globals.node,
-      sourceType: 'commonjs',
-    },
-    rules: {
-      '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/no-var-requires': 'off',
-    },
+    files: ['**/*.mjs'],
   },
 )
