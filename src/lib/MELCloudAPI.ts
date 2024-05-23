@@ -31,6 +31,7 @@ import { DateTime, Duration } from 'luxon'
 import APICallRequestData from './APICallRequestData'
 import APICallResponseData from './APICallResponseData'
 import createAPICallErrorData from './createAPICallErrorData'
+import https from 'https'
 
 export interface APISettings {
   readonly contextKey?: string | null
@@ -78,10 +79,11 @@ export default class {
   readonly #logger: Logger
 
   public constructor(
-    settingManager?: SettingManager,
-    logger: Logger = console,
+    config: { logger?: Logger; settingManager?: SettingManager },
     language = 'en',
+    verifySSL = true,
   ) {
+    const { settingManager, logger = console } = config
     if (settingManager) {
       this.#settingManager = settingManager
     }
@@ -92,6 +94,9 @@ export default class {
       : Language.en
     this.#api = createAxiosInstance({
       baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: verifySSL,
+      }),
     })
     this.#setupAxiosInterceptors()
   }
@@ -172,12 +177,6 @@ export default class {
     return false
   }
 
-  /**
-   * Ezdzefd
-   * @param postData azdzad
-   * @param postData.Email azdzad
-   * @returns azadadz
-   */
   public async errors(
     postData: ErrorLogPostData,
   ): Promise<{ data: ErrorLogData[] | FailureData }> {
