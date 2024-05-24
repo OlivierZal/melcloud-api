@@ -92,19 +92,15 @@ export default class {
       settingManager,
       shouldVerifySSL = true,
     } = config
-    if (settingManager) {
-      this.#settingManager = settingManager
-    }
-    this.#logger = logger
     this.language =
       language in Language ?
         Language[language as keyof typeof Language]
       : Language.en
+    this.#logger = logger
+    this.#settingManager = settingManager
     this.#api = createAxiosInstance({
       baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: shouldVerifySSL,
-      }),
+      httpsAgent: new https.Agent({ rejectUnauthorized: shouldVerifySSL }),
     })
     this.#setupAxiosInterceptors()
   }
@@ -115,9 +111,7 @@ export default class {
 
   private set contextKey(value: string) {
     this.#contextKey = value
-    if (this.#settingManager) {
-      this.#settingManager.set('contextKey', this.#contextKey)
-    }
+    this.#settingManager?.set('contextKey', this.#contextKey)
   }
 
   private get expiry(): string {
@@ -126,9 +120,7 @@ export default class {
 
   private set expiry(value: string) {
     this.#expiry = value
-    if (this.#settingManager) {
-      this.#settingManager.set('expiry', this.#expiry)
-    }
+    this.#settingManager?.set('expiry', this.#expiry)
   }
 
   private get password(): string {
@@ -137,9 +129,7 @@ export default class {
 
   private set password(value: string) {
     this.#password = value
-    if (this.#settingManager) {
-      this.#settingManager.set('password', this.#password)
-    }
+    this.#settingManager?.set('password', this.#password)
   }
 
   private get username(): string {
@@ -148,19 +138,14 @@ export default class {
 
   private set username(value: string) {
     this.#username = value
-    if (this.#settingManager) {
-      this.#settingManager.set('username', this.#username)
-    }
+    this.#settingManager?.set('username', this.#username)
   }
 
   public async applyLogin(
     data?: LoginCredentials,
     onSuccess?: () => Promise<void>,
   ): Promise<boolean> {
-    const { username, password } = data ?? {
-      password: this.password,
-      username: this.username,
-    }
+    const { username = this.username, password = this.password } = data ?? {}
     if (username && password) {
       try {
         const { LoginData: loginData } = (
