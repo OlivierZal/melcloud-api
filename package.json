@@ -29,7 +29,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "docs": "typedoc",
+    "docs": "typedoc && markdownlint-cli2 README.md",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
     "lint": "eslint .",

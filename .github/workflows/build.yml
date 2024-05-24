@@ -30,11 +30,6 @@ jobs:
         run: npm run build
       - name: Generate documentation
         run: npm run docs
-      - name: Lint documentation
-        uses: DavidAnson/markdownlint-cli2-action@v16.0.0
-        with:
-          fix: true
-          globs: 'README.md'
       - name: Commit changes
         run: |
           git config --local user.name "GitHub Actions"
