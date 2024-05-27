@@ -7,6 +7,8 @@ interface APICallContextDataWithErrorMessage extends APICallContextData {
   readonly errorMessage: string
 }
 
+const getMessage = (error: AxiosError): string => error.message
+
 const withErrorMessage = <T extends new (...args: any[]) => APICallContextData>(
   base: T,
   error: AxiosError,
@@ -14,7 +16,7 @@ const withErrorMessage = <T extends new (...args: any[]) => APICallContextData>(
   ...args: ConstructorParameters<T>
 ) => APICallContextDataWithErrorMessage =>
   class extends base {
-    public readonly errorMessage = error.message
+    public readonly errorMessage = getMessage(error)
   }
 
 export default (error: AxiosError): APICallContextDataWithErrorMessage =>
