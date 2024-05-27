@@ -28,7 +28,7 @@
     "singleQuote": true
   },
   "scripts": {
-    "build": "tsc && tsc -p 'tsconfig.mjs.json'",
+    "build": "tsc && tsc -p 'tsconfig.checkjs.json'",
     "docs": "typedoc && markdownlint-cli2 README.md",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",

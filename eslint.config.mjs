@@ -278,7 +278,7 @@ export default tsEslint.config(
     ...tsEslint.configs.disableTypeChecked,
     languageOptions: {
       parserOptions: {
-        project: 'tsconfig.mjs.json',
+        project: 'tsconfig.checkjs.json',
       },
     },
   },
