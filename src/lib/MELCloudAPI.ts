@@ -8,14 +8,17 @@ import {
 } from 'axios'
 import {
   type Building,
+  type BuildingDataParams,
   type DeviceData,
   type DeviceDataFromGet,
+  type DeviceDataParams,
   type DeviceType,
   type ErrorLogData,
   type ErrorLogPostData,
   type FailureData,
   type FrostProtectionData,
   type FrostProtectionPostData,
+  type GroupPostData,
   type HolidayModeData,
   type HolidayModePostData,
   Language,
@@ -25,7 +28,10 @@ import {
   type PostData,
   type ReportData,
   type ReportPostData,
+  type SetPowerPostData,
   type SuccessData,
+  type TilesData,
+  type TilesPostData,
 } from '..'
 import { DateTime, Duration } from 'luxon'
 import APICallRequestData from './APICallRequestData'
@@ -58,7 +64,7 @@ const LOGIN_URL = '/Login/ClientLogin'
 export default class {
   readonly #settingManager?: SettingManager
 
-  public readonly language: Language
+  public language: Language
 
   #contextKey = ''
 
@@ -175,7 +181,7 @@ export default class {
   ): Promise<{ data: ErrorLogData[] | FailureData }> {
     return this.#api.post<ErrorLogData[] | FailureData>(
       '/Report/GetUnitErrorLog2',
-      postData,
+      postData satisfies ErrorLogPostData,
     )
   }
 
@@ -184,7 +190,7 @@ export default class {
     buildingId: number,
   ): Promise<{ data: DeviceDataFromGet[T] }> {
     return this.#api.get<DeviceDataFromGet[T]>('/Device/Get', {
-      params: { buildingId, id },
+      params: { buildingId, id } satisfies DeviceDataParams,
     })
   }
 
@@ -192,13 +198,13 @@ export default class {
     id: number,
   ): Promise<{ data: FrostProtectionData }> {
     return this.#api.get<FrostProtectionData>('/FrostProtection/GetSettings', {
-      params: { id, tableName: 'DeviceLocation' },
+      params: { id, tableName: 'DeviceLocation' } satisfies BuildingDataParams,
     })
   }
 
   public async getHolidayMode(id: number): Promise<{ data: HolidayModeData }> {
     return this.#api.get<HolidayModeData>('/HolidayMode/GetSettings', {
-      params: { id, tableName: 'DeviceLocation' },
+      params: { id, tableName: 'DeviceLocation' } satisfies BuildingDataParams,
     })
   }
 
@@ -206,11 +212,19 @@ export default class {
     return this.#api.get<Building[]>(LIST_URL)
   }
 
-  public async login(postData: LoginPostData): Promise<{ data: LoginData }> {
-    const response = await this.#api.post<LoginData>(LOGIN_URL, postData)
+  public async login({
+    Email: username,
+    Password: password,
+    ...rest
+  }: LoginPostData): Promise<{ data: LoginData }> {
+    const response = await this.#api.post<LoginData>(LOGIN_URL, {
+      Email: username,
+      Password: password,
+      ...rest,
+    } satisfies LoginPostData)
     if (response.data.LoginData) {
-      this.username = postData.Email
-      this.password = postData.Password
+      this.username = username
+      this.password = password
       this.contextKey = response.data.LoginData.ContextKey
       this.expiry = response.data.LoginData.Expiry
     }
@@ -220,14 +234,45 @@ export default class {
   public async report<T extends keyof typeof DeviceType>(
     postData: ReportPostData,
   ): Promise<{ data: ReportData[T] }> {
-    return this.#api.post<ReportData[T]>('/EnergyCost/Report', postData)
+    return this.#api.post<ReportData[T]>(
+      '/EnergyCost/Report',
+      postData satisfies ReportPostData,
+    )
   }
 
   public async set<T extends keyof typeof DeviceType>(
     heatPumpType: T,
     postData: PostData[T],
   ): Promise<{ data: DeviceData[T] }> {
-    return this.#api.post<DeviceData[T]>(`/Device/Set${heatPumpType}`, postData)
+    return this.#api.post<DeviceData[T]>(
+      `/Device/Set${heatPumpType}`,
+      postData satisfies PostData[T],
+    )
+  }
+
+  public async setGroup(
+    postData: GroupPostData,
+  ): Promise<{ data: FailureData | SuccessData }> {
+    return this.#api.post('/Group/SetAta', postData satisfies GroupPostData)
+  }
+
+  public async setPower(
+    ids: number[],
+    power: boolean,
+  ): Promise<{ data: boolean }> {
+    return this.#api.post<boolean>('/Device/Power', {
+      DeviceIds: ids,
+      Power: power,
+    } satisfies SetPowerPostData)
+  }
+
+  public async tiles<T extends keyof typeof DeviceType | null>(
+    postData: TilesPostData<T>,
+  ): Promise<{ data: TilesData<T> }> {
+    return this.#api.post<TilesData<T>>(
+      '/Tile/Get2',
+      postData satisfies TilesPostData<T>,
+    )
   }
 
   public async updateFrostProtection(
@@ -235,7 +280,7 @@ export default class {
   ): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post<FailureData | SuccessData>(
       '/FrostProtection/Update',
-      postData,
+      postData satisfies FrostProtectionPostData,
     )
   }
 
@@ -244,8 +289,18 @@ export default class {
   ): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post<FailureData | SuccessData>(
       '/HolidayMode/Update',
-      postData,
+      postData satisfies HolidayModePostData,
     )
+  }
+
+  public async updateLanguage(language: Language): Promise<{ data: boolean }> {
+    const response = await this.#api.post<boolean>('/User/UpdateLanguage', {
+      language,
+    } satisfies { language: Language })
+    if (response.data) {
+      this.language = language
+    }
+    return response
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {

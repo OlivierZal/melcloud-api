@@ -185,13 +185,13 @@ new default(config: {
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:81](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L81)
+[src/lib/MELCloudAPI.ts:86](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L86)
 
 #### Properties
 
 | Property | Modifier | Type |
 | :------ | :------ | :------ |
-| `language` | `readonly` | [`Language`](README.md#language) |
+| `language` | `public` | [`Language`](README.md#language) |
 
 #### Methods
 
@@ -214,7 +214,7 @@ applyLogin(data?: LoginCredentials, onSuccess?: () => Promise<void>): Promise<bo
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:144](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L144)
+[src/lib/MELCloudAPI.ts:149](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L149)
 
 ##### errors()
 
@@ -242,7 +242,7 @@ errors(postData: ErrorLogPostData): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:173](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L173)
+[src/lib/MELCloudAPI.ts:178](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L178)
 
 ##### get()
 
@@ -277,7 +277,7 @@ get<T>(id: number, buildingId: number): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:182](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L182)
+[src/lib/MELCloudAPI.ts:187](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L187)
 
 ##### getFrostProtection()
 
@@ -305,7 +305,7 @@ getFrostProtection(id: number): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:191](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L191)
+[src/lib/MELCloudAPI.ts:196](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L196)
 
 ##### getHolidayMode()
 
@@ -333,7 +333,7 @@ getHolidayMode(id: number): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:199](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L199)
+[src/lib/MELCloudAPI.ts:204](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L204)
 
 ##### list()
 
@@ -355,12 +355,12 @@ list(): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:205](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L205)
+[src/lib/MELCloudAPI.ts:210](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L210)
 
 ##### login()
 
 ```ts
-login(postData: LoginPostData): Promise<{
+login(__namedParameters: LoginPostData): Promise<{
   data: LoginData;
 }>
 ```
@@ -369,7 +369,7 @@ login(postData: LoginPostData): Promise<{
 
 | Parameter | Type |
 | :------ | :------ |
-| `postData` | [`LoginPostData`](README.md#loginpostdata) |
+| `__namedParameters` | [`LoginPostData`](README.md#loginpostdata) |
 
 ###### Returns
 
@@ -383,7 +383,7 @@ login(postData: LoginPostData): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:209](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L209)
+[src/lib/MELCloudAPI.ts:214](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L214)
 
 ##### report()
 
@@ -417,7 +417,7 @@ report<T>(postData: ReportPostData): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:220](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L220)
+[src/lib/MELCloudAPI.ts:233](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L233)
 
 ##### set()
 
@@ -452,7 +452,69 @@ set<T>(heatPumpType: T, postData: PostData[T]): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:226](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L226)
+[src/lib/MELCloudAPI.ts:242](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L242)
+
+##### setGroup()
+
+```ts
+setGroup(postData: GroupPostData): Promise<{
+  data: SuccessData | FailureData;
+}>
+```
+
+###### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `postData` | [`GroupPostData`](README.md#grouppostdata) |
+
+###### Returns
+
+`Promise`\<\{
+  `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata);
+ \}\>
+
+| Member | Type |
+| :------ | :------ |
+| `data` | [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata) |
+
+###### Source
+
+[src/lib/MELCloudAPI.ts:252](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L252)
+
+##### tiles()
+
+```ts
+tiles<T>(postData: TilesPostData<T>): Promise<{
+  data: TilesData<T>;
+}>
+```
+
+###### Type parameters
+
+| Type parameter |
+| :------ |
+| `T` *extends* `null` \| `"Ata"` \| `"Atw"` \| `"Erv"` |
+
+###### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `postData` | [`TilesPostData`](README.md#tilespostdatat)\<`T`\> |
+
+###### Returns
+
+`Promise`\<\{
+  `data`: [`TilesData`](README.md#tilesdatat)\<`T`\>;
+ \}\>
+
+| Member | Type |
+| :------ | :------ |
+| `data` | [`TilesData`](README.md#tilesdatat)\<`T`\> |
+
+###### Source
+
+[src/lib/MELCloudAPI.ts:258](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L258)
 
 ##### updateFrostProtection()
 
@@ -480,7 +542,7 @@ updateFrostProtection(postData: FrostProtectionPostData): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:233](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L233)
+[src/lib/MELCloudAPI.ts:267](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L267)
 
 ##### updateHolidayMode()
 
@@ -508,7 +570,27 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:242](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L242)
+[src/lib/MELCloudAPI.ts:276](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L276)
+
+##### updateLanguage()
+
+```ts
+updateLanguage(language: Language): Promise<boolean>
+```
+
+###### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `language` | [`Language`](README.md#language) |
+
+###### Returns
+
+`Promise`\<`boolean`\>
+
+###### Source
+
+[src/lib/MELCloudAPI.ts:285](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/lib/MELCloudAPI.ts#L285)
 
 ## Interfaces
 
@@ -527,22 +609,52 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 ### BaseDeviceData
 
+#### Extends
+
+- `Readonly`\<[`BaseSetDeviceData`](README.md#basesetdevicedata)\>.[`DeviceDataNotInList`](README.md#devicedatanotinlist)
+
 #### Extended by
 
-- [`SetDeviceDataAta`](README.md#setdevicedataata)
-- [`SetDeviceDataAtw`](README.md#setdevicedataatw)
-- [`SetDeviceDataErv`](README.md#setdevicedataerv)
+- [`BaseDeviceDataFromGet`](README.md#basedevicedatafromget)
+- [`DeviceDataAta`](README.md#devicedataata)
+- [`DeviceDataAtw`](README.md#devicedataatw)
+- [`DeviceDataErv`](README.md#devicedataerv)
 
 #### Properties
 
-| Property | Modifier | Type |
-| :------ | :------ | :------ |
-| `EffectiveFlags` | `public` | `number` |
-| `Power?` | `readonly` | `boolean` |
+| Property | Modifier | Type | Inherited from |
+| :------ | :------ | :------ | :------ |
+| `EffectiveFlags` | `readonly` | `number` | `Readonly.EffectiveFlags` |
+| `LastCommunication` | `readonly` | `string` | [`DeviceDataNotInList`](README.md#devicedatanotinlist).`LastCommunication` |
+| `NextCommunication` | `readonly` | `string` | [`DeviceDataNotInList`](README.md#devicedatanotinlist).`NextCommunication` |
+| `Offline` | `readonly` | `boolean` | - |
+| `Power?` | `readonly` | `boolean` | `Readonly.Power` |
+
+***
+
+### BaseDeviceDataFromGet
+
+#### Extends
+
+- [`BaseDeviceData`](README.md#basedevicedata)
+
+#### Properties
+
+| Property | Modifier | Type | Overrides | Inherited from |
+| :------ | :------ | :------ | :------ | :------ |
+| `EffectiveFlags` | `readonly` | `0` | [`BaseDeviceData`](README.md#basedevicedata).`EffectiveFlags` | [`BaseDeviceData`](README.md#basedevicedata).`EffectiveFlags` |
+| `LastCommunication` | `readonly` | `string` | [`BaseDeviceData`](README.md#basedevicedata).`LastCommunication` | [`BaseDeviceData`](README.md#basedevicedata).`LastCommunication` |
+| `NextCommunication` | `readonly` | `string` | [`BaseDeviceData`](README.md#basedevicedata).`NextCommunication` | [`BaseDeviceData`](README.md#basedevicedata).`NextCommunication` |
+| `Offline` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Offline` | [`BaseDeviceData`](README.md#basedevicedata).`Offline` |
+| `Power?` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Power` | [`BaseDeviceData`](README.md#basedevicedata).`Power` |
 
 ***
 
 ### BaseDeviceDataFromList
+
+#### Extends
+
+- `Omit`\<[`BaseDeviceDataFromGet`](README.md#basedevicedatafromget), keyof [`DeviceDataNotInList`](README.md#devicedatanotinlist)\>
 
 #### Extended by
 
@@ -552,9 +664,22 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 #### Properties
 
+| Property | Modifier | Type | Inherited from |
+| :------ | :------ | :------ | :------ |
+| `EffectiveFlags` | `readonly` | `0` | `Omit.EffectiveFlags` |
+| `Offline` | `readonly` | `boolean` | `Omit.Offline` |
+| `Power?` | `readonly` | `boolean` | `Omit.Power` |
+| `WifiSignalStrength` | `readonly` | `number` | - |
+
+***
+
+### BaseDevicePostData
+
+#### Properties
+
 | Property | Modifier | Type |
 | :------ | :------ | :------ |
-| `WifiSignalStrength` | `readonly` | `number` |
+| `DeviceID` | `readonly` | `number` |
 
 ***
 
@@ -576,32 +701,20 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 ***
 
-### BasePostData
-
-#### Properties
-
-| Property | Modifier | Type |
-| :------ | :------ | :------ |
-| `DeviceID` | `readonly` | `number` |
-| `HasPendingCommand` | `readonly` | `true` |
-
-***
-
-### BaseSuccessData
+### BaseSetDeviceData
 
 #### Extended by
 
-- [`FailureData`](README.md#failuredata)
-- [`SuccessData`](README.md#successdata)
+- [`SetDeviceDataAta`](README.md#setdevicedataata)
+- [`SetDeviceDataAtw`](README.md#setdevicedataatw)
+- [`SetDeviceDataErv`](README.md#setdevicedataerv)
 
 #### Properties
 
 | Property | Modifier | Type |
 | :------ | :------ | :------ |
-| `AttributeErrors` | `readonly` | `null` \| `Record`\<`string`, readonly `string`[]\> |
-| `Data` | `readonly` | `null` |
-| `GlobalErrors` | `readonly` | `null` |
-| `Success` | `readonly` | `boolean` |
+| `EffectiveFlags` | `public` | `number` |
+| `Power?` | `readonly` | `boolean` |
 
 ***
 
@@ -655,6 +768,17 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 ***
 
+### BuildingDataParams
+
+#### Properties
+
+| Property | Modifier | Type |
+| :------ | :------ | :------ |
+| `id` | `readonly` | `number` |
+| `tableName` | `readonly` | `"DeviceLocation"` |
+
+***
+
 ### DeviceData
 
 #### Properties
@@ -671,20 +795,25 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 #### Extends
 
-- [`SetDeviceDataAta`](README.md#setdevicedataata)
+- [`BaseDeviceData`](README.md#basedevicedata).`Readonly`\<[`SetDeviceDataAta`](README.md#setdevicedataata)\>
 
 #### Properties
 
 | Property | Modifier | Type | Inherited from |
 | :------ | :------ | :------ | :------ |
-| `EffectiveFlags` | `public` | `number` | [`SetDeviceDataAta`](README.md#setdevicedataata).`EffectiveFlags` |
-| `OperationMode?` | `readonly` | [`OperationMode`](README.md#operationmode) | [`SetDeviceDataAta`](README.md#setdevicedataata).`OperationMode` |
-| `Power?` | `readonly` | `boolean` | [`SetDeviceDataAta`](README.md#setdevicedataata).`Power` |
+| `DeviceType` | `readonly` | `Ata` | - |
+| `EffectiveFlags` | `readonly` | `number` | [`BaseDeviceData`](README.md#basedevicedata).`EffectiveFlags` |
+| `LastCommunication` | `readonly` | `string` | [`BaseDeviceData`](README.md#basedevicedata).`LastCommunication` |
+| `NextCommunication` | `readonly` | `string` | [`BaseDeviceData`](README.md#basedevicedata).`NextCommunication` |
+| `NumberOfFanSpeeds` | `readonly` | `number` | - |
+| `Offline` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Offline` |
+| `OperationMode?` | `readonly` | [`OperationMode`](README.md#operationmode) | `Readonly.OperationMode` |
+| `Power?` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Power` |
 | `RoomTemperature` | `readonly` | `number` | - |
-| `SetFanSpeed?` | `readonly` | [`FanSpeed`](README.md#fanspeed) | [`SetDeviceDataAta`](README.md#setdevicedataata).`SetFanSpeed` |
-| `SetTemperature?` | `readonly` | `number` | [`SetDeviceDataAta`](README.md#setdevicedataata).`SetTemperature` |
-| `VaneHorizontal?` | `readonly` | [`Horizontal`](README.md#horizontal) | [`SetDeviceDataAta`](README.md#setdevicedataata).`VaneHorizontal` |
-| `VaneVertical?` | `readonly` | [`Vertical`](README.md#vertical) | [`SetDeviceDataAta`](README.md#setdevicedataata).`VaneVertical` |
+| `SetFanSpeed?` | `readonly` |  \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | `Readonly.SetFanSpeed` |
+| `SetTemperature?` | `readonly` | `number` | `Readonly.SetTemperature` |
+| `VaneHorizontal?` | `readonly` | [`Horizontal`](README.md#horizontal) | `Readonly.VaneHorizontal` |
+| `VaneVertical?` | `readonly` | [`Vertical`](README.md#vertical) | `Readonly.VaneVertical` |
 
 ***
 
@@ -692,21 +821,25 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 #### Extends
 
-- [`SetDeviceDataAtw`](README.md#setdevicedataatw)
+- [`BaseDeviceData`](README.md#basedevicedata).`Readonly`\<[`SetDeviceDataAtw`](README.md#setdevicedataatw)\>
 
 #### Properties
 
 | Property | Modifier | Type | Inherited from |
 | :------ | :------ | :------ | :------ |
-| `EffectiveFlags` | `public` | `number` | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`EffectiveFlags` |
-| `ForcedHotWaterMode?` | `readonly` | `boolean` | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`ForcedHotWaterMode` |
+| `DeviceType` | `readonly` | `Atw` | - |
+| `EffectiveFlags` | `readonly` | `number` | [`BaseDeviceData`](README.md#basedevicedata).`EffectiveFlags` |
+| `ForcedHotWaterMode?` | `readonly` | `boolean` | `Readonly.ForcedHotWaterMode` |
 | `IdleZone1` | `readonly` | `boolean` | - |
 | `IdleZone2` | `readonly` | `boolean` | - |
+| `LastCommunication` | `readonly` | `string` | [`BaseDeviceData`](README.md#basedevicedata).`LastCommunication` |
+| `NextCommunication` | `readonly` | `string` | [`BaseDeviceData`](README.md#basedevicedata).`NextCommunication` |
+| `Offline` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Offline` |
 | `OperationMode` | `readonly` | [`OperationModeState`](README.md#operationmodestate) | - |
-| `OperationModeZone1?` | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`OperationModeZone1` |
-| `OperationModeZone2?` | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`OperationModeZone2` |
+| `OperationModeZone1?` | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | `Readonly.OperationModeZone1` |
+| `OperationModeZone2?` | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | `Readonly.OperationModeZone2` |
 | `OutdoorTemperature` | `readonly` | `number` | - |
-| `Power?` | `readonly` | `boolean` | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`Power` |
+| `Power?` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Power` |
 | `ProhibitCoolingZone1` | `readonly` | `boolean` | - |
 | `ProhibitCoolingZone2` | `readonly` | `boolean` | - |
 | `ProhibitHeatingZone1` | `readonly` | `boolean` | - |
@@ -714,13 +847,13 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 | `ProhibitHotWater` | `readonly` | `boolean` | - |
 | `RoomTemperatureZone1` | `readonly` | `number` | - |
 | `RoomTemperatureZone2` | `readonly` | `number` | - |
-| `SetCoolFlowTemperatureZone1?` | `readonly` | `number` | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`SetCoolFlowTemperatureZone1` |
-| `SetCoolFlowTemperatureZone2?` | `readonly` | `number` | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`SetCoolFlowTemperatureZone2` |
-| `SetHeatFlowTemperatureZone1?` | `readonly` | `number` | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`SetHeatFlowTemperatureZone1` |
-| `SetHeatFlowTemperatureZone2?` | `readonly` | `number` | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`SetHeatFlowTemperatureZone2` |
-| `SetTankWaterTemperature?` | `readonly` | `number` | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`SetTankWaterTemperature` |
-| `SetTemperatureZone1?` | `readonly` | `number` | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`SetTemperatureZone1` |
-| `SetTemperatureZone2?` | `readonly` | `number` | [`SetDeviceDataAtw`](README.md#setdevicedataatw).`SetTemperatureZone2` |
+| `SetCoolFlowTemperatureZone1?` | `readonly` | `number` | `Readonly.SetCoolFlowTemperatureZone1` |
+| `SetCoolFlowTemperatureZone2?` | `readonly` | `number` | `Readonly.SetCoolFlowTemperatureZone2` |
+| `SetHeatFlowTemperatureZone1?` | `readonly` | `number` | `Readonly.SetHeatFlowTemperatureZone1` |
+| `SetHeatFlowTemperatureZone2?` | `readonly` | `number` | `Readonly.SetHeatFlowTemperatureZone2` |
+| `SetTankWaterTemperature?` | `readonly` | `number` | `Readonly.SetTankWaterTemperature` |
+| `SetTemperatureZone1?` | `readonly` | `number` | `Readonly.SetTemperatureZone1` |
+| `SetTemperatureZone2?` | `readonly` | `number` | `Readonly.SetTemperatureZone2` |
 | `TankWaterTemperature` | `readonly` | `number` | - |
 
 ***
@@ -729,19 +862,24 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 #### Extends
 
-- [`SetDeviceDataErv`](README.md#setdevicedataerv)
+- [`BaseDeviceData`](README.md#basedevicedata).`Readonly`\<[`SetDeviceDataErv`](README.md#setdevicedataerv)\>
 
 #### Properties
 
 | Property | Modifier | Type | Inherited from |
 | :------ | :------ | :------ | :------ |
-| `EffectiveFlags` | `public` | `number` | [`SetDeviceDataErv`](README.md#setdevicedataerv).`EffectiveFlags` |
+| `DeviceType` | `readonly` | `Erv` | - |
+| `EffectiveFlags` | `readonly` | `number` | [`BaseDeviceData`](README.md#basedevicedata).`EffectiveFlags` |
+| `LastCommunication` | `readonly` | `string` | [`BaseDeviceData`](README.md#basedevicedata).`LastCommunication` |
+| `NextCommunication` | `readonly` | `string` | [`BaseDeviceData`](README.md#basedevicedata).`NextCommunication` |
+| `NumberOfFanSpeeds` | `readonly` | `number` | - |
+| `Offline` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Offline` |
 | `OutdoorTemperature` | `readonly` | `number` | - |
-| `Power?` | `readonly` | `boolean` | [`SetDeviceDataErv`](README.md#setdevicedataerv).`Power` |
+| `Power?` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Power` |
 | `RoomCO2Level` | `readonly` | `number` | - |
 | `RoomTemperature` | `readonly` | `number` | - |
-| `SetFanSpeed?` | `readonly` | `number` | [`SetDeviceDataErv`](README.md#setdevicedataerv).`SetFanSpeed` |
-| `VentilationMode?` | `readonly` | [`VentilationMode`](README.md#ventilationmode) | [`SetDeviceDataErv`](README.md#setdevicedataerv).`VentilationMode` |
+| `SetFanSpeed?` | `readonly` |  \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | `Readonly.SetFanSpeed` |
+| `VentilationMode?` | `readonly` | [`VentilationMode`](README.md#ventilationmode) | `Readonly.VentilationMode` |
 
 ***
 
@@ -761,15 +899,15 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 #### Extends
 
-- [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`Omit`\<[`DeviceDataFromGetAta`](README.md#devicedatafromgetata), `"SetFanSpeed"` \| `"VaneHorizontal"` \| `"VaneVertical"`\>
+- [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`Omit`\<[`DeviceDataFromGetAta`](README.md#devicedatafromgetata), keyof [`DeviceDataNotInList`](README.md#devicedatanotinlist) \| `"SetFanSpeed"` \| `"VaneHorizontal"` \| `"VaneVertical"`\>
 
 #### Properties
 
 | Property | Modifier | Type | Inherited from |
 | :------ | :------ | :------ | :------ |
 | `ActualFanSpeed` | `readonly` | `number` | - |
-| `DeviceType` | `readonly` | `Ata` | - |
-| `EffectiveFlags` | `public` | `0` | `Omit.EffectiveFlags` |
+| `DeviceType` | `readonly` | `Ata` | `Omit.DeviceType` |
+| `EffectiveFlags` | `readonly` | `0` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`EffectiveFlags` |
 | `FanSpeed` | `readonly` | [`FanSpeed`](README.md#fanspeed) | - |
 | `HasAutomaticFanSpeed` | `readonly` | `boolean` | - |
 | `MaxTempAutomatic` | `readonly` | `number` | - |
@@ -778,10 +916,11 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 | `MinTempAutomatic` | `readonly` | `number` | - |
 | `MinTempCoolDry` | `readonly` | `number` | - |
 | `MinTempHeat` | `readonly` | `number` | - |
-| `NumberOfFanSpeeds` | `readonly` | `number` | - |
+| `NumberOfFanSpeeds` | `readonly` | `number` | `Omit.NumberOfFanSpeeds` |
+| `Offline` | `readonly` | `boolean` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`Offline` |
 | `OperationMode?` | `readonly` | [`OperationMode`](README.md#operationmode) | `Omit.OperationMode` |
 | `OutdoorTemperature` | `readonly` | `number` | - |
-| `Power?` | `readonly` | `boolean` | `Omit.Power` |
+| `Power?` | `readonly` | `boolean` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`Power` |
 | `RoomTemperature` | `readonly` | `number` | `Omit.RoomTemperature` |
 | `SetTemperature?` | `readonly` | `number` | `Omit.SetTemperature` |
 | `VaneHorizontalDirection` | `readonly` | [`Horizontal`](README.md#horizontal) | - |
@@ -794,7 +933,7 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 #### Extends
 
-- [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).[`DeviceDataFromGetAtw`](README.md#devicedatafromgetatw)
+- [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`Omit`\<[`DeviceDataFromGetAtw`](README.md#devicedatafromgetatw), keyof [`DeviceDataNotInList`](README.md#devicedatanotinlist)\>
 
 #### Properties
 
@@ -808,44 +947,45 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 | `CurrentEnergyConsumed` | `readonly` | `number` | - |
 | `CurrentEnergyProduced` | `readonly` | `number` | - |
 | `DefrostMode` | `readonly` | `number` | - |
-| `DeviceType` | `readonly` | `Atw` | - |
+| `DeviceType` | `readonly` | `Atw` | `Omit.DeviceType` |
 | `EcoHotWater` | `readonly` | `boolean` | - |
-| `EffectiveFlags` | `public` | `0` | `DeviceDataFromGetAtw.EffectiveFlags` |
+| `EffectiveFlags` | `readonly` | `0` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`EffectiveFlags` |
 | `FlowTemperature` | `readonly` | `number` | - |
 | `FlowTemperatureZone1` | `readonly` | `number` | - |
 | `FlowTemperatureZone2` | `readonly` | `number` | - |
-| `ForcedHotWaterMode?` | `readonly` | `boolean` | `DeviceDataFromGetAtw.ForcedHotWaterMode` |
+| `ForcedHotWaterMode?` | `readonly` | `boolean` | `Omit.ForcedHotWaterMode` |
 | `HasZone2` | `readonly` | `boolean` | - |
 | `HeatPumpFrequency` | `readonly` | `number` | - |
-| `IdleZone1` | `readonly` | `boolean` | `DeviceDataFromGetAtw.IdleZone1` |
-| `IdleZone2` | `readonly` | `boolean` | `DeviceDataFromGetAtw.IdleZone2` |
+| `IdleZone1` | `readonly` | `boolean` | `Omit.IdleZone1` |
+| `IdleZone2` | `readonly` | `boolean` | `Omit.IdleZone2` |
 | `ImmersionHeaterStatus` | `readonly` | `boolean` | - |
 | `LastLegionellaActivationTime` | `readonly` | `string` | - |
 | `MaxTankTemperature` | `readonly` | `number` | - |
 | `MixingTankWaterTemperature` | `readonly` | `number` | - |
-| `OperationMode` | `readonly` | [`OperationModeState`](README.md#operationmodestate) | `DeviceDataFromGetAtw.OperationMode` |
-| `OperationModeZone1?` | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | `DeviceDataFromGetAtw.OperationModeZone1` |
-| `OperationModeZone2?` | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | `DeviceDataFromGetAtw.OperationModeZone2` |
-| `OutdoorTemperature` | `readonly` | `number` | `DeviceDataFromGetAtw.OutdoorTemperature` |
-| `Power?` | `readonly` | `boolean` | `DeviceDataFromGetAtw.Power` |
-| `ProhibitCoolingZone1` | `readonly` | `boolean` | `DeviceDataFromGetAtw.ProhibitCoolingZone1` |
-| `ProhibitCoolingZone2` | `readonly` | `boolean` | `DeviceDataFromGetAtw.ProhibitCoolingZone2` |
-| `ProhibitHeatingZone1` | `readonly` | `boolean` | `DeviceDataFromGetAtw.ProhibitHeatingZone1` |
-| `ProhibitHeatingZone2` | `readonly` | `boolean` | `DeviceDataFromGetAtw.ProhibitHeatingZone2` |
-| `ProhibitHotWater` | `readonly` | `boolean` | `DeviceDataFromGetAtw.ProhibitHotWater` |
+| `Offline` | `readonly` | `boolean` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`Offline` |
+| `OperationMode` | `readonly` | [`OperationModeState`](README.md#operationmodestate) | `Omit.OperationMode` |
+| `OperationModeZone1?` | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | `Omit.OperationModeZone1` |
+| `OperationModeZone2?` | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | `Omit.OperationModeZone2` |
+| `OutdoorTemperature` | `readonly` | `number` | `Omit.OutdoorTemperature` |
+| `Power?` | `readonly` | `boolean` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`Power` |
+| `ProhibitCoolingZone1` | `readonly` | `boolean` | `Omit.ProhibitCoolingZone1` |
+| `ProhibitCoolingZone2` | `readonly` | `boolean` | `Omit.ProhibitCoolingZone2` |
+| `ProhibitHeatingZone1` | `readonly` | `boolean` | `Omit.ProhibitHeatingZone1` |
+| `ProhibitHeatingZone2` | `readonly` | `boolean` | `Omit.ProhibitHeatingZone2` |
+| `ProhibitHotWater` | `readonly` | `boolean` | `Omit.ProhibitHotWater` |
 | `ReturnTemperature` | `readonly` | `number` | - |
 | `ReturnTemperatureZone1` | `readonly` | `number` | - |
 | `ReturnTemperatureZone2` | `readonly` | `number` | - |
-| `RoomTemperatureZone1` | `readonly` | `number` | `DeviceDataFromGetAtw.RoomTemperatureZone1` |
-| `RoomTemperatureZone2` | `readonly` | `number` | `DeviceDataFromGetAtw.RoomTemperatureZone2` |
-| `SetCoolFlowTemperatureZone1?` | `readonly` | `number` | `DeviceDataFromGetAtw.SetCoolFlowTemperatureZone1` |
-| `SetCoolFlowTemperatureZone2?` | `readonly` | `number` | `DeviceDataFromGetAtw.SetCoolFlowTemperatureZone2` |
-| `SetHeatFlowTemperatureZone1?` | `readonly` | `number` | `DeviceDataFromGetAtw.SetHeatFlowTemperatureZone1` |
-| `SetHeatFlowTemperatureZone2?` | `readonly` | `number` | `DeviceDataFromGetAtw.SetHeatFlowTemperatureZone2` |
-| `SetTankWaterTemperature?` | `readonly` | `number` | `DeviceDataFromGetAtw.SetTankWaterTemperature` |
-| `SetTemperatureZone1?` | `readonly` | `number` | `DeviceDataFromGetAtw.SetTemperatureZone1` |
-| `SetTemperatureZone2?` | `readonly` | `number` | `DeviceDataFromGetAtw.SetTemperatureZone2` |
-| `TankWaterTemperature` | `readonly` | `number` | `DeviceDataFromGetAtw.TankWaterTemperature` |
+| `RoomTemperatureZone1` | `readonly` | `number` | `Omit.RoomTemperatureZone1` |
+| `RoomTemperatureZone2` | `readonly` | `number` | `Omit.RoomTemperatureZone2` |
+| `SetCoolFlowTemperatureZone1?` | `readonly` | `number` | `Omit.SetCoolFlowTemperatureZone1` |
+| `SetCoolFlowTemperatureZone2?` | `readonly` | `number` | `Omit.SetCoolFlowTemperatureZone2` |
+| `SetHeatFlowTemperatureZone1?` | `readonly` | `number` | `Omit.SetHeatFlowTemperatureZone1` |
+| `SetHeatFlowTemperatureZone2?` | `readonly` | `number` | `Omit.SetHeatFlowTemperatureZone2` |
+| `SetTankWaterTemperature?` | `readonly` | `number` | `Omit.SetTankWaterTemperature` |
+| `SetTemperatureZone1?` | `readonly` | `number` | `Omit.SetTemperatureZone1` |
+| `SetTemperatureZone2?` | `readonly` | `number` | `Omit.SetTemperatureZone2` |
+| `TankWaterTemperature` | `readonly` | `number` | `Omit.TankWaterTemperature` |
 | `TargetHCTemperatureZone1` | `readonly` | `number` | - |
 | `TargetHCTemperatureZone2` | `readonly` | `number` | - |
 | `WifiSignalStrength` | `readonly` | `number` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`WifiSignalStrength` |
@@ -860,26 +1000,53 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 #### Extends
 
-- [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).[`DeviceDataFromGetErv`](README.md#devicedatafromgeterv)
+- [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`Omit`\<[`DeviceDataFromGetErv`](README.md#devicedatafromgeterv), keyof [`DeviceDataNotInList`](README.md#devicedatanotinlist)\>
 
 #### Properties
 
 | Property | Modifier | Type | Inherited from |
 | :------ | :------ | :------ | :------ |
-| `DeviceType` | `readonly` | `Erv` | - |
-| `EffectiveFlags` | `public` | `0` | `DeviceDataFromGetErv.EffectiveFlags` |
+| `DeviceType` | `readonly` | `Erv` | `Omit.DeviceType` |
+| `EffectiveFlags` | `readonly` | `0` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`EffectiveFlags` |
 | `HasAutomaticFanSpeed` | `readonly` | `boolean` | - |
 | `HasCO2Sensor` | `readonly` | `boolean` | - |
 | `HasPM25Sensor` | `readonly` | `boolean` | - |
-| `NumberOfFanSpeeds` | `readonly` | `number` | - |
-| `OutdoorTemperature` | `readonly` | `number` | `DeviceDataFromGetErv.OutdoorTemperature` |
+| `NumberOfFanSpeeds` | `readonly` | `number` | `Omit.NumberOfFanSpeeds` |
+| `Offline` | `readonly` | `boolean` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`Offline` |
+| `OutdoorTemperature` | `readonly` | `number` | `Omit.OutdoorTemperature` |
 | `PM25Level` | `readonly` | `number` | - |
-| `Power?` | `readonly` | `boolean` | `DeviceDataFromGetErv.Power` |
-| `RoomCO2Level` | `readonly` | `number` | `DeviceDataFromGetErv.RoomCO2Level` |
-| `RoomTemperature` | `readonly` | `number` | `DeviceDataFromGetErv.RoomTemperature` |
-| `SetFanSpeed?` | `readonly` | `number` | `DeviceDataFromGetErv.SetFanSpeed` |
-| `VentilationMode?` | `readonly` | [`VentilationMode`](README.md#ventilationmode) | `DeviceDataFromGetErv.VentilationMode` |
+| `Power?` | `readonly` | `boolean` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`Power` |
+| `RoomCO2Level` | `readonly` | `number` | `Omit.RoomCO2Level` |
+| `RoomTemperature` | `readonly` | `number` | `Omit.RoomTemperature` |
+| `SetFanSpeed?` | `readonly` |  \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | `Omit.SetFanSpeed` |
+| `VentilationMode?` | `readonly` | [`VentilationMode`](README.md#ventilationmode) | `Omit.VentilationMode` |
 | `WifiSignalStrength` | `readonly` | `number` | [`BaseDeviceDataFromList`](README.md#basedevicedatafromlist).`WifiSignalStrength` |
+
+***
+
+### DeviceDataNotInList
+
+#### Extended by
+
+- [`BaseDeviceData`](README.md#basedevicedata)
+
+#### Properties
+
+| Property | Modifier | Type |
+| :------ | :------ | :------ |
+| `LastCommunication` | `readonly` | `string` |
+| `NextCommunication` | `readonly` | `string` |
+
+***
+
+### DeviceDataParams
+
+#### Properties
+
+| Property | Modifier | Type |
+| :------ | :------ | :------ |
+| `buildingId` | `readonly` | `number` |
+| `id` | `readonly` | `number` |
 
 ***
 
@@ -889,9 +1056,9 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 | Property | Modifier | Type |
 | :------ | :------ | :------ |
-| `Ata` | `readonly` | `Record`\< \| `"OperationMode"` \| `"SetFanSpeed"` \| `"SetTemperature"` \| `"VaneHorizontal"` \| `"VaneVertical"` \| `"Power"`, `number`\> |
+| `Ata` | `readonly` | `Record`\< \| `"Power"` \| `"OperationMode"` \| `"SetFanSpeed"` \| `"SetTemperature"` \| `"VaneHorizontal"` \| `"VaneVertical"`, `number`\> |
 | `Atw` | `readonly` | `Record`\< \| `"Power"` \| `"ForcedHotWaterMode"` \| `"OperationModeZone1"` \| `"OperationModeZone2"` \| `"SetCoolFlowTemperatureZone1"` \| `"SetCoolFlowTemperatureZone2"` \| `"SetHeatFlowTemperatureZone1"` \| `"SetHeatFlowTemperatureZone2"` \| `"SetTankWaterTemperature"` \| `"SetTemperatureZone1"` \| `"SetTemperatureZone2"`, `number`\> |
-| `Erv` | `readonly` | `Record`\<`"SetFanSpeed"` \| `"Power"` \| `"VentilationMode"`, `number`\> |
+| `Erv` | `readonly` | `Record`\<`"Power"` \| `"SetFanSpeed"` \| `"VentilationMode"`, `number`\> |
 
 ***
 
@@ -922,18 +1089,12 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 ### FailureData
 
-#### Extends
-
-- [`BaseSuccessData`](README.md#basesuccessdata)
-
 #### Properties
 
-| Property | Modifier | Type | Overrides | Inherited from |
-| :------ | :------ | :------ | :------ | :------ |
-| `AttributeErrors` | `readonly` | `Record`\<`string`, readonly `string`[]\> | [`BaseSuccessData`](README.md#basesuccessdata).`AttributeErrors` | [`BaseSuccessData`](README.md#basesuccessdata).`AttributeErrors` |
-| `Data` | `readonly` | `null` | [`BaseSuccessData`](README.md#basesuccessdata).`Data` | [`BaseSuccessData`](README.md#basesuccessdata).`Data` |
-| `GlobalErrors` | `readonly` | `null` | [`BaseSuccessData`](README.md#basesuccessdata).`GlobalErrors` | [`BaseSuccessData`](README.md#basesuccessdata).`GlobalErrors` |
-| `Success` | `readonly` | `false` | [`BaseSuccessData`](README.md#basesuccessdata).`Success` | [`BaseSuccessData`](README.md#basesuccessdata).`Success` |
+| Property | Modifier | Type |
+| :------ | :------ | :------ |
+| `AttributeErrors` | `readonly` | `Record`\<`string`, readonly `string`[]\> |
+| `Success` | `readonly` | `false` |
 
 ***
 
@@ -966,6 +1127,25 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 | `FloorIds?` | `readonly` | readonly `number`[] |
 | `MaximumTemperature` | `readonly` | `number` |
 | `MinimumTemperature` | `readonly` | `number` |
+
+***
+
+### GroupPostData
+
+#### Properties
+
+| Property | Modifier | Type |
+| :------ | :------ | :------ |
+| `Specification` | `readonly` | \{ `AreaID`: `null`; `BuildingID`: `null`; `FloorID`: `number`; \} \| \{ `AreaID`: `null`; `BuildingID`: `number`; `FloorID`: `null`; \} \| \{ `AreaID`: `number`; `BuildingID`: `null`; `FloorID`: `null`; \} |
+| `State` | `readonly` | \{ `FanSpeed`: \| `null` \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast`; `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \} |
+| `State.FanSpeed?` | `public` |  \| `null` \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` |
+| `State.OperationMode?` | `public` | `null` \| [`OperationMode`](README.md#operationmode) |
+| `State.Power?` | `public` | `null` \| `boolean` |
+| `State.SetTemperature?` | `public` | `null` \| `number` |
+| `State.VaneHorizontalDirection?` | `public` | `null` \| [`Horizontal`](README.md#horizontal) |
+| `State.VaneHorizontalSwing?` | `public` | `null` \| `boolean` |
+| `State.VaneVerticalDirection?` | `public` | `null` \| [`Vertical`](README.md#vertical) |
+| `State.VaneVerticalSwing?` | `public` | `null` \| `boolean` |
 
 ***
 
@@ -1124,9 +1304,9 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 | Property | Modifier | Type |
 | :------ | :------ | :------ |
-| `Ata` | `readonly` | [`PostDataAta`](README.md#postdataata) |
-| `Atw` | `readonly` | [`PostDataAtw`](README.md#postdataatw) |
-| `Erv` | `readonly` | [`PostDataErv`](README.md#postdataerv) |
+| `Ata` | `readonly` | [`DevicePostDataAta`](README.md#devicepostdataata) |
+| `Atw` | `readonly` | [`DevicePostDataAtw`](README.md#devicepostdataatw) |
+| `Erv` | `readonly` | [`DevicePostDataErv`](README.md#devicepostdataerv) |
 
 ***
 
@@ -1209,20 +1389,16 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 #### Extends
 
-- [`BaseDeviceData`](README.md#basedevicedata)
-
-#### Extended by
-
-- [`DeviceDataAta`](README.md#devicedataata)
+- [`BaseSetDeviceData`](README.md#basesetdevicedata)
 
 #### Properties
 
 | Property | Modifier | Type | Inherited from |
 | :------ | :------ | :------ | :------ |
-| `EffectiveFlags` | `public` | `number` | [`BaseDeviceData`](README.md#basedevicedata).`EffectiveFlags` |
+| `EffectiveFlags` | `public` | `number` | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags` |
 | `OperationMode?` | `readonly` | [`OperationMode`](README.md#operationmode) | - |
-| `Power?` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Power` |
-| `SetFanSpeed?` | `readonly` | [`FanSpeed`](README.md#fanspeed) | - |
+| `Power?` | `readonly` | `boolean` | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power` |
+| `SetFanSpeed?` | `readonly` |  \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | - |
 | `SetTemperature?` | `readonly` | `number` | - |
 | `VaneHorizontal?` | `readonly` | [`Horizontal`](README.md#horizontal) | - |
 | `VaneVertical?` | `readonly` | [`Vertical`](README.md#vertical) | - |
@@ -1233,21 +1409,17 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 #### Extends
 
-- [`BaseDeviceData`](README.md#basedevicedata)
-
-#### Extended by
-
-- [`DeviceDataAtw`](README.md#devicedataatw)
+- [`BaseSetDeviceData`](README.md#basesetdevicedata)
 
 #### Properties
 
 | Property | Modifier | Type | Inherited from |
 | :------ | :------ | :------ | :------ |
-| `EffectiveFlags` | `public` | `number` | [`BaseDeviceData`](README.md#basedevicedata).`EffectiveFlags` |
+| `EffectiveFlags` | `public` | `number` | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags` |
 | `ForcedHotWaterMode?` | `readonly` | `boolean` | - |
 | `OperationModeZone1?` | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | - |
 | `OperationModeZone2?` | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | - |
-| `Power?` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Power` |
+| `Power?` | `readonly` | `boolean` | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power` |
 | `SetCoolFlowTemperatureZone1?` | `readonly` | `number` | - |
 | `SetCoolFlowTemperatureZone2?` | `readonly` | `number` | - |
 | `SetHeatFlowTemperatureZone1?` | `readonly` | `number` | - |
@@ -1262,19 +1434,15 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 #### Extends
 
-- [`BaseDeviceData`](README.md#basedevicedata)
-
-#### Extended by
-
-- [`DeviceDataErv`](README.md#devicedataerv)
+- [`BaseSetDeviceData`](README.md#basesetdevicedata)
 
 #### Properties
 
 | Property | Modifier | Type | Inherited from |
 | :------ | :------ | :------ | :------ |
-| `EffectiveFlags` | `public` | `number` | [`BaseDeviceData`](README.md#basedevicedata).`EffectiveFlags` |
-| `Power?` | `readonly` | `boolean` | [`BaseDeviceData`](README.md#basedevicedata).`Power` |
-| `SetFanSpeed?` | `readonly` | `number` | - |
+| `EffectiveFlags` | `public` | `number` | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags` |
+| `Power?` | `readonly` | `boolean` | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power` |
+| `SetFanSpeed?` | `readonly` |  \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | - |
 | `VentilationMode?` | `readonly` | [`VentilationMode`](README.md#ventilationmode) | - |
 
 ***
@@ -1292,78 +1460,117 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 ### SuccessData
 
-#### Extends
+#### Properties
 
-- [`BaseSuccessData`](README.md#basesuccessdata)
+| Property | Modifier | Type |
+| :------ | :------ | :------ |
+| `AttributeErrors` | `readonly` | `null` |
+| `Success` | `readonly` | `true` |
+
+***
+
+### TilesData\<T\>
+
+#### Type parameters
+
+| Type parameter |
+| :------ |
+| `T` *extends* keyof *typeof* [`DeviceType`](README.md#devicetype) \| `null` |
 
 #### Properties
 
-| Property | Modifier | Type | Overrides | Inherited from |
-| :------ | :------ | :------ | :------ | :------ |
-| `AttributeErrors` | `readonly` | `null` | [`BaseSuccessData`](README.md#basesuccessdata).`AttributeErrors` | [`BaseSuccessData`](README.md#basesuccessdata).`AttributeErrors` |
-| `Data` | `readonly` | `null` | [`BaseSuccessData`](README.md#basesuccessdata).`Data` | [`BaseSuccessData`](README.md#basesuccessdata).`Data` |
-| `GlobalErrors` | `readonly` | `null` | [`BaseSuccessData`](README.md#basesuccessdata).`GlobalErrors` | [`BaseSuccessData`](README.md#basesuccessdata).`GlobalErrors` |
-| `Success` | `readonly` | `true` | [`BaseSuccessData`](README.md#basesuccessdata).`Success` | [`BaseSuccessData`](README.md#basesuccessdata).`Success` |
+| Property | Modifier | Type |
+| :------ | :------ | :------ |
+| `SelectedDevice` | `readonly` | `T` *extends* `"Ata"` \| `"Atw"` \| `"Erv"` ? [`DeviceDataFromGet`](README.md#devicedatafromget)\[`T`\<`T`\>\] : `null` |
+| `Tiles` | `readonly` | readonly \{ `Device`: `number`; `Offline`: `false`; `Power`: `boolean`; `RoomTemperature`: `number`; `RoomTemperature2`: `number`; `TankWaterTemperature`: `number`; \}[] |
+
+***
+
+### TilesPostData\<T\>
+
+#### Type parameters
+
+| Type parameter |
+| :------ |
+| `T` *extends* keyof *typeof* [`DeviceType`](README.md#devicetype) \| `null` |
+
+#### Properties
+
+| Property | Modifier | Type |
+| :------ | :------ | :------ |
+| `DeviceIDs` | `readonly` | readonly `number`[] & `T` *extends* `"Ata"` \| `"Atw"` \| `"Erv"` ? \{ `SelectedBuilding`: `number`; `SelectedDevice`: `number`; \} : \{ `SelectedBuilding`: `null`; `SelectedDevice`: `null`; \} |
 
 ## Type Aliases
 
 ### DeviceDataFromGetAta
 
 ```ts
-type DeviceDataFromGetAta: DeviceDataAta & {
-  EffectiveFlags: typeof FLAG_UNCHANGED;
-};
+type DeviceDataFromGetAta: BaseDeviceDataFromGet & DeviceDataAta;
 ```
-
-#### Type declaration
-
-| Member | Type |
-| :------ | :------ |
-| `EffectiveFlags` | *typeof* [`FLAG_UNCHANGED`](README.md#flag_unchanged) |
 
 #### Source
 
-[src/types.ts:135](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L135)
+[src/types.ts:151](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L151)
 
 ***
 
 ### DeviceDataFromGetAtw
 
 ```ts
-type DeviceDataFromGetAtw: DeviceDataAtw & {
-  EffectiveFlags: typeof FLAG_UNCHANGED;
-};
+type DeviceDataFromGetAtw: BaseDeviceDataFromGet & DeviceDataAtw;
 ```
-
-#### Type declaration
-
-| Member | Type |
-| :------ | :------ |
-| `EffectiveFlags` | *typeof* [`FLAG_UNCHANGED`](README.md#flag_unchanged) |
 
 #### Source
 
-[src/types.ts:203](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L203)
+[src/types.ts:221](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L221)
 
 ***
 
 ### DeviceDataFromGetErv
 
 ```ts
-type DeviceDataFromGetErv: DeviceDataErv & {
-  EffectiveFlags: typeof FLAG_UNCHANGED;
-};
+type DeviceDataFromGetErv: BaseDeviceDataFromGet & DeviceDataErv;
 ```
-
-#### Type declaration
-
-| Member | Type |
-| :------ | :------ |
-| `EffectiveFlags` | *typeof* [`FLAG_UNCHANGED`](README.md#flag_unchanged) |
 
 #### Source
 
-[src/types.ts:253](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L253)
+[src/types.ts:272](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L272)
+
+***
+
+### DevicePostDataAta
+
+```ts
+type DevicePostDataAta: BaseDevicePostData & Readonly<SetDeviceDataAta>;
+```
+
+#### Source
+
+[src/types.ts:143](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L143)
+
+***
+
+### DevicePostDataAtw
+
+```ts
+type DevicePostDataAtw: BaseDevicePostData & Readonly<SetDeviceDataAtw>;
+```
+
+#### Source
+
+[src/types.ts:203](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L203)
+
+***
+
+### DevicePostDataErv
+
+```ts
+type DevicePostDataErv: BaseDevicePostData & Readonly<SetDeviceDataErv>;
+```
+
+#### Source
+
+[src/types.ts:262](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L262)
 
 ***
 
@@ -1375,7 +1582,7 @@ type ListDeviceAny: ListDeviceAta | ListDeviceAtw | ListDeviceErv;
 
 #### Source
 
-[src/types.ts:448](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L448)
+[src/types.ts:457](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L457)
 
 ***
 
@@ -1393,7 +1600,7 @@ type NonEffectiveFlagsKeyOf<T>: Exclude<keyof T, "EffectiveFlags">;
 
 #### Source
 
-[src/types.ts:3](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L3)
+[src/types.ts:3](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L3)
 
 ***
 
@@ -1411,43 +1618,7 @@ type NonEffectiveFlagsValueOf<T>: T[NonEffectiveFlagsKeyOf<T>];
 
 #### Source
 
-[src/types.ts:4](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L4)
-
-***
-
-### PostDataAta
-
-```ts
-type PostDataAta: BasePostData & Readonly<SetDeviceDataAta>;
-```
-
-#### Source
-
-[src/types.ts:131](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L131)
-
-***
-
-### PostDataAtw
-
-```ts
-type PostDataAtw: BasePostData & Readonly<SetDeviceDataAtw>;
-```
-
-#### Source
-
-[src/types.ts:188](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L188)
-
-***
-
-### PostDataErv
-
-```ts
-type PostDataErv: BasePostData & Readonly<SetDeviceDataErv>;
-```
-
-#### Source
-
-[src/types.ts:247](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L247)
+[src/types.ts:4](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L4)
 
 ## Variables
 
@@ -1459,7 +1630,7 @@ const FLAG_UNCHANGED: 0 = 0x0;
 
 #### Source
 
-[src/types.ts:1](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L1)
+[src/types.ts:1](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L1)
 
 ***
 
@@ -1471,7 +1642,7 @@ const effectiveFlagsAta: Record<NonEffectiveFlagsKeyOf<SetDeviceDataAta>, number
 
 #### Source
 
-[src/types.ts:120](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L120)
+[src/types.ts:132](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L132)
 
 ***
 
@@ -1483,7 +1654,7 @@ const effectiveFlagsAtw: Record<NonEffectiveFlagsKeyOf<SetDeviceDataAtw>, number
 
 #### Source
 
-[src/types.ts:172](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L172)
+[src/types.ts:187](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L187)
 
 ***
 
@@ -1495,4 +1666,4 @@ const effectiveFlagsErv: Record<NonEffectiveFlagsKeyOf<SetDeviceDataErv>, number
 
 #### Source
 
-[src/types.ts:243](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L243)
+[src/types.ts:258](https://github.com/OlivierZal/melcloud-api/blob/7b841988cf0fafbeb4283c2f26643cf5a0c17645/src/types.ts#L258)
