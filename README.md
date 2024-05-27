@@ -162,10 +162,10 @@
 
 ```ts
 new default(config: {
-  "language": string;
-  "logger": Logger;
-  "settingManager": SettingManager;
-  "shouldVerifySSL": boolean;
+  language: string;
+  logger: Logger;
+  settingManager: SettingManager;
+  shouldVerifySSL: boolean;
  }): default
 ```
 
@@ -185,7 +185,7 @@ new default(config: {
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:81](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L81)
+[src/lib/MELCloudAPI.ts:81](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L81)
 
 #### Properties
 
@@ -214,13 +214,13 @@ applyLogin(data?: LoginCredentials, onSuccess?: () => Promise<void>): Promise<bo
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:144](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L144)
+[src/lib/MELCloudAPI.ts:144](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L144)
 
 ##### errors()
 
 ```ts
 errors(postData: ErrorLogPostData): Promise<{
-  "data": FailureData | ErrorLogData[];
+  data: FailureData | ErrorLogData[];
 }>
 ```
 
@@ -233,7 +233,7 @@ errors(postData: ErrorLogPostData): Promise<{
 ###### Returns
 
 `Promise`\<\{
-  `"data"`: [`FailureData`](README.md#failuredata) \| [`ErrorLogData`](README.md#errorlogdata)[];
+  `data`: [`FailureData`](README.md#failuredata) \| [`ErrorLogData`](README.md#errorlogdata)[];
  \}\>
 
 | Member | Type |
@@ -242,13 +242,13 @@ errors(postData: ErrorLogPostData): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:173](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L173)
+[src/lib/MELCloudAPI.ts:173](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L173)
 
 ##### get()
 
 ```ts
 get<T>(id: number, buildingId: number): Promise<{
-  "data": DeviceDataFromGet[T];
+  data: DeviceDataFromGet[T];
 }>
 ```
 
@@ -268,7 +268,7 @@ get<T>(id: number, buildingId: number): Promise<{
 ###### Returns
 
 `Promise`\<\{
-  `"data"`: [`DeviceDataFromGet`](README.md#devicedatafromget)\[`T`\];
+  `data`: [`DeviceDataFromGet`](README.md#devicedatafromget)\[`T`\];
  \}\>
 
 | Member | Type |
@@ -277,13 +277,13 @@ get<T>(id: number, buildingId: number): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:182](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L182)
+[src/lib/MELCloudAPI.ts:182](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L182)
 
 ##### getFrostProtection()
 
 ```ts
 getFrostProtection(id: number): Promise<{
-  "data": FrostProtectionData;
+  data: FrostProtectionData;
 }>
 ```
 
@@ -296,7 +296,7 @@ getFrostProtection(id: number): Promise<{
 ###### Returns
 
 `Promise`\<\{
-  `"data"`: [`FrostProtectionData`](README.md#frostprotectiondata);
+  `data`: [`FrostProtectionData`](README.md#frostprotectiondata);
  \}\>
 
 | Member | Type |
@@ -305,13 +305,13 @@ getFrostProtection(id: number): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:191](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L191)
+[src/lib/MELCloudAPI.ts:191](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L191)
 
 ##### getHolidayMode()
 
 ```ts
 getHolidayMode(id: number): Promise<{
-  "data": HolidayModeData;
+  data: HolidayModeData;
 }>
 ```
 
@@ -324,7 +324,7 @@ getHolidayMode(id: number): Promise<{
 ###### Returns
 
 `Promise`\<\{
-  `"data"`: [`HolidayModeData`](README.md#holidaymodedata);
+  `data`: [`HolidayModeData`](README.md#holidaymodedata);
  \}\>
 
 | Member | Type |
@@ -333,20 +333,20 @@ getHolidayMode(id: number): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:199](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L199)
+[src/lib/MELCloudAPI.ts:199](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L199)
 
 ##### list()
 
 ```ts
 list(): Promise<{
-  "data": Building[];
+  data: Building[];
 }>
 ```
 
 ###### Returns
 
 `Promise`\<\{
-  `"data"`: [`Building`](README.md#building)[];
+  `data`: [`Building`](README.md#building)[];
  \}\>
 
 | Member | Type |
@@ -355,13 +355,13 @@ list(): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:205](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L205)
+[src/lib/MELCloudAPI.ts:205](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L205)
 
 ##### login()
 
 ```ts
 login(postData: LoginPostData): Promise<{
-  "data": LoginData;
+  data: LoginData;
 }>
 ```
 
@@ -374,7 +374,7 @@ login(postData: LoginPostData): Promise<{
 ###### Returns
 
 `Promise`\<\{
-  `"data"`: [`LoginData`](README.md#logindata);
+  `data`: [`LoginData`](README.md#logindata);
  \}\>
 
 | Member | Type |
@@ -383,13 +383,13 @@ login(postData: LoginPostData): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:209](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L209)
+[src/lib/MELCloudAPI.ts:209](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L209)
 
 ##### report()
 
 ```ts
 report<T>(postData: ReportPostData): Promise<{
-  "data": ReportData[T];
+  data: ReportData[T];
 }>
 ```
 
@@ -408,7 +408,7 @@ report<T>(postData: ReportPostData): Promise<{
 ###### Returns
 
 `Promise`\<\{
-  `"data"`: [`ReportData`](README.md#reportdata)\[`T`\];
+  `data`: [`ReportData`](README.md#reportdata)\[`T`\];
  \}\>
 
 | Member | Type |
@@ -417,13 +417,13 @@ report<T>(postData: ReportPostData): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:220](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L220)
+[src/lib/MELCloudAPI.ts:220](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L220)
 
 ##### set()
 
 ```ts
 set<T>(heatPumpType: T, postData: PostData[T]): Promise<{
-  "data": DeviceData[T];
+  data: DeviceData[T];
 }>
 ```
 
@@ -443,7 +443,7 @@ set<T>(heatPumpType: T, postData: PostData[T]): Promise<{
 ###### Returns
 
 `Promise`\<\{
-  `"data"`: [`DeviceData`](README.md#devicedata)\[`T`\];
+  `data`: [`DeviceData`](README.md#devicedata)\[`T`\];
  \}\>
 
 | Member | Type |
@@ -452,13 +452,13 @@ set<T>(heatPumpType: T, postData: PostData[T]): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:226](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L226)
+[src/lib/MELCloudAPI.ts:226](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L226)
 
 ##### updateFrostProtection()
 
 ```ts
 updateFrostProtection(postData: FrostProtectionPostData): Promise<{
-  "data": SuccessData | FailureData;
+  data: SuccessData | FailureData;
 }>
 ```
 
@@ -471,7 +471,7 @@ updateFrostProtection(postData: FrostProtectionPostData): Promise<{
 ###### Returns
 
 `Promise`\<\{
-  `"data"`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata);
+  `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata);
  \}\>
 
 | Member | Type |
@@ -480,13 +480,13 @@ updateFrostProtection(postData: FrostProtectionPostData): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:233](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L233)
+[src/lib/MELCloudAPI.ts:233](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L233)
 
 ##### updateHolidayMode()
 
 ```ts
 updateHolidayMode(postData: HolidayModePostData): Promise<{
-  "data": SuccessData | FailureData;
+  data: SuccessData | FailureData;
 }>
 ```
 
@@ -499,7 +499,7 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 ###### Returns
 
 `Promise`\<\{
-  `"data"`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata);
+  `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata);
  \}\>
 
 | Member | Type |
@@ -508,7 +508,7 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 ###### Source
 
-[src/lib/MELCloudAPI.ts:242](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/lib/MELCloudAPI.ts#L242)
+[src/lib/MELCloudAPI.ts:242](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/lib/MELCloudAPI.ts#L242)
 
 ## Interfaces
 
@@ -623,10 +623,10 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 | `HMStartDate` | `readonly` | `null` \| `string` | [`BuildingData`](README.md#buildingdata).`HMStartDate` |
 | `ID` | `readonly` | `number` | - |
 | `Name` | `readonly` | `string` | - |
-| `Structure` | `readonly` | \{ `"Areas"`: readonly \{ `"Devices"`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `"Devices"`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; `"Floors"`: readonly \{ `"Areas"`: readonly \{ `"Devices"`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `"Devices"`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; \} | - |
-| `Structure.Areas` | `readonly` | readonly \{ `"Devices"`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[] | - |
+| `Structure` | `readonly` | \{ `Areas`: readonly \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; `Floors`: readonly \{ `Areas`: readonly \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; \} | - |
+| `Structure.Areas` | `readonly` | readonly \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[] | - |
 | `Structure.Devices` | `public` | readonly [`ListDeviceAny`](README.md#listdeviceany)[] | - |
-| `Structure.Floors` | `public` | readonly \{ `"Areas"`: readonly \{ `"Devices"`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `"Devices"`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[] | - |
+| `Structure.Floors` | `public` | readonly \{ `Areas`: readonly \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[] | - |
 | `TimeZone` | `public` | `number` | [`BuildingData`](README.md#buildingdata).`TimeZone` |
 
 ***
@@ -975,7 +975,7 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 | Property | Modifier | Type |
 | :------ | :------ | :------ |
-| `EndDate` | `readonly` | \{ `"Day"`: `number`; `"Hour"`: `number`; `"Minute"`: `number`; `"Month"`: `number`; `"Second"`: `number`; `"Year"`: `number`; \} |
+| `EndDate` | `readonly` | \{ `Day`: `number`; `Hour`: `number`; `Minute`: `number`; `Month`: `number`; `Second`: `number`; `Year`: `number`; \} |
 | `EndDate.Day` | `readonly` | `number` |
 | `EndDate.Hour` | `readonly` | `number` |
 | `EndDate.Minute` | `readonly` | `number` |
@@ -985,7 +985,7 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 | `HMEnabled` | `public` | `boolean` |
 | `HMEndDate` | `public` | `null` \| `string` |
 | `HMStartDate` | `public` | `null` \| `string` |
-| `StartDate` | `public` | \{ `"Day"`: `number`; `"Hour"`: `number`; `"Minute"`: `number`; `"Month"`: `number`; `"Second"`: `number`; `"Year"`: `number`; \} |
+| `StartDate` | `public` | \{ `Day`: `number`; `Hour`: `number`; `Minute`: `number`; `Month`: `number`; `Second`: `number`; `Year`: `number`; \} |
 | `StartDate.Day` | `public` | `number` |
 | `StartDate.Hour` | `public` | `number` |
 | `StartDate.Minute` | `public` | `number` |
@@ -1003,9 +1003,9 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 | Property | Modifier | Type |
 | :------ | :------ | :------ |
 | `Enabled` | `readonly` | `boolean` |
-| `EndDate` | `readonly` | `null` \| \{ `"Day"`: `number`; `"Hour"`: `number`; `"Minute"`: `number`; `"Month"`: `number`; `"Second"`: `number`; `"Year"`: `number`; \} |
-| `HMTimeZones` | `readonly` | readonly \{ `"Areas"`: readonly `number`[]; `"Buildings"`: readonly `number`[]; `"Devices"`: readonly `number`[]; `"Floors"`: readonly `number`[]; `"TimeZone"`: `number`; \}[] |
-| `StartDate` | `readonly` | `null` \| \{ `"Day"`: `number`; `"Hour"`: `number`; `"Minute"`: `number`; `"Month"`: `number`; `"Second"`: `number`; `"Year"`: `number`; \} |
+| `EndDate` | `readonly` | `null` \| \{ `Day`: `number`; `Hour`: `number`; `Minute`: `number`; `Month`: `number`; `Second`: `number`; `Year`: `number`; \} |
+| `HMTimeZones` | `readonly` | readonly \{ `Areas`: readonly `number`[]; `Buildings`: readonly `number`[]; `Devices`: readonly `number`[]; `Floors`: readonly `number`[]; `TimeZone`: `number`; \}[] |
+| `StartDate` | `readonly` | `null` \| \{ `Day`: `number`; `Hour`: `number`; `Minute`: `number`; `Month`: `number`; `Second`: `number`; `Year`: `number`; \} |
 
 ***
 
@@ -1100,7 +1100,7 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 | Property | Modifier | Type |
 | :------ | :------ | :------ |
-| `LoginData` | `readonly` | `null` \| \{ `"ContextKey"`: `string`; `"Expiry"`: `string`; \} |
+| `LoginData` | `readonly` | `null` \| \{ `ContextKey`: `string`; `Expiry`: `string`; \} |
 
 ***
 
@@ -1311,7 +1311,7 @@ updateHolidayMode(postData: HolidayModePostData): Promise<{
 
 ```ts
 type DeviceDataFromGetAta: DeviceDataAta & {
-  "EffectiveFlags": typeof FLAG_UNCHANGED;
+  EffectiveFlags: typeof FLAG_UNCHANGED;
 };
 ```
 
@@ -1323,7 +1323,7 @@ type DeviceDataFromGetAta: DeviceDataAta & {
 
 #### Source
 
-[src/types.ts:135](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L135)
+[src/types.ts:135](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L135)
 
 ***
 
@@ -1331,7 +1331,7 @@ type DeviceDataFromGetAta: DeviceDataAta & {
 
 ```ts
 type DeviceDataFromGetAtw: DeviceDataAtw & {
-  "EffectiveFlags": typeof FLAG_UNCHANGED;
+  EffectiveFlags: typeof FLAG_UNCHANGED;
 };
 ```
 
@@ -1343,7 +1343,7 @@ type DeviceDataFromGetAtw: DeviceDataAtw & {
 
 #### Source
 
-[src/types.ts:203](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L203)
+[src/types.ts:203](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L203)
 
 ***
 
@@ -1351,7 +1351,7 @@ type DeviceDataFromGetAtw: DeviceDataAtw & {
 
 ```ts
 type DeviceDataFromGetErv: DeviceDataErv & {
-  "EffectiveFlags": typeof FLAG_UNCHANGED;
+  EffectiveFlags: typeof FLAG_UNCHANGED;
 };
 ```
 
@@ -1363,7 +1363,7 @@ type DeviceDataFromGetErv: DeviceDataErv & {
 
 #### Source
 
-[src/types.ts:253](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L253)
+[src/types.ts:253](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L253)
 
 ***
 
@@ -1375,7 +1375,7 @@ type ListDeviceAny: ListDeviceAta | ListDeviceAtw | ListDeviceErv;
 
 #### Source
 
-[src/types.ts:448](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L448)
+[src/types.ts:448](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L448)
 
 ***
 
@@ -1393,7 +1393,7 @@ type NonEffectiveFlagsKeyOf<T>: Exclude<keyof T, "EffectiveFlags">;
 
 #### Source
 
-[src/types.ts:3](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L3)
+[src/types.ts:3](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L3)
 
 ***
 
@@ -1411,7 +1411,7 @@ type NonEffectiveFlagsValueOf<T>: T[NonEffectiveFlagsKeyOf<T>];
 
 #### Source
 
-[src/types.ts:4](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L4)
+[src/types.ts:4](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L4)
 
 ***
 
@@ -1423,7 +1423,7 @@ type PostDataAta: BasePostData & Readonly<SetDeviceDataAta>;
 
 #### Source
 
-[src/types.ts:131](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L131)
+[src/types.ts:131](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L131)
 
 ***
 
@@ -1435,7 +1435,7 @@ type PostDataAtw: BasePostData & Readonly<SetDeviceDataAtw>;
 
 #### Source
 
-[src/types.ts:188](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L188)
+[src/types.ts:188](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L188)
 
 ***
 
@@ -1447,7 +1447,7 @@ type PostDataErv: BasePostData & Readonly<SetDeviceDataErv>;
 
 #### Source
 
-[src/types.ts:247](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L247)
+[src/types.ts:247](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L247)
 
 ## Variables
 
@@ -1459,7 +1459,7 @@ const FLAG_UNCHANGED: 0 = 0x0;
 
 #### Source
 
-[src/types.ts:1](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L1)
+[src/types.ts:1](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L1)
 
 ***
 
@@ -1471,7 +1471,7 @@ const effectiveFlagsAta: Record<NonEffectiveFlagsKeyOf<SetDeviceDataAta>, number
 
 #### Source
 
-[src/types.ts:120](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L120)
+[src/types.ts:120](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L120)
 
 ***
 
@@ -1483,7 +1483,7 @@ const effectiveFlagsAtw: Record<NonEffectiveFlagsKeyOf<SetDeviceDataAtw>, number
 
 #### Source
 
-[src/types.ts:172](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L172)
+[src/types.ts:172](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L172)
 
 ***
 
@@ -1495,4 +1495,4 @@ const effectiveFlagsErv: Record<NonEffectiveFlagsKeyOf<SetDeviceDataErv>, number
 
 #### Source
 
-[src/types.ts:243](https://github.com/OlivierZal/melcloud-api/blob/040382445c7bbc3c4457f5c19402692eb2601ecc/src/types.ts#L243)
+[src/types.ts:243](https://github.com/OlivierZal/melcloud-api/blob/12e38ef85a496a328da5d64600336c052e1ea3e0/src/types.ts#L243)
