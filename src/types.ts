@@ -98,19 +98,33 @@ export enum VentilationMode {
   auto = 2,
 }
 
-export interface BaseDeviceData {
-  readonly Power?: boolean
-  EffectiveFlags: number
-}
 export interface BasePostData {
   readonly DeviceID: number
   readonly HasPendingCommand: true
 }
+export interface BaseSetDeviceData {
+  readonly Power?: boolean
+  EffectiveFlags: number
+}
+export interface DeviceDataNotInList {
+  readonly ErrorMessage: string | null
+  readonly LastCommunication: string
+  readonly NextCommunication: string
+}
+export interface BaseDeviceData extends DeviceDataNotInList {
+  readonly ErrorCode: number
+  readonly Offline: boolean
+}
+export interface BaseDeviceDataFromGet {
+  readonly EffectiveFlags: typeof FLAG_UNCHANGED
+}
 export interface BaseDeviceDataFromList {
+  readonly DeviceType: DeviceType
+  readonly ErrorMessages: string
   readonly WifiSignalStrength: number
 }
 
-export interface SetDeviceDataAta extends BaseDeviceData {
+export interface SetDeviceDataAta extends BaseSetDeviceData {
   readonly OperationMode?: OperationMode
   readonly SetFanSpeed?: FanSpeed
   readonly SetTemperature?: number
@@ -129,17 +143,18 @@ export const effectiveFlagsAta: Record<
   VaneVertical: 0x10,
 } as const
 export type PostDataAta = BasePostData & Readonly<SetDeviceDataAta>
-export interface DeviceDataAta extends SetDeviceDataAta {
+export interface DeviceDataAta extends BaseDeviceData, SetDeviceDataAta {
   readonly RoomTemperature: number
 }
-export type DeviceDataFromGetAta = DeviceDataAta & {
-  readonly EffectiveFlags: typeof FLAG_UNCHANGED
-}
+export type DeviceDataFromGetAta = BaseDeviceDataFromGet & DeviceDataAta
 export interface DeviceDataFromListAta
   extends BaseDeviceDataFromList,
     Omit<
       DeviceDataFromGetAta,
-      'SetFanSpeed' | 'VaneHorizontal' | 'VaneVertical'
+      | keyof DeviceDataNotInList
+      | 'SetFanSpeed'
+      | 'VaneHorizontal'
+      | 'VaneVertical'
     > {
   readonly ActualFanSpeed: number
   readonly DeviceType: DeviceType.Ata
@@ -157,7 +172,7 @@ export interface DeviceDataFromListAta
   readonly VaneVerticalDirection: Vertical
 }
 
-export interface SetDeviceDataAtw extends BaseDeviceData {
+export interface SetDeviceDataAtw extends BaseSetDeviceData {
   readonly ForcedHotWaterMode?: boolean
   readonly OperationModeZone1?: OperationModeZone
   readonly OperationModeZone2?: OperationModeZone
@@ -186,7 +201,7 @@ export const effectiveFlagsAtw: Record<
   SetTemperatureZone2: 0x800000200,
 } as const
 export type PostDataAtw = BasePostData & Readonly<SetDeviceDataAtw>
-export interface DeviceDataAtw extends SetDeviceDataAtw {
+export interface DeviceDataAtw extends BaseDeviceData, SetDeviceDataAtw {
   readonly IdleZone1: boolean
   readonly IdleZone2: boolean
   readonly OperationMode: OperationModeState
@@ -200,12 +215,10 @@ export interface DeviceDataAtw extends SetDeviceDataAtw {
   readonly RoomTemperatureZone2: number
   readonly TankWaterTemperature: number
 }
-export type DeviceDataFromGetAtw = DeviceDataAtw & {
-  readonly EffectiveFlags: typeof FLAG_UNCHANGED
-}
+export type DeviceDataFromGetAtw = BaseDeviceDataFromGet & DeviceDataAtw
 export interface DeviceDataFromListAtw
   extends BaseDeviceDataFromList,
-    DeviceDataFromGetAtw {
+    Omit<DeviceDataFromGetAtw, keyof DeviceDataNotInList> {
   readonly BoosterHeater1Status: boolean
   readonly BoosterHeater2PlusStatus: boolean
   readonly BoosterHeater2Status: boolean
@@ -236,7 +249,7 @@ export interface DeviceDataFromListAtw
   readonly Zone2InHeatMode: boolean
 }
 
-export interface SetDeviceDataErv extends BaseDeviceData {
+export interface SetDeviceDataErv extends BaseSetDeviceData {
   readonly SetFanSpeed?: number
   readonly VentilationMode?: VentilationMode
 }
@@ -245,17 +258,15 @@ export const effectiveFlagsErv: Record<
   number
 > = { Power: 0x1, SetFanSpeed: 0x8, VentilationMode: 0x4 } as const
 export type PostDataErv = BasePostData & Readonly<SetDeviceDataErv>
-export interface DeviceDataErv extends SetDeviceDataErv {
+export interface DeviceDataErv extends BaseDeviceData, SetDeviceDataErv {
   readonly OutdoorTemperature: number
   readonly RoomCO2Level: number
   readonly RoomTemperature: number
 }
-export type DeviceDataFromGetErv = DeviceDataErv & {
-  readonly EffectiveFlags: typeof FLAG_UNCHANGED
-}
+export type DeviceDataFromGetErv = BaseDeviceDataFromGet & DeviceDataErv
 export interface DeviceDataFromListErv
   extends BaseDeviceDataFromList,
-    DeviceDataFromGetErv {
+    Omit<DeviceDataFromGetErv, keyof DeviceDataNotInList> {
   readonly DeviceType: DeviceType.Erv
   readonly HasAutomaticFanSpeed: boolean
   readonly HasCO2Sensor: boolean
@@ -457,6 +468,41 @@ export interface Building extends BuildingData {
       readonly Devices: readonly ListDeviceAny[]
     }[]
   }
+}
+
+export interface DeviceDataParams {
+  readonly buildingId: number
+  readonly id: number
+}
+export interface BuildingDataParams {
+  readonly id: number
+  readonly tableName: 'DeviceLocation'
+}
+
+export interface TilesPostData<T extends keyof typeof DeviceType | null> {
+  readonly DeviceIDs: readonly number[] &
+    (T extends keyof typeof DeviceType ?
+      {
+        readonly SelectedBuilding: number
+        readonly SelectedDevice: number
+      }
+    : {
+        readonly SelectedBuilding?: null
+        readonly SelectedDevice?: null
+      })
+}
+export interface TilesData<T extends keyof typeof DeviceType | null> {
+  readonly SelectedDevice: T extends keyof typeof DeviceType ?
+    DeviceDataFromGet[T]
+  : null
+  readonly Tiles: readonly {
+    Device: number
+    Offline: false
+    Power: boolean
+    RoomTemperature: number
+    RoomTemperature2: number
+    TankWaterTemperature: number
+  }[]
 }
 
 export interface ErrorLogPostData {
