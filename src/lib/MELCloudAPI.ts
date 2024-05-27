@@ -206,11 +206,19 @@ export default class {
     return this.#api.get<Building[]>(LIST_URL)
   }
 
-  public async login(postData: LoginPostData): Promise<{ data: LoginData }> {
-    const response = await this.#api.post<LoginData>(LOGIN_URL, postData)
+  public async login({
+    Email: username,
+    Password: password,
+    ...rest
+  }: LoginPostData): Promise<{ data: LoginData }> {
+    const response = await this.#api.post<LoginData>(LOGIN_URL, {
+      Email: username,
+      Password: password,
+      ...rest,
+    } satisfies LoginPostData)
     if (response.data.LoginData) {
-      this.username = postData.Email
-      this.password = postData.Password
+      this.username = username
+      this.password = password
       this.contextKey = response.data.LoginData.ContextKey
       this.expiry = response.data.LoginData.Expiry
     }
