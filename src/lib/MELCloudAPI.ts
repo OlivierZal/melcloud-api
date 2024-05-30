@@ -215,7 +215,7 @@ export default class {
       Email: username,
       Password: password,
       ...rest,
-    })
+    } satisfies LoginPostData)
     if (response.data.LoginData) {
       this.username = username
       this.password = password
