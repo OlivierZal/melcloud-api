@@ -100,21 +100,18 @@ export enum VentilationMode {
 
 export interface BasePostData {
   readonly DeviceID: number
-  readonly HasPendingCommand: true
 }
 export interface BaseSetDeviceData {
   readonly Power?: boolean
   EffectiveFlags: number
 }
 export interface DeviceDataNotInList {
-  readonly ErrorMessage: string | null
   readonly LastCommunication: string
   readonly NextCommunication: string
 }
 export interface BaseDeviceData
   extends Readonly<BaseSetDeviceData>,
     DeviceDataNotInList {
-  readonly ErrorCode: number
   readonly Offline: boolean
 }
 export interface BaseDeviceDataFromGet extends BaseDeviceData {
@@ -122,10 +119,6 @@ export interface BaseDeviceDataFromGet extends BaseDeviceData {
 }
 export interface BaseDeviceDataFromList
   extends Omit<BaseDeviceDataFromGet, keyof DeviceDataNotInList> {
-  readonly DeviceType: DeviceType
-  readonly ErrorMessages: string
-  readonly HasError: boolean
-  readonly HasErrorMessages: boolean
   readonly WifiSignalStrength: number
 }
 
@@ -151,6 +144,8 @@ export type PostDataAta = BasePostData & Readonly<SetDeviceDataAta>
 export interface DeviceDataAta
   extends BaseDeviceData,
     Readonly<SetDeviceDataAta> {
+  readonly DeviceType: DeviceType.Ata
+  readonly NumberOfFanSpeeds: number
   readonly RoomTemperature: number
 }
 export type DeviceDataFromGetAta = BaseDeviceDataFromGet & DeviceDataAta
@@ -164,7 +159,6 @@ export interface DeviceDataFromListAta
       | 'VaneVertical'
     > {
   readonly ActualFanSpeed: number
-  readonly DeviceType: DeviceType.Ata
   readonly FanSpeed: FanSpeed
   readonly HasAutomaticFanSpeed: boolean
   readonly MaxTempAutomatic: number
@@ -173,7 +167,6 @@ export interface DeviceDataFromListAta
   readonly MinTempAutomatic: number
   readonly MinTempCoolDry: number
   readonly MinTempHeat: number
-  readonly NumberOfFanSpeeds: number
   readonly OutdoorTemperature: number
   readonly VaneHorizontalDirection: Horizontal
   readonly VaneVerticalDirection: Vertical
@@ -211,6 +204,7 @@ export type PostDataAtw = BasePostData & Readonly<SetDeviceDataAtw>
 export interface DeviceDataAtw
   extends BaseDeviceData,
     Readonly<SetDeviceDataAtw> {
+  readonly DeviceType: DeviceType.Atw
   readonly IdleZone1: boolean
   readonly IdleZone2: boolean
   readonly OperationMode: OperationModeState
@@ -236,7 +230,6 @@ export interface DeviceDataFromListAtw
   readonly CurrentEnergyConsumed: number
   readonly CurrentEnergyProduced: number
   readonly DefrostMode: number
-  readonly DeviceType: DeviceType.Atw
   readonly EcoHotWater: boolean
   readonly FlowTemperature: number
   readonly FlowTemperatureZone1: number
@@ -270,6 +263,8 @@ export type PostDataErv = BasePostData & Readonly<SetDeviceDataErv>
 export interface DeviceDataErv
   extends BaseDeviceData,
     Readonly<SetDeviceDataErv> {
+  readonly DeviceType: DeviceType.Erv
+  readonly NumberOfFanSpeeds: number
   readonly OutdoorTemperature: number
   readonly RoomCO2Level: number
   readonly RoomTemperature: number
@@ -278,11 +273,9 @@ export type DeviceDataFromGetErv = BaseDeviceDataFromGet & DeviceDataErv
 export interface DeviceDataFromListErv
   extends BaseDeviceDataFromList,
     Omit<DeviceDataFromGetErv, keyof DeviceDataNotInList> {
-  readonly DeviceType: DeviceType.Erv
   readonly HasAutomaticFanSpeed: boolean
   readonly HasCO2Sensor: boolean
   readonly HasPM25Sensor: boolean
-  readonly NumberOfFanSpeeds: number
   readonly PM25Level: number
 }
 
