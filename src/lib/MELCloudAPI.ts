@@ -8,8 +8,10 @@ import {
 } from 'axios'
 import {
   type Building,
+  type BuildingDataParams,
   type DeviceData,
   type DeviceDataFromGet,
+  type DeviceDataParams,
   type DeviceType,
   type ErrorLogData,
   type ErrorLogPostData,
@@ -175,7 +177,7 @@ export default class {
   ): Promise<{ data: ErrorLogData[] | FailureData }> {
     return this.#api.post<ErrorLogData[] | FailureData>(
       '/Report/GetUnitErrorLog2',
-      postData,
+      postData satisfies ErrorLogPostData,
     )
   }
 
@@ -184,7 +186,7 @@ export default class {
     buildingId: number,
   ): Promise<{ data: DeviceDataFromGet[T] }> {
     return this.#api.get<DeviceDataFromGet[T]>('/Device/Get', {
-      params: { buildingId, id },
+      params: { buildingId, id } satisfies DeviceDataParams,
     })
   }
 
@@ -192,13 +194,13 @@ export default class {
     id: number,
   ): Promise<{ data: FrostProtectionData }> {
     return this.#api.get<FrostProtectionData>('/FrostProtection/GetSettings', {
-      params: { id, tableName: 'DeviceLocation' },
+      params: { id, tableName: 'DeviceLocation' } satisfies BuildingDataParams,
     })
   }
 
   public async getHolidayMode(id: number): Promise<{ data: HolidayModeData }> {
     return this.#api.get<HolidayModeData>('/HolidayMode/GetSettings', {
-      params: { id, tableName: 'DeviceLocation' },
+      params: { id, tableName: 'DeviceLocation' } satisfies BuildingDataParams,
     })
   }
 
@@ -228,14 +230,20 @@ export default class {
   public async report<T extends keyof typeof DeviceType>(
     postData: ReportPostData,
   ): Promise<{ data: ReportData[T] }> {
-    return this.#api.post<ReportData[T]>('/EnergyCost/Report', postData)
+    return this.#api.post<ReportData[T]>(
+      '/EnergyCost/Report',
+      postData satisfies ReportPostData,
+    )
   }
 
   public async set<T extends keyof typeof DeviceType>(
     heatPumpType: T,
     postData: PostData[T],
   ): Promise<{ data: DeviceData[T] }> {
-    return this.#api.post<DeviceData[T]>(`/Device/Set${heatPumpType}`, postData)
+    return this.#api.post<DeviceData[T]>(
+      `/Device/Set${heatPumpType}`,
+      postData satisfies PostData[T],
+    )
   }
 
   public async updateFrostProtection(
@@ -243,7 +251,7 @@ export default class {
   ): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post<FailureData | SuccessData>(
       '/FrostProtection/Update',
-      postData,
+      postData satisfies FrostProtectionPostData,
     )
   }
 
@@ -252,7 +260,7 @@ export default class {
   ): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post<FailureData | SuccessData>(
       '/HolidayMode/Update',
-      postData,
+      postData satisfies HolidayModePostData,
     )
   }
 

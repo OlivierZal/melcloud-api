@@ -459,6 +459,15 @@ export interface Building extends BuildingData {
   }
 }
 
+export interface DeviceDataParams {
+  readonly buildingId: number
+  readonly id: number
+}
+export interface BuildingDataParams {
+  readonly id: number
+  readonly tableName: 'DeviceLocation'
+}
+
 export interface ErrorLogPostData {
   readonly DeviceIDs: readonly string[]
   readonly FromDate: string
