@@ -98,19 +98,26 @@ export enum VentilationMode {
   auto = 2,
 }
 
-export interface BaseDeviceData {
-  readonly Power?: boolean
-  EffectiveFlags: number
-}
 export interface BasePostData {
   readonly DeviceID: number
   readonly HasPendingCommand: true
 }
+export interface BaseSetDeviceData {
+  readonly Power?: boolean
+  EffectiveFlags: number
+}
+export interface BaseDeviceData {
+  readonly Offline: boolean
+}
+export interface BaseDeviceDataFromGet {
+  readonly EffectiveFlags: typeof FLAG_UNCHANGED
+}
 export interface BaseDeviceDataFromList {
+  readonly DeviceType: DeviceType
   readonly WifiSignalStrength: number
 }
 
-export interface SetDeviceDataAta extends BaseDeviceData {
+export interface SetDeviceDataAta extends BaseSetDeviceData {
   readonly OperationMode?: OperationMode
   readonly SetFanSpeed?: FanSpeed
   readonly SetTemperature?: number
@@ -129,12 +136,10 @@ export const effectiveFlagsAta: Record<
   VaneVertical: 0x10,
 } as const
 export type PostDataAta = BasePostData & Readonly<SetDeviceDataAta>
-export interface DeviceDataAta extends SetDeviceDataAta {
+export interface DeviceDataAta extends BaseDeviceData, SetDeviceDataAta {
   readonly RoomTemperature: number
 }
-export type DeviceDataFromGetAta = DeviceDataAta & {
-  readonly EffectiveFlags: typeof FLAG_UNCHANGED
-}
+export type DeviceDataFromGetAta = BaseDeviceDataFromGet & DeviceDataAta
 export interface DeviceDataFromListAta
   extends BaseDeviceDataFromList,
     Omit<
@@ -157,7 +162,7 @@ export interface DeviceDataFromListAta
   readonly VaneVerticalDirection: Vertical
 }
 
-export interface SetDeviceDataAtw extends BaseDeviceData {
+export interface SetDeviceDataAtw extends BaseSetDeviceData {
   readonly ForcedHotWaterMode?: boolean
   readonly OperationModeZone1?: OperationModeZone
   readonly OperationModeZone2?: OperationModeZone
@@ -186,7 +191,7 @@ export const effectiveFlagsAtw: Record<
   SetTemperatureZone2: 0x800000200,
 } as const
 export type PostDataAtw = BasePostData & Readonly<SetDeviceDataAtw>
-export interface DeviceDataAtw extends SetDeviceDataAtw {
+export interface DeviceDataAtw extends BaseDeviceData, SetDeviceDataAtw {
   readonly IdleZone1: boolean
   readonly IdleZone2: boolean
   readonly OperationMode: OperationModeState
@@ -200,9 +205,7 @@ export interface DeviceDataAtw extends SetDeviceDataAtw {
   readonly RoomTemperatureZone2: number
   readonly TankWaterTemperature: number
 }
-export type DeviceDataFromGetAtw = DeviceDataAtw & {
-  readonly EffectiveFlags: typeof FLAG_UNCHANGED
-}
+export type DeviceDataFromGetAtw = BaseDeviceDataFromGet & DeviceDataAtw
 export interface DeviceDataFromListAtw
   extends BaseDeviceDataFromList,
     DeviceDataFromGetAtw {
@@ -236,7 +239,7 @@ export interface DeviceDataFromListAtw
   readonly Zone2InHeatMode: boolean
 }
 
-export interface SetDeviceDataErv extends BaseDeviceData {
+export interface SetDeviceDataErv extends BaseSetDeviceData {
   readonly SetFanSpeed?: number
   readonly VentilationMode?: VentilationMode
 }
@@ -245,14 +248,12 @@ export const effectiveFlagsErv: Record<
   number
 > = { Power: 0x1, SetFanSpeed: 0x8, VentilationMode: 0x4 } as const
 export type PostDataErv = BasePostData & Readonly<SetDeviceDataErv>
-export interface DeviceDataErv extends SetDeviceDataErv {
+export interface DeviceDataErv extends BaseDeviceData, SetDeviceDataErv {
   readonly OutdoorTemperature: number
   readonly RoomCO2Level: number
   readonly RoomTemperature: number
 }
-export type DeviceDataFromGetErv = DeviceDataErv & {
-  readonly EffectiveFlags: typeof FLAG_UNCHANGED
-}
+export type DeviceDataFromGetErv = BaseDeviceDataFromGet & DeviceDataErv
 export interface DeviceDataFromListErv
   extends BaseDeviceDataFromList,
     DeviceDataFromGetErv {
