@@ -248,7 +248,7 @@ export default class {
     )
   }
 
-  public async tiles<T extends number | null>(
+  public async tiles<T extends keyof typeof DeviceType | null>(
     postData: TilesPostData<T>,
   ): Promise<{ data: TilesData<T> }> {
     return this.#api.post<TilesData<T>>(
