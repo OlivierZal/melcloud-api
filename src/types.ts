@@ -98,7 +98,7 @@ export enum VentilationMode {
   auto = 2,
 }
 
-export interface BasePostData {
+export interface BaseDevicePostData {
   readonly DeviceID: number
 }
 export interface BaseSetDeviceData {
@@ -124,7 +124,7 @@ export interface BaseDeviceDataFromList
 
 export interface SetDeviceDataAta extends BaseSetDeviceData {
   readonly OperationMode?: OperationMode
-  readonly SetFanSpeed?: FanSpeed
+  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
   readonly SetTemperature?: number
   readonly VaneHorizontal?: Horizontal
   readonly VaneVertical?: Vertical
@@ -140,7 +140,7 @@ export const effectiveFlagsAta: Record<
   VaneHorizontal: 0x100,
   VaneVertical: 0x10,
 } as const
-export type PostDataAta = BasePostData & Readonly<SetDeviceDataAta>
+export type DevicePostDataAta = BaseDevicePostData & Readonly<SetDeviceDataAta>
 export interface DeviceDataAta
   extends BaseDeviceData,
     Readonly<SetDeviceDataAta> {
@@ -200,7 +200,7 @@ export const effectiveFlagsAtw: Record<
   SetTemperatureZone1: 0x200000080,
   SetTemperatureZone2: 0x800000200,
 } as const
-export type PostDataAtw = BasePostData & Readonly<SetDeviceDataAtw>
+export type DevicePostDataAtw = BaseDevicePostData & Readonly<SetDeviceDataAtw>
 export interface DeviceDataAtw
   extends BaseDeviceData,
     Readonly<SetDeviceDataAtw> {
@@ -252,14 +252,14 @@ export interface DeviceDataFromListAtw
 }
 
 export interface SetDeviceDataErv extends BaseSetDeviceData {
-  readonly SetFanSpeed?: number
+  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
   readonly VentilationMode?: VentilationMode
 }
 export const effectiveFlagsErv: Record<
   NonEffectiveFlagsKeyOf<SetDeviceDataErv>,
   number
 > = { Power: 0x1, SetFanSpeed: 0x8, VentilationMode: 0x4 } as const
-export type PostDataErv = BasePostData & Readonly<SetDeviceDataErv>
+export type DevicePostDataErv = BaseDevicePostData & Readonly<SetDeviceDataErv>
 export interface DeviceDataErv
   extends BaseDeviceData,
     Readonly<SetDeviceDataErv> {
@@ -290,9 +290,9 @@ export interface EffectiveFlags {
   readonly Erv: typeof effectiveFlagsErv
 }
 export interface PostData {
-  readonly Ata: PostDataAta
-  readonly Atw: PostDataAtw
-  readonly Erv: PostDataErv
+  readonly Ata: DevicePostDataAta
+  readonly Atw: DevicePostDataAtw
+  readonly Erv: DevicePostDataErv
 }
 export interface DeviceData {
   readonly Ata: DeviceDataAta
@@ -423,17 +423,11 @@ export interface HolidayModeData {
   readonly TimeZone: number
 }
 
-export interface BaseSuccessData {
-  readonly AttributeErrors: Record<string, readonly string[]> | null
-  readonly Data: null
-  readonly GlobalErrors: null
-  readonly Success: boolean
-}
-export interface SuccessData extends BaseSuccessData {
+export interface SuccessData {
   readonly AttributeErrors: null
   readonly Success: true
 }
-export interface FailureData extends BaseSuccessData {
+export interface FailureData {
   readonly AttributeErrors: Record<string, readonly string[]>
   readonly Success: false
 }
@@ -481,6 +475,35 @@ export interface DeviceDataParams {
 export interface BuildingDataParams {
   readonly id: number
   readonly tableName: 'DeviceLocation'
+}
+
+export interface GroupPostData {
+  readonly Specification:
+    | {
+        readonly AreaID?: null
+        readonly BuildingID?: null
+        readonly FloorID: number
+      }
+    | {
+        readonly AreaID?: null
+        readonly FloorID?: null
+        readonly BuildingID: number
+      }
+    | {
+        readonly BuildingID?: null
+        readonly FloorID?: null
+        readonly AreaID: number
+      }
+  readonly State: {
+    readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
+    readonly OperationMode?: OperationMode | null
+    readonly Power?: boolean | null
+    readonly SetTemperature?: number | null
+    readonly VaneHorizontalDirection?: Horizontal | null
+    readonly VaneHorizontalSwing?: boolean | null
+    readonly VaneVerticalDirection?: Vertical | null
+    readonly VaneVerticalSwing?: boolean | null
+  }
 }
 
 export interface TilesPostData<T extends keyof typeof DeviceType | null> {

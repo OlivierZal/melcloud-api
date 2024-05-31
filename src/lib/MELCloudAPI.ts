@@ -18,6 +18,7 @@ import {
   type FailureData,
   type FrostProtectionData,
   type FrostProtectionPostData,
+  type GroupPostData,
   type HolidayModeData,
   type HolidayModePostData,
   Language,
@@ -246,6 +247,12 @@ export default class {
       `/Device/Set${heatPumpType}`,
       postData satisfies PostData[T],
     )
+  }
+
+  public async setGroup(
+    postData: GroupPostData,
+  ): Promise<{ data: FailureData | SuccessData }> {
+    return this.#api.post('/Group/SetAta', postData satisfies GroupPostData)
   }
 
   public async tiles<T extends keyof typeof DeviceType | null>(
