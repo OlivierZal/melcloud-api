@@ -258,7 +258,11 @@ export interface SetDeviceDataErv extends BaseSetDeviceData {
 export const effectiveFlagsErv: Record<
   NonEffectiveFlagsKeyOf<SetDeviceDataErv>,
   number
-> = { Power: 0x1, SetFanSpeed: 0x8, VentilationMode: 0x4 } as const
+> = {
+  Power: 0x1,
+  SetFanSpeed: 0x8,
+  VentilationMode: 0x4,
+} as const
 export type DevicePostDataErv = BaseDevicePostData & Readonly<SetDeviceDataErv>
 export interface DeviceDataErv
   extends BaseDeviceData,
@@ -309,7 +313,6 @@ export interface ReportPostData {
   readonly DeviceID: number
   readonly FromDate: string
   readonly ToDate: string
-  readonly UseCurrency: false
 }
 export interface ReportDataAta {
   readonly Auto: readonly number[]
@@ -532,7 +535,7 @@ export interface TilesData<T extends keyof typeof DeviceType | null> {
   : null
   readonly Tiles: readonly {
     Device: number
-    Offline: false
+    Offline: boolean
     Power: boolean
     RoomTemperature: number
     RoomTemperature2: number
