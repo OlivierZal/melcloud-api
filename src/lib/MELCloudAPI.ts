@@ -28,6 +28,8 @@ import {
   type ReportData,
   type ReportPostData,
   type SuccessData,
+  type TilesData,
+  type TilesPostData,
 } from '..'
 import { DateTime, Duration } from 'luxon'
 import APICallRequestData from './APICallRequestData'
@@ -243,6 +245,15 @@ export default class {
     return this.#api.post<DeviceData[T]>(
       `/Device/Set${heatPumpType}`,
       postData satisfies PostData[T],
+    )
+  }
+
+  public async tiles<T extends keyof typeof DeviceType | null>(
+    postData: TilesPostData<T>,
+  ): Promise<{ data: TilesData<T> }> {
+    return this.#api.post<TilesData<T>>(
+      '/Tile/Get2',
+      postData satisfies TilesPostData<T>,
     )
   }
 

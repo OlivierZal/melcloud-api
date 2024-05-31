@@ -469,6 +469,32 @@ export interface BuildingDataParams {
   readonly tableName: 'DeviceLocation'
 }
 
+export interface TilesPostData<T extends keyof typeof DeviceType | null> {
+  readonly DeviceIDs: readonly number[] &
+    (T extends keyof typeof DeviceType ?
+      {
+        readonly SelectedBuilding: number
+        readonly SelectedDevice: T
+      }
+    : {
+        readonly SelectedBuilding?: null
+        readonly SelectedDevice?: null
+      })
+}
+export interface TilesData<T extends keyof typeof DeviceType | null> {
+  readonly SelectedDevice: T extends keyof typeof DeviceType ?
+    DeviceDataFromGet[T]
+  : null
+  readonly Tiles: readonly {
+    Device: number
+    Offline: false
+    Power: boolean
+    RoomTemperature: number
+    RoomTemperature2: number
+    TankWaterTemperature: number
+  }[]
+}
+
 export interface ErrorLogPostData {
   readonly DeviceIDs: readonly string[]
   readonly FromDate: string
