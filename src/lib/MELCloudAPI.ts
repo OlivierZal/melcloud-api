@@ -28,6 +28,7 @@ import {
   type PostData,
   type ReportData,
   type ReportPostData,
+  type SetPowerPostData,
   type SuccessData,
   type TilesData,
   type TilesPostData,
@@ -255,6 +256,16 @@ export default class {
     return this.#api.post('/Group/SetAta', postData satisfies GroupPostData)
   }
 
+  public async setPower(
+    ids: number[],
+    power: boolean,
+  ): Promise<{ data: boolean }> {
+    return this.#api.post<boolean>('/Device/Power', {
+      DeviceIds: ids,
+      Power: power,
+    } satisfies SetPowerPostData)
+  }
+
   public async tiles<T extends keyof typeof DeviceType | null>(
     postData: TilesPostData<T>,
   ): Promise<{ data: TilesData<T> }> {
@@ -282,17 +293,14 @@ export default class {
     )
   }
 
-  public async updateLanguage(language: Language): Promise<boolean> {
-    const { data: isSuccess } = await this.#api.post<boolean>(
-      '/User/UpdateLanguage',
-      {
-        language,
-      } satisfies { language: Language },
-    )
-    if (isSuccess) {
+  public async updateLanguage(language: Language): Promise<{ data: boolean }> {
+    const response = await this.#api.post<boolean>('/User/UpdateLanguage', {
+      language,
+    } satisfies { language: Language })
+    if (response.data) {
       this.language = language
     }
-    return isSuccess
+    return response
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {

@@ -436,9 +436,12 @@ export interface BuildingData
   extends FrostProtectionData,
     Omit<HolidayModeData, 'EndDate' | 'StartDate'> {}
 export interface BaseListDevice {
+  readonly AreaID: number
   readonly BuildingID: number
   readonly DeviceID: number
   readonly DeviceName: string
+  readonly FloorID: number
+  readonly Type: DeviceType
 }
 export interface ListDeviceAta extends BaseListDevice {
   readonly Device: DeviceDataFromListAta
@@ -477,6 +480,10 @@ export interface BuildingDataParams {
   readonly tableName: 'DeviceLocation'
 }
 
+export interface SetPowerPostData {
+  readonly DeviceIds: readonly number[]
+  readonly Power: boolean
+}
 export interface GroupPostData {
   readonly Specification:
     | {
