@@ -484,7 +484,7 @@ export interface TilesPostData<T extends number | null> {
     (T extends number ?
       {
         readonly SelectedBuilding: number
-        readonly SelectedDevice: number
+        readonly SelectedDevice: T
       }
     : {
         readonly SelectedBuilding?: null
