@@ -479,9 +479,9 @@ export interface BuildingDataParams {
   readonly tableName: 'DeviceLocation'
 }
 
-export interface TilesPostData<T extends keyof typeof DeviceType | null> {
+export interface TilesPostData<T extends number | null> {
   readonly DeviceIDs: readonly number[] &
-    (T extends keyof typeof DeviceType ?
+    (T extends number ?
       {
         readonly SelectedBuilding: number
         readonly SelectedDevice: number
@@ -491,9 +491,9 @@ export interface TilesPostData<T extends keyof typeof DeviceType | null> {
         readonly SelectedDevice?: null
       })
 }
-export interface TilesData<T extends keyof typeof DeviceType | null> {
-  readonly SelectedDevice: T extends keyof typeof DeviceType ?
-    DeviceDataFromGet[T]
+export interface TilesData<T extends number | null> {
+  readonly SelectedDevice: T extends number ?
+    DeviceDataFromGetAta | DeviceDataFromGetAtw | DeviceDataFromGetErv
   : null
   readonly Tiles: readonly {
     Device: number
