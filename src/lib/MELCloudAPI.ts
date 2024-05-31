@@ -62,7 +62,7 @@ const LOGIN_URL = '/Login/ClientLogin'
 export default class {
   readonly #settingManager?: SettingManager
 
-  public readonly language: Language
+  public language: Language
 
   #contextKey = ''
 
@@ -273,6 +273,19 @@ export default class {
       '/HolidayMode/Update',
       postData satisfies HolidayModePostData,
     )
+  }
+
+  public async updateLanguage(language: Language): Promise<boolean> {
+    const { data: isSuccess } = await this.#api.post<boolean>(
+      '/User/UpdateLanguage',
+      {
+        language,
+      } satisfies { language: Language },
+    )
+    if (isSuccess) {
+      this.language = language
+    }
+    return isSuccess
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {
