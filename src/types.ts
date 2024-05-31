@@ -106,7 +106,13 @@ export interface BaseSetDeviceData {
   readonly Power?: boolean
   EffectiveFlags: number
 }
-export interface BaseDeviceData {
+export interface DeviceDataNotInList {
+  readonly ErrorMessage: string | null
+  readonly LastCommunication: string
+  readonly NextCommunication: string
+}
+export interface BaseDeviceData extends DeviceDataNotInList {
+  readonly ErrorCode: number
   readonly Offline: boolean
 }
 export interface BaseDeviceDataFromGet {
@@ -114,6 +120,7 @@ export interface BaseDeviceDataFromGet {
 }
 export interface BaseDeviceDataFromList {
   readonly DeviceType: DeviceType
+  readonly ErrorMessages: string
   readonly WifiSignalStrength: number
 }
 
@@ -144,7 +151,10 @@ export interface DeviceDataFromListAta
   extends BaseDeviceDataFromList,
     Omit<
       DeviceDataFromGetAta,
-      'SetFanSpeed' | 'VaneHorizontal' | 'VaneVertical'
+      | keyof DeviceDataNotInList
+      | 'SetFanSpeed'
+      | 'VaneHorizontal'
+      | 'VaneVertical'
     > {
   readonly ActualFanSpeed: number
   readonly DeviceType: DeviceType.Ata
@@ -208,7 +218,7 @@ export interface DeviceDataAtw extends BaseDeviceData, SetDeviceDataAtw {
 export type DeviceDataFromGetAtw = BaseDeviceDataFromGet & DeviceDataAtw
 export interface DeviceDataFromListAtw
   extends BaseDeviceDataFromList,
-    DeviceDataFromGetAtw {
+    Omit<DeviceDataFromGetAtw, keyof DeviceDataNotInList> {
   readonly BoosterHeater1Status: boolean
   readonly BoosterHeater2PlusStatus: boolean
   readonly BoosterHeater2Status: boolean
@@ -256,7 +266,7 @@ export interface DeviceDataErv extends BaseDeviceData, SetDeviceDataErv {
 export type DeviceDataFromGetErv = BaseDeviceDataFromGet & DeviceDataErv
 export interface DeviceDataFromListErv
   extends BaseDeviceDataFromList,
-    DeviceDataFromGetErv {
+    Omit<DeviceDataFromGetErv, keyof DeviceDataNotInList> {
   readonly DeviceType: DeviceType.Erv
   readonly HasAutomaticFanSpeed: boolean
   readonly HasCO2Sensor: boolean
@@ -474,7 +484,7 @@ export interface TilesPostData<T extends keyof typeof DeviceType | null> {
     (T extends keyof typeof DeviceType ?
       {
         readonly SelectedBuilding: number
-        readonly SelectedDevice: T
+        readonly SelectedDevice: number
       }
     : {
         readonly SelectedBuilding?: null
