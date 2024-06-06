@@ -107,7 +107,7 @@ export interface IMELCloudAPI {
   }) => Promise<{ data: boolean }>
 }
 
-interface APISettings {
+export interface APISettings {
   readonly contextKey?: string | null
   readonly expiry?: string | null
   readonly password?: string | null
