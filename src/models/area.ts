@@ -1,9 +1,10 @@
-import type {
-  AreaModel,
+import {
+  type AreaModel,
   BuildingModel,
-  DeviceModelAny,
+  DeviceModel,
+  type DeviceModelAny,
   FloorModel,
-  IAreaModel,
+  type IAreaModel,
 } from '.'
 import type {
   ErrorData,
@@ -19,9 +20,11 @@ import type {
   SuccessData,
   TilesData,
 } from '../types'
-import API from '../services'
+import type API from '../services'
 
 export default class implements IAreaModel {
+  public static readonly areas = new Map<number, AreaModel>()
+
   public readonly buildingId: number
 
   public readonly floorId: number | null
@@ -51,7 +54,7 @@ export default class implements IAreaModel {
   }
 
   public get building(): BuildingModel | null {
-    return API.buildings.get(this.buildingId) ?? null
+    return BuildingModel.getById(this.buildingId) ?? null
   }
 
   public get deviceIds(): number[] {
@@ -59,24 +62,22 @@ export default class implements IAreaModel {
   }
 
   public get devices(): DeviceModelAny[] {
-    return Array.from(API.devices.values()).filter(
-      ({ areaId }) => areaId === this.id,
-    )
+    return DeviceModel.getAll().filter(({ areaId }) => areaId === this.id)
   }
 
   public get floor(): FloorModel | null {
     if (this.floorId === null) {
       return null
     }
-    return API.floors.get(this.floorId) ?? null
+    return FloorModel.getById(this.floorId) ?? null
   }
 
   public static getAll(): AreaModel[] {
-    return Array.from(API.areas.values())
+    return Array.from(this.areas.values())
   }
 
   public static getById(id: number): AreaModel | undefined {
-    return API.areas.get(id)
+    return this.areas.get(id)
   }
 
   public static getByName(areaName: string): AreaModel | undefined {
@@ -88,8 +89,8 @@ export default class implements IAreaModel {
     data: LocationData & { readonly FloorId: number | null },
   ): AreaModel {
     const area = new this(api, data)
-    API.areas.delete(data.ID)
-    API.areas.set(data.ID, area)
+    this.areas.delete(data.ID)
+    this.areas.set(data.ID, area)
     return area
   }
 

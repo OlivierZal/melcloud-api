@@ -13,10 +13,17 @@ import type {
   SuccessData,
   TilesData,
 } from '../types'
-import type { BuildingModel, DeviceModelAny, IBuildingModel } from '.'
-import API from '../services'
+import {
+  type BuildingModel,
+  DeviceModel,
+  type DeviceModelAny,
+  type IBuildingModel,
+} from '.'
+import type API from '../services'
 
 export default class implements IBuildingModel {
+  public static readonly buildings = new Map<number, BuildingModel>()
+
   public readonly data: BuildingSettings
 
   public readonly id: number
@@ -37,17 +44,17 @@ export default class implements IBuildingModel {
   }
 
   public get devices(): DeviceModelAny[] {
-    return Array.from(API.devices.values()).filter(
+    return DeviceModel.getAll().filter(
       ({ buildingId }) => buildingId === this.id,
     )
   }
 
   public static getAll(): BuildingModel[] {
-    return Array.from(API.buildings.values())
+    return Array.from(this.buildings.values())
   }
 
   public static getById(id: number): BuildingModel | undefined {
-    return API.buildings.get(id)
+    return this.buildings.get(id)
   }
 
   public static getByName(buildingName: string): BuildingModel | undefined {
@@ -56,8 +63,8 @@ export default class implements IBuildingModel {
 
   public static upsert(api: API, data: BuildingData): BuildingModel {
     const building = new this(api, data)
-    API.buildings.delete(data.ID)
-    API.buildings.set(data.ID, building)
+    this.buildings.delete(data.ID)
+    this.buildings.set(data.ID, building)
     return building
   }
 

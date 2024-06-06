@@ -1,9 +1,10 @@
-import type {
+import {
   AreaModel,
   BuildingModel,
-  DeviceModelAny,
-  FloorModel,
-  IFloorModel,
+  DeviceModel,
+  type DeviceModelAny,
+  type FloorModel,
+  type IFloorModel,
 } from '.'
 import type {
   ErrorData,
@@ -19,9 +20,11 @@ import type {
   SuccessData,
   TilesData,
 } from '../types'
-import API from '../services'
+import type API from '../services'
 
 export default class implements IFloorModel {
+  public static readonly floors = new Map<number, FloorModel>()
+
   public readonly buildingId: number
 
   public readonly id: number
@@ -45,13 +48,11 @@ export default class implements IFloorModel {
   }
 
   public get areas(): AreaModel[] {
-    return Array.from(API.areas.values()).filter(
-      ({ floorId }) => floorId === this.id,
-    )
+    return AreaModel.getAll().filter(({ floorId }) => floorId === this.id)
   }
 
   public get building(): BuildingModel | null {
-    return API.buildings.get(this.buildingId) ?? null
+    return BuildingModel.getById(this.buildingId) ?? null
   }
 
   public get deviceIds(): number[] {
@@ -59,17 +60,15 @@ export default class implements IFloorModel {
   }
 
   public get devices(): DeviceModelAny[] {
-    return Array.from(API.devices.values()).filter(
-      ({ floorId }) => floorId === this.id,
-    )
+    return DeviceModel.getAll().filter(({ floorId }) => floorId === this.id)
   }
 
   public static getAll(): FloorModel[] {
-    return Array.from(API.floors.values())
+    return Array.from(this.floors.values())
   }
 
   public static getById(id: number): FloorModel | undefined {
-    return API.floors.get(id)
+    return this.floors.get(id)
   }
 
   public static getByName(floorName: string): FloorModel | undefined {
@@ -78,8 +77,8 @@ export default class implements IFloorModel {
 
   public static upsert(api: API, data: LocationData): FloorModel {
     const floor = new this(api, data)
-    API.floors.delete(data.ID)
-    API.floors.set(data.ID, floor)
+    this.floors.delete(data.ID)
+    this.floors.set(data.ID, floor)
     return floor
   }
 

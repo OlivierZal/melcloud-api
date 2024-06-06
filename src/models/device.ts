@@ -1,9 +1,9 @@
-import type {
+import {
   AreaModel,
   BuildingModel,
-  DeviceModel,
+  type DeviceModel,
   FloorModel,
-  IDeviceModel,
+  type IDeviceModel,
 } from '.'
 import {
   DeviceType,
@@ -25,7 +25,7 @@ import {
   type SuccessData,
   type TilesData,
 } from '../types'
-import API from '../services'
+import type API from '../services'
 
 export type DeviceModelAny =
   | DeviceModel<'Ata'>
@@ -35,6 +35,8 @@ export type DeviceModelAny =
 export default class<T extends keyof typeof DeviceType>
   implements IDeviceModel<T>
 {
+  public static readonly devices = new Map<number, DeviceModelAny>()
+
   public readonly areaId: number | null = null
 
   public readonly buildingId: number
@@ -77,26 +79,26 @@ export default class<T extends keyof typeof DeviceType>
     if (this.areaId === null) {
       return null
     }
-    return API.areas.get(this.areaId) ?? null
+    return AreaModel.getById(this.areaId) ?? null
   }
 
   public get building(): BuildingModel | null {
-    return API.buildings.get(this.buildingId) ?? null
+    return BuildingModel.getById(this.buildingId) ?? null
   }
 
   public get floor(): FloorModel | null {
     if (this.floorId === null) {
       return null
     }
-    return API.floors.get(this.floorId) ?? null
+    return FloorModel.getById(this.floorId) ?? null
   }
 
   public static getAll(): DeviceModelAny[] {
-    return Array.from(API.devices.values())
+    return Array.from(this.devices.values())
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
-    return API.devices.get(id)
+    return this.devices.get(id)
   }
 
   public static getByName(deviceName: string): DeviceModelAny | undefined {
@@ -111,8 +113,8 @@ export default class<T extends keyof typeof DeviceType>
 
   public static upsert(api: API, data: ListDeviceAny): DeviceModelAny {
     const device = new this(api, data) as DeviceModelAny
-    API.devices.delete(data.DeviceID)
-    API.devices.set(data.DeviceID, device)
+    this.devices.delete(data.DeviceID)
+    this.devices.set(data.DeviceID, device)
     return device
   }
 

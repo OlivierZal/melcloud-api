@@ -56,14 +56,6 @@ const LOGIN_URL = '/Login/ClientLogin'
 export default class API implements IMELCloudAPI {
   readonly #settingManager?: SettingManager
 
-  public static readonly areas = new Map<number, AreaModel>()
-
-  public static readonly buildings = new Map<number, BuildingModel>()
-
-  public static readonly devices = new Map<number, DeviceModelAny>()
-
-  public static readonly floors = new Map<number, FloorModel>()
-
   public language: Language
 
   #contextKey = ''
