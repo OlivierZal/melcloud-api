@@ -185,22 +185,25 @@ export default class API implements IMELCloudAPI {
 
   public async fetchDevices(): Promise<{ data: Building[] }> {
     const response = await this.#api.get<Building[]>(LIST_URL)
-    response.data.forEach((building) => {
-      BuildingModel.upsert(this, building)
-      this.#upsertDevices(building.Structure.Devices)
-      building.Structure.Areas.forEach((area) => {
-        AreaModel.upsert(this, area)
-        this.#upsertDevices(area.Devices)
-      })
-      building.Structure.Floors.forEach((floor) => {
-        FloorModel.upsert(this, floor)
-        this.#upsertDevices(floor.Devices)
-        floor.Areas.forEach((area) => {
+    await Promise.all(
+      response.data.map(async (building) => {
+        this.#upsertDevices(building.Structure.Devices)
+        building.Structure.Areas.forEach((area) => {
           AreaModel.upsert(this, area)
           this.#upsertDevices(area.Devices)
         })
-      })
-    })
+        building.Structure.Floors.forEach((floor) => {
+          FloorModel.upsert(this, floor)
+          this.#upsertDevices(floor.Devices)
+          floor.Areas.forEach((area) => {
+            AreaModel.upsert(this, area)
+            this.#upsertDevices(area.Devices)
+          })
+        })
+        const [device] = building.Structure.Devices
+        await this.#upsertBuilding(building, API.devices.get(device.DeviceID))
+      }),
+    )
     return response
   }
 
@@ -444,6 +447,19 @@ export default class API implements IMELCloudAPI {
       async (error: AxiosError): Promise<AxiosError> =>
         this.#handleError(error),
     )
+  }
+
+  async #upsertBuilding(
+    building: Building,
+    device?: DeviceModelAny,
+  ): Promise<void> {
+    BuildingModel.upsert(this, {
+      ...building,
+      ...(device && !building.FPDefined ?
+        await device.getFrostProtection()
+      : {}),
+      ...(device && !building.HMDefined ? await device.getHolidayMode() : {}),
+    })
   }
 
   #upsertDevices(devices: readonly ListDeviceAny[]): void {

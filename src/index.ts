@@ -1,7 +1,18 @@
 import 'source-map-support/register'
-export type { DeviceModelAny } from './models'
+export type {
+  DeviceModelAny,
+  IAreaModel,
+  IBuildingModel,
+  IDeviceModel,
+  IFloorModel,
+} from './models'
 export { AreaModel, BuildingModel, DeviceModel, FloorModel } from './models'
-export type { Logger, SettingManager } from './services'
+export type {
+  APISettings,
+  IMELCloudAPI,
+  Logger,
+  SettingManager,
+} from './services'
 export { default } from './services'
 export type {
   BaseDevicePostData,
