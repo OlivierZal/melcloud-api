@@ -201,7 +201,10 @@ export default class API implements IMELCloudAPI {
           })
         })
         const [device] = building.Structure.Devices
-        await this.#upsertBuilding(building, API.devices.get(device.DeviceID))
+        await this.#upsertBuilding(
+          building,
+          DeviceModel.getById(device.DeviceID),
+        )
       }),
     )
     return response
