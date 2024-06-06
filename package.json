@@ -29,16 +29,16 @@
   },
   "scripts": {
     "build": "tsc && tsc -p 'tsconfig.checkjs.json'",
-    "docs": "typedoc && markdownlint-cli2 README.md",
+    "docs": "typedoc && markdownlint-cli2 README.md && npm run format:fix README.md -- --ignore-path",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
     "prepack": "npm run lint:fix && npm run format:fix",
-    "prepare": "npm run build"
+    "prepare": "npm run build && npm run docs"
   },
   "devDependencies": {
-    "@eslint/js": "^9.3.0",
+    "@eslint/js": "^9.4.0",
     "@stylistic/eslint-plugin": "^2.1.0",
     "@types/eslint__js": "^8.42.3",
     "@types/eslint-config-prettier": "^6.11.3",
@@ -50,7 +50,7 @@
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsdoc": "^48.2.8",
     "markdownlint-cli2": "^0.13.0",
-    "prettier": "^3.3.0",
+    "prettier": "^3.3.1",
     "typedoc": "^0.25.13",
     "typedoc-plugin-markdown": "^4.0.3",
     "typescript": "^5.4.5",

@@ -1,4 +1,16 @@
 import {
+  APICallRequestData,
+  APICallResponseData,
+  createAPICallErrorData,
+} from '../lib'
+import {
+  AreaModel,
+  BuildingModel,
+  DeviceModel,
+  type DeviceModelAny,
+  FloorModel,
+} from '../models'
+import {
   type AxiosError,
   type AxiosInstance,
   type AxiosResponse,
@@ -8,61 +20,49 @@ import {
 } from 'axios'
 import {
   type Building,
-  type BuildingDataParams,
-  type DeviceData,
-  type DeviceDataFromGet,
-  type DeviceDataParams,
   type DeviceType,
-  type ErrorLogData,
-  type ErrorLogPostData,
+  type EnergyData,
+  type EnergyPostData,
+  type ErrorData,
+  type ErrorPostData,
   type FailureData,
   type FrostProtectionData,
   type FrostProtectionPostData,
-  type GroupPostData,
+  type GetDeviceData,
+  type GetDeviceDataParams,
   type HolidayModeData,
   type HolidayModePostData,
   Language,
+  type ListDeviceAny,
   type LoginCredentials,
   type LoginData,
   type LoginPostData,
-  type PostData,
-  type ReportData,
-  type ReportPostData,
+  type SetAtaGroupPostData,
+  type SetDeviceData,
+  type SetDevicePostData,
   type SetPowerPostData,
+  type SettingsParams,
   type SuccessData,
   type TilesData,
   type TilesPostData,
-} from '..'
-import { DateTime, Duration } from 'luxon'
-import APICallRequestData from './APICallRequestData'
-import APICallResponseData from './APICallResponseData'
-import createAPICallErrorData from './createAPICallErrorData'
+} from '../types'
+import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
+import type { IMELCloudAPI, Logger, SettingManager } from '.'
 import https from 'https'
-
-export interface APISettings {
-  readonly contextKey?: string | null
-  readonly expiry?: string | null
-  readonly password?: string | null
-  readonly username?: string | null
-}
-
-export interface Logger {
-  readonly error: Console['error']
-  readonly log: Console['log']
-}
-
-export interface SettingManager {
-  get: <K extends keyof APISettings>(
-    key: K,
-  ) => APISettings[K] | null | undefined
-  set: <K extends keyof APISettings>(key: K, value: APISettings[K]) => void
-}
 
 const LIST_URL = '/User/ListDevices'
 const LOGIN_URL = '/Login/ClientLogin'
 
-export default class {
+export default class API implements IMELCloudAPI {
   readonly #settingManager?: SettingManager
+
+  public static readonly areas = new Map<number, AreaModel>()
+
+  public static readonly buildings = new Map<number, BuildingModel>()
+
+  public static readonly devices = new Map<number, DeviceModelAny>()
+
+  public static readonly floors = new Map<number, FloorModel>()
 
   public language: Language
 
@@ -90,6 +90,7 @@ export default class {
       logger?: Logger
       settingManager?: SettingManager
       shouldVerifySSL?: boolean
+      timezone?: string
     } = {},
   ) {
     const {
@@ -97,7 +98,11 @@ export default class {
       logger = console,
       settingManager,
       shouldVerifySSL = true,
+      timezone,
     } = config
+    if (typeof timezone !== 'undefined') {
+      LuxonSettings.defaultZone = timezone
+    }
     this.language =
       language in Language ?
         Language[language as keyof typeof Language]
@@ -156,11 +161,13 @@ export default class {
       try {
         const { LoginData: loginData } = (
           await this.login({
-            AppVersion: '1.32.0.0',
-            Email: username,
-            Language: this.language,
-            Password: password,
-            Persist: true,
+            postData: {
+              AppVersion: '1.32.0.0',
+              Email: username,
+              Language: this.language,
+              Password: password,
+              Persist: true,
+            },
           })
         ).data
         if (loginData) {
@@ -176,47 +183,105 @@ export default class {
     return false
   }
 
-  public async errors(
-    postData: ErrorLogPostData,
-  ): Promise<{ data: ErrorLogData[] | FailureData }> {
-    return this.#api.post<ErrorLogData[] | FailureData>(
-      '/Report/GetUnitErrorLog2',
-      postData satisfies ErrorLogPostData,
+  public async fetchDevices(): Promise<{ data: Building[] }> {
+    const response = await this.#api.get<Building[]>(LIST_URL)
+    response.data.forEach((building) => {
+      BuildingModel.upsert(this, building)
+      this.#upsertDevices(building.Structure.Devices)
+      building.Structure.Areas.forEach((area) => {
+        AreaModel.upsert(this, area)
+        this.#upsertDevices(area.Devices)
+      })
+      building.Structure.Floors.forEach((floor) => {
+        FloorModel.upsert(this, floor)
+        this.#upsertDevices(floor.Devices)
+        floor.Areas.forEach((area) => {
+          AreaModel.upsert(this, area)
+          this.#upsertDevices(area.Devices)
+        })
+      })
+    })
+    return response
+  }
+
+  public async getDevice<T extends keyof typeof DeviceType>({
+    params,
+  }: {
+    params: GetDeviceDataParams
+  }): Promise<{ data: GetDeviceData[T] }> {
+    return this.#api.get<GetDeviceData[T]>('/Device/Get', {
+      params: params satisfies GetDeviceDataParams,
+    })
+  }
+
+  public async getEnergyReport<T extends keyof typeof DeviceType>({
+    postData,
+  }: {
+    postData: EnergyPostData
+  }): Promise<{ data: EnergyData[T] }> {
+    return this.#api.post<EnergyData[T]>(
+      '/EnergyCost/Report',
+      postData satisfies EnergyPostData,
     )
   }
 
-  public async get<T extends keyof typeof DeviceType>(
-    id: number,
-    buildingId: number,
-  ): Promise<{ data: DeviceDataFromGet[T] }> {
-    return this.#api.get<DeviceDataFromGet[T]>('/Device/Get', {
-      params: { buildingId, id } satisfies DeviceDataParams,
-    })
+  public async getErrors({
+    postData,
+  }: {
+    postData: ErrorPostData
+  }): Promise<{ data: ErrorData[] | FailureData }> {
+    return this.#api.post<ErrorData[] | FailureData>(
+      '/Report/GetUnitErrorLog2',
+      postData satisfies ErrorPostData,
+    )
   }
 
-  public async getFrostProtection(
-    id: number,
-  ): Promise<{ data: FrostProtectionData }> {
+  public async getFrostProtection({
+    params,
+  }: {
+    params: SettingsParams
+  }): Promise<{ data: FrostProtectionData }> {
     return this.#api.get<FrostProtectionData>('/FrostProtection/GetSettings', {
-      params: { id, tableName: 'DeviceLocation' } satisfies BuildingDataParams,
+      params: params satisfies SettingsParams,
     })
   }
 
-  public async getHolidayMode(id: number): Promise<{ data: HolidayModeData }> {
+  public async getHolidayMode({
+    params,
+  }: {
+    params: SettingsParams
+  }): Promise<{ data: HolidayModeData }> {
     return this.#api.get<HolidayModeData>('/HolidayMode/GetSettings', {
-      params: { id, tableName: 'DeviceLocation' } satisfies BuildingDataParams,
+      params: params satisfies SettingsParams,
     })
   }
 
-  public async list(): Promise<{ data: Building[] }> {
-    return this.#api.get<Building[]>(LIST_URL)
+  public async getTiles({
+    postData,
+  }: {
+    postData: TilesPostData<null>
+  }): Promise<{ data: TilesData<null> }>
+  public async getTiles<T extends keyof typeof DeviceType>({
+    postData,
+  }: {
+    postData: TilesPostData<T>
+  }): Promise<{ data: TilesData<T> }>
+  public async getTiles<T extends keyof typeof DeviceType | null>({
+    postData,
+  }: {
+    postData: TilesPostData<T>
+  }): Promise<{ data: TilesData<T> }> {
+    return this.#api.post<TilesData<T>>(
+      '/Tile/Get2',
+      postData satisfies TilesPostData<T>,
+    )
   }
 
   public async login({
-    Email: username,
-    Password: password,
-    ...rest
-  }: LoginPostData): Promise<{ data: LoginData }> {
+    postData: { Email: username, Password: password, ...rest },
+  }: {
+    postData: LoginPostData
+  }): Promise<{ data: LoginData }> {
     const response = await this.#api.post<LoginData>(LOGIN_URL, {
       Email: username,
       Password: password,
@@ -231,69 +296,61 @@ export default class {
     return response
   }
 
-  public async report<T extends keyof typeof DeviceType>(
-    postData: ReportPostData,
-  ): Promise<{ data: ReportData[T] }> {
-    return this.#api.post<ReportData[T]>(
-      '/EnergyCost/Report',
-      postData satisfies ReportPostData,
-    )
+  public async setAtaGroup({
+    postData,
+  }: {
+    postData: SetAtaGroupPostData
+  }): Promise<{ data: FailureData | SuccessData }> {
+    try {
+      return await this.#api.post<FailureData | SuccessData>(
+        '/Group/SetAta',
+        postData satisfies SetAtaGroupPostData,
+      )
+    } catch (_error) {
+      throw new Error('No air-to-air device found')
+    }
   }
 
-  public async set<T extends keyof typeof DeviceType>(
-    heatPumpType: T,
-    postData: PostData[T],
-  ): Promise<{ data: DeviceData[T] }> {
-    return this.#api.post<DeviceData[T]>(
+  public async setDevice<T extends keyof typeof DeviceType>({
+    heatPumpType,
+    postData,
+  }: {
+    heatPumpType: T
+    postData: SetDevicePostData[T]
+  }): Promise<{ data: SetDeviceData[T] }> {
+    return this.#api.post<SetDeviceData[T]>(
       `/Device/Set${heatPumpType}`,
-      postData satisfies PostData[T],
+      postData satisfies SetDevicePostData[T],
     )
   }
 
-  public async setGroup(
-    postData: GroupPostData,
-  ): Promise<{ data: FailureData | SuccessData }> {
-    return this.#api.post('/Group/SetAta', postData satisfies GroupPostData)
-  }
-
-  public async setPower(
-    ids: number[],
-    power: boolean,
-  ): Promise<{ data: boolean }> {
-    return this.#api.post<boolean>('/Device/Power', {
-      DeviceIds: ids,
-      Power: power,
-    } satisfies SetPowerPostData)
-  }
-
-  public async tiles<T extends keyof typeof DeviceType | null>(
-    postData: TilesPostData<T>,
-  ): Promise<{ data: TilesData<T> }> {
-    return this.#api.post<TilesData<T>>(
-      '/Tile/Get2',
-      postData satisfies TilesPostData<T>,
-    )
-  }
-
-  public async updateFrostProtection(
-    postData: FrostProtectionPostData,
-  ): Promise<{ data: FailureData | SuccessData }> {
+  public async setFrostProtection({
+    postData,
+  }: {
+    postData: FrostProtectionPostData
+  }): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post<FailureData | SuccessData>(
       '/FrostProtection/Update',
       postData satisfies FrostProtectionPostData,
     )
   }
 
-  public async updateHolidayMode(
-    postData: HolidayModePostData,
-  ): Promise<{ data: FailureData | SuccessData }> {
+  public async setHolidayMode({
+    postData,
+  }: {
+    postData: HolidayModePostData
+  }): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post<FailureData | SuccessData>(
       '/HolidayMode/Update',
       postData satisfies HolidayModePostData,
     )
   }
 
-  public async updateLanguage(language: Language): Promise<{ data: boolean }> {
+  public async setLanguage({
+    postData: { language },
+  }: {
+    postData: { language: Language }
+  }): Promise<{ data: boolean }> {
     const response = await this.#api.post<boolean>('/User/UpdateLanguage', {
       language,
     } satisfies { language: Language })
@@ -301,6 +358,17 @@ export default class {
       this.language = language
     }
     return response
+  }
+
+  public async setPower({
+    postData,
+  }: {
+    postData: SetPowerPostData
+  }): Promise<{ data: boolean }> {
+    return this.#api.post<boolean>(
+      '/Device/Power',
+      postData satisfies SetPowerPostData,
+    )
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {
@@ -376,5 +444,11 @@ export default class {
       async (error: AxiosError): Promise<AxiosError> =>
         this.#handleError(error),
     )
+  }
+
+  #upsertDevices(devices: readonly ListDeviceAny[]): void {
+    devices.forEach((device) => {
+      DeviceModel.upsert(this, device)
+    })
   }
 }
