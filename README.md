@@ -183,7 +183,7 @@ new AreaModel(api: default, __namedParameters: LocationData & {
 
 ###### Source
 
-[src/models/area.ts:38](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L38)
+[src/models/area.ts:38](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L38)
 
 #### Properties
 
@@ -209,7 +209,7 @@ get building(): null | BuildingModel
 
 ###### Source
 
-[src/models/area.ts:56](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L56)
+[src/models/area.ts:56](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L56)
 
 ##### deviceIds
 
@@ -223,7 +223,7 @@ get deviceIds(): number[]
 
 ###### Source
 
-[src/models/area.ts:60](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L60)
+[src/models/area.ts:60](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L60)
 
 ##### devices
 
@@ -237,7 +237,7 @@ get devices(): DeviceModelAny[]
 
 ###### Source
 
-[src/models/area.ts:64](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L64)
+[src/models/area.ts:64](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L64)
 
 ##### floor
 
@@ -251,7 +251,7 @@ get floor(): null | FloorModel
 
 ###### Source
 
-[src/models/area.ts:68](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L68)
+[src/models/area.ts:68](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L68)
 
 #### Methods
 
@@ -277,7 +277,7 @@ getErrors(postData: Omit<ErrorPostData, "DeviceIDs">): Promise<FailureData | Err
 
 ###### Source
 
-[src/models/area.ts:97](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L97)
+[src/models/area.ts:94](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L94)
 
 ##### getFrostProtection()
 
@@ -295,7 +295,7 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 ###### Source
 
-[src/models/area.ts:107](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L107)
+[src/models/area.ts:104](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L104)
 
 ##### getHolidayMode()
 
@@ -313,7 +313,7 @@ getHolidayMode(): Promise<HolidayModeData>
 
 ###### Source
 
-[src/models/area.ts:120](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L120)
+[src/models/area.ts:117](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L117)
 
 ##### getTiles()
 
@@ -331,7 +331,7 @@ getTiles(): Promise<TilesData<null>>
 
 ###### Source
 
-[src/models/area.ts:133](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L133)
+[src/models/area.ts:130](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L130)
 
 ##### setAtaGroup()
 
@@ -355,7 +355,7 @@ setAtaGroup(postData: Omit<SetAtaGroupPostData, "Specification">): Promise<Succe
 
 ###### Source
 
-[src/models/area.ts:141](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L141)
+[src/models/area.ts:138](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L138)
 
 ##### setFrostProtection()
 
@@ -379,7 +379,7 @@ setFrostProtection(postData: Omit<FrostProtectionPostData, "BuildingIds">): Prom
 
 ###### Source
 
-[src/models/area.ts:151](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L151)
+[src/models/area.ts:148](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L148)
 
 ##### setHolidayMode()
 
@@ -403,7 +403,7 @@ setHolidayMode(postData: Omit<HolidayModePostData, "HMTimeZones">): Promise<Succ
 
 ###### Source
 
-[src/models/area.ts:166](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L166)
+[src/models/area.ts:163](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L163)
 
 ##### setPower()
 
@@ -427,7 +427,7 @@ setPower(postData: Omit<SetPowerPostData, "DeviceIds">): Promise<boolean>
 
 ###### Source
 
-[src/models/area.ts:183](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L183)
+[src/models/area.ts:180](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L180)
 
 ##### getAll()
 
@@ -441,7 +441,7 @@ static getAll(): AreaModel[]
 
 ###### Source
 
-[src/models/area.ts:75](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L75)
+[src/models/area.ts:75](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L75)
 
 ##### getById()
 
@@ -461,7 +461,7 @@ static getById(id: number): undefined | AreaModel
 
 ###### Source
 
-[src/models/area.ts:79](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L79)
+[src/models/area.ts:79](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L79)
 
 ##### getByName()
 
@@ -481,14 +481,14 @@ static getByName(areaName: string): undefined | AreaModel
 
 ###### Source
 
-[src/models/area.ts:83](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L83)
+[src/models/area.ts:83](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L83)
 
 ##### upsert()
 
 ```ts
 static upsert(api: default, data: LocationData & {
   FloorId: null | number;
- }): AreaModel
+ }): void
 ```
 
 ###### Parameters
@@ -500,11 +500,11 @@ static upsert(api: default, data: LocationData & {
 
 ###### Returns
 
-[`AreaModel`](README.md#areamodel)
+`void`
 
 ###### Source
 
-[src/models/area.ts:87](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/area.ts#L87)
+[src/models/area.ts:87](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/area.ts#L87)
 
 ---
 
@@ -535,7 +535,7 @@ new BuildingModel(api: default, __namedParameters: BuildingData): BuildingModel
 
 ###### Source
 
-[src/models/building.ts:35](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L35)
+[src/models/building.ts:35](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L35)
 
 #### Properties
 
@@ -560,7 +560,7 @@ get deviceIds(): number[]
 
 ###### Source
 
-[src/models/building.ts:42](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L42)
+[src/models/building.ts:42](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L42)
 
 ##### devices
 
@@ -574,7 +574,7 @@ get devices(): DeviceModelAny[]
 
 ###### Source
 
-[src/models/building.ts:46](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L46)
+[src/models/building.ts:46](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L46)
 
 #### Methods
 
@@ -594,7 +594,7 @@ fetch(): Promise<BuildingSettings>
 
 ###### Source
 
-[src/models/building.ts:71](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L71)
+[src/models/building.ts:68](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L68)
 
 ##### getErrors()
 
@@ -618,7 +618,7 @@ getErrors(postData: Omit<ErrorPostData, "DeviceIDs">): Promise<FailureData | Err
 
 ###### Source
 
-[src/models/building.ts:76](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L76)
+[src/models/building.ts:73](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L73)
 
 ##### getFrostProtection()
 
@@ -636,7 +636,7 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 ###### Source
 
-[src/models/building.ts:86](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L86)
+[src/models/building.ts:83](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L83)
 
 ##### getHolidayMode()
 
@@ -654,7 +654,7 @@ getHolidayMode(): Promise<HolidayModeData>
 
 ###### Source
 
-[src/models/building.ts:99](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L99)
+[src/models/building.ts:96](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L96)
 
 ##### getTiles()
 
@@ -672,7 +672,7 @@ getTiles(): Promise<TilesData<null>>
 
 ###### Source
 
-[src/models/building.ts:112](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L112)
+[src/models/building.ts:109](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L109)
 
 ##### setAtaGroup()
 
@@ -696,7 +696,7 @@ setAtaGroup(postData: Omit<SetAtaGroupPostData, "Specification">): Promise<Succe
 
 ###### Source
 
-[src/models/building.ts:120](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L120)
+[src/models/building.ts:117](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L117)
 
 ##### setFrostProtection()
 
@@ -720,7 +720,7 @@ setFrostProtection(postData: Omit<FrostProtectionPostData, "BuildingIds">): Prom
 
 ###### Source
 
-[src/models/building.ts:130](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L130)
+[src/models/building.ts:127](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L127)
 
 ##### setHolidayMode()
 
@@ -744,7 +744,7 @@ setHolidayMode(postData: Omit<HolidayModePostData, "HMTimeZones">): Promise<Succ
 
 ###### Source
 
-[src/models/building.ts:145](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L145)
+[src/models/building.ts:142](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L142)
 
 ##### setPower()
 
@@ -768,7 +768,7 @@ setPower(postData: Omit<SetPowerPostData, "DeviceIds">): Promise<boolean>
 
 ###### Source
 
-[src/models/building.ts:162](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L162)
+[src/models/building.ts:159](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L159)
 
 ##### getAll()
 
@@ -782,7 +782,7 @@ static getAll(): BuildingModel[]
 
 ###### Source
 
-[src/models/building.ts:52](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L52)
+[src/models/building.ts:52](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L52)
 
 ##### getById()
 
@@ -802,7 +802,7 @@ static getById(id: number): undefined | BuildingModel
 
 ###### Source
 
-[src/models/building.ts:56](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L56)
+[src/models/building.ts:56](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L56)
 
 ##### getByName()
 
@@ -822,12 +822,12 @@ static getByName(buildingName: string): undefined | BuildingModel
 
 ###### Source
 
-[src/models/building.ts:60](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L60)
+[src/models/building.ts:60](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L60)
 
 ##### upsert()
 
 ```ts
-static upsert(api: default, data: BuildingData): BuildingModel
+static upsert(api: default, data: BuildingData): void
 ```
 
 ###### Parameters
@@ -839,11 +839,11 @@ static upsert(api: default, data: BuildingData): BuildingModel
 
 ###### Returns
 
-[`BuildingModel`](README.md#buildingmodel)
+`void`
 
 ###### Source
 
-[src/models/building.ts:64](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/building.ts#L64)
+[src/models/building.ts:64](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/building.ts#L64)
 
 ---
 
@@ -880,7 +880,7 @@ new DeviceModel<T>(api: default, __namedParameters: ListDevice[T]): DeviceModel<
 
 ###### Source
 
-[src/models/device.ts:56](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L56)
+[src/models/device.ts:56](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L56)
 
 #### Properties
 
@@ -909,7 +909,7 @@ get area(): null | AreaModel
 
 ###### Source
 
-[src/models/device.ts:78](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L78)
+[src/models/device.ts:78](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L78)
 
 ##### building
 
@@ -923,7 +923,7 @@ get building(): null | BuildingModel
 
 ###### Source
 
-[src/models/device.ts:85](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L85)
+[src/models/device.ts:85](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L85)
 
 ##### floor
 
@@ -937,7 +937,7 @@ get floor(): null | FloorModel
 
 ###### Source
 
-[src/models/device.ts:89](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L89)
+[src/models/device.ts:89](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L89)
 
 #### Methods
 
@@ -957,7 +957,7 @@ fetch(): Promise<ListDevice[T]["Device"]>
 
 ###### Source
 
-[src/models/device.ts:121](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L121)
+[src/models/device.ts:118](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L118)
 
 ##### get()
 
@@ -975,7 +975,7 @@ get(): Promise<GetDeviceData[T]>
 
 ###### Source
 
-[src/models/device.ts:126](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L126)
+[src/models/device.ts:123](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L123)
 
 ##### getEnergyReport()
 
@@ -999,7 +999,7 @@ getEnergyReport(postData: Omit<EnergyPostData, "DeviceID">): Promise<EnergyData[
 
 ###### Source
 
-[src/models/device.ts:134](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L134)
+[src/models/device.ts:131](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L131)
 
 ##### getErrors()
 
@@ -1023,7 +1023,7 @@ getErrors(postData: Omit<ErrorPostData, "DeviceIDs">): Promise<FailureData | Err
 
 ###### Source
 
-[src/models/device.ts:144](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L144)
+[src/models/device.ts:141](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L141)
 
 ##### getFrostProtection()
 
@@ -1041,7 +1041,7 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 ###### Source
 
-[src/models/device.ts:154](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L154)
+[src/models/device.ts:151](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L151)
 
 ##### getHolidayMode()
 
@@ -1059,7 +1059,7 @@ getHolidayMode(): Promise<HolidayModeData>
 
 ###### Source
 
-[src/models/device.ts:162](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L162)
+[src/models/device.ts:159](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L159)
 
 ##### getTile()
 
@@ -1085,7 +1085,7 @@ getTile(select?: false): Promise<TilesData<null>>
 
 ###### Source
 
-[src/models/device.ts:170](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L170)
+[src/models/device.ts:167](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L167)
 
 ###### getTile(select)
 
@@ -1109,7 +1109,7 @@ getTile(select: true): Promise<TilesData<T>>
 
 ###### Source
 
-[src/models/device.ts:171](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L171)
+[src/models/device.ts:168](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L168)
 
 ##### set()
 
@@ -1133,7 +1133,7 @@ set(postData: Omit<SetDevicePostData[T], "DeviceID">): Promise<SetDeviceData[T]>
 
 ###### Source
 
-[src/models/device.ts:192](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L192)
+[src/models/device.ts:189](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L189)
 
 ##### setFrostProtection()
 
@@ -1157,7 +1157,7 @@ setFrostProtection(postData: Omit<FrostProtectionPostData, "DeviceIds">): Promis
 
 ###### Source
 
-[src/models/device.ts:203](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L203)
+[src/models/device.ts:200](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L200)
 
 ##### setHolidayMode()
 
@@ -1181,7 +1181,7 @@ setHolidayMode(postData: Omit<HolidayModePostData, "HMTimeZones">): Promise<Succ
 
 ###### Source
 
-[src/models/device.ts:213](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L213)
+[src/models/device.ts:210](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L210)
 
 ##### setPower()
 
@@ -1205,7 +1205,7 @@ setPower(postData: Omit<SetPowerPostData, "DeviceIds">): Promise<boolean>
 
 ###### Source
 
-[src/models/device.ts:223](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L223)
+[src/models/device.ts:220](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L220)
 
 ##### getAll()
 
@@ -1219,7 +1219,7 @@ static getAll(): DeviceModelAny[]
 
 ###### Source
 
-[src/models/device.ts:96](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L96)
+[src/models/device.ts:96](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L96)
 
 ##### getById()
 
@@ -1239,7 +1239,7 @@ static getById(id: number): undefined | DeviceModelAny
 
 ###### Source
 
-[src/models/device.ts:100](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L100)
+[src/models/device.ts:100](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L100)
 
 ##### getByName()
 
@@ -1259,7 +1259,7 @@ static getByName(deviceName: string): undefined | DeviceModelAny
 
 ###### Source
 
-[src/models/device.ts:104](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L104)
+[src/models/device.ts:104](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L104)
 
 ##### getByType()
 
@@ -1279,12 +1279,12 @@ static getByType(deviceType: "Ata" | "Atw" | "Erv"): DeviceModelAny[]
 
 ###### Source
 
-[src/models/device.ts:108](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L108)
+[src/models/device.ts:108](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L108)
 
 ##### upsert()
 
 ```ts
-static upsert(api: default, data: ListDeviceAny): DeviceModelAny
+static upsert(api: default, data: ListDeviceAny): void
 ```
 
 ###### Parameters
@@ -1296,11 +1296,11 @@ static upsert(api: default, data: ListDeviceAny): DeviceModelAny
 
 ###### Returns
 
-[`DeviceModelAny`](README.md#devicemodelany)
+`void`
 
 ###### Source
 
-[src/models/device.ts:114](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L114)
+[src/models/device.ts:114](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L114)
 
 ---
 
@@ -1331,7 +1331,7 @@ new FloorModel(api: default, __namedParameters: LocationData): FloorModel
 
 ###### Source
 
-[src/models/floor.ts:36](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L36)
+[src/models/floor.ts:36](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L36)
 
 #### Properties
 
@@ -1356,7 +1356,7 @@ get areaIds(): number[]
 
 ###### Source
 
-[src/models/floor.ts:46](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L46)
+[src/models/floor.ts:46](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L46)
 
 ##### areas
 
@@ -1370,7 +1370,7 @@ get areas(): AreaModel[]
 
 ###### Source
 
-[src/models/floor.ts:50](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L50)
+[src/models/floor.ts:50](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L50)
 
 ##### building
 
@@ -1384,7 +1384,7 @@ get building(): null | BuildingModel
 
 ###### Source
 
-[src/models/floor.ts:54](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L54)
+[src/models/floor.ts:54](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L54)
 
 ##### deviceIds
 
@@ -1398,7 +1398,7 @@ get deviceIds(): number[]
 
 ###### Source
 
-[src/models/floor.ts:58](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L58)
+[src/models/floor.ts:58](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L58)
 
 ##### devices
 
@@ -1412,7 +1412,7 @@ get devices(): DeviceModelAny[]
 
 ###### Source
 
-[src/models/floor.ts:62](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L62)
+[src/models/floor.ts:62](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L62)
 
 #### Methods
 
@@ -1438,7 +1438,7 @@ getErrors(postData: Omit<ErrorPostData, "DeviceIDs">): Promise<FailureData | Err
 
 ###### Source
 
-[src/models/floor.ts:85](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L85)
+[src/models/floor.ts:82](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L82)
 
 ##### getFrostProtection()
 
@@ -1456,7 +1456,7 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 ###### Source
 
-[src/models/floor.ts:95](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L95)
+[src/models/floor.ts:92](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L92)
 
 ##### getHolidayMode()
 
@@ -1474,7 +1474,7 @@ getHolidayMode(): Promise<HolidayModeData>
 
 ###### Source
 
-[src/models/floor.ts:108](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L108)
+[src/models/floor.ts:105](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L105)
 
 ##### getTiles()
 
@@ -1492,7 +1492,7 @@ getTiles(): Promise<TilesData<null>>
 
 ###### Source
 
-[src/models/floor.ts:121](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L121)
+[src/models/floor.ts:118](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L118)
 
 ##### setAtaGroup()
 
@@ -1516,7 +1516,7 @@ setAtaGroup(postData: Omit<SetAtaGroupPostData, "Specification">): Promise<Succe
 
 ###### Source
 
-[src/models/floor.ts:129](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L129)
+[src/models/floor.ts:126](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L126)
 
 ##### setFrostProtection()
 
@@ -1540,7 +1540,7 @@ setFrostProtection(postData: Omit<FrostProtectionPostData, "BuildingIds">): Prom
 
 ###### Source
 
-[src/models/floor.ts:139](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L139)
+[src/models/floor.ts:136](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L136)
 
 ##### setHolidayMode()
 
@@ -1564,7 +1564,7 @@ setHolidayMode(postData: Omit<HolidayModePostData, "HMTimeZones">): Promise<Succ
 
 ###### Source
 
-[src/models/floor.ts:154](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L154)
+[src/models/floor.ts:151](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L151)
 
 ##### setPower()
 
@@ -1588,7 +1588,7 @@ setPower(postData: Omit<SetPowerPostData, "DeviceIds">): Promise<boolean>
 
 ###### Source
 
-[src/models/floor.ts:171](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L171)
+[src/models/floor.ts:168](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L168)
 
 ##### getAll()
 
@@ -1602,7 +1602,7 @@ static getAll(): FloorModel[]
 
 ###### Source
 
-[src/models/floor.ts:66](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L66)
+[src/models/floor.ts:66](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L66)
 
 ##### getById()
 
@@ -1622,7 +1622,7 @@ static getById(id: number): undefined | FloorModel
 
 ###### Source
 
-[src/models/floor.ts:70](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L70)
+[src/models/floor.ts:70](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L70)
 
 ##### getByName()
 
@@ -1642,12 +1642,12 @@ static getByName(floorName: string): undefined | FloorModel
 
 ###### Source
 
-[src/models/floor.ts:74](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L74)
+[src/models/floor.ts:74](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L74)
 
 ##### upsert()
 
 ```ts
-static upsert(api: default, data: LocationData): FloorModel
+static upsert(api: default, data: LocationData): void
 ```
 
 ###### Parameters
@@ -1659,11 +1659,11 @@ static upsert(api: default, data: LocationData): FloorModel
 
 ###### Returns
 
-[`FloorModel`](README.md#floormodel)
+`void`
 
 ###### Source
 
-[src/models/floor.ts:78](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/floor.ts#L78)
+[src/models/floor.ts:78](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/floor.ts#L78)
 
 ---
 
@@ -1704,7 +1704,7 @@ new default(config: {
 
 ###### Source
 
-[src/services/api.ts:79](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L79)
+[src/services/api.ts:79](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L79)
 
 #### Properties
 
@@ -1737,7 +1737,7 @@ applyLogin(data?: LoginCredentials, onSuccess?: () => Promise<void>): Promise<bo
 
 ###### Source
 
-[src/services/api.ts:147](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L147)
+[src/services/api.ts:147](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L147)
 
 ##### fetchDevices()
 
@@ -1763,7 +1763,7 @@ fetchDevices(): Promise<{
 
 ###### Source
 
-[src/services/api.ts:178](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L178)
+[src/services/api.ts:178](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L178)
 
 ##### getDevice()
 
@@ -1804,7 +1804,7 @@ getDevice<T>(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:202](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L202)
+[src/services/api.ts:202](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L202)
 
 ##### getEnergyReport()
 
@@ -1845,7 +1845,7 @@ getEnergyReport<T>(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:212](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L212)
+[src/services/api.ts:212](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L212)
 
 ##### getErrors()
 
@@ -1880,7 +1880,7 @@ getErrors(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:223](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L223)
+[src/services/api.ts:223](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L223)
 
 ##### getFrostProtection()
 
@@ -1915,7 +1915,7 @@ getFrostProtection(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:234](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L234)
+[src/services/api.ts:234](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L234)
 
 ##### getHolidayMode()
 
@@ -1950,7 +1950,7 @@ getHolidayMode(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:244](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L244)
+[src/services/api.ts:244](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L244)
 
 ##### getTiles()
 
@@ -1987,7 +1987,7 @@ getTiles(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:254](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L254)
+[src/services/api.ts:254](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L254)
 
 ###### getTiles(\_\_namedParameters)
 
@@ -2028,7 +2028,7 @@ getTiles<T>(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:259](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L259)
+[src/services/api.ts:259](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L259)
 
 ##### login()
 
@@ -2063,7 +2063,7 @@ login(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:275](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L275)
+[src/services/api.ts:275](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L275)
 
 ##### setAtaGroup()
 
@@ -2098,7 +2098,7 @@ setAtaGroup(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:294](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L294)
+[src/services/api.ts:294](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L294)
 
 ##### setDevice()
 
@@ -2141,7 +2141,7 @@ setDevice<T>(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:309](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L309)
+[src/services/api.ts:309](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L309)
 
 ##### setFrostProtection()
 
@@ -2176,7 +2176,7 @@ setFrostProtection(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:322](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L322)
+[src/services/api.ts:322](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L322)
 
 ##### setHolidayMode()
 
@@ -2211,7 +2211,7 @@ setHolidayMode(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:333](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L333)
+[src/services/api.ts:333](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L333)
 
 ##### setLanguage()
 
@@ -2249,7 +2249,7 @@ setLanguage(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:344](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L344)
+[src/services/api.ts:344](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L344)
 
 ##### setPower()
 
@@ -2284,7 +2284,7 @@ setPower(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:358](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/services/api.ts#L358)
+[src/services/api.ts:358](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/services/api.ts#L358)
 
 ## Interfaces
 
@@ -3506,7 +3506,7 @@ type DeviceModelAny: DeviceModel<"Ata"> | DeviceModel<"Atw"> | DeviceModel<"Erv"
 
 #### Source
 
-[src/models/device.ts:30](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/models/device.ts#L30)
+[src/models/device.ts:30](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/models/device.ts#L30)
 
 ---
 
@@ -3518,7 +3518,7 @@ type GetDeviceDataAta: BaseGetDeviceData & SetDeviceDataAta;
 
 #### Source
 
-[src/types/ata.ts:74](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/ata.ts#L74)
+[src/types/ata.ts:74](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/ata.ts#L74)
 
 ---
 
@@ -3530,7 +3530,7 @@ type GetDeviceDataAtw: BaseGetDeviceData & SetDeviceDataAtw;
 
 #### Source
 
-[src/types/atw.ts:81](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/atw.ts#L81)
+[src/types/atw.ts:81](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/atw.ts#L81)
 
 ---
 
@@ -3542,7 +3542,7 @@ type GetDeviceDataErv: BaseGetDeviceData & SetDeviceDataErv;
 
 #### Source
 
-[src/types/erv.ts:47](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/erv.ts#L47)
+[src/types/erv.ts:47](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/erv.ts#L47)
 
 ---
 
@@ -3554,7 +3554,7 @@ type ListDeviceAny: ListDeviceAta | ListDeviceAtw | ListDeviceErv;
 
 #### Source
 
-[src/types/common.ts:219](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/common.ts#L219)
+[src/types/common.ts:219](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/common.ts#L219)
 
 ---
 
@@ -3572,7 +3572,7 @@ type NonEffectiveFlagsKeyOf<T>: Exclude<keyof T, "EffectiveFlags">;
 
 #### Source
 
-[src/types/bases.ts:19](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/bases.ts#L19)
+[src/types/bases.ts:19](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/bases.ts#L19)
 
 ---
 
@@ -3590,7 +3590,7 @@ type NonEffectiveFlagsValueOf<T>: T[NonEffectiveFlagsKeyOf<T>];
 
 #### Source
 
-[src/types/bases.ts:21](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/bases.ts#L21)
+[src/types/bases.ts:21](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/bases.ts#L21)
 
 ---
 
@@ -3622,7 +3622,7 @@ type TilesPostData<T>: T extends keyof typeof DeviceType ? {
 
 #### Source
 
-[src/types/common.ts:276](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/common.ts#L276)
+[src/types/common.ts:276](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/common.ts#L276)
 
 ## Variables
 
@@ -3634,7 +3634,7 @@ const FLAG_UNCHANGED: 0 = 0x0
 
 #### Source
 
-[src/types/bases.ts:1](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/bases.ts#L1)
+[src/types/bases.ts:1](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/bases.ts#L1)
 
 ---
 
@@ -3649,7 +3649,7 @@ const effectiveFlagsAta: Record<
 
 #### Source
 
-[src/types/ata.ts:50](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/ata.ts#L50)
+[src/types/ata.ts:50](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/ata.ts#L50)
 
 ---
 
@@ -3664,7 +3664,7 @@ const effectiveFlagsAtw: Record<
 
 #### Source
 
-[src/types/atw.ts:42](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/atw.ts#L42)
+[src/types/atw.ts:42](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/atw.ts#L42)
 
 ---
 
@@ -3679,4 +3679,4 @@ const effectiveFlagsErv: Record<
 
 #### Source
 
-[src/types/erv.ts:24](https://github.com/OlivierZal/melcloud-api/blob/8087cc7586e27a234443d42839be23c65388698f/src/types/erv.ts#L24)
+[src/types/erv.ts:24](https://github.com/OlivierZal/melcloud-api/blob/49fd8e738bbff70a9715ddfe302786350c46bc6f/src/types/erv.ts#L24)

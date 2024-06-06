@@ -111,11 +111,8 @@ export default class<T extends keyof typeof DeviceType>
     return this.getAll().filter(({ type }) => type === deviceType)
   }
 
-  public static upsert(api: API, data: ListDeviceAny): DeviceModelAny {
-    const device = new this(api, data) as DeviceModelAny
-    this.devices.delete(data.DeviceID)
-    this.devices.set(data.DeviceID, device)
-    return device
+  public static upsert(api: API, data: ListDeviceAny): void {
+    this.devices.set(data.DeviceID, new this(api, data) as DeviceModelAny)
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {

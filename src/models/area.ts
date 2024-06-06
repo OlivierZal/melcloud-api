@@ -87,11 +87,8 @@ export default class implements IAreaModel {
   public static upsert(
     api: API,
     data: LocationData & { readonly FloorId: number | null },
-  ): AreaModel {
-    const area = new this(api, data)
-    this.areas.delete(data.ID)
-    this.areas.set(data.ID, area)
-    return area
+  ): void {
+    this.areas.set(data.ID, new this(api, data))
   }
 
   public async getErrors(

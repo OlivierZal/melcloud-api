@@ -75,11 +75,8 @@ export default class implements IFloorModel {
     return this.getAll().find(({ name }) => name === floorName)
   }
 
-  public static upsert(api: API, data: LocationData): FloorModel {
-    const floor = new this(api, data)
-    this.floors.delete(data.ID)
-    this.floors.set(data.ID, floor)
-    return floor
+  public static upsert(api: API, data: LocationData): void {
+    this.floors.set(data.ID, new this(api, data))
   }
 
   public async getErrors(

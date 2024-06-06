@@ -61,11 +61,8 @@ export default class implements IBuildingModel {
     return this.getAll().find(({ name }) => name === buildingName)
   }
 
-  public static upsert(api: API, data: BuildingData): BuildingModel {
-    const building = new this(api, data)
-    this.buildings.delete(data.ID)
-    this.buildings.set(data.ID, building)
-    return building
+  public static upsert(api: API, data: BuildingData): void {
+    this.buildings.set(data.ID, new this(api, data))
   }
 
   public async fetch(): Promise<BuildingSettings> {
