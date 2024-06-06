@@ -200,11 +200,8 @@ export default class API implements IMELCloudAPI {
             this.#upsertDevices(area.Devices)
           })
         })
-        const [device] = building.Structure.Devices
-        await this.#upsertBuilding(
-          building,
-          DeviceModel.getById(device.DeviceID),
-        )
+        const [device] = DeviceModel.getAll()
+        await this.#upsertBuilding(building, device)
       }),
     )
     return response
@@ -454,14 +451,12 @@ export default class API implements IMELCloudAPI {
 
   async #upsertBuilding(
     building: Building,
-    device?: DeviceModelAny,
+    device: DeviceModelAny,
   ): Promise<void> {
     BuildingModel.upsert(this, {
       ...building,
-      ...(device && !building.FPDefined ?
-        await device.getFrostProtection()
-      : {}),
-      ...(device && !building.HMDefined ? await device.getHolidayMode() : {}),
+      ...(building.FPDefined ? {} : await device.getFrostProtection()),
+      ...(building.HMDefined ? {} : await device.getHolidayMode()),
     })
   }
 
