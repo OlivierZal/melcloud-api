@@ -2,12 +2,12 @@
   "compilerOptions": {
     "declaration": true,
     "declarationMap": true,
-    "lib": ["DOM", "ESNext"],
+    "lib": ["ESNext"],
     "module": "NodeNext",
     "noImplicitOverride": true,
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "ESNext"
+    "target": "ES2022"
   }
 }

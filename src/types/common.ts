@@ -15,9 +15,6 @@ import type {
   SetDeviceDataAta,
   SetDeviceDataAtw,
   SetDeviceDataErv,
-  SetDevicePostDataAta,
-  SetDevicePostDataAtw,
-  SetDevicePostDataErv,
   UpdateDeviceDataAta,
   UpdateDeviceDataAtw,
   UpdateDeviceDataErv,
@@ -86,11 +83,8 @@ export interface UpdateDeviceData {
   readonly Atw: UpdateDeviceDataAtw
   readonly Erv: UpdateDeviceDataErv
 }
-export interface SetDevicePostData {
-  readonly Ata: SetDevicePostDataAta
-  readonly Atw: SetDevicePostDataAtw
-  readonly Erv: SetDevicePostDataErv
-}
+export type SetDevicePostData<T extends keyof typeof DeviceType> =
+  UpdateDeviceData[T] & BaseDevicePostData
 export interface SetDeviceData {
   readonly Ata: SetDeviceDataAta
   readonly Atw: SetDeviceDataAtw
@@ -121,11 +115,13 @@ export interface SettingsParams {
   readonly tableName: 'Area' | 'Building' | 'DeviceLocation' | 'Floor'
 }
 
-export interface FrostProtectionPostData {
+export interface FrostProtectionLocation {
   readonly AreaIds?: readonly number[]
   readonly BuildingIds?: readonly number[]
   readonly DeviceIds?: readonly number[]
   readonly FloorIds?: readonly number[]
+}
+export interface FrostProtectionPostData extends FrostProtectionLocation {
   readonly Enabled: boolean
   readonly MaximumTemperature: number
   readonly MinimumTemperature: number
@@ -137,31 +133,28 @@ export interface FrostProtectionData {
   readonly FPMinTemperature: number
 }
 
+export interface DateTimeComponents {
+  readonly Day: number
+  readonly Hour: number
+  readonly Minute: number
+  readonly Month: number
+  readonly Second: number
+  readonly Year: number
+}
+export interface HolidayModeLocation {
+  readonly Areas?: readonly number[]
+  readonly Buildings?: readonly number[]
+  readonly Devices?: readonly number[]
+  readonly Floors?: readonly number[]
+}
+export interface HMTimeZone extends HolidayModeLocation {
+  readonly TimeZone?: number
+}
 export interface HolidayModePostData {
   readonly Enabled: boolean
-  readonly EndDate: {
-    readonly Day: number
-    readonly Hour: number
-    readonly Minute: number
-    readonly Month: number
-    readonly Second: number
-    readonly Year: number
-  } | null
-  readonly HMTimeZones: readonly {
-    readonly Areas?: readonly number[]
-    readonly Buildings?: readonly number[]
-    readonly Devices?: readonly number[]
-    readonly Floors?: readonly number[]
-    readonly TimeZone?: number
-  }[]
-  readonly StartDate: {
-    readonly Day: number
-    readonly Hour: number
-    readonly Minute: number
-    readonly Month: number
-    readonly Second: number
-    readonly Year: number
-  } | null
+  readonly EndDate: DateTimeComponents | null
+  readonly HMTimeZones: readonly HMTimeZone[]
+  readonly StartDate: DateTimeComponents | null
 }
 export interface HolidayModeData {
   readonly EndDate: {
@@ -217,22 +210,24 @@ export interface ListDevice {
   readonly Erv: ListDeviceErv
 }
 export type ListDeviceAny = ListDeviceAta | ListDeviceAtw | ListDeviceErv
-export interface LocationData {
+export interface FloorData {
   readonly BuildingId: number
   readonly ID: number
   readonly Name: string
 }
+export interface AreaData<T extends number | null> extends FloorData {
+  readonly FloorId: T
+}
+export type AreaDataAny = AreaData<number> | AreaData<null>
 export interface Building extends BuildingData {
   readonly Structure: {
-    readonly Areas: readonly (LocationData & {
+    readonly Areas: readonly (AreaData<null> & {
       readonly Devices: readonly ListDeviceAny[]
-      readonly FloorId: null
     })[]
     readonly Devices: readonly ListDeviceAny[]
-    readonly Floors: readonly (LocationData & {
-      readonly Areas: readonly (LocationData & {
+    readonly Floors: readonly (FloorData & {
+      readonly Areas: readonly (AreaData<number> & {
         readonly Devices: readonly ListDeviceAny[]
-        readonly FloorId: number
       })[]
       readonly Devices: readonly ListDeviceAny[]
     })[]
@@ -245,22 +240,11 @@ export interface SetPowerPostData {
 }
 
 export interface SetAtaGroupPostData {
-  readonly Specification:
-    | {
-        readonly AreaID?: null
-        readonly BuildingID?: null
-        readonly FloorID: number
-      }
-    | {
-        readonly AreaID?: null
-        readonly FloorID?: null
-        readonly BuildingID: number
-      }
-    | {
-        readonly BuildingID?: null
-        readonly FloorID?: null
-        readonly AreaID: number
-      }
+  readonly Specification: {
+    readonly AreaID?: number | null
+    readonly BuildingID?: number | null
+    readonly FloorID?: number | null
+  }
   readonly State: {
     readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
     readonly OperationMode?: OperationMode | null
