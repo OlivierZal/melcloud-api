@@ -13,10 +13,10 @@ import type {
   HolidayModePostData,
   ListDevice,
   SetDeviceData,
-  SetDevicePostData,
   SetPowerPostData,
   SuccessData,
   TilesData,
+  UpdateDeviceData,
 } from '../types'
 import type API from '../services'
 import type { DeviceModel } from '../models'
@@ -109,9 +109,7 @@ export default class<T extends keyof typeof DeviceType>
         ).data
   }
 
-  public async set(
-    postData: Omit<SetDevicePostData[T], 'DeviceID'>,
-  ): Promise<SetDeviceData[T]> {
+  public async set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
     return (
       await this.#api.setDevice({
         heatPumpType: this.#device.type,
