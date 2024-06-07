@@ -211,22 +211,23 @@ export interface ListDevice {
   readonly Erv: ListDeviceErv
 }
 export type ListDeviceAny = ListDeviceAta | ListDeviceAtw | ListDeviceErv
-export interface LocationData {
+export interface FloorData {
   readonly BuildingId: number
   readonly ID: number
   readonly Name: string
 }
+export interface AreaData<T extends number | null> extends FloorData {
+  readonly FloorId: T
+}
 export interface Building extends BuildingData {
   readonly Structure: {
-    readonly Areas: readonly (LocationData & {
+    readonly Areas: readonly (AreaData<null> & {
       readonly Devices: readonly ListDeviceAny[]
-      readonly FloorId: null
     })[]
     readonly Devices: readonly ListDeviceAny[]
-    readonly Floors: readonly (LocationData & {
-      readonly Areas: readonly (LocationData & {
+    readonly Floors: readonly (FloorData & {
+      readonly Areas: readonly (AreaData<number> & {
         readonly Devices: readonly ListDeviceAny[]
-        readonly FloorId: number
       })[]
       readonly Devices: readonly ListDeviceAny[]
     })[]

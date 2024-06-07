@@ -19,16 +19,16 @@ import type { IBuildingFacade } from '.'
 export default class implements IBuildingFacade {
   readonly #api: API
 
-  readonly #building: BuildingModel
+  readonly #model: BuildingModel
 
   public constructor(api: API, building: BuildingModel) {
     this.#api = api
-    this.#building = building
+    this.#model = building
   }
 
   public async fetch(): Promise<BuildingSettings> {
     await this.#api.fetchDevices()
-    return this.#building.data
+    return this.#model.data
   }
 
   public async getErrors(
@@ -36,7 +36,7 @@ export default class implements IBuildingFacade {
   ): Promise<ErrorData[] | FailureData> {
     return (
       await this.#api.getErrors({
-        postData: { ...postData, DeviceIDs: this.#building.deviceIds },
+        postData: { ...postData, DeviceIDs: this.#model.deviceIds },
       })
     ).data
   }
@@ -45,11 +45,11 @@ export default class implements IBuildingFacade {
     try {
       return (
         await this.#api.getFrostProtection({
-          params: { id: this.#building.id, tableName: 'Building' },
+          params: { id: this.#model.id, tableName: 'Building' },
         })
       ).data
     } catch (_error) {
-      const [device] = this.#building.devices
+      const [device] = this.#model.devices
       return (
         await this.#api.getFrostProtection({
           params: { id: device.id, tableName: 'DeviceLocation' },
@@ -62,11 +62,11 @@ export default class implements IBuildingFacade {
     try {
       return (
         await this.#api.getHolidayMode({
-          params: { id: this.#building.id, tableName: 'Building' },
+          params: { id: this.#model.id, tableName: 'Building' },
         })
       ).data
     } catch (_error) {
-      const [device] = this.#building.devices
+      const [device] = this.#model.devices
       return (
         await this.#api.getHolidayMode({
           params: { id: device.id, tableName: 'DeviceLocation' },
@@ -78,7 +78,7 @@ export default class implements IBuildingFacade {
   public async getTiles(): Promise<TilesData<null>> {
     return (
       await this.#api.getTiles({
-        postData: { DeviceIDs: this.#building.deviceIds },
+        postData: { DeviceIDs: this.#model.deviceIds },
       })
     ).data
   }
@@ -90,7 +90,7 @@ export default class implements IBuildingFacade {
       await this.#api.setAtaGroup({
         postData: {
           ...postData,
-          Specification: { BuildingID: this.#building.id },
+          Specification: { BuildingID: this.#model.id },
         },
       })
     ).data
@@ -103,9 +103,9 @@ export default class implements IBuildingFacade {
       await this.#api.setFrostProtection({
         postData: {
           ...postData,
-          ...(this.#building.data.FPDefined ?
-            { BuildingIds: [this.#building.id] }
-          : { DeviceIds: this.#building.deviceIds }),
+          ...(this.#model.data.FPDefined ?
+            { BuildingIds: [this.#model.id] }
+          : { DeviceIds: this.#model.deviceIds }),
         },
       })
     ).data
@@ -119,9 +119,9 @@ export default class implements IBuildingFacade {
         postData: {
           ...postData,
           HMTimeZones: [
-            this.#building.data.HMDefined ?
-              { Buildings: [this.#building.id] }
-            : { Devices: this.#building.deviceIds },
+            this.#model.data.HMDefined ?
+              { Buildings: [this.#model.id] }
+            : { Devices: this.#model.deviceIds },
           ],
         },
       })
@@ -133,7 +133,7 @@ export default class implements IBuildingFacade {
   ): Promise<boolean> {
     return (
       await this.#api.setPower({
-        postData: { ...postData, DeviceIds: this.#building.deviceIds },
+        postData: { ...postData, DeviceIds: this.#model.deviceIds },
       })
     ).data
   }

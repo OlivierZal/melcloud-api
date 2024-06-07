@@ -15,14 +15,14 @@ import type API from '../services'
 import type { AreaModel } from '../models'
 import type { IAreaFacade } from '.'
 
-export default class implements IAreaFacade {
+export default class<T extends number | null> implements IAreaFacade {
   readonly #api: API
 
-  readonly #area: AreaModel
+  readonly #model: AreaModel<T>
 
-  public constructor(api: API, area: AreaModel) {
+  public constructor(api: API, area: AreaModel<T>) {
     this.#api = api
-    this.#area = area
+    this.#model = area
   }
 
   public async getErrors(
@@ -30,7 +30,7 @@ export default class implements IAreaFacade {
   ): Promise<ErrorData[] | FailureData> {
     return (
       await this.#api.getErrors({
-        postData: { ...postData, DeviceIDs: this.#area.deviceIds },
+        postData: { ...postData, DeviceIDs: this.#model.deviceIds },
       })
     ).data
   }
@@ -39,11 +39,11 @@ export default class implements IAreaFacade {
     try {
       return (
         await this.#api.getFrostProtection({
-          params: { id: this.#area.id, tableName: 'Area' },
+          params: { id: this.#model.id, tableName: 'Area' },
         })
       ).data
     } catch (_error) {
-      const [device] = this.#area.devices
+      const [device] = this.#model.devices
       return (
         await this.#api.getFrostProtection({
           params: { id: device.id, tableName: 'DeviceLocation' },
@@ -56,11 +56,11 @@ export default class implements IAreaFacade {
     try {
       return (
         await this.#api.getHolidayMode({
-          params: { id: this.#area.id, tableName: 'Area' },
+          params: { id: this.#model.id, tableName: 'Area' },
         })
       ).data
     } catch (_error) {
-      const [device] = this.#area.devices
+      const [device] = this.#model.devices
       return (
         await this.#api.getHolidayMode({
           params: { id: device.id, tableName: 'DeviceLocation' },
@@ -72,7 +72,7 @@ export default class implements IAreaFacade {
   public async getTiles(): Promise<TilesData<null>> {
     return (
       await this.#api.getTiles({
-        postData: { DeviceIDs: this.#area.deviceIds },
+        postData: { DeviceIDs: this.#model.deviceIds },
       })
     ).data
   }
@@ -82,7 +82,7 @@ export default class implements IAreaFacade {
   ): Promise<FailureData | SuccessData> {
     return (
       await this.#api.setAtaGroup({
-        postData: { ...postData, Specification: { AreaID: this.#area.id } },
+        postData: { ...postData, Specification: { AreaID: this.#model.id } },
       })
     ).data
   }
@@ -94,9 +94,9 @@ export default class implements IAreaFacade {
       await this.#api.setFrostProtection({
         postData: {
           ...postData,
-          ...(this.#area.building?.data.FPDefined === true ?
-            { AreaIds: [this.#area.id] }
-          : { DeviceIds: this.#area.deviceIds }),
+          ...(this.#model.building?.data.FPDefined === true ?
+            { AreaIds: [this.#model.id] }
+          : { DeviceIds: this.#model.deviceIds }),
         },
       })
     ).data
@@ -110,9 +110,9 @@ export default class implements IAreaFacade {
         postData: {
           ...postData,
           HMTimeZones: [
-            this.#area.building?.data.HMDefined === true ?
-              { Areas: [this.#area.id] }
-            : { Devices: this.#area.deviceIds },
+            this.#model.building?.data.HMDefined === true ?
+              { Areas: [this.#model.id] }
+            : { Devices: this.#model.deviceIds },
           ],
         },
       })
@@ -124,7 +124,7 @@ export default class implements IAreaFacade {
   ): Promise<boolean> {
     return (
       await this.#api.setPower({
-        postData: { ...postData, DeviceIds: this.#area.deviceIds },
+        postData: { ...postData, DeviceIds: this.#model.deviceIds },
       })
     ).data
   }

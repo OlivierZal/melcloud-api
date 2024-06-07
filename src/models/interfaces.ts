@@ -1,5 +1,18 @@
-import type { AreaModel, BuildingModel, DeviceModelAny, FloorModel } from '.'
-import type { BuildingSettings, DeviceType, ListDevice } from '../types'
+import type {
+  AreaData,
+  BuildingData,
+  BuildingSettings,
+  DeviceType,
+  FloorData,
+  ListDevice,
+} from '../types'
+import type {
+  AreaModel,
+  AreaModelAny,
+  BuildingModel,
+  DeviceModelAny,
+  FloorModel,
+} from '.'
 
 export interface IBaseModel {
   readonly id: number
@@ -7,42 +20,49 @@ export interface IBaseModel {
 }
 
 interface IBaseSubBuildingModel {
-  building: BuildingModel | null
+  readonly building: BuildingModel | null
   readonly buildingId: number
 }
 
+interface IBaseSubFloorModel {
+  readonly floor: FloorModel | null
+  readonly floorId: number | null
+}
+
 interface IBaseSuperDeviceModel {
-  deviceIds: number[]
-  devices: DeviceModelAny[]
+  readonly deviceIds: number[]
+  readonly devices: DeviceModelAny[]
 }
 
 export interface IBuildingModel extends IBaseModel, IBaseSuperDeviceModel {
+  update: (data: BuildingData) => void
   readonly data: BuildingSettings
 }
 
-export interface IAreaModel
+export interface IAreaModel<T extends number | null>
   extends IBaseModel,
-    IBaseSuperDeviceModel,
-    IBaseSubBuildingModel {
-  floor: FloorModel | null
-  readonly floorId: number | null
+    IBaseSubBuildingModel,
+    IBaseSubFloorModel,
+    IBaseSuperDeviceModel {
+  update: (data: AreaData<T>) => void
 }
 
 export interface IFloorModel
   extends IBaseModel,
-    IBaseSuperDeviceModel,
-    IBaseSubBuildingModel {
-  areaIds: number[]
-  areas: AreaModel[]
+    IBaseSubBuildingModel,
+    IBaseSuperDeviceModel {
+  update: (data: FloorData) => void
+  readonly areaIds: number[]
+  readonly areas: AreaModel<number>[]
 }
 
 export interface IDeviceModel<T extends keyof typeof DeviceType>
   extends IBaseModel,
-    IBaseSubBuildingModel {
-  area: AreaModel | null
-  floor: FloorModel | null
+    IBaseSubBuildingModel,
+    IBaseSubFloorModel {
+  update: (data: ListDevice[T]) => void
+  readonly area: AreaModelAny | null
   readonly areaId: number | null
   readonly data: ListDevice[T]['Device']
-  readonly floorId: number | null
   readonly type: T
 }

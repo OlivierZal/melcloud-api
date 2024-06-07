@@ -12,6 +12,7 @@ export {
   FloorFacade,
 } from './facades'
 export type {
+  AreaModelAny,
   DeviceModelAny,
   IAreaModel,
   IBuildingModel,
@@ -27,6 +28,7 @@ export type {
 } from './services'
 export { default } from './services'
 export type {
+  AreaData,
   BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,
@@ -45,6 +47,7 @@ export type {
   ErrorData,
   ErrorPostData,
   FailureData,
+  FloorData,
   FrostProtectionData,
   FrostProtectionPostData,
   GetDeviceData,
@@ -62,7 +65,6 @@ export type {
   ListDeviceDataAtw,
   ListDeviceDataErv,
   ListDeviceErv,
-  LocationData,
   LoginCredentials,
   LoginData,
   LoginPostData,

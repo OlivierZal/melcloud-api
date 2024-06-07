@@ -26,22 +26,22 @@ export default class<T extends keyof typeof DeviceType>
 {
   readonly #api: API
 
-  readonly #device: DeviceModel<T>
+  readonly #model: DeviceModel<T>
 
   public constructor(api: API, device: DeviceModel<T>) {
     this.#api = api
-    this.#device = device
+    this.#model = device
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {
     await this.#api.fetchDevices()
-    return this.#device.data
+    return this.#model.data
   }
 
   public async get(): Promise<GetDeviceData[T]> {
     return (
       await this.#api.getDevice({
-        params: { buildingId: this.#device.buildingId, id: this.#device.id },
+        params: { buildingId: this.#model.buildingId, id: this.#model.id },
       })
     ).data as GetDeviceData[T]
   }
@@ -51,7 +51,7 @@ export default class<T extends keyof typeof DeviceType>
   ): Promise<EnergyData[T]> {
     return (
       await this.#api.getEnergyReport({
-        postData: { ...postData, DeviceID: this.#device.id },
+        postData: { ...postData, DeviceID: this.#model.id },
       })
     ).data as EnergyData[T]
   }
@@ -61,7 +61,7 @@ export default class<T extends keyof typeof DeviceType>
   ): Promise<ErrorData[] | FailureData> {
     return (
       await this.#api.getErrors({
-        postData: { ...postData, DeviceIDs: [this.#device.id] },
+        postData: { ...postData, DeviceIDs: [this.#model.id] },
       })
     ).data
   }
@@ -69,7 +69,7 @@ export default class<T extends keyof typeof DeviceType>
   public async getFrostProtection(): Promise<FrostProtectionData> {
     return (
       await this.#api.getFrostProtection({
-        params: { id: this.#device.id, tableName: 'DeviceLocation' },
+        params: { id: this.#model.id, tableName: 'DeviceLocation' },
       })
     ).data
   }
@@ -77,7 +77,7 @@ export default class<T extends keyof typeof DeviceType>
   public async getHolidayMode(): Promise<HolidayModeData> {
     return (
       await this.#api.getHolidayMode({
-        params: { id: this.#device.id, tableName: 'DeviceLocation' },
+        params: { id: this.#model.id, tableName: 'DeviceLocation' },
       })
     ).data
   }
@@ -89,16 +89,16 @@ export default class<T extends keyof typeof DeviceType>
         ((
           await this.#api.getTiles({
             postData: {
-              DeviceIDs: [this.#device.id],
-              SelectedBuilding: this.#device.buildingId,
-              SelectedDevice: this.#device.id,
+              DeviceIDs: [this.#model.id],
+              SelectedBuilding: this.#model.buildingId,
+              SelectedDevice: this.#model.id,
             },
           })
         ).data as TilesData<T>)
       : (
           await this.#api.getTiles({
             postData: {
-              DeviceIDs: [this.#device.id],
+              DeviceIDs: [this.#model.id],
             },
           })
         ).data
@@ -107,8 +107,8 @@ export default class<T extends keyof typeof DeviceType>
   public async set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
     return (
       await this.#api.setDevice({
-        heatPumpType: this.#device.type,
-        postData: { ...postData, DeviceID: this.#device.id },
+        heatPumpType: this.#model.type,
+        postData: { ...postData, DeviceID: this.#model.id },
       })
     ).data
   }
@@ -118,7 +118,7 @@ export default class<T extends keyof typeof DeviceType>
   ): Promise<FailureData | SuccessData> {
     return (
       await this.#api.setFrostProtection({
-        postData: { ...postData, DeviceIds: [this.#device.id] },
+        postData: { ...postData, DeviceIds: [this.#model.id] },
       })
     ).data
   }
@@ -130,7 +130,7 @@ export default class<T extends keyof typeof DeviceType>
       await this.#api.setHolidayMode({
         postData: {
           ...postData,
-          HMTimeZones: [{ Devices: [this.#device.id] }],
+          HMTimeZones: [{ Devices: [this.#model.id] }],
         },
       })
     ).data
@@ -141,7 +141,7 @@ export default class<T extends keyof typeof DeviceType>
   ): Promise<boolean> {
     return (
       await this.#api.setPower({
-        postData: { ...postData, DeviceIds: [this.#device.id] },
+        postData: { ...postData, DeviceIds: [this.#model.id] },
       })
     ).data
   }

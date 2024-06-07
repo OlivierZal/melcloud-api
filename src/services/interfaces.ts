@@ -67,7 +67,6 @@ export interface IMELCloudAPI {
     }: {
       postData: TilesPostData<T>
     }) => Promise<{ data: TilesData<T> }>)
-  language: Language
   login: ({
     postData,
   }: {
@@ -105,6 +104,7 @@ export interface IMELCloudAPI {
   }: {
     postData: SetPowerPostData
   }) => Promise<{ data: boolean }>
+  readonly language: Language
 }
 
 export interface APISettings {

@@ -6,45 +6,61 @@ import {
   type FloorModel,
   type IFloorModel,
 } from '.'
-import type { LocationData } from '../types'
+import type { FloorData } from '../types'
 
 export default class implements IFloorModel {
   public static readonly floors = new Map<number, FloorModel>()
 
-  public readonly buildingId: number
+  #buildingId: number
 
-  public readonly id: number
+  #id: number
 
-  public readonly name: string
+  #name: string
 
   public constructor({
-    ID: id,
     BuildingId: buildingId,
+    ID: id,
     Name: name,
-  }: LocationData) {
-    this.id = id
-    this.name = name
-    this.buildingId = buildingId
+  }: FloorData) {
+    this.#buildingId = buildingId
+    this.#id = id
+    this.#name = name
   }
 
   public get areaIds(): number[] {
     return this.areas.map(({ id }) => id)
   }
 
-  public get areas(): AreaModel[] {
-    return AreaModel.getAll().filter(({ floorId }) => floorId === this.id)
+  public get areas(): AreaModel<number>[] {
+    return AreaModel.getAll().filter(
+      (area): area is AreaModel<number> => area.floorId === this.#id,
+    )
   }
 
   public get building(): BuildingModel | null {
-    return BuildingModel.getById(this.buildingId) ?? null
+    return BuildingModel.getById(this.#buildingId) ?? null
+  }
+
+  public get buildingId(): number {
+    return this.#buildingId
   }
 
   public get deviceIds(): number[] {
-    return this.devices.map(({ id }) => id)
+    return this.devices.map(({ #id: id }) => id)
   }
 
   public get devices(): DeviceModelAny[] {
-    return DeviceModel.getAll().filter(({ floorId }) => floorId === this.id)
+    return DeviceModel.getAll().filter(
+      ({ #floorId: floorId }) => floorId === this.#id,
+    )
+  }
+
+  public get id(): number {
+    return this.#id
+  }
+
+  public get name(): string {
+    return this.#name
   }
 
   public static getAll(): FloorModel[] {
@@ -52,7 +68,7 @@ export default class implements IFloorModel {
   }
 
   public static getByBuildingId(buildingId: number): FloorModel[] {
-    return this.getAll().filter(({ buildingId: id }) => id === buildingId)
+    return this.getAll().filter(({ #buildingId: id }) => id === buildingId)
   }
 
   public static getById(id: number): FloorModel | undefined {
@@ -60,10 +76,24 @@ export default class implements IFloorModel {
   }
 
   public static getByName(floorName: string): FloorModel | undefined {
-    return this.getAll().find(({ name }) => name === floorName)
+    return this.getAll().find(({ #name: name }) => name === floorName)
   }
 
-  public static upsert(data: LocationData): void {
+  public static upsert(data: FloorData): void {
+    if (this.floors.has(data.ID)) {
+      this.floors.get(data.ID)?.update(data)
+      return
+    }
     this.floors.set(data.ID, new this(data))
+  }
+
+  public update({
+    BuildingId: buildingId,
+    ID: id,
+    Name: name,
+  }: FloorData): void {
+    this.#buildingId = buildingId
+    this.#id = id
+    this.#name = name
   }
 }

@@ -33,6 +33,7 @@ export type {
 } from './erv'
 export { VentilationMode, effectiveFlagsErv } from './erv'
 export type {
+  AreaData,
   BaseListDevice,
   Building,
   BuildingData,
@@ -43,6 +44,7 @@ export type {
   ErrorData,
   ErrorPostData,
   FailureData,
+  FloorData,
   FrostProtectionData,
   FrostProtectionPostData,
   GetDeviceData,
@@ -54,7 +56,6 @@ export type {
   ListDeviceAta,
   ListDeviceAtw,
   ListDeviceErv,
-  LocationData,
   LoginCredentials,
   LoginData,
   LoginPostData,

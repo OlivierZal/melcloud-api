@@ -1,5 +1,6 @@
 import {
   AreaModel,
+  type AreaModelAny,
   BuildingModel,
   type DeviceModel,
   FloorModel,
@@ -15,60 +16,89 @@ export type DeviceModelAny =
 export default class<T extends keyof typeof DeviceType>
   implements IDeviceModel<T>
 {
-  public static readonly devices = new Map<number, DeviceModelAny>()
+  public static readonly devices = new Map<
+    number,
+    DeviceModel<'Ata' | 'Atw' | 'Erv'>
+  >()
 
-  public readonly areaId: number | null = null
+  #areaId: number | null = null
 
-  public readonly buildingId: number
+  #buildingId: number
 
-  public readonly data: ListDevice[T]['Device']
+  #data: ListDevice[T]['Device']
 
-  public readonly floorId: number | null = null
+  #floorId: number | null = null
 
-  public readonly id: number
+  #id: number
 
-  public readonly name: string
+  #name: string
 
-  public readonly type: T
+  #type: T
 
   public constructor({
     AreaID: areaId,
     BuildingID: buildingId,
-    FloorID: floorId,
     Device: data,
     DeviceID: id,
     DeviceName: name,
+    FloorID: floorId,
     Type: type,
   }: ListDevice[T]) {
-    this.id = id
-    this.name = name
-    this.type = DeviceType[type] as T
-    this.data = data
-    this.buildingId = buildingId
-    this.areaId = areaId
-    this.floorId = floorId
+    this.#areaId = areaId
+    this.#buildingId = buildingId
+    this.#data = data
+    this.#floorId = floorId
+    this.#id = id
+    this.#name = name
+    this.#type = DeviceType[type] as T
   }
 
-  public get area(): AreaModel | null {
-    if (this.areaId === null) {
-      return null
-    }
-    return AreaModel.getById(this.areaId) ?? null
+  public get area(): AreaModelAny | null {
+    return this.#areaId === null ?
+        null
+      : AreaModel.getById(this.#areaId) ?? null
+  }
+
+  public get areaId(): number | null {
+    return this.#areaId
   }
 
   public get building(): BuildingModel | null {
-    return BuildingModel.getById(this.buildingId) ?? null
+    return BuildingModel.getById(this.#buildingId) ?? null
+  }
+
+  public get buildingId(): number {
+    return this.#buildingId
+  }
+
+  public get data(): ListDevice[T]['Device'] {
+    return this.#data
   }
 
   public get floor(): FloorModel | null {
-    if (this.floorId === null) {
-      return null
-    }
-    return FloorModel.getById(this.floorId) ?? null
+    return this.#floorId === null ?
+        null
+      : FloorModel.getById(this.#floorId) ?? null
+  }
+
+  public get floorId(): number | null {
+    return this.#floorId
+  }
+
+  public get id(): number {
+    return this.#id
+  }
+
+  public get name(): string {
+    return this.#name
+  }
+
+  public get type(): T {
+    return this.#type
   }
 
   public static getAll(): DeviceModelAny[] {
-    return Array.from(this.devices.values())
+    return Array.from(this.devices.values()) as DeviceModelAny[]
   }
 
   public static getByBuildingId(buildingId: number): DeviceModelAny[] {
@@ -76,7 +106,7 @@ export default class<T extends keyof typeof DeviceType>
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
-    return this.devices.get(id)
+    return this.devices.get(id) as DeviceModelAny
   }
 
   public static getByName(deviceName: string): DeviceModelAny | undefined {
@@ -90,6 +120,10 @@ export default class<T extends keyof typeof DeviceType>
   }
 
   public static upsert(data: ListDeviceAny): void {
+    if (this.devices.has(data.DeviceID)) {
+      this.devices.get(data.DeviceID)?.update(data)
+      return
+    }
     this.devices.set(data.DeviceID, new this(data) as DeviceModelAny)
   }
 
@@ -97,5 +131,23 @@ export default class<T extends keyof typeof DeviceType>
     dataList.forEach((data) => {
       this.upsert(data)
     })
+  }
+
+  public update({
+    AreaID: areaId,
+    BuildingID: buildingId,
+    Device: data,
+    DeviceID: id,
+    DeviceName: name,
+    FloorID: floorId,
+    Type: type,
+  }: ListDevice[T]): void {
+    this.#areaId = areaId
+    this.#buildingId = buildingId
+    this.#data = data
+    this.#floorId = floorId
+    this.#id = id
+    this.#name = name
+    this.#type = DeviceType[type] as T
   }
 }
