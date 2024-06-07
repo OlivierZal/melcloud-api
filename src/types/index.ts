@@ -14,7 +14,6 @@ export type {
   GetDeviceDataAta,
   ListDeviceDataAta,
   SetDeviceDataAta,
-  SetDevicePostDataAta,
   UpdateDeviceDataAta,
 } from './ata'
 export { Horizontal, OperationMode, Vertical, effectiveFlagsAta } from './ata'
@@ -23,7 +22,6 @@ export type {
   GetDeviceDataAtw,
   ListDeviceDataAtw,
   SetDeviceDataAtw,
-  SetDevicePostDataAtw,
   UpdateDeviceDataAtw,
 } from './atw'
 export { OperationModeState, OperationModeZone, effectiveFlagsAtw } from './atw'
@@ -31,7 +29,6 @@ export type {
   GetDeviceDataErv,
   ListDeviceDataErv,
   SetDeviceDataErv,
-  SetDevicePostDataErv,
   UpdateDeviceDataErv,
 } from './erv'
 export { VentilationMode, effectiveFlagsErv } from './erv'
