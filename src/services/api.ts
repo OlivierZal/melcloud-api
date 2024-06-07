@@ -203,7 +203,7 @@ export default class API implements IMELCloudAPI {
     params: GetDeviceDataParams
   }): Promise<{ data: GetDeviceData[T] }> {
     return this.#api.get<GetDeviceData[T]>('/Device/Get', {
-      params: params satisfies GetDeviceDataParams,
+      params,
     })
   }
 
@@ -212,10 +212,7 @@ export default class API implements IMELCloudAPI {
   }: {
     postData: EnergyPostData
   }): Promise<{ data: EnergyData[T] }> {
-    return this.#api.post<EnergyData[T]>(
-      '/EnergyCost/Report',
-      postData satisfies EnergyPostData,
-    )
+    return this.#api.post<EnergyData[T]>('/EnergyCost/Report', postData)
   }
 
   public async getErrors({
@@ -225,7 +222,7 @@ export default class API implements IMELCloudAPI {
   }): Promise<{ data: ErrorData[] | FailureData }> {
     return this.#api.post<ErrorData[] | FailureData>(
       '/Report/GetUnitErrorLog2',
-      postData satisfies ErrorPostData,
+      postData,
     )
   }
 
@@ -235,7 +232,7 @@ export default class API implements IMELCloudAPI {
     params: SettingsParams
   }): Promise<{ data: FrostProtectionData }> {
     return this.#api.get<FrostProtectionData>('/FrostProtection/GetSettings', {
-      params: params satisfies SettingsParams,
+      params,
     })
   }
 
@@ -245,7 +242,7 @@ export default class API implements IMELCloudAPI {
     params: SettingsParams
   }): Promise<{ data: HolidayModeData }> {
     return this.#api.get<HolidayModeData>('/HolidayMode/GetSettings', {
-      params: params satisfies SettingsParams,
+      params,
     })
   }
 
@@ -264,10 +261,7 @@ export default class API implements IMELCloudAPI {
   }: {
     postData: TilesPostData<T>
   }): Promise<{ data: TilesData<T> }> {
-    return this.#api.post<TilesData<T>>(
-      '/Tile/Get2',
-      postData satisfies TilesPostData<T>,
-    )
+    return this.#api.post<TilesData<T>>('/Tile/Get2', postData)
   }
 
   public async login({
@@ -279,7 +273,7 @@ export default class API implements IMELCloudAPI {
       Email: username,
       Password: password,
       ...rest,
-    } satisfies LoginPostData)
+    })
     if (response.data.LoginData) {
       this.username = username
       this.password = password
@@ -297,7 +291,7 @@ export default class API implements IMELCloudAPI {
     try {
       return await this.#api.post<FailureData | SuccessData>(
         '/Group/SetAta',
-        postData satisfies SetAtaGroupPostData,
+        postData,
       )
     } catch (_error) {
       throw new Error('No air-to-air device found')
@@ -309,11 +303,11 @@ export default class API implements IMELCloudAPI {
     postData,
   }: {
     heatPumpType: T
-    postData: SetDevicePostData[T]
+    postData: SetDevicePostData<T>
   }): Promise<{ data: SetDeviceData[T] }> {
     return this.#api.post<SetDeviceData[T]>(
       `/Device/Set${heatPumpType}`,
-      postData satisfies SetDevicePostData[T],
+      postData,
     )
   }
 
@@ -324,7 +318,7 @@ export default class API implements IMELCloudAPI {
   }): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post<FailureData | SuccessData>(
       '/FrostProtection/Update',
-      postData satisfies FrostProtectionPostData,
+      postData,
     )
   }
 
@@ -335,7 +329,7 @@ export default class API implements IMELCloudAPI {
   }): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post<FailureData | SuccessData>(
       '/HolidayMode/Update',
-      postData satisfies HolidayModePostData,
+      postData,
     )
   }
 
@@ -346,7 +340,7 @@ export default class API implements IMELCloudAPI {
   }): Promise<{ data: boolean }> {
     const response = await this.#api.post<boolean>('/User/UpdateLanguage', {
       language,
-    } satisfies { language: Language })
+    })
     if (response.data) {
       this.language = language
     }
@@ -358,10 +352,7 @@ export default class API implements IMELCloudAPI {
   }: {
     postData: SetPowerPostData
   }): Promise<{ data: boolean }> {
-    return this.#api.post<boolean>(
-      '/Device/Power',
-      postData satisfies SetPowerPostData,
-    )
+    return this.#api.post<boolean>('/Device/Power', postData)
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {

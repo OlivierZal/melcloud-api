@@ -14,10 +14,10 @@ import type {
   ListDevice,
   SetAtaGroupPostData,
   SetDeviceData,
-  SetDevicePostData,
   SetPowerPostData,
   SuccessData,
   TilesData,
+  UpdateDeviceData,
 } from '../types'
 
 export interface IBaseFacade {
@@ -59,7 +59,5 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   ) => Promise<EnergyData[T]>
   getTile: ((select?: false) => Promise<TilesData<null>>) &
     ((select: true) => Promise<TilesData<T>>)
-  set: (
-    postData: Omit<SetDevicePostData[T], 'DeviceID'>,
-  ) => Promise<SetDeviceData[T]>
+  set: (postData: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
 }

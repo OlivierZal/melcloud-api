@@ -15,9 +15,6 @@ import type {
   SetDeviceDataAta,
   SetDeviceDataAtw,
   SetDeviceDataErv,
-  SetDevicePostDataAta,
-  SetDevicePostDataAtw,
-  SetDevicePostDataErv,
   UpdateDeviceDataAta,
   UpdateDeviceDataAtw,
   UpdateDeviceDataErv,
@@ -86,11 +83,8 @@ export interface UpdateDeviceData {
   readonly Atw: UpdateDeviceDataAtw
   readonly Erv: UpdateDeviceDataErv
 }
-export interface SetDevicePostData {
-  readonly Ata: SetDevicePostDataAta
-  readonly Atw: SetDevicePostDataAtw
-  readonly Erv: SetDevicePostDataErv
-}
+export type SetDevicePostData<T extends keyof typeof DeviceType> =
+  UpdateDeviceData[T] & BaseDevicePostData
 export interface SetDeviceData {
   readonly Ata: SetDeviceDataAta
   readonly Atw: SetDeviceDataAtw
