@@ -85,7 +85,6 @@ export interface UpdateDeviceData {
 }
 export type SetDevicePostData<T extends keyof typeof DeviceType> =
   UpdateDeviceData[T] & BaseDevicePostData
-
 export interface SetDeviceData {
   readonly Ata: SetDeviceDataAta
   readonly Atw: SetDeviceDataAtw
