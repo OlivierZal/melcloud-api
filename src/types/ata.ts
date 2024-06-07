@@ -1,5 +1,4 @@
 import type {
-  BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDeviceData,
   BaseSetDeviceData,
@@ -58,10 +57,6 @@ export const effectiveFlagsAta: Record<
   VaneHorizontal: 0x100,
   VaneVertical: 0x10,
 } as const
-
-export interface SetDevicePostDataAta
-  extends BaseDevicePostData,
-    Readonly<UpdateDeviceDataAta> {}
 
 export interface SetDeviceDataAta
   extends BaseSetDeviceData,
