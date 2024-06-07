@@ -1,4 +1,3 @@
-import type { DeviceFacade, IDeviceFacade } from '.'
 import type {
   DeviceType,
   EnergyData,
@@ -20,11 +19,7 @@ import type {
 } from '../types'
 import type API from '../services'
 import type { DeviceModel } from '../models'
-
-export type DeviceFacadeAny =
-  | DeviceFacade<'Ata'>
-  | DeviceFacade<'Atw'>
-  | DeviceFacade<'Erv'>
+import type { IDeviceFacade } from '.'
 
 export default class<T extends keyof typeof DeviceType>
   implements IDeviceFacade<T>

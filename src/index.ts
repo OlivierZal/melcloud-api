@@ -1,6 +1,5 @@
 import 'source-map-support/register'
 export type {
-  DeviceFacadeAny,
   IAreaFacade,
   IBuildingFacade,
   IDeviceFacade,
