@@ -12,7 +12,6 @@ import type {
   GetDeviceDataParams,
   HolidayModeData,
   HolidayModePostData,
-  Language,
   LoginCredentials,
   LoginData,
   LoginPostData,
@@ -24,7 +23,28 @@ import type {
   SuccessData,
   TilesData,
   TilesPostData,
+  WifiData,
+  WifiPostData,
 } from '../types'
+
+export interface APISettings {
+  readonly contextKey?: string | null
+  readonly expiry?: string | null
+  readonly password?: string | null
+  readonly username?: string | null
+}
+
+export interface SettingManager {
+  get: <K extends keyof APISettings>(
+    key: K,
+  ) => APISettings[K] | null | undefined
+  set: <K extends keyof APISettings>(key: K, value: APISettings[K]) => void
+}
+
+export interface Logger {
+  readonly error: Console['error']
+  readonly log: Console['log']
+}
 
 export interface IMELCloudAPI {
   applyLogin: (
@@ -67,7 +87,11 @@ export interface IMELCloudAPI {
     }: {
       postData: TilesPostData<T>
     }) => Promise<{ data: TilesData<T> }>)
-  language: Language
+  getWifiReport: ({
+    postData,
+  }: {
+    postData: WifiPostData
+  }) => Promise<{ data: WifiData }>
   login: ({
     postData,
   }: {
@@ -83,7 +107,7 @@ export interface IMELCloudAPI {
     postData,
   }: {
     heatPumpType: T
-    postData: SetDevicePostData[T]
+    postData: SetDevicePostData<T>
   }) => Promise<{ data: SetDeviceData[T] }>
   setFrostProtection: ({
     postData,
@@ -95,33 +119,11 @@ export interface IMELCloudAPI {
   }: {
     postData: HolidayModePostData
   }) => Promise<{ data: FailureData | SuccessData }>
-  setLanguage: ({
-    postData,
-  }: {
-    postData: { language: Language }
-  }) => Promise<{ data: boolean }>
+  setLanguage: (language: string) => Promise<{ data: boolean }>
   setPower: ({
     postData,
   }: {
     postData: SetPowerPostData
   }) => Promise<{ data: boolean }>
-}
-
-export interface APISettings {
-  readonly contextKey?: string | null
-  readonly expiry?: string | null
-  readonly password?: string | null
-  readonly username?: string | null
-}
-
-export interface SettingManager {
-  get: <K extends keyof APISettings>(
-    key: K,
-  ) => APISettings[K] | null | undefined
-  set: <K extends keyof APISettings>(key: K, value: APISettings[K]) => void
-}
-
-export interface Logger {
-  readonly error: Console['error']
-  readonly log: Console['log']
+  readonly language: string
 }

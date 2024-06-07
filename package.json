@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "3.0.5",
+  "version": "4.0.0",
   "description": "MELCloud API for Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -50,11 +50,11 @@
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsdoc": "^48.2.9",
     "markdownlint-cli2": "^0.13.0",
-    "prettier": "^3.3.1",
+    "prettier": "^3.3.2",
     "typedoc": "^0.25.13",
     "typedoc-plugin-markdown": "^4.0.3",
     "typescript": "^5.4.5",
-    "typescript-eslint": "^8.0.0-alpha.28"
+    "typescript-eslint": "^8.0.0-alpha.30"
   },
   "dependencies": {
     "axios": "^1.7.2",

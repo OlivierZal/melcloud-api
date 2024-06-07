@@ -1,6 +1,23 @@
 import 'source-map-support/register'
 export type {
+  IBaseFacade,
+  IBaseSuperDeviceFacade,
+  IBuildingFacade,
+  IDeviceFacade,
+} from './facades'
+export {
+  AreaFacade,
+  BuildingFacade,
+  DeviceFacade,
+  FloorFacade,
+} from './facades'
+export type {
+  AreaModelAny,
   DeviceModelAny,
+  IBaseModel,
+  IBaseSubBuildingModel,
+  IBaseSubFloorModel,
+  IBaseSuperDeviceModel,
   IAreaModel,
   IBuildingModel,
   IDeviceModel,
@@ -15,6 +32,8 @@ export type {
 } from './services'
 export { default } from './services'
 export type {
+  AreaData,
+  AreaDataAny,
   BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,
@@ -24,6 +43,7 @@ export type {
   Building,
   BuildingData,
   BuildingSettings,
+  DateTimeComponents,
   DeviceDataNotInList,
   EffectiveFlags,
   EnergyData,
@@ -33,6 +53,7 @@ export type {
   ErrorData,
   ErrorPostData,
   FailureData,
+  FloorData,
   FrostProtectionData,
   FrostProtectionPostData,
   GetDeviceData,
@@ -50,7 +71,6 @@ export type {
   ListDeviceDataAtw,
   ListDeviceDataErv,
   ListDeviceErv,
-  LocationData,
   LoginCredentials,
   LoginData,
   LoginPostData,
@@ -62,9 +82,6 @@ export type {
   SetDeviceDataAtw,
   SetDeviceDataErv,
   SetDevicePostData,
-  SetDevicePostDataAta,
-  SetDevicePostDataAtw,
-  SetDevicePostDataErv,
   SetPowerPostData,
   SettingsParams,
   SuccessData,
