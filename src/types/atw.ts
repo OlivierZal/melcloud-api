@@ -1,5 +1,4 @@
 import type {
-  BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDeviceData,
   BaseSetDeviceData,
@@ -55,10 +54,6 @@ export const effectiveFlagsAtw: Record<
   SetTemperatureZone1: 0x200000080,
   SetTemperatureZone2: 0x800000200,
 } as const
-
-export interface SetDevicePostDataAtw
-  extends BaseDevicePostData,
-    Readonly<UpdateDeviceDataAtw> {}
 
 export interface SetDeviceDataAtw
   extends BaseSetDeviceData,
