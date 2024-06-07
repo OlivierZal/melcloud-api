@@ -33,7 +33,6 @@ import {
   type HolidayModeData,
   type HolidayModePostData,
   Language,
-  type ListDeviceAny,
   type LoginCredentials,
   type LoginData,
   type LoginPostData,
@@ -179,21 +178,20 @@ export default class API implements IMELCloudAPI {
     const response = await this.#api.get<Building[]>(LIST_URL)
     await Promise.all(
       response.data.map(async (building) => {
-        this.#upsertDevices(building.Structure.Devices)
+        DeviceModel.upsertMany(building.Structure.Devices)
         building.Structure.Areas.forEach((area) => {
-          AreaModel.upsert(this, area)
-          this.#upsertDevices(area.Devices)
+          AreaModel.upsert(area)
+          DeviceModel.upsertMany(area.Devices)
         })
         building.Structure.Floors.forEach((floor) => {
-          FloorModel.upsert(this, floor)
-          this.#upsertDevices(floor.Devices)
+          FloorModel.upsert(floor)
+          DeviceModel.upsertMany(floor.Devices)
           floor.Areas.forEach((area) => {
-            AreaModel.upsert(this, area)
-            this.#upsertDevices(area.Devices)
+            AreaModel.upsert(area)
+            DeviceModel.upsertMany(area.Devices)
           })
         })
-        const [device] = DeviceModel.getAll()
-        await this.#upsertBuilding(building, device)
+        await this.#upsertBuilding(building)
       }),
     )
     return response
@@ -441,20 +439,34 @@ export default class API implements IMELCloudAPI {
     )
   }
 
-  async #upsertBuilding(
-    building: Building,
-    device: DeviceModelAny,
-  ): Promise<void> {
-    BuildingModel.upsert(this, {
+  async #upsertBuilding(building: Building): Promise<void> {
+    let device: DeviceModelAny | null = null
+    const devices = DeviceModel.getByBuildingId(building.ID)
+    if ((building.FPDefined || building.HMDefined) && devices.length) {
+      ;[device] = devices
+    }
+    BuildingModel.upsert({
       ...building,
-      ...(building.FPDefined ? {} : await device.getFrostProtection()),
-      ...(building.HMDefined ? {} : await device.getHolidayMode()),
-    })
-  }
-
-  #upsertDevices(devices: readonly ListDeviceAny[]): void {
-    devices.forEach((device) => {
-      DeviceModel.upsert(this, device)
+      ...(building.FPDefined || !device ?
+        {}
+      : (
+          await this.getFrostProtection({
+            params: {
+              id: device.id,
+              tableName: 'DeviceLocation',
+            },
+          })
+        ).data),
+      ...(building.HMDefined || !device ?
+        {}
+      : (
+          await this.getHolidayMode({
+            params: {
+              id: device.id,
+              tableName: 'DeviceLocation',
+            },
+          })
+        ).data),
     })
   }
 }

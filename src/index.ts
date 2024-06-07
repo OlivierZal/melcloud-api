@@ -1,5 +1,18 @@
 import 'source-map-support/register'
 export type {
+  DeviceFacadeAny,
+  IAreaFacade,
+  IBuildingFacade,
+  IDeviceFacade,
+  IFloorFacade,
+} from './facades'
+export {
+  AreaFacade,
+  BuildingFacade,
+  DeviceFacade,
+  FloorFacade,
+} from './facades'
+export type {
   DeviceModelAny,
   IAreaModel,
   IBuildingModel,
