@@ -1,5 +1,4 @@
 import type {
-  BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDeviceData,
   BaseSetDeviceData,
@@ -8,7 +7,7 @@ import type {
   DeviceType,
   FanSpeed,
   NonEffectiveFlagsKeyOf,
-} from '.'
+} from './bases'
 
 export enum VentilationMode {
   recovery = 0,
@@ -29,10 +28,6 @@ export const effectiveFlagsErv: Record<
   SetFanSpeed: 0x8,
   VentilationMode: 0x4,
 } as const
-
-export interface SetDevicePostDataErv
-  extends BaseDevicePostData,
-    Readonly<UpdateDeviceDataErv> {}
 
 export interface SetDeviceDataErv
   extends BaseSetDeviceData,

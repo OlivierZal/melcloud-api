@@ -1,10 +1,14 @@
+export { default as AreaModel, type AreaModelAny } from './area'
+export { default as BuildingModel } from './building'
+export { default as DeviceModel, type DeviceModelAny } from './device'
+export { default as FloorModel } from './floor'
 export type {
   IAreaModel,
+  IBaseModel,
+  IBaseSubBuildingModel,
+  IBaseSubFloorModel,
+  IBaseSuperDeviceModel,
   IBuildingModel,
   IDeviceModel,
   IFloorModel,
 } from './interfaces'
-export { default as AreaModel } from './area'
-export { default as BuildingModel } from './building'
-export { default as DeviceModel, type DeviceModelAny } from './device'
-export { default as FloorModel } from './floor'

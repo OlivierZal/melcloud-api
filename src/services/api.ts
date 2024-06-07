@@ -2,14 +2,8 @@ import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-} from '../lib'
-import {
-  AreaModel,
-  BuildingModel,
-  DeviceModel,
-  type DeviceModelAny,
-  FloorModel,
-} from '../models'
+} from './logger'
+import { AreaModel, BuildingModel, DeviceModel, FloorModel } from '../models'
 import {
   type AxiosError,
   type AxiosInstance,
@@ -33,7 +27,6 @@ import {
   type HolidayModeData,
   type HolidayModePostData,
   Language,
-  type ListDeviceAny,
   type LoginCredentials,
   type LoginData,
   type LoginPostData,
@@ -45,9 +38,11 @@ import {
   type SuccessData,
   type TilesData,
   type TilesPostData,
+  type WifiData,
+  type WifiPostData,
 } from '../types'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
-import type { IMELCloudAPI, Logger, SettingManager } from '.'
+import type { IMELCloudAPI, Logger, SettingManager } from './interfaces'
 import https from 'https'
 
 const LIST_URL = '/User/ListDevices'
@@ -56,7 +51,7 @@ const LOGIN_URL = '/Login/ClientLogin'
 export default class API implements IMELCloudAPI {
   readonly #settingManager?: SettingManager
 
-  public language: Language
+  public language: string
 
   #contextKey = ''
 
@@ -92,13 +87,11 @@ export default class API implements IMELCloudAPI {
       shouldVerifySSL = true,
       timezone,
     } = config
+    LuxonSettings.defaultLocale = language
     if (typeof timezone !== 'undefined') {
       LuxonSettings.defaultZone = timezone
     }
-    this.language =
-      language in Language ?
-        Language[language as keyof typeof Language]
-      : Language.en
+    this.language = language
     this.#logger = logger
     this.#settingManager = settingManager
     this.#api = createAxiosInstance({
@@ -156,7 +149,7 @@ export default class API implements IMELCloudAPI {
             postData: {
               AppVersion: '1.32.0.0',
               Email: username,
-              Language: this.language,
+              Language: this.#getLanguage(),
               Password: password,
               Persist: true,
             },
@@ -179,21 +172,20 @@ export default class API implements IMELCloudAPI {
     const response = await this.#api.get<Building[]>(LIST_URL)
     await Promise.all(
       response.data.map(async (building) => {
-        this.#upsertDevices(building.Structure.Devices)
+        DeviceModel.upsertMany(building.Structure.Devices)
         building.Structure.Areas.forEach((area) => {
-          AreaModel.upsert(this, area)
-          this.#upsertDevices(area.Devices)
+          AreaModel.upsert(area)
+          DeviceModel.upsertMany(area.Devices)
         })
         building.Structure.Floors.forEach((floor) => {
-          FloorModel.upsert(this, floor)
-          this.#upsertDevices(floor.Devices)
+          FloorModel.upsert(floor)
+          DeviceModel.upsertMany(floor.Devices)
           floor.Areas.forEach((area) => {
-            AreaModel.upsert(this, area)
-            this.#upsertDevices(area.Devices)
+            AreaModel.upsert(area)
+            DeviceModel.upsertMany(area.Devices)
           })
         })
-        const [device] = DeviceModel.getAll()
-        await this.#upsertBuilding(building, device)
+        await this.#upsertBuilding(building)
       }),
     )
     return response
@@ -205,7 +197,7 @@ export default class API implements IMELCloudAPI {
     params: GetDeviceDataParams
   }): Promise<{ data: GetDeviceData[T] }> {
     return this.#api.get<GetDeviceData[T]>('/Device/Get', {
-      params: params satisfies GetDeviceDataParams,
+      params,
     })
   }
 
@@ -214,10 +206,7 @@ export default class API implements IMELCloudAPI {
   }: {
     postData: EnergyPostData
   }): Promise<{ data: EnergyData[T] }> {
-    return this.#api.post<EnergyData[T]>(
-      '/EnergyCost/Report',
-      postData satisfies EnergyPostData,
-    )
+    return this.#api.post<EnergyData[T]>('/EnergyCost/Report', postData)
   }
 
   public async getErrors({
@@ -227,7 +216,7 @@ export default class API implements IMELCloudAPI {
   }): Promise<{ data: ErrorData[] | FailureData }> {
     return this.#api.post<ErrorData[] | FailureData>(
       '/Report/GetUnitErrorLog2',
-      postData satisfies ErrorPostData,
+      postData,
     )
   }
 
@@ -237,7 +226,7 @@ export default class API implements IMELCloudAPI {
     params: SettingsParams
   }): Promise<{ data: FrostProtectionData }> {
     return this.#api.get<FrostProtectionData>('/FrostProtection/GetSettings', {
-      params: params satisfies SettingsParams,
+      params,
     })
   }
 
@@ -247,7 +236,7 @@ export default class API implements IMELCloudAPI {
     params: SettingsParams
   }): Promise<{ data: HolidayModeData }> {
     return this.#api.get<HolidayModeData>('/HolidayMode/GetSettings', {
-      params: params satisfies SettingsParams,
+      params,
     })
   }
 
@@ -266,10 +255,15 @@ export default class API implements IMELCloudAPI {
   }: {
     postData: TilesPostData<T>
   }): Promise<{ data: TilesData<T> }> {
-    return this.#api.post<TilesData<T>>(
-      '/Tile/Get2',
-      postData satisfies TilesPostData<T>,
-    )
+    return this.#api.post<TilesData<T>>('/Tile/Get2', postData)
+  }
+
+  public async getWifiReport({
+    postData,
+  }: {
+    postData: WifiPostData
+  }): Promise<{ data: WifiData }> {
+    return this.#api.post<WifiData>('/Report/GetSignalStrength', postData)
   }
 
   public async login({
@@ -281,7 +275,7 @@ export default class API implements IMELCloudAPI {
       Email: username,
       Password: password,
       ...rest,
-    } satisfies LoginPostData)
+    })
     if (response.data.LoginData) {
       this.username = username
       this.password = password
@@ -299,7 +293,7 @@ export default class API implements IMELCloudAPI {
     try {
       return await this.#api.post<FailureData | SuccessData>(
         '/Group/SetAta',
-        postData satisfies SetAtaGroupPostData,
+        postData,
       )
     } catch (_error) {
       throw new Error('No air-to-air device found')
@@ -311,11 +305,11 @@ export default class API implements IMELCloudAPI {
     postData,
   }: {
     heatPumpType: T
-    postData: SetDevicePostData[T]
+    postData: SetDevicePostData<T>
   }): Promise<{ data: SetDeviceData[T] }> {
     return this.#api.post<SetDeviceData[T]>(
       `/Device/Set${heatPumpType}`,
-      postData satisfies SetDevicePostData[T],
+      postData,
     )
   }
 
@@ -326,7 +320,7 @@ export default class API implements IMELCloudAPI {
   }): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post<FailureData | SuccessData>(
       '/FrostProtection/Update',
-      postData satisfies FrostProtectionPostData,
+      postData,
     )
   }
 
@@ -337,18 +331,14 @@ export default class API implements IMELCloudAPI {
   }): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post<FailureData | SuccessData>(
       '/HolidayMode/Update',
-      postData satisfies HolidayModePostData,
+      postData,
     )
   }
 
-  public async setLanguage({
-    postData: { language },
-  }: {
-    postData: { language: Language }
-  }): Promise<{ data: boolean }> {
+  public async setLanguage(language: string): Promise<{ data: boolean }> {
     const response = await this.#api.post<boolean>('/User/UpdateLanguage', {
-      language,
-    } satisfies { language: Language })
+      language: this.#getLanguage(language) satisfies Language,
+    })
     if (response.data) {
       this.language = language
     }
@@ -360,10 +350,13 @@ export default class API implements IMELCloudAPI {
   }: {
     postData: SetPowerPostData
   }): Promise<{ data: boolean }> {
-    return this.#api.post<boolean>(
-      '/Device/Power',
-      postData satisfies SetPowerPostData,
-    )
+    return this.#api.post<boolean>('/Device/Power', postData)
+  }
+
+  #getLanguage(language = this.language): Language {
+    return language in Language ?
+        Language[language as keyof typeof Language]
+      : Language.en
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {
@@ -441,20 +434,20 @@ export default class API implements IMELCloudAPI {
     )
   }
 
-  async #upsertBuilding(
-    building: Building,
-    device: DeviceModelAny,
-  ): Promise<void> {
-    BuildingModel.upsert(this, {
+  async #upsertBuilding(building: Building): Promise<void> {
+    let params: SettingsParams | null = null
+    if (!building.FPDefined || !building.HMDefined) {
+      const [{ id }] = DeviceModel.getByBuildingId(building.ID)
+      params = { id, tableName: 'DeviceLocation' }
+    }
+    BuildingModel.upsert({
       ...building,
-      ...(building.FPDefined ? {} : await device.getFrostProtection()),
-      ...(building.HMDefined ? {} : await device.getHolidayMode()),
-    })
-  }
-
-  #upsertDevices(devices: readonly ListDeviceAny[]): void {
-    devices.forEach((device) => {
-      DeviceModel.upsert(this, device)
+      ...(building.FPDefined || !params ?
+        {}
+      : (await this.getFrostProtection({ params })).data),
+      ...(building.HMDefined || !params ?
+        {}
+      : (await this.getHolidayMode({ params })).data),
     })
   }
 }

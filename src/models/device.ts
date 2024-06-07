@@ -1,38 +1,15 @@
-import {
-  AreaModel,
-  BuildingModel,
-  type DeviceModel,
-  FloorModel,
-  type IDeviceModel,
-} from '.'
-import {
-  DeviceType,
-  type EnergyData,
-  type EnergyPostData,
-  type ErrorData,
-  type ErrorPostData,
-  type FailureData,
-  type FrostProtectionData,
-  type FrostProtectionPostData,
-  type GetDeviceData,
-  type HolidayModeData,
-  type HolidayModePostData,
-  type ListDevice,
-  type ListDeviceAny,
-  type SetDeviceData,
-  type SetDevicePostData,
-  type SetPowerPostData,
-  type SuccessData,
-  type TilesData,
-} from '../types'
-import type API from '../services'
+import AreaModel, { type AreaModelAny } from './area'
+import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
+import BuildingModel from './building'
+import FloorModel from './floor'
+import type { IDeviceModel } from './interfaces'
 
 export type DeviceModelAny =
   | DeviceModel<'Ata'>
   | DeviceModel<'Atw'>
   | DeviceModel<'Erv'>
 
-export default class<T extends keyof typeof DeviceType>
+export default class DeviceModel<T extends keyof typeof DeviceType>
   implements IDeviceModel<T>
 {
   public static readonly devices = new Map<number, DeviceModelAny>()
@@ -51,35 +28,26 @@ export default class<T extends keyof typeof DeviceType>
 
   public readonly type: T
 
-  readonly #api: API
-
-  public constructor(
-    api: API,
-    {
-      AreaID: areaId,
-      BuildingID: buildingId,
-      FloorID: floorId,
-      Device: data,
-      DeviceID: id,
-      DeviceName: name,
-      Type: type,
-    }: ListDevice[T],
-  ) {
-    this.#api = api
+  private constructor({
+    AreaID: areaId,
+    BuildingID: buildingId,
+    Device: data,
+    DeviceID: id,
+    DeviceName: name,
+    FloorID: floorId,
+    Type: type,
+  }: ListDevice[T]) {
+    this.areaId = areaId
+    this.buildingId = buildingId
+    this.data = data
+    this.floorId = floorId
     this.id = id
     this.name = name
     this.type = DeviceType[type] as T
-    this.data = data
-    this.buildingId = buildingId
-    this.areaId = areaId
-    this.floorId = floorId
   }
 
-  public get area(): AreaModel | null {
-    if (this.areaId === null) {
-      return null
-    }
-    return AreaModel.getById(this.areaId) ?? null
+  public get area(): AreaModelAny | null {
+    return this.areaId === null ? null : AreaModel.getById(this.areaId) ?? null
   }
 
   public get building(): BuildingModel | null {
@@ -87,14 +55,17 @@ export default class<T extends keyof typeof DeviceType>
   }
 
   public get floor(): FloorModel | null {
-    if (this.floorId === null) {
-      return null
-    }
-    return FloorModel.getById(this.floorId) ?? null
+    return this.floorId === null ?
+        null
+      : FloorModel.getById(this.floorId) ?? null
   }
 
   public static getAll(): DeviceModelAny[] {
     return Array.from(this.devices.values())
+  }
+
+  public static getByBuildingId(buildingId: number): DeviceModelAny[] {
+    return this.getAll().filter(({ buildingId: id }) => id === buildingId)
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
@@ -111,119 +82,13 @@ export default class<T extends keyof typeof DeviceType>
     return this.getAll().filter(({ type }) => type === deviceType)
   }
 
-  public static upsert(api: API, data: ListDeviceAny): void {
-    this.devices.set(data.DeviceID, new this(api, data) as DeviceModelAny)
+  public static upsert(data: ListDeviceAny): void {
+    this.devices.set(data.DeviceID, new this(data) as DeviceModelAny)
   }
 
-  public async fetch(): Promise<ListDevice[T]['Device']> {
-    await this.#api.fetchDevices()
-    return this.data
-  }
-
-  public async get(): Promise<GetDeviceData[T]> {
-    return (
-      await this.#api.getDevice({
-        params: { buildingId: this.buildingId, id: this.id },
-      })
-    ).data as GetDeviceData[T]
-  }
-
-  public async getEnergyReport(
-    postData: Omit<EnergyPostData, 'DeviceID'>,
-  ): Promise<EnergyData[T]> {
-    return (
-      await this.#api.getEnergyReport({
-        postData: { ...postData, DeviceID: this.id },
-      })
-    ).data as EnergyData[T]
-  }
-
-  public async getErrors(
-    postData: Omit<ErrorPostData, 'DeviceIDs'>,
-  ): Promise<ErrorData[] | FailureData> {
-    return (
-      await this.#api.getErrors({
-        postData: { ...postData, DeviceIDs: [this.id] },
-      })
-    ).data
-  }
-
-  public async getFrostProtection(): Promise<FrostProtectionData> {
-    return (
-      await this.#api.getFrostProtection({
-        params: { id: this.id, tableName: 'DeviceLocation' },
-      })
-    ).data
-  }
-
-  public async getHolidayMode(): Promise<HolidayModeData> {
-    return (
-      await this.#api.getHolidayMode({
-        params: { id: this.id, tableName: 'DeviceLocation' },
-      })
-    ).data
-  }
-
-  public async getTile(select?: false): Promise<TilesData<null>>
-  public async getTile(select: true): Promise<TilesData<T>>
-  public async getTile(select = false): Promise<TilesData<T | null>> {
-    return select ?
-        ((
-          await this.#api.getTiles({
-            postData: {
-              DeviceIDs: [this.id],
-              SelectedBuilding: this.buildingId,
-              SelectedDevice: this.id,
-            },
-          })
-        ).data as TilesData<T>)
-      : (
-          await this.#api.getTiles({
-            postData: {
-              DeviceIDs: [this.id],
-            },
-          })
-        ).data
-  }
-
-  public async set(
-    postData: Omit<SetDevicePostData[T], 'DeviceID'>,
-  ): Promise<SetDeviceData[T]> {
-    return (
-      await this.#api.setDevice({
-        heatPumpType: this.type,
-        postData: { ...postData, DeviceID: this.id },
-      })
-    ).data
-  }
-
-  public async setFrostProtection(
-    postData: Omit<FrostProtectionPostData, 'DeviceIds'>,
-  ): Promise<FailureData | SuccessData> {
-    return (
-      await this.#api.setFrostProtection({
-        postData: { ...postData, DeviceIds: [this.id] },
-      })
-    ).data
-  }
-
-  public async setHolidayMode(
-    postData: Omit<HolidayModePostData, 'HMTimeZones'>,
-  ): Promise<FailureData | SuccessData> {
-    return (
-      await this.#api.setHolidayMode({
-        postData: { ...postData, HMTimeZones: [{ Devices: [this.id] }] },
-      })
-    ).data
-  }
-
-  public async setPower(
-    postData: Omit<SetPowerPostData, 'DeviceIds'>,
-  ): Promise<boolean> {
-    return (
-      await this.#api.setPower({
-        postData: { ...postData, DeviceIds: [this.id] },
-      })
-    ).data
+  public static upsertMany(dataList: readonly ListDeviceAny[]): void {
+    dataList.forEach((data) => {
+      this.upsert(data)
+    })
   }
 }
