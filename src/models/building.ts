@@ -9,38 +9,26 @@ import {
 export default class implements IBuildingModel {
   public static readonly buildings = new Map<number, BuildingModel>()
 
-  #data: BuildingSettings
+  public readonly data: BuildingSettings
 
-  #id: number
+  public readonly id: number
 
-  #name: string
+  public readonly name: string
 
   public constructor({ Name: name, ID: id, ...data }: BuildingData) {
-    this.#data = data
-    this.#id = id
-    this.#name = name
-  }
-
-  public get data(): BuildingSettings {
-    return this.#data
+    this.data = data
+    this.id = id
+    this.name = name
   }
 
   public get deviceIds(): number[] {
-    return this.devices.map(({ #id: id }) => id)
+    return this.devices.map(({ id }) => id)
   }
 
   public get devices(): DeviceModelAny[] {
     return DeviceModel.getAll().filter(
-      ({ #buildingId: buildingId }) => buildingId === this.#id,
+      ({ buildingId }) => buildingId === this.id,
     )
-  }
-
-  public get id(): number {
-    return this.#id
-  }
-
-  public get name(): string {
-    return this.#name
   }
 
   public static getAll(): BuildingModel[] {
@@ -52,20 +40,10 @@ export default class implements IBuildingModel {
   }
 
   public static getByName(buildingName: string): BuildingModel | undefined {
-    return this.getAll().find(({ #name: name }) => name === buildingName)
+    return this.getAll().find(({ name }) => name === buildingName)
   }
 
   public static upsert(data: BuildingData): void {
-    if (this.buildings.has(data.ID)) {
-      this.buildings.get(data.ID)?.update(data)
-      return
-    }
     this.buildings.set(data.ID, new this(data))
-  }
-
-  public update({ Name: name, ID: id, ...data }: BuildingData): void {
-    this.#data = data
-    this.#id = id
-    this.#name = name
   }
 }

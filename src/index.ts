@@ -29,6 +29,7 @@ export type {
 export { default } from './services'
 export type {
   AreaData,
+  AreaDataAny,
   BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,

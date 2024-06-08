@@ -1,3 +1,4 @@
+import type { AreaData, AreaDataAny } from '../types'
 import {
   type AreaModel,
   BuildingModel,
@@ -6,20 +7,19 @@ import {
   FloorModel,
   type IAreaModel,
 } from '.'
-import type { AreaData } from '../types'
 
 export type AreaModelAny = AreaModel<number> | AreaModel<null>
 
-export default class<T extends number | null> implements IAreaModel<T> {
-  public static readonly areas = new Map<number, AreaModel<number | null>>()
+export default class<T extends number | null> implements IAreaModel {
+  public static readonly areas = new Map<number, AreaModelAny>()
 
-  #buildingId: number
+  public readonly buildingId: number
 
-  #floorId: number | null
+  public readonly floorId: number | null
 
-  #id: number
+  public readonly id: number
 
-  #name: string
+  public readonly name: string
 
   public constructor({
     BuildingId: buildingId,
@@ -27,46 +27,28 @@ export default class<T extends number | null> implements IAreaModel<T> {
     ID: id,
     Name: name,
   }: AreaData<T>) {
-    this.#buildingId = buildingId
-    this.#floorId = floorId
-    this.#id = id
-    this.#name = name
+    this.buildingId = buildingId
+    this.floorId = floorId
+    this.id = id
+    this.name = name
   }
 
   public get building(): BuildingModel | null {
-    return BuildingModel.getById(this.#buildingId) ?? null
-  }
-
-  public get buildingId(): number {
-    return this.#buildingId
+    return BuildingModel.getById(this.buildingId) ?? null
   }
 
   public get deviceIds(): number[] {
-    return this.devices.map(({ #id: id }) => id)
+    return this.devices.map(({ id }) => id)
   }
 
   public get devices(): DeviceModelAny[] {
-    return DeviceModel.getAll().filter(
-      ({ #areaId: areaId }) => areaId === this.#id,
-    )
+    return DeviceModel.getAll().filter(({ areaId }) => areaId === this.id)
   }
 
   public get floor(): FloorModel | null {
-    return this.#floorId === null ?
+    return this.floorId === null ?
         null
-      : FloorModel.getById(this.#floorId) ?? null
-  }
-
-  public get floorId(): number | null {
-    return this.#floorId
-  }
-
-  public get id(): number {
-    return this.#id
-  }
-
-  public get name(): string {
-    return this.#name
+      : FloorModel.getById(this.floorId) ?? null
   }
 
   public static getAll(): AreaModelAny[] {
@@ -85,23 +67,7 @@ export default class<T extends number | null> implements IAreaModel<T> {
     return this.getAll().find(({ name }) => name === areaName)
   }
 
-  public static upsert(data: AreaData<number | null>): void {
-    if (this.areas.has(data.ID)) {
-      this.areas.get(data.ID)?.update(data)
-      return
-    }
+  public static upsert(data: AreaDataAny): void {
     this.areas.set(data.ID, new this(data))
-  }
-
-  public update({
-    BuildingId: buildingId,
-    FloorId: floorId,
-    ID: id,
-    Name: name,
-  }: AreaData<T>): void {
-    this.#buildingId = buildingId
-    this.#floorId = floorId
-    this.#id = id
-    this.#name = name
   }
 }

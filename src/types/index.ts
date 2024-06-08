@@ -34,6 +34,7 @@ export type {
 export { VentilationMode, effectiveFlagsErv } from './erv'
 export type {
   AreaData,
+  AreaDataAny,
   BaseListDevice,
   Building,
   BuildingData,

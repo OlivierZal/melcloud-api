@@ -16,24 +16,21 @@ export type DeviceModelAny =
 export default class<T extends keyof typeof DeviceType>
   implements IDeviceModel<T>
 {
-  public static readonly devices = new Map<
-    number,
-    DeviceModel<'Ata' | 'Atw' | 'Erv'>
-  >()
+  public static readonly devices = new Map<number, DeviceModelAny>()
 
-  #areaId: number | null = null
+  public readonly areaId: number | null = null
 
-  #buildingId: number
+  public readonly buildingId: number
 
-  #data: ListDevice[T]['Device']
+  public readonly data: ListDevice[T]['Device']
 
-  #floorId: number | null = null
+  public readonly floorId: number | null = null
 
-  #id: number
+  public readonly id: number
 
-  #name: string
+  public readonly name: string
 
-  #type: T
+  public readonly type: T
 
   public constructor({
     AreaID: areaId,
@@ -44,61 +41,31 @@ export default class<T extends keyof typeof DeviceType>
     FloorID: floorId,
     Type: type,
   }: ListDevice[T]) {
-    this.#areaId = areaId
-    this.#buildingId = buildingId
-    this.#data = data
-    this.#floorId = floorId
-    this.#id = id
-    this.#name = name
-    this.#type = DeviceType[type] as T
+    this.areaId = areaId
+    this.buildingId = buildingId
+    this.data = data
+    this.floorId = floorId
+    this.id = id
+    this.name = name
+    this.type = DeviceType[type] as T
   }
 
   public get area(): AreaModelAny | null {
-    return this.#areaId === null ?
-        null
-      : AreaModel.getById(this.#areaId) ?? null
-  }
-
-  public get areaId(): number | null {
-    return this.#areaId
+    return this.areaId === null ? null : AreaModel.getById(this.areaId) ?? null
   }
 
   public get building(): BuildingModel | null {
-    return BuildingModel.getById(this.#buildingId) ?? null
-  }
-
-  public get buildingId(): number {
-    return this.#buildingId
-  }
-
-  public get data(): ListDevice[T]['Device'] {
-    return this.#data
+    return BuildingModel.getById(this.buildingId) ?? null
   }
 
   public get floor(): FloorModel | null {
-    return this.#floorId === null ?
+    return this.floorId === null ?
         null
-      : FloorModel.getById(this.#floorId) ?? null
-  }
-
-  public get floorId(): number | null {
-    return this.#floorId
-  }
-
-  public get id(): number {
-    return this.#id
-  }
-
-  public get name(): string {
-    return this.#name
-  }
-
-  public get type(): T {
-    return this.#type
+      : FloorModel.getById(this.floorId) ?? null
   }
 
   public static getAll(): DeviceModelAny[] {
-    return Array.from(this.devices.values()) as DeviceModelAny[]
+    return Array.from(this.devices.values())
   }
 
   public static getByBuildingId(buildingId: number): DeviceModelAny[] {
@@ -106,7 +73,7 @@ export default class<T extends keyof typeof DeviceType>
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
-    return this.devices.get(id) as DeviceModelAny
+    return this.devices.get(id)
   }
 
   public static getByName(deviceName: string): DeviceModelAny | undefined {
@@ -120,10 +87,6 @@ export default class<T extends keyof typeof DeviceType>
   }
 
   public static upsert(data: ListDeviceAny): void {
-    if (this.devices.has(data.DeviceID)) {
-      this.devices.get(data.DeviceID)?.update(data)
-      return
-    }
     this.devices.set(data.DeviceID, new this(data) as DeviceModelAny)
   }
 
@@ -131,23 +94,5 @@ export default class<T extends keyof typeof DeviceType>
     dataList.forEach((data) => {
       this.upsert(data)
     })
-  }
-
-  public update({
-    AreaID: areaId,
-    BuildingID: buildingId,
-    Device: data,
-    DeviceID: id,
-    DeviceName: name,
-    FloorID: floorId,
-    Type: type,
-  }: ListDevice[T]): void {
-    this.#areaId = areaId
-    this.#buildingId = buildingId
-    this.#data = data
-    this.#floorId = floorId
-    this.#id = id
-    this.#name = name
-    this.#type = DeviceType[type] as T
   }
 }

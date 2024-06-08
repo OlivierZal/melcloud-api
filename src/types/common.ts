@@ -219,6 +219,7 @@ export interface FloorData {
 export interface AreaData<T extends number | null> extends FloorData {
   readonly FloorId: T
 }
+export type AreaDataAny = AreaData<number> | AreaData<null>
 export interface Building extends BuildingData {
   readonly Structure: {
     readonly Areas: readonly (AreaData<null> & {
