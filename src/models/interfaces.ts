@@ -12,17 +12,17 @@ export interface IBaseModel {
   readonly name: string
 }
 
-interface IBaseSubBuildingModel {
+export interface IBaseSubBuildingModel {
   readonly building: BuildingModel | null
   readonly buildingId: number
 }
 
-interface IBaseSubFloorModel {
+export interface IBaseSubFloorModel {
   readonly floor: FloorModel | null
   readonly floorId: number | null
 }
 
-interface IBaseSuperDeviceModel {
+export interface IBaseSuperDeviceModel {
   readonly deviceIds: number[]
   readonly devices: DeviceModelAny[]
 }

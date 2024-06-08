@@ -1,5 +1,7 @@
 import 'source-map-support/register'
 export type {
+  IBaseFacade,
+  IBaseSuperDeviceFacade,
   IAreaFacade,
   IBuildingFacade,
   IDeviceFacade,
@@ -14,6 +16,10 @@ export {
 export type {
   AreaModelAny,
   DeviceModelAny,
+  IBaseModel,
+  IBaseSubBuildingModel,
+  IBaseSubFloorModel,
+  IBaseSuperDeviceModel,
   IAreaModel,
   IBuildingModel,
   IDeviceModel,

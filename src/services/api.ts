@@ -44,6 +44,8 @@ import {
   type SuccessData,
   type TilesData,
   type TilesPostData,
+  type WifiData,
+  type WifiPostData,
 } from '../types'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 import type { IMELCloudAPI, Logger, SettingManager } from '.'
@@ -262,6 +264,14 @@ export default class API implements IMELCloudAPI {
     postData: TilesPostData<T>
   }): Promise<{ data: TilesData<T> }> {
     return this.#api.post<TilesData<T>>('/Tile/Get2', postData)
+  }
+
+  public async getWifiReport({
+    postData,
+  }: {
+    postData: WifiPostData
+  }): Promise<{ data: WifiData }> {
+    return this.#api.post<WifiData>('/Report/GetSignalStrength', postData)
   }
 
   public async login({

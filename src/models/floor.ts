@@ -17,7 +17,7 @@ export default class implements IFloorModel {
 
   public readonly name: string
 
-  public constructor({
+  private constructor({
     BuildingId: buildingId,
     ID: id,
     Name: name,

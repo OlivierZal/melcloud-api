@@ -15,7 +15,7 @@ export default class implements IBuildingModel {
 
   public readonly name: string
 
-  public constructor({ Name: name, ID: id, ...data }: BuildingData) {
+  private constructor({ Name: name, ID: id, ...data }: BuildingData) {
     this.data = data
     this.id = id
     this.name = name

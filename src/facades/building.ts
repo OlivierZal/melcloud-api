@@ -13,22 +13,30 @@ import type {
   TilesData,
 } from '../types'
 import type API from '../services'
-import type { BuildingModel } from '../models'
+import { BuildingModel } from '../models'
 import type { IBuildingFacade } from '.'
 
 export default class implements IBuildingFacade {
   readonly #api: API
 
-  readonly #model: BuildingModel
+  readonly #id: number
 
-  public constructor(api: API, building: BuildingModel) {
+  public constructor(api: API, id: number) {
     this.#api = api
-    this.#model = building
+    this.#id = id
+  }
+
+  private get model(): BuildingModel {
+    const model = BuildingModel.getById(this.#id)
+    if (!model) {
+      throw new Error('Building not found')
+    }
+    return model
   }
 
   public async fetch(): Promise<BuildingSettings> {
     await this.#api.fetchDevices()
-    return this.#model.data
+    return this.model.data
   }
 
   public async getErrors(
@@ -36,7 +44,7 @@ export default class implements IBuildingFacade {
   ): Promise<ErrorData[] | FailureData> {
     return (
       await this.#api.getErrors({
-        postData: { ...postData, DeviceIDs: this.#model.deviceIds },
+        postData: { ...postData, DeviceIDs: this.model.deviceIds },
       })
     ).data
   }
@@ -45,11 +53,11 @@ export default class implements IBuildingFacade {
     try {
       return (
         await this.#api.getFrostProtection({
-          params: { id: this.#model.id, tableName: 'Building' },
+          params: { id: this.model.id, tableName: 'Building' },
         })
       ).data
     } catch (_error) {
-      const [device] = this.#model.devices
+      const [device] = this.model.devices
       return (
         await this.#api.getFrostProtection({
           params: { id: device.id, tableName: 'DeviceLocation' },
@@ -62,11 +70,11 @@ export default class implements IBuildingFacade {
     try {
       return (
         await this.#api.getHolidayMode({
-          params: { id: this.#model.id, tableName: 'Building' },
+          params: { id: this.model.id, tableName: 'Building' },
         })
       ).data
     } catch (_error) {
-      const [device] = this.#model.devices
+      const [device] = this.model.devices
       return (
         await this.#api.getHolidayMode({
           params: { id: device.id, tableName: 'DeviceLocation' },
@@ -78,7 +86,7 @@ export default class implements IBuildingFacade {
   public async getTiles(): Promise<TilesData<null>> {
     return (
       await this.#api.getTiles({
-        postData: { DeviceIDs: this.#model.deviceIds },
+        postData: { DeviceIDs: this.model.deviceIds },
       })
     ).data
   }
@@ -90,7 +98,7 @@ export default class implements IBuildingFacade {
       await this.#api.setAtaGroup({
         postData: {
           ...postData,
-          Specification: { BuildingID: this.#model.id },
+          Specification: { BuildingID: this.model.id },
         },
       })
     ).data
@@ -103,9 +111,9 @@ export default class implements IBuildingFacade {
       await this.#api.setFrostProtection({
         postData: {
           ...postData,
-          ...(this.#model.data.FPDefined ?
-            { BuildingIds: [this.#model.id] }
-          : { DeviceIds: this.#model.deviceIds }),
+          ...(this.model.data.FPDefined ?
+            { BuildingIds: [this.model.id] }
+          : { DeviceIds: this.model.deviceIds }),
         },
       })
     ).data
@@ -119,9 +127,9 @@ export default class implements IBuildingFacade {
         postData: {
           ...postData,
           HMTimeZones: [
-            this.#model.data.HMDefined ?
-              { Buildings: [this.#model.id] }
-            : { Devices: this.#model.deviceIds },
+            this.model.data.HMDefined ?
+              { Buildings: [this.model.id] }
+            : { Devices: this.model.deviceIds },
           ],
         },
       })
@@ -133,7 +141,7 @@ export default class implements IBuildingFacade {
   ): Promise<boolean> {
     return (
       await this.#api.setPower({
-        postData: { ...postData, DeviceIds: this.#model.deviceIds },
+        postData: { ...postData, DeviceIds: this.model.deviceIds },
       })
     ).data
   }

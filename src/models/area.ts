@@ -21,7 +21,7 @@ export default class<T extends number | null> implements IAreaModel {
 
   public readonly name: string
 
-  public constructor({
+  private constructor({
     BuildingId: buildingId,
     FloorId: floorId,
     ID: id,

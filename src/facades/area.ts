@@ -12,17 +12,25 @@ import type {
   TilesData,
 } from '../types'
 import type API from '../services'
-import type { AreaModel } from '../models'
+import { AreaModel } from '../models'
 import type { IAreaFacade } from '.'
 
 export default class<T extends number | null> implements IAreaFacade {
   readonly #api: API
 
-  readonly #model: AreaModel<T>
+  readonly #id: number
 
-  public constructor(api: API, area: AreaModel<T>) {
+  public constructor(api: API, id: number) {
     this.#api = api
-    this.#model = area
+    this.#id = id
+  }
+
+  private get model(): AreaModel<T> {
+    const model = AreaModel.getById(this.#id)
+    if (!model) {
+      throw new Error('Area not found')
+    }
+    return model
   }
 
   public async getErrors(
@@ -30,7 +38,7 @@ export default class<T extends number | null> implements IAreaFacade {
   ): Promise<ErrorData[] | FailureData> {
     return (
       await this.#api.getErrors({
-        postData: { ...postData, DeviceIDs: this.#model.deviceIds },
+        postData: { ...postData, DeviceIDs: this.model.deviceIds },
       })
     ).data
   }
@@ -39,11 +47,11 @@ export default class<T extends number | null> implements IAreaFacade {
     try {
       return (
         await this.#api.getFrostProtection({
-          params: { id: this.#model.id, tableName: 'Area' },
+          params: { id: this.model.id, tableName: 'Area' },
         })
       ).data
     } catch (_error) {
-      const [device] = this.#model.devices
+      const [device] = this.model.devices
       return (
         await this.#api.getFrostProtection({
           params: { id: device.id, tableName: 'DeviceLocation' },
@@ -56,11 +64,11 @@ export default class<T extends number | null> implements IAreaFacade {
     try {
       return (
         await this.#api.getHolidayMode({
-          params: { id: this.#model.id, tableName: 'Area' },
+          params: { id: this.model.id, tableName: 'Area' },
         })
       ).data
     } catch (_error) {
-      const [device] = this.#model.devices
+      const [device] = this.model.devices
       return (
         await this.#api.getHolidayMode({
           params: { id: device.id, tableName: 'DeviceLocation' },
@@ -72,7 +80,7 @@ export default class<T extends number | null> implements IAreaFacade {
   public async getTiles(): Promise<TilesData<null>> {
     return (
       await this.#api.getTiles({
-        postData: { DeviceIDs: this.#model.deviceIds },
+        postData: { DeviceIDs: this.model.deviceIds },
       })
     ).data
   }
@@ -82,7 +90,7 @@ export default class<T extends number | null> implements IAreaFacade {
   ): Promise<FailureData | SuccessData> {
     return (
       await this.#api.setAtaGroup({
-        postData: { ...postData, Specification: { AreaID: this.#model.id } },
+        postData: { ...postData, Specification: { AreaID: this.model.id } },
       })
     ).data
   }
@@ -94,9 +102,9 @@ export default class<T extends number | null> implements IAreaFacade {
       await this.#api.setFrostProtection({
         postData: {
           ...postData,
-          ...(this.#model.building?.data.FPDefined === true ?
-            { AreaIds: [this.#model.id] }
-          : { DeviceIds: this.#model.deviceIds }),
+          ...(this.model.building?.data.FPDefined === true ?
+            { AreaIds: [this.model.id] }
+          : { DeviceIds: this.model.deviceIds }),
         },
       })
     ).data
@@ -110,9 +118,9 @@ export default class<T extends number | null> implements IAreaFacade {
         postData: {
           ...postData,
           HMTimeZones: [
-            this.#model.building?.data.HMDefined === true ?
-              { Areas: [this.#model.id] }
-            : { Devices: this.#model.deviceIds },
+            this.model.building?.data.HMDefined === true ?
+              { Areas: [this.model.id] }
+            : { Devices: this.model.deviceIds },
           ],
         },
       })
@@ -124,7 +132,7 @@ export default class<T extends number | null> implements IAreaFacade {
   ): Promise<boolean> {
     return (
       await this.#api.setPower({
-        postData: { ...postData, DeviceIds: this.#model.deviceIds },
+        postData: { ...postData, DeviceIds: this.model.deviceIds },
       })
     ).data
   }

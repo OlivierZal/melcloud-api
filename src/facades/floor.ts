@@ -12,17 +12,25 @@ import type {
   TilesData,
 } from '../types'
 import type API from '../services'
-import type { FloorModel } from '../models'
+import { FloorModel } from '../models'
 import type { IFloorFacade } from '.'
 
 export default class implements IFloorFacade {
   readonly #api: API
 
-  readonly #model: FloorModel
+  readonly #id: number
 
-  public constructor(api: API, floor: FloorModel) {
+  public constructor(api: API, id: number) {
     this.#api = api
-    this.#model = floor
+    this.#id = id
+  }
+
+  private get model(): FloorModel {
+    const model = FloorModel.getById(this.#id)
+    if (!model) {
+      throw new Error('Floor not found')
+    }
+    return model
   }
 
   public async getErrors(
@@ -30,7 +38,7 @@ export default class implements IFloorFacade {
   ): Promise<ErrorData[] | FailureData> {
     return (
       await this.#api.getErrors({
-        postData: { ...postData, DeviceIDs: this.#model.deviceIds },
+        postData: { ...postData, DeviceIDs: this.model.deviceIds },
       })
     ).data
   }
@@ -39,11 +47,11 @@ export default class implements IFloorFacade {
     try {
       return (
         await this.#api.getFrostProtection({
-          params: { id: this.#model.id, tableName: 'Floor' },
+          params: { id: this.model.id, tableName: 'Floor' },
         })
       ).data
     } catch (_error) {
-      const [device] = this.#model.devices
+      const [device] = this.model.devices
       return (
         await this.#api.getFrostProtection({
           params: { id: device.id, tableName: 'DeviceLocation' },
@@ -56,11 +64,11 @@ export default class implements IFloorFacade {
     try {
       return (
         await this.#api.getHolidayMode({
-          params: { id: this.#model.id, tableName: 'Floor' },
+          params: { id: this.model.id, tableName: 'Floor' },
         })
       ).data
     } catch (_error) {
-      const [device] = this.#model.devices
+      const [device] = this.model.devices
       return (
         await this.#api.getHolidayMode({
           params: { id: device.id, tableName: 'DeviceLocation' },
@@ -72,7 +80,7 @@ export default class implements IFloorFacade {
   public async getTiles(): Promise<TilesData<null>> {
     return (
       await this.#api.getTiles({
-        postData: { DeviceIDs: this.#model.deviceIds },
+        postData: { DeviceIDs: this.model.deviceIds },
       })
     ).data
   }
@@ -82,7 +90,7 @@ export default class implements IFloorFacade {
   ): Promise<FailureData | SuccessData> {
     return (
       await this.#api.setAtaGroup({
-        postData: { ...postData, Specification: { FloorID: this.#model.id } },
+        postData: { ...postData, Specification: { FloorID: this.model.id } },
       })
     ).data
   }
@@ -94,9 +102,9 @@ export default class implements IFloorFacade {
       await this.#api.setFrostProtection({
         postData: {
           ...postData,
-          ...(this.#model.building?.data.FPDefined === true ?
-            { FloorIds: [this.#model.id] }
-          : { DeviceIds: this.#model.deviceIds }),
+          ...(this.model.building?.data.FPDefined === true ?
+            { FloorIds: [this.model.id] }
+          : { DeviceIds: this.model.deviceIds }),
         },
       })
     ).data
@@ -110,9 +118,9 @@ export default class implements IFloorFacade {
         postData: {
           ...postData,
           HMTimeZones: [
-            this.#model.building?.data.HMDefined === true ?
-              { Floors: [this.#model.id] }
-            : { Devices: this.#model.deviceIds },
+            this.model.building?.data.HMDefined === true ?
+              { Floors: [this.model.id] }
+            : { Devices: this.model.deviceIds },
           ],
         },
       })
@@ -124,7 +132,7 @@ export default class implements IFloorFacade {
   ): Promise<boolean> {
     return (
       await this.#api.setPower({
-        postData: { ...postData, DeviceIds: this.#model.deviceIds },
+        postData: { ...postData, DeviceIds: this.model.deviceIds },
       })
     ).data
   }

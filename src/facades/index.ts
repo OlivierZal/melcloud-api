@@ -1,4 +1,6 @@
 export type {
+  IBaseFacade,
+  IBaseSuperDeviceFacade,
   IAreaFacade,
   IBuildingFacade,
   IDeviceFacade,

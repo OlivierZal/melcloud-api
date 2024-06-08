@@ -35,7 +35,7 @@ export interface IBaseFacade {
   setPower: (postData: Omit<SetPowerPostData, 'DeviceIds'>) => Promise<boolean>
 }
 
-interface IBaseSuperDeviceFacade {
+export interface IBaseSuperDeviceFacade {
   getTiles: () => Promise<TilesData<null>>
   setAtaGroup: (
     postData: Omit<SetAtaGroupPostData, 'Specification'>,

@@ -32,7 +32,7 @@ export default class<T extends keyof typeof DeviceType>
 
   public readonly type: T
 
-  public constructor({
+  private constructor({
     AreaID: areaId,
     BuildingID: buildingId,
     Device: data,
