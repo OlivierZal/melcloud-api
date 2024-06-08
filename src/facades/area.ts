@@ -25,7 +25,7 @@ export default class<T extends number | null> implements IAreaFacade {
     this.#id = id
   }
 
-  private get model(): AreaModel<T> {
+  public get model(): AreaModel<T> {
     const model = AreaModel.getById(this.#id)
     if (!model) {
       throw new Error('Area not found')

@@ -33,7 +33,7 @@ export default class<T extends keyof typeof DeviceType>
     this.#id = id
   }
 
-  private get model(): DeviceModel<T> {
+  public get model(): DeviceModel<T> {
     const model = DeviceModel.getById(this.#id)
     if (!model) {
       throw new Error('Device not found')

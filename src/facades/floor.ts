@@ -25,7 +25,7 @@ export default class implements IFloorFacade {
     this.#id = id
   }
 
-  private get model(): FloorModel {
+  public get model(): FloorModel {
     const model = FloorModel.getById(this.#id)
     if (!model) {
       throw new Error('Floor not found')

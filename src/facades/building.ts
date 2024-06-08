@@ -26,7 +26,7 @@ export default class implements IBuildingFacade {
     this.#id = id
   }
 
-  private get model(): BuildingModel {
+  public get model(): BuildingModel {
     const model = BuildingModel.getById(this.#id)
     if (!model) {
       throw new Error('Building not found')
