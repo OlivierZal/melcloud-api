@@ -3,12 +3,7 @@ import {
   APICallResponseData,
   createAPICallErrorData,
 } from '../lib'
-import {
-  AreaModel,
-  BuildingModel,
-  DeviceModel,
-  FloorModel,
-} from '../models'
+import { AreaModel, BuildingModel, DeviceModel, FloorModel } from '../models'
 import {
   type AxiosError,
   type AxiosInstance,
