@@ -1,12 +1,7 @@
 import type { BuildingData, BuildingSettings } from '../types'
-import {
-  type BuildingModel,
-  DeviceModel,
-  type DeviceModelAny,
-  type IBuildingModel,
-} from '.'
+import { DeviceModel, type DeviceModelAny, type IBuildingModel } from '.'
 
-export default class implements IBuildingModel {
+export default class BuildingModel implements IBuildingModel {
   public static readonly buildings = new Map<number, BuildingModel>()
 
   public readonly data: BuildingSettings

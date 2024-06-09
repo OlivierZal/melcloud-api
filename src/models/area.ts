@@ -1,6 +1,5 @@
 import type { AreaData, AreaDataAny } from '../types'
 import {
-  type AreaModel,
   BuildingModel,
   DeviceModel,
   type DeviceModelAny,
@@ -10,7 +9,7 @@ import {
 
 export type AreaModelAny = AreaModel<number> | AreaModel<null>
 
-export default class<T extends number | null> implements IAreaModel {
+export default class AreaModel<T extends number | null> implements IAreaModel {
   public static readonly areas = new Map<number, AreaModelAny>()
 
   public readonly buildingId: number

@@ -2,7 +2,6 @@ import {
   AreaModel,
   type AreaModelAny,
   BuildingModel,
-  type DeviceModel,
   FloorModel,
   type IDeviceModel,
 } from '.'
@@ -13,7 +12,7 @@ export type DeviceModelAny =
   | DeviceModel<'Atw'>
   | DeviceModel<'Erv'>
 
-export default class<T extends keyof typeof DeviceType>
+export default class DeviceModel<T extends keyof typeof DeviceType>
   implements IDeviceModel<T>
 {
   public static readonly devices = new Map<number, DeviceModelAny>()

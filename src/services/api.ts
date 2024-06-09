@@ -7,7 +7,6 @@ import {
   AreaModel,
   BuildingModel,
   DeviceModel,
-  type DeviceModelAny,
   FloorModel,
 } from '../models'
 import {
@@ -441,33 +440,23 @@ export default class API implements IMELCloudAPI {
   }
 
   async #upsertBuilding(building: Building): Promise<void> {
-    let device: DeviceModelAny | null = null
+    let params: SettingsParams | null = null
     const devices = DeviceModel.getByBuildingId(building.ID)
-    if ((building.FPDefined || building.HMDefined) && devices.length) {
-      ;[device] = devices
+    if ((!building.FPDefined || !building.HMDefined) && devices.length) {
+      const [device] = devices
+      params = {
+        id: device.id,
+        tableName: 'DeviceLocation',
+      }
     }
     BuildingModel.upsert({
       ...building,
-      ...(building.FPDefined || !device ?
+      ...(building.FPDefined || !params ?
         {}
-      : (
-          await this.getFrostProtection({
-            params: {
-              id: device.id,
-              tableName: 'DeviceLocation',
-            },
-          })
-        ).data),
-      ...(building.HMDefined || !device ?
+      : (await this.getFrostProtection({ params })).data),
+      ...(building.HMDefined || !params ?
         {}
-      : (
-          await this.getHolidayMode({
-            params: {
-              id: device.id,
-              tableName: 'DeviceLocation',
-            },
-          })
-        ).data),
+      : (await this.getHolidayMode({ params })).data),
     })
   }
 }

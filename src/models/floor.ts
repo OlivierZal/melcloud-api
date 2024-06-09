@@ -3,12 +3,11 @@ import {
   BuildingModel,
   DeviceModel,
   type DeviceModelAny,
-  type FloorModel,
   type IFloorModel,
 } from '.'
 import type { FloorData } from '../types'
 
-export default class implements IFloorModel {
+export default class FloorModel implements IFloorModel {
   public static readonly floors = new Map<number, FloorModel>()
 
   public readonly buildingId: number
