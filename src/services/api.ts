@@ -436,13 +436,9 @@ export default class API implements IMELCloudAPI {
 
   async #upsertBuilding(building: Building): Promise<void> {
     let params: SettingsParams | null = null
-    const devices = DeviceModel.getByBuildingId(building.ID)
-    if ((!building.FPDefined || !building.HMDefined) && devices.length) {
-      const [device] = devices
-      params = {
-        id: device.id,
-        tableName: 'DeviceLocation',
-      }
+    if (!building.FPDefined || !building.HMDefined) {
+      const [{ id }] = DeviceModel.getByBuildingId(building.ID)
+      params = { id, tableName: 'DeviceLocation' }
     }
     BuildingModel.upsert({
       ...building,
