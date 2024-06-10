@@ -1,23 +1,20 @@
 import type {
   DeviceType,
   EnergyData,
-  EnergyPostData,
   ErrorData,
-  ErrorPostData,
   FailureData,
   FrostProtectionData,
-  FrostProtectionPostData,
   GetDeviceData,
   HolidayModeData,
-  HolidayModePostData,
   ListDevice,
   SetDeviceData,
-  SetPowerPostData,
   SuccessData,
   TilesData,
   UpdateDeviceData,
+  WifiData,
 } from '../types'
 import type API from '../services'
+import { DateTime } from 'luxon'
 import { DeviceModel } from '../models'
 import type { IDeviceFacade } from '.'
 
@@ -54,22 +51,34 @@ export default class<T extends keyof typeof DeviceType>
     ).data as GetDeviceData[T]
   }
 
-  public async getEnergyReport(
-    postData: Omit<EnergyPostData, 'DeviceID'>,
-  ): Promise<EnergyData[T]> {
+  public async getEnergyReport({
+    from,
+    to,
+  }: {
+    from: string
+    to: string
+  }): Promise<EnergyData[T]> {
     return (
       await this.#api.getEnergyReport({
-        postData: { ...postData, DeviceID: this.model.id },
+        postData: { DeviceID: this.model.id, FromDate: from, ToDate: to },
       })
     ).data as EnergyData[T]
   }
 
-  public async getErrors(
-    postData: Omit<ErrorPostData, 'DeviceIDs'>,
-  ): Promise<ErrorData[] | FailureData> {
+  public async getErrors({
+    from,
+    to,
+  }: {
+    from: string
+    to: string
+  }): Promise<ErrorData[] | FailureData> {
     return (
       await this.#api.getErrors({
-        postData: { ...postData, DeviceIDs: [this.model.id] },
+        postData: {
+          DeviceIDs: [this.model.id],
+          FromDate: from,
+          ToDate: to,
+        },
       })
     ).data
   }
@@ -112,6 +121,16 @@ export default class<T extends keyof typeof DeviceType>
         ).data
   }
 
+  public async getWifiReport(
+    hour: number = DateTime.now().hour,
+  ): Promise<WifiData> {
+    return (
+      await this.#api.getWifiReport({
+        postData: { devices: [this.model.id], hour },
+      })
+    ).data
+  }
+
   public async set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
     return (
       await this.#api.setDevice({
@@ -121,35 +140,75 @@ export default class<T extends keyof typeof DeviceType>
     ).data
   }
 
-  public async setFrostProtection(
-    postData: Omit<FrostProtectionPostData, 'DeviceIds'>,
-  ): Promise<FailureData | SuccessData> {
+  public async setFrostProtection({
+    enable,
+    max,
+    min,
+  }: {
+    enable?: boolean
+    max: number
+    min: number
+  }): Promise<FailureData | SuccessData> {
     return (
       await this.#api.setFrostProtection({
-        postData: { ...postData, DeviceIds: [this.model.id] },
-      })
-    ).data
-  }
-
-  public async setHolidayMode(
-    postData: Omit<HolidayModePostData, 'HMTimeZones'>,
-  ): Promise<FailureData | SuccessData> {
-    return (
-      await this.#api.setHolidayMode({
         postData: {
-          ...postData,
-          HMTimeZones: [{ Devices: [this.model.id] }],
+          DeviceIds: [this.model.id],
+          Enabled: enable ?? true,
+          MaximumTemperature: max,
+          MinimumTemperature: min,
         },
       })
     ).data
   }
 
-  public async setPower(
-    postData: Omit<SetPowerPostData, 'DeviceIds'>,
-  ): Promise<boolean> {
+  public async setHolidayMode({
+    enable,
+    from,
+    to,
+  }: {
+    enable?: boolean
+    from: string
+    to: string
+  }): Promise<FailureData | SuccessData> {
+    const isEnabled = enable ?? true
+    const startDate = isEnabled ? DateTime.fromISO(from).toUTC() : null
+    const endDate = isEnabled ? DateTime.fromISO(to).toUTC() : null
+    return (
+      await this.#api.setHolidayMode({
+        postData: {
+          Enabled: isEnabled,
+          EndDate:
+            startDate ?
+              {
+                Day: startDate.day,
+                Hour: startDate.hour,
+                Minute: startDate.minute,
+                Month: startDate.month,
+                Second: startDate.second,
+                Year: startDate.year,
+              }
+            : null,
+          HMTimeZones: [{ Devices: [this.model.id] }],
+          StartDate:
+            endDate ?
+              {
+                Day: endDate.day,
+                Hour: endDate.hour,
+                Minute: endDate.minute,
+                Month: endDate.month,
+                Second: endDate.second,
+                Year: endDate.year,
+              }
+            : null,
+        },
+      })
+    ).data
+  }
+
+  public async setPower(enable = true): Promise<boolean> {
     return (
       await this.#api.setPower({
-        postData: { ...postData, DeviceIds: [this.model.id] },
+        postData: { DeviceIds: [this.model.id], Power: enable },
       })
     ).data
   }

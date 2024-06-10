@@ -45,6 +45,7 @@ export type {
   Building,
   BuildingData,
   BuildingSettings,
+  DateTimeComponents,
   DeviceDataNotInList,
   EffectiveFlags,
   EnergyData,

@@ -131,16 +131,17 @@ export interface FrostProtectionData {
   readonly FPMinTemperature: number
 }
 
+export interface DateTimeComponents {
+  readonly Day: number
+  readonly Hour: number
+  readonly Minute: number
+  readonly Month: number
+  readonly Second: number
+  readonly Year: number
+}
 export interface HolidayModePostData {
   readonly Enabled: boolean
-  readonly EndDate: {
-    readonly Day: number
-    readonly Hour: number
-    readonly Minute: number
-    readonly Month: number
-    readonly Second: number
-    readonly Year: number
-  } | null
+  readonly EndDate: DateTimeComponents | null
   readonly HMTimeZones: readonly {
     readonly Areas?: readonly number[]
     readonly Buildings?: readonly number[]
@@ -148,14 +149,7 @@ export interface HolidayModePostData {
     readonly Floors?: readonly number[]
     readonly TimeZone?: number
   }[]
-  readonly StartDate: {
-    readonly Day: number
-    readonly Hour: number
-    readonly Minute: number
-    readonly Month: number
-    readonly Second: number
-    readonly Year: number
-  } | null
+  readonly StartDate: DateTimeComponents | null
 }
 export interface HolidayModeData {
   readonly EndDate: {

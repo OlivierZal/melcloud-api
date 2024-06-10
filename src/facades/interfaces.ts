@@ -2,37 +2,50 @@ import type {
   BuildingSettings,
   DeviceType,
   EnergyData,
-  EnergyPostData,
   ErrorData,
-  ErrorPostData,
   FailureData,
   FrostProtectionData,
-  FrostProtectionPostData,
   GetDeviceData,
   HolidayModeData,
-  HolidayModePostData,
   ListDevice,
   SetAtaGroupPostData,
   SetDeviceData,
-  SetPowerPostData,
   SuccessData,
   TilesData,
   UpdateDeviceData,
+  WifiData,
 } from '../types'
 
 export interface IBaseFacade {
-  getErrors: (
-    postData: Omit<ErrorPostData, 'DeviceIDs'>,
-  ) => Promise<ErrorData[] | FailureData>
+  getErrors: ({
+    from,
+    to,
+  }: {
+    from: string
+    to: string
+  }) => Promise<ErrorData[] | FailureData>
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
-  setFrostProtection: (
-    postData: Omit<FrostProtectionPostData, 'BuildingIds'>,
-  ) => Promise<FailureData | SuccessData>
-  setHolidayMode: (
-    postData: Omit<HolidayModePostData, 'HMTimeZones'>,
-  ) => Promise<FailureData | SuccessData>
-  setPower: (postData: Omit<SetPowerPostData, 'DeviceIds'>) => Promise<boolean>
+  getWifiReport: (hour: number) => Promise<WifiData>
+  setFrostProtection: ({
+    enable,
+    max,
+    min,
+  }: {
+    enable?: boolean
+    max: number
+    min: number
+  }) => Promise<FailureData | SuccessData>
+  setHolidayMode: ({
+    enable,
+    from,
+    to,
+  }: {
+    enable?: boolean
+    from: string
+    to: string
+  }) => Promise<FailureData | SuccessData>
+  setPower: (enable?: boolean) => Promise<boolean>
 }
 
 export interface IBaseSuperDeviceFacade {
@@ -54,9 +67,13 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   extends IBaseFacade {
   fetch: () => Promise<ListDevice[T]['Device']>
   get: () => Promise<GetDeviceData[T]>
-  getEnergyReport: (
-    postData: Omit<EnergyPostData, 'DeviceID'>,
-  ) => Promise<EnergyData[T]>
+  getEnergyReport: ({
+    from,
+    to,
+  }: {
+    from: string
+    to: string
+  }) => Promise<EnergyData[T]>
   getTile: ((select?: false) => Promise<TilesData<null>>) &
     ((select: true) => Promise<TilesData<T>>)
   set: (postData: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>

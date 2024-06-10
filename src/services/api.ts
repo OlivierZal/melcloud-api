@@ -51,7 +51,7 @@ const LOGIN_URL = '/Login/ClientLogin'
 export default class API implements IMELCloudAPI {
   readonly #settingManager?: SettingManager
 
-  public language: Language
+  public language: string
 
   #contextKey = ''
 
@@ -90,10 +90,7 @@ export default class API implements IMELCloudAPI {
     if (typeof timezone !== 'undefined') {
       LuxonSettings.defaultZone = timezone
     }
-    this.language =
-      language in Language ?
-        Language[language as keyof typeof Language]
-      : Language.en
+    this.language = language
     this.#logger = logger
     this.#settingManager = settingManager
     this.#api = createAxiosInstance({
@@ -151,7 +148,7 @@ export default class API implements IMELCloudAPI {
             postData: {
               AppVersion: '1.32.0.0',
               Email: username,
-              Language: this.language,
+              Language: this.#getLanguage(),
               Password: password,
               Persist: true,
             },
@@ -337,13 +334,9 @@ export default class API implements IMELCloudAPI {
     )
   }
 
-  public async setLanguage({
-    postData: { language },
-  }: {
-    postData: { language: Language }
-  }): Promise<{ data: boolean }> {
+  public async setLanguage(language: string): Promise<{ data: boolean }> {
     const response = await this.#api.post<boolean>('/User/UpdateLanguage', {
-      language,
+      language: this.#getLanguage(language) satisfies Language,
     })
     if (response.data) {
       this.language = language
@@ -357,6 +350,12 @@ export default class API implements IMELCloudAPI {
     postData: SetPowerPostData
   }): Promise<{ data: boolean }> {
     return this.#api.post<boolean>('/Device/Power', postData)
+  }
+
+  #getLanguage(language = this.language): Language {
+    return language in Language ?
+        Language[language as keyof typeof Language]
+      : Language.en
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {

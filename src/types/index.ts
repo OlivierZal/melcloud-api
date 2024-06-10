@@ -39,6 +39,7 @@ export type {
   Building,
   BuildingData,
   BuildingSettings,
+  DateTimeComponents,
   EffectiveFlags,
   EnergyData,
   EnergyPostData,

@@ -12,7 +12,6 @@ import type {
   GetDeviceDataParams,
   HolidayModeData,
   HolidayModePostData,
-  Language,
   LoginCredentials,
   LoginData,
   LoginPostData,
@@ -120,15 +119,11 @@ export interface IMELCloudAPI {
   }: {
     postData: HolidayModePostData
   }) => Promise<{ data: FailureData | SuccessData }>
-  setLanguage: ({
-    postData,
-  }: {
-    postData: { language: Language }
-  }) => Promise<{ data: boolean }>
+  setLanguage: (language: string) => Promise<{ data: boolean }>
   setPower: ({
     postData,
   }: {
     postData: SetPowerPostData
   }) => Promise<{ data: boolean }>
-  readonly language: Language
+  readonly language: string
 }

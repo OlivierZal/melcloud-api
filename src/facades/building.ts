@@ -1,19 +1,17 @@
 import type {
   BuildingSettings,
   ErrorData,
-  ErrorPostData,
   FailureData,
   FrostProtectionData,
-  FrostProtectionPostData,
   HolidayModeData,
-  HolidayModePostData,
   SetAtaGroupPostData,
-  SetPowerPostData,
   SuccessData,
   TilesData,
+  WifiData,
 } from '../types'
 import type API from '../services'
 import { BuildingModel } from '../models'
+import { DateTime } from 'luxon'
 import type { IBuildingFacade } from '.'
 
 export default class implements IBuildingFacade {
@@ -39,12 +37,20 @@ export default class implements IBuildingFacade {
     return this.model.data
   }
 
-  public async getErrors(
-    postData: Omit<ErrorPostData, 'DeviceIDs'>,
-  ): Promise<ErrorData[] | FailureData> {
+  public async getErrors({
+    from,
+    to,
+  }: {
+    from: string
+    to: string
+  }): Promise<ErrorData[] | FailureData> {
     return (
       await this.#api.getErrors({
-        postData: { ...postData, DeviceIDs: this.model.deviceIds },
+        postData: {
+          DeviceIDs: this.model.deviceIds,
+          FromDate: from,
+          ToDate: to,
+        },
       })
     ).data
   }
@@ -91,6 +97,16 @@ export default class implements IBuildingFacade {
     ).data
   }
 
+  public async getWifiReport(
+    hour: number = DateTime.now().hour,
+  ): Promise<WifiData> {
+    return (
+      await this.#api.getWifiReport({
+        postData: { devices: this.model.deviceIds, hour },
+      })
+    ).data
+  }
+
   public async setAtaGroup(
     postData: Omit<SetAtaGroupPostData, 'Specification'>,
   ): Promise<FailureData | SuccessData> {
@@ -104,13 +120,21 @@ export default class implements IBuildingFacade {
     ).data
   }
 
-  public async setFrostProtection(
-    postData: Omit<FrostProtectionPostData, 'BuildingIds'>,
-  ): Promise<FailureData | SuccessData> {
+  public async setFrostProtection({
+    enable,
+    max,
+    min,
+  }: {
+    enable?: boolean
+    max: number
+    min: number
+  }): Promise<FailureData | SuccessData> {
     return (
       await this.#api.setFrostProtection({
         postData: {
-          ...postData,
+          Enabled: enable ?? true,
+          MaximumTemperature: max,
+          MinimumTemperature: min,
           ...(this.model.data.FPDefined ?
             { BuildingIds: [this.model.id] }
           : { DeviceIds: this.model.deviceIds }),
@@ -119,29 +143,58 @@ export default class implements IBuildingFacade {
     ).data
   }
 
-  public async setHolidayMode(
-    postData: Omit<HolidayModePostData, 'HMTimeZones'>,
-  ): Promise<FailureData | SuccessData> {
+  public async setHolidayMode({
+    enable,
+    from,
+    to,
+  }: {
+    enable?: boolean
+    from: string
+    to: string
+  }): Promise<FailureData | SuccessData> {
+    const isEnabled = enable ?? true
+    const startDate = isEnabled ? DateTime.fromISO(from).toUTC() : null
+    const endDate = isEnabled ? DateTime.fromISO(to).toUTC() : null
     return (
       await this.#api.setHolidayMode({
         postData: {
-          ...postData,
+          Enabled: isEnabled,
+          EndDate:
+            startDate ?
+              {
+                Day: startDate.day,
+                Hour: startDate.hour,
+                Minute: startDate.minute,
+                Month: startDate.month,
+                Second: startDate.second,
+                Year: startDate.year,
+              }
+            : null,
           HMTimeZones: [
             this.model.data.HMDefined ?
               { Buildings: [this.model.id] }
             : { Devices: this.model.deviceIds },
           ],
+          StartDate:
+            endDate ?
+              {
+                Day: endDate.day,
+                Hour: endDate.hour,
+                Minute: endDate.minute,
+                Month: endDate.month,
+                Second: endDate.second,
+                Year: endDate.year,
+              }
+            : null,
         },
       })
     ).data
   }
 
-  public async setPower(
-    postData: Omit<SetPowerPostData, 'DeviceIds'>,
-  ): Promise<boolean> {
+  public async setPower(enable = true): Promise<boolean> {
     return (
       await this.#api.setPower({
-        postData: { ...postData, DeviceIds: this.model.deviceIds },
+        postData: { DeviceIds: this.model.deviceIds, Power: enable },
       })
     ).data
   }
