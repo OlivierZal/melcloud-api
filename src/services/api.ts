@@ -87,6 +87,7 @@ export default class API implements IMELCloudAPI {
       shouldVerifySSL = true,
       timezone,
     } = config
+    LuxonSettings.defaultLocale = language
     if (typeof timezone !== 'undefined') {
       LuxonSettings.defaultZone = timezone
     }
