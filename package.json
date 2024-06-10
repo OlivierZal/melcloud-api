@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "3.1.4",
+  "version": "4.0.0",
   "description": "MELCloud API for Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

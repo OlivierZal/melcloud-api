@@ -153,29 +153,13 @@ export default class implements IBuildingFacade {
     to: string
   }): Promise<FailureData | SuccessData> {
     const isEnabled = enable ?? true
-    const startDate = isEnabled ? DateTime.fromISO(from).toUTC() : null
-    const endDate = isEnabled ? DateTime.fromISO(to).toUTC() : null
+    const startDate = isEnabled ? DateTime.fromISO(from) : null
+    const endDate = isEnabled ? DateTime.fromISO(to) : null
     return (
       await this.#api.setHolidayMode({
         postData: {
           Enabled: isEnabled,
           EndDate:
-            startDate ?
-              {
-                Day: startDate.day,
-                Hour: startDate.hour,
-                Minute: startDate.minute,
-                Month: startDate.month,
-                Second: startDate.second,
-                Year: startDate.year,
-              }
-            : null,
-          HMTimeZones: [
-            this.model.data.HMDefined ?
-              { Buildings: [this.model.id] }
-            : { Devices: this.model.deviceIds },
-          ],
-          StartDate:
             endDate ?
               {
                 Day: endDate.day,
@@ -184,6 +168,22 @@ export default class implements IBuildingFacade {
                 Month: endDate.month,
                 Second: endDate.second,
                 Year: endDate.year,
+              }
+            : null,
+          HMTimeZones: [
+            this.model.data.HMDefined ?
+              { Buildings: [this.model.id] }
+            : { Devices: this.model.deviceIds },
+          ],
+          StartDate:
+            startDate ?
+              {
+                Day: startDate.day,
+                Hour: startDate.hour,
+                Minute: startDate.minute,
+                Month: startDate.month,
+                Second: startDate.second,
+                Year: startDate.year,
               }
             : null,
         },
