@@ -13,7 +13,9 @@ import { AreaModel } from '../models'
 import { DateTime } from 'luxon'
 import type { IBaseSuperDeviceFacade } from '.'
 
-export default class<T extends number | null> implements IBaseSuperDeviceFacade {
+export default class<T extends number | null>
+  implements IBaseSuperDeviceFacade
+{
   readonly #api: API
 
   readonly #id: number
