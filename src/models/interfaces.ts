@@ -12,43 +12,36 @@ export interface IBaseModel {
   readonly name: string
 }
 
-export interface IBaseSubBuildingModel {
+export interface IBaseSubBuildingModel extends IBaseModel {
   readonly building: BuildingModel | null
   readonly buildingId: number
 }
 
-export interface IBaseSubFloorModel {
+export interface IBaseSubFloorModel extends IBaseSubBuildingModel {
   readonly floor: FloorModel | null
   readonly floorId: number | null
 }
 
-export interface IBaseSuperDeviceModel {
+export interface IBaseSuperDeviceModel extends IBaseModel {
   readonly deviceIds: number[]
   readonly devices: DeviceModelAny[]
 }
 
-export interface IBuildingModel extends IBaseModel, IBaseSuperDeviceModel {
+export interface IBuildingModel extends IBaseSuperDeviceModel {
   readonly data: BuildingSettings
 }
 
-export interface IAreaModel
-  extends IBaseModel,
-    IBaseSubBuildingModel,
-    IBaseSubFloorModel,
-    IBaseSuperDeviceModel {}
+export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}
 
 export interface IFloorModel
-  extends IBaseModel,
-    IBaseSubBuildingModel,
+  extends IBaseSubBuildingModel,
     IBaseSuperDeviceModel {
   readonly areaIds: number[]
   readonly areas: AreaModel<number>[]
 }
 
 export interface IDeviceModel<T extends keyof typeof DeviceType>
-  extends IBaseModel,
-    IBaseSubBuildingModel,
-    IBaseSubFloorModel {
+  extends IBaseSubFloorModel {
   readonly area: AreaModelAny | null
   readonly areaId: number | null
   readonly data: ListDevice[T]['Device']

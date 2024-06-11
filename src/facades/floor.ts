@@ -11,9 +11,9 @@ import type {
 import type API from '../services'
 import { DateTime } from 'luxon'
 import { FloorModel } from '../models'
-import type { IFloorFacade } from '.'
+import type { IBaseSuperDeviceFacade } from '.'
 
-export default class implements IFloorFacade {
+export default class implements IBaseSuperDeviceFacade {
   readonly #api: API
 
   readonly #id: number

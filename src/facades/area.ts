@@ -11,9 +11,9 @@ import type {
 import type API from '../services'
 import { AreaModel } from '../models'
 import { DateTime } from 'luxon'
-import type { IAreaFacade } from '.'
+import type { IBaseSuperDeviceFacade } from '.'
 
-export default class<T extends number | null> implements IAreaFacade {
+export default class<T extends number | null> implements IBaseSuperDeviceFacade {
   readonly #api: API
 
   readonly #id: number

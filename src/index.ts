@@ -2,10 +2,8 @@ import 'source-map-support/register'
 export type {
   IBaseFacade,
   IBaseSuperDeviceFacade,
-  IAreaFacade,
   IBuildingFacade,
   IDeviceFacade,
-  IFloorFacade,
 } from './facades'
 export {
   AreaFacade,

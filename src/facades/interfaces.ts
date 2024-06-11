@@ -48,20 +48,16 @@ export interface IBaseFacade {
   setPower: (enable?: boolean) => Promise<boolean>
 }
 
-export interface IBaseSuperDeviceFacade {
+export interface IBaseSuperDeviceFacade extends IBaseFacade {
   getTiles: () => Promise<TilesData<null>>
   setAtaGroup: (
     postData: Omit<SetAtaGroupPostData, 'Specification'>,
   ) => Promise<FailureData | SuccessData>
 }
 
-export interface IBuildingFacade extends IBaseFacade, IBaseSuperDeviceFacade {
+export interface IBuildingFacade extends IBaseSuperDeviceFacade {
   fetch: () => Promise<BuildingSettings>
 }
-
-export interface IAreaFacade extends IBaseFacade, IBaseSuperDeviceFacade {}
-
-export interface IFloorFacade extends IBaseFacade, IBaseSuperDeviceFacade {}
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>
   extends IBaseFacade {

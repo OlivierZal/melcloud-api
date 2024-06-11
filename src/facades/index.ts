@@ -1,10 +1,8 @@
 export type {
   IBaseFacade,
   IBaseSuperDeviceFacade,
-  IAreaFacade,
   IBuildingFacade,
   IDeviceFacade,
-  IFloorFacade,
 } from './interfaces'
 export { default as AreaFacade } from './area'
 export { default as BuildingFacade } from './building'
