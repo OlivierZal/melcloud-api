@@ -164,7 +164,7 @@
 
 #### Implements
 
-- [`IAreaFacade`](README.md#iareafacade)
+- [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade)
 
 #### Constructors
 
@@ -187,7 +187,7 @@ new AreaFacade<T>(api: default, id: number): AreaFacade<T>
 
 ###### Source
 
-[src/facades/area.ts:21](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L21)
+[src/facades/area.ts:23](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L23)
 
 #### Accessors
 
@@ -203,7 +203,7 @@ get model(): AreaModel<T>
 
 ###### Source
 
-[src/facades/area.ts:26](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L26)
+[src/facades/area.ts:28](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L28)
 
 #### Methods
 
@@ -230,11 +230,11 @@ getErrors(__namedParameters: {
 
 ###### Implementation of
 
-[`IAreaFacade`](README.md#iareafacade).`getErrors`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getErrors`
 
 ###### Source
 
-[src/facades/area.ts:34](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L34)
+[src/facades/area.ts:36](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L36)
 
 ##### getFrostProtection()
 
@@ -248,11 +248,11 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 ###### Implementation of
 
-[`IAreaFacade`](README.md#iareafacade).`getFrostProtection`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getFrostProtection`
 
 ###### Source
 
-[src/facades/area.ts:52](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L52)
+[src/facades/area.ts:54](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L54)
 
 ##### getHolidayMode()
 
@@ -266,11 +266,11 @@ getHolidayMode(): Promise<HolidayModeData>
 
 ###### Implementation of
 
-[`IAreaFacade`](README.md#iareafacade).`getHolidayMode`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getHolidayMode`
 
 ###### Source
 
-[src/facades/area.ts:69](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L69)
+[src/facades/area.ts:71](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L71)
 
 ##### getTiles()
 
@@ -284,11 +284,11 @@ getTiles(): Promise<TilesData<null>>
 
 ###### Implementation of
 
-[`IAreaFacade`](README.md#iareafacade).`getTiles`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getTiles`
 
 ###### Source
 
-[src/facades/area.ts:86](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L86)
+[src/facades/area.ts:88](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L88)
 
 ##### getWifiReport()
 
@@ -308,11 +308,11 @@ getWifiReport(hour: number): Promise<WifiData>
 
 ###### Implementation of
 
-[`IAreaFacade`](README.md#iareafacade).`getWifiReport`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getWifiReport`
 
 ###### Source
 
-[src/facades/area.ts:94](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L94)
+[src/facades/area.ts:96](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L96)
 
 ##### setAtaGroup()
 
@@ -332,11 +332,11 @@ setAtaGroup(postData: Omit<SetAtaGroupPostData, "Specification">): Promise<Succe
 
 ###### Implementation of
 
-[`IAreaFacade`](README.md#iareafacade).`setAtaGroup`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setAtaGroup`
 
 ###### Source
 
-[src/facades/area.ts:104](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L104)
+[src/facades/area.ts:106](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L106)
 
 ##### setFrostProtection()
 
@@ -363,11 +363,11 @@ setFrostProtection(__namedParameters: {
 
 ###### Implementation of
 
-[`IAreaFacade`](README.md#iareafacade).`setFrostProtection`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setFrostProtection`
 
 ###### Source
 
-[src/facades/area.ts:114](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L114)
+[src/facades/area.ts:116](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L116)
 
 ##### setHolidayMode()
 
@@ -394,11 +394,11 @@ setHolidayMode(__namedParameters: {
 
 ###### Implementation of
 
-[`IAreaFacade`](README.md#iareafacade).`setHolidayMode`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setHolidayMode`
 
 ###### Source
 
-[src/facades/area.ts:137](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L137)
+[src/facades/area.ts:139](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L139)
 
 ##### setPower()
 
@@ -418,11 +418,11 @@ setPower(enable: boolean): Promise<boolean>
 
 ###### Implementation of
 
-[`IAreaFacade`](README.md#iareafacade).`setPower`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setPower`
 
 ###### Source
 
-[src/facades/area.ts:185](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/area.ts#L185)
+[src/facades/area.ts:187](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/area.ts#L187)
 
 ---
 
@@ -462,7 +462,7 @@ get building(): null | BuildingModel
 
 ###### Source
 
-[src/models/area.ts:35](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/area.ts#L35)
+[src/models/area.ts:35](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/area.ts#L35)
 
 ##### deviceIds
 
@@ -476,7 +476,7 @@ get deviceIds(): number[]
 
 ###### Source
 
-[src/models/area.ts:39](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/area.ts#L39)
+[src/models/area.ts:39](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/area.ts#L39)
 
 ##### devices
 
@@ -490,7 +490,7 @@ get devices(): DeviceModelAny[]
 
 ###### Source
 
-[src/models/area.ts:43](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/area.ts#L43)
+[src/models/area.ts:43](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/area.ts#L43)
 
 ##### floor
 
@@ -504,7 +504,7 @@ get floor(): null | FloorModel
 
 ###### Source
 
-[src/models/area.ts:47](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/area.ts#L47)
+[src/models/area.ts:47](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/area.ts#L47)
 
 #### Methods
 
@@ -520,7 +520,7 @@ static getAll(): AreaModelAny[]
 
 ###### Source
 
-[src/models/area.ts:53](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/area.ts#L53)
+[src/models/area.ts:53](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/area.ts#L53)
 
 ##### getByBuildingId()
 
@@ -540,7 +540,7 @@ static getByBuildingId(buildingId: number): AreaModelAny[]
 
 ###### Source
 
-[src/models/area.ts:57](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/area.ts#L57)
+[src/models/area.ts:57](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/area.ts#L57)
 
 ##### getById()
 
@@ -560,7 +560,7 @@ static getById(id: number): undefined | AreaModelAny
 
 ###### Source
 
-[src/models/area.ts:61](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/area.ts#L61)
+[src/models/area.ts:61](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/area.ts#L61)
 
 ##### getByName()
 
@@ -580,7 +580,7 @@ static getByName(areaName: string): undefined | AreaModelAny
 
 ###### Source
 
-[src/models/area.ts:65](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/area.ts#L65)
+[src/models/area.ts:65](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/area.ts#L65)
 
 ##### upsert()
 
@@ -600,7 +600,7 @@ static upsert(data: AreaDataAny): void
 
 ###### Source
 
-[src/models/area.ts:69](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/area.ts#L69)
+[src/models/area.ts:69](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/area.ts#L69)
 
 ---
 
@@ -631,7 +631,7 @@ new BuildingFacade(api: default, id: number): BuildingFacade
 
 ###### Source
 
-[src/facades/building.ts:22](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L22)
+[src/facades/building.ts:22](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L22)
 
 #### Accessors
 
@@ -647,7 +647,7 @@ get model(): BuildingModel
 
 ###### Source
 
-[src/facades/building.ts:27](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L27)
+[src/facades/building.ts:27](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L27)
 
 #### Methods
 
@@ -667,7 +667,7 @@ fetch(): Promise<BuildingSettings>
 
 ###### Source
 
-[src/facades/building.ts:35](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L35)
+[src/facades/building.ts:35](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L35)
 
 ##### getErrors()
 
@@ -696,7 +696,7 @@ getErrors(__namedParameters: {
 
 ###### Source
 
-[src/facades/building.ts:40](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L40)
+[src/facades/building.ts:40](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L40)
 
 ##### getFrostProtection()
 
@@ -714,7 +714,7 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 ###### Source
 
-[src/facades/building.ts:58](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L58)
+[src/facades/building.ts:58](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L58)
 
 ##### getHolidayMode()
 
@@ -732,7 +732,7 @@ getHolidayMode(): Promise<HolidayModeData>
 
 ###### Source
 
-[src/facades/building.ts:75](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L75)
+[src/facades/building.ts:75](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L75)
 
 ##### getTiles()
 
@@ -750,7 +750,7 @@ getTiles(): Promise<TilesData<null>>
 
 ###### Source
 
-[src/facades/building.ts:92](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L92)
+[src/facades/building.ts:92](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L92)
 
 ##### getWifiReport()
 
@@ -774,7 +774,7 @@ getWifiReport(hour: number): Promise<WifiData>
 
 ###### Source
 
-[src/facades/building.ts:100](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L100)
+[src/facades/building.ts:100](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L100)
 
 ##### setAtaGroup()
 
@@ -798,7 +798,7 @@ setAtaGroup(postData: Omit<SetAtaGroupPostData, "Specification">): Promise<Succe
 
 ###### Source
 
-[src/facades/building.ts:110](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L110)
+[src/facades/building.ts:110](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L110)
 
 ##### setFrostProtection()
 
@@ -829,7 +829,7 @@ setFrostProtection(__namedParameters: {
 
 ###### Source
 
-[src/facades/building.ts:123](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L123)
+[src/facades/building.ts:123](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L123)
 
 ##### setHolidayMode()
 
@@ -860,7 +860,7 @@ setHolidayMode(__namedParameters: {
 
 ###### Source
 
-[src/facades/building.ts:146](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L146)
+[src/facades/building.ts:146](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L146)
 
 ##### setPower()
 
@@ -884,7 +884,7 @@ setPower(enable: boolean): Promise<boolean>
 
 ###### Source
 
-[src/facades/building.ts:194](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/building.ts#L194)
+[src/facades/building.ts:194](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/building.ts#L194)
 
 ---
 
@@ -917,7 +917,7 @@ get deviceIds(): number[]
 
 ###### Source
 
-[src/models/building.ts:19](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/building.ts#L19)
+[src/models/building.ts:19](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/building.ts#L19)
 
 ##### devices
 
@@ -931,7 +931,7 @@ get devices(): DeviceModelAny[]
 
 ###### Source
 
-[src/models/building.ts:23](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/building.ts#L23)
+[src/models/building.ts:23](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/building.ts#L23)
 
 #### Methods
 
@@ -947,7 +947,7 @@ static getAll(): BuildingModel[]
 
 ###### Source
 
-[src/models/building.ts:29](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/building.ts#L29)
+[src/models/building.ts:29](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/building.ts#L29)
 
 ##### getById()
 
@@ -967,7 +967,7 @@ static getById(id: number): undefined | BuildingModel
 
 ###### Source
 
-[src/models/building.ts:33](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/building.ts#L33)
+[src/models/building.ts:33](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/building.ts#L33)
 
 ##### getByName()
 
@@ -987,7 +987,7 @@ static getByName(buildingName: string): undefined | BuildingModel
 
 ###### Source
 
-[src/models/building.ts:37](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/building.ts#L37)
+[src/models/building.ts:37](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/building.ts#L37)
 
 ##### upsert()
 
@@ -1007,7 +1007,7 @@ static upsert(data: BuildingData): void
 
 ###### Source
 
-[src/models/building.ts:41](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/building.ts#L41)
+[src/models/building.ts:41](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/building.ts#L41)
 
 ---
 
@@ -1044,7 +1044,7 @@ new DeviceFacade<T>(api: default, id: number): DeviceFacade<T>
 
 ###### Source
 
-[src/facades/device.ts:28](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L28)
+[src/facades/device.ts:28](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L28)
 
 #### Accessors
 
@@ -1060,7 +1060,7 @@ get model(): DeviceModel<T>
 
 ###### Source
 
-[src/facades/device.ts:33](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L33)
+[src/facades/device.ts:33](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L33)
 
 #### Methods
 
@@ -1080,7 +1080,7 @@ fetch(): Promise<ListDevice[T]["Device"]>
 
 ###### Source
 
-[src/facades/device.ts:41](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L41)
+[src/facades/device.ts:41](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L41)
 
 ##### get()
 
@@ -1098,7 +1098,7 @@ get(): Promise<GetDeviceData[T]>
 
 ###### Source
 
-[src/facades/device.ts:46](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L46)
+[src/facades/device.ts:46](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L46)
 
 ##### getEnergyReport()
 
@@ -1127,7 +1127,7 @@ getEnergyReport(__namedParameters: {
 
 ###### Source
 
-[src/facades/device.ts:54](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L54)
+[src/facades/device.ts:54](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L54)
 
 ##### getErrors()
 
@@ -1156,7 +1156,7 @@ getErrors(__namedParameters: {
 
 ###### Source
 
-[src/facades/device.ts:68](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L68)
+[src/facades/device.ts:68](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L68)
 
 ##### getFrostProtection()
 
@@ -1174,7 +1174,7 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 ###### Source
 
-[src/facades/device.ts:86](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L86)
+[src/facades/device.ts:86](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L86)
 
 ##### getHolidayMode()
 
@@ -1192,7 +1192,7 @@ getHolidayMode(): Promise<HolidayModeData>
 
 ###### Source
 
-[src/facades/device.ts:94](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L94)
+[src/facades/device.ts:94](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L94)
 
 ##### getTile()
 
@@ -1218,7 +1218,7 @@ getTile(select?: false): Promise<TilesData<null>>
 
 ###### Source
 
-[src/facades/device.ts:102](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L102)
+[src/facades/device.ts:102](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L102)
 
 ###### getTile(select)
 
@@ -1242,7 +1242,7 @@ getTile(select: true): Promise<TilesData<T>>
 
 ###### Source
 
-[src/facades/device.ts:103](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L103)
+[src/facades/device.ts:103](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L103)
 
 ##### getWifiReport()
 
@@ -1266,7 +1266,7 @@ getWifiReport(hour: number): Promise<WifiData>
 
 ###### Source
 
-[src/facades/device.ts:124](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L124)
+[src/facades/device.ts:124](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L124)
 
 ##### set()
 
@@ -1290,7 +1290,7 @@ set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]>
 
 ###### Source
 
-[src/facades/device.ts:134](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L134)
+[src/facades/device.ts:134](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L134)
 
 ##### setFrostProtection()
 
@@ -1321,7 +1321,7 @@ setFrostProtection(__namedParameters: {
 
 ###### Source
 
-[src/facades/device.ts:143](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L143)
+[src/facades/device.ts:143](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L143)
 
 ##### setHolidayMode()
 
@@ -1352,7 +1352,7 @@ setHolidayMode(__namedParameters: {
 
 ###### Source
 
-[src/facades/device.ts:164](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L164)
+[src/facades/device.ts:164](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L164)
 
 ##### setPower()
 
@@ -1376,7 +1376,7 @@ setPower(enable: boolean): Promise<boolean>
 
 ###### Source
 
-[src/facades/device.ts:208](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/device.ts#L208)
+[src/facades/device.ts:208](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/device.ts#L208)
 
 ---
 
@@ -1419,7 +1419,7 @@ get area(): null | AreaModelAny
 
 ###### Source
 
-[src/models/device.ts:52](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L52)
+[src/models/device.ts:52](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L52)
 
 ##### building
 
@@ -1433,7 +1433,7 @@ get building(): null | BuildingModel
 
 ###### Source
 
-[src/models/device.ts:56](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L56)
+[src/models/device.ts:56](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L56)
 
 ##### floor
 
@@ -1447,7 +1447,7 @@ get floor(): null | FloorModel
 
 ###### Source
 
-[src/models/device.ts:60](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L60)
+[src/models/device.ts:60](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L60)
 
 #### Methods
 
@@ -1463,7 +1463,7 @@ static getAll(): DeviceModelAny[]
 
 ###### Source
 
-[src/models/device.ts:66](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L66)
+[src/models/device.ts:66](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L66)
 
 ##### getByBuildingId()
 
@@ -1483,7 +1483,7 @@ static getByBuildingId(buildingId: number): DeviceModelAny[]
 
 ###### Source
 
-[src/models/device.ts:70](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L70)
+[src/models/device.ts:70](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L70)
 
 ##### getById()
 
@@ -1503,7 +1503,7 @@ static getById(id: number): undefined | DeviceModelAny
 
 ###### Source
 
-[src/models/device.ts:74](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L74)
+[src/models/device.ts:74](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L74)
 
 ##### getByName()
 
@@ -1523,7 +1523,7 @@ static getByName(deviceName: string): undefined | DeviceModelAny
 
 ###### Source
 
-[src/models/device.ts:78](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L78)
+[src/models/device.ts:78](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L78)
 
 ##### getByType()
 
@@ -1543,7 +1543,7 @@ static getByType(deviceType: "Ata" | "Atw" | "Erv"): DeviceModelAny[]
 
 ###### Source
 
-[src/models/device.ts:82](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L82)
+[src/models/device.ts:82](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L82)
 
 ##### upsert()
 
@@ -1563,7 +1563,7 @@ static upsert(data: ListDeviceAny): void
 
 ###### Source
 
-[src/models/device.ts:88](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L88)
+[src/models/device.ts:88](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L88)
 
 ##### upsertMany()
 
@@ -1583,7 +1583,7 @@ static upsertMany(dataList: readonly ListDeviceAny[]): void
 
 ###### Source
 
-[src/models/device.ts:92](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L92)
+[src/models/device.ts:92](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L92)
 
 ---
 
@@ -1591,7 +1591,7 @@ static upsertMany(dataList: readonly ListDeviceAny[]): void
 
 #### Implements
 
-- [`IFloorFacade`](README.md#ifloorfacade)
+- [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade)
 
 #### Constructors
 
@@ -1614,7 +1614,7 @@ new FloorFacade(api: default, id: number): FloorFacade
 
 ###### Source
 
-[src/facades/floor.ts:21](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L21)
+[src/facades/floor.ts:21](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L21)
 
 #### Accessors
 
@@ -1630,7 +1630,7 @@ get model(): FloorModel
 
 ###### Source
 
-[src/facades/floor.ts:26](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L26)
+[src/facades/floor.ts:26](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L26)
 
 #### Methods
 
@@ -1657,11 +1657,11 @@ getErrors(__namedParameters: {
 
 ###### Implementation of
 
-[`IFloorFacade`](README.md#ifloorfacade).`getErrors`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getErrors`
 
 ###### Source
 
-[src/facades/floor.ts:34](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L34)
+[src/facades/floor.ts:34](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L34)
 
 ##### getFrostProtection()
 
@@ -1675,11 +1675,11 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 ###### Implementation of
 
-[`IFloorFacade`](README.md#ifloorfacade).`getFrostProtection`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getFrostProtection`
 
 ###### Source
 
-[src/facades/floor.ts:52](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L52)
+[src/facades/floor.ts:52](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L52)
 
 ##### getHolidayMode()
 
@@ -1693,11 +1693,11 @@ getHolidayMode(): Promise<HolidayModeData>
 
 ###### Implementation of
 
-[`IFloorFacade`](README.md#ifloorfacade).`getHolidayMode`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getHolidayMode`
 
 ###### Source
 
-[src/facades/floor.ts:69](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L69)
+[src/facades/floor.ts:69](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L69)
 
 ##### getTiles()
 
@@ -1711,11 +1711,11 @@ getTiles(): Promise<TilesData<null>>
 
 ###### Implementation of
 
-[`IFloorFacade`](README.md#ifloorfacade).`getTiles`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getTiles`
 
 ###### Source
 
-[src/facades/floor.ts:86](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L86)
+[src/facades/floor.ts:86](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L86)
 
 ##### getWifiReport()
 
@@ -1735,11 +1735,11 @@ getWifiReport(hour: number): Promise<WifiData>
 
 ###### Implementation of
 
-[`IFloorFacade`](README.md#ifloorfacade).`getWifiReport`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getWifiReport`
 
 ###### Source
 
-[src/facades/floor.ts:94](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L94)
+[src/facades/floor.ts:94](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L94)
 
 ##### setAtaGroup()
 
@@ -1759,11 +1759,11 @@ setAtaGroup(postData: Omit<SetAtaGroupPostData, "Specification">): Promise<Succe
 
 ###### Implementation of
 
-[`IFloorFacade`](README.md#ifloorfacade).`setAtaGroup`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setAtaGroup`
 
 ###### Source
 
-[src/facades/floor.ts:104](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L104)
+[src/facades/floor.ts:104](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L104)
 
 ##### setFrostProtection()
 
@@ -1790,11 +1790,11 @@ setFrostProtection(__namedParameters: {
 
 ###### Implementation of
 
-[`IFloorFacade`](README.md#ifloorfacade).`setFrostProtection`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setFrostProtection`
 
 ###### Source
 
-[src/facades/floor.ts:114](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L114)
+[src/facades/floor.ts:114](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L114)
 
 ##### setHolidayMode()
 
@@ -1821,11 +1821,11 @@ setHolidayMode(__namedParameters: {
 
 ###### Implementation of
 
-[`IFloorFacade`](README.md#ifloorfacade).`setHolidayMode`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setHolidayMode`
 
 ###### Source
 
-[src/facades/floor.ts:137](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L137)
+[src/facades/floor.ts:137](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L137)
 
 ##### setPower()
 
@@ -1845,11 +1845,11 @@ setPower(enable: boolean): Promise<boolean>
 
 ###### Implementation of
 
-[`IFloorFacade`](README.md#ifloorfacade).`setPower`
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setPower`
 
 ###### Source
 
-[src/facades/floor.ts:185](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/facades/floor.ts#L185)
+[src/facades/floor.ts:185](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/facades/floor.ts#L185)
 
 ---
 
@@ -1882,7 +1882,7 @@ get areaIds(): number[]
 
 ###### Source
 
-[src/models/floor.ts:29](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/floor.ts#L29)
+[src/models/floor.ts:29](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/floor.ts#L29)
 
 ##### areas
 
@@ -1896,7 +1896,7 @@ get areas(): AreaModel<number>[]
 
 ###### Source
 
-[src/models/floor.ts:33](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/floor.ts#L33)
+[src/models/floor.ts:33](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/floor.ts#L33)
 
 ##### building
 
@@ -1910,7 +1910,7 @@ get building(): null | BuildingModel
 
 ###### Source
 
-[src/models/floor.ts:39](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/floor.ts#L39)
+[src/models/floor.ts:39](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/floor.ts#L39)
 
 ##### deviceIds
 
@@ -1924,7 +1924,7 @@ get deviceIds(): number[]
 
 ###### Source
 
-[src/models/floor.ts:43](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/floor.ts#L43)
+[src/models/floor.ts:43](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/floor.ts#L43)
 
 ##### devices
 
@@ -1938,7 +1938,7 @@ get devices(): DeviceModelAny[]
 
 ###### Source
 
-[src/models/floor.ts:47](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/floor.ts#L47)
+[src/models/floor.ts:47](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/floor.ts#L47)
 
 #### Methods
 
@@ -1954,7 +1954,7 @@ static getAll(): FloorModel[]
 
 ###### Source
 
-[src/models/floor.ts:51](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/floor.ts#L51)
+[src/models/floor.ts:51](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/floor.ts#L51)
 
 ##### getByBuildingId()
 
@@ -1974,7 +1974,7 @@ static getByBuildingId(buildingId: number): FloorModel[]
 
 ###### Source
 
-[src/models/floor.ts:55](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/floor.ts#L55)
+[src/models/floor.ts:55](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/floor.ts#L55)
 
 ##### getById()
 
@@ -1994,7 +1994,7 @@ static getById(id: number): undefined | FloorModel
 
 ###### Source
 
-[src/models/floor.ts:59](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/floor.ts#L59)
+[src/models/floor.ts:59](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/floor.ts#L59)
 
 ##### getByName()
 
@@ -2014,7 +2014,7 @@ static getByName(floorName: string): undefined | FloorModel
 
 ###### Source
 
-[src/models/floor.ts:63](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/floor.ts#L63)
+[src/models/floor.ts:63](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/floor.ts#L63)
 
 ##### upsert()
 
@@ -2034,7 +2034,7 @@ static upsert(data: FloorData): void
 
 ###### Source
 
-[src/models/floor.ts:67](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/floor.ts#L67)
+[src/models/floor.ts:67](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/floor.ts#L67)
 
 ---
 
@@ -2075,7 +2075,7 @@ new default(config: {
 
 ###### Source
 
-[src/services/api.ts:74](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L74)
+[src/services/api.ts:74](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L74)
 
 #### Properties
 
@@ -2108,7 +2108,7 @@ applyLogin(data?: LoginCredentials, onSuccess?: () => Promise<void>): Promise<bo
 
 ###### Source
 
-[src/services/api.ts:140](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L140)
+[src/services/api.ts:140](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L140)
 
 ##### fetchDevices()
 
@@ -2134,7 +2134,7 @@ fetchDevices(): Promise<{
 
 ###### Source
 
-[src/services/api.ts:171](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L171)
+[src/services/api.ts:171](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L171)
 
 ##### getDevice()
 
@@ -2175,7 +2175,7 @@ getDevice<T>(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:194](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L194)
+[src/services/api.ts:194](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L194)
 
 ##### getEnergyReport()
 
@@ -2216,7 +2216,7 @@ getEnergyReport<T>(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:204](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L204)
+[src/services/api.ts:204](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L204)
 
 ##### getErrors()
 
@@ -2251,7 +2251,7 @@ getErrors(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:212](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L212)
+[src/services/api.ts:212](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L212)
 
 ##### getFrostProtection()
 
@@ -2286,7 +2286,7 @@ getFrostProtection(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:223](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L223)
+[src/services/api.ts:223](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L223)
 
 ##### getHolidayMode()
 
@@ -2321,7 +2321,7 @@ getHolidayMode(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:233](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L233)
+[src/services/api.ts:233](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L233)
 
 ##### getTiles()
 
@@ -2358,7 +2358,7 @@ getTiles(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:243](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L243)
+[src/services/api.ts:243](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L243)
 
 ###### getTiles(\_\_namedParameters)
 
@@ -2399,7 +2399,7 @@ getTiles<T>(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:248](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L248)
+[src/services/api.ts:248](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L248)
 
 ##### getWifiReport()
 
@@ -2434,7 +2434,7 @@ getWifiReport(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:261](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L261)
+[src/services/api.ts:261](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L261)
 
 ##### login()
 
@@ -2469,7 +2469,7 @@ login(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:269](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L269)
+[src/services/api.ts:269](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L269)
 
 ##### setAtaGroup()
 
@@ -2504,7 +2504,7 @@ setAtaGroup(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:288](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L288)
+[src/services/api.ts:288](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L288)
 
 ##### setDevice()
 
@@ -2547,7 +2547,7 @@ setDevice<T>(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:303](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L303)
+[src/services/api.ts:303](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L303)
 
 ##### setFrostProtection()
 
@@ -2582,7 +2582,7 @@ setFrostProtection(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:316](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L316)
+[src/services/api.ts:316](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L316)
 
 ##### setHolidayMode()
 
@@ -2617,7 +2617,7 @@ setHolidayMode(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:327](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L327)
+[src/services/api.ts:327](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L327)
 
 ##### setLanguage()
 
@@ -2649,7 +2649,7 @@ setLanguage(language: string): Promise<{
 
 ###### Source
 
-[src/services/api.ts:338](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L338)
+[src/services/api.ts:338](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L338)
 
 ##### setPower()
 
@@ -2684,7 +2684,7 @@ setPower(__namedParameters: {
 
 ###### Source
 
-[src/services/api.ts:348](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/services/api.ts#L348)
+[src/services/api.ts:348](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/services/api.ts#L348)
 
 ## Interfaces
 
@@ -3181,46 +3181,24 @@ setPower(__namedParameters: {
 
 ---
 
-### IAreaFacade
-
-#### Extends
-
-- [`IBaseFacade`](README.md#ibasefacade).[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade)
-
-#### Properties
-
-| Property             | Type                                                                                                                                                                                               | Inherited from                                                             |
-| :------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
-| `getErrors`          | (`__namedParameters`: \{ `from`: `string`; `to`: `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                      | [`IBaseFacade`](README.md#ibasefacade).`getErrors`                         |
-| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                          | [`IBaseFacade`](README.md#ibasefacade).`getFrostProtection`                |
-| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                  | [`IBaseFacade`](README.md#ibasefacade).`getHolidayMode`                    |
-| `getTiles`           | () => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\>                                                                                                                                   | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getTiles`    |
-| `getWifiReport`      | (`hour`: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                | [`IBaseFacade`](README.md#ibasefacade).`getWifiReport`                     |
-| `setAtaGroup`        | (`postData`: `Omit`\<[`SetAtaGroupPostData`](README.md#setatagrouppostdata), `"Specification"`\>) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setAtaGroup` |
-| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>               | [`IBaseFacade`](README.md#ibasefacade).`setFrostProtection`                |
-| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `boolean`; `from`: `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>               | [`IBaseFacade`](README.md#ibasefacade).`setHolidayMode`                    |
-| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                   | [`IBaseFacade`](README.md#ibasefacade).`setPower`                          |
-
----
-
 ### IAreaModel
 
 #### Extends
 
-- [`IBaseModel`](README.md#ibasemodel).[`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).[`IBaseSubFloorModel`](README.md#ibasesubfloormodel).[`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel)
+- [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).[`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel)
 
 #### Properties
 
-| Property     | Modifier   | Type                                                 | Inherited from                                                          |
-| :----------- | :--------- | :--------------------------------------------------- | :---------------------------------------------------------------------- |
-| `building`   | `readonly` | `null` \| [`BuildingModel`](README.md#buildingmodel) | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`building`   |
-| `buildingId` | `readonly` | `number`                                             | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`buildingId` |
-| `deviceIds`  | `readonly` | `number`[]                                           | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`deviceIds`  |
-| `devices`    | `readonly` | [`DeviceModelAny`](README.md#devicemodelany)[]       | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`devices`    |
-| `floor`      | `readonly` | `null` \| [`FloorModel`](README.md#floormodel)       | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floor`            |
-| `floorId`    | `readonly` | `null` \| `number`                                   | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floorId`          |
-| `id`         | `readonly` | `number`                                             | [`IBaseModel`](README.md#ibasemodel).`id`                               |
-| `name`       | `readonly` | `string`                                             | [`IBaseModel`](README.md#ibasemodel).`name`                             |
+| Property     | Modifier   | Type                                                 | Inherited from                                                         |
+| :----------- | :--------- | :--------------------------------------------------- | :--------------------------------------------------------------------- |
+| `building`   | `readonly` | `null` \| [`BuildingModel`](README.md#buildingmodel) | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`building`        |
+| `buildingId` | `readonly` | `number`                                             | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`buildingId`      |
+| `deviceIds`  | `readonly` | `number`[]                                           | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`deviceIds` |
+| `devices`    | `readonly` | [`DeviceModelAny`](README.md#devicemodelany)[]       | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`devices`   |
+| `floor`      | `readonly` | `null` \| [`FloorModel`](README.md#floormodel)       | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floor`           |
+| `floorId`    | `readonly` | `null` \| `number`                                   | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floorId`         |
+| `id`         | `readonly` | `number`                                             | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`id`        |
+| `name`       | `readonly` | `string`                                             | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`name`      |
 
 ---
 
@@ -3228,10 +3206,8 @@ setPower(__namedParameters: {
 
 #### Extended by
 
-- [`IAreaFacade`](README.md#iareafacade)
-- [`IBuildingFacade`](README.md#ibuildingfacade)
+- [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade)
 - [`IDeviceFacade`](README.md#idevicefacadet)
-- [`IFloorFacade`](README.md#ifloorfacade)
 
 #### Properties
 
@@ -3251,10 +3227,8 @@ setPower(__namedParameters: {
 
 #### Extended by
 
-- [`IAreaModel`](README.md#iareamodel)
-- [`IBuildingModel`](README.md#ibuildingmodel)
-- [`IDeviceModel`](README.md#idevicemodelt)
-- [`IFloorModel`](README.md#ifloormodel)
+- [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel)
+- [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel)
 
 #### Properties
 
@@ -3267,23 +3241,32 @@ setPower(__namedParameters: {
 
 ### IBaseSubBuildingModel
 
+#### Extends
+
+- [`IBaseModel`](README.md#ibasemodel)
+
 #### Extended by
 
-- [`IAreaModel`](README.md#iareamodel)
-- [`IDeviceModel`](README.md#idevicemodelt)
+- [`IBaseSubFloorModel`](README.md#ibasesubfloormodel)
 - [`IFloorModel`](README.md#ifloormodel)
 
 #### Properties
 
-| Property     | Modifier   | Type                                                 |
-| :----------- | :--------- | :--------------------------------------------------- |
-| `building`   | `readonly` | `null` \| [`BuildingModel`](README.md#buildingmodel) |
-| `buildingId` | `readonly` | `number`                                             |
+| Property     | Modifier   | Type                                                 | Inherited from                              |
+| :----------- | :--------- | :--------------------------------------------------- | :------------------------------------------ |
+| `building`   | `readonly` | `null` \| [`BuildingModel`](README.md#buildingmodel) | -                                           |
+| `buildingId` | `readonly` | `number`                                             | -                                           |
+| `id`         | `readonly` | `number`                                             | [`IBaseModel`](README.md#ibasemodel).`id`   |
+| `name`       | `readonly` | `string`                                             | [`IBaseModel`](README.md#ibasemodel).`name` |
 
 ---
 
 ### IBaseSubFloorModel
 
+#### Extends
+
+- [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel)
+
 #### Extended by
 
 - [`IAreaModel`](README.md#iareamodel)
@@ -3291,31 +3274,48 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property  | Modifier   | Type                                           |
-| :-------- | :--------- | :--------------------------------------------- |
-| `floor`   | `readonly` | `null` \| [`FloorModel`](README.md#floormodel) |
-| `floorId` | `readonly` | `null` \| `number`                             |
+| Property     | Modifier   | Type                                                 | Inherited from                                                          |
+| :----------- | :--------- | :--------------------------------------------------- | :---------------------------------------------------------------------- |
+| `building`   | `readonly` | `null` \| [`BuildingModel`](README.md#buildingmodel) | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`building`   |
+| `buildingId` | `readonly` | `number`                                             | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`buildingId` |
+| `floor`      | `readonly` | `null` \| [`FloorModel`](README.md#floormodel)       | -                                                                       |
+| `floorId`    | `readonly` | `null` \| `number`                                   | -                                                                       |
+| `id`         | `readonly` | `number`                                             | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`id`         |
+| `name`       | `readonly` | `string`                                             | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`name`       |
 
 ---
 
 ### IBaseSuperDeviceFacade
 
+#### Extends
+
+- [`IBaseFacade`](README.md#ibasefacade)
+
 #### Extended by
 
-- [`IAreaFacade`](README.md#iareafacade)
 - [`IBuildingFacade`](README.md#ibuildingfacade)
-- [`IFloorFacade`](README.md#ifloorfacade)
 
 #### Properties
 
-| Property      | Type                                                                                                                                                                                               |
-| :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getTiles`    | () => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\>                                                                                                                                   |
-| `setAtaGroup` | (`postData`: `Omit`\<[`SetAtaGroupPostData`](README.md#setatagrouppostdata), `"Specification"`\>) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> |
+| Property             | Type                                                                                                                                                                                               | Inherited from                                              |
+| :------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------- |
+| `getErrors`          | (`__namedParameters`: \{ `from`: `string`; `to`: `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                      | [`IBaseFacade`](README.md#ibasefacade).`getErrors`          |
+| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                          | [`IBaseFacade`](README.md#ibasefacade).`getFrostProtection` |
+| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                  | [`IBaseFacade`](README.md#ibasefacade).`getHolidayMode`     |
+| `getTiles`           | () => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\>                                                                                                                                   | -                                                           |
+| `getWifiReport`      | (`hour`: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                | [`IBaseFacade`](README.md#ibasefacade).`getWifiReport`      |
+| `setAtaGroup`        | (`postData`: `Omit`\<[`SetAtaGroupPostData`](README.md#setatagrouppostdata), `"Specification"`\>) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | -                                                           |
+| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>               | [`IBaseFacade`](README.md#ibasefacade).`setFrostProtection` |
+| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `boolean`; `from`: `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>               | [`IBaseFacade`](README.md#ibasefacade).`setHolidayMode`     |
+| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                   | [`IBaseFacade`](README.md#ibasefacade).`setPower`           |
 
 ---
 
 ### IBaseSuperDeviceModel
+
+#### Extends
+
+- [`IBaseModel`](README.md#ibasemodel)
 
 #### Extended by
 
@@ -3325,10 +3325,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property    | Modifier   | Type                                           |
-| :---------- | :--------- | :--------------------------------------------- |
-| `deviceIds` | `readonly` | `number`[]                                     |
-| `devices`   | `readonly` | [`DeviceModelAny`](README.md#devicemodelany)[] |
+| Property    | Modifier   | Type                                           | Inherited from                              |
+| :---------- | :--------- | :--------------------------------------------- | :------------------------------------------ |
+| `deviceIds` | `readonly` | `number`[]                                     | -                                           |
+| `devices`   | `readonly` | [`DeviceModelAny`](README.md#devicemodelany)[] | -                                           |
+| `id`        | `readonly` | `number`                                       | [`IBaseModel`](README.md#ibasemodel).`id`   |
+| `name`      | `readonly` | `string`                                       | [`IBaseModel`](README.md#ibasemodel).`name` |
 
 ---
 
@@ -3336,22 +3338,22 @@ setPower(__namedParameters: {
 
 #### Extends
 
-- [`IBaseFacade`](README.md#ibasefacade).[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade)
+- [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade)
 
 #### Properties
 
-| Property             | Type                                                                                                                                                                                               | Inherited from                                                             |
-| :------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
-| `fetch`              | () => `Promise`\<[`BuildingSettings`](README.md#buildingsettings)\>                                                                                                                                | -                                                                          |
-| `getErrors`          | (`__namedParameters`: \{ `from`: `string`; `to`: `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                      | [`IBaseFacade`](README.md#ibasefacade).`getErrors`                         |
-| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                          | [`IBaseFacade`](README.md#ibasefacade).`getFrostProtection`                |
-| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                  | [`IBaseFacade`](README.md#ibasefacade).`getHolidayMode`                    |
-| `getTiles`           | () => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\>                                                                                                                                   | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getTiles`    |
-| `getWifiReport`      | (`hour`: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                | [`IBaseFacade`](README.md#ibasefacade).`getWifiReport`                     |
-| `setAtaGroup`        | (`postData`: `Omit`\<[`SetAtaGroupPostData`](README.md#setatagrouppostdata), `"Specification"`\>) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setAtaGroup` |
-| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>               | [`IBaseFacade`](README.md#ibasefacade).`setFrostProtection`                |
-| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `boolean`; `from`: `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>               | [`IBaseFacade`](README.md#ibasefacade).`setHolidayMode`                    |
-| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                   | [`IBaseFacade`](README.md#ibasefacade).`setPower`                          |
+| Property             | Type                                                                                                                                                                                               | Inherited from                                                                    |
+| :------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------- |
+| `fetch`              | () => `Promise`\<[`BuildingSettings`](README.md#buildingsettings)\>                                                                                                                                | -                                                                                 |
+| `getErrors`          | (`__namedParameters`: \{ `from`: `string`; `to`: `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                      | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getErrors`          |
+| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                          | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getFrostProtection` |
+| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                  | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getHolidayMode`     |
+| `getTiles`           | () => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\>                                                                                                                                   | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getTiles`           |
+| `getWifiReport`      | (`hour`: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getWifiReport`      |
+| `setAtaGroup`        | (`postData`: `Omit`\<[`SetAtaGroupPostData`](README.md#setatagrouppostdata), `"Specification"`\>) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setAtaGroup`        |
+| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>               | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setFrostProtection` |
+| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `boolean`; `from`: `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>               | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setHolidayMode`     |
+| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                   | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setPower`           |
 
 ---
 
@@ -3359,7 +3361,7 @@ setPower(__namedParameters: {
 
 #### Extends
 
-- [`IBaseModel`](README.md#ibasemodel).[`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel)
+- [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel)
 
 #### Properties
 
@@ -3368,8 +3370,8 @@ setPower(__namedParameters: {
 | `data`      | `readonly` | [`BuildingSettings`](README.md#buildingsettings) | -                                                                      |
 | `deviceIds` | `readonly` | `number`[]                                       | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`deviceIds` |
 | `devices`   | `readonly` | [`DeviceModelAny`](README.md#devicemodelany)[]   | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`devices`   |
-| `id`        | `readonly` | `number`                                         | [`IBaseModel`](README.md#ibasemodel).`id`                              |
-| `name`      | `readonly` | `string`                                         | [`IBaseModel`](README.md#ibasemodel).`name`                            |
+| `id`        | `readonly` | `number`                                         | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`id`        |
+| `name`      | `readonly` | `string`                                         | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`name`      |
 
 ---
 
@@ -3408,7 +3410,7 @@ setPower(__namedParameters: {
 
 #### Extends
 
-- [`IBaseModel`](README.md#ibasemodel).[`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).[`IBaseSubFloorModel`](README.md#ibasesubfloormodel)
+- [`IBaseSubFloorModel`](README.md#ibasesubfloormodel)
 
 #### Type parameters
 
@@ -3418,40 +3420,18 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Modifier   | Type                                                      | Inherited from                                                          |
-| :----------- | :--------- | :-------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `area`       | `readonly` | `null` \| [`AreaModelAny`](README.md#areamodelany)        | -                                                                       |
-| `areaId`     | `readonly` | `null` \| `number`                                        | -                                                                       |
-| `building`   | `readonly` | `null` \| [`BuildingModel`](README.md#buildingmodel)      | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`building`   |
-| `buildingId` | `readonly` | `number`                                                  | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`buildingId` |
-| `data`       | `readonly` | [`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\] | -                                                                       |
-| `floor`      | `readonly` | `null` \| [`FloorModel`](README.md#floormodel)            | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floor`            |
-| `floorId`    | `readonly` | `null` \| `number`                                        | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floorId`          |
-| `id`         | `readonly` | `number`                                                  | [`IBaseModel`](README.md#ibasemodel).`id`                               |
-| `name`       | `readonly` | `string`                                                  | [`IBaseModel`](README.md#ibasemodel).`name`                             |
-| `type`       | `readonly` | `T`                                                       | -                                                                       |
-
----
-
-### IFloorFacade
-
-#### Extends
-
-- [`IBaseFacade`](README.md#ibasefacade).[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade)
-
-#### Properties
-
-| Property             | Type                                                                                                                                                                                               | Inherited from                                                             |
-| :------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------- |
-| `getErrors`          | (`__namedParameters`: \{ `from`: `string`; `to`: `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                      | [`IBaseFacade`](README.md#ibasefacade).`getErrors`                         |
-| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                          | [`IBaseFacade`](README.md#ibasefacade).`getFrostProtection`                |
-| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                  | [`IBaseFacade`](README.md#ibasefacade).`getHolidayMode`                    |
-| `getTiles`           | () => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\>                                                                                                                                   | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getTiles`    |
-| `getWifiReport`      | (`hour`: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                | [`IBaseFacade`](README.md#ibasefacade).`getWifiReport`                     |
-| `setAtaGroup`        | (`postData`: `Omit`\<[`SetAtaGroupPostData`](README.md#setatagrouppostdata), `"Specification"`\>) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setAtaGroup` |
-| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>               | [`IBaseFacade`](README.md#ibasefacade).`setFrostProtection`                |
-| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `boolean`; `from`: `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>               | [`IBaseFacade`](README.md#ibasefacade).`setHolidayMode`                    |
-| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                   | [`IBaseFacade`](README.md#ibasefacade).`setPower`                          |
+| Property     | Modifier   | Type                                                      | Inherited from                                                    |
+| :----------- | :--------- | :-------------------------------------------------------- | :---------------------------------------------------------------- |
+| `area`       | `readonly` | `null` \| [`AreaModelAny`](README.md#areamodelany)        | -                                                                 |
+| `areaId`     | `readonly` | `null` \| `number`                                        | -                                                                 |
+| `building`   | `readonly` | `null` \| [`BuildingModel`](README.md#buildingmodel)      | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`building`   |
+| `buildingId` | `readonly` | `number`                                                  | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`buildingId` |
+| `data`       | `readonly` | [`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\] | -                                                                 |
+| `floor`      | `readonly` | `null` \| [`FloorModel`](README.md#floormodel)            | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floor`      |
+| `floorId`    | `readonly` | `null` \| `number`                                        | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floorId`    |
+| `id`         | `readonly` | `number`                                                  | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`id`         |
+| `name`       | `readonly` | `string`                                                  | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`name`       |
+| `type`       | `readonly` | `T`                                                       | -                                                                 |
 
 ---
 
@@ -3459,7 +3439,7 @@ setPower(__namedParameters: {
 
 #### Extends
 
-- [`IBaseModel`](README.md#ibasemodel).[`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).[`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel)
+- [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).[`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel)
 
 #### Properties
 
@@ -3471,8 +3451,8 @@ setPower(__namedParameters: {
 | `buildingId` | `readonly` | `number`                                             | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`buildingId` |
 | `deviceIds`  | `readonly` | `number`[]                                           | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`deviceIds`  |
 | `devices`    | `readonly` | [`DeviceModelAny`](README.md#devicemodelany)[]       | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`devices`    |
-| `id`         | `readonly` | `number`                                             | [`IBaseModel`](README.md#ibasemodel).`id`                               |
-| `name`       | `readonly` | `string`                                             | [`IBaseModel`](README.md#ibasemodel).`name`                             |
+| `id`         | `readonly` | `number`                                             | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`id`         |
+| `name`       | `readonly` | `string`                                             | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`name`       |
 
 ---
 
@@ -4039,7 +4019,7 @@ type AreaDataAny: AreaData<number> | AreaData<null>;
 
 #### Source
 
-[src/types/common.ts:216](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/common.ts#L216)
+[src/types/common.ts:216](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/common.ts#L216)
 
 ---
 
@@ -4051,7 +4031,7 @@ type AreaModelAny: AreaModel<number> | AreaModel<null>;
 
 #### Source
 
-[src/models/area.ts:10](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/area.ts#L10)
+[src/models/area.ts:10](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/area.ts#L10)
 
 ---
 
@@ -4063,7 +4043,7 @@ type DeviceModelAny: DeviceModel<"Ata"> | DeviceModel<"Atw"> | DeviceModel<"Erv"
 
 #### Source
 
-[src/models/device.ts:10](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/models/device.ts#L10)
+[src/models/device.ts:10](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/models/device.ts#L10)
 
 ---
 
@@ -4075,7 +4055,7 @@ type GetDeviceDataAta: BaseGetDeviceData & SetDeviceDataAta;
 
 #### Source
 
-[src/types/ata.ts:69](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/ata.ts#L69)
+[src/types/ata.ts:69](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/ata.ts#L69)
 
 ---
 
@@ -4087,7 +4067,7 @@ type GetDeviceDataAtw: BaseGetDeviceData & SetDeviceDataAtw;
 
 #### Source
 
-[src/types/atw.ts:76](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/atw.ts#L76)
+[src/types/atw.ts:76](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/atw.ts#L76)
 
 ---
 
@@ -4099,7 +4079,7 @@ type GetDeviceDataErv: BaseGetDeviceData & SetDeviceDataErv;
 
 #### Source
 
-[src/types/erv.ts:42](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/erv.ts#L42)
+[src/types/erv.ts:42](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/erv.ts#L42)
 
 ---
 
@@ -4111,7 +4091,7 @@ type ListDeviceAny: ListDeviceAta | ListDeviceAtw | ListDeviceErv;
 
 #### Source
 
-[src/types/common.ts:207](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/common.ts#L207)
+[src/types/common.ts:207](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/common.ts#L207)
 
 ---
 
@@ -4129,7 +4109,7 @@ type NonEffectiveFlagsKeyOf<T>: Exclude<keyof T, "EffectiveFlags">;
 
 #### Source
 
-[src/types/bases.ts:19](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/bases.ts#L19)
+[src/types/bases.ts:19](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/bases.ts#L19)
 
 ---
 
@@ -4147,7 +4127,7 @@ type NonEffectiveFlagsValueOf<T>: T[NonEffectiveFlagsKeyOf<T>];
 
 #### Source
 
-[src/types/bases.ts:21](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/bases.ts#L21)
+[src/types/bases.ts:21](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/bases.ts#L21)
 
 ---
 
@@ -4165,7 +4145,7 @@ type SetDevicePostData<T>: UpdateDeviceData[T] & BaseDevicePostData;
 
 #### Source
 
-[src/types/common.ts:86](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/common.ts#L86)
+[src/types/common.ts:86](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/common.ts#L86)
 
 ---
 
@@ -4197,7 +4177,7 @@ type TilesPostData<T>: T extends keyof typeof DeviceType ? {
 
 #### Source
 
-[src/types/common.ts:266](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/common.ts#L266)
+[src/types/common.ts:266](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/common.ts#L266)
 
 ## Variables
 
@@ -4209,7 +4189,7 @@ const FLAG_UNCHANGED: 0 = 0x0
 
 #### Source
 
-[src/types/bases.ts:1](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/bases.ts#L1)
+[src/types/bases.ts:1](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/bases.ts#L1)
 
 ---
 
@@ -4224,7 +4204,7 @@ const effectiveFlagsAta: Record<
 
 #### Source
 
-[src/types/ata.ts:49](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/ata.ts#L49)
+[src/types/ata.ts:49](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/ata.ts#L49)
 
 ---
 
@@ -4239,7 +4219,7 @@ const effectiveFlagsAtw: Record<
 
 #### Source
 
-[src/types/atw.ts:41](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/atw.ts#L41)
+[src/types/atw.ts:41](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/atw.ts#L41)
 
 ---
 
@@ -4254,4 +4234,4 @@ const effectiveFlagsErv: Record<
 
 #### Source
 
-[src/types/erv.ts:23](https://github.com/OlivierZal/melcloud-api/blob/824f0cd33932175cb629bda70e70fab719181885/src/types/erv.ts#L23)
+[src/types/erv.ts:23](https://github.com/OlivierZal/melcloud-api/blob/4b6c359f4de9d4255128775baa7d431cdcb2a536/src/types/erv.ts#L23)
