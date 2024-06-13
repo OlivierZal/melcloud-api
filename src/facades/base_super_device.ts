@@ -1,40 +1,51 @@
 import type {
-  BuildingSettings,
   ErrorData,
   FailureData,
   FrostProtectionData,
+  FrostProtectionLocation,
   HolidayModeData,
+  HolidayModeLocation,
   SetAtaGroupPostData,
+  SettingsParams,
   SuccessData,
   TilesData,
   WifiData,
 } from '../types'
+import type { IBaseSubBuildingModel, IBaseSuperDeviceModel } from '../models'
 import type API from '../services'
-import { BuildingModel } from '../models'
 import { DateTime } from 'luxon'
-import type { IBuildingFacade } from '.'
+import type { IBaseSuperDeviceFacade } from '.'
 
-export default class implements IBuildingFacade {
+export default abstract class implements IBaseSuperDeviceFacade {
   protected readonly api: API
 
   protected readonly id: number
+
+  protected abstract readonly frostProtectionLocation: keyof FrostProtectionLocation
+
+  protected abstract readonly holidayModeLocation: keyof HolidayModeLocation
+
+  protected abstract readonly modelClass: {
+    getById: (
+      id: number,
+    ) => (IBaseSuperDeviceModel & IBaseSubBuildingModel) | undefined
+  }
+
+  protected abstract readonly setAtaGroupSpecification: keyof SetAtaGroupPostData['Specification']
+
+  protected abstract readonly tableName: SettingsParams['tableName']
 
   public constructor(api: API, id: number) {
     this.api = api
     this.id = id
   }
 
-  public get model(): BuildingModel {
-    const model = BuildingModel.getById(this.id)
+  public get model(): IBaseSuperDeviceModel & IBaseSubBuildingModel {
+    const model = this.modelClass.getById(this.id)
     if (!model) {
-      throw new Error('Building not found')
+      throw new Error(`${this.tableName} not found`)
     }
     return model
-  }
-
-  public async fetch(): Promise<BuildingSettings> {
-    await this.api.fetchDevices()
-    return this.model.data
   }
 
   public async getErrors({
@@ -59,7 +70,7 @@ export default class implements IBuildingFacade {
     try {
       return (
         await this.api.getFrostProtection({
-          params: { id: this.model.id, tableName: 'Building' },
+          params: { id: this.model.id, tableName: this.tableName },
         })
       ).data
     } catch (_error) {
@@ -76,7 +87,7 @@ export default class implements IBuildingFacade {
     try {
       return (
         await this.api.getHolidayMode({
-          params: { id: this.model.id, tableName: 'Building' },
+          params: { id: this.model.id, tableName: this.tableName },
         })
       ).data
     } catch (_error) {
@@ -91,7 +102,9 @@ export default class implements IBuildingFacade {
 
   public async getTiles(): Promise<TilesData<null>> {
     return (
-      await this.api.getTiles({ postData: { DeviceIDs: this.model.deviceIds } })
+      await this.api.getTiles({
+        postData: { DeviceIDs: this.model.deviceIds },
+      })
     ).data
   }
 
@@ -112,7 +125,7 @@ export default class implements IBuildingFacade {
       await this.api.setAtaGroup({
         postData: {
           ...postData,
-          Specification: { BuildingID: this.model.id },
+          Specification: { [this.setAtaGroupSpecification]: this.model.id },
         },
       })
     ).data
@@ -133,8 +146,8 @@ export default class implements IBuildingFacade {
           Enabled: enable ?? true,
           MaximumTemperature: max,
           MinimumTemperature: min,
-          ...(this.model.data.FPDefined ?
-            { BuildingIds: [this.model.id] }
+          ...(this.model.building?.data.FPDefined === true ?
+            { [this.frostProtectionLocation]: [this.model.id] }
           : { DeviceIds: this.model.deviceIds }),
         },
       })
@@ -169,8 +182,8 @@ export default class implements IBuildingFacade {
               }
             : null,
           HMTimeZones: [
-            this.model.data.HMDefined ?
-              { Buildings: [this.model.id] }
+            this.model.building?.data.HMDefined === true ?
+              { [this.holidayModeLocation]: [this.model.id] }
             : { Devices: this.model.deviceIds },
           ],
           StartDate:

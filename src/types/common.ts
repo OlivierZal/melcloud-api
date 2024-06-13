@@ -115,11 +115,13 @@ export interface SettingsParams {
   readonly tableName: 'Area' | 'Building' | 'DeviceLocation' | 'Floor'
 }
 
-export interface FrostProtectionPostData {
+export interface FrostProtectionLocation {
   readonly AreaIds?: readonly number[]
   readonly BuildingIds?: readonly number[]
   readonly DeviceIds?: readonly number[]
   readonly FloorIds?: readonly number[]
+}
+export interface FrostProtectionPostData extends FrostProtectionLocation {
   readonly Enabled: boolean
   readonly MaximumTemperature: number
   readonly MinimumTemperature: number
@@ -139,16 +141,19 @@ export interface DateTimeComponents {
   readonly Second: number
   readonly Year: number
 }
+export interface HolidayModeLocation {
+  readonly Areas?: readonly number[]
+  readonly Buildings?: readonly number[]
+  readonly Devices?: readonly number[]
+  readonly Floors?: readonly number[]
+}
+export interface HMTimeZone extends HolidayModeLocation {
+  readonly TimeZone?: number
+}
 export interface HolidayModePostData {
   readonly Enabled: boolean
   readonly EndDate: DateTimeComponents | null
-  readonly HMTimeZones: readonly {
-    readonly Areas?: readonly number[]
-    readonly Buildings?: readonly number[]
-    readonly Devices?: readonly number[]
-    readonly Floors?: readonly number[]
-    readonly TimeZone?: number
-  }[]
+  readonly HMTimeZones: readonly HMTimeZone[]
   readonly StartDate: DateTimeComponents | null
 }
 export interface HolidayModeData {
@@ -235,22 +240,11 @@ export interface SetPowerPostData {
 }
 
 export interface SetAtaGroupPostData {
-  readonly Specification:
-    | {
-        readonly AreaID?: null
-        readonly BuildingID?: null
-        readonly FloorID: number
-      }
-    | {
-        readonly AreaID?: null
-        readonly FloorID?: null
-        readonly BuildingID: number
-      }
-    | {
-        readonly BuildingID?: null
-        readonly FloorID?: null
-        readonly AreaID: number
-      }
+  readonly Specification: {
+    readonly AreaID?: number | null
+    readonly BuildingID?: number | null
+    readonly FloorID?: number | null
+  }
   readonly State: {
     readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
     readonly OperationMode?: OperationMode | null
