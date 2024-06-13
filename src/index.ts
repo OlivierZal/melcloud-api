@@ -7,6 +7,7 @@ export type {
 } from './facades'
 export {
   AreaFacade,
+  BaseFacade,
   BaseSuperDeviceFacade,
   BuildingFacade,
   DeviceFacade,

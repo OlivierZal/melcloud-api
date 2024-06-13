@@ -2,7 +2,7 @@ import { BaseSuperDeviceFacade, type IBaseSuperDeviceFacade } from '.'
 import { FloorModel } from '../models'
 
 export default class
-  extends BaseSuperDeviceFacade
+  extends BaseSuperDeviceFacade<FloorModel>
   implements IBaseSuperDeviceFacade
 {
   protected readonly frostProtectionLocation = 'FloorIds'

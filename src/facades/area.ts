@@ -1,8 +1,8 @@
+import { AreaModel, type AreaModelAny } from '../models'
 import { BaseSuperDeviceFacade, type IBaseSuperDeviceFacade } from '.'
-import { AreaModel } from '../models'
 
 export default class
-  extends BaseSuperDeviceFacade
+  extends BaseSuperDeviceFacade<AreaModelAny>
   implements IBaseSuperDeviceFacade
 {
   protected readonly frostProtectionLocation = 'AreaIds'
