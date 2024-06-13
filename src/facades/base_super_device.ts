@@ -17,9 +17,7 @@ export default abstract class<
 
   public async getTiles(): Promise<TilesData<null>> {
     return (
-      await this.api.getTiles({
-        postData: { DeviceIDs: this.model.deviceIds },
-      })
+      await this.api.getTiles({ postData: { DeviceIDs: this.model.deviceIds } })
     ).data
   }
 

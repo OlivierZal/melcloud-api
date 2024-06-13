@@ -202,16 +202,13 @@ export default abstract class<
 
   #getDeviceId(): number {
     if ('devices' in this.model) {
-      const [device] = this.model.devices
-      return device.id
+      const [{ id }] = this.model.devices
+      return id
     }
     return this.model.id
   }
 
   #getDeviceIds(): number[] {
-    if ('deviceIds' in this.model) {
-      return this.model.deviceIds
-    }
-    return [this.model.id]
+    return 'deviceIds' in this.model ? this.model.deviceIds : [this.model.id]
   }
 }
