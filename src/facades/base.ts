@@ -26,7 +26,7 @@ export default abstract class<
 {
   protected readonly api: API
 
-  protected readonly id: number
+  readonly #id: number
 
   protected abstract readonly frostProtectionLocation: keyof FrostProtectionLocation
 
@@ -40,11 +40,11 @@ export default abstract class<
 
   public constructor(api: API, id: number) {
     this.api = api
-    this.id = id
+    this.#id = id
   }
 
   public get model(): T {
-    const model = this.modelClass.getById(this.id)
+    const model = this.modelClass.getById(this.#id)
     if (!model) {
       throw new Error(`${this.tableName} not found`)
     }
