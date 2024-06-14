@@ -17,7 +17,7 @@ import type {
   SuccessData,
   WifiData,
 } from '../types'
-import { type IBaseFacade, from1970, now } from '.'
+import { type IBaseFacade, YEAR_1970, now } from '.'
 import type API from '../services'
 import { DateTime } from 'luxon'
 
@@ -77,7 +77,7 @@ export default abstract class<
       await this.api.getErrors({
         postData: {
           DeviceIDs: this.#getDeviceIds(),
-          FromDate: from ?? from1970(),
+          FromDate: from ?? YEAR_1970,
           ToDate: to ?? now(),
         },
       })

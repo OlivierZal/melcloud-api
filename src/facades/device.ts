@@ -1,4 +1,4 @@
-import { BaseFacade, type IDeviceFacade, from1970, now } from '.'
+import { BaseFacade, type IDeviceFacade, YEAR_1970, now } from '.'
 import { DeviceModel, type DeviceModelAny } from '../models'
 import type {
   DeviceType,
@@ -46,7 +46,7 @@ export default class<U extends keyof typeof DeviceType>
       await this.api.getEnergyReport({
         postData: {
           DeviceID: this.model.id,
-          FromDate: from ?? from1970(),
+          FromDate: from ?? YEAR_1970,
           ToDate: to ?? now(),
         },
       })
