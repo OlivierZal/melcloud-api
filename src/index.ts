@@ -18,11 +18,11 @@ export {
 export type {
   AreaModelAny,
   DeviceModelAny,
+  IAreaModel,
   IBaseModel,
   IBaseSubBuildingModel,
   IBaseSubFloorModel,
   IBaseSuperDeviceModel,
-  IAreaModel,
   IBuildingModel,
   IDeviceModel,
   IFloorModel,
