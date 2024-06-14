@@ -1,3 +1,4 @@
+export { from1970, now } from './constants'
 export type {
   IBaseFacade,
   IBaseSuperDeviceFacade,

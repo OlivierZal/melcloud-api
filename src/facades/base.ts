@@ -6,6 +6,7 @@ import type {
 } from '../models'
 import type {
   BuildingSettings,
+  DateTimeComponents,
   ErrorData,
   FailureData,
   FrostProtectionData,
@@ -16,9 +17,23 @@ import type {
   SuccessData,
   WifiData,
 } from '../types'
+import { type IBaseFacade, from1970, now } from '.'
 import type API from '../services'
 import { DateTime } from 'luxon'
-import type { IBaseFacade } from '.'
+
+const getDateTimeComponents = (
+  date: DateTime | null,
+): DateTimeComponents | null =>
+  date ?
+    {
+      Day: date.day,
+      Hour: date.hour,
+      Minute: date.minute,
+      Month: date.month,
+      Second: date.second,
+      Year: date.year,
+    }
+  : null
 
 export default abstract class<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
@@ -55,15 +70,15 @@ export default abstract class<
     from,
     to,
   }: {
-    from: string
-    to: string
+    from?: string
+    to?: string
   }): Promise<ErrorData[] | FailureData> {
     return (
       await this.api.getErrors({
         postData: {
           DeviceIDs: this.#getDeviceIds(),
-          FromDate: from,
-          ToDate: to,
+          FromDate: from ?? from1970(),
+          ToDate: to ?? now(),
         },
       })
     ).data
@@ -140,43 +155,29 @@ export default abstract class<
     to,
   }: {
     enable?: boolean
-    from: string
-    to: string
+    from?: string
+    to?: string
   }): Promise<FailureData | SuccessData> {
     const isEnabled = enable ?? true
-    const startDate = isEnabled ? DateTime.fromISO(from) : null
-    const endDate = isEnabled ? DateTime.fromISO(to) : null
+    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
+    let endDate: DateTime | null = null
+    if (isEnabled) {
+      if (typeof to === 'undefined') {
+        throw new Error('End date is missing')
+      }
+      endDate = DateTime.fromISO(to)
+    }
     return (
       await this.api.setHolidayMode({
         postData: {
           Enabled: isEnabled,
-          EndDate:
-            endDate ?
-              {
-                Day: endDate.day,
-                Hour: endDate.hour,
-                Minute: endDate.minute,
-                Month: endDate.month,
-                Second: endDate.second,
-                Year: endDate.year,
-              }
-            : null,
+          EndDate: getDateTimeComponents(endDate),
           HMTimeZones: [
             this.#getBuildingData().HMDefined ?
               { [this.holidayModeLocation]: [this.model.id] }
             : { Devices: this.#getDeviceIds() },
           ],
-          StartDate:
-            startDate ?
-              {
-                Day: startDate.day,
-                Hour: startDate.hour,
-                Minute: startDate.minute,
-                Month: startDate.month,
-                Second: startDate.second,
-                Year: startDate.year,
-              }
-            : null,
+          StartDate: getDateTimeComponents(startDate),
         },
       })
     ).data

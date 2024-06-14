@@ -1,4 +1,4 @@
-import { BaseFacade, type IDeviceFacade } from '.'
+import { BaseFacade, type IDeviceFacade, from1970, now } from '.'
 import { DeviceModel, type DeviceModelAny } from '../models'
 import type {
   DeviceType,
@@ -39,12 +39,16 @@ export default class<U extends keyof typeof DeviceType>
     from,
     to,
   }: {
-    from: string
-    to: string
+    from?: string
+    to?: string
   }): Promise<EnergyData[U]> {
     return (
       await this.api.getEnergyReport({
-        postData: { DeviceID: this.model.id, FromDate: from, ToDate: to },
+        postData: {
+          DeviceID: this.model.id,
+          FromDate: from ?? from1970(),
+          ToDate: to ?? now(),
+        },
       })
     ).data as EnergyData[U]
   }

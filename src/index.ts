@@ -12,6 +12,8 @@ export {
   BuildingFacade,
   DeviceFacade,
   FloorFacade,
+  from1970,
+  now,
 } from './facades'
 export type {
   AreaModelAny,
