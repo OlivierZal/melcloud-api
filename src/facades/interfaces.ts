@@ -21,8 +21,8 @@ export interface IBaseFacade {
     from,
     to,
   }: {
-    from?: string
-    to?: string
+    from?: string | null
+    to?: string | null
   }) => Promise<ErrorData[] | FailureData>
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
@@ -41,8 +41,8 @@ export interface IBaseFacade {
     from,
     to,
   }: {
-    from?: string
-    to?: string
+    from?: string | null
+    to?: string | null
     enable: false
   }) => Promise<FailureData | SuccessData>) &
     (({
@@ -51,7 +51,7 @@ export interface IBaseFacade {
       to,
     }: {
       enable?: boolean
-      from?: string
+      from?: string | null
       to: string
     }) => Promise<FailureData | SuccessData>)
   setPower: (enable?: boolean) => Promise<boolean>
@@ -76,8 +76,8 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
     from,
     to,
   }: {
-    from?: string
-    to?: string
+    from?: string | null
+    to?: string | null
   }) => Promise<EnergyData[T]>
   getTile: ((select?: false) => Promise<TilesData<null>>) &
     ((select: true) => Promise<TilesData<T>>)

@@ -70,8 +70,8 @@ export default abstract class<
     from,
     to,
   }: {
-    from?: string
-    to?: string
+    from?: string | null
+    to?: string | null
   }): Promise<ErrorData[] | FailureData> {
     return (
       await this.api.getErrors({
@@ -155,14 +155,14 @@ export default abstract class<
     to,
   }: {
     enable?: boolean
-    from?: string
-    to?: string
+    from?: string | null
+    to?: string | null
   }): Promise<FailureData | SuccessData> {
     const isEnabled = enable ?? true
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
     let endDate: DateTime | null = null
     if (isEnabled) {
-      if (typeof to === 'undefined') {
+      if (typeof to === 'undefined' || to === null) {
         throw new Error('End date is missing')
       }
       endDate = DateTime.fromISO(to)

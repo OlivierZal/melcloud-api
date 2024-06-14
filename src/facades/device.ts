@@ -39,8 +39,8 @@ export default class<U extends keyof typeof DeviceType>
     from,
     to,
   }: {
-    from?: string
-    to?: string
+    from?: string | null
+    to?: string | null
   }): Promise<EnergyData[U]> {
     return (
       await this.api.getEnergyReport({
