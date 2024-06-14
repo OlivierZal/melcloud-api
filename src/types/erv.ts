@@ -7,7 +7,7 @@ import type {
   DeviceType,
   FanSpeed,
   NonEffectiveFlagsKeyOf,
-} from '.'
+} from './bases'
 
 export enum VentilationMode {
   recovery = 0,

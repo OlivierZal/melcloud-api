@@ -1,28 +1,30 @@
+import type { BaseDevicePostData, DeviceType, FanSpeed } from './bases'
 import type {
-  BaseDevicePostData,
-  DeviceType,
   EnergyDataAta,
-  EnergyDataAtw,
-  FanSpeed,
   GetDeviceDataAta,
-  GetDeviceDataAtw,
-  GetDeviceDataErv,
   Horizontal,
   ListDeviceDataAta,
-  ListDeviceDataAtw,
-  ListDeviceDataErv,
   OperationMode,
   SetDeviceDataAta,
-  SetDeviceDataAtw,
-  SetDeviceDataErv,
   UpdateDeviceDataAta,
-  UpdateDeviceDataAtw,
-  UpdateDeviceDataErv,
   Vertical,
   effectiveFlagsAta,
+} from './ata'
+import type {
+  EnergyDataAtw,
+  GetDeviceDataAtw,
+  ListDeviceDataAtw,
+  SetDeviceDataAtw,
+  UpdateDeviceDataAtw,
   effectiveFlagsAtw,
+} from './atw'
+import type {
+  GetDeviceDataErv,
+  ListDeviceDataErv,
+  SetDeviceDataErv,
+  UpdateDeviceDataErv,
   effectiveFlagsErv,
-} from '.'
+} from './erv'
 
 export enum Language {
   en = 0,

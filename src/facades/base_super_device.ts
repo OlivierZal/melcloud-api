@@ -1,11 +1,12 @@
 import type { AreaModelAny, BuildingModel, FloorModel } from '../models'
-import { BaseFacade, type IBaseSuperDeviceFacade } from '.'
 import type {
   FailureData,
   SetAtaGroupPostData,
   SuccessData,
   TilesData,
 } from '../types'
+import BaseFacade from './base'
+import type { IBaseSuperDeviceFacade } from './interfaces'
 
 export default abstract class<
     T extends AreaModelAny | BuildingModel | FloorModel,

@@ -1,4 +1,4 @@
-import { APICallContextData } from '.'
+import APICallContextData from './APICallContextData'
 import type { InternalAxiosRequestConfig } from 'axios'
 
 export default class extends APICallContextData {

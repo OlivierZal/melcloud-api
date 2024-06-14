@@ -7,7 +7,7 @@ import type {
   DeviceType,
   FanSpeed,
   NonEffectiveFlagsKeyOf,
-} from '.'
+} from './bases'
 
 export enum OperationMode {
   heat = 1,

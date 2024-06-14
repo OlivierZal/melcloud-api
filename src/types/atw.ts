@@ -6,7 +6,7 @@ import type {
   DeviceDataNotInList,
   DeviceType,
   NonEffectiveFlagsKeyOf,
-} from '.'
+} from './bases'
 
 export enum OperationModeState {
   idle = 0,

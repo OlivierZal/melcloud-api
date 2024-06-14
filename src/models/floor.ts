@@ -1,11 +1,8 @@
-import {
-  AreaModel,
-  BuildingModel,
-  DeviceModel,
-  type DeviceModelAny,
-  type IFloorModel,
-} from '.'
+import DeviceModel, { type DeviceModelAny } from './device'
+import AreaModel from './area'
+import BuildingModel from './building'
 import type { FloorData } from '../types'
+import type { IFloorModel } from './interfaces'
 
 export default class FloorModel implements IFloorModel {
   public static readonly floors = new Map<number, FloorModel>()

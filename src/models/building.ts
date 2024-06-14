@@ -1,5 +1,6 @@
 import type { BuildingData, BuildingSettings } from '../types'
-import { DeviceModel, type DeviceModelAny, type IBuildingModel } from '.'
+import DeviceModel, { type DeviceModelAny } from './device'
+import type { IBuildingModel } from './interfaces'
 
 export default class BuildingModel implements IBuildingModel {
   public static readonly buildings = new Map<number, BuildingModel>()

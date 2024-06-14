@@ -1,11 +1,8 @@
-import type {
-  AreaModel,
-  AreaModelAny,
-  BuildingModel,
-  DeviceModelAny,
-  FloorModel,
-} from '.'
+import type { default as AreaModel, AreaModelAny } from './area'
 import type { BuildingSettings, DeviceType, ListDevice } from '../types'
+import type BuildingModel from './building'
+import type { DeviceModelAny } from './device'
+import type FloorModel from './floor'
 
 export interface IBaseModel {
   readonly id: number

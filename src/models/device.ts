@@ -1,11 +1,8 @@
-import {
-  AreaModel,
-  type AreaModelAny,
-  BuildingModel,
-  FloorModel,
-  type IDeviceModel,
-} from '.'
+import AreaModel, { type AreaModelAny } from './area'
 import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
+import BuildingModel from './building'
+import FloorModel from './floor'
+import type { IDeviceModel } from './interfaces'
 
 export type DeviceModelAny =
   | DeviceModel<'Ata'>

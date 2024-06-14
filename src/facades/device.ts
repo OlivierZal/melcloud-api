@@ -1,4 +1,3 @@
-import { BaseFacade, type IDeviceFacade, YEAR_1970, now } from '.'
 import { DeviceModel, type DeviceModelAny } from '../models'
 import type {
   DeviceType,
@@ -9,6 +8,9 @@ import type {
   TilesData,
   UpdateDeviceData,
 } from '../types'
+import { YEAR_1970, now } from './utils'
+import BaseFacade from './base'
+import type { IDeviceFacade } from './interfaces'
 
 export default class<U extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>

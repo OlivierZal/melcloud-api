@@ -1,8 +1,6 @@
-import {
-  type APICallContextData,
-  APICallRequestData,
-  APICallResponseData,
-} from '.'
+import type APICallContextData from './APICallContextData'
+import APICallRequestData from './APICallRequestData'
+import APICallResponseData from './APICallResponseData'
 import type { AxiosError } from 'axios'
 
 interface APICallContextDataWithErrorMessage extends APICallContextData {

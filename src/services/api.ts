@@ -42,7 +42,7 @@ import {
   type WifiPostData,
 } from '../types'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
-import type { IMELCloudAPI, Logger, SettingManager } from '.'
+import type { IMELCloudAPI, Logger, SettingManager } from './interfaces'
 import https from 'https'
 
 const LIST_URL = '/User/ListDevices'

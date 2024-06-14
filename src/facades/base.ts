@@ -17,9 +17,10 @@ import type {
   SuccessData,
   WifiData,
 } from '../types'
-import { type IBaseFacade, YEAR_1970, now } from '.'
+import { YEAR_1970, now } from './utils'
 import type API from '../services'
 import { DateTime } from 'luxon'
+import type { IBaseFacade } from './interfaces'
 
 const getDateTimeComponents = (
   date: DateTime | null,

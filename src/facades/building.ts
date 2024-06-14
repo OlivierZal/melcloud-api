@@ -1,6 +1,7 @@
-import { BaseSuperDeviceFacade, type IBuildingFacade } from '.'
+import BaseSuperDeviceFacade from './base_super_device'
 import { BuildingModel } from '../models'
 import type { BuildingSettings } from '../types'
+import type { IBuildingFacade } from './interfaces'
 
 export default class
   extends BaseSuperDeviceFacade<BuildingModel>
