@@ -2,7 +2,7 @@ import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-} from '../lib'
+} from './logger'
 import { AreaModel, BuildingModel, DeviceModel, FloorModel } from '../models'
 import {
   type AxiosError,
