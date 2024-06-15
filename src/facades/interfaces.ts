@@ -41,8 +41,8 @@ export interface IBaseFacade {
     from,
     to,
   }: {
-    from?: string | null
-    to?: string | null
+    from?: null
+    to?: null
     enable: false
   }) => Promise<FailureData | SuccessData>) &
     (({
@@ -50,16 +50,30 @@ export interface IBaseFacade {
       from,
       to,
     }: {
-      enable?: boolean
+      enable?: true
       from?: string | null
       to: string
+    }) => Promise<FailureData | SuccessData>) &
+    (({
+      enable,
+      from,
+      days,
+    }: {
+      enable?: true
+      from?: string | null
+      days: number
     }) => Promise<FailureData | SuccessData>)
   setPower: (enable?: boolean) => Promise<boolean>
 }
 
 export interface IBaseSuperDeviceFacade extends IBaseFacade {
+  get: () => Promise<
+    ListDevice['Ata']['Device'] &
+      ListDevice['Atw']['Device'] &
+      ListDevice['Erv']['Device']
+  >
   getTiles: () => Promise<TilesData<null>>
-  setAtaGroup: (
+  setAta: (
     postData: Omit<SetAtaGroupPostData, 'Specification'>,
   ) => Promise<FailureData | SuccessData>
 }

@@ -8,7 +8,7 @@ import type {
   TilesData,
   UpdateDeviceData,
 } from '../types'
-import { YEAR_1970, now } from './utils'
+import { YEAR_1970, nowISO } from './utils'
 import BaseFacade from './base'
 import type { IDeviceFacade } from './interfaces'
 
@@ -49,7 +49,7 @@ export default class<U extends keyof typeof DeviceType>
         postData: {
           DeviceID: this.model.id,
           FromDate: from ?? YEAR_1970,
-          ToDate: to ?? now(),
+          ToDate: to ?? nowISO(),
         },
       })
     ).data as EnergyData[U]

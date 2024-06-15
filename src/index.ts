@@ -7,7 +7,7 @@ export {
   DeviceFacade,
   FloorFacade,
   YEAR_1970,
-  now,
+  nowISO,
   type IBaseFacade,
   type IBaseSuperDeviceFacade,
   type IBuildingFacade,

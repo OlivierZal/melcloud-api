@@ -1,6 +1,7 @@
 import type { AreaModelAny, BuildingModel, FloorModel } from '../models'
 import type {
   FailureData,
+  ListDevice,
   SetAtaGroupPostData,
   SuccessData,
   TilesData,
@@ -16,13 +17,19 @@ export default abstract class<
 {
   protected abstract readonly setAtaGroupSpecification: keyof SetAtaGroupPostData['Specification']
 
+  public async get(): Promise<
+    ListDevice['Ata']['Device'] &
+      ListDevice['Atw']['Device'] &
+      ListDevice['Erv']['Device']
+  > {}
+
   public async getTiles(): Promise<TilesData<null>> {
     return (
       await this.api.getTiles({ postData: { DeviceIDs: this.model.deviceIds } })
     ).data
   }
 
-  public async setAtaGroup(
+  public async setAta(
     postData: Omit<SetAtaGroupPostData, 'Specification'>,
   ): Promise<FailureData | SuccessData> {
     return (

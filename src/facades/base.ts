@@ -17,7 +17,7 @@ import type {
   SuccessData,
   WifiData,
 } from '../types'
-import { YEAR_1970, now } from './utils'
+import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
 import { DateTime } from 'luxon'
 import type { IBaseFacade } from './interfaces'
@@ -35,6 +35,22 @@ const getDateTimeComponents = (
       Year: date.year,
     }
   : null
+
+const getEndDate = (
+  startDate: DateTime,
+  to?: string | null,
+  days?: number,
+): DateTime | null => {
+  if (
+    typeof to === 'undefined' ||
+    to === null ||
+    typeof days === 'undefined' ||
+    !days
+  ) {
+    throw new Error('End date is missing')
+  }
+  return days ? startDate.plus({ days }) : DateTime.fromISO(to)
+}
 
 export default abstract class<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
@@ -79,7 +95,7 @@ export default abstract class<
         postData: {
           DeviceIDs: this.#getDeviceIds(),
           FromDate: from ?? YEAR_1970,
-          ToDate: to ?? now(),
+          ToDate: to ?? nowISO(),
         },
       })
     ).data
@@ -151,23 +167,19 @@ export default abstract class<
   }
 
   public async setHolidayMode({
+    days,
     enable,
     from,
     to,
   }: {
+    days?: number
     enable?: boolean
     from?: string | null
     to?: string | null
   }): Promise<FailureData | SuccessData> {
     const isEnabled = enable ?? true
-    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
-    let endDate: DateTime | null = null
-    if (isEnabled) {
-      if (typeof to === 'undefined' || to === null) {
-        throw new Error('End date is missing')
-      }
-      endDate = DateTime.fromISO(to)
-    }
+    const startDate = isEnabled ? DateTime.fromISO(from ?? nowISO()) : null
+    const endDate = startDate ? getEndDate(startDate, to, days) : null
     return (
       await this.api.setHolidayMode({
         postData: {
