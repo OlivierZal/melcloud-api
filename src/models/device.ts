@@ -1,5 +1,13 @@
 import AreaModel, { type AreaModelAny } from './area'
-import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
+import {
+  DeviceType,
+  type ListDevice,
+  type ListDeviceAny,
+  type NonFlagsKeyOf,
+  type UpdateDeviceData,
+  flags,
+} from '../types'
+import BaseModel from './base'
 import BuildingModel from './building'
 import FloorModel from './floor'
 import type { IDeviceModel } from './interfaces'
@@ -10,9 +18,10 @@ export type DeviceModelAny =
   | DeviceModel<'Erv'>
 
 export default class DeviceModel<T extends keyof typeof DeviceType>
+  extends BaseModel
   implements IDeviceModel<T>
 {
-  public static readonly devices = new Map<number, DeviceModelAny>()
+  static readonly #devices = new Map<number, DeviceModelAny>()
 
   public readonly areaId: number | null = null
 
@@ -20,11 +29,9 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public readonly data: ListDevice[T]['Device']
 
+  public readonly flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
+
   public readonly floorId: number | null = null
-
-  public readonly id: number
-
-  public readonly name: string
 
   public readonly type: T
 
@@ -37,13 +44,13 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     FloorID: floorId,
     Type: type,
   }: ListDevice[T]) {
+    super({ id, name })
     this.areaId = areaId
     this.buildingId = buildingId
     this.data = data
     this.floorId = floorId
-    this.id = id
-    this.name = name
     this.type = DeviceType[type] as T
+    this.flags = flags[this.type]
   }
 
   public get area(): AreaModelAny | null {
@@ -61,29 +68,35 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getAll(): DeviceModelAny[] {
-    return Array.from(this.devices.values())
+    return Array.from(this.#devices.values())
   }
 
-  public static getByBuildingId(buildingId: number): DeviceModelAny[] {
-    return this.getAll().filter(({ buildingId: id }) => id === buildingId)
+  public static getByAreaId(id: number): DeviceModelAny[] {
+    return this.getAll().filter((model) => id === model.areaId)
+  }
+
+  public static getByBuildingId(id: number): DeviceModelAny[] {
+    return this.getAll().filter((model) => id === model.buildingId)
+  }
+
+  public static getByFloorId(id: number): DeviceModelAny[] {
+    return this.getAll().filter((model) => id === model.floorId)
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
-    return this.devices.get(id)
+    return this.#devices.get(id)
   }
 
-  public static getByName(deviceName: string): DeviceModelAny | undefined {
-    return this.getAll().find(({ name }) => name === deviceName)
+  public static getByName(name: string): DeviceModelAny | undefined {
+    return this.getAll().find((model) => name === model.name)
   }
 
-  public static getByType(
-    deviceType: keyof typeof DeviceType,
-  ): DeviceModelAny[] {
-    return this.getAll().filter(({ type }) => type === deviceType)
+  public static getByType(type: keyof typeof DeviceType): DeviceModelAny[] {
+    return this.getAll().filter((model) => type === model.type)
   }
 
   public static upsert(data: ListDeviceAny): void {
-    this.devices.set(data.DeviceID, new this(data) as DeviceModelAny)
+    this.#devices.set(data.DeviceID, new this(data) as DeviceModelAny)
   }
 
   public static upsertMany(dataList: readonly ListDeviceAny[]): void {

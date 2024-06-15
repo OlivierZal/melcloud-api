@@ -16,13 +16,13 @@ export enum FanSpeed {
   silent = 255,
 }
 
-export type NonEffectiveFlagsKeyOf<T> = Exclude<keyof T, 'EffectiveFlags'>
+export type NonFlagsKeyOf<T> = Exclude<keyof T, 'EffectiveFlags'>
 
-export type NonEffectiveFlagsValueOf<T> = T[NonEffectiveFlagsKeyOf<T>]
+export type NonFlagsValueOf<T> = T[NonFlagsKeyOf<T>]
 
 export interface BaseUpdateDeviceData {
+  EffectiveFlags?: number
   readonly Power?: boolean
-  EffectiveFlags: number
 }
 
 export interface BaseDevicePostData {
@@ -47,4 +47,13 @@ export interface BaseGetDeviceData extends BaseSetDeviceData {
 export interface BaseListDeviceData
   extends Omit<BaseGetDeviceData, keyof DeviceDataNotInList> {
   readonly WifiSignalStrength: number
+}
+
+export interface BaseListDevice {
+  readonly AreaID: number | null
+  readonly BuildingID: number
+  readonly DeviceID: number
+  readonly DeviceName: string
+  readonly FloorID: number | null
+  readonly Type: DeviceType
 }

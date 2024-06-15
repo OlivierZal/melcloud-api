@@ -21,7 +21,7 @@ export default abstract class {
 
   public readonly url: InternalAxiosRequestConfig['url']
 
-  public constructor(config?: InternalAxiosRequestConfig) {
+  protected constructor(config?: InternalAxiosRequestConfig) {
     this.method = config?.method?.toUpperCase()
     this.url = config?.url
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
