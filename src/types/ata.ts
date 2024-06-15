@@ -1,5 +1,6 @@
 import type {
   BaseGetDeviceData,
+  BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
@@ -89,6 +90,9 @@ export interface ListDeviceDataAta
   readonly OutdoorTemperature: number
   readonly VaneHorizontalDirection: Horizontal
   readonly VaneVerticalDirection: Vertical
+}
+export interface ListDeviceAta extends BaseListDevice {
+  readonly Device: ListDeviceDataAta
 }
 
 export interface EnergyDataAta {
