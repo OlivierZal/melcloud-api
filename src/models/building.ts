@@ -1,20 +1,26 @@
+import AreaModel, { type AreaModelAny } from './area'
 import type { BuildingData, BuildingSettings } from '../types'
 import DeviceModel, { type DeviceModelAny } from './device'
+import BaseModel from './base'
+import FloorModel from './floor'
 import type { IBuildingModel } from './interfaces'
 
-export default class BuildingModel implements IBuildingModel {
-  public static readonly buildings = new Map<number, BuildingModel>()
+export default class BuildingModel extends BaseModel implements IBuildingModel {
+  static readonly #buildings = new Map<number, BuildingModel>()
 
-  public readonly data: BuildingSettings
+  public readonly settings: BuildingSettings
 
-  public readonly id: number
+  private constructor({ Name: name, ID: id, ...settings }: BuildingData) {
+    super({ id, name })
+    this.settings = settings
+  }
 
-  public readonly name: string
+  public get areaIds(): number[] {
+    return this.areas.map(({ id }) => id)
+  }
 
-  private constructor({ Name: name, ID: id, ...data }: BuildingData) {
-    this.data = data
-    this.id = id
-    this.name = name
+  public get areas(): AreaModelAny[] {
+    return AreaModel.getByBuildingId(this.id)
   }
 
   public get deviceIds(): number[] {
@@ -22,24 +28,30 @@ export default class BuildingModel implements IBuildingModel {
   }
 
   public get devices(): DeviceModelAny[] {
-    return DeviceModel.getAll().filter(
-      ({ buildingId }) => buildingId === this.id,
-    )
+    return DeviceModel.getByBuildingId(this.id)
+  }
+
+  public get floorIds(): number[] {
+    return this.areas.map(({ id }) => id)
+  }
+
+  public get floors(): FloorModel[] {
+    return FloorModel.getByBuildingId(this.id)
   }
 
   public static getAll(): BuildingModel[] {
-    return Array.from(this.buildings.values())
+    return Array.from(this.#buildings.values())
   }
 
   public static getById(id: number): BuildingModel | undefined {
-    return this.buildings.get(id)
+    return this.#buildings.get(id)
   }
 
-  public static getByName(buildingName: string): BuildingModel | undefined {
-    return this.getAll().find(({ name }) => name === buildingName)
+  public static getByName(name: string): BuildingModel | undefined {
+    return this.getAll().find((model) => name === model.name)
   }
 
   public static upsert(data: BuildingData): void {
-    this.buildings.set(data.ID, new this(data))
+    this.#buildings.set(data.ID, new this(data))
   }
 }

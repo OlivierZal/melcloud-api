@@ -1,12 +1,13 @@
 import type {
   BaseGetDeviceData,
+  BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
-  NonEffectiveFlagsKeyOf,
+  NonFlagsKeyOf,
 } from './bases'
 
 export enum VentilationMode {
@@ -20,10 +21,7 @@ export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
   readonly VentilationMode?: VentilationMode
 }
 
-export const effectiveFlagsErv: Record<
-  NonEffectiveFlagsKeyOf<UpdateDeviceDataErv>,
-  number
-> = {
+export const flagsErv: Record<NonFlagsKeyOf<UpdateDeviceDataErv>, number> = {
   Power: 0x1,
   SetFanSpeed: 0x8,
   VentilationMode: 0x4,
@@ -48,4 +46,7 @@ export interface ListDeviceDataErv
   readonly HasCO2Sensor: boolean
   readonly HasPM25Sensor: boolean
   readonly PM25Level: number
+}
+export interface ListDeviceErv extends BaseListDevice {
+  readonly Device: ListDeviceDataErv
 }

@@ -1,11 +1,12 @@
 import type {
   BaseGetDeviceData,
+  BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
-  NonEffectiveFlagsKeyOf,
+  NonFlagsKeyOf,
 } from './bases'
 
 export enum OperationModeState {
@@ -38,10 +39,7 @@ export interface UpdateDeviceDataAtw extends BaseUpdateDeviceData {
   readonly SetTemperatureZone2?: number
 }
 
-export const effectiveFlagsAtw: Record<
-  NonEffectiveFlagsKeyOf<UpdateDeviceDataAtw>,
-  number
-> = {
+export const flagsAtw: Record<NonFlagsKeyOf<UpdateDeviceDataAtw>, number> = {
   ForcedHotWaterMode: 0x10000,
   OperationModeZone1: 0x8,
   OperationModeZone2: 0x10,
@@ -105,6 +103,9 @@ export interface ListDeviceDataAtw
   readonly Zone1InHeatMode: boolean
   readonly Zone2InCoolMode: boolean
   readonly Zone2InHeatMode: boolean
+}
+export interface ListDeviceAtw extends BaseListDevice {
+  readonly Device: ListDeviceDataAtw
 }
 
 export interface EnergyDataAtw {

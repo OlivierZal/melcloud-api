@@ -28,10 +28,10 @@ import type {
 } from '../types'
 
 export interface APISettings {
-  readonly contextKey?: string | null
-  readonly expiry?: string | null
-  readonly password?: string | null
-  readonly username?: string | null
+  contextKey?: string | null
+  expiry?: string | null
+  password?: string | null
+  username?: string | null
 }
 
 export interface SettingManager {
@@ -42,8 +42,8 @@ export interface SettingManager {
 }
 
 export interface Logger {
-  readonly error: Console['error']
-  readonly log: Console['log']
+  error: Console['error']
+  log: Console['log']
 }
 
 export interface IMELCloudAPI {
@@ -51,7 +51,7 @@ export interface IMELCloudAPI {
     data?: LoginCredentials,
     onSuccess?: () => Promise<void>,
   ) => Promise<boolean>
-  fetchDevices: () => Promise<{ data: Building[] }>
+  fetch: () => Promise<{ data: Building[] }>
   getDevice: <T extends keyof typeof DeviceType>({
     params,
   }: {
@@ -125,5 +125,4 @@ export interface IMELCloudAPI {
   }: {
     postData: SetPowerPostData
   }) => Promise<{ data: boolean }>
-  readonly language: string
 }

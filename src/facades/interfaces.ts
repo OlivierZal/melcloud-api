@@ -1,4 +1,11 @@
 import type {
+  AreaModelAny,
+  BuildingModel,
+  DeviceModelAny,
+  FloorModel,
+} from '../models'
+import type {
+  BuildingData,
   BuildingSettings,
   DeviceType,
   EnergyData,
@@ -8,6 +15,7 @@ import type {
   GetDeviceData,
   HolidayModeData,
   ListDevice,
+  NonFlagsKeyOf,
   SetAtaGroupPostData,
   SetDeviceData,
   SuccessData,
@@ -16,7 +24,9 @@ import type {
   WifiData,
 } from '../types'
 
-export interface IBaseFacade {
+export interface IBaseFacade<
+  T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
+> {
   getErrors: ({
     from,
     to,
@@ -27,6 +37,8 @@ export interface IBaseFacade {
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
   getWifiReport: (hour: number) => Promise<WifiData>
+  model: T
+  name: string
   setFrostProtection: ({
     enable,
     max,
@@ -41,8 +53,8 @@ export interface IBaseFacade {
     from,
     to,
   }: {
-    from?: string | null
-    to?: string | null
+    from?: null
+    to?: null
     enable: false
   }) => Promise<FailureData | SuccessData>) &
     (({
@@ -50,27 +62,42 @@ export interface IBaseFacade {
       from,
       to,
     }: {
-      enable?: boolean
+      enable?: true
       from?: string | null
       to: string
+    }) => Promise<FailureData | SuccessData>) &
+    (({
+      enable,
+      from,
+      days,
+    }: {
+      enable?: true
+      from?: string | null
+      days: number
     }) => Promise<FailureData | SuccessData>)
   setPower: (enable?: boolean) => Promise<boolean>
 }
 
-export interface IBaseSuperDeviceFacade extends IBaseFacade {
+export interface IBaseSuperDeviceFacade
+  extends IBaseFacade<AreaModelAny | BuildingModel | FloorModel> {
+  getAta: () => SetAtaGroupPostData['State']
   getTiles: () => Promise<TilesData<null>>
-  setAtaGroup: (
-    postData: Omit<SetAtaGroupPostData, 'Specification'>,
+  setAta: (
+    postData: SetAtaGroupPostData['State'],
   ) => Promise<FailureData | SuccessData>
 }
 
 export interface IBuildingFacade extends IBaseSuperDeviceFacade {
+  actualData: () => Promise<BuildingData>
   fetch: () => Promise<BuildingSettings>
+  settings: BuildingSettings
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>
-  extends IBaseFacade {
+  extends IBaseFacade<DeviceModelAny> {
+  data: ListDevice[T]['Device']
   fetch: () => Promise<ListDevice[T]['Device']>
+  flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
   get: () => Promise<GetDeviceData[T]>
   getEnergyReport: ({
     from,
@@ -82,4 +109,5 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   getTile: ((select?: false) => Promise<TilesData<null>>) &
     ((select: true) => Promise<TilesData<T>>)
   set: (postData: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
+  type: T
 }
