@@ -1,12 +1,13 @@
 import type {
   BaseGetDeviceData,
+  BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
-  NonEffectiveFlagsKeyOf,
+  NonFlagsKeyOf,
 } from './bases'
 
 export enum OperationMode {
@@ -46,10 +47,7 @@ export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly VaneVertical?: Vertical
 }
 
-export const effectiveFlagsAta: Record<
-  NonEffectiveFlagsKeyOf<UpdateDeviceDataAta>,
-  number
-> = {
+export const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number> = {
   OperationMode: 0x2,
   Power: 0x1,
   SetFanSpeed: 0x8,
@@ -89,6 +87,9 @@ export interface ListDeviceDataAta
   readonly OutdoorTemperature: number
   readonly VaneHorizontalDirection: Horizontal
   readonly VaneVerticalDirection: Vertical
+}
+export interface ListDeviceAta extends BaseListDevice {
+  readonly Device: ListDeviceDataAta
 }
 
 export interface EnergyDataAta {

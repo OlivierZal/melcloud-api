@@ -48,10 +48,18 @@ import https from 'https'
 const LIST_URL = '/User/ListDevices'
 const LOGIN_URL = '/Login/ClientLogin'
 
+const MINUTES_0 = 0
+const MINUTES_5 = 5
+
+const getLanguage = (language = LuxonSettings.defaultLocale): Language =>
+  language in Language ?
+    Language[language as keyof typeof Language]
+  : Language.en
+
 export default class API implements IMELCloudAPI {
   readonly #settingManager?: SettingManager
 
-  public language: string
+  readonly #syncFunction?: () => Promise<void>
 
   #contextKey = ''
 
@@ -65,39 +73,48 @@ export default class API implements IMELCloudAPI {
 
   #retryTimeout!: NodeJS.Timeout
 
+  #syncInterval: NodeJS.Timeout | null = null
+
   #username = ''
 
   readonly #api: AxiosInstance
+
+  readonly #autoSync: Duration
 
   readonly #logger: Logger
 
   public constructor(
     config: {
+      autoSync?: number | null
       language?: string
       logger?: Logger
       settingManager?: SettingManager
       shouldVerifySSL?: boolean
+      syncFunction?: () => Promise<void>
       timezone?: string
     } = {},
   ) {
     const {
+      autoSync = MINUTES_5,
       language = 'en',
       logger = console,
       settingManager,
       shouldVerifySSL = true,
+      syncFunction,
       timezone,
     } = config
     LuxonSettings.defaultLocale = language
     if (typeof timezone !== 'undefined') {
       LuxonSettings.defaultZone = timezone
     }
-    this.language = language
-    this.#logger = logger
-    this.#settingManager = settingManager
     this.#api = createAxiosInstance({
       baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
       httpsAgent: new https.Agent({ rejectUnauthorized: shouldVerifySSL }),
     })
+    this.#autoSync = Duration.fromObject({ minutes: autoSync ?? MINUTES_0 })
+    this.#logger = logger
+    this.#settingManager = settingManager
+    this.#syncFunction = syncFunction
     this.#setupAxiosInterceptors()
   }
 
@@ -137,10 +154,7 @@ export default class API implements IMELCloudAPI {
     this.#settingManager?.set('username', this.#username)
   }
 
-  public async applyLogin(
-    data?: LoginCredentials,
-    onSuccess?: () => Promise<void>,
-  ): Promise<boolean> {
+  public async applyLogin(data?: LoginCredentials): Promise<boolean> {
     const { username = this.username, password = this.password } = data ?? {}
     if (username && password) {
       try {
@@ -149,15 +163,13 @@ export default class API implements IMELCloudAPI {
             postData: {
               AppVersion: '1.32.0.0',
               Email: username,
-              Language: this.#getLanguage(),
+              Language: getLanguage(),
               Password: password,
               Persist: true,
             },
           })
         ).data
-        if (loginData) {
-          await onSuccess?.()
-        }
+        await this.sync()
         return loginData !== null
       } catch (error) {
         if (typeof data !== 'undefined') {
@@ -168,26 +180,31 @@ export default class API implements IMELCloudAPI {
     return false
   }
 
+  public clearSync(): void {
+    if (this.#syncInterval) {
+      clearInterval(this.#syncInterval)
+      this.#syncInterval = null
+    }
+  }
+
   public async fetchDevices(): Promise<{ data: Building[] }> {
     const response = await this.#api.get<Building[]>(LIST_URL)
-    await Promise.all(
-      response.data.map(async (building) => {
-        DeviceModel.upsertMany(building.Structure.Devices)
-        building.Structure.Areas.forEach((area) => {
-          AreaModel.upsert(area)
+    response.data.forEach((building) => {
+      DeviceModel.upsertMany(building.Structure.Devices)
+      building.Structure.Areas.forEach((area) => {
+        DeviceModel.upsertMany(area.Devices)
+        AreaModel.upsert(area)
+      })
+      building.Structure.Floors.forEach((floor) => {
+        DeviceModel.upsertMany(floor.Devices)
+        FloorModel.upsert(floor)
+        floor.Areas.forEach((area) => {
           DeviceModel.upsertMany(area.Devices)
+          AreaModel.upsert(area)
         })
-        building.Structure.Floors.forEach((floor) => {
-          FloorModel.upsert(floor)
-          DeviceModel.upsertMany(floor.Devices)
-          floor.Areas.forEach((area) => {
-            AreaModel.upsert(area)
-            DeviceModel.upsertMany(area.Devices)
-          })
-        })
-        await this.#upsertBuilding(building)
-      }),
-    )
+      })
+      BuildingModel.upsert(building)
+    })
     return response
   }
 
@@ -337,10 +354,10 @@ export default class API implements IMELCloudAPI {
 
   public async setLanguage(language: string): Promise<{ data: boolean }> {
     const response = await this.#api.post<boolean>('/User/UpdateLanguage', {
-      language: this.#getLanguage(language) satisfies Language,
+      language: getLanguage(language) satisfies Language,
     })
     if (response.data) {
-      this.language = language
+      LuxonSettings.defaultLocale = language
     }
     return response
   }
@@ -353,10 +370,23 @@ export default class API implements IMELCloudAPI {
     return this.#api.post<boolean>('/Device/Power', postData)
   }
 
-  #getLanguage(language = this.language): Language {
-    return language in Language ?
-        Language[language as keyof typeof Language]
-      : Language.en
+  public async sync(): Promise<void> {
+    if (this.#autoSync.as('milliseconds')) {
+      this.clearSync()
+      if (!this.#syncInterval) {
+        this.#syncInterval = setInterval(() => {
+          this.#applySync().catch((error: unknown) => {
+            this.#logger.error(error)
+          })
+        }, this.#autoSync.as('milliseconds'))
+      }
+    }
+    await this.#applySync()
+  }
+
+  async #applySync(): Promise<void> {
+    await this.fetchDevices()
+    await this.#syncFunction?.()
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {
@@ -432,22 +462,5 @@ export default class API implements IMELCloudAPI {
       async (error: AxiosError): Promise<AxiosError> =>
         this.#handleError(error),
     )
-  }
-
-  async #upsertBuilding(building: Building): Promise<void> {
-    let params: SettingsParams | null = null
-    if (!building.FPDefined || !building.HMDefined) {
-      const [{ id }] = DeviceModel.getByBuildingId(building.ID)
-      params = { id, tableName: 'DeviceLocation' }
-    }
-    BuildingModel.upsert({
-      ...building,
-      ...(building.FPDefined || !params ?
-        {}
-      : (await this.getFrostProtection({ params })).data),
-      ...(building.HMDefined || !params ?
-        {}
-      : (await this.getHolidayMode({ params })).data),
-    })
   }
 }

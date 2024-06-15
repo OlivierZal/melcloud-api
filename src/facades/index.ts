@@ -10,4 +10,4 @@ export type {
   IBuildingFacade,
   IDeviceFacade,
 } from './interfaces'
-export { YEAR_1970, now } from './utils'
+export { YEAR_1970, nowISO } from './utils'
