@@ -17,10 +17,16 @@ import type {
   SuccessData,
   WifiData,
 } from '../types'
-import { YEAR_1970, now } from './utils'
+import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
 import { DateTime } from 'luxon'
 import type { IBaseFacade } from './interfaces'
+
+const MIN_TEMPERATURE_MIN = 4
+const MIN_TEMPERATURE_MAX = 14
+const MAX_TEMPERATURE_MIN = 6
+const MAX_TEMPERATURE_MAX = 16
+const MIN_MAX_GAP = 2
 
 const getDateTimeComponents = (
   date: DateTime | null,
@@ -35,6 +41,22 @@ const getDateTimeComponents = (
       Year: date.year,
     }
   : null
+
+const getEndDate = (
+  startDate: DateTime,
+  to?: string | null,
+  days?: number,
+): DateTime | null => {
+  if (
+    typeof to === 'undefined' ||
+    to === null ||
+    typeof days === 'undefined' ||
+    !days
+  ) {
+    throw new Error('End date is missing')
+  }
+  return days ? startDate.plus({ days }) : DateTime.fromISO(to)
+}
 
 export default abstract class<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
@@ -59,7 +81,7 @@ export default abstract class<
     this.#id = id
   }
 
-  public get model(): T {
+  protected get model(): T {
     const model = this.modelClass.getById(this.#id)
     if (!model) {
       throw new Error(`${this.tableName} not found`)
@@ -79,7 +101,7 @@ export default abstract class<
         postData: {
           DeviceIDs: this.#getDeviceIds(),
           FromDate: from ?? YEAR_1970,
-          ToDate: to ?? now(),
+          ToDate: to ?? nowISO(),
         },
       })
     ).data
@@ -136,12 +158,24 @@ export default abstract class<
     max: number
     min: number
   }): Promise<FailureData | SuccessData> {
+    let [newMin, newMax] = min > max ? [max, min] : [min, max]
+    newMin = Math.max(
+      MIN_TEMPERATURE_MIN,
+      Math.min(newMin, MIN_TEMPERATURE_MAX),
+    )
+    newMax = Math.max(
+      MAX_TEMPERATURE_MIN,
+      Math.min(newMax, MAX_TEMPERATURE_MAX),
+    )
+    if (newMax - newMin < MIN_MAX_GAP) {
+      newMax = newMin + MIN_MAX_GAP
+    }
     return (
       await this.api.setFrostProtection({
         postData: {
           Enabled: enable ?? true,
-          MaximumTemperature: max,
-          MinimumTemperature: min,
+          MaximumTemperature: newMax,
+          MinimumTemperature: newMin,
           ...(this.#getBuildingData().FPDefined ?
             { [this.frostProtectionLocation]: [this.model.id] }
           : { DeviceIds: this.#getDeviceIds() }),
@@ -151,23 +185,19 @@ export default abstract class<
   }
 
   public async setHolidayMode({
+    days,
     enable,
     from,
     to,
   }: {
+    days?: number
     enable?: boolean
     from?: string | null
     to?: string | null
   }): Promise<FailureData | SuccessData> {
     const isEnabled = enable ?? true
-    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
-    let endDate: DateTime | null = null
-    if (isEnabled) {
-      if (typeof to === 'undefined' || to === null) {
-        throw new Error('End date is missing')
-      }
-      endDate = DateTime.fromISO(to)
-    }
+    const startDate = isEnabled ? DateTime.fromISO(from ?? nowISO()) : null
+    const endDate = startDate ? getEndDate(startDate, to, days) : null
     return (
       await this.api.setHolidayMode({
         postData: {
