@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "4.0.4",
+  "version": "5.0.0",
   "description": "MELCloud API for Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -29,7 +29,7 @@
   },
   "scripts": {
     "build": "tsc && tsc -p 'tsconfig.checkjs.json'",
-    "docs": "typedoc && markdownlint-cli2 README.md && npm run format:fix README.md -- --ignore-path",
+    "docs": "typedoc && npm run format:fix README.md -- --ignore-path && markdownlint-cli2 README.md",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
     "lint": "eslint .",
@@ -38,13 +38,13 @@
     "prepare": "npm run build && npm run docs"
   },
   "devDependencies": {
-    "@eslint/js": "^9.4.0",
-    "@stylistic/eslint-plugin": "^2.1.0",
+    "@eslint/js": "^9.5.0",
+    "@stylistic/eslint-plugin": "^2.2.1",
     "@types/eslint__js": "^8.42.3",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/luxon": "^3.4.2",
-    "@types/node": "^20.14.2",
-    "eslint": "^9.4.0",
+    "@types/node": "^20.14.5",
+    "eslint": "^9.5.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",

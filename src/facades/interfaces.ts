@@ -41,8 +41,8 @@ export interface IBaseFacade {
     from,
     to,
   }: {
-    from?: string | null
-    to?: string | null
+    from?: null
+    to?: null
     enable: false
   }) => Promise<FailureData | SuccessData>) &
     (({
@@ -50,26 +50,38 @@ export interface IBaseFacade {
       from,
       to,
     }: {
-      enable?: boolean
+      enable?: true
       from?: string | null
       to: string
+    }) => Promise<FailureData | SuccessData>) &
+    (({
+      enable,
+      from,
+      days,
+    }: {
+      enable?: true
+      from?: string | null
+      days: number
     }) => Promise<FailureData | SuccessData>)
   setPower: (enable?: boolean) => Promise<boolean>
 }
 
 export interface IBaseSuperDeviceFacade extends IBaseFacade {
+  getAta: () => SetAtaGroupPostData['State']
   getTiles: () => Promise<TilesData<null>>
-  setAtaGroup: (
-    postData: Omit<SetAtaGroupPostData, 'Specification'>,
+  setAta: (
+    postData: SetAtaGroupPostData['State'],
   ) => Promise<FailureData | SuccessData>
 }
 
 export interface IBuildingFacade extends IBaseSuperDeviceFacade {
+  data: BuildingSettings
   fetch: () => Promise<BuildingSettings>
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>
   extends IBaseFacade {
+  data: ListDevice[T]['Device']
   fetch: () => Promise<ListDevice[T]['Device']>
   get: () => Promise<GetDeviceData[T]>
   getEnergyReport: ({

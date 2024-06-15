@@ -5,22 +5,28 @@ import type {
   FloorModel,
 } from '../models'
 import type {
-  BuildingSettings,
   DateTimeComponents,
   ErrorData,
   FailureData,
   FrostProtectionData,
   FrostProtectionLocation,
+  HMTimeZone,
   HolidayModeData,
   HolidayModeLocation,
   SettingsParams,
   SuccessData,
   WifiData,
 } from '../types'
-import { YEAR_1970, now } from './utils'
+import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
 import { DateTime } from 'luxon'
 import type { IBaseFacade } from './interfaces'
+
+const MIN_TEMPERATURE_MIN = 4
+const MIN_TEMPERATURE_MAX = 14
+const MAX_TEMPERATURE_MIN = 6
+const MAX_TEMPERATURE_MAX = 16
+const MIN_MAX_GAP = 2
 
 const getDateTimeComponents = (
   date: DateTime | null,
@@ -36,10 +42,30 @@ const getDateTimeComponents = (
     }
   : null
 
+const getEndDate = (
+  startDate: DateTime,
+  to?: string | null,
+  days?: number,
+): DateTime | null => {
+  if (
+    typeof to === 'undefined' ||
+    to === null ||
+    typeof days === 'undefined' ||
+    !days
+  ) {
+    throw new Error('End date is missing')
+  }
+  return days ? startDate.plus({ days }) : DateTime.fromISO(to)
+}
+
 export default abstract class<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
 > implements IBaseFacade
 {
+  protected isFrostProtectionDefined: boolean | null = null
+
+  protected isHolidayModeDefined: boolean | null = null
+
   protected readonly api: API
 
   readonly #id: number
@@ -59,7 +85,7 @@ export default abstract class<
     this.#id = id
   }
 
-  public get model(): T {
+  protected get model(): T {
     const model = this.modelClass.getById(this.#id)
     if (!model) {
       throw new Error(`${this.tableName} not found`)
@@ -79,42 +105,36 @@ export default abstract class<
         postData: {
           DeviceIDs: this.#getDeviceIds(),
           FromDate: from ?? YEAR_1970,
-          ToDate: to ?? now(),
+          ToDate: to ?? nowISO(),
         },
       })
     ).data
   }
 
   public async getFrostProtection(): Promise<FrostProtectionData> {
-    try {
-      return (
-        await this.api.getFrostProtection({
-          params: { id: this.model.id, tableName: this.tableName },
-        })
-      ).data
-    } catch (_error) {
-      return (
-        await this.api.getFrostProtection({
-          params: { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
-        })
-      ).data
+    if (this.isFrostProtectionDefined === null) {
+      try {
+        return await this.#getLocalFrostProtection()
+      } catch (_error) {
+        return this.#getDevicesFrostProtection()
+      }
     }
+    return this.isFrostProtectionDefined ?
+        this.#getLocalFrostProtection()
+      : this.#getDevicesFrostProtection()
   }
 
   public async getHolidayMode(): Promise<HolidayModeData> {
-    try {
-      return (
-        await this.api.getHolidayMode({
-          params: { id: this.model.id, tableName: this.tableName },
-        })
-      ).data
-    } catch (_error) {
-      return (
-        await this.api.getHolidayMode({
-          params: { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
-        })
-      ).data
+    if (this.isHolidayModeDefined === null) {
+      try {
+        return await this.#getLocalHolidayMode()
+      } catch (_error) {
+        return this.#getDevicesHolidayMode()
+      }
     }
+    return this.isHolidayModeDefined ?
+        this.#getLocalHolidayMode()
+      : this.#getDevicesHolidayMode()
   }
 
   public async getWifiReport(
@@ -136,48 +156,50 @@ export default abstract class<
     max: number
     min: number
   }): Promise<FailureData | SuccessData> {
+    let [newMin, newMax] = min > max ? [max, min] : [min, max]
+    newMin = Math.max(
+      MIN_TEMPERATURE_MIN,
+      Math.min(newMin, MIN_TEMPERATURE_MAX),
+    )
+    newMax = Math.max(
+      MAX_TEMPERATURE_MIN,
+      Math.min(newMax, MAX_TEMPERATURE_MAX),
+    )
+    if (newMax - newMin < MIN_MAX_GAP) {
+      newMax = newMin + MIN_MAX_GAP
+    }
     return (
       await this.api.setFrostProtection({
         postData: {
           Enabled: enable ?? true,
-          MaximumTemperature: max,
-          MinimumTemperature: min,
-          ...(this.#getBuildingData().FPDefined ?
-            { [this.frostProtectionLocation]: [this.model.id] }
-          : { DeviceIds: this.#getDeviceIds() }),
+          MaximumTemperature: newMax,
+          MinimumTemperature: newMin,
+          ...(await this.#getFrostProtectionLocation()),
         },
       })
     ).data
   }
 
   public async setHolidayMode({
+    days,
     enable,
     from,
     to,
   }: {
+    days?: number
     enable?: boolean
     from?: string | null
     to?: string | null
   }): Promise<FailureData | SuccessData> {
     const isEnabled = enable ?? true
-    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
-    let endDate: DateTime | null = null
-    if (isEnabled) {
-      if (typeof to === 'undefined' || to === null) {
-        throw new Error('End date is missing')
-      }
-      endDate = DateTime.fromISO(to)
-    }
+    const startDate = isEnabled ? DateTime.fromISO(from ?? nowISO()) : null
+    const endDate = startDate ? getEndDate(startDate, to, days) : null
     return (
       await this.api.setHolidayMode({
         postData: {
           Enabled: isEnabled,
           EndDate: getDateTimeComponents(endDate),
-          HMTimeZones: [
-            this.#getBuildingData().HMDefined ?
-              { [this.holidayModeLocation]: [this.model.id] }
-            : { Devices: this.#getDeviceIds() },
-          ],
+          HMTimeZones: await this.#getHolidayModeLocation(),
           StartDate: getDateTimeComponents(startDate),
         },
       })
@@ -192,14 +214,22 @@ export default abstract class<
     ).data
   }
 
-  #getBuildingData(): BuildingSettings {
-    if ('building' in this.model) {
-      if (!this.model.building) {
-        throw new Error('Building not found')
-      }
-      return this.model.building.data
-    }
-    return this.model.data
+  async #getBaseFrostProtection(
+    params: SettingsParams,
+    isDefined = true,
+  ): Promise<FrostProtectionData> {
+    const { data } = await this.api.getFrostProtection({ params })
+    this.isFrostProtectionDefined = isDefined
+    return data
+  }
+
+  async #getBaseHolidayMode(
+    params: SettingsParams,
+    isDefined = true,
+  ): Promise<HolidayModeData> {
+    const { data } = await this.api.getHolidayMode({ params })
+    this.isHolidayModeDefined = isDefined
+    return data
   }
 
   #getDeviceId(): number {
@@ -212,5 +242,53 @@ export default abstract class<
 
   #getDeviceIds(): number[] {
     return 'deviceIds' in this.model ? this.model.deviceIds : [this.model.id]
+  }
+
+  async #getDevicesFrostProtection(): Promise<FrostProtectionData> {
+    return this.#getBaseFrostProtection(
+      { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
+      false,
+    )
+  }
+
+  async #getDevicesHolidayMode(): Promise<HolidayModeData> {
+    return this.#getBaseHolidayMode(
+      { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
+      false,
+    )
+  }
+
+  async #getFrostProtectionLocation(): Promise<FrostProtectionLocation> {
+    if (this.isFrostProtectionDefined === null) {
+      await this.getFrostProtection()
+    }
+    if (this.isFrostProtectionDefined === true) {
+      return { [this.frostProtectionLocation]: [this.model.id] }
+    }
+    return { DeviceIds: this.#getDeviceIds() }
+  }
+
+  async #getHolidayModeLocation(): Promise<HMTimeZone[]> {
+    if (this.isHolidayModeDefined === null) {
+      await this.getHolidayMode()
+    }
+    if (this.isHolidayModeDefined === true) {
+      return [{ [this.holidayModeLocation]: [this.model.id] }]
+    }
+    return [{ Devices: this.#getDeviceIds() }]
+  }
+
+  async #getLocalFrostProtection(): Promise<FrostProtectionData> {
+    return this.#getBaseFrostProtection({
+      id: this.model.id,
+      tableName: this.tableName,
+    })
+  }
+
+  async #getLocalHolidayMode(): Promise<HolidayModeData> {
+    return this.#getBaseHolidayMode({
+      id: this.model.id,
+      tableName: this.tableName,
+    })
   }
 }

@@ -1,5 +1,6 @@
 import type {
   BaseGetDeviceData,
+  BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
@@ -105,6 +106,9 @@ export interface ListDeviceDataAtw
   readonly Zone1InHeatMode: boolean
   readonly Zone2InCoolMode: boolean
   readonly Zone2InHeatMode: boolean
+}
+export interface ListDeviceAtw extends BaseListDevice {
+  readonly Device: ListDeviceDataAtw
 }
 
 export interface EnergyDataAtw {
