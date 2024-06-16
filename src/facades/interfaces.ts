@@ -8,6 +8,7 @@ import type {
   GetDeviceData,
   HolidayModeData,
   ListDevice,
+  ListDeviceDataAta,
   SetAtaGroupPostData,
   SetDeviceData,
   SuccessData,
@@ -67,11 +68,7 @@ export interface IBaseFacade {
 }
 
 export interface IBaseSuperDeviceFacade extends IBaseFacade {
-  get: () => Promise<
-    ListDevice['Ata']['Device'] &
-      ListDevice['Atw']['Device'] &
-      ListDevice['Erv']['Device']
-  >
+  getAta: () => Partial<ListDeviceDataAta>
   getTiles: () => Promise<TilesData<null>>
   setAta: (
     postData: Omit<SetAtaGroupPostData, 'Specification'>,
@@ -79,11 +76,13 @@ export interface IBaseSuperDeviceFacade extends IBaseFacade {
 }
 
 export interface IBuildingFacade extends IBaseSuperDeviceFacade {
+  data: BuildingSettings
   fetch: () => Promise<BuildingSettings>
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>
   extends IBaseFacade {
+  data: ListDevice[T]['Device']
   fetch: () => Promise<ListDevice[T]['Device']>
   get: () => Promise<GetDeviceData[T]>
   getEnergyReport: ({

@@ -1,5 +1,6 @@
 import type {
   BaseGetDeviceData,
+  BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
@@ -48,4 +49,7 @@ export interface ListDeviceDataErv
   readonly HasCO2Sensor: boolean
   readonly HasPM25Sensor: boolean
   readonly PM25Level: number
+}
+export interface ListDeviceErv extends BaseListDevice {
+  readonly Device: ListDeviceDataErv
 }

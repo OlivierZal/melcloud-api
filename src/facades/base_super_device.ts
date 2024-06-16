@@ -1,13 +1,33 @@
-import type { AreaModelAny, BuildingModel, FloorModel } from '../models'
+import type {
+  AreaModelAny,
+  BuildingModel,
+  DeviceModel,
+  FloorModel,
+} from '../models'
 import type {
   FailureData,
-  ListDevice,
+  ListDeviceDataAta,
   SetAtaGroupPostData,
   SuccessData,
   TilesData,
 } from '../types'
 import BaseFacade from './base'
 import type { IBaseSuperDeviceFacade } from './interfaces'
+
+const NUMBER_1 = 1
+
+const mergeData = (dataList: ListDeviceDataAta[]): Partial<ListDeviceDataAta> =>
+  Object.fromEntries(
+    Array.from(
+      new Set(dataList.flatMap(Object.keys) as (keyof ListDeviceDataAta)[]),
+    ).map((key) => {
+      const values = new Set(
+        dataList.map((data: ListDeviceDataAta) => data[key]),
+      )
+      const [value] = values.size === NUMBER_1 ? values : [null]
+      return [key, value]
+    }),
+  )
 
 export default abstract class<
     T extends AreaModelAny | BuildingModel | FloorModel,
@@ -17,11 +37,13 @@ export default abstract class<
 {
   protected abstract readonly setAtaGroupSpecification: keyof SetAtaGroupPostData['Specification']
 
-  public async get(): Promise<
-    ListDevice['Ata']['Device'] &
-      ListDevice['Atw']['Device'] &
-      ListDevice['Erv']['Device']
-  > {}
+  public getAta(): Partial<ListDeviceDataAta> {
+    return mergeData(
+      this.model.devices
+        .filter((device): device is DeviceModel<'Ata'> => device.type === 'Ata')
+        .map(({ data }) => data),
+    )
+  }
 
   public async getTiles(): Promise<TilesData<null>> {
     return (

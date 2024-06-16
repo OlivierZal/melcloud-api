@@ -24,6 +24,10 @@ export default class<U extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
+  public get data(): ListDevice[U]['Device'] {
+    return this.model.data
+  }
+
   public async fetch(): Promise<ListDevice[U]['Device']> {
     await this.api.fetchDevices()
     return this.model.data

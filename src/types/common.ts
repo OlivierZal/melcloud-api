@@ -3,6 +3,7 @@ import type {
   EnergyDataAta,
   GetDeviceDataAta,
   Horizontal,
+  ListDeviceAta,
   ListDeviceDataAta,
   OperationMode,
   SetDeviceDataAta,
@@ -13,6 +14,7 @@ import type {
 import type {
   EnergyDataAtw,
   GetDeviceDataAtw,
+  ListDeviceAtw,
   ListDeviceDataAtw,
   SetDeviceDataAtw,
   UpdateDeviceDataAtw,
@@ -21,6 +23,7 @@ import type {
 import type {
   GetDeviceDataErv,
   ListDeviceDataErv,
+  ListDeviceErv,
   SetDeviceDataErv,
   UpdateDeviceDataErv,
   effectiveFlagsErv,
@@ -189,23 +192,20 @@ export interface BuildingData extends BuildingSettings {
   readonly ID: number
   readonly Name: string
 }
-export interface BaseListDevice {
-  readonly AreaID: number | null
-  readonly BuildingID: number
-  readonly DeviceID: number
-  readonly DeviceName: string
-  readonly FloorID: number | null
-  readonly Type: DeviceType
+
+export interface AreaData<T extends number | null> extends FloorData {
+  readonly FloorId: T
 }
-export interface ListDeviceAta extends BaseListDevice {
-  readonly Device: ListDeviceDataAta
+export type AreaDataAny = AreaData<number> | AreaData<null>
+export interface ListDeviceData {
+  readonly Ata: ListDeviceDataAta
+  readonly Atw: ListDeviceDataAtw
+  readonly Erv: ListDeviceDataErv
 }
-export interface ListDeviceAtw extends BaseListDevice {
-  readonly Device: ListDeviceDataAtw
-}
-export interface ListDeviceErv extends BaseListDevice {
-  readonly Device: ListDeviceDataErv
-}
+export type ListDeviceDataAny =
+  | ListDeviceDataAta
+  | ListDeviceDataAtw
+  | ListDeviceDataErv
 export interface ListDevice {
   readonly Ata: ListDeviceAta
   readonly Atw: ListDeviceAtw
@@ -217,10 +217,6 @@ export interface FloorData {
   readonly ID: number
   readonly Name: string
 }
-export interface AreaData<T extends number | null> extends FloorData {
-  readonly FloorId: T
-}
-export type AreaDataAny = AreaData<number> | AreaData<null>
 export interface Building extends BuildingData {
   readonly Structure: {
     readonly Areas: readonly (AreaData<null> & {

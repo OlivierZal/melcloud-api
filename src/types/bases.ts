@@ -48,3 +48,12 @@ export interface BaseListDeviceData
   extends Omit<BaseGetDeviceData, keyof DeviceDataNotInList> {
   readonly WifiSignalStrength: number
 }
+
+export interface BaseListDevice {
+  readonly AreaID: number | null
+  readonly BuildingID: number
+  readonly DeviceID: number
+  readonly DeviceName: string
+  readonly FloorID: number | null
+  readonly Type: DeviceType
+}

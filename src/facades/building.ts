@@ -17,6 +17,10 @@ export default class
 
   protected readonly tableName = 'Building'
 
+  public get data(): BuildingSettings {
+    return this.model.data
+  }
+
   public async fetch(): Promise<BuildingSettings> {
     await this.api.fetchDevices()
     return this.model.data

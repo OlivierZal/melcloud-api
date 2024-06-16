@@ -75,7 +75,7 @@ export default abstract class<
     this.#id = id
   }
 
-  public get model(): T {
+  protected get model(): T {
     const model = this.modelClass.getById(this.#id)
     if (!model) {
       throw new Error(`${this.tableName} not found`)
