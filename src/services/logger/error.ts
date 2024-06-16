@@ -12,7 +12,7 @@ const getMessage = (error: AxiosError): string => error.message
 const withErrorMessage = <T extends new (...args: any[]) => APICallContextData>(
   base: T,
   error: AxiosError,
-): new (...args: any[]) => APICallContextDataWithErrorMessage =>
+): new (...args: unknown[]) => APICallContextDataWithErrorMessage =>
   class extends base {
     public readonly errorMessage = getMessage(error)
   }
