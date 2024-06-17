@@ -244,7 +244,7 @@ export interface SetAtaGroupPostData {
     readonly FloorID?: number | null
   }
   readonly State: {
-    readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
+    readonly FanSpeed?: FanSpeed | null
     readonly OperationMode?: OperationMode | null
     readonly Power?: boolean | null
     readonly SetTemperature?: number | null
