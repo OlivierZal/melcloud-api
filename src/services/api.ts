@@ -169,7 +169,7 @@ export default class API implements IMELCloudAPI {
             },
           })
         ).data
-        await this.sync(typeof data !== 'undefined')
+        await this.sync()
         return loginData !== null
       } catch (error) {
         if (typeof data !== 'undefined') {
@@ -372,11 +372,9 @@ export default class API implements IMELCloudAPI {
     return this.#api.post<boolean>('/Device/Power', postData)
   }
 
-  public async sync(clear = true): Promise<void> {
+  public async sync(): Promise<void> {
     if (this.#autoSync.as('milliseconds')) {
-      if (clear && this.#syncInterval) {
-        this.clearSync()
-      }
+      this.clearSync()
       if (!this.#syncInterval) {
         this.#syncInterval = setInterval(() => {
           this.#applySync().catch((error: unknown) => {
