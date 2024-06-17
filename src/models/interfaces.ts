@@ -30,7 +30,9 @@ export interface IBuildingModel extends IBaseSuperDeviceModel {
 
 export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}
 
-export interface IFloorModel extends IBaseSubBuildingModel, IBaseSuperDeviceModel {
+export interface IFloorModel
+  extends IBaseSubBuildingModel,
+    IBaseSuperDeviceModel {
   readonly areaIds: readonly number[]
   readonly areas: readonly AreaModel<number>[]
 }
