@@ -107,19 +107,26 @@ export default class<T extends keyof typeof DeviceType>
 
   public async set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
     const { EffectiveFlags: effectiveFlags, ...updateData } = postData
-    const newEffectiveFlags =
+    let newEffectiveFlags =
       typeof effectiveFlags === 'undefined' ?
-        Object.entries(updateData).reduce<number>(
-          (acc, [key, value]) =>
-            key === 'FanSpeed' && value === FanSpeed.silent ?
-              acc
-            : acc |
-              this.#effectiveFlagsMapping[
-                key as NonEffectiveFlagsKeyOf<UpdateDeviceData[T]>
-              ],
+        Object.keys(updateData).reduce<number>(
+          (acc, key) =>
+            acc |
+            this.#effectiveFlagsMapping[
+              key as NonEffectiveFlagsKeyOf<UpdateDeviceData[T]>
+            ],
           FLAG_UNCHANGED,
         )
       : effectiveFlags
+    if (
+      'SetFanSpeed' in updateData &&
+      updateData.SetFanSpeed === FanSpeed.silent &&
+      'SetFanSpeed' in this.#effectiveFlagsMapping &&
+      typeof this.#effectiveFlagsMapping.SetFanSpeed !== 'undefined' &&
+      this.#effectiveFlagsMapping.SetFanSpeed !== null
+    ) {
+      newEffectiveFlags &= ~this.#effectiveFlagsMapping.SetFanSpeed
+    }
     return (
       await this.api.setDevice({
         heatPumpType: this.model.type,
