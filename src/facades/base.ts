@@ -22,6 +22,12 @@ import type API from '../services'
 import { DateTime } from 'luxon'
 import type { IBaseFacade } from './interfaces'
 
+const MIN_TEMPERATURE_MIN = 4
+const MIN_TEMPERATURE_MAX = 14
+const MAX_TEMPERATURE_MIN = 6
+const MAX_TEMPERATURE_MAX = 16
+const MIN_MAX_GAP = 2
+
 const getDateTimeComponents = (
   date: DateTime | null,
 ): DateTimeComponents | null =>
@@ -152,12 +158,24 @@ export default abstract class<
     max: number
     min: number
   }): Promise<FailureData | SuccessData> {
+    let [newMin, newMax] = min > max ? [max, min] : [min, max]
+    newMin = Math.max(
+      MIN_TEMPERATURE_MIN,
+      Math.min(newMin, MIN_TEMPERATURE_MAX),
+    )
+    newMax = Math.max(
+      MAX_TEMPERATURE_MIN,
+      Math.min(newMax, MAX_TEMPERATURE_MAX),
+    )
+    if (newMax - newMin < MIN_MAX_GAP) {
+      newMax = newMin + MIN_MAX_GAP
+    }
     return (
       await this.api.setFrostProtection({
         postData: {
           Enabled: enable ?? true,
-          MaximumTemperature: max,
-          MinimumTemperature: min,
+          MaximumTemperature: newMax,
+          MinimumTemperature: newMin,
           ...(this.#getBuildingData().FPDefined ?
             { [this.frostProtectionLocation]: [this.model.id] }
           : { DeviceIds: this.#getDeviceIds() }),
