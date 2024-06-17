@@ -58,7 +58,7 @@ export default class<T extends keyof typeof DeviceType>
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {
-    await this.api.fetchDevices()
+    await this.api.sync()
     return this.model.data
   }
 

@@ -5,27 +5,27 @@ import type { DeviceModelAny } from './device'
 import type FloorModel from './floor'
 
 export interface IBaseModel {
-  readonly id: number
-  readonly name: string
+  id: number
+  name: string
 }
 
 export interface IBaseSubBuildingModel extends IBaseModel {
-  readonly building: BuildingModel | null
-  readonly buildingId: number
+  building: BuildingModel | null
+  buildingId: number
 }
 
 export interface IBaseSubFloorModel extends IBaseSubBuildingModel {
-  readonly floor: FloorModel | null
-  readonly floorId: number | null
+  floor: FloorModel | null
+  floorId: number | null
 }
 
 export interface IBaseSuperDeviceModel extends IBaseModel {
-  readonly deviceIds: readonly number[]
-  readonly devices: readonly DeviceModelAny[]
+  deviceIds: readonly number[]
+  devices: readonly DeviceModelAny[]
 }
 
 export interface IBuildingModel extends IBaseSuperDeviceModel {
-  readonly data: BuildingSettings
+  data: BuildingSettings
 }
 
 export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}
@@ -33,14 +33,14 @@ export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}
 export interface IFloorModel
   extends IBaseSubBuildingModel,
     IBaseSuperDeviceModel {
-  readonly areaIds: readonly number[]
-  readonly areas: readonly AreaModel<number>[]
+  areaIds: readonly number[]
+  areas: readonly AreaModel<number>[]
 }
 
 export interface IDeviceModel<T extends keyof typeof DeviceType>
   extends IBaseSubFloorModel {
-  readonly area: AreaModelAny | null
-  readonly areaId: number | null
-  readonly data: ListDevice[T]['Device']
-  readonly type: T
+  area: AreaModelAny | null
+  areaId: number | null
+  data: ListDevice[T]['Device']
+  type: T
 }

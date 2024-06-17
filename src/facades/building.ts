@@ -22,7 +22,7 @@ export default class
   }
 
   public async fetch(): Promise<BuildingSettings> {
-    await this.api.fetchDevices()
+    await this.api.sync()
     return this.model.data
   }
 }
