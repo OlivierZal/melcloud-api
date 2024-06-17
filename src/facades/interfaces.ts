@@ -8,7 +8,6 @@ import type {
   GetDeviceData,
   HolidayModeData,
   ListDevice,
-  ListDeviceDataAta,
   SetAtaGroupPostData,
   SetDeviceData,
   SuccessData,
@@ -68,10 +67,10 @@ export interface IBaseFacade {
 }
 
 export interface IBaseSuperDeviceFacade extends IBaseFacade {
-  getAta: () => Partial<ListDeviceDataAta>
+  getAta: () => SetAtaGroupPostData['State']
   getTiles: () => Promise<TilesData<null>>
   setAta: (
-    postData: Omit<SetAtaGroupPostData, 'Specification'>,
+    postData: SetAtaGroupPostData['State'],
   ) => Promise<FailureData | SuccessData>
 }
 

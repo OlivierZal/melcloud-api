@@ -16,10 +16,19 @@ import type { IBaseSuperDeviceFacade } from './interfaces'
 
 const NUMBER_1 = 1
 
-const mergeData = (dataList: ListDeviceDataAta[]): Partial<ListDeviceDataAta> =>
+const mergeData = (
+  dataList: ListDeviceDataAta[],
+): SetAtaGroupPostData['State'] =>
   Object.fromEntries(
-    Array.from(
-      new Set(dataList.flatMap(Object.keys) as (keyof ListDeviceDataAta)[]),
+    (
+      [
+        'FanSpeed',
+        'OperationMode',
+        'Power',
+        'SetTemperature',
+        'VaneHorizontalDirection',
+        'VaneVerticalDirection',
+      ] satisfies (keyof SetAtaGroupPostData['State'])[]
     ).map((key) => {
       const values = new Set(
         dataList.map((data: ListDeviceDataAta) => data[key]),
@@ -37,7 +46,7 @@ export default abstract class<
 {
   protected abstract readonly setAtaGroupSpecification: keyof SetAtaGroupPostData['Specification']
 
-  public getAta(): Partial<ListDeviceDataAta> {
+  public getAta(): SetAtaGroupPostData['State'] {
     return mergeData(
       this.model.devices
         .filter((device): device is DeviceModel<'Ata'> => device.type === 'Ata')
@@ -52,13 +61,13 @@ export default abstract class<
   }
 
   public async setAta(
-    postData: Omit<SetAtaGroupPostData, 'Specification'>,
+    postData: SetAtaGroupPostData['State'],
   ): Promise<FailureData | SuccessData> {
     return (
       await this.api.setAtaGroup({
         postData: {
-          ...postData,
           Specification: { [this.setAtaGroupSpecification]: this.model.id },
+          State: postData,
         },
       })
     ).data
