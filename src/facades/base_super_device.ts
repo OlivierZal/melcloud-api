@@ -4,12 +4,13 @@ import type {
   DeviceModel,
   FloorModel,
 } from '../models'
-import type {
-  FailureData,
-  ListDeviceDataAta,
-  SetAtaGroupPostData,
-  SuccessData,
-  TilesData,
+import {
+  type FailureData,
+  FanSpeed,
+  type ListDeviceDataAta,
+  type SetAtaGroupPostData,
+  type SuccessData,
+  type TilesData,
 } from '../types'
 import BaseFacade from './base'
 import type { IBaseSuperDeviceFacade } from './interfaces'
@@ -67,7 +68,11 @@ export default abstract class<
       await this.api.setAtaGroup({
         postData: {
           Specification: { [this.setAtaGroupSpecification]: this.model.id },
-          State: postData,
+          State: {
+            ...postData,
+            FanSpeed:
+              postData.FanSpeed === FanSpeed.silent ? null : postData.FanSpeed,
+          },
         },
       })
     ).data

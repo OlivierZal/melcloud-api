@@ -21,8 +21,8 @@ export type NonEffectiveFlagsKeyOf<T> = Exclude<keyof T, 'EffectiveFlags'>
 export type NonEffectiveFlagsValueOf<T> = T[NonEffectiveFlagsKeyOf<T>]
 
 export interface BaseUpdateDeviceData {
+  EffectiveFlags?: number
   readonly Power?: boolean
-  EffectiveFlags: number
 }
 
 export interface BaseDevicePostData {

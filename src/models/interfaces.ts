@@ -20,8 +20,8 @@ export interface IBaseSubFloorModel extends IBaseSubBuildingModel {
 }
 
 export interface IBaseSuperDeviceModel extends IBaseModel {
-  readonly deviceIds: number[]
-  readonly devices: DeviceModelAny[]
+  readonly deviceIds: readonly number[]
+  readonly devices: readonly DeviceModelAny[]
 }
 
 export interface IBuildingModel extends IBaseSuperDeviceModel {
@@ -30,11 +30,9 @@ export interface IBuildingModel extends IBaseSuperDeviceModel {
 
 export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}
 
-export interface IFloorModel
-  extends IBaseSubBuildingModel,
-    IBaseSuperDeviceModel {
-  readonly areaIds: number[]
-  readonly areas: AreaModel<number>[]
+export interface IFloorModel extends IBaseSubBuildingModel, IBaseSuperDeviceModel {
+  readonly areaIds: readonly number[]
+  readonly areas: readonly AreaModel<number>[]
 }
 
 export interface IDeviceModel<T extends keyof typeof DeviceType>

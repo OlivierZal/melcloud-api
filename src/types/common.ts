@@ -89,7 +89,9 @@ export interface UpdateDeviceData {
   readonly Erv: UpdateDeviceDataErv
 }
 export type SetDevicePostData<T extends keyof typeof DeviceType> =
-  UpdateDeviceData[T] & BaseDevicePostData
+  UpdateDeviceData[T] &
+    Required<{ EffectiveFlags: number }> &
+    BaseDevicePostData
 export interface SetDeviceData {
   readonly Ata: SetDeviceDataAta
   readonly Atw: SetDeviceDataAtw
@@ -307,8 +309,8 @@ export interface WifiPostData {
   readonly hour: number
 }
 export interface WifiData {
-  readonly Data: (number | null)[][]
+  readonly Data: readonly (readonly (number | null)[])[]
   readonly FromDate: string
-  readonly Labels: string[]
+  readonly Labels: readonly string[]
   readonly ToDate: string
 }
