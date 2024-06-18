@@ -23,6 +23,8 @@ export default class<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
+  public readonly type: T
+
   protected readonly frostProtectionLocation = 'DeviceIds'
 
   protected readonly holidayModeLocation = 'Devices'
@@ -38,6 +40,7 @@ export default class<T extends keyof typeof DeviceType>
 
   public constructor(api: API, id: number) {
     super(api, id)
+    this.type = this.model.type as T
     switch (this.type) {
       case 'Ata':
         this.#effectiveFlagsMapping = effectiveFlagsAta
@@ -55,10 +58,6 @@ export default class<T extends keyof typeof DeviceType>
 
   public get data(): ListDevice[T]['Device'] {
     return this.model.data
-  }
-
-  public get type(): T {
-    return this.model.type as T
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {
