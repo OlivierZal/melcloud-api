@@ -77,6 +77,7 @@ export interface IBaseSuperDeviceFacade extends IBaseFacade {
 export interface IBuildingFacade extends IBaseSuperDeviceFacade {
   data: BuildingSettings
   fetch: () => Promise<BuildingSettings>
+  getData: () => Promise<BuildingSettings>
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>

@@ -36,4 +36,12 @@ export default class
     await this.api.sync()
     return this.model.data
   }
+
+  public async getData(): Promise<BuildingSettings> {
+    return {
+      ...this.data,
+      ...(await this.getFrostProtection()),
+      ...(await this.getHolidayMode()),
+    }
+  }
 }
