@@ -5,12 +5,12 @@ import type {
   FloorModel,
 } from '../models'
 import type {
-  BuildingSettings,
   DateTimeComponents,
   ErrorData,
   FailureData,
   FrostProtectionData,
   FrostProtectionLocation,
+  HMTimeZone,
   HolidayModeData,
   HolidayModeLocation,
   SettingsParams,
@@ -64,6 +64,10 @@ export default abstract class<
 {
   protected readonly api: API
 
+  #isFrostProtectionDefined: boolean | null = null
+
+  #isHolidayModeDefined: boolean | null = null
+
   readonly #id: number
 
   protected abstract readonly frostProtectionLocation: keyof FrostProtectionLocation
@@ -108,35 +112,29 @@ export default abstract class<
   }
 
   public async getFrostProtection(): Promise<FrostProtectionData> {
-    try {
-      return (
-        await this.api.getFrostProtection({
-          params: { id: this.model.id, tableName: this.tableName },
-        })
-      ).data
-    } catch (_error) {
-      return (
-        await this.api.getFrostProtection({
-          params: { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
-        })
-      ).data
+    if (this.#isFrostProtectionDefined === null) {
+      try {
+        return await this.#getLocalFrostProtection()
+      } catch (_error) {
+        return this.#getDevicesFrostProtection()
+      }
     }
+    return this.#isFrostProtectionDefined ?
+        this.#getLocalFrostProtection()
+      : this.#getDevicesFrostProtection()
   }
 
   public async getHolidayMode(): Promise<HolidayModeData> {
-    try {
-      return (
-        await this.api.getHolidayMode({
-          params: { id: this.model.id, tableName: this.tableName },
-        })
-      ).data
-    } catch (_error) {
-      return (
-        await this.api.getHolidayMode({
-          params: { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
-        })
-      ).data
+    if (this.#isHolidayModeDefined === null) {
+      try {
+        return await this.#getLocalHolidayMode()
+      } catch (_error) {
+        return this.#getDevicesHolidayMode()
+      }
     }
+    return this.#isHolidayModeDefined ?
+        this.#getLocalHolidayMode()
+      : this.#getDevicesHolidayMode()
   }
 
   public async getWifiReport(
@@ -176,9 +174,7 @@ export default abstract class<
           Enabled: enable ?? true,
           MaximumTemperature: newMax,
           MinimumTemperature: newMin,
-          ...(this.#getBuildingData().FPDefined ?
-            { [this.frostProtectionLocation]: [this.model.id] }
-          : { DeviceIds: this.#getDeviceIds() }),
+          ...(await this.#getFrostProtectionLocation()),
         },
       })
     ).data
@@ -203,11 +199,7 @@ export default abstract class<
         postData: {
           Enabled: isEnabled,
           EndDate: getDateTimeComponents(endDate),
-          HMTimeZones: [
-            this.#getBuildingData().HMDefined ?
-              { [this.holidayModeLocation]: [this.model.id] }
-            : { Devices: this.#getDeviceIds() },
-          ],
+          HMTimeZones: await this.#getHolidayModeLocation(),
           StartDate: getDateTimeComponents(startDate),
         },
       })
@@ -222,14 +214,22 @@ export default abstract class<
     ).data
   }
 
-  #getBuildingData(): BuildingSettings {
-    if ('building' in this.model) {
-      if (!this.model.building) {
-        throw new Error('Building not found')
-      }
-      return this.model.building.data
-    }
-    return this.model.data
+  async #getBaseFrostProtection(
+    params: SettingsParams,
+    isDefined = true,
+  ): Promise<FrostProtectionData> {
+    const { data } = await this.api.getFrostProtection({ params })
+    this.#isFrostProtectionDefined = isDefined
+    return data
+  }
+
+  async #getBaseHolidayMode(
+    params: SettingsParams,
+    isDefined = true,
+  ): Promise<HolidayModeData> {
+    const { data } = await this.api.getHolidayMode({ params })
+    this.#isHolidayModeDefined = isDefined
+    return data
   }
 
   #getDeviceId(): number {
@@ -242,5 +242,53 @@ export default abstract class<
 
   #getDeviceIds(): number[] {
     return 'deviceIds' in this.model ? this.model.deviceIds : [this.model.id]
+  }
+
+  async #getDevicesFrostProtection(): Promise<FrostProtectionData> {
+    return this.#getBaseFrostProtection(
+      { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
+      false,
+    )
+  }
+
+  async #getDevicesHolidayMode(): Promise<HolidayModeData> {
+    return this.#getBaseHolidayMode(
+      { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
+      false,
+    )
+  }
+
+  async #getFrostProtectionLocation(): Promise<FrostProtectionLocation> {
+    if (this.#isFrostProtectionDefined === null) {
+      await this.getFrostProtection()
+    }
+    if (this.#isFrostProtectionDefined === true) {
+      return { [this.frostProtectionLocation]: [this.model.id] }
+    }
+    return { DeviceIds: this.#getDeviceIds() }
+  }
+
+  async #getHolidayModeLocation(): Promise<HMTimeZone[]> {
+    if (this.#isHolidayModeDefined === null) {
+      await this.getHolidayMode()
+    }
+    if (this.#isHolidayModeDefined === true) {
+      return [{ [this.holidayModeLocation]: [this.model.id] }]
+    }
+    return [{ Devices: this.#getDeviceIds() }]
+  }
+
+  async #getLocalFrostProtection(): Promise<FrostProtectionData> {
+    return this.#getBaseFrostProtection({
+      id: this.model.id,
+      tableName: this.tableName,
+    })
+  }
+
+  async #getLocalHolidayMode(): Promise<HolidayModeData> {
+    return this.#getBaseHolidayMode({
+      id: this.model.id,
+      tableName: this.tableName,
+    })
   }
 }

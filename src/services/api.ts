@@ -189,24 +189,22 @@ export default class API implements IMELCloudAPI {
 
   public async fetchDevices(): Promise<{ data: Building[] }> {
     const response = await this.#api.get<Building[]>(LIST_URL)
-    await Promise.all(
-      response.data.map(async (building) => {
-        DeviceModel.upsertMany(building.Structure.Devices)
-        building.Structure.Areas.forEach((area) => {
-          AreaModel.upsert(area)
+    response.data.forEach((building) => {
+      DeviceModel.upsertMany(building.Structure.Devices)
+      building.Structure.Areas.forEach((area) => {
+        DeviceModel.upsertMany(area.Devices)
+        AreaModel.upsert(area)
+      })
+      building.Structure.Floors.forEach((floor) => {
+        DeviceModel.upsertMany(floor.Devices)
+        FloorModel.upsert(floor)
+        floor.Areas.forEach((area) => {
           DeviceModel.upsertMany(area.Devices)
+          AreaModel.upsert(area)
         })
-        building.Structure.Floors.forEach((floor) => {
-          FloorModel.upsert(floor)
-          DeviceModel.upsertMany(floor.Devices)
-          floor.Areas.forEach((area) => {
-            AreaModel.upsert(area)
-            DeviceModel.upsertMany(area.Devices)
-          })
-        })
-        await this.#upsertBuilding(building)
-      }),
-    )
+      })
+      BuildingModel.upsert(building)
+    })
     return response
   }
 
@@ -464,22 +462,5 @@ export default class API implements IMELCloudAPI {
       async (error: AxiosError): Promise<AxiosError> =>
         this.#handleError(error),
     )
-  }
-
-  async #upsertBuilding(building: Building): Promise<void> {
-    let params: SettingsParams | null = null
-    if (!building.FPDefined || !building.HMDefined) {
-      const [{ id }] = DeviceModel.getByBuildingId(building.ID)
-      params = { id, tableName: 'DeviceLocation' }
-    }
-    BuildingModel.upsert({
-      ...building,
-      ...(building.FPDefined || !params ?
-        {}
-      : (await this.getFrostProtection({ params })).data),
-      ...(building.HMDefined || !params ?
-        {}
-      : (await this.getHolidayMode({ params })).data),
-    })
   }
 }
