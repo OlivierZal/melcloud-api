@@ -11,6 +11,11 @@ export default class
 
   protected readonly holidayModeLocation = 'Buildings'
 
+  protected override readonly isFrostProtectionDefined =
+    this.model.data.FPDefined
+
+  protected override readonly isHolidayModeDefined = this.model.data.HMDefined
+
   protected readonly modelClass = BuildingModel
 
   protected readonly setAtaGroupSpecification = 'BuildingID'

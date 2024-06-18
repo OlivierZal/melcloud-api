@@ -62,11 +62,11 @@ export default abstract class<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
 > implements IBaseFacade
 {
+  protected isFrostProtectionDefined: boolean | null = null
+
+  protected isHolidayModeDefined: boolean | null = null
+
   protected readonly api: API
-
-  #isFrostProtectionDefined: boolean | null = null
-
-  #isHolidayModeDefined: boolean | null = null
 
   readonly #id: number
 
@@ -112,27 +112,27 @@ export default abstract class<
   }
 
   public async getFrostProtection(): Promise<FrostProtectionData> {
-    if (this.#isFrostProtectionDefined === null) {
+    if (this.isFrostProtectionDefined === null) {
       try {
         return await this.#getLocalFrostProtection()
       } catch (_error) {
         return this.#getDevicesFrostProtection()
       }
     }
-    return this.#isFrostProtectionDefined ?
+    return this.isFrostProtectionDefined ?
         this.#getLocalFrostProtection()
       : this.#getDevicesFrostProtection()
   }
 
   public async getHolidayMode(): Promise<HolidayModeData> {
-    if (this.#isHolidayModeDefined === null) {
+    if (this.isHolidayModeDefined === null) {
       try {
         return await this.#getLocalHolidayMode()
       } catch (_error) {
         return this.#getDevicesHolidayMode()
       }
     }
-    return this.#isHolidayModeDefined ?
+    return this.isHolidayModeDefined ?
         this.#getLocalHolidayMode()
       : this.#getDevicesHolidayMode()
   }
@@ -219,7 +219,7 @@ export default abstract class<
     isDefined = true,
   ): Promise<FrostProtectionData> {
     const { data } = await this.api.getFrostProtection({ params })
-    this.#isFrostProtectionDefined = isDefined
+    this.isFrostProtectionDefined = isDefined
     return data
   }
 
@@ -228,7 +228,7 @@ export default abstract class<
     isDefined = true,
   ): Promise<HolidayModeData> {
     const { data } = await this.api.getHolidayMode({ params })
-    this.#isHolidayModeDefined = isDefined
+    this.isHolidayModeDefined = isDefined
     return data
   }
 
@@ -259,20 +259,20 @@ export default abstract class<
   }
 
   async #getFrostProtectionLocation(): Promise<FrostProtectionLocation> {
-    if (this.#isFrostProtectionDefined === null) {
+    if (this.isFrostProtectionDefined === null) {
       await this.getFrostProtection()
     }
-    if (this.#isFrostProtectionDefined === true) {
+    if (this.isFrostProtectionDefined === true) {
       return { [this.frostProtectionLocation]: [this.model.id] }
     }
     return { DeviceIds: this.#getDeviceIds() }
   }
 
   async #getHolidayModeLocation(): Promise<HMTimeZone[]> {
-    if (this.#isHolidayModeDefined === null) {
+    if (this.isHolidayModeDefined === null) {
       await this.getHolidayMode()
     }
-    if (this.#isHolidayModeDefined === true) {
+    if (this.isHolidayModeDefined === true) {
       return [{ [this.holidayModeLocation]: [this.model.id] }]
     }
     return [{ Devices: this.#getDeviceIds() }]
