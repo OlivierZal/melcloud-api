@@ -62,13 +62,13 @@ export default abstract class<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
 > implements IBaseFacade
 {
+  public readonly id: number
+
   protected isFrostProtectionDefined: boolean | null = null
 
   protected isHolidayModeDefined: boolean | null = null
 
   protected readonly api: API
-
-  readonly #id: number
 
   protected abstract readonly frostProtectionLocation: keyof FrostProtectionLocation
 
@@ -82,11 +82,15 @@ export default abstract class<
 
   public constructor(api: API, id: number) {
     this.api = api
-    this.#id = id
+    this.id = id
+  }
+
+  public get name(): string {
+    return this.model.name
   }
 
   protected get model(): T {
-    const model = this.modelClass.getById(this.#id)
+    const model = this.modelClass.getById(this.id)
     if (!model) {
       throw new Error(`${this.tableName} not found`)
     }
@@ -237,11 +241,11 @@ export default abstract class<
       const [{ id }] = this.model.devices
       return id
     }
-    return this.model.id
+    return this.id
   }
 
   #getDeviceIds(): number[] {
-    return 'deviceIds' in this.model ? this.model.deviceIds : [this.model.id]
+    return 'deviceIds' in this.model ? this.model.deviceIds : [this.id]
   }
 
   async #getDevicesFrostProtection(): Promise<FrostProtectionData> {
@@ -263,7 +267,7 @@ export default abstract class<
       await this.getFrostProtection()
     }
     if (this.isFrostProtectionDefined === true) {
-      return { [this.frostProtectionLocation]: [this.model.id] }
+      return { [this.frostProtectionLocation]: [this.id] }
     }
     return { DeviceIds: this.#getDeviceIds() }
   }
@@ -273,21 +277,21 @@ export default abstract class<
       await this.getHolidayMode()
     }
     if (this.isHolidayModeDefined === true) {
-      return [{ [this.holidayModeLocation]: [this.model.id] }]
+      return [{ [this.holidayModeLocation]: [this.id] }]
     }
     return [{ Devices: this.#getDeviceIds() }]
   }
 
   async #getLocalFrostProtection(): Promise<FrostProtectionData> {
     return this.#getBaseFrostProtection({
-      id: this.model.id,
+      id: this.id,
       tableName: this.tableName,
     })
   }
 
   async #getLocalHolidayMode(): Promise<HolidayModeData> {
     return this.#getBaseHolidayMode({
-      id: this.model.id,
+      id: this.id,
       tableName: this.tableName,
     })
   }

@@ -67,7 +67,7 @@ export default abstract class<
     return (
       await this.api.setAtaGroup({
         postData: {
-          Specification: { [this.setAtaGroupSpecification]: this.model.id },
+          Specification: { [this.setAtaGroupSpecification]: this.id },
           State: {
             ...postData,
             FanSpeed:

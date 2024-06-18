@@ -5,14 +5,14 @@ import type { IBuildingModel } from './interfaces'
 export default class BuildingModel implements IBuildingModel {
   public static readonly buildings = new Map<number, BuildingModel>()
 
-  public readonly data: BuildingSettings
-
   public readonly id: number
 
   public readonly name: string
 
-  private constructor({ Name: name, ID: id, ...data }: BuildingData) {
-    this.data = data
+  public readonly settings: BuildingSettings
+
+  private constructor({ Name: name, ID: id, ...settings }: BuildingData) {
+    this.settings = settings
     this.id = id
     this.name = name
   }

@@ -25,7 +25,7 @@ export interface IBaseSuperDeviceModel extends IBaseModel {
 }
 
 export interface IBuildingModel extends IBaseSuperDeviceModel {
-  data: BuildingSettings
+  settings: BuildingSettings
 }
 
 export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}

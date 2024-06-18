@@ -1,7 +1,7 @@
+import type { BuildingData, BuildingSettings } from '../types'
 import type API from '../services'
 import BaseSuperDeviceFacade from './base_super_device'
 import { BuildingModel } from '../models'
-import type { BuildingSettings } from '../types'
 import type { IBuildingFacade } from './interfaces'
 
 export default class
@@ -24,24 +24,25 @@ export default class
 
   public constructor(api: API, id: number) {
     super(api, id)
-    this.isFrostProtectionDefined = this.data.FPDefined
-    this.isHolidayModeDefined = this.data.HMDefined
+    this.isFrostProtectionDefined = this.settings.FPDefined
+    this.isHolidayModeDefined = this.settings.HMDefined
   }
 
-  public get data(): BuildingSettings {
-    return this.model.data
+  public get settings(): BuildingSettings {
+    return this.model.settings
+  }
+
+  public async actualData(): Promise<BuildingData> {
+    return {
+      ID: this.id,
+      Name: this.name,
+      ...(await this.getFrostProtection()),
+      ...(await this.getHolidayMode()),
+    }
   }
 
   public async fetch(): Promise<BuildingSettings> {
     await this.api.sync()
-    return this.model.data
-  }
-
-  public async getData(): Promise<BuildingSettings> {
-    return {
-      ...this.data,
-      ...(await this.getFrostProtection()),
-      ...(await this.getHolidayMode()),
-    }
+    return this.settings
   }
 }

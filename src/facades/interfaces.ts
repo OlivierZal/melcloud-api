@@ -1,4 +1,5 @@
 import type {
+  BuildingData,
   BuildingSettings,
   DeviceType,
   EnergyData,
@@ -27,6 +28,8 @@ export interface IBaseFacade {
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
   getWifiReport: (hour: number) => Promise<WifiData>
+  id: number
+  name: string
   setFrostProtection: ({
     enable,
     max,
@@ -75,9 +78,9 @@ export interface IBaseSuperDeviceFacade extends IBaseFacade {
 }
 
 export interface IBuildingFacade extends IBaseSuperDeviceFacade {
-  data: BuildingSettings
+  actualData: () => Promise<BuildingData>
   fetch: () => Promise<BuildingSettings>
-  getData: () => Promise<BuildingSettings>
+  settings: BuildingSettings
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>
@@ -95,4 +98,5 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   getTile: ((select?: false) => Promise<TilesData<null>>) &
     ((select: true) => Promise<TilesData<T>>)
   set: (postData: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
+  type: T
 }

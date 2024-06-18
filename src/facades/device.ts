@@ -38,7 +38,7 @@ export default class<T extends keyof typeof DeviceType>
 
   public constructor(api: API, id: number) {
     super(api, id)
-    switch (this.model.type) {
+    switch (this.type) {
       case 'Ata':
         this.#effectiveFlagsMapping = effectiveFlagsAta
         break
@@ -57,15 +57,19 @@ export default class<T extends keyof typeof DeviceType>
     return this.model.data
   }
 
+  public get type(): T {
+    return this.model.type as T
+  }
+
   public async fetch(): Promise<ListDevice[T]['Device']> {
     await this.api.sync()
-    return this.model.data
+    return this.data
   }
 
   public async get(): Promise<GetDeviceData[T]> {
     return (
       await this.api.getDevice({
-        params: { buildingId: this.model.buildingId, id: this.model.id },
+        params: { buildingId: this.model.buildingId, id: this.id },
       })
     ).data as GetDeviceData[T]
   }
@@ -80,7 +84,7 @@ export default class<T extends keyof typeof DeviceType>
     return (
       await this.api.getEnergyReport({
         postData: {
-          DeviceID: this.model.id,
+          DeviceID: this.id,
           FromDate: from ?? YEAR_1970,
           ToDate: to ?? nowISO(),
         },
@@ -95,14 +99,13 @@ export default class<T extends keyof typeof DeviceType>
         ((
           await this.api.getTiles({
             postData: {
-              DeviceIDs: [this.model.id],
+              DeviceIDs: [this.id],
               SelectedBuilding: this.model.buildingId,
-              SelectedDevice: this.model.id,
+              SelectedDevice: this.id,
             },
           })
         ).data as TilesData<T>)
-      : (await this.api.getTiles({ postData: { DeviceIDs: [this.model.id] } }))
-          .data
+      : (await this.api.getTiles({ postData: { DeviceIDs: [this.id] } })).data
   }
 
   public async set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
@@ -129,13 +132,13 @@ export default class<T extends keyof typeof DeviceType>
     }
     return (
       await this.api.setDevice({
-        heatPumpType: this.model.type,
+        heatPumpType: this.type,
         postData: {
           ...updateData,
-          DeviceID: this.model.id,
+          DeviceID: this.id,
           EffectiveFlags: newEffectiveFlags,
         },
       })
-    ).data as SetDeviceData[T]
+    ).data
   }
 }
