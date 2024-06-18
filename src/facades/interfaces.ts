@@ -1,4 +1,10 @@
 import type {
+  AreaModelAny,
+  BuildingModel,
+  DeviceModelAny,
+  FloorModel,
+} from '../models'
+import type {
   BuildingData,
   BuildingSettings,
   DeviceType,
@@ -17,7 +23,9 @@ import type {
   WifiData,
 } from '../types'
 
-export interface IBaseFacade {
+export interface IBaseFacade<
+  T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
+> {
   getErrors: ({
     from,
     to,
@@ -29,6 +37,7 @@ export interface IBaseFacade {
   getHolidayMode: () => Promise<HolidayModeData>
   getWifiReport: (hour: number) => Promise<WifiData>
   id: number
+  model: T
   name: string
   setFrostProtection: ({
     enable,
@@ -69,7 +78,8 @@ export interface IBaseFacade {
   setPower: (enable?: boolean) => Promise<boolean>
 }
 
-export interface IBaseSuperDeviceFacade extends IBaseFacade {
+export interface IBaseSuperDeviceFacade
+  extends IBaseFacade<AreaModelAny | BuildingModel | FloorModel> {
   getAta: () => SetAtaGroupPostData['State']
   getTiles: () => Promise<TilesData<null>>
   setAta: (
@@ -84,7 +94,7 @@ export interface IBuildingFacade extends IBaseSuperDeviceFacade {
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>
-  extends IBaseFacade {
+  extends IBaseFacade<DeviceModelAny> {
   data: ListDevice[T]['Device']
   fetch: () => Promise<ListDevice[T]['Device']>
   get: () => Promise<GetDeviceData[T]>

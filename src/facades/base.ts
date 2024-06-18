@@ -60,7 +60,7 @@ const getEndDate = (
 
 export default abstract class<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
-> implements IBaseFacade
+> implements IBaseFacade<T>
 {
   public readonly id: number
 
@@ -85,16 +85,16 @@ export default abstract class<
     this.id = id
   }
 
-  public get name(): string {
-    return this.model.name
-  }
-
-  protected get model(): T {
+  public get model(): T {
     const model = this.modelClass.getById(this.id)
     if (!model) {
       throw new Error(`${this.tableName} not found`)
     }
     return model
+  }
+
+  public get name(): string {
+    return this.model.name
   }
 
   public async getErrors({
