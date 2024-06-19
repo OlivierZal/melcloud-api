@@ -51,7 +51,7 @@ export interface IMELCloudAPI {
     data?: LoginCredentials,
     onSuccess?: () => Promise<void>,
   ) => Promise<boolean>
-  fetchDevices: () => Promise<{ data: Building[] }>
+  fetch: () => Promise<{ data: Building[] }>
   getDevice: <T extends keyof typeof DeviceType>({
     params,
   }: {

@@ -154,23 +154,35 @@ export default class API implements IMELCloudAPI {
     this.#settingManager?.set('username', this.#username)
   }
 
+  public async applyFetch(): Promise<void> {
+    this.clearSync()
+    await this.#applyFetch()
+    if (this.#autoSync.as('milliseconds')) {
+      this.#syncInterval = setInterval(() => {
+        this.#applyFetch().catch((error: unknown) => {
+          this.#logger.error(error)
+        })
+      }, this.#autoSync.as('milliseconds'))
+    }
+  }
+
   public async applyLogin(data?: LoginCredentials): Promise<boolean> {
     const { username = this.username, password = this.password } = data ?? {}
     if (username && password) {
       try {
-        const { LoginData: loginData } = (
-          await this.login({
-            postData: {
-              AppVersion: '1.32.0.0',
-              Email: username,
-              Language: getLanguage(),
-              Password: password,
-              Persist: true,
-            },
-          })
-        ).data
-        await this.sync()
-        return loginData !== null
+        return (
+          (
+            await this.login({
+              postData: {
+                AppVersion: '1.32.0.0',
+                Email: username,
+                Language: getLanguage(),
+                Password: password,
+                Persist: true,
+              },
+            })
+          ).data.LoginData !== null
+        )
       } catch (error) {
         if (typeof data !== 'undefined') {
           throw error
@@ -187,7 +199,7 @@ export default class API implements IMELCloudAPI {
     }
   }
 
-  public async fetchDevices(): Promise<{ data: Building[] }> {
+  public async fetch(): Promise<{ data: Building[] }> {
     const response = await this.#api.get<Building[]>(LIST_URL)
     response.data.forEach((building) => {
       DeviceModel.upsertMany(building.Structure.Devices)
@@ -298,6 +310,9 @@ export default class API implements IMELCloudAPI {
       this.password = password
       this.contextKey = response.data.LoginData.ContextKey
       this.expiry = response.data.LoginData.Expiry
+      await this.applyFetch()
+    } else {
+      this.clearSync()
     }
     return response
   }
@@ -370,22 +385,8 @@ export default class API implements IMELCloudAPI {
     return this.#api.post<boolean>('/Device/Power', postData)
   }
 
-  public async sync(): Promise<void> {
-    if (this.#autoSync.as('milliseconds')) {
-      this.clearSync()
-      if (!this.#syncInterval) {
-        this.#syncInterval = setInterval(() => {
-          this.#applySync().catch((error: unknown) => {
-            this.#logger.error(error)
-          })
-        }, this.#autoSync.as('milliseconds'))
-      }
-    }
-    await this.#applySync()
-  }
-
-  async #applySync(): Promise<void> {
-    await this.fetchDevices()
+  async #applyFetch(): Promise<void> {
+    await this.fetch()
     await this.#syncFunction?.()
   }
 
