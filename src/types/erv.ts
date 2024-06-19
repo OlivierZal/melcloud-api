@@ -7,7 +7,7 @@ import type {
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
-  NonEffectiveFlagsKeyOf,
+  NonFlagsKeyOf,
 } from './bases'
 
 export enum VentilationMode {
@@ -21,10 +21,7 @@ export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
   readonly VentilationMode?: VentilationMode
 }
 
-export const effectiveFlagsErv: Record<
-  NonEffectiveFlagsKeyOf<UpdateDeviceDataErv>,
-  number
-> = {
+export const flagsErv: Record<NonFlagsKeyOf<UpdateDeviceDataErv>, number> = {
   Power: 0x1,
   SetFanSpeed: 0x8,
   VentilationMode: 0x4,

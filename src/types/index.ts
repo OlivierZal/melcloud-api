@@ -9,14 +9,14 @@ export {
   type BaseSetDeviceData,
   type BaseUpdateDeviceData,
   type DeviceDataNotInList,
-  type NonEffectiveFlagsKeyOf,
-  type NonEffectiveFlagsValueOf,
+  type NonFlagsKeyOf,
+  type NonFlagsValueOf,
 } from './bases'
 export {
   Horizontal,
   OperationMode,
   Vertical,
-  effectiveFlagsAta,
+  flagsAta,
   type EnergyDataAta,
   type GetDeviceDataAta,
   type ListDeviceAta,
@@ -27,7 +27,7 @@ export {
 export {
   OperationModeState,
   OperationModeZone,
-  effectiveFlagsAtw,
+  flagsAtw,
   type EnergyDataAtw,
   type GetDeviceDataAtw,
   type ListDeviceAtw,
@@ -37,7 +37,7 @@ export {
 } from './atw'
 export {
   VentilationMode,
-  effectiveFlagsErv,
+  flagsErv,
   type GetDeviceDataErv,
   type ListDeviceDataErv,
   type ListDeviceErv,
@@ -46,18 +46,19 @@ export {
 } from './erv'
 export {
   Language,
+  flags,
   type AreaData,
   type AreaDataAny,
   type Building,
   type BuildingData,
   type BuildingSettings,
   type DateTimeComponents,
-  type EffectiveFlags,
   type EnergyData,
   type EnergyPostData,
   type ErrorData,
   type ErrorPostData,
   type FailureData,
+  type Flags,
   type FloorData,
   type FrostProtectionData,
   type FrostProtectionLocation,

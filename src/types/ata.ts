@@ -7,7 +7,7 @@ import type {
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
-  NonEffectiveFlagsKeyOf,
+  NonFlagsKeyOf,
 } from './bases'
 
 export enum OperationMode {
@@ -47,10 +47,7 @@ export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly VaneVertical?: Vertical
 }
 
-export const effectiveFlagsAta: Record<
-  NonEffectiveFlagsKeyOf<UpdateDeviceDataAta>,
-  number
-> = {
+export const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number> = {
   OperationMode: 0x2,
   Power: 0x1,
   SetFanSpeed: 0x8,

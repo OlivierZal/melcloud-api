@@ -16,9 +16,9 @@ export enum FanSpeed {
   silent = 255,
 }
 
-export type NonEffectiveFlagsKeyOf<T> = Exclude<keyof T, 'EffectiveFlags'>
+export type NonFlagsKeyOf<T> = Exclude<keyof T, 'EffectiveFlags'>
 
-export type NonEffectiveFlagsValueOf<T> = T[NonEffectiveFlagsKeyOf<T>]
+export type NonFlagsValueOf<T> = T[NonFlagsKeyOf<T>]
 
 export interface BaseUpdateDeviceData {
   EffectiveFlags?: number

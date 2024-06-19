@@ -6,13 +6,11 @@ import {
   FanSpeed,
   type GetDeviceData,
   type ListDevice,
-  type NonEffectiveFlagsKeyOf,
+  type NonFlagsKeyOf,
   type SetDeviceData,
   type TilesData,
   type UpdateDeviceData,
-  effectiveFlagsAta,
-  effectiveFlagsAtw,
-  effectiveFlagsErv,
+  flags,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
@@ -23,6 +21,8 @@ export default class<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
+  public readonly flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
+
   public readonly type: T
 
   protected readonly frostProtectionLocation = 'DeviceIds'
@@ -33,27 +33,13 @@ export default class<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  readonly #effectiveFlagsMapping: Record<
-    NonEffectiveFlagsKeyOf<UpdateDeviceData[T]>,
-    number
-  >
-
-  public constructor(api: API, id: number) {
-    super(api, id)
-    this.type = this.model.type as T
-    switch (this.type) {
-      case 'Ata':
-        this.#effectiveFlagsMapping = effectiveFlagsAta
-        break
-      case 'Atw':
-        this.#effectiveFlagsMapping = effectiveFlagsAtw
-        break
-      case 'Erv':
-        this.#effectiveFlagsMapping = effectiveFlagsErv
-        break
-      default:
-        throw new Error('Invalid device type')
-    }
+  public constructor(api: API, idOrModel: DeviceModelAny | number) {
+    super(api, idOrModel)
+    this.type = (
+      typeof idOrModel === 'number' ?
+        this.model.type
+      : idOrModel.type) as T
+    this.flags = flags[this.type]
   }
 
   public get data(): ListDevice[T]['Device'] {
@@ -109,25 +95,22 @@ export default class<T extends keyof typeof DeviceType>
 
   public async set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
     const { EffectiveFlags: effectiveFlags, ...updateData } = postData
-    let newEffectiveFlags =
+    let newFlags =
       typeof effectiveFlags === 'undefined' ?
         Object.keys(updateData).reduce<number>(
           (acc, key) =>
-            acc |
-            this.#effectiveFlagsMapping[
-              key as NonEffectiveFlagsKeyOf<UpdateDeviceData[T]>
-            ],
+            acc | this.flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>],
           FLAG_UNCHANGED,
         )
       : effectiveFlags
     if (
       'SetFanSpeed' in updateData &&
       updateData.SetFanSpeed === FanSpeed.silent &&
-      'SetFanSpeed' in this.#effectiveFlagsMapping &&
-      typeof this.#effectiveFlagsMapping.SetFanSpeed !== 'undefined' &&
-      this.#effectiveFlagsMapping.SetFanSpeed !== null
+      'SetFanSpeed' in this.flags &&
+      typeof this.flags.SetFanSpeed !== 'undefined' &&
+      this.flags.SetFanSpeed !== null
     ) {
-      newEffectiveFlags &= ~this.#effectiveFlagsMapping.SetFanSpeed
+      newFlags &= ~this.flags.SetFanSpeed
     }
     return (
       await this.api.setDevice({
@@ -135,7 +118,7 @@ export default class<T extends keyof typeof DeviceType>
         postData: {
           ...updateData,
           DeviceID: this.id,
-          EffectiveFlags: newEffectiveFlags,
+          EffectiveFlags: newFlags,
         },
       })
     ).data

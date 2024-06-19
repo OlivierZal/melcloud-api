@@ -22,8 +22,8 @@ export default class
 
   protected readonly tableName = 'Building'
 
-  public constructor(api: API, id: number) {
-    super(api, id)
+  public constructor(api: API, idOrModel: BuildingModel | number) {
+    super(api, idOrModel)
     this.isFrostProtectionDefined = this.settings.FPDefined
     this.isHolidayModeDefined = this.settings.HMDefined
   }

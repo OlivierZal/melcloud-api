@@ -80,9 +80,9 @@ export default abstract class<
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(api: API, id: number) {
+  public constructor(api: API, idOrModel: T | number) {
     this.api = api
-    this.id = id
+    this.id = typeof idOrModel === 'number' ? idOrModel : idOrModel.id
   }
 
   public get model(): T {

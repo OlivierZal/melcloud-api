@@ -1,32 +1,32 @@
 import type { BaseDevicePostData, DeviceType, FanSpeed } from './bases'
-import type {
-  EnergyDataAta,
-  GetDeviceDataAta,
-  Horizontal,
-  ListDeviceAta,
-  ListDeviceDataAta,
-  OperationMode,
-  SetDeviceDataAta,
-  UpdateDeviceDataAta,
-  Vertical,
-  effectiveFlagsAta,
+import {
+  type EnergyDataAta,
+  type GetDeviceDataAta,
+  type Horizontal,
+  type ListDeviceAta,
+  type ListDeviceDataAta,
+  type OperationMode,
+  type SetDeviceDataAta,
+  type UpdateDeviceDataAta,
+  type Vertical,
+  flagsAta,
 } from './ata'
-import type {
-  EnergyDataAtw,
-  GetDeviceDataAtw,
-  ListDeviceAtw,
-  ListDeviceDataAtw,
-  SetDeviceDataAtw,
-  UpdateDeviceDataAtw,
-  effectiveFlagsAtw,
+import {
+  type EnergyDataAtw,
+  type GetDeviceDataAtw,
+  type ListDeviceAtw,
+  type ListDeviceDataAtw,
+  type SetDeviceDataAtw,
+  type UpdateDeviceDataAtw,
+  flagsAtw,
 } from './atw'
-import type {
-  GetDeviceDataErv,
-  ListDeviceDataErv,
-  ListDeviceErv,
-  SetDeviceDataErv,
-  UpdateDeviceDataErv,
-  effectiveFlagsErv,
+import {
+  type GetDeviceDataErv,
+  type ListDeviceDataErv,
+  type ListDeviceErv,
+  type SetDeviceDataErv,
+  type UpdateDeviceDataErv,
+  flagsErv,
 } from './erv'
 
 export enum Language {
@@ -59,11 +59,12 @@ export enum Language {
   sq = 26,
 }
 
-export interface EffectiveFlags {
-  readonly Ata: typeof effectiveFlagsAta
-  readonly Atw: typeof effectiveFlagsAtw
-  readonly Erv: typeof effectiveFlagsErv
-}
+export const flags = {
+  Ata: flagsAta,
+  Atw: flagsAtw,
+  Erv: flagsErv,
+} as const
+export type Flags = typeof flags
 
 export interface LoginCredentials {
   readonly password: string
