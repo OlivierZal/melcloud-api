@@ -8,6 +8,7 @@ export type {
   IBaseModel,
   IBaseSubBuildingModel,
   IBaseSubFloorModel,
+  IBaseSuperAreaModel,
   IBaseSuperDeviceModel,
   IBuildingModel,
   IDeviceModel,

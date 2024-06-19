@@ -25,6 +25,7 @@ export {
   type IBaseModel,
   type IBaseSubBuildingModel,
   type IBaseSubFloorModel,
+  type IBaseSuperAreaModel,
   type IBaseSuperDeviceModel,
   type IBuildingModel,
   type IDeviceModel,
