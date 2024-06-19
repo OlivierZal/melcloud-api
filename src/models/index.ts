@@ -5,7 +5,6 @@ export { default as DeviceModel, type DeviceModelAny } from './device'
 export { default as FloorModel } from './floor'
 export type {
   IAreaModel,
-  IBaseModel,
   IBaseSubBuildingModel,
   IBaseSubFloorModel,
   IBaseSuperAreaModel,

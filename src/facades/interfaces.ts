@@ -37,7 +37,6 @@ export interface IBaseFacade<
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
   getWifiReport: (hour: number) => Promise<WifiData>
-  id: number
   model: T
   name: string
   setFrostProtection: ({

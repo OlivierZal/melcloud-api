@@ -22,7 +22,6 @@ export {
   type AreaModelAny,
   type DeviceModelAny,
   type IAreaModel,
-  type IBaseModel,
   type IBaseSubBuildingModel,
   type IBaseSubFloorModel,
   type IBaseSuperAreaModel,

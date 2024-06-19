@@ -29,13 +29,14 @@
   },
   "scripts": {
     "build": "tsc && tsc -p 'tsconfig.checkjs.json'",
-    "docs": "typedoc && npm run format:fix README.md -- --ignore-path && markdownlint-cli2 README.md",
+    "docs": "typedoc && npm run format:docs && npm run lint:docs",
     "format": "prettier . --check",
+    "format:docs": "npm run format:fix README.md -- --ignore-path",
     "format:fix": "prettier . --write",
     "lint": "eslint .",
+    "lint:docs": "markdownlint-cli2 README.md --fix",
     "lint:fix": "npm run lint -- --fix",
-    "prepack": "npm run lint:fix && npm run format:fix",
-    "prepare": "npm run build && npm run docs"
+    "prepare": "npm run lint:fix && npm run format:fix && npm run build && npm run docs"
   },
   "devDependencies": {
     "@eslint/js": "^9.5.0",

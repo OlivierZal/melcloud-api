@@ -4,12 +4,7 @@ import type BuildingModel from './building'
 import type { DeviceModelAny } from './device'
 import type FloorModel from './floor'
 
-export interface IBaseModel {
-  id: number
-  name: string
-}
-
-export interface IBaseSubBuildingModel extends IBaseModel {
+export interface IBaseSubBuildingModel {
   building: BuildingModel | null
   buildingId: number
 }
@@ -24,7 +19,7 @@ export interface IBaseSuperAreaModel extends IBaseSuperDeviceModel {
   areas: readonly AreaModel<number>[]
 }
 
-export interface IBaseSuperDeviceModel extends IBaseModel {
+export interface IBaseSuperDeviceModel {
   deviceIds: readonly number[]
   devices: readonly DeviceModelAny[]
 }
