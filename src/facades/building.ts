@@ -12,10 +12,6 @@ export default class
 
   protected readonly holidayModeLocation = 'Buildings'
 
-  protected override readonly isFrostProtectionDefined
-
-  protected override readonly isHolidayModeDefined
-
   protected readonly modelClass = BuildingModel
 
   protected readonly setAtaGroupSpecification = 'BuildingID'
