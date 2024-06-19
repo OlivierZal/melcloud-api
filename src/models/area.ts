@@ -11,7 +11,7 @@ export default class AreaModel<T extends number | null>
   extends BaseModel
   implements IAreaModel
 {
-  public static readonly areas = new Map<number, AreaModelAny>()
+  static readonly #areas = new Map<number, AreaModelAny>()
 
   public readonly buildingId: number
 
@@ -47,7 +47,7 @@ export default class AreaModel<T extends number | null>
   }
 
   public static getAll(): AreaModelAny[] {
-    return Array.from(this.areas.values())
+    return Array.from(this.#areas.values())
   }
 
   public static getByBuildingId(buildingId: number): AreaModelAny[] {
@@ -55,7 +55,7 @@ export default class AreaModel<T extends number | null>
   }
 
   public static getById(id: number): AreaModelAny | undefined {
-    return this.areas.get(id)
+    return this.#areas.get(id)
   }
 
   public static getByName(areaName: string): AreaModelAny | undefined {
@@ -63,6 +63,6 @@ export default class AreaModel<T extends number | null>
   }
 
   public static upsert(data: AreaDataAny): void {
-    this.areas.set(data.ID, new this(data))
+    this.#areas.set(data.ID, new this(data))
   }
 }

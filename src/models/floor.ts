@@ -6,7 +6,7 @@ import type { FloorData } from '../types'
 import type { IFloorModel } from './interfaces'
 
 export default class FloorModel extends BaseModel implements IFloorModel {
-  public static readonly floors = new Map<number, FloorModel>()
+  static readonly #floors = new Map<number, FloorModel>()
 
   public readonly buildingId: number
 
@@ -42,7 +42,7 @@ export default class FloorModel extends BaseModel implements IFloorModel {
   }
 
   public static getAll(): FloorModel[] {
-    return Array.from(this.floors.values())
+    return Array.from(this.#floors.values())
   }
 
   public static getByBuildingId(buildingId: number): FloorModel[] {
@@ -50,7 +50,7 @@ export default class FloorModel extends BaseModel implements IFloorModel {
   }
 
   public static getById(id: number): FloorModel | undefined {
-    return this.floors.get(id)
+    return this.#floors.get(id)
   }
 
   public static getByName(floorName: string): FloorModel | undefined {
@@ -58,6 +58,6 @@ export default class FloorModel extends BaseModel implements IFloorModel {
   }
 
   public static upsert(data: FloorData): void {
-    this.floors.set(data.ID, new this(data))
+    this.#floors.set(data.ID, new this(data))
   }
 }

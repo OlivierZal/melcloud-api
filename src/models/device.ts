@@ -14,7 +14,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   extends BaseModel
   implements IDeviceModel<T>
 {
-  public static readonly devices = new Map<number, DeviceModelAny>()
+  static readonly #devices = new Map<number, DeviceModelAny>()
 
   public readonly areaId: number | null = null
 
@@ -58,7 +58,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getAll(): DeviceModelAny[] {
-    return Array.from(this.devices.values())
+    return Array.from(this.#devices.values())
   }
 
   public static getByBuildingId(buildingId: number): DeviceModelAny[] {
@@ -66,7 +66,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
-    return this.devices.get(id)
+    return this.#devices.get(id)
   }
 
   public static getByName(deviceName: string): DeviceModelAny | undefined {
@@ -80,7 +80,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static upsert(data: ListDeviceAny): void {
-    this.devices.set(data.DeviceID, new this(data) as DeviceModelAny)
+    this.#devices.set(data.DeviceID, new this(data) as DeviceModelAny)
   }
 
   public static upsertMany(dataList: readonly ListDeviceAny[]): void {

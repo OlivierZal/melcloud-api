@@ -4,7 +4,7 @@ import BaseModel from './base'
 import type { IBuildingModel } from './interfaces'
 
 export default class BuildingModel extends BaseModel implements IBuildingModel {
-  public static readonly buildings = new Map<number, BuildingModel>()
+  static readonly #buildings = new Map<number, BuildingModel>()
 
   public readonly settings: BuildingSettings
 
@@ -24,11 +24,11 @@ export default class BuildingModel extends BaseModel implements IBuildingModel {
   }
 
   public static getAll(): BuildingModel[] {
-    return Array.from(this.buildings.values())
+    return Array.from(this.#buildings.values())
   }
 
   public static getById(id: number): BuildingModel | undefined {
-    return this.buildings.get(id)
+    return this.#buildings.get(id)
   }
 
   public static getByName(buildingName: string): BuildingModel | undefined {
@@ -36,6 +36,6 @@ export default class BuildingModel extends BaseModel implements IBuildingModel {
   }
 
   public static upsert(data: BuildingData): void {
-    this.buildings.set(data.ID, new this(data))
+    this.#buildings.set(data.ID, new this(data))
   }
 }
