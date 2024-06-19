@@ -38,7 +38,7 @@ export default class
   }
 
   public async fetch(): Promise<BuildingSettings> {
-    await this.api.applyFetch()
+    await this.api.fetch()
     return this.settings
   }
 }
