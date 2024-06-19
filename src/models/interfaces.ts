@@ -19,12 +19,19 @@ export interface IBaseSubFloorModel extends IBaseSubBuildingModel {
   floorId: number | null
 }
 
+export interface IBaseSuperAreaModel extends IBaseSuperDeviceModel {
+  areaIds: readonly number[]
+  areas: readonly AreaModel<number>[]
+}
+
 export interface IBaseSuperDeviceModel extends IBaseModel {
   deviceIds: readonly number[]
   devices: readonly DeviceModelAny[]
 }
 
-export interface IBuildingModel extends IBaseSuperDeviceModel {
+export interface IBuildingModel extends IBaseSuperAreaModel {
+  floorIds: readonly number[]
+  floors: readonly FloorModel[]
   settings: BuildingSettings
 }
 
@@ -32,10 +39,7 @@ export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}
 
 export interface IFloorModel
   extends IBaseSubBuildingModel,
-    IBaseSuperDeviceModel {
-  areaIds: readonly number[]
-  areas: readonly AreaModel<number>[]
-}
+    IBaseSuperAreaModel {}
 
 export interface IDeviceModel<T extends keyof typeof DeviceType>
   extends IBaseSubFloorModel {
