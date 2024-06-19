@@ -1,6 +1,8 @@
+import AreaModel, { type AreaModelAny } from './area'
 import type { BuildingData, BuildingSettings } from '../types'
 import DeviceModel, { type DeviceModelAny } from './device'
 import BaseModel from './base'
+import FloorModel from './floor'
 import type { IBuildingModel } from './interfaces'
 
 export default class BuildingModel extends BaseModel implements IBuildingModel {
@@ -13,14 +15,28 @@ export default class BuildingModel extends BaseModel implements IBuildingModel {
     this.settings = settings
   }
 
+  public get areaIds(): number[] {
+    return this.areas.map(({ id }) => id)
+  }
+
+  public get areas(): AreaModelAny[] {
+    return AreaModel.getByBuildingId(this.id)
+  }
+
   public get deviceIds(): number[] {
     return this.devices.map(({ id }) => id)
   }
 
   public get devices(): DeviceModelAny[] {
-    return DeviceModel.getAll().filter(
-      ({ buildingId }) => buildingId === this.id,
-    )
+    return DeviceModel.getByBuildingId(this.id)
+  }
+
+  public get floorIds(): number[] {
+    return this.areas.map(({ id }) => id)
+  }
+
+  public get floors(): FloorModel[] {
+    return FloorModel.getByBuildingId(this.id)
   }
 
   public static getAll(): BuildingModel[] {
@@ -31,8 +47,8 @@ export default class BuildingModel extends BaseModel implements IBuildingModel {
     return this.#buildings.get(id)
   }
 
-  public static getByName(buildingName: string): BuildingModel | undefined {
-    return this.getAll().find(({ name }) => name === buildingName)
+  public static getByName(name: string): BuildingModel | undefined {
+    return this.getAll().find((model) => name === model.name)
   }
 
   public static upsert(data: BuildingData): void {

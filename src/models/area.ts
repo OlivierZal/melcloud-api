@@ -37,7 +37,7 @@ export default class AreaModel<T extends number | null>
   }
 
   public get devices(): DeviceModelAny[] {
-    return DeviceModel.getAll().filter(({ areaId }) => areaId === this.id)
+    return DeviceModel.getByAreaId(this.id)
   }
 
   public get floor(): FloorModel | null {
@@ -50,16 +50,20 @@ export default class AreaModel<T extends number | null>
     return Array.from(this.#areas.values())
   }
 
-  public static getByBuildingId(buildingId: number): AreaModelAny[] {
-    return this.getAll().filter(({ buildingId: id }) => id === buildingId)
+  public static getByBuildingId(id: number): AreaModelAny[] {
+    return this.getAll().filter((model) => id === model.buildingId)
+  }
+
+  public static getByFloorId(id: number): AreaModelAny[] {
+    return this.getAll().filter((model) => id === model.floorId)
   }
 
   public static getById(id: number): AreaModelAny | undefined {
     return this.#areas.get(id)
   }
 
-  public static getByName(areaName: string): AreaModelAny | undefined {
-    return this.getAll().find(({ name }) => name === areaName)
+  public static getByName(name: string): AreaModelAny | undefined {
+    return this.getAll().find((model) => name === model.name)
   }
 
   public static upsert(data: AreaDataAny): void {

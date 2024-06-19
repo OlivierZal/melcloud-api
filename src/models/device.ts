@@ -61,16 +61,24 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     return Array.from(this.#devices.values())
   }
 
-  public static getByBuildingId(buildingId: number): DeviceModelAny[] {
-    return this.getAll().filter(({ buildingId: id }) => id === buildingId)
+  public static getByAreaId(id: number): DeviceModelAny[] {
+    return this.getAll().filter((model) => id === model.areaId)
+  }
+
+  public static getByBuildingId(id: number): DeviceModelAny[] {
+    return this.getAll().filter((model) => id === model.buildingId)
+  }
+
+  public static getByFloorId(id: number): DeviceModelAny[] {
+    return this.getAll().filter((model) => id === model.floorId)
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
     return this.#devices.get(id)
   }
 
-  public static getByName(deviceName: string): DeviceModelAny | undefined {
-    return this.getAll().find(({ name }) => name === deviceName)
+  public static getByName(name: string): DeviceModelAny | undefined {
+    return this.getAll().find((model) => name === model.name)
   }
 
   public static getByType(
