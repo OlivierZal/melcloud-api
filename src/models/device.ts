@@ -1,5 +1,6 @@
 import AreaModel, { type AreaModelAny } from './area'
 import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
+import BaseModel from './base'
 import BuildingModel from './building'
 import FloorModel from './floor'
 import type { IDeviceModel } from './interfaces'
@@ -10,6 +11,7 @@ export type DeviceModelAny =
   | DeviceModel<'Erv'>
 
 export default class DeviceModel<T extends keyof typeof DeviceType>
+  extends BaseModel
   implements IDeviceModel<T>
 {
   public static readonly devices = new Map<number, DeviceModelAny>()
@@ -22,10 +24,6 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public readonly floorId: number | null = null
 
-  public readonly id: number
-
-  public readonly name: string
-
   public readonly type: T
 
   private constructor({
@@ -37,12 +35,11 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     FloorID: floorId,
     Type: type,
   }: ListDevice[T]) {
+    super({ id, name })
     this.areaId = areaId
     this.buildingId = buildingId
     this.data = data
     this.floorId = floorId
-    this.id = id
-    this.name = name
     this.type = DeviceType[type] as T
   }
 

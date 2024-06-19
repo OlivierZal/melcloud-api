@@ -1,20 +1,16 @@
 import type { BuildingData, BuildingSettings } from '../types'
 import DeviceModel, { type DeviceModelAny } from './device'
+import BaseModel from './base'
 import type { IBuildingModel } from './interfaces'
 
-export default class BuildingModel implements IBuildingModel {
+export default class BuildingModel extends BaseModel implements IBuildingModel {
   public static readonly buildings = new Map<number, BuildingModel>()
-
-  public readonly id: number
-
-  public readonly name: string
 
   public readonly settings: BuildingSettings
 
   private constructor({ Name: name, ID: id, ...settings }: BuildingData) {
+    super({ id, name })
     this.settings = settings
-    this.id = id
-    this.name = name
   }
 
   public get deviceIds(): number[] {

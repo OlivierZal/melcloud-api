@@ -1,21 +1,21 @@
 import type { AreaData, AreaDataAny } from '../types'
 import DeviceModel, { type DeviceModelAny } from './device'
+import BaseModel from './base'
 import BuildingModel from './building'
 import FloorModel from './floor'
 import type { IAreaModel } from './interfaces'
 
 export type AreaModelAny = AreaModel<number> | AreaModel<null>
 
-export default class AreaModel<T extends number | null> implements IAreaModel {
+export default class AreaModel<T extends number | null>
+  extends BaseModel
+  implements IAreaModel
+{
   public static readonly areas = new Map<number, AreaModelAny>()
 
   public readonly buildingId: number
 
   public readonly floorId: number | null
-
-  public readonly id: number
-
-  public readonly name: string
 
   private constructor({
     BuildingId: buildingId,
@@ -23,10 +23,9 @@ export default class AreaModel<T extends number | null> implements IAreaModel {
     ID: id,
     Name: name,
   }: AreaData<T>) {
+    super({ id, name })
     this.buildingId = buildingId
     this.floorId = floorId
-    this.id = id
-    this.name = name
   }
 
   public get building(): BuildingModel | null {

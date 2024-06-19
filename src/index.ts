@@ -15,6 +15,7 @@ export {
 } from './facades'
 export {
   AreaModel,
+  BaseModel,
   BuildingModel,
   DeviceModel,
   FloorModel,

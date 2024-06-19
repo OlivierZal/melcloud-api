@@ -1,26 +1,22 @@
 import DeviceModel, { type DeviceModelAny } from './device'
 import AreaModel from './area'
+import BaseModel from './base'
 import BuildingModel from './building'
 import type { FloorData } from '../types'
 import type { IFloorModel } from './interfaces'
 
-export default class FloorModel implements IFloorModel {
+export default class FloorModel extends BaseModel implements IFloorModel {
   public static readonly floors = new Map<number, FloorModel>()
 
   public readonly buildingId: number
-
-  public readonly id: number
-
-  public readonly name: string
 
   private constructor({
     BuildingId: buildingId,
     ID: id,
     Name: name,
   }: FloorData) {
+    super({ id, name })
     this.buildingId = buildingId
-    this.id = id
-    this.name = name
   }
 
   public get areaIds(): number[] {
