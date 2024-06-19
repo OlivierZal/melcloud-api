@@ -81,10 +81,8 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     return this.getAll().find((model) => name === model.name)
   }
 
-  public static getByType(
-    deviceType: keyof typeof DeviceType,
-  ): DeviceModelAny[] {
-    return this.getAll().filter(({ type }) => type === deviceType)
+  public static getByType(type: keyof typeof DeviceType): DeviceModelAny[] {
+    return this.getAll().filter((model) => type === model.type)
   }
 
   public static upsert(data: ListDeviceAny): void {
