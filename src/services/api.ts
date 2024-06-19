@@ -385,9 +385,10 @@ export default class API implements IMELCloudAPI {
     return this.#api.post<boolean>('/Device/Power', postData)
   }
 
-  async #applyFetch(): Promise<void> {
-    await this.fetch()
+  async #applyFetch(): Promise<Building[]> {
+    const { data } = await this.fetch()
     await this.#syncFunction?.()
+    return data
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {
