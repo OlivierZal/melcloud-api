@@ -17,7 +17,12 @@ import type API from '../services'
 import BaseFacade from './base'
 import type { IDeviceFacade } from './interfaces'
 
-export default class<T extends keyof typeof DeviceType>
+export type DeviceFacadeAny =
+  | DeviceFacade<'Ata'>
+  | DeviceFacade<'Atw'>
+  | DeviceFacade<'Erv'>
+
+export default class DeviceFacade<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
@@ -33,12 +38,9 @@ export default class<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  public constructor(api: API, idOrModel: DeviceModelAny | number) {
-    super(api, idOrModel)
-    this.type = (
-      typeof idOrModel === 'number' ?
-        this.model.type
-      : idOrModel.type) as T
+  public constructor(api: API, model: DeviceModel<T>) {
+    super(api, model as DeviceModelAny)
+    this.type = this.model.type as T
     this.flags = flags[this.type]
   }
 
