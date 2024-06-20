@@ -1,16 +1,15 @@
 import type { default as AreaModel, AreaModelAny } from './area'
-import type {
-  BuildingSettings,
-  DeviceType,
-  ListDevice,
-  NonFlagsKeyOf,
-  UpdateDeviceData,
-} from '../types'
+import type { BuildingSettings, DeviceType, ListDevice } from '../types'
 import type BuildingModel from './building'
 import type { DeviceModelAny } from './device'
 import type FloorModel from './floor'
 
-export interface IBaseSubBuildingModel {
+export interface IBaseModel {
+  id: number
+  name: string
+}
+
+export interface IBaseSubBuildingModel extends IBaseModel {
   building: BuildingModel | null
   buildingId: number
 }
@@ -20,14 +19,14 @@ export interface IBaseSubFloorModel extends IBaseSubBuildingModel {
   floorId: number | null
 }
 
+export interface IBaseSuperDeviceModel extends IBaseModel {
+  deviceIds: readonly number[]
+  devices: readonly DeviceModelAny[]
+}
+
 export interface IBaseSuperAreaModel extends IBaseSuperDeviceModel {
   areaIds: readonly number[]
   areas: readonly AreaModel<number>[]
-}
-
-export interface IBaseSuperDeviceModel {
-  deviceIds: readonly number[]
-  devices: readonly DeviceModelAny[]
 }
 
 export interface IBuildingModel extends IBaseSuperAreaModel {
@@ -47,6 +46,5 @@ export interface IDeviceModel<T extends keyof typeof DeviceType>
   area: AreaModelAny | null
   areaId: number | null
   data: ListDevice[T]['Device']
-  flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
   type: T
 }

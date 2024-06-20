@@ -18,8 +18,8 @@ export default class
 
   protected readonly tableName = 'Building'
 
-  public constructor(api: API, idOrModel: BuildingModel | number) {
-    super(api, idOrModel)
+  public constructor(api: API, model: BuildingModel) {
+    super(api, model)
     this.isFrostProtectionDefined = this.settings.FPDefined
     this.isHolidayModeDefined = this.settings.HMDefined
   }

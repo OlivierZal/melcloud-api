@@ -1,10 +1,4 @@
 import type {
-  AreaModelAny,
-  BuildingModel,
-  DeviceModelAny,
-  FloorModel,
-} from '../models'
-import type {
   BuildingData,
   BuildingSettings,
   DeviceType,
@@ -23,10 +17,9 @@ import type {
   UpdateDeviceData,
   WifiData,
 } from '../types'
+import type { DeviceModel } from '../models'
 
-export interface IBaseFacade<
-  T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
-> {
+export interface IBaseFacade {
   getErrors: ({
     from,
     to,
@@ -36,8 +29,12 @@ export interface IBaseFacade<
   }) => Promise<ErrorData[] | FailureData>
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
-  getWifiReport: (hour: number) => Promise<WifiData>
-  model: T
+  getTiles: ((select?: false | null) => Promise<TilesData<null>>) &
+    (<T extends keyof typeof DeviceType>(
+      select: DeviceModel<T>,
+    ) => Promise<TilesData<T>>)
+  getWifiReport: (hour?: number) => Promise<WifiData>
+  id: number
   name: string
   setFrostProtection: ({
     enable,
@@ -78,10 +75,8 @@ export interface IBaseFacade<
   setPower: (enable?: boolean) => Promise<boolean>
 }
 
-export interface IBaseSuperDeviceFacade
-  extends IBaseFacade<AreaModelAny | BuildingModel | FloorModel> {
+export interface IBaseSuperDeviceFacade extends IBaseFacade {
   getAta: () => SetAtaGroupPostData['State']
-  getTiles: () => Promise<TilesData<null>>
   setAta: (
     postData: SetAtaGroupPostData['State'],
   ) => Promise<FailureData | SuccessData>
@@ -94,7 +89,7 @@ export interface IBuildingFacade extends IBaseSuperDeviceFacade {
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>
-  extends IBaseFacade<DeviceModelAny> {
+  extends IBaseFacade {
   data: ListDevice[T]['Device']
   fetch: () => Promise<ListDevice[T]['Device']>
   flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
@@ -106,8 +101,8 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
     from?: string | null
     to?: string | null
   }) => Promise<EnergyData[T]>
-  getTile: ((select?: false) => Promise<TilesData<null>>) &
-    ((select: true) => Promise<TilesData<T>>)
+  getTiles: ((select?: false | null) => Promise<TilesData<null>>) &
+    ((select: true | DeviceModel<T>) => Promise<TilesData<T>>)
   set: (postData: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
   type: T
 }

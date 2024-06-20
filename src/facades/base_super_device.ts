@@ -4,13 +4,11 @@ import type {
   DeviceModel,
   FloorModel,
 } from '../models'
-import {
-  type FailureData,
-  FanSpeed,
-  type ListDeviceDataAta,
-  type SetAtaGroupPostData,
-  type SuccessData,
-  type TilesData,
+import type {
+  FailureData,
+  ListDeviceDataAta,
+  SetAtaGroupPostData,
+  SuccessData,
 } from '../types'
 import BaseFacade from './base'
 import type { IBaseSuperDeviceFacade } from './interfaces'
@@ -55,24 +53,14 @@ export default abstract class<
     )
   }
 
-  public async getTiles(): Promise<TilesData<null>> {
-    return (
-      await this.api.getTiles({ postData: { DeviceIDs: this.model.deviceIds } })
-    ).data
-  }
-
   public async setAta(
     postData: SetAtaGroupPostData['State'],
   ): Promise<FailureData | SuccessData> {
     return (
-      await this.api.setAtaGroup({
+      await this.api.setAta({
         postData: {
           Specification: { [this.setAtaGroupSpecification]: this.id },
-          State: {
-            ...postData,
-            FanSpeed:
-              postData.FanSpeed === FanSpeed.silent ? null : postData.FanSpeed,
-          },
+          State: postData,
         },
       })
     ).data

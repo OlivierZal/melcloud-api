@@ -51,8 +51,9 @@ export interface IMELCloudAPI {
     data?: LoginCredentials,
     onSuccess?: () => Promise<void>,
   ) => Promise<boolean>
+  clearSync: () => void
   fetch: () => Promise<{ data: Building[] }>
-  getDevice: <T extends keyof typeof DeviceType>({
+  get: <T extends keyof typeof DeviceType>({
     params,
   }: {
     params: GetDeviceDataParams
@@ -97,18 +98,18 @@ export interface IMELCloudAPI {
   }: {
     postData: LoginPostData
   }) => Promise<{ data: LoginData }>
-  setAtaGroup: ({
-    postData,
-  }: {
-    postData: SetAtaGroupPostData
-  }) => Promise<{ data: FailureData | SuccessData }>
-  setDevice: <T extends keyof typeof DeviceType>({
+  set: <T extends keyof typeof DeviceType>({
     heatPumpType,
     postData,
   }: {
     heatPumpType: T
     postData: SetDevicePostData<T>
   }) => Promise<{ data: SetDeviceData[T] }>
+  setAta: ({
+    postData,
+  }: {
+    postData: SetAtaGroupPostData
+  }) => Promise<{ data: FailureData | SuccessData }>
   setFrostProtection: ({
     postData,
   }: {
