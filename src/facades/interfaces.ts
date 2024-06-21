@@ -17,6 +17,7 @@ import type {
   UpdateDeviceData,
   WifiData,
 } from '../types'
+import type { DeviceModel } from '../models'
 
 export interface IBaseFacade {
   getErrors: ({
@@ -28,7 +29,11 @@ export interface IBaseFacade {
   }) => Promise<ErrorData[] | FailureData>
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
-  getWifiReport: (hour: number) => Promise<WifiData>
+  getTiles: ((select?: false | null) => Promise<TilesData<null>>) &
+    (<T extends keyof typeof DeviceType>(
+      select: DeviceModel<T>,
+    ) => Promise<TilesData<T>>)
+  getWifiReport: (hour?: number) => Promise<WifiData>
   name: string
   setFrostProtection: ({
     enable,
@@ -71,7 +76,6 @@ export interface IBaseFacade {
 
 export interface IBaseSuperDeviceFacade extends IBaseFacade {
   getAta: () => SetAtaGroupPostData['State']
-  getTiles: () => Promise<TilesData<null>>
   setAta: (
     postData: SetAtaGroupPostData['State'],
   ) => Promise<FailureData | SuccessData>
@@ -96,8 +100,8 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
     from?: string | null
     to?: string | null
   }) => Promise<EnergyData[T]>
-  getTile: ((select?: false) => Promise<TilesData<null>>) &
-    ((select: true) => Promise<TilesData<T>>)
+  getTiles: ((select?: false | null) => Promise<TilesData<null>>) &
+    ((select: true | DeviceModel<T>) => Promise<TilesData<T>>)
   set: (postData: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
   type: T
 }

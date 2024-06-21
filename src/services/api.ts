@@ -217,7 +217,7 @@ export default class API implements IMELCloudAPI {
     return response
   }
 
-  public async getDevice<T extends keyof typeof DeviceType>({
+  public async get<T extends keyof typeof DeviceType>({
     params,
   }: {
     params: GetDeviceDataParams
@@ -314,7 +314,20 @@ export default class API implements IMELCloudAPI {
     return response
   }
 
-  public async setAtaGroup({
+  public async set<T extends keyof typeof DeviceType>({
+    heatPumpType,
+    postData,
+  }: {
+    heatPumpType: T
+    postData: SetDevicePostData<T>
+  }): Promise<{ data: SetDeviceData[T] }> {
+    return this.#api.post<SetDeviceData[T]>(
+      `/Device/Set${heatPumpType}`,
+      postData,
+    )
+  }
+
+  public async setAta({
     postData,
   }: {
     postData: SetAtaGroupPostData
@@ -327,19 +340,6 @@ export default class API implements IMELCloudAPI {
     } catch (_error) {
       throw new Error('No air-to-air device found')
     }
-  }
-
-  public async setDevice<T extends keyof typeof DeviceType>({
-    heatPumpType,
-    postData,
-  }: {
-    heatPumpType: T
-    postData: SetDevicePostData<T>
-  }): Promise<{ data: SetDeviceData[T] }> {
-    return this.#api.post<SetDeviceData[T]>(
-      `/Device/Set${heatPumpType}`,
-      postData,
-    )
   }
 
   public async setFrostProtection({

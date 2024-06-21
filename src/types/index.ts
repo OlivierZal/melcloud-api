@@ -25,26 +25,6 @@ export {
   type UpdateDeviceDataAta,
 } from './ata'
 export {
-  OperationModeState,
-  OperationModeZone,
-  flagsAtw,
-  type EnergyDataAtw,
-  type GetDeviceDataAtw,
-  type ListDeviceAtw,
-  type ListDeviceDataAtw,
-  type SetDeviceDataAtw,
-  type UpdateDeviceDataAtw,
-} from './atw'
-export {
-  VentilationMode,
-  flagsErv,
-  type GetDeviceDataErv,
-  type ListDeviceDataErv,
-  type ListDeviceErv,
-  type SetDeviceDataErv,
-  type UpdateDeviceDataErv,
-} from './erv'
-export {
   Language,
   flags,
   type AreaData,
@@ -88,3 +68,23 @@ export {
   type WifiData,
   type WifiPostData,
 } from './common'
+export {
+  OperationModeState,
+  OperationModeZone,
+  flagsAtw,
+  type EnergyDataAtw,
+  type GetDeviceDataAtw,
+  type ListDeviceAtw,
+  type ListDeviceDataAtw,
+  type SetDeviceDataAtw,
+  type UpdateDeviceDataAtw,
+} from './atw'
+export {
+  VentilationMode,
+  flagsErv,
+  type GetDeviceDataErv,
+  type ListDeviceDataErv,
+  type ListDeviceErv,
+  type SetDeviceDataErv,
+  type UpdateDeviceDataErv,
+} from './erv'

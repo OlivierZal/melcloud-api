@@ -1,11 +1,13 @@
-import type {
-  AreaModelAny,
-  BuildingModel,
-  DeviceModelAny,
-  FloorModel,
+import {
+  type AreaModelAny,
+  type BuildingModel,
+  DeviceModel,
+  type DeviceModelAny,
+  type FloorModel,
 } from '../models'
 import type {
   DateTimeComponents,
+  DeviceType,
   ErrorData,
   FailureData,
   FrostProtectionData,
@@ -15,6 +17,7 @@ import type {
   HolidayModeLocation,
   SettingsParams,
   SuccessData,
+  TilesData,
   WifiData,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
@@ -139,6 +142,34 @@ export default abstract class<
     return this.isHolidayModeDefined ?
         this.#getLocalHolidayMode()
       : this.#getDevicesHolidayMode()
+  }
+
+  public async getTiles(select?: false | null): Promise<TilesData<null>>
+  public async getTiles<K extends keyof typeof DeviceType>(
+    select: DeviceModel<K>,
+  ): Promise<TilesData<K>>
+  public async getTiles<K extends keyof typeof DeviceType>(
+    select: DeviceModel<K> | boolean | null = false,
+  ): Promise<TilesData<K | null>> {
+    if (select === true) {
+      throw new Error('Select a device')
+    }
+    if (select instanceof DeviceModel) {
+      return (
+        await this.api.getTiles({
+          postData: {
+            DeviceIDs: this.#getDeviceIds(),
+            SelectedBuilding: select.buildingId,
+            SelectedDevice: select.id,
+          },
+        })
+      ).data as TilesData<K>
+    }
+    return (
+      await this.api.getTiles({
+        postData: { DeviceIDs: this.#getDeviceIds() },
+      })
+    ).data
   }
 
   public async getWifiReport(

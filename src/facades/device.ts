@@ -55,7 +55,7 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
 
   public async get(): Promise<GetDeviceData[T]> {
     return (
-      await this.api.getDevice({
+      await this.api.get({
         params: { buildingId: this.model.buildingId, id: this.id },
       })
     ).data as GetDeviceData[T]
@@ -68,6 +68,9 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
     from?: string | null
     to?: string | null
   }): Promise<EnergyData[T]> {
+    if (this.type === 'Erv') {
+      throw new Error('Erv devices do not support energy reports')
+    }
     return (
       await this.api.getEnergyReport({
         postData: {
@@ -79,20 +82,22 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
     ).data as EnergyData[T]
   }
 
-  public async getTile(select?: false): Promise<TilesData<null>>
-  public async getTile(select: true): Promise<TilesData<T>>
-  public async getTile(select = false): Promise<TilesData<T | null>> {
-    return select ?
-        ((
-          await this.api.getTiles({
-            postData: {
-              DeviceIDs: [this.id],
-              SelectedBuilding: this.model.buildingId,
-              SelectedDevice: this.id,
-            },
-          })
-        ).data as TilesData<T>)
-      : (await this.api.getTiles({ postData: { DeviceIDs: [this.id] } })).data
+  public override async getTiles(
+    select?: false | null,
+  ): Promise<TilesData<null>>
+  public override async getTiles(
+    select: true | DeviceModel<T>,
+  ): Promise<TilesData<T>>
+  public override async getTiles(
+    select: boolean | null | DeviceModel<T> = false,
+  ): Promise<TilesData<T | null>> {
+    if (
+      select === true ||
+      (select instanceof DeviceModel && select.id === this.id)
+    ) {
+      return super.getTiles(this.model as DeviceModel<T>)
+    }
+    return super.getTiles(null)
   }
 
   public async set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
@@ -115,7 +120,7 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
       newFlags &= ~this.flags.SetFanSpeed
     }
     return (
-      await this.api.setDevice({
+      await this.api.set({
         heatPumpType: this.type,
         postData: {
           ...updateData,

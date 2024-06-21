@@ -10,7 +10,6 @@ import {
   type ListDeviceDataAta,
   type SetAtaGroupPostData,
   type SuccessData,
-  type TilesData,
 } from '../types'
 import BaseFacade from './base'
 import type { IBaseSuperDeviceFacade } from './interfaces'
@@ -55,17 +54,11 @@ export default abstract class<
     )
   }
 
-  public async getTiles(): Promise<TilesData<null>> {
-    return (
-      await this.api.getTiles({ postData: { DeviceIDs: this.model.deviceIds } })
-    ).data
-  }
-
   public async setAta(
     postData: SetAtaGroupPostData['State'],
   ): Promise<FailureData | SuccessData> {
     return (
-      await this.api.setAtaGroup({
+      await this.api.setAta({
         postData: {
           Specification: { [this.setAtaGroupSpecification]: this.id },
           State: {
