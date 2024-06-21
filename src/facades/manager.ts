@@ -14,8 +14,6 @@ import type { DeviceType } from '../types'
 import FloorFacade from './floor'
 
 export default class FacadeManager {
-  static #instance: FacadeManager | null = null
-
   readonly #api: API
 
   readonly #facades = new Map<
@@ -23,15 +21,8 @@ export default class FacadeManager {
     AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
   >()
 
-  private constructor(api: API) {
+  public constructor(api: API) {
     this.#api = api
-  }
-
-  public static getInstance(api: API): FacadeManager {
-    if (!FacadeManager.#instance) {
-      FacadeManager.#instance = new FacadeManager(api)
-    }
-    return FacadeManager.#instance
   }
 
   public get(model: AreaModelAny): AreaFacade

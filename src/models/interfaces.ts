@@ -1,11 +1,5 @@
 import type { default as AreaModel, AreaModelAny } from './area'
-import type {
-  BuildingSettings,
-  DeviceType,
-  ListDevice,
-  NonFlagsKeyOf,
-  UpdateDeviceData,
-} from '../types'
+import type { BuildingSettings, DeviceType, ListDevice } from '../types'
 import type BuildingModel from './building'
 import type { DeviceModelAny } from './device'
 import type FloorModel from './floor'
@@ -47,6 +41,5 @@ export interface IDeviceModel<T extends keyof typeof DeviceType>
   area: AreaModelAny | null
   areaId: number | null
   data: ListDevice[T]['Device']
-  flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
   type: T
 }
