@@ -155,6 +155,9 @@ export default abstract class<
       throw new Error('Select a device')
     }
     if (select instanceof DeviceModel) {
+      if (!this.#getDeviceIds().includes(select.id)) {
+        throw new Error('Device not found')
+      }
       return (
         await this.api.getTiles({
           postData: {
