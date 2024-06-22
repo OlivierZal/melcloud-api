@@ -6,11 +6,11 @@
 
 #### Enumeration Members
 
-| Enumeration Member | Value |
-| :----------------- | :---- |
-| `Ata`              | `0`   |
-| `Atw`              | `1`   |
-| `Erv`              | `3`   |
+| Enumeration Member | Value | Defined in                                                                                                                             |
+| ------------------ | ----- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `Ata`              | `0`   | [src/types/bases.ts:4](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L4) |
+| `Atw`              | `1`   | [src/types/bases.ts:5](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L5) |
+| `Erv`              | `3`   | [src/types/bases.ts:6](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L6) |
 
 ---
 
@@ -18,15 +18,15 @@
 
 #### Enumeration Members
 
-| Enumeration Member | Value |
-| :----------------- | :---- |
-| `auto`             | `0`   |
-| `fast`             | `4`   |
-| `moderate`         | `3`   |
-| `silent`           | `255` |
-| `slow`             | `2`   |
-| `very_fast`        | `5`   |
-| `very_slow`        | `1`   |
+| Enumeration Member | Value | Defined in                                                                                                                               |
+| ------------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `auto`             | `0`   | [src/types/bases.ts:10](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L10) |
+| `fast`             | `4`   | [src/types/bases.ts:14](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L14) |
+| `moderate`         | `3`   | [src/types/bases.ts:13](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L13) |
+| `silent`           | `255` | [src/types/bases.ts:16](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L16) |
+| `slow`             | `2`   | [src/types/bases.ts:12](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L12) |
+| `very_fast`        | `5`   | [src/types/bases.ts:15](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L15) |
+| `very_slow`        | `1`   | [src/types/bases.ts:11](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L11) |
 
 ---
 
@@ -34,16 +34,16 @@
 
 #### Enumeration Members
 
-| Enumeration Member | Value |
-| :----------------- | :---- |
-| `auto`             | `0`   |
-| `center`           | `3`   |
-| `center_left`      | `2`   |
-| `center_right`     | `4`   |
-| `leftwards`        | `1`   |
-| `rightwards`       | `5`   |
-| `swing`            | `12`  |
-| `wide`             | `8`   |
+| Enumeration Member | Value | Defined in                                                                                                                           |
+| ------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `auto`             | `0`   | [src/types/ata.ts:32](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L32) |
+| `center`           | `3`   | [src/types/ata.ts:35](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L35) |
+| `center_left`      | `2`   | [src/types/ata.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L34) |
+| `center_right`     | `4`   | [src/types/ata.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L36) |
+| `leftwards`        | `1`   | [src/types/ata.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L33) |
+| `rightwards`       | `5`   | [src/types/ata.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L37) |
+| `swing`            | `12`  | [src/types/ata.ts:39](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L39) |
+| `wide`             | `8`   | [src/types/ata.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L38) |
 
 ---
 
@@ -51,35 +51,35 @@
 
 #### Enumeration Members
 
-| Enumeration Member | Value |
-| :----------------- | :---- |
-| `bg`               | `1`   |
-| `cs`               | `2`   |
-| `da`               | `3`   |
-| `de`               | `4`   |
-| `el`               | `22`  |
-| `en`               | `0`   |
-| `es`               | `6`   |
-| `et`               | `5`   |
-| `fi`               | `17`  |
-| `fr`               | `7`   |
-| `hr`               | `23`  |
-| `hu`               | `11`  |
-| `hy`               | `8`   |
-| `it`               | `19`  |
-| `lt`               | `10`  |
-| `lv`               | `9`   |
-| `nl`               | `12`  |
-| `no`               | `13`  |
-| `pl`               | `14`  |
-| `pt`               | `15`  |
-| `ro`               | `24`  |
-| `ru`               | `16`  |
-| `sl`               | `25`  |
-| `sq`               | `26`  |
-| `sv`               | `18`  |
-| `tr`               | `21`  |
-| `uk`               | `20`  |
+| Enumeration Member | Value | Defined in                                                                                                                                 |
+| ------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bg`               | `1`   | [src/types/common.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L34) |
+| `cs`               | `2`   | [src/types/common.ts:35](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L35) |
+| `da`               | `3`   | [src/types/common.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L36) |
+| `de`               | `4`   | [src/types/common.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L37) |
+| `el`               | `22`  | [src/types/common.ts:55](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L55) |
+| `en`               | `0`   | [src/types/common.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L33) |
+| `es`               | `6`   | [src/types/common.ts:39](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L39) |
+| `et`               | `5`   | [src/types/common.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L38) |
+| `fi`               | `17`  | [src/types/common.ts:50](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L50) |
+| `fr`               | `7`   | [src/types/common.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L40) |
+| `hr`               | `23`  | [src/types/common.ts:56](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L56) |
+| `hu`               | `11`  | [src/types/common.ts:44](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L44) |
+| `hy`               | `8`   | [src/types/common.ts:41](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L41) |
+| `it`               | `19`  | [src/types/common.ts:52](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L52) |
+| `lt`               | `10`  | [src/types/common.ts:43](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L43) |
+| `lv`               | `9`   | [src/types/common.ts:42](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L42) |
+| `nl`               | `12`  | [src/types/common.ts:45](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L45) |
+| `no`               | `13`  | [src/types/common.ts:46](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L46) |
+| `pl`               | `14`  | [src/types/common.ts:47](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L47) |
+| `pt`               | `15`  | [src/types/common.ts:48](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L48) |
+| `ro`               | `24`  | [src/types/common.ts:57](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L57) |
+| `ru`               | `16`  | [src/types/common.ts:49](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L49) |
+| `sl`               | `25`  | [src/types/common.ts:58](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L58) |
+| `sq`               | `26`  | [src/types/common.ts:59](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L59) |
+| `sv`               | `18`  | [src/types/common.ts:51](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L51) |
+| `tr`               | `21`  | [src/types/common.ts:54](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L54) |
+| `uk`               | `20`  | [src/types/common.ts:53](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L53) |
 
 ---
 
@@ -87,13 +87,13 @@
 
 #### Enumeration Members
 
-| Enumeration Member | Value |
-| :----------------- | :---- |
-| `auto`             | `8`   |
-| `cool`             | `3`   |
-| `dry`              | `2`   |
-| `fan`              | `7`   |
-| `heat`             | `1`   |
+| Enumeration Member | Value | Defined in                                                                                                                           |
+| ------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `auto`             | `8`   | [src/types/ata.ts:18](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L18) |
+| `cool`             | `3`   | [src/types/ata.ts:16](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L16) |
+| `dry`              | `2`   | [src/types/ata.ts:15](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L15) |
+| `fan`              | `7`   | [src/types/ata.ts:17](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L17) |
+| `heat`             | `1`   | [src/types/ata.ts:14](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L14) |
 
 ---
 
@@ -101,14 +101,14 @@
 
 #### Enumeration Members
 
-| Enumeration Member | Value |
-| :----------------- | :---- |
-| `cooling`          | `3`   |
-| `defrost`          | `5`   |
-| `dhw`              | `1`   |
-| `heating`          | `2`   |
-| `idle`             | `0`   |
-| `legionella`       | `6`   |
+| Enumeration Member | Value | Defined in                                                                                                                           |
+| ------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `cooling`          | `3`   | [src/types/atw.ts:16](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L16) |
+| `defrost`          | `5`   | [src/types/atw.ts:17](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L17) |
+| `dhw`              | `1`   | [src/types/atw.ts:14](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L14) |
+| `heating`          | `2`   | [src/types/atw.ts:15](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L15) |
+| `idle`             | `0`   | [src/types/atw.ts:13](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L13) |
+| `legionella`       | `6`   | [src/types/atw.ts:18](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L18) |
 
 ---
 
@@ -116,13 +116,13 @@
 
 #### Enumeration Members
 
-| Enumeration Member | Value |
-| :----------------- | :---- |
-| `curve`            | `2`   |
-| `flow`             | `1`   |
-| `flow_cool`        | `4`   |
-| `room`             | `0`   |
-| `room_cool`        | `3`   |
+| Enumeration Member | Value | Defined in                                                                                                                           |
+| ------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `curve`            | `2`   | [src/types/atw.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L24) |
+| `flow`             | `1`   | [src/types/atw.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L23) |
+| `flow_cool`        | `4`   | [src/types/atw.ts:26](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L26) |
+| `room`             | `0`   | [src/types/atw.ts:22](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L22) |
+| `room_cool`        | `3`   | [src/types/atw.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L25) |
 
 ---
 
@@ -130,11 +130,11 @@
 
 #### Enumeration Members
 
-| Enumeration Member | Value |
-| :----------------- | :---- |
-| `auto`             | `2`   |
-| `bypass`           | `1`   |
-| `recovery`         | `0`   |
+| Enumeration Member | Value | Defined in                                                                                                                           |
+| ------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `auto`             | `2`   | [src/types/erv.ts:16](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L16) |
+| `bypass`           | `1`   | [src/types/erv.ts:15](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L15) |
+| `recovery`         | `0`   | [src/types/erv.ts:14](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L14) |
 
 ---
 
@@ -142,15 +142,15 @@
 
 #### Enumeration Members
 
-| Enumeration Member | Value |
-| :----------------- | :---- |
-| `auto`             | `0`   |
-| `downwards`        | `5`   |
-| `mid_high`         | `2`   |
-| `mid_low`          | `4`   |
-| `middle`           | `3`   |
-| `swing`            | `7`   |
-| `upwards`          | `1`   |
+| Enumeration Member | Value | Defined in                                                                                                                           |
+| ------------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `auto`             | `0`   | [src/types/ata.ts:22](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L22) |
+| `downwards`        | `5`   | [src/types/ata.ts:27](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L27) |
+| `mid_high`         | `2`   | [src/types/ata.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L24) |
+| `mid_low`          | `4`   | [src/types/ata.ts:26](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L26) |
+| `middle`           | `3`   | [src/types/ata.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L25) |
+| `swing`            | `7`   | [src/types/ata.ts:28](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L28) |
+| `upwards`          | `1`   | [src/types/ata.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L23) |
 
 ## Classes
 
@@ -175,7 +175,7 @@ new AreaFacade(api: default, model: AreaModelAny): AreaFacade
 ###### Parameters
 
 | Parameter | Type                                     |
-| :-------- | :--------------------------------------- |
+| --------- | ---------------------------------------- |
 | `api`     | [`default`](README.md#default)           |
 | `model`   | [`AreaModelAny`](README.md#areamodelany) |
 
@@ -187,23 +187,23 @@ new AreaFacade(api: default, model: AreaModelAny): AreaFacade
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`constructor`](README.md#constructors-3)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:86](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L86)
+[src/facades/base.ts:86](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L86)
 
 #### Properties
 
-| Property                   | Modifier    | Type                                         | Default value | Overrides                                                                              | Inherited from                                                                         |
-| :------------------------- | :---------- | :------------------------------------------- | :------------ | :------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
-| `api`                      | `readonly`  | [`default`](README.md#default)               | `undefined`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`api`                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`api`                      |
-| `frostProtectionLocation`  | `readonly`  | `"AreaIds"`                                  | `'AreaIds'`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`frostProtectionLocation`  | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`frostProtectionLocation`  |
-| `holidayModeLocation`      | `readonly`  | `"Areas"`                                    | `'Areas'`     | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`holidayModeLocation`      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`holidayModeLocation`      |
-| `id`                       | `readonly`  | `number`                                     | `undefined`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`id`                       | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`id`                       |
-| `isFrostProtectionDefined` | `protected` | `null` \| `boolean`                          | `null`        | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isFrostProtectionDefined` | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isFrostProtectionDefined` |
-| `isHolidayModeDefined`     | `protected` | `null` \| `boolean`                          | `null`        | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isHolidayModeDefined`     | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isHolidayModeDefined`     |
-| `modelClass`               | `readonly`  | _typeof_ [`AreaModel`](README.md#areamodelt) | `AreaModel`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`modelClass`               | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`modelClass`               |
-| `setAtaGroupSpecification` | `readonly`  | `"AreaID"`                                   | `'AreaID'`    | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`setAtaGroupSpecification` | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`setAtaGroupSpecification` |
-| `tableName`                | `readonly`  | `"Area"`                                     | `'Area'`      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`tableName`                | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`tableName`                |
+| Property                   | Modifier    | Type                                         | Default value | Overrides                                                                              | Inherited from                                                                         | Defined in                                                                                                                                 |
+| -------------------------- | ----------- | -------------------------------------------- | ------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `api`                      | `readonly`  | [`default`](README.md#default)               | `undefined`   | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`api`                      | [src/facades/base.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L74) |
+| `frostProtectionLocation`  | `readonly`  | `"AreaIds"`                                  | `'AreaIds'`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`frostProtectionLocation`  | -                                                                                      | [src/facades/area.ts:9](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/area.ts#L9)   |
+| `holidayModeLocation`      | `readonly`  | `"Areas"`                                    | `'Areas'`     | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`holidayModeLocation`      | -                                                                                      | [src/facades/area.ts:11](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/area.ts#L11) |
+| `id`                       | `readonly`  | `number`                                     | `undefined`   | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`id`                       | [src/facades/base.ts:68](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L68) |
+| `isFrostProtectionDefined` | `protected` | `null` \| `boolean`                          | `null`        | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isFrostProtectionDefined` | [src/facades/base.ts:70](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L70) |
+| `isHolidayModeDefined`     | `protected` | `null` \| `boolean`                          | `null`        | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isHolidayModeDefined`     | [src/facades/base.ts:72](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L72) |
+| `modelClass`               | `readonly`  | _typeof_ [`AreaModel`](README.md#areamodelt) | `AreaModel`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`modelClass`               | -                                                                                      | [src/facades/area.ts:13](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/area.ts#L13) |
+| `setAtaGroupSpecification` | `readonly`  | `"AreaID"`                                   | `'AreaID'`    | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`setAtaGroupSpecification` | -                                                                                      | [src/facades/area.ts:15](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/area.ts#L15) |
+| `tableName`                | `readonly`  | `"Area"`                                     | `'Area'`      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`tableName`                | -                                                                                      | [src/facades/area.ts:17](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/area.ts#L17) |
 
 #### Accessors
 
@@ -217,9 +217,13 @@ get protected model(): T
 
 `T`
 
-###### Source
+###### Inherited from
 
-[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L95)
+[`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`model`](README.md#model-2)
+
+###### Defined in
+
+[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L95)
 
 ##### name
 
@@ -231,9 +235,17 @@ get name(): string
 
 `string`
 
-###### Source
+###### Implementation of
 
-[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L91)
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`name`
+
+###### Inherited from
+
+[`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`name`](README.md#name-2)
+
+###### Defined in
+
+[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L91)
 
 #### Methods
 
@@ -267,16 +279,16 @@ getAta(): {
 }
 ```
 
-| Member                    | Type                                                 |
-| :------------------------ | :--------------------------------------------------- |
-| `FanSpeed`                | `null` \| [`FanSpeed`](README.md#fanspeed)           |
-| `OperationMode`           | `null` \| [`OperationMode`](README.md#operationmode) |
-| `Power`                   | `null` \| `boolean`                                  |
-| `SetTemperature`          | `null` \| `number`                                   |
-| `VaneHorizontalDirection` | `null` \| [`Horizontal`](README.md#horizontal)       |
-| `VaneHorizontalSwing`     | `null` \| `boolean`                                  |
-| `VaneVerticalDirection`   | `null` \| [`Vertical`](README.md#vertical)           |
-| `VaneVerticalSwing`       | `null` \| `boolean`                                  |
+| Name                      | Type                                                 | Defined in                                                                                                                                   |
+| ------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FanSpeed`                | `null` \| [`FanSpeed`](README.md#fanspeed)           | [src/types/common.ts:250](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L250) |
+| `OperationMode`           | `null` \| [`OperationMode`](README.md#operationmode) | [src/types/common.ts:251](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L251) |
+| `Power`                   | `null` \| `boolean`                                  | [src/types/common.ts:252](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L252) |
+| `SetTemperature`          | `null` \| `number`                                   | [src/types/common.ts:253](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L253) |
+| `VaneHorizontalDirection` | `null` \| [`Horizontal`](README.md#horizontal)       | [src/types/common.ts:254](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L254) |
+| `VaneHorizontalSwing`     | `null` \| `boolean`                                  | [src/types/common.ts:255](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L255) |
+| `VaneVerticalDirection`   | `null` \| [`Vertical`](README.md#vertical)           | [src/types/common.ts:256](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L256) |
+| `VaneVerticalSwing`       | `null` \| `boolean`                                  | [src/types/common.ts:257](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L257) |
 
 ###### Implementation of
 
@@ -286,9 +298,9 @@ getAta(): {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getAta`](README.md#getata-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base_super_device.ts:49](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base_super_device.ts#L49)
+[src/facades/base_super_device.ts:49](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base_super_device.ts#L49)
 
 ##### getErrors()
 
@@ -302,7 +314,7 @@ getErrors(__namedParameters: {
 ###### Parameters
 
 | Parameter                 | Type               |
-| :------------------------ | :----------------- |
+| ------------------------- | ------------------ |
 | `__namedParameters`       | `object`           |
 | `__namedParameters.from`? | `null` \| `string` |
 | `__namedParameters.to`?   | `null` \| `string` |
@@ -319,9 +331,9 @@ getErrors(__namedParameters: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getErrors`](README.md#geterrors-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L103)
+[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L103)
 
 ##### getFrostProtection()
 
@@ -341,9 +353,9 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getFrostProtection`](README.md#getfrostprotection-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L121)
+[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L121)
 
 ##### getHolidayMode()
 
@@ -363,9 +375,9 @@ getHolidayMode(): Promise<HolidayModeData>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getHolidayMode`](README.md#getholidaymode-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L134)
+[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L134)
 
 ##### getTiles()
 
@@ -378,7 +390,7 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 ###### Parameters
 
 | Parameter | Type              |
-| :-------- | :---------------- |
+| --------- | ----------------- |
 | `select`? | `null` \| `false` |
 
 ###### Returns
@@ -393,9 +405,9 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getTiles`](README.md#gettiles-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:147](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L147)
+[src/facades/base.ts:147](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L147)
 
 ###### getTiles(select)
 
@@ -403,16 +415,16 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 getTiles<K>(select: DeviceModel<K>): Promise<TilesData<K>>
 ```
 
-###### Type parameters
+###### Type Parameters
 
-| Type parameter                              |
-| :------------------------------------------ |
+| Type Parameter                              |
+| ------------------------------------------- |
 | `K` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Parameters
 
 | Parameter | Type                                           |
-| :-------- | :--------------------------------------------- |
+| --------- | ---------------------------------------------- |
 | `select`  | [`DeviceModel`](README.md#devicemodelt)\<`K`\> |
 
 ###### Returns
@@ -427,9 +439,9 @@ getTiles<K>(select: DeviceModel<K>): Promise<TilesData<K>>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getTiles`](README.md#gettiles-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:148](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L148)
+[src/facades/base.ts:148](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L148)
 
 ##### getWifiReport()
 
@@ -440,7 +452,7 @@ getWifiReport(hour: number): Promise<WifiData>
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `hour`    | `number` |
 
 ###### Returns
@@ -455,9 +467,9 @@ getWifiReport(hour: number): Promise<WifiData>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getWifiReport`](README.md#getwifireport-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L178)
+[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L178)
 
 ##### setAta()
 
@@ -477,7 +489,7 @@ setAta(postData: {
 ###### Parameters
 
 | Parameter                           | Type                                                 |
-| :---------------------------------- | :--------------------------------------------------- |
+| ----------------------------------- | ---------------------------------------------------- |
 | `postData`                          | `object`                                             |
 | `postData.FanSpeed`?                | `null` \| [`FanSpeed`](README.md#fanspeed)           |
 | `postData.OperationMode`?           | `null` \| [`OperationMode`](README.md#operationmode) |
@@ -500,9 +512,9 @@ setAta(postData: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setAta`](README.md#setata-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base_super_device.ts:57](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base_super_device.ts#L57)
+[src/facades/base_super_device.ts:57](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base_super_device.ts#L57)
 
 ##### setFrostProtection()
 
@@ -517,7 +529,7 @@ setFrostProtection(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type      |
-| :-------------------------- | :-------- |
+| --------------------------- | --------- |
 | `__namedParameters`         | `object`  |
 | `__namedParameters.enable`? | `boolean` |
 | `__namedParameters.max`     | `number`  |
@@ -535,9 +547,9 @@ setFrostProtection(__namedParameters: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setFrostProtection`](README.md#setfrostprotection-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L188)
+[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L188)
 
 ##### setHolidayMode()
 
@@ -553,7 +565,7 @@ setHolidayMode(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type               |
-| :-------------------------- | :----------------- |
+| --------------------------- | ------------------ |
 | `__namedParameters`         | `object`           |
 | `__namedParameters.days`?   | `number`           |
 | `__namedParameters.enable`? | `boolean`          |
@@ -572,9 +584,9 @@ setHolidayMode(__namedParameters: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setHolidayMode`](README.md#setholidaymode-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L221)
+[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L221)
 
 ##### setPower()
 
@@ -585,7 +597,7 @@ setPower(enable: boolean): Promise<boolean>
 ###### Parameters
 
 | Parameter | Type      | Default value |
-| :-------- | :-------- | :------------ |
+| --------- | --------- | ------------- |
 | `enable`  | `boolean` | `true`        |
 
 ###### Returns
@@ -600,9 +612,9 @@ setPower(enable: boolean): Promise<boolean>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setPower`](README.md#setpower-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L247)
+[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L247)
 
 ---
 
@@ -612,10 +624,10 @@ setPower(enable: boolean): Promise<boolean>
 
 - [`BaseModel`](README.md#basemodel)
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                   |
-| :------------------------------- |
+| Type Parameter                   |
+| -------------------------------- |
 | `T` _extends_ `number` \| `null` |
 
 #### Implements
@@ -624,12 +636,12 @@ setPower(enable: boolean): Promise<boolean>
 
 #### Properties
 
-| Property     | Modifier   | Type               | Inherited from                                    |
-| :----------- | :--------- | :----------------- | :------------------------------------------------ |
-| `buildingId` | `readonly` | `number`           | [`IAreaModel`](README.md#iareamodel).`buildingId` |
-| `floorId`    | `readonly` | `null` \| `number` | [`IAreaModel`](README.md#iareamodel).`floorId`    |
-| `id`         | `readonly` | `number`           | [`BaseModel`](README.md#basemodel).`id`           |
-| `name`       | `readonly` | `string`           | [`BaseModel`](README.md#basemodel).`name`         |
+| Property     | Modifier   | Type               | Inherited from                            | Defined in                                                                                                                               |
+| ------------ | ---------- | ------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildingId` | `readonly` | `number`           | -                                         | [src/models/area.ts:16](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L16) |
+| `floorId`    | `readonly` | `null` \| `number` | -                                         | [src/models/area.ts:18](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L18) |
+| `id`         | `readonly` | `number`           | [`BaseModel`](README.md#basemodel).`id`   | [src/models/base.ts:2](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L2)   |
+| `name`       | `readonly` | `string`           | [`BaseModel`](README.md#basemodel).`name` | [src/models/base.ts:4](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L4)   |
 
 #### Accessors
 
@@ -643,9 +655,13 @@ get building(): null | BuildingModel
 
 `null` \| [`BuildingModel`](README.md#buildingmodel)
 
-###### Source
+###### Implementation of
 
-[src/models/area.ts:31](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L31)
+[`IAreaModel`](README.md#iareamodel).`building`
+
+###### Defined in
+
+[src/models/area.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L31)
 
 ##### deviceIds
 
@@ -657,9 +673,13 @@ get deviceIds(): number[]
 
 `number`[]
 
-###### Source
+###### Implementation of
 
-[src/models/area.ts:35](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L35)
+[`IAreaModel`](README.md#iareamodel).`deviceIds`
+
+###### Defined in
+
+[src/models/area.ts:35](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L35)
 
 ##### devices
 
@@ -671,9 +691,13 @@ get devices(): DeviceModelAny[]
 
 [`DeviceModelAny`](README.md#devicemodelany)[]
 
-###### Source
+###### Implementation of
 
-[src/models/area.ts:39](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L39)
+[`IAreaModel`](README.md#iareamodel).`devices`
+
+###### Defined in
+
+[src/models/area.ts:39](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L39)
 
 ##### floor
 
@@ -685,9 +709,13 @@ get floor(): null | FloorModel
 
 `null` \| [`FloorModel`](README.md#floormodel)
 
-###### Source
+###### Implementation of
 
-[src/models/area.ts:43](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L43)
+[`IAreaModel`](README.md#iareamodel).`floor`
+
+###### Defined in
+
+[src/models/area.ts:43](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L43)
 
 #### Methods
 
@@ -701,9 +729,9 @@ static getAll(): AreaModelAny[]
 
 [`AreaModelAny`](README.md#areamodelany)[]
 
-###### Source
+###### Defined in
 
-[src/models/area.ts:49](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L49)
+[src/models/area.ts:49](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L49)
 
 ##### getByBuildingId()
 
@@ -714,16 +742,16 @@ static getByBuildingId(id: number): AreaModelAny[]
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `id`      | `number` |
 
 ###### Returns
 
 [`AreaModelAny`](README.md#areamodelany)[]
 
-###### Source
+###### Defined in
 
-[src/models/area.ts:53](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L53)
+[src/models/area.ts:53](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L53)
 
 ##### getByFloorId()
 
@@ -734,16 +762,16 @@ static getByFloorId(id: number): AreaModelAny[]
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `id`      | `number` |
 
 ###### Returns
 
 [`AreaModelAny`](README.md#areamodelany)[]
 
-###### Source
+###### Defined in
 
-[src/models/area.ts:57](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L57)
+[src/models/area.ts:57](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L57)
 
 ##### getById()
 
@@ -754,16 +782,16 @@ static getById(id: number): undefined | AreaModelAny
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `id`      | `number` |
 
 ###### Returns
 
 `undefined` \| [`AreaModelAny`](README.md#areamodelany)
 
-###### Source
+###### Defined in
 
-[src/models/area.ts:61](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L61)
+[src/models/area.ts:61](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L61)
 
 ##### getByName()
 
@@ -774,16 +802,16 @@ static getByName(name: string): undefined | AreaModelAny
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `name`    | `string` |
 
 ###### Returns
 
 `undefined` \| [`AreaModelAny`](README.md#areamodelany)
 
-###### Source
+###### Defined in
 
-[src/models/area.ts:65](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L65)
+[src/models/area.ts:65](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L65)
 
 ##### upsert()
 
@@ -794,16 +822,16 @@ static upsert(data: AreaDataAny): void
 ###### Parameters
 
 | Parameter | Type                                   |
-| :-------- | :------------------------------------- |
+| --------- | -------------------------------------- |
 | `data`    | [`AreaDataAny`](README.md#areadataany) |
 
 ###### Returns
 
 `void`
 
-###### Source
+###### Defined in
 
-[src/models/area.ts:69](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L69)
+[src/models/area.ts:69](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L69)
 
 ---
 
@@ -814,10 +842,10 @@ static upsert(data: AreaDataAny): void
 - [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet)
 - [`DeviceFacade`](README.md#devicefacadet)
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                                                                                                                                                                               |
-| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type Parameter                                                                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `T` _extends_ [`AreaModelAny`](README.md#areamodelany) \| [`BuildingModel`](README.md#buildingmodel) \| [`DeviceModelAny`](README.md#devicemodelany) \| [`FloorModel`](README.md#floormodel) |
 
 #### Implements
@@ -835,7 +863,7 @@ new BaseFacade<T>(api: default, model: T): BaseFacade<T>
 ###### Parameters
 
 | Parameter | Type                           |
-| :-------- | :----------------------------- |
+| --------- | ------------------------------ |
 | `api`     | [`default`](README.md#default) |
 | `model`   | `T`                            |
 
@@ -843,23 +871,23 @@ new BaseFacade<T>(api: default, model: T): BaseFacade<T>
 
 [`BaseFacade`](README.md#basefacadet)\<`T`\>
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:86](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L86)
+[src/facades/base.ts:86](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L86)
 
 #### Properties
 
-| Property                   | Modifier    | Type                                                                 | Default value |
-| :------------------------- | :---------- | :------------------------------------------------------------------- | :------------ |
-| `api`                      | `readonly`  | [`default`](README.md#default)                                       | `undefined`   |
-| `frostProtectionLocation`  | `abstract`  | keyof [`FrostProtectionLocation`](README.md#frostprotectionlocation) | `undefined`   |
-| `holidayModeLocation`      | `abstract`  | keyof [`HolidayModeLocation`](README.md#holidaymodelocation)         | `undefined`   |
-| `id`                       | `readonly`  | `number`                                                             | `undefined`   |
-| `isFrostProtectionDefined` | `protected` | `null` \| `boolean`                                                  | `null`        |
-| `isHolidayModeDefined`     | `protected` | `null` \| `boolean`                                                  | `null`        |
-| `modelClass`               | `abstract`  | \{ `getById`: (`id`: `number`) => `undefined` \| `T`; \}             | `undefined`   |
-| `modelClass.getById`       | `abstract`  | (`id`: `number`) => `undefined` \| `T`                               | `undefined`   |
-| `tableName`                | `public`    | `"Area"` \| `"Building"` \| `"DeviceLocation"` \| `"Floor"`          | `undefined`   |
+| Property                   | Modifier    | Type                                                                 | Default value | Defined in                                                                                                                                 |
+| -------------------------- | ----------- | -------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `api`                      | `readonly`  | [`default`](README.md#default)                                       | `undefined`   | [src/facades/base.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L74) |
+| `frostProtectionLocation`  | `abstract`  | keyof [`FrostProtectionLocation`](README.md#frostprotectionlocation) | `undefined`   | [src/facades/base.ts:76](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L76) |
+| `holidayModeLocation`      | `abstract`  | keyof [`HolidayModeLocation`](README.md#holidaymodelocation)         | `undefined`   | [src/facades/base.ts:78](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L78) |
+| `id`                       | `readonly`  | `number`                                                             | `undefined`   | [src/facades/base.ts:68](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L68) |
+| `isFrostProtectionDefined` | `protected` | `null` \| `boolean`                                                  | `null`        | [src/facades/base.ts:70](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L70) |
+| `isHolidayModeDefined`     | `protected` | `null` \| `boolean`                                                  | `null`        | [src/facades/base.ts:72](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L72) |
+| `modelClass`               | `abstract`  | \{ `getById`: (`id`: `number`) => `undefined` \| `T`; \}             | `undefined`   | [src/facades/base.ts:80](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L80) |
+| `modelClass.getById`       | `public`    | (`id`: `number`) => `undefined` \| `T`                               | `undefined`   | [src/facades/base.ts:81](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L81) |
+| `tableName`                | `abstract`  | `"Area"` \| `"Building"` \| `"DeviceLocation"` \| `"Floor"`          | `undefined`   | [src/facades/base.ts:84](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L84) |
 
 #### Accessors
 
@@ -873,9 +901,9 @@ get protected model(): T
 
 `T`
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L95)
+[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L95)
 
 ##### name
 
@@ -887,9 +915,13 @@ get name(): string
 
 `string`
 
-###### Source
+###### Implementation of
 
-[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L91)
+[`IBaseFacade`](README.md#ibasefacade).`name`
+
+###### Defined in
+
+[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L91)
 
 #### Methods
 
@@ -905,7 +937,7 @@ getErrors(__namedParameters: {
 ###### Parameters
 
 | Parameter                 | Type               |
-| :------------------------ | :----------------- |
+| ------------------------- | ------------------ |
 | `__namedParameters`       | `object`           |
 | `__namedParameters.from`? | `null` \| `string` |
 | `__namedParameters.to`?   | `null` \| `string` |
@@ -918,9 +950,9 @@ getErrors(__namedParameters: {
 
 [`IBaseFacade`](README.md#ibasefacade).`getErrors`
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L103)
+[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L103)
 
 ##### getFrostProtection()
 
@@ -936,9 +968,9 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 [`IBaseFacade`](README.md#ibasefacade).`getFrostProtection`
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L121)
+[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L121)
 
 ##### getHolidayMode()
 
@@ -954,9 +986,9 @@ getHolidayMode(): Promise<HolidayModeData>
 
 [`IBaseFacade`](README.md#ibasefacade).`getHolidayMode`
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L134)
+[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L134)
 
 ##### getTiles()
 
@@ -969,7 +1001,7 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 ###### Parameters
 
 | Parameter | Type              |
-| :-------- | :---------------- |
+| --------- | ----------------- |
 | `select`? | `null` \| `false` |
 
 ###### Returns
@@ -980,9 +1012,9 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 
 `IBaseFacade.getTiles`
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:147](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L147)
+[src/facades/base.ts:147](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L147)
 
 ###### getTiles(select)
 
@@ -990,16 +1022,16 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 getTiles<K>(select: DeviceModel<K>): Promise<TilesData<K>>
 ```
 
-###### Type parameters
+###### Type Parameters
 
-| Type parameter                              |
-| :------------------------------------------ |
+| Type Parameter                              |
+| ------------------------------------------- |
 | `K` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Parameters
 
 | Parameter | Type                                           |
-| :-------- | :--------------------------------------------- |
+| --------- | ---------------------------------------------- |
 | `select`  | [`DeviceModel`](README.md#devicemodelt)\<`K`\> |
 
 ###### Returns
@@ -1010,9 +1042,9 @@ getTiles<K>(select: DeviceModel<K>): Promise<TilesData<K>>
 
 `IBaseFacade.getTiles`
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:148](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L148)
+[src/facades/base.ts:148](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L148)
 
 ##### getWifiReport()
 
@@ -1023,7 +1055,7 @@ getWifiReport(hour: number): Promise<WifiData>
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `hour`    | `number` |
 
 ###### Returns
@@ -1034,9 +1066,9 @@ getWifiReport(hour: number): Promise<WifiData>
 
 [`IBaseFacade`](README.md#ibasefacade).`getWifiReport`
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L178)
+[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L178)
 
 ##### setFrostProtection()
 
@@ -1051,7 +1083,7 @@ setFrostProtection(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type      |
-| :-------------------------- | :-------- |
+| --------------------------- | --------- |
 | `__namedParameters`         | `object`  |
 | `__namedParameters.enable`? | `boolean` |
 | `__namedParameters.max`     | `number`  |
@@ -1065,9 +1097,9 @@ setFrostProtection(__namedParameters: {
 
 [`IBaseFacade`](README.md#ibasefacade).`setFrostProtection`
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L188)
+[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L188)
 
 ##### setHolidayMode()
 
@@ -1083,7 +1115,7 @@ setHolidayMode(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type               |
-| :-------------------------- | :----------------- |
+| --------------------------- | ------------------ |
 | `__namedParameters`         | `object`           |
 | `__namedParameters.days`?   | `number`           |
 | `__namedParameters.enable`? | `boolean`          |
@@ -1098,9 +1130,9 @@ setHolidayMode(__namedParameters: {
 
 `IBaseFacade.setHolidayMode`
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L221)
+[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L221)
 
 ##### setPower()
 
@@ -1111,7 +1143,7 @@ setPower(enable: boolean): Promise<boolean>
 ###### Parameters
 
 | Parameter | Type      | Default value |
-| :-------- | :-------- | :------------ |
+| --------- | --------- | ------------- |
 | `enable`  | `boolean` | `true`        |
 
 ###### Returns
@@ -1122,9 +1154,9 @@ setPower(enable: boolean): Promise<boolean>
 
 [`IBaseFacade`](README.md#ibasefacade).`setPower`
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L247)
+[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L247)
 
 ---
 
@@ -1151,7 +1183,7 @@ protected new BaseModel(__namedParameters: {
 ###### Parameters
 
 | Parameter                | Type     |
-| :----------------------- | :------- |
+| ------------------------ | -------- |
 | `__namedParameters`      | `object` |
 | `__namedParameters.id`   | `number` |
 | `__namedParameters.name` | `string` |
@@ -1160,16 +1192,16 @@ protected new BaseModel(__namedParameters: {
 
 [`BaseModel`](README.md#basemodel)
 
-###### Source
+###### Defined in
 
-[src/models/base.ts:6](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/base.ts#L6)
+[src/models/base.ts:6](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L6)
 
 #### Properties
 
-| Property | Modifier   | Type     |
-| :------- | :--------- | :------- |
-| `id`     | `readonly` | `number` |
-| `name`   | `readonly` | `string` |
+| Property | Modifier   | Type     | Defined in                                                                                                                             |
+| -------- | ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`     | `readonly` | `number` | [src/models/base.ts:2](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L2) |
+| `name`   | `readonly` | `string` | [src/models/base.ts:4](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L4) |
 
 ---
 
@@ -1185,10 +1217,10 @@ protected new BaseModel(__namedParameters: {
 - [`BuildingFacade`](README.md#buildingfacade)
 - [`FloorFacade`](README.md#floorfacade)
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                                                                                                                               |
-| :------------------------------------------------------------------------------------------------------------------------------------------- |
+| Type Parameter                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `T` _extends_ [`AreaModelAny`](README.md#areamodelany) \| [`BuildingModel`](README.md#buildingmodel) \| [`FloorModel`](README.md#floormodel) |
 
 #### Implements
@@ -1206,7 +1238,7 @@ new BaseSuperDeviceFacade<T>(api: default, model: T): BaseSuperDeviceFacade<T>
 ###### Parameters
 
 | Parameter | Type                           |
-| :-------- | :----------------------------- |
+| --------- | ------------------------------ |
 | `api`     | [`default`](README.md#default) |
 | `model`   | `T`                            |
 
@@ -1218,24 +1250,24 @@ new BaseSuperDeviceFacade<T>(api: default, model: T): BaseSuperDeviceFacade<T>
 
 [`BaseFacade`](README.md#basefacadet).[`constructor`](README.md#constructors-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:86](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L86)
+[src/facades/base.ts:86](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L86)
 
 #### Properties
 
-| Property                   | Modifier    | Type                                                                 | Default value | Inherited from                                                   |
-| :------------------------- | :---------- | :------------------------------------------------------------------- | :------------ | :--------------------------------------------------------------- |
-| `api`                      | `readonly`  | [`default`](README.md#default)                                       | `undefined`   | [`BaseFacade`](README.md#basefacadet).`api`                      |
-| `frostProtectionLocation`  | `abstract`  | keyof [`FrostProtectionLocation`](README.md#frostprotectionlocation) | `undefined`   | [`BaseFacade`](README.md#basefacadet).`frostProtectionLocation`  |
-| `holidayModeLocation`      | `abstract`  | keyof [`HolidayModeLocation`](README.md#holidaymodelocation)         | `undefined`   | [`BaseFacade`](README.md#basefacadet).`holidayModeLocation`      |
-| `id`                       | `readonly`  | `number`                                                             | `undefined`   | [`BaseFacade`](README.md#basefacadet).`id`                       |
-| `isFrostProtectionDefined` | `protected` | `null` \| `boolean`                                                  | `null`        | [`BaseFacade`](README.md#basefacadet).`isFrostProtectionDefined` |
-| `isHolidayModeDefined`     | `protected` | `null` \| `boolean`                                                  | `null`        | [`BaseFacade`](README.md#basefacadet).`isHolidayModeDefined`     |
-| `modelClass`               | `abstract`  | \{ `getById`: (`id`: `number`) => `undefined` \| `T`; \}             | `undefined`   | [`BaseFacade`](README.md#basefacadet).`modelClass`               |
-| `modelClass.getById`       | `abstract`  | (`id`: `number`) => `undefined` \| `T`                               | `undefined`   | -                                                                |
-| `setAtaGroupSpecification` | `abstract`  | `"AreaID"` \| `"BuildingID"` \| `"FloorID"`                          | `undefined`   | -                                                                |
-| `tableName`                | `public`    | `"Area"` \| `"Building"` \| `"DeviceLocation"` \| `"Floor"`          | `undefined`   | [`BaseFacade`](README.md#basefacadet).`tableName`                |
+| Property                   | Modifier    | Type                                                                 | Default value | Inherited from                                                   | Defined in                                                                                                                                                           |
+| -------------------------- | ----------- | -------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api`                      | `readonly`  | [`default`](README.md#default)                                       | `undefined`   | [`BaseFacade`](README.md#basefacadet).`api`                      | [src/facades/base.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L74)                           |
+| `frostProtectionLocation`  | `abstract`  | keyof [`FrostProtectionLocation`](README.md#frostprotectionlocation) | `undefined`   | [`BaseFacade`](README.md#basefacadet).`frostProtectionLocation`  | [src/facades/base.ts:76](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L76)                           |
+| `holidayModeLocation`      | `abstract`  | keyof [`HolidayModeLocation`](README.md#holidaymodelocation)         | `undefined`   | [`BaseFacade`](README.md#basefacadet).`holidayModeLocation`      | [src/facades/base.ts:78](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L78)                           |
+| `id`                       | `readonly`  | `number`                                                             | `undefined`   | [`BaseFacade`](README.md#basefacadet).`id`                       | [src/facades/base.ts:68](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L68)                           |
+| `isFrostProtectionDefined` | `protected` | `null` \| `boolean`                                                  | `null`        | [`BaseFacade`](README.md#basefacadet).`isFrostProtectionDefined` | [src/facades/base.ts:70](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L70)                           |
+| `isHolidayModeDefined`     | `protected` | `null` \| `boolean`                                                  | `null`        | [`BaseFacade`](README.md#basefacadet).`isHolidayModeDefined`     | [src/facades/base.ts:72](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L72)                           |
+| `modelClass`               | `abstract`  | \{ `getById`: (`id`: `number`) => `undefined` \| `T`; \}             | `undefined`   | [`BaseFacade`](README.md#basefacadet).`modelClass`               | [src/facades/base.ts:80](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L80)                           |
+| `modelClass.getById`       | `public`    | (`id`: `number`) => `undefined` \| `T`                               | `undefined`   | -                                                                | [src/facades/base.ts:81](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L81)                           |
+| `setAtaGroupSpecification` | `abstract`  | `"AreaID"` \| `"BuildingID"` \| `"FloorID"`                          | `undefined`   | -                                                                | [src/facades/base_super_device.ts:47](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base_super_device.ts#L47) |
+| `tableName`                | `abstract`  | `"Area"` \| `"Building"` \| `"DeviceLocation"` \| `"Floor"`          | `undefined`   | [`BaseFacade`](README.md#basefacadet).`tableName`                | [src/facades/base.ts:84](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L84)                           |
 
 #### Accessors
 
@@ -1249,9 +1281,13 @@ get protected model(): T
 
 `T`
 
-###### Source
+###### Inherited from
 
-[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L95)
+[`BaseFacade`](README.md#basefacadet).[`model`](README.md#model-1)
+
+###### Defined in
+
+[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L95)
 
 ##### name
 
@@ -1263,9 +1299,17 @@ get name(): string
 
 `string`
 
-###### Source
+###### Implementation of
 
-[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L91)
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`name`
+
+###### Inherited from
+
+[`BaseFacade`](README.md#basefacadet).[`name`](README.md#name-1)
+
+###### Defined in
+
+[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L91)
 
 #### Methods
 
@@ -1299,24 +1343,24 @@ getAta(): {
 }
 ```
 
-| Member                    | Type                                                 |
-| :------------------------ | :--------------------------------------------------- |
-| `FanSpeed`                | `null` \| [`FanSpeed`](README.md#fanspeed)           |
-| `OperationMode`           | `null` \| [`OperationMode`](README.md#operationmode) |
-| `Power`                   | `null` \| `boolean`                                  |
-| `SetTemperature`          | `null` \| `number`                                   |
-| `VaneHorizontalDirection` | `null` \| [`Horizontal`](README.md#horizontal)       |
-| `VaneHorizontalSwing`     | `null` \| `boolean`                                  |
-| `VaneVerticalDirection`   | `null` \| [`Vertical`](README.md#vertical)           |
-| `VaneVerticalSwing`       | `null` \| `boolean`                                  |
+| Name                      | Type                                                 | Defined in                                                                                                                                   |
+| ------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FanSpeed`                | `null` \| [`FanSpeed`](README.md#fanspeed)           | [src/types/common.ts:250](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L250) |
+| `OperationMode`           | `null` \| [`OperationMode`](README.md#operationmode) | [src/types/common.ts:251](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L251) |
+| `Power`                   | `null` \| `boolean`                                  | [src/types/common.ts:252](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L252) |
+| `SetTemperature`          | `null` \| `number`                                   | [src/types/common.ts:253](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L253) |
+| `VaneHorizontalDirection` | `null` \| [`Horizontal`](README.md#horizontal)       | [src/types/common.ts:254](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L254) |
+| `VaneHorizontalSwing`     | `null` \| `boolean`                                  | [src/types/common.ts:255](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L255) |
+| `VaneVerticalDirection`   | `null` \| [`Vertical`](README.md#vertical)           | [src/types/common.ts:256](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L256) |
+| `VaneVerticalSwing`       | `null` \| `boolean`                                  | [src/types/common.ts:257](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L257) |
 
 ###### Implementation of
 
 [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getAta`
 
-###### Source
+###### Defined in
 
-[src/facades/base_super_device.ts:49](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base_super_device.ts#L49)
+[src/facades/base_super_device.ts:49](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base_super_device.ts#L49)
 
 ##### getErrors()
 
@@ -1330,7 +1374,7 @@ getErrors(__namedParameters: {
 ###### Parameters
 
 | Parameter                 | Type               |
-| :------------------------ | :----------------- |
+| ------------------------- | ------------------ |
 | `__namedParameters`       | `object`           |
 | `__namedParameters.from`? | `null` \| `string` |
 | `__namedParameters.to`?   | `null` \| `string` |
@@ -1347,9 +1391,9 @@ getErrors(__namedParameters: {
 
 [`BaseFacade`](README.md#basefacadet).[`getErrors`](README.md#geterrors-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L103)
+[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L103)
 
 ##### getFrostProtection()
 
@@ -1369,9 +1413,9 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 [`BaseFacade`](README.md#basefacadet).[`getFrostProtection`](README.md#getfrostprotection-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L121)
+[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L121)
 
 ##### getHolidayMode()
 
@@ -1391,9 +1435,9 @@ getHolidayMode(): Promise<HolidayModeData>
 
 [`BaseFacade`](README.md#basefacadet).[`getHolidayMode`](README.md#getholidaymode-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L134)
+[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L134)
 
 ##### getTiles()
 
@@ -1406,7 +1450,7 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 ###### Parameters
 
 | Parameter | Type              |
-| :-------- | :---------------- |
+| --------- | ----------------- |
 | `select`? | `null` \| `false` |
 
 ###### Returns
@@ -1421,9 +1465,9 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 
 [`BaseFacade`](README.md#basefacadet).[`getTiles`](README.md#gettiles-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:147](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L147)
+[src/facades/base.ts:147](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L147)
 
 ###### getTiles(select)
 
@@ -1431,16 +1475,16 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 getTiles<K>(select: DeviceModel<K>): Promise<TilesData<K>>
 ```
 
-###### Type parameters
+###### Type Parameters
 
-| Type parameter                              |
-| :------------------------------------------ |
+| Type Parameter                              |
+| ------------------------------------------- |
 | `K` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Parameters
 
 | Parameter | Type                                           |
-| :-------- | :--------------------------------------------- |
+| --------- | ---------------------------------------------- |
 | `select`  | [`DeviceModel`](README.md#devicemodelt)\<`K`\> |
 
 ###### Returns
@@ -1455,9 +1499,9 @@ getTiles<K>(select: DeviceModel<K>): Promise<TilesData<K>>
 
 [`BaseFacade`](README.md#basefacadet).[`getTiles`](README.md#gettiles-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:148](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L148)
+[src/facades/base.ts:148](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L148)
 
 ##### getWifiReport()
 
@@ -1468,7 +1512,7 @@ getWifiReport(hour: number): Promise<WifiData>
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `hour`    | `number` |
 
 ###### Returns
@@ -1483,9 +1527,9 @@ getWifiReport(hour: number): Promise<WifiData>
 
 [`BaseFacade`](README.md#basefacadet).[`getWifiReport`](README.md#getwifireport-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L178)
+[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L178)
 
 ##### setAta()
 
@@ -1505,7 +1549,7 @@ setAta(postData: {
 ###### Parameters
 
 | Parameter                           | Type                                                 |
-| :---------------------------------- | :--------------------------------------------------- |
+| ----------------------------------- | ---------------------------------------------------- |
 | `postData`                          | `object`                                             |
 | `postData.FanSpeed`?                | `null` \| [`FanSpeed`](README.md#fanspeed)           |
 | `postData.OperationMode`?           | `null` \| [`OperationMode`](README.md#operationmode) |
@@ -1524,9 +1568,9 @@ setAta(postData: {
 
 [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setAta`
 
-###### Source
+###### Defined in
 
-[src/facades/base_super_device.ts:57](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base_super_device.ts#L57)
+[src/facades/base_super_device.ts:57](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base_super_device.ts#L57)
 
 ##### setFrostProtection()
 
@@ -1541,7 +1585,7 @@ setFrostProtection(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type      |
-| :-------------------------- | :-------- |
+| --------------------------- | --------- |
 | `__namedParameters`         | `object`  |
 | `__namedParameters.enable`? | `boolean` |
 | `__namedParameters.max`     | `number`  |
@@ -1559,9 +1603,9 @@ setFrostProtection(__namedParameters: {
 
 [`BaseFacade`](README.md#basefacadet).[`setFrostProtection`](README.md#setfrostprotection-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L188)
+[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L188)
 
 ##### setHolidayMode()
 
@@ -1577,7 +1621,7 @@ setHolidayMode(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type               |
-| :-------------------------- | :----------------- |
+| --------------------------- | ------------------ |
 | `__namedParameters`         | `object`           |
 | `__namedParameters.days`?   | `number`           |
 | `__namedParameters.enable`? | `boolean`          |
@@ -1596,9 +1640,9 @@ setHolidayMode(__namedParameters: {
 
 [`BaseFacade`](README.md#basefacadet).[`setHolidayMode`](README.md#setholidaymode-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L221)
+[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L221)
 
 ##### setPower()
 
@@ -1609,7 +1653,7 @@ setPower(enable: boolean): Promise<boolean>
 ###### Parameters
 
 | Parameter | Type      | Default value |
-| :-------- | :-------- | :------------ |
+| --------- | --------- | ------------- |
 | `enable`  | `boolean` | `true`        |
 
 ###### Returns
@@ -1624,9 +1668,9 @@ setPower(enable: boolean): Promise<boolean>
 
 [`BaseFacade`](README.md#basefacadet).[`setPower`](README.md#setpower-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L247)
+[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L247)
 
 ---
 
@@ -1651,7 +1695,7 @@ new BuildingFacade(api: default, model: BuildingModel): BuildingFacade
 ###### Parameters
 
 | Parameter | Type                                       |
-| :-------- | :----------------------------------------- |
+| --------- | ------------------------------------------ |
 | `api`     | [`default`](README.md#default)             |
 | `model`   | [`BuildingModel`](README.md#buildingmodel) |
 
@@ -1663,23 +1707,23 @@ new BuildingFacade(api: default, model: BuildingModel): BuildingFacade
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`constructor`](README.md#constructors-3)
 
-###### Source
+###### Defined in
 
-[src/facades/building.ts:21](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/building.ts#L21)
+[src/facades/building.ts:21](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/building.ts#L21)
 
 #### Properties
 
-| Property                   | Modifier    | Type                                                | Default value   | Overrides                                                                              | Inherited from                                                                         |
-| :------------------------- | :---------- | :-------------------------------------------------- | :-------------- | :------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
-| `api`                      | `readonly`  | [`default`](README.md#default)                      | `undefined`     | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`api`                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`api`                      |
-| `frostProtectionLocation`  | `readonly`  | `"BuildingIds"`                                     | `'BuildingIds'` | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`frostProtectionLocation`  | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`frostProtectionLocation`  |
-| `holidayModeLocation`      | `readonly`  | `"Buildings"`                                       | `'Buildings'`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`holidayModeLocation`      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`holidayModeLocation`      |
-| `id`                       | `readonly`  | `number`                                            | `undefined`     | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`id`                       | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`id`                       |
-| `isFrostProtectionDefined` | `protected` | `null` \| `boolean`                                 | `null`          | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isFrostProtectionDefined` | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isFrostProtectionDefined` |
-| `isHolidayModeDefined`     | `protected` | `null` \| `boolean`                                 | `null`          | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isHolidayModeDefined`     | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isHolidayModeDefined`     |
-| `modelClass`               | `readonly`  | _typeof_ [`BuildingModel`](README.md#buildingmodel) | `BuildingModel` | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`modelClass`               | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`modelClass`               |
-| `setAtaGroupSpecification` | `readonly`  | `"BuildingID"`                                      | `'BuildingID'`  | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`setAtaGroupSpecification` | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`setAtaGroupSpecification` |
-| `tableName`                | `readonly`  | `"Building"`                                        | `'Building'`    | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`tableName`                | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`tableName`                |
+| Property                   | Modifier    | Type                                                | Default value   | Overrides                                                                              | Inherited from                                                                         | Defined in                                                                                                                                         |
+| -------------------------- | ----------- | --------------------------------------------------- | --------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api`                      | `readonly`  | [`default`](README.md#default)                      | `undefined`     | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`api`                      | [src/facades/base.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L74)         |
+| `frostProtectionLocation`  | `readonly`  | `"BuildingIds"`                                     | `'BuildingIds'` | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`frostProtectionLocation`  | -                                                                                      | [src/facades/building.ts:11](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/building.ts#L11) |
+| `holidayModeLocation`      | `readonly`  | `"Buildings"`                                       | `'Buildings'`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`holidayModeLocation`      | -                                                                                      | [src/facades/building.ts:13](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/building.ts#L13) |
+| `id`                       | `readonly`  | `number`                                            | `undefined`     | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`id`                       | [src/facades/base.ts:68](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L68)         |
+| `isFrostProtectionDefined` | `protected` | `null` \| `boolean`                                 | `null`          | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isFrostProtectionDefined` | [src/facades/base.ts:70](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L70)         |
+| `isHolidayModeDefined`     | `protected` | `null` \| `boolean`                                 | `null`          | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isHolidayModeDefined`     | [src/facades/base.ts:72](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L72)         |
+| `modelClass`               | `readonly`  | _typeof_ [`BuildingModel`](README.md#buildingmodel) | `BuildingModel` | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`modelClass`               | -                                                                                      | [src/facades/building.ts:15](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/building.ts#L15) |
+| `setAtaGroupSpecification` | `readonly`  | `"BuildingID"`                                      | `'BuildingID'`  | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`setAtaGroupSpecification` | -                                                                                      | [src/facades/building.ts:17](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/building.ts#L17) |
+| `tableName`                | `readonly`  | `"Building"`                                        | `'Building'`    | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`tableName`                | -                                                                                      | [src/facades/building.ts:19](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/building.ts#L19) |
 
 #### Accessors
 
@@ -1693,9 +1737,13 @@ get protected model(): T
 
 `T`
 
-###### Source
+###### Inherited from
 
-[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L95)
+[`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`model`](README.md#model-2)
+
+###### Defined in
+
+[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L95)
 
 ##### name
 
@@ -1707,9 +1755,17 @@ get name(): string
 
 `string`
 
-###### Source
+###### Implementation of
 
-[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L91)
+[`IBuildingFacade`](README.md#ibuildingfacade).`name`
+
+###### Inherited from
+
+[`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`name`](README.md#name-2)
+
+###### Defined in
+
+[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L91)
 
 ##### settings
 
@@ -1721,9 +1777,13 @@ get settings(): BuildingSettings
 
 [`BuildingSettings`](README.md#buildingsettings)
 
-###### Source
+###### Implementation of
 
-[src/facades/building.ts:27](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/building.ts#L27)
+[`IBuildingFacade`](README.md#ibuildingfacade).`settings`
+
+###### Defined in
+
+[src/facades/building.ts:27](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/building.ts#L27)
 
 #### Methods
 
@@ -1741,9 +1801,9 @@ actualData(): Promise<BuildingData>
 
 [`IBuildingFacade`](README.md#ibuildingfacade).`actualData`
 
-###### Source
+###### Defined in
 
-[src/facades/building.ts:31](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/building.ts#L31)
+[src/facades/building.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/building.ts#L31)
 
 ##### fetch()
 
@@ -1759,9 +1819,9 @@ fetch(): Promise<BuildingSettings>
 
 [`IBuildingFacade`](README.md#ibuildingfacade).`fetch`
 
-###### Source
+###### Defined in
 
-[src/facades/building.ts:40](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/building.ts#L40)
+[src/facades/building.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/building.ts#L40)
 
 ##### getAta()
 
@@ -1793,16 +1853,16 @@ getAta(): {
 }
 ```
 
-| Member                    | Type                                                 |
-| :------------------------ | :--------------------------------------------------- |
-| `FanSpeed`                | `null` \| [`FanSpeed`](README.md#fanspeed)           |
-| `OperationMode`           | `null` \| [`OperationMode`](README.md#operationmode) |
-| `Power`                   | `null` \| `boolean`                                  |
-| `SetTemperature`          | `null` \| `number`                                   |
-| `VaneHorizontalDirection` | `null` \| [`Horizontal`](README.md#horizontal)       |
-| `VaneHorizontalSwing`     | `null` \| `boolean`                                  |
-| `VaneVerticalDirection`   | `null` \| [`Vertical`](README.md#vertical)           |
-| `VaneVerticalSwing`       | `null` \| `boolean`                                  |
+| Name                      | Type                                                 | Defined in                                                                                                                                   |
+| ------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FanSpeed`                | `null` \| [`FanSpeed`](README.md#fanspeed)           | [src/types/common.ts:250](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L250) |
+| `OperationMode`           | `null` \| [`OperationMode`](README.md#operationmode) | [src/types/common.ts:251](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L251) |
+| `Power`                   | `null` \| `boolean`                                  | [src/types/common.ts:252](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L252) |
+| `SetTemperature`          | `null` \| `number`                                   | [src/types/common.ts:253](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L253) |
+| `VaneHorizontalDirection` | `null` \| [`Horizontal`](README.md#horizontal)       | [src/types/common.ts:254](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L254) |
+| `VaneHorizontalSwing`     | `null` \| `boolean`                                  | [src/types/common.ts:255](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L255) |
+| `VaneVerticalDirection`   | `null` \| [`Vertical`](README.md#vertical)           | [src/types/common.ts:256](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L256) |
+| `VaneVerticalSwing`       | `null` \| `boolean`                                  | [src/types/common.ts:257](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L257) |
 
 ###### Implementation of
 
@@ -1812,9 +1872,9 @@ getAta(): {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getAta`](README.md#getata-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base_super_device.ts:49](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base_super_device.ts#L49)
+[src/facades/base_super_device.ts:49](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base_super_device.ts#L49)
 
 ##### getErrors()
 
@@ -1828,7 +1888,7 @@ getErrors(__namedParameters: {
 ###### Parameters
 
 | Parameter                 | Type               |
-| :------------------------ | :----------------- |
+| ------------------------- | ------------------ |
 | `__namedParameters`       | `object`           |
 | `__namedParameters.from`? | `null` \| `string` |
 | `__namedParameters.to`?   | `null` \| `string` |
@@ -1845,9 +1905,9 @@ getErrors(__namedParameters: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getErrors`](README.md#geterrors-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L103)
+[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L103)
 
 ##### getFrostProtection()
 
@@ -1867,9 +1927,9 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getFrostProtection`](README.md#getfrostprotection-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L121)
+[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L121)
 
 ##### getHolidayMode()
 
@@ -1889,9 +1949,9 @@ getHolidayMode(): Promise<HolidayModeData>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getHolidayMode`](README.md#getholidaymode-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L134)
+[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L134)
 
 ##### getTiles()
 
@@ -1904,7 +1964,7 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 ###### Parameters
 
 | Parameter | Type              |
-| :-------- | :---------------- |
+| --------- | ----------------- |
 | `select`? | `null` \| `false` |
 
 ###### Returns
@@ -1919,9 +1979,9 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getTiles`](README.md#gettiles-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:147](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L147)
+[src/facades/base.ts:147](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L147)
 
 ###### getTiles(select)
 
@@ -1929,16 +1989,16 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 getTiles<K>(select: DeviceModel<K>): Promise<TilesData<K>>
 ```
 
-###### Type parameters
+###### Type Parameters
 
-| Type parameter                              |
-| :------------------------------------------ |
+| Type Parameter                              |
+| ------------------------------------------- |
 | `K` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Parameters
 
 | Parameter | Type                                           |
-| :-------- | :--------------------------------------------- |
+| --------- | ---------------------------------------------- |
 | `select`  | [`DeviceModel`](README.md#devicemodelt)\<`K`\> |
 
 ###### Returns
@@ -1953,9 +2013,9 @@ getTiles<K>(select: DeviceModel<K>): Promise<TilesData<K>>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getTiles`](README.md#gettiles-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:148](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L148)
+[src/facades/base.ts:148](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L148)
 
 ##### getWifiReport()
 
@@ -1966,7 +2026,7 @@ getWifiReport(hour: number): Promise<WifiData>
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `hour`    | `number` |
 
 ###### Returns
@@ -1981,9 +2041,9 @@ getWifiReport(hour: number): Promise<WifiData>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getWifiReport`](README.md#getwifireport-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L178)
+[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L178)
 
 ##### setAta()
 
@@ -2003,7 +2063,7 @@ setAta(postData: {
 ###### Parameters
 
 | Parameter                           | Type                                                 |
-| :---------------------------------- | :--------------------------------------------------- |
+| ----------------------------------- | ---------------------------------------------------- |
 | `postData`                          | `object`                                             |
 | `postData.FanSpeed`?                | `null` \| [`FanSpeed`](README.md#fanspeed)           |
 | `postData.OperationMode`?           | `null` \| [`OperationMode`](README.md#operationmode) |
@@ -2026,9 +2086,9 @@ setAta(postData: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setAta`](README.md#setata-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base_super_device.ts:57](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base_super_device.ts#L57)
+[src/facades/base_super_device.ts:57](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base_super_device.ts#L57)
 
 ##### setFrostProtection()
 
@@ -2043,7 +2103,7 @@ setFrostProtection(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type      |
-| :-------------------------- | :-------- |
+| --------------------------- | --------- |
 | `__namedParameters`         | `object`  |
 | `__namedParameters.enable`? | `boolean` |
 | `__namedParameters.max`     | `number`  |
@@ -2061,9 +2121,9 @@ setFrostProtection(__namedParameters: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setFrostProtection`](README.md#setfrostprotection-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L188)
+[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L188)
 
 ##### setHolidayMode()
 
@@ -2079,7 +2139,7 @@ setHolidayMode(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type               |
-| :-------------------------- | :----------------- |
+| --------------------------- | ------------------ |
 | `__namedParameters`         | `object`           |
 | `__namedParameters.days`?   | `number`           |
 | `__namedParameters.enable`? | `boolean`          |
@@ -2098,9 +2158,9 @@ setHolidayMode(__namedParameters: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setHolidayMode`](README.md#setholidaymode-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L221)
+[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L221)
 
 ##### setPower()
 
@@ -2111,7 +2171,7 @@ setPower(enable: boolean): Promise<boolean>
 ###### Parameters
 
 | Parameter | Type      | Default value |
-| :-------- | :-------- | :------------ |
+| --------- | --------- | ------------- |
 | `enable`  | `boolean` | `true`        |
 
 ###### Returns
@@ -2126,9 +2186,9 @@ setPower(enable: boolean): Promise<boolean>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setPower`](README.md#setpower-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L247)
+[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L247)
 
 ---
 
@@ -2144,11 +2204,11 @@ setPower(enable: boolean): Promise<boolean>
 
 #### Properties
 
-| Property   | Modifier   | Type                                             | Inherited from                                          |
-| :--------- | :--------- | :----------------------------------------------- | :------------------------------------------------------ |
-| `id`       | `readonly` | `number`                                         | [`BaseModel`](README.md#basemodel).`id`                 |
-| `name`     | `readonly` | `string`                                         | [`BaseModel`](README.md#basemodel).`name`               |
-| `settings` | `readonly` | [`BuildingSettings`](README.md#buildingsettings) | [`IBuildingModel`](README.md#ibuildingmodel).`settings` |
+| Property   | Modifier   | Type                                             | Inherited from                            | Defined in                                                                                                                                       |
+| ---------- | ---------- | ------------------------------------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`       | `readonly` | `number`                                         | [`BaseModel`](README.md#basemodel).`id`   | [src/models/base.ts:2](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L2)           |
+| `name`     | `readonly` | `string`                                         | [`BaseModel`](README.md#basemodel).`name` | [src/models/base.ts:4](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L4)           |
+| `settings` | `readonly` | [`BuildingSettings`](README.md#buildingsettings) | -                                         | [src/models/building.ts:11](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L11) |
 
 #### Accessors
 
@@ -2162,9 +2222,13 @@ get areaIds(): number[]
 
 `number`[]
 
-###### Source
+###### Implementation of
 
-[src/models/building.ts:18](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/building.ts#L18)
+[`IBuildingModel`](README.md#ibuildingmodel).`areaIds`
+
+###### Defined in
+
+[src/models/building.ts:18](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L18)
 
 ##### areas
 
@@ -2176,9 +2240,13 @@ get areas(): AreaModelAny[]
 
 [`AreaModelAny`](README.md#areamodelany)[]
 
-###### Source
+###### Implementation of
 
-[src/models/building.ts:22](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/building.ts#L22)
+[`IBuildingModel`](README.md#ibuildingmodel).`areas`
+
+###### Defined in
+
+[src/models/building.ts:22](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L22)
 
 ##### deviceIds
 
@@ -2190,9 +2258,13 @@ get deviceIds(): number[]
 
 `number`[]
 
-###### Source
+###### Implementation of
 
-[src/models/building.ts:26](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/building.ts#L26)
+[`IBuildingModel`](README.md#ibuildingmodel).`deviceIds`
+
+###### Defined in
+
+[src/models/building.ts:26](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L26)
 
 ##### devices
 
@@ -2204,9 +2276,13 @@ get devices(): DeviceModelAny[]
 
 [`DeviceModelAny`](README.md#devicemodelany)[]
 
-###### Source
+###### Implementation of
 
-[src/models/building.ts:30](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/building.ts#L30)
+[`IBuildingModel`](README.md#ibuildingmodel).`devices`
+
+###### Defined in
+
+[src/models/building.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L30)
 
 ##### floorIds
 
@@ -2218,9 +2294,13 @@ get floorIds(): number[]
 
 `number`[]
 
-###### Source
+###### Implementation of
 
-[src/models/building.ts:34](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/building.ts#L34)
+[`IBuildingModel`](README.md#ibuildingmodel).`floorIds`
+
+###### Defined in
+
+[src/models/building.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L34)
 
 ##### floors
 
@@ -2232,9 +2312,13 @@ get floors(): FloorModel[]
 
 [`FloorModel`](README.md#floormodel)[]
 
-###### Source
+###### Implementation of
 
-[src/models/building.ts:38](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/building.ts#L38)
+[`IBuildingModel`](README.md#ibuildingmodel).`floors`
+
+###### Defined in
+
+[src/models/building.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L38)
 
 #### Methods
 
@@ -2248,9 +2332,9 @@ static getAll(): BuildingModel[]
 
 [`BuildingModel`](README.md#buildingmodel)[]
 
-###### Source
+###### Defined in
 
-[src/models/building.ts:42](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/building.ts#L42)
+[src/models/building.ts:42](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L42)
 
 ##### getById()
 
@@ -2261,16 +2345,16 @@ static getById(id: number): undefined | BuildingModel
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `id`      | `number` |
 
 ###### Returns
 
 `undefined` \| [`BuildingModel`](README.md#buildingmodel)
 
-###### Source
+###### Defined in
 
-[src/models/building.ts:46](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/building.ts#L46)
+[src/models/building.ts:46](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L46)
 
 ##### getByName()
 
@@ -2281,16 +2365,16 @@ static getByName(name: string): undefined | BuildingModel
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `name`    | `string` |
 
 ###### Returns
 
 `undefined` \| [`BuildingModel`](README.md#buildingmodel)
 
-###### Source
+###### Defined in
 
-[src/models/building.ts:50](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/building.ts#L50)
+[src/models/building.ts:50](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L50)
 
 ##### upsert()
 
@@ -2301,16 +2385,16 @@ static upsert(data: BuildingData): void
 ###### Parameters
 
 | Parameter | Type                                     |
-| :-------- | :--------------------------------------- |
+| --------- | ---------------------------------------- |
 | `data`    | [`BuildingData`](README.md#buildingdata) |
 
 ###### Returns
 
 `void`
 
-###### Source
+###### Defined in
 
-[src/models/building.ts:54](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/building.ts#L54)
+[src/models/building.ts:54](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/building.ts#L54)
 
 ---
 
@@ -2320,10 +2404,10 @@ static upsert(data: BuildingData): void
 
 - [`BaseFacade`](README.md#basefacadet)\<[`DeviceModelAny`](README.md#devicemodelany)\>
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                                                    |
-| :---------------------------------------------------------------- |
+| Type Parameter                                                    |
+| ----------------------------------------------------------------- |
 | `T` _extends_ keyof _typeof_ [`DeviceType`](README.md#devicetype) |
 
 #### Implements
@@ -2341,7 +2425,7 @@ new DeviceFacade<T>(api: default, model: DeviceModel<T>): DeviceFacade<T>
 ###### Parameters
 
 | Parameter | Type                                           |
-| :-------- | :--------------------------------------------- |
+| --------- | ---------------------------------------------- |
 | `api`     | [`default`](README.md#default)                 |
 | `model`   | [`DeviceModel`](README.md#devicemodelt)\<`T`\> |
 
@@ -2353,34 +2437,34 @@ new DeviceFacade<T>(api: default, model: DeviceModel<T>): DeviceFacade<T>
 
 [`BaseFacade`](README.md#basefacadet).[`constructor`](README.md#constructors-1)
 
-###### Source
+###### Defined in
 
-[src/facades/device.ts:41](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/device.ts#L41)
+[src/facades/device.ts:41](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L41)
 
 #### Properties
 
-| Property                     | Modifier    | Type                                                                                                                 | Default value      | Overrides                                                        | Inherited from                                                   |
-| :--------------------------- | :---------- | :------------------------------------------------------------------------------------------------------------------- | :----------------- | :--------------------------------------------------------------- | :--------------------------------------------------------------- |
-| `api`                        | `readonly`  | [`default`](README.md#default)                                                                                       | `undefined`        | [`BaseFacade`](README.md#basefacadet).`api`                      | [`BaseFacade`](README.md#basefacadet).`api`                      |
-| `flags`                      | `readonly`  | `Record`\<`Exclude`\<keyof [`UpdateDeviceData`](README.md#updatedevicedata)\[`T`\], `"EffectiveFlags"`\>, `number`\> | `undefined`        | [`IDeviceFacade`](README.md#idevicefacadet).`flags`              | [`IDeviceFacade`](README.md#idevicefacadet).`flags`              |
-| `frostProtectionLocation`    | `readonly`  | `"DeviceIds"`                                                                                                        | `'DeviceIds'`      | [`BaseFacade`](README.md#basefacadet).`frostProtectionLocation`  | [`BaseFacade`](README.md#basefacadet).`frostProtectionLocation`  |
-| `holidayModeLocation`        | `readonly`  | `"Devices"`                                                                                                          | `'Devices'`        | [`BaseFacade`](README.md#basefacadet).`holidayModeLocation`      | [`BaseFacade`](README.md#basefacadet).`holidayModeLocation`      |
-| `id`                         | `readonly`  | `number`                                                                                                             | `undefined`        | [`BaseFacade`](README.md#basefacadet).`id`                       | [`BaseFacade`](README.md#basefacadet).`id`                       |
-| `isFrostProtectionDefined`   | `protected` | `null` \| `boolean`                                                                                                  | `null`             | [`BaseFacade`](README.md#basefacadet).`isFrostProtectionDefined` | [`BaseFacade`](README.md#basefacadet).`isFrostProtectionDefined` |
-| `isHolidayModeDefined`       | `protected` | `null` \| `boolean`                                                                                                  | `null`             | [`BaseFacade`](README.md#basefacadet).`isHolidayModeDefined`     | [`BaseFacade`](README.md#basefacadet).`isHolidayModeDefined`     |
-| `modelClass`                 | `readonly`  | (`__namedParameters`: [`ListDevice`](README.md#listdevice)\[`T`\]) => [`DeviceModel`](README.md#devicemodelt)\<`T`\> | `...`              | [`BaseFacade`](README.md#basefacadet).`modelClass`               | [`BaseFacade`](README.md#basefacadet).`modelClass`               |
-| `modelClass.prototype`       | `readonly`  | [`DeviceModel`](README.md#devicemodelt)\<`any`\>                                                                     | `undefined`        | -                                                                | -                                                                |
-| `modelClass.getAll`          | `readonly`  | [`DeviceModelAny`](README.md#devicemodelany)[]                                                                       | `undefined`        | -                                                                | -                                                                |
-| `modelClass.getByAreaId`     | `public`    | [`DeviceModelAny`](README.md#devicemodelany)[]                                                                       | `undefined`        | -                                                                | -                                                                |
-| `modelClass.getByBuildingId` | `public`    | [`DeviceModelAny`](README.md#devicemodelany)[]                                                                       | `undefined`        | -                                                                | -                                                                |
-| `modelClass.getByFloorId`    | `public`    | [`DeviceModelAny`](README.md#devicemodelany)[]                                                                       | `undefined`        | -                                                                | -                                                                |
-| `modelClass.getById`         | `public`    | `undefined` \| [`DeviceModelAny`](README.md#devicemodelany)                                                          | `undefined`        | -                                                                | -                                                                |
-| `modelClass.getByName`       | `public`    | `undefined` \| [`DeviceModelAny`](README.md#devicemodelany)                                                          | `undefined`        | -                                                                | -                                                                |
-| `modelClass.getByType`       | `public`    | [`DeviceModelAny`](README.md#devicemodelany)[]                                                                       | `undefined`        | -                                                                | -                                                                |
-| `modelClass.upsert`          | `public`    | `void`                                                                                                               | `undefined`        | -                                                                | -                                                                |
-| `modelClass.upsertMany`      | `public`    | `void`                                                                                                               | `undefined`        | -                                                                | -                                                                |
-| `tableName`                  | `public`    | `"DeviceLocation"`                                                                                                   | `'DeviceLocation'` | [`BaseFacade`](README.md#basefacadet).`tableName`                | [`BaseFacade`](README.md#basefacadet).`tableName`                |
-| `type`                       | `public`    | `T`                                                                                                                  | `undefined`        | [`IDeviceFacade`](README.md#idevicefacadet).`type`               | [`IDeviceFacade`](README.md#idevicefacadet).`type`               |
+| Property                     | Modifier    | Type                                                                                                                 | Default value      | Overrides                                                       | Inherited from                                                   | Defined in                                                                                                                                     |
+| ---------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api`                        | `readonly`  | [`default`](README.md#default)                                                                                       | `undefined`        | -                                                               | [`BaseFacade`](README.md#basefacadet).`api`                      | [src/facades/base.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L74)     |
+| `flags`                      | `readonly`  | `Record`\<`Exclude`\<keyof [`UpdateDeviceData`](README.md#updatedevicedata)\[`T`\], `"EffectiveFlags"`\>, `number`\> | `undefined`        | -                                                               | -                                                                | [src/facades/device.ts:29](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L29) |
+| `frostProtectionLocation`    | `readonly`  | `"DeviceIds"`                                                                                                        | `'DeviceIds'`      | [`BaseFacade`](README.md#basefacadet).`frostProtectionLocation` | -                                                                | [src/facades/device.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L33) |
+| `holidayModeLocation`        | `readonly`  | `"Devices"`                                                                                                          | `'Devices'`        | [`BaseFacade`](README.md#basefacadet).`holidayModeLocation`     | -                                                                | [src/facades/device.ts:35](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L35) |
+| `id`                         | `readonly`  | `number`                                                                                                             | `undefined`        | -                                                               | [`BaseFacade`](README.md#basefacadet).`id`                       | [src/facades/base.ts:68](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L68)     |
+| `isFrostProtectionDefined`   | `protected` | `null` \| `boolean`                                                                                                  | `null`             | -                                                               | [`BaseFacade`](README.md#basefacadet).`isFrostProtectionDefined` | [src/facades/base.ts:70](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L70)     |
+| `isHolidayModeDefined`       | `protected` | `null` \| `boolean`                                                                                                  | `null`             | -                                                               | [`BaseFacade`](README.md#basefacadet).`isHolidayModeDefined`     | [src/facades/base.ts:72](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L72)     |
+| `modelClass`                 | `readonly`  | (`__namedParameters`: [`ListDevice`](README.md#listdevice)\[`T`\]) => [`DeviceModel`](README.md#devicemodelt)\<`T`\> | `undefined`        | [`BaseFacade`](README.md#basefacadet).`modelClass`              | -                                                                | [src/facades/device.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L37) |
+| `modelClass.prototype`       | `public`    | [`DeviceModel`](README.md#devicemodelt)\<`any`\>                                                                     | `undefined`        | -                                                               | -                                                                |                                                                                                                                                |
+| `modelClass.getAll`          | `public`    | [`DeviceModelAny`](README.md#devicemodelany)[]                                                                       | `undefined`        | -                                                               | -                                                                | [src/models/device.ts:60](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L60)   |
+| `modelClass.getByAreaId`     | `public`    | [`DeviceModelAny`](README.md#devicemodelany)[]                                                                       | `undefined`        | -                                                               | -                                                                | [src/models/device.ts:64](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L64)   |
+| `modelClass.getByBuildingId` | `public`    | [`DeviceModelAny`](README.md#devicemodelany)[]                                                                       | `undefined`        | -                                                               | -                                                                | [src/models/device.ts:68](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L68)   |
+| `modelClass.getByFloorId`    | `public`    | [`DeviceModelAny`](README.md#devicemodelany)[]                                                                       | `undefined`        | -                                                               | -                                                                | [src/models/device.ts:72](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L72)   |
+| `modelClass.getById`         | `public`    | `undefined` \| [`DeviceModelAny`](README.md#devicemodelany)                                                          | `undefined`        | -                                                               | -                                                                | [src/models/device.ts:76](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L76)   |
+| `modelClass.getByName`       | `public`    | `undefined` \| [`DeviceModelAny`](README.md#devicemodelany)                                                          | `undefined`        | -                                                               | -                                                                | [src/models/device.ts:80](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L80)   |
+| `modelClass.getByType`       | `public`    | [`DeviceModelAny`](README.md#devicemodelany)[]                                                                       | `undefined`        | -                                                               | -                                                                | [src/models/device.ts:84](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L84)   |
+| `modelClass.upsert`          | `public`    | `void`                                                                                                               | `undefined`        | -                                                               | -                                                                | [src/models/device.ts:88](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L88)   |
+| `modelClass.upsertMany`      | `public`    | `void`                                                                                                               | `undefined`        | -                                                               | -                                                                | [src/models/device.ts:92](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L92)   |
+| `tableName`                  | `readonly`  | `"DeviceLocation"`                                                                                                   | `'DeviceLocation'` | [`BaseFacade`](README.md#basefacadet).`tableName`               | -                                                                | [src/facades/device.ts:39](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L39) |
+| `type`                       | `readonly`  | `T`                                                                                                                  | `undefined`        | -                                                               | -                                                                | [src/facades/device.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L31) |
 
 #### Accessors
 
@@ -2394,9 +2478,13 @@ get data(): ListDevice[T]["Device"]
 
 [`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\]
 
-###### Source
+###### Implementation of
 
-[src/facades/device.ts:47](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/device.ts#L47)
+[`IDeviceFacade`](README.md#idevicefacadet).`data`
+
+###### Defined in
+
+[src/facades/device.ts:47](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L47)
 
 ##### model
 
@@ -2408,9 +2496,13 @@ get protected model(): T
 
 `T`
 
-###### Source
+###### Inherited from
 
-[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L95)
+[`BaseFacade`](README.md#basefacadet).[`model`](README.md#model-1)
+
+###### Defined in
+
+[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L95)
 
 ##### name
 
@@ -2422,9 +2514,17 @@ get name(): string
 
 `string`
 
-###### Source
+###### Implementation of
 
-[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L91)
+[`IDeviceFacade`](README.md#idevicefacadet).`name`
+
+###### Inherited from
+
+[`BaseFacade`](README.md#basefacadet).[`name`](README.md#name-1)
+
+###### Defined in
+
+[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L91)
 
 #### Methods
 
@@ -2442,9 +2542,9 @@ fetch(): Promise<ListDevice[T]["Device"]>
 
 [`IDeviceFacade`](README.md#idevicefacadet).`fetch`
 
-###### Source
+###### Defined in
 
-[src/facades/device.ts:51](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/device.ts#L51)
+[src/facades/device.ts:51](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L51)
 
 ##### get()
 
@@ -2460,9 +2560,9 @@ get(): Promise<GetDeviceData[T]>
 
 [`IDeviceFacade`](README.md#idevicefacadet).`get`
 
-###### Source
+###### Defined in
 
-[src/facades/device.ts:56](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/device.ts#L56)
+[src/facades/device.ts:56](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L56)
 
 ##### getEnergyReport()
 
@@ -2476,7 +2576,7 @@ getEnergyReport(__namedParameters: {
 ###### Parameters
 
 | Parameter                 | Type               |
-| :------------------------ | :----------------- |
+| ------------------------- | ------------------ |
 | `__namedParameters`       | `object`           |
 | `__namedParameters.from`? | `null` \| `string` |
 | `__namedParameters.to`?   | `null` \| `string` |
@@ -2489,9 +2589,9 @@ getEnergyReport(__namedParameters: {
 
 [`IDeviceFacade`](README.md#idevicefacadet).`getEnergyReport`
 
-###### Source
+###### Defined in
 
-[src/facades/device.ts:64](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/device.ts#L64)
+[src/facades/device.ts:64](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L64)
 
 ##### getErrors()
 
@@ -2505,7 +2605,7 @@ getErrors(__namedParameters: {
 ###### Parameters
 
 | Parameter                 | Type               |
-| :------------------------ | :----------------- |
+| ------------------------- | ------------------ |
 | `__namedParameters`       | `object`           |
 | `__namedParameters.from`? | `null` \| `string` |
 | `__namedParameters.to`?   | `null` \| `string` |
@@ -2522,9 +2622,9 @@ getErrors(__namedParameters: {
 
 [`BaseFacade`](README.md#basefacadet).[`getErrors`](README.md#geterrors-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L103)
+[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L103)
 
 ##### getFrostProtection()
 
@@ -2544,9 +2644,9 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 [`BaseFacade`](README.md#basefacadet).[`getFrostProtection`](README.md#getfrostprotection-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L121)
+[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L121)
 
 ##### getHolidayMode()
 
@@ -2566,9 +2666,9 @@ getHolidayMode(): Promise<HolidayModeData>
 
 [`BaseFacade`](README.md#basefacadet).[`getHolidayMode`](README.md#getholidaymode-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L134)
+[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L134)
 
 ##### getTiles()
 
@@ -2581,7 +2681,7 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 ###### Parameters
 
 | Parameter | Type              |
-| :-------- | :---------------- |
+| --------- | ----------------- |
 | `select`? | `null` \| `false` |
 
 ###### Returns
@@ -2596,9 +2696,9 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 
 [`BaseFacade`](README.md#basefacadet).[`getTiles`](README.md#gettiles-1)
 
-###### Source
+###### Defined in
 
-[src/facades/device.ts:85](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/device.ts#L85)
+[src/facades/device.ts:85](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L85)
 
 ###### getTiles(select)
 
@@ -2609,7 +2709,7 @@ getTiles(select: true | DeviceModel<T>): Promise<TilesData<T>>
 ###### Parameters
 
 | Parameter | Type                                                     |
-| :-------- | :------------------------------------------------------- |
+| --------- | -------------------------------------------------------- |
 | `select`  | `true` \| [`DeviceModel`](README.md#devicemodelt)\<`T`\> |
 
 ###### Returns
@@ -2624,9 +2724,9 @@ getTiles(select: true | DeviceModel<T>): Promise<TilesData<T>>
 
 [`BaseFacade`](README.md#basefacadet).[`getTiles`](README.md#gettiles-1)
 
-###### Source
+###### Defined in
 
-[src/facades/device.ts:88](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/device.ts#L88)
+[src/facades/device.ts:88](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L88)
 
 ##### getWifiReport()
 
@@ -2637,7 +2737,7 @@ getWifiReport(hour: number): Promise<WifiData>
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `hour`    | `number` |
 
 ###### Returns
@@ -2652,9 +2752,9 @@ getWifiReport(hour: number): Promise<WifiData>
 
 [`BaseFacade`](README.md#basefacadet).[`getWifiReport`](README.md#getwifireport-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L178)
+[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L178)
 
 ##### set()
 
@@ -2665,7 +2765,7 @@ set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]>
 ###### Parameters
 
 | Parameter  | Type                                                    |
-| :--------- | :------------------------------------------------------ |
+| ---------- | ------------------------------------------------------- |
 | `postData` | [`UpdateDeviceData`](README.md#updatedevicedata)\[`T`\] |
 
 ###### Returns
@@ -2676,9 +2776,9 @@ set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]>
 
 [`IDeviceFacade`](README.md#idevicefacadet).`set`
 
-###### Source
+###### Defined in
 
-[src/facades/device.ts:100](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/device.ts#L100)
+[src/facades/device.ts:100](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L100)
 
 ##### setFrostProtection()
 
@@ -2693,7 +2793,7 @@ setFrostProtection(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type      |
-| :-------------------------- | :-------- |
+| --------------------------- | --------- |
 | `__namedParameters`         | `object`  |
 | `__namedParameters.enable`? | `boolean` |
 | `__namedParameters.max`     | `number`  |
@@ -2711,9 +2811,9 @@ setFrostProtection(__namedParameters: {
 
 [`BaseFacade`](README.md#basefacadet).[`setFrostProtection`](README.md#setfrostprotection-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L188)
+[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L188)
 
 ##### setHolidayMode()
 
@@ -2729,7 +2829,7 @@ setHolidayMode(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type               |
-| :-------------------------- | :----------------- |
+| --------------------------- | ------------------ |
 | `__namedParameters`         | `object`           |
 | `__namedParameters.days`?   | `number`           |
 | `__namedParameters.enable`? | `boolean`          |
@@ -2748,9 +2848,9 @@ setHolidayMode(__namedParameters: {
 
 [`BaseFacade`](README.md#basefacadet).[`setHolidayMode`](README.md#setholidaymode-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L221)
+[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L221)
 
 ##### setPower()
 
@@ -2761,7 +2861,7 @@ setPower(enable: boolean): Promise<boolean>
 ###### Parameters
 
 | Parameter | Type      | Default value |
-| :-------- | :-------- | :------------ |
+| --------- | --------- | ------------- |
 | `enable`  | `boolean` | `true`        |
 
 ###### Returns
@@ -2776,9 +2876,9 @@ setPower(enable: boolean): Promise<boolean>
 
 [`BaseFacade`](README.md#basefacadet).[`setPower`](README.md#setpower-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L247)
+[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L247)
 
 ---
 
@@ -2788,10 +2888,10 @@ setPower(enable: boolean): Promise<boolean>
 
 - [`BaseModel`](README.md#basemodel)
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                                                    |
-| :---------------------------------------------------------------- |
+| Type Parameter                                                    |
+| ----------------------------------------------------------------- |
 | `T` _extends_ keyof _typeof_ [`DeviceType`](README.md#devicetype) |
 
 #### Implements
@@ -2800,15 +2900,15 @@ setPower(enable: boolean): Promise<boolean>
 
 #### Properties
 
-| Property     | Modifier   | Type                                                      | Default value | Inherited from                                         |
-| :----------- | :--------- | :-------------------------------------------------------- | :------------ | :----------------------------------------------------- |
-| `areaId`     | `readonly` | `null` \| `number`                                        | `null`        | [`IDeviceModel`](README.md#idevicemodelt).`areaId`     |
-| `buildingId` | `readonly` | `number`                                                  | `undefined`   | [`IDeviceModel`](README.md#idevicemodelt).`buildingId` |
-| `data`       | `readonly` | [`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\] | `undefined`   | [`IDeviceModel`](README.md#idevicemodelt).`data`       |
-| `floorId`    | `readonly` | `null` \| `number`                                        | `null`        | [`IDeviceModel`](README.md#idevicemodelt).`floorId`    |
-| `id`         | `readonly` | `number`                                                  | `undefined`   | [`BaseModel`](README.md#basemodel).`id`                |
-| `name`       | `readonly` | `string`                                                  | `undefined`   | [`BaseModel`](README.md#basemodel).`name`              |
-| `type`       | `readonly` | `T`                                                       | `undefined`   | [`IDeviceModel`](README.md#idevicemodelt).`type`       |
+| Property     | Modifier   | Type                                                      | Default value | Inherited from                            | Defined in                                                                                                                                   |
+| ------------ | ---------- | --------------------------------------------------------- | ------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areaId`     | `readonly` | `null` \| `number`                                        | `null`        | -                                         | [src/models/device.ts:19](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L19) |
+| `buildingId` | `readonly` | `number`                                                  | `undefined`   | -                                         | [src/models/device.ts:21](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L21) |
+| `data`       | `readonly` | [`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\] | `undefined`   | -                                         | [src/models/device.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L23) |
+| `floorId`    | `readonly` | `null` \| `number`                                        | `null`        | -                                         | [src/models/device.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L25) |
+| `id`         | `readonly` | `number`                                                  | `undefined`   | [`BaseModel`](README.md#basemodel).`id`   | [src/models/base.ts:2](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L2)       |
+| `name`       | `readonly` | `string`                                                  | `undefined`   | [`BaseModel`](README.md#basemodel).`name` | [src/models/base.ts:4](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L4)       |
+| `type`       | `readonly` | `T`                                                       | `undefined`   | -                                         | [src/models/device.ts:27](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L27) |
 
 #### Accessors
 
@@ -2822,9 +2922,13 @@ get area(): null | AreaModelAny
 
 `null` \| [`AreaModelAny`](README.md#areamodelany)
 
-###### Source
+###### Implementation of
 
-[src/models/device.ts:46](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L46)
+[`IDeviceModel`](README.md#idevicemodelt).`area`
+
+###### Defined in
+
+[src/models/device.ts:46](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L46)
 
 ##### building
 
@@ -2836,9 +2940,13 @@ get building(): null | BuildingModel
 
 `null` \| [`BuildingModel`](README.md#buildingmodel)
 
-###### Source
+###### Implementation of
 
-[src/models/device.ts:50](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L50)
+[`IDeviceModel`](README.md#idevicemodelt).`building`
+
+###### Defined in
+
+[src/models/device.ts:50](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L50)
 
 ##### floor
 
@@ -2850,9 +2958,13 @@ get floor(): null | FloorModel
 
 `null` \| [`FloorModel`](README.md#floormodel)
 
-###### Source
+###### Implementation of
 
-[src/models/device.ts:54](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L54)
+[`IDeviceModel`](README.md#idevicemodelt).`floor`
+
+###### Defined in
+
+[src/models/device.ts:54](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L54)
 
 #### Methods
 
@@ -2866,9 +2978,9 @@ static getAll(): DeviceModelAny[]
 
 [`DeviceModelAny`](README.md#devicemodelany)[]
 
-###### Source
+###### Defined in
 
-[src/models/device.ts:60](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L60)
+[src/models/device.ts:60](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L60)
 
 ##### getByAreaId()
 
@@ -2879,16 +2991,16 @@ static getByAreaId(id: number): DeviceModelAny[]
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `id`      | `number` |
 
 ###### Returns
 
 [`DeviceModelAny`](README.md#devicemodelany)[]
 
-###### Source
+###### Defined in
 
-[src/models/device.ts:64](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L64)
+[src/models/device.ts:64](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L64)
 
 ##### getByBuildingId()
 
@@ -2899,16 +3011,16 @@ static getByBuildingId(id: number): DeviceModelAny[]
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `id`      | `number` |
 
 ###### Returns
 
 [`DeviceModelAny`](README.md#devicemodelany)[]
 
-###### Source
+###### Defined in
 
-[src/models/device.ts:68](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L68)
+[src/models/device.ts:68](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L68)
 
 ##### getByFloorId()
 
@@ -2919,16 +3031,16 @@ static getByFloorId(id: number): DeviceModelAny[]
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `id`      | `number` |
 
 ###### Returns
 
 [`DeviceModelAny`](README.md#devicemodelany)[]
 
-###### Source
+###### Defined in
 
-[src/models/device.ts:72](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L72)
+[src/models/device.ts:72](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L72)
 
 ##### getById()
 
@@ -2939,16 +3051,16 @@ static getById(id: number): undefined | DeviceModelAny
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `id`      | `number` |
 
 ###### Returns
 
 `undefined` \| [`DeviceModelAny`](README.md#devicemodelany)
 
-###### Source
+###### Defined in
 
-[src/models/device.ts:76](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L76)
+[src/models/device.ts:76](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L76)
 
 ##### getByName()
 
@@ -2959,16 +3071,16 @@ static getByName(name: string): undefined | DeviceModelAny
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `name`    | `string` |
 
 ###### Returns
 
 `undefined` \| [`DeviceModelAny`](README.md#devicemodelany)
 
-###### Source
+###### Defined in
 
-[src/models/device.ts:80](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L80)
+[src/models/device.ts:80](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L80)
 
 ##### getByType()
 
@@ -2979,16 +3091,16 @@ static getByType(type: "Ata" | "Atw" | "Erv"): DeviceModelAny[]
 ###### Parameters
 
 | Parameter | Type                          |
-| :-------- | :---------------------------- |
+| --------- | ----------------------------- |
 | `type`    | `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Returns
 
 [`DeviceModelAny`](README.md#devicemodelany)[]
 
-###### Source
+###### Defined in
 
-[src/models/device.ts:84](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L84)
+[src/models/device.ts:84](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L84)
 
 ##### upsert()
 
@@ -2999,16 +3111,16 @@ static upsert(data: ListDeviceAny): void
 ###### Parameters
 
 | Parameter | Type                                       |
-| :-------- | :----------------------------------------- |
+| --------- | ------------------------------------------ |
 | `data`    | [`ListDeviceAny`](README.md#listdeviceany) |
 
 ###### Returns
 
 `void`
 
-###### Source
+###### Defined in
 
-[src/models/device.ts:88](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L88)
+[src/models/device.ts:88](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L88)
 
 ##### upsertMany()
 
@@ -3019,16 +3131,16 @@ static upsertMany(dataList: readonly ListDeviceAny[]): void
 ###### Parameters
 
 | Parameter  | Type                                                  |
-| :--------- | :---------------------------------------------------- |
+| ---------- | ----------------------------------------------------- |
 | `dataList` | readonly [`ListDeviceAny`](README.md#listdeviceany)[] |
 
 ###### Returns
 
 `void`
 
-###### Source
+###### Defined in
 
-[src/models/device.ts:92](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L92)
+[src/models/device.ts:92](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L92)
 
 ---
 
@@ -3045,16 +3157,16 @@ new FacadeManager(api: default): FacadeManager
 ###### Parameters
 
 | Parameter | Type                           |
-| :-------- | :----------------------------- |
+| --------- | ------------------------------ |
 | `api`     | [`default`](README.md#default) |
 
 ###### Returns
 
 [`FacadeManager`](README.md#facademanager)
 
-###### Source
+###### Defined in
 
-[src/facades/manager.ts:24](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/manager.ts#L24)
+[src/facades/manager.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/manager.ts#L24)
 
 #### Methods
 
@@ -3069,16 +3181,16 @@ get(model: AreaModelAny): AreaFacade
 ###### Parameters
 
 | Parameter | Type                                     |
-| :-------- | :--------------------------------------- |
+| --------- | ---------------------------------------- |
 | `model`   | [`AreaModelAny`](README.md#areamodelany) |
 
 ###### Returns
 
 [`AreaFacade`](README.md#areafacade)
 
-###### Source
+###### Defined in
 
-[src/facades/manager.ts:28](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/manager.ts#L28)
+[src/facades/manager.ts:28](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/manager.ts#L28)
 
 ###### get(model)
 
@@ -3089,16 +3201,16 @@ get(model: BuildingModel): BuildingFacade
 ###### Parameters
 
 | Parameter | Type                                       |
-| :-------- | :----------------------------------------- |
+| --------- | ------------------------------------------ |
 | `model`   | [`BuildingModel`](README.md#buildingmodel) |
 
 ###### Returns
 
 [`BuildingFacade`](README.md#buildingfacade)
 
-###### Source
+###### Defined in
 
-[src/facades/manager.ts:29](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/manager.ts#L29)
+[src/facades/manager.ts:29](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/manager.ts#L29)
 
 ###### get(model)
 
@@ -3106,25 +3218,25 @@ get(model: BuildingModel): BuildingFacade
 get<T>(model: DeviceModel<T>): DeviceFacade<T>
 ```
 
-###### Type parameters
+###### Type Parameters
 
-| Type parameter                              |
-| :------------------------------------------ |
+| Type Parameter                              |
+| ------------------------------------------- |
 | `T` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Parameters
 
 | Parameter | Type                                           |
-| :-------- | :--------------------------------------------- |
+| --------- | ---------------------------------------------- |
 | `model`   | [`DeviceModel`](README.md#devicemodelt)\<`T`\> |
 
 ###### Returns
 
 [`DeviceFacade`](README.md#devicefacadet)\<`T`\>
 
-###### Source
+###### Defined in
 
-[src/facades/manager.ts:30](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/manager.ts#L30)
+[src/facades/manager.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/manager.ts#L30)
 
 ###### get(model)
 
@@ -3135,16 +3247,16 @@ get(model: FloorModel): FloorFacade
 ###### Parameters
 
 | Parameter | Type                                 |
-| :-------- | :----------------------------------- |
+| --------- | ------------------------------------ |
 | `model`   | [`FloorModel`](README.md#floormodel) |
 
 ###### Returns
 
 [`FloorFacade`](README.md#floorfacade)
 
-###### Source
+###### Defined in
 
-[src/facades/manager.ts:33](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/manager.ts#L33)
+[src/facades/manager.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/manager.ts#L33)
 
 ---
 
@@ -3169,7 +3281,7 @@ new FloorFacade(api: default, model: FloorModel): FloorFacade
 ###### Parameters
 
 | Parameter | Type                                 |
-| :-------- | :----------------------------------- |
+| --------- | ------------------------------------ |
 | `api`     | [`default`](README.md#default)       |
 | `model`   | [`FloorModel`](README.md#floormodel) |
 
@@ -3181,23 +3293,23 @@ new FloorFacade(api: default, model: FloorModel): FloorFacade
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`constructor`](README.md#constructors-3)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:86](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L86)
+[src/facades/base.ts:86](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L86)
 
 #### Properties
 
-| Property                   | Modifier    | Type                                          | Default value | Overrides                                                                              | Inherited from                                                                         |
-| :------------------------- | :---------- | :-------------------------------------------- | :------------ | :------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
-| `api`                      | `readonly`  | [`default`](README.md#default)                | `undefined`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`api`                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`api`                      |
-| `frostProtectionLocation`  | `readonly`  | `"FloorIds"`                                  | `'FloorIds'`  | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`frostProtectionLocation`  | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`frostProtectionLocation`  |
-| `holidayModeLocation`      | `readonly`  | `"Floors"`                                    | `'Floors'`    | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`holidayModeLocation`      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`holidayModeLocation`      |
-| `id`                       | `readonly`  | `number`                                      | `undefined`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`id`                       | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`id`                       |
-| `isFrostProtectionDefined` | `protected` | `null` \| `boolean`                           | `null`        | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isFrostProtectionDefined` | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isFrostProtectionDefined` |
-| `isHolidayModeDefined`     | `protected` | `null` \| `boolean`                           | `null`        | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isHolidayModeDefined`     | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isHolidayModeDefined`     |
-| `modelClass`               | `readonly`  | _typeof_ [`FloorModel`](README.md#floormodel) | `FloorModel`  | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`modelClass`               | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`modelClass`               |
-| `setAtaGroupSpecification` | `readonly`  | `"FloorID"`                                   | `'FloorID'`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`setAtaGroupSpecification` | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`setAtaGroupSpecification` |
-| `tableName`                | `readonly`  | `"Floor"`                                     | `'Floor'`     | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`tableName`                | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`tableName`                |
+| Property                   | Modifier    | Type                                          | Default value | Overrides                                                                              | Inherited from                                                                         | Defined in                                                                                                                                   |
+| -------------------------- | ----------- | --------------------------------------------- | ------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api`                      | `readonly`  | [`default`](README.md#default)                | `undefined`   | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`api`                      | [src/facades/base.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L74)   |
+| `frostProtectionLocation`  | `readonly`  | `"FloorIds"`                                  | `'FloorIds'`  | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`frostProtectionLocation`  | -                                                                                      | [src/facades/floor.ts:9](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/floor.ts#L9)   |
+| `holidayModeLocation`      | `readonly`  | `"Floors"`                                    | `'Floors'`    | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`holidayModeLocation`      | -                                                                                      | [src/facades/floor.ts:11](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/floor.ts#L11) |
+| `id`                       | `readonly`  | `number`                                      | `undefined`   | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`id`                       | [src/facades/base.ts:68](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L68)   |
+| `isFrostProtectionDefined` | `protected` | `null` \| `boolean`                           | `null`        | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isFrostProtectionDefined` | [src/facades/base.ts:70](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L70)   |
+| `isHolidayModeDefined`     | `protected` | `null` \| `boolean`                           | `null`        | -                                                                                      | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`isHolidayModeDefined`     | [src/facades/base.ts:72](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L72)   |
+| `modelClass`               | `readonly`  | _typeof_ [`FloorModel`](README.md#floormodel) | `FloorModel`  | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`modelClass`               | -                                                                                      | [src/facades/floor.ts:13](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/floor.ts#L13) |
+| `setAtaGroupSpecification` | `readonly`  | `"FloorID"`                                   | `'FloorID'`   | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`setAtaGroupSpecification` | -                                                                                      | [src/facades/floor.ts:15](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/floor.ts#L15) |
+| `tableName`                | `readonly`  | `"Floor"`                                     | `'Floor'`     | [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).`tableName`                | -                                                                                      | [src/facades/floor.ts:17](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/floor.ts#L17) |
 
 #### Accessors
 
@@ -3211,9 +3323,13 @@ get protected model(): T
 
 `T`
 
-###### Source
+###### Inherited from
 
-[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L95)
+[`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`model`](README.md#model-2)
+
+###### Defined in
+
+[src/facades/base.ts:95](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L95)
 
 ##### name
 
@@ -3225,9 +3341,17 @@ get name(): string
 
 `string`
 
-###### Source
+###### Implementation of
 
-[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L91)
+[`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`name`
+
+###### Inherited from
+
+[`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`name`](README.md#name-2)
+
+###### Defined in
+
+[src/facades/base.ts:91](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L91)
 
 #### Methods
 
@@ -3261,16 +3385,16 @@ getAta(): {
 }
 ```
 
-| Member                    | Type                                                 |
-| :------------------------ | :--------------------------------------------------- |
-| `FanSpeed`                | `null` \| [`FanSpeed`](README.md#fanspeed)           |
-| `OperationMode`           | `null` \| [`OperationMode`](README.md#operationmode) |
-| `Power`                   | `null` \| `boolean`                                  |
-| `SetTemperature`          | `null` \| `number`                                   |
-| `VaneHorizontalDirection` | `null` \| [`Horizontal`](README.md#horizontal)       |
-| `VaneHorizontalSwing`     | `null` \| `boolean`                                  |
-| `VaneVerticalDirection`   | `null` \| [`Vertical`](README.md#vertical)           |
-| `VaneVerticalSwing`       | `null` \| `boolean`                                  |
+| Name                      | Type                                                 | Defined in                                                                                                                                   |
+| ------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FanSpeed`                | `null` \| [`FanSpeed`](README.md#fanspeed)           | [src/types/common.ts:250](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L250) |
+| `OperationMode`           | `null` \| [`OperationMode`](README.md#operationmode) | [src/types/common.ts:251](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L251) |
+| `Power`                   | `null` \| `boolean`                                  | [src/types/common.ts:252](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L252) |
+| `SetTemperature`          | `null` \| `number`                                   | [src/types/common.ts:253](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L253) |
+| `VaneHorizontalDirection` | `null` \| [`Horizontal`](README.md#horizontal)       | [src/types/common.ts:254](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L254) |
+| `VaneHorizontalSwing`     | `null` \| `boolean`                                  | [src/types/common.ts:255](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L255) |
+| `VaneVerticalDirection`   | `null` \| [`Vertical`](README.md#vertical)           | [src/types/common.ts:256](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L256) |
+| `VaneVerticalSwing`       | `null` \| `boolean`                                  | [src/types/common.ts:257](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L257) |
 
 ###### Implementation of
 
@@ -3280,9 +3404,9 @@ getAta(): {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getAta`](README.md#getata-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base_super_device.ts:49](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base_super_device.ts#L49)
+[src/facades/base_super_device.ts:49](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base_super_device.ts#L49)
 
 ##### getErrors()
 
@@ -3296,7 +3420,7 @@ getErrors(__namedParameters: {
 ###### Parameters
 
 | Parameter                 | Type               |
-| :------------------------ | :----------------- |
+| ------------------------- | ------------------ |
 | `__namedParameters`       | `object`           |
 | `__namedParameters.from`? | `null` \| `string` |
 | `__namedParameters.to`?   | `null` \| `string` |
@@ -3313,9 +3437,9 @@ getErrors(__namedParameters: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getErrors`](README.md#geterrors-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L103)
+[src/facades/base.ts:103](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L103)
 
 ##### getFrostProtection()
 
@@ -3335,9 +3459,9 @@ getFrostProtection(): Promise<FrostProtectionData>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getFrostProtection`](README.md#getfrostprotection-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L121)
+[src/facades/base.ts:121](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L121)
 
 ##### getHolidayMode()
 
@@ -3357,9 +3481,9 @@ getHolidayMode(): Promise<HolidayModeData>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getHolidayMode`](README.md#getholidaymode-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L134)
+[src/facades/base.ts:134](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L134)
 
 ##### getTiles()
 
@@ -3372,7 +3496,7 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 ###### Parameters
 
 | Parameter | Type              |
-| :-------- | :---------------- |
+| --------- | ----------------- |
 | `select`? | `null` \| `false` |
 
 ###### Returns
@@ -3387,9 +3511,9 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getTiles`](README.md#gettiles-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:147](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L147)
+[src/facades/base.ts:147](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L147)
 
 ###### getTiles(select)
 
@@ -3397,16 +3521,16 @@ getTiles(select?: null | false): Promise<TilesData<null>>
 getTiles<K>(select: DeviceModel<K>): Promise<TilesData<K>>
 ```
 
-###### Type parameters
+###### Type Parameters
 
-| Type parameter                              |
-| :------------------------------------------ |
+| Type Parameter                              |
+| ------------------------------------------- |
 | `K` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Parameters
 
 | Parameter | Type                                           |
-| :-------- | :--------------------------------------------- |
+| --------- | ---------------------------------------------- |
 | `select`  | [`DeviceModel`](README.md#devicemodelt)\<`K`\> |
 
 ###### Returns
@@ -3421,9 +3545,9 @@ getTiles<K>(select: DeviceModel<K>): Promise<TilesData<K>>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getTiles`](README.md#gettiles-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:148](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L148)
+[src/facades/base.ts:148](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L148)
 
 ##### getWifiReport()
 
@@ -3434,7 +3558,7 @@ getWifiReport(hour: number): Promise<WifiData>
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `hour`    | `number` |
 
 ###### Returns
@@ -3449,9 +3573,9 @@ getWifiReport(hour: number): Promise<WifiData>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`getWifiReport`](README.md#getwifireport-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L178)
+[src/facades/base.ts:178](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L178)
 
 ##### setAta()
 
@@ -3471,7 +3595,7 @@ setAta(postData: {
 ###### Parameters
 
 | Parameter                           | Type                                                 |
-| :---------------------------------- | :--------------------------------------------------- |
+| ----------------------------------- | ---------------------------------------------------- |
 | `postData`                          | `object`                                             |
 | `postData.FanSpeed`?                | `null` \| [`FanSpeed`](README.md#fanspeed)           |
 | `postData.OperationMode`?           | `null` \| [`OperationMode`](README.md#operationmode) |
@@ -3494,9 +3618,9 @@ setAta(postData: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setAta`](README.md#setata-1)
 
-###### Source
+###### Defined in
 
-[src/facades/base_super_device.ts:57](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base_super_device.ts#L57)
+[src/facades/base_super_device.ts:57](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base_super_device.ts#L57)
 
 ##### setFrostProtection()
 
@@ -3511,7 +3635,7 @@ setFrostProtection(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type      |
-| :-------------------------- | :-------- |
+| --------------------------- | --------- |
 | `__namedParameters`         | `object`  |
 | `__namedParameters.enable`? | `boolean` |
 | `__namedParameters.max`     | `number`  |
@@ -3529,9 +3653,9 @@ setFrostProtection(__namedParameters: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setFrostProtection`](README.md#setfrostprotection-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L188)
+[src/facades/base.ts:188](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L188)
 
 ##### setHolidayMode()
 
@@ -3547,7 +3671,7 @@ setHolidayMode(__namedParameters: {
 ###### Parameters
 
 | Parameter                   | Type               |
-| :-------------------------- | :----------------- |
+| --------------------------- | ------------------ |
 | `__namedParameters`         | `object`           |
 | `__namedParameters.days`?   | `number`           |
 | `__namedParameters.enable`? | `boolean`          |
@@ -3566,9 +3690,9 @@ setHolidayMode(__namedParameters: {
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setHolidayMode`](README.md#setholidaymode-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L221)
+[src/facades/base.ts:221](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L221)
 
 ##### setPower()
 
@@ -3579,7 +3703,7 @@ setPower(enable: boolean): Promise<boolean>
 ###### Parameters
 
 | Parameter | Type      | Default value |
-| :-------- | :-------- | :------------ |
+| --------- | --------- | ------------- |
 | `enable`  | `boolean` | `true`        |
 
 ###### Returns
@@ -3594,9 +3718,9 @@ setPower(enable: boolean): Promise<boolean>
 
 [`BaseSuperDeviceFacade`](README.md#basesuperdevicefacadet).[`setPower`](README.md#setpower-2)
 
-###### Source
+###### Defined in
 
-[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/base.ts#L247)
+[src/facades/base.ts:247](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/base.ts#L247)
 
 ---
 
@@ -3612,11 +3736,11 @@ setPower(enable: boolean): Promise<boolean>
 
 #### Properties
 
-| Property     | Modifier   | Type     | Inherited from                                      |
-| :----------- | :--------- | :------- | :-------------------------------------------------- |
-| `buildingId` | `readonly` | `number` | [`IFloorModel`](README.md#ifloormodel).`buildingId` |
-| `id`         | `readonly` | `number` | [`BaseModel`](README.md#basemodel).`id`             |
-| `name`       | `readonly` | `string` | [`BaseModel`](README.md#basemodel).`name`           |
+| Property     | Modifier   | Type     | Inherited from                            | Defined in                                                                                                                                 |
+| ------------ | ---------- | -------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `buildingId` | `readonly` | `number` | -                                         | [src/models/floor.ts:11](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L11) |
+| `id`         | `readonly` | `number` | [`BaseModel`](README.md#basemodel).`id`   | [src/models/base.ts:2](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L2)     |
+| `name`       | `readonly` | `string` | [`BaseModel`](README.md#basemodel).`name` | [src/models/base.ts:4](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/base.ts#L4)     |
 
 #### Accessors
 
@@ -3630,9 +3754,13 @@ get areaIds(): number[]
 
 `number`[]
 
-###### Source
+###### Implementation of
 
-[src/models/floor.ts:22](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/floor.ts#L22)
+[`IFloorModel`](README.md#ifloormodel).`areaIds`
+
+###### Defined in
+
+[src/models/floor.ts:22](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L22)
 
 ##### areas
 
@@ -3644,9 +3772,13 @@ get areas(): AreaModel<number>[]
 
 [`AreaModel`](README.md#areamodelt)\<`number`\>[]
 
-###### Source
+###### Implementation of
 
-[src/models/floor.ts:26](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/floor.ts#L26)
+[`IFloorModel`](README.md#ifloormodel).`areas`
+
+###### Defined in
+
+[src/models/floor.ts:26](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L26)
 
 ##### building
 
@@ -3658,9 +3790,13 @@ get building(): null | BuildingModel
 
 `null` \| [`BuildingModel`](README.md#buildingmodel)
 
-###### Source
+###### Implementation of
 
-[src/models/floor.ts:30](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/floor.ts#L30)
+[`IFloorModel`](README.md#ifloormodel).`building`
+
+###### Defined in
+
+[src/models/floor.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L30)
 
 ##### deviceIds
 
@@ -3672,9 +3808,13 @@ get deviceIds(): number[]
 
 `number`[]
 
-###### Source
+###### Implementation of
 
-[src/models/floor.ts:34](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/floor.ts#L34)
+[`IFloorModel`](README.md#ifloormodel).`deviceIds`
+
+###### Defined in
+
+[src/models/floor.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L34)
 
 ##### devices
 
@@ -3686,9 +3826,13 @@ get devices(): DeviceModelAny[]
 
 [`DeviceModelAny`](README.md#devicemodelany)[]
 
-###### Source
+###### Implementation of
 
-[src/models/floor.ts:38](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/floor.ts#L38)
+[`IFloorModel`](README.md#ifloormodel).`devices`
+
+###### Defined in
+
+[src/models/floor.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L38)
 
 #### Methods
 
@@ -3702,9 +3846,9 @@ static getAll(): FloorModel[]
 
 [`FloorModel`](README.md#floormodel)[]
 
-###### Source
+###### Defined in
 
-[src/models/floor.ts:42](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/floor.ts#L42)
+[src/models/floor.ts:42](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L42)
 
 ##### getByBuildingId()
 
@@ -3715,16 +3859,16 @@ static getByBuildingId(id: number): FloorModel[]
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `id`      | `number` |
 
 ###### Returns
 
 [`FloorModel`](README.md#floormodel)[]
 
-###### Source
+###### Defined in
 
-[src/models/floor.ts:46](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/floor.ts#L46)
+[src/models/floor.ts:46](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L46)
 
 ##### getById()
 
@@ -3735,16 +3879,16 @@ static getById(id: number): undefined | FloorModel
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `id`      | `number` |
 
 ###### Returns
 
 `undefined` \| [`FloorModel`](README.md#floormodel)
 
-###### Source
+###### Defined in
 
-[src/models/floor.ts:50](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/floor.ts#L50)
+[src/models/floor.ts:50](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L50)
 
 ##### getByName()
 
@@ -3755,16 +3899,16 @@ static getByName(name: string): undefined | FloorModel
 ###### Parameters
 
 | Parameter | Type     |
-| :-------- | :------- |
+| --------- | -------- |
 | `name`    | `string` |
 
 ###### Returns
 
 `undefined` \| [`FloorModel`](README.md#floormodel)
 
-###### Source
+###### Defined in
 
-[src/models/floor.ts:54](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/floor.ts#L54)
+[src/models/floor.ts:54](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L54)
 
 ##### upsert()
 
@@ -3775,16 +3919,16 @@ static upsert(data: FloorData): void
 ###### Parameters
 
 | Parameter | Type                               |
-| :-------- | :--------------------------------- |
+| --------- | ---------------------------------- |
 | `data`    | [`FloorData`](README.md#floordata) |
 
 ###### Returns
 
 `void`
 
-###### Source
+###### Defined in
 
-[src/models/floor.ts:58](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/floor.ts#L58)
+[src/models/floor.ts:58](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/floor.ts#L58)
 
 ---
 
@@ -3813,7 +3957,7 @@ new default(config: {
 ###### Parameters
 
 | Parameter                 | Type                                         |
-| :------------------------ | :------------------------------------------- |
+| ------------------------- | -------------------------------------------- |
 | `config`                  | `object`                                     |
 | `config.autoSync`?        | `null` \| `number`                           |
 | `config.language`?        | `string`                                     |
@@ -3827,9 +3971,9 @@ new default(config: {
 
 [`default`](README.md#default)
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:86](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L86)
+[src/services/api.ts:86](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L86)
 
 #### Methods
 
@@ -3842,7 +3986,7 @@ applyLogin(data?: LoginCredentials): Promise<boolean>
 ###### Parameters
 
 | Parameter | Type                                             |
-| :-------- | :----------------------------------------------- |
+| --------- | ------------------------------------------------ |
 | `data`?   | [`LoginCredentials`](README.md#logincredentials) |
 
 ###### Returns
@@ -3853,9 +3997,9 @@ applyLogin(data?: LoginCredentials): Promise<boolean>
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`applyLogin`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:157](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L157)
+[src/services/api.ts:157](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L157)
 
 ##### clearSync()
 
@@ -3871,9 +4015,9 @@ clearSync(): void
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`clearSync`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:183](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L183)
+[src/services/api.ts:183](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L183)
 
 ##### fetch()
 
@@ -3889,17 +4033,17 @@ fetch(): Promise<{
 `data`: [`Building`](README.md#building-3)[];
 \}\>
 
-| Member | Type                                 |
-| :----- | :----------------------------------- |
-| `data` | [`Building`](README.md#building-3)[] |
+| Name   | Type                                 | Defined in                                                                                                                                   |
+| ------ | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`Building`](README.md#building-3)[] | [src/services/api.ts:190](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L190) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`fetch`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:190](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L190)
+[src/services/api.ts:190](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L190)
 
 ##### get()
 
@@ -3911,16 +4055,16 @@ get<T>(__namedParameters: {
 }>
 ```
 
-###### Type parameters
+###### Type Parameters
 
-| Type parameter                              |
-| :------------------------------------------ |
+| Type Parameter                              |
+| ------------------------------------------- |
 | `T` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Parameters
 
 | Parameter                  | Type                                                   |
-| :------------------------- | :----------------------------------------------------- |
+| -------------------------- | ------------------------------------------------------ |
 | `__namedParameters`        | `object`                                               |
 | `__namedParameters.params` | [`GetDeviceDataParams`](README.md#getdevicedataparams) |
 
@@ -3930,17 +4074,17 @@ get<T>(__namedParameters: {
 `data`: [`GetDeviceData`](README.md#getdevicedata)\[`T`\];
 \}\>
 
-| Member | Type                                              |
-| :----- | :------------------------------------------------ |
-| `data` | [`GetDeviceData`](README.md#getdevicedata)\[`T`\] |
+| Name   | Type                                              | Defined in                                                                                                                                   |
+| ------ | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`GetDeviceData`](README.md#getdevicedata)\[`T`\] | [src/services/api.ts:224](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L224) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`get`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:220](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L220)
+[src/services/api.ts:220](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L220)
 
 ##### getEnergyReport()
 
@@ -3952,16 +4096,16 @@ getEnergyReport<T>(__namedParameters: {
 }>
 ```
 
-###### Type parameters
+###### Type Parameters
 
-| Type parameter                              |
-| :------------------------------------------ |
+| Type Parameter                              |
+| ------------------------------------------- |
 | `T` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Parameters
 
 | Parameter                    | Type                                         |
-| :--------------------------- | :------------------------------------------- |
+| ---------------------------- | -------------------------------------------- |
 | `__namedParameters`          | `object`                                     |
 | `__namedParameters.postData` | [`EnergyPostData`](README.md#energypostdata) |
 
@@ -3971,17 +4115,17 @@ getEnergyReport<T>(__namedParameters: {
 `data`: [`EnergyData`](README.md#energydata)\[`T`\];
 \}\>
 
-| Member | Type                                        |
-| :----- | :------------------------------------------ |
-| `data` | [`EnergyData`](README.md#energydata)\[`T`\] |
+| Name   | Type                                        | Defined in                                                                                                                                   |
+| ------ | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`EnergyData`](README.md#energydata)\[`T`\] | [src/services/api.ts:234](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L234) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`getEnergyReport`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:230](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L230)
+[src/services/api.ts:230](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L230)
 
 ##### getErrors()
 
@@ -3996,7 +4140,7 @@ getErrors(__namedParameters: {
 ###### Parameters
 
 | Parameter                    | Type                                       |
-| :--------------------------- | :----------------------------------------- |
+| ---------------------------- | ------------------------------------------ |
 | `__namedParameters`          | `object`                                   |
 | `__namedParameters.postData` | [`ErrorPostData`](README.md#errorpostdata) |
 
@@ -4006,17 +4150,17 @@ getErrors(__namedParameters: {
 `data`: [`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[];
 \}\>
 
-| Member | Type                                                                           |
-| :----- | :----------------------------------------------------------------------------- |
-| `data` | [`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[] |
+| Name   | Type                                                                           | Defined in                                                                                                                                   |
+| ------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[] | [src/services/api.ts:242](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L242) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`getErrors`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:238](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L238)
+[src/services/api.ts:238](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L238)
 
 ##### getFrostProtection()
 
@@ -4031,7 +4175,7 @@ getFrostProtection(__namedParameters: {
 ###### Parameters
 
 | Parameter                  | Type                                         |
-| :------------------------- | :------------------------------------------- |
+| -------------------------- | -------------------------------------------- |
 | `__namedParameters`        | `object`                                     |
 | `__namedParameters.params` | [`SettingsParams`](README.md#settingsparams) |
 
@@ -4041,17 +4185,17 @@ getFrostProtection(__namedParameters: {
 `data`: [`FrostProtectionData`](README.md#frostprotectiondata);
 \}\>
 
-| Member | Type                                                   |
-| :----- | :----------------------------------------------------- |
-| `data` | [`FrostProtectionData`](README.md#frostprotectiondata) |
+| Name   | Type                                                   | Defined in                                                                                                                                   |
+| ------ | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`FrostProtectionData`](README.md#frostprotectiondata) | [src/services/api.ts:253](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L253) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`getFrostProtection`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:249](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L249)
+[src/services/api.ts:249](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L249)
 
 ##### getHolidayMode()
 
@@ -4066,7 +4210,7 @@ getHolidayMode(__namedParameters: {
 ###### Parameters
 
 | Parameter                  | Type                                         |
-| :------------------------- | :------------------------------------------- |
+| -------------------------- | -------------------------------------------- |
 | `__namedParameters`        | `object`                                     |
 | `__namedParameters.params` | [`SettingsParams`](README.md#settingsparams) |
 
@@ -4076,17 +4220,17 @@ getHolidayMode(__namedParameters: {
 `data`: [`HolidayModeData`](README.md#holidaymodedata);
 \}\>
 
-| Member | Type                                           |
-| :----- | :--------------------------------------------- |
-| `data` | [`HolidayModeData`](README.md#holidaymodedata) |
+| Name   | Type                                           | Defined in                                                                                                                                   |
+| ------ | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`HolidayModeData`](README.md#holidaymodedata) | [src/services/api.ts:263](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L263) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`getHolidayMode`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:259](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L259)
+[src/services/api.ts:259](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L259)
 
 ##### getTiles()
 
@@ -4103,7 +4247,7 @@ getTiles(__namedParameters: {
 ###### Parameters
 
 | Parameter                    | Type                                                  |
-| :--------------------------- | :---------------------------------------------------- |
+| ---------------------------- | ----------------------------------------------------- |
 | `__namedParameters`          | `object`                                              |
 | `__namedParameters.postData` | [`TilesPostData`](README.md#tilespostdatat)\<`null`\> |
 
@@ -4113,17 +4257,17 @@ getTiles(__namedParameters: {
 `data`: [`TilesData`](README.md#tilesdatat)\<`null`\>;
 \}\>
 
-| Member | Type                                          |
-| :----- | :-------------------------------------------- |
-| `data` | [`TilesData`](README.md#tilesdatat)\<`null`\> |
+| Name   | Type                                          | Defined in                                                                                                                                   |
+| ------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`TilesData`](README.md#tilesdatat)\<`null`\> | [src/services/api.ts:273](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L273) |
 
 ###### Implementation of
 
 `IMELCloudAPI.getTiles`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:269](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L269)
+[src/services/api.ts:269](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L269)
 
 ###### getTiles(\_\_namedParameters)
 
@@ -4135,16 +4279,16 @@ getTiles<T>(__namedParameters: {
 }>
 ```
 
-###### Type parameters
+###### Type Parameters
 
-| Type parameter                              |
-| :------------------------------------------ |
+| Type Parameter                              |
+| ------------------------------------------- |
 | `T` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Parameters
 
 | Parameter                    | Type                                               |
-| :--------------------------- | :------------------------------------------------- |
+| ---------------------------- | -------------------------------------------------- |
 | `__namedParameters`          | `object`                                           |
 | `__namedParameters.postData` | [`TilesPostData`](README.md#tilespostdatat)\<`T`\> |
 
@@ -4154,17 +4298,17 @@ getTiles<T>(__namedParameters: {
 `data`: [`TilesData`](README.md#tilesdatat)\<`T`\>;
 \}\>
 
-| Member | Type                                       |
-| :----- | :----------------------------------------- |
-| `data` | [`TilesData`](README.md#tilesdatat)\<`T`\> |
+| Name   | Type                                       | Defined in                                                                                                                                   |
+| ------ | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`TilesData`](README.md#tilesdatat)\<`T`\> | [src/services/api.ts:278](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L278) |
 
 ###### Implementation of
 
 `IMELCloudAPI.getTiles`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:274](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L274)
+[src/services/api.ts:274](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L274)
 
 ##### getWifiReport()
 
@@ -4179,7 +4323,7 @@ getWifiReport(__namedParameters: {
 ###### Parameters
 
 | Parameter                    | Type                                     |
-| :--------------------------- | :--------------------------------------- |
+| ---------------------------- | ---------------------------------------- |
 | `__namedParameters`          | `object`                                 |
 | `__namedParameters.postData` | [`WifiPostData`](README.md#wifipostdata) |
 
@@ -4189,17 +4333,17 @@ getWifiReport(__namedParameters: {
 `data`: [`WifiData`](README.md#wifidata);
 \}\>
 
-| Member | Type                             |
-| :----- | :------------------------------- |
-| `data` | [`WifiData`](README.md#wifidata) |
+| Name   | Type                             | Defined in                                                                                                                                   |
+| ------ | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`WifiData`](README.md#wifidata) | [src/services/api.ts:291](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L291) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`getWifiReport`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:287](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L287)
+[src/services/api.ts:287](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L287)
 
 ##### login()
 
@@ -4214,7 +4358,7 @@ login(__namedParameters: {
 ###### Parameters
 
 | Parameter                    | Type                                       |
-| :--------------------------- | :----------------------------------------- |
+| ---------------------------- | ------------------------------------------ |
 | `__namedParameters`          | `object`                                   |
 | `__namedParameters.postData` | [`LoginPostData`](README.md#loginpostdata) |
 
@@ -4224,17 +4368,17 @@ login(__namedParameters: {
 `data`: [`LoginData`](README.md#logindata);
 \}\>
 
-| Member | Type                               |
-| :----- | :--------------------------------- |
-| `data` | [`LoginData`](README.md#logindata) |
+| Name   | Type                               | Defined in                                                                                                                                   |
+| ------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`LoginData`](README.md#logindata) | [src/services/api.ts:299](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L299) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`login`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:295](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L295)
+[src/services/api.ts:295](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L295)
 
 ##### set()
 
@@ -4247,16 +4391,16 @@ set<T>(__namedParameters: {
 }>
 ```
 
-###### Type parameters
+###### Type Parameters
 
-| Type parameter                              |
-| :------------------------------------------ |
+| Type Parameter                              |
+| ------------------------------------------- |
 | `T` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` |
 
 ###### Parameters
 
 | Parameter                        | Type                                                       |
-| :------------------------------- | :--------------------------------------------------------- |
+| -------------------------------- | ---------------------------------------------------------- |
 | `__namedParameters`              | `object`                                                   |
 | `__namedParameters.heatPumpType` | `T`                                                        |
 | `__namedParameters.postData`     | [`SetDevicePostData`](README.md#setdevicepostdatat)\<`T`\> |
@@ -4267,17 +4411,17 @@ set<T>(__namedParameters: {
 `data`: [`SetDeviceData`](README.md#setdevicedata)\[`T`\];
 \}\>
 
-| Member | Type                                              |
-| :----- | :------------------------------------------------ |
-| `data` | [`SetDeviceData`](README.md#setdevicedata)\[`T`\] |
+| Name   | Type                                              | Defined in                                                                                                                                   |
+| ------ | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`SetDeviceData`](README.md#setdevicedata)\[`T`\] | [src/services/api.ts:323](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L323) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`set`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:317](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L317)
+[src/services/api.ts:317](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L317)
 
 ##### setAta()
 
@@ -4292,7 +4436,7 @@ setAta(__namedParameters: {
 ###### Parameters
 
 | Parameter                    | Type                                                   |
-| :--------------------------- | :----------------------------------------------------- |
+| ---------------------------- | ------------------------------------------------------ |
 | `__namedParameters`          | `object`                                               |
 | `__namedParameters.postData` | [`SetAtaGroupPostData`](README.md#setatagrouppostdata) |
 
@@ -4302,17 +4446,17 @@ setAta(__namedParameters: {
 `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata);
 \}\>
 
-| Member | Type                                                                             |
-| :----- | :------------------------------------------------------------------------------- |
-| `data` | [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata) |
+| Name   | Type                                                                             | Defined in                                                                                                                                   |
+| ------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata) | [src/services/api.ts:334](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L334) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`setAta`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:330](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L330)
+[src/services/api.ts:330](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L330)
 
 ##### setFrostProtection()
 
@@ -4327,7 +4471,7 @@ setFrostProtection(__namedParameters: {
 ###### Parameters
 
 | Parameter                    | Type                                                           |
-| :--------------------------- | :------------------------------------------------------------- |
+| ---------------------------- | -------------------------------------------------------------- |
 | `__namedParameters`          | `object`                                                       |
 | `__namedParameters.postData` | [`FrostProtectionPostData`](README.md#frostprotectionpostdata) |
 
@@ -4337,17 +4481,17 @@ setFrostProtection(__namedParameters: {
 `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata);
 \}\>
 
-| Member | Type                                                                             |
-| :----- | :------------------------------------------------------------------------------- |
-| `data` | [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata) |
+| Name   | Type                                                                             | Defined in                                                                                                                                   |
+| ------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata) | [src/services/api.ts:349](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L349) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`setFrostProtection`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:345](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L345)
+[src/services/api.ts:345](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L345)
 
 ##### setHolidayMode()
 
@@ -4362,7 +4506,7 @@ setHolidayMode(__namedParameters: {
 ###### Parameters
 
 | Parameter                    | Type                                                   |
-| :--------------------------- | :----------------------------------------------------- |
+| ---------------------------- | ------------------------------------------------------ |
 | `__namedParameters`          | `object`                                               |
 | `__namedParameters.postData` | [`HolidayModePostData`](README.md#holidaymodepostdata) |
 
@@ -4372,17 +4516,17 @@ setHolidayMode(__namedParameters: {
 `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata);
 \}\>
 
-| Member | Type                                                                             |
-| :----- | :------------------------------------------------------------------------------- |
-| `data` | [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata) |
+| Name   | Type                                                                             | Defined in                                                                                                                                   |
+| ------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata) | [src/services/api.ts:360](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L360) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`setHolidayMode`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:356](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L356)
+[src/services/api.ts:356](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L356)
 
 ##### setLanguage()
 
@@ -4395,7 +4539,7 @@ setLanguage(language: string): Promise<{
 ###### Parameters
 
 | Parameter  | Type     |
-| :--------- | :------- |
+| ---------- | -------- |
 | `language` | `string` |
 
 ###### Returns
@@ -4404,17 +4548,17 @@ setLanguage(language: string): Promise<{
 `data`: `boolean`;
 \}\>
 
-| Member | Type      |
-| :----- | :-------- |
-| `data` | `boolean` |
+| Name   | Type      | Defined in                                                                                                                                   |
+| ------ | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | `boolean` | [src/services/api.ts:367](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L367) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`setLanguage`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:367](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L367)
+[src/services/api.ts:367](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L367)
 
 ##### setPower()
 
@@ -4429,7 +4573,7 @@ setPower(__namedParameters: {
 ###### Parameters
 
 | Parameter                    | Type                                             |
-| :--------------------------- | :----------------------------------------------- |
+| ---------------------------- | ------------------------------------------------ |
 | `__namedParameters`          | `object`                                         |
 | `__namedParameters.postData` | [`SetPowerPostData`](README.md#setpowerpostdata) |
 
@@ -4439,17 +4583,17 @@ setPower(__namedParameters: {
 `data`: `boolean`;
 \}\>
 
-| Member | Type      |
-| :----- | :-------- |
-| `data` | `boolean` |
+| Name   | Type      | Defined in                                                                                                                                   |
+| ------ | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data` | `boolean` | [src/services/api.ts:381](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L381) |
 
 ###### Implementation of
 
 [`IMELCloudAPI`](README.md#imelcloudapi).`setPower`
 
-###### Source
+###### Defined in
 
-[src/services/api.ts:377](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/services/api.ts#L377)
+[src/services/api.ts:377](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/api.ts#L377)
 
 ## Interfaces
 
@@ -4457,12 +4601,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property      | Type               |
-| :------------ | :----------------- |
-| `contextKey?` | `null` \| `string` |
-| `expiry?`     | `null` \| `string` |
-| `password?`   | `null` \| `string` |
-| `username?`   | `null` \| `string` |
+| Property      | Type               | Defined in                                                                                                                                               |
+| ------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `contextKey?` | `null` \| `string` | [src/services/interfaces.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L31) |
+| `expiry?`     | `null` \| `string` | [src/services/interfaces.ts:32](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L32) |
+| `password?`   | `null` \| `string` | [src/services/interfaces.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L33) |
+| `username?`   | `null` \| `string` | [src/services/interfaces.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L34) |
 
 ---
 
@@ -4472,20 +4616,20 @@ setPower(__namedParameters: {
 
 - [`FloorData`](README.md#floordata)
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                   |
-| :------------------------------- |
+| Type Parameter                   |
+| -------------------------------- |
 | `T` _extends_ `number` \| `null` |
 
 #### Properties
 
-| Property     | Modifier   | Type     | Inherited from                                  |
-| :----------- | :--------- | :------- | :---------------------------------------------- |
-| `BuildingId` | `readonly` | `number` | [`FloorData`](README.md#floordata).`BuildingId` |
-| `FloorId`    | `readonly` | `T`      | -                                               |
-| `ID`         | `readonly` | `number` | [`FloorData`](README.md#floordata).`ID`         |
-| `Name`       | `readonly` | `string` | [`FloorData`](README.md#floordata).`Name`       |
+| Property     | Modifier   | Type     | Inherited from                                  | Defined in                                                                                                                                   |
+| ------------ | ---------- | -------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BuildingId` | `readonly` | `number` | [`FloorData`](README.md#floordata).`BuildingId` | [src/types/common.ts:219](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L219) |
+| `FloorId`    | `readonly` | `T`      | -                                               | [src/types/common.ts:200](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L200) |
+| `ID`         | `readonly` | `number` | [`FloorData`](README.md#floordata).`ID`         | [src/types/common.ts:220](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L220) |
+| `Name`       | `readonly` | `string` | [`FloorData`](README.md#floordata).`Name`       | [src/types/common.ts:221](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L221) |
 
 ---
 
@@ -4497,9 +4641,9 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property   | Modifier   | Type     |
-| :--------- | :--------- | :------- |
-| `DeviceID` | `readonly` | `number` |
+| Property   | Modifier   | Type     | Defined in                                                                                                                               |
+| ---------- | ---------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeviceID` | `readonly` | `number` | [src/types/bases.ts:29](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L29) |
 
 ---
 
@@ -4511,13 +4655,13 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property            | Modifier   | Type      | Overrides                                                              | Inherited from                                                         |
-| :------------------ | :--------- | :-------- | :--------------------------------------------------------------------- | :--------------------------------------------------------------------- |
-| `EffectiveFlags`    | `readonly` | `0`       | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags`    | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags`    |
-| `LastCommunication` | `readonly` | `string`  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`LastCommunication` | [`BaseSetDeviceData`](README.md#basesetdevicedata).`LastCommunication` |
-| `NextCommunication` | `readonly` | `string`  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`NextCommunication` | [`BaseSetDeviceData`](README.md#basesetdevicedata).`NextCommunication` |
-| `Offline`           | `readonly` | `boolean` | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Offline`           | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Offline`           |
-| `Power`             | `readonly` | `boolean` | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power`             | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power`             |
+| Property            | Modifier   | Type      | Overrides                                                           | Inherited from                                                         | Defined in                                                                                                                               |
+| ------------------- | ---------- | --------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `EffectiveFlags`    | `readonly` | `0`       | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags` | -                                                                      | [src/types/bases.ts:44](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L44) |
+| `LastCommunication` | `readonly` | `string`  | -                                                                   | [`BaseSetDeviceData`](README.md#basesetdevicedata).`LastCommunication` | [src/types/bases.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L33) |
+| `NextCommunication` | `readonly` | `string`  | -                                                                   | [`BaseSetDeviceData`](README.md#basesetdevicedata).`NextCommunication` | [src/types/bases.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L34) |
+| `Offline`           | `readonly` | `boolean` | -                                                                   | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Offline`           | [src/types/bases.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L40) |
+| `Power`             | `readonly` | `boolean` | -                                                                   | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power`             | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
 
 ---
 
@@ -4531,14 +4675,14 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Modifier   | Type                                 |
-| :----------- | :--------- | :----------------------------------- |
-| `AreaID`     | `readonly` | `null` \| `number`                   |
-| `BuildingID` | `readonly` | `number`                             |
-| `DeviceID`   | `readonly` | `number`                             |
-| `DeviceName` | `readonly` | `string`                             |
-| `FloorID`    | `readonly` | `null` \| `number`                   |
-| `Type`       | `readonly` | [`DeviceType`](README.md#devicetype) |
+| Property     | Modifier   | Type                                 | Defined in                                                                                                                               |
+| ------------ | ---------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `AreaID`     | `readonly` | `null` \| `number`                   | [src/types/bases.ts:53](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L53) |
+| `BuildingID` | `readonly` | `number`                             | [src/types/bases.ts:54](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L54) |
+| `DeviceID`   | `readonly` | `number`                             | [src/types/bases.ts:55](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L55) |
+| `DeviceName` | `readonly` | `string`                             | [src/types/bases.ts:56](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L56) |
+| `FloorID`    | `readonly` | `null` \| `number`                   | [src/types/bases.ts:57](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L57) |
+| `Type`       | `readonly` | [`DeviceType`](README.md#devicetype) | [src/types/bases.ts:58](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L58) |
 
 ---
 
@@ -4556,12 +4700,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property             | Modifier   | Type      | Inherited from        |
-| :------------------- | :--------- | :-------- | :-------------------- |
-| `EffectiveFlags`     | `readonly` | `0`       | `Omit.EffectiveFlags` |
-| `Offline`            | `readonly` | `boolean` | `Omit.Offline`        |
-| `Power`              | `readonly` | `boolean` | `Omit.Power`          |
-| `WifiSignalStrength` | `readonly` | `number`  | -                     |
+| Property             | Modifier   | Type      | Inherited from        | Defined in                                                                                                                               |
+| -------------------- | ---------- | --------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `EffectiveFlags`     | `readonly` | `0`       | `Omit.EffectiveFlags` | [src/types/bases.ts:44](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L44) |
+| `Offline`            | `readonly` | `boolean` | `Omit.Offline`        | [src/types/bases.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L40) |
+| `Power`              | `readonly` | `boolean` | `Omit.Power`          | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
+| `WifiSignalStrength` | `readonly` | `number`  | -                     | [src/types/bases.ts:49](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L49) |
 
 ---
 
@@ -4580,13 +4724,13 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property            | Modifier   | Type      | Inherited from                                                             |
-| :------------------ | :--------- | :-------- | :------------------------------------------------------------------------- |
-| `EffectiveFlags`    | `readonly` | `number`  | `Required.EffectiveFlags`                                                  |
-| `LastCommunication` | `readonly` | `string`  | [`DeviceDataNotInList`](README.md#devicedatanotinlist).`LastCommunication` |
-| `NextCommunication` | `readonly` | `string`  | [`DeviceDataNotInList`](README.md#devicedatanotinlist).`NextCommunication` |
-| `Offline`           | `readonly` | `boolean` | -                                                                          |
-| `Power`             | `readonly` | `boolean` | `Required.Power`                                                           |
+| Property            | Modifier   | Type      | Inherited from                                                             | Defined in                                                                                                                               |
+| ------------------- | ---------- | --------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `EffectiveFlags`    | `readonly` | `number`  | `Required.EffectiveFlags`                                                  | [src/types/bases.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L24) |
+| `LastCommunication` | `readonly` | `string`  | [`DeviceDataNotInList`](README.md#devicedatanotinlist).`LastCommunication` | [src/types/bases.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L33) |
+| `NextCommunication` | `readonly` | `string`  | [`DeviceDataNotInList`](README.md#devicedatanotinlist).`NextCommunication` | [src/types/bases.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L34) |
+| `Offline`           | `readonly` | `boolean` | -                                                                          | [src/types/bases.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L40) |
+| `Power`             | `readonly` | `boolean` | `Required.Power`                                                           | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
 
 ---
 
@@ -4600,10 +4744,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property          | Modifier   | Type      |
-| :---------------- | :--------- | :-------- |
-| `EffectiveFlags?` | `public`   | `number`  |
-| `Power?`          | `readonly` | `boolean` |
+| Property          | Modifier   | Type      | Defined in                                                                                                                               |
+| ----------------- | ---------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `EffectiveFlags?` | `public`   | `number`  | [src/types/bases.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L24) |
+| `Power?`          | `readonly` | `boolean` | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
 
 ---
 
@@ -4615,23 +4759,23 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property            | Modifier   | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Inherited from                                              |
-| :------------------ | :--------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------- |
-| `FPDefined`         | `readonly` | `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | [`BuildingData`](README.md#buildingdata).`FPDefined`        |
-| `FPEnabled`         | `readonly` | `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | [`BuildingData`](README.md#buildingdata).`FPEnabled`        |
-| `FPMaxTemperature`  | `readonly` | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [`BuildingData`](README.md#buildingdata).`FPMaxTemperature` |
-| `FPMinTemperature`  | `readonly` | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [`BuildingData`](README.md#buildingdata).`FPMinTemperature` |
-| `HMDefined`         | `readonly` | `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | [`BuildingData`](README.md#buildingdata).`HMDefined`        |
-| `HMEnabled`         | `readonly` | `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | [`BuildingData`](README.md#buildingdata).`HMEnabled`        |
-| `HMEndDate`         | `readonly` | `null` \| `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | [`BuildingData`](README.md#buildingdata).`HMEndDate`        |
-| `HMStartDate`       | `readonly` | `null` \| `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | [`BuildingData`](README.md#buildingdata).`HMStartDate`      |
-| `ID`                | `readonly` | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [`BuildingData`](README.md#buildingdata).`ID`               |
-| `Name`              | `readonly` | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [`BuildingData`](README.md#buildingdata).`Name`             |
-| `Structure`         | `readonly` | \{ `Areas`: readonly [`AreaData`](README.md#areadatat)\<`null`\> & \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; `Floors`: readonly [`FloorData`](README.md#floordata) & \{ `Areas`: readonly [`AreaData`](README.md#areadatat)\<`number`\> & \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; \} | -                                                           |
-| `Structure.Areas`   | `readonly` | readonly [`AreaData`](README.md#areadatat)\<`null`\> & \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]                                                                                                                                                                                                                                                                                                                                                                   | -                                                           |
-| `Structure.Devices` | `public`   | readonly [`ListDeviceAny`](README.md#listdeviceany)[]                                                                                                                                                                                                                                                                                                                                                                                                                                              | -                                                           |
-| `Structure.Floors`  | `public`   | readonly [`FloorData`](README.md#floordata) & \{ `Areas`: readonly [`AreaData`](README.md#areadatat)\<`number`\> & \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]                                                                                                                                                                                                                               | -                                                           |
-| `TimeZone`          | `public`   | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [`BuildingData`](README.md#buildingdata).`TimeZone`         |
+| Property            | Modifier   | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Inherited from                                              | Defined in                                                                                                                                   |
+| ------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FPDefined`         | `readonly` | `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | [`BuildingData`](README.md#buildingdata).`FPDefined`        | [src/types/common.ts:138](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L138) |
+| `FPEnabled`         | `readonly` | `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | [`BuildingData`](README.md#buildingdata).`FPEnabled`        | [src/types/common.ts:139](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L139) |
+| `FPMaxTemperature`  | `readonly` | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [`BuildingData`](README.md#buildingdata).`FPMaxTemperature` | [src/types/common.ts:140](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L140) |
+| `FPMinTemperature`  | `readonly` | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [`BuildingData`](README.md#buildingdata).`FPMinTemperature` | [src/types/common.ts:141](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L141) |
+| `HMDefined`         | `readonly` | `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | [`BuildingData`](README.md#buildingdata).`HMDefined`        | [src/types/common.ts:176](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L176) |
+| `HMEnabled`         | `readonly` | `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | [`BuildingData`](README.md#buildingdata).`HMEnabled`        | [src/types/common.ts:177](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L177) |
+| `HMEndDate`         | `readonly` | `null` \| `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | [`BuildingData`](README.md#buildingdata).`HMEndDate`        | [src/types/common.ts:178](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L178) |
+| `HMStartDate`       | `readonly` | `null` \| `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | [`BuildingData`](README.md#buildingdata).`HMStartDate`      | [src/types/common.ts:179](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L179) |
+| `ID`                | `readonly` | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [`BuildingData`](README.md#buildingdata).`ID`               | [src/types/common.ts:195](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L195) |
+| `Name`              | `readonly` | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [`BuildingData`](README.md#buildingdata).`Name`             | [src/types/common.ts:196](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L196) |
+| `Structure`         | `readonly` | \{ `Areas`: readonly [`AreaData`](README.md#areadatat)\<`null`\> & \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; `Floors`: readonly [`FloorData`](README.md#floordata) & \{ `Areas`: readonly [`AreaData`](README.md#areadatat)\<`number`\> & \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; \} | -                                                           | [src/types/common.ts:224](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L224) |
+| `Structure.Areas`   | `readonly` | readonly [`AreaData`](README.md#areadatat)\<`null`\> & \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]                                                                                                                                                                                                                                                                                                                                                                   | -                                                           | [src/types/common.ts:225](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L225) |
+| `Structure.Devices` | `readonly` | readonly [`ListDeviceAny`](README.md#listdeviceany)[]                                                                                                                                                                                                                                                                                                                                                                                                                                              | -                                                           | [src/types/common.ts:228](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L228) |
+| `Structure.Floors`  | `readonly` | readonly [`FloorData`](README.md#floordata) & \{ `Areas`: readonly [`AreaData`](README.md#areadatat)\<`number`\> & \{ `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]; `Devices`: readonly [`ListDeviceAny`](README.md#listdeviceany)[]; \}[]                                                                                                                                                                                                                               | -                                                           | [src/types/common.ts:229](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L229) |
+| `TimeZone`          | `readonly` | `number`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [`BuildingData`](README.md#buildingdata).`TimeZone`         | [src/types/common.ts:188](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L188) |
 
 ---
 
@@ -4647,19 +4791,19 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property           | Modifier   | Type               | Inherited from                                                      |
-| :----------------- | :--------- | :----------------- | :------------------------------------------------------------------ |
-| `FPDefined`        | `readonly` | `boolean`          | [`BuildingSettings`](README.md#buildingsettings).`FPDefined`        |
-| `FPEnabled`        | `readonly` | `boolean`          | [`BuildingSettings`](README.md#buildingsettings).`FPEnabled`        |
-| `FPMaxTemperature` | `readonly` | `number`           | [`BuildingSettings`](README.md#buildingsettings).`FPMaxTemperature` |
-| `FPMinTemperature` | `readonly` | `number`           | [`BuildingSettings`](README.md#buildingsettings).`FPMinTemperature` |
-| `HMDefined`        | `readonly` | `boolean`          | [`BuildingSettings`](README.md#buildingsettings).`HMDefined`        |
-| `HMEnabled`        | `readonly` | `boolean`          | [`BuildingSettings`](README.md#buildingsettings).`HMEnabled`        |
-| `HMEndDate`        | `readonly` | `null` \| `string` | [`BuildingSettings`](README.md#buildingsettings).`HMEndDate`        |
-| `HMStartDate`      | `readonly` | `null` \| `string` | [`BuildingSettings`](README.md#buildingsettings).`HMStartDate`      |
-| `ID`               | `readonly` | `number`           | -                                                                   |
-| `Name`             | `readonly` | `string`           | -                                                                   |
-| `TimeZone`         | `readonly` | `number`           | [`BuildingSettings`](README.md#buildingsettings).`TimeZone`         |
+| Property           | Modifier   | Type               | Inherited from                                                      | Defined in                                                                                                                                   |
+| ------------------ | ---------- | ------------------ | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FPDefined`        | `readonly` | `boolean`          | [`BuildingSettings`](README.md#buildingsettings).`FPDefined`        | [src/types/common.ts:138](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L138) |
+| `FPEnabled`        | `readonly` | `boolean`          | [`BuildingSettings`](README.md#buildingsettings).`FPEnabled`        | [src/types/common.ts:139](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L139) |
+| `FPMaxTemperature` | `readonly` | `number`           | [`BuildingSettings`](README.md#buildingsettings).`FPMaxTemperature` | [src/types/common.ts:140](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L140) |
+| `FPMinTemperature` | `readonly` | `number`           | [`BuildingSettings`](README.md#buildingsettings).`FPMinTemperature` | [src/types/common.ts:141](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L141) |
+| `HMDefined`        | `readonly` | `boolean`          | [`BuildingSettings`](README.md#buildingsettings).`HMDefined`        | [src/types/common.ts:176](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L176) |
+| `HMEnabled`        | `readonly` | `boolean`          | [`BuildingSettings`](README.md#buildingsettings).`HMEnabled`        | [src/types/common.ts:177](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L177) |
+| `HMEndDate`        | `readonly` | `null` \| `string` | [`BuildingSettings`](README.md#buildingsettings).`HMEndDate`        | [src/types/common.ts:178](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L178) |
+| `HMStartDate`      | `readonly` | `null` \| `string` | [`BuildingSettings`](README.md#buildingsettings).`HMStartDate`      | [src/types/common.ts:179](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L179) |
+| `ID`               | `readonly` | `number`           | -                                                                   | [src/types/common.ts:195](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L195) |
+| `Name`             | `readonly` | `string`           | -                                                                   | [src/types/common.ts:196](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L196) |
+| `TimeZone`         | `readonly` | `number`           | [`BuildingSettings`](README.md#buildingsettings).`TimeZone`         | [src/types/common.ts:188](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L188) |
 
 ---
 
@@ -4675,17 +4819,17 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property           | Modifier   | Type               | Inherited from                                                            |
-| :----------------- | :--------- | :----------------- | :------------------------------------------------------------------------ |
-| `FPDefined`        | `readonly` | `boolean`          | [`FrostProtectionData`](README.md#frostprotectiondata).`FPDefined`        |
-| `FPEnabled`        | `readonly` | `boolean`          | [`FrostProtectionData`](README.md#frostprotectiondata).`FPEnabled`        |
-| `FPMaxTemperature` | `readonly` | `number`           | [`FrostProtectionData`](README.md#frostprotectiondata).`FPMaxTemperature` |
-| `FPMinTemperature` | `readonly` | `number`           | [`FrostProtectionData`](README.md#frostprotectiondata).`FPMinTemperature` |
-| `HMDefined`        | `readonly` | `boolean`          | `Omit.HMDefined`                                                          |
-| `HMEnabled`        | `readonly` | `boolean`          | `Omit.HMEnabled`                                                          |
-| `HMEndDate`        | `readonly` | `null` \| `string` | `Omit.HMEndDate`                                                          |
-| `HMStartDate`      | `readonly` | `null` \| `string` | `Omit.HMStartDate`                                                        |
-| `TimeZone`         | `readonly` | `number`           | `Omit.TimeZone`                                                           |
+| Property           | Modifier   | Type               | Inherited from                                                            | Defined in                                                                                                                                   |
+| ------------------ | ---------- | ------------------ | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FPDefined`        | `readonly` | `boolean`          | [`FrostProtectionData`](README.md#frostprotectiondata).`FPDefined`        | [src/types/common.ts:138](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L138) |
+| `FPEnabled`        | `readonly` | `boolean`          | [`FrostProtectionData`](README.md#frostprotectiondata).`FPEnabled`        | [src/types/common.ts:139](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L139) |
+| `FPMaxTemperature` | `readonly` | `number`           | [`FrostProtectionData`](README.md#frostprotectiondata).`FPMaxTemperature` | [src/types/common.ts:140](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L140) |
+| `FPMinTemperature` | `readonly` | `number`           | [`FrostProtectionData`](README.md#frostprotectiondata).`FPMinTemperature` | [src/types/common.ts:141](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L141) |
+| `HMDefined`        | `readonly` | `boolean`          | `Omit.HMDefined`                                                          | [src/types/common.ts:176](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L176) |
+| `HMEnabled`        | `readonly` | `boolean`          | `Omit.HMEnabled`                                                          | [src/types/common.ts:177](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L177) |
+| `HMEndDate`        | `readonly` | `null` \| `string` | `Omit.HMEndDate`                                                          | [src/types/common.ts:178](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L178) |
+| `HMStartDate`      | `readonly` | `null` \| `string` | `Omit.HMStartDate`                                                        | [src/types/common.ts:179](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L179) |
+| `TimeZone`         | `readonly` | `number`           | `Omit.TimeZone`                                                           | [src/types/common.ts:188](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L188) |
 
 ---
 
@@ -4693,14 +4837,14 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property | Modifier   | Type     |
-| :------- | :--------- | :------- |
-| `Day`    | `readonly` | `number` |
-| `Hour`   | `readonly` | `number` |
-| `Minute` | `readonly` | `number` |
-| `Month`  | `readonly` | `number` |
-| `Second` | `readonly` | `number` |
-| `Year`   | `readonly` | `number` |
+| Property | Modifier   | Type     | Defined in                                                                                                                                   |
+| -------- | ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Day`    | `readonly` | `number` | [src/types/common.ts:145](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L145) |
+| `Hour`   | `readonly` | `number` | [src/types/common.ts:146](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L146) |
+| `Minute` | `readonly` | `number` | [src/types/common.ts:147](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L147) |
+| `Month`  | `readonly` | `number` | [src/types/common.ts:148](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L148) |
+| `Second` | `readonly` | `number` | [src/types/common.ts:149](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L149) |
+| `Year`   | `readonly` | `number` | [src/types/common.ts:150](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L150) |
 
 ---
 
@@ -4712,10 +4856,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property            | Modifier   | Type     |
-| :------------------ | :--------- | :------- |
-| `LastCommunication` | `readonly` | `string` |
-| `NextCommunication` | `readonly` | `string` |
+| Property            | Modifier   | Type     | Defined in                                                                                                                               |
+| ------------------- | ---------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `LastCommunication` | `readonly` | `string` | [src/types/bases.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L33) |
+| `NextCommunication` | `readonly` | `string` | [src/types/bases.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L34) |
 
 ---
 
@@ -4723,11 +4867,11 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property | Modifier   | Type                                       |
-| :------- | :--------- | :----------------------------------------- |
-| `Ata`    | `readonly` | [`EnergyDataAta`](README.md#energydataata) |
-| `Atw`    | `readonly` | [`EnergyDataAtw`](README.md#energydataatw) |
-| `Erv`    | `readonly` | `never`                                    |
+| Property | Modifier   | Type                                       | Defined in                                                                                                                                   |
+| -------- | ---------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Ata`    | `readonly` | [`EnergyDataAta`](README.md#energydataata) | [src/types/common.ts:291](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L291) |
+| `Atw`    | `readonly` | [`EnergyDataAtw`](README.md#energydataatw) | [src/types/common.ts:292](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L292) |
+| `Erv`    | `readonly` | `never`                                    | [src/types/common.ts:293](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L293) |
 
 ---
 
@@ -4735,21 +4879,21 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property                     | Modifier   | Type                |
-| :--------------------------- | :--------- | :------------------ |
-| `Auto`                       | `readonly` | readonly `number`[] |
-| `Cooling`                    | `readonly` | readonly `number`[] |
-| `Dry`                        | `readonly` | readonly `number`[] |
-| `Fan`                        | `readonly` | readonly `number`[] |
-| `Heating`                    | `readonly` | readonly `number`[] |
-| `Other`                      | `readonly` | readonly `number`[] |
-| `TotalAutoConsumed`          | `readonly` | `number`            |
-| `TotalCoolingConsumed`       | `readonly` | `number`            |
-| `TotalDryConsumed`           | `readonly` | `number`            |
-| `TotalFanConsumed`           | `readonly` | `number`            |
-| `TotalHeatingConsumed`       | `readonly` | `number`            |
-| `TotalOtherConsumed`         | `readonly` | `number`            |
-| `UsageDisclaimerPercentages` | `readonly` | `string`            |
+| Property                     | Modifier   | Type                | Defined in                                                                                                                             |
+| ---------------------------- | ---------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `Auto`                       | `readonly` | readonly `number`[] | [src/types/ata.ts:96](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L96)   |
+| `Cooling`                    | `readonly` | readonly `number`[] | [src/types/ata.ts:97](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L97)   |
+| `Dry`                        | `readonly` | readonly `number`[] | [src/types/ata.ts:98](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L98)   |
+| `Fan`                        | `readonly` | readonly `number`[] | [src/types/ata.ts:99](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L99)   |
+| `Heating`                    | `readonly` | readonly `number`[] | [src/types/ata.ts:100](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L100) |
+| `Other`                      | `readonly` | readonly `number`[] | [src/types/ata.ts:101](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L101) |
+| `TotalAutoConsumed`          | `readonly` | `number`            | [src/types/ata.ts:102](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L102) |
+| `TotalCoolingConsumed`       | `readonly` | `number`            | [src/types/ata.ts:103](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L103) |
+| `TotalDryConsumed`           | `readonly` | `number`            | [src/types/ata.ts:104](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L104) |
+| `TotalFanConsumed`           | `readonly` | `number`            | [src/types/ata.ts:105](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L105) |
+| `TotalHeatingConsumed`       | `readonly` | `number`            | [src/types/ata.ts:106](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L106) |
+| `TotalOtherConsumed`         | `readonly` | `number`            | [src/types/ata.ts:107](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L107) |
+| `UsageDisclaimerPercentages` | `readonly` | `string`            | [src/types/ata.ts:108](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L108) |
 
 ---
 
@@ -4757,15 +4901,15 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property                | Modifier   | Type                |
-| :---------------------- | :--------- | :------------------ |
-| `CoP`                   | `readonly` | readonly `number`[] |
-| `TotalCoolingConsumed`  | `readonly` | `number`            |
-| `TotalCoolingProduced`  | `readonly` | `number`            |
-| `TotalHeatingConsumed`  | `readonly` | `number`            |
-| `TotalHeatingProduced`  | `readonly` | `number`            |
-| `TotalHotWaterConsumed` | `readonly` | `number`            |
-| `TotalHotWaterProduced` | `readonly` | `number`            |
+| Property                | Modifier   | Type                | Defined in                                                                                                                             |
+| ----------------------- | ---------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `CoP`                   | `readonly` | readonly `number`[] | [src/types/atw.ts:112](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L112) |
+| `TotalCoolingConsumed`  | `readonly` | `number`            | [src/types/atw.ts:113](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L113) |
+| `TotalCoolingProduced`  | `readonly` | `number`            | [src/types/atw.ts:114](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L114) |
+| `TotalHeatingConsumed`  | `readonly` | `number`            | [src/types/atw.ts:115](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L115) |
+| `TotalHeatingProduced`  | `readonly` | `number`            | [src/types/atw.ts:116](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L116) |
+| `TotalHotWaterConsumed` | `readonly` | `number`            | [src/types/atw.ts:117](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L117) |
+| `TotalHotWaterProduced` | `readonly` | `number`            | [src/types/atw.ts:118](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L118) |
 
 ---
 
@@ -4777,11 +4921,11 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property   | Modifier   | Type     | Inherited from                                                  |
-| :--------- | :--------- | :------- | :-------------------------------------------------------------- |
-| `DeviceID` | `readonly` | `number` | [`BaseDevicePostData`](README.md#basedevicepostdata).`DeviceID` |
-| `FromDate` | `readonly` | `string` | -                                                               |
-| `ToDate`   | `readonly` | `string` | -                                                               |
+| Property   | Modifier   | Type     | Inherited from                                                  | Defined in                                                                                                                                   |
+| ---------- | ---------- | -------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeviceID` | `readonly` | `number` | [`BaseDevicePostData`](README.md#basedevicepostdata).`DeviceID` | [src/types/bases.ts:29](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L29)     |
+| `FromDate` | `readonly` | `string` | -                                                               | [src/types/common.ts:287](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L287) |
+| `ToDate`   | `readonly` | `string` | -                                                               | [src/types/common.ts:288](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L288) |
 
 ---
 
@@ -4789,12 +4933,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property       | Modifier   | Type               |
-| :------------- | :--------- | :----------------- |
-| `DeviceId`     | `readonly` | `number`           |
-| `EndDate`      | `readonly` | `string`           |
-| `ErrorMessage` | `readonly` | `null` \| `string` |
-| `StartDate`    | `readonly` | `string`           |
+| Property       | Modifier   | Type               | Defined in                                                                                                                                   |
+| -------------- | ---------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeviceId`     | `readonly` | `number`           | [src/types/common.ts:302](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L302) |
+| `EndDate`      | `readonly` | `string`           | [src/types/common.ts:303](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L303) |
+| `ErrorMessage` | `readonly` | `null` \| `string` | [src/types/common.ts:304](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L304) |
+| `StartDate`    | `readonly` | `string`           | [src/types/common.ts:305](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L305) |
 
 ---
 
@@ -4802,11 +4946,11 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property    | Modifier   | Type                |
-| :---------- | :--------- | :------------------ |
-| `DeviceIDs` | `readonly` | readonly `number`[] |
-| `FromDate`  | `readonly` | `string`            |
-| `ToDate`    | `readonly` | `string`            |
+| Property    | Modifier   | Type                | Defined in                                                                                                                                   |
+| ----------- | ---------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeviceIDs` | `readonly` | readonly `number`[] | [src/types/common.ts:297](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L297) |
+| `FromDate`  | `readonly` | `string`            | [src/types/common.ts:298](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L298) |
+| `ToDate`    | `readonly` | `string`            | [src/types/common.ts:299](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L299) |
 
 ---
 
@@ -4814,10 +4958,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property          | Modifier   | Type                                      |
-| :---------------- | :--------- | :---------------------------------------- |
-| `AttributeErrors` | `readonly` | `Record`\<`string`, readonly `string`[]\> |
-| `Success`         | `readonly` | `false`                                   |
+| Property          | Modifier   | Type                                      | Defined in                                                                                                                                   |
+| ----------------- | ---------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AttributeErrors` | `readonly` | `Record`\<`string`, readonly `string`[]\> | [src/types/common.ts:117](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L117) |
+| `Success`         | `readonly` | `false`                                   | [src/types/common.ts:118](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L118) |
 
 ---
 
@@ -4829,11 +4973,11 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Modifier   | Type     |
-| :----------- | :--------- | :------- |
-| `BuildingId` | `readonly` | `number` |
-| `ID`         | `readonly` | `number` |
-| `Name`       | `readonly` | `string` |
+| Property     | Modifier   | Type     | Defined in                                                                                                                                   |
+| ------------ | ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BuildingId` | `readonly` | `number` | [src/types/common.ts:219](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L219) |
+| `ID`         | `readonly` | `number` | [src/types/common.ts:220](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L220) |
+| `Name`       | `readonly` | `string` | [src/types/common.ts:221](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L221) |
 
 ---
 
@@ -4845,12 +4989,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property           | Modifier   | Type      |
-| :----------------- | :--------- | :-------- |
-| `FPDefined`        | `readonly` | `boolean` |
-| `FPEnabled`        | `readonly` | `boolean` |
-| `FPMaxTemperature` | `readonly` | `number`  |
-| `FPMinTemperature` | `readonly` | `number`  |
+| Property           | Modifier   | Type      | Defined in                                                                                                                                   |
+| ------------------ | ---------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FPDefined`        | `readonly` | `boolean` | [src/types/common.ts:138](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L138) |
+| `FPEnabled`        | `readonly` | `boolean` | [src/types/common.ts:139](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L139) |
+| `FPMaxTemperature` | `readonly` | `number`  | [src/types/common.ts:140](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L140) |
+| `FPMinTemperature` | `readonly` | `number`  | [src/types/common.ts:141](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L141) |
 
 ---
 
@@ -4862,12 +5006,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property       | Modifier   | Type                |
-| :------------- | :--------- | :------------------ |
-| `AreaIds?`     | `readonly` | readonly `number`[] |
-| `BuildingIds?` | `readonly` | readonly `number`[] |
-| `DeviceIds?`   | `readonly` | readonly `number`[] |
-| `FloorIds?`    | `readonly` | readonly `number`[] |
+| Property       | Modifier   | Type                | Defined in                                                                                                                                   |
+| -------------- | ---------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AreaIds?`     | `readonly` | readonly `number`[] | [src/types/common.ts:127](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L127) |
+| `BuildingIds?` | `readonly` | readonly `number`[] | [src/types/common.ts:128](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L128) |
+| `DeviceIds?`   | `readonly` | readonly `number`[] | [src/types/common.ts:129](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L129) |
+| `FloorIds?`    | `readonly` | readonly `number`[] | [src/types/common.ts:130](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L130) |
 
 ---
 
@@ -4879,15 +5023,15 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property             | Modifier   | Type                | Inherited from                                                               |
-| :------------------- | :--------- | :------------------ | :--------------------------------------------------------------------------- |
-| `AreaIds?`           | `readonly` | readonly `number`[] | [`FrostProtectionLocation`](README.md#frostprotectionlocation).`AreaIds`     |
-| `BuildingIds?`       | `readonly` | readonly `number`[] | [`FrostProtectionLocation`](README.md#frostprotectionlocation).`BuildingIds` |
-| `DeviceIds?`         | `readonly` | readonly `number`[] | [`FrostProtectionLocation`](README.md#frostprotectionlocation).`DeviceIds`   |
-| `Enabled`            | `readonly` | `boolean`           | -                                                                            |
-| `FloorIds?`          | `readonly` | readonly `number`[] | [`FrostProtectionLocation`](README.md#frostprotectionlocation).`FloorIds`    |
-| `MaximumTemperature` | `readonly` | `number`            | -                                                                            |
-| `MinimumTemperature` | `readonly` | `number`            | -                                                                            |
+| Property             | Modifier   | Type                | Inherited from                                                               | Defined in                                                                                                                                   |
+| -------------------- | ---------- | ------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AreaIds?`           | `readonly` | readonly `number`[] | [`FrostProtectionLocation`](README.md#frostprotectionlocation).`AreaIds`     | [src/types/common.ts:127](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L127) |
+| `BuildingIds?`       | `readonly` | readonly `number`[] | [`FrostProtectionLocation`](README.md#frostprotectionlocation).`BuildingIds` | [src/types/common.ts:128](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L128) |
+| `DeviceIds?`         | `readonly` | readonly `number`[] | [`FrostProtectionLocation`](README.md#frostprotectionlocation).`DeviceIds`   | [src/types/common.ts:129](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L129) |
+| `Enabled`            | `readonly` | `boolean`           | -                                                                            | [src/types/common.ts:133](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L133) |
+| `FloorIds?`          | `readonly` | readonly `number`[] | [`FrostProtectionLocation`](README.md#frostprotectionlocation).`FloorIds`    | [src/types/common.ts:130](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L130) |
+| `MaximumTemperature` | `readonly` | `number`            | -                                                                            | [src/types/common.ts:134](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L134) |
+| `MinimumTemperature` | `readonly` | `number`            | -                                                                            | [src/types/common.ts:135](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L135) |
 
 ---
 
@@ -4895,11 +5039,11 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property | Modifier   | Type                                             |
-| :------- | :--------- | :----------------------------------------------- |
-| `Ata`    | `readonly` | [`GetDeviceDataAta`](README.md#getdevicedataata) |
-| `Atw`    | `readonly` | [`GetDeviceDataAtw`](README.md#getdevicedataatw) |
-| `Erv`    | `readonly` | [`GetDeviceDataErv`](README.md#getdevicedataerv) |
+| Property | Modifier   | Type                                             | Defined in                                                                                                                                   |
+| -------- | ---------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Ata`    | `readonly` | [`GetDeviceDataAta`](README.md#getdevicedataata) | [src/types/common.ts:107](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L107) |
+| `Atw`    | `readonly` | [`GetDeviceDataAtw`](README.md#getdevicedataatw) | [src/types/common.ts:108](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L108) |
+| `Erv`    | `readonly` | [`GetDeviceDataErv`](README.md#getdevicedataerv) | [src/types/common.ts:109](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L109) |
 
 ---
 
@@ -4907,10 +5051,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Modifier   | Type     |
-| :----------- | :--------- | :------- |
-| `buildingId` | `readonly` | `number` |
-| `id`         | `readonly` | `number` |
+| Property     | Modifier   | Type     | Defined in                                                                                                                                   |
+| ------------ | ---------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildingId` | `readonly` | `number` | [src/types/common.ts:103](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L103) |
+| `id`         | `readonly` | `number` | [src/types/common.ts:104](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L104) |
 
 ---
 
@@ -4922,13 +5066,13 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Modifier   | Type                | Inherited from                                                     |
-| :----------- | :--------- | :------------------ | :----------------------------------------------------------------- |
-| `Areas?`     | `readonly` | readonly `number`[] | [`HolidayModeLocation`](README.md#holidaymodelocation).`Areas`     |
-| `Buildings?` | `readonly` | readonly `number`[] | [`HolidayModeLocation`](README.md#holidaymodelocation).`Buildings` |
-| `Devices?`   | `readonly` | readonly `number`[] | [`HolidayModeLocation`](README.md#holidaymodelocation).`Devices`   |
-| `Floors?`    | `readonly` | readonly `number`[] | [`HolidayModeLocation`](README.md#holidaymodelocation).`Floors`    |
-| `TimeZone?`  | `readonly` | `number`            | -                                                                  |
+| Property     | Modifier   | Type                | Inherited from                                                     | Defined in                                                                                                                                   |
+| ------------ | ---------- | ------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Areas?`     | `readonly` | readonly `number`[] | [`HolidayModeLocation`](README.md#holidaymodelocation).`Areas`     | [src/types/common.ts:153](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L153) |
+| `Buildings?` | `readonly` | readonly `number`[] | [`HolidayModeLocation`](README.md#holidaymodelocation).`Buildings` | [src/types/common.ts:154](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L154) |
+| `Devices?`   | `readonly` | readonly `number`[] | [`HolidayModeLocation`](README.md#holidaymodelocation).`Devices`   | [src/types/common.ts:155](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L155) |
+| `Floors?`    | `readonly` | readonly `number`[] | [`HolidayModeLocation`](README.md#holidaymodelocation).`Floors`    | [src/types/common.ts:156](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L156) |
+| `TimeZone?`  | `readonly` | `number`            | -                                                                  | [src/types/common.ts:159](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L159) |
 
 ---
 
@@ -4936,27 +5080,27 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property           | Modifier   | Type                                                                                                                  |
-| :----------------- | :--------- | :-------------------------------------------------------------------------------------------------------------------- |
-| `EndDate`          | `readonly` | \{ `Day`: `number`; `Hour`: `number`; `Minute`: `number`; `Month`: `number`; `Second`: `number`; `Year`: `number`; \} |
-| `EndDate.Day`      | `readonly` | `number`                                                                                                              |
-| `EndDate.Hour`     | `readonly` | `number`                                                                                                              |
-| `EndDate.Minute`   | `readonly` | `number`                                                                                                              |
-| `EndDate.Month`    | `readonly` | `number`                                                                                                              |
-| `EndDate.Second`   | `readonly` | `number`                                                                                                              |
-| `EndDate.Year`     | `readonly` | `number`                                                                                                              |
-| `HMDefined`        | `public`   | `boolean`                                                                                                             |
-| `HMEnabled`        | `public`   | `boolean`                                                                                                             |
-| `HMEndDate`        | `public`   | `null` \| `string`                                                                                                    |
-| `HMStartDate`      | `public`   | `null` \| `string`                                                                                                    |
-| `StartDate`        | `public`   | \{ `Day`: `number`; `Hour`: `number`; `Minute`: `number`; `Month`: `number`; `Second`: `number`; `Year`: `number`; \} |
-| `StartDate.Day`    | `public`   | `number`                                                                                                              |
-| `StartDate.Hour`   | `public`   | `number`                                                                                                              |
-| `StartDate.Minute` | `public`   | `number`                                                                                                              |
-| `StartDate.Month`  | `public`   | `number`                                                                                                              |
-| `StartDate.Second` | `public`   | `number`                                                                                                              |
-| `StartDate.Year`   | `public`   | `number`                                                                                                              |
-| `TimeZone`         | `public`   | `number`                                                                                                              |
+| Property           | Modifier   | Type                                                                                                                  | Defined in                                                                                                                                   |
+| ------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EndDate`          | `readonly` | \{ `Day`: `number`; `Hour`: `number`; `Minute`: `number`; `Month`: `number`; `Second`: `number`; `Year`: `number`; \} | [src/types/common.ts:168](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L168) |
+| `EndDate.Day`      | `readonly` | `number`                                                                                                              | [src/types/common.ts:169](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L169) |
+| `EndDate.Hour`     | `readonly` | `number`                                                                                                              | [src/types/common.ts:170](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L170) |
+| `EndDate.Minute`   | `readonly` | `number`                                                                                                              | [src/types/common.ts:171](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L171) |
+| `EndDate.Month`    | `readonly` | `number`                                                                                                              | [src/types/common.ts:172](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L172) |
+| `EndDate.Second`   | `readonly` | `number`                                                                                                              | [src/types/common.ts:173](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L173) |
+| `EndDate.Year`     | `readonly` | `number`                                                                                                              | [src/types/common.ts:174](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L174) |
+| `HMDefined`        | `readonly` | `boolean`                                                                                                             | [src/types/common.ts:176](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L176) |
+| `HMEnabled`        | `readonly` | `boolean`                                                                                                             | [src/types/common.ts:177](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L177) |
+| `HMEndDate`        | `readonly` | `null` \| `string`                                                                                                    | [src/types/common.ts:178](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L178) |
+| `HMStartDate`      | `readonly` | `null` \| `string`                                                                                                    | [src/types/common.ts:179](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L179) |
+| `StartDate`        | `readonly` | \{ `Day`: `number`; `Hour`: `number`; `Minute`: `number`; `Month`: `number`; `Second`: `number`; `Year`: `number`; \} | [src/types/common.ts:180](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L180) |
+| `StartDate.Day`    | `readonly` | `number`                                                                                                              | [src/types/common.ts:181](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L181) |
+| `StartDate.Hour`   | `readonly` | `number`                                                                                                              | [src/types/common.ts:182](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L182) |
+| `StartDate.Minute` | `readonly` | `number`                                                                                                              | [src/types/common.ts:183](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L183) |
+| `StartDate.Month`  | `readonly` | `number`                                                                                                              | [src/types/common.ts:184](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L184) |
+| `StartDate.Second` | `readonly` | `number`                                                                                                              | [src/types/common.ts:185](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L185) |
+| `StartDate.Year`   | `readonly` | `number`                                                                                                              | [src/types/common.ts:186](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L186) |
+| `TimeZone`         | `readonly` | `number`                                                                                                              | [src/types/common.ts:188](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L188) |
 
 ---
 
@@ -4968,12 +5112,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Modifier   | Type                |
-| :----------- | :--------- | :------------------ |
-| `Areas?`     | `readonly` | readonly `number`[] |
-| `Buildings?` | `readonly` | readonly `number`[] |
-| `Devices?`   | `readonly` | readonly `number`[] |
-| `Floors?`    | `readonly` | readonly `number`[] |
+| Property     | Modifier   | Type                | Defined in                                                                                                                                   |
+| ------------ | ---------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Areas?`     | `readonly` | readonly `number`[] | [src/types/common.ts:153](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L153) |
+| `Buildings?` | `readonly` | readonly `number`[] | [src/types/common.ts:154](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L154) |
+| `Devices?`   | `readonly` | readonly `number`[] | [src/types/common.ts:155](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L155) |
+| `Floors?`    | `readonly` | readonly `number`[] | [src/types/common.ts:156](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L156) |
 
 ---
 
@@ -4981,12 +5125,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property      | Modifier   | Type                                                           |
-| :------------ | :--------- | :------------------------------------------------------------- |
-| `Enabled`     | `readonly` | `boolean`                                                      |
-| `EndDate`     | `readonly` | `null` \| [`DateTimeComponents`](README.md#datetimecomponents) |
-| `HMTimeZones` | `readonly` | readonly [`HMTimeZone`](README.md#hmtimezone)[]                |
-| `StartDate`   | `readonly` | `null` \| [`DateTimeComponents`](README.md#datetimecomponents) |
+| Property      | Modifier   | Type                                                           | Defined in                                                                                                                                   |
+| ------------- | ---------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Enabled`     | `readonly` | `boolean`                                                      | [src/types/common.ts:162](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L162) |
+| `EndDate`     | `readonly` | `null` \| [`DateTimeComponents`](README.md#datetimecomponents) | [src/types/common.ts:163](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L163) |
+| `HMTimeZones` | `readonly` | readonly [`HMTimeZone`](README.md#hmtimezone)[]                | [src/types/common.ts:164](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L164) |
+| `StartDate`   | `readonly` | `null` \| [`DateTimeComponents`](README.md#datetimecomponents) | [src/types/common.ts:165](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L165) |
 
 ---
 
@@ -4998,14 +5142,14 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Type                                                    | Inherited from                                                         |
-| :----------- | :------------------------------------------------------ | :--------------------------------------------------------------------- |
-| `building`   | `null` \| [`BuildingModel`](README.md#buildingmodel)    | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`building`        |
-| `buildingId` | `number`                                                | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`buildingId`      |
-| `deviceIds`  | readonly `number`[]                                     | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`deviceIds` |
-| `devices`    | readonly [`DeviceModelAny`](README.md#devicemodelany)[] | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`devices`   |
-| `floor`      | `null` \| [`FloorModel`](README.md#floormodel)          | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floor`           |
-| `floorId`    | `null` \| `number`                                      | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floorId`         |
+| Property     | Type                                                    | Inherited from                                                         | Defined in                                                                                                                                           |
+| ------------ | ------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `building`   | `null` \| [`BuildingModel`](README.md#buildingmodel)    | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`building`        | [src/models/interfaces.ts:8](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L8)   |
+| `buildingId` | `number`                                                | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`buildingId`      | [src/models/interfaces.ts:9](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L9)   |
+| `deviceIds`  | readonly `number`[]                                     | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`deviceIds` | [src/models/interfaces.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L23) |
+| `devices`    | readonly [`DeviceModelAny`](README.md#devicemodelany)[] | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`devices`   | [src/models/interfaces.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L24) |
+| `floor`      | `null` \| [`FloorModel`](README.md#floormodel)          | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floor`           | [src/models/interfaces.ts:13](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L13) |
+| `floorId`    | `null` \| `number`                                      | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floorId`         | [src/models/interfaces.ts:14](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L14) |
 
 ---
 
@@ -5018,17 +5162,17 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property             | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| :------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getErrors`          | (`__namedParameters`: \{ `from`: `null` \| `string`; `to`: `null` \| `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                                                                                                                                                                                                                                                                                                                                                                            |
-| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `getTiles`           | (`select`?: `null` \| `false`) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\> & \<`T`\>(`select`: [`DeviceModel`](README.md#devicemodelt)\<`T`\>) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`T`\>\>                                                                                                                                                                                                                                                                                                                                                  |
-| `getWifiReport`      | (`hour`?: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `name`               | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                                                                                                                                                                                                                                                                                                                                                                                         |
-| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `false`; `from`: `null`; `to`: `null`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `enable`: `true`; `from`: `null` \| `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `days`: `number`; `enable`: `true`; `from`: `null` \| `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> |
-| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Property             | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Defined in                                                                                                                                             |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `getErrors`          | (`__namedParameters`: \{ `from`: `null` \| `string`; `to`: `null` \| `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                                                                                                                                                                                                                                                                                                                                                                            | [src/facades/interfaces.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L23) |
+| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [src/facades/interfaces.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L30) |
+| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [src/facades/interfaces.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L31) |
+| `getTiles`           | (`select`?: `null` \| `false`) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\> & \<`T`\>(`select`: [`DeviceModel`](README.md#devicemodelt)\<`T`\>) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`T`\>\>                                                                                                                                                                                                                                                                                                                                                  | [src/facades/interfaces.ts:32](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L32) |
+| `getWifiReport`      | (`hour`?: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | [src/facades/interfaces.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L36) |
+| `name`               | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | [src/facades/interfaces.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L37) |
+| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                                                                                                                                                                                                                                                                                                                                                                                         | [src/facades/interfaces.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L38) |
+| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `false`; `from`: `null`; `to`: `null`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `enable`: `true`; `from`: `null` \| `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `days`: `number`; `enable`: `true`; `from`: `null` \| `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | [src/facades/interfaces.ts:47](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L47) |
+| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | [src/facades/interfaces.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L74) |
 
 ---
 
@@ -5041,10 +5185,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Type                                                 |
-| :----------- | :--------------------------------------------------- |
-| `building`   | `null` \| [`BuildingModel`](README.md#buildingmodel) |
-| `buildingId` | `number`                                             |
+| Property     | Type                                                 | Defined in                                                                                                                                         |
+| ------------ | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `building`   | `null` \| [`BuildingModel`](README.md#buildingmodel) | [src/models/interfaces.ts:8](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L8) |
+| `buildingId` | `number`                                             | [src/models/interfaces.ts:9](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L9) |
 
 ---
 
@@ -5061,12 +5205,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Type                                                 | Inherited from                                                          |
-| :----------- | :--------------------------------------------------- | :---------------------------------------------------------------------- |
-| `building`   | `null` \| [`BuildingModel`](README.md#buildingmodel) | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`building`   |
-| `buildingId` | `number`                                             | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`buildingId` |
-| `floor`      | `null` \| [`FloorModel`](README.md#floormodel)       | -                                                                       |
-| `floorId`    | `null` \| `number`                                   | -                                                                       |
+| Property     | Type                                                 | Inherited from                                                          | Defined in                                                                                                                                           |
+| ------------ | ---------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `building`   | `null` \| [`BuildingModel`](README.md#buildingmodel) | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`building`   | [src/models/interfaces.ts:8](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L8)   |
+| `buildingId` | `number`                                             | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`buildingId` | [src/models/interfaces.ts:9](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L9)   |
+| `floor`      | `null` \| [`FloorModel`](README.md#floormodel)       | -                                                                       | [src/models/interfaces.ts:13](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L13) |
+| `floorId`    | `null` \| `number`                                   | -                                                                       | [src/models/interfaces.ts:14](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L14) |
 
 ---
 
@@ -5083,12 +5227,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property    | Type                                                       | Inherited from                                                         |
-| :---------- | :--------------------------------------------------------- | :--------------------------------------------------------------------- |
-| `areaIds`   | readonly `number`[]                                        | -                                                                      |
-| `areas`     | readonly [`AreaModel`](README.md#areamodelt)\<`number`\>[] | -                                                                      |
-| `deviceIds` | readonly `number`[]                                        | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`deviceIds` |
-| `devices`   | readonly [`DeviceModelAny`](README.md#devicemodelany)[]    | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`devices`   |
+| Property    | Type                                                       | Inherited from                                                         | Defined in                                                                                                                                           |
+| ----------- | ---------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areaIds`   | readonly `number`[]                                        | -                                                                      | [src/models/interfaces.ts:18](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L18) |
+| `areas`     | readonly [`AreaModel`](README.md#areamodelt)\<`number`\>[] | -                                                                      | [src/models/interfaces.ts:19](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L19) |
+| `deviceIds` | readonly `number`[]                                        | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`deviceIds` | [src/models/interfaces.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L23) |
+| `devices`   | readonly [`DeviceModelAny`](README.md#devicemodelany)[]    | [`IBaseSuperDeviceModel`](README.md#ibasesuperdevicemodel).`devices`   | [src/models/interfaces.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L24) |
 
 ---
 
@@ -5104,19 +5248,19 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property             | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Inherited from                                              |
-| :------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------- |
-| `getAta`             | () => \{ `FanSpeed`: `null` \| [`FanSpeed`](README.md#fanspeed); `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \}                                                                                                                         | -                                                           |
-| `getErrors`          | (`__namedParameters`: \{ `from`: `null` \| `string`; `to`: `null` \| `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                                                                                                                                                                                                                                                                                                                                                                            | [`IBaseFacade`](README.md#ibasefacade).`getErrors`          |
-| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [`IBaseFacade`](README.md#ibasefacade).`getFrostProtection` |
-| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [`IBaseFacade`](README.md#ibasefacade).`getHolidayMode`     |
-| `getTiles`           | (`select`?: `null` \| `false`) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\> & \<`T`\>(`select`: [`DeviceModel`](README.md#devicemodelt)\<`T`\>) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`T`\>\>                                                                                                                                                                                                                                                                                                                                                  | [`IBaseFacade`](README.md#ibasefacade).`getTiles`           |
-| `getWifiReport`      | (`hour`?: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | [`IBaseFacade`](README.md#ibasefacade).`getWifiReport`      |
-| `name`               | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | [`IBaseFacade`](README.md#ibasefacade).`name`               |
-| `setAta`             | (`postData`: \{ `FanSpeed`: `null` \| [`FanSpeed`](README.md#fanspeed); `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                | -                                                           |
-| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                                                                                                                                                                                                                                                                                                                                                                                         | [`IBaseFacade`](README.md#ibasefacade).`setFrostProtection` |
-| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `false`; `from`: `null`; `to`: `null`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `enable`: `true`; `from`: `null` \| `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `days`: `number`; `enable`: `true`; `from`: `null` \| `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | [`IBaseFacade`](README.md#ibasefacade).`setHolidayMode`     |
-| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | [`IBaseFacade`](README.md#ibasefacade).`setPower`           |
+| Property             | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Inherited from                                              | Defined in                                                                                                                                             |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `getAta`             | () => \{ `FanSpeed`: `null` \| [`FanSpeed`](README.md#fanspeed); `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \}                                                                                                                         | -                                                           | [src/facades/interfaces.ts:78](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L78) |
+| `getErrors`          | (`__namedParameters`: \{ `from`: `null` \| `string`; `to`: `null` \| `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                                                                                                                                                                                                                                                                                                                                                                            | [`IBaseFacade`](README.md#ibasefacade).`getErrors`          | [src/facades/interfaces.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L23) |
+| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [`IBaseFacade`](README.md#ibasefacade).`getFrostProtection` | [src/facades/interfaces.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L30) |
+| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [`IBaseFacade`](README.md#ibasefacade).`getHolidayMode`     | [src/facades/interfaces.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L31) |
+| `getTiles`           | (`select`?: `null` \| `false`) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\> & \<`T`\>(`select`: [`DeviceModel`](README.md#devicemodelt)\<`T`\>) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`T`\>\>                                                                                                                                                                                                                                                                                                                                                  | [`IBaseFacade`](README.md#ibasefacade).`getTiles`           | [src/facades/interfaces.ts:32](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L32) |
+| `getWifiReport`      | (`hour`?: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | [`IBaseFacade`](README.md#ibasefacade).`getWifiReport`      | [src/facades/interfaces.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L36) |
+| `name`               | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | [`IBaseFacade`](README.md#ibasefacade).`name`               | [src/facades/interfaces.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L37) |
+| `setAta`             | (`postData`: \{ `FanSpeed`: `null` \| [`FanSpeed`](README.md#fanspeed); `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                | -                                                           | [src/facades/interfaces.ts:79](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L79) |
+| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                                                                                                                                                                                                                                                                                                                                                                                         | [`IBaseFacade`](README.md#ibasefacade).`setFrostProtection` | [src/facades/interfaces.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L38) |
+| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `false`; `from`: `null`; `to`: `null`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `enable`: `true`; `from`: `null` \| `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `days`: `number`; `enable`: `true`; `from`: `null` \| `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | [`IBaseFacade`](README.md#ibasefacade).`setHolidayMode`     | [src/facades/interfaces.ts:47](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L47) |
+| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | [`IBaseFacade`](README.md#ibasefacade).`setPower`           | [src/facades/interfaces.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L74) |
 
 ---
 
@@ -5129,10 +5273,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property    | Type                                                    |
-| :---------- | :------------------------------------------------------ |
-| `deviceIds` | readonly `number`[]                                     |
-| `devices`   | readonly [`DeviceModelAny`](README.md#devicemodelany)[] |
+| Property    | Type                                                    | Defined in                                                                                                                                           |
+| ----------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `deviceIds` | readonly `number`[]                                     | [src/models/interfaces.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L23) |
+| `devices`   | readonly [`DeviceModelAny`](README.md#devicemodelany)[] | [src/models/interfaces.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L24) |
 
 ---
 
@@ -5144,22 +5288,22 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property             | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Inherited from                                                                    |
-| :------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------- |
-| `actualData`         | () => `Promise`\<[`BuildingData`](README.md#buildingdata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -                                                                                 |
-| `fetch`              | () => `Promise`\<[`BuildingSettings`](README.md#buildingsettings)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -                                                                                 |
-| `getAta`             | () => \{ `FanSpeed`: `null` \| [`FanSpeed`](README.md#fanspeed); `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \}                                                                                                                         | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getAta`             |
-| `getErrors`          | (`__namedParameters`: \{ `from`: `null` \| `string`; `to`: `null` \| `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                                                                                                                                                                                                                                                                                                                                                                            | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getErrors`          |
-| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getFrostProtection` |
-| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getHolidayMode`     |
-| `getTiles`           | (`select`?: `null` \| `false`) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\> & \<`T`\>(`select`: [`DeviceModel`](README.md#devicemodelt)\<`T`\>) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`T`\>\>                                                                                                                                                                                                                                                                                                                                                  | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getTiles`           |
-| `getWifiReport`      | (`hour`?: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getWifiReport`      |
-| `name`               | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`name`               |
-| `setAta`             | (`postData`: \{ `FanSpeed`: `null` \| [`FanSpeed`](README.md#fanspeed); `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setAta`             |
-| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                                                                                                                                                                                                                                                                                                                                                                                         | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setFrostProtection` |
-| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `false`; `from`: `null`; `to`: `null`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `enable`: `true`; `from`: `null` \| `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `days`: `number`; `enable`: `true`; `from`: `null` \| `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setHolidayMode`     |
-| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setPower`           |
-| `settings`           | [`BuildingSettings`](README.md#buildingsettings)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | -                                                                                 |
+| Property             | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Inherited from                                                                    | Defined in                                                                                                                                             |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `actualData`         | () => `Promise`\<[`BuildingData`](README.md#buildingdata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | -                                                                                 | [src/facades/interfaces.ts:85](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L85) |
+| `fetch`              | () => `Promise`\<[`BuildingSettings`](README.md#buildingsettings)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -                                                                                 | [src/facades/interfaces.ts:86](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L86) |
+| `getAta`             | () => \{ `FanSpeed`: `null` \| [`FanSpeed`](README.md#fanspeed); `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \}                                                                                                                         | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getAta`             | [src/facades/interfaces.ts:78](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L78) |
+| `getErrors`          | (`__namedParameters`: \{ `from`: `null` \| `string`; `to`: `null` \| `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                                                                                                                                                                                                                                                                                                                                                                            | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getErrors`          | [src/facades/interfaces.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L23) |
+| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getFrostProtection` | [src/facades/interfaces.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L30) |
+| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getHolidayMode`     | [src/facades/interfaces.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L31) |
+| `getTiles`           | (`select`?: `null` \| `false`) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\> & \<`T`\>(`select`: [`DeviceModel`](README.md#devicemodelt)\<`T`\>) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`T`\>\>                                                                                                                                                                                                                                                                                                                                                  | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getTiles`           | [src/facades/interfaces.ts:32](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L32) |
+| `getWifiReport`      | (`hour`?: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`getWifiReport`      | [src/facades/interfaces.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L36) |
+| `name`               | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`name`               | [src/facades/interfaces.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L37) |
+| `setAta`             | (`postData`: \{ `FanSpeed`: `null` \| [`FanSpeed`](README.md#fanspeed); `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setAta`             | [src/facades/interfaces.ts:79](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L79) |
+| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                                                                                                                                                                                                                                                                                                                                                                                         | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setFrostProtection` | [src/facades/interfaces.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L38) |
+| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `false`; `from`: `null`; `to`: `null`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `enable`: `true`; `from`: `null` \| `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `days`: `number`; `enable`: `true`; `from`: `null` \| `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setHolidayMode`     | [src/facades/interfaces.ts:47](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L47) |
+| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | [`IBaseSuperDeviceFacade`](README.md#ibasesuperdevicefacade).`setPower`           | [src/facades/interfaces.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L74) |
+| `settings`           | [`BuildingSettings`](README.md#buildingsettings)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | -                                                                                 | [src/facades/interfaces.ts:87](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L87) |
 
 ---
 
@@ -5171,15 +5315,15 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property    | Type                                                       | Inherited from                                                     |
-| :---------- | :--------------------------------------------------------- | :----------------------------------------------------------------- |
-| `areaIds`   | readonly `number`[]                                        | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`areaIds`   |
-| `areas`     | readonly [`AreaModel`](README.md#areamodelt)\<`number`\>[] | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`areas`     |
-| `deviceIds` | readonly `number`[]                                        | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`deviceIds` |
-| `devices`   | readonly [`DeviceModelAny`](README.md#devicemodelany)[]    | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`devices`   |
-| `floorIds`  | readonly `number`[]                                        | -                                                                  |
-| `floors`    | readonly [`FloorModel`](README.md#floormodel)[]            | -                                                                  |
-| `settings`  | [`BuildingSettings`](README.md#buildingsettings)           | -                                                                  |
+| Property    | Type                                                       | Inherited from                                                     | Defined in                                                                                                                                           |
+| ----------- | ---------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areaIds`   | readonly `number`[]                                        | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`areaIds`   | [src/models/interfaces.ts:18](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L18) |
+| `areas`     | readonly [`AreaModel`](README.md#areamodelt)\<`number`\>[] | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`areas`     | [src/models/interfaces.ts:19](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L19) |
+| `deviceIds` | readonly `number`[]                                        | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`deviceIds` | [src/models/interfaces.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L23) |
+| `devices`   | readonly [`DeviceModelAny`](README.md#devicemodelany)[]    | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`devices`   | [src/models/interfaces.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L24) |
+| `floorIds`  | readonly `number`[]                                        | -                                                                  | [src/models/interfaces.ts:28](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L28) |
+| `floors`    | readonly [`FloorModel`](README.md#floormodel)[]            | -                                                                  | [src/models/interfaces.ts:29](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L29) |
+| `settings`  | [`BuildingSettings`](README.md#buildingsettings)           | -                                                                  | [src/models/interfaces.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L30) |
 
 ---
 
@@ -5189,32 +5333,32 @@ setPower(__namedParameters: {
 
 - [`IBaseFacade`](README.md#ibasefacade)
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                                                    |
-| :---------------------------------------------------------------- |
+| Type Parameter                                                    |
+| ----------------------------------------------------------------- |
 | `T` _extends_ keyof _typeof_ [`DeviceType`](README.md#devicetype) |
 
 #### Properties
 
-| Property             | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Overrides                                                   | Inherited from                                              |
-| :------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------- | :---------------------------------------------------------- |
-| `data`               | [`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | -                                                           | -                                                           |
-| `fetch`              | () => `Promise`\<[`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\]\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | -                                                           | -                                                           |
-| `flags`              | `Record`\<`Exclude`\<keyof [`UpdateDeviceData`](README.md#updatedevicedata)\[`T`\], `"EffectiveFlags"`\>, `number`\>                                                                                                                                                                                                                                                                                                                                                                                                                                                         | -                                                           | -                                                           |
-| `get`                | () => `Promise`\<[`GetDeviceData`](README.md#getdevicedata)\[`T`\]\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | -                                                           | -                                                           |
-| `getEnergyReport`    | (`__namedParameters`: \{ `from`: `null` \| `string`; `to`: `null` \| `string`; \}) => `Promise`\<[`EnergyData`](README.md#energydata)\[`T`\]\>                                                                                                                                                                                                                                                                                                                                                                                                                               | -                                                           | -                                                           |
-| `getErrors`          | (`__namedParameters`: \{ `from`: `null` \| `string`; `to`: `null` \| `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                                                                                                                                                                                                                                                                                                                                                                            | [`IBaseFacade`](README.md#ibasefacade).`getErrors`          | [`IBaseFacade`](README.md#ibasefacade).`getErrors`          |
-| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [`IBaseFacade`](README.md#ibasefacade).`getFrostProtection` | [`IBaseFacade`](README.md#ibasefacade).`getFrostProtection` |
-| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [`IBaseFacade`](README.md#ibasefacade).`getHolidayMode`     | [`IBaseFacade`](README.md#ibasefacade).`getHolidayMode`     |
-| `getTiles`           | (`select`?: `null` \| `false`) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\> & (`select`: `true` \| [`DeviceModel`](README.md#devicemodelt)\<`T`\>) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`T`\>\>                                                                                                                                                                                                                                                                                                                                               | [`IBaseFacade`](README.md#ibasefacade).`getTiles`           | [`IBaseFacade`](README.md#ibasefacade).`getTiles`           |
-| `getWifiReport`      | (`hour`?: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | [`IBaseFacade`](README.md#ibasefacade).`getWifiReport`      | [`IBaseFacade`](README.md#ibasefacade).`getWifiReport`      |
-| `name`               | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | [`IBaseFacade`](README.md#ibasefacade).`name`               | [`IBaseFacade`](README.md#ibasefacade).`name`               |
-| `set`                | (`postData`: [`UpdateDeviceData`](README.md#updatedevicedata)\[`T`\]) => `Promise`\<[`SetDeviceData`](README.md#setdevicedata)\[`T`\]\>                                                                                                                                                                                                                                                                                                                                                                                                                                      | -                                                           | -                                                           |
-| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                                                                                                                                                                                                                                                                                                                                                                                         | [`IBaseFacade`](README.md#ibasefacade).`setFrostProtection` | [`IBaseFacade`](README.md#ibasefacade).`setFrostProtection` |
-| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `false`; `from`: `null`; `to`: `null`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `enable`: `true`; `from`: `null` \| `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `days`: `number`; `enable`: `true`; `from`: `null` \| `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | [`IBaseFacade`](README.md#ibasefacade).`setHolidayMode`     | [`IBaseFacade`](README.md#ibasefacade).`setHolidayMode`     |
-| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | [`IBaseFacade`](README.md#ibasefacade).`setPower`           | [`IBaseFacade`](README.md#ibasefacade).`setPower`           |
-| `type`               | `T`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -                                                           | -                                                           |
+| Property             | Type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Overrides                                         | Inherited from                                              | Defined in                                                                                                                                               |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`               | [`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | -                                                 | -                                                           | [src/facades/interfaces.ts:92](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L92)   |
+| `fetch`              | () => `Promise`\<[`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\]\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | -                                                 | -                                                           | [src/facades/interfaces.ts:93](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L93)   |
+| `flags`              | `Record`\<`Exclude`\<keyof [`UpdateDeviceData`](README.md#updatedevicedata)\[`T`\], `"EffectiveFlags"`\>, `number`\>                                                                                                                                                                                                                                                                                                                                                                                                                                                         | -                                                 | -                                                           | [src/facades/interfaces.ts:94](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L94)   |
+| `get`                | () => `Promise`\<[`GetDeviceData`](README.md#getdevicedata)\[`T`\]\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | -                                                 | -                                                           | [src/facades/interfaces.ts:95](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L95)   |
+| `getEnergyReport`    | (`__namedParameters`: \{ `from`: `null` \| `string`; `to`: `null` \| `string`; \}) => `Promise`\<[`EnergyData`](README.md#energydata)\[`T`\]\>                                                                                                                                                                                                                                                                                                                                                                                                                               | -                                                 | -                                                           | [src/facades/interfaces.ts:96](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L96)   |
+| `getErrors`          | (`__namedParameters`: \{ `from`: `null` \| `string`; `to`: `null` \| `string`; \}) => `Promise`\<[`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]\>                                                                                                                                                                                                                                                                                                                                                                                            | -                                                 | [`IBaseFacade`](README.md#ibasefacade).`getErrors`          | [src/facades/interfaces.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L23)   |
+| `getFrostProtection` | () => `Promise`\<[`FrostProtectionData`](README.md#frostprotectiondata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | -                                                 | [`IBaseFacade`](README.md#ibasefacade).`getFrostProtection` | [src/facades/interfaces.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L30)   |
+| `getHolidayMode`     | () => `Promise`\<[`HolidayModeData`](README.md#holidaymodedata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | -                                                 | [`IBaseFacade`](README.md#ibasefacade).`getHolidayMode`     | [src/facades/interfaces.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L31)   |
+| `getTiles`           | (`select`?: `null` \| `false`) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`null`\>\> & (`select`: `true` \| [`DeviceModel`](README.md#devicemodelt)\<`T`\>) => `Promise`\<[`TilesData`](README.md#tilesdatat)\<`T`\>\>                                                                                                                                                                                                                                                                                                                                               | [`IBaseFacade`](README.md#ibasefacade).`getTiles` | -                                                           | [src/facades/interfaces.ts:103](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L103) |
+| `getWifiReport`      | (`hour`?: `number`) => `Promise`\<[`WifiData`](README.md#wifidata)\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | -                                                 | [`IBaseFacade`](README.md#ibasefacade).`getWifiReport`      | [src/facades/interfaces.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L36)   |
+| `name`               | `string`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | -                                                 | [`IBaseFacade`](README.md#ibasefacade).`name`               | [src/facades/interfaces.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L37)   |
+| `set`                | (`postData`: [`UpdateDeviceData`](README.md#updatedevicedata)\[`T`\]) => `Promise`\<[`SetDeviceData`](README.md#setdevicedata)\[`T`\]\>                                                                                                                                                                                                                                                                                                                                                                                                                                      | -                                                 | -                                                           | [src/facades/interfaces.ts:105](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L105) |
+| `setFrostProtection` | (`__namedParameters`: \{ `enable`: `boolean`; `max`: `number`; `min`: `number`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\>                                                                                                                                                                                                                                                                                                                                                                                         | -                                                 | [`IBaseFacade`](README.md#ibasefacade).`setFrostProtection` | [src/facades/interfaces.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L38)   |
+| `setHolidayMode`     | (`__namedParameters`: \{ `enable`: `false`; `from`: `null`; `to`: `null`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `enable`: `true`; `from`: `null` \| `string`; `to`: `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> & (`__namedParameters`: \{ `days`: `number`; `enable`: `true`; `from`: `null` \| `string`; \}) => `Promise`\<[`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata)\> | -                                                 | [`IBaseFacade`](README.md#ibasefacade).`setHolidayMode`     | [src/facades/interfaces.ts:47](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L47)   |
+| `setPower`           | (`enable`?: `boolean`) => `Promise`\<`boolean`\>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | -                                                 | [`IBaseFacade`](README.md#ibasefacade).`setPower`           | [src/facades/interfaces.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L74)   |
+| `type`               | `T`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | -                                                 | -                                                           | [src/facades/interfaces.ts:106](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/interfaces.ts#L106) |
 
 ---
 
@@ -5224,24 +5368,24 @@ setPower(__namedParameters: {
 
 - [`IBaseSubFloorModel`](README.md#ibasesubfloormodel)
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                                                    |
-| :---------------------------------------------------------------- |
+| Type Parameter                                                    |
+| ----------------------------------------------------------------- |
 | `T` _extends_ keyof _typeof_ [`DeviceType`](README.md#devicetype) |
 
 #### Properties
 
-| Property     | Type                                                      | Inherited from                                                    |
-| :----------- | :-------------------------------------------------------- | :---------------------------------------------------------------- |
-| `area`       | `null` \| [`AreaModelAny`](README.md#areamodelany)        | -                                                                 |
-| `areaId`     | `null` \| `number`                                        | -                                                                 |
-| `building`   | `null` \| [`BuildingModel`](README.md#buildingmodel)      | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`building`   |
-| `buildingId` | `number`                                                  | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`buildingId` |
-| `data`       | [`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\] | -                                                                 |
-| `floor`      | `null` \| [`FloorModel`](README.md#floormodel)            | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floor`      |
-| `floorId`    | `null` \| `number`                                        | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floorId`    |
-| `type`       | `T`                                                       | -                                                                 |
+| Property     | Type                                                      | Inherited from                                                    | Defined in                                                                                                                                           |
+| ------------ | --------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `area`       | `null` \| [`AreaModelAny`](README.md#areamodelany)        | -                                                                 | [src/models/interfaces.ts:41](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L41) |
+| `areaId`     | `null` \| `number`                                        | -                                                                 | [src/models/interfaces.ts:42](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L42) |
+| `building`   | `null` \| [`BuildingModel`](README.md#buildingmodel)      | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`building`   | [src/models/interfaces.ts:8](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L8)   |
+| `buildingId` | `number`                                                  | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`buildingId` | [src/models/interfaces.ts:9](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L9)   |
+| `data`       | [`ListDevice`](README.md#listdevice)\[`T`\]\[`"Device"`\] | -                                                                 | [src/models/interfaces.ts:43](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L43) |
+| `floor`      | `null` \| [`FloorModel`](README.md#floormodel)            | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floor`      | [src/models/interfaces.ts:13](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L13) |
+| `floorId`    | `null` \| `number`                                        | [`IBaseSubFloorModel`](README.md#ibasesubfloormodel).`floorId`    | [src/models/interfaces.ts:14](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L14) |
+| `type`       | `T`                                                       | -                                                                 | [src/models/interfaces.ts:44](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L44) |
 
 ---
 
@@ -5253,14 +5397,14 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Type                                                       | Inherited from                                                          |
-| :----------- | :--------------------------------------------------------- | :---------------------------------------------------------------------- |
-| `areaIds`    | readonly `number`[]                                        | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`areaIds`        |
-| `areas`      | readonly [`AreaModel`](README.md#areamodelt)\<`number`\>[] | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`areas`          |
-| `building`   | `null` \| [`BuildingModel`](README.md#buildingmodel)       | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`building`   |
-| `buildingId` | `number`                                                   | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`buildingId` |
-| `deviceIds`  | readonly `number`[]                                        | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`deviceIds`      |
-| `devices`    | readonly [`DeviceModelAny`](README.md#devicemodelany)[]    | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`devices`        |
+| Property     | Type                                                       | Inherited from                                                          | Defined in                                                                                                                                           |
+| ------------ | ---------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areaIds`    | readonly `number`[]                                        | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`areaIds`        | [src/models/interfaces.ts:18](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L18) |
+| `areas`      | readonly [`AreaModel`](README.md#areamodelt)\<`number`\>[] | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`areas`          | [src/models/interfaces.ts:19](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L19) |
+| `building`   | `null` \| [`BuildingModel`](README.md#buildingmodel)       | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`building`   | [src/models/interfaces.ts:8](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L8)   |
+| `buildingId` | `number`                                                   | [`IBaseSubBuildingModel`](README.md#ibasesubbuildingmodel).`buildingId` | [src/models/interfaces.ts:9](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L9)   |
+| `deviceIds`  | readonly `number`[]                                        | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`deviceIds`      | [src/models/interfaces.ts:23](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L23) |
+| `devices`    | readonly [`DeviceModelAny`](README.md#devicemodelany)[]    | [`IBaseSuperAreaModel`](README.md#ibasesuperareamodel).`devices`        | [src/models/interfaces.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/interfaces.ts#L24) |
 
 ---
 
@@ -5268,25 +5412,25 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property             | Type                                                                                                                                                                                                                                                                                                                                                         |
-| :------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `applyLogin`         | (`data`?: [`LoginCredentials`](README.md#logincredentials), `onSuccess`?: () => `Promise`\<`void`\>) => `Promise`\<`boolean`\>                                                                                                                                                                                                                               |
-| `clearSync`          | () => `void`                                                                                                                                                                                                                                                                                                                                                 |
-| `fetch`              | () => `Promise`\<\{ `data`: [`Building`](README.md#building-3)[]; \}\>                                                                                                                                                                                                                                                                                       |
-| `get`                | \<`T`\>(`__namedParameters`: \{ `params`: [`GetDeviceDataParams`](README.md#getdevicedataparams); \}) => `Promise`\<\{ `data`: [`GetDeviceData`](README.md#getdevicedata)\[`T`\]; \}\>                                                                                                                                                                       |
-| `getEnergyReport`    | \<`T`\>(`__namedParameters`: \{ `postData`: [`EnergyPostData`](README.md#energypostdata); \}) => `Promise`\<\{ `data`: [`EnergyData`](README.md#energydata)\[`T`\]; \}\>                                                                                                                                                                                     |
-| `getErrors`          | (`__namedParameters`: \{ `postData`: [`ErrorPostData`](README.md#errorpostdata); \}) => `Promise`\<\{ `data`: [`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]; \}\>                                                                                                                                                           |
-| `getFrostProtection` | (`__namedParameters`: \{ `params`: [`SettingsParams`](README.md#settingsparams); \}) => `Promise`\<\{ `data`: [`FrostProtectionData`](README.md#frostprotectiondata); \}\>                                                                                                                                                                                   |
-| `getHolidayMode`     | (`__namedParameters`: \{ `params`: [`SettingsParams`](README.md#settingsparams); \}) => `Promise`\<\{ `data`: [`HolidayModeData`](README.md#holidaymodedata); \}\>                                                                                                                                                                                           |
-| `getTiles`           | (`__namedParameters`: \{ `postData`: [`TilesPostData`](README.md#tilespostdatat)\<`null`\>; \}) => `Promise`\<\{ `data`: [`TilesData`](README.md#tilesdatat)\<`null`\>; \}\> & \<`T`\>(`__namedParameters`: \{ `postData`: [`TilesPostData`](README.md#tilespostdatat)\<`T`\>; \}) => `Promise`\<\{ `data`: [`TilesData`](README.md#tilesdatat)\<`T`\>; \}\> |
-| `getWifiReport`      | (`__namedParameters`: \{ `postData`: [`WifiPostData`](README.md#wifipostdata); \}) => `Promise`\<\{ `data`: [`WifiData`](README.md#wifidata); \}\>                                                                                                                                                                                                           |
-| `login`              | (`__namedParameters`: \{ `postData`: [`LoginPostData`](README.md#loginpostdata); \}) => `Promise`\<\{ `data`: [`LoginData`](README.md#logindata); \}\>                                                                                                                                                                                                       |
-| `set`                | \<`T`\>(`__namedParameters`: \{ `heatPumpType`: `T`; `postData`: [`SetDevicePostData`](README.md#setdevicepostdatat)\<`T`\>; \}) => `Promise`\<\{ `data`: [`SetDeviceData`](README.md#setdevicedata)\[`T`\]; \}\>                                                                                                                                            |
-| `setAta`             | (`__namedParameters`: \{ `postData`: [`SetAtaGroupPostData`](README.md#setatagrouppostdata); \}) => `Promise`\<\{ `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata); \}\>                                                                                                                                             |
-| `setFrostProtection` | (`__namedParameters`: \{ `postData`: [`FrostProtectionPostData`](README.md#frostprotectionpostdata); \}) => `Promise`\<\{ `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata); \}\>                                                                                                                                     |
-| `setHolidayMode`     | (`__namedParameters`: \{ `postData`: [`HolidayModePostData`](README.md#holidaymodepostdata); \}) => `Promise`\<\{ `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata); \}\>                                                                                                                                             |
-| `setLanguage`        | (`language`: `string`) => `Promise`\<\{ `data`: `boolean`; \}\>                                                                                                                                                                                                                                                                                              |
-| `setPower`           | (`__namedParameters`: \{ `postData`: [`SetPowerPostData`](README.md#setpowerpostdata); \}) => `Promise`\<\{ `data`: `boolean`; \}\>                                                                                                                                                                                                                          |
+| Property             | Type                                                                                                                                                                                                                                                                                                                                                         | Defined in                                                                                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `applyLogin`         | (`data`?: [`LoginCredentials`](README.md#logincredentials), `onSuccess`?: () => `Promise`\<`void`\>) => `Promise`\<`boolean`\>                                                                                                                                                                                                                               | [src/services/interfaces.ts:50](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L50)   |
+| `clearSync`          | () => `void`                                                                                                                                                                                                                                                                                                                                                 | [src/services/interfaces.ts:54](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L54)   |
+| `fetch`              | () => `Promise`\<\{ `data`: [`Building`](README.md#building-3)[]; \}\>                                                                                                                                                                                                                                                                                       | [src/services/interfaces.ts:55](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L55)   |
+| `get`                | \<`T`\>(`__namedParameters`: \{ `params`: [`GetDeviceDataParams`](README.md#getdevicedataparams); \}) => `Promise`\<\{ `data`: [`GetDeviceData`](README.md#getdevicedata)\[`T`\]; \}\>                                                                                                                                                                       | [src/services/interfaces.ts:56](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L56)   |
+| `getEnergyReport`    | \<`T`\>(`__namedParameters`: \{ `postData`: [`EnergyPostData`](README.md#energypostdata); \}) => `Promise`\<\{ `data`: [`EnergyData`](README.md#energydata)\[`T`\]; \}\>                                                                                                                                                                                     | [src/services/interfaces.ts:61](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L61)   |
+| `getErrors`          | (`__namedParameters`: \{ `postData`: [`ErrorPostData`](README.md#errorpostdata); \}) => `Promise`\<\{ `data`: [`FailureData`](README.md#failuredata) \| [`ErrorData`](README.md#errordata)[]; \}\>                                                                                                                                                           | [src/services/interfaces.ts:66](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L66)   |
+| `getFrostProtection` | (`__namedParameters`: \{ `params`: [`SettingsParams`](README.md#settingsparams); \}) => `Promise`\<\{ `data`: [`FrostProtectionData`](README.md#frostprotectiondata); \}\>                                                                                                                                                                                   | [src/services/interfaces.ts:71](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L71)   |
+| `getHolidayMode`     | (`__namedParameters`: \{ `params`: [`SettingsParams`](README.md#settingsparams); \}) => `Promise`\<\{ `data`: [`HolidayModeData`](README.md#holidaymodedata); \}\>                                                                                                                                                                                           | [src/services/interfaces.ts:76](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L76)   |
+| `getTiles`           | (`__namedParameters`: \{ `postData`: [`TilesPostData`](README.md#tilespostdatat)\<`null`\>; \}) => `Promise`\<\{ `data`: [`TilesData`](README.md#tilesdatat)\<`null`\>; \}\> & \<`T`\>(`__namedParameters`: \{ `postData`: [`TilesPostData`](README.md#tilespostdatat)\<`T`\>; \}) => `Promise`\<\{ `data`: [`TilesData`](README.md#tilesdatat)\<`T`\>; \}\> | [src/services/interfaces.ts:81](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L81)   |
+| `getWifiReport`      | (`__namedParameters`: \{ `postData`: [`WifiPostData`](README.md#wifipostdata); \}) => `Promise`\<\{ `data`: [`WifiData`](README.md#wifidata); \}\>                                                                                                                                                                                                           | [src/services/interfaces.ts:91](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L91)   |
+| `login`              | (`__namedParameters`: \{ `postData`: [`LoginPostData`](README.md#loginpostdata); \}) => `Promise`\<\{ `data`: [`LoginData`](README.md#logindata); \}\>                                                                                                                                                                                                       | [src/services/interfaces.ts:96](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L96)   |
+| `set`                | \<`T`\>(`__namedParameters`: \{ `heatPumpType`: `T`; `postData`: [`SetDevicePostData`](README.md#setdevicepostdatat)\<`T`\>; \}) => `Promise`\<\{ `data`: [`SetDeviceData`](README.md#setdevicedata)\[`T`\]; \}\>                                                                                                                                            | [src/services/interfaces.ts:101](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L101) |
+| `setAta`             | (`__namedParameters`: \{ `postData`: [`SetAtaGroupPostData`](README.md#setatagrouppostdata); \}) => `Promise`\<\{ `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata); \}\>                                                                                                                                             | [src/services/interfaces.ts:108](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L108) |
+| `setFrostProtection` | (`__namedParameters`: \{ `postData`: [`FrostProtectionPostData`](README.md#frostprotectionpostdata); \}) => `Promise`\<\{ `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata); \}\>                                                                                                                                     | [src/services/interfaces.ts:113](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L113) |
+| `setHolidayMode`     | (`__namedParameters`: \{ `postData`: [`HolidayModePostData`](README.md#holidaymodepostdata); \}) => `Promise`\<\{ `data`: [`SuccessData`](README.md#successdata) \| [`FailureData`](README.md#failuredata); \}\>                                                                                                                                             | [src/services/interfaces.ts:118](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L118) |
+| `setLanguage`        | (`language`: `string`) => `Promise`\<\{ `data`: `boolean`; \}\>                                                                                                                                                                                                                                                                                              | [src/services/interfaces.ts:123](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L123) |
+| `setPower`           | (`__namedParameters`: \{ `postData`: [`SetPowerPostData`](README.md#setpowerpostdata); \}) => `Promise`\<\{ `data`: `boolean`; \}\>                                                                                                                                                                                                                          | [src/services/interfaces.ts:124](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L124) |
 
 ---
 
@@ -5294,11 +5438,11 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property | Modifier   | Type                                       |
-| :------- | :--------- | :----------------------------------------- |
-| `Ata`    | `readonly` | [`ListDeviceAta`](README.md#listdeviceata) |
-| `Atw`    | `readonly` | [`ListDeviceAtw`](README.md#listdeviceatw) |
-| `Erv`    | `readonly` | [`ListDeviceErv`](README.md#listdeviceerv) |
+| Property | Modifier   | Type                                       | Defined in                                                                                                                                   |
+| -------- | ---------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Ata`    | `readonly` | [`ListDeviceAta`](README.md#listdeviceata) | [src/types/common.ts:213](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L213) |
+| `Atw`    | `readonly` | [`ListDeviceAtw`](README.md#listdeviceatw) | [src/types/common.ts:214](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L214) |
+| `Erv`    | `readonly` | [`ListDeviceErv`](README.md#listdeviceerv) | [src/types/common.ts:215](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L215) |
 
 ---
 
@@ -5310,15 +5454,15 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Modifier   | Type                                               | Inherited from                                            |
-| :----------- | :--------- | :------------------------------------------------- | :-------------------------------------------------------- |
-| `AreaID`     | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`AreaID`     |
-| `BuildingID` | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`BuildingID` |
-| `Device`     | `readonly` | [`ListDeviceDataAta`](README.md#listdevicedataata) | -                                                         |
-| `DeviceID`   | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceID`   |
-| `DeviceName` | `readonly` | `string`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceName` |
-| `FloorID`    | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`FloorID`    |
-| `Type`       | `readonly` | [`DeviceType`](README.md#devicetype)               | [`BaseListDevice`](README.md#baselistdevice).`Type`       |
+| Property     | Modifier   | Type                                               | Inherited from                                            | Defined in                                                                                                                               |
+| ------------ | ---------- | -------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `AreaID`     | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`AreaID`     | [src/types/bases.ts:53](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L53) |
+| `BuildingID` | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`BuildingID` | [src/types/bases.ts:54](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L54) |
+| `Device`     | `readonly` | [`ListDeviceDataAta`](README.md#listdevicedataata) | -                                                         | [src/types/ata.ts:92](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L92)     |
+| `DeviceID`   | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceID`   | [src/types/bases.ts:55](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L55) |
+| `DeviceName` | `readonly` | `string`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceName` | [src/types/bases.ts:56](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L56) |
+| `FloorID`    | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`FloorID`    | [src/types/bases.ts:57](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L57) |
+| `Type`       | `readonly` | [`DeviceType`](README.md#devicetype)               | [`BaseListDevice`](README.md#baselistdevice).`Type`       | [src/types/bases.ts:58](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L58) |
 
 ---
 
@@ -5330,15 +5474,15 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Modifier   | Type                                               | Inherited from                                            |
-| :----------- | :--------- | :------------------------------------------------- | :-------------------------------------------------------- |
-| `AreaID`     | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`AreaID`     |
-| `BuildingID` | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`BuildingID` |
-| `Device`     | `readonly` | [`ListDeviceDataAtw`](README.md#listdevicedataatw) | -                                                         |
-| `DeviceID`   | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceID`   |
-| `DeviceName` | `readonly` | `string`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceName` |
-| `FloorID`    | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`FloorID`    |
-| `Type`       | `readonly` | [`DeviceType`](README.md#devicetype)               | [`BaseListDevice`](README.md#baselistdevice).`Type`       |
+| Property     | Modifier   | Type                                               | Inherited from                                            | Defined in                                                                                                                               |
+| ------------ | ---------- | -------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `AreaID`     | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`AreaID`     | [src/types/bases.ts:53](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L53) |
+| `BuildingID` | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`BuildingID` | [src/types/bases.ts:54](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L54) |
+| `Device`     | `readonly` | [`ListDeviceDataAtw`](README.md#listdevicedataatw) | -                                                         | [src/types/atw.ts:108](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L108)   |
+| `DeviceID`   | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceID`   | [src/types/bases.ts:55](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L55) |
+| `DeviceName` | `readonly` | `string`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceName` | [src/types/bases.ts:56](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L56) |
+| `FloorID`    | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`FloorID`    | [src/types/bases.ts:57](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L57) |
+| `Type`       | `readonly` | [`DeviceType`](README.md#devicetype)               | [`BaseListDevice`](README.md#baselistdevice).`Type`       | [src/types/bases.ts:58](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L58) |
 
 ---
 
@@ -5346,11 +5490,11 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property | Modifier   | Type                                               |
-| :------- | :--------- | :------------------------------------------------- |
-| `Ata`    | `readonly` | [`ListDeviceDataAta`](README.md#listdevicedataata) |
-| `Atw`    | `readonly` | [`ListDeviceDataAtw`](README.md#listdevicedataatw) |
-| `Erv`    | `readonly` | [`ListDeviceDataErv`](README.md#listdevicedataerv) |
+| Property | Modifier   | Type                                               | Defined in                                                                                                                                   |
+| -------- | ---------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Ata`    | `readonly` | [`ListDeviceDataAta`](README.md#listdevicedataata) | [src/types/common.ts:204](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L204) |
+| `Atw`    | `readonly` | [`ListDeviceDataAtw`](README.md#listdevicedataatw) | [src/types/common.ts:205](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L205) |
+| `Erv`    | `readonly` | [`ListDeviceDataErv`](README.md#listdevicedataerv) | [src/types/common.ts:206](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L206) |
 
 ---
 
@@ -5362,29 +5506,29 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property                  | Modifier   | Type                                       | Inherited from                                                            |
-| :------------------------ | :--------- | :----------------------------------------- | :------------------------------------------------------------------------ |
-| `ActualFanSpeed`          | `readonly` | `number`                                   | -                                                                         |
-| `DeviceType`              | `readonly` | `Ata`                                      | `Omit.DeviceType`                                                         |
-| `EffectiveFlags`          | `readonly` | `0`                                        | [`BaseListDeviceData`](README.md#baselistdevicedata).`EffectiveFlags`     |
-| `FanSpeed`                | `readonly` | [`FanSpeed`](README.md#fanspeed)           | -                                                                         |
-| `HasAutomaticFanSpeed`    | `readonly` | `boolean`                                  | -                                                                         |
-| `MaxTempAutomatic`        | `readonly` | `number`                                   | -                                                                         |
-| `MaxTempCoolDry`          | `readonly` | `number`                                   | -                                                                         |
-| `MaxTempHeat`             | `readonly` | `number`                                   | -                                                                         |
-| `MinTempAutomatic`        | `readonly` | `number`                                   | -                                                                         |
-| `MinTempCoolDry`          | `readonly` | `number`                                   | -                                                                         |
-| `MinTempHeat`             | `readonly` | `number`                                   | -                                                                         |
-| `NumberOfFanSpeeds`       | `readonly` | `number`                                   | `Omit.NumberOfFanSpeeds`                                                  |
-| `Offline`                 | `readonly` | `boolean`                                  | [`BaseListDeviceData`](README.md#baselistdevicedata).`Offline`            |
-| `OperationMode`           | `readonly` | [`OperationMode`](README.md#operationmode) | `Omit.OperationMode`                                                      |
-| `OutdoorTemperature`      | `readonly` | `number`                                   | -                                                                         |
-| `Power`                   | `readonly` | `boolean`                                  | [`BaseListDeviceData`](README.md#baselistdevicedata).`Power`              |
-| `RoomTemperature`         | `readonly` | `number`                                   | `Omit.RoomTemperature`                                                    |
-| `SetTemperature`          | `readonly` | `number`                                   | `Omit.SetTemperature`                                                     |
-| `VaneHorizontalDirection` | `readonly` | [`Horizontal`](README.md#horizontal)       | -                                                                         |
-| `VaneVerticalDirection`   | `readonly` | [`Vertical`](README.md#vertical)           | -                                                                         |
-| `WifiSignalStrength`      | `readonly` | `number`                                   | [`BaseListDeviceData`](README.md#baselistdevicedata).`WifiSignalStrength` |
+| Property                  | Modifier   | Type                                       | Inherited from                                                            | Defined in                                                                                                                               |
+| ------------------------- | ---------- | ------------------------------------------ | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `ActualFanSpeed`          | `readonly` | `number`                                   | -                                                                         | [src/types/ata.ts:78](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L78)     |
+| `DeviceType`              | `readonly` | `Ata`                                      | `Omit.DeviceType`                                                         | [src/types/ata.ts:62](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L62)     |
+| `EffectiveFlags`          | `readonly` | `0`                                        | [`BaseListDeviceData`](README.md#baselistdevicedata).`EffectiveFlags`     | [src/types/bases.ts:44](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L44) |
+| `FanSpeed`                | `readonly` | [`FanSpeed`](README.md#fanspeed)           | -                                                                         | [src/types/ata.ts:79](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L79)     |
+| `HasAutomaticFanSpeed`    | `readonly` | `boolean`                                  | -                                                                         | [src/types/ata.ts:80](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L80)     |
+| `MaxTempAutomatic`        | `readonly` | `number`                                   | -                                                                         | [src/types/ata.ts:81](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L81)     |
+| `MaxTempCoolDry`          | `readonly` | `number`                                   | -                                                                         | [src/types/ata.ts:82](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L82)     |
+| `MaxTempHeat`             | `readonly` | `number`                                   | -                                                                         | [src/types/ata.ts:83](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L83)     |
+| `MinTempAutomatic`        | `readonly` | `number`                                   | -                                                                         | [src/types/ata.ts:84](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L84)     |
+| `MinTempCoolDry`          | `readonly` | `number`                                   | -                                                                         | [src/types/ata.ts:85](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L85)     |
+| `MinTempHeat`             | `readonly` | `number`                                   | -                                                                         | [src/types/ata.ts:86](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L86)     |
+| `NumberOfFanSpeeds`       | `readonly` | `number`                                   | `Omit.NumberOfFanSpeeds`                                                  | [src/types/ata.ts:63](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L63)     |
+| `Offline`                 | `readonly` | `boolean`                                  | [`BaseListDeviceData`](README.md#baselistdevicedata).`Offline`            | [src/types/bases.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L40) |
+| `OperationMode`           | `readonly` | [`OperationMode`](README.md#operationmode) | `Omit.OperationMode`                                                      | [src/types/ata.ts:43](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L43)     |
+| `OutdoorTemperature`      | `readonly` | `number`                                   | -                                                                         | [src/types/ata.ts:87](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L87)     |
+| `Power`                   | `readonly` | `boolean`                                  | [`BaseListDeviceData`](README.md#baselistdevicedata).`Power`              | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
+| `RoomTemperature`         | `readonly` | `number`                                   | `Omit.RoomTemperature`                                                    | [src/types/ata.ts:64](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L64)     |
+| `SetTemperature`          | `readonly` | `number`                                   | `Omit.SetTemperature`                                                     | [src/types/ata.ts:45](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L45)     |
+| `VaneHorizontalDirection` | `readonly` | [`Horizontal`](README.md#horizontal)       | -                                                                         | [src/types/ata.ts:88](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L88)     |
+| `VaneVerticalDirection`   | `readonly` | [`Vertical`](README.md#vertical)           | -                                                                         | [src/types/ata.ts:89](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L89)     |
+| `WifiSignalStrength`      | `readonly` | `number`                                   | [`BaseListDeviceData`](README.md#baselistdevicedata).`WifiSignalStrength` | [src/types/bases.ts:49](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L49) |
 
 ---
 
@@ -5396,62 +5540,62 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property                       | Modifier   | Type                                                 | Inherited from                                                            |
-| :----------------------------- | :--------- | :--------------------------------------------------- | :------------------------------------------------------------------------ |
-| `BoosterHeater1Status`         | `readonly` | `boolean`                                            | -                                                                         |
-| `BoosterHeater2PlusStatus`     | `readonly` | `boolean`                                            | -                                                                         |
-| `BoosterHeater2Status`         | `readonly` | `boolean`                                            | -                                                                         |
-| `CanCool`                      | `readonly` | `boolean`                                            | -                                                                         |
-| `CondensingTemperature`        | `readonly` | `number`                                             | -                                                                         |
-| `CurrentEnergyConsumed`        | `readonly` | `number`                                             | -                                                                         |
-| `CurrentEnergyProduced`        | `readonly` | `number`                                             | -                                                                         |
-| `DefrostMode`                  | `readonly` | `number`                                             | -                                                                         |
-| `DeviceType`                   | `readonly` | `Atw`                                                | `Omit.DeviceType`                                                         |
-| `EcoHotWater`                  | `readonly` | `boolean`                                            | -                                                                         |
-| `EffectiveFlags`               | `readonly` | `0`                                                  | [`BaseListDeviceData`](README.md#baselistdevicedata).`EffectiveFlags`     |
-| `FlowTemperature`              | `readonly` | `number`                                             | -                                                                         |
-| `FlowTemperatureZone1`         | `readonly` | `number`                                             | -                                                                         |
-| `FlowTemperatureZone2`         | `readonly` | `number`                                             | -                                                                         |
-| `ForcedHotWaterMode`           | `readonly` | `boolean`                                            | `Omit.ForcedHotWaterMode`                                                 |
-| `HasZone2`                     | `readonly` | `boolean`                                            | -                                                                         |
-| `HeatPumpFrequency`            | `readonly` | `number`                                             | -                                                                         |
-| `IdleZone1`                    | `readonly` | `boolean`                                            | `Omit.IdleZone1`                                                          |
-| `IdleZone2`                    | `readonly` | `boolean`                                            | `Omit.IdleZone2`                                                          |
-| `ImmersionHeaterStatus`        | `readonly` | `boolean`                                            | -                                                                         |
-| `LastLegionellaActivationTime` | `readonly` | `string`                                             | -                                                                         |
-| `MaxTankTemperature`           | `readonly` | `number`                                             | -                                                                         |
-| `MixingTankWaterTemperature`   | `readonly` | `number`                                             | -                                                                         |
-| `Offline`                      | `readonly` | `boolean`                                            | [`BaseListDeviceData`](README.md#baselistdevicedata).`Offline`            |
-| `OperationMode`                | `readonly` | [`OperationModeState`](README.md#operationmodestate) | `Omit.OperationMode`                                                      |
-| `OperationModeZone1`           | `readonly` | [`OperationModeZone`](README.md#operationmodezone)   | `Omit.OperationModeZone1`                                                 |
-| `OperationModeZone2`           | `readonly` | [`OperationModeZone`](README.md#operationmodezone)   | `Omit.OperationModeZone2`                                                 |
-| `OutdoorTemperature`           | `readonly` | `number`                                             | `Omit.OutdoorTemperature`                                                 |
-| `Power`                        | `readonly` | `boolean`                                            | [`BaseListDeviceData`](README.md#baselistdevicedata).`Power`              |
-| `ProhibitCoolingZone1`         | `readonly` | `boolean`                                            | `Omit.ProhibitCoolingZone1`                                               |
-| `ProhibitCoolingZone2`         | `readonly` | `boolean`                                            | `Omit.ProhibitCoolingZone2`                                               |
-| `ProhibitHeatingZone1`         | `readonly` | `boolean`                                            | `Omit.ProhibitHeatingZone1`                                               |
-| `ProhibitHeatingZone2`         | `readonly` | `boolean`                                            | `Omit.ProhibitHeatingZone2`                                               |
-| `ProhibitHotWater`             | `readonly` | `boolean`                                            | `Omit.ProhibitHotWater`                                                   |
-| `ReturnTemperature`            | `readonly` | `number`                                             | -                                                                         |
-| `ReturnTemperatureZone1`       | `readonly` | `number`                                             | -                                                                         |
-| `ReturnTemperatureZone2`       | `readonly` | `number`                                             | -                                                                         |
-| `RoomTemperatureZone1`         | `readonly` | `number`                                             | `Omit.RoomTemperatureZone1`                                               |
-| `RoomTemperatureZone2`         | `readonly` | `number`                                             | `Omit.RoomTemperatureZone2`                                               |
-| `SetCoolFlowTemperatureZone1`  | `readonly` | `number`                                             | `Omit.SetCoolFlowTemperatureZone1`                                        |
-| `SetCoolFlowTemperatureZone2`  | `readonly` | `number`                                             | `Omit.SetCoolFlowTemperatureZone2`                                        |
-| `SetHeatFlowTemperatureZone1`  | `readonly` | `number`                                             | `Omit.SetHeatFlowTemperatureZone1`                                        |
-| `SetHeatFlowTemperatureZone2`  | `readonly` | `number`                                             | `Omit.SetHeatFlowTemperatureZone2`                                        |
-| `SetTankWaterTemperature`      | `readonly` | `number`                                             | `Omit.SetTankWaterTemperature`                                            |
-| `SetTemperatureZone1`          | `readonly` | `number`                                             | `Omit.SetTemperatureZone1`                                                |
-| `SetTemperatureZone2`          | `readonly` | `number`                                             | `Omit.SetTemperatureZone2`                                                |
-| `TankWaterTemperature`         | `readonly` | `number`                                             | `Omit.TankWaterTemperature`                                               |
-| `TargetHCTemperatureZone1`     | `readonly` | `number`                                             | -                                                                         |
-| `TargetHCTemperatureZone2`     | `readonly` | `number`                                             | -                                                                         |
-| `WifiSignalStrength`           | `readonly` | `number`                                             | [`BaseListDeviceData`](README.md#baselistdevicedata).`WifiSignalStrength` |
-| `Zone1InCoolMode`              | `readonly` | `boolean`                                            | -                                                                         |
-| `Zone1InHeatMode`              | `readonly` | `boolean`                                            | -                                                                         |
-| `Zone2InCoolMode`              | `readonly` | `boolean`                                            | -                                                                         |
-| `Zone2InHeatMode`              | `readonly` | `boolean`                                            | -                                                                         |
+| Property                       | Modifier   | Type                                                 | Inherited from                                                            | Defined in                                                                                                                               |
+| ------------------------------ | ---------- | ---------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `BoosterHeater1Status`         | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:79](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L79)     |
+| `BoosterHeater2PlusStatus`     | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:80](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L80)     |
+| `BoosterHeater2Status`         | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:81](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L81)     |
+| `CanCool`                      | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:82](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L82)     |
+| `CondensingTemperature`        | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:83](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L83)     |
+| `CurrentEnergyConsumed`        | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:84](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L84)     |
+| `CurrentEnergyProduced`        | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:85](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L85)     |
+| `DefrostMode`                  | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:86](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L86)     |
+| `DeviceType`                   | `readonly` | `Atw`                                                | `Omit.DeviceType`                                                         | [src/types/atw.ts:59](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L59)     |
+| `EcoHotWater`                  | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:87](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L87)     |
+| `EffectiveFlags`               | `readonly` | `0`                                                  | [`BaseListDeviceData`](README.md#baselistdevicedata).`EffectiveFlags`     | [src/types/bases.ts:44](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L44) |
+| `FlowTemperature`              | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:88](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L88)     |
+| `FlowTemperatureZone1`         | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:89](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L89)     |
+| `FlowTemperatureZone2`         | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:90](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L90)     |
+| `ForcedHotWaterMode`           | `readonly` | `boolean`                                            | `Omit.ForcedHotWaterMode`                                                 | [src/types/atw.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L30)     |
+| `HasZone2`                     | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:91](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L91)     |
+| `HeatPumpFrequency`            | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:92](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L92)     |
+| `IdleZone1`                    | `readonly` | `boolean`                                            | `Omit.IdleZone1`                                                          | [src/types/atw.ts:60](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L60)     |
+| `IdleZone2`                    | `readonly` | `boolean`                                            | `Omit.IdleZone2`                                                          | [src/types/atw.ts:61](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L61)     |
+| `ImmersionHeaterStatus`        | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:93](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L93)     |
+| `LastLegionellaActivationTime` | `readonly` | `string`                                             | -                                                                         | [src/types/atw.ts:94](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L94)     |
+| `MaxTankTemperature`           | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:95](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L95)     |
+| `MixingTankWaterTemperature`   | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:96](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L96)     |
+| `Offline`                      | `readonly` | `boolean`                                            | [`BaseListDeviceData`](README.md#baselistdevicedata).`Offline`            | [src/types/bases.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L40) |
+| `OperationMode`                | `readonly` | [`OperationModeState`](README.md#operationmodestate) | `Omit.OperationMode`                                                      | [src/types/atw.ts:62](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L62)     |
+| `OperationModeZone1`           | `readonly` | [`OperationModeZone`](README.md#operationmodezone)   | `Omit.OperationModeZone1`                                                 | [src/types/atw.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L31)     |
+| `OperationModeZone2`           | `readonly` | [`OperationModeZone`](README.md#operationmodezone)   | `Omit.OperationModeZone2`                                                 | [src/types/atw.ts:32](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L32)     |
+| `OutdoorTemperature`           | `readonly` | `number`                                             | `Omit.OutdoorTemperature`                                                 | [src/types/atw.ts:63](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L63)     |
+| `Power`                        | `readonly` | `boolean`                                            | [`BaseListDeviceData`](README.md#baselistdevicedata).`Power`              | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
+| `ProhibitCoolingZone1`         | `readonly` | `boolean`                                            | `Omit.ProhibitCoolingZone1`                                               | [src/types/atw.ts:64](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L64)     |
+| `ProhibitCoolingZone2`         | `readonly` | `boolean`                                            | `Omit.ProhibitCoolingZone2`                                               | [src/types/atw.ts:65](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L65)     |
+| `ProhibitHeatingZone1`         | `readonly` | `boolean`                                            | `Omit.ProhibitHeatingZone1`                                               | [src/types/atw.ts:66](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L66)     |
+| `ProhibitHeatingZone2`         | `readonly` | `boolean`                                            | `Omit.ProhibitHeatingZone2`                                               | [src/types/atw.ts:67](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L67)     |
+| `ProhibitHotWater`             | `readonly` | `boolean`                                            | `Omit.ProhibitHotWater`                                                   | [src/types/atw.ts:68](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L68)     |
+| `ReturnTemperature`            | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:97](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L97)     |
+| `ReturnTemperatureZone1`       | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:98](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L98)     |
+| `ReturnTemperatureZone2`       | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:99](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L99)     |
+| `RoomTemperatureZone1`         | `readonly` | `number`                                             | `Omit.RoomTemperatureZone1`                                               | [src/types/atw.ts:69](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L69)     |
+| `RoomTemperatureZone2`         | `readonly` | `number`                                             | `Omit.RoomTemperatureZone2`                                               | [src/types/atw.ts:70](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L70)     |
+| `SetCoolFlowTemperatureZone1`  | `readonly` | `number`                                             | `Omit.SetCoolFlowTemperatureZone1`                                        | [src/types/atw.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L33)     |
+| `SetCoolFlowTemperatureZone2`  | `readonly` | `number`                                             | `Omit.SetCoolFlowTemperatureZone2`                                        | [src/types/atw.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L34)     |
+| `SetHeatFlowTemperatureZone1`  | `readonly` | `number`                                             | `Omit.SetHeatFlowTemperatureZone1`                                        | [src/types/atw.ts:35](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L35)     |
+| `SetHeatFlowTemperatureZone2`  | `readonly` | `number`                                             | `Omit.SetHeatFlowTemperatureZone2`                                        | [src/types/atw.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L36)     |
+| `SetTankWaterTemperature`      | `readonly` | `number`                                             | `Omit.SetTankWaterTemperature`                                            | [src/types/atw.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L37)     |
+| `SetTemperatureZone1`          | `readonly` | `number`                                             | `Omit.SetTemperatureZone1`                                                | [src/types/atw.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L38)     |
+| `SetTemperatureZone2`          | `readonly` | `number`                                             | `Omit.SetTemperatureZone2`                                                | [src/types/atw.ts:39](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L39)     |
+| `TankWaterTemperature`         | `readonly` | `number`                                             | `Omit.TankWaterTemperature`                                               | [src/types/atw.ts:71](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L71)     |
+| `TargetHCTemperatureZone1`     | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:100](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L100)   |
+| `TargetHCTemperatureZone2`     | `readonly` | `number`                                             | -                                                                         | [src/types/atw.ts:101](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L101)   |
+| `WifiSignalStrength`           | `readonly` | `number`                                             | [`BaseListDeviceData`](README.md#baselistdevicedata).`WifiSignalStrength` | [src/types/bases.ts:49](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L49) |
+| `Zone1InCoolMode`              | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:102](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L102)   |
+| `Zone1InHeatMode`              | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:103](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L103)   |
+| `Zone2InCoolMode`              | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:104](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L104)   |
+| `Zone2InHeatMode`              | `readonly` | `boolean`                                            | -                                                                         | [src/types/atw.ts:105](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L105)   |
 
 ---
 
@@ -5463,23 +5607,23 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property               | Modifier   | Type                                                                      | Inherited from                                                            |
-| :--------------------- | :--------- | :------------------------------------------------------------------------ | :------------------------------------------------------------------------ |
-| `DeviceType`           | `readonly` | `Erv`                                                                     | `Omit.DeviceType`                                                         |
-| `EffectiveFlags`       | `readonly` | `0`                                                                       | [`BaseListDeviceData`](README.md#baselistdevicedata).`EffectiveFlags`     |
-| `HasAutomaticFanSpeed` | `readonly` | `boolean`                                                                 | -                                                                         |
-| `HasCO2Sensor`         | `readonly` | `boolean`                                                                 | -                                                                         |
-| `HasPM25Sensor`        | `readonly` | `boolean`                                                                 | -                                                                         |
-| `NumberOfFanSpeeds`    | `readonly` | `number`                                                                  | `Omit.NumberOfFanSpeeds`                                                  |
-| `Offline`              | `readonly` | `boolean`                                                                 | [`BaseListDeviceData`](README.md#baselistdevicedata).`Offline`            |
-| `OutdoorTemperature`   | `readonly` | `number`                                                                  | `Omit.OutdoorTemperature`                                                 |
-| `PM25Level`            | `readonly` | `number`                                                                  | -                                                                         |
-| `Power`                | `readonly` | `boolean`                                                                 | [`BaseListDeviceData`](README.md#baselistdevicedata).`Power`              |
-| `RoomCO2Level`         | `readonly` | `number`                                                                  | `Omit.RoomCO2Level`                                                       |
-| `RoomTemperature`      | `readonly` | `number`                                                                  | `Omit.RoomTemperature`                                                    |
-| `SetFanSpeed`          | `readonly` | \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | `Omit.SetFanSpeed`                                                        |
-| `VentilationMode`      | `readonly` | [`VentilationMode`](README.md#ventilationmode)                            | `Omit.VentilationMode`                                                    |
-| `WifiSignalStrength`   | `readonly` | `number`                                                                  | [`BaseListDeviceData`](README.md#baselistdevicedata).`WifiSignalStrength` |
+| Property               | Modifier   | Type                                                                      | Inherited from                                                            | Defined in                                                                                                                               |
+| ---------------------- | ---------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeviceType`           | `readonly` | `Erv`                                                                     | `Omit.DeviceType`                                                         | [src/types/erv.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L33)     |
+| `EffectiveFlags`       | `readonly` | `0`                                                                       | [`BaseListDeviceData`](README.md#baselistdevicedata).`EffectiveFlags`     | [src/types/bases.ts:44](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L44) |
+| `HasAutomaticFanSpeed` | `readonly` | `boolean`                                                                 | -                                                                         | [src/types/erv.ts:45](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L45)     |
+| `HasCO2Sensor`         | `readonly` | `boolean`                                                                 | -                                                                         | [src/types/erv.ts:46](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L46)     |
+| `HasPM25Sensor`        | `readonly` | `boolean`                                                                 | -                                                                         | [src/types/erv.ts:47](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L47)     |
+| `NumberOfFanSpeeds`    | `readonly` | `number`                                                                  | `Omit.NumberOfFanSpeeds`                                                  | [src/types/erv.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L34)     |
+| `Offline`              | `readonly` | `boolean`                                                                 | [`BaseListDeviceData`](README.md#baselistdevicedata).`Offline`            | [src/types/bases.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L40) |
+| `OutdoorTemperature`   | `readonly` | `number`                                                                  | `Omit.OutdoorTemperature`                                                 | [src/types/erv.ts:35](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L35)     |
+| `PM25Level`            | `readonly` | `number`                                                                  | -                                                                         | [src/types/erv.ts:48](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L48)     |
+| `Power`                | `readonly` | `boolean`                                                                 | [`BaseListDeviceData`](README.md#baselistdevicedata).`Power`              | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
+| `RoomCO2Level`         | `readonly` | `number`                                                                  | `Omit.RoomCO2Level`                                                       | [src/types/erv.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L36)     |
+| `RoomTemperature`      | `readonly` | `number`                                                                  | `Omit.RoomTemperature`                                                    | [src/types/erv.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L37)     |
+| `SetFanSpeed`          | `readonly` | \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | `Omit.SetFanSpeed`                                                        | [src/types/erv.ts:20](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L20)     |
+| `VentilationMode`      | `readonly` | [`VentilationMode`](README.md#ventilationmode)                            | `Omit.VentilationMode`                                                    | [src/types/erv.ts:21](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L21)     |
+| `WifiSignalStrength`   | `readonly` | `number`                                                                  | [`BaseListDeviceData`](README.md#baselistdevicedata).`WifiSignalStrength` | [src/types/bases.ts:49](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L49) |
 
 ---
 
@@ -5491,15 +5635,15 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Modifier   | Type                                               | Inherited from                                            |
-| :----------- | :--------- | :------------------------------------------------- | :-------------------------------------------------------- |
-| `AreaID`     | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`AreaID`     |
-| `BuildingID` | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`BuildingID` |
-| `Device`     | `readonly` | [`ListDeviceDataErv`](README.md#listdevicedataerv) | -                                                         |
-| `DeviceID`   | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceID`   |
-| `DeviceName` | `readonly` | `string`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceName` |
-| `FloorID`    | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`FloorID`    |
-| `Type`       | `readonly` | [`DeviceType`](README.md#devicetype)               | [`BaseListDevice`](README.md#baselistdevice).`Type`       |
+| Property     | Modifier   | Type                                               | Inherited from                                            | Defined in                                                                                                                               |
+| ------------ | ---------- | -------------------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `AreaID`     | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`AreaID`     | [src/types/bases.ts:53](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L53) |
+| `BuildingID` | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`BuildingID` | [src/types/bases.ts:54](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L54) |
+| `Device`     | `readonly` | [`ListDeviceDataErv`](README.md#listdevicedataerv) | -                                                         | [src/types/erv.ts:51](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L51)     |
+| `DeviceID`   | `readonly` | `number`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceID`   | [src/types/bases.ts:55](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L55) |
+| `DeviceName` | `readonly` | `string`                                           | [`BaseListDevice`](README.md#baselistdevice).`DeviceName` | [src/types/bases.ts:56](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L56) |
+| `FloorID`    | `readonly` | `null` \| `number`                                 | [`BaseListDevice`](README.md#baselistdevice).`FloorID`    | [src/types/bases.ts:57](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L57) |
+| `Type`       | `readonly` | [`DeviceType`](README.md#devicetype)               | [`BaseListDevice`](README.md#baselistdevice).`Type`       | [src/types/bases.ts:58](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L58) |
 
 ---
 
@@ -5507,10 +5651,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property | Type                                                        |
-| :------- | :---------------------------------------------------------- |
-| `error`  | (`message`?: `any`, ...`optionalParams`: `any`[]) => `void` |
-| `log`    | (`message`?: `any`, ...`optionalParams`: `any`[]) => `void` |
+| Property | Type                                                        | Defined in                                                                                                                                               |
+| -------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `error`  | (`message`?: `any`, ...`optionalParams`: `any`[]) => `void` | [src/services/interfaces.ts:45](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L45) |
+| `log`    | (`message`?: `any`, ...`optionalParams`: `any`[]) => `void` | [src/services/interfaces.ts:46](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L46) |
 
 ---
 
@@ -5518,10 +5662,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property   | Modifier   | Type     |
-| :--------- | :--------- | :------- |
-| `password` | `readonly` | `string` |
-| `username` | `readonly` | `string` |
+| Property   | Modifier   | Type     | Defined in                                                                                                                                 |
+| ---------- | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `password` | `readonly` | `string` | [src/types/common.ts:70](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L70) |
+| `username` | `readonly` | `string` | [src/types/common.ts:71](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L71) |
 
 ---
 
@@ -5529,9 +5673,9 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property    | Modifier   | Type                                                        |
-| :---------- | :--------- | :---------------------------------------------------------- |
-| `LoginData` | `readonly` | `null` \| \{ `ContextKey`: `string`; `Expiry`: `string`; \} |
+| Property    | Modifier   | Type                                                        | Defined in                                                                                                                                 |
+| ----------- | ---------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `LoginData` | `readonly` | `null` \| \{ `ContextKey`: `string`; `Expiry`: `string`; \} | [src/types/common.ts:81](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L81) |
 
 ---
 
@@ -5539,13 +5683,13 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property     | Modifier   | Type      |
-| :----------- | :--------- | :-------- |
-| `AppVersion` | `readonly` | `string`  |
-| `Email`      | `readonly` | `string`  |
-| `Language?`  | `readonly` | `number`  |
-| `Password`   | `readonly` | `string`  |
-| `Persist?`   | `readonly` | `boolean` |
+| Property     | Modifier   | Type      | Defined in                                                                                                                                 |
+| ------------ | ---------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `AppVersion` | `readonly` | `string`  | [src/types/common.ts:76](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L76) |
+| `Email`      | `readonly` | `string`  | [src/types/common.ts:77](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L77) |
+| `Language?`  | `readonly` | `number`  | [src/types/common.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L74) |
+| `Password`   | `readonly` | `string`  | [src/types/common.ts:78](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L78) |
+| `Persist?`   | `readonly` | `boolean` | [src/types/common.ts:75](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L75) |
 
 ---
 
@@ -5553,21 +5697,21 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property                         | Modifier   | Type                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| :------------------------------- | :--------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Specification`                  | `readonly` | \{ `AreaID`: `null` \| `number`; `BuildingID`: `null` \| `number`; `FloorID`: `null` \| `number`; \}                                                                                                                                                                                                                                                                                                                                           |
-| `Specification.AreaID?`          | `readonly` | `null` \| `number`                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `Specification.BuildingID?`      | `public`   | `null` \| `number`                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `Specification.FloorID?`         | `public`   | `null` \| `number`                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `State`                          | `public`   | \{ `FanSpeed`: `null` \| [`FanSpeed`](README.md#fanspeed); `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \} |
-| `State.FanSpeed?`                | `public`   | `null` \| [`FanSpeed`](README.md#fanspeed)                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `State.OperationMode?`           | `public`   | `null` \| [`OperationMode`](README.md#operationmode)                                                                                                                                                                                                                                                                                                                                                                                           |
-| `State.Power?`                   | `public`   | `null` \| `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `State.SetTemperature?`          | `public`   | `null` \| `number`                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `State.VaneHorizontalDirection?` | `public`   | `null` \| [`Horizontal`](README.md#horizontal)                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `State.VaneHorizontalSwing?`     | `public`   | `null` \| `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `State.VaneVerticalDirection?`   | `public`   | `null` \| [`Vertical`](README.md#vertical)                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `State.VaneVerticalSwing?`       | `public`   | `null` \| `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Property                         | Modifier   | Type                                                                                                                                                                                                                                                                                                                                                                                                                                           | Defined in                                                                                                                                   |
+| -------------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Specification`                  | `readonly` | \{ `AreaID`: `null` \| `number`; `BuildingID`: `null` \| `number`; `FloorID`: `null` \| `number`; \}                                                                                                                                                                                                                                                                                                                                           | [src/types/common.ts:244](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L244) |
+| `Specification.AreaID?`          | `readonly` | `null` \| `number`                                                                                                                                                                                                                                                                                                                                                                                                                             | [src/types/common.ts:245](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L245) |
+| `Specification.BuildingID?`      | `readonly` | `null` \| `number`                                                                                                                                                                                                                                                                                                                                                                                                                             | [src/types/common.ts:246](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L246) |
+| `Specification.FloorID?`         | `readonly` | `null` \| `number`                                                                                                                                                                                                                                                                                                                                                                                                                             | [src/types/common.ts:247](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L247) |
+| `State`                          | `readonly` | \{ `FanSpeed`: `null` \| [`FanSpeed`](README.md#fanspeed); `OperationMode`: `null` \| [`OperationMode`](README.md#operationmode); `Power`: `null` \| `boolean`; `SetTemperature`: `null` \| `number`; `VaneHorizontalDirection`: `null` \| [`Horizontal`](README.md#horizontal); `VaneHorizontalSwing`: `null` \| `boolean`; `VaneVerticalDirection`: `null` \| [`Vertical`](README.md#vertical); `VaneVerticalSwing`: `null` \| `boolean`; \} | [src/types/common.ts:249](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L249) |
+| `State.FanSpeed?`                | `readonly` | `null` \| [`FanSpeed`](README.md#fanspeed)                                                                                                                                                                                                                                                                                                                                                                                                     | [src/types/common.ts:250](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L250) |
+| `State.OperationMode?`           | `readonly` | `null` \| [`OperationMode`](README.md#operationmode)                                                                                                                                                                                                                                                                                                                                                                                           | [src/types/common.ts:251](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L251) |
+| `State.Power?`                   | `readonly` | `null` \| `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                            | [src/types/common.ts:252](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L252) |
+| `State.SetTemperature?`          | `readonly` | `null` \| `number`                                                                                                                                                                                                                                                                                                                                                                                                                             | [src/types/common.ts:253](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L253) |
+| `State.VaneHorizontalDirection?` | `readonly` | `null` \| [`Horizontal`](README.md#horizontal)                                                                                                                                                                                                                                                                                                                                                                                                 | [src/types/common.ts:254](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L254) |
+| `State.VaneHorizontalSwing?`     | `readonly` | `null` \| `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                            | [src/types/common.ts:255](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L255) |
+| `State.VaneVerticalDirection?`   | `readonly` | `null` \| [`Vertical`](README.md#vertical)                                                                                                                                                                                                                                                                                                                                                                                                     | [src/types/common.ts:256](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L256) |
+| `State.VaneVerticalSwing?`       | `readonly` | `null` \| `boolean`                                                                                                                                                                                                                                                                                                                                                                                                                            | [src/types/common.ts:257](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L257) |
 
 ---
 
@@ -5575,11 +5719,11 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property | Modifier   | Type                                             |
-| :------- | :--------- | :----------------------------------------------- |
-| `Ata`    | `readonly` | [`SetDeviceDataAta`](README.md#setdevicedataata) |
-| `Atw`    | `readonly` | [`SetDeviceDataAtw`](README.md#setdevicedataatw) |
-| `Erv`    | `readonly` | [`SetDeviceDataErv`](README.md#setdevicedataerv) |
+| Property | Modifier   | Type                                             | Defined in                                                                                                                                 |
+| -------- | ---------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Ata`    | `readonly` | [`SetDeviceDataAta`](README.md#setdevicedataata) | [src/types/common.ts:97](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L97) |
+| `Atw`    | `readonly` | [`SetDeviceDataAtw`](README.md#setdevicedataatw) | [src/types/common.ts:98](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L98) |
+| `Erv`    | `readonly` | [`SetDeviceDataErv`](README.md#setdevicedataerv) | [src/types/common.ts:99](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L99) |
 
 ---
 
@@ -5591,21 +5735,21 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property            | Modifier   | Type                                                                      | Inherited from                                                         |
-| :------------------ | :--------- | :------------------------------------------------------------------------ | :--------------------------------------------------------------------- |
-| `DeviceType`        | `readonly` | `Ata`                                                                     | -                                                                      |
-| `EffectiveFlags`    | `readonly` | `number`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags`    |
-| `LastCommunication` | `readonly` | `string`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`LastCommunication` |
-| `NextCommunication` | `readonly` | `string`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`NextCommunication` |
-| `NumberOfFanSpeeds` | `readonly` | `number`                                                                  | -                                                                      |
-| `Offline`           | `readonly` | `boolean`                                                                 | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Offline`           |
-| `OperationMode`     | `readonly` | [`OperationMode`](README.md#operationmode)                                | `Required.OperationMode`                                               |
-| `Power`             | `readonly` | `boolean`                                                                 | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power`             |
-| `RoomTemperature`   | `readonly` | `number`                                                                  | -                                                                      |
-| `SetFanSpeed`       | `readonly` | \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | `Required.SetFanSpeed`                                                 |
-| `SetTemperature`    | `readonly` | `number`                                                                  | `Required.SetTemperature`                                              |
-| `VaneHorizontal`    | `readonly` | [`Horizontal`](README.md#horizontal)                                      | `Required.VaneHorizontal`                                              |
-| `VaneVertical`      | `readonly` | [`Vertical`](README.md#vertical)                                          | `Required.VaneVertical`                                                |
+| Property            | Modifier   | Type                                                                      | Inherited from                                                         | Defined in                                                                                                                               |
+| ------------------- | ---------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeviceType`        | `readonly` | `Ata`                                                                     | -                                                                      | [src/types/ata.ts:62](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L62)     |
+| `EffectiveFlags`    | `readonly` | `number`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags`    | [src/types/bases.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L24) |
+| `LastCommunication` | `readonly` | `string`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`LastCommunication` | [src/types/bases.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L33) |
+| `NextCommunication` | `readonly` | `string`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`NextCommunication` | [src/types/bases.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L34) |
+| `NumberOfFanSpeeds` | `readonly` | `number`                                                                  | -                                                                      | [src/types/ata.ts:63](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L63)     |
+| `Offline`           | `readonly` | `boolean`                                                                 | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Offline`           | [src/types/bases.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L40) |
+| `OperationMode`     | `readonly` | [`OperationMode`](README.md#operationmode)                                | `Required.OperationMode`                                               | [src/types/ata.ts:43](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L43)     |
+| `Power`             | `readonly` | `boolean`                                                                 | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power`             | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
+| `RoomTemperature`   | `readonly` | `number`                                                                  | -                                                                      | [src/types/ata.ts:64](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L64)     |
+| `SetFanSpeed`       | `readonly` | \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | `Required.SetFanSpeed`                                                 | [src/types/ata.ts:44](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L44)     |
+| `SetTemperature`    | `readonly` | `number`                                                                  | `Required.SetTemperature`                                              | [src/types/ata.ts:45](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L45)     |
+| `VaneHorizontal`    | `readonly` | [`Horizontal`](README.md#horizontal)                                      | `Required.VaneHorizontal`                                              | [src/types/ata.ts:46](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L46)     |
+| `VaneVertical`      | `readonly` | [`Vertical`](README.md#vertical)                                          | `Required.VaneVertical`                                                | [src/types/ata.ts:47](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L47)     |
 
 ---
 
@@ -5617,36 +5761,36 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property                      | Modifier   | Type                                                 | Inherited from                                                         |
-| :---------------------------- | :--------- | :--------------------------------------------------- | :--------------------------------------------------------------------- |
-| `DeviceType`                  | `readonly` | `Atw`                                                | -                                                                      |
-| `EffectiveFlags`              | `readonly` | `number`                                             | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags`    |
-| `ForcedHotWaterMode`          | `readonly` | `boolean`                                            | `Required.ForcedHotWaterMode`                                          |
-| `IdleZone1`                   | `readonly` | `boolean`                                            | -                                                                      |
-| `IdleZone2`                   | `readonly` | `boolean`                                            | -                                                                      |
-| `LastCommunication`           | `readonly` | `string`                                             | [`BaseSetDeviceData`](README.md#basesetdevicedata).`LastCommunication` |
-| `NextCommunication`           | `readonly` | `string`                                             | [`BaseSetDeviceData`](README.md#basesetdevicedata).`NextCommunication` |
-| `Offline`                     | `readonly` | `boolean`                                            | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Offline`           |
-| `OperationMode`               | `readonly` | [`OperationModeState`](README.md#operationmodestate) | -                                                                      |
-| `OperationModeZone1`          | `readonly` | [`OperationModeZone`](README.md#operationmodezone)   | `Required.OperationModeZone1`                                          |
-| `OperationModeZone2`          | `readonly` | [`OperationModeZone`](README.md#operationmodezone)   | `Required.OperationModeZone2`                                          |
-| `OutdoorTemperature`          | `readonly` | `number`                                             | -                                                                      |
-| `Power`                       | `readonly` | `boolean`                                            | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power`             |
-| `ProhibitCoolingZone1`        | `readonly` | `boolean`                                            | -                                                                      |
-| `ProhibitCoolingZone2`        | `readonly` | `boolean`                                            | -                                                                      |
-| `ProhibitHeatingZone1`        | `readonly` | `boolean`                                            | -                                                                      |
-| `ProhibitHeatingZone2`        | `readonly` | `boolean`                                            | -                                                                      |
-| `ProhibitHotWater`            | `readonly` | `boolean`                                            | -                                                                      |
-| `RoomTemperatureZone1`        | `readonly` | `number`                                             | -                                                                      |
-| `RoomTemperatureZone2`        | `readonly` | `number`                                             | -                                                                      |
-| `SetCoolFlowTemperatureZone1` | `readonly` | `number`                                             | `Required.SetCoolFlowTemperatureZone1`                                 |
-| `SetCoolFlowTemperatureZone2` | `readonly` | `number`                                             | `Required.SetCoolFlowTemperatureZone2`                                 |
-| `SetHeatFlowTemperatureZone1` | `readonly` | `number`                                             | `Required.SetHeatFlowTemperatureZone1`                                 |
-| `SetHeatFlowTemperatureZone2` | `readonly` | `number`                                             | `Required.SetHeatFlowTemperatureZone2`                                 |
-| `SetTankWaterTemperature`     | `readonly` | `number`                                             | `Required.SetTankWaterTemperature`                                     |
-| `SetTemperatureZone1`         | `readonly` | `number`                                             | `Required.SetTemperatureZone1`                                         |
-| `SetTemperatureZone2`         | `readonly` | `number`                                             | `Required.SetTemperatureZone2`                                         |
-| `TankWaterTemperature`        | `readonly` | `number`                                             | -                                                                      |
+| Property                      | Modifier   | Type                                                 | Inherited from                                                         | Defined in                                                                                                                               |
+| ----------------------------- | ---------- | ---------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeviceType`                  | `readonly` | `Atw`                                                | -                                                                      | [src/types/atw.ts:59](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L59)     |
+| `EffectiveFlags`              | `readonly` | `number`                                             | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags`    | [src/types/bases.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L24) |
+| `ForcedHotWaterMode`          | `readonly` | `boolean`                                            | `Required.ForcedHotWaterMode`                                          | [src/types/atw.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L30)     |
+| `IdleZone1`                   | `readonly` | `boolean`                                            | -                                                                      | [src/types/atw.ts:60](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L60)     |
+| `IdleZone2`                   | `readonly` | `boolean`                                            | -                                                                      | [src/types/atw.ts:61](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L61)     |
+| `LastCommunication`           | `readonly` | `string`                                             | [`BaseSetDeviceData`](README.md#basesetdevicedata).`LastCommunication` | [src/types/bases.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L33) |
+| `NextCommunication`           | `readonly` | `string`                                             | [`BaseSetDeviceData`](README.md#basesetdevicedata).`NextCommunication` | [src/types/bases.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L34) |
+| `Offline`                     | `readonly` | `boolean`                                            | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Offline`           | [src/types/bases.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L40) |
+| `OperationMode`               | `readonly` | [`OperationModeState`](README.md#operationmodestate) | -                                                                      | [src/types/atw.ts:62](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L62)     |
+| `OperationModeZone1`          | `readonly` | [`OperationModeZone`](README.md#operationmodezone)   | `Required.OperationModeZone1`                                          | [src/types/atw.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L31)     |
+| `OperationModeZone2`          | `readonly` | [`OperationModeZone`](README.md#operationmodezone)   | `Required.OperationModeZone2`                                          | [src/types/atw.ts:32](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L32)     |
+| `OutdoorTemperature`          | `readonly` | `number`                                             | -                                                                      | [src/types/atw.ts:63](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L63)     |
+| `Power`                       | `readonly` | `boolean`                                            | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power`             | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
+| `ProhibitCoolingZone1`        | `readonly` | `boolean`                                            | -                                                                      | [src/types/atw.ts:64](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L64)     |
+| `ProhibitCoolingZone2`        | `readonly` | `boolean`                                            | -                                                                      | [src/types/atw.ts:65](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L65)     |
+| `ProhibitHeatingZone1`        | `readonly` | `boolean`                                            | -                                                                      | [src/types/atw.ts:66](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L66)     |
+| `ProhibitHeatingZone2`        | `readonly` | `boolean`                                            | -                                                                      | [src/types/atw.ts:67](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L67)     |
+| `ProhibitHotWater`            | `readonly` | `boolean`                                            | -                                                                      | [src/types/atw.ts:68](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L68)     |
+| `RoomTemperatureZone1`        | `readonly` | `number`                                             | -                                                                      | [src/types/atw.ts:69](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L69)     |
+| `RoomTemperatureZone2`        | `readonly` | `number`                                             | -                                                                      | [src/types/atw.ts:70](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L70)     |
+| `SetCoolFlowTemperatureZone1` | `readonly` | `number`                                             | `Required.SetCoolFlowTemperatureZone1`                                 | [src/types/atw.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L33)     |
+| `SetCoolFlowTemperatureZone2` | `readonly` | `number`                                             | `Required.SetCoolFlowTemperatureZone2`                                 | [src/types/atw.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L34)     |
+| `SetHeatFlowTemperatureZone1` | `readonly` | `number`                                             | `Required.SetHeatFlowTemperatureZone1`                                 | [src/types/atw.ts:35](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L35)     |
+| `SetHeatFlowTemperatureZone2` | `readonly` | `number`                                             | `Required.SetHeatFlowTemperatureZone2`                                 | [src/types/atw.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L36)     |
+| `SetTankWaterTemperature`     | `readonly` | `number`                                             | `Required.SetTankWaterTemperature`                                     | [src/types/atw.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L37)     |
+| `SetTemperatureZone1`         | `readonly` | `number`                                             | `Required.SetTemperatureZone1`                                         | [src/types/atw.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L38)     |
+| `SetTemperatureZone2`         | `readonly` | `number`                                             | `Required.SetTemperatureZone2`                                         | [src/types/atw.ts:39](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L39)     |
+| `TankWaterTemperature`        | `readonly` | `number`                                             | -                                                                      | [src/types/atw.ts:71](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L71)     |
 
 ---
 
@@ -5658,20 +5802,20 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property             | Modifier   | Type                                                                      | Inherited from                                                         |
-| :------------------- | :--------- | :------------------------------------------------------------------------ | :--------------------------------------------------------------------- |
-| `DeviceType`         | `readonly` | `Erv`                                                                     | -                                                                      |
-| `EffectiveFlags`     | `readonly` | `number`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags`    |
-| `LastCommunication`  | `readonly` | `string`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`LastCommunication` |
-| `NextCommunication`  | `readonly` | `string`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`NextCommunication` |
-| `NumberOfFanSpeeds`  | `readonly` | `number`                                                                  | -                                                                      |
-| `Offline`            | `readonly` | `boolean`                                                                 | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Offline`           |
-| `OutdoorTemperature` | `readonly` | `number`                                                                  | -                                                                      |
-| `Power`              | `readonly` | `boolean`                                                                 | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power`             |
-| `RoomCO2Level`       | `readonly` | `number`                                                                  | -                                                                      |
-| `RoomTemperature`    | `readonly` | `number`                                                                  | -                                                                      |
-| `SetFanSpeed`        | `readonly` | \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | `Required.SetFanSpeed`                                                 |
-| `VentilationMode`    | `readonly` | [`VentilationMode`](README.md#ventilationmode)                            | `Required.VentilationMode`                                             |
+| Property             | Modifier   | Type                                                                      | Inherited from                                                         | Defined in                                                                                                                               |
+| -------------------- | ---------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeviceType`         | `readonly` | `Erv`                                                                     | -                                                                      | [src/types/erv.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L33)     |
+| `EffectiveFlags`     | `readonly` | `number`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`EffectiveFlags`    | [src/types/bases.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L24) |
+| `LastCommunication`  | `readonly` | `string`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`LastCommunication` | [src/types/bases.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L33) |
+| `NextCommunication`  | `readonly` | `string`                                                                  | [`BaseSetDeviceData`](README.md#basesetdevicedata).`NextCommunication` | [src/types/bases.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L34) |
+| `NumberOfFanSpeeds`  | `readonly` | `number`                                                                  | -                                                                      | [src/types/erv.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L34)     |
+| `Offline`            | `readonly` | `boolean`                                                                 | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Offline`           | [src/types/bases.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L40) |
+| `OutdoorTemperature` | `readonly` | `number`                                                                  | -                                                                      | [src/types/erv.ts:35](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L35)     |
+| `Power`              | `readonly` | `boolean`                                                                 | [`BaseSetDeviceData`](README.md#basesetdevicedata).`Power`             | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
+| `RoomCO2Level`       | `readonly` | `number`                                                                  | -                                                                      | [src/types/erv.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L36)     |
+| `RoomTemperature`    | `readonly` | `number`                                                                  | -                                                                      | [src/types/erv.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L37)     |
+| `SetFanSpeed`        | `readonly` | \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | `Required.SetFanSpeed`                                                 | [src/types/erv.ts:20](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L20)     |
+| `VentilationMode`    | `readonly` | [`VentilationMode`](README.md#ventilationmode)                            | `Required.VentilationMode`                                             | [src/types/erv.ts:21](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L21)     |
 
 ---
 
@@ -5679,10 +5823,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property    | Modifier   | Type                |
-| :---------- | :--------- | :------------------ |
-| `DeviceIds` | `readonly` | readonly `number`[] |
-| `Power`     | `readonly` | `boolean`           |
+| Property    | Modifier   | Type                | Defined in                                                                                                                                   |
+| ----------- | ---------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeviceIds` | `readonly` | readonly `number`[] | [src/types/common.ts:239](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L239) |
+| `Power`     | `readonly` | `boolean`           | [src/types/common.ts:240](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L240) |
 
 ---
 
@@ -5690,10 +5834,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property | Type                                                                                          |
-| :------- | :-------------------------------------------------------------------------------------------- |
-| `get`    | \<`K`\>(`key`: `K`) => `undefined` \| `null` \| [`APISettings`](README.md#apisettings)\[`K`\] |
-| `set`    | \<`K`\>(`key`: `K`, `value`: [`APISettings`](README.md#apisettings)\[`K`\]) => `void`         |
+| Property | Type                                                                                          | Defined in                                                                                                                                               |
+| -------- | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get`    | \<`K`\>(`key`: `K`) => `undefined` \| `null` \| [`APISettings`](README.md#apisettings)\[`K`\] | [src/services/interfaces.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L38) |
+| `set`    | \<`K`\>(`key`: `K`, `value`: [`APISettings`](README.md#apisettings)\[`K`\]) => `void`         | [src/services/interfaces.ts:41](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/services/interfaces.ts#L41) |
 
 ---
 
@@ -5701,10 +5845,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property    | Modifier   | Type                                                        |
-| :---------- | :--------- | :---------------------------------------------------------- |
-| `id`        | `readonly` | `number`                                                    |
-| `tableName` | `readonly` | `"Area"` \| `"Building"` \| `"DeviceLocation"` \| `"Floor"` |
+| Property    | Modifier   | Type                                                        | Defined in                                                                                                                                   |
+| ----------- | ---------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`        | `readonly` | `number`                                                    | [src/types/common.ts:122](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L122) |
+| `tableName` | `readonly` | `"Area"` \| `"Building"` \| `"DeviceLocation"` \| `"Floor"` | [src/types/common.ts:123](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L123) |
 
 ---
 
@@ -5712,27 +5856,27 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property          | Modifier   | Type   |
-| :---------------- | :--------- | :----- |
-| `AttributeErrors` | `readonly` | `null` |
-| `Success`         | `readonly` | `true` |
+| Property          | Modifier   | Type   | Defined in                                                                                                                                   |
+| ----------------- | ---------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AttributeErrors` | `readonly` | `null` | [src/types/common.ts:113](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L113) |
+| `Success`         | `readonly` | `true` | [src/types/common.ts:114](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L114) |
 
 ---
 
 ### TilesData\<T\>
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                                                              |
-| :-------------------------------------------------------------------------- |
+| Type Parameter                                                              |
+| --------------------------------------------------------------------------- |
 | `T` _extends_ keyof _typeof_ [`DeviceType`](README.md#devicetype) \| `null` |
 
 #### Properties
 
-| Property         | Modifier   | Type                                                                                                                                                                        |
-| :--------------- | :--------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SelectedDevice` | `readonly` | `T` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` ? [`GetDeviceData`](README.md#getdevicedata)\[`T`\<`T`\>\] : `null`                                                             |
-| `Tiles`          | `readonly` | readonly \{ `Device`: `number`; `Offline`: `boolean`; `Power`: `boolean`; `RoomTemperature`: `number`; `RoomTemperature2`: `number`; `TankWaterTemperature`: `number`; \}[] |
+| Property         | Modifier   | Type                                                                                                                                                                        | Defined in                                                                                                                                   |
+| ---------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SelectedDevice` | `readonly` | `T` _extends_ `"Ata"` \| `"Atw"` \| `"Erv"` ? [`GetDeviceData`](README.md#getdevicedata)\[`T`\<`T`\>\] : `null`                                                             | [src/types/common.ts:274](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L274) |
+| `Tiles`          | `readonly` | readonly \{ `Device`: `number`; `Offline`: `boolean`; `Power`: `boolean`; `RoomTemperature`: `number`; `RoomTemperature2`: `number`; `TankWaterTemperature`: `number`; \}[] | [src/types/common.ts:276](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L276) |
 
 ---
 
@@ -5740,11 +5884,11 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property | Modifier   | Type                                                   |
-| :------- | :--------- | :----------------------------------------------------- |
-| `Ata`    | `readonly` | [`UpdateDeviceDataAta`](README.md#updatedevicedataata) |
-| `Atw`    | `readonly` | [`UpdateDeviceDataAtw`](README.md#updatedevicedataatw) |
-| `Erv`    | `readonly` | [`UpdateDeviceDataErv`](README.md#updatedevicedataerv) |
+| Property | Modifier   | Type                                                   | Defined in                                                                                                                                 |
+| -------- | ---------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Ata`    | `readonly` | [`UpdateDeviceDataAta`](README.md#updatedevicedataata) | [src/types/common.ts:88](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L88) |
+| `Atw`    | `readonly` | [`UpdateDeviceDataAtw`](README.md#updatedevicedataatw) | [src/types/common.ts:89](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L89) |
+| `Erv`    | `readonly` | [`UpdateDeviceDataErv`](README.md#updatedevicedataerv) | [src/types/common.ts:90](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L90) |
 
 ---
 
@@ -5756,15 +5900,15 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property          | Modifier   | Type                                                                      | Inherited from                                                            |
-| :---------------- | :--------- | :------------------------------------------------------------------------ | :------------------------------------------------------------------------ |
-| `EffectiveFlags?` | `public`   | `number`                                                                  | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`EffectiveFlags` |
-| `OperationMode?`  | `readonly` | [`OperationMode`](README.md#operationmode)                                | -                                                                         |
-| `Power?`          | `readonly` | `boolean`                                                                 | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`Power`          |
-| `SetFanSpeed?`    | `readonly` | \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | -                                                                         |
-| `SetTemperature?` | `readonly` | `number`                                                                  | -                                                                         |
-| `VaneHorizontal?` | `readonly` | [`Horizontal`](README.md#horizontal)                                      | -                                                                         |
-| `VaneVertical?`   | `readonly` | [`Vertical`](README.md#vertical)                                          | -                                                                         |
+| Property          | Modifier   | Type                                                                      | Inherited from                                                            | Defined in                                                                                                                               |
+| ----------------- | ---------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `EffectiveFlags?` | `public`   | `number`                                                                  | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`EffectiveFlags` | [src/types/bases.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L24) |
+| `OperationMode?`  | `readonly` | [`OperationMode`](README.md#operationmode)                                | -                                                                         | [src/types/ata.ts:43](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L43)     |
+| `Power?`          | `readonly` | `boolean`                                                                 | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`Power`          | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
+| `SetFanSpeed?`    | `readonly` | \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | -                                                                         | [src/types/ata.ts:44](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L44)     |
+| `SetTemperature?` | `readonly` | `number`                                                                  | -                                                                         | [src/types/ata.ts:45](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L45)     |
+| `VaneHorizontal?` | `readonly` | [`Horizontal`](README.md#horizontal)                                      | -                                                                         | [src/types/ata.ts:46](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L46)     |
+| `VaneVertical?`   | `readonly` | [`Vertical`](README.md#vertical)                                          | -                                                                         | [src/types/ata.ts:47](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L47)     |
 
 ---
 
@@ -5776,20 +5920,20 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property                       | Modifier   | Type                                               | Inherited from                                                            |
-| :----------------------------- | :--------- | :------------------------------------------------- | :------------------------------------------------------------------------ |
-| `EffectiveFlags?`              | `public`   | `number`                                           | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`EffectiveFlags` |
-| `ForcedHotWaterMode?`          | `readonly` | `boolean`                                          | -                                                                         |
-| `OperationModeZone1?`          | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | -                                                                         |
-| `OperationModeZone2?`          | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | -                                                                         |
-| `Power?`                       | `readonly` | `boolean`                                          | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`Power`          |
-| `SetCoolFlowTemperatureZone1?` | `readonly` | `number`                                           | -                                                                         |
-| `SetCoolFlowTemperatureZone2?` | `readonly` | `number`                                           | -                                                                         |
-| `SetHeatFlowTemperatureZone1?` | `readonly` | `number`                                           | -                                                                         |
-| `SetHeatFlowTemperatureZone2?` | `readonly` | `number`                                           | -                                                                         |
-| `SetTankWaterTemperature?`     | `readonly` | `number`                                           | -                                                                         |
-| `SetTemperatureZone1?`         | `readonly` | `number`                                           | -                                                                         |
-| `SetTemperatureZone2?`         | `readonly` | `number`                                           | -                                                                         |
+| Property                       | Modifier   | Type                                               | Inherited from                                                            | Defined in                                                                                                                               |
+| ------------------------------ | ---------- | -------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `EffectiveFlags?`              | `public`   | `number`                                           | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`EffectiveFlags` | [src/types/bases.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L24) |
+| `ForcedHotWaterMode?`          | `readonly` | `boolean`                                          | -                                                                         | [src/types/atw.ts:30](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L30)     |
+| `OperationModeZone1?`          | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | -                                                                         | [src/types/atw.ts:31](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L31)     |
+| `OperationModeZone2?`          | `readonly` | [`OperationModeZone`](README.md#operationmodezone) | -                                                                         | [src/types/atw.ts:32](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L32)     |
+| `Power?`                       | `readonly` | `boolean`                                          | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`Power`          | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
+| `SetCoolFlowTemperatureZone1?` | `readonly` | `number`                                           | -                                                                         | [src/types/atw.ts:33](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L33)     |
+| `SetCoolFlowTemperatureZone2?` | `readonly` | `number`                                           | -                                                                         | [src/types/atw.ts:34](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L34)     |
+| `SetHeatFlowTemperatureZone1?` | `readonly` | `number`                                           | -                                                                         | [src/types/atw.ts:35](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L35)     |
+| `SetHeatFlowTemperatureZone2?` | `readonly` | `number`                                           | -                                                                         | [src/types/atw.ts:36](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L36)     |
+| `SetTankWaterTemperature?`     | `readonly` | `number`                                           | -                                                                         | [src/types/atw.ts:37](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L37)     |
+| `SetTemperatureZone1?`         | `readonly` | `number`                                           | -                                                                         | [src/types/atw.ts:38](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L38)     |
+| `SetTemperatureZone2?`         | `readonly` | `number`                                           | -                                                                         | [src/types/atw.ts:39](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L39)     |
 
 ---
 
@@ -5801,12 +5945,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property           | Modifier   | Type                                                                      | Inherited from                                                            |
-| :----------------- | :--------- | :------------------------------------------------------------------------ | :------------------------------------------------------------------------ |
-| `EffectiveFlags?`  | `public`   | `number`                                                                  | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`EffectiveFlags` |
-| `Power?`           | `readonly` | `boolean`                                                                 | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`Power`          |
-| `SetFanSpeed?`     | `readonly` | \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | -                                                                         |
-| `VentilationMode?` | `readonly` | [`VentilationMode`](README.md#ventilationmode)                            | -                                                                         |
+| Property           | Modifier   | Type                                                                      | Inherited from                                                            | Defined in                                                                                                                               |
+| ------------------ | ---------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `EffectiveFlags?`  | `public`   | `number`                                                                  | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`EffectiveFlags` | [src/types/bases.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L24) |
+| `Power?`           | `readonly` | `boolean`                                                                 | [`BaseUpdateDeviceData`](README.md#baseupdatedevicedata).`Power`          | [src/types/bases.ts:25](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L25) |
+| `SetFanSpeed?`     | `readonly` | \| `auto` \| `very_slow` \| `slow` \| `moderate` \| `fast` \| `very_fast` | -                                                                         | [src/types/erv.ts:20](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L20)     |
+| `VentilationMode?` | `readonly` | [`VentilationMode`](README.md#ventilationmode)                            | -                                                                         | [src/types/erv.ts:21](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L21)     |
 
 ---
 
@@ -5814,12 +5958,12 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property   | Modifier   | Type                                       |
-| :--------- | :--------- | :----------------------------------------- |
-| `Data`     | `readonly` | readonly readonly (`null` \| `number`)[][] |
-| `FromDate` | `readonly` | `string`                                   |
-| `Labels`   | `readonly` | readonly `string`[]                        |
-| `ToDate`   | `readonly` | `string`                                   |
+| Property   | Modifier   | Type                                       | Defined in                                                                                                                                   |
+| ---------- | ---------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Data`     | `readonly` | readonly readonly (`null` \| `number`)[][] | [src/types/common.ts:313](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L313) |
+| `FromDate` | `readonly` | `string`                                   | [src/types/common.ts:314](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L314) |
+| `Labels`   | `readonly` | readonly `string`[]                        | [src/types/common.ts:315](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L315) |
+| `ToDate`   | `readonly` | `string`                                   | [src/types/common.ts:316](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L316) |
 
 ---
 
@@ -5827,10 +5971,10 @@ setPower(__namedParameters: {
 
 #### Properties
 
-| Property  | Modifier   | Type                |
-| :-------- | :--------- | :------------------ |
-| `devices` | `readonly` | readonly `number`[] |
-| `hour`    | `readonly` | `number`            |
+| Property  | Modifier   | Type                | Defined in                                                                                                                                   |
+| --------- | ---------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `devices` | `readonly` | readonly `number`[] | [src/types/common.ts:309](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L309) |
+| `hour`    | `readonly` | `number`            | [src/types/common.ts:310](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L310) |
 
 ## Type Aliases
 
@@ -5840,9 +5984,9 @@ setPower(__namedParameters: {
 type AreaDataAny: AreaData<number> | AreaData<null>;
 ```
 
-#### Source
+#### Defined in
 
-[src/types/common.ts:202](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/common.ts#L202)
+[src/types/common.ts:202](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L202)
 
 ---
 
@@ -5852,9 +5996,9 @@ type AreaDataAny: AreaData<number> | AreaData<null>;
 type AreaModelAny: AreaModel<number> | AreaModel<null>;
 ```
 
-#### Source
+#### Defined in
 
-[src/models/area.ts:8](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/area.ts#L8)
+[src/models/area.ts:8](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/area.ts#L8)
 
 ---
 
@@ -5864,9 +6008,9 @@ type AreaModelAny: AreaModel<number> | AreaModel<null>;
 type DeviceFacadeAny: DeviceFacade<"Ata"> | DeviceFacade<"Atw"> | DeviceFacade<"Erv">;
 ```
 
-#### Source
+#### Defined in
 
-[src/facades/device.ts:20](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/device.ts#L20)
+[src/facades/device.ts:20](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/device.ts#L20)
 
 ---
 
@@ -5876,9 +6020,9 @@ type DeviceFacadeAny: DeviceFacade<"Ata"> | DeviceFacade<"Atw"> | DeviceFacade<"
 type DeviceModelAny: DeviceModel<"Ata"> | DeviceModel<"Atw"> | DeviceModel<"Erv">;
 ```
 
-#### Source
+#### Defined in
 
-[src/models/device.ts:8](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/models/device.ts#L8)
+[src/models/device.ts:8](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/models/device.ts#L8)
 
 ---
 
@@ -5888,9 +6032,9 @@ type DeviceModelAny: DeviceModel<"Ata"> | DeviceModel<"Atw"> | DeviceModel<"Erv"
 type Flags: typeof flags;
 ```
 
-#### Source
+#### Defined in
 
-[src/types/common.ts:67](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/common.ts#L67)
+[src/types/common.ts:67](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L67)
 
 ---
 
@@ -5900,9 +6044,9 @@ type Flags: typeof flags;
 type GetDeviceDataAta: BaseGetDeviceData & SetDeviceDataAta;
 ```
 
-#### Source
+#### Defined in
 
-[src/types/ata.ts:67](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/ata.ts#L67)
+[src/types/ata.ts:67](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L67)
 
 ---
 
@@ -5912,9 +6056,9 @@ type GetDeviceDataAta: BaseGetDeviceData & SetDeviceDataAta;
 type GetDeviceDataAtw: BaseGetDeviceData & SetDeviceDataAtw;
 ```
 
-#### Source
+#### Defined in
 
-[src/types/atw.ts:74](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/atw.ts#L74)
+[src/types/atw.ts:74](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L74)
 
 ---
 
@@ -5924,9 +6068,9 @@ type GetDeviceDataAtw: BaseGetDeviceData & SetDeviceDataAtw;
 type GetDeviceDataErv: BaseGetDeviceData & SetDeviceDataErv;
 ```
 
-#### Source
+#### Defined in
 
-[src/types/erv.ts:40](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/erv.ts#L40)
+[src/types/erv.ts:40](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L40)
 
 ---
 
@@ -5936,9 +6080,9 @@ type GetDeviceDataErv: BaseGetDeviceData & SetDeviceDataErv;
 type ListDeviceAny: ListDeviceAta | ListDeviceAtw | ListDeviceErv;
 ```
 
-#### Source
+#### Defined in
 
-[src/types/common.ts:217](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/common.ts#L217)
+[src/types/common.ts:217](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L217)
 
 ---
 
@@ -5948,9 +6092,9 @@ type ListDeviceAny: ListDeviceAta | ListDeviceAtw | ListDeviceErv;
 type ListDeviceDataAny: ListDeviceDataAta | ListDeviceDataAtw | ListDeviceDataErv;
 ```
 
-#### Source
+#### Defined in
 
-[src/types/common.ts:208](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/common.ts#L208)
+[src/types/common.ts:208](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L208)
 
 ---
 
@@ -5960,15 +6104,15 @@ type ListDeviceDataAny: ListDeviceDataAta | ListDeviceDataAtw | ListDeviceDataEr
 type NonFlagsKeyOf<T>: Exclude<keyof T, "EffectiveFlags">;
 ```
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter |
-| :------------- |
+| Type Parameter |
+| -------------- |
 | `T`            |
 
-#### Source
+#### Defined in
 
-[src/types/bases.ts:19](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/bases.ts#L19)
+[src/types/bases.ts:19](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L19)
 
 ---
 
@@ -5978,15 +6122,15 @@ type NonFlagsKeyOf<T>: Exclude<keyof T, "EffectiveFlags">;
 type NonFlagsValueOf<T>: T[NonFlagsKeyOf<T>];
 ```
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter |
-| :------------- |
+| Type Parameter |
+| -------------- |
 | `T`            |
 
-#### Source
+#### Defined in
 
-[src/types/bases.ts:21](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/bases.ts#L21)
+[src/types/bases.ts:21](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L21)
 
 ---
 
@@ -5998,15 +6142,15 @@ type SetDevicePostData<T>: UpdateDeviceData[T] & Required<{
  }> & BaseDevicePostData;
 ```
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                                                    |
-| :---------------------------------------------------------------- |
+| Type Parameter                                                    |
+| ----------------------------------------------------------------- |
 | `T` _extends_ keyof _typeof_ [`DeviceType`](README.md#devicetype) |
 
-#### Source
+#### Defined in
 
-[src/types/common.ts:92](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/common.ts#L92)
+[src/types/common.ts:92](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L92)
 
 ---
 
@@ -6026,19 +6170,19 @@ type TilesPostData<T>: T extends keyof typeof DeviceType ? {
 
 #### Type declaration
 
-| Member      | Type                |
-| :---------- | :------------------ |
-| `DeviceIDs` | readonly `number`[] |
+| Name        | Type                | Defined in                                                                                                                                   |
+| ----------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DeviceIDs` | readonly `number`[] | [src/types/common.ts:271](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L271) |
 
-#### Type parameters
+#### Type Parameters
 
-| Type parameter                                                              |
-| :-------------------------------------------------------------------------- |
+| Type Parameter                                                              |
+| --------------------------------------------------------------------------- |
 | `T` _extends_ keyof _typeof_ [`DeviceType`](README.md#devicetype) \| `null` |
 
-#### Source
+#### Defined in
 
-[src/types/common.ts:261](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/common.ts#L261)
+[src/types/common.ts:261](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L261)
 
 ## Variables
 
@@ -6048,9 +6192,9 @@ type TilesPostData<T>: T extends keyof typeof DeviceType ? {
 const FLAG_UNCHANGED: 0 = 0x0
 ```
 
-#### Source
+#### Defined in
 
-[src/types/bases.ts:1](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/bases.ts#L1)
+[src/types/bases.ts:1](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/bases.ts#L1)
 
 ---
 
@@ -6060,9 +6204,9 @@ const FLAG_UNCHANGED: 0 = 0x0
 const YEAR_1970: '1970-01-01' = '1970-01-01'
 ```
 
-#### Source
+#### Defined in
 
-[src/facades/utils.ts:3](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/utils.ts#L3)
+[src/facades/utils.ts:3](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/utils.ts#L3)
 
 ---
 
@@ -6078,15 +6222,15 @@ const flags: {
 
 #### Type declaration
 
-| Member | Type                                                                                                                        | Value    |
-| :----- | :-------------------------------------------------------------------------------------------------------------------------- | :------- |
-| `Ata`  | `Record`\<[`NonFlagsKeyOf`](README.md#nonflagskeyoft)\<[`UpdateDeviceDataAta`](README.md#updatedevicedataata)\>, `number`\> | flagsAta |
-| `Atw`  | `Record`\<[`NonFlagsKeyOf`](README.md#nonflagskeyoft)\<[`UpdateDeviceDataAtw`](README.md#updatedevicedataatw)\>, `number`\> | flagsAtw |
-| `Erv`  | `Record`\<[`NonFlagsKeyOf`](README.md#nonflagskeyoft)\<[`UpdateDeviceDataErv`](README.md#updatedevicedataerv)\>, `number`\> | flagsErv |
+| Name  | Type                                                                                                                        | Default value | Defined in                                                                                                                                 |
+| ----- | --------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Ata` | `Record`\<[`NonFlagsKeyOf`](README.md#nonflagskeyoft)\<[`UpdateDeviceDataAta`](README.md#updatedevicedataata)\>, `number`\> | flagsAta      | [src/types/common.ts:63](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L63) |
+| `Atw` | `Record`\<[`NonFlagsKeyOf`](README.md#nonflagskeyoft)\<[`UpdateDeviceDataAtw`](README.md#updatedevicedataatw)\>, `number`\> | flagsAtw      | [src/types/common.ts:64](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L64) |
+| `Erv` | `Record`\<[`NonFlagsKeyOf`](README.md#nonflagskeyoft)\<[`UpdateDeviceDataErv`](README.md#updatedevicedataerv)\>, `number`\> | flagsErv      | [src/types/common.ts:65](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L65) |
 
-#### Source
+#### Defined in
 
-[src/types/common.ts:62](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/common.ts#L62)
+[src/types/common.ts:62](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/common.ts#L62)
 
 ---
 
@@ -6096,9 +6240,9 @@ const flags: {
 const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number>
 ```
 
-#### Source
+#### Defined in
 
-[src/types/ata.ts:50](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/ata.ts#L50)
+[src/types/ata.ts:50](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/ata.ts#L50)
 
 ---
 
@@ -6108,9 +6252,9 @@ const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number>
 const flagsAtw: Record<NonFlagsKeyOf<UpdateDeviceDataAtw>, number>
 ```
 
-#### Source
+#### Defined in
 
-[src/types/atw.ts:42](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/atw.ts#L42)
+[src/types/atw.ts:42](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/atw.ts#L42)
 
 ---
 
@@ -6120,9 +6264,9 @@ const flagsAtw: Record<NonFlagsKeyOf<UpdateDeviceDataAtw>, number>
 const flagsErv: Record<NonFlagsKeyOf<UpdateDeviceDataErv>, number>
 ```
 
-#### Source
+#### Defined in
 
-[src/types/erv.ts:24](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/types/erv.ts#L24)
+[src/types/erv.ts:24](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/types/erv.ts#L24)
 
 ## Functions
 
@@ -6136,6 +6280,6 @@ function nowISO(): string
 
 `string`
 
-#### Source
+#### Defined in
 
-[src/facades/utils.ts:4](https://github.com/OlivierZal/melcloud-api/blob/302b552bcee1d8ddcb601a471fe26372333d893f/src/facades/utils.ts#L4)
+[src/facades/utils.ts:4](https://github.com/OlivierZal/melcloud-api/blob/aaccae1e75175fee421131667ae5796d506a86de/src/facades/utils.ts#L4)
