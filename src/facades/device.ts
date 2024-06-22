@@ -91,10 +91,7 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
   public override async getTiles(
     select: boolean | null | DeviceModel<T> = false,
   ): Promise<TilesData<T | null>> {
-    if (
-      select === true ||
-      (select instanceof DeviceModel && select.id === this.id)
-    ) {
+    if (select === true || select instanceof DeviceModel) {
       return super.getTiles(this.model as DeviceModel<T>)
     }
     return super.getTiles(null)
