@@ -4,12 +4,11 @@ import type {
   DeviceModel,
   FloorModel,
 } from '../models'
-import {
-  type FailureData,
-  FanSpeed,
-  type ListDeviceDataAta,
-  type SetAtaGroupPostData,
-  type SuccessData,
+import type {
+  FailureData,
+  ListDeviceDataAta,
+  SetAtaGroupPostData,
+  SuccessData,
 } from '../types'
 import BaseFacade from './base'
 import type { IBaseSuperDeviceFacade } from './interfaces'
@@ -61,11 +60,7 @@ export default abstract class<
       await this.api.setAta({
         postData: {
           Specification: { [this.setAtaGroupSpecification]: this.id },
-          State: {
-            ...postData,
-            FanSpeed:
-              postData.FanSpeed === FanSpeed.silent ? null : postData.FanSpeed,
-          },
+          State: postData,
         },
       })
     ).data
