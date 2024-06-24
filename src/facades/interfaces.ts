@@ -34,6 +34,7 @@ export interface IBaseFacade {
       select: DeviceModel<T>,
     ) => Promise<TilesData<T>>)
   getWifiReport: (hour?: number) => Promise<WifiData>
+  id: number
   name: string
   setFrostProtection: ({
     enable,

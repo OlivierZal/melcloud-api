@@ -1,4 +1,6 @@
-export default abstract class BaseModel {
+import type { IBaseModel } from './interfaces'
+
+export default abstract class BaseModel implements IBaseModel {
   public readonly id: number
 
   public readonly name: string
