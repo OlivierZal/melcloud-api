@@ -106,7 +106,7 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
           DeviceID: this.id,
           EffectiveFlags:
             typeof effectiveFlags === 'undefined' ?
-              Object.keys(updateData).reduce<number>(
+              Object.keys(updateData).reduce(
                 (acc, key) =>
                   acc | this.flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>],
                 FLAG_UNCHANGED,
