@@ -3,7 +3,6 @@ import {
   type DeviceType,
   type EnergyData,
   FLAG_UNCHANGED,
-  FanSpeed,
   type GetDeviceData,
   type ListDevice,
   type NonFlagsKeyOf,
@@ -99,30 +98,20 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
 
   public async set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
     const { EffectiveFlags: effectiveFlags, ...updateData } = postData
-    let newFlags =
-      typeof effectiveFlags === 'undefined' ?
-        Object.keys(updateData).reduce<number>(
-          (acc, key) =>
-            acc | this.flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>],
-          FLAG_UNCHANGED,
-        )
-      : effectiveFlags
-    if (
-      'SetFanSpeed' in updateData &&
-      updateData.SetFanSpeed === FanSpeed.silent &&
-      'SetFanSpeed' in this.flags &&
-      typeof this.flags.SetFanSpeed !== 'undefined' &&
-      this.flags.SetFanSpeed !== null
-    ) {
-      newFlags &= ~this.flags.SetFanSpeed
-    }
     return (
       await this.api.set({
         heatPumpType: this.type,
         postData: {
           ...updateData,
           DeviceID: this.id,
-          EffectiveFlags: newFlags,
+          EffectiveFlags:
+            typeof effectiveFlags === 'undefined' ?
+              Object.keys(updateData).reduce<number>(
+                (acc, key) =>
+                  acc | this.flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>],
+                FLAG_UNCHANGED,
+              )
+            : effectiveFlags,
         },
       })
     ).data
