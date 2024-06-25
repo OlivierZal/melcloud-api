@@ -34,6 +34,16 @@ export interface APISettings {
   username?: string | null
 }
 
+export const isAPISetting = (key: string): key is keyof APISettings =>
+  (
+    [
+      'contextKey',
+      'expiry',
+      'password',
+      'username',
+    ] satisfies (keyof APISettings)[] as string[]
+  ).includes(key)
+
 export interface SettingManager {
   get: <K extends keyof APISettings>(
     key: K,
@@ -46,7 +56,17 @@ export interface Logger {
   log: Console['log']
 }
 
-export interface IMELCloudAPI {
+export interface APIConfig {
+  autoSyncInterval?: number | null
+  language?: string
+  logger?: Logger
+  settingManager?: SettingManager
+  shouldVerifySSL?: boolean
+  syncFunction?: () => Promise<void>
+  timezone?: string
+}
+
+export interface IAPI {
   applyLogin: (
     data?: LoginCredentials,
     onSuccess?: () => Promise<void>,

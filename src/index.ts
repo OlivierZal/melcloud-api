@@ -34,11 +34,13 @@ export {
   FloorModel,
 } from './models'
 export {
+  type APIConfig,
   type APISettings,
-  type IMELCloudAPI,
+  type IAPI,
   type Logger,
   type SettingManager,
   default,
+  isAPISetting,
 } from './services'
 export {
   type AreaData,
