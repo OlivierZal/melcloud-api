@@ -56,6 +56,21 @@ const LOGIN_URL = '/Login/ClientLogin'
 const MINUTES_0 = 0
 const MINUTES_5 = 5
 
+const setupLuxonSettings = ({
+  language,
+  timezone,
+}: {
+  language?: string
+  timezone?: string
+}): void => {
+  if (typeof language !== 'undefined') {
+    LuxonSettings.defaultLocale = language
+  }
+  if (typeof timezone !== 'undefined') {
+    LuxonSettings.defaultZone = timezone
+  }
+}
+
 const getLanguage = (language = LuxonSettings.defaultLocale): Language =>
   language in Language ?
     Language[language as keyof typeof Language]
@@ -114,13 +129,13 @@ export default class API implements IMELCloudAPI {
 
   readonly #api: AxiosInstance
 
-  readonly #autoSync: Duration
+  readonly #autoSyncInterval: Duration
 
   readonly #logger: Logger
 
   public constructor(
     config: {
-      autoSync?: number | null
+      autoSyncInterval?: number | null
       language?: string
       logger?: Logger
       settingManager?: SettingManager
@@ -130,7 +145,7 @@ export default class API implements IMELCloudAPI {
     } = {},
   ) {
     const {
-      autoSync = MINUTES_5,
+      autoSyncInterval = MINUTES_5,
       language = 'en',
       logger = console,
       settingManager,
@@ -138,19 +153,23 @@ export default class API implements IMELCloudAPI {
       syncFunction,
       timezone,
     } = config
-    LuxonSettings.defaultLocale = language
-    if (typeof timezone !== 'undefined') {
-      LuxonSettings.defaultZone = timezone
-    }
+    setupLuxonSettings({ language, timezone })
+    this.#logger = logger
+    this.#syncFunction = syncFunction
     this.settingManager = settingManager
+
     this.#api = createAxiosInstance({
       baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
       httpsAgent: new https.Agent({ rejectUnauthorized: shouldVerifySSL }),
     })
-    this.#autoSync = Duration.fromObject({ minutes: autoSync ?? MINUTES_0 })
-    this.#logger = logger
-    this.#syncFunction = syncFunction
     this.#setupAxiosInterceptors()
+
+    this.#autoSyncInterval = Duration.fromObject({
+      minutes: autoSyncInterval ?? MINUTES_0,
+    })
+    this.#autoSync(true).catch((error: unknown) => {
+      this.#logger.error(error)
+    })
   }
 
   public async applyLogin(data?: LoginCredentials): Promise<boolean> {
@@ -206,13 +225,7 @@ export default class API implements IMELCloudAPI {
       BuildingModel.upsert(building)
     })
     await this.#syncFunction?.()
-    if (this.#autoSync.as('milliseconds')) {
-      this.#syncTimeout = setTimeout(() => {
-        this.fetch().catch((error: unknown) => {
-          this.#logger.error(error)
-        })
-      }, this.#autoSync.as('milliseconds'))
-    }
+    await this.#autoSync()
     return response
   }
 
@@ -302,8 +315,6 @@ export default class API implements IMELCloudAPI {
       this.contextKey = response.data.LoginData.ContextKey
       this.expiry = response.data.LoginData.Expiry
       await this.fetch()
-    } else {
-      this.clearSync()
     }
     return response
   }
@@ -362,6 +373,19 @@ export default class API implements IMELCloudAPI {
     postData: SetPowerPostData
   }): Promise<{ data: boolean }> {
     return this.#api.post('/Device/Power', postData)
+  }
+
+  async #autoSync(init = false): Promise<void> {
+    if (this.#autoSyncInterval.as('milliseconds')) {
+      if (init) {
+        await this.fetch()
+      }
+      this.#syncTimeout = setTimeout(() => {
+        this.fetch().catch((error: unknown) => {
+          this.#logger.error(error)
+        })
+      }, this.#autoSyncInterval.as('milliseconds'))
+    }
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {
