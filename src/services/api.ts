@@ -160,6 +160,12 @@ export default class API implements IAPI {
     })
   }
 
+  public static async create(config: APIConfig = {}): Promise<API> {
+    const api = new API(config)
+    await api.#autoSync(true)
+    return api
+  }
+
   public async applyLogin(data?: LoginCredentials): Promise<boolean> {
     const { username = this.username, password = this.password } = data ?? {}
     if (username && password) {
@@ -191,12 +197,6 @@ export default class API implements IAPI {
       clearTimeout(this.#syncTimeout)
       this.#syncTimeout = null
     }
-  }
-
-  public async create(config: APIConfig = {}): Promise<API> {
-    const api = new API(config)
-    await this.#autoSync(true)
-    return api
   }
 
   public async fetch(): Promise<{ data: Building[] }> {
