@@ -97,9 +97,9 @@ const setting = <T extends API, R extends string | null | undefined>(
     }
     if (typeof this.settingManager === 'undefined') {
       target.set.call(this, value)
-    } else {
-      this.settingManager.set(key, value)
+      return
     }
+    this.settingManager.set(key, value)
   },
 })
 
@@ -164,6 +164,14 @@ export default class API implements IAPI {
     const api = new API(config)
     await api.#autoSync(true)
     return api
+  }
+
+  public async applyFetch(): Promise<Building[]> {
+    try {
+      return (await this.fetch()).data
+    } catch (_error) {
+      return []
+    }
   }
 
   public async applyLogin(data?: LoginCredentials): Promise<boolean> {
@@ -308,7 +316,7 @@ export default class API implements IAPI {
       this.password = password
       this.contextKey = response.data.LoginData.ContextKey
       this.expiry = response.data.LoginData.Expiry
-      await this.fetch()
+      await this.#autoSync(true)
     }
     return response
   }
@@ -372,10 +380,11 @@ export default class API implements IAPI {
   async #autoSync(init = false): Promise<void> {
     if (this.#autoSyncInterval.as('milliseconds')) {
       if (init) {
-        await this.fetch()
+        await this.applyFetch()
+        return
       }
       this.#syncTimeout = setTimeout(() => {
-        this.fetch().catch((error: unknown) => {
+        this.applyFetch().catch((error: unknown) => {
           this.#logger.error(error)
         })
       }, this.#autoSyncInterval.as('milliseconds'))
