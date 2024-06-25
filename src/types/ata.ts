@@ -1,13 +1,14 @@
 import type {
+  BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
+  BaseValues,
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
-  NonFlagsKeyOf,
 } from './bases'
 
 export enum OperationMode {
@@ -46,16 +47,9 @@ export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly VaneHorizontal?: Horizontal
   readonly VaneVertical?: Vertical
 }
-
-export const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number> = {
-  OperationMode: 0x2,
-  Power: 0x1,
-  SetFanSpeed: 0x8,
-  SetTemperature: 0x4,
-  VaneHorizontal: 0x100,
-  VaneVertical: 0x10,
-} as const
-
+export interface SetDevicePostDataAta
+  extends UpdateDeviceDataAta,
+    BaseDevicePostData {}
 export interface SetDeviceDataAta
   extends BaseSetDeviceData,
     Required<Readonly<UpdateDeviceDataAta>> {
@@ -66,17 +60,23 @@ export interface SetDeviceDataAta
 
 export type GetDeviceDataAta = BaseGetDeviceData & SetDeviceDataAta
 
+export type KeysOfSetDeviceDataAtaNotInList =
+  | 'SetFanSpeed'
+  | 'VaneHorizontal'
+  | 'VaneVertical'
+export interface SetDeviceDataAtaInList {
+  readonly FanSpeed: FanSpeed
+  readonly VaneHorizontalDirection: Horizontal
+  readonly VaneVerticalDirection: Vertical
+}
 export interface ListDeviceDataAta
   extends BaseListDeviceData,
+    SetDeviceDataAtaInList,
     Omit<
       GetDeviceDataAta,
-      | keyof DeviceDataNotInList
-      | 'SetFanSpeed'
-      | 'VaneHorizontal'
-      | 'VaneVertical'
+      keyof DeviceDataNotInList | KeysOfSetDeviceDataAtaNotInList
     > {
   readonly ActualFanSpeed: number
-  readonly FanSpeed: FanSpeed
   readonly HasAutomaticFanSpeed: boolean
   readonly MaxTempAutomatic: number
   readonly MaxTempCoolDry: number
@@ -85,8 +85,6 @@ export interface ListDeviceDataAta
   readonly MinTempCoolDry: number
   readonly MinTempHeat: number
   readonly OutdoorTemperature: number
-  readonly VaneHorizontalDirection: Horizontal
-  readonly VaneVerticalDirection: Vertical
 }
 export interface ListDeviceAta extends BaseListDevice {
   readonly Device: ListDeviceDataAta
@@ -107,3 +105,36 @@ export interface EnergyDataAta {
   readonly TotalOtherConsumed: number
   readonly UsageDisclaimerPercentages: string
 }
+
+export const flagsAta: Record<keyof UpdateDeviceDataAta, number> = {
+  OperationMode: 0x2,
+  Power: 0x1,
+  SetFanSpeed: 0x8,
+  SetTemperature: 0x4,
+  VaneHorizontal: 0x100,
+  VaneVertical: 0x10,
+} as const
+
+export interface ValuesAta extends BaseValues {
+  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly horizontal?: Horizontal
+  readonly mode?: OperationMode
+  readonly temperature?: number
+  readonly vertical?: Vertical
+}
+
+export const fromSetToListMappingAta: Record<
+  KeysOfSetDeviceDataAtaNotInList,
+  keyof SetDeviceDataAtaInList
+> = {
+  SetFanSpeed: 'FanSpeed',
+  VaneHorizontal: 'VaneHorizontalDirection',
+  VaneVertical: 'VaneVerticalDirection',
+}
+
+export const fromListToSetMappingAta: Record<
+  keyof SetDeviceDataAtaInList,
+  KeysOfSetDeviceDataAtaNotInList
+> = Object.fromEntries(
+  Object.entries(fromSetToListMappingAta).map(([key, value]) => [value, key]),
+) as Record<keyof SetDeviceDataAtaInList, KeysOfSetDeviceDataAtaNotInList>

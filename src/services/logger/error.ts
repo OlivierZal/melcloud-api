@@ -9,8 +9,8 @@ interface APICallContextDataWithErrorMessage extends APICallContextData {
 
 const getMessage = (error: AxiosError): string => error.message
 
-const withErrorMessage = <T extends new (...args: any[]) => APICallContextData>(
-  base: T,
+const withErrorMessage = (
+  base: new (...args: any[]) => APICallContextData,
   error: AxiosError,
 ): new (...args: unknown[]) => APICallContextDataWithErrorMessage =>
   class extends base {
