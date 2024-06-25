@@ -1,9 +1,9 @@
-import {
-  type AreaModelAny,
-  type BuildingModel,
+import type {
+  AreaModelAny,
+  BuildingModel,
   DeviceModel,
-  type DeviceModelAny,
-  type FloorModel,
+  DeviceModelAny,
+  FloorModel,
 } from '../models'
 import type {
   DateTimeComponents,
@@ -47,18 +47,16 @@ const getDateTimeComponents = (
 
 const getEndDate = (
   startDate: DateTime,
-  to?: string | null,
+  to?: string,
   days?: number,
-): DateTime | null => {
+): DateTime => {
   if (
-    typeof to === 'undefined' ||
-    to === null ||
-    typeof days === 'undefined' ||
-    !days
+    (to === undefined && (days === undefined || !days)) ||
+    (to !== undefined && days !== undefined && days)
   ) {
-    throw new Error('End date is missing')
+    throw new Error('Select either end date or days')
   }
-  return days ? startDate.plus({ days }) : DateTime.fromISO(to)
+  return to === undefined ? startDate.plus({ days }) : DateTime.fromISO(to)
 }
 
 export default abstract class<
@@ -104,8 +102,8 @@ export default abstract class<
     from,
     to,
   }: {
-    from?: string | null
-    to?: string | null
+    from?: string
+    to?: string
   }): Promise<ErrorData[] | FailureData> {
     return (
       await this.api.getErrors({
@@ -144,35 +142,25 @@ export default abstract class<
       : this.#getDevicesHolidayMode()
   }
 
-  public async getTiles(select?: false | null): Promise<TilesData<null>>
+  public async getTiles(select?: false): Promise<TilesData<null>>
   public async getTiles<K extends keyof typeof DeviceType>(
     select: DeviceModel<K>,
   ): Promise<TilesData<K>>
   public async getTiles<K extends keyof typeof DeviceType>(
-    select: DeviceModel<K> | boolean | null = false,
+    select: DeviceModel<K> | false = false,
   ): Promise<TilesData<K | null>> {
-    if (select === true) {
-      throw new Error('Select a device')
-    }
-    if (select instanceof DeviceModel) {
-      if (!this.#getDeviceIds().includes(select.id)) {
-        throw new Error('Device not found')
-      }
-      return (
-        await this.api.getTiles({
-          postData: {
-            DeviceIDs: this.#getDeviceIds(),
-            SelectedBuilding: select.buildingId,
-            SelectedDevice: select.id,
-          },
-        })
-      ).data as TilesData<K>
-    }
-    return (
-      await this.api.getTiles({
-        postData: { DeviceIDs: this.#getDeviceIds() },
-      })
-    ).data
+    const postData = { DeviceIDs: this.#getDeviceIds() }
+    return select === false || !this.#getDeviceIds().includes(select.id) ?
+        (await this.api.getTiles({ postData })).data
+      : ((
+          await this.api.getTiles({
+            postData: {
+              ...postData,
+              SelectedBuilding: select.buildingId,
+              SelectedDevice: select.id,
+            },
+          })
+        ).data as TilesData<K>)
   }
 
   public async getWifiReport(
@@ -226,8 +214,8 @@ export default abstract class<
   }: {
     days?: number
     enable?: boolean
-    from?: string | null
-    to?: string | null
+    from?: string
+    to?: string
   }): Promise<FailureData | SuccessData> {
     const isEnabled = enable ?? true
     const startDate = isEnabled ? DateTime.fromISO(from ?? nowISO()) : null

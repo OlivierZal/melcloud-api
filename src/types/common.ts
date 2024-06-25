@@ -1,32 +1,38 @@
-import type { BaseDevicePostData, DeviceType, FanSpeed } from './bases'
+import type { DeviceType, FanSpeed } from './bases'
 import {
   type EnergyDataAta,
+  FLAGS_ATA,
   type GetDeviceDataAta,
   type Horizontal,
   type ListDeviceAta,
   type ListDeviceDataAta,
   type OperationMode,
   type SetDeviceDataAta,
+  type SetDevicePostDataAta,
   type UpdateDeviceDataAta,
+  type ValuesAta,
   type Vertical,
-  flagsAta,
 } from './ata'
 import {
   type EnergyDataAtw,
+  FLAGS_ATW,
   type GetDeviceDataAtw,
   type ListDeviceAtw,
   type ListDeviceDataAtw,
   type SetDeviceDataAtw,
+  type SetDevicePostDataAtw,
   type UpdateDeviceDataAtw,
-  flagsAtw,
+  type ValuesAtw,
 } from './atw'
 import {
+  FLAGS_ERV,
   type GetDeviceDataErv,
   type ListDeviceDataErv,
   type ListDeviceErv,
   type SetDeviceDataErv,
+  type SetDevicePostDataErv,
   type UpdateDeviceDataErv,
-  flagsErv,
+  type ValuesErv,
 } from './erv'
 
 export enum Language {
@@ -59,13 +65,6 @@ export enum Language {
   sq = 26,
 }
 
-export const flags = {
-  Ata: flagsAta,
-  Atw: flagsAtw,
-  Erv: flagsErv,
-} as const
-export type Flags = typeof flags
-
 export interface LoginCredentials {
   readonly password: string
   readonly username: string
@@ -89,10 +88,11 @@ export interface UpdateDeviceData {
   readonly Atw: UpdateDeviceDataAtw
   readonly Erv: UpdateDeviceDataErv
 }
-export type SetDevicePostData<T extends keyof typeof DeviceType> =
-  UpdateDeviceData[T] &
-    Required<{ EffectiveFlags: number }> &
-    BaseDevicePostData
+export interface SetDevicePostData {
+  readonly Ata: SetDevicePostDataAta
+  readonly Atw: SetDevicePostDataAtw
+  readonly Erv: SetDevicePostDataErv
+}
 export interface SetDeviceData {
   readonly Ata: SetDeviceDataAta
   readonly Atw: SetDeviceDataAtw
@@ -274,16 +274,17 @@ export interface TilesData<T extends keyof typeof DeviceType | null> {
   readonly SelectedDevice: T extends keyof typeof DeviceType ? GetDeviceData[T]
   : null
   readonly Tiles: readonly {
-    Device: number
-    Offline: boolean
-    Power: boolean
-    RoomTemperature: number
-    RoomTemperature2: number
-    TankWaterTemperature: number
+    readonly Device: number
+    readonly Offline: boolean
+    readonly Power: boolean
+    readonly RoomTemperature: number
+    readonly RoomTemperature2: number
+    readonly TankWaterTemperature: number
   }[]
 }
 
-export interface EnergyPostData extends BaseDevicePostData {
+export interface EnergyPostData {
+  readonly DeviceID: number
   readonly FromDate: string
   readonly ToDate: string
 }
@@ -315,3 +316,11 @@ export interface WifiData {
   readonly Labels: readonly string[]
   readonly ToDate: string
 }
+
+export interface Values {
+  readonly Ata: ValuesAta
+  readonly Atw: ValuesAtw
+  readonly Erv: ValuesErv
+}
+
+export const FLAGS = { Ata: FLAGS_ATA, Atw: FLAGS_ATW, Erv: FLAGS_ERV } as const

@@ -20,12 +20,12 @@ export default class
 
   public constructor(api: API, model: BuildingModel) {
     super(api, model)
-    this.isFrostProtectionDefined = this.settings.FPDefined
-    this.isHolidayModeDefined = this.settings.HMDefined
+    this.isFrostProtectionDefined = this.data.FPDefined
+    this.isHolidayModeDefined = this.data.HMDefined
   }
 
-  public get settings(): BuildingSettings {
-    return this.model.settings
+  public get data(): BuildingSettings {
+    return this.model.data
   }
 
   public async actualData(): Promise<BuildingData> {
@@ -39,6 +39,6 @@ export default class
 
   public async fetch(): Promise<BuildingSettings> {
     await this.api.fetch()
-    return this.settings
+    return this.data
   }
 }
