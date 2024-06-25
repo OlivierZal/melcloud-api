@@ -8,11 +8,11 @@ import type { IBuildingModel } from './interfaces'
 export default class BuildingModel extends BaseModel implements IBuildingModel {
   static readonly #buildings = new Map<number, BuildingModel>()
 
-  public readonly settings: BuildingSettings
+  public readonly data: BuildingSettings
 
-  private constructor({ Name: name, ID: id, ...settings }: BuildingData) {
+  private constructor({ Name: name, ID: id, ...data }: BuildingData) {
     super({ id, name })
-    this.settings = settings
+    this.data = data
   }
 
   public get areaIds(): number[] {
@@ -48,10 +48,10 @@ export default class BuildingModel extends BaseModel implements IBuildingModel {
   }
 
   public static getByName(name: string): BuildingModel | undefined {
-    return this.getAll().find((model) => name === model.name)
+    return this.getAll().find((model) => model.name === name)
   }
 
-  public static upsert(data: BuildingData): void {
-    this.#buildings.set(data.ID, new this(data))
+  public static upsert(building: BuildingData): void {
+    this.#buildings.set(building.ID, new this(building))
   }
 }

@@ -44,7 +44,7 @@ export default class FloorModel extends BaseModel implements IFloorModel {
   }
 
   public static getByBuildingId(id: number): FloorModel[] {
-    return this.getAll().filter((model) => id === model.buildingId)
+    return this.getAll().filter((model) => model.buildingId === id)
   }
 
   public static getById(id: number): FloorModel | undefined {
@@ -52,10 +52,10 @@ export default class FloorModel extends BaseModel implements IFloorModel {
   }
 
   public static getByName(name: string): FloorModel | undefined {
-    return this.getAll().find((model) => name === model.name)
+    return this.getAll().find((model) => model.name === name)
   }
 
-  public static upsert(data: FloorData): void {
-    this.#floors.set(data.ID, new this(data))
+  public static upsert(floor: FloorData): void {
+    this.#floors.set(floor.ID, new this(floor))
   }
 }

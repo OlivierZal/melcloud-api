@@ -20,13 +20,13 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public readonly buildingId: number
 
-  public readonly data: ListDevice[T]['Device']
-
   public readonly floorId: number | null = null
 
   public readonly type: T
 
-  private constructor({
+  #data: ListDevice[T]['Device']
+
+  protected constructor({
     AreaID: areaId,
     BuildingID: buildingId,
     Device: data,
@@ -38,9 +38,9 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     super({ id, name })
     this.areaId = areaId
     this.buildingId = buildingId
-    this.data = data
     this.floorId = floorId
     this.type = DeviceType[type] as T
+    this.#data = data
   }
 
   public get area(): AreaModelAny | null {
@@ -49,6 +49,10 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public get building(): BuildingModel | null {
     return BuildingModel.getById(this.buildingId) ?? null
+  }
+
+  public get data(): ListDevice[T]['Device'] {
+    return this.#data
   }
 
   public get floor(): FloorModel | null {
@@ -62,15 +66,15 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getByAreaId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => id === model.areaId)
+    return this.getAll().filter((model) => model.areaId === id)
   }
 
   public static getByBuildingId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => id === model.buildingId)
+    return this.getAll().filter((model) => model.buildingId === id)
   }
 
   public static getByFloorId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => id === model.floorId)
+    return this.getAll().filter((model) => model.floorId === id)
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
@@ -78,20 +82,31 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getByName(name: string): DeviceModelAny | undefined {
-    return this.getAll().find((model) => name === model.name)
+    return this.getAll().find((model) => model.name === name)
   }
 
-  public static getByType(type: keyof typeof DeviceType): DeviceModelAny[] {
-    return this.getAll().filter((model) => type === model.type)
+  public static getByType<K extends keyof typeof DeviceType>(
+    type: K,
+  ): DeviceModel<K>[] {
+    return this.getAll().filter(
+      (model) => model.type === type,
+    ) as DeviceModel<K>[]
   }
 
-  public static upsert(data: ListDeviceAny): void {
-    this.#devices.set(data.DeviceID, new this(data) as DeviceModelAny)
+  public static upsert(device: ListDeviceAny): void {
+    this.#devices.set(device.DeviceID, new this(device) as DeviceModelAny)
   }
 
-  public static upsertMany(dataList: readonly ListDeviceAny[]): void {
-    dataList.forEach((data) => {
-      this.upsert(data)
+  public static upsertMany(devices: readonly ListDeviceAny[]): void {
+    devices.forEach((device) => {
+      this.upsert(device)
     })
+  }
+
+  public update(data: Partial<ListDevice[T]['Device']>): void {
+    this.#data = {
+      ...this.#data,
+      ...data,
+    }
   }
 }
