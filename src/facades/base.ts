@@ -1,10 +1,13 @@
-import {
-  type AreaModelAny,
-  type BuildingModel,
+import { DateTime } from 'luxon'
+
+import type {
+  AreaModelAny,
+  BuildingModel,
   DeviceModel,
-  type DeviceModelAny,
-  type FloorModel,
+  DeviceModelAny,
+  FloorModel,
 } from '../models'
+import type API from '../services'
 import type {
   DateTimeComponents,
   DeviceType,
@@ -20,10 +23,9 @@ import type {
   TilesData,
   WifiData,
 } from '../types'
-import { YEAR_1970, nowISO } from './utils'
-import type API from '../services'
-import { DateTime } from 'luxon'
 import type { IBaseFacade } from './interfaces'
+
+import { YEAR_1970, nowISO } from './utils'
 
 const MIN_TEMPERATURE_MIN = 4
 const MIN_TEMPERATURE_MAX = 14
@@ -31,9 +33,7 @@ const MAX_TEMPERATURE_MIN = 6
 const MAX_TEMPERATURE_MAX = 16
 const MIN_MAX_GAP = 2
 
-const getDateTimeComponents = (
-  date: DateTime | null,
-): DateTimeComponents | null =>
+const getDateTimeComponents = (date?: DateTime): DateTimeComponents =>
   date ?
     {
       Day: date.day,
@@ -47,18 +47,16 @@ const getDateTimeComponents = (
 
 const getEndDate = (
   startDate: DateTime,
-  to?: string | null,
+  to?: string,
   days?: number,
-): DateTime | null => {
+): DateTime => {
   if (
-    typeof to === 'undefined' ||
-    to === null ||
-    typeof days === 'undefined' ||
-    !days
+    (to === undefined && (days === undefined || !days)) ||
+    (to !== undefined && days !== undefined && days)
   ) {
-    throw new Error('End date is missing')
+    throw new Error('Select either end date or days')
   }
-  return days ? startDate.plus({ days }) : DateTime.fromISO(to)
+  return to === undefined ? startDate.plus({ days }) : DateTime.fromISO(to)
 }
 
 export default abstract class<
@@ -104,8 +102,8 @@ export default abstract class<
     from,
     to,
   }: {
-    from?: string | null
-    to?: string | null
+    from?: string
+    to?: string
   }): Promise<ErrorData[] | FailureData> {
     return (
       await this.api.getErrors({
@@ -144,35 +142,25 @@ export default abstract class<
       : this.#getDevicesHolidayMode()
   }
 
-  public async getTiles(select?: false | null): Promise<TilesData<null>>
+  public async getTiles(select?: false): Promise<TilesData<null>>
   public async getTiles<K extends keyof typeof DeviceType>(
     select: DeviceModel<K>,
   ): Promise<TilesData<K>>
   public async getTiles<K extends keyof typeof DeviceType>(
-    select: DeviceModel<K> | boolean | null = false,
+    select: false | DeviceModel<K> = false,
   ): Promise<TilesData<K | null>> {
-    if (select === true) {
-      throw new Error('Select a device')
-    }
-    if (select instanceof DeviceModel) {
-      if (!this.#getDeviceIds().includes(select.id)) {
-        throw new Error('Device not found')
-      }
-      return (
-        await this.api.getTiles({
-          postData: {
-            DeviceIDs: this.#getDeviceIds(),
-            SelectedBuilding: select.buildingId,
-            SelectedDevice: select.id,
-          },
-        })
-      ).data as TilesData<K>
-    }
-    return (
-      await this.api.getTiles({
-        postData: { DeviceIDs: this.#getDeviceIds() },
-      })
-    ).data
+    const postData = { DeviceIDs: this.#getDeviceIds() }
+    return select === false || !this.#getDeviceIds().includes(select.id) ?
+        (await this.api.getTiles({ postData })).data
+      : ((
+          await this.api.getTiles({
+            postData: {
+              ...postData,
+              SelectedBuilding: select.buildingId,
+              SelectedDevice: select.id,
+            },
+          })
+        ).data as TilesData<K>)
   }
 
   public async getWifiReport(
@@ -186,11 +174,11 @@ export default abstract class<
   }
 
   public async setFrostProtection({
-    enable,
+    enabled,
     max,
     min,
   }: {
-    enable?: boolean
+    enabled?: boolean
     max: number
     min: number
   }): Promise<FailureData | SuccessData> {
@@ -209,7 +197,7 @@ export default abstract class<
     return (
       await this.api.setFrostProtection({
         postData: {
-          Enabled: enable ?? true,
+          Enabled: enabled ?? true,
           MaximumTemperature: newMax,
           MinimumTemperature: newMin,
           ...(await this.#getFrostProtectionLocation()),
@@ -220,18 +208,18 @@ export default abstract class<
 
   public async setHolidayMode({
     days,
-    enable,
+    enabled,
     from,
     to,
   }: {
     days?: number
-    enable?: boolean
-    from?: string | null
-    to?: string | null
+    enabled?: boolean
+    from?: string
+    to?: string
   }): Promise<FailureData | SuccessData> {
-    const isEnabled = enable ?? true
-    const startDate = isEnabled ? DateTime.fromISO(from ?? nowISO()) : null
-    const endDate = startDate ? getEndDate(startDate, to, days) : null
+    const isEnabled = enabled ?? true
+    const startDate = isEnabled ? DateTime.fromISO(from ?? nowISO()) : undefined
+    const endDate = startDate ? getEndDate(startDate, to, days) : undefined
     return (
       await this.api.setHolidayMode({
         postData: {
@@ -244,10 +232,10 @@ export default abstract class<
     ).data
   }
 
-  public async setPower(enable = true): Promise<boolean> {
+  public async setPower(enabled = true): Promise<boolean> {
     return (
       await this.api.setPower({
-        postData: { DeviceIds: this.#getDeviceIds(), Power: enable },
+        postData: { DeviceIds: this.#getDeviceIds(), Power: enabled },
       })
     ).data
   }

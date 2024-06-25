@@ -34,10 +34,18 @@ export interface APISettings {
   username?: string | null
 }
 
+export const isAPISetting = (key: string): key is keyof APISettings =>
+  (
+    [
+      'contextKey',
+      'expiry',
+      'password',
+      'username',
+    ] satisfies (keyof APISettings)[] as string[]
+  ).includes(key)
+
 export interface SettingManager {
-  get: <K extends keyof APISettings>(
-    key: K,
-  ) => APISettings[K] | null | undefined
+  get: <K extends keyof APISettings>(key: K) => APISettings[K]
   set: <K extends keyof APISettings>(key: K, value: APISettings[K]) => void
 }
 
@@ -46,23 +54,33 @@ export interface Logger {
   log: Console['log']
 }
 
-export interface IMELCloudAPI {
+export interface APIConfig {
+  autoSyncInterval?: number | null
+  language?: string
+  logger?: Logger
+  settingManager?: SettingManager
+  shouldVerifySSL?: boolean
+  syncFunction?: () => Promise<void>
+  timezone?: string
+}
+
+export interface IAPI {
   applyLogin: (
     data?: LoginCredentials,
     onSuccess?: () => Promise<void>,
   ) => Promise<boolean>
   clearSync: () => void
   fetch: () => Promise<{ data: Building[] }>
-  get: <T extends keyof typeof DeviceType>({
+  get: ({
     params,
   }: {
     params: GetDeviceDataParams
-  }) => Promise<{ data: GetDeviceData[T] }>
-  getEnergyReport: <T extends keyof typeof DeviceType>({
+  }) => Promise<{ data: GetDeviceData[keyof typeof DeviceType] }>
+  getEnergyReport: ({
     postData,
   }: {
     postData: EnergyPostData
-  }) => Promise<{ data: EnergyData[T] }>
+  }) => Promise<{ data: EnergyData[keyof typeof DeviceType] }>
   getErrors: ({
     postData,
   }: {
@@ -103,7 +121,7 @@ export interface IMELCloudAPI {
     postData,
   }: {
     heatPumpType: T
-    postData: SetDevicePostData<T>
+    postData: SetDevicePostData[T]
   }) => Promise<{ data: SetDeviceData[T] }>
   setAta: ({
     postData,

@@ -1,11 +1,12 @@
 import type { AreaData, AreaDataAny } from '../types'
-import DeviceModel, { type DeviceModelAny } from './device'
-import BaseModel from './base'
-import BuildingModel from './building'
-import FloorModel from './floor'
 import type { IAreaModel } from './interfaces'
 
-export type AreaModelAny = AreaModel<number> | AreaModel<null>
+import BaseModel from './base'
+import BuildingModel from './building'
+import DeviceModel, { type DeviceModelAny } from './device'
+import FloorModel from './floor'
+
+export type AreaModelAny = AreaModel<null> | AreaModel<number>
 
 export default class AreaModel<T extends number | null>
   extends BaseModel
@@ -28,8 +29,8 @@ export default class AreaModel<T extends number | null>
     this.floorId = floorId
   }
 
-  public get building(): BuildingModel | null {
-    return BuildingModel.getById(this.buildingId) ?? null
+  public get building(): BuildingModel | undefined {
+    return BuildingModel.getById(this.buildingId)
   }
 
   public get deviceIds(): number[] {
@@ -40,22 +41,20 @@ export default class AreaModel<T extends number | null>
     return DeviceModel.getByAreaId(this.id)
   }
 
-  public get floor(): FloorModel | null {
-    return this.floorId === null ?
-        null
-      : FloorModel.getById(this.floorId) ?? null
+  public get floor(): FloorModel | null | undefined {
+    return this.floorId === null ? null : FloorModel.getById(this.floorId)
   }
 
   public static getAll(): AreaModelAny[] {
-    return Array.from(this.#areas.values())
+    return [...this.#areas.values()]
   }
 
   public static getByBuildingId(id: number): AreaModelAny[] {
-    return this.getAll().filter((model) => id === model.buildingId)
+    return this.getAll().filter((model) => model.buildingId === id)
   }
 
   public static getByFloorId(id: number): AreaModelAny[] {
-    return this.getAll().filter((model) => id === model.floorId)
+    return this.getAll().filter((model) => model.floorId === id)
   }
 
   public static getById(id: number): AreaModelAny | undefined {
@@ -63,10 +62,10 @@ export default class AreaModel<T extends number | null>
   }
 
   public static getByName(name: string): AreaModelAny | undefined {
-    return this.getAll().find((model) => name === model.name)
+    return this.getAll().find((model) => model.name === name)
   }
 
-  public static upsert(data: AreaDataAny): void {
-    this.#areas.set(data.ID, new this(data))
+  public static upsert(area: AreaDataAny): void {
+    this.#areas.set(area.ID, new this(area))
   }
 }

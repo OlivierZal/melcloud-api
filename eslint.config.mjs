@@ -1,10 +1,36 @@
 import eslint from '@eslint/js'
+import stylistic from '@stylistic/eslint-plugin'
+import prettier from 'eslint-config-prettier'
 // @ts-expect-error: untyped module
 import importPlugin from 'eslint-plugin-import'
 import jsdoc from 'eslint-plugin-jsdoc'
-import prettier from 'eslint-config-prettier'
-import stylistic from '@stylistic/eslint-plugin'
+import perfectionist from 'eslint-plugin-perfectionist'
 import tsEslint from 'typescript-eslint'
+
+const naturalSortOptions = {
+  ignoreCase: false,
+  order: 'asc',
+  type: 'natural',
+}
+
+const naturalSortTypeOptions = {
+  ...naturalSortOptions,
+  groups: [
+    'conditional',
+    'function',
+    'import',
+    'intersection',
+    'keyword',
+    'literal',
+    'named',
+    'object',
+    'operator',
+    'tuple',
+    'union',
+    'nullish',
+    'unknown',
+  ],
+}
 
 export default tsEslint.config(
   {
@@ -30,10 +56,24 @@ export default tsEslint.config(
       // @ts-expect-error: incorrect type
       '@stylistic': stylistic,
       import: importPlugin,
+      // @ts-expect-error: incorrect type
+      perfectionist,
     },
     rules: {
       // ...importPlugin.configs.recommended.rules,
+      '@stylistic/line-comment-position': 'error',
+      '@stylistic/lines-around-comment': 'error',
       '@stylistic/lines-between-class-members': ['error', 'always'],
+      '@stylistic/padding-line-between-statements': 'error',
+      '@stylistic/quotes': [
+        'error',
+        'single',
+        {
+          allowTemplateLiterals: false,
+          avoidEscape: true,
+          ignoreStringLiterals: false,
+        },
+      ],
       '@stylistic/spaced-comment': [
         'error',
         'always',
@@ -49,6 +89,7 @@ export default tsEslint.config(
           },
         },
       ],
+      '@typescript-eslint/consistent-return': 'off',
       '@typescript-eslint/member-ordering': [
         'error',
         {
@@ -57,6 +98,7 @@ export default tsEslint.config(
               // Index signature
               'signature',
               'readonly-signature',
+              'call-signature',
 
               // Fields
               'public-static-field',
@@ -119,6 +161,39 @@ export default tsEslint.config(
               'protected-constructor',
               'private-constructor',
 
+              'constructor',
+
+              // Accessors
+              'public-static-accessor',
+              'protected-static-accessor',
+              'private-static-accessor',
+              '#private-static-accessor',
+
+              'public-decorated-accessor',
+              'protected-decorated-accessor',
+              'private-decorated-accessor',
+
+              'public-instance-accessor',
+              'protected-instance-accessor',
+              'private-instance-accessor',
+              '#private-instance-accessor',
+
+              'public-abstract-accessor',
+              'protected-abstract-accessor',
+
+              'public-accessor',
+              'protected-accessor',
+              'private-accessor',
+              '#private-accessor',
+
+              'static-accessor',
+              'instance-accessor',
+              'abstract-accessor',
+
+              'decorated-accessor',
+
+              'accessor',
+
               // Getters and setters
               ['public-static-get', 'public-static-set'],
               ['protected-static-get', 'protected-static-set'],
@@ -155,15 +230,31 @@ export default tsEslint.config(
               'protected-static-method',
               'private-static-method',
               '#private-static-method',
+
               'public-decorated-method',
               'protected-decorated-method',
               'private-decorated-method',
+
               'public-instance-method',
               'protected-instance-method',
               'private-instance-method',
               '#private-instance-method',
+
               'public-abstract-method',
               'protected-abstract-method',
+
+              'public-method',
+              'protected-method',
+              'private-method',
+              '#private-method',
+
+              'static-method',
+              'instance-method',
+              'abstract-method',
+
+              'decorated-method',
+
+              'method',
             ],
             optionalityOrder: 'optional-first',
             order: 'natural',
@@ -219,6 +310,7 @@ export default tsEslint.config(
           selector: 'default',
         },
       ],
+      '@typescript-eslint/no-dupe-class-members': 'off',
       '@typescript-eslint/no-explicit-any': [
         'error',
         {
@@ -232,14 +324,15 @@ export default tsEslint.config(
           ignoreEnums: true,
         },
       ],
+      '@typescript-eslint/no-redeclare': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
-          argsIgnorePattern: '^_',
           caughtErrorsIgnorePattern: '^_',
         },
       ],
       '@typescript-eslint/prefer-readonly-parameter-types': 'off',
+      '@typescript-eslint/typedef': 'off',
       camelcase: 'off',
       'import/no-duplicates': [
         'error',
@@ -256,7 +349,16 @@ export default tsEslint.config(
         },
       ],
       'no-ternary': 'off',
+      'no-undefined': 'off',
       'one-var': ['error', 'never'],
+      'perfectionist/sort-exports': ['error', naturalSortOptions],
+      'perfectionist/sort-imports': ['error', naturalSortOptions],
+      'perfectionist/sort-intersection-types': [
+        'error',
+        naturalSortTypeOptions,
+      ],
+      'perfectionist/sort-union-types': ['error', naturalSortTypeOptions],
+      'sort-imports': 'off',
       'sort-keys': [
         'error',
         'asc',
