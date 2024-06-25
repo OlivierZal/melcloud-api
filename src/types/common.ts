@@ -1,4 +1,4 @@
-import type { BaseDevicePostData, DeviceType, FanSpeed } from './bases'
+import type { DeviceType, FanSpeed } from './bases'
 import {
   type EnergyDataAta,
   type GetDeviceDataAta,
@@ -7,7 +7,9 @@ import {
   type ListDeviceDataAta,
   type OperationMode,
   type SetDeviceDataAta,
+  type SetDevicePostDataAta,
   type UpdateDeviceDataAta,
+  type ValuesAta,
   type Vertical,
   flagsAta,
 } from './ata'
@@ -17,7 +19,9 @@ import {
   type ListDeviceAtw,
   type ListDeviceDataAtw,
   type SetDeviceDataAtw,
+  type SetDevicePostDataAtw,
   type UpdateDeviceDataAtw,
+  type ValuesAtw,
   flagsAtw,
 } from './atw'
 import {
@@ -25,7 +29,9 @@ import {
   type ListDeviceDataErv,
   type ListDeviceErv,
   type SetDeviceDataErv,
+  type SetDevicePostDataErv,
   type UpdateDeviceDataErv,
+  type ValuesErv,
   flagsErv,
 } from './erv'
 
@@ -59,13 +65,6 @@ export enum Language {
   sq = 26,
 }
 
-export const flags = {
-  Ata: flagsAta,
-  Atw: flagsAtw,
-  Erv: flagsErv,
-} as const
-export type Flags = typeof flags
-
 export interface LoginCredentials {
   readonly password: string
   readonly username: string
@@ -84,15 +83,24 @@ export interface LoginData {
   } | null
 }
 
+export type UpdatedDeviceData<T extends keyof typeof DeviceType> = Partial<
+  Pick<
+    ListDevice['Ata']['Device'],
+    'FanSpeed' | 'VaneHorizontalDirection' | 'VaneVerticalDirection'
+  >
+> &
+  UpdateDeviceData[T]
+
 export interface UpdateDeviceData {
   readonly Ata: UpdateDeviceDataAta
   readonly Atw: UpdateDeviceDataAtw
   readonly Erv: UpdateDeviceDataErv
 }
-export type SetDevicePostData<T extends keyof typeof DeviceType> =
-  UpdateDeviceData[T] &
-    Required<{ EffectiveFlags: number }> &
-    BaseDevicePostData
+export interface SetDevicePostData {
+  Ata: SetDevicePostDataAta
+  Atw: SetDevicePostDataAtw
+  Erv: SetDevicePostDataErv
+}
 export interface SetDeviceData {
   readonly Ata: SetDeviceDataAta
   readonly Atw: SetDeviceDataAtw
@@ -283,7 +291,8 @@ export interface TilesData<T extends keyof typeof DeviceType | null> {
   }[]
 }
 
-export interface EnergyPostData extends BaseDevicePostData {
+export interface EnergyPostData {
+  readonly DeviceID: number
   readonly FromDate: string
   readonly ToDate: string
 }
@@ -314,4 +323,16 @@ export interface WifiData {
   readonly FromDate: string
   readonly Labels: readonly string[]
   readonly ToDate: string
+}
+
+export const flags = {
+  Ata: flagsAta,
+  Atw: flagsAtw,
+  Erv: flagsErv,
+} as const
+
+export interface Values {
+  readonly Ata: ValuesAta
+  readonly Atw: ValuesAtw
+  readonly Erv: ValuesErv
 }

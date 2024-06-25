@@ -3,6 +3,13 @@ import {
   APICallResponseData,
   createAPICallErrorData,
 } from './logger'
+import {
+  type APIConfig,
+  type IAPI,
+  type Logger,
+  type SettingManager,
+  isAPISetting,
+} from './interfaces'
 import { AreaModel, BuildingModel, DeviceModel, FloorModel } from '../models'
 import {
   type AxiosError,
@@ -42,60 +49,80 @@ import {
   type WifiPostData,
 } from '../types'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
-import type { IMELCloudAPI, Logger, SettingManager } from './interfaces'
 import https from 'https'
 
-const LIST_URL = '/User/ListDevices'
-const LOGIN_URL = '/Login/ClientLogin'
+const LIST_PATH = '/User/ListDevices'
+const LOGIN_PATH = '/Login/ClientLogin'
 
 const MINUTES_0 = 0
 const MINUTES_5 = 5
+
+const setupLuxonSettings = ({
+  language,
+  timezone,
+}: {
+  language?: string
+  timezone?: string
+}): void => {
+  if (typeof language !== 'undefined') {
+    LuxonSettings.defaultLocale = language
+  }
+  if (typeof timezone !== 'undefined') {
+    LuxonSettings.defaultZone = timezone
+  }
+}
 
 const getLanguage = (language = LuxonSettings.defaultLocale): Language =>
   language in Language ?
     Language[language as keyof typeof Language]
   : Language.en
 
-export default class API implements IMELCloudAPI {
-  readonly #settingManager?: SettingManager
+const setting = <This extends API, Value extends string | null | undefined>(
+  target: ClassAccessorDecoratorTarget<This, Value>,
+  context: ClassAccessorDecoratorContext<This, Value>,
+): ClassAccessorDecoratorResult<This, Value> => ({
+  get(this: This): Value {
+    const key = String(context.name)
+    if (!isAPISetting(key)) {
+      throw new Error(`Invalid setting: ${key}`)
+    }
+    return typeof this.settingManager === 'undefined' ?
+        target.get.call(this)
+      : (this.settingManager.get(key) as Value)
+  },
+  set(this: This, value: Value): void {
+    const key = String(context.name)
+    if (!isAPISetting(key)) {
+      throw new Error(`Invalid setting: ${key}`)
+    }
+    if (typeof this.settingManager === 'undefined') {
+      target.set.call(this, value)
+      return
+    }
+    this.settingManager.set(key, value)
+  },
+})
+
+export default class API implements IAPI {
+  protected readonly settingManager?: SettingManager
 
   readonly #syncFunction?: () => Promise<void>
 
-  #contextKey = ''
-
-  #expiry = ''
-
   #holdAPIListUntil = DateTime.now()
 
-  #password = ''
-
-  #retry = true
-
-  #retryTimeout!: NodeJS.Timeout
+  #retryTimeout: NodeJS.Timeout | null = null
 
   #syncTimeout: NodeJS.Timeout | null = null
 
-  #username = ''
-
   readonly #api: AxiosInstance
 
-  readonly #autoSync: Duration
+  readonly #autoSyncInterval: Duration
 
   readonly #logger: Logger
 
-  public constructor(
-    config: {
-      autoSync?: number | null
-      language?: string
-      logger?: Logger
-      settingManager?: SettingManager
-      shouldVerifySSL?: boolean
-      syncFunction?: () => Promise<void>
-      timezone?: string
-    } = {},
-  ) {
+  private constructor(config: APIConfig = {}) {
     const {
-      autoSync = MINUTES_5,
+      autoSyncInterval = MINUTES_5,
       language = 'en',
       logger = console,
       settingManager,
@@ -103,55 +130,46 @@ export default class API implements IMELCloudAPI {
       syncFunction,
       timezone,
     } = config
-    LuxonSettings.defaultLocale = language
-    if (typeof timezone !== 'undefined') {
-      LuxonSettings.defaultZone = timezone
-    }
+    setupLuxonSettings({ language, timezone })
+    this.#logger = logger
+    this.#syncFunction = syncFunction
+    this.settingManager = settingManager
+
     this.#api = createAxiosInstance({
       baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
       httpsAgent: new https.Agent({ rejectUnauthorized: shouldVerifySSL }),
     })
-    this.#autoSync = Duration.fromObject({ minutes: autoSync ?? MINUTES_0 })
-    this.#logger = logger
-    this.#settingManager = settingManager
-    this.#syncFunction = syncFunction
     this.#setupAxiosInterceptors()
+
+    this.#autoSyncInterval = Duration.fromObject({
+      minutes: autoSyncInterval ?? MINUTES_0,
+    })
   }
 
-  private get contextKey(): string {
-    return this.#settingManager?.get('contextKey') ?? this.#contextKey
+  @setting
+  private accessor contextKey = ''
+
+  @setting
+  private accessor expiry = ''
+
+  @setting
+  private accessor password = ''
+
+  @setting
+  private accessor username = ''
+
+  public static async create(config: APIConfig = {}): Promise<API> {
+    const api = new API(config)
+    await api.#autoSync(true)
+    return api
   }
 
-  private set contextKey(value: string) {
-    this.#contextKey = value
-    this.#settingManager?.set('contextKey', this.#contextKey)
-  }
-
-  private get expiry(): string {
-    return this.#settingManager?.get('expiry') ?? this.#expiry
-  }
-
-  private set expiry(value: string) {
-    this.#expiry = value
-    this.#settingManager?.set('expiry', this.#expiry)
-  }
-
-  private get password(): string {
-    return this.#settingManager?.get('password') ?? this.#password
-  }
-
-  private set password(value: string) {
-    this.#password = value
-    this.#settingManager?.set('password', this.#password)
-  }
-
-  private get username(): string {
-    return this.#settingManager?.get('username') ?? this.#username
-  }
-
-  private set username(value: string) {
-    this.#username = value
-    this.#settingManager?.set('username', this.#username)
+  public async applyFetch(): Promise<Building[]> {
+    try {
+      return (await this.fetch()).data
+    } catch (_error) {
+      return []
+    }
   }
 
   public async applyLogin(data?: LoginCredentials): Promise<boolean> {
@@ -189,7 +207,7 @@ export default class API implements IMELCloudAPI {
 
   public async fetch(): Promise<{ data: Building[] }> {
     this.clearSync()
-    const response = await this.#api.get<Building[]>(LIST_URL)
+    const response = await this.#api.get<Building[]>(LIST_PATH)
     response.data.forEach((building) => {
       DeviceModel.upsertMany(building.Structure.Devices)
       building.Structure.Areas.forEach((area) => {
@@ -207,29 +225,23 @@ export default class API implements IMELCloudAPI {
       BuildingModel.upsert(building)
     })
     await this.#syncFunction?.()
-    if (this.#autoSync.as('milliseconds')) {
-      this.#syncTimeout = setTimeout(() => {
-        this.fetch().catch((error: unknown) => {
-          this.#logger.error(error)
-        })
-      }, this.#autoSync.as('milliseconds'))
-    }
+    await this.#autoSync()
     return response
   }
 
-  public async get<T extends keyof typeof DeviceType>({
+  public async get({
     params,
   }: {
     params: GetDeviceDataParams
-  }): Promise<{ data: GetDeviceData[T] }> {
+  }): Promise<{ data: GetDeviceData[keyof typeof DeviceType] }> {
     return this.#api.get('/Device/Get', { params })
   }
 
-  public async getEnergyReport<T extends keyof typeof DeviceType>({
+  public async getEnergyReport({
     postData,
   }: {
     postData: EnergyPostData
-  }): Promise<{ data: EnergyData[T] }> {
+  }): Promise<{ data: EnergyData[keyof typeof DeviceType] }> {
     return this.#api.post('/EnergyCost/Report', postData)
   }
 
@@ -292,7 +304,7 @@ export default class API implements IMELCloudAPI {
   }: {
     postData: LoginPostData
   }): Promise<{ data: LoginData }> {
-    const response = await this.#api.post<LoginData>(LOGIN_URL, {
+    const response = await this.#api.post<LoginData>(LOGIN_PATH, {
       Email: username,
       Password: password,
       ...rest,
@@ -302,9 +314,7 @@ export default class API implements IMELCloudAPI {
       this.password = password
       this.contextKey = response.data.LoginData.ContextKey
       this.expiry = response.data.LoginData.Expiry
-      await this.fetch()
-    } else {
-      this.clearSync()
+      await this.#autoSync(true)
     }
     return response
   }
@@ -314,7 +324,7 @@ export default class API implements IMELCloudAPI {
     postData,
   }: {
     heatPumpType: T
-    postData: SetDevicePostData<T>
+    postData: SetDevicePostData[T]
   }): Promise<{ data: SetDeviceData[T] }> {
     return this.#api.post(`/Device/Set${heatPumpType}`, postData)
   }
@@ -365,13 +375,39 @@ export default class API implements IMELCloudAPI {
     return this.#api.post('/Device/Power', postData)
   }
 
+  async #autoSync(init = false): Promise<void> {
+    if (this.#autoSyncInterval.as('milliseconds')) {
+      if (init) {
+        await this.applyFetch()
+        return
+      }
+      this.#syncTimeout = setTimeout(() => {
+        this.applyFetch().catch((error: unknown) => {
+          this.#logger.error(error)
+        })
+      }, this.#autoSyncInterval.as('milliseconds'))
+    }
+  }
+
+  #canRetry(): boolean {
+    if (!this.#retryTimeout) {
+      this.#retryTimeout = setTimeout(
+        () => {
+          this.#retryTimeout = null
+        },
+        Duration.fromObject({ minutes: 1 }).as('milliseconds'),
+      )
+      return true
+    }
+    return false
+  }
+
   async #handleError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
     this.#logger.error(String(errorData))
     switch (error.response?.status) {
       case HttpStatusCode.Unauthorized:
-        if (this.#retry && error.config?.url !== LOGIN_URL) {
-          this.#handleRetry()
+        if (this.#canRetry() && error.config?.url !== LOGIN_PATH) {
           if ((await this.applyLogin()) && error.config) {
             return this.#api.request(error.config)
           }
@@ -389,16 +425,19 @@ export default class API implements IMELCloudAPI {
     config: InternalAxiosRequestConfig,
   ): Promise<InternalAxiosRequestConfig> {
     const newConfig = { ...config }
-    if (newConfig.url === LIST_URL && this.#holdAPIListUntil > DateTime.now()) {
+    if (
+      newConfig.url === LIST_PATH &&
+      this.#holdAPIListUntil > DateTime.now()
+    ) {
       throw new Error(
-        `API requests to ${LIST_URL} are on hold for ${this.#holdAPIListUntil
+        `API requests to ${LIST_PATH} are on hold for ${this.#holdAPIListUntil
           .diffNow()
           .shiftTo('minutes')
           .toHuman()}`,
       )
     }
-    if (newConfig.url !== LOGIN_URL) {
-      const { contextKey, expiry } = this
+    if (newConfig.url !== LOGIN_PATH) {
+      const { expiry, contextKey } = this
       if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
         await this.applyLogin()
       }
@@ -411,17 +450,6 @@ export default class API implements IMELCloudAPI {
   #handleResponse(response: AxiosResponse): AxiosResponse {
     this.#logger.log(String(new APICallResponseData(response)))
     return response
-  }
-
-  #handleRetry(): void {
-    this.#retry = false
-    clearTimeout(this.#retryTimeout)
-    this.#retryTimeout = setTimeout(
-      () => {
-        this.#retry = true
-      },
-      Duration.fromObject({ minutes: 1 }).as('milliseconds'),
-    )
   }
 
   #setupAxiosInterceptors(): void {

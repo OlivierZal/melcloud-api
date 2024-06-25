@@ -1,13 +1,14 @@
 import type {
+  BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
+  BaseValues,
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
-  NonFlagsKeyOf,
 } from './bases'
 
 export enum VentilationMode {
@@ -20,13 +21,9 @@ export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
   readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
   readonly VentilationMode?: VentilationMode
 }
-
-export const flagsErv: Record<NonFlagsKeyOf<UpdateDeviceDataErv>, number> = {
-  Power: 0x1,
-  SetFanSpeed: 0x8,
-  VentilationMode: 0x4,
-} as const
-
+export interface SetDevicePostDataErv
+  extends UpdateDeviceDataErv,
+    BaseDevicePostData {}
 export interface SetDeviceDataErv
   extends BaseSetDeviceData,
     Required<Readonly<UpdateDeviceDataErv>> {
@@ -49,4 +46,15 @@ export interface ListDeviceDataErv
 }
 export interface ListDeviceErv extends BaseListDevice {
   readonly Device: ListDeviceDataErv
+}
+
+export const flagsErv: Record<keyof UpdateDeviceDataErv, number> = {
+  Power: 0x1,
+  SetFanSpeed: 0x8,
+  VentilationMode: 0x4,
+} as const
+
+export interface ValuesErv extends BaseValues {
+  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly mode?: VentilationMode
 }
