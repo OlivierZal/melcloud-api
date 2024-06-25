@@ -34,6 +34,15 @@ export interface APISettings {
   username?: string | null
 }
 
+export const isAPISetting = (key: string): key is keyof APISettings =>
+  (
+    [
+      'contextKey',
+      'expiry',
+      'username',
+    ] satisfies (keyof APISettings)[] as string[]
+  ).includes(key)
+
 export interface SettingManager {
   get: <K extends keyof APISettings>(
     key: K,

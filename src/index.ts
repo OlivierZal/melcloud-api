@@ -39,6 +39,7 @@ export {
   type Logger,
   type SettingManager,
   default,
+  isAPISetting,
 } from './services'
 export {
   type AreaData,

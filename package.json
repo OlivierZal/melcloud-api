@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "5.0.3",
+  "version": "5.0.4",
   "description": "MELCloud API for Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.5.0",
-    "@stylistic/eslint-plugin": "^2.2.2",
+    "@stylistic/eslint-plugin": "^2.3.0",
     "@types/eslint__js": "^8.42.3",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/luxon": "^3.4.2",
