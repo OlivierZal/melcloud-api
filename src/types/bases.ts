@@ -57,3 +57,7 @@ export interface BaseListDevice {
   readonly FloorID: number | null
   readonly Type: DeviceType
 }
+
+export interface BaseValues {
+  readonly power?: boolean
+}

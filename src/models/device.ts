@@ -1,5 +1,13 @@
 import AreaModel, { type AreaModelAny } from './area'
-import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
+import {
+  type DeviceDataAtaKeysNotInList,
+  DeviceType,
+  type ListDevice,
+  type ListDeviceAny,
+  type NonFlagsKeyOf,
+  type UpdatedDeviceData,
+  flags,
+} from '../types'
 import BaseModel from './base'
 import BuildingModel from './building'
 import FloorModel from './floor'
@@ -20,13 +28,15 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public readonly buildingId: number
 
-  public readonly data: ListDevice[T]['Device']
-
   public readonly floorId: number | null = null
 
   public readonly type: T
 
-  private constructor({
+  #data: ListDevice[T]['Device']
+
+  readonly #flags: Record<NonFlagsKeyOf<UpdatedDeviceData<T>>, number>
+
+  protected constructor({
     AreaID: areaId,
     BuildingID: buildingId,
     Device: data,
@@ -38,9 +48,13 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     super({ id, name })
     this.areaId = areaId
     this.buildingId = buildingId
-    this.data = data
+    this.#data = data
     this.floorId = floorId
     this.type = DeviceType[type] as T
+    this.#flags = flags[this.type] as Record<
+      NonFlagsKeyOf<UpdatedDeviceData<T>>,
+      number
+    >
   }
 
   public get area(): AreaModelAny | null {
@@ -49,6 +63,10 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public get building(): BuildingModel | null {
     return BuildingModel.getById(this.buildingId) ?? null
+  }
+
+  public get data(): ListDevice[T]['Device'] {
+    return this.#data
   }
 
   public get floor(): FloorModel | null {
@@ -62,15 +80,15 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getByAreaId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => id === model.areaId)
+    return this.getAll().filter((model) => model.areaId === id)
   }
 
   public static getByBuildingId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => id === model.buildingId)
+    return this.getAll().filter((model) => model.buildingId === id)
   }
 
   public static getByFloorId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => id === model.floorId)
+    return this.getAll().filter((model) => model.floorId === id)
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
@@ -78,11 +96,15 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getByName(name: string): DeviceModelAny | undefined {
-    return this.getAll().find((model) => name === model.name)
+    return this.getAll().find((model) => model.name === name)
   }
 
-  public static getByType(type: keyof typeof DeviceType): DeviceModelAny[] {
-    return this.getAll().filter((model) => type === model.type)
+  public static getByType<K extends keyof typeof DeviceType>(
+    type: K,
+  ): DeviceModel<K>[] {
+    return this.getAll().filter(
+      (model) => model.type === type,
+    ) as DeviceModel<K>[]
   }
 
   public static upsert(data: ListDeviceAny): void {
@@ -93,5 +115,36 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     dataList.forEach((data) => {
       this.upsert(data)
     })
+  }
+
+  public update(data: UpdatedDeviceData<T>): void {
+    this.#data = {
+      ...this.#data,
+      ...(this.#cleanData(data) satisfies Omit<
+        UpdatedDeviceData<T>,
+        DeviceDataAtaKeysNotInList
+      >),
+    }
+  }
+
+  #cleanData(
+    data: UpdatedDeviceData<T>,
+  ): Omit<UpdatedDeviceData<T>, DeviceDataAtaKeysNotInList> {
+    return Object.fromEntries(
+      Object.entries(data)
+        .filter(([key]) => key in this.#flags)
+        .map(([key, value]) => {
+          switch (key) {
+            case 'SetFanSpeed':
+              return ['FanSpeed', value]
+            case 'VaneHorizontal':
+              return ['VaneHorizontalDirection', value]
+            case 'VaneVertical':
+              return ['VaneVerticalDirection', value]
+            default:
+              return [key, value]
+          }
+        }),
+    ) as Omit<UpdatedDeviceData<T>, DeviceDataAtaKeysNotInList>
   }
 }

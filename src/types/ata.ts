@@ -4,6 +4,7 @@ import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
+  BaseValues,
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
@@ -47,15 +48,6 @@ export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly VaneVertical?: Vertical
 }
 
-export const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number> = {
-  OperationMode: 0x2,
-  Power: 0x1,
-  SetFanSpeed: 0x8,
-  SetTemperature: 0x4,
-  VaneHorizontal: 0x100,
-  VaneVertical: 0x10,
-} as const
-
 export interface SetDeviceDataAta
   extends BaseSetDeviceData,
     Required<Readonly<UpdateDeviceDataAta>> {
@@ -66,14 +58,16 @@ export interface SetDeviceDataAta
 
 export type GetDeviceDataAta = BaseGetDeviceData & SetDeviceDataAta
 
+export type DeviceDataAtaKeysNotInList =
+  | 'SetFanSpeed'
+  | 'VaneHorizontal'
+  | 'VaneVertical'
+
 export interface ListDeviceDataAta
   extends BaseListDeviceData,
     Omit<
       GetDeviceDataAta,
-      | keyof DeviceDataNotInList
-      | 'SetFanSpeed'
-      | 'VaneHorizontal'
-      | 'VaneVertical'
+      keyof DeviceDataNotInList | DeviceDataAtaKeysNotInList
     > {
   readonly ActualFanSpeed: number
   readonly FanSpeed: FanSpeed
@@ -106,4 +100,21 @@ export interface EnergyDataAta {
   readonly TotalHeatingConsumed: number
   readonly TotalOtherConsumed: number
   readonly UsageDisclaimerPercentages: string
+}
+
+export const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number> = {
+  OperationMode: 0x2,
+  Power: 0x1,
+  SetFanSpeed: 0x8,
+  SetTemperature: 0x4,
+  VaneHorizontal: 0x100,
+  VaneVertical: 0x10,
+} as const
+
+export interface ValuesAta extends BaseValues {
+  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly horizontal?: Horizontal
+  readonly mode?: OperationMode
+  readonly temperature?: number
+  readonly vertical?: Vertical
 }

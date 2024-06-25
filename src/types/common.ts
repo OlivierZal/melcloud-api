@@ -8,6 +8,7 @@ import {
   type OperationMode,
   type SetDeviceDataAta,
   type UpdateDeviceDataAta,
+  type ValuesAta,
   type Vertical,
   flagsAta,
 } from './ata'
@@ -18,6 +19,7 @@ import {
   type ListDeviceDataAtw,
   type SetDeviceDataAtw,
   type UpdateDeviceDataAtw,
+  type ValuesAtw,
   flagsAtw,
 } from './atw'
 import {
@@ -26,6 +28,7 @@ import {
   type ListDeviceErv,
   type SetDeviceDataErv,
   type UpdateDeviceDataErv,
+  type ValuesErv,
   flagsErv,
 } from './erv'
 
@@ -59,13 +62,6 @@ export enum Language {
   sq = 26,
 }
 
-export const flags = {
-  Ata: flagsAta,
-  Atw: flagsAtw,
-  Erv: flagsErv,
-} as const
-export type Flags = typeof flags
-
 export interface LoginCredentials {
   readonly password: string
   readonly username: string
@@ -83,6 +79,17 @@ export interface LoginData {
     readonly Expiry: string
   } | null
 }
+
+export type UpdatedDeviceData<T extends keyof typeof DeviceType> = Omit<
+  UpdateDeviceData[T],
+  'EffectiveFlags'
+> &
+  Partial<
+    Pick<
+      ListDevice['Ata']['Device'],
+      'FanSpeed' | 'VaneHorizontalDirection' | 'VaneVerticalDirection'
+    >
+  >
 
 export interface UpdateDeviceData {
   readonly Ata: UpdateDeviceDataAta
@@ -314,4 +321,16 @@ export interface WifiData {
   readonly FromDate: string
   readonly Labels: readonly string[]
   readonly ToDate: string
+}
+
+export const flags = {
+  Ata: flagsAta,
+  Atw: flagsAtw,
+  Erv: flagsErv,
+} as const
+
+export interface Values {
+  readonly Ata: ValuesAta
+  readonly Atw: ValuesAtw
+  readonly Erv: ValuesErv
 }
