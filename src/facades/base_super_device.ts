@@ -9,13 +9,14 @@ import type {
   ListDeviceDataAta,
   SetAtaGroupPostData,
   SuccessData,
+  ValuesAta,
 } from '../types'
 import BaseFacade from './base'
 import type { IBaseSuperDeviceFacade } from './interfaces'
 
 const NUMBER_1 = 1
 
-const mergeListDeviceData = (
+const mergeListDeviceDataAta = (
   dataList: ListDeviceDataAta[],
 ): SetAtaGroupPostData['State'] =>
   Object.fromEntries(
@@ -29,9 +30,7 @@ const mergeListDeviceData = (
         'VaneVerticalDirection',
       ] satisfies (keyof SetAtaGroupPostData['State'])[]
     ).map((key) => {
-      const values = new Set(
-        dataList.map((data: ListDeviceDataAta) => data[key]),
-      )
+      const values = new Set(dataList.map((data) => data[key]))
       const [value] = values.size === NUMBER_1 ? values : [null]
       return [key, value]
     }),
@@ -46,23 +45,40 @@ export default abstract class<
   protected abstract readonly setAtaGroupSpecification: keyof SetAtaGroupPostData['Specification']
 
   public getAta(): SetAtaGroupPostData['State'] {
-    return mergeListDeviceData(
+    return mergeListDeviceDataAta(
       this.model.devices
         .filter((device): device is DeviceModel<'Ata'> => device.type === 'Ata')
         .map(({ data }) => data),
     )
   }
 
-  public async setAta(
-    postData: SetAtaGroupPostData['State'],
-  ): Promise<FailureData | SuccessData> {
-    return (
-      await this.api.setAta({
-        postData: {
-          Specification: { [this.setAtaGroupSpecification]: this.id },
-          State: postData,
-        },
+  public async setAta({
+    fan,
+    horizontal,
+    mode,
+    power,
+    temperature,
+    vertical,
+  }: ValuesAta): Promise<FailureData | SuccessData> {
+    const state = {
+      FanSpeed: fan,
+      OperationMode: mode,
+      Power: power,
+      SetTemperature: temperature,
+      VaneHorizontalDirection: horizontal,
+      VaneVerticalDirection: vertical,
+    }
+    const { data } = await this.api.setAta({
+      postData: {
+        Specification: { [this.setAtaGroupSpecification]: this.id },
+        State: state,
+      },
+    })
+    this.model.devices
+      .filter((device): device is DeviceModel<'Ata'> => device.type === 'Ata')
+      .forEach((device) => {
+        device.update(state)
       })
-    ).data
+    return data
   }
 }

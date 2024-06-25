@@ -9,8 +9,8 @@ interface APICallContextDataWithErrorMessage extends APICallContextData {
 
 const getMessage = (error: AxiosError): string => error.message
 
-const withErrorMessage = <T extends new (...args: any[]) => APICallContextData>(
-  base: T,
+const withErrorMessage = (
+  base: new (...args: any[]) => APICallContextData,
   error: AxiosError,
 ): new (...args: unknown[]) => APICallContextDataWithErrorMessage =>
   class extends base {
@@ -18,6 +18,6 @@ const withErrorMessage = <T extends new (...args: any[]) => APICallContextData>(
   }
 
 export default (error: AxiosError): APICallContextDataWithErrorMessage =>
-  typeof error.response === 'undefined' ?
-    new (withErrorMessage(APICallRequestData, error))(error.config)
-  : new (withErrorMessage(APICallResponseData, error))(error.response)
+  error.response ?
+    new (withErrorMessage(APICallResponseData, error))(error.response)
+  : new (withErrorMessage(APICallRequestData, error))(error.config)

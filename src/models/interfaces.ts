@@ -10,7 +10,7 @@ export interface IBaseModel {
 }
 
 export interface IBaseSubBuildingModel extends IBaseModel {
-  building: BuildingModel | null
+  building?: BuildingModel
   buildingId: number
 }
 
@@ -30,9 +30,9 @@ export interface IBaseSuperAreaModel extends IBaseSuperDeviceModel {
 }
 
 export interface IBuildingModel extends IBaseSuperAreaModel {
+  data: BuildingSettings
   floorIds: readonly number[]
   floors: readonly FloorModel[]
-  settings: BuildingSettings
 }
 
 export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}
@@ -47,4 +47,5 @@ export interface IDeviceModel<T extends keyof typeof DeviceType>
   areaId: number | null
   data: ListDevice[T]['Device']
   type: T
+  update: (data: Partial<ListDevice[T]['Device']>) => void
 }

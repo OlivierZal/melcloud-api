@@ -32,7 +32,7 @@ export default abstract class {
     return ORDER.map((key) => {
       if (key in this) {
         const value = this[key as keyof this]
-        if (typeof value !== 'undefined') {
+        if (value !== undefined) {
           return `${key}: ${
             typeof value === 'object' ?
               JSON.stringify(value, null, SPACE)
@@ -40,9 +40,9 @@ export default abstract class {
           }`
         }
       }
-      return null
+      return undefined
     })
-      .filter((line) => line !== null)
+      .filter((line) => line !== undefined)
       .join('\n')
   }
 }
