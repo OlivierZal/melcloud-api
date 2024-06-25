@@ -39,6 +39,7 @@ export const isAPISetting = (key: string): key is keyof APISettings =>
     [
       'contextKey',
       'expiry',
+      'password',
       'username',
     ] satisfies (keyof APISettings)[] as string[]
   ).includes(key)
