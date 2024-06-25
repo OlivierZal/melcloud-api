@@ -4,4 +4,5 @@ export type {
   IMELCloudAPI,
   Logger,
   SettingManager,
+  isAPISetting,
 } from './interfaces'

@@ -42,7 +42,12 @@ import {
   type WifiPostData,
 } from '../types'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
-import type { IMELCloudAPI, Logger, SettingManager } from './interfaces'
+import {
+  type IMELCloudAPI,
+  type Logger,
+  type SettingManager,
+  isAPISetting,
+} from './interfaces'
 import https from 'https'
 
 const LIST_URL = '/User/ListDevices'
@@ -56,26 +61,56 @@ const getLanguage = (language = LuxonSettings.defaultLocale): Language =>
     Language[language as keyof typeof Language]
   : Language.en
 
+const setting = <T extends API, R extends string | null | undefined>(
+  target: ClassAccessorDecoratorTarget<T, R>,
+  context: ClassAccessorDecoratorContext<T, R>,
+): ClassAccessorDecoratorResult<T, R> => ({
+  get(this: T): R {
+    const key = String(context.name)
+    if (!isAPISetting(key)) {
+      throw new Error(`Invalid setting: ${key}`)
+    }
+    return typeof this.settingManager === 'undefined' ?
+        target.get.call(this)
+      : (this.settingManager.get(key) as R)
+  },
+  set(this: T, value: R): void {
+    const key = String(context.name)
+    if (!isAPISetting(key)) {
+      throw new Error(`Invalid setting: ${key}`)
+    }
+    if (typeof this.settingManager === 'undefined') {
+      target.set.call(this, value)
+    } else {
+      this.settingManager.set(key, value)
+    }
+  },
+})
+
 export default class API implements IMELCloudAPI {
-  readonly #settingManager?: SettingManager
+  protected readonly settingManager?: SettingManager
 
   readonly #syncFunction?: () => Promise<void>
 
-  #contextKey = ''
+  @setting
+  accessor contextKey = ''
 
-  #expiry = ''
+  @setting
+  accessor expiry = ''
+
+  @setting
+  accessor password = ''
+
+  @setting
+  accessor username = ''
 
   #holdAPIListUntil = DateTime.now()
-
-  #password = ''
 
   #retry = true
 
   #retryTimeout!: NodeJS.Timeout
 
   #syncTimeout: NodeJS.Timeout | null = null
-
-  #username = ''
 
   readonly #api: AxiosInstance
 
@@ -107,51 +142,15 @@ export default class API implements IMELCloudAPI {
     if (typeof timezone !== 'undefined') {
       LuxonSettings.defaultZone = timezone
     }
+    this.settingManager = settingManager
     this.#api = createAxiosInstance({
       baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
       httpsAgent: new https.Agent({ rejectUnauthorized: shouldVerifySSL }),
     })
     this.#autoSync = Duration.fromObject({ minutes: autoSync ?? MINUTES_0 })
     this.#logger = logger
-    this.#settingManager = settingManager
     this.#syncFunction = syncFunction
     this.#setupAxiosInterceptors()
-  }
-
-  private get contextKey(): string {
-    return this.#settingManager?.get('contextKey') ?? this.#contextKey
-  }
-
-  private set contextKey(value: string) {
-    this.#contextKey = value
-    this.#settingManager?.set('contextKey', this.#contextKey)
-  }
-
-  private get expiry(): string {
-    return this.#settingManager?.get('expiry') ?? this.#expiry
-  }
-
-  private set expiry(value: string) {
-    this.#expiry = value
-    this.#settingManager?.set('expiry', this.#expiry)
-  }
-
-  private get password(): string {
-    return this.#settingManager?.get('password') ?? this.#password
-  }
-
-  private set password(value: string) {
-    this.#password = value
-    this.#settingManager?.set('password', this.#password)
-  }
-
-  private get username(): string {
-    return this.#settingManager?.get('username') ?? this.#username
-  }
-
-  private set username(value: string) {
-    this.#username = value
-    this.#settingManager?.set('username', this.#username)
   }
 
   public async applyLogin(data?: LoginCredentials): Promise<boolean> {
