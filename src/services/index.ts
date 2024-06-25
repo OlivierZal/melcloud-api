@@ -1,7 +1,8 @@
 export { default } from './api'
 export type {
+  APIConfig,
   APISettings,
-  IMELCloudAPI,
+  IAPI,
   Logger,
   SettingManager,
   isAPISetting,

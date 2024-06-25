@@ -34,8 +34,9 @@ export {
   FloorModel,
 } from './models'
 export {
+  type APIConfig,
   type APISettings,
-  type IMELCloudAPI,
+  type IAPI,
   type Logger,
   type SettingManager,
   default,

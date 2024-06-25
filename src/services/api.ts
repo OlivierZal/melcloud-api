@@ -3,6 +3,13 @@ import {
   APICallResponseData,
   createAPICallErrorData,
 } from './logger'
+import {
+  type APIConfig,
+  type IAPI,
+  type Logger,
+  type SettingManager,
+  isAPISetting,
+} from './interfaces'
 import { AreaModel, BuildingModel, DeviceModel, FloorModel } from '../models'
 import {
   type AxiosError,
@@ -42,12 +49,6 @@ import {
   type WifiPostData,
 } from '../types'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
-import {
-  type IMELCloudAPI,
-  type Logger,
-  type SettingManager,
-  isAPISetting,
-} from './interfaces'
 import https from 'https'
 
 const LIST_URL = '/User/ListDevices'
@@ -102,7 +103,7 @@ const setting = <T extends API, R extends string | null | undefined>(
   },
 })
 
-export default class API implements IMELCloudAPI {
+export default class API implements IAPI {
   protected readonly settingManager?: SettingManager
 
   readonly #syncFunction?: () => Promise<void>
@@ -133,17 +134,7 @@ export default class API implements IMELCloudAPI {
 
   readonly #logger: Logger
 
-  public constructor(
-    config: {
-      autoSyncInterval?: number | null
-      language?: string
-      logger?: Logger
-      settingManager?: SettingManager
-      shouldVerifySSL?: boolean
-      syncFunction?: () => Promise<void>
-      timezone?: string
-    } = {},
-  ) {
+  private constructor(config: APIConfig = {}) {
     const {
       autoSyncInterval = MINUTES_5,
       language = 'en',
@@ -166,9 +157,6 @@ export default class API implements IMELCloudAPI {
 
     this.#autoSyncInterval = Duration.fromObject({
       minutes: autoSyncInterval ?? MINUTES_0,
-    })
-    this.#autoSync(true).catch((error: unknown) => {
-      this.#logger.error(error)
     })
   }
 
@@ -203,6 +191,12 @@ export default class API implements IMELCloudAPI {
       clearTimeout(this.#syncTimeout)
       this.#syncTimeout = null
     }
+  }
+
+  public async create(config: APIConfig = {}): Promise<API> {
+    const api = new API(config)
+    await this.#autoSync(true)
+    return api
   }
 
   public async fetch(): Promise<{ data: Building[] }> {

@@ -56,7 +56,17 @@ export interface Logger {
   log: Console['log']
 }
 
-export interface IMELCloudAPI {
+export interface APIConfig {
+  autoSyncInterval?: number | null
+  language?: string
+  logger?: Logger
+  settingManager?: SettingManager
+  shouldVerifySSL?: boolean
+  syncFunction?: () => Promise<void>
+  timezone?: string
+}
+
+export interface IAPI {
   applyLogin: (
     data?: LoginCredentials,
     onSuccess?: () => Promise<void>,
