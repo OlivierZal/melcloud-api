@@ -25,6 +25,7 @@ export default class FacadeManager {
     this.#api = api
   }
 
+  public get(): null
   public get(model: AreaModelAny): AreaFacade
   public get(model: BuildingModel): BuildingFacade
   public get<T extends keyof typeof DeviceType>(
@@ -32,8 +33,11 @@ export default class FacadeManager {
   ): DeviceFacade<T>
   public get(model: FloorModel): FloorFacade
   public get(
-    model: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
-  ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade {
+    model?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
+  ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade | null {
+    if (typeof model === 'undefined') {
+      return null
+    }
     const modelName = model.constructor.name
     const id = `${modelName}:${model.id}`
     if (!this.#facades.has(id)) {
