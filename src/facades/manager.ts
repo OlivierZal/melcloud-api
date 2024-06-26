@@ -27,11 +27,17 @@ export default class FacadeManager {
 
   public get(): null
   public get(model?: AreaModelAny): AreaFacade | null
+  public get(model: AreaModelAny): AreaFacade
   public get(model?: BuildingModel): BuildingFacade | null
+  public get(model: BuildingModel): BuildingFacade
   public get<T extends keyof typeof DeviceType>(
     model?: DeviceModel<T>,
   ): DeviceFacade<T> | null
+  public get<T extends keyof typeof DeviceType>(
+    model: DeviceModel<T>,
+  ): DeviceFacade<T>
   public get(model?: FloorModel): FloorFacade | null
+  public get(model: FloorModel): FloorFacade
   public get(
     model?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
   ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade | null {
