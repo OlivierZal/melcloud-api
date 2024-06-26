@@ -122,9 +122,7 @@ export default class API implements IAPI {
 
   #holdAPIListUntil = DateTime.now()
 
-  #retry = true
-
-  #retryTimeout!: NodeJS.Timeout
+  #retryTimeout: NodeJS.Timeout | null = null
 
   #syncTimeout: NodeJS.Timeout | null = null
 
@@ -391,13 +389,25 @@ export default class API implements IAPI {
     }
   }
 
+  #canRetry(): boolean {
+    if (!this.#retryTimeout) {
+      this.#retryTimeout = setTimeout(
+        () => {
+          this.#retryTimeout = null
+        },
+        Duration.fromObject({ minutes: 1 }).as('milliseconds'),
+      )
+      return true
+    }
+    return false
+  }
+
   async #handleError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
     this.#logger.error(String(errorData))
     switch (error.response?.status) {
       case HttpStatusCode.Unauthorized:
-        if (this.#retry && error.config?.url !== LOGIN_URL) {
-          this.#handleRetry()
+        if (this.#canRetry() && error.config?.url !== LOGIN_URL) {
           if ((await this.applyLogin()) && error.config) {
             return this.#api.request(error.config)
           }
@@ -437,17 +447,6 @@ export default class API implements IAPI {
   #handleResponse(response: AxiosResponse): AxiosResponse {
     this.#logger.log(String(new APICallResponseData(response)))
     return response
-  }
-
-  #handleRetry(): void {
-    this.#retry = false
-    clearTimeout(this.#retryTimeout)
-    this.#retryTimeout = setTimeout(
-      () => {
-        this.#retry = true
-      },
-      Duration.fromObject({ minutes: 1 }).as('milliseconds'),
-    )
   }
 
   #setupAxiosInterceptors(): void {
