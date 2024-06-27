@@ -21,6 +21,13 @@ export type DeviceFacadeAny =
   | DeviceFacade<'Atw'>
   | DeviceFacade<'Erv'>
 
+const update = <T extends keyof typeof DeviceType>(
+  model: DeviceModel<T>,
+  data: GetDeviceData[T] | SetDeviceData[T],
+): void => {
+  model.update(data)
+}
+
 export default class DeviceFacade<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
@@ -53,11 +60,11 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
   }
 
   public async get(): Promise<GetDeviceData[T]> {
-    return (
-      await this.api.get({
-        params: { buildingId: this.model.buildingId, id: this.id },
-      })
-    ).data as GetDeviceData[T]
+    const { data } = (await this.api.get({
+      params: { buildingId: this.model.buildingId, id: this.id },
+    })) as { data: GetDeviceData[T] }
+    update(this.model as DeviceModel<T>, data)
+    return data
   }
 
   public async getEnergyReport({
@@ -98,22 +105,29 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
 
   public async set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
     const { EffectiveFlags: effectiveFlags, ...updateData } = postData
-    return (
-      await this.api.set({
-        heatPumpType: this.type,
-        postData: {
-          ...updateData,
-          DeviceID: this.id,
-          EffectiveFlags:
-            typeof effectiveFlags === 'undefined' ?
-              Object.keys(updateData).reduce(
-                (acc, key) =>
-                  acc | this.flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>],
-                FLAG_UNCHANGED,
-              )
-            : effectiveFlags,
-        },
-      })
-    ).data
+    if (effectiveFlags === FLAG_UNCHANGED || !Object.keys(updateData).length) {
+      throw new Error('No changes to update')
+    }
+    const { data } = await this.api.set({
+      heatPumpType: this.type,
+      postData: {
+        ...updateData,
+        DeviceID: this.id,
+        EffectiveFlags:
+          typeof effectiveFlags === 'undefined' ?
+            Object.keys(updateData).reduce(
+              (acc, key) =>
+                Number(
+                  BigInt(
+                    this.flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>],
+                  ) | BigInt(acc),
+                ),
+              FLAG_UNCHANGED,
+            )
+          : effectiveFlags,
+      },
+    })
+    update(this.model as DeviceModel<T>, data)
+    return data
   }
 }

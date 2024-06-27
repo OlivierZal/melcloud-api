@@ -1,5 +1,11 @@
 import type { default as AreaModel, AreaModelAny } from './area'
-import type { BuildingSettings, DeviceType, ListDevice } from '../types'
+import type {
+  BuildingSettings,
+  DeviceType,
+  GetDeviceData,
+  ListDevice,
+  SetDeviceData,
+} from '../types'
 import type BuildingModel from './building'
 import type { DeviceModelAny } from './device'
 import type FloorModel from './floor'
@@ -47,4 +53,5 @@ export interface IDeviceModel<T extends keyof typeof DeviceType>
   areaId: number | null
   data: ListDevice[T]['Device']
   type: T
+  update: (data: GetDeviceData[T] | SetDeviceData[T]) => void
 }

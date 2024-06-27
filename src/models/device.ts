@@ -1,5 +1,15 @@
 import AreaModel, { type AreaModelAny } from './area'
-import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
+import {
+  DeviceType,
+  FLAG_UNCHANGED,
+  type GetDeviceData,
+  type ListDevice,
+  type ListDeviceAny,
+  type NonFlagsKeyOf,
+  type SetDeviceData,
+  type UpdateDeviceData,
+  flags,
+} from '../types'
 import BaseModel from './base'
 import BuildingModel from './building'
 import FloorModel from './floor'
@@ -20,13 +30,15 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public readonly buildingId: number
 
-  public readonly data: ListDevice[T]['Device']
+  public readonly flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
 
   public readonly floorId: number | null = null
 
   public readonly type: T
 
-  private constructor({
+  #data: ListDevice[T]['Device']
+
+  protected constructor({
     AreaID: areaId,
     BuildingID: buildingId,
     Device: data,
@@ -38,9 +50,10 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     super({ id, name })
     this.areaId = areaId
     this.buildingId = buildingId
-    this.data = data
+    this.#data = data
     this.floorId = floorId
     this.type = DeviceType[type] as T
+    this.flags = flags[this.type]
   }
 
   public get area(): AreaModelAny | null {
@@ -49,6 +62,10 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public get building(): BuildingModel | null {
     return BuildingModel.getById(this.buildingId) ?? null
+  }
+
+  public get data(): ListDevice[T]['Device'] {
+    return this.#data
   }
 
   public get floor(): FloorModel | null {
@@ -93,5 +110,20 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     dataList.forEach((data) => {
       this.upsert(data)
     })
+  }
+
+  public update(data: GetDeviceData[T] | SetDeviceData[T]): void {
+    this.#data = {
+      ...this.#data,
+      ...data,
+      EffectiveFlags: FLAG_UNCHANGED,
+      ...('SetFanSpeed' in data ? { FanSpeed: data.SetFanSpeed } : {}),
+      ...('VaneHorizontal' in data ?
+        { VaneHorizontalDirection: data.VaneHorizontal }
+      : {}),
+      ...('VaneVertical' in data ?
+        { VaneVerticalDirection: data.VaneVertical }
+      : {}),
+    }
   }
 }

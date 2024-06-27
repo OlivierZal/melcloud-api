@@ -15,7 +15,7 @@ import type { IBaseSuperDeviceFacade } from './interfaces'
 
 const NUMBER_1 = 1
 
-const mergeListDeviceData = (
+const mergeListDeviceDataAta = (
   dataList: ListDeviceDataAta[],
 ): SetAtaGroupPostData['State'] =>
   Object.fromEntries(
@@ -46,7 +46,7 @@ export default abstract class<
   protected abstract readonly setAtaGroupSpecification: keyof SetAtaGroupPostData['Specification']
 
   public getAta(): SetAtaGroupPostData['State'] {
-    return mergeListDeviceData(
+    return mergeListDeviceDataAta(
       this.model.devices
         .filter((device): device is DeviceModel<'Ata'> => device.type === 'Ata')
         .map(({ data }) => data),

@@ -108,18 +108,6 @@ export default class API implements IAPI {
 
   readonly #syncFunction?: () => Promise<void>
 
-  @setting
-  accessor contextKey = ''
-
-  @setting
-  accessor expiry = ''
-
-  @setting
-  accessor password = ''
-
-  @setting
-  accessor username = ''
-
   #holdAPIListUntil = DateTime.now()
 
   #retryTimeout: NodeJS.Timeout | null = null
@@ -158,6 +146,18 @@ export default class API implements IAPI {
     })
   }
 
+  @setting
+  accessor #contextKey = ''
+
+  @setting
+  accessor #expiry = ''
+
+  @setting
+  accessor #password = ''
+
+  @setting
+  accessor #username = ''
+
   public static async create(config: APIConfig = {}): Promise<API> {
     const api = new API(config)
     await api.#autoSync(true)
@@ -173,7 +173,7 @@ export default class API implements IAPI {
   }
 
   public async applyLogin(data?: LoginCredentials): Promise<boolean> {
-    const { username = this.username, password = this.password } = data ?? {}
+    const { username = this.#username, password = this.#password } = data ?? {}
     if (username && password) {
       try {
         return (
@@ -310,10 +310,10 @@ export default class API implements IAPI {
       ...rest,
     })
     if (response.data.LoginData) {
-      this.username = username
-      this.password = password
-      this.contextKey = response.data.LoginData.ContextKey
-      this.expiry = response.data.LoginData.Expiry
+      this.#username = username
+      this.#password = password
+      this.#contextKey = response.data.LoginData.ContextKey
+      this.#expiry = response.data.LoginData.Expiry
       await this.#autoSync(true)
     }
     return response
@@ -434,11 +434,10 @@ export default class API implements IAPI {
       )
     }
     if (newConfig.url !== LOGIN_URL) {
-      const { contextKey, expiry } = this
-      if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
+      if (this.#expiry && DateTime.fromISO(this.#expiry) < DateTime.now()) {
         await this.applyLogin()
       }
-      newConfig.headers.set('X-MitsContextKey', contextKey)
+      newConfig.headers.set('X-MitsContextKey', this.#contextKey)
     }
     this.#logger.log(String(new APICallRequestData(newConfig)))
     return newConfig
