@@ -73,16 +73,16 @@ export interface IAPI {
   ) => Promise<boolean>
   clearSync: () => void
   fetch: () => Promise<{ data: Building[] }>
-  get: <T extends keyof typeof DeviceType>({
+  get: ({
     params,
   }: {
     params: GetDeviceDataParams
-  }) => Promise<{ data: GetDeviceData[T] }>
-  getEnergyReport: <T extends keyof typeof DeviceType>({
+  }) => Promise<{ data: GetDeviceData[keyof typeof DeviceType] }>
+  getEnergyReport: ({
     postData,
   }: {
     postData: EnergyPostData
-  }) => Promise<{ data: EnergyData[T] }>
+  }) => Promise<{ data: EnergyData[keyof typeof DeviceType] }>
   getErrors: ({
     postData,
   }: {

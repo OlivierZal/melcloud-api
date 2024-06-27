@@ -229,19 +229,19 @@ export default class API implements IAPI {
     return response
   }
 
-  public async get<T extends keyof typeof DeviceType>({
+  public async get({
     params,
   }: {
     params: GetDeviceDataParams
-  }): Promise<{ data: GetDeviceData[T] }> {
+  }): Promise<{ data: GetDeviceData[keyof typeof DeviceType] }> {
     return this.#api.get('/Device/Get', { params })
   }
 
-  public async getEnergyReport<T extends keyof typeof DeviceType>({
+  public async getEnergyReport({
     postData,
   }: {
     postData: EnergyPostData
-  }): Promise<{ data: EnergyData[T] }> {
+  }): Promise<{ data: EnergyData[keyof typeof DeviceType] }> {
     return this.#api.post('/EnergyCost/Report', postData)
   }
 
