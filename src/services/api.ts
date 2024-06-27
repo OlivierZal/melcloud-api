@@ -147,16 +147,16 @@ export default class API implements IAPI {
   }
 
   @setting
-  accessor #contextKey = ''
+  private accessor contextKey = ''
 
   @setting
-  accessor #expiry = ''
+  private accessor expiry = ''
 
   @setting
-  accessor #password = ''
+  private accessor password = ''
 
   @setting
-  accessor #username = ''
+  private accessor username = ''
 
   public static async create(config: APIConfig = {}): Promise<API> {
     const api = new API(config)
@@ -173,7 +173,7 @@ export default class API implements IAPI {
   }
 
   public async applyLogin(data?: LoginCredentials): Promise<boolean> {
-    const { username = this.#username, password = this.#password } = data ?? {}
+    const { username = this.username, password = this.password } = data ?? {}
     if (username && password) {
       try {
         return (
@@ -310,10 +310,10 @@ export default class API implements IAPI {
       ...rest,
     })
     if (response.data.LoginData) {
-      this.#username = username
-      this.#password = password
-      this.#contextKey = response.data.LoginData.ContextKey
-      this.#expiry = response.data.LoginData.Expiry
+      this.username = username
+      this.password = password
+      this.contextKey = response.data.LoginData.ContextKey
+      this.expiry = response.data.LoginData.Expiry
       await this.#autoSync(true)
     }
     return response
@@ -434,10 +434,11 @@ export default class API implements IAPI {
       )
     }
     if (newConfig.url !== LOGIN_URL) {
-      if (this.#expiry && DateTime.fromISO(this.#expiry) < DateTime.now()) {
+      const { expiry, contextKey } = this
+      if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
         await this.applyLogin()
       }
-      newConfig.headers.set('X-MitsContextKey', this.#contextKey)
+      newConfig.headers.set('X-MitsContextKey', contextKey)
     }
     this.#logger.log(String(new APICallRequestData(newConfig)))
     return newConfig
