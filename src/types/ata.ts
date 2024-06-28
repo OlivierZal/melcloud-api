@@ -3,6 +3,7 @@ import type {
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
+  BaseSetKeys,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
@@ -101,11 +102,10 @@ export interface EnergyDataAta {
   readonly UsageDisclaimerPercentages: string
 }
 
-export interface SetKeysAta {
+export interface SetKeysAta extends BaseSetKeys {
   readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
   readonly horizontal?: Horizontal
   readonly mode?: OperationMode
-  readonly power?: boolean
   readonly temperature?: number
   readonly vertical?: Vertical
 }

@@ -3,6 +3,7 @@ export {
   type BaseGetDeviceData,
   type BaseListDevice,
   type BaseListDeviceData,
+  type BaseSetKeys,
   type BaseSetDeviceData,
   type BaseUpdateDeviceData,
   type DeviceDataNotInList,

@@ -3,6 +3,7 @@ import type {
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
+  BaseSetKeys,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
@@ -104,7 +105,7 @@ export interface EnergyDataAtw {
   readonly TotalHotWaterProduced: number
 }
 
-export interface SetKeysAtw {
+export interface SetKeysAtw extends BaseSetKeys {
   readonly coolFlowTemperature?: number
   readonly coolFlowTemperatureZone2?: number
   readonly forceHotWater?: boolean
@@ -113,7 +114,6 @@ export interface SetKeysAtw {
   readonly hotWaterTemperature?: number
   readonly mode?: OperationModeZone
   readonly modeZone2?: OperationModeZone
-  readonly power?: boolean
   readonly temperature?: number
   readonly temperatureZone2?: number
 }
