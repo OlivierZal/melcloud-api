@@ -4,7 +4,6 @@ export {
   type BaseListDevice,
   type BaseListDeviceData,
   type BaseSetDeviceData,
-  type BaseSetKeys,
   type BaseUpdateDeviceData,
   type DeviceDataNotInList,
   type NonFlagsKeyOf,
@@ -18,6 +17,7 @@ export {
   type GetDeviceDataAta,
   type ListDeviceAta,
   type ListDeviceDataAta,
+  type DeviceDataKeyAtaNotInList,
   type SetDeviceDataAta,
   type SetKeysAta,
   type UpdateDeviceDataAta,
@@ -25,6 +25,8 @@ export {
   OperationMode,
   Vertical,
   flagsAta,
+  setDataMappingAta,
+  setKeyMappingAta,
 } from './ata'
 export {
   type AreaData,
@@ -69,7 +71,7 @@ export {
   type WifiData,
   type WifiPostData,
   Language,
-  flags,
+  setData,
 } from './common'
 export {
   type EnergyDataAtw,
@@ -82,6 +84,8 @@ export {
   OperationModeState,
   OperationModeZone,
   flagsAtw,
+  setDataMappingAtw,
+  setKeyMappingAtw,
 } from './atw'
 export {
   type GetDeviceDataErv,
@@ -92,4 +96,6 @@ export {
   type UpdateDeviceDataErv,
   VentilationMode,
   flagsErv,
+  setDataMappingErv,
+  setKeyMappingErv,
 } from './erv'

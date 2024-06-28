@@ -10,7 +10,7 @@ import {
   type SetKeysAta,
   type UpdateDeviceDataAta,
   type Vertical,
-  flagsAta,
+  setDataMappingAta,
 } from './ata'
 import {
   type EnergyDataAtw,
@@ -20,7 +20,7 @@ import {
   type SetDeviceDataAtw,
   type SetKeysAtw,
   type UpdateDeviceDataAtw,
-  flagsAtw,
+  setDataMappingAtw,
 } from './atw'
 import {
   type GetDeviceDataErv,
@@ -29,7 +29,7 @@ import {
   type SetDeviceDataErv,
   type SetKeysErv,
   type UpdateDeviceDataErv,
-  flagsErv,
+  setDataMappingErv,
 } from './erv'
 
 export enum Language {
@@ -60,18 +60,6 @@ export enum Language {
   ro = 24,
   sl = 25,
   sq = 26,
-}
-
-export const flags = {
-  Ata: flagsAta,
-  Atw: flagsAtw,
-  Erv: flagsErv,
-} as const
-
-export interface SetKeys {
-  Ata: SetKeysAta
-  Atw: SetKeysAtw
-  Erv: SetKeysErv
 }
 
 export interface LoginCredentials {
@@ -334,3 +322,15 @@ export interface WifiData {
   readonly Labels: readonly string[]
   readonly ToDate: string
 }
+
+export interface SetKeys {
+  readonly Ata: SetKeysAta
+  readonly Atw: SetKeysAtw
+  readonly Erv: SetKeysErv
+}
+
+export const setData = {
+  Ata: Object.keys(setDataMappingAta),
+  Atw: Object.keys(setDataMappingAtw),
+  Erv: Object.keys(setDataMappingErv),
+} as const

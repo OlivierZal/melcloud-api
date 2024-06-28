@@ -3,11 +3,11 @@ import type {
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
-  BaseSetKeys,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
+  NonFlagsKeyOf,
 } from './bases'
 
 export enum OperationMode {
@@ -39,23 +39,6 @@ export enum Horizontal {
   swing = 12,
 }
 
-export interface SetKeysAta extends BaseSetKeys {
-  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly horizontal?: Horizontal
-  readonly mode?: OperationMode
-  readonly temperature?: number
-  readonly vertical?: Vertical
-}
-
-export const flagsAta: Record<keyof SetKeysAta, number> = {
-  fan: 0x8,
-  horizontal: 0x100,
-  mode: 0x2,
-  power: 0x1,
-  temperature: 0x4,
-  vertical: 0x10,
-} as const
-
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly OperationMode?: OperationMode
   readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
@@ -74,14 +57,16 @@ export interface SetDeviceDataAta
 
 export type GetDeviceDataAta = BaseGetDeviceData & SetDeviceDataAta
 
+export type DeviceDataKeyAtaNotInList =
+  | 'SetFanSpeed'
+  | 'VaneHorizontal'
+  | 'VaneVertical'
+
 export interface ListDeviceDataAta
   extends BaseListDeviceData,
     Omit<
       GetDeviceDataAta,
-      | keyof DeviceDataNotInList
-      | 'SetFanSpeed'
-      | 'VaneHorizontal'
-      | 'VaneVertical'
+      keyof DeviceDataNotInList | DeviceDataKeyAtaNotInList
     > {
   readonly ActualFanSpeed: number
   readonly FanSpeed: FanSpeed
@@ -114,4 +99,46 @@ export interface EnergyDataAta {
   readonly TotalHeatingConsumed: number
   readonly TotalOtherConsumed: number
   readonly UsageDisclaimerPercentages: string
+}
+
+export interface SetKeysAta {
+  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly horizontal?: Horizontal
+  readonly mode?: OperationMode
+  readonly power?: boolean
+  readonly temperature?: number
+  readonly vertical?: Vertical
+}
+
+export const flagsAta: Record<keyof SetKeysAta, number> = {
+  fan: 0x8,
+  horizontal: 0x100,
+  mode: 0x2,
+  power: 0x1,
+  temperature: 0x4,
+  vertical: 0x10,
+} as const
+
+export const setDataMappingAta: Record<
+  NonFlagsKeyOf<UpdateDeviceDataAta>,
+  keyof SetKeysAta
+> = {
+  OperationMode: 'mode',
+  Power: 'power',
+  SetFanSpeed: 'fan',
+  SetTemperature: 'temperature',
+  VaneHorizontal: 'horizontal',
+  VaneVertical: 'vertical',
+}
+
+export const setKeyMappingAta: Record<
+  keyof SetKeysAta,
+  NonFlagsKeyOf<UpdateDeviceDataAta>
+> = {
+  fan: 'SetFanSpeed',
+  horizontal: 'VaneHorizontal',
+  mode: 'OperationMode',
+  power: 'Power',
+  temperature: 'SetTemperature',
+  vertical: 'VaneVertical',
 }

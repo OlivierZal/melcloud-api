@@ -1,11 +1,12 @@
 import AreaModel, { type AreaModelAny } from './area'
 import {
+  type DeviceDataKeyAtaNotInList,
   DeviceType,
   type ListDevice,
   type ListDeviceAny,
-  type SetKeys,
+  type NonFlagsKeyOf,
   type UpdatedDeviceData,
-  flags,
+  setData,
 } from '../types'
 import BaseModel from './base'
 import BuildingModel from './building'
@@ -27,13 +28,13 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public readonly buildingId: number
 
-  public readonly flags: Record<keyof SetKeys[T], number>
-
   public readonly floorId: number | null = null
 
   public readonly type: T
 
   #data: ListDevice[T]['Device']
+
+  readonly #setData: NonFlagsKeyOf<UpdatedDeviceData<T>>[]
 
   protected constructor({
     AreaID: areaId,
@@ -50,7 +51,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     this.#data = data
     this.floorId = floorId
     this.type = DeviceType[type] as T
-    this.flags = flags[this.type] as Record<keyof SetKeys[T], number>
+    this.#setData = setData[this.type] as NonFlagsKeyOf<UpdatedDeviceData<T>>[]
   }
 
   public get area(): AreaModelAny | null {
@@ -125,14 +126,11 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   #cleanData(
     data: UpdatedDeviceData<T>,
-  ): Omit<
-    UpdatedDeviceData<T>,
-    'SetFanSpeed' | 'VaneHorizontal' | 'VaneVertical'
-  > {
+  ): Omit<UpdatedDeviceData<T>, DeviceDataKeyAtaNotInList> {
     return {
       ...Object.fromEntries(
         Object.entries(data)
-          .filter(([key]) => key in this.flags)
+          .filter(([key]) => (this.#setData as string[]).includes(key))
           .map(([key, value]) => {
             switch (key) {
               case 'SetFanSpeed':
@@ -146,9 +144,6 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
             }
           }),
       ),
-    } as Omit<
-      UpdatedDeviceData<T>,
-      'SetFanSpeed' | 'VaneHorizontal' | 'VaneVertical'
-    >
+    } as Omit<UpdatedDeviceData<T>, DeviceDataKeyAtaNotInList>
   }
 }

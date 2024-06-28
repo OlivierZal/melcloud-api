@@ -8,7 +8,7 @@ import type {
   FailureData,
   ListDeviceDataAta,
   SetAtaGroupPostData,
-  SetKeysAta,
+  SetKeys,
   SuccessData,
 } from '../types'
 import BaseFacade from './base'
@@ -61,7 +61,7 @@ export default abstract class<
     power,
     temperature,
     vertical,
-  }: SetKeysAta): Promise<FailureData | SuccessData> {
+  }: SetKeys['Ata']): Promise<FailureData | SuccessData> {
     const postData = {
       FanSpeed: fan,
       OperationMode: mode,

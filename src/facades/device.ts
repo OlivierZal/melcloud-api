@@ -10,7 +10,6 @@ import {
   type SetKeys,
   type TilesData,
   type UpdateDeviceData,
-  flags,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
@@ -21,8 +20,6 @@ export default abstract class<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
-  public readonly flags: Record<keyof SetKeys[T], number>
-
   public readonly type: T
 
   protected readonly frostProtectionLocation = 'DeviceIds'
@@ -32,6 +29,8 @@ export default abstract class<T extends keyof typeof DeviceType>
   protected readonly modelClass = DeviceModel<T>
 
   protected readonly tableName = 'DeviceLocation'
+
+  protected abstract readonly flags: Record<keyof SetKeys[T], number>
 
   protected abstract readonly setDataMapping: Record<
     NonFlagsKeyOf<UpdateDeviceData[T]>,
@@ -46,7 +45,6 @@ export default abstract class<T extends keyof typeof DeviceType>
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
     this.type = this.model.type as T
-    this.flags = flags[this.type] as Record<keyof SetKeys[T], number>
   }
 
   public get data(): ListDevice[T]['Device'] {

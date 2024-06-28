@@ -11,7 +11,6 @@ import type {
   HolidayModeData,
   Horizontal,
   ListDevice,
-  NonFlagsKeyOf,
   OperationMode,
   SetAtaGroupPostData,
   SetDeviceData,
@@ -108,7 +107,6 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   extends IBaseFacade {
   data: ListDevice[T]['Device']
   fetch: () => Promise<ListDevice[T]['Device']>
-  flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
   get: () => Promise<GetDeviceData[T]>
   getEnergyReport: ({
     from,
