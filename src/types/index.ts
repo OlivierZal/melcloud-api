@@ -38,7 +38,6 @@ export {
   type ErrorData,
   type ErrorPostData,
   type FailureData,
-  type Flags,
   type FloorData,
   type FrostProtectionData,
   type FrostProtectionLocation,

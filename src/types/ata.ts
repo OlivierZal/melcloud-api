@@ -8,7 +8,6 @@ import type {
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
-  NonFlagsKeyOf,
 } from './bases'
 
 export enum OperationMode {
@@ -40,29 +39,29 @@ export enum Horizontal {
   swing = 12,
 }
 
-export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
-  readonly OperationMode?: OperationMode
-  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly SetTemperature?: number
-  readonly VaneHorizontal?: Horizontal
-  readonly VaneVertical?: Vertical
-}
-
-export const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number> = {
-  OperationMode: 0x2,
-  Power: 0x1,
-  SetFanSpeed: 0x8,
-  SetTemperature: 0x4,
-  VaneHorizontal: 0x100,
-  VaneVertical: 0x10,
-} as const
-
 export interface SetKeysAta extends BaseSetKeys {
   readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
   readonly horizontal?: Horizontal
   readonly mode?: OperationMode
   readonly temperature?: number
   readonly vertical?: Vertical
+}
+
+export const flagsAta: Record<keyof SetKeysAta, number> = {
+  fan: 0x8,
+  horizontal: 0x100,
+  mode: 0x2,
+  power: 0x1,
+  temperature: 0x4,
+  vertical: 0x10,
+} as const
+
+export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
+  readonly OperationMode?: OperationMode
+  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly SetTemperature?: number
+  readonly VaneHorizontal?: Horizontal
+  readonly VaneVertical?: Vertical
 }
 
 export interface SetDeviceDataAta

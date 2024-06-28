@@ -6,13 +6,10 @@ import type {
 } from '../models'
 import type {
   FailureData,
-  FanSpeed,
-  Horizontal,
   ListDeviceDataAta,
-  OperationMode,
   SetAtaGroupPostData,
+  SetKeysAta,
   SuccessData,
-  Vertical,
 } from '../types'
 import BaseFacade from './base'
 import type { IBaseSuperDeviceFacade } from './interfaces'
@@ -60,21 +57,14 @@ export default abstract class<
   public async setAta({
     fan,
     horizontal,
-    operationMode,
+    mode,
     power,
     temperature,
     vertical,
-  }: {
-    fan?: Exclude<FanSpeed, FanSpeed.silent>
-    horizontal?: Horizontal
-    operationMode?: OperationMode
-    power?: boolean
-    temperature?: number
-    vertical?: Vertical
-  }): Promise<FailureData | SuccessData> {
+  }: SetKeysAta): Promise<FailureData | SuccessData> {
     const postData = {
       FanSpeed: fan,
-      OperationMode: operationMode,
+      OperationMode: mode,
       Power: power,
       SetTemperature: temperature,
       VaneHorizontalDirection: horizontal,

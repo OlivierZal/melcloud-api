@@ -1,9 +1,9 @@
 import AreaModel, { type AreaModelAny } from './area'
 import {
   DeviceType,
-  type Flags,
   type ListDevice,
   type ListDeviceAny,
+  type SetKeys,
   type UpdatedDeviceData,
   flags,
 } from '../types'
@@ -27,7 +27,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public readonly buildingId: number
 
-  public readonly flags: Flags[T]
+  public readonly flags: Record<keyof SetKeys[T], number>
 
   public readonly floorId: number | null = null
 
@@ -50,7 +50,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     this.#data = data
     this.floorId = floorId
     this.type = DeviceType[type] as T
-    this.flags = flags[this.type]
+    this.flags = flags[this.type] as Record<keyof SetKeys[T], number>
   }
 
   public get area(): AreaModelAny | null {

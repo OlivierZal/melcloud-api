@@ -1,7 +1,11 @@
+import type { NonFlagsKeyOf, SetKeys, UpdateDeviceData } from '../types'
 import BaseDeviceFacade from './device'
 
 export default class extends BaseDeviceFacade<'Atw'> {
-  protected setKeys = {
+  protected setKeys: Record<
+    keyof SetKeys['Atw'],
+    NonFlagsKeyOf<UpdateDeviceData['Atw']>
+  > = {
     coolFlowTemperature: 'SetCoolFlowTemperatureZone1',
     coolFlowTemperatureZone2: 'SetCoolFlowTemperatureZone2',
     forceHotWater: 'ForcedHotWaterMode',

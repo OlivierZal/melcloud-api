@@ -7,7 +7,6 @@ import type {
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
-  NonFlagsKeyOf,
 } from './bases'
 
 export enum OperationModeState {
@@ -27,33 +26,6 @@ export enum OperationModeZone {
   flow_cool = 4,
 }
 
-export interface UpdateDeviceDataAtw extends BaseUpdateDeviceData {
-  readonly ForcedHotWaterMode?: boolean
-  readonly OperationModeZone1?: OperationModeZone
-  readonly OperationModeZone2?: OperationModeZone
-  readonly SetCoolFlowTemperatureZone1?: number
-  readonly SetCoolFlowTemperatureZone2?: number
-  readonly SetHeatFlowTemperatureZone1?: number
-  readonly SetHeatFlowTemperatureZone2?: number
-  readonly SetTankWaterTemperature?: number
-  readonly SetTemperatureZone1?: number
-  readonly SetTemperatureZone2?: number
-}
-
-export const flagsAtw: Record<NonFlagsKeyOf<UpdateDeviceDataAtw>, number> = {
-  ForcedHotWaterMode: 0x10000,
-  OperationModeZone1: 0x8,
-  OperationModeZone2: 0x10,
-  Power: 0x1,
-  SetCoolFlowTemperatureZone1: 0x1000000000000,
-  SetCoolFlowTemperatureZone2: 0x1000000000000,
-  SetHeatFlowTemperatureZone1: 0x1000000000000,
-  SetHeatFlowTemperatureZone2: 0x1000000000000,
-  SetTankWaterTemperature: 0x1000000000020,
-  SetTemperatureZone1: 0x200000080,
-  SetTemperatureZone2: 0x800000200,
-} as const
-
 export interface SetKeysAtw extends BaseSetKeys {
   readonly coolFlowTemperature?: number
   readonly coolFlowTemperatureZone2?: number
@@ -65,6 +37,33 @@ export interface SetKeysAtw extends BaseSetKeys {
   readonly modeZone2?: OperationModeZone
   readonly temperature?: number
   readonly temperatureZone2?: number
+}
+
+export const flagsAtw: Record<keyof SetKeysAtw, number> = {
+  coolFlowTemperature: 0x1000000000000,
+  coolFlowTemperatureZone2: 0x1000000000000,
+  forceHotWater: 0x10000,
+  heatFlowTemperature: 0x1000000000000,
+  heatFlowTemperatureZone2: 0x1000000000000,
+  hotWaterTemperature: 0x1000000000020,
+  mode: 0x8,
+  modeZone2: 0x10,
+  power: 0x1,
+  temperature: 0x200000080,
+  temperatureZone2: 0x800000200,
+} as const
+
+export interface UpdateDeviceDataAtw extends BaseUpdateDeviceData {
+  readonly ForcedHotWaterMode?: boolean
+  readonly OperationModeZone1?: OperationModeZone
+  readonly OperationModeZone2?: OperationModeZone
+  readonly SetCoolFlowTemperatureZone1?: number
+  readonly SetCoolFlowTemperatureZone2?: number
+  readonly SetHeatFlowTemperatureZone1?: number
+  readonly SetHeatFlowTemperatureZone2?: number
+  readonly SetTankWaterTemperature?: number
+  readonly SetTemperatureZone1?: number
+  readonly SetTemperatureZone2?: number
 }
 
 export interface SetDeviceDataAtw

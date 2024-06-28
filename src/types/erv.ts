@@ -8,7 +8,6 @@ import type {
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
-  NonFlagsKeyOf,
 } from './bases'
 
 export enum VentilationMode {
@@ -17,20 +16,20 @@ export enum VentilationMode {
   auto = 2,
 }
 
-export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
-  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly VentilationMode?: VentilationMode
-}
-
-export const flagsErv: Record<NonFlagsKeyOf<UpdateDeviceDataErv>, number> = {
-  Power: 0x1,
-  SetFanSpeed: 0x8,
-  VentilationMode: 0x4,
-} as const
-
 export interface SetKeysErv extends BaseSetKeys {
   readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
   readonly mode?: VentilationMode
+}
+
+export const flagsErv: Record<keyof SetKeysErv, number> = {
+  fan: 0x8,
+  mode: 0x4,
+  power: 0x1,
+} as const
+
+export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
+  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly VentilationMode?: VentilationMode
 }
 
 export interface SetDeviceDataErv

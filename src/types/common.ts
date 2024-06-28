@@ -67,7 +67,6 @@ export const flags = {
   Atw: flagsAtw,
   Erv: flagsErv,
 } as const
-export type Flags = typeof flags
 
 export interface SetKeys {
   Ata: SetKeysAta

@@ -17,11 +17,18 @@ import type API from '../services'
 import BaseFacade from './base'
 import type { IDeviceFacade } from './interfaces'
 
+const reverse = <T extends keyof typeof DeviceType>(
+  mapping: Record<keyof SetKeys[T], NonFlagsKeyOf<UpdateDeviceData[T]>>,
+): Record<NonFlagsKeyOf<UpdateDeviceData[T]>, keyof SetKeys[T]> =>
+  Object.fromEntries(
+    Object.entries(mapping).map(([key, value]) => [value, key]),
+  ) as Record<NonFlagsKeyOf<UpdateDeviceData[T]>, keyof SetKeys[T]>
+
 export default abstract class<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
-  public readonly flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
+  public readonly flags: Record<keyof SetKeys[T], number>
 
   public readonly type: T
 
@@ -33,20 +40,33 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  protected abstract setKeys: Record<keyof SetKeys[T], string>
+  readonly #dataMapping: Record<
+    NonFlagsKeyOf<UpdateDeviceData[T]>,
+    keyof SetKeys[T]
+  >
+
+  protected abstract setKeys: Record<
+    keyof SetKeys[T],
+    NonFlagsKeyOf<UpdateDeviceData[T]>
+  >
 
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
     this.type = this.model.type as T
-    this.flags = flags[this.type]
+    this.flags = flags[this.type] as Record<keyof SetKeys[T], number>
+    this.#dataMapping = reverse(this.setKeys)
   }
 
   public get data(): ListDevice[T]['Device'] {
     return this.model.data
   }
 
-  public get power(): boolean {
-    return this.model.data.Power
+  get #setData(): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
+    return Object.fromEntries(
+      Object.entries(this.data).filter(
+        ([key]) => this.#dataMapping[key] in this.setKeys,
+      ),
+    ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {
@@ -98,28 +118,33 @@ export default abstract class<T extends keyof typeof DeviceType>
     return super.getTiles(null)
   }
 
-  public async set(updateData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
-    const { EffectiveFlags: effectiveFlags, ...newData } = updateData
-    if (effectiveFlags === FLAG_UNCHANGED || !Object.keys(newData).length) {
+  public async set(setKeys: SetKeys[T]): Promise<SetDeviceData[T]> {
+    if (!Object.keys(setKeys).length) {
       throw new Error('No changes to update')
+    }
+    const updateData = {
+      ...Object.fromEntries(
+        Object.entries(setKeys).map(([key, value]) => [
+          this.setKeys[key as keyof SetKeys[T]],
+          value,
+        ]),
+      ),
     }
     const { data } = await this.api.set({
       heatPumpType: this.type,
       postData: {
-        ...newData,
+        ...this.#setData,
+        ...updateData,
         DeviceID: this.id,
-        EffectiveFlags:
-          typeof effectiveFlags === 'undefined' ?
-            this.#getFlags(newData)
-          : effectiveFlags,
+        EffectiveFlags: this.#getFlags(setKeys),
       },
     })
     this.model.update(this.#getUpdatedData(data))
     return data
   }
 
-  #getFlags(data: Omit<UpdateDeviceData[T], 'EffectiveFlags'>): number {
-    return (Object.keys(data) as NonFlagsKeyOf<UpdateDeviceData[T]>[]).reduce(
+  #getFlags(setKeys: SetKeys[T]): number {
+    return (Object.keys(setKeys) as (keyof SetKeys[T])[]).reduce(
       (acc, key) => Number(BigInt(this.flags[key]) | BigInt(acc)),
       FLAG_UNCHANGED,
     )
@@ -130,13 +155,10 @@ export default abstract class<T extends keyof typeof DeviceType>
   ): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
     const { EffectiveFlags: effectiveFlags, ...newData } = data
     return Object.fromEntries(
-      Object.entries(newData).filter(
-        ([key]) =>
-          key in this.flags &&
-          Number(
-            BigInt(this.flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>]) &
-              BigInt(effectiveFlags),
-          ),
+      Object.entries(newData).filter(([key]) =>
+        Number(
+          BigInt(this.flags[this.#dataMapping[key]]) & BigInt(effectiveFlags),
+        ),
       ),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
   }
