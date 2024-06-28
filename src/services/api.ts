@@ -425,7 +425,10 @@ export default class API implements IAPI {
     config: InternalAxiosRequestConfig,
   ): Promise<InternalAxiosRequestConfig> {
     const newConfig = { ...config }
-    if (newConfig.url === LIST_PATH && this.#holdAPIListUntil > DateTime.now()) {
+    if (
+      newConfig.url === LIST_PATH &&
+      this.#holdAPIListUntil > DateTime.now()
+    ) {
       throw new Error(
         `API requests to ${LIST_PATH} are on hold for ${this.#holdAPIListUntil
           .diffNow()
