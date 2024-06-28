@@ -7,6 +7,7 @@ import {
   type ListDeviceDataAta,
   type OperationMode,
   type SetDeviceDataAta,
+  type SetKeysAta,
   type UpdateDeviceDataAta,
   type Vertical,
   flagsAta,
@@ -17,6 +18,7 @@ import {
   type ListDeviceAtw,
   type ListDeviceDataAtw,
   type SetDeviceDataAtw,
+  type SetKeysAtw,
   type UpdateDeviceDataAtw,
   flagsAtw,
 } from './atw'
@@ -25,6 +27,7 @@ import {
   type ListDeviceDataErv,
   type ListDeviceErv,
   type SetDeviceDataErv,
+  type SetKeysErv,
   type UpdateDeviceDataErv,
   flagsErv,
 } from './erv'
@@ -65,6 +68,12 @@ export const flags = {
   Erv: flagsErv,
 } as const
 export type Flags = typeof flags
+
+export interface SetKeys {
+  Ata: SetKeysAta
+  Atw: SetKeysAtw
+  Erv: SetKeysErv
+}
 
 export interface LoginCredentials {
   readonly password: string

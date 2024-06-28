@@ -7,6 +7,7 @@ import {
   type ListDevice,
   type NonFlagsKeyOf,
   type SetDeviceData,
+  type SetKeys,
   type TilesData,
   type UpdateDeviceData,
   flags,
@@ -16,12 +17,7 @@ import type API from '../services'
 import BaseFacade from './base'
 import type { IDeviceFacade } from './interfaces'
 
-export type DeviceFacadeAny =
-  | DeviceFacade<'Ata'>
-  | DeviceFacade<'Atw'>
-  | DeviceFacade<'Erv'>
-
-export default class DeviceFacade<T extends keyof typeof DeviceType>
+export default abstract class<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
@@ -37,6 +33,8 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
+  protected abstract setKeys: Record<keyof SetKeys[T], string>
+
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
     this.type = this.model.type as T
@@ -45,6 +43,10 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
 
   public get data(): ListDevice[T]['Device'] {
     return this.model.data
+  }
+
+  public get power(): boolean {
+    return this.model.data.Power
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {
@@ -97,8 +99,8 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
   }
 
   public async set(updateData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
-    const { EffectiveFlags: updateFlags, ...newData } = updateData
-    if (updateFlags === FLAG_UNCHANGED || !Object.keys(newData).length) {
+    const { EffectiveFlags: effectiveFlags, ...newData } = updateData
+    if (effectiveFlags === FLAG_UNCHANGED || !Object.keys(newData).length) {
       throw new Error('No changes to update')
     }
     const { data } = await this.api.set({
@@ -107,9 +109,9 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
         ...newData,
         DeviceID: this.id,
         EffectiveFlags:
-          typeof updateFlags === 'undefined' ?
+          typeof effectiveFlags === 'undefined' ?
             this.#getFlags(newData)
-          : updateFlags,
+          : effectiveFlags,
       },
     })
     this.model.update(this.#getUpdatedData(data))
@@ -126,14 +128,14 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
   #getUpdatedData(
     data: SetDeviceData[T],
   ): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
-    const { EffectiveFlags: updatedFlags, ...newData } = data
+    const { EffectiveFlags: effectiveFlags, ...newData } = data
     return Object.fromEntries(
       Object.entries(newData).filter(
         ([key]) =>
           key in this.flags &&
           Number(
             BigInt(this.flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>]) &
-              BigInt(updatedFlags),
+              BigInt(effectiveFlags),
           ),
       ),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>

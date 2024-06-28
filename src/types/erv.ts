@@ -3,6 +3,7 @@ import type {
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
+  BaseSetKeys,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
@@ -26,6 +27,11 @@ export const flagsErv: Record<NonFlagsKeyOf<UpdateDeviceDataErv>, number> = {
   SetFanSpeed: 0x8,
   VentilationMode: 0x4,
 } as const
+
+export interface SetKeysErv extends BaseSetKeys {
+  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly mode?: VentilationMode
+}
 
 export interface SetDeviceDataErv
   extends BaseSetDeviceData,

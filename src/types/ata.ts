@@ -3,6 +3,7 @@ import type {
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
+  BaseSetKeys,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
@@ -55,6 +56,14 @@ export const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number> = {
   VaneHorizontal: 0x100,
   VaneVertical: 0x10,
 } as const
+
+export interface SetKeysAta extends BaseSetKeys {
+  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly horizontal?: Horizontal
+  readonly mode?: OperationMode
+  readonly temperature?: number
+  readonly vertical?: Vertical
+}
 
 export interface SetDeviceDataAta
   extends BaseSetDeviceData,

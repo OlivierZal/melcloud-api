@@ -1,10 +1,9 @@
 import AreaModel, { type AreaModelAny } from './area'
 import {
   DeviceType,
+  type Flags,
   type ListDevice,
   type ListDeviceAny,
-  type NonFlagsKeyOf,
-  type UpdateDeviceData,
   type UpdatedDeviceData,
   flags,
 } from '../types'
@@ -28,7 +27,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   public readonly buildingId: number
 
-  public readonly flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
+  public readonly flags: Flags[T]
 
   public readonly floorId: number | null = null
 
@@ -77,15 +76,15 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getByAreaId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => id === model.areaId)
+    return this.getAll().filter((model) => model.areaId === id)
   }
 
   public static getByBuildingId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => id === model.buildingId)
+    return this.getAll().filter((model) => model.buildingId === id)
   }
 
   public static getByFloorId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => id === model.floorId)
+    return this.getAll().filter((model) => model.floorId === id)
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
@@ -93,11 +92,15 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getByName(name: string): DeviceModelAny | undefined {
-    return this.getAll().find((model) => name === model.name)
+    return this.getAll().find((model) => model.name === name)
   }
 
-  public static getByType(type: keyof typeof DeviceType): DeviceModelAny[] {
-    return this.getAll().filter((model) => type === model.type)
+  public static getByType<K extends keyof typeof DeviceType>(
+    type: K,
+  ): DeviceModel<K>[] {
+    return this.getAll().filter(
+      (model) => model.type === type,
+    ) as DeviceModel<K>[]
   }
 
   public static upsert(data: ListDeviceAny): void {

@@ -3,6 +3,7 @@ import type {
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
+  BaseSetKeys,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
@@ -52,6 +53,19 @@ export const flagsAtw: Record<NonFlagsKeyOf<UpdateDeviceDataAtw>, number> = {
   SetTemperatureZone1: 0x200000080,
   SetTemperatureZone2: 0x800000200,
 } as const
+
+export interface SetKeysAtw extends BaseSetKeys {
+  readonly coolFlowTemperature?: number
+  readonly coolFlowTemperatureZone2?: number
+  readonly forceHotWater?: boolean
+  readonly heatFlowTemperature?: number
+  readonly heatFlowTemperatureZone2?: number
+  readonly hotWaterTemperature?: number
+  readonly mode?: OperationModeZone
+  readonly modeZone2?: OperationModeZone
+  readonly temperature?: number
+  readonly temperatureZone2?: number
+}
 
 export interface SetDeviceDataAtw
   extends BaseSetDeviceData,

@@ -6,12 +6,24 @@ import {
   type DeviceModelAny,
   FloorModel,
 } from '../models'
-import DeviceFacade, { type DeviceFacadeAny } from './device'
 import type API from '../services'
 import AreaFacade from './area'
 import BuildingFacade from './building'
+import DeviceFacadeAta from './device_ata'
+import DeviceFacadeAtw from './device_atw'
+import DeviceFacadeErv from './device_erv'
 import type { DeviceType } from '../types'
 import FloorFacade from './floor'
+
+export interface DeviceFacade {
+  Ata: DeviceFacadeAta
+  Atw: DeviceFacadeAtw
+  Erv: DeviceFacadeErv
+}
+export type DeviceFacadeAny =
+  | DeviceFacadeAta
+  | DeviceFacadeAtw
+  | DeviceFacadeErv
 
 export default class FacadeManager {
   readonly #api: API
@@ -30,13 +42,13 @@ export default class FacadeManager {
   public get(model: BuildingModel): BuildingFacade
   public get<T extends keyof typeof DeviceType>(
     model: DeviceModel<T>,
-  ): DeviceFacade<T>
+  ): DeviceFacade[T]
   public get(model: FloorModel): FloorFacade
   public get(model?: AreaModelAny): AreaFacade | null
   public get(model?: BuildingModel): BuildingFacade | null
   public get<T extends keyof typeof DeviceType>(
     model?: DeviceModel<T>,
-  ): DeviceFacade<T> | null
+  ): DeviceFacade[T] | null
   public get(model?: FloorModel): FloorFacade | null
   public get(
     model?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
@@ -54,11 +66,14 @@ export default class FacadeManager {
         case model instanceof BuildingModel:
           this.#facades.set(id, new BuildingFacade(this.#api, model))
           break
-        case model instanceof DeviceModel:
-          this.#facades.set(
-            id,
-            new DeviceFacade(this.#api, model) as DeviceFacadeAny,
-          )
+        case model instanceof DeviceModel && model.type === 'Ata':
+          this.#facades.set(id, new DeviceFacadeAta(this.#api, model))
+          break
+        case model instanceof DeviceModel && model.type === 'Atw':
+          this.#facades.set(id, new DeviceFacadeAtw(this.#api, model))
+          break
+        case model instanceof DeviceModel && model.type === 'Erv':
+          this.#facades.set(id, new DeviceFacadeErv(this.#api, model))
           break
         case model instanceof FloorModel:
           this.#facades.set(id, new FloorFacade(this.#api, model))
