@@ -5,16 +5,20 @@ import type {
   EnergyData,
   ErrorData,
   FailureData,
+  FanSpeed,
   FrostProtectionData,
   GetDeviceData,
   HolidayModeData,
+  Horizontal,
   ListDevice,
   NonFlagsKeyOf,
+  OperationMode,
   SetAtaGroupPostData,
   SetDeviceData,
   SuccessData,
   TilesData,
   UpdateDeviceData,
+  Vertical,
   WifiData,
 } from '../types'
 import type { DeviceModel } from '../models'
@@ -77,9 +81,21 @@ export interface IBaseFacade {
 
 export interface IBaseSuperDeviceFacade extends IBaseFacade {
   getAta: () => SetAtaGroupPostData['State']
-  setAta: (
-    postData: SetAtaGroupPostData['State'],
-  ) => Promise<FailureData | SuccessData>
+  setAta: ({
+    fan,
+    horizontal,
+    operationMode,
+    power,
+    temperature,
+    vertical,
+  }: {
+    fan?: Exclude<FanSpeed, FanSpeed.silent>
+    horizontal?: Horizontal
+    operationMode?: OperationMode
+    power?: boolean
+    temperature?: number
+    vertical?: Vertical
+  }) => Promise<FailureData | SuccessData>
 }
 
 export interface IBuildingFacade extends IBaseSuperDeviceFacade {

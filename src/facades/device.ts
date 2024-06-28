@@ -21,13 +21,6 @@ export type DeviceFacadeAny =
   | DeviceFacade<'Atw'>
   | DeviceFacade<'Erv'>
 
-const update = <T extends keyof typeof DeviceType>(
-  model: DeviceModel<T>,
-  data: GetDeviceData[T] | SetDeviceData[T],
-): void => {
-  model.update(data)
-}
-
 export default class DeviceFacade<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
@@ -63,7 +56,7 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
     const { data } = (await this.api.get({
       params: { buildingId: this.model.buildingId, id: this.id },
     })) as { data: GetDeviceData[T] }
-    update(this.model as DeviceModel<T>, data)
+    this.model.update(data as UpdateDeviceData[T])
     return data
   }
 
@@ -103,31 +96,46 @@ export default class DeviceFacade<T extends keyof typeof DeviceType>
     return super.getTiles(null)
   }
 
-  public async set(postData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
-    const { EffectiveFlags: effectiveFlags, ...updateData } = postData
-    if (effectiveFlags === FLAG_UNCHANGED || !Object.keys(updateData).length) {
+  public async set(updateData: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
+    const { EffectiveFlags: updateFlags, ...newData } = updateData
+    if (updateFlags === FLAG_UNCHANGED || !Object.keys(newData).length) {
       throw new Error('No changes to update')
     }
     const { data } = await this.api.set({
       heatPumpType: this.type,
       postData: {
-        ...updateData,
+        ...newData,
         DeviceID: this.id,
         EffectiveFlags:
-          typeof effectiveFlags === 'undefined' ?
-            Object.keys(updateData).reduce(
-              (acc, key) =>
-                Number(
-                  BigInt(
-                    this.flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>],
-                  ) | BigInt(acc),
-                ),
-              FLAG_UNCHANGED,
-            )
-          : effectiveFlags,
+          typeof updateFlags === 'undefined' ?
+            this.#getFlags(newData)
+          : updateFlags,
       },
     })
-    update(this.model as DeviceModel<T>, data)
+    this.model.update(this.#getUpdatedData(data))
     return data
+  }
+
+  #getFlags(data: Omit<UpdateDeviceData[T], 'EffectiveFlags'>): number {
+    return (Object.keys(data) as NonFlagsKeyOf<UpdateDeviceData[T]>[]).reduce(
+      (acc, key) => Number(BigInt(this.flags[key]) | BigInt(acc)),
+      FLAG_UNCHANGED,
+    )
+  }
+
+  #getUpdatedData(
+    data: SetDeviceData[T],
+  ): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
+    const { EffectiveFlags: updatedFlags, ...newData } = data
+    return Object.fromEntries(
+      Object.entries(newData).filter(
+        ([key]) =>
+          key in this.flags &&
+          Number(
+            BigInt(this.flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>]) &
+              BigInt(updatedFlags),
+          ),
+      ),
+    ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
   }
 }

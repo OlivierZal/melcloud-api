@@ -6,9 +6,13 @@ import type {
 } from '../models'
 import type {
   FailureData,
+  FanSpeed,
+  Horizontal,
   ListDeviceDataAta,
+  OperationMode,
   SetAtaGroupPostData,
   SuccessData,
+  Vertical,
 } from '../types'
 import BaseFacade from './base'
 import type { IBaseSuperDeviceFacade } from './interfaces'
@@ -53,16 +57,40 @@ export default abstract class<
     )
   }
 
-  public async setAta(
-    postData: SetAtaGroupPostData['State'],
-  ): Promise<FailureData | SuccessData> {
-    return (
-      await this.api.setAta({
-        postData: {
-          Specification: { [this.setAtaGroupSpecification]: this.id },
-          State: postData,
-        },
+  public async setAta({
+    fan,
+    horizontal,
+    operationMode,
+    power,
+    temperature,
+    vertical,
+  }: {
+    fan?: Exclude<FanSpeed, FanSpeed.silent>
+    horizontal?: Horizontal
+    operationMode?: OperationMode
+    power?: boolean
+    temperature?: number
+    vertical?: Vertical
+  }): Promise<FailureData | SuccessData> {
+    const postData = {
+      FanSpeed: fan,
+      OperationMode: operationMode,
+      Power: power,
+      SetTemperature: temperature,
+      VaneHorizontalDirection: horizontal,
+      VaneVerticalDirection: vertical,
+    }
+    const { data } = await this.api.setAta({
+      postData: {
+        Specification: { [this.setAtaGroupSpecification]: this.id },
+        State: postData,
+      },
+    })
+    this.model.devices
+      .filter((device): device is DeviceModel<'Ata'> => device.type === 'Ata')
+      .forEach((device) => {
+        device.update(postData)
       })
-    ).data
+    return data
   }
 }

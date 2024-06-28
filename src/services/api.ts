@@ -51,8 +51,8 @@ import {
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 import https from 'https'
 
-const LIST_URL = '/User/ListDevices'
-const LOGIN_URL = '/Login/ClientLogin'
+const LIST_PATH = '/User/ListDevices'
+const LOGIN_PATH = '/Login/ClientLogin'
 
 const MINUTES_0 = 0
 const MINUTES_5 = 5
@@ -207,7 +207,7 @@ export default class API implements IAPI {
 
   public async fetch(): Promise<{ data: Building[] }> {
     this.clearSync()
-    const response = await this.#api.get<Building[]>(LIST_URL)
+    const response = await this.#api.get<Building[]>(LIST_PATH)
     response.data.forEach((building) => {
       DeviceModel.upsertMany(building.Structure.Devices)
       building.Structure.Areas.forEach((area) => {
@@ -304,7 +304,7 @@ export default class API implements IAPI {
   }: {
     postData: LoginPostData
   }): Promise<{ data: LoginData }> {
-    const response = await this.#api.post<LoginData>(LOGIN_URL, {
+    const response = await this.#api.post<LoginData>(LOGIN_PATH, {
       Email: username,
       Password: password,
       ...rest,
@@ -407,7 +407,7 @@ export default class API implements IAPI {
     this.#logger.error(String(errorData))
     switch (error.response?.status) {
       case HttpStatusCode.Unauthorized:
-        if (this.#canRetry() && error.config?.url !== LOGIN_URL) {
+        if (this.#canRetry() && error.config?.url !== LOGIN_PATH) {
           if ((await this.applyLogin()) && error.config) {
             return this.#api.request(error.config)
           }
@@ -425,15 +425,15 @@ export default class API implements IAPI {
     config: InternalAxiosRequestConfig,
   ): Promise<InternalAxiosRequestConfig> {
     const newConfig = { ...config }
-    if (newConfig.url === LIST_URL && this.#holdAPIListUntil > DateTime.now()) {
+    if (newConfig.url === LIST_PATH && this.#holdAPIListUntil > DateTime.now()) {
       throw new Error(
-        `API requests to ${LIST_URL} are on hold for ${this.#holdAPIListUntil
+        `API requests to ${LIST_PATH} are on hold for ${this.#holdAPIListUntil
           .diffNow()
           .shiftTo('minutes')
           .toHuman()}`,
       )
     }
-    if (newConfig.url !== LOGIN_URL) {
+    if (newConfig.url !== LOGIN_PATH) {
       const { expiry, contextKey } = this
       if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
         await this.applyLogin()

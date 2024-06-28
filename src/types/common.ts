@@ -84,6 +84,17 @@ export interface LoginData {
   } | null
 }
 
+export type UpdatedDeviceData<T extends keyof typeof DeviceType> = Omit<
+  UpdateDeviceData[T],
+  'EffectiveFlags'
+> &
+  Partial<
+    Pick<
+      ListDevice['Ata']['Device'],
+      'FanSpeed' | 'VaneHorizontalDirection' | 'VaneVerticalDirection'
+    >
+  >
+
 export interface UpdateDeviceData {
   readonly Ata: UpdateDeviceDataAta
   readonly Atw: UpdateDeviceDataAtw

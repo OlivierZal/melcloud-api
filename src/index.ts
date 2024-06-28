@@ -107,6 +107,7 @@ export {
   type UpdateDeviceDataAta,
   type UpdateDeviceDataAtw,
   type UpdateDeviceDataErv,
+  type UpdatedDeviceData,
   type WifiData,
   type WifiPostData,
   DeviceType,

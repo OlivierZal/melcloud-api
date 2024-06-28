@@ -1,13 +1,11 @@
 import AreaModel, { type AreaModelAny } from './area'
 import {
   DeviceType,
-  FLAG_UNCHANGED,
-  type GetDeviceData,
   type ListDevice,
   type ListDeviceAny,
   type NonFlagsKeyOf,
-  type SetDeviceData,
   type UpdateDeviceData,
+  type UpdatedDeviceData,
   flags,
 } from '../types'
 import BaseModel from './base'
@@ -112,18 +110,42 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     })
   }
 
-  public update(data: GetDeviceData[T] | SetDeviceData[T]): void {
+  public update(data: UpdatedDeviceData<T>): void {
     this.#data = {
       ...this.#data,
-      ...data,
-      EffectiveFlags: FLAG_UNCHANGED,
-      ...('SetFanSpeed' in data ? { FanSpeed: data.SetFanSpeed } : {}),
-      ...('VaneHorizontal' in data ?
-        { VaneHorizontalDirection: data.VaneHorizontal }
-      : {}),
-      ...('VaneVertical' in data ?
-        { VaneVerticalDirection: data.VaneVertical }
-      : {}),
+      ...(this.#cleanData(data) satisfies Omit<
+        UpdatedDeviceData<T>,
+        'SetFanSpeed' | 'VaneHorizontal' | 'VaneVertical'
+      >),
     }
+  }
+
+  #cleanData(
+    data: UpdatedDeviceData<T>,
+  ): Omit<
+    UpdatedDeviceData<T>,
+    'SetFanSpeed' | 'VaneHorizontal' | 'VaneVertical'
+  > {
+    return {
+      ...Object.fromEntries(
+        Object.entries(data)
+          .filter(([key]) => key in this.flags)
+          .map(([key, value]) => {
+            switch (key) {
+              case 'SetFanSpeed':
+                return ['FanSpeed', value]
+              case 'VaneHorizontal':
+                return ['VaneHorizontalDirection', value]
+              case 'VaneVertical':
+                return ['VaneVerticalDirection', value]
+              default:
+                return [key, value]
+            }
+          }),
+      ),
+    } as Omit<
+      UpdatedDeviceData<T>,
+      'SetFanSpeed' | 'VaneHorizontal' | 'VaneVertical'
+    >
   }
 }

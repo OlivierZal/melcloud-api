@@ -63,6 +63,7 @@ export {
   type TilesData,
   type TilesPostData,
   type UpdateDeviceData,
+  type UpdatedDeviceData,
   type WifiData,
   type WifiPostData,
   Language,
