@@ -17,13 +17,6 @@ import type API from '../services'
 import BaseFacade from './base'
 import type { IDeviceFacade } from './interfaces'
 
-const reverse = <T extends keyof typeof DeviceType>(
-  mapping: Record<keyof SetKeys[T], NonFlagsKeyOf<UpdateDeviceData[T]>>,
-): Record<NonFlagsKeyOf<UpdateDeviceData[T]>, keyof SetKeys[T]> =>
-  Object.fromEntries(
-    Object.entries(mapping).map(([key, value]) => [value, key]),
-  ) as Record<NonFlagsKeyOf<UpdateDeviceData[T]>, keyof SetKeys[T]>
-
 export default abstract class<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
@@ -40,12 +33,12 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  readonly #dataMapping: Record<
+  protected abstract readonly setDataMapping: Record<
     NonFlagsKeyOf<UpdateDeviceData[T]>,
     keyof SetKeys[T]
   >
 
-  protected abstract setKeys: Record<
+  protected abstract readonly setKeyMapping: Record<
     keyof SetKeys[T],
     NonFlagsKeyOf<UpdateDeviceData[T]>
   >
@@ -54,7 +47,6 @@ export default abstract class<T extends keyof typeof DeviceType>
     super(api, model as DeviceModelAny)
     this.type = this.model.type as T
     this.flags = flags[this.type] as Record<keyof SetKeys[T], number>
-    this.#dataMapping = reverse(this.setKeys)
   }
 
   public get data(): ListDevice[T]['Device'] {
@@ -63,9 +55,7 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   get #setData(): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
     return Object.fromEntries(
-      Object.entries(this.data).filter(
-        ([key]) => this.#dataMapping[key] in this.setKeys,
-      ),
+      Object.entries(this.data).filter(([key]) => key in this.setDataMapping),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
   }
 
@@ -125,7 +115,7 @@ export default abstract class<T extends keyof typeof DeviceType>
     const updateData = {
       ...Object.fromEntries(
         Object.entries(setKeys).map(([key, value]) => [
-          this.setKeys[key as keyof SetKeys[T]],
+          this.setKeyMapping[key as keyof SetKeys[T]],
           value,
         ]),
       ),
@@ -157,7 +147,11 @@ export default abstract class<T extends keyof typeof DeviceType>
     return Object.fromEntries(
       Object.entries(newData).filter(([key]) =>
         Number(
-          BigInt(this.flags[this.#dataMapping[key]]) & BigInt(effectiveFlags),
+          BigInt(
+            this.flags[
+              this.setDataMapping[key as NonFlagsKeyOf<UpdateDeviceData[T]>]
+            ],
+          ) & BigInt(effectiveFlags),
         ),
       ),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>

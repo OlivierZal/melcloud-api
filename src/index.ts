@@ -102,6 +102,7 @@ export {
   type SetDeviceDataAtw,
   type SetDeviceDataErv,
   type SetDevicePostData,
+  type SetKeys,
   type SetKeysAta,
   type SetKeysAtw,
   type SetKeysErv,
