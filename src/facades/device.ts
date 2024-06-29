@@ -51,6 +51,10 @@ export default abstract class<T extends keyof typeof DeviceType>
     return this.model.data
   }
 
+  public get power(): boolean {
+    return this.data.Power
+  }
+
   get #setData(): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
     return Object.fromEntries(
       Object.entries(this.data).filter(([key]) => key in this.setDataMapping),
