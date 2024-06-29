@@ -7,8 +7,8 @@ import {
   type ListDeviceDataAta,
   type OperationMode,
   type SetDeviceDataAta,
-  type ValuesAta,
   type UpdateDeviceDataAta,
+  type ValuesAta,
   type Vertical,
   setDataMappingAta,
 } from './ata'
@@ -18,8 +18,8 @@ import {
   type ListDeviceAtw,
   type ListDeviceDataAtw,
   type SetDeviceDataAtw,
-  type ValuesAtw,
   type UpdateDeviceDataAtw,
+  type ValuesAtw,
   setDataMappingAtw,
 } from './atw'
 import {
@@ -27,8 +27,8 @@ import {
   type ListDeviceDataErv,
   type ListDeviceErv,
   type SetDeviceDataErv,
-  type ValuesErv,
   type UpdateDeviceDataErv,
+  type ValuesErv,
   setDataMappingErv,
 } from './erv'
 
