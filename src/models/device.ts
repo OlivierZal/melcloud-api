@@ -1,6 +1,6 @@
 import AreaModel, { type AreaModelAny } from './area'
 import {
-  type DeviceDataKeyAtaNotInList,
+  type DeviceDataAtaKeysNotInList,
   DeviceType,
   type ListDevice,
   type ListDeviceAny,
@@ -126,7 +126,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   #cleanData(
     data: UpdatedDeviceData<T>,
-  ): Omit<UpdatedDeviceData<T>, DeviceDataKeyAtaNotInList> {
+  ): Omit<UpdatedDeviceData<T>, DeviceDataAtaKeysNotInList> {
     return {
       ...Object.fromEntries(
         Object.entries(data)
@@ -144,6 +144,6 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
             }
           }),
       ),
-    } as Omit<UpdatedDeviceData<T>, DeviceDataKeyAtaNotInList>
+    } as Omit<UpdatedDeviceData<T>, DeviceDataAtaKeysNotInList>
   }
 }

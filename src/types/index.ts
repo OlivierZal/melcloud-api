@@ -14,11 +14,11 @@ export {
   FanSpeed,
 } from './bases'
 export {
+  type DeviceDataAtaKeysNotInList,
   type EnergyDataAta,
   type GetDeviceDataAta,
   type ListDeviceAta,
   type ListDeviceDataAta,
-  type DeviceDataKeyAtaNotInList,
   type SetDeviceDataAta,
   type SetKeysAta,
   type UpdateDeviceDataAta,

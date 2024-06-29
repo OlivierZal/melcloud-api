@@ -58,7 +58,7 @@ export interface SetDeviceDataAta
 
 export type GetDeviceDataAta = BaseGetDeviceData & SetDeviceDataAta
 
-export type DeviceDataKeyAtaNotInList =
+export type DeviceDataAtaKeysNotInList =
   | 'SetFanSpeed'
   | 'VaneHorizontal'
   | 'VaneVertical'
@@ -67,7 +67,7 @@ export interface ListDeviceDataAta
   extends BaseListDeviceData,
     Omit<
       GetDeviceDataAta,
-      keyof DeviceDataNotInList | DeviceDataKeyAtaNotInList
+      keyof DeviceDataNotInList | DeviceDataAtaKeysNotInList
     > {
   readonly ActualFanSpeed: number
   readonly FanSpeed: FanSpeed
