@@ -58,6 +58,6 @@ export interface BaseListDevice {
   readonly Type: DeviceType
 }
 
-export interface BaseSetKeys {
+export interface BaseValues {
   readonly power?: boolean
 }

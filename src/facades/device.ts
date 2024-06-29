@@ -7,9 +7,9 @@ import {
   type ListDevice,
   type NonFlagsKeyOf,
   type SetDeviceData,
-  type SetKeys,
   type TilesData,
   type UpdateDeviceData,
+  type Values,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
@@ -30,15 +30,15 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  protected abstract readonly flags: Record<keyof SetKeys[T], number>
+  protected abstract readonly flags: Record<keyof Values[T], number>
 
   protected abstract readonly setDataMapping: Record<
     NonFlagsKeyOf<UpdateDeviceData[T]>,
-    keyof SetKeys[T]
+    keyof Values[T]
   >
 
-  protected abstract readonly setKeyMapping: Record<
-    keyof SetKeys[T],
+  protected abstract readonly valueMapping: Record<
+    keyof Values[T],
     NonFlagsKeyOf<UpdateDeviceData[T]>
   >
 
@@ -110,14 +110,14 @@ export default abstract class<T extends keyof typeof DeviceType>
     return super.getTiles(null)
   }
 
-  public async set(setKeys: SetKeys[T]): Promise<SetDeviceData[T]> {
-    if (!Object.keys(setKeys).length) {
+  public async set(values: Values[T]): Promise<SetDeviceData[T]> {
+    if (!Object.keys(values).length) {
       throw new Error('No changes to update')
     }
     const updateData = {
       ...Object.fromEntries(
-        Object.entries(setKeys).map(([key, value]) => [
-          this.setKeyMapping[key as keyof SetKeys[T]],
+        Object.entries(values).map(([key, value]) => [
+          this.valueMapping[key as keyof Values[T]],
           value,
         ]),
       ),
@@ -128,15 +128,15 @@ export default abstract class<T extends keyof typeof DeviceType>
         ...this.#setData,
         ...updateData,
         DeviceID: this.id,
-        EffectiveFlags: this.#getFlags(setKeys),
+        EffectiveFlags: this.#getFlags(values),
       },
     })
     this.model.update(this.#getUpdatedData(data))
     return data
   }
 
-  #getFlags(setKeys: SetKeys[T]): number {
-    return (Object.keys(setKeys) as (keyof SetKeys[T])[]).reduce(
+  #getFlags(values: Values[T]): number {
+    return (Object.keys(values) as (keyof Values[T])[]).reduce(
       (acc, key) => Number(BigInt(this.flags[key]) | BigInt(acc)),
       FLAG_UNCHANGED,
     )

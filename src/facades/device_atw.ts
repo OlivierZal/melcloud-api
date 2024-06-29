@@ -2,7 +2,7 @@ import {
   type OperationModeZone,
   flagsAtw,
   setDataMappingAtw,
-  setKeyMappingAtw,
+  valueMappingAtw,
 } from '../types'
 import BaseDeviceFacade from './device'
 
@@ -11,7 +11,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
 
   protected readonly setDataMapping = setDataMappingAtw
 
-  protected readonly setKeyMapping = setKeyMappingAtw
+  protected readonly valueMapping = valueMappingAtw
 
   public get coolFlowTemperature(): number {
     return this.data.SetCoolFlowTemperatureZone1

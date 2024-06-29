@@ -3,7 +3,7 @@ import type {
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
-  BaseSetKeys,
+  BaseValues,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
@@ -46,12 +46,12 @@ export interface ListDeviceErv extends BaseListDevice {
   readonly Device: ListDeviceDataErv
 }
 
-export interface SetKeysErv extends BaseSetKeys {
+export interface ValuesErv extends BaseValues {
   readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
   readonly mode?: VentilationMode
 }
 
-export const flagsErv: Record<keyof SetKeysErv, number> = {
+export const flagsErv: Record<keyof ValuesErv, number> = {
   fan: 0x8,
   mode: 0x4,
   power: 0x1,
@@ -59,15 +59,15 @@ export const flagsErv: Record<keyof SetKeysErv, number> = {
 
 export const setDataMappingErv: Record<
   NonFlagsKeyOf<UpdateDeviceDataErv>,
-  keyof SetKeysErv
+  keyof ValuesErv
 > = {
   Power: 'power',
   SetFanSpeed: 'fan',
   VentilationMode: 'mode',
 }
 
-export const setKeyMappingErv: Record<
-  keyof SetKeysErv,
+export const valueMappingErv: Record<
+  keyof ValuesErv,
   NonFlagsKeyOf<UpdateDeviceDataErv>
 > = {
   fan: 'SetFanSpeed',

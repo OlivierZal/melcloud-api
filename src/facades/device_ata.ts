@@ -5,7 +5,7 @@ import {
   type Vertical,
   flagsAta,
   setDataMappingAta,
-  setKeyMappingAta,
+  valueMappingAta,
 } from '../types'
 import BaseDeviceFacade from './device'
 
@@ -14,7 +14,7 @@ export default class extends BaseDeviceFacade<'Ata'> {
 
   protected readonly setDataMapping = setDataMappingAta
 
-  protected readonly setKeyMapping = setKeyMappingAta
+  protected readonly valueMapping = valueMappingAta
 
   public get fan(): FanSpeed {
     return this.data.FanSpeed

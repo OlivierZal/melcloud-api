@@ -3,8 +3,8 @@ import type {
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
-  BaseSetKeys,
   BaseUpdateDeviceData,
+  BaseValues,
   DeviceDataNotInList,
   DeviceType,
   NonFlagsKeyOf,
@@ -105,7 +105,7 @@ export interface EnergyDataAtw {
   readonly TotalHotWaterProduced: number
 }
 
-export interface SetKeysAtw extends BaseSetKeys {
+export interface ValuesAtw extends BaseValues {
   readonly coolFlowTemperature?: number
   readonly coolFlowTemperatureZone2?: number
   readonly forcedHotWater?: boolean
@@ -118,7 +118,7 @@ export interface SetKeysAtw extends BaseSetKeys {
   readonly temperatureZone2?: number
 }
 
-export const flagsAtw: Record<keyof SetKeysAtw, number> = {
+export const flagsAtw: Record<keyof ValuesAtw, number> = {
   coolFlowTemperature: 0x1000000000000,
   coolFlowTemperatureZone2: 0x1000000000000,
   forcedHotWater: 0x10000,
@@ -134,7 +134,7 @@ export const flagsAtw: Record<keyof SetKeysAtw, number> = {
 
 export const setDataMappingAtw: Record<
   NonFlagsKeyOf<UpdateDeviceDataAtw>,
-  keyof SetKeysAtw
+  keyof ValuesAtw
 > = {
   ForcedHotWaterMode: 'forcedHotWater',
   OperationModeZone1: 'mode',
@@ -149,8 +149,8 @@ export const setDataMappingAtw: Record<
   SetTemperatureZone2: 'temperatureZone2',
 }
 
-export const setKeyMappingAtw: Record<
-  keyof SetKeysAtw,
+export const valueMappingAtw: Record<
+  keyof ValuesAtw,
   NonFlagsKeyOf<UpdateDeviceDataAtw>
 > = {
   coolFlowTemperature: 'SetCoolFlowTemperatureZone1',

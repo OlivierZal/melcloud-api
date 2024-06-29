@@ -3,7 +3,7 @@ import type {
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
-  BaseSetKeys,
+  BaseValues,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
   DeviceType,
@@ -102,7 +102,7 @@ export interface EnergyDataAta {
   readonly UsageDisclaimerPercentages: string
 }
 
-export interface SetKeysAta extends BaseSetKeys {
+export interface ValuesAta extends BaseValues {
   readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
   readonly horizontal?: Horizontal
   readonly mode?: OperationMode
@@ -110,7 +110,7 @@ export interface SetKeysAta extends BaseSetKeys {
   readonly vertical?: Vertical
 }
 
-export const flagsAta: Record<keyof SetKeysAta, number> = {
+export const flagsAta: Record<keyof ValuesAta, number> = {
   fan: 0x8,
   horizontal: 0x100,
   mode: 0x2,
@@ -121,7 +121,7 @@ export const flagsAta: Record<keyof SetKeysAta, number> = {
 
 export const setDataMappingAta: Record<
   NonFlagsKeyOf<UpdateDeviceDataAta>,
-  keyof SetKeysAta
+  keyof ValuesAta
 > = {
   OperationMode: 'mode',
   Power: 'power',
@@ -131,8 +131,8 @@ export const setDataMappingAta: Record<
   VaneVertical: 'vertical',
 }
 
-export const setKeyMappingAta: Record<
-  keyof SetKeysAta,
+export const valueMappingAta: Record<
+  keyof ValuesAta,
   NonFlagsKeyOf<UpdateDeviceDataAta>
 > = {
   fan: 'SetFanSpeed',

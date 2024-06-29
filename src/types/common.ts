@@ -7,7 +7,7 @@ import {
   type ListDeviceDataAta,
   type OperationMode,
   type SetDeviceDataAta,
-  type SetKeysAta,
+  type ValuesAta,
   type UpdateDeviceDataAta,
   type Vertical,
   setDataMappingAta,
@@ -18,7 +18,7 @@ import {
   type ListDeviceAtw,
   type ListDeviceDataAtw,
   type SetDeviceDataAtw,
-  type SetKeysAtw,
+  type ValuesAtw,
   type UpdateDeviceDataAtw,
   setDataMappingAtw,
 } from './atw'
@@ -27,7 +27,7 @@ import {
   type ListDeviceDataErv,
   type ListDeviceErv,
   type SetDeviceDataErv,
-  type SetKeysErv,
+  type ValuesErv,
   type UpdateDeviceDataErv,
   setDataMappingErv,
 } from './erv'
@@ -323,10 +323,10 @@ export interface WifiData {
   readonly ToDate: string
 }
 
-export interface SetKeys {
-  readonly Ata: SetKeysAta
-  readonly Atw: SetKeysAtw
-  readonly Erv: SetKeysErv
+export interface Values {
+  readonly Ata: ValuesAta
+  readonly Atw: ValuesAtw
+  readonly Erv: ValuesErv
 }
 
 export const setData = {
