@@ -26,7 +26,6 @@ export {
   OperationMode,
   Vertical,
   flagsAta,
-  setDataMappingAta,
   valueMappingAta,
 } from './ata'
 export {
@@ -72,7 +71,9 @@ export {
   type WifiData,
   type WifiPostData,
   Language,
-  setData,
+  flags,
+  setDataMapping,
+  valueMapping,
 } from './common'
 export {
   type EnergyDataAtw,
@@ -85,7 +86,6 @@ export {
   OperationModeState,
   OperationModeZone,
   flagsAtw,
-  setDataMappingAtw,
   valueMappingAtw,
 } from './atw'
 export {
@@ -97,6 +97,5 @@ export {
   type ValuesErv,
   VentilationMode,
   flagsErv,
-  setDataMappingErv,
   valueMappingErv,
 } from './erv'

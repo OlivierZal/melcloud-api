@@ -6,7 +6,7 @@ import {
   type ListDeviceAny,
   type NonFlagsKeyOf,
   type UpdatedDeviceData,
-  setData,
+  setDataMapping,
 } from '../types'
 import BaseModel from './base'
 import BuildingModel from './building'
@@ -51,7 +51,9 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     this.#data = data
     this.floorId = floorId
     this.type = DeviceType[type] as T
-    this.#setData = setData[this.type] as NonFlagsKeyOf<UpdatedDeviceData<T>>[]
+    this.#setData = Object.values(setDataMapping[this.type]) as NonFlagsKeyOf<
+      UpdatedDeviceData<T>
+    >[]
   }
 
   public get area(): AreaModelAny | null {
@@ -119,7 +121,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
       ...this.#data,
       ...(this.#cleanData(data) satisfies Omit<
         UpdatedDeviceData<T>,
-        'SetFanSpeed' | 'VaneHorizontal' | 'VaneVertical'
+        DeviceDataAtaKeysNotInList
       >),
     }
   }

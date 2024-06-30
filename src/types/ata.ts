@@ -119,18 +119,6 @@ export const flagsAta: Record<keyof ValuesAta, number> = {
   vertical: 0x10,
 } as const
 
-export const setDataMappingAta: Record<
-  NonFlagsKeyOf<UpdateDeviceDataAta>,
-  keyof ValuesAta
-> = {
-  OperationMode: 'mode',
-  Power: 'power',
-  SetFanSpeed: 'fan',
-  SetTemperature: 'temperature',
-  VaneHorizontal: 'horizontal',
-  VaneVertical: 'vertical',
-}
-
 export const valueMappingAta: Record<
   keyof ValuesAta,
   NonFlagsKeyOf<UpdateDeviceDataAta>

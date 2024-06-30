@@ -1,17 +1,12 @@
-import { flagsErv, setDataMappingErv, valueMappingErv } from '../types'
-import BaseDeviceFacade from './device'
+import BaseDeviceFacade, { isValue } from './device'
 
 export default class extends BaseDeviceFacade<'Erv'> {
-  protected readonly flags = flagsErv
-
-  protected readonly setDataMapping = setDataMappingErv
-
-  protected readonly valueMapping = valueMappingErv
-
+  @isValue
   public get fan(): number {
     return this.data.SetFanSpeed
   }
 
+  @isValue
   public get mode(): number {
     return this.data.VentilationMode
   }

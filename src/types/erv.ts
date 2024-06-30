@@ -57,15 +57,6 @@ export const flagsErv: Record<keyof ValuesErv, number> = {
   power: 0x1,
 } as const
 
-export const setDataMappingErv: Record<
-  NonFlagsKeyOf<UpdateDeviceDataErv>,
-  keyof ValuesErv
-> = {
-  Power: 'power',
-  SetFanSpeed: 'fan',
-  VentilationMode: 'mode',
-}
-
 export const valueMappingErv: Record<
   keyof ValuesErv,
   NonFlagsKeyOf<UpdateDeviceDataErv>

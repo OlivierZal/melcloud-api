@@ -10,18 +10,47 @@ import {
   type TilesData,
   type UpdateDeviceData,
   type Values,
+  flags,
+  setDataMapping,
+  valueMapping,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
 import BaseFacade from './base'
+import { DeviceFacadeErv } from '.'
 import type { IDeviceFacade } from './interfaces'
+
+// @ts-expect-error: most runtimes do not support it natively
+Symbol.metadata ??= Symbol('Symbol.metadata')
+
+export const isValue = (
+  _target: unknown,
+  context: ClassGetterDecoratorContext,
+): void => {
+  context.metadata[Symbol('value')] ??= []
+  ;(context.metadata as string[]).push(context.name as string)
+}
+
+const jsonify = (instance: object): Record<string, unknown> => {
+  const values = instance.constructor[Symbol.metadata]?.[Symbol('value')] as
+    | string[]
+    | undefined
+  if (!values) {
+    throw new Error('No members marked with @values')
+  }
+  return values.reduce(
+    (acc, key) => ({
+      ...acc,
+      [key]: instance[key as keyof typeof instance] as unknown,
+    }),
+    {},
+  )
+}
 
 export default abstract class<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
-  public readonly type: T
-
   protected readonly frostProtectionLocation = 'DeviceIds'
 
   protected readonly holidayModeLocation = 'Devices'
@@ -30,34 +59,50 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  protected abstract readonly flags: Record<keyof Values[T], number>
+  readonly #flags: Record<keyof Values[T], number>
 
-  protected abstract readonly setDataMapping: Record<
+  readonly #setDataMapping: Record<
     NonFlagsKeyOf<UpdateDeviceData[T]>,
     keyof Values[T]
   >
 
-  protected abstract readonly valueMapping: Record<
+  readonly #type: T
+
+  readonly #valueMapping: Record<
     keyof Values[T],
     NonFlagsKeyOf<UpdateDeviceData[T]>
   >
 
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
-    this.type = this.model.type as T
+    this.#type = model.type
+    this.#flags = flags[this.#type] as Record<keyof Values[T], number>
+    this.#setDataMapping = setDataMapping[this.#type] as Record<
+      NonFlagsKeyOf<UpdateDeviceData[T]>,
+      keyof Values[T]
+    >
+    this.#valueMapping = valueMapping[this.#type] as Record<
+      keyof Values[T],
+      NonFlagsKeyOf<UpdateDeviceData[T]>
+    >
+  }
+
+  @isValue
+  public get power(): boolean {
+    return this.data.Power
   }
 
   public get data(): ListDevice[T]['Device'] {
     return this.model.data
   }
 
-  public get power(): boolean {
-    return this.data.Power
+  public get values(): Values[T] {
+    return jsonify(this)
   }
 
   get #setData(): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
     return Object.fromEntries(
-      Object.entries(this.data).filter(([key]) => key in this.setDataMapping),
+      Object.entries(this.data).filter(([key]) => key in this.#setDataMapping),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
   }
 
@@ -81,7 +126,7 @@ export default abstract class<T extends keyof typeof DeviceType>
     from?: string | null
     to?: string | null
   }): Promise<EnergyData[T]> {
-    if (this.type === 'Erv') {
+    if (this instanceof DeviceFacadeErv) {
       throw new Error('Erv devices do not support energy reports')
     }
     return (
@@ -117,13 +162,13 @@ export default abstract class<T extends keyof typeof DeviceType>
     const updateData = {
       ...Object.fromEntries(
         Object.entries(values).map(([key, value]) => [
-          this.valueMapping[key as keyof Values[T]],
+          this.#valueMapping[key as keyof Values[T]],
           value,
         ]),
       ),
     }
     const { data } = await this.api.set({
-      heatPumpType: this.type,
+      heatPumpType: this.#type,
       postData: {
         ...this.#setData,
         ...updateData,
@@ -137,7 +182,7 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   #getFlags(values: Values[T]): number {
     return (Object.keys(values) as (keyof Values[T])[]).reduce(
-      (acc, key) => Number(BigInt(this.flags[key]) | BigInt(acc)),
+      (acc, key) => Number(BigInt(this.#flags[key]) | BigInt(acc)),
       FLAG_UNCHANGED,
     )
   }
@@ -150,8 +195,8 @@ export default abstract class<T extends keyof typeof DeviceType>
       Object.entries(newData).filter(([key]) =>
         Number(
           BigInt(
-            this.flags[
-              this.setDataMapping[key as NonFlagsKeyOf<UpdateDeviceData[T]>]
+            this.#flags[
+              this.#setDataMapping[key as NonFlagsKeyOf<UpdateDeviceData[T]>]
             ],
           ) & BigInt(effectiveFlags),
         ),

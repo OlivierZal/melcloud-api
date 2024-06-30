@@ -82,7 +82,7 @@ const setting = <T extends API, R extends string | null | undefined>(
   context: ClassAccessorDecoratorContext<T, R>,
 ): ClassAccessorDecoratorResult<T, R> => ({
   get(this: T): R {
-    const key = String(context.name)
+    const key = context.name as string
     if (!isAPISetting(key)) {
       throw new Error(`Invalid setting: ${key}`)
     }
@@ -91,7 +91,7 @@ const setting = <T extends API, R extends string | null | undefined>(
       : (this.settingManager.get(key) as R)
   },
   set(this: T, value: R): void {
-    const key = String(context.name)
+    const key = context.name as string
     if (!isAPISetting(key)) {
       throw new Error(`Invalid setting: ${key}`)
     }

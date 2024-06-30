@@ -17,6 +17,7 @@ import type {
   SuccessData,
   TilesData,
   UpdateDeviceData,
+  Values,
   Vertical,
   WifiData,
 } from '../types'
@@ -118,5 +119,5 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   getTiles: ((select?: false | null) => Promise<TilesData<null>>) &
     ((select: true | DeviceModel<T>) => Promise<TilesData<T>>)
   set: (postData: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
-  type: T
+  values: Values[T]
 }

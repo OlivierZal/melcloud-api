@@ -1,4 +1,9 @@
-import type { BaseDevicePostData, DeviceType, FanSpeed } from './bases'
+import type {
+  BaseDevicePostData,
+  DeviceType,
+  FanSpeed,
+  NonFlagsKeyOf,
+} from './bases'
 import {
   type EnergyDataAta,
   type GetDeviceDataAta,
@@ -10,7 +15,8 @@ import {
   type UpdateDeviceDataAta,
   type ValuesAta,
   type Vertical,
-  setDataMappingAta,
+  flagsAta,
+  valueMappingAta,
 } from './ata'
 import {
   type EnergyDataAtw,
@@ -20,7 +26,8 @@ import {
   type SetDeviceDataAtw,
   type UpdateDeviceDataAtw,
   type ValuesAtw,
-  setDataMappingAtw,
+  flagsAtw,
+  valueMappingAtw,
 } from './atw'
 import {
   type GetDeviceDataErv,
@@ -29,7 +36,8 @@ import {
   type SetDeviceDataErv,
   type UpdateDeviceDataErv,
   type ValuesErv,
-  setDataMappingErv,
+  flagsErv,
+  valueMappingErv,
 } from './erv'
 
 export enum Language {
@@ -329,8 +337,36 @@ export interface Values {
   readonly Erv: ValuesErv
 }
 
-export const setData = {
-  Ata: Object.keys(setDataMappingAta),
-  Atw: Object.keys(setDataMappingAtw),
-  Erv: Object.keys(setDataMappingErv),
+export const flags = {
+  Ata: flagsAta,
+  Atw: flagsAtw,
+  Erv: flagsErv,
+} as const
+
+export const valueMapping = {
+  Ata: valueMappingAta,
+  Atw: valueMappingAtw,
+  Erv: valueMappingErv,
+} as const
+
+const reverseMapping = (
+  mapping: Record<string, string>,
+): Record<string, string> =>
+  Object.fromEntries(
+    Object.entries(mapping).map(([key, value]) => [value, key]),
+  )
+
+export const setDataMapping = {
+  Ata: reverseMapping(valueMappingAta) as Record<
+    NonFlagsKeyOf<UpdateDeviceData['Ata']>,
+    keyof Values['Ata']
+  >,
+  Atw: reverseMapping(valueMappingAtw) as Record<
+    NonFlagsKeyOf<UpdateDeviceData['Atw']>,
+    keyof Values['Atw']
+  >,
+  Erv: reverseMapping(valueMappingErv) as Record<
+    NonFlagsKeyOf<UpdateDeviceData['Erv']>,
+    keyof Values['Erv']
+  >,
 } as const
