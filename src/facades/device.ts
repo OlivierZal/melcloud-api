@@ -22,29 +22,14 @@ import type { IDeviceFacade } from './interfaces'
 
 // @ts-expect-error: most runtimes do not support it natively
 Symbol.metadata ??= Symbol('Symbol.metadata')
+const valueSymbol = Symbol('value')
 
 export const isValue = (
   _target: unknown,
   context: ClassGetterDecoratorContext,
 ): void => {
-  context.metadata[Symbol('value')] ??= []
-  ;(context.metadata as string[]).push(context.name as string)
-}
-
-const jsonify = (instance: object): Record<string, unknown> => {
-  const values = instance.constructor[Symbol.metadata]?.[Symbol('value')] as
-    | string[]
-    | undefined
-  if (!values) {
-    throw new Error('No members marked with @values')
-  }
-  return values.reduce(
-    (acc, key) => ({
-      ...acc,
-      [key]: instance[key as keyof typeof instance] as unknown,
-    }),
-    {},
-  )
+  context.metadata[valueSymbol] ??= []
+  ;(context.metadata[valueSymbol] as string[]).push(context.name as string)
 }
 
 export default abstract class<T extends keyof typeof DeviceType>
@@ -97,7 +82,21 @@ export default abstract class<T extends keyof typeof DeviceType>
   }
 
   public get values(): Values[T] {
-    return jsonify(this)
+    const values = this.constructor[Symbol.metadata]?.[valueSymbol] as
+      | string[]
+      | undefined
+    if (!values) {
+      throw new Error('No members marked with @values')
+    }
+    return values
+      .filter((key) => key in this)
+      .reduce(
+        (acc, key) => ({
+          ...acc,
+          [key]: this[key as keyof typeof this],
+        }),
+        {},
+      )
   }
 
   get #setData(): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
