@@ -191,14 +191,16 @@ export default abstract class<T extends keyof typeof DeviceType>
   ): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
     const { EffectiveFlags: effectiveFlags, ...newData } = data
     return Object.fromEntries(
-      Object.entries(newData).filter(([key]) =>
-        Number(
-          BigInt(
-            this.#flags[
-              this.#setDataMapping[key as NonFlagsKeyOf<UpdateDeviceData[T]>]
-            ],
-          ) & BigInt(effectiveFlags),
-        ),
+      Object.entries(newData).filter(
+        ([key]) =>
+          key in this.#setDataMapping &&
+          Number(
+            BigInt(
+              this.#flags[
+                this.#setDataMapping[key as NonFlagsKeyOf<UpdateDeviceData[T]>]
+              ],
+            ) & BigInt(effectiveFlags),
+          ),
       ),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
   }
