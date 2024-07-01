@@ -11,28 +11,47 @@ import {
   type UpdateDeviceData,
   type Values,
   flags,
-  setDataMapping,
-  valueMapping,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
 import BaseFacade from './base'
-import { DeviceFacadeErv } from '.'
 import type { IDeviceFacade } from './interfaces'
 
 // @ts-expect-error: most runtimes do not support it natively
 Symbol.metadata ??= Symbol('Symbol.metadata')
+const setDataSymbol = Symbol('setData')
 const valueSymbol = Symbol('value')
 
-export const isValue = (
-  _target: unknown,
-  context: ClassGetterDecoratorContext,
-): void => {
-  context.metadata[valueSymbol] ??= []
-  ;(context.metadata[valueSymbol] as string[]).push(String(context.name))
-}
+export const mapTo =
+  <
+    This extends {
+      data: ListDevice[keyof typeof DeviceType]['Device']
+    },
+  >(
+    setData: string,
+  ) =>
+  (
+    _target: unknown,
+    context: ClassAccessorDecoratorContext<This>,
+  ): ClassAccessorDecoratorResult<This, unknown> => ({
+    get(this: This): unknown {
+      const value = String(context.name)
+      context.metadata[setDataSymbol] ??= {}
+      ;(context.metadata[setDataSymbol] as Record<string, string>)[setData] =
+        value
+      context.metadata[valueSymbol] ??= {}
+      ;(context.metadata[valueSymbol] as Record<string, string>)[value] =
+        setData
+      return setData in this.data ?
+          this.data[setData as keyof typeof this.data]
+        : null
+    },
+    set(this: This, _value: unknown): void {
+      throw new Error(`Cannot set value for ${String(context.name)}`)
+    },
+  })
 
-export default abstract class<T extends keyof typeof DeviceType>
+export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
@@ -44,59 +63,37 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  readonly #flags: Record<keyof Values[T], number>
-
-  readonly #setDataMapping: Record<
-    NonFlagsKeyOf<UpdateDeviceData[T]>,
-    keyof Values[T]
-  >
+  readonly #flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
 
   readonly #type: T
-
-  readonly #valueMapping: Record<
-    keyof Values[T],
-    NonFlagsKeyOf<UpdateDeviceData[T]>
-  >
 
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
     this.#type = model.type
-    this.#flags = flags[this.#type] as Record<keyof Values[T], number>
-    this.#setDataMapping = setDataMapping[this.#type] as Record<
+    this.#flags = flags[this.#type] as Record<
       NonFlagsKeyOf<UpdateDeviceData[T]>,
-      keyof Values[T]
-    >
-    this.#valueMapping = valueMapping[this.#type] as Record<
-      keyof Values[T],
-      NonFlagsKeyOf<UpdateDeviceData[T]>
+      number
     >
   }
 
-  @isValue
-  public get power(): boolean {
-    return this.data.Power
-  }
+  @mapTo('Power')
+  public accessor power: unknown = false
 
   public get data(): ListDevice[T]['Device'] {
     return this.model.data
   }
 
   public get values(): Values[T] {
-    const values = this.constructor[Symbol.metadata]?.[valueSymbol] as
-      | string[]
-      | undefined
-    if (!values) {
-      throw new Error('No members marked with @values')
-    }
-    return values
-      .filter((key) => key in this)
-      .reduce(
-        (acc, key) => ({
-          ...acc,
-          [key]: this[key as keyof typeof this],
-        }),
-        {},
+    return Object.fromEntries(
+      Object.entries(
+        this.constructor[Symbol.metadata]?.[valueSymbol] as Record<
+          string,
+          string
+        >,
       )
+        .filter(([value]) => value in this)
+        .map(([key, value]) => [value, this[key as keyof typeof this]]),
+    )
   }
 
   get #setData(): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {

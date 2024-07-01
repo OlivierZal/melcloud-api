@@ -1,54 +1,34 @@
-import BaseDeviceFacade, { isValue } from './device'
-import type { OperationModeZone } from '../types'
+import BaseDeviceFacade, { mapTo } from './device'
+import { NUMBER_0, OperationModeZone } from '../types'
 
 export default class extends BaseDeviceFacade<'Atw'> {
-  @isValue
-  public get coolFlowTemperature(): number {
-    return this.data.SetCoolFlowTemperatureZone1
-  }
+  @mapTo('SetCoolFlowTemperatureZone1')
+  public accessor coolFlowTemperature: unknown = NUMBER_0
 
-  @isValue
-  public get coolFlowTemperatureZone2(): number {
-    return this.data.SetCoolFlowTemperatureZone2
-  }
+  @mapTo('SetCoolFlowTemperatureZone2')
+  public accessor coolFlowTemperatureZone2: unknown = NUMBER_0
 
-  @isValue
-  public get forcedHotWater(): boolean {
-    return this.data.ForcedHotWaterMode
-  }
+  @mapTo('ForcedHotWaterMode')
+  public accessor forcedHotWater: unknown = false
 
-  @isValue
-  public get heatFlowTemperature(): number {
-    return this.data.SetHeatFlowTemperatureZone1
-  }
+  @mapTo('HeatFlowTemperature')
+  public accessor heatFlowTemperature: unknown = NUMBER_0
 
-  @isValue
-  public get heatFlowTemperatureZone2(): number {
-    return this.data.SetHeatFlowTemperatureZone2
-  }
+  @mapTo('SetHeatFlowTemperatureZone2')
+  public accessor heatFlowTemperatureZone2: unknown = NUMBER_0
 
-  @isValue
-  public get hotWaterTemperature(): number {
-    return this.data.SetTankWaterTemperature
-  }
+  @mapTo('SetTankWaterTemperature')
+  public accessor hotWaterTemperature: unknown = NUMBER_0
 
-  @isValue
-  public get mode(): OperationModeZone {
-    return this.data.OperationModeZone1
-  }
+  @mapTo('OperationModeZone1')
+  public accessor mode: unknown = OperationModeZone.room
 
-  @isValue
-  public get modeZone2(): OperationModeZone {
-    return this.data.OperationModeZone2
-  }
+  @mapTo('OperationModeZone2')
+  public accessor modeZone2: unknown = OperationModeZone.flow
 
-  @isValue
-  public get temperature(): number {
-    return this.data.SetTemperatureZone1
-  }
+  @mapTo('SetTemperatureZone1')
+  public accessor temperature: unknown = NUMBER_0
 
-  @isValue
-  public get temperatureZone2(): number {
-    return this.data.SetTemperatureZone2
-  }
+  @mapTo('SetTemperatureZone2')
+  public accessor temperatureZone2: unknown = NUMBER_0
 }

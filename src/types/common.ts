@@ -1,9 +1,4 @@
-import type {
-  BaseDevicePostData,
-  DeviceType,
-  FanSpeed,
-  NonFlagsKeyOf,
-} from './bases'
+import type { BaseDevicePostData, DeviceType, FanSpeed } from './bases'
 import {
   type EnergyDataAta,
   type GetDeviceDataAta,
@@ -16,7 +11,6 @@ import {
   type ValuesAta,
   type Vertical,
   flagsAta,
-  valueMappingAta,
 } from './ata'
 import {
   type EnergyDataAtw,
@@ -27,7 +21,6 @@ import {
   type UpdateDeviceDataAtw,
   type ValuesAtw,
   flagsAtw,
-  valueMappingAtw,
 } from './atw'
 import {
   type GetDeviceDataErv,
@@ -37,7 +30,6 @@ import {
   type UpdateDeviceDataErv,
   type ValuesErv,
   flagsErv,
-  valueMappingErv,
 } from './erv'
 
 export enum Language {
@@ -331,42 +323,14 @@ export interface WifiData {
   readonly ToDate: string
 }
 
-export interface Values {
-  readonly Ata: ValuesAta
-  readonly Atw: ValuesAtw
-  readonly Erv: ValuesErv
-}
-
 export const flags = {
   Ata: flagsAta,
   Atw: flagsAtw,
   Erv: flagsErv,
 } as const
 
-export const valueMapping = {
-  Ata: valueMappingAta,
-  Atw: valueMappingAtw,
-  Erv: valueMappingErv,
-} as const
-
-const reverseMapping = (
-  mapping: Record<string, string>,
-): Record<string, string> =>
-  Object.fromEntries(
-    Object.entries(mapping).map(([key, value]) => [value, key]),
-  )
-
-export const setDataMapping = {
-  Ata: reverseMapping(valueMappingAta) as Record<
-    NonFlagsKeyOf<UpdateDeviceData['Ata']>,
-    keyof Values['Ata']
-  >,
-  Atw: reverseMapping(valueMappingAtw) as Record<
-    NonFlagsKeyOf<UpdateDeviceData['Atw']>,
-    keyof Values['Atw']
-  >,
-  Erv: reverseMapping(valueMappingErv) as Record<
-    NonFlagsKeyOf<UpdateDeviceData['Erv']>,
-    keyof Values['Erv']
-  >,
-} as const
+export interface Values {
+  readonly Ata: ValuesAta
+  readonly Atw: ValuesAtw
+  readonly Erv: ValuesErv
+}

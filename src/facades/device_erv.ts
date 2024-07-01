@@ -1,13 +1,10 @@
-import BaseDeviceFacade, { isValue } from './device'
+import BaseDeviceFacade, { mapTo } from './device'
+import { FanSpeed, NUMBER_0 } from '../types'
 
 export default class extends BaseDeviceFacade<'Erv'> {
-  @isValue
-  public get fan(): number {
-    return this.data.SetFanSpeed
-  }
+  @mapTo('SetFanSpeed')
+  public accessor fan: unknown = FanSpeed.auto
 
-  @isValue
-  public get mode(): number {
-    return this.data.VentilationMode
-  }
+  @mapTo('VentilationMode')
+  public accessor mode: unknown = NUMBER_0
 }

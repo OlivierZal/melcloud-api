@@ -46,22 +46,13 @@ export interface ListDeviceErv extends BaseListDevice {
   readonly Device: ListDeviceDataErv
 }
 
+export const flagsErv: Record<NonFlagsKeyOf<UpdateDeviceDataErv>, number> = {
+  Power: 0x1,
+  SetFanSpeed: 0x8,
+  VentilationMode: 0x4,
+} as const
+
 export interface ValuesErv extends BaseValues {
   readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
   readonly mode?: VentilationMode
-}
-
-export const flagsErv: Record<keyof ValuesErv, number> = {
-  fan: 0x8,
-  mode: 0x4,
-  power: 0x1,
-} as const
-
-export const valueMappingErv: Record<
-  keyof ValuesErv,
-  NonFlagsKeyOf<UpdateDeviceDataErv>
-> = {
-  fan: 'SetFanSpeed',
-  mode: 'VentilationMode',
-  power: 'Power',
 }

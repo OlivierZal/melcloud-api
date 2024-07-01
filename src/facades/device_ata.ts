@@ -1,29 +1,25 @@
-import BaseDeviceFacade, { isValue } from './device'
-import type { FanSpeed, Horizontal, OperationMode, Vertical } from '../types'
+import BaseDeviceFacade, { mapTo } from './device'
+import {
+  FanSpeed,
+  Horizontal,
+  NUMBER_0,
+  OperationMode,
+  Vertical,
+} from '../types'
 
 export default class extends BaseDeviceFacade<'Ata'> {
-  @isValue
-  public get fan(): FanSpeed {
-    return this.data.FanSpeed
-  }
+  @mapTo('FanSpeed')
+  public accessor fan: unknown = FanSpeed.auto
 
-  @isValue
-  public get horizontal(): Horizontal {
-    return this.data.VaneHorizontalDirection
-  }
+  @mapTo('VaneHorizontal')
+  public accessor horizontal: unknown = Horizontal.auto
 
-  @isValue
-  public get mode(): OperationMode {
-    return this.data.OperationMode
-  }
+  @mapTo('OperationMode')
+  public accessor mode: unknown = OperationMode.auto
 
-  @isValue
-  public get temperature(): number {
-    return this.data.SetTemperature
-  }
+  @mapTo('SetTemperature')
+  public accessor temperature: unknown = NUMBER_0
 
-  @isValue
-  public get vertical(): Vertical {
-    return this.data.VaneVerticalDirection
-  }
+  @mapTo('VaneVertical')
+  public accessor vertical: unknown = Vertical.auto
 }

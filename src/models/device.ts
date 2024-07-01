@@ -6,7 +6,7 @@ import {
   type ListDeviceAny,
   type NonFlagsKeyOf,
   type UpdatedDeviceData,
-  setDataMapping,
+  flags,
 } from '../types'
 import BaseModel from './base'
 import BuildingModel from './building'
@@ -51,7 +51,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     this.#data = data
     this.floorId = floorId
     this.type = DeviceType[type] as T
-    this.#setData = Object.values(setDataMapping[this.type]) as NonFlagsKeyOf<
+    this.#setData = Object.keys(flags[this.type]) as NonFlagsKeyOf<
       UpdatedDeviceData<T>
     >[]
   }

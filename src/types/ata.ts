@@ -102,31 +102,19 @@ export interface EnergyDataAta {
   readonly UsageDisclaimerPercentages: string
 }
 
+export const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number> = {
+  OperationMode: 0x2,
+  Power: 0x1,
+  SetFanSpeed: 0x8,
+  SetTemperature: 0x4,
+  VaneHorizontal: 0x100,
+  VaneVertical: 0x10,
+} as const
+
 export interface ValuesAta extends BaseValues {
   readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
   readonly horizontal?: Horizontal
   readonly mode?: OperationMode
   readonly temperature?: number
   readonly vertical?: Vertical
-}
-
-export const flagsAta: Record<keyof ValuesAta, number> = {
-  fan: 0x8,
-  horizontal: 0x100,
-  mode: 0x2,
-  power: 0x1,
-  temperature: 0x4,
-  vertical: 0x10,
-} as const
-
-export const valueMappingAta: Record<
-  keyof ValuesAta,
-  NonFlagsKeyOf<UpdateDeviceDataAta>
-> = {
-  fan: 'SetFanSpeed',
-  horizontal: 'VaneHorizontal',
-  mode: 'OperationMode',
-  power: 'Power',
-  temperature: 'SetTemperature',
-  vertical: 'VaneVertical',
 }
