@@ -29,7 +29,7 @@ export const isValue = (
   context: ClassGetterDecoratorContext,
 ): void => {
   context.metadata[valueSymbol] ??= []
-  ;(context.metadata[valueSymbol] as string[]).push(context.name as string)
+  ;(context.metadata[valueSymbol] as string[]).push(String(context.name))
 }
 
 export default abstract class<T extends keyof typeof DeviceType>
