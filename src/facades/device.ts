@@ -40,9 +40,7 @@ export const mapTo =
       if (!(setData in this.data)) {
         throw new Error(`Cannot get value for ${key}`)
       }
-      return setData in this.data ?
-          this.data[setData as keyof ListDeviceDataAny]
-        : null
+      return this.data[setData as keyof ListDeviceDataAny]
     },
     set(this: This, _value: unknown): void {
       throw new Error(`Cannot set value for ${String(context.name)}`)
