@@ -15,7 +15,6 @@ import {
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
 import BaseFacade from './base'
-import DeviceFacadeErv from './device_erv'
 import type { IDeviceFacade } from './interfaces'
 
 // @ts-expect-error: most runtimes do not support it natively
@@ -131,7 +130,7 @@ export default abstract class<T extends keyof typeof DeviceType>
     from?: string | null
     to?: string | null
   }): Promise<EnergyData[T]> {
-    if (this instanceof DeviceFacadeErv) {
+    if (this.#type === 'Erv') {
       throw new Error('Erv devices do not support energy reports')
     }
     return (
