@@ -5,6 +5,7 @@ import {
   FLAG_UNCHANGED,
   type GetDeviceData,
   type ListDevice,
+  type ListDeviceDataAny,
   type NonFlagsKeyOf,
   type SetDeviceData,
   type TilesData,
@@ -24,13 +25,7 @@ const keySymbol = Symbol('value')
 const setDataSymbol = Symbol('setData')
 
 export const mapTo =
-  <
-    This extends {
-      data: ListDevice[keyof typeof DeviceType]['Device']
-    },
-  >(
-    setData: string,
-  ) =>
+  <This extends { data: ListDeviceDataAny }>(setData: string) =>
   (
     _target: unknown,
     context: ClassAccessorDecoratorContext<This>,
@@ -43,7 +38,7 @@ export const mapTo =
       ;(context.metadata[setDataSymbol] as Record<string, string>)[setData] =
         key
       return setData in this.data ?
-          this.data[setData as keyof typeof this.data]
+          this.data[setData as keyof ListDeviceDataAny]
         : null
     },
     set(this: This, _value: unknown): void {
