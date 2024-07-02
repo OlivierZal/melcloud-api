@@ -11,6 +11,7 @@ import {
   type UpdateDeviceData,
   type Values,
   flags,
+  keys,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
@@ -19,8 +20,8 @@ import type { IDeviceFacade } from './interfaces'
 
 // @ts-expect-error: most runtimes do not support it natively
 Symbol.metadata ??= Symbol('Symbol.metadata')
+const keySymbol = Symbol('value')
 const setDataSymbol = Symbol('setData')
-const valueSymbol = Symbol('value')
 
 export const mapTo =
   <
@@ -35,13 +36,12 @@ export const mapTo =
     context: ClassAccessorDecoratorContext<This>,
   ): ClassAccessorDecoratorResult<This, unknown> => ({
     get(this: This): unknown {
-      const value = String(context.name)
+      const key = String(context.name)
+      context.metadata[keySymbol] ??= {}
+      ;(context.metadata[keySymbol] as Record<string, string>)[key] = setData
       context.metadata[setDataSymbol] ??= {}
       ;(context.metadata[setDataSymbol] as Record<string, string>)[setData] =
-        value
-      context.metadata[valueSymbol] ??= {}
-      ;(context.metadata[valueSymbol] as Record<string, string>)[value] =
-        setData
+        key
       return setData in this.data ?
           this.data[setData as keyof typeof this.data]
         : null
@@ -65,15 +65,7 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   readonly #flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
 
-  readonly #setDataMapping = this.constructor[Symbol.metadata]?.[
-    setDataSymbol
-  ] as Record<NonFlagsKeyOf<UpdateDeviceData[T]>, keyof Values[T]>
-
   readonly #type: T
-
-  readonly #valueMapping = this.constructor[Symbol.metadata]?.[
-    valueSymbol
-  ] as Record<keyof Values[T], NonFlagsKeyOf<UpdateDeviceData[T]>>
 
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
@@ -82,6 +74,9 @@ export default abstract class<T extends keyof typeof DeviceType>
       NonFlagsKeyOf<UpdateDeviceData[T]>,
       number
     >
+    keys[this.#type]
+      .filter((key) => key in this)
+      .forEach((key) => this[key as keyof typeof this])
   }
 
   @mapTo('Power')
@@ -93,14 +88,14 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   public get values(): Values[T] {
     return Object.fromEntries(
-      Object.entries(
-        this.constructor[Symbol.metadata]?.[valueSymbol] as Record<
+      Object.keys(
+        this.constructor[Symbol.metadata]?.[keySymbol] as Record<
           string,
           string
         >,
       )
-        .filter(([value]) => value in this)
-        .map(([key, value]) => [value, this[key as keyof typeof this]]),
+        .filter((key) => key in this)
+        .map((key) => [key, this[key as keyof typeof this]]),
     )
   }
 
@@ -108,6 +103,26 @@ export default abstract class<T extends keyof typeof DeviceType>
     return Object.fromEntries(
       Object.entries(this.data).filter(([key]) => key in this.#setDataMapping),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
+  }
+
+  get #setDataMapping(): Record<
+    NonFlagsKeyOf<UpdateDeviceData[T]>,
+    keyof Values[T]
+  > {
+    return this.constructor[Symbol.metadata]?.[setDataSymbol] as Record<
+      NonFlagsKeyOf<UpdateDeviceData[T]>,
+      keyof Values[T]
+    >
+  }
+
+  get #valueMapping(): Record<
+    keyof Values[T],
+    NonFlagsKeyOf<UpdateDeviceData[T]>
+  > {
+    return this.constructor[Symbol.metadata]?.[keySymbol] as Record<
+      keyof Values[T],
+      NonFlagsKeyOf<UpdateDeviceData[T]>
+    >
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {

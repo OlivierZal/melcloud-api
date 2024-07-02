@@ -134,4 +134,8 @@ export {
   flagsAta,
   flagsAtw,
   flagsErv,
+  keys,
+  keysAta,
+  keysAtw,
+  keysErv,
 } from './types'

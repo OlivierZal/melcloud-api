@@ -118,3 +118,12 @@ export interface ValuesAta extends BaseValues {
   readonly temperature?: number
   readonly vertical?: Vertical
 }
+
+export const keysAta = [
+  'fan',
+  'horizontal',
+  'mode',
+  'power',
+  'temperature',
+  'vertical',
+] as const satisfies (keyof ValuesAta)[]

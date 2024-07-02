@@ -56,3 +56,9 @@ export interface ValuesErv extends BaseValues {
   readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
   readonly mode?: VentilationMode
 }
+
+export const keysErv = [
+  'fan',
+  'mode',
+  'power',
+] as const satisfies (keyof ValuesErv)[]

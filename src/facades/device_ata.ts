@@ -11,7 +11,7 @@ export default class extends BaseDeviceFacade<'Ata'> {
   @mapTo('FanSpeed')
   public accessor fan: unknown = FanSpeed.auto
 
-  @mapTo('VaneHorizontal')
+  @mapTo('VaneHorizontalDirection')
   public accessor horizontal: unknown = Horizontal.auto
 
   @mapTo('OperationMode')
@@ -20,6 +20,6 @@ export default class extends BaseDeviceFacade<'Ata'> {
   @mapTo('SetTemperature')
   public accessor temperature: unknown = NUMBER_0
 
-  @mapTo('VaneVertical')
+  @mapTo('VaneVerticalDirection')
   public accessor vertical: unknown = Vertical.auto
 }
