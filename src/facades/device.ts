@@ -15,6 +15,7 @@ import {
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
 import BaseFacade from './base'
+import DeviceFacadeErv from './device_erv'
 import type { IDeviceFacade } from './interfaces'
 
 // @ts-expect-error: most runtimes do not support it natively
@@ -51,7 +52,7 @@ export const mapTo =
     },
   })
 
-export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
+export default abstract class<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
@@ -65,7 +66,15 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
 
   readonly #flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
 
+  readonly #setDataMapping = this.constructor[Symbol.metadata]?.[
+    setDataSymbol
+  ] as Record<NonFlagsKeyOf<UpdateDeviceData[T]>, keyof Values[T]>
+
   readonly #type: T
+
+  readonly #valueMapping = this.constructor[Symbol.metadata]?.[
+    valueSymbol
+  ] as Record<keyof Values[T], NonFlagsKeyOf<UpdateDeviceData[T]>>
 
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
@@ -178,7 +187,8 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
 
   #getFlags(values: Values[T]): number {
     return (Object.keys(values) as (keyof Values[T])[]).reduce(
-      (acc, key) => Number(BigInt(this.#flags[key]) | BigInt(acc)),
+      (acc, key) =>
+        Number(BigInt(this.#flags[this.#valueMapping[key]]) | BigInt(acc)),
       FLAG_UNCHANGED,
     )
   }
@@ -192,11 +202,8 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
         ([key]) =>
           key in this.#setDataMapping &&
           Number(
-            BigInt(
-              this.#flags[
-                this.#setDataMapping[key as NonFlagsKeyOf<UpdateDeviceData[T]>]
-              ],
-            ) & BigInt(effectiveFlags),
+            BigInt(this.#flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>]) &
+              BigInt(effectiveFlags),
           ),
       ),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
