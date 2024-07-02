@@ -5,7 +5,6 @@ import {
   FLAG_UNCHANGED,
   type GetDeviceData,
   type ListDevice,
-  type ListDeviceDataAny,
   type NonFlagsKeyOf,
   type SetDeviceData,
   type TilesData,
@@ -25,7 +24,7 @@ const keySymbol = Symbol('value')
 const setDataSymbol = Symbol('setData')
 
 export const mapTo =
-  <This extends { data: ListDeviceDataAny }>(setData: string) =>
+  <This extends { data: object }>(setData: string) =>
   (
     _target: unknown,
     context: ClassAccessorDecoratorContext<This>,
@@ -40,7 +39,7 @@ export const mapTo =
       if (!(setData in this.data)) {
         throw new Error(`Cannot get value for ${key}`)
       }
-      return this.data[setData as keyof ListDeviceDataAny]
+      return this.data[setData as keyof typeof this.data]
     },
     set(this: This, _value: unknown): void {
       throw new Error(`Cannot set value for ${String(context.name)}`)
