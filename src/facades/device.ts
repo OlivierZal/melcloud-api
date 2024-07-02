@@ -37,6 +37,9 @@ export const mapTo =
       context.metadata[setDataSymbol] ??= {}
       ;(context.metadata[setDataSymbol] as Record<string, string>)[setData] =
         key
+      if (!(setData in this.data)) {
+        throw new Error(`Cannot get value for ${key}`)
+      }
       return setData in this.data ?
           this.data[setData as keyof ListDeviceDataAny]
         : null
