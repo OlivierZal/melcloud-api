@@ -60,7 +60,15 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   readonly #flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
 
+  readonly #setDataMapping = this.constructor[Symbol.metadata]?.[
+    setDataSymbol
+  ] as Record<NonFlagsKeyOf<UpdateDeviceData[T]>, keyof Values[T]>
+
   readonly #type: T
+
+  readonly #valueMapping = this.constructor[Symbol.metadata]?.[
+    keySymbol
+  ] as Record<keyof Values[T], NonFlagsKeyOf<UpdateDeviceData[T]>>
 
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
@@ -98,26 +106,6 @@ export default abstract class<T extends keyof typeof DeviceType>
     return Object.fromEntries(
       Object.entries(this.data).filter(([key]) => key in this.#setDataMapping),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
-  }
-
-  get #setDataMapping(): Record<
-    NonFlagsKeyOf<UpdateDeviceData[T]>,
-    keyof Values[T]
-  > {
-    return this.constructor[Symbol.metadata]?.[setDataSymbol] as Record<
-      NonFlagsKeyOf<UpdateDeviceData[T]>,
-      keyof Values[T]
-    >
-  }
-
-  get #valueMapping(): Record<
-    keyof Values[T],
-    NonFlagsKeyOf<UpdateDeviceData[T]>
-  > {
-    return this.constructor[Symbol.metadata]?.[keySymbol] as Record<
-      keyof Values[T],
-      NonFlagsKeyOf<UpdateDeviceData[T]>
-    >
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {
