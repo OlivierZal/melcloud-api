@@ -17,7 +17,7 @@ import type API from '../services'
 import BaseFacade from './base'
 import type { IDeviceFacade } from './interfaces'
 
-// @ts-expect-error: most runtimes do not support it natively
+// @ts-expect-error: most runtimes do not support natively
 Symbol.metadata ??= Symbol('Symbol.metadata')
 const valueSymbol = Symbol('value')
 
