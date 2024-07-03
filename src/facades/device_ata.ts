@@ -1,25 +1,18 @@
 import BaseDeviceFacade, { mapTo } from './device'
-import {
-  FanSpeed,
-  Horizontal,
-  NUMBER_0,
-  OperationMode,
-  Vertical,
-} from '../types'
 
 export default class extends BaseDeviceFacade<'Ata'> {
   @mapTo('FanSpeed')
-  public accessor fan: unknown = FanSpeed.auto
+  public accessor fan: unknown = null
 
   @mapTo('VaneHorizontalDirection')
-  public accessor horizontal: unknown = Horizontal.auto
+  public accessor horizontal: unknown = null
 
   @mapTo('OperationMode')
-  public accessor mode: unknown = OperationMode.auto
+  public accessor mode: unknown = null
 
   @mapTo('SetTemperature')
-  public accessor temperature: unknown = NUMBER_0
+  public accessor temperature: unknown = null
 
   @mapTo('VaneVerticalDirection')
-  public accessor vertical: unknown = Vertical.auto
+  public accessor vertical: unknown = null
 }

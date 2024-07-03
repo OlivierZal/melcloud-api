@@ -131,17 +131,3 @@ export interface ValuesAtw extends BaseValues {
   readonly temperature?: number
   readonly temperatureZone2?: number
 }
-
-export const keysAtw = [
-  'coolFlowTemperature',
-  'coolFlowTemperatureZone2',
-  'forcedHotWater',
-  'heatFlowTemperature',
-  'heatFlowTemperatureZone2',
-  'hotWaterTemperature',
-  'mode',
-  'modeZone2',
-  'power',
-  'temperature',
-  'temperatureZone2',
-] as const satisfies (keyof ValuesAtw)[]

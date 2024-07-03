@@ -12,7 +12,6 @@ export {
   DeviceType,
   FLAG_UNCHANGED,
   FanSpeed,
-  NUMBER_0,
 } from './bases'
 export {
   type DeviceDataAtaKeysNotInList,
@@ -27,7 +26,6 @@ export {
   OperationMode,
   Vertical,
   flagsAta,
-  keysAta,
 } from './ata'
 export {
   type AreaData,
@@ -73,7 +71,6 @@ export {
   type WifiPostData,
   Language,
   flags,
-  keys,
 } from './common'
 export {
   type EnergyDataAtw,
@@ -86,7 +83,6 @@ export {
   OperationModeState,
   OperationModeZone,
   flagsAtw,
-  keysAtw,
 } from './atw'
 export {
   type GetDeviceDataErv,
@@ -97,5 +93,4 @@ export {
   type ValuesErv,
   VentilationMode,
   flagsErv,
-  keysErv,
 } from './erv'

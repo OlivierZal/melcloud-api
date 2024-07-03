@@ -11,7 +11,6 @@ import {
   type UpdateDeviceData,
   type Values,
   flags,
-  keys,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
@@ -20,7 +19,6 @@ import type { IDeviceFacade } from './interfaces'
 
 // @ts-expect-error: most runtimes do not support it natively
 Symbol.metadata ??= Symbol('Symbol.metadata')
-const keySymbol = Symbol('value')
 const setDataSymbol = Symbol('setData')
 
 export const mapTo =
@@ -31,13 +29,19 @@ export const mapTo =
   ): ClassAccessorDecoratorResult<This, unknown> => ({
     get(this: This): unknown {
       const key = String(context.name)
-      context.metadata[keySymbol] ??= {}
-      ;(context.metadata[keySymbol] as Record<string, string>)[key] = setData
-      context.metadata[setDataSymbol] ??= {}
-      ;(context.metadata[setDataSymbol] as Record<string, string>)[setData] =
-        key
       if (!(setData in this.data)) {
         throw new Error(`Cannot get value for ${key}`)
+      }
+      context.metadata[setDataSymbol] ??= {}
+      if (
+        !(
+          setData in
+          (context.metadata[setDataSymbol] as Partial<Record<string, string>>)
+        )
+      ) {
+        ;(context.metadata[setDataSymbol] as Partial<Record<string, string>>)[
+          setData
+        ] = key
       }
       return this.data[setData as keyof typeof this.data]
     },
@@ -60,15 +64,12 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   readonly #flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
 
-  readonly #setDataMapping = this.constructor[Symbol.metadata]?.[
-    setDataSymbol
-  ] as Record<NonFlagsKeyOf<UpdateDeviceData[T]>, keyof Values[T]>
+  readonly #setDataMapping: Record<
+    NonFlagsKeyOf<UpdateDeviceData[T]>,
+    keyof Values[T]
+  >
 
   readonly #type: T
-
-  readonly #valueMapping = this.constructor[Symbol.metadata]?.[
-    keySymbol
-  ] as Record<keyof Values[T], NonFlagsKeyOf<UpdateDeviceData[T]>>
 
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
@@ -77,13 +78,20 @@ export default abstract class<T extends keyof typeof DeviceType>
       NonFlagsKeyOf<UpdateDeviceData[T]>,
       number
     >
-    keys[this.#type]
-      .filter((key) => key in this)
-      .forEach((key) => this[key as keyof typeof this])
+    const prototype = Object.getPrototypeOf(this) as unknown
+    Object.getOwnPropertyNames(prototype).forEach((name) => {
+      const descriptor = Object.getOwnPropertyDescriptor(prototype, name)
+      if (descriptor && typeof descriptor.get === 'function') {
+        this.#initMetadata(name)
+      }
+    })
+    this.#setDataMapping = this.constructor[Symbol.metadata]?.[
+      setDataSymbol
+    ] as Record<NonFlagsKeyOf<UpdateDeviceData[T]>, keyof Values[T]>
   }
 
   @mapTo('Power')
-  public accessor power: unknown = false
+  public accessor power: unknown = null
 
   public get data(): ListDevice[T]['Device'] {
     return this.model.data
@@ -91,14 +99,9 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   public get values(): Values[T] {
     return Object.fromEntries(
-      Object.keys(
-        this.constructor[Symbol.metadata]?.[keySymbol] as Record<
-          string,
-          string
-        >,
-      )
+      Object.values(this.#setDataMapping)
         .filter((key) => key in this)
-        .map((key) => [key, this[key as keyof typeof this]]),
+        .map((key) => [key, this[key as keyof this]]),
     )
   }
 
@@ -157,35 +160,25 @@ export default abstract class<T extends keyof typeof DeviceType>
     return super.getTiles(null)
   }
 
-  public async set(values: Values[T]): Promise<SetDeviceData[T]> {
-    if (!Object.keys(values).length) {
-      throw new Error('No changes to update')
-    }
-    const updateData = {
-      ...Object.fromEntries(
-        Object.entries(values).map(([key, value]) => [
-          this.#valueMapping[key as keyof Values[T]],
-          value,
-        ]),
-      ),
-    }
-    const { data } = await this.api.set({
+  public async set(
+    data: Omit<UpdateDeviceData[T], 'EffectiveFlags'>,
+  ): Promise<SetDeviceData[T]> {
+    const { data: updatedData } = await this.api.set({
       heatPumpType: this.#type,
       postData: {
         ...this.#setData,
-        ...updateData,
+        ...data,
         DeviceID: this.id,
-        EffectiveFlags: this.#getFlags(values),
+        EffectiveFlags: this.#getFlags(data),
       },
     })
-    this.model.update(this.#getUpdatedData(data))
-    return data
+    this.model.update(this.#getUpdatedData(updatedData))
+    return updatedData
   }
 
-  #getFlags(values: Values[T]): number {
-    return (Object.keys(values) as (keyof Values[T])[]).reduce(
-      (acc, key) =>
-        Number(BigInt(this.#flags[this.#valueMapping[key]]) | BigInt(acc)),
+  #getFlags(data: Omit<UpdateDeviceData[T], 'EffectiveFlags'>): number {
+    return (Object.keys(data) as NonFlagsKeyOf<UpdateDeviceData[T]>[]).reduce(
+      (acc, key) => Number(BigInt(this.#flags[key]) | BigInt(acc)),
       FLAG_UNCHANGED,
     )
   }
@@ -204,5 +197,9 @@ export default abstract class<T extends keyof typeof DeviceType>
           ),
       ),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
+  }
+
+  #initMetadata(name: string): unknown {
+    return name in this ? this[name as keyof this] : null
   }
 }

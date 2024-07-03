@@ -1,10 +1,9 @@
 import BaseDeviceFacade, { mapTo } from './device'
-import { FanSpeed, VentilationMode } from '../types'
 
 export default class extends BaseDeviceFacade<'Erv'> {
   @mapTo('SetFanSpeed')
-  public accessor fan: unknown = FanSpeed.auto
+  public accessor fan: unknown = null
 
   @mapTo('VentilationMode')
-  public accessor mode: unknown = VentilationMode.auto
+  public accessor mode: unknown = null
 }

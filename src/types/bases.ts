@@ -1,4 +1,3 @@
-export const NUMBER_0 = 0
 export const FLAG_UNCHANGED = 0x0
 
 export enum DeviceType {

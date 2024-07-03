@@ -11,7 +11,6 @@ import {
   type ValuesAta,
   type Vertical,
   flagsAta,
-  keysAta,
 } from './ata'
 import {
   type EnergyDataAtw,
@@ -22,7 +21,6 @@ import {
   type UpdateDeviceDataAtw,
   type ValuesAtw,
   flagsAtw,
-  keysAtw,
 } from './atw'
 import {
   type GetDeviceDataErv,
@@ -32,7 +30,6 @@ import {
   type UpdateDeviceDataErv,
   type ValuesErv,
   flagsErv,
-  keysErv,
 } from './erv'
 
 export enum Language {
@@ -337,9 +334,3 @@ export interface Values {
   readonly Atw: ValuesAtw
   readonly Erv: ValuesErv
 }
-
-export const keys = {
-  Ata: keysAta,
-  Atw: keysAtw,
-  Erv: keysErv,
-} as const

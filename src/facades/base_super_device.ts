@@ -62,7 +62,7 @@ export default abstract class<
     temperature,
     vertical,
   }: Values['Ata']): Promise<FailureData | SuccessData> {
-    const postData = {
+    const state = {
       FanSpeed: fan,
       OperationMode: mode,
       Power: power,
@@ -73,13 +73,13 @@ export default abstract class<
     const { data } = await this.api.setAta({
       postData: {
         Specification: { [this.setAtaGroupSpecification]: this.id },
-        State: postData,
+        State: state,
       },
     })
     this.model.devices
       .filter((device): device is DeviceModel<'Ata'> => device.type === 'Ata')
       .forEach((device) => {
-        device.update(postData)
+        device.update(state)
       })
     return data
   }
