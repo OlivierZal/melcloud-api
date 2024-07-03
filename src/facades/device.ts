@@ -165,15 +165,17 @@ export default abstract class<T extends keyof typeof DeviceType>
         ...this.#setData,
         ...data,
         DeviceID: this.id,
-        EffectiveFlags: this.#getFlags(data),
+        EffectiveFlags: this.#getFlags(
+          Object.keys(data) as NonFlagsKeyOf<UpdateDeviceData[T]>[],
+        ),
       },
     })
     this.model.update(this.#getUpdatedData(updatedData))
     return updatedData
   }
 
-  #getFlags(data: Omit<UpdateDeviceData[T], 'EffectiveFlags'>): number {
-    return (Object.keys(data) as NonFlagsKeyOf<UpdateDeviceData[T]>[]).reduce(
+  #getFlags(keys: NonFlagsKeyOf<UpdateDeviceData[T]>[]): number {
+    return keys.reduce(
       (acc, key) => Number(BigInt(this.#flags[key]) | BigInt(acc)),
       FLAG_UNCHANGED,
     )
