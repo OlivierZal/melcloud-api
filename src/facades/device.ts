@@ -5,7 +5,6 @@ import {
   FLAG_UNCHANGED,
   type GetDeviceData,
   type ListDevice,
-  type NonFlagsKeyOf,
   type SetDeviceData,
   type SetDeviceDataAtaInList,
   type TilesData,
@@ -58,7 +57,7 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  readonly #flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
+  readonly #flags: Record<keyof UpdateDeviceData[T], number>
 
   readonly #type: T
 
@@ -67,10 +66,7 @@ export default abstract class<T extends keyof typeof DeviceType>
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
     this.#type = model.type
-    this.#flags = flags[this.#type] as Record<
-      NonFlagsKeyOf<UpdateDeviceData[T]>,
-      number
-    >
+    this.#flags = flags[this.#type] as Record<keyof UpdateDeviceData[T], number>
     const prototype = Object.getPrototypeOf(this) as unknown
     Object.getOwnPropertyNames(prototype).forEach((name) => {
       const descriptor = Object.getOwnPropertyDescriptor(prototype, name)
@@ -91,7 +87,7 @@ export default abstract class<T extends keyof typeof DeviceType>
     return Object.fromEntries(this.#values.map((key) => [key, this[key]]))
   }
 
-  get #setData(): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
+  get #setData(): UpdateDeviceData[T] {
     const filteredEntries = Object.entries(this.data).filter(
       ([key]) => key in this.#flags,
     )
@@ -104,7 +100,7 @@ export default abstract class<T extends keyof typeof DeviceType>
           value,
         ])
       : filteredEntries,
-    ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
+    ) as UpdateDeviceData[T]
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {
@@ -156,9 +152,7 @@ export default abstract class<T extends keyof typeof DeviceType>
     return super.getTiles(null)
   }
 
-  public async set(
-    data: Omit<UpdateDeviceData[T], 'EffectiveFlags'>,
-  ): Promise<SetDeviceData[T]> {
+  public async set(data: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
     const { data: updatedData } = await this.api.set({
       heatPumpType: this.#type,
       postData: {
@@ -166,7 +160,7 @@ export default abstract class<T extends keyof typeof DeviceType>
         ...data,
         DeviceID: this.id,
         EffectiveFlags: this.#getFlags(
-          Object.keys(data) as NonFlagsKeyOf<UpdateDeviceData[T]>[],
+          Object.keys(data) as (keyof UpdateDeviceData[T])[],
         ),
       },
     })
@@ -174,27 +168,25 @@ export default abstract class<T extends keyof typeof DeviceType>
     return updatedData
   }
 
-  #getFlags(keys: NonFlagsKeyOf<UpdateDeviceData[T]>[]): number {
+  #getFlags(keys: (keyof UpdateDeviceData[T])[]): number {
     return keys.reduce(
       (acc, key) => Number(BigInt(this.#flags[key]) | BigInt(acc)),
       FLAG_UNCHANGED,
     )
   }
 
-  #getUpdatedData(
-    data: SetDeviceData[T],
-  ): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
+  #getUpdatedData(data: SetDeviceData[T]): UpdateDeviceData[T] {
     const { EffectiveFlags: effectiveFlags, ...newData } = data
     return Object.fromEntries(
       Object.entries(newData).filter(
         ([key]) =>
           key in this.#flags &&
           Number(
-            BigInt(this.#flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>]) &
+            BigInt(this.#flags[key as keyof UpdateDeviceData[T]]) &
               BigInt(effectiveFlags),
           ),
       ),
-    ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
+    ) as UpdateDeviceData[T]
   }
 
   #initMetadata(name: string): unknown {

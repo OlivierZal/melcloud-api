@@ -324,7 +324,7 @@ export default class API implements IAPI {
     postData,
   }: {
     heatPumpType: T
-    postData: SetDevicePostData<T>
+    postData: SetDevicePostData[T]
   }): Promise<{ data: SetDeviceData[T] }> {
     return this.#api.post(`/Device/Set${heatPumpType}`, postData)
   }

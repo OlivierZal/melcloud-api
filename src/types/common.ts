@@ -1,4 +1,4 @@
-import type { BaseDevicePostData, DeviceType, FanSpeed } from './bases'
+import type { DeviceType, FanSpeed } from './bases'
 import {
   type EnergyDataAta,
   type GetDeviceDataAta,
@@ -7,6 +7,7 @@ import {
   type ListDeviceDataAta,
   type OperationMode,
   type SetDeviceDataAta,
+  type SetDevicePostDataAta,
   type UpdateDeviceDataAta,
   type ValuesAta,
   type Vertical,
@@ -18,6 +19,7 @@ import {
   type ListDeviceAtw,
   type ListDeviceDataAtw,
   type SetDeviceDataAtw,
+  type SetDevicePostDataAtw,
   type UpdateDeviceDataAtw,
   type ValuesAtw,
   flagsAtw,
@@ -27,6 +29,7 @@ import {
   type ListDeviceDataErv,
   type ListDeviceErv,
   type SetDeviceDataErv,
+  type SetDevicePostDataErv,
   type UpdateDeviceDataErv,
   type ValuesErv,
   flagsErv,
@@ -80,26 +83,24 @@ export interface LoginData {
   } | null
 }
 
-export type UpdatedDeviceData<T extends keyof typeof DeviceType> = Omit<
-  UpdateDeviceData[T],
-  'EffectiveFlags'
-> &
-  Partial<
-    Pick<
-      ListDevice['Ata']['Device'],
-      'FanSpeed' | 'VaneHorizontalDirection' | 'VaneVerticalDirection'
-    >
+export type UpdatedDeviceData<T extends keyof typeof DeviceType> = Partial<
+  Pick<
+    ListDevice['Ata']['Device'],
+    'FanSpeed' | 'VaneHorizontalDirection' | 'VaneVerticalDirection'
   >
+> &
+  UpdateDeviceData[T]
 
 export interface UpdateDeviceData {
   readonly Ata: UpdateDeviceDataAta
   readonly Atw: UpdateDeviceDataAtw
   readonly Erv: UpdateDeviceDataErv
 }
-export type SetDevicePostData<T extends keyof typeof DeviceType> =
-  UpdateDeviceData[T] &
-    Required<{ EffectiveFlags: number }> &
-    BaseDevicePostData
+export interface SetDevicePostData {
+  Ata: SetDevicePostDataAta
+  Atw: SetDevicePostDataAtw
+  Erv: SetDevicePostDataErv
+}
 export interface SetDeviceData {
   readonly Ata: SetDeviceDataAta
   readonly Atw: SetDeviceDataAtw
@@ -290,7 +291,8 @@ export interface TilesData<T extends keyof typeof DeviceType | null> {
   }[]
 }
 
-export interface EnergyPostData extends BaseDevicePostData {
+export interface EnergyPostData {
+  readonly DeviceID: number
   readonly FromDate: string
   readonly ToDate: string
 }

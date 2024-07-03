@@ -1,4 +1,5 @@
 import type {
+  BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,
   BaseListDeviceData,
@@ -7,7 +8,6 @@ import type {
   BaseValues,
   DeviceDataNotInList,
   DeviceType,
-  NonFlagsKeyOf,
 } from './bases'
 
 export enum OperationModeState {
@@ -39,7 +39,9 @@ export interface UpdateDeviceDataAtw extends BaseUpdateDeviceData {
   readonly SetTemperatureZone1?: number
   readonly SetTemperatureZone2?: number
 }
-
+export interface SetDevicePostDataAtw
+  extends UpdateDeviceDataAtw,
+    BaseDevicePostData {}
 export interface SetDeviceDataAtw
   extends BaseSetDeviceData,
     Required<Readonly<UpdateDeviceDataAtw>> {
@@ -105,7 +107,7 @@ export interface EnergyDataAtw {
   readonly TotalHotWaterProduced: number
 }
 
-export const flagsAtw: Record<NonFlagsKeyOf<UpdateDeviceDataAtw>, number> = {
+export const flagsAtw: Record<keyof UpdateDeviceDataAtw, number> = {
   ForcedHotWaterMode: 0x10000,
   OperationModeZone1: 0x8,
   OperationModeZone2: 0x10,

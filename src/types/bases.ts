@@ -21,12 +21,12 @@ export type NonFlagsKeyOf<T> = Exclude<keyof T, 'EffectiveFlags'>
 export type NonFlagsValueOf<T> = T[NonFlagsKeyOf<T>]
 
 export interface BaseUpdateDeviceData {
-  EffectiveFlags?: number
   readonly Power?: boolean
 }
 
 export interface BaseDevicePostData {
   readonly DeviceID: number
+  readonly EffectiveFlags: number
 }
 
 export interface DeviceDataNotInList {
@@ -37,6 +37,7 @@ export interface DeviceDataNotInList {
 export interface BaseSetDeviceData
   extends Required<Readonly<BaseUpdateDeviceData>>,
     DeviceDataNotInList {
+  readonly EffectiveFlags: number
   readonly Offline: boolean
 }
 

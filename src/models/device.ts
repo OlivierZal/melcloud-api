@@ -4,7 +4,7 @@ import {
   type KeysOfSetDeviceDataAtaNotInList,
   type ListDevice,
   type ListDeviceAny,
-  type NonFlagsKeyOf,
+  type UpdateDeviceData,
   type UpdatedDeviceData,
   flags,
   fromSetToListMappingAta,
@@ -35,7 +35,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   #data: ListDevice[T]['Device']
 
-  readonly #flags: Record<NonFlagsKeyOf<UpdatedDeviceData<T>>, number>
+  readonly #flags: Record<keyof UpdateDeviceData[T], number>
 
   protected constructor({
     AreaID: areaId,
@@ -52,10 +52,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     this.#data = data
     this.floorId = floorId
     this.type = DeviceType[type] as T
-    this.#flags = flags[this.type] as Record<
-      NonFlagsKeyOf<UpdatedDeviceData<T>>,
-      number
-    >
+    this.#flags = flags[this.type] as Record<keyof UpdateDeviceData[T], number>
   }
 
   public get area(): AreaModelAny | null {

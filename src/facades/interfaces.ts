@@ -118,8 +118,6 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   }) => Promise<EnergyData[T]>
   getTiles: ((select?: false | null) => Promise<TilesData<null>>) &
     ((select: true | DeviceModel<T>) => Promise<TilesData<T>>)
-  set: (
-    data: Omit<UpdateDeviceData[T], 'EffectiveFlags'>,
-  ) => Promise<SetDeviceData[T]>
+  set: (data: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
   values: Values[T]
 }

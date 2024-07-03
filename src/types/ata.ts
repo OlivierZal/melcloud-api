@@ -1,4 +1,5 @@
 import type {
+  BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,
   BaseListDeviceData,
@@ -8,7 +9,6 @@ import type {
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
-  NonFlagsKeyOf,
 } from './bases'
 
 export enum OperationMode {
@@ -47,7 +47,9 @@ export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly VaneHorizontal?: Horizontal
   readonly VaneVertical?: Vertical
 }
-
+export interface SetDevicePostDataAta
+  extends UpdateDeviceDataAta,
+    BaseDevicePostData {}
 export interface SetDeviceDataAta
   extends BaseSetDeviceData,
     Required<Readonly<UpdateDeviceDataAta>> {
@@ -104,7 +106,7 @@ export interface EnergyDataAta {
   readonly UsageDisclaimerPercentages: string
 }
 
-export const flagsAta: Record<NonFlagsKeyOf<UpdateDeviceDataAta>, number> = {
+export const flagsAta: Record<keyof UpdateDeviceDataAta, number> = {
   OperationMode: 0x2,
   Power: 0x1,
   SetFanSpeed: 0x8,

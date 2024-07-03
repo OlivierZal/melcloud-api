@@ -123,7 +123,7 @@ export interface IAPI {
     postData,
   }: {
     heatPumpType: T
-    postData: SetDevicePostData<T>
+    postData: SetDevicePostData[T]
   }) => Promise<{ data: SetDeviceData[T] }>
   setAta: ({
     postData,
