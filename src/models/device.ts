@@ -34,7 +34,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   #data: ListDevice[T]['Device']
 
-  readonly #setData: NonFlagsKeyOf<UpdatedDeviceData<T>>[]
+  readonly #flags: Record<NonFlagsKeyOf<UpdatedDeviceData<T>>, number>
 
   protected constructor({
     AreaID: areaId,
@@ -51,9 +51,10 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     this.#data = data
     this.floorId = floorId
     this.type = DeviceType[type] as T
-    this.#setData = Object.keys(flags[this.type]) as NonFlagsKeyOf<
-      UpdatedDeviceData<T>
-    >[]
+    this.#flags = flags[this.type] as Record<
+      NonFlagsKeyOf<UpdatedDeviceData<T>>,
+      number
+    >
   }
 
   public get area(): AreaModelAny | null {
@@ -129,23 +130,21 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   #cleanData(
     data: UpdatedDeviceData<T>,
   ): Omit<UpdatedDeviceData<T>, DeviceDataAtaKeysNotInList> {
-    return {
-      ...Object.fromEntries(
-        Object.entries(data)
-          .filter(([key]) => (this.#setData as string[]).includes(key))
-          .map(([key, value]) => {
-            switch (key) {
-              case 'SetFanSpeed':
-                return ['FanSpeed', value]
-              case 'VaneHorizontal':
-                return ['VaneHorizontalDirection', value]
-              case 'VaneVertical':
-                return ['VaneVerticalDirection', value]
-              default:
-                return [key, value]
-            }
-          }),
-      ),
-    } as Omit<UpdatedDeviceData<T>, DeviceDataAtaKeysNotInList>
+    return Object.fromEntries(
+      Object.entries(data)
+        .filter(([key]) => key in this.#flags)
+        .map(([key, value]) => {
+          switch (key) {
+            case 'SetFanSpeed':
+              return ['FanSpeed', value]
+            case 'VaneHorizontal':
+              return ['VaneHorizontalDirection', value]
+            case 'VaneVertical':
+              return ['VaneVerticalDirection', value]
+            default:
+              return [key, value]
+          }
+        }),
+    ) as Omit<UpdatedDeviceData<T>, DeviceDataAtaKeysNotInList>
   }
 }

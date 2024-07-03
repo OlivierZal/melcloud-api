@@ -25,6 +25,9 @@ export default class extends BaseDeviceFacade<'Atw'> {
   @mapTo('OperationModeZone2')
   public accessor modeZone2: unknown = null
 
+  @mapTo('Power')
+  public accessor power: unknown = null
+
   @mapTo('SetTemperatureZone1')
   public accessor temperature: unknown = null
 

@@ -10,6 +10,9 @@ export default class extends BaseDeviceFacade<'Ata'> {
   @mapTo('OperationMode')
   public accessor mode: unknown = null
 
+  @mapTo('Power')
+  public accessor power: unknown = null
+
   @mapTo('SetTemperature')
   public accessor temperature: unknown = null
 

@@ -19,7 +19,7 @@ import type { IDeviceFacade } from './interfaces'
 
 // @ts-expect-error: most runtimes do not support it natively
 Symbol.metadata ??= Symbol('Symbol.metadata')
-const setDataSymbol = Symbol('setData')
+const valueSymbol = Symbol('value')
 
 export const mapTo =
   <This extends { data: object }>(setData: string) =>
@@ -28,20 +28,17 @@ export const mapTo =
     context: ClassAccessorDecoratorContext<This>,
   ): ClassAccessorDecoratorResult<This, unknown> => ({
     get(this: This): unknown {
-      const key = String(context.name)
+      const value = String(context.name)
       if (!(setData in this.data)) {
-        throw new Error(`Cannot get value for ${key}`)
+        throw new Error(`Cannot get value for ${value}`)
       }
-      context.metadata[setDataSymbol] ??= {}
-      const metadata = context.metadata[setDataSymbol] as Partial<
-        Record<string, string>
-      >
-      if (!(setData in metadata)) {
-        metadata[setData] = key
+      const values = (context.metadata[valueSymbol] ??= []) as string[]
+      if (!values.includes(value)) {
+        values.push(value)
       }
       return this.data[setData as keyof typeof this.data]
     },
-    set(this: This, _value: unknown): void {
+    set(): void {
       throw new Error(`Cannot set value for ${String(context.name)}`)
     },
   })
@@ -60,12 +57,9 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   readonly #flags: Record<NonFlagsKeyOf<UpdateDeviceData[T]>, number>
 
-  readonly #setDataMapping: Record<
-    NonFlagsKeyOf<UpdateDeviceData[T]>,
-    keyof Values[T]
-  >
-
   readonly #type: T
+
+  readonly #values: (keyof this)[]
 
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
@@ -81,29 +75,35 @@ export default abstract class<T extends keyof typeof DeviceType>
         this.#initMetadata(name)
       }
     })
-    this.#setDataMapping = this.constructor[Symbol.metadata]?.[
-      setDataSymbol
-    ] as Record<NonFlagsKeyOf<UpdateDeviceData[T]>, keyof Values[T]>
+    this.#values = this.constructor[Symbol.metadata]?.[
+      valueSymbol
+    ] as (keyof this)[]
   }
-
-  @mapTo('Power')
-  public accessor power: unknown = null
 
   public get data(): ListDevice[T]['Device'] {
     return this.model.data
   }
 
   public get values(): Values[T] {
-    return Object.fromEntries(
-      Object.values(this.#setDataMapping)
-        .filter((key) => key in this)
-        .map((key) => [key, this[key as keyof this]]),
-    )
+    return Object.fromEntries(this.#values.map((key) => [key, this[key]]))
   }
 
   get #setData(): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
     return Object.fromEntries(
-      Object.entries(this.data).filter(([key]) => key in this.#setDataMapping),
+      Object.entries(this.data)
+        .filter(([key]) => key in this.#flags)
+        .map(([key, value]) => {
+          switch (key) {
+            case 'FanSpeed':
+              return ['SetFanSpeed', value]
+            case 'VaneHorizontalDirection':
+              return ['VaneHorizontal', value]
+            case 'VaneVerticalDirection':
+              return ['VaneVertical', value]
+            default:
+              return [key, value]
+          }
+        }),
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
   }
 
@@ -186,7 +186,7 @@ export default abstract class<T extends keyof typeof DeviceType>
     return Object.fromEntries(
       Object.entries(newData).filter(
         ([key]) =>
-          key in this.#setDataMapping &&
+          key in this.#flags &&
           Number(
             BigInt(this.#flags[key as NonFlagsKeyOf<UpdateDeviceData[T]>]) &
               BigInt(effectiveFlags),
