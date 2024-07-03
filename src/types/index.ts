@@ -14,18 +14,21 @@ export {
   FanSpeed,
 } from './bases'
 export {
-  type DeviceDataAtaKeysNotInList,
   type EnergyDataAta,
   type GetDeviceDataAta,
+  type KeysOfSetDeviceDataAtaNotInList,
   type ListDeviceAta,
   type ListDeviceDataAta,
   type SetDeviceDataAta,
+  type SetDeviceDataAtaInList,
   type UpdateDeviceDataAta,
   type ValuesAta,
   Horizontal,
   OperationMode,
   Vertical,
   flagsAta,
+  fromListToSetMappingAta,
+  fromSetToListMappingAta,
 } from './ata'
 export {
   type AreaData,

@@ -7,10 +7,12 @@ import {
   type ListDevice,
   type NonFlagsKeyOf,
   type SetDeviceData,
+  type SetDeviceDataAtaInList,
   type TilesData,
   type UpdateDeviceData,
   type Values,
   flags,
+  fromListToSetMappingAta,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
@@ -32,7 +34,8 @@ export const mapTo =
       if (!(setData in this.data)) {
         throw new Error(`Cannot get value for ${value}`)
       }
-      const values = (context.metadata[valueSymbol] ??= []) as string[]
+      context.metadata[valueSymbol] ??= []
+      const values = context.metadata[valueSymbol] as string[]
       if (!values.includes(value)) {
         values.push(value)
       }
@@ -89,21 +92,18 @@ export default abstract class<T extends keyof typeof DeviceType>
   }
 
   get #setData(): Omit<UpdateDeviceData[T], 'EffectiveFlags'> {
+    const filteredEntries = Object.entries(this.data).filter(
+      ([key]) => key in this.#flags,
+    )
     return Object.fromEntries(
-      Object.entries(this.data)
-        .filter(([key]) => key in this.#flags)
-        .map(([key, value]) => {
-          switch (key) {
-            case 'FanSpeed':
-              return ['SetFanSpeed', value]
-            case 'VaneHorizontalDirection':
-              return ['VaneHorizontal', value]
-            case 'VaneVerticalDirection':
-              return ['VaneVertical', value]
-            default:
-              return [key, value]
-          }
-        }),
+      this.#type === 'Ata' ?
+        filteredEntries.map(([key, value]) => [
+          key in fromListToSetMappingAta ?
+            fromListToSetMappingAta[key as keyof SetDeviceDataAtaInList]
+          : key,
+          value,
+        ])
+      : filteredEntries,
     ) as Omit<UpdateDeviceData[T], 'EffectiveFlags'>
   }
 

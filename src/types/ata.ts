@@ -58,19 +58,23 @@ export interface SetDeviceDataAta
 
 export type GetDeviceDataAta = BaseGetDeviceData & SetDeviceDataAta
 
-export type DeviceDataAtaKeysNotInList =
+export type KeysOfSetDeviceDataAtaNotInList =
   | 'SetFanSpeed'
   | 'VaneHorizontal'
   | 'VaneVertical'
-
+export interface SetDeviceDataAtaInList {
+  readonly FanSpeed: FanSpeed
+  readonly VaneHorizontalDirection: Horizontal
+  readonly VaneVerticalDirection: Vertical
+}
 export interface ListDeviceDataAta
   extends BaseListDeviceData,
+    SetDeviceDataAtaInList,
     Omit<
       GetDeviceDataAta,
-      keyof DeviceDataNotInList | DeviceDataAtaKeysNotInList
+      keyof DeviceDataNotInList | KeysOfSetDeviceDataAtaNotInList
     > {
   readonly ActualFanSpeed: number
-  readonly FanSpeed: FanSpeed
   readonly HasAutomaticFanSpeed: boolean
   readonly MaxTempAutomatic: number
   readonly MaxTempCoolDry: number
@@ -79,8 +83,6 @@ export interface ListDeviceDataAta
   readonly MinTempCoolDry: number
   readonly MinTempHeat: number
   readonly OutdoorTemperature: number
-  readonly VaneHorizontalDirection: Horizontal
-  readonly VaneVerticalDirection: Vertical
 }
 export interface ListDeviceAta extends BaseListDevice {
   readonly Device: ListDeviceDataAta
@@ -118,3 +120,19 @@ export interface ValuesAta extends BaseValues {
   readonly temperature?: number
   readonly vertical?: Vertical
 }
+
+export const fromSetToListMappingAta: Record<
+  KeysOfSetDeviceDataAtaNotInList,
+  keyof SetDeviceDataAtaInList
+> = {
+  SetFanSpeed: 'FanSpeed',
+  VaneHorizontal: 'VaneHorizontalDirection',
+  VaneVertical: 'VaneVerticalDirection',
+}
+
+export const fromListToSetMappingAta: Record<
+  keyof SetDeviceDataAtaInList,
+  KeysOfSetDeviceDataAtaNotInList
+> = Object.fromEntries(
+  Object.entries(fromSetToListMappingAta).map(([key, value]) => [value, key]),
+) as Record<keyof SetDeviceDataAtaInList, KeysOfSetDeviceDataAtaNotInList>

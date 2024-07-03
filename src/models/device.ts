@@ -1,12 +1,13 @@
 import AreaModel, { type AreaModelAny } from './area'
 import {
-  type DeviceDataAtaKeysNotInList,
   DeviceType,
+  type KeysOfSetDeviceDataAtaNotInList,
   type ListDevice,
   type ListDeviceAny,
   type NonFlagsKeyOf,
   type UpdatedDeviceData,
   flags,
+  fromSetToListMappingAta,
 } from '../types'
 import BaseModel from './base'
 import BuildingModel from './building'
@@ -122,29 +123,29 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
       ...this.#data,
       ...(this.#cleanData(data) satisfies Omit<
         UpdatedDeviceData<T>,
-        DeviceDataAtaKeysNotInList
+        KeysOfSetDeviceDataAtaNotInList
       >),
     }
   }
 
   #cleanData(
     data: UpdatedDeviceData<T>,
-  ): Omit<UpdatedDeviceData<T>, DeviceDataAtaKeysNotInList> {
-    return Object.fromEntries(
-      Object.entries(data)
-        .filter(([key]) => key in this.#flags)
-        .map(([key, value]) => {
-          switch (key) {
-            case 'SetFanSpeed':
-              return ['FanSpeed', value]
-            case 'VaneHorizontal':
-              return ['VaneHorizontalDirection', value]
-            case 'VaneVertical':
-              return ['VaneVerticalDirection', value]
-            default:
-              return [key, value]
-          }
-        }),
-    ) as Omit<UpdatedDeviceData<T>, DeviceDataAtaKeysNotInList>
+  ): Omit<UpdatedDeviceData<T>, KeysOfSetDeviceDataAtaNotInList> {
+    return this.type === 'Ata' ?
+        (Object.fromEntries(
+          Object.entries(data)
+            .filter(([key]) => key in this.#flags)
+            .map(([key, value]) =>
+              key in fromSetToListMappingAta ?
+                [
+                  fromSetToListMappingAta[
+                    key as KeysOfSetDeviceDataAtaNotInList
+                  ],
+                  value,
+                ]
+              : [key, value],
+            ),
+        ) as Omit<UpdatedDeviceData<T>, KeysOfSetDeviceDataAtaNotInList>)
+      : data
   }
 }
