@@ -33,15 +33,11 @@ export const mapTo =
         throw new Error(`Cannot get value for ${key}`)
       }
       context.metadata[setDataSymbol] ??= {}
-      if (
-        !(
-          setData in
-          (context.metadata[setDataSymbol] as Partial<Record<string, string>>)
-        )
-      ) {
-        ;(context.metadata[setDataSymbol] as Partial<Record<string, string>>)[
-          setData
-        ] = key
+      const metadata = context.metadata[setDataSymbol] as Partial<
+        Record<string, string>
+      >
+      if (!(setData in metadata)) {
+        metadata[setData] = key
       }
       return this.data[setData as keyof typeof this.data]
     },
