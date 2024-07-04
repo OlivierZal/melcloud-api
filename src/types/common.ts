@@ -83,10 +83,6 @@ export interface LoginData {
   } | null
 }
 
-export type UpdatedDeviceData<T extends keyof typeof DeviceType> = Partial<
-  ListDeviceAta['Device'] & UpdateDeviceData[T]
->
-
 export interface UpdateDeviceData {
   readonly Ata: UpdateDeviceDataAta
   readonly Atw: UpdateDeviceDataAtw

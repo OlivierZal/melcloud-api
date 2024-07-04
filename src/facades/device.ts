@@ -4,6 +4,7 @@ import {
   type EnergyData,
   FLAG_UNCHANGED,
   type GetDeviceData,
+  type KeysOfSetDeviceDataAtaNotInList,
   type ListDevice,
   type SetDeviceData,
   type SetDeviceDataAtaInList,
@@ -12,6 +13,7 @@ import {
   type Values,
   flags,
   fromListToSetMappingAta,
+  fromSetToListMappingAta,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
@@ -23,14 +25,14 @@ Symbol.metadata ??= Symbol('Symbol.metadata')
 const valueSymbol = Symbol('value')
 
 export const mapTo =
-  <This extends { data: object }>(setData: string) =>
+  <This extends { data: object }>(key: string) =>
   (
     _target: unknown,
     context: ClassAccessorDecoratorContext<This>,
   ): ClassAccessorDecoratorResult<This, unknown> => ({
     get(this: This): unknown {
       const value = String(context.name)
-      if (!(setData in this.data)) {
+      if (!(key in this.data)) {
         throw new Error(`Cannot get value for ${value}`)
       }
       context.metadata[valueSymbol] ??= []
@@ -38,7 +40,7 @@ export const mapTo =
       if (!values.includes(value)) {
         values.push(value)
       }
-      return this.data[setData as keyof typeof this.data]
+      return this.data[key as keyof typeof this.data]
     },
     set(): void {
       throw new Error(`Cannot set value for ${String(context.name)}`)
@@ -113,7 +115,7 @@ export default abstract class<T extends keyof typeof DeviceType>
     const { data } = (await this.api.get({
       params: { buildingId: this.model.buildingId, id: this.id },
     })) as { data: GetDeviceData[T] }
-    this.model.update(data as UpdateDeviceData[T])
+    ;(this.model as DeviceModel<T>).update(this.#getListDeviceData(data))
     return data
   }
 
@@ -154,18 +156,22 @@ export default abstract class<T extends keyof typeof DeviceType>
   }
 
   public async set(data: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
+    const effectiveFlags = this.#getFlags(
+      Object.keys(data) as (keyof UpdateDeviceData[T])[],
+    )
+    if (effectiveFlags === FLAG_UNCHANGED) {
+      throw new Error('No data to set')
+    }
     const { data: updatedData } = await this.api.set({
       heatPumpType: this.#type,
       postData: {
         ...this.#setData,
         ...data,
         DeviceID: this.id,
-        EffectiveFlags: this.#getFlags(
-          Object.keys(data) as (keyof UpdateDeviceData[T])[],
-        ),
+        EffectiveFlags: effectiveFlags,
       },
     })
-    this.model.update(this.#getUpdatedData(updatedData))
+    ;(this.model as DeviceModel<T>).update(this.#getListDeviceData(updatedData))
     return updatedData
   }
 
@@ -176,18 +182,28 @@ export default abstract class<T extends keyof typeof DeviceType>
     )
   }
 
-  #getUpdatedData(data: SetDeviceData[T]): UpdateDeviceData[T] {
+  #getListDeviceData(data: SetDeviceData[T]): Partial<ListDevice[T]['Device']> {
     const { EffectiveFlags: effectiveFlags, ...newData } = data
+    const entries = Object.entries(newData).filter(
+      ([key]) =>
+        key in this.#flags &&
+        Number(
+          BigInt(this.#flags[key as keyof UpdateDeviceData[T]]) &
+            BigInt(effectiveFlags),
+        ),
+    )
     return Object.fromEntries(
-      Object.entries(newData).filter(
-        ([key]) =>
-          key in this.#flags &&
-          Number(
-            BigInt(this.#flags[key as keyof UpdateDeviceData[T]]) &
-              BigInt(effectiveFlags),
-          ),
-      ),
-    ) as UpdateDeviceData[T]
+      this.#type === 'Ata' ?
+        entries.map(([key, value]) =>
+          key in fromSetToListMappingAta ?
+            [
+              fromSetToListMappingAta[key as KeysOfSetDeviceDataAtaNotInList],
+              value,
+            ]
+          : [key, value],
+        )
+      : entries,
+    ) as Partial<ListDevice[T]['Device']>
   }
 
   #initMetadata(name: string): unknown {

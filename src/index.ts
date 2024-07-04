@@ -114,7 +114,6 @@ export {
   type UpdateDeviceDataAta,
   type UpdateDeviceDataAtw,
   type UpdateDeviceDataErv,
-  type UpdatedDeviceData,
   type Values,
   type ValuesAta,
   type ValuesAtw,

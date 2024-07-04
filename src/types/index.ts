@@ -67,7 +67,6 @@ export {
   type TilesData,
   type TilesPostData,
   type UpdateDeviceData,
-  type UpdatedDeviceData,
   type Values,
   type WifiData,
   type WifiPostData,

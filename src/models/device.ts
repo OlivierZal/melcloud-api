@@ -1,14 +1,5 @@
 import AreaModel, { type AreaModelAny } from './area'
-import {
-  DeviceType,
-  type KeysOfSetDeviceDataAtaNotInList,
-  type ListDevice,
-  type ListDeviceAny,
-  type UpdateDeviceData,
-  type UpdatedDeviceData,
-  flags,
-  fromSetToListMappingAta,
-} from '../types'
+import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
 import BaseModel from './base'
 import BuildingModel from './building'
 import FloorModel from './floor'
@@ -35,8 +26,6 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 
   #data: ListDevice[T]['Device']
 
-  readonly #flags: Record<keyof UpdateDeviceData[T], number>
-
   protected constructor({
     AreaID: areaId,
     BuildingID: buildingId,
@@ -49,10 +38,9 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     super({ id, name })
     this.areaId = areaId
     this.buildingId = buildingId
-    this.#data = data
     this.floorId = floorId
     this.type = DeviceType[type] as T
-    this.#flags = flags[this.type] as Record<keyof UpdateDeviceData[T], number>
+    this.#data = data
   }
 
   public get area(): AreaModelAny | null {
@@ -105,8 +93,8 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     ) as DeviceModel<K>[]
   }
 
-  public static upsert(data: ListDeviceAny): void {
-    this.#devices.set(data.DeviceID, new this(data) as DeviceModelAny)
+  public static upsert(device: ListDeviceAny): void {
+    this.#devices.set(device.DeviceID, new this(device) as DeviceModelAny)
   }
 
   public static upsertMany(dataList: readonly ListDeviceAny[]): void {
@@ -115,34 +103,10 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     })
   }
 
-  public update(data: UpdatedDeviceData<T>): void {
+  public update(data: Partial<ListDevice[T]['Device']>): void {
     this.#data = {
       ...this.#data,
-      ...(this.#cleanData(data) satisfies Omit<
-        UpdatedDeviceData<T>,
-        KeysOfSetDeviceDataAtaNotInList
-      >),
+      ...data,
     }
-  }
-
-  #cleanData(
-    data: UpdatedDeviceData<T>,
-  ): Omit<UpdatedDeviceData<T>, KeysOfSetDeviceDataAtaNotInList> {
-    return this.type === 'Ata' ?
-        (Object.fromEntries(
-          Object.entries(data)
-            .filter(([key]) => key in this.#flags)
-            .map(([key, value]) =>
-              key in fromSetToListMappingAta ?
-                [
-                  fromSetToListMappingAta[
-                    key as KeysOfSetDeviceDataAtaNotInList
-                  ],
-                  value,
-                ]
-              : [key, value],
-            ),
-        ) as Omit<UpdatedDeviceData<T>, KeysOfSetDeviceDataAtaNotInList>)
-      : data
   }
 }

@@ -30,9 +30,7 @@ const mergeListDeviceDataAta = (
         'VaneVerticalDirection',
       ] satisfies (keyof SetAtaGroupPostData['State'])[]
     ).map((key) => {
-      const values = new Set(
-        dataList.map((data: ListDeviceDataAta) => data[key]),
-      )
+      const values = new Set(dataList.map((data) => data[key]))
       const [value] = values.size === NUMBER_1 ? values : [null]
       return [key, value]
     }),
