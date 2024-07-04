@@ -51,7 +51,7 @@ export default class BuildingModel extends BaseModel implements IBuildingModel {
     return this.getAll().find((model) => model.name === name)
   }
 
-  public static upsert(data: BuildingData): void {
-    this.#buildings.set(data.ID, new this(data))
+  public static upsert(building: BuildingData): void {
+    this.#buildings.set(building.ID, new this(building))
   }
 }

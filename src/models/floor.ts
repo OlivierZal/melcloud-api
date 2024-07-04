@@ -55,7 +55,7 @@ export default class FloorModel extends BaseModel implements IFloorModel {
     return this.getAll().find((model) => model.name === name)
   }
 
-  public static upsert(data: FloorData): void {
-    this.#floors.set(data.ID, new this(data))
+  public static upsert(floor: FloorData): void {
+    this.#floors.set(floor.ID, new this(floor))
   }
 }

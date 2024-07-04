@@ -66,7 +66,7 @@ export default class AreaModel<T extends number | null>
     return this.getAll().find((model) => model.name === name)
   }
 
-  public static upsert(data: AreaDataAny): void {
-    this.#areas.set(data.ID, new this(data))
+  public static upsert(area: AreaDataAny): void {
+    this.#areas.set(area.ID, new this(area))
   }
 }

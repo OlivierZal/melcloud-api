@@ -97,9 +97,9 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     this.#devices.set(device.DeviceID, new this(device) as DeviceModelAny)
   }
 
-  public static upsertMany(dataList: readonly ListDeviceAny[]): void {
-    dataList.forEach((data) => {
-      this.upsert(data)
+  public static upsertMany(devices: readonly ListDeviceAny[]): void {
+    devices.forEach((device) => {
+      this.upsert(device)
     })
   }
 
