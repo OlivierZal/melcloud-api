@@ -7,8 +7,6 @@ export {
   type BaseUpdateDeviceData,
   type BaseValues,
   type DeviceDataNotInList,
-  type NonFlagsKeyOf,
-  type NonFlagsValueOf,
   DeviceType,
   FLAG_UNCHANGED,
   FanSpeed,

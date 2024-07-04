@@ -95,8 +95,6 @@ export {
   type LoginCredentials,
   type LoginData,
   type LoginPostData,
-  type NonFlagsKeyOf,
-  type NonFlagsValueOf,
   type SetAtaGroupPostData,
   type SetDeviceData,
   type SetDeviceDataAta,
