@@ -88,18 +88,20 @@ export default abstract class<T extends keyof typeof DeviceType>
   }
 
   get #setData(): UpdateDeviceData[T] {
-    const filteredEntries = Object.entries(this.data).filter(
-      ([key]) => key in this.#flags,
-    )
-    return Object.fromEntries(
+    const entries =
       this.#type === 'Ata' ?
-        filteredEntries.map(([key, value]) => [
+        (Object.entries(this.data).map(([key, value]) => [
           key in fromListToSetMappingAta ?
             fromListToSetMappingAta[key as keyof SetDeviceDataAtaInList]
           : key,
           value,
-        ])
-      : filteredEntries,
+        ]) as [
+          keyof UpdateDeviceData[T],
+          UpdateDeviceData[T][keyof UpdateDeviceData[T]],
+        ][])
+      : Object.entries(this.data)
+    return Object.fromEntries(
+      entries.filter(([key]) => key in this.#flags),
     ) as UpdateDeviceData[T]
   }
 
