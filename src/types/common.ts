@@ -84,12 +84,8 @@ export interface LoginData {
 }
 
 export type UpdatedDeviceData<T extends keyof typeof DeviceType> = Partial<
-  Pick<
-    ListDevice['Ata']['Device'],
-    'FanSpeed' | 'VaneHorizontalDirection' | 'VaneVerticalDirection'
-  >
-> &
-  UpdateDeviceData[T]
+  ListDeviceAta['Device'] & UpdateDeviceData[T]
+>
 
 export interface UpdateDeviceData {
   readonly Ata: UpdateDeviceDataAta

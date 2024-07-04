@@ -25,7 +25,7 @@ export type DeviceFacadeAny =
   | DeviceFacadeAtw
   | DeviceFacadeErv
 
-export default class FacadeManager {
+export default class {
   readonly #api: API
 
   readonly #facades = new Map<

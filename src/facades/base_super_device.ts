@@ -9,7 +9,7 @@ import type {
   ListDeviceDataAta,
   SetAtaGroupPostData,
   SuccessData,
-  Values,
+  ValuesAta,
 } from '../types'
 import BaseFacade from './base'
 import type { IBaseSuperDeviceFacade } from './interfaces'
@@ -61,7 +61,7 @@ export default abstract class<
     power,
     temperature,
     vertical,
-  }: Values['Ata']): Promise<FailureData | SuccessData> {
+  }: ValuesAta): Promise<FailureData | SuccessData> {
     const state = {
       FanSpeed: fan,
       OperationMode: mode,
