@@ -69,13 +69,8 @@ export default abstract class<T extends keyof typeof DeviceType>
     super(api, model as DeviceModelAny)
     this.#type = model.type
     this.#flags = flags[this.#type] as Record<keyof UpdateDeviceData[T], number>
-    const prototype = Object.getPrototypeOf(this) as unknown
-    Object.getOwnPropertyNames(prototype).forEach((name) => {
-      const descriptor = Object.getOwnPropertyDescriptor(prototype, name)
-      if (descriptor && typeof descriptor.get === 'function') {
-        this.#initMetadata(name)
-      }
-    })
+
+    this.#initMetadata()
     this.#values = this.constructor[Symbol.metadata]?.[
       valueSymbol
     ] as (keyof this)[]
@@ -175,6 +170,10 @@ export default abstract class<T extends keyof typeof DeviceType>
     return updatedData
   }
 
+  #callProperty(name: keyof this): unknown {
+    return this[name]
+  }
+
   #getFlags(keys: (keyof UpdateDeviceData[T])[]): number {
     return keys.reduce(
       (acc, key) => Number(BigInt(this.#flags[key]) | BigInt(acc)),
@@ -206,7 +205,18 @@ export default abstract class<T extends keyof typeof DeviceType>
     ) as Partial<ListDevice[T]['Device']>
   }
 
-  #initMetadata(name: string): unknown {
-    return name in this ? this[name as keyof this] : null
+  #initMetadata(): void {
+    const prototype = Object.getPrototypeOf(this) as unknown
+    Object.getOwnPropertyNames(prototype).forEach((name) => {
+      if (
+        typeof name === 'string' &&
+        !['data', 'model', 'values'].includes(name)
+      ) {
+        const descriptor = Object.getOwnPropertyDescriptor(prototype, name)
+        if (descriptor && typeof descriptor.get === 'function') {
+          this.#callProperty(name as keyof this)
+        }
+      }
+    })
   }
 }
