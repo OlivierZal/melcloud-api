@@ -57,7 +57,7 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
       key in instance.flags &&
       Number(
         BigInt(instance.flags[key as keyof UpdateDeviceData[T]]) &
-          BigInt(flags),
+          BigInt(flags) || flags === FLAG_UNCHANGED,
       ),
   )
   return Object.fromEntries(
@@ -77,11 +77,11 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
 const updateDevice =
   <
     T extends keyof typeof DeviceType,
-    Value extends SetDeviceData[T] | GetDeviceData[T],
+    DeviceData extends SetDeviceData[T] | GetDeviceData[T],
   >(
-    target: (...args: any[]) => Promise<Value>,
+    target: (...args: any[]) => Promise<DeviceData>,
     _context: unknown,
-  ): ((...args: any[]) => Promise<Value>) =>
+  ): ((...args: any[]) => Promise<DeviceData>) =>
   async (instance: DeviceFacade<T>) => {
     const data = await target.call(instance)
     ;(instance.model as DeviceModel<T>).update(
