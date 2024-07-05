@@ -30,9 +30,9 @@ export interface IBaseSuperAreaModel extends IBaseSuperDeviceModel {
 }
 
 export interface IBuildingModel extends IBaseSuperAreaModel {
+  data: BuildingSettings
   floorIds: readonly number[]
   floors: readonly FloorModel[]
-  settings: BuildingSettings
 }
 
 export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}

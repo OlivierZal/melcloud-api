@@ -8,11 +8,11 @@ import type { IBuildingModel } from './interfaces'
 export default class BuildingModel extends BaseModel implements IBuildingModel {
   static readonly #buildings = new Map<number, BuildingModel>()
 
-  public readonly settings: BuildingSettings
+  public readonly data: BuildingSettings
 
-  private constructor({ Name: name, ID: id, ...settings }: BuildingData) {
+  private constructor({ Name: name, ID: id, ...data }: BuildingData) {
     super({ id, name })
-    this.settings = settings
+    this.data = data
   }
 
   public get areaIds(): number[] {
