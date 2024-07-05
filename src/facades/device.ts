@@ -77,19 +77,16 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
   ) as Partial<ListDevice[T]['Device']>
 }
 
-const updateDevice =
-  <
-    T extends keyof typeof DeviceType,
-    DeviceData extends SetDeviceData[T] | GetDeviceData[T],
-  >(
-    target: (...args: any[]) => Promise<DeviceData>,
-    _context: unknown,
-  ): ((...args: any[]) => Promise<DeviceData>) =>
-  async (instance: DeviceFacade<T>) => {
-    const data = await target.call(instance)
-    ;(instance.model as DeviceModel<T>).update(
-      convertToListDeviceData(instance, data),
-    )
+const updateDevice = <
+  T extends keyof typeof DeviceType,
+  DeviceData extends SetDeviceData[T] | GetDeviceData[T],
+>(
+  target: (...args: any[]) => Promise<DeviceData>,
+  _context: unknown,
+): ((...args: any[]) => Promise<DeviceData>) =>
+  async function newTarget(this: DeviceFacade<T>, ...args: unknown[]) {
+    const data = await target.call(this, args)
+    ;(this.model as DeviceModel<T>).update(convertToListDeviceData(this, data))
     return data
   }
 
