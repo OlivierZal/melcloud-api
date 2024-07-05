@@ -55,10 +55,11 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
   const entries = Object.entries(newData).filter(
     ([key]) =>
       key in instance.flags &&
-      Number(
+      (Number(
         BigInt(instance.flags[key as keyof UpdateDeviceData[T]]) &
-          BigInt(flags) || flags === FLAG_UNCHANGED,
-      ),
+          BigInt(flags),
+      ) ||
+        flags === FLAG_UNCHANGED),
   )
   return Object.fromEntries(
     instance.type === 'Ata' ?
