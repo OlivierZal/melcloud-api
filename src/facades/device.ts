@@ -52,15 +52,17 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
   data: SetDeviceData[T],
 ): Partial<ListDevice[T]['Device']> => {
   const { EffectiveFlags: flags, ...newData } = data
-  const entries = Object.entries(newData).filter(
-    ([key]) =>
-      key in instance.flags &&
-      (Number(
-        BigInt(instance.flags[key as keyof UpdateDeviceData[T]]) &
-          BigInt(flags),
-      ) ||
-        flags === FLAG_UNCHANGED),
-  )
+  const entries =
+    flags === FLAG_UNCHANGED ?
+      Object.entries(newData)
+    : Object.entries(newData).filter(
+        ([key]) =>
+          key in instance.flags &&
+          Number(
+            BigInt(instance.flags[key as keyof UpdateDeviceData[T]]) &
+              BigInt(flags),
+          ),
+      )
   return Object.fromEntries(
     instance.type === 'Ata' ?
       entries.map(([key, value]) =>
