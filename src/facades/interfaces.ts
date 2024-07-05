@@ -1,4 +1,11 @@
 import type {
+  AreaModelAny,
+  BuildingModel,
+  DeviceModel,
+  DeviceModelAny,
+  FloorModel,
+} from '../models'
+import type {
   BuildingData,
   BuildingSettings,
   DeviceType,
@@ -21,9 +28,10 @@ import type {
   Vertical,
   WifiData,
 } from '../types'
-import type { DeviceModel } from '../models'
 
-export interface IBaseFacade {
+export interface IBaseFacade<
+  T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
+> {
   getErrors: ({
     from,
     to,
@@ -34,11 +42,12 @@ export interface IBaseFacade {
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
   getTiles: ((select?: false | null) => Promise<TilesData<null>>) &
-    (<T extends keyof typeof DeviceType>(
-      select: DeviceModel<T>,
-    ) => Promise<TilesData<T>>)
+    (<U extends keyof typeof DeviceType>(
+      select: DeviceModel<U>,
+    ) => Promise<TilesData<U>>)
   getWifiReport: (hour?: number) => Promise<WifiData>
   id: number
+  model: T
   name: string
   setFrostProtection: ({
     enable,
@@ -79,7 +88,8 @@ export interface IBaseFacade {
   setPower: (enable?: boolean) => Promise<boolean>
 }
 
-export interface IBaseSuperDeviceFacade extends IBaseFacade {
+export interface IBaseSuperDeviceFacade
+  extends IBaseFacade<AreaModelAny | BuildingModel | FloorModel> {
   getAta: () => SetAtaGroupPostData['State']
   setAta: ({
     fan,
@@ -105,9 +115,10 @@ export interface IBuildingFacade extends IBaseSuperDeviceFacade {
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>
-  extends IBaseFacade {
+  extends IBaseFacade<DeviceModelAny> {
   data: ListDevice[T]['Device']
   fetch: () => Promise<ListDevice[T]['Device']>
+  flags: Record<keyof UpdateDeviceData[T], number>
   get: () => Promise<GetDeviceData[T]>
   getEnergyReport: ({
     from,
@@ -119,5 +130,6 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   getTiles: ((select?: false | null) => Promise<TilesData<null>>) &
     ((select: true | DeviceModel<T>) => Promise<TilesData<T>>)
   set: (data: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
+  type: T
   values: Values[T]
 }

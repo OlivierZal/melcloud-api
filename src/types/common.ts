@@ -11,7 +11,7 @@ import {
   type UpdateDeviceDataAta,
   type ValuesAta,
   type Vertical,
-  flagsAta,
+  effectiveFlagsAta,
 } from './ata'
 import {
   type EnergyDataAtw,
@@ -22,7 +22,7 @@ import {
   type SetDevicePostDataAtw,
   type UpdateDeviceDataAtw,
   type ValuesAtw,
-  flagsAtw,
+  effectiveFlagsAtw,
 } from './atw'
 import {
   type GetDeviceDataErv,
@@ -32,7 +32,7 @@ import {
   type SetDevicePostDataErv,
   type UpdateDeviceDataErv,
   type ValuesErv,
-  flagsErv,
+  effectiveFlagsErv,
 } from './erv'
 
 export enum Language {
@@ -317,10 +317,10 @@ export interface WifiData {
   readonly ToDate: string
 }
 
-export const flags = {
-  Ata: flagsAta,
-  Atw: flagsAtw,
-  Erv: flagsErv,
+export const effectiveFlags = {
+  Ata: effectiveFlagsAta,
+  Atw: effectiveFlagsAtw,
+  Erv: effectiveFlagsErv,
 } as const
 
 export interface Values {

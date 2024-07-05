@@ -25,7 +25,7 @@ export {
   Horizontal,
   OperationMode,
   Vertical,
-  flagsAta,
+  effectiveFlagsAta,
   fromListToSetMappingAta,
   fromSetToListMappingAta,
 } from './ata'
@@ -71,7 +71,7 @@ export {
   type WifiData,
   type WifiPostData,
   Language,
-  flags,
+  effectiveFlags,
 } from './common'
 export {
   type EnergyDataAtw,
@@ -84,7 +84,7 @@ export {
   type ValuesAtw,
   OperationModeState,
   OperationModeZone,
-  flagsAtw,
+  effectiveFlagsAtw,
 } from './atw'
 export {
   type GetDeviceDataErv,
@@ -95,5 +95,5 @@ export {
   type UpdateDeviceDataErv,
   type ValuesErv,
   VentilationMode,
-  flagsErv,
+  effectiveFlagsErv,
 } from './erv'

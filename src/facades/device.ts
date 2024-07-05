@@ -11,7 +11,7 @@ import {
   type TilesData,
   type UpdateDeviceData,
   type Values,
-  flags,
+  effectiveFlags,
   fromListToSetMappingAta,
   fromSetToListMappingAta,
 } from '../types'
@@ -47,10 +47,57 @@ export const mapTo =
     },
   })
 
-export default abstract class<T extends keyof typeof DeviceType>
+const convertToListDeviceData = <T extends keyof typeof DeviceType>(
+  instance: DeviceFacade<T>,
+  data: SetDeviceData[T],
+): Partial<ListDevice[T]['Device']> => {
+  const { EffectiveFlags: flags, ...newData } = data
+  const entries = Object.entries(newData).filter(
+    ([key]) =>
+      key in instance.flags &&
+      Number(
+        BigInt(instance.flags[key as keyof UpdateDeviceData[T]]) &
+          BigInt(flags),
+      ),
+  )
+  return Object.fromEntries(
+    instance.type === 'Ata' ?
+      entries.map(([key, value]) =>
+        key in fromSetToListMappingAta ?
+          [
+            fromSetToListMappingAta[key as KeysOfSetDeviceDataAtaNotInList],
+            value,
+          ]
+        : [key, value],
+      )
+    : entries,
+  ) as Partial<ListDevice[T]['Device']>
+}
+
+const updateDevice =
+  <
+    T extends keyof typeof DeviceType,
+    Value extends SetDeviceData[T] | GetDeviceData[T],
+  >(
+    target: (...args: any[]) => Promise<Value>,
+    _context: unknown,
+  ): ((...args: any[]) => Promise<Value>) =>
+  async (instance: DeviceFacade<T>) => {
+    const data = await target.call(instance)
+    ;(instance.model as DeviceModel<T>).update(
+      convertToListDeviceData(instance, data),
+    )
+    return data
+  }
+
+export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
+  public readonly flags: Record<keyof UpdateDeviceData[T], number>
+
+  public readonly type: T
+
   protected readonly frostProtectionLocation = 'DeviceIds'
 
   protected readonly holidayModeLocation = 'Devices'
@@ -59,16 +106,15 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  readonly #flags: Record<keyof UpdateDeviceData[T], number>
-
-  readonly #type: T
-
   readonly #values: (keyof this)[]
 
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
-    this.#type = model.type
-    this.#flags = flags[this.#type] as Record<keyof UpdateDeviceData[T], number>
+    this.type = model.type
+    this.flags = effectiveFlags[this.type] as Record<
+      keyof UpdateDeviceData[T],
+      number
+    >
 
     this.#initMetadata()
     this.#values = this.constructor[Symbol.metadata]?.[
@@ -86,7 +132,7 @@ export default abstract class<T extends keyof typeof DeviceType>
 
   get #setData(): UpdateDeviceData[T] {
     return Object.fromEntries(
-      (this.#type === 'Ata' ?
+      (this.type === 'Ata' ?
         (Object.entries(this.data).map(([key, value]) => [
           key in fromListToSetMappingAta ?
             fromListToSetMappingAta[key as keyof SetDeviceDataAtaInList]
@@ -97,21 +143,43 @@ export default abstract class<T extends keyof typeof DeviceType>
           UpdateDeviceData[T][keyof UpdateDeviceData[T]],
         ][])
       : Object.entries(this.data)
-      ).filter(([key]) => key in this.#flags),
+      ).filter(([key]) => key in this.flags),
     ) as UpdateDeviceData[T]
+  }
+
+  @updateDevice
+  public async get(): Promise<GetDeviceData[T]> {
+    return (
+      await this.api.get({
+        params: { buildingId: this.model.buildingId, id: this.id },
+      })
+    ).data as GetDeviceData[T]
+  }
+
+  @updateDevice
+  public async set(data: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
+    const updateFlags = this.#getFlags(
+      Object.keys(data) as (keyof UpdateDeviceData[T])[],
+    )
+    if (updateFlags === FLAG_UNCHANGED) {
+      throw new Error('No data to set')
+    }
+    return (
+      await this.api.set({
+        heatPumpType: this.type,
+        postData: {
+          ...this.#setData,
+          ...data,
+          DeviceID: this.id,
+          EffectiveFlags: updateFlags,
+        },
+      })
+    ).data
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {
     await this.api.fetch()
     return this.data
-  }
-
-  public async get(): Promise<GetDeviceData[T]> {
-    const { data } = (await this.api.get({
-      params: { buildingId: this.model.buildingId, id: this.id },
-    })) as { data: GetDeviceData[T] }
-    ;(this.model as DeviceModel<T>).update(this.#getListDeviceData(data))
-    return data
   }
 
   public async getEnergyReport({
@@ -121,7 +189,7 @@ export default abstract class<T extends keyof typeof DeviceType>
     from?: string | null
     to?: string | null
   }): Promise<EnergyData[T]> {
-    if (this.#type === 'Erv') {
+    if (this.type === 'Erv') {
       throw new Error('Erv devices do not support energy reports')
     }
     return (
@@ -150,59 +218,15 @@ export default abstract class<T extends keyof typeof DeviceType>
     return super.getTiles(null)
   }
 
-  public async set(data: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
-    const effectiveFlags = this.#getFlags(
-      Object.keys(data) as (keyof UpdateDeviceData[T])[],
-    )
-    if (effectiveFlags === FLAG_UNCHANGED) {
-      throw new Error('No data to set')
-    }
-    const { data: updatedData } = await this.api.set({
-      heatPumpType: this.#type,
-      postData: {
-        ...this.#setData,
-        ...data,
-        DeviceID: this.id,
-        EffectiveFlags: effectiveFlags,
-      },
-    })
-    ;(this.model as DeviceModel<T>).update(this.#getListDeviceData(updatedData))
-    return updatedData
-  }
-
   #callProperty(name: keyof this): unknown {
     return this[name]
   }
 
   #getFlags(keys: (keyof UpdateDeviceData[T])[]): number {
     return keys.reduce(
-      (acc, key) => Number(BigInt(this.#flags[key]) | BigInt(acc)),
+      (acc, key) => Number(BigInt(this.flags[key]) | BigInt(acc)),
       FLAG_UNCHANGED,
     )
-  }
-
-  #getListDeviceData(data: SetDeviceData[T]): Partial<ListDevice[T]['Device']> {
-    const { EffectiveFlags: effectiveFlags, ...newData } = data
-    const entries = Object.entries(newData).filter(
-      ([key]) =>
-        key in this.#flags &&
-        Number(
-          BigInt(this.#flags[key as keyof UpdateDeviceData[T]]) &
-            BigInt(effectiveFlags),
-        ),
-    )
-    return Object.fromEntries(
-      this.#type === 'Ata' ?
-        entries.map(([key, value]) =>
-          key in fromSetToListMappingAta ?
-            [
-              fromSetToListMappingAta[key as KeysOfSetDeviceDataAtaNotInList],
-              value,
-            ]
-          : [key, value],
-        )
-      : entries,
-    ) as Partial<ListDevice[T]['Device']>
   }
 
   #initMetadata(): void {

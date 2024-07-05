@@ -48,7 +48,7 @@ export interface ListDeviceErv extends BaseListDevice {
   readonly Device: ListDeviceDataErv
 }
 
-export const flagsErv: Record<keyof UpdateDeviceDataErv, number> = {
+export const effectiveFlagsErv: Record<keyof UpdateDeviceDataErv, number> = {
   Power: 0x1,
   SetFanSpeed: 0x8,
   VentilationMode: 0x4,
