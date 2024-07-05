@@ -18,8 +18,8 @@ export enum VentilationMode {
 }
 
 export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
-  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly VentilationMode?: VentilationMode
+  SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
+  VentilationMode?: VentilationMode
 }
 export interface SetDevicePostDataErv
   extends UpdateDeviceDataErv,

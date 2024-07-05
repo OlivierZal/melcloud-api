@@ -130,7 +130,7 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
     return Object.fromEntries(this.#values.map((key) => [key, this[key]]))
   }
 
-  get #setData(): UpdateDeviceData[T] {
+  protected get setData(): UpdateDeviceData[T] {
     return Object.fromEntries(
       (this.type === 'Ata' ?
         (Object.entries(this.data).map(([key, value]) => [
@@ -157,21 +157,29 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
   }
 
   @updateDevice
-  public async set(data: UpdateDeviceData[T]): Promise<SetDeviceData[T]> {
-    const updateFlags = this.#getFlags(
-      Object.keys(data) as (keyof UpdateDeviceData[T])[],
+  public async set(
+    data: Partial<UpdateDeviceData[T]>,
+  ): Promise<SetDeviceData[T]> {
+    const newData = Object.fromEntries(
+      Object.entries(data).filter(
+        ([key, value]) =>
+          key in this.setData &&
+          this.setData[key as keyof UpdateDeviceData[T]] !== value,
+      ),
+    ) as Partial<UpdateDeviceData[T]>
+    const flags = this.#getFlags(
+      Object.keys(newData) as (keyof UpdateDeviceData[T])[],
     )
-    if (updateFlags === FLAG_UNCHANGED) {
+    if (!flags) {
       throw new Error('No data to set')
     }
     return (
       await this.api.set({
         heatPumpType: this.type,
         postData: {
-          ...this.#setData,
-          ...data,
+          ...this.handle(newData),
           DeviceID: this.id,
-          EffectiveFlags: updateFlags,
+          EffectiveFlags: flags,
         },
       })
     ).data
@@ -216,6 +224,17 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
       return super.getTiles(this.model as DeviceModel<T>)
     }
     return super.getTiles(null)
+  }
+
+  protected getRequestedOrCurrentValue(
+    data: UpdateDeviceData[T],
+    key: keyof UpdateDeviceData[T],
+  ): UpdateDeviceData[T][keyof UpdateDeviceData[T]] {
+    return data[key] ?? this.setData[key]
+  }
+
+  protected handle(data: Partial<UpdateDeviceData[T]>): UpdateDeviceData[T] {
+    return { ...this.setData, ...data }
   }
 
   #callProperty(name: keyof this): unknown {

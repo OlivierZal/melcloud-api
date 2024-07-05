@@ -1,4 +1,5 @@
 import BaseDeviceFacade, { mapTo } from './device'
+import type { UpdateDeviceDataAtw } from '../types'
 
 export default class extends BaseDeviceFacade<'Atw'> {
   @mapTo('BoosterHeater1Status')
@@ -123,4 +124,10 @@ export default class extends BaseDeviceFacade<'Atw'> {
 
   @mapTo('RoomTemperatureZone2')
   public accessor roomTemperatureZone2: unknown = null
+
+  protected override handle(
+    data: Partial<UpdateDeviceDataAtw>,
+  ): UpdateDeviceDataAtw {
+    return super.handle(data)
+  }
 }

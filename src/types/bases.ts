@@ -17,7 +17,7 @@ export enum FanSpeed {
 }
 
 export interface BaseUpdateDeviceData {
-  readonly Power?: boolean
+  Power?: boolean
 }
 
 export interface BaseDevicePostData {

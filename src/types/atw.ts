@@ -28,16 +28,16 @@ export enum OperationModeZone {
 }
 
 export interface UpdateDeviceDataAtw extends BaseUpdateDeviceData {
-  readonly ForcedHotWaterMode?: boolean
-  readonly OperationModeZone1?: OperationModeZone
-  readonly OperationModeZone2?: OperationModeZone
-  readonly SetCoolFlowTemperatureZone1?: number
-  readonly SetCoolFlowTemperatureZone2?: number
-  readonly SetHeatFlowTemperatureZone1?: number
-  readonly SetHeatFlowTemperatureZone2?: number
-  readonly SetTankWaterTemperature?: number
-  readonly SetTemperatureZone1?: number
-  readonly SetTemperatureZone2?: number
+  ForcedHotWaterMode?: boolean
+  OperationModeZone1?: OperationModeZone
+  OperationModeZone2?: OperationModeZone
+  SetCoolFlowTemperatureZone1?: number
+  SetCoolFlowTemperatureZone2?: number
+  SetHeatFlowTemperatureZone1?: number
+  SetHeatFlowTemperatureZone2?: number
+  SetTankWaterTemperature?: number
+  SetTemperatureZone1?: number
+  SetTemperatureZone2?: number
 }
 export interface SetDevicePostDataAtw
   extends UpdateDeviceDataAtw,

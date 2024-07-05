@@ -1,4 +1,5 @@
 import BaseDeviceFacade, { mapTo } from './device'
+import { OperationMode, type UpdateDeviceDataAta } from '../types'
 
 export default class extends BaseDeviceFacade<'Ata'> {
   @mapTo('ActualFanSpeed')
@@ -27,4 +28,27 @@ export default class extends BaseDeviceFacade<'Ata'> {
 
   @mapTo('VaneVerticalDirection')
   public accessor vertical: unknown = null
+
+  protected override handle(
+    data: Partial<UpdateDeviceDataAta>,
+  ): UpdateDeviceDataAta {
+    const newData: Partial<UpdateDeviceDataAta> = {}
+    const value: number | undefined = data.SetTemperature
+    if (typeof value !== 'undefined') {
+      switch (this.getRequestedOrCurrentValue(data, 'OperationMode')) {
+        case OperationMode.auto:
+          newData.SetTemperature = Math.max(value, this.data.MinTempAutomatic)
+          break
+        case OperationMode.cool:
+        case OperationMode.dry:
+          newData.SetTemperature = Math.max(value, this.data.MinTempCoolDry)
+          break
+        case OperationMode.heat:
+          newData.SetTemperature = Math.max(value, this.data.MinTempHeat)
+          break
+        default:
+      }
+    }
+    return super.handle(newData)
+  }
 }

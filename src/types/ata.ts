@@ -41,11 +41,11 @@ export enum Horizontal {
 }
 
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
-  readonly OperationMode?: OperationMode
-  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly SetTemperature?: number
-  readonly VaneHorizontal?: Horizontal
-  readonly VaneVertical?: Vertical
+  OperationMode?: OperationMode
+  SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
+  SetTemperature?: number
+  VaneHorizontal?: Horizontal
+  VaneVertical?: Vertical
 }
 export interface SetDevicePostDataAta
   extends UpdateDeviceDataAta,
