@@ -27,10 +27,11 @@ export enum OperationModeZone {
   flow_cool = 4,
 }
 
-export interface UpdateDeviceDataAtw extends BaseUpdateDeviceData {
-  ForcedHotWaterMode?: boolean
+export interface OperationModeZoneDataAtw {
   OperationModeZone1?: OperationModeZone
   OperationModeZone2?: OperationModeZone
+}
+export interface TemperatureDataAtw {
   SetCoolFlowTemperatureZone1?: number
   SetCoolFlowTemperatureZone2?: number
   SetHeatFlowTemperatureZone1?: number
@@ -38,6 +39,12 @@ export interface UpdateDeviceDataAtw extends BaseUpdateDeviceData {
   SetTankWaterTemperature?: number
   SetTemperatureZone1?: number
   SetTemperatureZone2?: number
+}
+export interface UpdateDeviceDataAtw
+  extends BaseUpdateDeviceData,
+    OperationModeZoneDataAtw,
+    TemperatureDataAtw {
+  ForcedHotWaterMode?: boolean
 }
 export interface SetDevicePostDataAtw
   extends UpdateDeviceDataAtw,

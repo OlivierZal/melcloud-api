@@ -40,7 +40,7 @@ export default class FloorModel extends BaseModel implements IFloorModel {
   }
 
   public static getAll(): FloorModel[] {
-    return Array.from(this.#floors.values())
+    return [...this.#floors.values()]
   }
 
   public static getByBuildingId(id: number): FloorModel[] {

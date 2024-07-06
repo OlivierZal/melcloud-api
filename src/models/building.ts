@@ -40,7 +40,7 @@ export default class BuildingModel extends BaseModel implements IBuildingModel {
   }
 
   public static getAll(): BuildingModel[] {
-    return Array.from(this.#buildings.values())
+    return [...this.#buildings.values()]
   }
 
   public static getById(id: number): BuildingModel | undefined {

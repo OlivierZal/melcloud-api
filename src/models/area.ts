@@ -47,7 +47,7 @@ export default class AreaModel<T extends number | null>
   }
 
   public static getAll(): AreaModelAny[] {
-    return Array.from(this.#areas.values())
+    return [...this.#areas.values()]
   }
 
   public static getByBuildingId(id: number): AreaModelAny[] {

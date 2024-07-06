@@ -62,7 +62,7 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getAll(): DeviceModelAny[] {
-    return Array.from(this.#devices.values())
+    return [...this.#devices.values()]
   }
 
   public static getByAreaId(id: number): DeviceModelAny[] {
