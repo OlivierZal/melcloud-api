@@ -128,6 +128,8 @@ export default class extends BaseDeviceFacade<'Atw'> {
   protected override handle(
     data: Partial<UpdateDeviceDataAtw>,
   ): UpdateDeviceDataAtw {
-    return super.handle(data)
+    return super.handle({
+      ...data,
+    })
   }
 }

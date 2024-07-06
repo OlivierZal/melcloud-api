@@ -32,23 +32,32 @@ export default class extends BaseDeviceFacade<'Ata'> {
   protected override handle(
     data: Partial<UpdateDeviceDataAta>,
   ): UpdateDeviceDataAta {
-    const newData: Partial<UpdateDeviceDataAta> = {}
-    const value: number | undefined = data.SetTemperature
+    return super.handle({
+      ...data,
+      ...this.#handleTargetTemperature(data),
+    })
+  }
+
+  #handleTargetTemperature(
+    data: Partial<UpdateDeviceDataAta>,
+  ): Partial<UpdateDeviceDataAta> {
+    let value: number | undefined = data.SetTemperature
     if (typeof value !== 'undefined') {
       switch (this.getRequestedOrCurrentValue(data, 'OperationMode')) {
         case OperationMode.auto:
-          newData.SetTemperature = Math.max(value, this.data.MinTempAutomatic)
+          value = Math.max(value, this.data.MinTempAutomatic)
           break
         case OperationMode.cool:
         case OperationMode.dry:
-          newData.SetTemperature = Math.max(value, this.data.MinTempCoolDry)
+          value = Math.max(value, this.data.MinTempCoolDry)
           break
         case OperationMode.heat:
-          newData.SetTemperature = Math.max(value, this.data.MinTempHeat)
+          value = Math.max(value, this.data.MinTempHeat)
           break
         default:
       }
+      return { SetTemperature: value }
     }
-    return super.handle(newData)
+    return {}
   }
 }
