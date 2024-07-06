@@ -59,7 +59,7 @@ const handleTargetTemperature = (
   const value = data[key]
   const { min, max } = TEMPERATURE_MAPPING[key]
   if (typeof value !== 'undefined') {
-    if (!value || value < min) {
+    if (value < min) {
       return { [key]: min }
     }
     if (value > max) {
