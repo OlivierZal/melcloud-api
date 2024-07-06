@@ -1,7 +1,7 @@
 import BaseDeviceFacade, { mapTo } from './device'
 
 export default class extends BaseDeviceFacade<'Erv'> {
-  @mapTo('CO2Level')
+  @mapTo('RoomCO2Level')
   public accessor co2: unknown = null
 
   @mapTo('SetFanSpeed')
