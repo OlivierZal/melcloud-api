@@ -212,8 +212,8 @@ export default class extends BaseDeviceFacade<'Atw'> {
   }
 
   #getSecondaryOperationMode(
-    primaryValue: OperationModeZone,
     secondayKey: keyof OperationModeZoneDataAtw,
+    primaryValue: OperationModeZone,
     value?: OperationModeZone,
   ): OperationModeZone {
     let secondaryValue = value ?? this.data[secondayKey]
@@ -255,8 +255,8 @@ export default class extends BaseDeviceFacade<'Atw'> {
         : [pair2, pair1]
       if (typeof primaryValue !== 'undefined') {
         const secondaryValue = this.#getSecondaryOperationMode(
-          primaryValue,
           secondaryKey,
+          primaryValue,
           value,
         )
         if (typeof value !== 'undefined' && value !== secondaryValue) {
