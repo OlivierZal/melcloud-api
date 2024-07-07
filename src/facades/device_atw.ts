@@ -14,51 +14,41 @@ const MAX_FLOW_COOL_TEMP = 25
 const MIN_FLOW_HEAT_TEMP = 25
 const MAX_FLOW_HEAT_TEMP = 60
 const MIN_HOT_WATER_TEMP = 40
-const MAX_HOT_WATER_TEMP = 60
 const MIN_ROOM_TEMP = 10
 const MAX_ROOM_TEMP = 30
-
-const TEMP_RANGES: Record<
-  keyof TemperatureDataAtw,
-  { max: number; min: number }
-> = {
-  SetCoolFlowTemperatureZone1: {
-    max: MAX_FLOW_COOL_TEMP,
-    min: MIN_FLOW_COOL_TEMP,
-  },
-  SetCoolFlowTemperatureZone2: {
-    max: MAX_FLOW_COOL_TEMP,
-    min: MIN_FLOW_COOL_TEMP,
-  },
-  SetHeatFlowTemperatureZone1: {
-    max: MAX_FLOW_HEAT_TEMP,
-    min: MIN_FLOW_HEAT_TEMP,
-  },
-  SetHeatFlowTemperatureZone2: {
-    max: MAX_FLOW_HEAT_TEMP,
-    min: MIN_FLOW_HEAT_TEMP,
-  },
-  SetTankWaterTemperature: { max: MAX_HOT_WATER_TEMP, min: MIN_HOT_WATER_TEMP },
-  SetTemperatureZone1: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
-  SetTemperatureZone2: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
-} as const
-
-const handleTargetTemperature = (
-  data: Partial<UpdateDeviceDataAtw>,
-  key: keyof TemperatureDataAtw,
-): Partial<UpdateDeviceDataAtw> => {
-  const value = data[key]
-  const { min, max } = TEMP_RANGES[key]
-  if (typeof value !== 'undefined') {
-    return { [key]: Math.min(Math.max(value, min), max) }
-  }
-  return {}
-}
 
 export default class extends BaseDeviceFacade<'Atw'> {
   public override canCool = this.data.CanCool
 
   public override hasZone2 = this.data.HasZone2
+
+  readonly #targetTemperatureRange: Record<
+    keyof TemperatureDataAtw,
+    { max: number; min: number }
+  > = {
+    SetCoolFlowTemperatureZone1: {
+      max: MAX_FLOW_COOL_TEMP,
+      min: MIN_FLOW_COOL_TEMP,
+    },
+    SetCoolFlowTemperatureZone2: {
+      max: MAX_FLOW_COOL_TEMP,
+      min: MIN_FLOW_COOL_TEMP,
+    },
+    SetHeatFlowTemperatureZone1: {
+      max: MAX_FLOW_HEAT_TEMP,
+      min: MIN_FLOW_HEAT_TEMP,
+    },
+    SetHeatFlowTemperatureZone2: {
+      max: MAX_FLOW_HEAT_TEMP,
+      min: MIN_FLOW_HEAT_TEMP,
+    },
+    SetTankWaterTemperature: {
+      max: this.data.MaxTankTemperature,
+      min: MIN_HOT_WATER_TEMP,
+    },
+    SetTemperatureZone1: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
+    SetTemperatureZone2: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
+  } as const
 
   @alias('BoosterHeater1Status')
   public accessor boosterHeater1Status: unknown = null
@@ -189,10 +179,14 @@ export default class extends BaseDeviceFacade<'Atw'> {
     return super.handle({
       ...data,
       ...this.#handleOperationModes(data),
-      ...(Object.keys(TEMP_RANGES) as (keyof TemperatureDataAtw)[]).reduce(
+      ...(
+        Object.keys(
+          this.#targetTemperatureRange,
+        ) as (keyof TemperatureDataAtw)[]
+      ).reduce(
         (acc, key) => ({
           ...acc,
-          ...handleTargetTemperature(data, key),
+          ...this.#handleTargetTemperature(data, key),
         }),
         {},
       ),
@@ -252,6 +246,18 @@ export default class extends BaseDeviceFacade<'Atw'> {
         }
         return { [primaryKey]: primaryValue, [secondaryKey]: secondaryValue }
       }
+    }
+    return {}
+  }
+
+  #handleTargetTemperature(
+    data: Partial<UpdateDeviceDataAtw>,
+    key: keyof TemperatureDataAtw,
+  ): Partial<UpdateDeviceDataAtw> {
+    const value = data[key]
+    if (typeof value !== 'undefined') {
+      const { min, max } = this.#targetTemperatureRange[key]
+      return { [key]: Math.min(Math.max(value, min), max) }
     }
     return {}
   }
