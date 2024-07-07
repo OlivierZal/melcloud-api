@@ -114,7 +114,7 @@ export interface EnergyDataAtw {
   readonly TotalHotWaterProduced: number
 }
 
-export const effectiveFlagsAtw: Record<keyof UpdateDeviceDataAtw, number> = {
+export const FLAGS_ATW: Record<keyof UpdateDeviceDataAtw, number> = {
   ForcedHotWaterMode: 0x10000,
   OperationModeZone1: 0x8,
   OperationModeZone2: 0x10,

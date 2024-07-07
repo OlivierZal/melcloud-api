@@ -2,7 +2,10 @@ import { DeviceModel, type DeviceModelAny } from '../models'
 import {
   type DeviceType,
   type EnergyData,
+  FLAGS,
   FLAG_UNCHANGED,
+  FROM_LIST_TO_SET_ATA,
+  FROM_SET_TO_LIST_ATA,
   type GetDeviceData,
   type KeysOfSetDeviceDataAtaNotInList,
   type ListDevice,
@@ -11,9 +14,6 @@ import {
   type TilesData,
   type UpdateDeviceData,
   type Values,
-  effectiveFlags,
-  fromListToSetMappingAta,
-  fromSetToListMappingAta,
 } from '../types'
 import { YEAR_1970, nowISO } from './utils'
 import type API from '../services'
@@ -24,7 +24,7 @@ import type { IDeviceFacade } from './interfaces'
 Symbol.metadata ??= Symbol('Symbol.metadata')
 const valueSymbol = Symbol('value')
 
-export const mapTo =
+export const alias =
   <This extends { data: object }>(key: string) =>
   (
     _target: unknown,
@@ -66,11 +66,8 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
   return Object.fromEntries(
     instance.type === 'Ata' ?
       entries.map(([key, value]) =>
-        key in fromSetToListMappingAta ?
-          [
-            fromSetToListMappingAta[key as KeysOfSetDeviceDataAtaNotInList],
-            value,
-          ]
+        key in FROM_SET_TO_LIST_ATA ?
+          [FROM_SET_TO_LIST_ATA[key as KeysOfSetDeviceDataAtaNotInList], value]
         : [key, value],
       )
     : entries,
@@ -111,10 +108,7 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
     this.type = model.type
-    this.flags = effectiveFlags[this.type] as Record<
-      keyof UpdateDeviceData[T],
-      number
-    >
+    this.flags = FLAGS[this.type] as Record<keyof UpdateDeviceData[T], number>
 
     this.#initMetadata()
     this.#values = this.constructor[Symbol.metadata]?.[
@@ -134,8 +128,8 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
     return Object.fromEntries(
       (this.type === 'Ata' ?
         (Object.entries(this.data).map(([key, value]) => [
-          key in fromListToSetMappingAta ?
-            fromListToSetMappingAta[key as keyof SetDeviceDataAtaInList]
+          key in FROM_LIST_TO_SET_ATA ?
+            FROM_LIST_TO_SET_ATA[key as keyof SetDeviceDataAtaInList]
           : key,
           value,
         ]) as [

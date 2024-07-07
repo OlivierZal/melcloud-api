@@ -22,12 +22,12 @@ export {
   type SetDevicePostDataAta,
   type UpdateDeviceDataAta,
   type ValuesAta,
+  FLAGS_ATA,
+  FROM_LIST_TO_SET_ATA,
+  FROM_SET_TO_LIST_ATA,
   Horizontal,
   OperationMode,
   Vertical,
-  effectiveFlagsAta,
-  fromListToSetMappingAta,
-  fromSetToListMappingAta,
 } from './ata'
 export {
   type AreaData,
@@ -70,8 +70,8 @@ export {
   type Values,
   type WifiData,
   type WifiPostData,
+  FLAGS,
   Language,
-  effectiveFlags,
 } from './common'
 export {
   type EnergyDataAtw,
@@ -84,9 +84,9 @@ export {
   type TemperatureDataAtw,
   type UpdateDeviceDataAtw,
   type ValuesAtw,
+  FLAGS_ATW,
   OperationModeState,
   OperationModeZone,
-  effectiveFlagsAtw,
 } from './atw'
 export {
   type GetDeviceDataErv,
@@ -96,6 +96,6 @@ export {
   type SetDevicePostDataErv,
   type UpdateDeviceDataErv,
   type ValuesErv,
+  FLAGS_ERV,
   VentilationMode,
-  effectiveFlagsErv,
 } from './erv'

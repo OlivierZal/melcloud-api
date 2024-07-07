@@ -1,32 +1,34 @@
-import BaseDeviceFacade, { mapTo } from './device'
+import BaseDeviceFacade, { alias } from './device'
 import { OperationMode, type UpdateDeviceDataAta } from '../types'
 
+const MAX_TEMP = 38
+
 export default class extends BaseDeviceFacade<'Ata'> {
-  @mapTo('ActualFanSpeed')
+  @alias('ActualFanSpeed')
   public accessor actualFan: unknown = null
 
-  @mapTo('FanSpeed')
+  @alias('FanSpeed')
   public accessor fan: unknown = null
 
-  @mapTo('VaneHorizontalDirection')
+  @alias('VaneHorizontalDirection')
   public accessor horizontal: unknown = null
 
-  @mapTo('OperationMode')
+  @alias('OperationMode')
   public accessor mode: unknown = null
 
-  @mapTo('Power')
+  @alias('Power')
   public accessor power: unknown = null
 
-  @mapTo('OutdoorTemperature')
+  @alias('OutdoorTemperature')
   public accessor outdoorTemperature: unknown = null
 
-  @mapTo('SetTemperature')
+  @alias('SetTemperature')
   public accessor targetTemperature: unknown = null
 
-  @mapTo('RoomTemperature')
+  @alias('RoomTemperature')
   public accessor temperature: unknown = null
 
-  @mapTo('VaneVerticalDirection')
+  @alias('VaneVerticalDirection')
   public accessor vertical: unknown = null
 
   protected override handle(
@@ -39,18 +41,22 @@ export default class extends BaseDeviceFacade<'Ata'> {
     data: Partial<UpdateDeviceDataAta>,
   ): Partial<UpdateDeviceDataAta> {
     const key = 'SetTemperature'
-    const value = data[key]
+    let value = data[key]
     if (typeof value !== 'undefined') {
       switch (this.getRequestedOrCurrentValue(data, 'OperationMode')) {
         case OperationMode.auto:
-          return { [key]: Math.max(value, this.data.MinTempAutomatic) }
+          value = Math.max(value, this.data.MinTempAutomatic)
+          break
         case OperationMode.cool:
         case OperationMode.dry:
-          return { [key]: Math.max(value, this.data.MinTempCoolDry) }
+          value = Math.max(value, this.data.MinTempCoolDry)
+          break
         case OperationMode.heat:
-          return { [key]: Math.max(value, this.data.MinTempHeat) }
+          value = Math.max(value, this.data.MinTempHeat)
+          break
         default:
       }
+      return { [key]: Math.min(value, MAX_TEMP) }
     }
     return {}
   }

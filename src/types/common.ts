@@ -1,6 +1,7 @@
 import type { DeviceType, FanSpeed } from './bases'
 import {
   type EnergyDataAta,
+  FLAGS_ATA,
   type GetDeviceDataAta,
   type Horizontal,
   type ListDeviceAta,
@@ -11,10 +12,10 @@ import {
   type UpdateDeviceDataAta,
   type ValuesAta,
   type Vertical,
-  effectiveFlagsAta,
 } from './ata'
 import {
   type EnergyDataAtw,
+  FLAGS_ATW,
   type GetDeviceDataAtw,
   type ListDeviceAtw,
   type ListDeviceDataAtw,
@@ -22,9 +23,9 @@ import {
   type SetDevicePostDataAtw,
   type UpdateDeviceDataAtw,
   type ValuesAtw,
-  effectiveFlagsAtw,
 } from './atw'
 import {
+  FLAGS_ERV,
   type GetDeviceDataErv,
   type ListDeviceDataErv,
   type ListDeviceErv,
@@ -32,7 +33,6 @@ import {
   type SetDevicePostDataErv,
   type UpdateDeviceDataErv,
   type ValuesErv,
-  effectiveFlagsErv,
 } from './erv'
 
 export enum Language {
@@ -89,9 +89,9 @@ export interface UpdateDeviceData {
   readonly Erv: UpdateDeviceDataErv
 }
 export interface SetDevicePostData {
-  Ata: SetDevicePostDataAta
-  Atw: SetDevicePostDataAtw
-  Erv: SetDevicePostDataErv
+  readonly Ata: SetDevicePostDataAta
+  readonly Atw: SetDevicePostDataAtw
+  readonly Erv: SetDevicePostDataErv
 }
 export interface SetDeviceData {
   readonly Ata: SetDeviceDataAta
@@ -274,12 +274,12 @@ export interface TilesData<T extends keyof typeof DeviceType | null> {
   readonly SelectedDevice: T extends keyof typeof DeviceType ? GetDeviceData[T]
   : null
   readonly Tiles: readonly {
-    Device: number
-    Offline: boolean
-    Power: boolean
-    RoomTemperature: number
-    RoomTemperature2: number
-    TankWaterTemperature: number
+    readonly Device: number
+    readonly Offline: boolean
+    readonly Power: boolean
+    readonly RoomTemperature: number
+    readonly RoomTemperature2: number
+    readonly TankWaterTemperature: number
   }[]
 }
 
@@ -317,11 +317,7 @@ export interface WifiData {
   readonly ToDate: string
 }
 
-export const effectiveFlags = {
-  Ata: effectiveFlagsAta,
-  Atw: effectiveFlagsAtw,
-  Erv: effectiveFlagsErv,
-} as const
+export const FLAGS = { Ata: FLAGS_ATA, Atw: FLAGS_ATW, Erv: FLAGS_ERV } as const
 
 export interface Values {
   readonly Ata: ValuesAta

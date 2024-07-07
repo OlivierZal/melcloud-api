@@ -106,7 +106,7 @@ export interface EnergyDataAta {
   readonly UsageDisclaimerPercentages: string
 }
 
-export const effectiveFlagsAta: Record<keyof UpdateDeviceDataAta, number> = {
+export const FLAGS_ATA: Record<keyof UpdateDeviceDataAta, number> = {
   OperationMode: 0x2,
   Power: 0x1,
   SetFanSpeed: 0x8,
@@ -123,18 +123,18 @@ export interface ValuesAta extends BaseValues {
   readonly vertical?: Vertical
 }
 
-export const fromSetToListMappingAta: Record<
+export const FROM_SET_TO_LIST_ATA: Record<
   KeysOfSetDeviceDataAtaNotInList,
   keyof SetDeviceDataAtaInList
 > = {
   SetFanSpeed: 'FanSpeed',
   VaneHorizontal: 'VaneHorizontalDirection',
   VaneVertical: 'VaneVerticalDirection',
-}
+} as const
 
-export const fromListToSetMappingAta: Record<
+export const FROM_LIST_TO_SET_ATA: Record<
   keyof SetDeviceDataAtaInList,
   KeysOfSetDeviceDataAtaNotInList
 > = Object.fromEntries(
-  Object.entries(fromSetToListMappingAta).map(([key, value]) => [value, key]),
+  Object.entries(FROM_SET_TO_LIST_ATA).map(([key, value]) => [value, key]),
 ) as Record<keyof SetDeviceDataAtaInList, KeysOfSetDeviceDataAtaNotInList>
