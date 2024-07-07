@@ -59,7 +59,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
   @alias('BoosterHeater2Status')
   public accessor boosterHeater2Status: unknown = null
 
-  @alias('CondesingTemperature')
+  @alias('CondensingTemperature')
   public accessor condensingTemperature: unknown = null
 
   @alias('Zone1InCoolMode')
@@ -152,7 +152,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
   @alias('TargetHCTemperatureZone2')
   public accessor targetCurveTemperatureZone2: unknown = null
 
-  @alias('SetHeatFlowTemperature')
+  @alias('SetHeatFlowTemperatureZone1')
   public accessor targetHeatFlowTemperature: unknown = null
 
   @alias('SetHeatFlowTemperatureZone2')
