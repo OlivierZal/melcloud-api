@@ -56,6 +56,10 @@ const handleTargetTemperature = (
 }
 
 export default class extends BaseDeviceFacade<'Atw'> {
+  public override canCool = this.data.CanCool
+
+  public override hasZone2 = this.data.HasZone2
+
   @alias('BoosterHeater1Status')
   public accessor boosterHeater1Status: unknown = null
 
@@ -228,7 +232,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
     if (this.data.HasZone2) {
       const [pair1, pair2]: [
         key: keyof OperationModeZoneDataAtw,
-        value: OperationModeZone | undefined,
+        value?: OperationModeZone,
       ][] = [
         ['OperationModeZone1', data.OperationModeZone1],
         ['OperationModeZone2', data.OperationModeZone2],

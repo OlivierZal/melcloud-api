@@ -25,7 +25,9 @@ Symbol.metadata ??= Symbol('Symbol.metadata')
 const valueSymbol = Symbol('value')
 
 export const alias =
-  <This extends { data: object }>(key: string) =>
+  <This extends { canCool: boolean; data: object; hasZone2: boolean }>(
+    key: string,
+  ) =>
   (
     _target: unknown,
     context: ClassAccessorDecoratorContext<This>,
@@ -35,10 +37,15 @@ export const alias =
       if (!(key in this.data)) {
         throw new Error(`Cannot get value for ${value}`)
       }
-      context.metadata[valueSymbol] ??= []
-      const values = context.metadata[valueSymbol] as string[]
-      if (!values.includes(value)) {
-        values.push(value)
+      if (
+        (!value.includes('cool') || this.canCool) &&
+        (!value.includes('zone2') || this.hasZone2)
+      ) {
+        context.metadata[valueSymbol] ??= []
+        const values = context.metadata[valueSymbol] as string[]
+        if (!values.includes(value)) {
+          values.push(value)
+        }
       }
       return this.data[key as keyof typeof this.data]
     },
@@ -91,7 +98,11 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
+  public readonly canCool: boolean = false
+
   public readonly flags: Record<keyof UpdateDeviceData[T], number>
+
+  public readonly hasZone2: boolean = false
 
   public readonly type: T
 
@@ -124,7 +135,7 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
     return Object.fromEntries(this.#values.map((key) => [key, this[key]]))
   }
 
-  protected get setData(): UpdateDeviceData[T] {
+  protected get setData(): Required<UpdateDeviceData[T]> {
     return Object.fromEntries(
       (this.type === 'Ata' ?
         (Object.entries(this.data).map(([key, value]) => [
@@ -138,7 +149,7 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
         ][])
       : Object.entries(this.data)
       ).filter(([key]) => key in this.flags),
-    ) as UpdateDeviceData[T]
+    ) as Required<UpdateDeviceData[T]>
   }
 
   @updateDevice
@@ -218,13 +229,6 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
       return super.getTiles(this.model as DeviceModel<T>)
     }
     return super.getTiles(null)
-  }
-
-  protected getRequestedOrCurrentValue(
-    data: UpdateDeviceData[T],
-    key: keyof UpdateDeviceData[T],
-  ): UpdateDeviceData[T][keyof UpdateDeviceData[T]] {
-    return data[key] ?? this.setData[key]
   }
 
   protected handle(data: Partial<UpdateDeviceData[T]>): UpdateDeviceData[T] {

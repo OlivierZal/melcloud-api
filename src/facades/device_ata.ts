@@ -1,8 +1,6 @@
 import BaseDeviceFacade, { alias } from './device'
 import { OperationMode, type UpdateDeviceDataAta } from '../types'
 
-const MAX_TEMP = 38
-
 export default class extends BaseDeviceFacade<'Ata'> {
   @alias('ActualFanSpeed')
   public accessor actualFan: unknown = null
@@ -37,26 +35,32 @@ export default class extends BaseDeviceFacade<'Ata'> {
     return super.handle({ ...data, ...this.#handleTargetTemperature(data) })
   }
 
+  #getTargetTemperatureRange(operationMode = this.setData.OperationMode): {
+    max: number
+    min: number
+  } {
+    switch (operationMode) {
+      case OperationMode.auto:
+        return {
+          max: this.data.MaxTempAutomatic,
+          min: this.data.MinTempAutomatic,
+        }
+      case OperationMode.cool:
+      case OperationMode.dry:
+        return { max: this.data.MaxTempCoolDry, min: this.data.MinTempCoolDry }
+      case OperationMode.heat:
+      default:
+        return { max: this.data.MaxTempHeat, min: this.data.MinTempHeat }
+    }
+  }
+
   #handleTargetTemperature(
     data: Partial<UpdateDeviceDataAta>,
   ): Partial<UpdateDeviceDataAta> {
-    const key = 'SetTemperature'
-    let value = data[key]
+    const { SetTemperature: value, OperationMode: operationMode } = data
     if (typeof value !== 'undefined') {
-      switch (this.getRequestedOrCurrentValue(data, 'OperationMode')) {
-        case OperationMode.auto:
-          value = Math.max(value, this.data.MinTempAutomatic)
-          break
-        case OperationMode.cool:
-        case OperationMode.dry:
-          value = Math.max(value, this.data.MinTempCoolDry)
-          break
-        case OperationMode.heat:
-          value = Math.max(value, this.data.MinTempHeat)
-          break
-        default:
-      }
-      return { [key]: Math.min(value, MAX_TEMP) }
+      const { min, max } = this.#getTargetTemperatureRange(operationMode)
+      return { SetTemperature: Math.min(Math.max(value, min), max) }
     }
     return {}
   }

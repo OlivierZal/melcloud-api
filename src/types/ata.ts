@@ -52,7 +52,7 @@ export interface SetDevicePostDataAta
     BaseDevicePostData {}
 export interface SetDeviceDataAta
   extends BaseSetDeviceData,
-    Required<Readonly<UpdateDeviceDataAta>> {
+    Required<UpdateDeviceDataAta> {
   readonly DeviceType: DeviceType.Ata
   readonly NumberOfFanSpeeds: number
   readonly RoomTemperature: number
@@ -106,6 +106,14 @@ export interface EnergyDataAta {
   readonly UsageDisclaimerPercentages: string
 }
 
+export interface ValuesAta extends BaseValues {
+  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly horizontal?: Horizontal
+  readonly mode?: OperationMode
+  readonly temperature?: number
+  readonly vertical?: Vertical
+}
+
 export const FLAGS_ATA: Record<keyof UpdateDeviceDataAta, number> = {
   OperationMode: 0x2,
   Power: 0x1,
@@ -114,14 +122,6 @@ export const FLAGS_ATA: Record<keyof UpdateDeviceDataAta, number> = {
   VaneHorizontal: 0x100,
   VaneVertical: 0x10,
 } as const
-
-export interface ValuesAta extends BaseValues {
-  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly horizontal?: Horizontal
-  readonly mode?: OperationMode
-  readonly temperature?: number
-  readonly vertical?: Vertical
-}
 
 export const FROM_SET_TO_LIST_ATA: Record<
   KeysOfSetDeviceDataAtaNotInList,

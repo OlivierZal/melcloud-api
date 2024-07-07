@@ -31,7 +31,7 @@ export interface DeviceDataNotInList {
 }
 
 export interface BaseSetDeviceData
-  extends Required<Readonly<BaseUpdateDeviceData>>,
+  extends Required<BaseUpdateDeviceData>,
     DeviceDataNotInList {
   readonly EffectiveFlags: number
   readonly Offline: boolean

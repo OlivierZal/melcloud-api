@@ -26,7 +26,7 @@ export interface SetDevicePostDataErv
     BaseDevicePostData {}
 export interface SetDeviceDataErv
   extends BaseSetDeviceData,
-    Required<Readonly<UpdateDeviceDataErv>> {
+    Required<UpdateDeviceDataErv> {
   readonly DeviceType: DeviceType.Erv
   readonly NumberOfFanSpeeds: number
   readonly OutdoorTemperature: number
@@ -48,13 +48,13 @@ export interface ListDeviceErv extends BaseListDevice {
   readonly Device: ListDeviceDataErv
 }
 
+export interface ValuesErv extends BaseValues {
+  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly mode?: VentilationMode
+}
+
 export const FLAGS_ERV: Record<keyof UpdateDeviceDataErv, number> = {
   Power: 0x1,
   SetFanSpeed: 0x8,
   VentilationMode: 0x4,
 } as const
-
-export interface ValuesErv extends BaseValues {
-  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly mode?: VentilationMode
-}

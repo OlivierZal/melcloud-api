@@ -317,10 +317,10 @@ export interface WifiData {
   readonly ToDate: string
 }
 
-export const FLAGS = { Ata: FLAGS_ATA, Atw: FLAGS_ATW, Erv: FLAGS_ERV } as const
-
 export interface Values {
   readonly Ata: ValuesAta
   readonly Atw: ValuesAtw
   readonly Erv: ValuesErv
 }
+
+export const FLAGS = { Ata: FLAGS_ATA, Atw: FLAGS_ATW, Erv: FLAGS_ERV } as const

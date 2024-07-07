@@ -51,7 +51,7 @@ export interface SetDevicePostDataAtw
     BaseDevicePostData {}
 export interface SetDeviceDataAtw
   extends BaseSetDeviceData,
-    Required<Readonly<UpdateDeviceDataAtw>> {
+    Required<UpdateDeviceDataAtw> {
   readonly DeviceType: DeviceType.Atw
   readonly IdleZone1: boolean
   readonly IdleZone2: boolean
@@ -114,6 +114,19 @@ export interface EnergyDataAtw {
   readonly TotalHotWaterProduced: number
 }
 
+export interface ValuesAtw extends BaseValues {
+  readonly coolFlowTemperature?: number
+  readonly coolFlowTemperatureZone2?: number
+  readonly forcedHotWater?: boolean
+  readonly heatFlowTemperature?: number
+  readonly heatFlowTemperatureZone2?: number
+  readonly hotWaterTemperature?: number
+  readonly mode?: OperationModeZone
+  readonly modeZone2?: OperationModeZone
+  readonly temperature?: number
+  readonly temperatureZone2?: number
+}
+
 export const FLAGS_ATW: Record<keyof UpdateDeviceDataAtw, number> = {
   ForcedHotWaterMode: 0x10000,
   OperationModeZone1: 0x8,
@@ -127,16 +140,3 @@ export const FLAGS_ATW: Record<keyof UpdateDeviceDataAtw, number> = {
   SetTemperatureZone1: 0x200000080,
   SetTemperatureZone2: 0x800000200,
 } as const
-
-export interface ValuesAtw extends BaseValues {
-  readonly coolFlowTemperature?: number
-  readonly coolFlowTemperatureZone2?: number
-  readonly forcedHotWater?: boolean
-  readonly heatFlowTemperature?: number
-  readonly heatFlowTemperatureZone2?: number
-  readonly hotWaterTemperature?: number
-  readonly mode?: OperationModeZone
-  readonly modeZone2?: OperationModeZone
-  readonly temperature?: number
-  readonly temperatureZone2?: number
-}
