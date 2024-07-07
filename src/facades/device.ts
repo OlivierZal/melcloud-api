@@ -38,8 +38,8 @@ export const alias =
         throw new Error(`Cannot get value for ${value}`)
       }
       if (
-        (!value.includes('cool') || this.canCool) &&
-        (!value.includes('zone2') || this.hasZone2)
+        (!value.includes('Cool') || this.canCool) &&
+        (!value.includes('Zone2') || this.hasZone2)
       ) {
         context.metadata[valueSymbol] ??= []
         const values = context.metadata[valueSymbol] as string[]
