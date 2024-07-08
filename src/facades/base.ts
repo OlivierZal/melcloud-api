@@ -142,12 +142,12 @@ export default abstract class<
       : this.#getDevicesHolidayMode()
   }
 
-  public async getTiles(select?: false | null): Promise<TilesData<null>>
+  public async getTiles(select?: false): Promise<TilesData<null>>
   public async getTiles<K extends keyof typeof DeviceType>(
     select: DeviceModel<K>,
   ): Promise<TilesData<K>>
   public async getTiles<K extends keyof typeof DeviceType>(
-    select: DeviceModel<K> | boolean | null = false,
+    select: DeviceModel<K> | boolean = false,
   ): Promise<TilesData<K | null>> {
     if (select === true) {
       throw new Error('Select a device')

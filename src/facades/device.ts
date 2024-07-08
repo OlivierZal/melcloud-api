@@ -216,19 +216,19 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
     ).data as EnergyData[T]
   }
 
-  public override async getTiles(
-    select?: false | null,
-  ): Promise<TilesData<null>>
+  public override async getTiles(select?: false): Promise<TilesData<null>>
   public override async getTiles(
     select: true | DeviceModel<T>,
   ): Promise<TilesData<T>>
   public override async getTiles(
-    select: boolean | null | DeviceModel<T> = false,
+    select: boolean | DeviceModel<T> = false,
   ): Promise<TilesData<T | null>> {
-    if (select === true || select instanceof DeviceModel) {
-      return super.getTiles(this.model as DeviceModel<T>)
-    }
-    return super.getTiles(null)
+    return (
+        select === false ||
+          (select instanceof DeviceModel && select.id !== this.id)
+      ) ?
+        super.getTiles()
+      : super.getTiles(this.model as DeviceModel<T>)
   }
 
   protected handle(data: Partial<UpdateDeviceData[T]>): UpdateDeviceData[T] {
