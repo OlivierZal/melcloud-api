@@ -10,7 +10,7 @@ export interface IBaseModel {
 }
 
 export interface IBaseSubBuildingModel extends IBaseModel {
-  building: BuildingModel | null
+  building?: BuildingModel
   buildingId: number
 }
 

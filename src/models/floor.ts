@@ -27,8 +27,8 @@ export default class FloorModel extends BaseModel implements IFloorModel {
     return AreaModel.getByFloorId(this.id)
   }
 
-  public get building(): BuildingModel | null {
-    return BuildingModel.getById(this.buildingId) ?? null
+  public get building(): BuildingModel | undefined {
+    return BuildingModel.getById(this.buildingId)
   }
 
   public get deviceIds(): number[] {

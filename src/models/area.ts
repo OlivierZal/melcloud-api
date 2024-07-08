@@ -28,8 +28,8 @@ export default class AreaModel<T extends number | null>
     this.floorId = floorId
   }
 
-  public get building(): BuildingModel | null {
-    return BuildingModel.getById(this.buildingId) ?? null
+  public get building(): BuildingModel | undefined {
+    return BuildingModel.getById(this.buildingId)
   }
 
   public get deviceIds(): number[] {

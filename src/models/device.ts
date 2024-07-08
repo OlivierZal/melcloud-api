@@ -47,8 +47,8 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     return this.areaId === null ? null : AreaModel.getById(this.areaId) ?? null
   }
 
-  public get building(): BuildingModel | null {
-    return BuildingModel.getById(this.buildingId) ?? null
+  public get building(): BuildingModel | undefined {
+    return BuildingModel.getById(this.buildingId)
   }
 
   public get data(): ListDevice[T]['Device'] {

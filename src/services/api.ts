@@ -207,20 +207,20 @@ export default class API implements IAPI {
     this.clearSync()
     const response = await this.#api.get<Building[]>(LIST_PATH)
     response.data.forEach((building) => {
-      DeviceModel.upsertMany(building.Structure.Devices)
-      building.Structure.Areas.forEach((area) => {
-        DeviceModel.upsertMany(area.Devices)
-        AreaModel.upsert(area)
-      })
+      BuildingModel.upsert(building)
       building.Structure.Floors.forEach((floor) => {
-        DeviceModel.upsertMany(floor.Devices)
         FloorModel.upsert(floor)
         floor.Areas.forEach((area) => {
-          DeviceModel.upsertMany(area.Devices)
           AreaModel.upsert(area)
+          DeviceModel.upsertMany(area.Devices)
         })
+        DeviceModel.upsertMany(floor.Devices)
       })
-      BuildingModel.upsert(building)
+      building.Structure.Areas.forEach((area) => {
+        AreaModel.upsert(area)
+        DeviceModel.upsertMany(area.Devices)
+      })
+      DeviceModel.upsertMany(building.Structure.Devices)
     })
     await this.#syncFunction?.()
     await this.#autoSync()
