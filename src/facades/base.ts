@@ -1,9 +1,9 @@
-import {
-  type AreaModelAny,
-  type BuildingModel,
+import type {
+  AreaModelAny,
+  BuildingModel,
   DeviceModel,
-  type DeviceModelAny,
-  type FloorModel,
+  DeviceModelAny,
+  FloorModel,
 } from '../models'
 import type {
   DateTimeComponents,
@@ -147,30 +147,20 @@ export default abstract class<
     select: DeviceModel<K>,
   ): Promise<TilesData<K>>
   public async getTiles<K extends keyof typeof DeviceType>(
-    select: DeviceModel<K> | boolean = false,
+    select: DeviceModel<K> | false = false,
   ): Promise<TilesData<K | null>> {
-    if (select === true) {
-      throw new Error('Select a device')
-    }
-    if (select instanceof DeviceModel) {
-      if (!this.#getDeviceIds().includes(select.id)) {
-        throw new Error('Device not found')
-      }
-      return (
-        await this.api.getTiles({
-          postData: {
-            DeviceIDs: this.#getDeviceIds(),
-            SelectedBuilding: select.buildingId,
-            SelectedDevice: select.id,
-          },
-        })
-      ).data as TilesData<K>
-    }
-    return (
-      await this.api.getTiles({
-        postData: { DeviceIDs: this.#getDeviceIds() },
-      })
-    ).data
+    const postData = { DeviceIDs: this.#getDeviceIds() }
+    return select === false || !this.#getDeviceIds().includes(select.id) ?
+        (await this.api.getTiles({ postData })).data
+      : ((
+          await this.api.getTiles({
+            postData: {
+              ...postData,
+              SelectedBuilding: select.buildingId,
+              SelectedDevice: select.id,
+            },
+          })
+        ).data as TilesData<K>)
   }
 
   public async getWifiReport(
