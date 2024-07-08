@@ -18,6 +18,6 @@ const withErrorMessage = (
   }
 
 export default (error: AxiosError): APICallContextDataWithErrorMessage =>
-  typeof error.response === 'undefined' ?
-    new (withErrorMessage(APICallRequestData, error))(error.config)
-  : new (withErrorMessage(APICallResponseData, error))(error.response)
+  error.response ?
+    new (withErrorMessage(APICallResponseData, error))(error.response)
+  : new (withErrorMessage(APICallRequestData, error))(error.config)

@@ -58,7 +58,7 @@ export default class extends BaseDeviceFacade<'Ata'> {
     data: Partial<UpdateDeviceDataAta>,
   ): Partial<UpdateDeviceDataAta> {
     const { SetTemperature: value, OperationMode: operationMode } = data
-    if (typeof value !== 'undefined') {
+    if (value !== undefined) {
       const { min, max } = this.#getTargetTemperatureRange(operationMode)
       return { SetTemperature: Math.min(Math.max(value, min), max) }
     }

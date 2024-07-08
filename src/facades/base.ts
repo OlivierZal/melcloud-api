@@ -47,18 +47,16 @@ const getDateTimeComponents = (
 
 const getEndDate = (
   startDate: DateTime,
-  to?: string | null,
+  to?: string,
   days?: number,
-): DateTime | null => {
+): DateTime => {
   if (
-    typeof to === 'undefined' ||
-    to === null ||
-    typeof days === 'undefined' ||
-    !days
+    (to === undefined && (days === undefined || !days)) ||
+    (to !== undefined && days !== undefined && days)
   ) {
-    throw new Error('End date is missing')
+    throw new Error('Select either end date or days')
   }
-  return days ? startDate.plus({ days }) : DateTime.fromISO(to)
+  return to === undefined ? startDate.plus({ days }) : DateTime.fromISO(to)
 }
 
 export default abstract class<
@@ -226,8 +224,8 @@ export default abstract class<
   }: {
     days?: number
     enable?: boolean
-    from?: string | null
-    to?: string | null
+    from?: string
+    to?: string
   }): Promise<FailureData | SuccessData> {
     const isEnabled = enable ?? true
     const startDate = isEnabled ? DateTime.fromISO(from ?? nowISO()) : null

@@ -64,10 +64,10 @@ const setupLuxonSettings = ({
   language?: string
   timezone?: string
 }): void => {
-  if (typeof language !== 'undefined') {
+  if (language !== undefined) {
     LuxonSettings.defaultLocale = language
   }
-  if (typeof timezone !== 'undefined') {
+  if (timezone !== undefined) {
     LuxonSettings.defaultZone = timezone
   }
 }
@@ -86,20 +86,21 @@ const setting = <This extends API, Value extends string | null | undefined>(
     if (!isAPISetting(key)) {
       throw new Error(`Invalid setting: ${key}`)
     }
-    return typeof this.settingManager === 'undefined' ?
-        target.get.call(this)
-      : (this.settingManager.get(key) as Value)
+    return (this.settingManager?.get(key) as Value) ?? target.get.call(this)
   },
   set(this: This, value: Value): void {
     const key = String(context.name)
     if (!isAPISetting(key)) {
       throw new Error(`Invalid setting: ${key}`)
     }
-    if (typeof this.settingManager === 'undefined') {
-      target.set.call(this, value)
+    if (typeof value !== 'string') {
+      throw new Error(`Invalid value ${value} for setting ${key}`)
+    }
+    if (this.settingManager) {
+      this.settingManager.set(key, value)
       return
     }
-    this.settingManager.set(key, value)
+    target.set.call(this, value)
   },
 })
 
@@ -190,7 +191,7 @@ export default class API implements IAPI {
           ).data.LoginData !== null
         )
       } catch (error) {
-        if (typeof data !== 'undefined') {
+        if (data !== undefined) {
           throw error
         }
       }

@@ -232,16 +232,14 @@ export default class extends BaseDeviceFacade<'Atw'> {
         ['OperationModeZone2', data.OperationModeZone2],
       ]
       const [[primaryKey, primaryValue], [secondaryKey, value]] =
-        typeof data.OperationModeZone2 === 'undefined' ?
-          [pair1, pair2]
-        : [pair2, pair1]
-      if (typeof primaryValue !== 'undefined') {
+        data.OperationModeZone2 === undefined ? [pair1, pair2] : [pair2, pair1]
+      if (primaryValue !== undefined) {
         const secondaryValue = this.#getSecondaryOperationMode(
           secondaryKey,
           primaryValue,
           value,
         )
-        if (typeof value !== 'undefined' && value !== secondaryValue) {
+        if (value !== undefined && value !== secondaryValue) {
           throw new Error('Operation modes conflict')
         }
         return { [primaryKey]: primaryValue, [secondaryKey]: secondaryValue }
@@ -255,7 +253,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
     key: keyof TemperatureDataAtw,
   ): Partial<UpdateDeviceDataAtw> {
     const value = data[key]
-    if (typeof value !== 'undefined') {
+    if (value !== undefined) {
       const { min, max } = this.#targetTemperatureRange[key]
       return { [key]: Math.min(Math.max(value, min), max) }
     }

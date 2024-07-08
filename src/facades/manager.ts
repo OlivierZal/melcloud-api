@@ -37,24 +37,24 @@ export default class {
     this.#api = api
   }
 
-  public get(): null
+  public get(): undefined
   public get(model: AreaModelAny): AreaFacade
   public get(model: BuildingModel): BuildingFacade
   public get<T extends keyof typeof DeviceType>(
     model: DeviceModel<T>,
   ): DeviceFacade[T]
   public get(model: FloorModel): FloorFacade
-  public get(model?: AreaModelAny): AreaFacade | null
-  public get(model?: BuildingModel): BuildingFacade | null
+  public get(model?: AreaModelAny): AreaFacade | undefined
+  public get(model?: BuildingModel): BuildingFacade | undefined
   public get<T extends keyof typeof DeviceType>(
     model?: DeviceModel<T>,
-  ): DeviceFacade[T] | null
-  public get(model?: FloorModel): FloorFacade | null
+  ): DeviceFacade[T] | undefined
+  public get(model?: FloorModel): FloorFacade | undefined
   public get(
     model?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
-  ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade | null {
-    if (typeof model === 'undefined') {
-      return null
+  ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade | undefined {
+    if (!model) {
+      return undefined
     }
     const modelName = model.constructor.name
     const id = `${modelName}:${model.id}`
@@ -82,7 +82,7 @@ export default class {
       }
     }
     const facade = this.#facades.get(id)
-    if (typeof facade === 'undefined') {
+    if (!facade) {
       throw new Error(`Facade not found for ${modelName} with id ${model.id}`)
     }
     return facade

@@ -306,6 +306,7 @@ export default tsEslint.config(
         },
       ],
       'no-ternary': 'off',
+      'no-undefined': 'off',
       'one-var': ['error', 'never'],
       'sort-keys': [
         'error',

@@ -51,11 +51,7 @@ export interface IBaseFacade {
   }) => Promise<FailureData | SuccessData>
   setHolidayMode: (({
     enable,
-    from,
-    to,
   }: {
-    from?: null
-    to?: null
     enable: false
   }) => Promise<FailureData | SuccessData>) &
     (({
@@ -64,7 +60,7 @@ export interface IBaseFacade {
       to,
     }: {
       enable?: true
-      from?: string | null
+      from?: string
       to: string
     }) => Promise<FailureData | SuccessData>) &
     (({
@@ -73,7 +69,7 @@ export interface IBaseFacade {
       days,
     }: {
       enable?: true
-      from?: string | null
+      from?: string
       days: number
     }) => Promise<FailureData | SuccessData>)
   setPower: (enable?: boolean) => Promise<boolean>
