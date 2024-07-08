@@ -102,8 +102,8 @@ export default abstract class<
     from,
     to,
   }: {
-    from?: string | null
-    to?: string | null
+    from?: string
+    to?: string
   }): Promise<ErrorData[] | FailureData> {
     return (
       await this.api.getErrors({

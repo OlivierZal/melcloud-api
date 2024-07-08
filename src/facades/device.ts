@@ -199,8 +199,8 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
     from,
     to,
   }: {
-    from?: string | null
-    to?: string | null
+    from?: string
+    to?: string
   }): Promise<EnergyData[T]> {
     if (this.type === 'Erv') {
       throw new Error('Erv devices do not support energy reports')

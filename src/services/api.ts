@@ -77,24 +77,21 @@ const getLanguage = (language = LuxonSettings.defaultLocale): Language =>
     Language[language as keyof typeof Language]
   : Language.en
 
-const setting = <This extends API, Value extends string | null | undefined>(
-  target: ClassAccessorDecoratorTarget<This, Value>,
-  context: ClassAccessorDecoratorContext<This, Value>,
-): ClassAccessorDecoratorResult<This, Value> => ({
-  get(this: This): Value {
+const setting = <This extends API>(
+  target: ClassAccessorDecoratorTarget<This, string>,
+  context: ClassAccessorDecoratorContext<This, string>,
+): ClassAccessorDecoratorResult<This, string> => ({
+  get(this: This): string {
     const key = String(context.name)
     if (!isAPISetting(key)) {
       throw new Error(`Invalid setting: ${key}`)
     }
-    return (this.settingManager?.get(key) as Value) ?? target.get.call(this)
+    return this.settingManager?.get(key) ?? target.get.call(this)
   },
-  set(this: This, value: Value): void {
+  set(this: This, value: string): void {
     const key = String(context.name)
     if (!isAPISetting(key)) {
       throw new Error(`Invalid setting: ${key}`)
-    }
-    if (typeof value !== 'string') {
-      throw new Error(`Invalid value ${value} for setting ${key}`)
     }
     if (this.settingManager) {
       this.settingManager.set(key, value)

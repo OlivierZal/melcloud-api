@@ -28,8 +28,8 @@ export interface IBaseFacade {
     from,
     to,
   }: {
-    from?: string | null
-    to?: string | null
+    from?: string
+    to?: string
   }) => Promise<ErrorData[] | FailureData>
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
@@ -110,8 +110,8 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
     from,
     to,
   }: {
-    from?: string | null
-    to?: string | null
+    from?: string
+    to?: string
   }) => Promise<EnergyData[T]>
   getTiles: ((select?: false | null) => Promise<TilesData<null>>) &
     ((select: true | DeviceModel<T>) => Promise<TilesData<T>>)

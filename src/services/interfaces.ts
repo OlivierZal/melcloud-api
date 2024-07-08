@@ -45,8 +45,8 @@ export const isAPISetting = (key: string): key is keyof APISettings =>
   ).includes(key)
 
 export interface SettingManager {
-  get: (key: string) => string | null | undefined
-  set: (key: string, value: string) => void
+  get: <K extends keyof APISettings>(key: K) => APISettings[K]
+  set: <K extends keyof APISettings>(key: K, value: APISettings[K]) => void
 }
 
 export interface Logger {
