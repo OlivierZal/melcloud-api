@@ -31,9 +31,7 @@ const MAX_TEMPERATURE_MIN = 6
 const MAX_TEMPERATURE_MAX = 16
 const MIN_MAX_GAP = 2
 
-const getDateTimeComponents = (
-  date: DateTime | null,
-): DateTimeComponents | null =>
+const getDateTimeComponents = (date?: DateTime): DateTimeComponents =>
   date ?
     {
       Day: date.day,
@@ -218,8 +216,8 @@ export default abstract class<
     to?: string
   }): Promise<FailureData | SuccessData> {
     const isEnabled = enable ?? true
-    const startDate = isEnabled ? DateTime.fromISO(from ?? nowISO()) : null
-    const endDate = startDate ? getEndDate(startDate, to, days) : null
+    const startDate = isEnabled ? DateTime.fromISO(from ?? nowISO()) : undefined
+    const endDate = startDate ? getEndDate(startDate, to, days) : undefined
     return (
       await this.api.setHolidayMode({
         postData: {
