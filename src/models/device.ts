@@ -102,9 +102,6 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public update(data: Partial<ListDevice[T]['Device']>): void {
-    this.#data = {
-      ...this.#data,
-      ...data,
-    }
+    this.#data = { ...this.#data, ...data }
   }
 }

@@ -22,34 +22,6 @@ export default class extends BaseDeviceFacade<'Atw'> {
 
   public override hasZone2 = this.data.HasZone2
 
-  readonly #targetTemperatureRange: Record<
-    keyof TemperatureDataAtw,
-    { max: number; min: number }
-  > = {
-    SetCoolFlowTemperatureZone1: {
-      max: MAX_FLOW_COOL_TEMP,
-      min: MIN_FLOW_COOL_TEMP,
-    },
-    SetCoolFlowTemperatureZone2: {
-      max: MAX_FLOW_COOL_TEMP,
-      min: MIN_FLOW_COOL_TEMP,
-    },
-    SetHeatFlowTemperatureZone1: {
-      max: MAX_FLOW_HEAT_TEMP,
-      min: MIN_FLOW_HEAT_TEMP,
-    },
-    SetHeatFlowTemperatureZone2: {
-      max: MAX_FLOW_HEAT_TEMP,
-      min: MIN_FLOW_HEAT_TEMP,
-    },
-    SetTankWaterTemperature: {
-      max: this.data.MaxTankTemperature,
-      min: MIN_HOT_WATER_TEMP,
-    },
-    SetTemperatureZone1: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
-    SetTemperatureZone2: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
-  } as const
-
   @alias('BoosterHeater1Status')
   public accessor boosterHeater1Status: unknown = null
 
@@ -172,6 +144,36 @@ export default class extends BaseDeviceFacade<'Atw'> {
 
   @alias('RoomTemperatureZone2')
   public accessor roomTemperatureZone2: unknown = null
+
+  get #targetTemperatureRange(): Record<
+    keyof TemperatureDataAtw,
+    { max: number; min: number }
+  > {
+    return {
+      SetCoolFlowTemperatureZone1: {
+        max: MAX_FLOW_COOL_TEMP,
+        min: MIN_FLOW_COOL_TEMP,
+      },
+      SetCoolFlowTemperatureZone2: {
+        max: MAX_FLOW_COOL_TEMP,
+        min: MIN_FLOW_COOL_TEMP,
+      },
+      SetHeatFlowTemperatureZone1: {
+        max: MAX_FLOW_HEAT_TEMP,
+        min: MIN_FLOW_HEAT_TEMP,
+      },
+      SetHeatFlowTemperatureZone2: {
+        max: MAX_FLOW_HEAT_TEMP,
+        min: MIN_FLOW_HEAT_TEMP,
+      },
+      SetTankWaterTemperature: {
+        max: this.data.MaxTankTemperature,
+        min: MIN_HOT_WATER_TEMP,
+      },
+      SetTemperatureZone1: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
+      SetTemperatureZone2: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
+    }
+  }
 
   protected override handle(
     data: Partial<UpdateDeviceDataAtw>,

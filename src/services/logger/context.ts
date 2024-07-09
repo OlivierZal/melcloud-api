@@ -10,7 +10,7 @@ const ORDER = [
   'responseData',
   'status',
   'errorMessage',
-]
+] as const
 
 const SPACE = 2
 
