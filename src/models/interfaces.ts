@@ -43,7 +43,7 @@ export interface IFloorModel
 
 export interface IDeviceModel<T extends keyof typeof DeviceType>
   extends IBaseSubFloorModel {
-  area: AreaModelAny | null
+  area?: AreaModelAny | null
   areaId: number | null
   data: ListDevice[T]['Device']
   type: T

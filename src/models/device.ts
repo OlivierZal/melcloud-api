@@ -43,8 +43,8 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     this.#data = data
   }
 
-  public get area(): AreaModelAny | null {
-    return this.areaId === null ? null : AreaModel.getById(this.areaId) ?? null
+  public get area(): AreaModelAny | null | undefined {
+    return this.areaId === null ? null : AreaModel.getById(this.areaId)
   }
 
   public get building(): BuildingModel | undefined {
