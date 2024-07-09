@@ -55,10 +55,10 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
     return this.#data
   }
 
-  public get floor(): FloorModel | null {
+  public get floor(): FloorModel | null | undefined {
     return this.floorId === null ?
         null
-      : FloorModel.getById(this.floorId) ?? null
+      : FloorModel.getById(this.floorId)
   }
 
   public static getAll(): DeviceModelAny[] {

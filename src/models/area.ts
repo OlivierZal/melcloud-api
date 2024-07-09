@@ -40,10 +40,10 @@ export default class AreaModel<T extends number | null>
     return DeviceModel.getByAreaId(this.id)
   }
 
-  public get floor(): FloorModel | null {
+  public get floor(): FloorModel | null | undefined {
     return this.floorId === null ?
         null
-      : FloorModel.getById(this.floorId) ?? null
+      : FloorModel.getById(this.floorId)
   }
 
   public static getAll(): AreaModelAny[] {

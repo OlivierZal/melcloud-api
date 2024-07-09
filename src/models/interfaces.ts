@@ -15,7 +15,7 @@ export interface IBaseSubBuildingModel extends IBaseModel {
 }
 
 export interface IBaseSubFloorModel extends IBaseSubBuildingModel {
-  floor: FloorModel | null
+  floor?: FloorModel | null
   floorId: number | null
 }
 
