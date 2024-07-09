@@ -41,9 +41,7 @@ export default class AreaModel<T extends number | null>
   }
 
   public get floor(): FloorModel | null | undefined {
-    return this.floorId === null ?
-        null
-      : FloorModel.getById(this.floorId)
+    return this.floorId === null ? null : FloorModel.getById(this.floorId)
   }
 
   public static getAll(): AreaModelAny[] {
