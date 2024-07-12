@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "6.1.1",
+  "version": "6.1.2",
   "description": "MELCloud API for Node.js",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -39,13 +39,13 @@
     "prepare": "npm run lint:fix && npm run format:fix && npm run build && npm run docs"
   },
   "devDependencies": {
-    "@eslint/js": "^9.6.0",
+    "@eslint/js": "^9.7.0",
     "@stylistic/eslint-plugin": "^2.3.0",
     "@types/eslint__js": "^8.42.3",
     "@types/eslint-config-prettier": "^6.11.3",
     "@types/luxon": "^3.4.2",
     "@types/node": "^20.14.10",
-    "eslint": "^9.6.0",
+    "eslint": "^9.7.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.29.1",
