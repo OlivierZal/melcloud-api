@@ -1,9 +1,4 @@
-import type {
-  AreaModelAny,
-  BuildingModel,
-  DeviceModel,
-  FloorModel,
-} from '../models'
+import type { AreaModelAny, BuildingModel, FloorModel } from '../models'
 import type {
   FailureData,
   ListDeviceDataAta,
@@ -47,7 +42,7 @@ export default abstract class<
   public getAta(): SetAtaGroupPostData['State'] {
     return mergeListDeviceDataAta(
       this.model.devices
-        .filter((device): device is DeviceModel<'Ata'> => device.type === 'Ata')
+        .filter((device) => device.type === 'Ata')
         .map(({ data }) => data),
     )
   }
@@ -75,7 +70,7 @@ export default abstract class<
       },
     })
     this.model.devices
-      .filter((device): device is DeviceModel<'Ata'> => device.type === 'Ata')
+      .filter((device) => device.type === 'Ata')
       .forEach((device) => {
         device.update(state)
       })

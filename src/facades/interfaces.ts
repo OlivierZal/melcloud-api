@@ -41,38 +41,38 @@ export interface IBaseFacade {
   id: number
   name: string
   setFrostProtection: ({
-    enable,
+    enabled,
     max,
     min,
   }: {
-    enable?: boolean
+    enabled?: boolean
     max: number
     min: number
   }) => Promise<FailureData | SuccessData>
   setHolidayMode: (({
-    enable,
+    enabled,
   }: {
-    enable: false
+    enabled: false
   }) => Promise<FailureData | SuccessData>) &
     (({
-      enable,
+      enabled,
       from,
       to,
     }: {
-      enable?: true
+      enabled?: true
       from?: string
       to: string
     }) => Promise<FailureData | SuccessData>) &
     (({
-      enable,
+      enabled,
       from,
       days,
     }: {
-      enable?: true
+      enabled?: true
       from?: string
       days: number
     }) => Promise<FailureData | SuccessData>)
-  setPower: (enable?: boolean) => Promise<boolean>
+  setPower: (enabled?: boolean) => Promise<boolean>
 }
 
 export interface IBaseSuperDeviceFacade extends IBaseFacade {

@@ -172,11 +172,11 @@ export default abstract class<
   }
 
   public async setFrostProtection({
-    enable,
+    enabled,
     max,
     min,
   }: {
-    enable?: boolean
+    enabled?: boolean
     max: number
     min: number
   }): Promise<FailureData | SuccessData> {
@@ -195,7 +195,7 @@ export default abstract class<
     return (
       await this.api.setFrostProtection({
         postData: {
-          Enabled: enable ?? true,
+          Enabled: enabled ?? true,
           MaximumTemperature: newMax,
           MinimumTemperature: newMin,
           ...(await this.#getFrostProtectionLocation()),
@@ -206,16 +206,16 @@ export default abstract class<
 
   public async setHolidayMode({
     days,
-    enable,
+    enabled,
     from,
     to,
   }: {
     days?: number
-    enable?: boolean
+    enabled?: boolean
     from?: string
     to?: string
   }): Promise<FailureData | SuccessData> {
-    const isEnabled = enable ?? true
+    const isEnabled = enabled ?? true
     const startDate = isEnabled ? DateTime.fromISO(from ?? nowISO()) : undefined
     const endDate = startDate ? getEndDate(startDate, to, days) : undefined
     return (
@@ -230,10 +230,10 @@ export default abstract class<
     ).data
   }
 
-  public async setPower(enable = true): Promise<boolean> {
+  public async setPower(enabled = true): Promise<boolean> {
     return (
       await this.api.setPower({
-        postData: { DeviceIds: this.#getDeviceIds(), Power: enable },
+        postData: { DeviceIds: this.#getDeviceIds(), Power: enabled },
       })
     ).data
   }
