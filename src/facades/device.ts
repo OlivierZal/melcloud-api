@@ -177,7 +177,7 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
       Object.keys(newData) as (keyof UpdateDeviceData[T])[],
     )
     if (!flags) {
-      throw new Error('No data to set')
+      throw new Error('no_update')
     }
     return (
       await this.api.set({
