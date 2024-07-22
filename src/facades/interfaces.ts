@@ -51,8 +51,12 @@ export interface IBaseFacade {
   }) => Promise<FailureData | SuccessData>
   setHolidayMode: (({
     enabled,
+    from,
+    days,
   }: {
-    enabled: false
+    enabled?: true
+    from?: string
+    days: number
   }) => Promise<FailureData | SuccessData>) &
     (({
       enabled,
@@ -63,15 +67,7 @@ export interface IBaseFacade {
       from?: string
       to: string
     }) => Promise<FailureData | SuccessData>) &
-    (({
-      enabled,
-      from,
-      days,
-    }: {
-      enabled?: true
-      from?: string
-      days: number
-    }) => Promise<FailureData | SuccessData>)
+    (({ enabled }: { enabled: false }) => Promise<FailureData | SuccessData>)
   setPower: (enabled?: boolean) => Promise<boolean>
 }
 
@@ -113,8 +109,8 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
     from?: string
     to?: string
   }) => Promise<EnergyData[T]>
-  getTiles: ((select?: false) => Promise<TilesData<null>>) &
-    ((select: true | DeviceModel<T>) => Promise<TilesData<T>>)
+  getTiles: ((select: DeviceModel<T> | true) => Promise<TilesData<T>>) &
+    ((select?: false) => Promise<TilesData<null>>)
   set: (data: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
   type: T
   values: Values[T]

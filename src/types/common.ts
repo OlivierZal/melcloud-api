@@ -175,8 +175,8 @@ export interface HolidayModeData {
   }
   readonly HMDefined: boolean
   readonly HMEnabled: boolean
-  readonly HMEndDate: string | null
-  readonly HMStartDate: string | null
+  readonly HMEndDate: null | string
+  readonly HMStartDate: null | string
   readonly StartDate: {
     readonly Day: number
     readonly Hour: number
@@ -196,10 +196,10 @@ export interface BuildingData extends BuildingSettings {
   readonly Name: string
 }
 
-export interface AreaData<T extends number | null> extends FloorData {
+export interface AreaData<T extends null | number> extends FloorData {
   readonly FloorId: T
 }
-export type AreaDataAny = AreaData<number> | AreaData<null>
+export type AreaDataAny = AreaData<null> | AreaData<number>
 export interface ListDeviceData {
   readonly Ata: ListDeviceDataAta
   readonly Atw: ListDeviceDataAtw
@@ -222,16 +222,16 @@ export interface FloorData {
 }
 export interface Building extends BuildingData {
   readonly Structure: {
-    readonly Areas: readonly (AreaData<null> & {
+    readonly Areas: readonly ({
       readonly Devices: readonly ListDeviceAny[]
-    })[]
+    } & AreaData<null>)[]
     readonly Devices: readonly ListDeviceAny[]
-    readonly Floors: readonly (FloorData & {
-      readonly Areas: readonly (AreaData<number> & {
+    readonly Floors: readonly ({
+      readonly Areas: readonly ({
         readonly Devices: readonly ListDeviceAny[]
-      })[]
+      } & AreaData<number>)[]
       readonly Devices: readonly ListDeviceAny[]
-    })[]
+    } & FloorData)[]
   }
 }
 
@@ -242,34 +242,33 @@ export interface SetPowerPostData {
 
 export interface SetAtaGroupPostData {
   readonly Specification: {
-    readonly AreaID?: number | null
-    readonly BuildingID?: number | null
-    readonly FloorID?: number | null
+    readonly AreaID?: null | number
+    readonly BuildingID?: null | number
+    readonly FloorID?: null | number
   }
   readonly State: {
     readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
-    readonly OperationMode?: OperationMode | null
+    readonly OperationMode?: null | OperationMode
     readonly Power?: boolean | null
-    readonly SetTemperature?: number | null
+    readonly SetTemperature?: null | number
     readonly VaneHorizontalDirection?: Horizontal | null
     readonly VaneHorizontalSwing?: boolean | null
-    readonly VaneVerticalDirection?: Vertical | null
+    readonly VaneVerticalDirection?: null | Vertical
     readonly VaneVerticalSwing?: boolean | null
   }
 }
 
-export type TilesPostData<T extends keyof typeof DeviceType | null> =
-  (T extends keyof typeof DeviceType ?
-    {
-      readonly SelectedBuilding: number
-      readonly SelectedDevice: number
-    }
-  : {
-      readonly SelectedBuilding?: null
-      readonly SelectedDevice?: null
-    }) & {
-    readonly DeviceIDs: readonly number[]
+export type TilesPostData<T extends keyof typeof DeviceType | null> = {
+  readonly DeviceIDs: readonly number[]
+} & (T extends keyof typeof DeviceType ?
+  {
+    readonly SelectedBuilding: number
+    readonly SelectedDevice: number
   }
+: {
+    readonly SelectedBuilding?: null
+    readonly SelectedDevice?: null
+  })
 export interface TilesData<T extends keyof typeof DeviceType | null> {
   readonly SelectedDevice: T extends keyof typeof DeviceType ? GetDeviceData[T]
   : null
@@ -302,7 +301,7 @@ export interface ErrorPostData {
 export interface ErrorData {
   readonly DeviceId: number
   readonly EndDate: string
-  readonly ErrorMessage: string | null
+  readonly ErrorMessage: null | string
   readonly StartDate: string
 }
 
@@ -311,7 +310,7 @@ export interface WifiPostData {
   readonly hour: number
 }
 export interface WifiData {
-  readonly Data: readonly (readonly (number | null)[])[]
+  readonly Data: readonly (readonly (null | number)[])[]
   readonly FromDate: string
   readonly Labels: readonly string[]
   readonly ToDate: string

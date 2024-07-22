@@ -83,7 +83,7 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
 
 const updateDevice = <
   T extends keyof typeof DeviceType,
-  DeviceData extends SetDeviceData[T] | GetDeviceData[T],
+  DeviceData extends GetDeviceData[T] | SetDeviceData[T],
 >(
   target: (...args: any[]) => Promise<DeviceData>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -219,11 +219,11 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
 
   public override async getTiles(select?: false): Promise<TilesData<null>>
   public override async getTiles(
-    select: true | DeviceModel<T>,
+    select: DeviceModel<T> | true,
   ): Promise<TilesData<T>>
   public override async getTiles(
     select: boolean | DeviceModel<T> = false,
-  ): Promise<TilesData<T | null>> {
+  ): Promise<TilesData<null | T>> {
     return (
         select === false ||
           (select instanceof DeviceModel && select.id !== this.id)

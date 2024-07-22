@@ -16,11 +16,11 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 {
   static readonly #devices = new Map<number, DeviceModelAny>()
 
-  public readonly areaId: number | null = null
+  public readonly areaId: null | number = null
 
   public readonly buildingId: number
 
-  public readonly floorId: number | null = null
+  public readonly floorId: null | number = null
 
   public readonly type: T
 

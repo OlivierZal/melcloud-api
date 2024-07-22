@@ -5,9 +5,9 @@ import BuildingModel from './building'
 import FloorModel from './floor'
 import type { IAreaModel } from './interfaces'
 
-export type AreaModelAny = AreaModel<number> | AreaModel<null>
+export type AreaModelAny = AreaModel<null> | AreaModel<number>
 
-export default class AreaModel<T extends number | null>
+export default class AreaModel<T extends null | number>
   extends BaseModel
   implements IAreaModel
 {
@@ -15,7 +15,7 @@ export default class AreaModel<T extends number | null>
 
   public readonly buildingId: number
 
-  public readonly floorId: number | null
+  public readonly floorId: null | number
 
   private constructor({
     BuildingId: buildingId,
