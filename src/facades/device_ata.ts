@@ -1,5 +1,5 @@
-import BaseDeviceFacade, { alias } from './device'
 import { OperationMode, type UpdateDeviceDataAta } from '../types'
+import BaseDeviceFacade, { alias } from './device'
 
 export default class extends BaseDeviceFacade<'Ata'> {
   @alias('ActualFanSpeed')

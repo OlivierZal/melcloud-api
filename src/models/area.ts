@@ -1,13 +1,14 @@
 import type { AreaData, AreaDataAny } from '../types'
-import DeviceModel, { type DeviceModelAny } from './device'
+import type { IAreaModel } from './interfaces'
+
 import BaseModel from './base'
 import BuildingModel from './building'
+import DeviceModel, { type DeviceModelAny } from './device'
 import FloorModel from './floor'
-import type { IAreaModel } from './interfaces'
 
 export type AreaModelAny = AreaModel<null> | AreaModel<number>
 
-export default class AreaModel<T extends null | number>
+export default class AreaModel<T extends number | null>
   extends BaseModel
   implements IAreaModel
 {
@@ -15,7 +16,7 @@ export default class AreaModel<T extends null | number>
 
   public readonly buildingId: number
 
-  public readonly floorId: null | number
+  public readonly floorId: number | null
 
   private constructor({
     BuildingId: buildingId,

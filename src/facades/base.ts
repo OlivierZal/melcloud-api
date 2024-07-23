@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon'
+
 import type {
   AreaModelAny,
   BuildingModel,
@@ -5,6 +7,7 @@ import type {
   DeviceModelAny,
   FloorModel,
 } from '../models'
+import type API from '../services'
 import type {
   DateTimeComponents,
   DeviceType,
@@ -20,10 +23,9 @@ import type {
   TilesData,
   WifiData,
 } from '../types'
-import { YEAR_1970, nowISO } from './utils'
-import type API from '../services'
-import { DateTime } from 'luxon'
 import type { IBaseFacade } from './interfaces'
+
+import { YEAR_1970, nowISO } from './utils'
 
 const MIN_TEMPERATURE_MIN = 4
 const MIN_TEMPERATURE_MAX = 14
@@ -145,7 +147,7 @@ export default abstract class<
     select: DeviceModel<K>,
   ): Promise<TilesData<K>>
   public async getTiles<K extends keyof typeof DeviceType>(
-    select: DeviceModel<K> | false = false,
+    select: false | DeviceModel<K> = false,
   ): Promise<TilesData<K | null>> {
     const postData = { DeviceIDs: this.#getDeviceIds() }
     return select === false || !this.#getDeviceIds().includes(select.id) ?

@@ -1,6 +1,7 @@
-import BaseSuperDeviceFacade from './base_super_device'
-import { FloorModel } from '../models'
 import type { IBaseSuperDeviceFacade } from './interfaces'
+
+import { FloorModel } from '../models'
+import BaseSuperDeviceFacade from './base_super_device'
 
 export default class
   extends BaseSuperDeviceFacade<FloorModel>

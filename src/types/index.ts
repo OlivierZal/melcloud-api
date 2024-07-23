@@ -1,17 +1,4 @@
 export {
-  type BaseDevicePostData,
-  type BaseGetDeviceData,
-  type BaseListDevice,
-  type BaseListDeviceData,
-  type BaseSetDeviceData,
-  type BaseUpdateDeviceData,
-  type BaseValues,
-  type DeviceDataNotInList,
-  DeviceType,
-  FLAG_UNCHANGED,
-  FanSpeed,
-} from './bases'
-export {
   type EnergyDataAta,
   type GetDeviceDataAta,
   type KeysOfSetDeviceDataAtaNotInList,
@@ -29,6 +16,34 @@ export {
   OperationMode,
   Vertical,
 } from './ata'
+export {
+  type EnergyDataAtw,
+  type GetDeviceDataAtw,
+  type ListDeviceAtw,
+  type ListDeviceDataAtw,
+  type OperationModeZoneDataAtw,
+  type SetDeviceDataAtw,
+  type SetDevicePostDataAtw,
+  type TemperatureDataAtw,
+  type UpdateDeviceDataAtw,
+  type ValuesAtw,
+  FLAGS_ATW,
+  OperationModeState,
+  OperationModeZone,
+} from './atw'
+export {
+  type BaseDevicePostData,
+  type BaseGetDeviceData,
+  type BaseListDevice,
+  type BaseListDeviceData,
+  type BaseSetDeviceData,
+  type BaseUpdateDeviceData,
+  type BaseValues,
+  type DeviceDataNotInList,
+  DeviceType,
+  FLAG_UNCHANGED,
+  FanSpeed,
+} from './bases'
 export {
   type AreaData,
   type AreaDataAny,
@@ -73,21 +88,6 @@ export {
   FLAGS,
   Language,
 } from './common'
-export {
-  type EnergyDataAtw,
-  type GetDeviceDataAtw,
-  type ListDeviceAtw,
-  type ListDeviceDataAtw,
-  type OperationModeZoneDataAtw,
-  type SetDeviceDataAtw,
-  type SetDevicePostDataAtw,
-  type TemperatureDataAtw,
-  type UpdateDeviceDataAtw,
-  type ValuesAtw,
-  FLAGS_ATW,
-  OperationModeState,
-  OperationModeZone,
-} from './atw'
 export {
   type GetDeviceDataErv,
   type ListDeviceDataErv,

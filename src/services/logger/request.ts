@@ -1,5 +1,6 @@
-import APICallContextData from './context'
 import type { InternalAxiosRequestConfig } from 'axios'
+
+import APICallContextData from './context'
 
 export default class extends APICallContextData {
   public readonly headers?: InternalAxiosRequestConfig['headers']

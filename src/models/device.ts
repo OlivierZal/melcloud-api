@@ -1,9 +1,10 @@
-import AreaModel, { type AreaModelAny } from './area'
+import type { IDeviceModel } from './interfaces'
+
 import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
+import AreaModel, { type AreaModelAny } from './area'
 import BaseModel from './base'
 import BuildingModel from './building'
 import FloorModel from './floor'
-import type { IDeviceModel } from './interfaces'
 
 export type DeviceModelAny =
   | DeviceModel<'Ata'>
@@ -16,11 +17,11 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
 {
   static readonly #devices = new Map<number, DeviceModelAny>()
 
-  public readonly areaId: null | number = null
+  public readonly areaId: number | null = null
 
   public readonly buildingId: number
 
-  public readonly floorId: null | number = null
+  public readonly floorId: number | null = null
 
   public readonly type: T
 

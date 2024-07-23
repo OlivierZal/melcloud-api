@@ -6,8 +6,9 @@ import type {
   SuccessData,
   ValuesAta,
 } from '../types'
-import BaseFacade from './base'
 import type { IBaseSuperDeviceFacade } from './interfaces'
+
+import BaseFacade from './base'
 
 const NUMBER_1 = 1
 

@@ -74,7 +74,7 @@ export interface ListDeviceDataAta
     SetDeviceDataAtaInList,
     Omit<
       GetDeviceDataAta,
-      keyof DeviceDataNotInList | KeysOfSetDeviceDataAtaNotInList
+      KeysOfSetDeviceDataAtaNotInList | keyof DeviceDataNotInList
     > {
   readonly ActualFanSpeed: number
   readonly HasAutomaticFanSpeed: boolean

@@ -1,3 +1,4 @@
+import type { DeviceModel } from '../models'
 import type {
   BuildingData,
   BuildingSettings,
@@ -21,7 +22,6 @@ import type {
   Vertical,
   WifiData,
 } from '../types'
-import type { DeviceModel } from '../models'
 
 export interface IBaseFacade {
   getErrors: ({
@@ -109,7 +109,7 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
     from?: string
     to?: string
   }) => Promise<EnergyData[T]>
-  getTiles: ((select: DeviceModel<T> | true) => Promise<TilesData<T>>) &
+  getTiles: ((select: true | DeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
   set: (data: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
   type: T

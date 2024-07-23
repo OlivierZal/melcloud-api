@@ -1,5 +1,5 @@
-import type { default as AreaModel, AreaModelAny } from './area'
 import type { BuildingSettings, DeviceType, ListDevice } from '../types'
+import type { default as AreaModel, AreaModelAny } from './area'
 import type BuildingModel from './building'
 import type { DeviceModelAny } from './device'
 import type FloorModel from './floor'
@@ -16,7 +16,7 @@ export interface IBaseSubBuildingModel extends IBaseModel {
 
 export interface IBaseSubFloorModel extends IBaseSubBuildingModel {
   floor?: FloorModel | null
-  floorId: null | number
+  floorId: number | null
 }
 
 export interface IBaseSuperDeviceModel extends IBaseModel {
@@ -44,7 +44,7 @@ export interface IFloorModel
 export interface IDeviceModel<T extends keyof typeof DeviceType>
   extends IBaseSubFloorModel {
   area?: AreaModelAny | null
-  areaId: null | number
+  areaId: number | null
   data: ListDevice[T]['Device']
   type: T
   update: (data: Partial<ListDevice[T]['Device']>) => void

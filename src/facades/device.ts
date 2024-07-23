@@ -1,3 +1,6 @@
+import type API from '../services'
+import type { IDeviceFacade } from './interfaces'
+
 import { DeviceModel, type DeviceModelAny } from '../models'
 import {
   type DeviceType,
@@ -15,10 +18,8 @@ import {
   type UpdateDeviceData,
   type Values,
 } from '../types'
-import { YEAR_1970, nowISO } from './utils'
-import type API from '../services'
 import BaseFacade from './base'
-import type { IDeviceFacade } from './interfaces'
+import { YEAR_1970, nowISO } from './utils'
 
 // @ts-expect-error: most runtimes do not support natively
 Symbol.metadata ??= Symbol('Symbol.metadata')
@@ -219,11 +220,11 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
 
   public override async getTiles(select?: false): Promise<TilesData<null>>
   public override async getTiles(
-    select: DeviceModel<T> | true,
+    select: true | DeviceModel<T>,
   ): Promise<TilesData<T>>
   public override async getTiles(
     select: boolean | DeviceModel<T> = false,
-  ): Promise<TilesData<null | T>> {
+  ): Promise<TilesData<T | null>> {
     return (
         select === false ||
           (select instanceof DeviceModel && select.id !== this.id)

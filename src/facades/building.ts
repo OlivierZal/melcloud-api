@@ -1,8 +1,9 @@
-import type { BuildingData, BuildingSettings } from '../types'
 import type API from '../services'
-import BaseSuperDeviceFacade from './base_super_device'
-import { BuildingModel } from '../models'
+import type { BuildingData, BuildingSettings } from '../types'
 import type { IBuildingFacade } from './interfaces'
+
+import { BuildingModel } from '../models'
+import BaseSuperDeviceFacade from './base_super_device'
 
 export default class
   extends BaseSuperDeviceFacade<BuildingModel>

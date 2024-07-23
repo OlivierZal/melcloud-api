@@ -1,17 +1,4 @@
 import {
-  APICallRequestData,
-  APICallResponseData,
-  createAPICallErrorData,
-} from './logger'
-import {
-  type APIConfig,
-  type IAPI,
-  type Logger,
-  type SettingManager,
-  isAPISetting,
-} from './interfaces'
-import { AreaModel, BuildingModel, DeviceModel, FloorModel } from '../models'
-import {
   type AxiosError,
   type AxiosInstance,
   type AxiosResponse,
@@ -19,6 +6,10 @@ import {
   type InternalAxiosRequestConfig,
   create as createAxiosInstance,
 } from 'axios'
+import https from 'https'
+import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
+
+import { AreaModel, BuildingModel, DeviceModel, FloorModel } from '../models'
 import {
   type Building,
   type DeviceType,
@@ -48,8 +39,18 @@ import {
   type WifiData,
   type WifiPostData,
 } from '../types'
-import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
-import https from 'https'
+import {
+  type APIConfig,
+  type IAPI,
+  type Logger,
+  type SettingManager,
+  isAPISetting,
+} from './interfaces'
+import {
+  APICallRequestData,
+  APICallResponseData,
+  createAPICallErrorData,
+} from './logger'
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin'

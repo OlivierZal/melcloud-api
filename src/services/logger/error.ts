@@ -1,7 +1,9 @@
+import type { AxiosError } from 'axios'
+
 import type APICallContextData from './context'
+
 import APICallRequestData from './request'
 import APICallResponseData from './response'
-import type { AxiosError } from 'axios'
 
 interface APICallContextDataWithErrorMessage extends APICallContextData {
   readonly errorMessage: string

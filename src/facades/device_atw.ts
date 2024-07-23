@@ -1,10 +1,10 @@
-import BaseDeviceFacade, { alias } from './device'
 import {
   OperationModeZone,
   type OperationModeZoneDataAtw,
   type TemperatureDataAtw,
   type UpdateDeviceDataAtw,
 } from '../types'
+import BaseDeviceFacade, { alias } from './device'
 
 const HEAT_COOL_GAP = OperationModeZone.room_cool
 const ROOM_FLOW_GAP = OperationModeZone.flow

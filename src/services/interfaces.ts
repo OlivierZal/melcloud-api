@@ -28,10 +28,10 @@ import type {
 } from '../types'
 
 export interface APISettings {
-  contextKey?: null | string
-  expiry?: null | string
-  password?: null | string
-  username?: null | string
+  contextKey?: string | null
+  expiry?: string | null
+  password?: string | null
+  username?: string | null
 }
 
 export const isAPISetting = (key: string): key is keyof APISettings =>
@@ -55,7 +55,7 @@ export interface Logger {
 }
 
 export interface APIConfig {
-  autoSyncInterval?: null | number
+  autoSyncInterval?: number | null
   language?: string
   logger?: Logger
   settingManager?: SettingManager

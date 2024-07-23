@@ -47,11 +47,11 @@ export interface BaseListDeviceData
 }
 
 export interface BaseListDevice {
-  readonly AreaID: null | number
+  readonly AreaID: number | null
   readonly BuildingID: number
   readonly DeviceID: number
   readonly DeviceName: string
-  readonly FloorID: null | number
+  readonly FloorID: number | null
   readonly Type: DeviceType
 }
 

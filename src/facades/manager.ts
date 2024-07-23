@@ -1,3 +1,6 @@
+import type API from '../services'
+import type { DeviceType } from '../types'
+
 import {
   AreaModel,
   type AreaModelAny,
@@ -6,13 +9,11 @@ import {
   type DeviceModelAny,
   FloorModel,
 } from '../models'
-import type API from '../services'
 import AreaFacade from './area'
 import BuildingFacade from './building'
 import DeviceFacadeAta from './device_ata'
 import DeviceFacadeAtw from './device_atw'
 import DeviceFacadeErv from './device_erv'
-import type { DeviceType } from '../types'
 import FloorFacade from './floor'
 
 export interface DeviceFacade {
