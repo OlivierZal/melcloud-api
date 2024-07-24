@@ -2,11 +2,11 @@ import type API from '../services'
 import type { DeviceType } from '../types'
 
 import {
-  AreaModel,
   type AreaModelAny,
+  type DeviceModelAny,
+  AreaModel,
   BuildingModel,
   DeviceModel,
-  type DeviceModelAny,
   FloorModel,
 } from '../models'
 import AreaFacade from './area'

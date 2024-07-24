@@ -1,8 +1,8 @@
 import {
-  OperationModeZone,
   type OperationModeZoneDataAtw,
   type TemperatureDataAtw,
   type UpdateDeviceDataAtw,
+  OperationModeZone,
 } from '../types'
 import BaseDeviceFacade, { alias } from './device'
 

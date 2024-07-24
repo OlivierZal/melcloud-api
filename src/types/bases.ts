@@ -8,12 +8,12 @@ export enum DeviceType {
 
 export enum FanSpeed {
   auto = 0,
-  very_slow = 1,
-  slow = 2,
-  moderate = 3,
   fast = 4,
-  very_fast = 5,
+  moderate = 3,
   silent = 255,
+  slow = 2,
+  very_fast = 5,
+  very_slow = 1,
 }
 
 export interface BaseUpdateDeviceData {

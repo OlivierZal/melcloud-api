@@ -11,20 +11,20 @@ import type {
 } from './bases'
 
 export enum OperationModeState {
-  idle = 0,
-  dhw = 1,
-  heating = 2,
   cooling = 3,
   defrost = 5,
+  dhw = 1,
+  heating = 2,
+  idle = 0,
   legionella = 6,
 }
 
 export enum OperationModeZone {
-  room = 0,
-  flow = 1,
   curve = 2,
-  room_cool = 3,
+  flow = 1,
   flow_cool = 4,
+  room = 0,
+  room_cool = 3,
 }
 
 export interface OperationModeZoneDataAtw {

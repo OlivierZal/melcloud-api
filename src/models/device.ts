@@ -1,6 +1,6 @@
 import type { IDeviceModel } from './interfaces'
 
-import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
+import { type ListDevice, type ListDeviceAny, DeviceType } from '../types'
 import AreaModel, { type AreaModelAny } from './area'
 import BaseModel from './base'
 import BuildingModel from './building'

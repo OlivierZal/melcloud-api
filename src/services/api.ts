@@ -2,8 +2,8 @@ import {
   type AxiosError,
   type AxiosInstance,
   type AxiosResponse,
-  HttpStatusCode,
   type InternalAxiosRequestConfig,
+  HttpStatusCode,
   create as createAxiosInstance,
 } from 'axios'
 import https from 'https'
@@ -24,7 +24,6 @@ import {
   type GetDeviceDataParams,
   type HolidayModeData,
   type HolidayModePostData,
-  Language,
   type LoginCredentials,
   type LoginData,
   type LoginPostData,
@@ -38,6 +37,7 @@ import {
   type TilesPostData,
   type WifiData,
   type WifiPostData,
+  Language,
 } from '../types'
 import {
   type APIConfig,
