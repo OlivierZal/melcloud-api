@@ -1,4 +1,4 @@
-import { OperationMode, type UpdateDeviceDataAta } from '../types'
+import { type UpdateDeviceDataAta, OperationMode } from '../types'
 import BaseDeviceFacade, { alias } from './device'
 
 export default class extends BaseDeviceFacade<'Ata'> {
@@ -45,12 +45,14 @@ export default class extends BaseDeviceFacade<'Ata'> {
           max: this.data.MaxTempAutomatic,
           min: this.data.MinTempAutomatic,
         }
+      /* eslint-disable perfectionist/sort-switch-case */
       case OperationMode.cool:
       case OperationMode.dry:
         return { max: this.data.MaxTempCoolDry, min: this.data.MinTempCoolDry }
       case OperationMode.heat:
       default:
         return { max: this.data.MaxTempHeat, min: this.data.MinTempHeat }
+      /* eslint-enable perfectionist/sort-switch-case */
     }
   }
 

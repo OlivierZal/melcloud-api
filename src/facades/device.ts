@@ -1,14 +1,10 @@
 import type API from '../services'
 import type { IDeviceFacade } from './interfaces'
 
-import { DeviceModel, type DeviceModelAny } from '../models'
+import { type DeviceModelAny, DeviceModel } from '../models'
 import {
   type DeviceType,
   type EnergyData,
-  FLAGS,
-  FLAG_UNCHANGED,
-  FROM_LIST_TO_SET_ATA,
-  FROM_SET_TO_LIST_ATA,
   type GetDeviceData,
   type KeysOfSetDeviceDataAtaNotInList,
   type ListDevice,
@@ -17,6 +13,10 @@ import {
   type TilesData,
   type UpdateDeviceData,
   type Values,
+  FLAG_UNCHANGED,
+  FLAGS,
+  FROM_LIST_TO_SET_ATA,
+  FROM_SET_TO_LIST_ATA,
 } from '../types'
 import BaseFacade from './base'
 import { YEAR_1970, nowISO } from './utils'

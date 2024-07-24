@@ -2,7 +2,6 @@ import type { DeviceType, FanSpeed } from './bases'
 
 import {
   type EnergyDataAta,
-  FLAGS_ATA,
   type GetDeviceDataAta,
   type Horizontal,
   type ListDeviceAta,
@@ -13,10 +12,10 @@ import {
   type UpdateDeviceDataAta,
   type ValuesAta,
   type Vertical,
+  FLAGS_ATA,
 } from './ata'
 import {
   type EnergyDataAtw,
-  FLAGS_ATW,
   type GetDeviceDataAtw,
   type ListDeviceAtw,
   type ListDeviceDataAtw,
@@ -24,9 +23,9 @@ import {
   type SetDevicePostDataAtw,
   type UpdateDeviceDataAtw,
   type ValuesAtw,
+  FLAGS_ATW,
 } from './atw'
 import {
-  FLAGS_ERV,
   type GetDeviceDataErv,
   type ListDeviceDataErv,
   type ListDeviceErv,
@@ -34,36 +33,37 @@ import {
   type SetDevicePostDataErv,
   type UpdateDeviceDataErv,
   type ValuesErv,
+  FLAGS_ERV,
 } from './erv'
 
 export enum Language {
-  en = 0,
   bg = 1,
   cs = 2,
   da = 3,
   de = 4,
-  et = 5,
+  el = 22,
+  en = 0,
   es = 6,
+  et = 5,
+  fi = 17,
   fr = 7,
-  hy = 8,
-  lv = 9,
-  lt = 10,
+  hr = 23,
   hu = 11,
+  hy = 8,
+  it = 19,
+  lt = 10,
+  lv = 9,
   nl = 12,
   no = 13,
   pl = 14,
   pt = 15,
-  ru = 16,
-  fi = 17,
-  sv = 18,
-  it = 19,
-  uk = 20,
-  tr = 21,
-  el = 22,
-  hr = 23,
   ro = 24,
+  ru = 16,
   sl = 25,
   sq = 26,
+  sv = 18,
+  tr = 21,
+  uk = 20,
 }
 
 export interface LoginCredentials {

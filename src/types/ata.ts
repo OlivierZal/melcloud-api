@@ -12,32 +12,32 @@ import type {
 } from './bases'
 
 export enum OperationMode {
-  heat = 1,
-  dry = 2,
-  cool = 3,
-  fan = 7,
   auto = 8,
+  cool = 3,
+  dry = 2,
+  fan = 7,
+  heat = 1,
 }
 
 export enum Vertical {
   auto = 0,
-  upwards = 1,
-  mid_high = 2,
-  middle = 3,
-  mid_low = 4,
   downwards = 5,
+  mid_high = 2,
+  mid_low = 4,
+  middle = 3,
   swing = 7,
+  upwards = 1,
 }
 
 export enum Horizontal {
   auto = 0,
-  leftwards = 1,
-  center_left = 2,
   center = 3,
+  center_left = 2,
   center_right = 4,
+  leftwards = 1,
   rightwards = 5,
-  wide = 8,
   swing = 12,
+  wide = 8,
 }
 
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {

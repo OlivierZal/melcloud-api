@@ -12,9 +12,9 @@ import type {
 } from './bases'
 
 export enum VentilationMode {
-  recovery = 0,
-  bypass = 1,
   auto = 2,
+  bypass = 1,
+  recovery = 0,
 }
 
 export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {

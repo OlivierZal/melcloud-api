@@ -1,6 +1,6 @@
 import type { IBaseSuperDeviceFacade } from './interfaces'
 
-import { AreaModel, type AreaModelAny } from '../models'
+import { type AreaModelAny, AreaModel } from '../models'
 import BaseSuperDeviceFacade from './base_super_device'
 
 export default class
