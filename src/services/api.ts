@@ -105,7 +105,7 @@ const setting = <This extends API>(
 export default class API implements IAPI {
   protected readonly settingManager?: SettingManager
 
-  readonly #syncFunction?: () => Promise<void>
+  readonly #onSync?: () => Promise<void>
 
   #holdAPIListUntil = DateTime.now()
 
@@ -124,14 +124,14 @@ export default class API implements IAPI {
       autoSyncInterval = MINUTES_5,
       language = 'en',
       logger = console,
+      onSync,
       settingManager,
       shouldVerifySSL = true,
-      syncFunction,
       timezone,
     } = config
     setupLuxonSettings({ language, timezone })
     this.#logger = logger
-    this.#syncFunction = syncFunction
+    this.#onSync = onSync
     this.settingManager = settingManager
 
     this.#api = createAxiosInstance({
@@ -223,7 +223,7 @@ export default class API implements IAPI {
       })
       DeviceModel.upsertMany(building.Structure.Devices)
     })
-    await this.#syncFunction?.()
+    await this.#onSync?.()
     await this.#autoSync()
     return response
   }
