@@ -20,7 +20,7 @@ jobs:
         with:
           node-version: '22.x'
           cache: 'npm'
-      - name: Install dependencies, lint, format, build and generate docs
+      - name: Install dependencies, lint, format, build & generate docs
         run: npm ci --force
       - name: Commit changes
         run: |
