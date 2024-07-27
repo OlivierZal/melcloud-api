@@ -58,9 +58,9 @@ export interface APIConfig {
   autoSyncInterval?: number | null
   language?: string
   logger?: Logger
+  onSync?: () => Promise<void>
   settingManager?: SettingManager
   shouldVerifySSL?: boolean
-  syncFunction?: () => Promise<void>
   timezone?: string
 }
 
