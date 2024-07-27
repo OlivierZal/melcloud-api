@@ -17,6 +17,7 @@ jobs:
           node-version: '22.x'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@olivierzal'
+          cache: 'npm'
       - run: npm ci --force
       - run: npm publish
         env:
