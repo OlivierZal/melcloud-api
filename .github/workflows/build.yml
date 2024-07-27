@@ -3,14 +3,10 @@ on:
   push:
     branches: main
   pull_request:
-    types: [opened, synchronize, reopened]
-
-permissions:
-  contents: write
-  pull-requests: write
+    types: [opened, reopened, synchronize]
 
 jobs:
-  build:
+  main:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,23 +14,24 @@ jobs:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.x'
+          node-version: 22
           cache: 'npm'
-      - name: Install dependencies, lint, format, build and generate docs
-        run: npm ci --force
+      - name: Install dependencies, lint, format & build code, generate docs
+        run: npm ci
       - name: Commit changes
         run: |
+          git config --local user.email "actions@github.com" 
           git config --local user.name "GitHub Actions"
-          git config --local user.email "actions@github.com"
+
           git add -A
           if ! git diff --cached --exit-code; then
-            git commit -m "Code maintenance: lint, format and generate docs"
+            git commit -m "Code maintenance: lint, format and build code, generate docs"
             if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
               echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
               BRANCH_NAME="maintenance-$(date +'%Y%m%d%H%M%S')"
               git checkout -b "$BRANCH_NAME"
               git push origin "$BRANCH_NAME"
-              gh pr create --base main --head "$BRANCH_NAME" --title "Maintenance PR" --body "Automatic code maintenance: lint, format and generate docs."
+              gh pr create --base main --head "$BRANCH_NAME" --title "Maintenance PR" --body "Automatic code maintenance: lint, format and build code, generate docs."
               gh pr merge --auto --squash --delete-branch ${{ github.event.pull_request.html_url }}
             else
               git pull origin ${{ github.head_ref }} --rebase

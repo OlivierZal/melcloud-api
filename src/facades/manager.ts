@@ -57,8 +57,8 @@ export default class {
     if (!model) {
       return undefined
     }
-    const modelName = model.constructor.name
-    const id = `${modelName}:${model.id}`
+    const [modelName, modelId] = [model.constructor.name, String(model.id)]
+    const id = `${modelName}:${modelId}`
     if (!this.#facades.has(id)) {
       switch (true) {
         case model instanceof AreaModel:
@@ -84,7 +84,7 @@ export default class {
     }
     const facade = this.#facades.get(id)
     if (!facade) {
-      throw new Error(`Facade not found for ${modelName} with id ${model.id}`)
+      throw new Error(`Facade not found for ${modelName} with id ${modelId}`)
     }
     return facade
   }
