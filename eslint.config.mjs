@@ -1,7 +1,6 @@
 import eslint from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
 import prettier from 'eslint-config-prettier'
-import jsdoc from 'eslint-plugin-jsdoc'
 import perfectionist from 'eslint-plugin-perfectionist'
 import tsEslint from 'typescript-eslint'
 
@@ -40,12 +39,7 @@ export default tsEslint.config(
     ignores: ['dist/'],
   },
   {
-    extends: [
-      eslint.configs.all,
-      ...tsEslint.configs.all,
-      jsdoc.configs['flat/recommended-typescript-error'],
-      prettier,
-    ],
+    extends: [eslint.configs.all, ...tsEslint.configs.all, prettier],
     languageOptions: {
       parserOptions: {
         project: 'tsconfig.json',
