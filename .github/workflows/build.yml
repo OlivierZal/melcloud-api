@@ -21,7 +21,7 @@ jobs:
           node-version: '22.x'
           cache: 'npm'
       - name: Install dependencies, lint & format code, build & generate docs
-        run: npm ci --force
+        run: npm ci
       - name: Commit changes
         run: |
           git config --local user.email "actions@github.com" 

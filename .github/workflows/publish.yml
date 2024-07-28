@@ -18,7 +18,8 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: '@olivierzal'
           cache: 'npm'
-      - run: npm ci --force
+      - name: Install dependencies, lint & format code, build & generate docs
+        run: npm ci
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
