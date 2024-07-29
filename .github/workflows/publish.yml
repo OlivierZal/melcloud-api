@@ -19,7 +19,7 @@ jobs:
           scope: '@olivierzal'
           cache: 'npm'
       - name: Install dependencies, lint & format code, build & generate docs
-        run: npm ci
+        run: npm ci --ignore-scripts
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
