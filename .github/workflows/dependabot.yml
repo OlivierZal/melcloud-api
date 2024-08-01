@@ -1,5 +1,7 @@
 name: Dependabot auto-merge
-on: pull_request
+on:
+  pull_request:
+    types: [opened, synchronize]
 
 permissions:
   contents: write
@@ -15,6 +17,20 @@ jobs:
         uses: dependabot/fetch-metadata@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+      - name: Lint, format & build code, generate docs
+        run: npm ci
+      - name: Commit & push changes
+        run: |
+          git config --local user.email "actions@github.com" 
+          git config --local user.name "GitHub Actions"
+          git add -A
+          git commit -m "Dependabot update: lint, format and build code, generate docs"
+          git push origin HEAD:${{ github.head_ref }}
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --merge "$PR_URL"
         env:
