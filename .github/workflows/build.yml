@@ -8,6 +8,7 @@ on:
 jobs:
   main:
     runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -16,7 +17,7 @@ jobs:
         with:
           node-version: 22
           cache: 'npm'
-      - name: Install dependencies, lint, format & build code, generate docs
+      - name: Lint, format & build code, generate docs
         run: npm ci
       - name: Commit changes
         run: |
@@ -35,7 +36,3 @@ jobs:
             else
               git pull origin ${{ github.head_ref }} --rebase
               git push origin HEAD:${{ github.head_ref }}
-            fi
-          else
-            echo "No changes to commit."
-          fi
