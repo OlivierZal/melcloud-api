@@ -24,17 +24,15 @@ jobs:
           git config --local user.email "actions@github.com" 
           git config --local user.name "GitHub Actions"
           git add -A
-          if ! git diff --cached --exit-code; then
-            git commit -m "Code maintenance: lint, format and build code, generate docs"
-            if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
-              echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
-              BRANCH_NAME="maintenance-$(date +'%Y%m%d%H%M%S')"
-              git checkout -b "$BRANCH_NAME"
-              git push origin "$BRANCH_NAME"
-              gh pr create --base main --head "$BRANCH_NAME" --title "Maintenance PR" --body "Automatic code maintenance: lint, format and build code, generate docs."
-              gh pr merge --auto --squash --delete-branch ${{ github.event.pull_request.html_url }}
-            else
-              git pull origin ${{ github.head_ref }} --rebase
-              git push origin HEAD:${{ github.head_ref }}
-            fi
+          git commit -m "Code maintenance: lint, format and build code, generate docs"
+          if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
+            echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
+            BRANCH_NAME="maintenance-$(date +'%Y%m%d%H%M%S')"
+            git checkout -b "$BRANCH_NAME"
+            git push origin "$BRANCH_NAME"
+            gh pr create --base main --head "$BRANCH_NAME" --title "Maintenance PR" --body "Automatic code maintenance: lint, format and build code, generate docs."
+            gh pr merge --auto --squash --delete-branch ${{ github.event.pull_request.html_url }}
+          else
+            git pull origin ${{ github.head_ref }} --rebase
+            git push origin HEAD:${{ github.head_ref }}
           fi
