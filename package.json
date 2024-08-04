@@ -28,7 +28,7 @@
     "singleQuote": true
   },
   "scripts": {
-    "build": "tsc && tsc -p 'tsconfig.checkjs.json'",
+    "build": "tsc",
     "docs": "typedoc && npm run format:docs && npm run lint:docs",
     "format": "prettier . --check",
     "format:docs": "prettier README.md --ignore-path --write",
@@ -47,7 +47,7 @@
     "@types/node": "^22.1.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-perfectionist": "^3.1.0",
+    "eslint-plugin-perfectionist": "^3.1.1",
     "markdownlint-cli2": "^0.13.0",
     "prettier": "^3.3.3",
     "typedoc": "^0.26.5",
@@ -58,7 +58,7 @@
   "dependencies": {
     "axios": "^1.7.3",
     "https": "^1.0.0",
-    "luxon": "^3.4.4",
+    "luxon": "^3.5.0",
     "source-map-support": "^0.5.21"
   }
 }
