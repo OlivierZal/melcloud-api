@@ -58,9 +58,7 @@ export default tsEslint.config(
       reportUnusedDisableDirectives: true,
     },
     plugins: {
-      // @ts-expect-error: incorrect type
       '@stylistic': stylistic,
-      // @ts-expect-error: incorrect type
       perfectionist,
     },
     rules: {
