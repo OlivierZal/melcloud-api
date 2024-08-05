@@ -47,16 +47,18 @@ export default tsEslint.config(
     ],
     languageOptions: {
       parserOptions: {
-        project: 'tsconfig.json',
+        projectService: {
+          allowDefaultProject: ['*.mjs'],
+          defaultProject: './tsconfig.json',
+        },
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     linterOptions: {
       reportUnusedDisableDirectives: true,
     },
     plugins: {
-      // @ts-expect-error: incorrect type
       '@stylistic': stylistic,
-      // @ts-expect-error: incorrect type
       perfectionist,
     },
     rules: {
@@ -376,12 +378,9 @@ export default tsEslint.config(
     },
   },
   {
-    files: ['**/*.mjs'],
-    ...tsEslint.configs.disableTypeChecked,
-    languageOptions: {
-      parserOptions: {
-        project: 'tsconfig.checkjs.json',
-      },
+    files: ['*.mjs'],
+    rules: {
+      '@typescript-eslint/naming-convention': 'off',
     },
   },
 )
