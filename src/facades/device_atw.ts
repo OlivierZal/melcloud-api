@@ -6,8 +6,8 @@ import {
 } from '../types'
 import BaseDeviceFacade, { alias } from './device'
 
-const HEAT_COOL_GAP = OperationModeZone.room_cool
-const ROOM_FLOW_GAP = OperationModeZone.flow
+const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
+const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
 
 const MIN_FLOW_COOL_TEMP = 5
 const MAX_FLOW_COOL_TEMP = 25
@@ -196,16 +196,16 @@ export default class extends BaseDeviceFacade<'Atw'> {
   }
 
   #getSecondaryOperationMode(
-    secondayKey: keyof OperationModeZoneDataAtw,
+    secondaryKey: keyof OperationModeZoneDataAtw,
     primaryValue: OperationModeZone,
     value?: OperationModeZone,
   ): OperationModeZone {
-    let secondaryValue = value ?? this.data[secondayKey]
+    let secondaryValue = value ?? this.data[secondaryKey]
     if (this.data.CanCool) {
       if (primaryValue > OperationModeZone.curve) {
         secondaryValue =
           secondaryValue === OperationModeZone.curve ?
-            HEAT_COOL_GAP
+            OperationModeZone.room_cool
           : secondaryValue + HEAT_COOL_GAP
       } else if (secondaryValue > OperationModeZone.curve) {
         secondaryValue -= HEAT_COOL_GAP
@@ -226,25 +226,33 @@ export default class extends BaseDeviceFacade<'Atw'> {
     data: Partial<UpdateDeviceDataAtw>,
   ): Partial<UpdateDeviceDataAtw> {
     if (this.data.HasZone2) {
-      const [pair1, pair2]: [
-        key: keyof OperationModeZoneDataAtw,
-        value?: OperationModeZone,
-      ][] = [
-        ['OperationModeZone1', data.OperationModeZone1],
-        ['OperationModeZone2', data.OperationModeZone2],
+      const [operationModeZone1, operationModeZone2]: {
+        value?: OperationModeZone
+        key: keyof OperationModeZoneDataAtw
+      }[] = [
+        { key: 'OperationModeZone1', value: data.OperationModeZone1 },
+        { key: 'OperationModeZone2', value: data.OperationModeZone2 },
       ]
-      const [[primaryKey, primaryValue], [secondaryKey, value]] =
-        data.OperationModeZone2 === undefined ? [pair1, pair2] : [pair2, pair1]
-      if (primaryValue !== undefined) {
+      const [primaryOperationMode, secondaryOperationMode] =
+        operationModeZone1.value === undefined ?
+          [operationModeZone2, operationModeZone1]
+        : [operationModeZone1, operationModeZone2]
+      if (primaryOperationMode.value !== undefined) {
         const secondaryValue = this.#getSecondaryOperationMode(
-          secondaryKey,
-          primaryValue,
-          value,
+          secondaryOperationMode.key,
+          primaryOperationMode.value,
+          secondaryOperationMode.value,
         )
-        if (value !== undefined && value !== secondaryValue) {
+        if (
+          secondaryOperationMode.value !== undefined &&
+          secondaryOperationMode.value !== secondaryValue
+        ) {
           throw new Error('Operation modes conflict')
         }
-        return { [primaryKey]: primaryValue, [secondaryKey]: secondaryValue }
+        return {
+          [primaryOperationMode.key]: primaryOperationMode.value,
+          [secondaryOperationMode.key]: secondaryValue,
+        }
       }
     }
     return {}
