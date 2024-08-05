@@ -2,31 +2,26 @@
   "name": "@olivierzal/melcloud-api",
   "version": "6.1.6",
   "description": "MELCloud API for Node.js",
+  "keywords": [
+    "melcloud",
+    "api"
+  ],
+  "homepage": "https://github.com/OlivierZal/melcloud-api#readme",
+  "bugs": {
+    "url": "https://github.com/OlivierZal/melcloud-api/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OlivierZal/melcloud-api.git"
+  },
+  "license": "ISC",
+  "author": "Olivier Zalmanski",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist/",
     "src/"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/OlivierZal/melcloud-api.git"
-  },
-  "keywords": [
-    "melcloud",
-    "api"
-  ],
-  "author": "Olivier Zalmanski",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/OlivierZal/melcloud-api/issues"
-  },
-  "homepage": "https://github.com/OlivierZal/melcloud-api#readme",
-  "prettier": {
-    "experimentalTernaries": true,
-    "semi": false,
-    "singleQuote": true
-  },
   "scripts": {
     "build": "tsc",
     "docs": "typedoc && npm run format:docs && npm run lint:docs",
@@ -38,27 +33,28 @@
     "lint:fix": "npm run lint -- --fix",
     "prepare": "npm run lint:fix && npm run format:fix && npm run build && npm run docs"
   },
-  "devDependencies": {
-    "@eslint/js": "^9.8.0",
-    "@stylistic/eslint-plugin": "^2.6.1",
-    "@types/eslint__js": "^8.42.3",
-    "@types/eslint-config-prettier": "^6.11.3",
-    "@types/luxon": "^3.4.2",
-    "@types/node": "^22.1.0",
-    "eslint": "^9.8.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-perfectionist": "^3.1.1",
-    "markdownlint-cli2": "^0.13.0",
-    "prettier": "^3.3.3",
-    "typedoc": "^0.26.5",
-    "typedoc-plugin-markdown": "^4.2.3",
-    "typescript": "^5.5.4",
-    "typescript-eslint": "^8.0.0"
-  },
   "dependencies": {
     "axios": "^1.7.3",
     "https": "^1.0.0",
     "luxon": "^3.5.0",
     "source-map-support": "^0.5.21"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.8.0",
+    "@stylistic/eslint-plugin": "^2.6.1",
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^22.1.0",
+    "eslint": "^9.8.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-package-json": "^0.15.2",
+    "eslint-plugin-perfectionist": "^3.1.1",
+    "jsonc-eslint-parser": "^2.4.0",
+    "markdownlint-cli2": "^0.13.0",
+    "prettier": "^3.3.3",
+    "prettier-plugin-packagejson": "^2.5.1",
+    "typedoc": "^0.26.5",
+    "typedoc-plugin-markdown": "^4.2.3",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.0.0"
   }
 }
