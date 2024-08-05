@@ -378,9 +378,7 @@ export default tsEslint.config(
     },
   },
   {
-    files: ['*.mjs'],
-    rules: {
-      '@typescript-eslint/naming-convention': 'off',
-    },
+    files: ['**/*.mjs'],
+    ...tsEslint.configs.disableTypeChecked,
   },
 )
