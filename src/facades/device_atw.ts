@@ -6,8 +6,8 @@ import {
 } from '../types'
 import BaseDeviceFacade, { alias } from './device'
 
-const ROOM_FLOW_GAP = 1
-const HEAT_COOL_GAP = 3
+const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
+const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
 
 const MIN_FLOW_COOL_TEMP = 5
 const MAX_FLOW_COOL_TEMP = 25
