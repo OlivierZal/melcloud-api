@@ -205,7 +205,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
       if (primaryValue > OperationModeZone.curve) {
         secondaryValue =
           secondaryValue === OperationModeZone.curve ?
-            HEAT_COOL_GAP
+            OperationModeZone.room_cool
           : secondaryValue + HEAT_COOL_GAP
       } else if (secondaryValue > OperationModeZone.curve) {
         secondaryValue -= HEAT_COOL_GAP
