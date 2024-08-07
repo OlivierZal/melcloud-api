@@ -226,7 +226,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
     data: Partial<UpdateDeviceDataAtw>,
   ): Partial<UpdateDeviceDataAtw> {
     if (this.data.HasZone2) {
-      const [pair1, pair2]: {
+      const [operationModeZone1, operationModeZone2]: {
         value?: OperationModeZone
         key: keyof OperationModeZoneDataAtw
       }[] = [
@@ -234,7 +234,9 @@ export default class extends BaseDeviceFacade<'Atw'> {
         { key: 'OperationModeZone2', value: data.OperationModeZone2 },
       ]
       const [primaryOperationMode, secondaryOperationMode] =
-        pair1.value === undefined ? [pair2, pair1] : [pair1, pair2]
+        operationModeZone1.value === undefined ?
+          [operationModeZone2, operationModeZone1]
+        : [operationModeZone1, operationModeZone2]
       if (primaryOperationMode.value !== undefined) {
         const secondaryValue = this.#getSecondaryOperationMode(
           secondaryOperationMode.key,
