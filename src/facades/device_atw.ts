@@ -196,11 +196,11 @@ export default class extends BaseDeviceFacade<'Atw'> {
   }
 
   #getSecondaryOperationMode(
-    secondayKey: keyof OperationModeZoneDataAtw,
+    secondaryKey: keyof OperationModeZoneDataAtw,
     primaryValue: OperationModeZone,
     value?: OperationModeZone,
   ): OperationModeZone {
-    let secondaryValue = value ?? this.data[secondayKey]
+    let secondaryValue = value ?? this.data[secondaryKey]
     if (this.data.CanCool) {
       if (primaryValue > OperationModeZone.curve) {
         secondaryValue =
