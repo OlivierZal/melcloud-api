@@ -226,25 +226,31 @@ export default class extends BaseDeviceFacade<'Atw'> {
     data: Partial<UpdateDeviceDataAtw>,
   ): Partial<UpdateDeviceDataAtw> {
     if (this.data.HasZone2) {
-      const [pair1, pair2]: [
-        key: keyof OperationModeZoneDataAtw,
-        value?: OperationModeZone,
-      ][] = [
-        ['OperationModeZone1', data.OperationModeZone1],
-        ['OperationModeZone2', data.OperationModeZone2],
+      const [pair1, pair2]: {
+        value?: OperationModeZone
+        key: keyof OperationModeZoneDataAtw
+      }[] = [
+        { key: 'OperationModeZone1', value: data.OperationModeZone1 },
+        { key: 'OperationModeZone2', value: data.OperationModeZone2 },
       ]
-      const [[primaryKey, primaryValue], [secondaryKey, value]] =
-        data.OperationModeZone2 === undefined ? [pair1, pair2] : [pair2, pair1]
-      if (primaryValue !== undefined) {
+      const [primaryOperationMode, secondaryOperationMode] =
+        pair1.value === undefined ? [pair2, pair1] : [pair1, pair2]
+      if (primaryOperationMode.value !== undefined) {
         const secondaryValue = this.#getSecondaryOperationMode(
-          secondaryKey,
-          primaryValue,
-          value,
+          secondaryOperationMode.key,
+          primaryOperationMode.value,
+          secondaryOperationMode.value,
         )
-        if (value !== undefined && value !== secondaryValue) {
+        if (
+          secondaryOperationMode.value !== undefined &&
+          secondaryOperationMode.value !== secondaryValue
+        ) {
           throw new Error('Operation modes conflict')
         }
-        return { [primaryKey]: primaryValue, [secondaryKey]: secondaryValue }
+        return {
+          [primaryOperationMode.key]: primaryOperationMode.value,
+          [secondaryOperationMode.key]: secondaryValue,
+        }
       }
     }
     return {}
