@@ -26,9 +26,6 @@ jobs:
           git config --local user.name "GitHub Actions"
           git add -A
           git commit -m "Dependabot update: lint, format and build code, generate docs"
-          git fetch origin
-          git checkout ${{ github.head_ref }}
-          git merge origin/${{ github.head_ref }} --strategy-option=theirs || true
           git pull --rebase origin ${{ github.head_ref }}
           git push origin HEAD:${{ github.head_ref }}
       - name: Enable auto-merge for Dependabot PRs
