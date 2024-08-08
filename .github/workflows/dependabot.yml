@@ -27,8 +27,8 @@ jobs:
           git add -A
           git commit -m "Dependabot update: lint, format and build code, generate docs"
           git fetch origin
-          git merge origin/${{ github.head_ref }} --strategy-option=theirs || true
-          git push origin HEAD:${{ github.head_ref }}
+          git merge origin/${{ github.head_ref }} --strategy-option=theirs --allow-unrelated-histories || true
+          git push --force origin HEAD:${{ github.head_ref }}
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --merge "$PR_URL"
         env:
