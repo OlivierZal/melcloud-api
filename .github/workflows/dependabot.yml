@@ -22,10 +22,10 @@ jobs:
         run: npm ci
       - name: Commit & push changes
         run: |
+          git checkout README.md
           git config --local user.email "actions@github.com" 
           git config --local user.name "GitHub Actions"
           git add -A
-          git checkout README.md
           git commit -m "Dependabot update: lint, format and build code, generate docs"
           git pull --rebase origin ${{ github.head_ref }}
           git push origin HEAD:${{ github.head_ref }}
