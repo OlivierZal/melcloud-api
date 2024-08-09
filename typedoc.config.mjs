@@ -6,6 +6,7 @@ export default {
   expandObjects: true,
   expandParameters: true,
   hidePageHeader: true,
+  includeVersion: true,
   indexFormat: 'table',
   out: '.',
   outputFileStrategy: 'modules',
@@ -14,7 +15,7 @@ export default {
   propertiesFormat: 'table',
   readme: 'none',
   textContentMappings: {
-    'title.indexPage': 'MELCloud API for Node.js',
+    'title.indexPage': 'MELCloud API for Node.js - {version}',
   },
   typeDeclarationFormat: 'table',
   useCodeBlocks: true,
