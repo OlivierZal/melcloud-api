@@ -85,6 +85,12 @@ export default class extends BaseDeviceFacade<'Atw'> {
   @alias('OperationModeZone2')
   public accessor modeZone2: unknown = null
 
+  @alias('OperationMode')
+  public accessor operationMode: unknown = null
+
+  @alias('OutdoorTemperature')
+  public accessor outdoorTemperature: unknown = null
+
   @alias('Power')
   public accessor power: unknown = null
 
@@ -103,14 +109,14 @@ export default class extends BaseDeviceFacade<'Atw'> {
   @alias('ProhibitHotWater')
   public accessor prohibitHotWater: unknown = null
 
-  @alias('OperationMode')
-  public accessor operationMode: unknown = null
-
-  @alias('OutdoorTemperature')
-  public accessor outdoorTemperature: unknown = null
-
   @alias('ReturnTemperature')
   public accessor returnTemperature: unknown = null
+
+  @alias('RoomTemperatureZone1')
+  public accessor roomTemperature: unknown = null
+
+  @alias('RoomTemperatureZone2')
+  public accessor roomTemperatureZone2: unknown = null
 
   @alias('SetCoolFlowTemperatureZone1')
   public accessor targetCoolFlowTemperature: unknown = null
@@ -138,12 +144,6 @@ export default class extends BaseDeviceFacade<'Atw'> {
 
   @alias('SetTemperatureZone2')
   public accessor targetRoomTemperatureZone2: unknown = null
-
-  @alias('RoomTemperatureZone1')
-  public accessor roomTemperature: unknown = null
-
-  @alias('RoomTemperatureZone2')
-  public accessor roomTemperatureZone2: unknown = null
 
   get #targetTemperatureRange(): Record<
     keyof TemperatureDataAtw,

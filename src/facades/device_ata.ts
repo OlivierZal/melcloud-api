@@ -14,11 +14,11 @@ export default class extends BaseDeviceFacade<'Ata'> {
   @alias('OperationMode')
   public accessor mode: unknown = null
 
-  @alias('Power')
-  public accessor power: unknown = null
-
   @alias('OutdoorTemperature')
   public accessor outdoorTemperature: unknown = null
+
+  @alias('Power')
+  public accessor power: unknown = null
 
   @alias('SetTemperature')
   public accessor targetTemperature: unknown = null
