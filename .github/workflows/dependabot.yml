@@ -18,16 +18,6 @@ jobs:
         with:
           node-version: '22.x'
           cache: 'npm'
-      - name: Lint, format & build code, generate docs
-        run: npm ci
-      - name: Commit & push changes
-        run: |
-          git config --local user.email "actions@github.com" 
-          git config --local user.name "GitHub Actions"
-          git add -A
-          git commit -m "Dependabot update: lint, format and build code, generate docs"
-          git pull --rebase origin ${{ github.head_ref }}
-          git push origin HEAD:${{ github.head_ref }}
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --auto --merge "$PR_URL"
         env:
