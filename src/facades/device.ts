@@ -19,7 +19,7 @@ import {
   FROM_SET_TO_LIST_ATA,
 } from '../types'
 import BaseFacade from './base'
-import { YEAR_1970, nowISO } from './utils'
+import { nowISO, YEAR_1970 } from './utils'
 
 // @ts-expect-error: most runtimes do not support natively
 Symbol.metadata ??= Symbol('Symbol.metadata')

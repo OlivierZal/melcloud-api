@@ -18,4 +18,4 @@ export {
   type DeviceFacadeAny,
   default as FacadeManager,
 } from './manager'
-export { YEAR_1970, nowISO } from './utils'
+export { nowISO, YEAR_1970 } from './utils'

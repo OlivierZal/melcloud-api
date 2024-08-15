@@ -3,8 +3,8 @@ import {
   type AxiosInstance,
   type AxiosResponse,
   type InternalAxiosRequestConfig,
-  HttpStatusCode,
   create as createAxiosInstance,
+  HttpStatusCode,
 } from 'axios'
 import https from 'https'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
@@ -105,8 +105,6 @@ const setting = <This extends API>(
 export default class API implements IAPI {
   protected readonly settingManager?: SettingManager
 
-  readonly #onSync?: () => Promise<void>
-
   #holdAPIListUntil = DateTime.now()
 
   #retryTimeout: NodeJS.Timeout | null = null
@@ -118,6 +116,8 @@ export default class API implements IAPI {
   readonly #autoSyncInterval: Duration
 
   readonly #logger: Logger
+
+  readonly #onSync?: () => Promise<void>
 
   private constructor(config: APIConfig = {}) {
     const {
@@ -172,7 +172,7 @@ export default class API implements IAPI {
   }
 
   public async applyLogin(data?: LoginCredentials): Promise<boolean> {
-    const { username = this.username, password = this.password } = data ?? {}
+    const { password = this.password, username = this.username } = data ?? {}
     if (username && password) {
       try {
         return (
@@ -277,11 +277,13 @@ export default class API implements IAPI {
   }: {
     postData: TilesPostData<null>
   }): Promise<{ data: TilesData<null> }>
+
   public async getTiles<T extends keyof typeof DeviceType>({
     postData,
   }: {
     postData: TilesPostData<T>
   }): Promise<{ data: TilesData<T> }>
+
   public async getTiles<T extends keyof typeof DeviceType | null>({
     postData,
   }: {
@@ -436,7 +438,7 @@ export default class API implements IAPI {
       )
     }
     if (newConfig.url !== LOGIN_PATH) {
-      const { expiry, contextKey } = this
+      const { contextKey, expiry } = this
       if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
         await this.applyLogin()
       }

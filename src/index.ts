@@ -16,8 +16,8 @@ export {
   DeviceFacadeErv,
   FacadeManager,
   FloorFacade,
-  YEAR_1970,
   nowISO,
+  YEAR_1970,
 } from './facades'
 export {
   type AreaModelAny,
@@ -123,6 +123,7 @@ export {
   type WifiData,
   type WifiPostData,
   DeviceType,
+  FanSpeed,
   FLAG_UNCHANGED,
   FLAGS,
   FLAGS_ATA,
@@ -130,7 +131,6 @@ export {
   FLAGS_ERV,
   FROM_LIST_TO_SET_ATA,
   FROM_SET_TO_LIST_ATA,
-  FanSpeed,
   Horizontal,
   Language,
   OperationMode,

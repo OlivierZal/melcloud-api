@@ -264,7 +264,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
   ): Partial<UpdateDeviceDataAtw> {
     const value = data[key]
     if (value !== undefined) {
-      const { min, max } = this.#targetTemperatureRange[key]
+      const { max, min } = this.#targetTemperatureRange[key]
       return { [key]: Math.min(Math.max(value, min), max) }
     }
     return {}

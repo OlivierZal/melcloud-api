@@ -50,9 +50,9 @@ export interface IBaseFacade {
     min: number
   }) => Promise<FailureData | SuccessData>
   setHolidayMode: (({
+    days,
     enabled,
     from,
-    days,
   }: {
     enabled?: true
     from?: string

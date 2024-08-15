@@ -41,8 +41,8 @@ export {
   type BaseValues,
   type DeviceDataNotInList,
   DeviceType,
-  FLAG_UNCHANGED,
   FanSpeed,
+  FLAG_UNCHANGED,
 } from './bases'
 export {
   type AreaData,

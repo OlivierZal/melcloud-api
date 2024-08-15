@@ -11,7 +11,7 @@ export default class BuildingModel extends BaseModel implements IBuildingModel {
 
   public readonly data: BuildingSettings
 
-  private constructor({ Name: name, ID: id, ...data }: BuildingData) {
+  private constructor({ ID: id, Name: name, ...data }: BuildingData) {
     super({ id, name })
     this.data = data
   }
