@@ -259,18 +259,17 @@ export interface SetAtaGroupPostData {
   }
 }
 
-export type TilesPostData<T extends keyof typeof DeviceType | null> =
-  (T extends keyof typeof DeviceType ?
-    {
-      readonly SelectedBuilding: number
-      readonly SelectedDevice: number
-    }
-  : {
-      readonly SelectedBuilding?: null
-      readonly SelectedDevice?: null
-    }) & {
-    readonly DeviceIDs: readonly number[]
+export type TilesPostData<T extends keyof typeof DeviceType | null> = {
+  readonly DeviceIDs: readonly number[]
+} & (T extends keyof typeof DeviceType ?
+  {
+    readonly SelectedBuilding: number
+    readonly SelectedDevice: number
   }
+: {
+    readonly SelectedBuilding?: null
+    readonly SelectedDevice?: null
+  })
 export interface TilesData<T extends keyof typeof DeviceType | null> {
   readonly SelectedDevice: T extends keyof typeof DeviceType ? GetDeviceData[T]
   : null
