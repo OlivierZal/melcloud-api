@@ -3,7 +3,7 @@ export type {
   APIConfig,
   APISettings,
   IAPI,
-  isAPISetting,
   Logger,
   SettingManager,
+  isAPISetting,
 } from './interfaces'

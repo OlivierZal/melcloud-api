@@ -25,7 +25,7 @@ import type {
 } from '../types'
 import type { IBaseFacade } from './interfaces'
 
-import { nowISO, YEAR_1970 } from './utils'
+import { YEAR_1970, nowISO } from './utils'
 
 const MIN_TEMPERATURE_MIN = 4
 const MIN_TEMPERATURE_MAX = 14

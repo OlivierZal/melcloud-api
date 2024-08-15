@@ -3,8 +3,8 @@ import {
   type AxiosInstance,
   type AxiosResponse,
   type InternalAxiosRequestConfig,
-  create as createAxiosInstance,
   HttpStatusCode,
+  create as createAxiosInstance,
 } from 'axios'
 import https from 'https'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
