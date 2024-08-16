@@ -3,31 +3,31 @@ import BaseDeviceFacade, { alias } from './device'
 
 export default class extends BaseDeviceFacade<'Ata'> {
   @alias('ActualFanSpeed')
-  public accessor actualFan: unknown = null
+  public accessor actualFan: unknown = undefined
 
   @alias('FanSpeed')
-  public accessor fan: unknown = null
+  public accessor fan: unknown = undefined
 
   @alias('VaneHorizontalDirection')
-  public accessor horizontal: unknown = null
+  public accessor horizontal: unknown = undefined
 
   @alias('OperationMode')
-  public accessor mode: unknown = null
+  public accessor mode: unknown = undefined
 
   @alias('OutdoorTemperature')
-  public accessor outdoorTemperature: unknown = null
+  public accessor outdoorTemperature: unknown = undefined
 
   @alias('Power')
-  public accessor power: unknown = null
+  public accessor power: unknown = undefined
 
   @alias('SetTemperature')
-  public accessor targetTemperature: unknown = null
+  public accessor targetTemperature: unknown = undefined
 
   @alias('RoomTemperature')
-  public accessor temperature: unknown = null
+  public accessor temperature: unknown = undefined
 
   @alias('VaneVerticalDirection')
-  public accessor vertical: unknown = null
+  public accessor vertical: unknown = undefined
 
   protected override handle(
     data: Partial<UpdateDeviceDataAta>,

@@ -305,6 +305,7 @@ export default [
         perfectionist: {
           ignoreCase: false,
           partitionByComment: true,
+          order: 'asc',
           type: 'natural',
         },
       },
