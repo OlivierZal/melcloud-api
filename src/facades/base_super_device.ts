@@ -24,7 +24,7 @@ const mergeListDeviceDataAta = (
         'SetTemperature',
         'VaneHorizontalDirection',
         'VaneVerticalDirection',
-      ] satisfies (keyof SetAtaGroupPostData['State'])[]
+      ] as const
     ).map((key) => {
       const values = new Set(dataList.map((data) => data[key]))
       const [value] = values.size === NUMBER_1 ? values : [null]
