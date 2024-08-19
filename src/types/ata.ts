@@ -121,7 +121,7 @@ export const FLAGS_ATA: Record<keyof UpdateDeviceDataAta, number> = {
   SetTemperature: 0x4,
   VaneHorizontal: 0x100,
   VaneVertical: 0x10,
-} as const
+}
 
 export const FROM_SET_TO_LIST_ATA: Record<
   KeysOfSetDeviceDataAtaNotInList,
@@ -130,7 +130,7 @@ export const FROM_SET_TO_LIST_ATA: Record<
   SetFanSpeed: 'FanSpeed',
   VaneHorizontal: 'VaneHorizontalDirection',
   VaneVertical: 'VaneVerticalDirection',
-} as const
+}
 
 export const FROM_LIST_TO_SET_ATA: Record<
   keyof SetDeviceDataAtaInList,

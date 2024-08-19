@@ -139,4 +139,4 @@ export const FLAGS_ATW: Record<keyof UpdateDeviceDataAtw, number> = {
   SetTankWaterTemperature: 0x1000000000020,
   SetTemperatureZone1: 0x200000080,
   SetTemperatureZone2: 0x800000200,
-} as const
+}

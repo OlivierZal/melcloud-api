@@ -57,4 +57,4 @@ export const FLAGS_ERV: Record<keyof UpdateDeviceDataErv, number> = {
   Power: 0x1,
   SetFanSpeed: 0x8,
   VentilationMode: 0x4,
-} as const
+}

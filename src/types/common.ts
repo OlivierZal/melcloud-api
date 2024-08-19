@@ -323,4 +323,4 @@ export interface Values {
   readonly Erv: ValuesErv
 }
 
-export const FLAGS = { Ata: FLAGS_ATA, Atw: FLAGS_ATW, Erv: FLAGS_ERV } as const
+export const FLAGS = { Ata: FLAGS_ATA, Atw: FLAGS_ATW, Erv: FLAGS_ERV }
