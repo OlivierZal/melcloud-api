@@ -22,14 +22,16 @@ import {
   type FrostProtectionPostData,
   type GetDeviceData,
   type GetDeviceDataParams,
+  type GetGroupAtaData,
+  type GetGroupAtaPostData,
   type HolidayModeData,
   type HolidayModePostData,
   type LoginCredentials,
   type LoginData,
   type LoginPostData,
-  type SetAtaGroupPostData,
   type SetDeviceData,
   type SetDevicePostData,
+  type SetGroupAtaPostData,
   type SetPowerPostData,
   type SettingsParams,
   type SuccessData,
@@ -236,6 +238,18 @@ export default class API implements IAPI {
     return this.#api.get('/Device/Get', { params })
   }
 
+  public async getAta({
+    postData,
+  }: {
+    postData: GetGroupAtaPostData
+  }): Promise<{ data: GetGroupAtaData }> {
+    try {
+      return await this.#api.post('/Group/Get', postData)
+    } catch (_error) {
+      throw new Error('No air-to-air device found')
+    }
+  }
+
   public async getEnergyReport({
     postData,
   }: {
@@ -333,7 +347,7 @@ export default class API implements IAPI {
   public async setAta({
     postData,
   }: {
-    postData: SetAtaGroupPostData
+    postData: SetGroupAtaPostData
   }): Promise<{ data: FailureData | SuccessData }> {
     try {
       return await this.#api.post('/Group/SetAta', postData)

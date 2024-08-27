@@ -241,23 +241,30 @@ export interface SetPowerPostData {
   readonly Power: boolean
 }
 
-export interface SetAtaGroupPostData {
-  readonly Specification: {
-    readonly AreaID?: number | null
-    readonly BuildingID?: number | null
-    readonly FloorID?: number | null
-  }
-  readonly State: {
-    readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
-    readonly OperationMode?: OperationMode | null
-    readonly Power?: boolean | null
-    readonly SetTemperature?: number | null
-    readonly VaneHorizontalDirection?: Horizontal | null
-    readonly VaneHorizontalSwing?: boolean | null
-    readonly VaneVerticalDirection?: Vertical | null
-    readonly VaneVerticalSwing?: boolean | null
+export interface GroupAtaState {
+  readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
+  readonly OperationMode?: OperationMode | null
+  readonly Power?: boolean | null
+  readonly SetTemperature?: number | null
+  readonly VaneHorizontalDirection?: Horizontal | null
+  readonly VaneHorizontalSwing?: boolean | null
+  readonly VaneVerticalDirection?: Vertical | null
+  readonly VaneVerticalSwing?: boolean | null
+}
+export interface GetGroupAtaPostData {
+  readonly AreaID?: number | null
+  readonly BuildingID?: number | null
+  readonly FloorID?: number | null
+}
+export interface GetGroupAtaData {
+  readonly Data: {
+    readonly Group: {
+      readonly Specification: GetGroupAtaPostData
+      readonly State: GroupAtaState
+    }
   }
 }
+export type SetGroupAtaPostData = GetGroupAtaData['Data']['Group']
 
 export type TilesPostData<T extends keyof typeof DeviceType | null> = {
   readonly DeviceIDs: readonly number[]

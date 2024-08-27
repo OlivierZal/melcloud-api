@@ -10,14 +10,16 @@ import type {
   FrostProtectionPostData,
   GetDeviceData,
   GetDeviceDataParams,
+  GetGroupAtaData,
+  GetGroupAtaPostData,
   HolidayModeData,
   HolidayModePostData,
   LoginCredentials,
   LoginData,
   LoginPostData,
-  SetAtaGroupPostData,
   SetDeviceData,
   SetDevicePostData,
+  SetGroupAtaPostData,
   SetPowerPostData,
   SettingsParams,
   SuccessData,
@@ -76,6 +78,11 @@ export interface IAPI {
   }: {
     params: GetDeviceDataParams
   }) => Promise<{ data: GetDeviceData[keyof typeof DeviceType] }>
+  getAta: ({
+    postData,
+  }: {
+    postData: GetGroupAtaPostData
+  }) => Promise<{ data: GetGroupAtaData }>
   getEnergyReport: ({
     postData,
   }: {
@@ -126,7 +133,7 @@ export interface IAPI {
   setAta: ({
     postData,
   }: {
-    postData: SetAtaGroupPostData
+    postData: SetGroupAtaPostData
   }) => Promise<{ data: FailureData | SuccessData }>
   setFrostProtection: ({
     postData,
