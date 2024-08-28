@@ -113,13 +113,13 @@ export default class API implements IAPI {
 
   #syncTimeout: NodeJS.Timeout | null = null
 
+  readonly #onSync?: () => Promise<void>
+
   readonly #api: AxiosInstance
 
   readonly #autoSyncInterval: Duration
 
   readonly #logger: Logger
-
-  readonly #onSync?: () => Promise<void>
 
   private constructor(config: APIConfig = {}) {
     const {
