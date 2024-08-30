@@ -209,14 +209,7 @@ export default class API implements IAPI {
             },
           })
         ).data
-        if (loginData) {
-          this.username = username
-          this.password = password
-          this.contextKey = loginData.ContextKey
-          this.expiry = loginData.Expiry
-          await this.applyFetch()
-        }
-        return loginData !== null
+        return await this.#handleLogin({ loginData, password, username })
       } catch (error) {
         if (data !== undefined) {
           throw error
@@ -429,6 +422,25 @@ export default class API implements IAPI {
       default:
     }
     throw new Error(errorData.errorMessage)
+  }
+
+  async #handleLogin({
+    loginData,
+    password,
+    username,
+  }: {
+    loginData: LoginData['LoginData'] | null
+    password: string
+    username: string
+  }): Promise<boolean> {
+    if (loginData) {
+      this.username = username
+      this.password = password
+      this.contextKey = loginData.ContextKey
+      this.expiry = loginData.Expiry
+      await this.applyFetch()
+    }
+    return loginData !== null
   }
 
   async #handleRequest(
