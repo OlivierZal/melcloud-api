@@ -198,18 +198,7 @@ export default class API implements IAPI {
     const { password = this.password, username = this.username } = data ?? {}
     if (username && password) {
       try {
-        const { LoginData: loginData } = (
-          await this.login({
-            postData: {
-              AppVersion: '1.32.0.0',
-              Email: username,
-              Language: getLanguage(),
-              Password: password,
-              Persist: true,
-            },
-          })
-        ).data
-        return await this.#handleLogin({ loginData, password, username })
+        return await this.#login({ password, username })
       } catch (error) {
         if (data !== undefined) {
           throw error
@@ -424,25 +413,6 @@ export default class API implements IAPI {
     throw new Error(errorData.errorMessage)
   }
 
-  async #handleLogin({
-    loginData,
-    password,
-    username,
-  }: {
-    loginData: LoginData['LoginData'] | null
-    password: string
-    username: string
-  }): Promise<boolean> {
-    if (loginData) {
-      this.username = username
-      this.password = password
-      this.contextKey = loginData.ContextKey
-      this.expiry = loginData.Expiry
-      await this.applyFetch()
-    }
-    return loginData !== null
-  }
-
   async #handleRequest(
     config: InternalAxiosRequestConfig,
   ): Promise<InternalAxiosRequestConfig> {
@@ -472,6 +442,34 @@ export default class API implements IAPI {
   #handleResponse(response: AxiosResponse): AxiosResponse {
     this.#logger.log(String(new APICallResponseData(response)))
     return response
+  }
+
+  async #login({
+    password,
+    username,
+  }: {
+    password: string
+    username: string
+  }): Promise<boolean> {
+    const { LoginData: loginData } = (
+      await this.login({
+        postData: {
+          AppVersion: '1.32.0.0',
+          Email: username,
+          Language: getLanguage(),
+          Password: password,
+          Persist: true,
+        },
+      })
+    ).data
+    if (loginData) {
+      this.username = username
+      this.password = password
+      this.contextKey = loginData.ContextKey
+      this.expiry = loginData.Expiry
+      await this.applyFetch()
+    }
+    return loginData !== null
   }
 
   #setupAxiosInterceptors(): void {
