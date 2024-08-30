@@ -32,6 +32,7 @@ export default abstract class<
       .forEach((device) => {
         device.update(state)
       })
+    await this.api.onSync?.()
     return state
   }
 
@@ -53,6 +54,7 @@ export default abstract class<
           ),
         )
       })
+    await this.api.onSync?.()
     return data
   }
 }

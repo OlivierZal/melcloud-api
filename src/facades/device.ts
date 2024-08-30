@@ -93,6 +93,7 @@ const updateDevice = <
   async function newTarget(this: DeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
     ;(this.model as DeviceModel<T>).update(convertToListDeviceData(this, data))
+    await this.api.onSync?.()
     return data
   }
 
@@ -193,7 +194,7 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
   }
 
   public async fetch(): Promise<ListDevice[T]['Device']> {
-    await this.api.fetch()
+    await this.api.applyFetch()
     return this.data
   }
 

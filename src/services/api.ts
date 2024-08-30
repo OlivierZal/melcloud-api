@@ -105,6 +105,8 @@ const setting = <This extends API>(
 })
 
 export default class API implements IAPI {
+  public readonly onSync?: () => Promise<void>
+
   protected readonly settingManager?: SettingManager
 
   #holdAPIListUntil = DateTime.now()
@@ -112,8 +114,6 @@ export default class API implements IAPI {
   #retryTimeout: NodeJS.Timeout | null = null
 
   #syncTimeout: NodeJS.Timeout | null = null
-
-  readonly #onSync?: () => Promise<void>
 
   readonly #api: AxiosInstance
 
@@ -133,7 +133,7 @@ export default class API implements IAPI {
     } = config
     setupLuxonSettings({ language, timezone })
     this.#logger = logger
-    this.#onSync = onSync
+    this.onSync = onSync
     this.settingManager = settingManager
 
     this.#api = createAxiosInstance({
@@ -161,15 +161,36 @@ export default class API implements IAPI {
 
   public static async create(config: APIConfig = {}): Promise<API> {
     const api = new API(config)
-    await api.#autoSync(true)
+    await api.applyFetch()
     return api
   }
 
   public async applyFetch(): Promise<Building[]> {
+    this.clearSync()
     try {
-      return (await this.fetch()).data
+      const { data } = await this.fetch()
+      data.forEach((building) => {
+        BuildingModel.upsert(building)
+        building.Structure.Floors.forEach((floor) => {
+          FloorModel.upsert(floor)
+          floor.Areas.forEach((area) => {
+            AreaModel.upsert(area)
+            DeviceModel.upsertMany(area.Devices)
+          })
+          DeviceModel.upsertMany(floor.Devices)
+        })
+        building.Structure.Areas.forEach((area) => {
+          AreaModel.upsert(area)
+          DeviceModel.upsertMany(area.Devices)
+        })
+        DeviceModel.upsertMany(building.Structure.Devices)
+      })
+      await this.onSync?.()
+      return data
     } catch (_error) {
       return []
+    } finally {
+      this.#autoSync()
     }
   }
 
@@ -177,19 +198,25 @@ export default class API implements IAPI {
     const { password = this.password, username = this.username } = data ?? {}
     if (username && password) {
       try {
-        return (
-          (
-            await this.login({
-              postData: {
-                AppVersion: '1.32.0.0',
-                Email: username,
-                Language: getLanguage(),
-                Password: password,
-                Persist: true,
-              },
-            })
-          ).data.LoginData !== null
-        )
+        const { LoginData: loginData } = (
+          await this.login({
+            postData: {
+              AppVersion: '1.32.0.0',
+              Email: username,
+              Language: getLanguage(),
+              Password: password,
+              Persist: true,
+            },
+          })
+        ).data
+        if (loginData) {
+          this.username = username
+          this.password = password
+          this.contextKey = loginData.ContextKey
+          this.expiry = loginData.Expiry
+          await this.applyFetch()
+        }
+        return loginData !== null
       } catch (error) {
         if (data !== undefined) {
           throw error
@@ -207,27 +234,7 @@ export default class API implements IAPI {
   }
 
   public async fetch(): Promise<{ data: Building[] }> {
-    this.clearSync()
-    const response = await this.#api.get<Building[]>(LIST_PATH)
-    response.data.forEach((building) => {
-      BuildingModel.upsert(building)
-      building.Structure.Floors.forEach((floor) => {
-        FloorModel.upsert(floor)
-        floor.Areas.forEach((area) => {
-          AreaModel.upsert(area)
-          DeviceModel.upsertMany(area.Devices)
-        })
-        DeviceModel.upsertMany(floor.Devices)
-      })
-      building.Structure.Areas.forEach((area) => {
-        AreaModel.upsert(area)
-        DeviceModel.upsertMany(area.Devices)
-      })
-      DeviceModel.upsertMany(building.Structure.Devices)
-    })
-    await this.#onSync?.()
-    await this.#autoSync()
-    return response
+    return this.#api.get<Building[]>(LIST_PATH)
   }
 
   public async get({
@@ -319,19 +326,11 @@ export default class API implements IAPI {
   }: {
     postData: LoginPostData
   }): Promise<{ data: LoginData }> {
-    const response = await this.#api.post<LoginData>(LOGIN_PATH, {
+    return this.#api.post<LoginData>(LOGIN_PATH, {
       Email: username,
       Password: password,
       ...rest,
     })
-    if (response.data.LoginData) {
-      this.username = username
-      this.password = password
-      this.contextKey = response.data.LoginData.ContextKey
-      this.expiry = response.data.LoginData.Expiry
-      await this.#autoSync(true)
-    }
-    return response
   }
 
   public async set<T extends keyof typeof DeviceType>({
@@ -390,12 +389,8 @@ export default class API implements IAPI {
     return this.#api.post('/Device/Power', postData)
   }
 
-  async #autoSync(init = false): Promise<void> {
+  #autoSync(): void {
     if (this.#autoSyncInterval.as('milliseconds')) {
-      if (init) {
-        await this.applyFetch()
-        return
-      }
       this.#syncTimeout = setTimeout(() => {
         this.applyFetch().catch((error: unknown) => {
           this.#logger.error(error)
