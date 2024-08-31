@@ -9,7 +9,21 @@ import type { IBaseSuperDeviceFacade } from './interfaces'
 
 import BaseFacade from './base'
 
-export default abstract class<
+const sync = <T extends FailureData | GroupAtaState | SuccessData>(
+  target: (...args: any[]) => Promise<T>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  context: unknown,
+): ((...args: any[]) => Promise<T>) =>
+  async function newTarget(
+    this: BaseSuperDeviceFacade<AreaModelAny | BuildingModel | FloorModel>,
+    ...args: unknown[]
+  ) {
+    const data = await target.call(this, ...args)
+    await this.api.onSync?.()
+    return data
+  }
+
+export default abstract class BaseSuperDeviceFacade<
     T extends AreaModelAny | BuildingModel | FloorModel,
   >
   extends BaseFacade<T>
@@ -17,6 +31,7 @@ export default abstract class<
 {
   protected abstract readonly setAtaGroupSpecification: keyof SetGroupAtaPostData['Specification']
 
+  @sync
   public async getAta(): Promise<GroupAtaState> {
     const state = Object.fromEntries(
       Object.entries(
@@ -25,17 +40,17 @@ export default abstract class<
             postData: { [this.setAtaGroupSpecification]: this.id },
           })
         ).data.Data.Group.State,
-      ).filter(([, value]) => value),
+      ).filter(([, value]) => value !== null),
     )
     this.model.devices
       .filter((device) => device.type === 'Ata')
       .forEach((device) => {
         device.update(state)
       })
-    await this.api.onSync?.()
     return state
   }
 
+  @sync
   public async setAta(
     state: GroupAtaState,
   ): Promise<FailureData | SuccessData> {
@@ -50,11 +65,10 @@ export default abstract class<
       .forEach((device) => {
         device.update(
           Object.fromEntries(
-            Object.entries(state).filter(([, value]) => value),
+            Object.entries(state).filter(([, value]) => value !== null),
           ),
         )
       })
-    await this.api.onSync?.()
     return data
   }
 }
