@@ -374,8 +374,8 @@ export default class API implements IAPI {
   #autoSync(): void {
     if (this.#autoSyncInterval.as('milliseconds')) {
       this.#syncTimeout = setTimeout(() => {
-        this.applyFetch().catch((error: unknown) => {
-          this.#logger.error(error)
+        this.applyFetch().catch(() => {
+          //
         })
       }, this.#autoSyncInterval.as('milliseconds'))
     }
