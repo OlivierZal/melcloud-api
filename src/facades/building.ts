@@ -1,5 +1,5 @@
 import type API from '../services'
-import type { BuildingData, BuildingSettings } from '../types'
+import type { BuildingSettings } from '../types'
 import type { IBuildingFacade } from './interfaces'
 
 import { BuildingModel } from '../models'
@@ -27,15 +27,6 @@ export default class
 
   public get data(): BuildingSettings {
     return this.model.data
-  }
-
-  public async actualData(): Promise<BuildingData> {
-    return {
-      ID: this.id,
-      Name: this.name,
-      ...(await this.getFrostProtection()),
-      ...(await this.getHolidayMode()),
-    }
   }
 
   public async fetch(): Promise<BuildingSettings> {

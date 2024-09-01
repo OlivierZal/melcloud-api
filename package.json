@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "7.2.0",
+  "version": "7.3.0",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",
@@ -43,7 +43,7 @@
     "@eslint/js": "^9.9.1",
     "@stylistic/eslint-plugin": "^2.7.2",
     "@types/luxon": "^3.4.2",
-    "@types/node": "^22.5.1",
+    "@types/node": "^22.5.2",
     "eslint": "^9.9.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-package-json": "^0.15.2",

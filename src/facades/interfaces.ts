@@ -1,6 +1,5 @@
 import type { DeviceModel } from '../models'
 import type {
-  BuildingData,
   BuildingSettings,
   DeviceType,
   EnergyData,
@@ -75,7 +74,6 @@ export interface IBaseSuperDeviceFacade extends IBaseFacade {
 }
 
 export interface IBuildingFacade extends IBaseSuperDeviceFacade {
-  actualData: () => Promise<BuildingData>
   data: BuildingSettings
   fetch: () => Promise<BuildingSettings>
 }
