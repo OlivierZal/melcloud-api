@@ -82,7 +82,7 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
   ) as Partial<ListDevice[T]['Device']>
 }
 
-const updateDevice = <
+export const updateDevice = <
   T extends keyof typeof DeviceType,
   DeviceData extends GetDeviceData[T] | SetDeviceData[T],
 >(

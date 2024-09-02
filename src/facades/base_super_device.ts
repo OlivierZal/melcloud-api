@@ -9,7 +9,7 @@ import type { IBaseSuperDeviceFacade } from './interfaces'
 
 import BaseFacade from './base'
 
-const sync = <T extends FailureData | GroupAtaState | SuccessData>(
+export const sync = <T extends FailureData | GroupAtaState | SuccessData>(
   target: (...args: any[]) => Promise<T>,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   context: unknown,

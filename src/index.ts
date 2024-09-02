@@ -18,6 +18,8 @@ export {
   FloorFacade,
   YEAR_1970,
   nowISO,
+  sync,
+  updateDevice,
 } from './facades'
 export {
   type AreaModelAny,
