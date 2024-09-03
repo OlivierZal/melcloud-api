@@ -1,11 +1,12 @@
-name: Build
+name: Build package
 on:
-  push:
-    branches: main
   pull_request:
     types: [opened, synchronize]
+  push:
+    branches: main
 jobs:
   build:
+    name: Build package
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]'
     steps:
@@ -20,8 +21,8 @@ jobs:
         run: npm ci
       - name: Commit & push changes
         run: |
-          git config --local user.email "actions@github.com" 
-          git config --local user.name "GitHub Actions"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -m "Code maintenance: lint, format and build code, generate docs"
           if [[ ${{ github.ref }} == "refs/heads/main" ]]; then

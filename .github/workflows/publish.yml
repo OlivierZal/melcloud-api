@@ -4,6 +4,7 @@ on:
     types: [published]
 jobs:
   publish:
+    name: Publish package to GitHub Packages
     runs-on: ubuntu-latest
     permissions:
       contents: read
