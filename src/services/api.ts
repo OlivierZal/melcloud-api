@@ -454,7 +454,7 @@ export default class API implements IAPI {
     const { LoginData: loginData } = (
       await this.login({
         postData: {
-          AppVersion: '1.32.0.0',
+          AppVersion: '1.34.10.0',
           Email: username,
           Language: getLanguage(),
           Password: password,
