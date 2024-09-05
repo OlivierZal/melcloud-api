@@ -55,7 +55,7 @@ import {
 } from './logger'
 
 const LIST_PATH = '/User/ListDevices'
-const LOGIN_PATH = '/Login/ClientLogin'
+const LOGIN_PATH = '/Login/ClientLogin2'
 
 const MINUTES_0 = 0
 const MINUTES_5 = 5
