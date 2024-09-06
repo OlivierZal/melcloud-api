@@ -52,6 +52,9 @@ export default class {
   ): DeviceFacade[T] | undefined
   public get(model?: FloorModel): FloorFacade | undefined
   public get(
+    model: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
+  ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
+  public get(
     model?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
   ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade | undefined {
     if (model) {
