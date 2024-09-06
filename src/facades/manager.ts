@@ -54,38 +54,38 @@ export default class {
   public get(
     model?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
   ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade | undefined {
-    if (!model) {
-      return undefined
-    }
-    const [modelName, modelId] = [model.constructor.name, String(model.id)]
-    const id = `${modelName}:${modelId}`
-    if (!this.#facades.has(id)) {
-      switch (true) {
-        case model instanceof AreaModel:
-          this.#facades.set(id, new AreaFacade(this.#api, model))
-          break
-        case model instanceof BuildingModel:
-          this.#facades.set(id, new BuildingFacade(this.#api, model))
-          break
-        case model instanceof DeviceModel && model.type === 'Ata':
-          this.#facades.set(id, new DeviceFacadeAta(this.#api, model))
-          break
-        case model instanceof DeviceModel && model.type === 'Atw':
-          this.#facades.set(id, new DeviceFacadeAtw(this.#api, model))
-          break
-        case model instanceof DeviceModel && model.type === 'Erv':
-          this.#facades.set(id, new DeviceFacadeErv(this.#api, model))
-          break
-        case model instanceof FloorModel:
-          this.#facades.set(id, new FloorFacade(this.#api, model))
-          break
-        default:
+    if (model) {
+      const modelName = model.constructor.name
+      const modelId = String(model.id)
+      const id = `${modelName}:${modelId}`
+      if (!this.#facades.has(id)) {
+        switch (true) {
+          case model instanceof AreaModel:
+            this.#facades.set(id, new AreaFacade(this.#api, model))
+            break
+          case model instanceof BuildingModel:
+            this.#facades.set(id, new BuildingFacade(this.#api, model))
+            break
+          case model instanceof DeviceModel && model.type === 'Ata':
+            this.#facades.set(id, new DeviceFacadeAta(this.#api, model))
+            break
+          case model instanceof DeviceModel && model.type === 'Atw':
+            this.#facades.set(id, new DeviceFacadeAtw(this.#api, model))
+            break
+          case model instanceof DeviceModel && model.type === 'Erv':
+            this.#facades.set(id, new DeviceFacadeErv(this.#api, model))
+            break
+          case model instanceof FloorModel:
+            this.#facades.set(id, new FloorFacade(this.#api, model))
+            break
+          default:
+        }
       }
+      const facade = this.#facades.get(id)
+      if (!facade) {
+        throw new Error(`Facade not found for ${modelName} with id ${modelId}`)
+      }
+      return facade
     }
-    const facade = this.#facades.get(id)
-    if (!facade) {
-      throw new Error(`Facade not found for ${modelName} with id ${modelId}`)
-    }
-    return facade
   }
 }
