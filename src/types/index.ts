@@ -27,6 +27,7 @@ export {
   type TemperatureDataAtw,
   type UpdateDeviceDataAtw,
   type ValuesAtw,
+  type ZoneAtw,
   FLAGS_ATW,
   OperationModeState,
   OperationModeZone,
@@ -49,7 +50,6 @@ export {
   type AreaDataAny,
   type Building,
   type BuildingData,
-  type BuildingSettings,
   type DateTimeComponents,
   type EnergyData,
   type EnergyPostData,
@@ -88,6 +88,7 @@ export {
   type Values,
   type WifiData,
   type WifiPostData,
+  type ZoneSettings,
   FLAGS,
   Language,
 } from './common'

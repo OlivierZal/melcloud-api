@@ -189,10 +189,10 @@ export interface HolidayModeData {
   readonly TimeZone: number
 }
 
-export interface BuildingSettings
+export interface ZoneSettings
   extends FrostProtectionData,
     Omit<HolidayModeData, 'EndDate' | 'StartDate'> {}
-export interface BuildingData extends BuildingSettings {
+export interface BuildingData extends ZoneSettings {
   readonly ID: number
   readonly Name: string
 }

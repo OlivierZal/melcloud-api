@@ -1,5 +1,5 @@
 import type API from '../services'
-import type { BuildingSettings } from '../types'
+import type { ZoneSettings } from '../types'
 import type { IBuildingFacade } from './interfaces'
 
 import { BuildingModel } from '../models'
@@ -25,11 +25,11 @@ export default class
     this.isHolidayModeDefined = this.data.HMDefined
   }
 
-  public get data(): BuildingSettings {
+  public get data(): ZoneSettings {
     return this.model.data
   }
 
-  public async fetch(): Promise<BuildingSettings> {
+  public async fetch(): Promise<ZoneSettings> {
     await this.api.applyFetch()
     return this.data
   }

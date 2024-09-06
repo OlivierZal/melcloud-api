@@ -27,6 +27,8 @@ export enum OperationModeZone {
   room_cool = 3,
 }
 
+export type ZoneAtw = 'Zone1' | 'Zone2'
+
 export interface OperationModeZoneDataAtw {
   readonly OperationModeZone1?: OperationModeZone
   readonly OperationModeZone2?: OperationModeZone

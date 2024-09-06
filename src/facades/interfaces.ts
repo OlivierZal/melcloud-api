@@ -1,6 +1,5 @@
 import type { DeviceModel } from '../models'
 import type {
-  BuildingSettings,
   DeviceType,
   EnergyData,
   ErrorData,
@@ -16,6 +15,7 @@ import type {
   UpdateDeviceData,
   Values,
   WifiData,
+  ZoneSettings,
 } from '../types'
 
 export interface IBaseFacade {
@@ -74,8 +74,8 @@ export interface IBaseSuperDeviceFacade extends IBaseFacade {
 }
 
 export interface IBuildingFacade extends IBaseSuperDeviceFacade {
-  data: BuildingSettings
-  fetch: () => Promise<BuildingSettings>
+  data: ZoneSettings
+  fetch: () => Promise<ZoneSettings>
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>

@@ -1,4 +1,4 @@
-import type { BuildingSettings, DeviceType, ListDevice } from '../types'
+import type { DeviceType, ListDevice, ZoneSettings } from '../types'
 import type { default as AreaModel, AreaModelAny } from './area'
 import type BuildingModel from './building'
 import type { DeviceModelAny } from './device'
@@ -30,7 +30,7 @@ export interface IBaseSuperAreaModel extends IBaseSuperDeviceModel {
 }
 
 export interface IBuildingModel extends IBaseSuperAreaModel {
-  data: BuildingSettings
+  data: ZoneSettings
   floorIds: readonly number[]
   floors: readonly FloorModel[]
 }
