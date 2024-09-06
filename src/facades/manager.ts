@@ -45,15 +45,15 @@ export default class {
     model: DeviceModel<T>,
   ): DeviceFacade[T]
   public get(model: FloorModel): FloorFacade
+  public get(
+    model: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
+  ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
   public get(model?: AreaModelAny): AreaFacade | undefined
   public get(model?: BuildingModel): BuildingFacade | undefined
   public get<T extends keyof typeof DeviceType>(
     model?: DeviceModel<T>,
   ): DeviceFacade[T] | undefined
   public get(model?: FloorModel): FloorFacade | undefined
-  public get(
-    model: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
-  ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
   public get(
     model?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
   ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade | undefined {
