@@ -13,7 +13,6 @@ const MIN_FLOW_COOL_TEMP = 5
 const MAX_FLOW_COOL_TEMP = 25
 const MIN_FLOW_HEAT_TEMP = 25
 const MAX_FLOW_HEAT_TEMP = 60
-const MIN_HOT_WATER_TEMP = 40
 const MIN_ROOM_TEMP = 10
 const MAX_ROOM_TEMP = 30
 
@@ -166,10 +165,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
         max: MAX_FLOW_HEAT_TEMP,
         min: MIN_FLOW_HEAT_TEMP,
       },
-      SetTankWaterTemperature: {
-        max: this.data.MaxTankTemperature,
-        min: MIN_HOT_WATER_TEMP,
-      },
+      SetTankWaterTemperature: { max: this.data.MaxTankTemperature, min: 40 },
       SetTemperatureZone1: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
       SetTemperatureZone2: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
     }
