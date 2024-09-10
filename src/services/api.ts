@@ -60,25 +60,8 @@ const LOGIN_PATH = '/Login/ClientLogin2'
 const MINUTES_0 = 0
 const MINUTES_5 = 5
 
-const setupLuxonSettings = ({
-  language,
-  timezone,
-}: {
-  language?: string
-  timezone?: string
-}): void => {
-  if (language !== undefined) {
-    LuxonSettings.defaultLocale = language
-  }
-  if (timezone !== undefined) {
-    LuxonSettings.defaultZone = timezone
-  }
-}
-
-const getLanguage = (language = LuxonSettings.defaultLocale): Language =>
-  language in Language ?
-    Language[language as keyof typeof Language]
-  : Language.en
+const getLanguage = (value: string): Language =>
+  value in Language ? Language[value as keyof typeof Language] : Language.en
 
 const setting = <This extends API>(
   target: ClassAccessorDecoratorTarget<This, string>,
@@ -111,6 +94,8 @@ export default class API implements IAPI {
 
   #holdAPIListUntil = DateTime.now()
 
+  #language: Language = Language.en
+
   #retryTimeout: NodeJS.Timeout | null = null
 
   #syncTimeout: NodeJS.Timeout | null = null
@@ -124,14 +109,14 @@ export default class API implements IAPI {
   private constructor(config: APIConfig = {}) {
     const {
       autoSyncInterval = MINUTES_5,
-      language = 'en',
+      language,
       logger = console,
       onSync,
       settingManager,
       shouldVerifySSL = true,
       timezone,
     } = config
-    setupLuxonSettings({ language, timezone })
+    this.#setupLuxonSettings({ language, timezone })
     this.#logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
@@ -353,12 +338,13 @@ export default class API implements IAPI {
     return this.#api.post('/HolidayMode/Update', postData)
   }
 
-  public async setLanguage(language: string): Promise<{ data: boolean }> {
+  public async setLanguage(value: string): Promise<{ data: boolean }> {
+    const language = getLanguage(value)
     const response = await this.#api.post<boolean>('/User/UpdateLanguage', {
-      language: getLanguage(language) satisfies Language,
+      language: language satisfies Language,
     })
     if (response.data) {
-      setupLuxonSettings({ language })
+      this.#setupLuxonSettings({ language: value })
     }
     return response
   }
@@ -383,7 +369,7 @@ export default class API implements IAPI {
         postData: {
           AppVersion: '1.34.10.0',
           Email: username,
-          Language: getLanguage(),
+          Language: this.#language,
           Password: password,
           Persist: true,
         },
@@ -486,5 +472,21 @@ export default class API implements IAPI {
       async (error: AxiosError): Promise<AxiosError> =>
         this.#handleError(error),
     )
+  }
+
+  #setupLuxonSettings({
+    language,
+    timezone,
+  }: {
+    language?: string
+    timezone?: string
+  }): void {
+    if (language !== undefined) {
+      LuxonSettings.defaultLocale = language
+      this.#language = getLanguage(language)
+    }
+    if (timezone !== undefined) {
+      LuxonSettings.defaultZone = timezone
+    }
   }
 }
