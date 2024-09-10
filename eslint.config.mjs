@@ -80,12 +80,6 @@ export default [
           {
             block: {
               balanced: true,
-              exceptions: ['*'],
-              markers: ['!'],
-            },
-            line: {
-              exceptions: ['/', '#'],
-              markers: ['/'],
             },
           },
         ],
