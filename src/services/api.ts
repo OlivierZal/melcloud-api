@@ -116,7 +116,7 @@ export default class API implements IAPI {
       shouldVerifySSL = true,
       timezone,
     } = config
-    this.#setupLuxonSettings({ language, timezone })
+    this.#setupLanguageAndTimezone({ language, timezone })
     this.#logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
@@ -344,7 +344,7 @@ export default class API implements IAPI {
       language: language satisfies Language,
     })
     if (response.data) {
-      this.#setupLuxonSettings({ language: value })
+      this.#setupLanguageAndTimezone({ language: value })
     }
     return response
   }
@@ -474,7 +474,7 @@ export default class API implements IAPI {
     )
   }
 
-  #setupLuxonSettings({
+  #setupLanguageAndTimezone({
     language,
     timezone,
   }: {
