@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.10.0",
-    "@stylistic/eslint-plugin": "^2.7.2",
+    "@stylistic/eslint-plugin": "^2.8.0",
     "@types/luxon": "^3.4.2",
     "@types/node": "^22.5.4",
     "eslint": "^9.10.0",
