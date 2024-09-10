@@ -87,8 +87,7 @@ export const updateDevice = <
   DeviceData extends GetDeviceData[T] | SetDeviceData[T],
 >(
   target: (...args: any[]) => Promise<DeviceData>,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  context: unknown,
+  _context: unknown,
 ): ((...args: any[]) => Promise<DeviceData>) =>
   async function newTarget(this: DeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)

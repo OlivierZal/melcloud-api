@@ -11,8 +11,7 @@ import BaseFacade from './base'
 
 export const sync = <T extends FailureData | GroupAtaState | SuccessData>(
   target: (...args: any[]) => Promise<T>,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  context: unknown,
+  _context: unknown,
 ): ((...args: any[]) => Promise<T>) =>
   async function newTarget(
     this: BaseSuperDeviceFacade<AreaModelAny | BuildingModel | FloorModel>,
