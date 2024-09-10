@@ -67,6 +67,7 @@ export interface APIConfig {
 }
 
 export interface IAPI {
+  applyFetch: () => Promise<Building[]>
   applyLogin: (
     data?: LoginCredentials,
     onSuccess?: () => Promise<void>,

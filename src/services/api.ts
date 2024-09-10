@@ -198,7 +198,7 @@ export default class API implements IAPI {
     const { password = this.password, username = this.username } = data ?? {}
     if (username && password) {
       try {
-        return await this.#login({ password, username })
+        return await this.#authenticate({ password, username })
       } catch (error) {
         if (data !== undefined) {
           throw error
@@ -358,7 +358,7 @@ export default class API implements IAPI {
       language: getLanguage(language) satisfies Language,
     })
     if (response.data) {
-      LuxonSettings.defaultLocale = language
+      setupLuxonSettings({ language })
     }
     return response
   }
@@ -369,6 +369,34 @@ export default class API implements IAPI {
     postData: SetPowerPostData
   }): Promise<{ data: boolean }> {
     return this.#api.post('/Device/Power', postData)
+  }
+
+  async #authenticate({
+    password,
+    username,
+  }: {
+    password: string
+    username: string
+  }): Promise<boolean> {
+    const { LoginData: loginData } = (
+      await this.login({
+        postData: {
+          AppVersion: '1.34.10.0',
+          Email: username,
+          Language: getLanguage(),
+          Password: password,
+          Persist: true,
+        },
+      })
+    ).data
+    if (loginData) {
+      this.username = username
+      this.password = password
+      this.contextKey = loginData.ContextKey
+      this.expiry = loginData.Expiry
+      await this.applyFetch()
+    }
+    return loginData !== null
   }
 
   #autoSync(): void {
@@ -442,34 +470,6 @@ export default class API implements IAPI {
   #handleResponse(response: AxiosResponse): AxiosResponse {
     this.#logger.log(String(new APICallResponseData(response)))
     return response
-  }
-
-  async #login({
-    password,
-    username,
-  }: {
-    password: string
-    username: string
-  }): Promise<boolean> {
-    const { LoginData: loginData } = (
-      await this.login({
-        postData: {
-          AppVersion: '1.34.10.0',
-          Email: username,
-          Language: getLanguage(),
-          Password: password,
-          Persist: true,
-        },
-      })
-    ).data
-    if (loginData) {
-      this.username = username
-      this.password = password
-      this.contextKey = loginData.ContextKey
-      this.expiry = loginData.Expiry
-      await this.applyFetch()
-    }
-    return loginData !== null
   }
 
   #setupAxiosInterceptors(): void {
