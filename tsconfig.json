@@ -5,6 +5,7 @@
     "lib": ["ESNext"],
     "module": "NodeNext",
     "noImplicitOverride": true,
+    "noUncheckedSideEffectImports": true,
     "outDir": "dist",
     "rootDir": "src",
     "skipLibCheck": true,
