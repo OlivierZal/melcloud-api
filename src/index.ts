@@ -18,7 +18,7 @@ export {
   FloorFacade,
   YEAR_1970,
   nowISO,
-  sync,
+  syncDevices,
   updateDevice,
 } from './facades'
 export {
