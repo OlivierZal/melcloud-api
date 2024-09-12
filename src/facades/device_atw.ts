@@ -261,8 +261,8 @@ export default class extends BaseDeviceFacade<'Atw'> {
     data: Partial<UpdateDeviceDataAtw>,
   ): TemperatureDataAtw {
     return Object.fromEntries(
-      this.#targetTemperatureRanges.map(([key, { max, min }]) =>
-        handleTargetTemperature(data, key, { max, min }),
+      this.#targetTemperatureRanges.map((range) =>
+        handleTargetTemperature(data, ...range),
       ),
     )
   }
