@@ -10,12 +10,9 @@ const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
 const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
 
 const NUMBER_O = 0
-const MIN_FLOW_COOL_TEMP = 5
-const MAX_FLOW_COOL_TEMP = 25
-const MIN_FLOW_HEAT_TEMP = 25
-const MAX_FLOW_HEAT_TEMP = 60
-const MIN_ROOM_TEMP = 10
-const MAX_ROOM_TEMP = 30
+const COOL_FLOW_TEMPERATURE_RANGE = { max: 25, min: 5 }
+const HEAT_FLOW_TEMPERATURE_RANGE = { max: 60, min: 25 }
+const ROOM_TEMPERATURE_RANGE = { max: 30, min: 10 }
 
 export default class extends BaseDeviceFacade<'Atw'> {
   public override canCool = this.data.CanCool
@@ -150,28 +147,16 @@ export default class extends BaseDeviceFacade<'Atw'> {
     { max: number; min: number },
   ][] {
     return [
-      [
-        'SetCoolFlowTemperatureZone1',
-        { max: MAX_FLOW_COOL_TEMP, min: MIN_FLOW_COOL_TEMP },
-      ],
-      [
-        'SetCoolFlowTemperatureZone2',
-        { max: MAX_FLOW_COOL_TEMP, min: MIN_FLOW_COOL_TEMP },
-      ],
-      [
-        'SetHeatFlowTemperatureZone1',
-        { max: MAX_FLOW_HEAT_TEMP, min: MIN_FLOW_HEAT_TEMP },
-      ],
-      [
-        'SetHeatFlowTemperatureZone2',
-        { max: MAX_FLOW_HEAT_TEMP, min: MIN_FLOW_HEAT_TEMP },
-      ],
+      ['SetCoolFlowTemperatureZone1', COOL_FLOW_TEMPERATURE_RANGE],
+      ['SetCoolFlowTemperatureZone2', COOL_FLOW_TEMPERATURE_RANGE],
+      ['SetHeatFlowTemperatureZone1', HEAT_FLOW_TEMPERATURE_RANGE],
+      ['SetHeatFlowTemperatureZone2', HEAT_FLOW_TEMPERATURE_RANGE],
       [
         'SetTankWaterTemperature',
         { max: this.data.MaxTankTemperature, min: 40 },
       ],
-      ['SetTemperatureZone1', { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP }],
-      ['SetTemperatureZone2', { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP }],
+      ['SetTemperatureZone1', ROOM_TEMPERATURE_RANGE],
+      ['SetTemperatureZone2', ROOM_TEMPERATURE_RANGE],
     ]
   }
 
