@@ -213,20 +213,13 @@ export default class extends BaseDeviceFacade<'Atw'> {
           [operationModeZone2, operationModeZone1]
         : [operationModeZone1, operationModeZone2]
       if (primaryOperationMode.value !== undefined) {
-        const secondaryValue = this.#getSecondaryOperationMode(
-          secondaryOperationMode.key,
-          primaryOperationMode.value,
-          secondaryOperationMode.value,
-        )
-        if (
-          secondaryOperationMode.value !== undefined &&
-          secondaryOperationMode.value !== secondaryValue
-        ) {
-          throw new Error('Operation modes conflict')
-        }
         return {
           [primaryOperationMode.key]: primaryOperationMode.value,
-          [secondaryOperationMode.key]: secondaryValue,
+          [secondaryOperationMode.key]: this.#getSecondaryOperationMode(
+            secondaryOperationMode.key,
+            primaryOperationMode.value,
+            secondaryOperationMode.value,
+          ),
         }
       }
     }
