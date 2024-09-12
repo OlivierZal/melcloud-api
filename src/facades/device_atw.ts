@@ -17,15 +17,6 @@ const MAX_FLOW_HEAT_TEMP = 60
 const MIN_ROOM_TEMP = 10
 const MAX_ROOM_TEMP = 30
 
-const handleTargetTemperature = (
-  data: Partial<UpdateDeviceDataAtw>,
-  key: keyof TemperatureDataAtw,
-  { max, min }: { max: number; min: number },
-): [keyof TemperatureDataAtw, number] => [
-  key,
-  Math.min(Math.max(data[key] ?? NUMBER_O, min), max),
-]
-
 export default class extends BaseDeviceFacade<'Atw'> {
   public override canCool = this.data.CanCool
 
@@ -261,9 +252,10 @@ export default class extends BaseDeviceFacade<'Atw'> {
     data: Partial<UpdateDeviceDataAtw>,
   ): TemperatureDataAtw {
     return Object.fromEntries(
-      this.#targetTemperatureRanges.map((range) =>
-        handleTargetTemperature(data, ...range),
-      ),
+      this.#targetTemperatureRanges.map(([key, { max, min }]) => [
+        key,
+        Math.min(Math.max(data[key] ?? NUMBER_O, min), max),
+      ]),
     )
   }
 }
