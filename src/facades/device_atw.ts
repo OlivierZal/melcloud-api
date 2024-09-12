@@ -154,7 +154,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
   @alias('SetTemperatureZone2')
   public accessor targetRoomTemperatureZone2: unknown = undefined
 
-  get #targetTemperatureRange(): [
+  get #targetTemperatureRanges(): [
     keyof TemperatureDataAtw,
     { max: number; min: number },
   ][] {
@@ -261,7 +261,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
     data: Partial<UpdateDeviceDataAtw>,
   ): TemperatureDataAtw {
     return Object.fromEntries(
-      this.#targetTemperatureRange.map(([key, { max, min }]) =>
+      this.#targetTemperatureRanges.map(([key, { max, min }]) =>
         handleTargetTemperature(data, key, { max, min }),
       ),
     )
