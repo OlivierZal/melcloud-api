@@ -92,7 +92,6 @@ export const updateDevice = <
   async function newTarget(this: DeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
     ;(this.model as DeviceModel<T>).update(convertToListDeviceData(this, data))
-    await this.api.onSync?.()
     return data
   }
 
