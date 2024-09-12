@@ -9,12 +9,22 @@ import BaseDeviceFacade, { alias } from './device'
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
 const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
 
+const NUMBER_O = 0
 const MIN_FLOW_COOL_TEMP = 5
 const MAX_FLOW_COOL_TEMP = 25
 const MIN_FLOW_HEAT_TEMP = 25
 const MAX_FLOW_HEAT_TEMP = 60
 const MIN_ROOM_TEMP = 10
 const MAX_ROOM_TEMP = 30
+
+const handleTargetTemperature = (
+  data: Partial<UpdateDeviceDataAtw>,
+  key: keyof TemperatureDataAtw,
+  { max, min }: { max: number; min: number },
+): [keyof TemperatureDataAtw, number] => [
+  key,
+  Math.min(Math.max(data[key] ?? NUMBER_O, min), max),
+]
 
 export default class extends BaseDeviceFacade<'Atw'> {
   public override canCool = this.data.CanCool
@@ -144,31 +154,34 @@ export default class extends BaseDeviceFacade<'Atw'> {
   @alias('SetTemperatureZone2')
   public accessor targetRoomTemperatureZone2: unknown = undefined
 
-  get #targetTemperatureRange(): Record<
+  get #targetTemperatureRange(): [
     keyof TemperatureDataAtw,
-    { max: number; min: number }
-  > {
-    return {
-      SetCoolFlowTemperatureZone1: {
-        max: MAX_FLOW_COOL_TEMP,
-        min: MIN_FLOW_COOL_TEMP,
-      },
-      SetCoolFlowTemperatureZone2: {
-        max: MAX_FLOW_COOL_TEMP,
-        min: MIN_FLOW_COOL_TEMP,
-      },
-      SetHeatFlowTemperatureZone1: {
-        max: MAX_FLOW_HEAT_TEMP,
-        min: MIN_FLOW_HEAT_TEMP,
-      },
-      SetHeatFlowTemperatureZone2: {
-        max: MAX_FLOW_HEAT_TEMP,
-        min: MIN_FLOW_HEAT_TEMP,
-      },
-      SetTankWaterTemperature: { max: this.data.MaxTankTemperature, min: 40 },
-      SetTemperatureZone1: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
-      SetTemperatureZone2: { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP },
-    }
+    { max: number; min: number },
+  ][] {
+    return [
+      [
+        'SetCoolFlowTemperatureZone1',
+        { max: MAX_FLOW_COOL_TEMP, min: MIN_FLOW_COOL_TEMP },
+      ],
+      [
+        'SetCoolFlowTemperatureZone2',
+        { max: MAX_FLOW_COOL_TEMP, min: MIN_FLOW_COOL_TEMP },
+      ],
+      [
+        'SetHeatFlowTemperatureZone1',
+        { max: MAX_FLOW_HEAT_TEMP, min: MIN_FLOW_HEAT_TEMP },
+      ],
+      [
+        'SetHeatFlowTemperatureZone2',
+        { max: MAX_FLOW_HEAT_TEMP, min: MIN_FLOW_HEAT_TEMP },
+      ],
+      [
+        'SetTankWaterTemperature',
+        { max: this.data.MaxTankTemperature, min: 40 },
+      ],
+      ['SetTemperatureZone1', { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP }],
+      ['SetTemperatureZone2', { max: MAX_ROOM_TEMP, min: MIN_ROOM_TEMP }],
+    ]
   }
 
   protected override handle(
@@ -177,17 +190,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
     return super.handle({
       ...data,
       ...this.#handleOperationModes(data),
-      ...(
-        Object.keys(
-          this.#targetTemperatureRange,
-        ) as (keyof TemperatureDataAtw)[]
-      ).reduce(
-        (acc, key) => ({
-          ...acc,
-          ...this.#handleTargetTemperature(data, key),
-        }),
-        {},
-      ),
+      ...this.#handleTargetTemperatures(data),
     })
   }
 
@@ -220,7 +223,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
 
   #handleOperationModes(
     data: Partial<UpdateDeviceDataAtw>,
-  ): Partial<UpdateDeviceDataAtw> {
+  ): OperationModeZoneDataAtw {
     if (this.data.HasZone2) {
       const [operationModeZone1, operationModeZone2]: {
         value?: OperationModeZone
@@ -254,15 +257,13 @@ export default class extends BaseDeviceFacade<'Atw'> {
     return {}
   }
 
-  #handleTargetTemperature(
+  #handleTargetTemperatures(
     data: Partial<UpdateDeviceDataAtw>,
-    key: keyof TemperatureDataAtw,
-  ): Partial<UpdateDeviceDataAtw> {
-    const value = data[key]
-    if (value !== undefined) {
-      const { max, min } = this.#targetTemperatureRange[key]
-      return { [key]: Math.min(Math.max(value, min), max) }
-    }
-    return {}
+  ): TemperatureDataAtw {
+    return Object.fromEntries(
+      this.#targetTemperatureRange.map(([key, { max, min }]) =>
+        handleTargetTemperature(data, key, { max, min }),
+      ),
+    )
   }
 }
