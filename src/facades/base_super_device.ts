@@ -9,7 +9,9 @@ import type { IBaseSuperDeviceFacade } from './interfaces'
 
 import BaseFacade from './base'
 
-export const syncDevices = <T extends FailureData | GroupAtaState | SuccessData>(
+export const syncDevices = <
+  T extends FailureData | GroupAtaState | SuccessData,
+>(
   target: (...args: any[]) => Promise<T>,
   _context: unknown,
 ): ((...args: any[]) => Promise<T>) =>
