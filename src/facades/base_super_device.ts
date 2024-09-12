@@ -9,7 +9,7 @@ import type { IBaseSuperDeviceFacade } from './interfaces'
 
 import BaseFacade from './base'
 
-export const sync = <T extends FailureData | GroupAtaState | SuccessData>(
+export const syncDevices = <T extends FailureData | GroupAtaState | SuccessData>(
   target: (...args: any[]) => Promise<T>,
   _context: unknown,
 ): ((...args: any[]) => Promise<T>) =>
@@ -30,7 +30,7 @@ export default abstract class BaseSuperDeviceFacade<
 {
   protected abstract readonly setAtaGroupSpecification: keyof SetGroupAtaPostData['Specification']
 
-  @sync
+  @syncDevices
   public async getAta(): Promise<GroupAtaState> {
     const state = Object.fromEntries(
       Object.entries(
@@ -49,7 +49,7 @@ export default abstract class BaseSuperDeviceFacade<
     return state
   }
 
-  @sync
+  @syncDevices
   public async setAta(
     state: GroupAtaState,
   ): Promise<FailureData | SuccessData> {
