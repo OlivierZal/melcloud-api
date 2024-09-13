@@ -232,7 +232,7 @@ export default class extends BaseDeviceFacade<'Atw'> {
   ): TemperatureDataAtw {
     return Object.fromEntries(
       this.#targetTemperatureRanges
-        .filter(([key]) => data[key] !== undefined)
+        .filter(([key]) => key in data)
         .map(([key, { max, min }]) => [
           key,
           Math.min(Math.max(data[key] ?? NUMBER_0, min), max),
