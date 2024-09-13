@@ -6,10 +6,11 @@ import {
 } from '../types'
 import BaseDeviceFacade, { alias } from './device'
 
+const NUMBER_0 = 0
+
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
 const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
 
-const NUMBER_O = 0
 const COOL_FLOW_TEMPERATURE_RANGE = { max: 25, min: 5 }
 const HEAT_FLOW_TEMPERATURE_RANGE = { max: 60, min: 25 }
 const ROOM_TEMPERATURE_RANGE = { max: 30, min: 10 }
@@ -230,10 +231,12 @@ export default class extends BaseDeviceFacade<'Atw'> {
     data: Partial<UpdateDeviceDataAtw>,
   ): TemperatureDataAtw {
     return Object.fromEntries(
-      this.#targetTemperatureRanges.map(([key, { max, min }]) => [
-        key,
-        Math.min(Math.max(data[key] ?? NUMBER_O, min), max),
-      ]),
+      this.#targetTemperatureRanges
+        .filter(([key]) => data[key] !== undefined)
+        .map(([key, { max, min }]) => [
+          key,
+          Math.min(Math.max(data[key] ?? NUMBER_0, min), max),
+        ]),
     )
   }
 }
