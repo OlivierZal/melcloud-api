@@ -17,6 +17,7 @@ export {
   FacadeManager,
   FloorFacade,
   YEAR_1970,
+  fetchDevices,
   nowISO,
   syncDevices,
   updateDevice,

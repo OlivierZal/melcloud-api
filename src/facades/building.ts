@@ -3,6 +3,7 @@ import type { ZoneSettings } from '../types'
 import type { IBuildingFacade } from './interfaces'
 
 import { BuildingModel } from '../models'
+import { fetchDevices } from './base'
 import BaseSuperDeviceFacade from './base_super_device'
 
 export default class
@@ -29,8 +30,8 @@ export default class
     return this.model.data
   }
 
+  @fetchDevices
   public async fetch(): Promise<ZoneSettings> {
-    await this.api.applyFetch()
-    return this.data
+    return Promise.resolve(this.data)
   }
 }

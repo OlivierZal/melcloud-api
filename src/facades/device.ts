@@ -18,7 +18,7 @@ import {
   FROM_LIST_TO_SET_ATA,
   FROM_SET_TO_LIST_ATA,
 } from '../types'
-import BaseFacade from './base'
+import BaseFacade, { fetchDevices } from './base'
 import { YEAR_1970, nowISO } from './utils'
 
 // @ts-expect-error: most runtimes do not support natively
@@ -153,6 +153,11 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
     ) as Required<UpdateDeviceData[T]>
   }
 
+  @fetchDevices
+  public async fetch(): Promise<ListDevice[T]['Device']> {
+    return Promise.resolve(this.data)
+  }
+
   @updateDevice
   public async get(): Promise<GetDeviceData[T]> {
     return (
@@ -189,11 +194,6 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
         },
       })
     ).data
-  }
-
-  public async fetch(): Promise<ListDevice[T]['Device']> {
-    await this.api.applyFetch()
-    return this.data
   }
 
   public async getEnergyReport({

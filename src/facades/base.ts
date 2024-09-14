@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
 
+import type { BaseFacade } from '.'
 import type {
   AreaModelAny,
   BuildingModel,
@@ -18,10 +19,12 @@ import type {
   HMTimeZone,
   HolidayModeData,
   HolidayModeLocation,
+  ListDevice,
   SettingsParams,
   SuccessData,
   TilesData,
   WifiData,
+  ZoneSettings,
 } from '../types'
 import type { IBaseFacade } from './interfaces'
 
@@ -32,6 +35,20 @@ const MIN_TEMPERATURE_MAX = 14
 const MAX_TEMPERATURE_MIN = 6
 const MAX_TEMPERATURE_MAX = 16
 const MIN_MAX_GAP = 2
+
+export const fetchDevices = <
+  T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,
+>(
+  target: (...args: any[]) => Promise<T>,
+  _context: unknown,
+): ((...args: any[]) => Promise<T>) =>
+  async function newTarget(
+    this: BaseFacade<BuildingModel | DeviceModelAny>,
+    ...args: unknown[]
+  ) {
+    await this.api.fetch()
+    return target.call(this, ...args)
+  }
 
 const getDateTimeComponents = (date?: DateTime): DateTimeComponents =>
   date ?

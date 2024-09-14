@@ -1,5 +1,5 @@
 export { default as AreaFacade } from './area'
-export { default as BaseFacade } from './base'
+export { default as BaseFacade, fetchDevices } from './base'
 export {
   default as BaseSuperDeviceFacade,
   syncDevices,
