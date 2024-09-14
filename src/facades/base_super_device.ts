@@ -44,7 +44,7 @@ export default abstract class BaseSuperDeviceFacade<
       ).filter(([, value]) => value !== null),
     )
     this.model.devices
-      .filter((device) => device.type === 'Ata')
+      .filter(({ type }) => type === 'Ata')
       .forEach((device) => {
         device.update(state)
       })
@@ -62,7 +62,7 @@ export default abstract class BaseSuperDeviceFacade<
       },
     })
     this.model.devices
-      .filter((device) => device.type === 'Ata')
+      .filter(({ type }) => type === 'Ata')
       .forEach((device) => {
         device.update(
           Object.fromEntries(
