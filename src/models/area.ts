@@ -50,11 +50,11 @@ export default class AreaModel<T extends number | null>
   }
 
   public static getByBuildingId(id: number): AreaModelAny[] {
-    return this.getAll().filter((model) => model.buildingId === id)
+    return this.getAll().filter(({ buildingId }) => buildingId === id)
   }
 
   public static getByFloorId(id: number): AreaModelAny[] {
-    return this.getAll().filter((model) => model.floorId === id)
+    return this.getAll().filter(({ floorId }) => floorId === id)
   }
 
   public static getById(id: number): AreaModelAny | undefined {
@@ -62,7 +62,7 @@ export default class AreaModel<T extends number | null>
   }
 
   public static getByName(name: string): AreaModelAny | undefined {
-    return this.getAll().find((model) => model.name === name)
+    return this.getAll().find(({ name: modelName }) => modelName === name)
   }
 
   public static upsert(area: AreaDataAny): void {

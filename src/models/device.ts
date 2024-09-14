@@ -65,15 +65,15 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getByAreaId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => model.areaId === id)
+    return this.getAll().filter(({ areaId }) => areaId === id)
   }
 
   public static getByBuildingId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => model.buildingId === id)
+    return this.getAll().filter(({ buildingId }) => buildingId === id)
   }
 
   public static getByFloorId(id: number): DeviceModelAny[] {
-    return this.getAll().filter((model) => model.floorId === id)
+    return this.getAll().filter(({ floorId }) => floorId === id)
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
@@ -81,14 +81,14 @@ export default class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getByName(name: string): DeviceModelAny | undefined {
-    return this.getAll().find((model) => model.name === name)
+    return this.getAll().find(({ name: modelName }) => modelName === name)
   }
 
   public static getByType<K extends keyof typeof DeviceType>(
     type: K,
   ): DeviceModel<K>[] {
     return this.getAll().filter(
-      (model) => model.type === type,
+      ({ type: modelType }) => modelType === type,
     ) as DeviceModel<K>[]
   }
 

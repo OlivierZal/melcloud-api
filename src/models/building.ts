@@ -49,7 +49,7 @@ export default class BuildingModel extends BaseModel implements IBuildingModel {
   }
 
   public static getByName(name: string): BuildingModel | undefined {
-    return this.getAll().find((model) => model.name === name)
+    return this.getAll().find(({ name: modelName }) => modelName === name)
   }
 
   public static upsert(building: BuildingData): void {
