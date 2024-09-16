@@ -129,7 +129,7 @@ export interface ValuesAtw extends BaseValues {
   readonly temperatureZone2?: number
 }
 
-export const FLAGS_ATW: Record<keyof UpdateDeviceDataAtw, number> = {
+export const flagsAtw: Record<keyof UpdateDeviceDataAtw, number> = {
   ForcedHotWaterMode: 0x10000,
   OperationModeZone1: 0x8,
   OperationModeZone2: 0x10,
@@ -141,4 +141,4 @@ export const FLAGS_ATW: Record<keyof UpdateDeviceDataAtw, number> = {
   SetTankWaterTemperature: 0x1000000000020,
   SetTemperatureZone1: 0x200000080,
   SetTemperatureZone2: 0x800000200,
-}
+} as const

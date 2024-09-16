@@ -57,8 +57,8 @@ import {
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin2'
 
-const MINUTES_0 = 0
-const MINUTES_5 = 5
+const DEFAULT_SYNC_INTERVAL = 5
+const NO_SYNC_INTERVAL = 0
 
 const getLanguage = (value: string): Language =>
   value in Language ? Language[value as keyof typeof Language] : Language.en
@@ -108,7 +108,7 @@ export default class API implements IAPI {
 
   private constructor(config: APIConfig = {}) {
     const {
-      autoSyncInterval = MINUTES_5,
+      autoSyncInterval = DEFAULT_SYNC_INTERVAL,
       language,
       logger = console,
       onSync,
@@ -128,7 +128,7 @@ export default class API implements IAPI {
     this.#setupAxiosInterceptors()
 
     this.#autoSyncInterval = Duration.fromObject({
-      minutes: autoSyncInterval ?? MINUTES_0,
+      minutes: autoSyncInterval ?? NO_SYNC_INTERVAL,
     })
   }
 

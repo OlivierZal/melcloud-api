@@ -114,27 +114,27 @@ export interface ValuesAta extends BaseValues {
   readonly vertical?: Vertical
 }
 
-export const FLAGS_ATA: Record<keyof UpdateDeviceDataAta, number> = {
+export const flagsAta: Record<keyof UpdateDeviceDataAta, number> = {
   OperationMode: 0x2,
   Power: 0x1,
   SetFanSpeed: 0x8,
   SetTemperature: 0x4,
   VaneHorizontal: 0x100,
   VaneVertical: 0x10,
-}
+} as const
 
-export const FROM_SET_TO_LIST_ATA: Record<
+export const fromSetToListAta: Record<
   KeysOfSetDeviceDataAtaNotInList,
   keyof SetDeviceDataAtaInList
 > = {
   SetFanSpeed: 'FanSpeed',
   VaneHorizontal: 'VaneHorizontalDirection',
   VaneVertical: 'VaneVerticalDirection',
-}
+} as const
 
-export const FROM_LIST_TO_SET_ATA: Record<
+export const fromListToSetAta: Record<
   keyof SetDeviceDataAtaInList,
   KeysOfSetDeviceDataAtaNotInList
 > = Object.fromEntries(
-  Object.entries(FROM_SET_TO_LIST_ATA).map(([key, value]) => [value, key]),
+  Object.entries(fromSetToListAta).map(([key, value]) => [value, key]),
 ) as Record<keyof SetDeviceDataAtaInList, KeysOfSetDeviceDataAtaNotInList>

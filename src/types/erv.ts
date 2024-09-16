@@ -53,8 +53,8 @@ export interface ValuesErv extends BaseValues {
   readonly mode?: VentilationMode
 }
 
-export const FLAGS_ERV: Record<keyof UpdateDeviceDataErv, number> = {
+export const flagsErv: Record<keyof UpdateDeviceDataErv, number> = {
   Power: 0x1,
   SetFanSpeed: 0x8,
   VentilationMode: 0x4,
-}
+} as const

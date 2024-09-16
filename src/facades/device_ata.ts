@@ -1,7 +1,9 @@
-import { type UpdateDeviceDataAta, OperationMode } from '../types'
+import { type UpdateDeviceDataAta, OperationMode, flagsAta } from '../types'
 import BaseDeviceFacade, { alias } from './device'
 
 export default class extends BaseDeviceFacade<'Ata'> {
+  public readonly flags = flagsAta
+
   @alias('ActualFanSpeed')
   public accessor actualFan: unknown = undefined
 

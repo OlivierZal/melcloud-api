@@ -1,39 +1,35 @@
-import type { DeviceType, FanSpeed } from './bases'
-
-import {
-  type EnergyDataAta,
-  type GetDeviceDataAta,
-  type Horizontal,
-  type ListDeviceAta,
-  type ListDeviceDataAta,
-  type OperationMode,
-  type SetDeviceDataAta,
-  type SetDevicePostDataAta,
-  type UpdateDeviceDataAta,
-  type ValuesAta,
-  type Vertical,
-  FLAGS_ATA,
+import type {
+  EnergyDataAta,
+  GetDeviceDataAta,
+  Horizontal,
+  ListDeviceAta,
+  ListDeviceDataAta,
+  OperationMode,
+  SetDeviceDataAta,
+  SetDevicePostDataAta,
+  UpdateDeviceDataAta,
+  ValuesAta,
+  Vertical,
 } from './ata'
-import {
-  type EnergyDataAtw,
-  type GetDeviceDataAtw,
-  type ListDeviceAtw,
-  type ListDeviceDataAtw,
-  type SetDeviceDataAtw,
-  type SetDevicePostDataAtw,
-  type UpdateDeviceDataAtw,
-  type ValuesAtw,
-  FLAGS_ATW,
+import type {
+  EnergyDataAtw,
+  GetDeviceDataAtw,
+  ListDeviceAtw,
+  ListDeviceDataAtw,
+  SetDeviceDataAtw,
+  SetDevicePostDataAtw,
+  UpdateDeviceDataAtw,
+  ValuesAtw,
 } from './atw'
-import {
-  type GetDeviceDataErv,
-  type ListDeviceDataErv,
-  type ListDeviceErv,
-  type SetDeviceDataErv,
-  type SetDevicePostDataErv,
-  type UpdateDeviceDataErv,
-  type ValuesErv,
-  FLAGS_ERV,
+import type { DeviceType, FanSpeed } from './bases'
+import type {
+  GetDeviceDataErv,
+  ListDeviceDataErv,
+  ListDeviceErv,
+  SetDeviceDataErv,
+  SetDevicePostDataErv,
+  UpdateDeviceDataErv,
+  ValuesErv,
 } from './erv'
 
 export enum Language {
@@ -332,5 +328,3 @@ export interface Values {
   readonly Atw: ValuesAtw
   readonly Erv: ValuesErv
 }
-
-export const FLAGS = { Ata: FLAGS_ATA, Atw: FLAGS_ATW, Erv: FLAGS_ERV }

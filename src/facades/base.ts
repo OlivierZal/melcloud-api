@@ -28,13 +28,13 @@ import type {
 } from '../types'
 import type { IBaseFacade } from './interfaces'
 
-import { YEAR_1970, nowISO } from './utils'
+import { DEFAULT_YEAR, nowISO } from './utils'
 
+const MIN_MAX_GAP = 2
 const MIN_TEMPERATURE_MIN = 4
 const MIN_TEMPERATURE_MAX = 14
 const MAX_TEMPERATURE_MIN = 6
 const MAX_TEMPERATURE_MAX = 16
-const MIN_MAX_GAP = 2
 
 export const fetchDevices = <
   T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,
@@ -126,7 +126,7 @@ export default abstract class<
       await this.api.getErrors({
         postData: {
           DeviceIDs: this.#getDeviceIds(),
-          FromDate: from ?? YEAR_1970,
+          FromDate: from ?? DEFAULT_YEAR,
           ToDate: to ?? nowISO(),
         },
       })

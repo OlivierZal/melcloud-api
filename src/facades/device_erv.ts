@@ -1,6 +1,9 @@
+import { flagsErv } from '../types'
 import BaseDeviceFacade, { alias } from './device'
 
 export default class extends BaseDeviceFacade<'Erv'> {
+  public readonly flags = flagsErv
+
   @alias('RoomCO2Level')
   public accessor co2: unknown = undefined
 

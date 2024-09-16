@@ -14,12 +14,11 @@ import {
   type UpdateDeviceData,
   type Values,
   FLAG_UNCHANGED,
-  FLAGS,
-  FROM_LIST_TO_SET_ATA,
-  FROM_SET_TO_LIST_ATA,
+  fromListToSetAta,
+  fromSetToListAta,
 } from '../types'
 import BaseFacade, { fetchDevices } from './base'
-import { YEAR_1970, nowISO } from './utils'
+import { DEFAULT_YEAR, nowISO } from './utils'
 
 // @ts-expect-error: most runtimes do not support natively
 Symbol.metadata ??= Symbol('Symbol.metadata')
@@ -56,7 +55,7 @@ export const alias =
   })
 
 const convertToListDeviceData = <T extends keyof typeof DeviceType>(
-  instance: DeviceFacade<T>,
+  facade: DeviceFacade<T>,
   data: SetDeviceData[T],
 ): Partial<ListDevice[T]['Device']> => {
   const { EffectiveFlags: flags, ...newData } = data
@@ -65,17 +64,17 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
       Object.entries(newData)
     : Object.entries(newData).filter(
         ([key]) =>
-          key in instance.flags &&
+          key in facade.flags &&
           Number(
-            BigInt(instance.flags[key as keyof UpdateDeviceData[T]]) &
+            BigInt(facade.flags[key as keyof UpdateDeviceData[T]]) &
               BigInt(flags),
           ),
       )
   return Object.fromEntries(
-    instance.type === 'Ata' ?
+    facade.type === 'Ata' ?
       entries.map(([key, value]) =>
-        key in FROM_SET_TO_LIST_ATA ?
-          [FROM_SET_TO_LIST_ATA[key as KeysOfSetDeviceDataAtaNotInList], value]
+        key in fromSetToListAta ?
+          [fromSetToListAta[key as KeysOfSetDeviceDataAtaNotInList], value]
         : [key, value],
       )
     : entries,
@@ -101,8 +100,6 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
 {
   public readonly canCool: boolean = false
 
-  public readonly flags: Record<keyof UpdateDeviceData[T], number>
-
   public readonly hasZone2: boolean = false
 
   public readonly type: T
@@ -117,10 +114,11 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
 
   readonly #values: (keyof this)[]
 
+  public abstract readonly flags: Record<keyof UpdateDeviceData[T], number>
+
   public constructor(api: API, model: DeviceModel<T>) {
     super(api, model as DeviceModelAny)
     this.type = model.type
-    this.flags = FLAGS[this.type] as Record<keyof UpdateDeviceData[T], number>
 
     this.#initMetadata()
     this.#values = this.constructor[Symbol.metadata]?.[
@@ -140,8 +138,8 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
     return Object.fromEntries(
       (this.type === 'Ata' ?
         (Object.entries(this.data).map(([key, value]) => [
-          key in FROM_LIST_TO_SET_ATA ?
-            FROM_LIST_TO_SET_ATA[key as keyof SetDeviceDataAtaInList]
+          key in fromListToSetAta ?
+            fromListToSetAta[key as keyof SetDeviceDataAtaInList]
           : key,
           value,
         ]) as [
@@ -210,7 +208,7 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
       await this.api.getEnergyReport({
         postData: {
           DeviceID: this.id,
-          FromDate: from ?? YEAR_1970,
+          FromDate: from ?? DEFAULT_YEAR,
           ToDate: to ?? nowISO(),
         },
       })
