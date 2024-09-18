@@ -30,11 +30,8 @@ import type { IBaseFacade } from './interfaces'
 
 import { DEFAULT_YEAR, nowISO } from './utils'
 
-const MIN_MAX_GAP = 2
-const MIN_TEMPERATURE_MIN = 4
-const MIN_TEMPERATURE_MAX = 14
-const MAX_TEMPERATURE_MIN = 6
-const MAX_TEMPERATURE_MAX = 16
+const temperatureRange = { max: 16, min: 4 }
+const TEMPERATURE_GAP = 2
 
 export const fetchDevices = <
   T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,
@@ -136,26 +133,26 @@ export default abstract class<
   public async getFrostProtection(): Promise<FrostProtectionData> {
     if (this.isFrostProtectionDefined === null) {
       try {
-        return await this.#getLocalFrostProtection()
+        return await this.#getZoneFrostProtection()
       } catch (_error) {
         return this.#getDevicesFrostProtection()
       }
     }
     return this.isFrostProtectionDefined ?
-        this.#getLocalFrostProtection()
+        this.#getZoneFrostProtection()
       : this.#getDevicesFrostProtection()
   }
 
   public async getHolidayMode(): Promise<HolidayModeData> {
     if (this.isHolidayModeDefined === null) {
       try {
-        return await this.#getLocalHolidayMode()
+        return await this.#getZoneHolidayMode()
       } catch (_error) {
         return this.#getDevicesHolidayMode()
       }
     }
     return this.isHolidayModeDefined ?
-        this.#getLocalHolidayMode()
+        this.#getZoneHolidayMode()
       : this.#getDevicesHolidayMode()
   }
 
@@ -201,15 +198,15 @@ export default abstract class<
   }): Promise<FailureData | SuccessData> {
     let [newMin, newMax] = min > max ? [max, min] : [min, max]
     newMin = Math.max(
-      MIN_TEMPERATURE_MIN,
-      Math.min(newMin, MIN_TEMPERATURE_MAX),
+      temperatureRange.min,
+      Math.min(newMin, temperatureRange.max - TEMPERATURE_GAP),
     )
-    newMax = Math.max(
-      MAX_TEMPERATURE_MIN,
-      Math.min(newMax, MAX_TEMPERATURE_MAX),
+    newMax = Math.min(
+      Math.max(newMax, temperatureRange.min + TEMPERATURE_GAP),
+      temperatureRange.max,
     )
-    if (newMax - newMin < MIN_MAX_GAP) {
-      newMax = newMin + MIN_MAX_GAP
+    if (newMax - newMin < TEMPERATURE_GAP) {
+      newMax = newMin + TEMPERATURE_GAP
     }
     return (
       await this.api.setFrostProtection({
@@ -321,14 +318,14 @@ export default abstract class<
     return [{ Devices: this.#getDeviceIds() }]
   }
 
-  async #getLocalFrostProtection(): Promise<FrostProtectionData> {
+  async #getZoneFrostProtection(): Promise<FrostProtectionData> {
     return this.#getBaseFrostProtection({
       id: this.id,
       tableName: this.tableName,
     })
   }
 
-  async #getLocalHolidayMode(): Promise<HolidayModeData> {
+  async #getZoneHolidayMode(): Promise<HolidayModeData> {
     return this.#getBaseHolidayMode({
       id: this.id,
       tableName: this.tableName,
