@@ -30,7 +30,7 @@ import type { IBaseFacade } from './interfaces'
 
 import { DEFAULT_YEAR, nowISO } from './utils'
 
-const temperatureRange = { max: 16, min: 4 }
+const temperatureRange = { max: 16, min: 4 } as const
 const TEMPERATURE_GAP = 2
 
 export const fetchDevices = <

@@ -1,17 +1,5 @@
 import type { InternalAxiosRequestConfig } from 'axios'
 
-const ORDER = [
-  'dataType',
-  'method',
-  'url',
-  'params',
-  'headers',
-  'requestData',
-  'responseData',
-  'status',
-  'errorMessage',
-]
-
 const SPACE = 2
 
 export default abstract class {
@@ -28,19 +16,30 @@ export default abstract class {
   }
 
   public toString(): string {
-    return ORDER.map((key) => {
-      if (key in this) {
-        const value = this[key as keyof this]
-        if (value !== undefined) {
-          return `${key}: ${
-            typeof value === 'object' ?
-              JSON.stringify(value, null, SPACE)
-            : String(value)
-          }`
+    return [
+      'dataType',
+      'method',
+      'url',
+      'params',
+      'headers',
+      'requestData',
+      'responseData',
+      'status',
+      'errorMessage',
+    ]
+      .map((key) => {
+        if (key in this) {
+          const value = this[key as keyof this]
+          if (value !== undefined) {
+            return `${key}: ${
+              typeof value === 'object' ?
+                JSON.stringify(value, null, SPACE)
+              : String(value)
+            }`
+          }
         }
-      }
-      return undefined
-    })
+        return undefined
+      })
       .filter((line) => line !== undefined)
       .join('\n')
   }
