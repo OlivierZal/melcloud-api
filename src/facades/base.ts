@@ -36,7 +36,7 @@ const TEMPERATURE_GAP = 2
 export const fetchDevices = <
   T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,
 >(
-  target: (...args: unknown[]) => Promise<T>,
+  target: (...args: any[]) => Promise<T>,
   _context: unknown,
 ): ((...args: unknown[]) => Promise<T>) =>
   async function newTarget(
