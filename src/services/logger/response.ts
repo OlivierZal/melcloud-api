@@ -17,9 +17,7 @@ export default class extends APICallContextData {
     super(response?.config)
     this.headers = response?.headers
     this.status = response?.status
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    this.requestData = response?.config.data
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    this.responseData = response?.data
+    this.requestData = response?.config.data as unknown
+    this.responseData = response?.data as unknown
   }
 }

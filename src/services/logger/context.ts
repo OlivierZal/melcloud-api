@@ -24,8 +24,7 @@ export default abstract class {
   protected constructor(config?: InternalAxiosRequestConfig) {
     this.method = config?.method?.toUpperCase()
     this.url = config?.url
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    this.params = config?.params
+    this.params = config?.params as unknown
   }
 
   public toString(): string {

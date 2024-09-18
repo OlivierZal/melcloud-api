@@ -12,7 +12,6 @@ export default class extends APICallContextData {
   public constructor(config?: InternalAxiosRequestConfig) {
     super(config)
     this.headers = config?.headers
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    this.requestData = config?.data
+    this.requestData = config?.data as unknown
   }
 }
