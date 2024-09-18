@@ -1,4 +1,8 @@
-import type { AxiosError } from 'axios'
+import type {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios'
 
 import type APICallContextData from './context'
 
@@ -11,10 +15,10 @@ interface APICallContextDataWithErrorMessage extends APICallContextData {
 
 const getMessage = (error: AxiosError): string => error.message
 
-const withErrorMessage = (
-  base: new (...args: any[]) => APICallContextData,
+const withErrorMessage = <T extends AxiosResponse | InternalAxiosRequestConfig>(
+  base: new (arg?: T) => APICallContextData,
   error: AxiosError,
-): new (...args: unknown[]) => APICallContextDataWithErrorMessage =>
+): new (arg?: T) => APICallContextDataWithErrorMessage =>
   class extends base {
     public readonly errorMessage = getMessage(error)
   }
