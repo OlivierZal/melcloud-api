@@ -202,8 +202,8 @@ export default abstract class<
       Math.min(newMin, temperatureRange.max - TEMPERATURE_GAP),
     )
     newMax = Math.min(
-      Math.max(newMax, temperatureRange.min + TEMPERATURE_GAP),
       temperatureRange.max,
+      Math.max(newMax, temperatureRange.min + TEMPERATURE_GAP),
     )
     if (newMax - newMin < TEMPERATURE_GAP) {
       newMax = newMin + TEMPERATURE_GAP
