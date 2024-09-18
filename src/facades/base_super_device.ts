@@ -14,7 +14,7 @@ export const syncDevices = <
 >(
   target: (...args: any[]) => Promise<T>,
   _context: unknown,
-): ((...args: any[]) => Promise<T>) =>
+): ((...args: unknown[]) => Promise<T>) =>
   async function newTarget(
     this: BaseSuperDeviceFacade<AreaModelAny | BuildingModel | FloorModel>,
     ...args: unknown[]
