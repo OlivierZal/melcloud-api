@@ -46,11 +46,8 @@ export default [
       files: ['**/*.ts', '**/*.mjs'],
       languageOptions: {
         parserOptions: {
-          projectService: {
-            allowDefaultProject: ['*.mjs'],
-            defaultProject: './tsconfig.json',
-          },
-          tsconfigRootDir: import.meta.dirname,
+          projectService: true,
+          warnOnUnsupportedTypeScriptVersion: false,
         },
       },
       linterOptions: {
