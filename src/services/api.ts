@@ -117,6 +117,9 @@ export default class API implements IAPI {
       timezone,
     } = config
     this.#setupLanguageAndTimezone({ language, timezone })
+    this.#autoSyncInterval = Duration.fromObject({
+      minutes: autoSyncInterval ?? NO_SYNC_INTERVAL,
+    })
     this.#logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
@@ -126,10 +129,6 @@ export default class API implements IAPI {
       httpsAgent: new https.Agent({ rejectUnauthorized: shouldVerifySSL }),
     })
     this.#setupAxiosInterceptors()
-
-    this.#autoSyncInterval = Duration.fromObject({
-      minutes: autoSyncInterval ?? NO_SYNC_INTERVAL,
-    })
   }
 
   @setting
