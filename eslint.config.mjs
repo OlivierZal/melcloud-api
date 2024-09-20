@@ -1,9 +1,9 @@
-import eslint from '@eslint/js'
+import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
 import prettier from 'eslint-config-prettier'
 import packageJson from 'eslint-plugin-package-json/configs/recommended'
 import perfectionist from 'eslint-plugin-perfectionist'
-import tsEslint from 'typescript-eslint'
+import ts from 'typescript-eslint'
 
 const groups = {
   groups: [
@@ -32,15 +32,15 @@ const typesFirst = {
 }
 
 export default [
-  ...tsEslint.config(
+  ...ts.config(
     {
       ignores: ['dist/'],
     },
     {
       extends: [
-        eslint.configs.all,
-        ...tsEslint.configs.all,
-        ...tsEslint.configs.strictTypeChecked,
+        js.configs.all,
+        ...ts.configs.all,
+        ...ts.configs.strictTypeChecked,
         prettier,
       ],
       files: ['**/*.ts', '**/*.mjs'],
@@ -338,7 +338,7 @@ export default [
     },
     {
       files: ['**/*.mjs'],
-      ...tsEslint.configs.disableTypeChecked,
+      ...ts.configs.disableTypeChecked,
     },
     {
       settings: {
