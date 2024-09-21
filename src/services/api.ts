@@ -59,6 +59,7 @@ const LOGIN_PATH = '/Login/ClientLogin2'
 
 const DEFAULT_SYNC_INTERVAL = 5
 const NO_SYNC_INTERVAL = 0
+const RETRY_DELAY = Duration.fromObject({ minutes: 1 }).as('milliseconds')
 
 const getLanguage = (value: string): Language =>
   value in Language ? Language[value as keyof typeof Language] : Language.en
@@ -102,7 +103,7 @@ export default class API implements IAPI {
 
   readonly #api: AxiosInstance
 
-  readonly #autoSyncInterval: Duration
+  readonly #autoSyncInterval: number
 
   readonly #logger: Logger
 
@@ -119,7 +120,7 @@ export default class API implements IAPI {
     this.#setupLanguageAndTimezone({ language, timezone })
     this.#autoSyncInterval = Duration.fromObject({
       minutes: autoSyncInterval ?? NO_SYNC_INTERVAL,
-    })
+    }).as('milliseconds')
     this.#logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
@@ -385,23 +386,20 @@ export default class API implements IAPI {
   }
 
   #autoSync(): void {
-    if (this.#autoSyncInterval.as('milliseconds')) {
+    if (this.#autoSyncInterval) {
       this.#syncTimeout = setTimeout(() => {
         this.applyFetch().catch(() => {
           //
         })
-      }, this.#autoSyncInterval.as('milliseconds'))
+      }, this.#autoSyncInterval)
     }
   }
 
   #canRetry(): boolean {
     if (!this.#retryTimeout) {
-      this.#retryTimeout = setTimeout(
-        () => {
-          this.#retryTimeout = null
-        },
-        Duration.fromObject({ minutes: 1 }).as('milliseconds'),
-      )
+      this.#retryTimeout = setTimeout(() => {
+        this.#retryTimeout = null
+      }, RETRY_DELAY)
       return true
     }
     return false
