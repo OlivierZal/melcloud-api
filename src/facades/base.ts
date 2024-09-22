@@ -64,10 +64,8 @@ const getEndDate = (
   to?: string,
   days?: number,
 ): DateTime => {
-  if (
-    (to === undefined && (days === undefined || !days)) ||
-    (to !== undefined && days !== undefined && days)
-  ) {
+  const isDays = Boolean(days)
+  if ((to === undefined && !isDays) || (to !== undefined && isDays)) {
     throw new Error('Select either end date or days')
   }
   return to === undefined ? startDate.plus({ days }) : DateTime.fromISO(to)
