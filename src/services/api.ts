@@ -59,7 +59,7 @@ const LOGIN_PATH = '/Login/ClientLogin2'
 
 const DEFAULT_SYNC_INTERVAL = 5
 const NO_SYNC_INTERVAL = 0
-const RETRY_DELAY = Duration.fromObject({ minutes: 1 }).as('milliseconds')
+const RETRY_DELAY = 1000
 
 const setting = <This extends API>(
   target: ClassAccessorDecoratorTarget<This, string>,
