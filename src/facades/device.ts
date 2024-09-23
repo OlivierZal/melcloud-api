@@ -17,8 +17,8 @@ import {
   fromListToSetAta,
   fromSetToListAta,
 } from '../types'
+import { DEFAULT_YEAR, now } from '../utils'
 import BaseFacade, { fetchDevices } from './base'
-import { DEFAULT_YEAR, nowISO } from './utils'
 
 // @ts-expect-error: most runtimes do not support natively
 Symbol.metadata ??= Symbol('Symbol.metadata')
@@ -209,7 +209,7 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
         postData: {
           DeviceID: this.id,
           FromDate: from ?? DEFAULT_YEAR,
-          ToDate: to ?? nowISO(),
+          ToDate: to ?? now(),
         },
       })
     ).data as EnergyData[T]

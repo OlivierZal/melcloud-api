@@ -41,8 +41,11 @@ import {
   type WifiPostData,
   Language,
 } from '../types'
+import { DEFAULT_YEAR, now } from '../utils'
 import {
   type APIConfig,
+  type ErrorLog,
+  type ErrorLogQuery,
   type IAPI,
   type Logger,
   type SettingManager,
@@ -60,6 +63,41 @@ const LOGIN_PATH = '/Login/ClientLogin2'
 const DEFAULT_SYNC_INTERVAL = 5
 const NO_SYNC_INTERVAL = 0
 const RETRY_DELAY = Duration.fromObject({ minutes: 1 }).as('milliseconds')
+
+const DEFAULT_LIMIT = 1
+const DEFAULT_OFFSET = 0
+const INVALID_YEAR = 1
+
+const formatErrors = (errors: Record<string, readonly string[]>): string =>
+  Object.entries(errors)
+    .map(([error, messages]) => `${error}: ${messages.join(', ')}`)
+    .join('\n')
+
+const handleErrorLogQuery = ({
+  from,
+  limit,
+  offset,
+  to,
+}: ErrorLogQuery): { fromDate: DateTime; period: number; toDate: DateTime } => {
+  const fromDate =
+    from !== undefined && from ? DateTime.fromISO(from) : undefined
+  const toDate = to !== undefined && to ? DateTime.fromISO(to) : DateTime.now()
+
+  const numberLimit = Number(limit)
+  const period = Number.isFinite(numberLimit) ? numberLimit : DEFAULT_LIMIT
+
+  const offsetLimit = Number(offset)
+  const daysOffset =
+    !fromDate && Number.isFinite(offsetLimit) ? offsetLimit : DEFAULT_OFFSET
+
+  const daysLimit = fromDate ? DEFAULT_LIMIT : period
+  const days = daysLimit * daysOffset + daysOffset
+  return {
+    fromDate: fromDate ?? toDate.minus({ days: days + daysLimit }),
+    period,
+    toDate: toDate.minus({ days }),
+  }
+}
 
 const setting = <This extends API>(
   target: ClassAccessorDecoratorTarget<This, string>,
@@ -220,12 +258,39 @@ export default class API implements IAPI {
     return this.#api.post('/EnergyCost/Report', postData)
   }
 
-  public async getErrors({
-    postData,
-  }: {
-    postData: ErrorPostData
-  }): Promise<{ data: ErrorData[] | FailureData }> {
-    return this.#api.post('/Report/GetUnitErrorLog2', postData)
+  public async getErrors(
+    query: ErrorLogQuery,
+    deviceIds = DeviceModel.getAll().map(({ id }) => id),
+  ): Promise<ErrorLog> {
+    const { fromDate, period, toDate } = handleErrorLogQuery(query)
+    const nextToDate = fromDate.minus({ days: 1 })
+    const locale = this.language
+    return {
+      errors: (await this.#getDeviceErrors(deviceIds, fromDate, toDate))
+        .map(
+          ({
+            DeviceId: deviceId,
+            ErrorMessage: errorMessage,
+            StartDate: startDate,
+          }) => ({
+            date:
+              DateTime.fromISO(startDate).year === INVALID_YEAR ?
+                ''
+              : DateTime.fromISO(startDate, { locale }).toLocaleString(
+                  DateTime.DATETIME_MED,
+                ),
+            device: DeviceModel.getById(deviceId)?.name ?? '',
+            error: errorMessage?.trim() ?? '',
+          }),
+        )
+        .filter(({ date, error }) => date && error)
+        .reverse(),
+      fromDateHuman: fromDate
+        .setLocale(locale)
+        .toLocaleString(DateTime.DATE_FULL),
+      nextFromDate: nextToDate.minus({ days: period }).toISODate() ?? '',
+      nextToDate: nextToDate.toISODate() ?? '',
+    }
   }
 
   public async getFrostProtection({
@@ -405,6 +470,32 @@ export default class API implements IAPI {
 
   async #fetch(): Promise<{ data: Building[] }> {
     return this.#api.get<Building[]>(LIST_PATH)
+  }
+
+  async #getDeviceErrors(
+    deviceIds: number[],
+    fromDate: DateTime,
+    toDate: DateTime,
+  ): Promise<ErrorData[]> {
+    const { data } = await this.#getErrors({
+      postData: {
+        DeviceIDs: deviceIds,
+        FromDate: fromDate.toISODate() ?? DEFAULT_YEAR,
+        ToDate: toDate.toISODate() ?? now(),
+      },
+    })
+    if ('AttributeErrors' in data) {
+      throw new Error(formatErrors(data.AttributeErrors))
+    }
+    return data
+  }
+
+  async #getErrors({
+    postData,
+  }: {
+    postData: ErrorPostData
+  }): Promise<{ data: ErrorData[] | FailureData }> {
+    return this.#api.post('/Report/GetUnitErrorLog2', postData)
   }
 
   #getLanguageCode(language: string = this.#language): Language {

@@ -11,9 +11,6 @@ export { default as DeviceFacadeAtw } from './device_atw'
 export { default as DeviceFacadeErv } from './device_erv'
 export { default as FloorFacade } from './floor'
 export type {
-  ErrorDetails,
-  ErrorLog,
-  ErrorLogQuery,
   IBaseFacade,
   IBaseSuperDeviceFacade,
   IBuildingFacade,
@@ -24,4 +21,3 @@ export {
   type DeviceFacadeAny,
   default as FacadeManager,
 } from './manager'
-export { DEFAULT_YEAR, nowISO } from './utils'
