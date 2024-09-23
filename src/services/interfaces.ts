@@ -3,6 +3,8 @@ import type {
   DeviceType,
   EnergyData,
   EnergyPostData,
+  ErrorData,
+  ErrorPostData,
   FailureData,
   FrostProtectionData,
   FrostProtectionPostData,
@@ -62,25 +64,6 @@ export interface APIConfig {
   timezone?: string
 }
 
-export interface ErrorLogQuery {
-  readonly from?: string
-  readonly limit?: string
-  readonly offset?: string
-  readonly to?: string
-}
-
-export interface ErrorDetails {
-  readonly date: string
-  readonly device: string
-  readonly error: string
-}
-
-export interface ErrorLog {
-  readonly errors: ErrorDetails[]
-  readonly fromDateHuman: string
-  readonly nextFromDate: string
-  readonly nextToDate: string
-}
 
 export interface IAPI {
   clearSync: () => void
@@ -100,10 +83,11 @@ export interface IAPI {
   }: {
     postData: EnergyPostData
   }) => Promise<{ data: EnergyData[keyof typeof DeviceType] }>
-  getErrors: (
-    query: ErrorLogQuery,
-    deviceIds?: number[],
-  ) => Promise<ErrorLog | FailureData>
+  getErrors: ({
+    postData,
+  }: {
+    postData: ErrorPostData
+  }) => Promise<{ data: ErrorData[] | FailureData }>
   getFrostProtection: ({
     params,
   }: {

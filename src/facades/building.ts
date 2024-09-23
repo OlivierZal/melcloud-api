@@ -1,4 +1,4 @@
-import type API from '../services'
+import type { FacadeManager } from '.'
 import type { ZoneSettings } from '../types'
 import type { IBuildingFacade } from './interfaces'
 
@@ -20,8 +20,8 @@ export default class
 
   protected readonly tableName = 'Building'
 
-  public constructor(api: API, model: BuildingModel) {
-    super(api, model)
+  public constructor(facadeManager: FacadeManager, model: BuildingModel) {
+    super(facadeManager, model)
     this.isFrostProtectionDefined = this.data.FPDefined
     this.isHolidayModeDefined = this.data.HMDefined
   }

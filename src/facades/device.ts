@@ -1,4 +1,4 @@
-import type API from '../services'
+import type { FacadeManager } from '.'
 import type { IDeviceFacade } from './interfaces'
 
 import { type DeviceModelAny, DeviceModel } from '../models'
@@ -17,8 +17,8 @@ import {
   fromListToSetAta,
   fromSetToListAta,
 } from '../types'
-import { DEFAULT_YEAR, now } from '../utils'
 import BaseFacade, { fetchDevices } from './base'
+import { DEFAULT_YEAR, now } from './utils'
 
 // @ts-expect-error: most runtimes do not support natively
 Symbol.metadata ??= Symbol('Symbol.metadata')
@@ -116,8 +116,8 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
 
   public abstract readonly flags: Record<keyof UpdateDeviceData[T], number>
 
-  public constructor(api: API, model: DeviceModel<T>) {
-    super(api, model as DeviceModelAny)
+  public constructor(facadeManager: FacadeManager, model: DeviceModel<T>) {
+    super(facadeManager, model as DeviceModelAny)
     this.type = model.type
 
     this.#initMetadata()

@@ -11,12 +11,14 @@ export {
   BaseFacade,
   BaseSuperDeviceFacade,
   BuildingFacade,
+  DEFAULT_YEAR,
   DeviceFacadeAta,
   DeviceFacadeAtw,
   DeviceFacadeErv,
   FacadeManager,
   FloorFacade,
   fetchDevices,
+  now,
   syncDevices,
   updateDevice,
 } from './facades'
@@ -143,4 +145,3 @@ export {
   fromListToSetAta,
   fromSetToListAta,
 } from './types'
-export { DEFAULT_YEAR, now } from './utils'

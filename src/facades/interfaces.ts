@@ -1,5 +1,4 @@
 import type { DeviceModel } from '../models'
-import type { ErrorLog, ErrorLogQuery } from '../services'
 import type {
   DeviceType,
   EnergyData,
@@ -17,6 +16,26 @@ import type {
   WifiData,
   ZoneSettings,
 } from '../types'
+
+export interface ErrorLogQuery {
+  readonly from?: string
+  readonly limit?: string
+  readonly offset?: string
+  readonly to?: string
+}
+
+export interface ErrorDetails {
+  readonly date: string
+  readonly device: string
+  readonly error: string
+}
+
+export interface ErrorLog {
+  readonly errors: ErrorDetails[]
+  readonly fromDateHuman: string
+  readonly nextFromDate: string
+  readonly nextToDate: string
+}
 
 export interface IBaseFacade {
   getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>

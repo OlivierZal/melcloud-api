@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
 
+import type { FacadeManager } from '.'
 import type {
   AreaModelAny,
   BuildingModel,
@@ -7,7 +8,7 @@ import type {
   DeviceModelAny,
   FloorModel,
 } from '../models'
-import type { default as API, ErrorLog, ErrorLogQuery } from '../services'
+import type API from '../services'
 import type {
   DateTimeComponents,
   DeviceType,
@@ -24,9 +25,9 @@ import type {
   WifiData,
   ZoneSettings,
 } from '../types'
-import type { IBaseFacade } from './interfaces'
+import type { ErrorLog, ErrorLogQuery, IBaseFacade } from './interfaces'
 
-import { now } from '../utils'
+import { now } from './utils'
 
 const temperatureRange = { max: 16, min: 4 } as const
 const TEMPERATURE_GAP = 2
@@ -73,6 +74,8 @@ export default abstract class BaseFacade<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
 > implements IBaseFacade
 {
+  public readonly facadeManager: FacadeManager
+
   public readonly id: number
 
   protected isFrostProtectionDefined: boolean | null = null
@@ -91,8 +94,9 @@ export default abstract class BaseFacade<
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(api: API, model: T) {
-    this.api = api
+  public constructor(facadeManager: FacadeManager, model: T) {
+    this.facadeManager = facadeManager
+    this.api = facadeManager.api
     this.id = model.id
   }
 
@@ -108,8 +112,20 @@ export default abstract class BaseFacade<
     return model
   }
 
+  get #deviceId(): number {
+    if ('devices' in this.model) {
+      const [{ id }] = this.model.devices
+      return id
+    }
+    return this.id
+  }
+
+  get #deviceIds(): number[] {
+    return 'deviceIds' in this.model ? this.model.deviceIds : [this.id]
+  }
+
   public async getErrors(query: ErrorLogQuery): Promise<ErrorLog> {
-    return this.api.getErrors(query, this.#getDeviceIds())
+    return this.facadeManager.getErrors(query, this.#deviceIds)
   }
 
   public async getFrostProtection(): Promise<FrostProtectionData> {
@@ -145,8 +161,8 @@ export default abstract class BaseFacade<
   public async getTiles<K extends keyof typeof DeviceType>(
     select: false | DeviceModel<K> = false,
   ): Promise<TilesData<K | null>> {
-    const postData = { DeviceIDs: this.#getDeviceIds() }
-    return select === false || !this.#getDeviceIds().includes(select.id) ?
+    const postData = { DeviceIDs: this.#deviceIds }
+    return select === false || !this.#deviceIds.includes(select.id) ?
         (await this.api.getTiles({ postData })).data
       : ((
           await this.api.getTiles({
@@ -164,7 +180,7 @@ export default abstract class BaseFacade<
   ): Promise<WifiData> {
     return (
       await this.api.getWifiReport({
-        postData: { devices: this.#getDeviceIds(), hour },
+        postData: { devices: this.#deviceIds, hour },
       })
     ).data
   }
@@ -231,7 +247,7 @@ export default abstract class BaseFacade<
   public async setPower(enabled = true): Promise<boolean> {
     return (
       await this.api.setPower({
-        postData: { DeviceIds: this.#getDeviceIds(), Power: enabled },
+        postData: { DeviceIds: this.#deviceIds, Power: enabled },
       })
     ).data
   }
@@ -254,28 +270,16 @@ export default abstract class BaseFacade<
     return data
   }
 
-  #getDeviceId(): number {
-    if ('devices' in this.model) {
-      const [{ id }] = this.model.devices
-      return id
-    }
-    return this.id
-  }
-
-  #getDeviceIds(): number[] {
-    return 'deviceIds' in this.model ? this.model.deviceIds : [this.id]
-  }
-
   async #getDevicesFrostProtection(): Promise<FrostProtectionData> {
     return this.#getBaseFrostProtection(
-      { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
+      { id: this.#deviceId, tableName: 'DeviceLocation' },
       false,
     )
   }
 
   async #getDevicesHolidayMode(): Promise<HolidayModeData> {
     return this.#getBaseHolidayMode(
-      { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
+      { id: this.#deviceId, tableName: 'DeviceLocation' },
       false,
     )
   }
@@ -287,7 +291,7 @@ export default abstract class BaseFacade<
     if (this.isFrostProtectionDefined === true) {
       return { [this.frostProtectionLocation]: [this.id] }
     }
-    return { DeviceIds: this.#getDeviceIds() }
+    return { DeviceIds: this.#deviceIds }
   }
 
   async #getHolidayModeLocation(): Promise<HMTimeZone[]> {
@@ -297,7 +301,7 @@ export default abstract class BaseFacade<
     if (this.isHolidayModeDefined === true) {
       return [{ [this.holidayModeLocation]: [this.id] }]
     }
-    return [{ Devices: this.#getDeviceIds() }]
+    return [{ Devices: this.#deviceIds }]
   }
 
   async #getZoneFrostProtection(): Promise<FrostProtectionData> {
