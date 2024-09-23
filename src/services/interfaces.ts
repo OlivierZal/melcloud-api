@@ -112,7 +112,6 @@ export interface IAPI {
   }: {
     postData: WifiPostData
   }) => Promise<{ data: WifiData }>
-  language: string
   login: (
     data?: LoginCredentials,
     onSuccess?: () => Promise<void>,

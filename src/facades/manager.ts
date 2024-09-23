@@ -144,7 +144,6 @@ export default class {
   ): Promise<ErrorLog> {
     const { fromDate, period, toDate } = handleErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
-    const locale = this.api.language
     return {
       errors: (await this.#getErrors(deviceIds, fromDate, toDate))
         .map(
@@ -156,7 +155,7 @@ export default class {
             date:
               DateTime.fromISO(startDate).year === INVALID_YEAR ?
                 ''
-              : DateTime.fromISO(startDate, { locale }).toLocaleString(
+              : DateTime.fromISO(startDate).toLocaleString(
                   DateTime.DATETIME_MED,
                 ),
             device: DeviceModel.getById(deviceId)?.name ?? '',
@@ -165,9 +164,7 @@ export default class {
         )
         .filter(({ date, error }) => date && error)
         .reverse(),
-      fromDateHuman: fromDate
-        .setLocale(locale)
-        .toLocaleString(DateTime.DATE_FULL),
+      fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
       nextFromDate: nextToDate.minus({ days: period }).toISODate() ?? '',
       nextToDate: nextToDate.toISODate() ?? '',
     }

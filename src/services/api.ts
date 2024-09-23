@@ -141,7 +141,7 @@ export default class API implements IAPI {
   @setting
   private accessor username = ''
 
-  public get language(): string {
+  private get language(): string {
     return this.#language
   }
 
@@ -407,7 +407,7 @@ export default class API implements IAPI {
     return this.#api.get<Building[]>(LIST_PATH)
   }
 
-  #getLanguageCode(language: string = this.#language): Language {
+  #getLanguageCode(language: string = this.language): Language {
     return language in Language ?
         Language[language as keyof typeof Language]
       : Language.en
