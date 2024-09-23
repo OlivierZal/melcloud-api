@@ -345,14 +345,10 @@ export default abstract class<
     )
   }
 
-  async #getErrors(
-    fromDate: DateTime,
-    toDate: DateTime,
-    deviceIds: number[] = this.#getDeviceIds(),
-  ): Promise<ErrorData[]> {
+  async #getErrors(fromDate: DateTime, toDate: DateTime): Promise<ErrorData[]> {
     const { data } = await this.api.getErrors({
       postData: {
-        DeviceIDs: deviceIds,
+        DeviceIDs: this.#getDeviceIds(),
         FromDate: fromDate.toISODate() ?? DEFAULT_YEAR,
         ToDate: toDate.toISODate() ?? nowISO(),
       },
