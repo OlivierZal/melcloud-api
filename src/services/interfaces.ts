@@ -64,7 +64,6 @@ export interface APIConfig {
   timezone?: string
 }
 
-
 export interface IAPI {
   clearSync: () => void
   fetch: () => Promise<Building[]>
