@@ -1,3 +1,4 @@
+export { default } from './api'
 export {
   type APIConfig,
   type APISettings,
@@ -6,4 +7,3 @@ export {
   type SettingManager,
   isAPISetting,
 } from './interfaces'
-export { default } from './api'
