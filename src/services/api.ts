@@ -61,9 +61,6 @@ const DEFAULT_SYNC_INTERVAL = 5
 const NO_SYNC_INTERVAL = 0
 const RETRY_DELAY = Duration.fromObject({ minutes: 1 }).as('milliseconds')
 
-const getLanguage = (value: string): Language =>
-  value in Language ? Language[value as keyof typeof Language] : Language.en
-
 const setting = <This extends API>(
   target: ClassAccessorDecoratorTarget<This, string>,
   context: ClassAccessorDecoratorContext<This, string>,
@@ -95,7 +92,7 @@ export default class API implements IAPI {
 
   #holdAPIListUntil = DateTime.now()
 
-  #language: Language = Language.en
+  #language = 'en'
 
   #retryTimeout: NodeJS.Timeout | null = null
 
@@ -117,19 +114,19 @@ export default class API implements IAPI {
       shouldVerifySSL = true,
       timezone,
     } = config
-    this.#setupLanguageAndTimezone({ language, timezone })
+    if (language !== undefined) {
+      this.language = language
+    }
+    if (timezone !== undefined) {
+      LuxonSettings.defaultZone = timezone
+    }
     this.#autoSyncInterval = Duration.fromObject({
       minutes: autoSyncInterval ?? NO_SYNC_INTERVAL,
     }).as('milliseconds')
     this.#logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
-
-    this.#api = createAxiosInstance({
-      baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
-      httpsAgent: new https.Agent({ rejectUnauthorized: shouldVerifySSL }),
-    })
-    this.#setupAxiosInterceptors()
+    this.#api = this.#createAPI(shouldVerifySSL)
   }
 
   @setting
@@ -144,16 +141,32 @@ export default class API implements IAPI {
   @setting
   private accessor username = ''
 
+  public get language(): string {
+    return this.#language
+  }
+
+  private set language(value: string) {
+    this.#language = value
+    LuxonSettings.defaultLocale = this.#language
+  }
+
   public static async create(config: APIConfig = {}): Promise<API> {
     const api = new API(config)
-    await api.applyFetch()
+    await api.fetch()
     return api
   }
 
-  public async applyFetch(): Promise<Building[]> {
+  public clearSync(): void {
+    if (this.#syncTimeout) {
+      clearTimeout(this.#syncTimeout)
+      this.#syncTimeout = null
+    }
+  }
+
+  public async fetch(): Promise<Building[]> {
     this.clearSync()
     try {
-      const { data } = await this.fetch()
+      const { data } = await this.#fetch()
       data.forEach((building) => {
         BuildingModel.upsert(building)
         building.Structure.Floors.forEach((floor) => {
@@ -177,31 +190,6 @@ export default class API implements IAPI {
     } finally {
       this.#autoSync()
     }
-  }
-
-  public async applyLogin(data?: LoginCredentials): Promise<boolean> {
-    const { password = this.password, username = this.username } = data ?? {}
-    if (username && password) {
-      try {
-        return await this.#authenticate({ password, username })
-      } catch (error) {
-        if (data !== undefined) {
-          throw error
-        }
-      }
-    }
-    return false
-  }
-
-  public clearSync(): void {
-    if (this.#syncTimeout) {
-      clearTimeout(this.#syncTimeout)
-      this.#syncTimeout = null
-    }
-  }
-
-  public async fetch(): Promise<{ data: Building[] }> {
-    return this.#api.get<Building[]>(LIST_PATH)
   }
 
   public async get({
@@ -288,16 +276,18 @@ export default class API implements IAPI {
     return this.#api.post('/Report/GetSignalStrength', postData)
   }
 
-  public async login({
-    postData: { Email: username, Password: password, ...rest },
-  }: {
-    postData: LoginPostData
-  }): Promise<{ data: LoginData }> {
-    return this.#api.post<LoginData>(LOGIN_PATH, {
-      Email: username,
-      Password: password,
-      ...rest,
-    })
+  public async login(data?: LoginCredentials): Promise<boolean> {
+    const { password = this.password, username = this.username } = data ?? {}
+    if (username && password) {
+      try {
+        return await this.#authenticate({ password, username })
+      } catch (error) {
+        if (data !== undefined) {
+          throw error
+        }
+      }
+    }
+    return false
   }
 
   public async set<T extends keyof typeof DeviceType>({
@@ -338,15 +328,14 @@ export default class API implements IAPI {
     return this.#api.post('/HolidayMode/Update', postData)
   }
 
-  public async setLanguage(value: string): Promise<{ data: boolean }> {
-    const language = getLanguage(value)
-    const response = await this.#api.post<boolean>('/User/UpdateLanguage', {
-      language: language satisfies Language,
+  public async setLanguage(language: string): Promise<boolean> {
+    const { data: didLanguageChange } = await this.#setLanguage({
+      postData: { language: this.#getLanguageCode(language) },
     })
-    if (response.data) {
-      this.#setupLanguageAndTimezone({ language: value })
+    if (didLanguageChange) {
+      this.language = language
     }
-    return response
+    return didLanguageChange
   }
 
   public async setPower({
@@ -365,11 +354,11 @@ export default class API implements IAPI {
     username: string
   }): Promise<boolean> {
     const { LoginData: loginData } = (
-      await this.login({
+      await this.#login({
         postData: {
           AppVersion: '1.34.10.0',
           Email: username,
-          Language: this.#language,
+          Language: this.#getLanguageCode(),
           Password: password,
           Persist: true,
         },
@@ -380,7 +369,7 @@ export default class API implements IAPI {
       this.password = password
       this.contextKey = loginData.ContextKey
       this.expiry = loginData.Expiry
-      await this.applyFetch()
+      await this.fetch()
     }
     return loginData !== null
   }
@@ -388,7 +377,7 @@ export default class API implements IAPI {
   #autoSync(): void {
     if (this.#autoSyncInterval) {
       this.#syncTimeout = setTimeout(() => {
-        this.applyFetch().catch(() => {
+        this.fetch().catch(() => {
           //
         })
       }, this.#autoSyncInterval)
@@ -405,13 +394,32 @@ export default class API implements IAPI {
     return false
   }
 
+  #createAPI(rejectUnauthorized: boolean): AxiosInstance {
+    const api = createAxiosInstance({
+      baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
+      httpsAgent: new https.Agent({ rejectUnauthorized }),
+    })
+    this.#setupAxiosInterceptors(api)
+    return api
+  }
+
+  async #fetch(): Promise<{ data: Building[] }> {
+    return this.#api.get<Building[]>(LIST_PATH)
+  }
+
+  #getLanguageCode(language: string = this.#language): Language {
+    return language in Language ?
+        Language[language as keyof typeof Language]
+      : Language.en
+  }
+
   async #handleError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
     this.#logger.error(String(errorData))
     switch (error.response?.status) {
       case HttpStatusCode.Unauthorized:
         if (this.#canRetry() && error.config?.url !== LOGIN_PATH) {
-          if ((await this.applyLogin()) && error.config) {
+          if ((await this.login()) && error.config) {
             return this.#api.request(error.config)
           }
         }
@@ -442,7 +450,7 @@ export default class API implements IAPI {
     if (newConfig.url !== LOGIN_PATH) {
       const { contextKey, expiry } = this
       if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
-        await this.applyLogin()
+        await this.login()
       }
       newConfig.headers.set('X-MitsContextKey', contextKey)
     }
@@ -455,35 +463,39 @@ export default class API implements IAPI {
     return response
   }
 
-  #setupAxiosInterceptors(): void {
-    this.#api.interceptors.request.use(
+  async #login({
+    postData: { Email: username, Password: password, ...rest },
+  }: {
+    postData: LoginPostData
+  }): Promise<{ data: LoginData }> {
+    return this.#api.post<LoginData>(LOGIN_PATH, {
+      Email: username,
+      Password: password,
+      ...rest,
+    })
+  }
+
+  async #setLanguage({
+    postData,
+  }: {
+    postData: { language: Language }
+  }): Promise<{ data: boolean }> {
+    return this.#api.post<boolean>('/User/UpdateLanguage', postData)
+  }
+
+  #setupAxiosInterceptors(api: AxiosInstance): void {
+    api.interceptors.request.use(
       async (
         config: InternalAxiosRequestConfig,
       ): Promise<InternalAxiosRequestConfig> => this.#handleRequest(config),
       async (error: AxiosError): Promise<AxiosError> =>
         this.#handleError(error),
     )
-    this.#api.interceptors.response.use(
+    api.interceptors.response.use(
       (response: AxiosResponse): AxiosResponse =>
         this.#handleResponse(response),
       async (error: AxiosError): Promise<AxiosError> =>
         this.#handleError(error),
     )
-  }
-
-  #setupLanguageAndTimezone({
-    language,
-    timezone,
-  }: {
-    language?: string
-    timezone?: string
-  }): void {
-    if (language !== undefined) {
-      LuxonSettings.defaultLocale = language
-      this.#language = getLanguage(language)
-    }
-    if (timezone !== undefined) {
-      LuxonSettings.defaultZone = timezone
-    }
   }
 }

@@ -1,13 +1,6 @@
 import { DateTime } from 'luxon'
 
 import type { BaseFacade } from '.'
-import type {
-  AreaModelAny,
-  BuildingModel,
-  DeviceModel,
-  DeviceModelAny,
-  FloorModel,
-} from '../models'
 import type API from '../services'
 import type {
   DateTimeComponents,
@@ -26,12 +19,54 @@ import type {
   WifiData,
   ZoneSettings,
 } from '../types'
-import type { IBaseFacade } from './interfaces'
+import type { ErrorLog, ErrorLogQuery, IBaseFacade } from './interfaces'
 
+import {
+  type AreaModelAny,
+  type BuildingModel,
+  type DeviceModelAny,
+  type FloorModel,
+  DeviceModel,
+} from '../models'
 import { DEFAULT_YEAR, nowISO } from './utils'
 
 const temperatureRange = { max: 16, min: 4 } as const
 const TEMPERATURE_GAP = 2
+
+const DEFAULT_LIMIT = 1
+const DEFAULT_OFFSET = 0
+const INVALID_YEAR = 1
+
+const formatErrors = (errors: Record<string, readonly string[]>): string =>
+  Object.entries(errors)
+    .map(([error, messages]) => `${error}: ${messages.join(', ')}`)
+    .join('\n')
+
+const handleErrorLogQuery = ({
+  from,
+  limit,
+  offset,
+  to,
+}: ErrorLogQuery): { fromDate: DateTime; period: number; toDate: DateTime } => {
+  const fromDate =
+    from !== undefined && from ? DateTime.fromISO(from) : undefined
+  const toDate = to !== undefined && to ? DateTime.fromISO(to) : DateTime.now()
+
+  const numberLimit = Number(limit)
+  const period = Number.isFinite(numberLimit) ? numberLimit : DEFAULT_LIMIT
+
+  const offsetLimit = Number(offset)
+  const daysOffset =
+    !fromDate && Number.isFinite(offsetLimit) ? offsetLimit : DEFAULT_OFFSET
+
+  const daysLimit = fromDate ? DEFAULT_LIMIT : period
+  const days = daysLimit * daysOffset + daysOffset
+  return {
+    fromDate: fromDate ?? toDate.minus({ days: days + daysLimit }),
+    period,
+    toDate: toDate.minus({ days }),
+  }
+}
 
 export const fetchDevices = <
   T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,
@@ -110,22 +145,36 @@ export default abstract class<
     return model
   }
 
-  public async getErrors({
-    from,
-    to,
-  }: {
-    from?: string
-    to?: string
-  }): Promise<ErrorData[] | FailureData> {
-    return (
-      await this.api.getErrors({
-        postData: {
-          DeviceIDs: this.#getDeviceIds(),
-          FromDate: from ?? DEFAULT_YEAR,
-          ToDate: to ?? nowISO(),
-        },
-      })
-    ).data
+  public async getErrors(query: ErrorLogQuery): Promise<ErrorLog> {
+    const { fromDate, period, toDate } = handleErrorLogQuery(query)
+    const locale = this.api.language
+    const nextToDate = fromDate.minus({ days: 1 })
+    return {
+      errors: (await this.#getErrors(fromDate, toDate))
+        .map(
+          ({
+            DeviceId: deviceId,
+            ErrorMessage: errorMessage,
+            StartDate: startDate,
+          }) => ({
+            date:
+              DateTime.fromISO(startDate).year === INVALID_YEAR ?
+                ''
+              : DateTime.fromISO(startDate, { locale }).toLocaleString(
+                  DateTime.DATETIME_MED,
+                ),
+            device: DeviceModel.getById(deviceId)?.name ?? '',
+            error: errorMessage?.trim() ?? '',
+          }),
+        )
+        .filter(({ date, error }) => date && error)
+        .reverse(),
+      fromDateHuman: fromDate
+        .setLocale(locale)
+        .toLocaleString(DateTime.DATE_FULL),
+      nextFromDate: nextToDate.minus({ days: period }).toISODate() ?? '',
+      nextToDate: nextToDate.toISODate() ?? '',
+    }
   }
 
   public async getFrostProtection(): Promise<FrostProtectionData> {
@@ -294,6 +343,24 @@ export default abstract class<
       { id: this.#getDeviceId(), tableName: 'DeviceLocation' },
       false,
     )
+  }
+
+  async #getErrors(
+    fromDate: DateTime,
+    toDate: DateTime,
+    deviceIds: number[] = this.#getDeviceIds(),
+  ): Promise<ErrorData[]> {
+    const { data } = await this.api.getErrors({
+      postData: {
+        DeviceIDs: deviceIds,
+        FromDate: fromDate.toISODate() ?? DEFAULT_YEAR,
+        ToDate: toDate.toISODate() ?? nowISO(),
+      },
+    })
+    if ('AttributeErrors' in data) {
+      throw new Error(formatErrors(data.AttributeErrors))
+    }
+    return data
   }
 
   async #getFrostProtectionLocation(): Promise<FrostProtectionLocation> {
