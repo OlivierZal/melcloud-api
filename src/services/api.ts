@@ -90,6 +90,12 @@ export default class API implements IAPI {
 
   protected readonly settingManager?: SettingManager
 
+  readonly #api: AxiosInstance
+
+  readonly #autoSyncInterval: number
+
+  readonly #logger: Logger
+
   #holdAPIListUntil = DateTime.now()
 
   #language = 'en'
@@ -97,12 +103,6 @@ export default class API implements IAPI {
   #retryTimeout: NodeJS.Timeout | null = null
 
   #syncTimeout: NodeJS.Timeout | null = null
-
-  readonly #api: AxiosInstance
-
-  readonly #autoSyncInterval: number
-
-  readonly #logger: Logger
 
   private constructor(config: APIConfig = {}) {
     const {

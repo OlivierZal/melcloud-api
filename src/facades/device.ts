@@ -151,6 +151,21 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
     ) as Required<UpdateDeviceData[T]>
   }
 
+  public override async getTiles(select?: false): Promise<TilesData<null>>
+  public override async getTiles(
+    select: true | DeviceModel<T>,
+  ): Promise<TilesData<T>>
+  public override async getTiles(
+    select: boolean | DeviceModel<T> = false,
+  ): Promise<TilesData<T | null>> {
+    return (
+        select === false ||
+          (select instanceof DeviceModel && select.id !== this.id)
+      ) ?
+        super.getTiles()
+      : super.getTiles(this.model as DeviceModel<T>)
+  }
+
   @fetchDevices
   public async fetch(): Promise<ListDevice[T]['Device']> {
     return Promise.resolve(this.data)
@@ -213,21 +228,6 @@ export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
         },
       })
     ).data as EnergyData[T]
-  }
-
-  public override async getTiles(select?: false): Promise<TilesData<null>>
-  public override async getTiles(
-    select: true | DeviceModel<T>,
-  ): Promise<TilesData<T>>
-  public override async getTiles(
-    select: boolean | DeviceModel<T> = false,
-  ): Promise<TilesData<T | null>> {
-    return (
-        select === false ||
-          (select instanceof DeviceModel && select.id !== this.id)
-      ) ?
-        super.getTiles()
-      : super.getTiles(this.model as DeviceModel<T>)
   }
 
   protected handle(data: Partial<UpdateDeviceData[T]>): UpdateDeviceData[T] {

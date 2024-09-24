@@ -78,11 +78,11 @@ export default abstract class BaseFacade<
 
   public readonly id: number
 
+  protected readonly api: API
+
   protected isFrostProtectionDefined: boolean | null = null
 
   protected isHolidayModeDefined: boolean | null = null
-
-  protected readonly api: API
 
   protected abstract readonly frostProtectionLocation: keyof FrostProtectionLocation
 
@@ -190,9 +190,9 @@ export default abstract class BaseFacade<
     max,
     min,
   }: {
-    enabled?: boolean
     max: number
     min: number
+    enabled?: boolean
   }): Promise<FailureData | SuccessData> {
     let [newMin, newMax] = min > max ? [max, min] : [min, max]
     newMin = Math.max(

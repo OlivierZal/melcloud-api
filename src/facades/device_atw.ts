@@ -205,8 +205,8 @@ export default class extends BaseDeviceFacade<'Atw'> {
   ): OperationModeZoneDataAtw {
     if (this.data.HasZone2) {
       const [operationModeZone1, operationModeZone2]: {
-        value?: OperationModeZone
         key: keyof OperationModeZoneDataAtw
+        value?: OperationModeZone
       }[] = [
         { key: 'OperationModeZone1', value: data.OperationModeZone1 },
         { key: 'OperationModeZone2', value: data.OperationModeZone2 },

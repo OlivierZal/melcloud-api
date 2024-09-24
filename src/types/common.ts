@@ -67,11 +67,11 @@ export interface LoginCredentials {
   readonly username: string
 }
 export interface LoginPostData {
-  readonly Language?: number
-  readonly Persist?: boolean
   readonly AppVersion: string
   readonly Email: string
   readonly Password: string
+  readonly Language?: number
+  readonly Persist?: boolean
 }
 export interface LoginData {
   readonly LoginData: {

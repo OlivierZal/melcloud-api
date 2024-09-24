@@ -2,6 +2,9 @@ import 'source-map-support/register'
 export {
   type DeviceFacade,
   type DeviceFacadeAny,
+  type ErrorDetails,
+  type ErrorLog,
+  type ErrorLogQuery,
   type IBaseFacade,
   type IBaseSuperDeviceFacade,
   type IBuildingFacade,

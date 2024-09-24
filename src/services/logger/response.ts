@@ -3,15 +3,15 @@ import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import APICallContextData from './context'
 
 export default class extends APICallContextData {
-  public readonly headers?: AxiosResponse['headers']
-
-  public readonly status?: AxiosResponse['status']
-
   public readonly dataType = 'API response'
 
   public readonly requestData: InternalAxiosRequestConfig['data']
 
   public readonly responseData: AxiosResponse['data']
+
+  public readonly headers?: AxiosResponse['headers']
+
+  public readonly status?: AxiosResponse['status']
 
   public constructor(response?: AxiosResponse) {
     super(response?.config)
