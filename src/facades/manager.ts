@@ -1,17 +1,14 @@
 import { DateTime } from 'luxon'
 
-import type API from '../services'
-import type { DeviceType, ErrorData } from '../types'
-import type { ErrorLog, ErrorLogQuery } from './interfaces'
-
 import {
-  type AreaModelAny,
-  type DeviceModelAny,
   AreaModel,
   BuildingModel,
   DeviceModel,
   FloorModel,
+  type AreaModelAny,
+  type DeviceModelAny,
 } from '../models'
+
 import AreaFacade from './area'
 import BuildingFacade from './building'
 import DeviceFacadeAta from './device_ata'
@@ -19,6 +16,11 @@ import DeviceFacadeAtw from './device_atw'
 import DeviceFacadeErv from './device_erv'
 import FloorFacade from './floor'
 import { DEFAULT_YEAR, now } from './utils'
+
+import type API from '../services'
+import type { DeviceType, ErrorData } from '../types'
+
+import type { ErrorLog, ErrorLogQuery } from './interfaces'
 
 export interface DeviceFacade {
   Ata: DeviceFacadeAta

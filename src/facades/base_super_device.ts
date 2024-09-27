@@ -1,3 +1,5 @@
+import BaseFacade from './base'
+
 import type { AreaModelAny, BuildingModel, FloorModel } from '../models'
 import type {
   FailureData,
@@ -5,9 +7,8 @@ import type {
   SetGroupAtaPostData,
   SuccessData,
 } from '../types'
-import type { IBaseSuperDeviceFacade } from './interfaces'
 
-import BaseFacade from './base'
+import type { IBaseSuperDeviceFacade } from './interfaces'
 
 export const syncDevices = <
   T extends FailureData | GroupAtaState | SuccessData,

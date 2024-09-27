@@ -119,8 +119,32 @@ const classGroups = {
   groups,
 }
 
+const importGroups = {
+  groups: [
+    'side-effect',
+    'side-effect-style',
+    'builtin',
+    'external',
+    'internal',
+    'parent',
+    'sibling',
+    'index',
+    'object',
+    'style',
+    'unknown',
+    'builtin-type',
+    'external-type',
+    'internal-type',
+    'parent-type',
+    'sibling-type',
+    'index-type',
+    'type',
+  ],
+}
+
 const typeGroups = {
   groups: [
+    'import',
     'keyword',
     'literal',
     'named',
@@ -129,9 +153,8 @@ const typeGroups = {
     'tuple',
     'union',
     'intersection',
-    'operator',
     'conditional',
-    'import',
+    'operator',
     'unknown',
     'nullish',
   ],
@@ -141,8 +164,8 @@ const requiredFirst = {
   groupKind: 'required-first',
 }
 
-const typesFirst = {
-  groupKind: 'types-first',
+const valuesFirst = {
+  groupKind: 'values-first',
 }
 
 export default [
@@ -286,13 +309,13 @@ export default [
         'perfectionist/sort-array-includes': 'error',
         'perfectionist/sort-classes': ['error', classGroups],
         'perfectionist/sort-enums': 'error',
-        'perfectionist/sort-exports': ['error', typesFirst],
-        'perfectionist/sort-imports': ['error'],
+        'perfectionist/sort-exports': ['error', valuesFirst],
+        'perfectionist/sort-imports': ['error', importGroups],
         'perfectionist/sort-interfaces': ['error', requiredFirst],
         'perfectionist/sort-intersection-types': ['error', typeGroups],
         'perfectionist/sort-maps': 'error',
-        'perfectionist/sort-named-exports': ['error', typesFirst],
-        'perfectionist/sort-named-imports': ['error', typesFirst],
+        'perfectionist/sort-named-exports': ['error', valuesFirst],
+        'perfectionist/sort-named-imports': ['error', valuesFirst],
         'perfectionist/sort-object-types': ['error', requiredFirst],
         'perfectionist/sort-objects': 'error',
         'perfectionist/sort-sets': 'error',

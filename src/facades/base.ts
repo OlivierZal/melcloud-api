@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 
-import type { FacadeManager } from '.'
+import { now } from './utils'
+
 import type {
   AreaModelAny,
   BuildingModel,
@@ -25,9 +26,10 @@ import type {
   WifiData,
   ZoneSettings,
 } from '../types'
+
 import type { ErrorLog, ErrorLogQuery, IBaseFacade } from './interfaces'
 
-import { now } from './utils'
+import type { FacadeManager } from '.'
 
 const temperatureRange = { max: 16, min: 4 } as const
 const TEMPERATURE_GAP = 2

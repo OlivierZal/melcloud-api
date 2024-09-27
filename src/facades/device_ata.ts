@@ -1,4 +1,5 @@
-import { type UpdateDeviceDataAta, OperationMode, flagsAta } from '../types'
+import { OperationMode, flagsAta, type UpdateDeviceDataAta } from '../types'
+
 import BaseDeviceFacade, { alias } from './device'
 
 export default class extends BaseDeviceFacade<'Ata'> {

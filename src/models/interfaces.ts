@@ -1,4 +1,5 @@
 import type { DeviceType, ListDevice, ZoneSettings } from '../types'
+
 import type { default as AreaModel, AreaModelAny } from './area'
 import type BuildingModel from './building'
 import type { DeviceModelAny } from './device'

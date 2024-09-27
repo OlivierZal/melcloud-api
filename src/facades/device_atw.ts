@@ -1,10 +1,11 @@
 import {
+  OperationModeZone,
+  flagsAtw,
   type OperationModeZoneDataAtw,
   type TemperatureDataAtw,
   type UpdateDeviceDataAtw,
-  OperationModeZone,
-  flagsAtw,
 } from '../types'
+
 import BaseDeviceFacade, { alias } from './device'
 
 const DEFAULT_TEMPERATURE = 0

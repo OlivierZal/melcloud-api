@@ -1,8 +1,8 @@
-import type { FacadeManager } from '.'
-import type { IDeviceFacade } from './interfaces'
-
-import { type DeviceModelAny, DeviceModel } from '../models'
+import { DeviceModel, type DeviceModelAny } from '../models'
 import {
+  FLAG_UNCHANGED,
+  fromListToSetAta,
+  fromSetToListAta,
   type DeviceType,
   type EnergyData,
   type GetDeviceData,
@@ -13,12 +13,14 @@ import {
   type TilesData,
   type UpdateDeviceData,
   type Values,
-  FLAG_UNCHANGED,
-  fromListToSetAta,
-  fromSetToListAta,
 } from '../types'
+
 import BaseFacade, { fetchDevices } from './base'
 import { DEFAULT_YEAR, now } from './utils'
+
+import type { IDeviceFacade } from './interfaces'
+
+import type { FacadeManager } from '.'
 
 // @ts-expect-error: most runtimes do not support natively
 Symbol.metadata ??= Symbol('Symbol.metadata')

@@ -1,16 +1,18 @@
+import https from 'https'
+
 import {
+  HttpStatusCode,
+  create as createAxiosInstance,
   type AxiosError,
   type AxiosInstance,
   type AxiosResponse,
   type InternalAxiosRequestConfig,
-  HttpStatusCode,
-  create as createAxiosInstance,
 } from 'axios'
-import https from 'https'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 
 import { AreaModel, BuildingModel, DeviceModel, FloorModel } from '../models'
 import {
+  Language,
   type Building,
   type DeviceType,
   type EnergyData,
@@ -39,14 +41,14 @@ import {
   type TilesPostData,
   type WifiData,
   type WifiPostData,
-  Language,
 } from '../types'
+
 import {
+  isAPISetting,
   type APIConfig,
   type IAPI,
   type Logger,
   type SettingManager,
-  isAPISetting,
 } from './interfaces'
 import {
   APICallRequestData,

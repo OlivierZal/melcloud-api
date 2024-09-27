@@ -1,10 +1,11 @@
-import type { BuildingData, ZoneSettings } from '../types'
-import type { IBuildingModel } from './interfaces'
-
 import AreaModel, { type AreaModelAny } from './area'
 import BaseModel from './base'
 import DeviceModel, { type DeviceModelAny } from './device'
 import FloorModel from './floor'
+
+import type { BuildingData, ZoneSettings } from '../types'
+
+import type { IBuildingModel } from './interfaces'
 
 export default class BuildingModel extends BaseModel implements IBuildingModel {
   static readonly #buildings = new Map<number, BuildingModel>()

@@ -1,12 +1,3 @@
-export type {
-  ErrorDetails,
-  ErrorLog,
-  ErrorLogQuery,
-  IBaseFacade,
-  IBaseSuperDeviceFacade,
-  IBuildingFacade,
-  IDeviceFacade,
-} from './interfaces'
 export { default as AreaFacade } from './area'
 export { default as BaseFacade, fetchDevices } from './base'
 export {
@@ -20,8 +11,17 @@ export { default as DeviceFacadeAtw } from './device_atw'
 export { default as DeviceFacadeErv } from './device_erv'
 export { default as FloorFacade } from './floor'
 export {
+  default as FacadeManager,
   type DeviceFacade,
   type DeviceFacadeAny,
-  default as FacadeManager,
 } from './manager'
 export { DEFAULT_YEAR, now } from './utils'
+export type {
+  ErrorDetails,
+  ErrorLog,
+  ErrorLogQuery,
+  IBaseFacade,
+  IBaseSuperDeviceFacade,
+  IBuildingFacade,
+  IDeviceFacade,
+} from './interfaces'

@@ -1,10 +1,11 @@
-import type { AreaData, AreaDataAny } from '../types'
-import type { IAreaModel } from './interfaces'
-
 import BaseModel from './base'
 import BuildingModel from './building'
 import DeviceModel, { type DeviceModelAny } from './device'
 import FloorModel from './floor'
+
+import type { AreaData, AreaDataAny } from '../types'
+
+import type { IAreaModel } from './interfaces'
 
 export type AreaModelAny = AreaModel<null> | AreaModel<number>
 

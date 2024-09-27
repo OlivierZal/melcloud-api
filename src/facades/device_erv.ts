@@ -1,4 +1,5 @@
 import { flagsErv } from '../types'
+
 import BaseDeviceFacade, { alias } from './device'
 
 export default class extends BaseDeviceFacade<'Erv'> {

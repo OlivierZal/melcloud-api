@@ -1,10 +1,13 @@
-import type { FacadeManager } from '.'
-import type { ZoneSettings } from '../types'
-import type { IBuildingFacade } from './interfaces'
-
 import { BuildingModel } from '../models'
+
 import { fetchDevices } from './base'
 import BaseSuperDeviceFacade from './base_super_device'
+
+import type { ZoneSettings } from '../types'
+
+import type { IBuildingFacade } from './interfaces'
+
+import type { FacadeManager } from '.'
 
 export default class
   extends BaseSuperDeviceFacade<BuildingModel>
