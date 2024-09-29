@@ -1,4 +1,5 @@
 import 'source-map-support/register'
+export { fetchDevices, syncDevices, updateDevice } from './decorators'
 export {
   AreaFacade,
   BaseDeviceFacade,
@@ -11,10 +12,7 @@ export {
   DeviceFacadeErv,
   FacadeManager,
   FloorFacade,
-  fetchDevices,
   now,
-  syncDevices,
-  updateDevice,
   type DeviceFacade,
   type DeviceFacadeAny,
   type ErrorDetails,

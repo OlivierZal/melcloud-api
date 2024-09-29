@@ -1,3 +1,4 @@
+import { alias } from '../decorators'
 import {
   OperationModeZone,
   flagsAtw,
@@ -6,7 +7,7 @@ import {
   type UpdateDeviceDataAtw,
 } from '../types'
 
-import BaseDeviceFacade, { alias } from './device'
+import BaseDeviceFacade from './base_device'
 
 const DEFAULT_TEMPERATURE = 0
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room

@@ -1,12 +1,11 @@
+import { fetchDevices, updateDevice, valueSymbol } from '../decorators'
 import { DeviceModel, type DeviceModelAny } from '../models'
 import {
   FLAG_UNCHANGED,
   fromListToSetAta,
-  fromSetToListAta,
   type DeviceType,
   type EnergyData,
   type GetDeviceData,
-  type KeysOfSetDeviceDataAtaNotInList,
   type ListDevice,
   type SetDeviceData,
   type SetDeviceDataAtaInList,
@@ -15,88 +14,14 @@ import {
   type Values,
 } from '../types'
 
-import BaseFacade, { fetchDevices } from './base'
+import BaseFacade from './base'
 import { DEFAULT_YEAR, now } from './utils'
 
 import type { IDeviceFacade } from './interfaces'
 
 import type { FacadeManager } from '.'
 
-// @ts-expect-error: most runtimes do not support natively
-Symbol.metadata ??= Symbol('Symbol.metadata')
-const valueSymbol = Symbol('value')
-
-export const alias =
-  <This extends { canCool: boolean; data: object; hasZone2: boolean }>(
-    key: string,
-  ) =>
-  (
-    _target: unknown,
-    context: ClassAccessorDecoratorContext<This>,
-  ): ClassAccessorDecoratorResult<This, unknown> => ({
-    get(this: This): unknown {
-      const value = String(context.name)
-      if (!(key in this.data)) {
-        throw new Error(`Cannot get value for ${value}`)
-      }
-      if (
-        (!value.includes('Cool') || this.canCool) &&
-        (!value.includes('Zone2') || this.hasZone2)
-      ) {
-        context.metadata[valueSymbol] ??= []
-        const values = context.metadata[valueSymbol] as string[]
-        if (!values.includes(value)) {
-          values.push(value)
-        }
-      }
-      return this.data[key as keyof typeof this.data]
-    },
-    set(): void {
-      throw new Error(`Cannot set value for ${String(context.name)}`)
-    },
-  })
-
-const convertToListDeviceData = <T extends keyof typeof DeviceType>(
-  facade: DeviceFacade<T>,
-  data: SetDeviceData[T],
-): Partial<ListDevice[T]['Device']> => {
-  const { EffectiveFlags: flags, ...newData } = data
-  const entries =
-    flags === FLAG_UNCHANGED ?
-      Object.entries(newData)
-    : Object.entries(newData).filter(
-        ([key]) =>
-          key in facade.flags &&
-          Number(
-            BigInt(facade.flags[key as keyof UpdateDeviceData[T]]) &
-              BigInt(flags),
-          ),
-      )
-  return Object.fromEntries(
-    facade.type === 'Ata' ?
-      entries.map(([key, value]) =>
-        key in fromSetToListAta ?
-          [fromSetToListAta[key as KeysOfSetDeviceDataAtaNotInList], value]
-        : [key, value],
-      )
-    : entries,
-  ) as Partial<ListDevice[T]['Device']>
-}
-
-export const updateDevice = <
-  T extends keyof typeof DeviceType,
-  DeviceData extends GetDeviceData[T] | SetDeviceData[T],
->(
-  target: (...args: any[]) => Promise<DeviceData>,
-  _context: unknown,
-): ((...args: unknown[]) => Promise<DeviceData>) =>
-  async function newTarget(this: DeviceFacade<T>, ...args: unknown[]) {
-    const data = await target.call(this, ...args)
-    ;(this.model as DeviceModel<T>).update(convertToListDeviceData(this, data))
-    return data
-  }
-
-export default abstract class DeviceFacade<T extends keyof typeof DeviceType>
+export default abstract class<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {

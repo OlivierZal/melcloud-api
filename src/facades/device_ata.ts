@@ -1,6 +1,7 @@
+import { alias } from '../decorators'
 import { OperationMode, flagsAta, type UpdateDeviceDataAta } from '../types'
 
-import BaseDeviceFacade, { alias } from './device'
+import BaseDeviceFacade from './base_device'
 
 export default class extends BaseDeviceFacade<'Ata'> {
   public readonly flags = flagsAta

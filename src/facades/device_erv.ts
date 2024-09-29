@@ -1,6 +1,7 @@
+import { alias } from '../decorators'
 import { flagsErv } from '../types'
 
-import BaseDeviceFacade, { alias } from './device'
+import BaseDeviceFacade from './base_device'
 
 export default class extends BaseDeviceFacade<'Erv'> {
   public readonly flags = flagsErv

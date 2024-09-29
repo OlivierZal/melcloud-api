@@ -19,12 +19,10 @@ import type {
   HMTimeZone,
   HolidayModeData,
   HolidayModeLocation,
-  ListDevice,
   SettingsParams,
   SuccessData,
   TilesData,
   WifiData,
-  ZoneSettings,
 } from '../types'
 
 import type { ErrorLog, ErrorLogQuery, IBaseFacade } from './interfaces'
@@ -33,20 +31,6 @@ import type { FacadeManager } from '.'
 
 const temperatureRange = { max: 16, min: 4 } as const
 const TEMPERATURE_GAP = 2
-
-export const fetchDevices = <
-  T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,
->(
-  target: (...args: any[]) => Promise<T>,
-  _context: unknown,
-): ((...args: unknown[]) => Promise<T>) =>
-  async function newTarget(
-    this: BaseFacade<BuildingModel | DeviceModelAny>,
-    ...args: unknown[]
-  ) {
-    await this.api.fetch()
-    return target.call(this, ...args)
-  }
 
 const getDateTimeComponents = (date?: DateTime): DateTimeComponents =>
   date ?
@@ -72,7 +56,7 @@ const getEndDate = (
   return to === undefined ? startDate.plus({ days }) : DateTime.fromISO(to)
 }
 
-export default abstract class BaseFacade<
+export default abstract class<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
 > implements IBaseFacade
 {
