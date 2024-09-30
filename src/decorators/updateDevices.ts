@@ -22,21 +22,20 @@ export default <T extends boolean | FailureData | GroupAtaState | SuccessData>(
     ) {
       const [arg] = args
       const data = await target.call(this, arg)
+      const newData = String(context.name) === 'SetPower' ?
+          { Power: arg }
+        : Object.fromEntries(
+          Object.entries(arg ?? data).filter(
+            ([, value]) => value !== undefined && value !== null,
+          ),
+        )
       this.devices
         .filter(
           ({ type: deviceType }) =>
             !options.type || deviceType === options.type,
         )
         .forEach((device) => {
-          device.update(
-            String(context.name) === 'SetPower' ?
-              { Power: arg }
-            : Object.fromEntries(
-                Object.entries(arg ?? data).filter(
-                  ([, value]) => value !== undefined && value !== null,
-                ),
-              ),
-          )
+          device.update(newData)
         })
       return data
     }
