@@ -221,7 +221,7 @@ export default abstract class<
     days?: number
     from?: string
     to?: string | null
-  }): Promise<FailureData | SuccessData> {
+  } = {}): Promise<FailureData | SuccessData> {
     const isEnabled = Boolean(days) || Boolean(to)
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : undefined
     const endDate =
