@@ -1,4 +1,4 @@
-import type { DeviceModel } from '../models'
+import type { DeviceModel, DeviceModelAny } from '../models'
 import type {
   DeviceType,
   EnergyData,
@@ -38,6 +38,7 @@ export interface ErrorLog {
 }
 
 export interface IBaseFacade {
+  devices: DeviceModelAny[]
   getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>

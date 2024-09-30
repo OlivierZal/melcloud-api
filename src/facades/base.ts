@@ -1,5 +1,7 @@
 import { DateTime } from 'luxon'
 
+import { syncDevices, updateDevices } from '../decorators'
+
 import { now } from './utils'
 
 import type {
@@ -86,6 +88,10 @@ export default abstract class<
     this.id = model.id
   }
 
+  public get devices(): DeviceModelAny[] {
+    return 'devices' in this.model ? this.model.devices : [this.model]
+  }
+
   public get name(): string {
     return this.model.name
   }
@@ -99,15 +105,22 @@ export default abstract class<
   }
 
   get #deviceId(): number {
-    if ('devices' in this.model) {
-      const [{ id }] = this.model.devices
-      return id
-    }
-    return this.id
+    const [id] = this.#deviceIds
+    return id
   }
 
   get #deviceIds(): number[] {
-    return 'deviceIds' in this.model ? this.model.deviceIds : [this.id]
+    return this.devices.map(({ id }) => id)
+  }
+
+  @syncDevices
+  @updateDevices()
+  public async setPower(enabled = true): Promise<boolean> {
+    return (
+      await this.api.setPower({
+        postData: { DeviceIds: this.#deviceIds, Power: enabled },
+      })
+    ).data
   }
 
   public async getErrors(query: ErrorLogQuery): Promise<ErrorLog> {
@@ -139,11 +152,11 @@ export default abstract class<
         this.#getZoneHolidayMode()
       : this.#getDevicesHolidayMode()
   }
-
   public async getTiles(select?: false): Promise<TilesData<null>>
   public async getTiles<K extends keyof typeof DeviceType>(
     select: DeviceModel<K>,
   ): Promise<TilesData<K>>
+
   public async getTiles<K extends keyof typeof DeviceType>(
     select: false | DeviceModel<K> = false,
   ): Promise<TilesData<K | null>> {
@@ -226,14 +239,6 @@ export default abstract class<
           HMTimeZones: await this.#getHolidayModeLocation(),
           StartDate: getDateTimeComponents(startDate),
         },
-      })
-    ).data
-  }
-
-  public async setPower(enabled = true): Promise<boolean> {
-    return (
-      await this.api.setPower({
-        postData: { DeviceIds: this.#deviceIds, Power: enabled },
       })
     ).data
   }

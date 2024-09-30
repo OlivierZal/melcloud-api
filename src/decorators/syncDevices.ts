@@ -1,20 +1,20 @@
-import type { BaseSuperDeviceFacade } from '../facades'
-import type { AreaModelAny, BuildingModel, FloorModel } from '../models'
+import type { BaseFacade } from '../facades'
 import type {
-  Building,
-  FailureData,
-  GroupAtaState,
-  SuccessData,
-} from '../types'
+  AreaModelAny,
+  BuildingModel,
+  DeviceModelAny,
+  FloorModel,
+} from '../models'
+import type { FailureData, GroupAtaState, SuccessData } from '../types'
 
-export default <
-  T extends Building[] | FailureData | GroupAtaState | SuccessData,
->(
+export default <T extends boolean | FailureData | GroupAtaState | SuccessData>(
   target: (...args: any[]) => Promise<T>,
   _context: unknown,
 ): ((...args: unknown[]) => Promise<T>) =>
   async function newTarget(
-    this: BaseSuperDeviceFacade<AreaModelAny | BuildingModel | FloorModel>,
+    this: BaseFacade<
+      AreaModelAny | BuildingModel | DeviceModelAny | FloorModel
+    >,
     ...args: unknown[]
   ) {
     const data = await target.call(this, ...args)

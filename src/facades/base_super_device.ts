@@ -1,4 +1,4 @@
-import { syncDevices } from '../decorators'
+import { syncDevices, updateDevices } from '../decorators'
 
 import BaseFacade from './base'
 
@@ -21,43 +21,27 @@ export default abstract class<
   protected abstract readonly setAtaGroupSpecification: keyof SetGroupAtaPostData['Specification']
 
   @syncDevices
+  @updateDevices({ type: 'Ata' })
   public async getAta(): Promise<GroupAtaState> {
-    const state = Object.fromEntries(
-      Object.entries(
-        (
-          await this.api.getAta({
-            postData: { [this.setAtaGroupSpecification]: this.id },
-          })
-        ).data.Data.Group.State,
-      ).filter(([, value]) => value !== null),
-    )
-    this.model.devices
-      .filter(({ type }) => type === 'Ata')
-      .forEach((device) => {
-        device.update(state)
+    return (
+      await this.api.getAta({
+        postData: { [this.setAtaGroupSpecification]: this.id },
       })
-    return state
+    ).data.Data.Group.State
   }
 
   @syncDevices
+  @updateDevices({ type: 'Ata' })
   public async setAta(
     state: GroupAtaState,
   ): Promise<FailureData | SuccessData> {
-    const { data } = await this.api.setAta({
-      postData: {
-        Specification: { [this.setAtaGroupSpecification]: this.id },
-        State: state,
-      },
-    })
-    this.model.devices
-      .filter(({ type }) => type === 'Ata')
-      .forEach((device) => {
-        device.update(
-          Object.fromEntries(
-            Object.entries(state).filter(([, value]) => value !== null),
-          ),
-        )
+    return (
+      await this.api.setAta({
+        postData: {
+          Specification: { [this.setAtaGroupSpecification]: this.id },
+          State: state,
+        },
       })
-    return data
+    ).data
   }
 }

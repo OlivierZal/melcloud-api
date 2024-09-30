@@ -1,5 +1,10 @@
 import 'source-map-support/register'
-export { fetchDevices, syncDevices, updateDevice } from './decorators'
+export {
+  fetchDevices,
+  syncDevices,
+  updateDevice,
+  updateDevices,
+} from './decorators'
 export {
   AreaFacade,
   BaseDeviceFacade,
