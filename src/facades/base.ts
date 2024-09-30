@@ -48,11 +48,11 @@ const getDateTimeComponents = (date?: DateTime): DateTimeComponents =>
 
 const getEndDate = (
   startDate: DateTime,
-  endDateInfo?: number | string,
+  endDateInfo: number | string,
 ): DateTime =>
-  typeof endDateInfo === 'string' ?
-    DateTime.fromISO(endDateInfo)
-  : startDate.plus({ days: endDateInfo })
+  typeof endDateInfo === 'number' ?
+    startDate.plus({ days: endDateInfo })
+  : DateTime.fromISO(endDateInfo)
 
 export default abstract class<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
@@ -215,19 +215,19 @@ export default abstract class<
 
   public async setHolidayMode({
     days,
-    enabled,
     from,
     to,
   }: {
     days?: number
-    enabled?: boolean
     from?: string
-    to?: string
+    to?: string | null
   }): Promise<FailureData | SuccessData> {
-    const isEnabled =
-      enabled ?? (days === undefined ? Boolean(to) : Boolean(days))
+    const isEnabled = Boolean(days) || Boolean(to)
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : undefined
-    const endDate = startDate ? getEndDate(startDate, days ?? to) : undefined
+    const endDate =
+      startDate ?
+        getEndDate(startDate, days ?? (to as number | string))
+      : undefined
     return (
       await this.api.setHolidayMode({
         postData: {
