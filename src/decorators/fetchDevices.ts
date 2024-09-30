@@ -6,7 +6,7 @@ export default <
   T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,
 >(
   target: (...args: any[]) => Promise<T>,
-  _context: unknown,
+  _context: ClassMethodDecoratorContext,
 ): ((...args: unknown[]) => Promise<T>) =>
   async function newTarget(
     this: BaseFacade<BuildingModel | DeviceModelAny>,

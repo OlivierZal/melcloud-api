@@ -44,7 +44,7 @@ export default <
   DeviceData extends GetDeviceData[T] | SetDeviceData[T],
 >(
   target: (...args: any[]) => Promise<DeviceData>,
-  _context: unknown,
+  _context: ClassMethodDecoratorContext,
 ): ((...args: unknown[]) => Promise<DeviceData>) =>
   async function newTarget(this: BaseDeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)

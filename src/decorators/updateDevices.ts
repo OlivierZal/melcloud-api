@@ -14,14 +14,14 @@ export default <T extends boolean | FailureData | GroupAtaState | SuccessData>(
   ) =>
   (
     target: (...args: any[]) => Promise<T>,
-    _context: unknown,
+    context: ClassMethodDecoratorContext,
   ): ((...args: unknown[]) => Promise<T>) =>
     async function newTarget(
       this: BaseFacade<AreaModelAny | BuildingModel | FloorModel>,
       ...args: unknown[]
     ) {
-      const [state] = args
-      const data = await target.call(this, state)
+      const [arg] = args
+      const data = await target.call(this, arg)
       this.devices
         .filter(
           ({ type: deviceType }) =>
@@ -29,11 +29,13 @@ export default <T extends boolean | FailureData | GroupAtaState | SuccessData>(
         )
         .forEach((device) => {
           device.update(
-            Object.fromEntries(
-              Object.entries(state ?? data).filter(
-                ([, value]) => value !== null,
+            String(context.name) === 'SetPower' ?
+              { Power: arg }
+            : Object.fromEntries(
+                Object.entries(arg ?? data).filter(
+                  ([, value]) => value !== undefined && value !== null,
+                ),
               ),
-            ),
           )
         })
       return data
