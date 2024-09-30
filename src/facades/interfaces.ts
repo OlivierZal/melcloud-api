@@ -59,21 +59,20 @@ export interface IBaseFacade {
     enabled?: boolean
   }) => Promise<FailureData | SuccessData>
   setHolidayMode: (({
+    days,
     from,
-    to,
   }: {
-    to: string
+    days: number
     from?: string
   }) => Promise<FailureData | SuccessData>) &
     /* eslint-disable perfectionist/sort-intersection-types */
     (({
-      days,
       from,
+      to,
     }: {
-      days: number
+      to: string | null
       from?: string
     }) => Promise<FailureData | SuccessData>)
-  /* eslint-enable perfectionist/sort-intersection-types */
   setPower: (enabled?: boolean) => Promise<boolean>
 }
 
