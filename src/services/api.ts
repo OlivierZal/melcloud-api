@@ -207,11 +207,7 @@ export default class API implements IAPI {
   }: {
     postData: GetGroupAtaPostData
   }): Promise<{ data: GetGroupAtaData }> {
-    try {
-      return await this.#api.post('/Group/Get', postData)
-    } catch (_error) {
-      throw new Error('No air-to-air device found')
-    }
+    return this.#api.post('/Group/Get', postData)
   }
 
   public async getEnergyReport({
@@ -307,11 +303,7 @@ export default class API implements IAPI {
   }: {
     postData: SetGroupAtaPostData
   }): Promise<{ data: FailureData | SuccessData }> {
-    try {
-      return await this.#api.post('/Group/SetAta', postData)
-    } catch (_error) {
-      throw new Error('No air-to-air device found')
-    }
+    return this.#api.post('/Group/SetAta', postData)
   }
 
   public async setFrostProtection({

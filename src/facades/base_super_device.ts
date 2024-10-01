@@ -22,11 +22,15 @@ export default abstract class<
 
   @updateDevices({ type: 'Ata' })
   public async getAta(): Promise<GroupAtaState> {
-    return (
-      await this.api.getAta({
-        postData: { [this.setAtaGroupSpecification]: this.id },
-      })
-    ).data.Data.Group.State
+    try {
+      return (
+        await this.api.getAta({
+          postData: { [this.setAtaGroupSpecification]: this.id },
+        })
+      ).data.Data.Group.State
+    } catch (_error) {
+      throw new Error('No air-to-air device found')
+    }
   }
 
   @syncDevices
@@ -34,13 +38,20 @@ export default abstract class<
   public async setAta(
     state: GroupAtaState,
   ): Promise<FailureData | SuccessData> {
-    return (
-      await this.api.setAta({
-        postData: {
-          Specification: { [this.setAtaGroupSpecification]: this.id },
-          State: state,
-        },
-      })
-    ).data
+    if (!Object.keys(state).length) {
+      throw new Error('No data to set')
+    }
+    try {
+      return (
+        await this.api.setAta({
+          postData: {
+            Specification: { [this.setAtaGroupSpecification]: this.id },
+            State: state,
+          },
+        })
+      ).data
+    } catch (_error) {
+      throw new Error('No air-to-air device found')
+    }
   }
 }
