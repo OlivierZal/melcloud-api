@@ -65,7 +65,6 @@ export interface IBaseFacade {
     days: number
     from?: string
   }) => Promise<FailureData | SuccessData>) &
-    /* eslint-disable perfectionist/sort-intersection-types */
     (({
       from,
       to,
