@@ -20,7 +20,6 @@ export default abstract class<
 {
   protected abstract readonly setAtaGroupSpecification: keyof SetGroupAtaPostData['Specification']
 
-  @syncDevices
   @updateDevices({ type: 'Ata' })
   public async getAta(): Promise<GroupAtaState> {
     return (
