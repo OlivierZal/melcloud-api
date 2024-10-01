@@ -38,9 +38,6 @@ export default abstract class<
   public async setAta(
     state: GroupAtaState,
   ): Promise<FailureData | SuccessData> {
-    if (!Object.keys(state).length) {
-      throw new Error('No data to set')
-    }
     try {
       return (
         await this.api.setAta({

@@ -21,6 +21,9 @@ export default <T extends boolean | FailureData | GroupAtaState | SuccessData>(
       ...args: unknown[]
     ) {
       const [arg] = args
+      if (arg !== null && typeof arg === 'object' && !Object.keys(arg).length) {
+        throw new Error('No data to set')
+      }
       const data = await target.call(this, arg)
       const newData =
         String(context.name) === 'SetPower' ?
