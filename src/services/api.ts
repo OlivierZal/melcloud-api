@@ -98,9 +98,9 @@ export default class API implements IAPI {
 
   readonly #logger: Logger
 
-  #holdAPIListUntil = DateTime.now()
-
   #language = 'en'
+
+  #pauseListUntil = DateTime.now()
 
   #retryTimeout: NodeJS.Timeout | null = null
 
@@ -419,7 +419,7 @@ export default class API implements IAPI {
         }
         break
       case HttpStatusCode.TooManyRequests:
-        this.#holdAPIListUntil = DateTime.now().plus({ hours: 2 })
+        this.#pauseListUntil = DateTime.now().plus({ hours: 2 })
         break
       default:
     }
@@ -430,12 +430,9 @@ export default class API implements IAPI {
     config: InternalAxiosRequestConfig,
   ): Promise<InternalAxiosRequestConfig> {
     const newConfig = { ...config }
-    if (
-      newConfig.url === LIST_PATH &&
-      this.#holdAPIListUntil > DateTime.now()
-    ) {
+    if (newConfig.url === LIST_PATH && this.#pauseListUntil > DateTime.now()) {
       throw new Error(
-        `API requests to ${LIST_PATH} are on hold for ${this.#holdAPIListUntil
+        `API requests to ${LIST_PATH} are on hold for ${this.#pauseListUntil
           .diffNow()
           .shiftTo('minutes')
           .toHuman()}`,
