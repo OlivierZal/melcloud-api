@@ -304,6 +304,12 @@ const config = [
         curly: 'error',
         'import/dynamic-import-chunkname': 'error',
         'import/first': 'error',
+        'import/max-dependencies': [
+          'error',
+          {
+            ignoreTypeImports: true,
+          },
+        ],
         'import/newline-after-import': 'error',
         'import/no-absolute-path': 'error',
         'import/no-amd': 'error',
@@ -315,7 +321,17 @@ const config = [
         'import/no-duplicates': 'error',
         'import/no-dynamic-require': 'error',
         'import/no-empty-named-blocks': 'error',
+        'import/no-extraneous-dependencies': 'error',
         'import/no-import-module-exports': 'error',
+        'import/no-internal-modules': [
+          'error',
+          {
+            allow: [
+              'eslint-plugin-package-json/configs/recommended',
+              'source-map-support/register',
+            ],
+          },
+        ],
         'import/no-mutable-exports': 'error',
         'import/no-named-as-default': 'error',
         'import/no-named-as-default-member': 'error',
