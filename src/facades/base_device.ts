@@ -14,7 +14,7 @@ import {
   type Values,
 } from '../types'
 
-import {BaseFacade} from './base'
+import { BaseFacade } from './base'
 import { DEFAULT_YEAR, now } from './utils'
 
 import type { IDeviceFacade } from './interfaces'

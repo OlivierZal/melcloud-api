@@ -183,7 +183,7 @@ const config = [
         importPlugin.flatConfigs.typescript,
         prettier,
       ],
-      files: ['**/*.ts', '**/*.mjs'],
+      files: ['**/*.ts', '**/*.config.mjs'],
       languageOptions: {
         parserOptions: {
           projectService: true,
@@ -392,6 +392,17 @@ const config = [
             alwaysTryTypes: true,
           },
         },
+      },
+    },
+    {
+      files: [
+        'src/models/area.ts',
+        'src/models/building.ts',
+        'src/models/device.ts',
+        'src/models/floor.ts',
+      ],
+      rules: {
+        'import/no-cycle': 'off',
       },
     },
     {
