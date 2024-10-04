@@ -1,7 +1,7 @@
 import { fetchDevices } from '../decorators'
 import { BuildingModel } from '../models'
 
-import BaseSuperDeviceFacade from './base_super_device'
+import {BaseSuperDeviceFacade} from './base_super_device'
 
 import type { ZoneSettings } from '../types'
 
@@ -9,7 +9,7 @@ import type { IBuildingFacade } from './interfaces'
 
 import type { FacadeManager } from '.'
 
-export default class
+export class BuildingFacade
   extends BaseSuperDeviceFacade<BuildingModel>
   implements IBuildingFacade
 {

@@ -7,7 +7,7 @@ import {
   type UpdateDeviceDataAtw,
 } from '../types'
 
-import BaseDeviceFacade from './base_device'
+import {BaseDeviceFacade} from './base_device'
 
 const DEFAULT_TEMPERATURE = 0
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
@@ -17,7 +17,7 @@ const coolFlowTemperatureRange = { max: 25, min: 5 } as const
 const heatFlowTemperatureRange = { max: 60, min: 25 } as const
 const roomTemperatureRange = { max: 30, min: 10 } as const
 
-export default class extends BaseDeviceFacade<'Atw'> {
+export  class DeviceAtwFacade extends BaseDeviceFacade<'Atw'> {
   public override canCool = this.data.CanCool
 
   public override hasZone2 = this.data.HasZone2

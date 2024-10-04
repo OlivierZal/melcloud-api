@@ -1,4 +1,5 @@
 import 'source-map-support/register'
+
 export {
   fetchDevices,
   syncDevices,
@@ -12,9 +13,9 @@ export {
   BaseSuperDeviceFacade,
   BuildingFacade,
   DEFAULT_YEAR,
-  DeviceFacadeAta,
-  DeviceFacadeAtw,
-  DeviceFacadeErv,
+  DeviceAtaFacade,
+  DeviceAtwFacade,
+  DeviceErvFacade,
   FacadeManager,
   FloorFacade,
   now,
@@ -47,7 +48,7 @@ export {
   type IFloorModel,
 } from './models'
 export {
-  default,
+  API,
   isAPISetting,
   type APIConfig,
   type APISettings,

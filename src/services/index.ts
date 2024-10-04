@@ -1,4 +1,4 @@
-export { default } from './api'
+export { API } from './api'
 export {
   isAPISetting,
   type APIConfig,

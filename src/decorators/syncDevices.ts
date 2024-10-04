@@ -7,7 +7,7 @@ import type {
 } from '../models'
 import type { FailureData, GroupAtaState, SuccessData } from '../types'
 
-export default <T extends boolean | FailureData | GroupAtaState | SuccessData>(
+export const syncDevices = <T extends boolean | FailureData | GroupAtaState | SuccessData>(
   target: (...args: any[]) => Promise<T>,
   _context: ClassMethodDecoratorContext,
 ): ((...args: unknown[]) => Promise<T>) =>

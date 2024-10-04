@@ -1,4 +1,4 @@
-export default {
+const config = {
   cleanOutputDir: false,
   entryPoints: ['src/index.ts'],
   enumMembersFormat: 'table',
@@ -20,3 +20,5 @@ export default {
   typeDeclarationFormat: 'table',
   useCodeBlocks: true,
 }
+
+export default config

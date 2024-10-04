@@ -2,7 +2,7 @@ import type { InternalAxiosRequestConfig } from 'axios'
 
 const SPACE = 2
 
-export default abstract class {
+export abstract class APICallContextData {
   public readonly method: InternalAxiosRequestConfig['method']
 
   public readonly params: InternalAxiosRequestConfig['params']

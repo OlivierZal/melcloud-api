@@ -2,7 +2,7 @@
 Symbol.metadata ??= Symbol('Symbol.metadata')
 export const valueSymbol = Symbol('value')
 
-export default <
+export const alias = <
     This extends { canCool: boolean; data: object; hasZone2: boolean },
   >(
     key: string,

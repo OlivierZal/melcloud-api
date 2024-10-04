@@ -9,28 +9,28 @@ import {
   type DeviceModelAny,
 } from '../models'
 
-import AreaFacade from './area'
-import BuildingFacade from './building'
-import DeviceFacadeAta from './device_ata'
-import DeviceFacadeAtw from './device_atw'
-import DeviceFacadeErv from './device_erv'
-import FloorFacade from './floor'
+import { AreaFacade } from './area'
+import { BuildingFacade } from './building'
+import { DeviceAtaFacade } from './device_ata'
+import { DeviceAtwFacade } from './device_atw'
+import { DeviceErvFacade } from './device_erv'
+import { FloorFacade } from './floor'
 import { DEFAULT_YEAR, now } from './utils'
 
-import type API from '../services'
+import type { API } from '../services'
 import type { DeviceType, ErrorData } from '../types'
 
 import type { ErrorLog, ErrorLogQuery } from './interfaces'
 
 export interface DeviceFacade {
-  Ata: DeviceFacadeAta
-  Atw: DeviceFacadeAtw
-  Erv: DeviceFacadeErv
+  Ata: DeviceAtaFacade
+  Atw: DeviceAtwFacade
+  Erv: DeviceErvFacade
 }
 export type DeviceFacadeAny =
-  | DeviceFacadeAta
-  | DeviceFacadeAtw
-  | DeviceFacadeErv
+  | DeviceAtaFacade
+  | DeviceAtwFacade
+  | DeviceErvFacade
 
 const DEFAULT_LIMIT = 1
 const DEFAULT_OFFSET = 0
@@ -71,7 +71,7 @@ const handleErrorLogQuery = ({
   }
 }
 
-export default class {
+export class FacadeManager {
   public readonly api: API
 
   readonly #facades = new Map<
@@ -118,13 +118,13 @@ export default class {
             this.#facades.set(id, new BuildingFacade(this, model))
             break
           case model instanceof DeviceModel && model.type === 'Ata':
-            this.#facades.set(id, new DeviceFacadeAta(this, model))
+            this.#facades.set(id, new DeviceAtaFacade(this, model))
             break
           case model instanceof DeviceModel && model.type === 'Atw':
-            this.#facades.set(id, new DeviceFacadeAtw(this, model))
+            this.#facades.set(id, new DeviceAtwFacade(this, model))
             break
           case model instanceof DeviceModel && model.type === 'Erv':
-            this.#facades.set(id, new DeviceFacadeErv(this, model))
+            this.#facades.set(id, new DeviceErvFacade(this, model))
             break
           case model instanceof FloorModel:
             this.#facades.set(id, new FloorFacade(this, model))

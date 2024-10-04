@@ -1,7 +1,7 @@
-import BaseModel from './base'
-import BuildingModel from './building'
-import DeviceModel, { type DeviceModelAny } from './device'
-import FloorModel from './floor'
+import { BaseModel } from './base'
+import { BuildingModel } from './building'
+import { DeviceModel, type DeviceModelAny } from './device'
+import { FloorModel } from './floor'
 
 import type { AreaData, AreaDataAny } from '../types'
 
@@ -9,7 +9,7 @@ import type { IAreaModel } from './interfaces'
 
 export type AreaModelAny = AreaModel<null> | AreaModel<number>
 
-export default class AreaModel<T extends number | null>
+export class AreaModel<T extends number | null>
   extends BaseModel
   implements IAreaModel
 {

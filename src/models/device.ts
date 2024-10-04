@@ -1,9 +1,9 @@
 import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
 
-import AreaModel, { type AreaModelAny } from './area'
-import BaseModel from './base'
-import BuildingModel from './building'
-import FloorModel from './floor'
+import { AreaModel, type AreaModelAny } from './area'
+import { BaseModel } from './base'
+import { BuildingModel } from './building'
+import { FloorModel } from './floor'
 
 import type { IDeviceModel } from './interfaces'
 
@@ -12,7 +12,7 @@ export type DeviceModelAny =
   | DeviceModel<'Atw'>
   | DeviceModel<'Erv'>
 
-export default class DeviceModel<T extends keyof typeof DeviceType>
+export class DeviceModel<T extends keyof typeof DeviceType>
   extends BaseModel
   implements IDeviceModel<T>
 {

@@ -11,7 +11,7 @@ import type {
   DeviceModelAny,
   FloorModel,
 } from '../models'
-import type API from '../services'
+import type { API } from '../services'
 import type {
   DateTimeComponents,
   DeviceType,
@@ -54,7 +54,7 @@ const getEndDate = (
     startDate.plus({ days: endDateInfo })
   : DateTime.fromISO(endDateInfo)
 
-export default abstract class<
+export abstract class BaseFacade<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
 > implements IBaseFacade
 {

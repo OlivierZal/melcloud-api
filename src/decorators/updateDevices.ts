@@ -7,7 +7,8 @@ import type {
   SuccessData,
 } from '../types'
 
-export default <T extends boolean | FailureData | GroupAtaState | SuccessData>(
+export const updateDevices =
+  <T extends boolean | FailureData | GroupAtaState | SuccessData>(
     options: {
       type?: keyof typeof DeviceType
     } = {},

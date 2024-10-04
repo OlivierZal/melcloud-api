@@ -87,7 +87,7 @@ const setting = <This extends API>(
   },
 })
 
-export default class API implements IAPI {
+export class API implements IAPI {
   public readonly onSync?: () => Promise<void>
 
   protected readonly settingManager?: SettingManager

@@ -1,8 +1,8 @@
-import APICallContextData from './context'
+import { APICallContextData } from './context'
 
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
-export default class extends APICallContextData {
+export class APICallResponseData extends APICallContextData {
   public readonly dataType = 'API response'
 
   public readonly requestData: InternalAxiosRequestConfig['data']

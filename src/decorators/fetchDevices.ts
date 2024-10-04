@@ -2,7 +2,7 @@ import type { BaseFacade } from '../facades'
 import type { BuildingModel, DeviceModelAny } from '../models'
 import type { DeviceType, ListDevice, ZoneSettings } from '../types'
 
-export default <
+export const fetchDevices = <
   T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,
 >(
   target: (...args: any[]) => Promise<T>,

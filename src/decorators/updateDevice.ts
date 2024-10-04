@@ -39,7 +39,7 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
   ) as Partial<ListDevice[T]['Device']>
 }
 
-export default <
+export const updateDevice = <
   T extends keyof typeof DeviceType,
   DeviceData extends GetDeviceData[T] | SetDeviceData[T],
 >(

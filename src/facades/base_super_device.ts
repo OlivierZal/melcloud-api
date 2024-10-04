@@ -1,6 +1,6 @@
 import { syncDevices, updateDevices } from '../decorators'
 
-import BaseFacade from './base'
+import {BaseFacade} from './base'
 
 import type { AreaModelAny, BuildingModel, FloorModel } from '../models'
 import type {
@@ -12,7 +12,7 @@ import type {
 
 import type { IBaseSuperDeviceFacade } from './interfaces'
 
-export default abstract class<
+export  abstract class BaseSuperDeviceFacade<
     T extends AreaModelAny | BuildingModel | FloorModel,
   >
   extends BaseFacade<T>

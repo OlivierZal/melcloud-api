@@ -14,14 +14,14 @@ import {
   type Values,
 } from '../types'
 
-import BaseFacade from './base'
+import {BaseFacade} from './base'
 import { DEFAULT_YEAR, now } from './utils'
 
 import type { IDeviceFacade } from './interfaces'
 
 import type { FacadeManager } from '.'
 
-export default abstract class<T extends keyof typeof DeviceType>
+export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {

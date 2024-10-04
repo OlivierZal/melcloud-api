@@ -1,9 +1,9 @@
 import { alias } from '../decorators'
 import { OperationMode, flagsAta, type UpdateDeviceDataAta } from '../types'
 
-import BaseDeviceFacade from './base_device'
+import {BaseDeviceFacade} from './base_device'
 
-export default class extends BaseDeviceFacade<'Ata'> {
+export class DeviceAtaFacade extends BaseDeviceFacade<'Ata'> {
   public readonly flags = flagsAta
 
   @alias('ActualFanSpeed')

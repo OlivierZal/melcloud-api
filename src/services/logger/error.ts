@@ -1,5 +1,5 @@
-import APICallRequestData from './request'
-import APICallResponseData from './response'
+import { APICallRequestData } from './request'
+import { APICallResponseData } from './response'
 
 import type {
   AxiosError,
@@ -7,7 +7,7 @@ import type {
   InternalAxiosRequestConfig,
 } from 'axios'
 
-import type APICallContextData from './context'
+import type { APICallContextData } from './context'
 
 interface APICallContextDataWithErrorMessage extends APICallContextData {
   readonly errorMessage: string
@@ -23,7 +23,9 @@ const withErrorMessage = <T extends AxiosResponse | InternalAxiosRequestConfig>(
     public readonly errorMessage = getMessage(error)
   }
 
-export default (error: AxiosError): APICallContextDataWithErrorMessage =>
+export const createAPICallErrorData = (
+  error: AxiosError,
+): APICallContextDataWithErrorMessage =>
   error.response ?
     new (withErrorMessage(APICallResponseData, error))(error.response)
   : new (withErrorMessage(APICallRequestData, error))(error.config)
