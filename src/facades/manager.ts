@@ -84,50 +84,50 @@ export class FacadeManager {
   }
 
   public get(): undefined
-  public get(model: AreaModelAny): AreaFacade
-  public get(model: BuildingModel): BuildingFacade
+  public get(instance: AreaModelAny): AreaFacade
+  public get(instance: BuildingModel): BuildingFacade
   public get<T extends keyof typeof DeviceType>(
-    model: DeviceModel<T>,
+    instance: DeviceModel<T>,
   ): DeviceFacade[T]
-  public get(model: FloorModel): FloorFacade
+  public get(instance: FloorModel): FloorFacade
   public get(
-    model: AreaModelAny | BuildingModel | FloorModel,
+    instance: AreaModelAny | BuildingModel | FloorModel,
   ): AreaFacade | BuildingFacade | FloorFacade
   public get(
-    model: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
+    instance: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
   ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
-  public get(model?: AreaModelAny): AreaFacade | undefined
-  public get(model?: BuildingModel): BuildingFacade | undefined
+  public get(instance?: AreaModelAny): AreaFacade | undefined
+  public get(instance?: BuildingModel): BuildingFacade | undefined
   public get<T extends keyof typeof DeviceType>(
-    model?: DeviceModel<T>,
+    instance?: DeviceModel<T>,
   ): DeviceFacade[T] | undefined
-  public get(model?: FloorModel): FloorFacade | undefined
+  public get(instance?: FloorModel): FloorFacade | undefined
   public get(
-    model?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
+    instance?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
   ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade | undefined {
-    if (model) {
-      const modelName = model.constructor.name
-      const modelId = String(model.id)
+    if (instance) {
+      const modelName = instance.constructor.name
+      const modelId = String(instance.id)
       const id = `${modelName}:${modelId}`
       if (!this.#facades.has(id)) {
         switch (true) {
-          case model instanceof AreaModel:
-            this.#facades.set(id, new AreaFacade(this, model))
+          case instance instanceof AreaModel:
+            this.#facades.set(id, new AreaFacade(this, instance))
             break
-          case model instanceof BuildingModel:
-            this.#facades.set(id, new BuildingFacade(this, model))
+          case instance instanceof BuildingModel:
+            this.#facades.set(id, new BuildingFacade(this, instance))
             break
-          case model instanceof DeviceModel && model.type === 'Ata':
-            this.#facades.set(id, new DeviceAtaFacade(this, model))
+          case instance instanceof DeviceModel && instance.type === 'Ata':
+            this.#facades.set(id, new DeviceAtaFacade(this, instance))
             break
-          case model instanceof DeviceModel && model.type === 'Atw':
-            this.#facades.set(id, new DeviceAtwFacade(this, model))
+          case instance instanceof DeviceModel && instance.type === 'Atw':
+            this.#facades.set(id, new DeviceAtwFacade(this, instance))
             break
-          case model instanceof DeviceModel && model.type === 'Erv':
-            this.#facades.set(id, new DeviceErvFacade(this, model))
+          case instance instanceof DeviceModel && instance.type === 'Erv':
+            this.#facades.set(id, new DeviceErvFacade(this, instance))
             break
-          case model instanceof FloorModel:
-            this.#facades.set(id, new FloorFacade(this, model))
+          case instance instanceof FloorModel:
+            this.#facades.set(id, new FloorFacade(this, instance))
             break
           default:
         }

@@ -43,9 +43,9 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
 
   public abstract readonly flags: Record<keyof UpdateDeviceData[T], number>
 
-  public constructor(facadeManager: FacadeManager, model: DeviceModel<T>) {
-    super(facadeManager, model as DeviceModelAny)
-    this.type = model.type
+  public constructor(facadeManager: FacadeManager, instance: DeviceModel<T>) {
+    super(facadeManager, instance as DeviceModelAny)
+    this.type = instance.type
 
     this.#initMetadata()
     this.#values = this.constructor[Symbol.metadata]?.[
