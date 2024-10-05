@@ -393,17 +393,6 @@ const config = [
       },
     },
     {
-      files: [
-        'src/models/area.ts',
-        'src/models/building.ts',
-        'src/models/device.ts',
-        'src/models/floor.ts',
-      ],
-      rules: {
-        'import/no-cycle': 'off',
-      },
-    },
-    {
       files: ['**/*.config.mjs'],
       ...tsConfigs.disableTypeChecked,
       rules: {

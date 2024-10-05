@@ -48,7 +48,7 @@ export {
   type IFloorModel,
 } from './models'
 export {
-  API,
+  API as MELCloudAPI,
   isAPISetting,
   type APIConfig,
   type APISettings,

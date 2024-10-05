@@ -1,14 +1,20 @@
-import { AreaModel } from './area'
 import { BaseModel } from './base'
-import { BuildingModel } from './building'
-import { DeviceModel, type DeviceModelAny } from './device'
 
 import type { FloorData } from '../types'
 
+import type { AreaModel } from './area'
+import type { BuildingModel } from './building'
+import type { DeviceModel, DeviceModelAny } from './device'
 import type { IFloorModel } from './interfaces'
 
 export class FloorModel extends BaseModel implements IFloorModel {
-  static readonly #floors = new Map<number, FloorModel>()
+  static readonly #instances = new Map<number, FloorModel>()
+
+  static #areaModel: typeof AreaModel
+
+  static #buildingModel: typeof BuildingModel
+
+  static #deviceModel: typeof DeviceModel
 
   public readonly buildingId: number
 
@@ -26,11 +32,11 @@ export class FloorModel extends BaseModel implements IFloorModel {
   }
 
   public get areas(): AreaModel<number>[] {
-    return AreaModel.getByFloorId(this.id)
+    return FloorModel.#areaModel.getByFloorId(this.id)
   }
 
   public get building(): BuildingModel | undefined {
-    return BuildingModel.getById(this.buildingId)
+    return FloorModel.#buildingModel.getById(this.buildingId)
   }
 
   public get deviceIds(): number[] {
@@ -38,11 +44,11 @@ export class FloorModel extends BaseModel implements IFloorModel {
   }
 
   public get devices(): DeviceModelAny[] {
-    return DeviceModel.getByFloorId(this.id)
+    return FloorModel.#deviceModel.getByFloorId(this.id)
   }
 
   public static getAll(): FloorModel[] {
-    return [...this.#floors.values()]
+    return [...this.#instances.values()]
   }
 
   public static getByBuildingId(id: number): FloorModel[] {
@@ -50,14 +56,26 @@ export class FloorModel extends BaseModel implements IFloorModel {
   }
 
   public static getById(id: number): FloorModel | undefined {
-    return this.#floors.get(id)
+    return this.#instances.get(id)
   }
 
   public static getByName(name: string): FloorModel | undefined {
     return this.getAll().find(({ name: modelName }) => modelName === name)
   }
 
+  public static setAreaModel(model: typeof AreaModel): void {
+    this.#areaModel = model
+  }
+
+  public static setBuildingModel(model: typeof BuildingModel): void {
+    this.#buildingModel = model
+  }
+
+  public static setDeviceModel(model: typeof DeviceModel): void {
+    this.#deviceModel = model
+  }
+
   public static upsert(floor: FloorData): void {
-    this.#floors.set(floor.ID, new this(floor))
+    this.#instances.set(floor.ID, new this(floor))
   }
 }

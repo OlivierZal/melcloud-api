@@ -1,10 +1,10 @@
 import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
 
-import { AreaModel, type AreaModelAny } from './area'
 import { BaseModel } from './base'
-import { BuildingModel } from './building'
-import { FloorModel } from './floor'
 
+import type { AreaModel, AreaModelAny } from './area'
+import type { BuildingModel } from './building'
+import type { FloorModel } from './floor'
 import type { IDeviceModel } from './interfaces'
 
 export type DeviceModelAny =
@@ -16,7 +16,13 @@ export class DeviceModel<T extends keyof typeof DeviceType>
   extends BaseModel
   implements IDeviceModel<T>
 {
-  static readonly #devices = new Map<number, DeviceModelAny>()
+  static readonly #instances = new Map<number, DeviceModelAny>()
+
+  static #areaModel: typeof AreaModel
+
+  static #buildingModel: typeof BuildingModel
+
+  static #floorModel: typeof FloorModel
 
   public readonly areaId: number | null = null
 
@@ -46,11 +52,13 @@ export class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public get area(): AreaModelAny | null | undefined {
-    return this.areaId === null ? null : AreaModel.getById(this.areaId)
+    return this.areaId === null ?
+        null
+      : DeviceModel.#areaModel.getById(this.areaId)
   }
 
   public get building(): BuildingModel | undefined {
-    return BuildingModel.getById(this.buildingId)
+    return DeviceModel.#buildingModel.getById(this.buildingId)
   }
 
   public get data(): ListDevice[T]['Device'] {
@@ -58,11 +66,13 @@ export class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public get floor(): FloorModel | null | undefined {
-    return this.floorId === null ? null : FloorModel.getById(this.floorId)
+    return this.floorId === null ?
+        null
+      : DeviceModel.#floorModel.getById(this.floorId)
   }
 
   public static getAll(): DeviceModelAny[] {
-    return [...this.#devices.values()]
+    return [...this.#instances.values()]
   }
 
   public static getByAreaId(id: number): DeviceModelAny[] {
@@ -78,7 +88,7 @@ export class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getById(id: number): DeviceModelAny | undefined {
-    return this.#devices.get(id)
+    return this.#instances.get(id)
   }
 
   public static getByName(name: string): DeviceModelAny | undefined {
@@ -93,8 +103,20 @@ export class DeviceModel<T extends keyof typeof DeviceType>
     ) as DeviceModel<K>[]
   }
 
+  public static setAreaModel(model: typeof AreaModel): void {
+    this.#areaModel = model
+  }
+
+  public static setBuildingModel(model: typeof BuildingModel): void {
+    this.#buildingModel = model
+  }
+
+  public static setFloorModel(model: typeof FloorModel): void {
+    this.#floorModel = model
+  }
+
   public static upsert(device: ListDeviceAny): void {
-    this.#devices.set(device.DeviceID, new this(device) as DeviceModelAny)
+    this.#instances.set(device.DeviceID, new this(device) as DeviceModelAny)
   }
 
   public static upsertMany(devices: readonly ListDeviceAny[]): void {
