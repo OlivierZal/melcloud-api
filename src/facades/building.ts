@@ -17,7 +17,7 @@ export class BuildingFacade
 
   protected readonly holidayModeLocation = 'Buildings'
 
-  protected readonly modelClass = BuildingModel
+  protected readonly model = BuildingModel
 
   protected readonly setAtaGroupSpecification = 'BuildingID'
 
@@ -30,7 +30,7 @@ export class BuildingFacade
   }
 
   public get data(): ZoneSettings {
-    return this.model.data
+    return this.instance.data
   }
 
   @fetchDevices

@@ -72,32 +72,32 @@ export abstract class BaseFacade<
 
   protected abstract readonly holidayModeLocation: keyof HolidayModeLocation
 
-  protected abstract readonly modelClass: {
+  protected abstract readonly model: {
     getById: (id: number) => T | undefined
   }
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(facadeManager: FacadeManager, model: T) {
+  public constructor(facadeManager: FacadeManager, instance: T) {
     this.facadeManager = facadeManager
     this.api = facadeManager.api
-    this.id = model.id
+    this.id = instance.id
   }
 
   public get devices(): DeviceModelAny[] {
-    return 'devices' in this.model ? this.model.devices : [this.model]
+    return 'devices' in this.instance ? this.instance.devices : [this.instance]
   }
 
   public get name(): string {
-    return this.model.name
+    return this.instance.name
   }
 
-  protected get model(): T {
-    const model = this.modelClass.getById(this.id)
-    if (!model) {
+  protected get instance(): T {
+    const instance = this.model.getById(this.id)
+    if (!instance) {
       throw new Error(`${this.tableName} not found`)
     }
-    return model
+    return instance
   }
 
   get #deviceId(): number {

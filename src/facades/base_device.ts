@@ -35,7 +35,7 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
 
   protected readonly holidayModeLocation = 'Devices'
 
-  protected readonly modelClass = DeviceModel<T>
+  protected readonly model = DeviceModel<T>
 
   protected readonly tableName = 'DeviceLocation'
 
@@ -54,7 +54,7 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
   }
 
   public get data(): ListDevice[T]['Device'] {
-    return this.model.data
+    return this.instance.data
   }
 
   public get values(): Values[T] {
@@ -90,7 +90,7 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
           (select instanceof DeviceModel && select.id !== this.id)
       ) ?
         super.getTiles()
-      : super.getTiles(this.model as DeviceModel<T>)
+      : super.getTiles(this.instance as DeviceModel<T>)
   }
 
   @fetchDevices
@@ -102,7 +102,7 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
   public async get(): Promise<GetDeviceData[T]> {
     return (
       await this.api.get({
-        params: { buildingId: this.model.buildingId, id: this.id },
+        params: { buildingId: this.instance.buildingId, id: this.id },
       })
     ).data as GetDeviceData[T]
   }

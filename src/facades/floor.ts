@@ -12,7 +12,7 @@ export class FloorFacade
 
   protected readonly holidayModeLocation = 'Floors'
 
-  protected readonly modelClass = FloorModel
+  protected readonly model = FloorModel
 
   protected readonly setAtaGroupSpecification = 'FloorID'
 

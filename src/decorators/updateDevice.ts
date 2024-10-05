@@ -48,6 +48,8 @@ export const updateDevice = <
 ): ((...args: unknown[]) => Promise<DeviceData>) =>
   async function newTarget(this: BaseDeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
-    ;(this.model as DeviceModel<T>).update(convertToListDeviceData(this, data))
+    ;(this.instance as DeviceModel<T>).update(
+      convertToListDeviceData(this, data),
+    )
     return data
   }

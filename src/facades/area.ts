@@ -12,7 +12,7 @@ export class AreaFacade
 
   protected readonly holidayModeLocation = 'Areas'
 
-  protected readonly modelClass = AreaModel
+  protected readonly model = AreaModel
 
   protected readonly setAtaGroupSpecification = 'AreaID'
 
