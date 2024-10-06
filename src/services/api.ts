@@ -10,6 +10,7 @@ import {
 } from 'axios'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 
+import { syncDevices } from '../decorators'
 import {
   APICallRequestData,
   APICallResponseData,
@@ -106,15 +107,18 @@ export class API implements IAPI {
 
   #syncTimeout: NodeJS.Timeout | null = null
 
+  // eslint-disable-next-line max-statements
   private constructor(config: APIConfig = {}) {
     const {
       autoSyncInterval = DEFAULT_SYNC_INTERVAL,
       language,
       logger = console,
       onSync,
+      password,
       settingManager,
       shouldVerifySSL = true,
       timezone,
+      username,
     } = config
     if (language !== undefined) {
       this.language = language
@@ -128,6 +132,12 @@ export class API implements IAPI {
     this.#logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
+    if (username !== undefined) {
+      this.username = username
+    }
+    if (password !== undefined) {
+      this.password = password
+    }
     this.#api = this.#createAPI(shouldVerifySSL)
   }
 
@@ -158,13 +168,7 @@ export class API implements IAPI {
     return api
   }
 
-  public clearSync(): void {
-    if (this.#syncTimeout) {
-      clearTimeout(this.#syncTimeout)
-      this.#syncTimeout = null
-    }
-  }
-
+  @syncDevices
   public async fetch(): Promise<Building[]> {
     this.clearSync()
     try {
@@ -185,12 +189,18 @@ export class API implements IAPI {
         })
         DeviceModel.upsertMany(building.Structure.Devices)
       })
-      await this.onSync?.()
       return data
     } catch (_error) {
       return []
     } finally {
-      this.#autoSync()
+      this.#planNextSync()
+    }
+  }
+
+  public clearSync(): void {
+    if (this.#syncTimeout) {
+      clearTimeout(this.#syncTimeout)
+      this.#syncTimeout = null
     }
   }
 
@@ -368,16 +378,6 @@ export class API implements IAPI {
     return loginData !== null
   }
 
-  #autoSync(): void {
-    if (this.#autoSyncInterval) {
-      this.#syncTimeout = setTimeout(() => {
-        this.fetch().catch(() => {
-          //
-        })
-      }, this.#autoSyncInterval)
-    }
-  }
-
   #canRetry(): boolean {
     if (!this.#retryTimeout) {
       this.#retryTimeout = setTimeout(() => {
@@ -464,6 +464,16 @@ export class API implements IAPI {
       Password: password,
       ...rest,
     })
+  }
+
+  #planNextSync(): void {
+    if (this.#autoSyncInterval) {
+      this.#syncTimeout = setTimeout(() => {
+        this.fetch().catch(() => {
+          //
+        })
+      }, this.#autoSyncInterval)
+    }
   }
 
   async #setLanguage({

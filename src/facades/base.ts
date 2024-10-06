@@ -58,11 +58,11 @@ export abstract class BaseFacade<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
 > implements IBaseFacade
 {
+  public readonly api: API
+
   public readonly facadeManager: FacadeManager
 
   public readonly id: number
-
-  protected readonly api: API
 
   protected isFrostProtectionDefined: boolean | null = null
 

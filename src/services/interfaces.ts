@@ -54,7 +54,7 @@ export interface Logger {
   log: Console['log']
 }
 
-export interface APIConfig {
+export interface APIConfig extends Partial<LoginCredentials> {
   autoSyncInterval?: number | null
   language?: string
   logger?: Logger
