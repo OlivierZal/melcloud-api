@@ -10,6 +10,11 @@ import {
 } from 'axios'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 
+import {
+  APICallRequestData,
+  APICallResponseData,
+  createAPICallErrorData,
+} from '../logging'
 import { AreaModel, BuildingModel, DeviceModel, FloorModel } from '../models'
 import {
   Language,
@@ -50,11 +55,6 @@ import {
   type Logger,
   type SettingManager,
 } from './interfaces'
-import {
-  APICallRequestData,
-  APICallResponseData,
-  createAPICallErrorData,
-} from './logger'
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin2'

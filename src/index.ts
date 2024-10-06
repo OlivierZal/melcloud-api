@@ -30,6 +30,12 @@ export {
   type IDeviceFacade,
 } from './facades'
 export {
+  APICallContextData,
+  APICallRequestData,
+  APICallResponseData,
+  createAPICallErrorData,
+} from './logging'
+export {
   AreaModel,
   BaseModel,
   BuildingModel,
