@@ -9,7 +9,7 @@ import type {
 
 import type { APICallContextData } from './context'
 
-interface APICallContextDataWithErrorMessage extends APICallContextData {
+export interface APICallContextDataWithErrorMessage extends APICallContextData {
   readonly errorMessage: string
 }
 

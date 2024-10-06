@@ -107,7 +107,6 @@ export class API implements IAPI {
 
   #syncTimeout: NodeJS.Timeout | null = null
 
-  // eslint-disable-next-line max-statements
   private constructor(config: APIConfig = {}) {
     const {
       autoSyncInterval = DEFAULT_SYNC_INTERVAL,
@@ -120,24 +119,18 @@ export class API implements IAPI {
       timezone,
       username,
     } = config
-    if (language !== undefined) {
-      this.language = language
-    }
-    if (timezone !== undefined) {
-      LuxonSettings.defaultZone = timezone
-    }
     this.#autoSyncInterval = Duration.fromObject({
       minutes: autoSyncInterval ?? NO_SYNC_INTERVAL,
     }).as('milliseconds')
     this.#logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
-    if (username !== undefined) {
-      this.username = username
-    }
-    if (password !== undefined) {
-      this.password = password
-    }
+    this.#setOptionalProperties({
+      language,
+      password,
+      timezone,
+      username,
+    })
     this.#api = this.#createAPI(shouldVerifySSL)
   }
 
@@ -482,6 +475,31 @@ export class API implements IAPI {
     postData: { language: Language }
   }): Promise<{ data: boolean }> {
     return this.#api.post<boolean>('/User/UpdateLanguage', postData)
+  }
+
+  #setOptionalProperties({
+    language,
+    password,
+    timezone,
+    username,
+  }: {
+    language?: string
+    password?: string
+    timezone?: string
+    username?: string
+  }): void {
+    if (timezone !== undefined) {
+      LuxonSettings.defaultZone = timezone
+    }
+    if (language !== undefined) {
+      this.language = language
+    }
+    if (username !== undefined) {
+      this.username = username
+    }
+    if (password !== undefined) {
+      this.password = password
+    }
   }
 
   #setupAxiosInterceptors(api: AxiosInstance): void {

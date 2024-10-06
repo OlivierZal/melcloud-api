@@ -34,6 +34,7 @@ export {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
+  type APICallContextDataWithErrorMessage,
 } from './logging'
 export {
   AreaModel,
