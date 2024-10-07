@@ -19,7 +19,7 @@ export class BuildingFacade
 
   protected readonly model = BuildingModel
 
-  protected readonly setAtaGroupSpecification = 'BuildingID'
+  protected readonly specification = 'BuildingID'
 
   protected readonly tableName = 'Building'
 

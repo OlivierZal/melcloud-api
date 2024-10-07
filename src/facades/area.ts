@@ -14,7 +14,7 @@ export class AreaFacade
 
   protected readonly model = AreaModel
 
-  protected readonly setAtaGroupSpecification = 'AreaID'
+  protected readonly specification = 'AreaID'
 
   protected readonly tableName = 'Area'
 }

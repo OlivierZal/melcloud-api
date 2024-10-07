@@ -18,15 +18,13 @@ export abstract class BaseSuperDeviceFacade<
   extends BaseFacade<T>
   implements IBaseSuperDeviceFacade
 {
-  protected abstract readonly setAtaGroupSpecification: keyof SetGroupAtaPostData['Specification']
+  protected abstract readonly specification: keyof SetGroupAtaPostData['Specification']
 
   @updateDevices({ type: 'Ata' })
   public async getAta(): Promise<GroupAtaState> {
     try {
       return (
-        await this.api.getAta({
-          postData: { [this.setAtaGroupSpecification]: this.id },
-        })
+        await this.api.getAta({ postData: { [this.specification]: this.id } })
       ).data.Data.Group.State
     } catch (_error) {
       throw new Error('No air-to-air device found')
@@ -42,7 +40,7 @@ export abstract class BaseSuperDeviceFacade<
       return (
         await this.api.setAta({
           postData: {
-            Specification: { [this.setAtaGroupSpecification]: this.id },
+            Specification: { [this.specification]: this.id },
             State: state,
           },
         })

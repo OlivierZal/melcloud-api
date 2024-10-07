@@ -14,7 +14,7 @@ export class FloorFacade
 
   protected readonly model = FloorModel
 
-  protected readonly setAtaGroupSpecification = 'FloorID'
+  protected readonly specification = 'FloorID'
 
   protected readonly tableName = 'Floor'
 }
