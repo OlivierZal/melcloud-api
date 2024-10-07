@@ -60,9 +60,9 @@ export abstract class BaseFacade<
 {
   public readonly api: API
 
-  public readonly facadeManager: FacadeManager
-
   public readonly id: number
+
+  public readonly manager: FacadeManager
 
   protected isFrostProtectionDefined: boolean | null = null
 
@@ -78,9 +78,9 @@ export abstract class BaseFacade<
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(facadeManager: FacadeManager, instance: T) {
-    this.facadeManager = facadeManager
-    this.api = facadeManager.api
+  public constructor(manager: FacadeManager, instance: T) {
+    this.manager = manager
+    this.api = manager.api
     this.id = instance.id
   }
 
@@ -120,7 +120,7 @@ export abstract class BaseFacade<
   }
 
   public async getErrors(query: ErrorLogQuery): Promise<ErrorLog> {
-    return this.facadeManager.getErrors(query, this.#deviceIds)
+    return this.manager.getErrors(query, this.#deviceIds)
   }
 
   public async getFrostProtection(): Promise<FrostProtectionData> {

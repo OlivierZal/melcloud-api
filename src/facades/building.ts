@@ -23,8 +23,8 @@ export class BuildingFacade
 
   protected readonly tableName = 'Building'
 
-  public constructor(facadeManager: FacadeManager, instance: BuildingModel) {
-    super(facadeManager, instance)
+  public constructor(manager: FacadeManager, instance: BuildingModel) {
+    super(manager, instance)
     this.isFrostProtectionDefined = this.data.FPDefined
     this.isHolidayModeDefined = this.data.HMDefined
   }
