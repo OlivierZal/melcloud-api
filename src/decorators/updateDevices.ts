@@ -34,13 +34,13 @@ export const updateDevices =
               ([, value]) => value !== undefined && value !== null,
             ),
           )
-      this.devices
-        .filter(
-          ({ type: deviceType }) =>
-            !options.type || deviceType === options.type,
+      ;(options.type ?
+        this.devices.filter(
+          ({ type: deviceType }) => deviceType === options.type,
         )
-        .forEach((device) => {
-          device.update(newData)
-        })
+      : this.devices
+      ).forEach((device) => {
+        device.update(newData)
+      })
       return data
     }
