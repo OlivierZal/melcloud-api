@@ -71,7 +71,7 @@ export class AreaModel<T extends number | null>
   }
 
   public static getByName(name: string): AreaModelAny | undefined {
-    return this.getAll().find(({ name: modelName }) => modelName === name)
+    return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
   public static setBuildingModel(model: typeof BuildingModel): void {

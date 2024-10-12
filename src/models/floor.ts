@@ -60,7 +60,7 @@ export class FloorModel extends BaseModel implements IFloorModel {
   }
 
   public static getByName(name: string): FloorModel | undefined {
-    return this.getAll().find(({ name: modelName }) => modelName === name)
+    return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
   public static setAreaModel(model: typeof AreaModel): void {

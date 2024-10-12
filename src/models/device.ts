@@ -92,14 +92,14 @@ export class DeviceModel<T extends keyof typeof DeviceType>
   }
 
   public static getByName(name: string): DeviceModelAny | undefined {
-    return this.getAll().find(({ name: modelName }) => modelName === name)
+    return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
   public static getByType<K extends keyof typeof DeviceType>(
     type: K,
   ): DeviceModel<K>[] {
     return this.getAll().filter(
-      ({ type: modelType }) => modelType === type,
+      ({ type: instanceType }) => instanceType === type,
     ) as DeviceModel<K>[]
   }
 

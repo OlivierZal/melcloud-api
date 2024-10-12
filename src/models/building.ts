@@ -56,7 +56,7 @@ export class BuildingModel extends BaseModel implements IBuildingModel {
   }
 
   public static getByName(name: string): BuildingModel | undefined {
-    return this.getAll().find(({ name: modelName }) => modelName === name)
+    return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
   public static setAreaModel(model: typeof AreaModel): void {
