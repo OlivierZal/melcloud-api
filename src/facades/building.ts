@@ -25,8 +25,12 @@ export class BuildingFacade
 
   public constructor(manager: FacadeManager, instance: BuildingModel) {
     super(manager, instance)
-    this.isFrostProtectionDefined = this.data.FPDefined
-    this.isHolidayModeDefined = this.data.HMDefined
+    ;({
+      data: {
+        FPDefined: this.isFrostProtectionDefined,
+        HMDefined: this.isHolidayModeDefined,
+      },
+    } = this)
   }
 
   public get data(): ZoneSettings {

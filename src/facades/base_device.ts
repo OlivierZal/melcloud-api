@@ -45,8 +45,7 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
 
   public constructor(manager: FacadeManager, instance: DeviceModel<T>) {
     super(manager, instance as DeviceModelAny)
-    this.type = instance.type
-
+    ;({ type: this.type } = instance)
     this.#initMetadata()
     this.#values = this.constructor[Symbol.metadata]?.[valueSymbol] as Set<
       keyof this

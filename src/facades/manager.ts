@@ -106,9 +106,11 @@ export class FacadeManager {
     instance?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
   ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade | undefined {
     if (instance) {
-      const modelName = instance.constructor.name
+      const {
+        constructor: { name },
+      } = instance
       const modelId = String(instance.id)
-      const id = `${modelName}:${modelId}`
+      const id = `${name}:${modelId}`
       if (!this.#facades.has(id)) {
         switch (true) {
           case instance instanceof AreaModel:
@@ -134,7 +136,7 @@ export class FacadeManager {
       }
       const facade = this.#facades.get(id)
       if (!facade) {
-        throw new Error(`Facade not found for ${modelName} with id ${modelId}`)
+        throw new Error(`Facade not found for ${name} with id ${modelId}`)
       }
       return facade
     }

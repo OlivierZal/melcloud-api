@@ -350,22 +350,21 @@ export class API implements IAPI {
     password: string
     username: string
   }): Promise<boolean> {
-    const { LoginData: loginData } = (
-      await this.#login({
-        postData: {
-          AppVersion: '1.34.10.0',
-          Email: username,
-          Language: this.#getLanguageCode(),
-          Password: password,
-          Persist: true,
-        },
-      })
-    ).data
+    const {
+      data: { LoginData: loginData },
+    } = await this.#login({
+      postData: {
+        AppVersion: '1.34.10.0',
+        Email: username,
+        Language: this.#getLanguageCode(),
+        Password: password,
+        Persist: true,
+      },
+    })
     if (loginData) {
       this.username = username
       this.password = password
-      this.contextKey = loginData.ContextKey
-      this.expiry = loginData.Expiry
+      ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
       await this.fetch()
     }
     return loginData !== null

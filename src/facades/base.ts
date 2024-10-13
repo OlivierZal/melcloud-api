@@ -62,11 +62,11 @@ export abstract class BaseFacade<
 
   public readonly id: number
 
-  public readonly manager: FacadeManager
-
   protected isFrostProtectionDefined: boolean | null = null
 
   protected isHolidayModeDefined: boolean | null = null
+
+  readonly #manager: FacadeManager
 
   protected abstract readonly frostProtectionLocation: keyof FrostProtectionLocation
 
@@ -79,9 +79,9 @@ export abstract class BaseFacade<
   protected abstract readonly tableName: SettingsParams['tableName']
 
   public constructor(manager: FacadeManager, instance: T) {
-    this.manager = manager
-    this.api = manager.api
-    this.id = instance.id
+    this.#manager = manager
+    ;({ api: this.api } = manager)
+    ;({ id: this.id } = instance)
   }
 
   public get devices(): DeviceModelAny[] {
@@ -120,7 +120,7 @@ export abstract class BaseFacade<
   }
 
   public async getErrors(query: ErrorLogQuery): Promise<ErrorLog> {
-    return this.manager.getErrors(query, this.#deviceIds)
+    return this.#manager.getErrors(query, this.#deviceIds)
   }
 
   public async getFrostProtection(): Promise<FrostProtectionData> {

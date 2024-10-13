@@ -29,7 +29,7 @@ export abstract class APICallContextData {
     ]
       .map((key) => {
         if (key in this) {
-          const value = this[key as keyof this]
+          const { [key as keyof this]: value } = this
           if (value !== undefined) {
             return `${key}: ${
               typeof value === 'object' ?
