@@ -1,4 +1,5 @@
 import js from '@eslint/js'
+import markdown from '@eslint/markdown'
 import stylistic from '@stylistic/eslint-plugin'
 import prettier from 'eslint-config-prettier'
 import importPlugin from 'eslint-plugin-import'
@@ -402,6 +403,17 @@ const config = [
       },
     },
   ),
+  {
+    files: ['**/*.md'],
+    language: 'markdown/gfm',
+    plugins: {
+      markdown,
+    },
+    rules: {
+      ...markdown.configs.recommended.rules,
+      'markdown/no-html': 'error',
+    },
+  },
   packageJson,
 ]
 
