@@ -39,7 +39,7 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  readonly #values: (keyof this)[]
+  readonly #values: Set<keyof this>
 
   public abstract readonly flags: Record<keyof UpdateDeviceData[T], number>
 
@@ -48,9 +48,9 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
     this.type = instance.type
 
     this.#initMetadata()
-    this.#values = this.constructor[Symbol.metadata]?.[
-      valueSymbol
-    ] as (keyof this)[]
+    this.#values = this.constructor[Symbol.metadata]?.[valueSymbol] as Set<
+      keyof this
+    >
   }
 
   public get data(): ListDevice[T]['Device'] {
@@ -58,7 +58,7 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
   }
 
   public get values(): Values[T] {
-    return Object.fromEntries(this.#values.map((key) => [key, this[key]]))
+    return Object.fromEntries([...this.#values].map((key) => [key, this[key]]))
   }
 
   protected get setData(): Required<UpdateDeviceData[T]> {

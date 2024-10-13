@@ -19,11 +19,8 @@ export const alias =
         (!value.includes('Cool') || this.canCool) &&
         (!value.includes('Zone2') || this.hasZone2)
       ) {
-        context.metadata[valueSymbol] ??= []
-        const values = context.metadata[valueSymbol] as string[]
-        if (!values.includes(value)) {
-          values.push(value)
-        }
+        context.metadata[valueSymbol] ??= new Set<string>()
+        ;(context.metadata[valueSymbol] as Set<string>).add(value)
       }
       return this.data[key as keyof typeof this.data]
     },
