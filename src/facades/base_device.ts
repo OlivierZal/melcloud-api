@@ -57,7 +57,9 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
   }
 
   public get values(): Values[T] {
-    return Object.fromEntries([...this.#values].map((key) => [key, this[key]]))
+    return Object.fromEntries(
+      this.#values.values().map((key) => [key, this[key]]),
+    )
   }
 
   protected get setData(): Required<UpdateDeviceData[T]> {
