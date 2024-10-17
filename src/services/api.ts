@@ -403,15 +403,15 @@ export class API implements IAPI {
     const errorData = createAPICallErrorData(error)
     this.#logger.error(String(errorData))
     switch (error.response?.status) {
+      case HttpStatusCode.TooManyRequests:
+        this.#pauseListUntil = DateTime.now().plus({ hours: 2 })
+        break
       case HttpStatusCode.Unauthorized:
         if (this.#canRetry() && error.config?.url !== LOGIN_PATH) {
           if ((await this.login()) && error.config) {
             return this.#api.request(error.config)
           }
         }
-        break
-      case HttpStatusCode.TooManyRequests:
-        this.#pauseListUntil = DateTime.now().plus({ hours: 2 })
         break
       default:
     }
