@@ -1,6 +1,6 @@
+node_modules/
 /.npmrc
 /.vscode/*
 !/.vscode/settings.json
 /coverage/
 /dist/
-/node_modules/
