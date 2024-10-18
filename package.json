@@ -24,7 +24,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "docs": "typedoc && npm run format:docs",
+    "docs": "NODE_OPTIONS=--no-experimental-require-module typedoc && npm run format:docs",
     "format": "prettier . --check",
     "format:docs": "prettier README.md --ignore-path --write",
     "format:fix": "prettier . --write",
