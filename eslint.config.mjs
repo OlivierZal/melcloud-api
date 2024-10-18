@@ -18,8 +18,7 @@ const modifiersOrder = [
 
 const selectorOrder = [
   'index-signature',
-  'property',
-  'function-property',
+  ['property', 'function-property'],
   'static-block',
   'constructor',
   'accessor-property',
