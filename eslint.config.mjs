@@ -18,7 +18,8 @@ const modifiersOrder = [
 
 const selectorOrder = [
   'index-signature',
-  ['property', 'function-property'],
+  'property',
+  'function-property',
   'static-block',
   'constructor',
   'accessor-property',
@@ -69,7 +70,6 @@ const allModifiers = [
 ]
 const baseMethodIncompatibilities = ['declare', 'readonly']
 const accessorIncompatibilities = [...baseMethodIncompatibilities, 'optional']
-const propertyIncompatibilities = []
 
 const selectorIncompatibilities = {
   'accessor-property': accessorIncompatibilities,
@@ -82,7 +82,7 @@ const selectorIncompatibilities = {
     'static',
   ],
   'event-handler': allModifiers,
-  'function-property': propertyIncompatibilities,
+  'function-property': ['abstract', 'declare'],
   'get-method': accessorIncompatibilities,
   'index-signature': [
     'abstract',
@@ -94,7 +94,7 @@ const selectorIncompatibilities = {
     'protected',
   ],
   method: baseMethodIncompatibilities,
-  property: propertyIncompatibilities,
+  property: [],
   'set-method': accessorIncompatibilities,
   'static-block': allModifiers,
 }
