@@ -1,13 +1,13 @@
-import { alias } from '../decorators'
+import { alias } from '../decorators/index.js'
 import {
   OperationModeZone,
   flagsAtw,
   type OperationModeZoneDataAtw,
   type TemperatureDataAtw,
   type UpdateDeviceDataAtw,
-} from '../types'
+} from '../types/index.js'
 
-import { BaseDeviceFacade } from './base_device'
+import { BaseDeviceFacade } from './base_device.js'
 
 const DEFAULT_TEMPERATURE = 0
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room

@@ -1,11 +1,11 @@
-import { BaseModel } from './base'
+import { BaseModel } from './base.js'
 
-import type { BuildingData, ZoneSettings } from '../types'
+import type { BuildingData, ZoneSettings } from '../types/index.js'
 
-import type { AreaModel, AreaModelAny } from './area'
-import type { DeviceModel, DeviceModelAny } from './device'
-import type { FloorModel } from './floor'
-import type { IBuildingModel } from './interfaces'
+import type { AreaModel, AreaModelAny } from './area.js'
+import type { DeviceModel, DeviceModelAny } from './device.js'
+import type { FloorModel } from './floor.js'
+import type { IBuildingModel } from './interfaces.js'
 
 export class BuildingModel extends BaseModel implements IBuildingModel {
   static readonly #instances = new Map<number, BuildingModel>()

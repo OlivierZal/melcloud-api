@@ -9,7 +9,7 @@ import type {
   DeviceDataNotInList,
   DeviceType,
   FanSpeed,
-} from './bases'
+} from './bases.js'
 
 export enum VentilationMode {
   auto = 2,

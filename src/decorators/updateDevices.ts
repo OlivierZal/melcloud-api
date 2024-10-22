@@ -1,11 +1,15 @@
-import type { BaseFacade } from '../facades'
-import type { AreaModelAny, BuildingModel, FloorModel } from '../models'
+import type { BaseFacade } from '../facades/index.js'
+import type {
+  AreaModelAny,
+  BuildingModel,
+  FloorModel,
+} from '../models/index.js'
 import type {
   DeviceType,
   FailureData,
   GroupAtaState,
   SuccessData,
-} from '../types'
+} from '../types/index.js'
 
 export const updateDevices =
   <T extends boolean | FailureData | GroupAtaState | SuccessData>(

@@ -1,8 +1,8 @@
-import { AreaModel, type AreaModelAny } from './area'
-import { BaseModel } from './base'
-import { BuildingModel } from './building'
-import { DeviceModel, type DeviceModelAny } from './device'
-import { FloorModel } from './floor'
+import { AreaModel, type AreaModelAny } from './area.js'
+import { BaseModel } from './base.js'
+import { BuildingModel } from './building.js'
+import { DeviceModel, type DeviceModelAny } from './device.js'
+import { FloorModel } from './floor.js'
 
 import type {
   IAreaModel,
@@ -14,7 +14,7 @@ import type {
   IBuildingModel,
   IDeviceModel,
   IFloorModel,
-} from './interfaces'
+} from './interfaces.js'
 
 AreaModel.setBuildingModel(BuildingModel)
 AreaModel.setDeviceModel(DeviceModel)

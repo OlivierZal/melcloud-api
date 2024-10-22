@@ -1,4 +1,4 @@
-import type { DeviceModel } from '../models'
+import type { DeviceModel } from '../models/index.js'
 import type {
   DeviceType,
   EnergyData,
@@ -15,7 +15,7 @@ import type {
   Values,
   WifiData,
   ZoneSettings,
-} from '../types'
+} from '../types/index.js'
 
 export interface ErrorLogQuery {
   readonly from?: string

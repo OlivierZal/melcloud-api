@@ -196,7 +196,7 @@ const config = [
         importPlugin.flatConfigs.typescript,
         prettier,
       ],
-      files: ['**/*.ts', '**/*.config.mjs'],
+      files: ['**/*.{ts,js}'],
       languageOptions: {
         parserOptions: {
           projectService: true,
@@ -345,15 +345,6 @@ const config = [
         'import/no-empty-named-blocks': 'error',
         'import/no-extraneous-dependencies': 'error',
         'import/no-import-module-exports': 'error',
-        'import/no-internal-modules': [
-          'error',
-          {
-            allow: [
-              'eslint-plugin-package-json/configs/recommended',
-              'source-map-support/register',
-            ],
-          },
-        ],
         'import/no-mutable-exports': 'error',
         'import/no-named-as-default': 'error',
         'import/no-named-as-default-member': 'error',
@@ -364,7 +355,7 @@ const config = [
         'import/no-unassigned-import': [
           'error',
           {
-            allow: ['source-map-support/register'],
+            allow: ['source-map-support/register.js'],
           },
         ],
         'import/no-unused-modules': 'error',
@@ -417,11 +408,16 @@ const config = [
       },
     },
     {
-      files: ['**/*.config.mjs'],
+      files: ['**/*.js'],
       ...tsConfigs.disableTypeChecked,
       rules: {
         ...tsConfigs.disableTypeChecked.rules,
         '@typescript-eslint/explicit-function-return-type': 'off',
+      },
+    },
+    {
+      files: ['**/*.config.js'],
+      rules: {
         'import/no-default-export': 'off',
       },
     },

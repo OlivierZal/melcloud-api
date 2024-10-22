@@ -1,8 +1,8 @@
-import { AreaModel, type AreaModelAny } from '../models'
+import { AreaModel, type AreaModelAny } from '../models/index.js'
 
-import { BaseSuperDeviceFacade } from './base_super_device'
+import { BaseSuperDeviceFacade } from './base_super_device.js'
 
-import type { IBaseSuperDeviceFacade } from './interfaces'
+import type { IBaseSuperDeviceFacade } from './interfaces.js'
 
 export class AreaFacade
   extends BaseSuperDeviceFacade<AreaModelAny>

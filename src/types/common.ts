@@ -10,7 +10,7 @@ import type {
   UpdateDeviceDataAta,
   ValuesAta,
   Vertical,
-} from './ata'
+} from './ata.js'
 import type {
   EnergyDataAtw,
   GetDeviceDataAtw,
@@ -20,8 +20,8 @@ import type {
   SetDevicePostDataAtw,
   UpdateDeviceDataAtw,
   ValuesAtw,
-} from './atw'
-import type { DeviceType, FanSpeed } from './bases'
+} from './atw.js'
+import type { DeviceType, FanSpeed } from './bases.js'
 import type {
   GetDeviceDataErv,
   ListDeviceDataErv,
@@ -30,7 +30,7 @@ import type {
   SetDevicePostDataErv,
   UpdateDeviceDataErv,
   ValuesErv,
-} from './erv'
+} from './erv.js'
 
 export enum Language {
   bg = 1,

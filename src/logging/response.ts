@@ -1,4 +1,4 @@
-import { APICallContextData } from './context'
+import { APICallContextData } from './context.js'
 
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 

@@ -1,8 +1,7 @@
 import https from 'https'
 
-import {
+import axios, {
   HttpStatusCode,
-  create as createAxiosInstance,
   type AxiosError,
   type AxiosInstance,
   type AxiosResponse,
@@ -10,13 +9,18 @@ import {
 } from 'axios'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 
-import { syncDevices } from '../decorators'
+import { syncDevices } from '../decorators/index.js'
 import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-} from '../logging'
-import { AreaModel, BuildingModel, DeviceModel, FloorModel } from '../models'
+} from '../logging/index.js'
+import {
+  AreaModel,
+  BuildingModel,
+  DeviceModel,
+  FloorModel,
+} from '../models/index.js'
 import {
   Language,
   type Building,
@@ -47,7 +51,7 @@ import {
   type TilesPostData,
   type WifiData,
   type WifiPostData,
-} from '../types'
+} from '../types/index.js'
 
 import {
   isAPISetting,
@@ -55,7 +59,7 @@ import {
   type IAPI,
   type Logger,
   type SettingManager,
-} from './interfaces'
+} from './interfaces.js'
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin2'
@@ -381,7 +385,7 @@ export class API implements IAPI {
   }
 
   #createAPI(rejectUnauthorized: boolean): AxiosInstance {
-    const api = createAxiosInstance({
+    const api = axios.create({
       baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
       httpsAgent: new https.Agent({ rejectUnauthorized }),
     })

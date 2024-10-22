@@ -1,11 +1,15 @@
-import { DeviceType, type ListDevice, type ListDeviceAny } from '../types'
+import {
+  DeviceType,
+  type ListDevice,
+  type ListDeviceAny,
+} from '../types/index.js'
 
-import { BaseModel } from './base'
+import { BaseModel } from './base.js'
 
-import type { AreaModel, AreaModelAny } from './area'
-import type { BuildingModel } from './building'
-import type { FloorModel } from './floor'
-import type { IDeviceModel } from './interfaces'
+import type { AreaModel, AreaModelAny } from './area.js'
+import type { BuildingModel } from './building.js'
+import type { FloorModel } from './floor.js'
+import type { IDeviceModel } from './interfaces.js'
 
 export type DeviceModelAny =
   | DeviceModel<'Ata'>

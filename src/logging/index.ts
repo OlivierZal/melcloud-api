@@ -1,7 +1,7 @@
-export { APICallContextData } from './context'
+export { APICallContextData } from './context.js'
 export {
   createAPICallErrorData,
   type APICallContextDataWithErrorMessage,
-} from './error'
-export { APICallRequestData } from './request'
-export { APICallResponseData } from './response'
+} from './error.js'
+export { APICallRequestData } from './request.js'
+export { APICallResponseData } from './response.js'

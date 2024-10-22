@@ -8,7 +8,7 @@ import type {
   BaseValues,
   DeviceDataNotInList,
   DeviceType,
-} from './bases'
+} from './bases.js'
 
 export enum OperationModeState {
   cooling = 3,
