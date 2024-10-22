@@ -1,11 +1,11 @@
-import { BaseModel } from './base'
+import { BaseModel } from './base.js'
 
-import type { AreaData, AreaDataAny } from '../types'
+import type { AreaData, AreaDataAny } from '../types/index.js'
 
-import type { BuildingModel } from './building'
-import type { DeviceModel, DeviceModelAny } from './device'
-import type { FloorModel } from './floor'
-import type { IAreaModel } from './interfaces'
+import type { BuildingModel } from './building.js'
+import type { DeviceModel, DeviceModelAny } from './device.js'
+import type { FloorModel } from './floor.js'
+import type { IAreaModel } from './interfaces.js'
 
 export type AreaModelAny = AreaModel<null> | AreaModel<number>
 

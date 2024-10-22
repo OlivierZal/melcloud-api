@@ -7,10 +7,10 @@ import {
   type ListDevice,
   type SetDeviceData,
   type UpdateDeviceData,
-} from '../types'
+} from '../types/index.js'
 
-import type { BaseDeviceFacade } from '../facades'
-import type { DeviceModel } from '../models'
+import type { BaseDeviceFacade } from '../facades/index.js'
+import type { DeviceModel } from '../models/index.js'
 
 const convertToListDeviceData = <T extends keyof typeof DeviceType>(
   facade: BaseDeviceFacade<T>,

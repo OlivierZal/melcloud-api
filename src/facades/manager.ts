@@ -7,20 +7,20 @@ import {
   FloorModel,
   type AreaModelAny,
   type DeviceModelAny,
-} from '../models'
+} from '../models/index.js'
 
-import { AreaFacade } from './area'
-import { BuildingFacade } from './building'
-import { DeviceAtaFacade } from './device_ata'
-import { DeviceAtwFacade } from './device_atw'
-import { DeviceErvFacade } from './device_erv'
-import { FloorFacade } from './floor'
-import { DEFAULT_YEAR, now } from './utils'
+import { AreaFacade } from './area.js'
+import { BuildingFacade } from './building.js'
+import { DeviceAtaFacade } from './device_ata.js'
+import { DeviceAtwFacade } from './device_atw.js'
+import { DeviceErvFacade } from './device_erv.js'
+import { FloorFacade } from './floor.js'
+import { DEFAULT_YEAR, now } from './utils.js'
 
-import type { API } from '../services'
-import type { DeviceType, ErrorData } from '../types'
+import type { API } from '../services/index.js'
+import type { DeviceType, ErrorData } from '../types/index.js'
 
-import type { ErrorLog, ErrorLogQuery } from './interfaces'
+import type { ErrorLog, ErrorLogQuery } from './interfaces.js'
 
 export interface DeviceFacade {
   Ata: DeviceAtaFacade

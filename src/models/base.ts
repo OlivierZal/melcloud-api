@@ -1,4 +1,4 @@
-import type { IBaseModel } from './interfaces'
+import type { IBaseModel } from './interfaces.js'
 
 export abstract class BaseModel implements IBaseModel {
   public readonly id: number

@@ -1,17 +1,17 @@
-import type { BaseFacade } from '../facades'
+import type { BaseFacade } from '../facades/index.js'
 import type {
   AreaModelAny,
   BuildingModel,
   DeviceModelAny,
   FloorModel,
-} from '../models'
-import type { API } from '../services'
+} from '../models/index.js'
+import type { API } from '../services/index.js'
 import type {
   Building,
   FailureData,
   GroupAtaState,
   SuccessData,
-} from '../types'
+} from '../types/index.js'
 
 export const syncDevices = <
   T extends boolean | Building[] | FailureData | GroupAtaState | SuccessData,

@@ -1,16 +1,20 @@
-import { syncDevices, updateDevices } from '../decorators'
+import { syncDevices, updateDevices } from '../decorators/index.js'
 
-import { BaseFacade } from './base'
+import { BaseFacade } from './base.js'
 
-import type { AreaModelAny, BuildingModel, FloorModel } from '../models'
+import type {
+  AreaModelAny,
+  BuildingModel,
+  FloorModel,
+} from '../models/index.js'
 import type {
   FailureData,
   GroupAtaState,
   SetGroupAtaPostData,
   SuccessData,
-} from '../types'
+} from '../types/index.js'
 
-import type { IBaseSuperDeviceFacade } from './interfaces'
+import type { IBaseSuperDeviceFacade } from './interfaces.js'
 
 export abstract class BaseSuperDeviceFacade<
     T extends AreaModelAny | BuildingModel | FloorModel,

@@ -1,7 +1,7 @@
-import { alias } from '../decorators'
-import { flagsErv } from '../types'
+import { alias } from '../decorators/index.js'
+import { flagsErv } from '../types/index.js'
 
-import { BaseDeviceFacade } from './base_device'
+import { BaseDeviceFacade } from './base_device.js'
 
 export class DeviceErvFacade extends BaseDeviceFacade<'Erv'> {
   public readonly flags = flagsErv

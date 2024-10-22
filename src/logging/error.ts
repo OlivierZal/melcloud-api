@@ -1,5 +1,5 @@
-import { APICallRequestData } from './request'
-import { APICallResponseData } from './response'
+import { APICallRequestData } from './request.js'
+import { APICallResponseData } from './response.js'
 
 import type {
   AxiosError,
@@ -7,7 +7,7 @@ import type {
   InternalAxiosRequestConfig,
 } from 'axios'
 
-import type { APICallContextData } from './context'
+import type { APICallContextData } from './context.js'
 
 export interface APICallContextDataWithErrorMessage extends APICallContextData {
   readonly errorMessage: string

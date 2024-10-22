@@ -1,4 +1,4 @@
-export { API } from './api'
+export { API } from './api.js'
 export {
   isAPISetting,
   type APIConfig,
@@ -6,4 +6,4 @@ export {
   type IAPI,
   type Logger,
   type SettingManager,
-} from './interfaces'
+} from './interfaces.js'

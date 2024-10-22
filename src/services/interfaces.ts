@@ -25,7 +25,7 @@ import type {
   TilesPostData,
   WifiData,
   WifiPostData,
-} from '../types'
+} from '../types/index.js'
 
 export interface APISettings {
   contextKey?: string | null

@@ -1,5 +1,5 @@
-import { fetchDevices, updateDevice, valueSymbol } from '../decorators'
-import { DeviceModel, type DeviceModelAny } from '../models'
+import { fetchDevices, updateDevice, valueSymbol } from '../decorators/index.js'
+import { DeviceModel, type DeviceModelAny } from '../models/index.js'
 import {
   FLAG_UNCHANGED,
   fromListToSetAta,
@@ -12,14 +12,13 @@ import {
   type TilesData,
   type UpdateDeviceData,
   type Values,
-} from '../types'
+} from '../types/index.js'
 
-import { BaseFacade } from './base'
-import { DEFAULT_YEAR, now } from './utils'
+import { BaseFacade } from './base.js'
+import { DEFAULT_YEAR, now } from './utils.js'
 
-import type { IDeviceFacade } from './interfaces'
-
-import type { FacadeManager } from '.'
+import type { IDeviceFacade } from './interfaces.js'
+import type { FacadeManager } from './manager.js'
 
 export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>

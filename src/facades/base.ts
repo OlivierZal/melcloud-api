@@ -1,8 +1,8 @@
 import { DateTime } from 'luxon'
 
-import { syncDevices, updateDevices } from '../decorators'
+import { syncDevices, updateDevices } from '../decorators/index.js'
 
-import { now } from './utils'
+import { now } from './utils.js'
 
 import type {
   AreaModelAny,
@@ -10,8 +10,8 @@ import type {
   DeviceModel,
   DeviceModelAny,
   FloorModel,
-} from '../models'
-import type { API } from '../services'
+} from '../models/index.js'
+import type { API } from '../services/index.js'
 import type {
   DateTimeComponents,
   DeviceType,
@@ -25,11 +25,10 @@ import type {
   SuccessData,
   TilesData,
   WifiData,
-} from '../types'
+} from '../types/index.js'
 
-import type { ErrorLog, ErrorLogQuery, IBaseFacade } from './interfaces'
-
-import type { FacadeManager } from '.'
+import type { ErrorLog, ErrorLogQuery, IBaseFacade } from './interfaces.js'
+import type { FacadeManager } from './manager.js'
 
 const temperatureRange = { max: 16, min: 4 } as const
 const TEMPERATURE_GAP = 2

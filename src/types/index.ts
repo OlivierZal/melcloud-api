@@ -15,7 +15,7 @@ export {
   type SetDevicePostDataAta,
   type UpdateDeviceDataAta,
   type ValuesAta,
-} from './ata'
+} from './ata.js'
 export {
   OperationModeState,
   OperationModeZone,
@@ -31,7 +31,7 @@ export {
   type UpdateDeviceDataAtw,
   type ValuesAtw,
   type ZoneAtw,
-} from './atw'
+} from './atw.js'
 export {
   DeviceType,
   FLAG_UNCHANGED,
@@ -44,7 +44,7 @@ export {
   type BaseUpdateDeviceData,
   type BaseValues,
   type DeviceDataNotInList,
-} from './bases'
+} from './bases.js'
 export {
   Language,
   type AreaData,
@@ -90,7 +90,7 @@ export {
   type WifiData,
   type WifiPostData,
   type ZoneSettings,
-} from './common'
+} from './common.js'
 export {
   VentilationMode,
   flagsErv,
@@ -101,4 +101,4 @@ export {
   type SetDevicePostDataErv,
   type UpdateDeviceDataErv,
   type ValuesErv,
-} from './erv'
+} from './erv.js'

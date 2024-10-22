@@ -1,6 +1,6 @@
-import type { BaseFacade } from '../facades'
-import type { BuildingModel, DeviceModelAny } from '../models'
-import type { DeviceType, ListDevice, ZoneSettings } from '../types'
+import type { BaseFacade } from '../facades/index.js'
+import type { BuildingModel, DeviceModelAny } from '../models/index.js'
+import type { DeviceType, ListDevice, ZoneSettings } from '../types/index.js'
 
 export const fetchDevices = <
   T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,

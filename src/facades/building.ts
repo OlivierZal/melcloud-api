@@ -1,13 +1,12 @@
-import { fetchDevices } from '../decorators'
-import { BuildingModel } from '../models'
+import { fetchDevices } from '../decorators/index.js'
+import { BuildingModel } from '../models/index.js'
 
-import { BaseSuperDeviceFacade } from './base_super_device'
+import { BaseSuperDeviceFacade } from './base_super_device.js'
 
-import type { ZoneSettings } from '../types'
+import type { ZoneSettings } from '../types/index.js'
 
-import type { IBuildingFacade } from './interfaces'
-
-import type { FacadeManager } from '.'
+import type { IBuildingFacade } from './interfaces.js'
+import type { FacadeManager } from './manager.js'
 
 export class BuildingFacade
   extends BaseSuperDeviceFacade<BuildingModel>

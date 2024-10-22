@@ -1,11 +1,11 @@
-import 'source-map-support/register'
+import 'source-map-support/register.js'
 
 export {
   fetchDevices,
   syncDevices,
   updateDevice,
   updateDevices,
-} from './decorators'
+} from './decorators/index.js'
 export {
   AreaFacade,
   BaseDeviceFacade,
@@ -28,14 +28,14 @@ export {
   type IBaseSuperDeviceFacade,
   type IBuildingFacade,
   type IDeviceFacade,
-} from './facades'
+} from './facades/index.js'
 export {
   APICallContextData,
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
   type APICallContextDataWithErrorMessage,
-} from './logging'
+} from './logging/index.js'
 export {
   AreaModel,
   BaseModel,
@@ -53,7 +53,7 @@ export {
   type IBuildingModel,
   type IDeviceModel,
   type IFloorModel,
-} from './models'
+} from './models/index.js'
 export {
   API as MELCloudAPI,
   isAPISetting,
@@ -62,7 +62,7 @@ export {
   type IAPI,
   type Logger,
   type SettingManager,
-} from './services'
+} from './services/index.js'
 export {
   DeviceType,
   FLAG_UNCHANGED,
@@ -158,4 +158,4 @@ export {
   type WifiPostData,
   type ZoneAtw,
   type ZoneSettings,
-} from './types'
+} from './types/index.js'
