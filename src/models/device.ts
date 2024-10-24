@@ -20,13 +20,13 @@ export class DeviceModel<T extends keyof typeof DeviceType>
   extends BaseModel
   implements IDeviceModel<T>
 {
-  static readonly #instances = new Map<number, DeviceModelAny>()
-
   static #areaModel: typeof AreaModel
 
   static #buildingModel: typeof BuildingModel
 
   static #floorModel: typeof FloorModel
+
+  static #instances = new Map<number, DeviceModelAny>()
 
   public readonly areaId: number | null = null
 
@@ -119,14 +119,13 @@ export class DeviceModel<T extends keyof typeof DeviceType>
     this.#floorModel = model
   }
 
-  public static upsert(device: ListDeviceAny): void {
-    this.#instances.set(device.DeviceID, new this(device) as DeviceModelAny)
-  }
-
-  public static upsertMany(devices: readonly ListDeviceAny[]): void {
-    devices.forEach((device) => {
-      this.upsert(device)
-    })
+  public static sync(devices: readonly ListDeviceAny[]): void {
+    this.#instances = new Map(
+      devices.map((device) => [
+        device.DeviceID,
+        new this(device) as DeviceModelAny,
+      ]),
+    )
   }
 
   public update(data: Partial<ListDevice[T]['Device']>): void {

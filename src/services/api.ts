@@ -170,22 +170,34 @@ export class API implements IAPI {
     this.clearSync()
     try {
       const { data } = await this.#fetch()
-      data.forEach((building) => {
-        BuildingModel.upsert(building)
-        building.Structure.Floors.forEach((floor) => {
-          FloorModel.upsert(floor)
-          floor.Areas.forEach((area) => {
-            AreaModel.upsert(area)
-            DeviceModel.upsertMany(area.Devices)
-          })
-          DeviceModel.upsertMany(floor.Devices)
-        })
-        building.Structure.Areas.forEach((area) => {
-          AreaModel.upsert(area)
-          DeviceModel.upsertMany(area.Devices)
-        })
-        DeviceModel.upsertMany(building.Structure.Devices)
-      })
+      BuildingModel.sync(data)
+      FloorModel.sync(
+        data.flatMap(({ Structure: { Floors: floors } }) => floors),
+      )
+      AreaModel.sync(
+        data.flatMap(({ Structure: { Areas: areas, Floors: floors } }) => [
+          ...areas,
+          ...floors.flatMap(({ Areas: floorAreas }) => floorAreas),
+        ]),
+      )
+      DeviceModel.sync(
+        data.flatMap(
+          ({
+            Structure: { Areas: areas, Devices: devices, Floors: floors },
+          }) => [
+            ...devices,
+            ...areas.flatMap(({ Devices: areaDevices }) => areaDevices),
+            ...floors.flatMap(
+              ({ Areas: floorAreas, Devices: floorDevices }) => [
+                ...floorDevices,
+                ...floorAreas.flatMap(
+                  ({ Devices: floorAreaDevices }) => floorAreaDevices,
+                ),
+              ],
+            ),
+          ],
+        ),
+      )
       return data
     } catch (_error) {
       return []

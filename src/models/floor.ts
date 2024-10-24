@@ -8,13 +8,13 @@ import type { DeviceModel, DeviceModelAny } from './device.js'
 import type { IFloorModel } from './interfaces.js'
 
 export class FloorModel extends BaseModel implements IFloorModel {
-  static readonly #instances = new Map<number, FloorModel>()
-
   static #areaModel: typeof AreaModel
 
   static #buildingModel: typeof BuildingModel
 
   static #deviceModel: typeof DeviceModel
+
+  static #instances = new Map<number, FloorModel>()
 
   public readonly buildingId: number
 
@@ -75,7 +75,9 @@ export class FloorModel extends BaseModel implements IFloorModel {
     this.#deviceModel = model
   }
 
-  public static upsert(floor: FloorData): void {
-    this.#instances.set(floor.ID, new this(floor))
+  public static sync(floors: FloorData[]): void {
+    this.#instances = new Map(
+      floors.map((floor) => [floor.ID, new this(floor)]),
+    )
   }
 }

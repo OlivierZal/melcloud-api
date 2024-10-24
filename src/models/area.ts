@@ -13,13 +13,13 @@ export class AreaModel<T extends number | null>
   extends BaseModel
   implements IAreaModel
 {
-  static readonly #instances = new Map<number, AreaModelAny>()
-
   static #buildingModel: typeof BuildingModel
 
   static #deviceModel: typeof DeviceModel
 
   static #floorModel: typeof FloorModel
+
+  static #instances = new Map<number, AreaModelAny>()
 
   public readonly buildingId: number
 
@@ -86,7 +86,7 @@ export class AreaModel<T extends number | null>
     this.#floorModel = model
   }
 
-  public static upsert(area: AreaDataAny): void {
-    this.#instances.set(area.ID, new this(area))
+  public static sync(areas: AreaDataAny[]): void {
+    this.#instances = new Map(areas.map((area) => [area.ID, new this(area)]))
   }
 }
