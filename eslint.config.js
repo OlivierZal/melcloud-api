@@ -413,7 +413,7 @@ const config = [
       },
     },
     {
-      files: ['**/*.config.js'],
+      files: ['**/*.config.{ts,js}'],
       rules: {
         'import/no-default-export': 'off',
         'import/prefer-default-export': [
