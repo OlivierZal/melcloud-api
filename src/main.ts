@@ -21,7 +21,6 @@ export {
   DeviceModel,
   FloorModel,
   type AreaModelAny,
-  type BaseModel,
   type DeviceModelAny,
 } from './models/index.js'
 export { API as MELCloudAPI } from './services/api.js'
@@ -72,6 +71,7 @@ export type {
   AreaData,
   AreaDataAny,
   BaseDevicePostData,
+  BaseGetDeviceData,
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,

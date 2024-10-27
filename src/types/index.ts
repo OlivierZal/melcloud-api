@@ -35,6 +35,7 @@ export type {
 } from './atw.js'
 export type {
   BaseDevicePostData,
+  BaseGetDeviceData,
   BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
