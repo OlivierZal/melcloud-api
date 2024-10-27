@@ -1,15 +1,11 @@
 import type {
   EnergyDataAta,
   GetDeviceDataAta,
-  Horizontal,
   ListDeviceAta,
   ListDeviceDataAta,
-  OperationMode,
   SetDeviceDataAta,
   SetDevicePostDataAta,
   UpdateDeviceDataAta,
-  ValuesAta,
-  Vertical,
 } from './ata.js'
 import type {
   EnergyDataAtw,
@@ -19,9 +15,14 @@ import type {
   SetDeviceDataAtw,
   SetDevicePostDataAtw,
   UpdateDeviceDataAtw,
-  ValuesAtw,
 } from './atw.js'
-import type { DeviceType, FanSpeed } from './bases.js'
+import type {
+  DeviceType,
+  FanSpeed,
+  Horizontal,
+  OperationMode,
+  Vertical,
+} from './enums.js'
 import type {
   GetDeviceDataErv,
   ListDeviceDataErv,
@@ -29,38 +30,7 @@ import type {
   SetDeviceDataErv,
   SetDevicePostDataErv,
   UpdateDeviceDataErv,
-  ValuesErv,
 } from './erv.js'
-
-export enum Language {
-  bg = 1,
-  cs = 2,
-  da = 3,
-  de = 4,
-  el = 22,
-  en = 0,
-  es = 6,
-  et = 5,
-  fi = 17,
-  fr = 7,
-  hr = 23,
-  hu = 11,
-  hy = 8,
-  it = 19,
-  lt = 10,
-  lv = 9,
-  nl = 12,
-  no = 13,
-  pl = 14,
-  pt = 15,
-  ro = 24,
-  ru = 16,
-  sl = 25,
-  sq = 26,
-  sv = 18,
-  tr = 21,
-  uk = 20,
-}
 
 export interface LoginCredentials {
   readonly password: string
@@ -321,10 +291,4 @@ export interface WifiData {
   readonly FromDate: string
   readonly Labels: readonly string[]
   readonly ToDate: string
-}
-
-export interface Values {
-  readonly Ata: ValuesAta
-  readonly Atw: ValuesAtw
-  readonly Erv: ValuesErv
 }

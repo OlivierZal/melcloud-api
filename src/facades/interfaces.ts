@@ -3,19 +3,60 @@ import type {
   DeviceType,
   EnergyData,
   FailureData,
+  FanSpeed,
   FrostProtectionData,
   GetDeviceData,
   GroupAtaState,
   HolidayModeData,
+  Horizontal,
   ListDevice,
+  OperationMode,
+  OperationModeZone,
   SetDeviceData,
   SuccessData,
   TilesData,
   UpdateDeviceData,
-  Values,
+  VentilationMode,
+  Vertical,
   WifiData,
   ZoneSettings,
 } from '../types/index.js'
+
+export interface BaseValues {
+  readonly power?: boolean
+}
+
+export interface ValuesAta extends BaseValues {
+  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly horizontal?: Horizontal
+  readonly mode?: OperationMode
+  readonly temperature?: number
+  readonly vertical?: Vertical
+}
+
+export interface ValuesAtw extends BaseValues {
+  readonly coolFlowTemperature?: number
+  readonly coolFlowTemperatureZone2?: number
+  readonly forcedHotWater?: boolean
+  readonly heatFlowTemperature?: number
+  readonly heatFlowTemperatureZone2?: number
+  readonly hotWaterTemperature?: number
+  readonly mode?: OperationModeZone
+  readonly modeZone2?: OperationModeZone
+  readonly temperature?: number
+  readonly temperatureZone2?: number
+}
+
+export interface ValuesErv extends BaseValues {
+  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly mode?: VentilationMode
+}
+
+export interface Values {
+  readonly Ata: ValuesAta
+  readonly Atw: ValuesAtw
+  readonly Erv: ValuesErv
+}
 
 export interface ErrorLogQuery {
   readonly from?: string

@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "13.1.0",
+  "version": "13.2.0",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",
@@ -17,7 +17,7 @@
   "license": "ISC",
   "author": "Olivier Zalmanski",
   "type": "module",
-  "exports": "./dist/index.js",
+  "exports": "./dist/main.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
@@ -44,7 +44,7 @@
     "@eslint/markdown": "^6.2.1",
     "@stylistic/eslint-plugin": "^2.9.0",
     "@types/luxon": "^3.4.2",
-    "@types/node": "^22.7.9",
+    "@types/node": "^22.8.1",
     "eslint": "^9.13.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.3",

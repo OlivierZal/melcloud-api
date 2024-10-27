@@ -1,4 +1,4 @@
-import { fetchDevices } from '../decorators/index.js'
+import { fetchDevices } from '../decorators/fetchDevices.js'
 import { BuildingModel } from '../models/index.js'
 
 import { BaseSuperDeviceFacade } from './base_super_device.js'

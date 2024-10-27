@@ -1,20 +1,5 @@
-export const FLAG_UNCHANGED = 0x0
-
-export enum DeviceType {
-  Ata = 0,
-  Atw = 1,
-  Erv = 3,
-}
-
-export enum FanSpeed {
-  auto = 0,
-  fast = 4,
-  moderate = 3,
-  silent = 255,
-  slow = 2,
-  very_fast = 5,
-  very_slow = 1,
-}
+import type { DeviceType } from './enums.js'
+import type { FLAG_UNCHANGED } from './flags.js'
 
 export interface BaseUpdateDeviceData {
   readonly Power?: boolean
@@ -53,8 +38,4 @@ export interface BaseListDevice {
   readonly DeviceName: string
   readonly FloorID: number | null
   readonly Type: DeviceType
-}
-
-export interface BaseValues {
-  readonly power?: boolean
 }

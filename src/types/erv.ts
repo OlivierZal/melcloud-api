@@ -5,17 +5,9 @@ import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
-  BaseValues,
   DeviceDataNotInList,
-  DeviceType,
-  FanSpeed,
 } from './bases.js'
-
-export enum VentilationMode {
-  auto = 2,
-  bypass = 1,
-  recovery = 0,
-}
+import type { DeviceType, FanSpeed, VentilationMode } from './enums.js'
 
 export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
   readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
@@ -47,14 +39,3 @@ export interface ListDeviceDataErv
 export interface ListDeviceErv extends BaseListDevice {
   readonly Device: ListDeviceDataErv
 }
-
-export interface ValuesErv extends BaseValues {
-  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly mode?: VentilationMode
-}
-
-export const flagsErv: Record<keyof UpdateDeviceDataErv, number> = {
-  Power: 0x1,
-  SetFanSpeed: 0x8,
-  VentilationMode: 0x4,
-} as const

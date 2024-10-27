@@ -1,4 +1,4 @@
-import type { BaseFacade } from '../facades/index.js'
+import type { BaseFacade } from '../facades/base.js'
 import type {
   AreaModelAny,
   BuildingModel,

@@ -1,4 +1,4 @@
-import { alias } from '../decorators/index.js'
+import { alias } from '../decorators/alias.js'
 import {
   OperationMode,
   flagsAta,

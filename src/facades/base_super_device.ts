@@ -1,4 +1,5 @@
-import { syncDevices, updateDevices } from '../decorators/index.js'
+import { syncDevices } from '../decorators/syncDevices.js'
+import { updateDevices } from '../decorators/updateDevices.js'
 
 import { BaseFacade } from './base.js'
 

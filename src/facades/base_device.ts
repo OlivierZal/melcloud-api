@@ -1,8 +1,9 @@
-import { fetchDevices, updateDevice, valueSymbol } from '../decorators/index.js'
+import { valueSymbol } from '../decorators/alias.js'
+import { fetchDevices } from '../decorators/fetchDevices.js'
+import { updateDevice } from '../decorators/updateDevice.js'
 import { DeviceModel, type DeviceModelAny } from '../models/index.js'
 import {
   FLAG_UNCHANGED,
-  fromListToSetAta,
   type DeviceType,
   type EnergyData,
   type GetDeviceData,
@@ -11,13 +12,12 @@ import {
   type SetDeviceDataAtaInList,
   type TilesData,
   type UpdateDeviceData,
-  type Values,
 } from '../types/index.js'
 
 import { BaseFacade } from './base.js'
-import { DEFAULT_YEAR, now } from './utils.js'
+import { DEFAULT_YEAR, fromListToSetAta, now } from './utils.js'
 
-import type { IDeviceFacade } from './interfaces.js'
+import type { IDeviceFacade, Values } from './interfaces.js'
 import type { FacadeManager } from './manager.js'
 
 export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>

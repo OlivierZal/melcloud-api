@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 
-import { syncDevices, updateDevices } from '../decorators/index.js'
+import { syncDevices } from '../decorators/syncDevices.js'
+import { updateDevices } from '../decorators/updateDevices.js'
 
 import { now } from './utils.js'
 
@@ -11,7 +12,7 @@ import type {
   DeviceModelAny,
   FloorModel,
 } from '../models/index.js'
-import type { API } from '../services/index.js'
+import type { API } from '../services/api.js'
 import type {
   DateTimeComponents,
   DeviceType,

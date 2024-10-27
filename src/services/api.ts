@@ -9,12 +9,10 @@ import axios, {
 } from 'axios'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 
-import { syncDevices } from '../decorators/index.js'
-import {
-  APICallRequestData,
-  APICallResponseData,
-  createAPICallErrorData,
-} from '../logging/index.js'
+import { syncDevices } from '../decorators/syncDevices.js'
+import { createAPICallErrorData } from '../logging/error.js'
+import { APICallRequestData } from '../logging/request.js'
+import { APICallResponseData } from '../logging/response.js'
 import {
   AreaModel,
   BuildingModel,

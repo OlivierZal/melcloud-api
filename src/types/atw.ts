@@ -5,27 +5,13 @@ import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
-  BaseValues,
   DeviceDataNotInList,
-  DeviceType,
 } from './bases.js'
-
-export enum OperationModeState {
-  cooling = 3,
-  defrost = 5,
-  dhw = 1,
-  heating = 2,
-  idle = 0,
-  legionella = 6,
-}
-
-export enum OperationModeZone {
-  curve = 2,
-  flow = 1,
-  flow_cool = 4,
-  room = 0,
-  room_cool = 3,
-}
+import type {
+  DeviceType,
+  OperationModeState,
+  OperationModeZone,
+} from './enums.js'
 
 export type ZoneAtw = 'Zone1' | 'Zone2'
 
@@ -115,30 +101,3 @@ export interface EnergyDataAtw {
   readonly TotalHotWaterConsumed: number
   readonly TotalHotWaterProduced: number
 }
-
-export interface ValuesAtw extends BaseValues {
-  readonly coolFlowTemperature?: number
-  readonly coolFlowTemperatureZone2?: number
-  readonly forcedHotWater?: boolean
-  readonly heatFlowTemperature?: number
-  readonly heatFlowTemperatureZone2?: number
-  readonly hotWaterTemperature?: number
-  readonly mode?: OperationModeZone
-  readonly modeZone2?: OperationModeZone
-  readonly temperature?: number
-  readonly temperatureZone2?: number
-}
-
-export const flagsAtw: Record<keyof UpdateDeviceDataAtw, number> = {
-  ForcedHotWaterMode: 0x10000,
-  OperationModeZone1: 0x8,
-  OperationModeZone2: 0x10,
-  Power: 0x1,
-  SetCoolFlowTemperatureZone1: 0x1000000000000,
-  SetCoolFlowTemperatureZone2: 0x1000000000000,
-  SetHeatFlowTemperatureZone1: 0x1000000000000,
-  SetHeatFlowTemperatureZone2: 0x1000000000000,
-  SetTankWaterTemperature: 0x1000000000020,
-  SetTemperatureZone1: 0x200000080,
-  SetTemperatureZone2: 0x800000200,
-} as const

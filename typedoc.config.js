@@ -1,6 +1,6 @@
 const config = {
   cleanOutputDir: false,
-  entryPoints: ['src/index.ts'],
+  entryPoints: ['src/main.ts'],
   enumMembersFormat: 'table',
   excludePrivate: true,
   expandObjects: true,

@@ -1,6 +1,6 @@
+import { fromSetToListAta } from '../facades/utils.js'
 import {
   FLAG_UNCHANGED,
-  fromSetToListAta,
   type DeviceType,
   type GetDeviceData,
   type KeysOfSetDeviceDataAtaNotInList,
@@ -9,7 +9,7 @@ import {
   type UpdateDeviceData,
 } from '../types/index.js'
 
-import type { BaseDeviceFacade } from '../facades/index.js'
+import type { BaseDeviceFacade } from '../facades/base_device.js'
 import type { DeviceModel } from '../models/index.js'
 
 const convertToListDeviceData = <T extends keyof typeof DeviceType>(

@@ -1,4 +1,4 @@
-import { alias } from '../decorators/index.js'
+import { alias } from '../decorators/alias.js'
 import { flagsErv } from '../types/index.js'
 
 import { BaseDeviceFacade } from './base_device.js'

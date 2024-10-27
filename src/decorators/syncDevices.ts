@@ -1,11 +1,11 @@
-import type { BaseFacade } from '../facades/index.js'
+import type { BaseFacade } from '../facades/base.js'
 import type {
   AreaModelAny,
   BuildingModel,
   DeviceModelAny,
   FloorModel,
 } from '../models/index.js'
-import type { API } from '../services/index.js'
+import type { API } from '../services/api.js'
 import type {
   Building,
   FailureData,

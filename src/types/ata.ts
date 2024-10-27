@@ -5,40 +5,15 @@ import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
-  BaseValues,
   DeviceDataNotInList,
+} from './bases.js'
+import type {
   DeviceType,
   FanSpeed,
-} from './bases.js'
-
-export enum OperationMode {
-  auto = 8,
-  cool = 3,
-  dry = 2,
-  fan = 7,
-  heat = 1,
-}
-
-export enum Vertical {
-  auto = 0,
-  downwards = 5,
-  mid_high = 2,
-  mid_low = 4,
-  middle = 3,
-  swing = 7,
-  upwards = 1,
-}
-
-export enum Horizontal {
-  auto = 0,
-  center = 3,
-  center_left = 2,
-  center_right = 4,
-  leftwards = 1,
-  rightwards = 5,
-  swing = 12,
-  wide = 8,
-}
+  Horizontal,
+  OperationMode,
+  Vertical,
+} from './enums.js'
 
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly OperationMode?: OperationMode
@@ -105,36 +80,3 @@ export interface EnergyDataAta {
   readonly TotalOtherConsumed: number
   readonly UsageDisclaimerPercentages: string
 }
-
-export interface ValuesAta extends BaseValues {
-  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly horizontal?: Horizontal
-  readonly mode?: OperationMode
-  readonly temperature?: number
-  readonly vertical?: Vertical
-}
-
-export const flagsAta: Record<keyof UpdateDeviceDataAta, number> = {
-  OperationMode: 0x2,
-  Power: 0x1,
-  SetFanSpeed: 0x8,
-  SetTemperature: 0x4,
-  VaneHorizontal: 0x100,
-  VaneVertical: 0x10,
-} as const
-
-export const fromSetToListAta: Record<
-  KeysOfSetDeviceDataAtaNotInList,
-  keyof SetDeviceDataAtaInList
-> = {
-  SetFanSpeed: 'FanSpeed',
-  VaneHorizontal: 'VaneHorizontalDirection',
-  VaneVertical: 'VaneVerticalDirection',
-} as const
-
-export const fromListToSetAta: Record<
-  keyof SetDeviceDataAtaInList,
-  KeysOfSetDeviceDataAtaNotInList
-> = Object.fromEntries(
-  Object.entries(fromSetToListAta).map(([key, value]) => [value, key]),
-) as Record<keyof SetDeviceDataAtaInList, KeysOfSetDeviceDataAtaNotInList>

@@ -17,7 +17,7 @@ import { DeviceErvFacade } from './device_erv.js'
 import { FloorFacade } from './floor.js'
 import { DEFAULT_YEAR, now } from './utils.js'
 
-import type { API } from '../services/index.js'
+import type { API } from '../services/api.js'
 import type { DeviceType, ErrorData } from '../types/index.js'
 
 import type { ErrorLog, ErrorLogQuery } from './interfaces.js'
