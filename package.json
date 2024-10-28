@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "13.2.0",
+  "version": "13.2.1",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",
@@ -18,7 +18,7 @@
   "author": "Olivier Zalmanski",
   "type": "module",
   "exports": "./dist/main.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/main.d.ts",
   "files": [
     "dist",
     "src"
@@ -57,6 +57,6 @@
     "typedoc": "^0.26.10",
     "typedoc-plugin-markdown": "^4.2.9",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.11.0"
+    "typescript-eslint": "^8.12.0"
   }
 }
