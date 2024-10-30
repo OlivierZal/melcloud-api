@@ -1,9 +1,18 @@
 import type { DeviceType, ListDevice, ZoneSettings } from '../types/index.js'
 
-import type { AreaModel, AreaModelAny } from './area.js'
+import type { AreaModel } from './area.js'
 import type { BuildingModel } from './building.js'
-import type { DeviceModelAny } from './device.js'
+import type { DeviceModel } from './device.js'
 import type { FloorModel } from './floor.js'
+
+export type AreaModelAny = AreaModel<null> | AreaModel<number>
+
+export type DeviceModelAny =
+  | DeviceModel<'Ata'>
+  | DeviceModel<'Atw'>
+  | DeviceModel<'Erv'>
+
+export type Model = AreaModelAny | BuildingModel | DeviceModelAny | FloorModel
 
 export interface IBaseModel {
   id: number

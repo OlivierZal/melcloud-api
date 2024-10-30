@@ -5,13 +5,8 @@ import { updateDevices } from '../decorators/updateDevices.js'
 
 import { now } from './utils.js'
 
-import type {
-  AreaModelAny,
-  BuildingModel,
-  DeviceModel,
-  DeviceModelAny,
-  FloorModel,
-} from '../models/index.js'
+import type { BuildingModel, DeviceModel, FloorModel } from '../models/index.js'
+import type { AreaModelAny, DeviceModelAny } from '../models/interfaces.js'
 import type { API } from '../services/api.js'
 import type {
   DateTimeComponents,
@@ -127,7 +122,7 @@ export abstract class BaseFacade<
     if (this.isFrostProtectionDefined === null) {
       try {
         return await this.#getZoneFrostProtection()
-      } catch (_error) {
+      } catch {
         return this.#getDevicesFrostProtection()
       }
     }
@@ -140,7 +135,7 @@ export abstract class BaseFacade<
     if (this.isHolidayModeDefined === null) {
       try {
         return await this.#getZoneHolidayMode()
-      } catch (_error) {
+      } catch {
         return this.#getDevicesHolidayMode()
       }
     }

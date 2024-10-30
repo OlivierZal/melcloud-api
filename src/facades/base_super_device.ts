@@ -3,11 +3,8 @@ import { updateDevices } from '../decorators/updateDevices.js'
 
 import { BaseFacade } from './base.js'
 
-import type {
-  AreaModelAny,
-  BuildingModel,
-  FloorModel,
-} from '../models/index.js'
+import type { BuildingModel, FloorModel } from '../models/index.js'
+import type { AreaModelAny } from '../models/interfaces.js'
 import type {
   FailureData,
   GroupAtaState,
@@ -31,7 +28,7 @@ export abstract class BaseSuperDeviceFacade<
       return (
         await this.api.getAta({ postData: { [this.specification]: this.id } })
       ).data.Data.Group.State
-    } catch (_error) {
+    } catch {
       throw new Error('No air-to-air device found')
     }
   }
@@ -50,7 +47,7 @@ export abstract class BaseSuperDeviceFacade<
           },
         })
       ).data
-    } catch (_error) {
+    } catch {
       throw new Error('No air-to-air device found')
     }
   }

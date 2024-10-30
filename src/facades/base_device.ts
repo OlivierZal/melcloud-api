@@ -1,7 +1,7 @@
 import { valueSymbol } from '../decorators/alias.js'
 import { fetchDevices } from '../decorators/fetchDevices.js'
 import { updateDevice } from '../decorators/updateDevice.js'
-import { DeviceModel, type DeviceModelAny } from '../models/index.js'
+import { DeviceModel } from '../models/index.js'
 import {
   FLAG_UNCHANGED,
   type DeviceType,
@@ -16,6 +16,8 @@ import {
 
 import { BaseFacade } from './base.js'
 import { DEFAULT_YEAR, fromListToSetAta, now } from './utils.js'
+
+import type { DeviceModelAny } from '../models/interfaces.js'
 
 import type { IDeviceFacade, Values } from './interfaces.js'
 import type { FacadeManager } from './manager.js'

@@ -1,9 +1,6 @@
 import type { BaseFacade } from '../facades/base.js'
-import type {
-  AreaModelAny,
-  BuildingModel,
-  FloorModel,
-} from '../models/index.js'
+import type { BuildingModel, FloorModel } from '../models/index.js'
+import type { AreaModelAny } from '../models/interfaces.js'
 import type {
   DeviceType,
   FailureData,

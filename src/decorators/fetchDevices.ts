@@ -1,5 +1,6 @@
 import type { BaseFacade } from '../facades/base.js'
-import type { BuildingModel, DeviceModelAny } from '../models/index.js'
+import type { BuildingModel } from '../models/index.js'
+import type { DeviceModelAny } from '../models/interfaces.js'
 import type { DeviceType, ListDevice, ZoneSettings } from '../types/index.js'
 
 export const fetchDevices = <

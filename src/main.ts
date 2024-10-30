@@ -10,18 +10,12 @@ export { DeviceAtaFacade } from './facades/device_ata.js'
 export { DeviceAtwFacade } from './facades/device_atw.js'
 export { DeviceErvFacade } from './facades/device_erv.js'
 export { FloorFacade } from './facades/floor.js'
-export {
-  FacadeManager,
-  type DeviceFacade,
-  type DeviceFacadeAny,
-} from './facades/manager.js'
+export { FacadeManager } from './facades/manager.js'
 export {
   AreaModel,
   BuildingModel,
   DeviceModel,
   FloorModel,
-  type AreaModelAny,
-  type DeviceModelAny,
 } from './models/index.js'
 export { API as MELCloudAPI } from './services/api.js'
 export {
@@ -37,9 +31,12 @@ export {
 } from './types/index.js'
 export type {
   BaseValues,
+  DeviceFacade,
+  DeviceFacadeAny,
   ErrorDetails,
   ErrorLog,
   ErrorLogQuery,
+  Facade,
   IBaseFacade,
   IBaseSuperDeviceFacade,
   IBuildingFacade,
@@ -50,6 +47,8 @@ export type {
   ValuesErv,
 } from './facades/interfaces.js'
 export type {
+  AreaModelAny,
+  DeviceModelAny,
   IAreaModel,
   IBaseModel,
   IBaseSubBuildingModel,
@@ -59,6 +58,7 @@ export type {
   IBuildingModel,
   IDeviceModel,
   IFloorModel,
+  Model,
 } from './models/interfaces.js'
 export type {
   APIConfig,

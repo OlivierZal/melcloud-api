@@ -197,7 +197,7 @@ export class API implements IAPI {
         ),
       )
       return data
-    } catch (_error) {
+    } catch {
       return []
     } finally {
       this.#planNextSync()
@@ -427,6 +427,7 @@ export class API implements IAPI {
           }
         }
         break
+      case undefined:
       default:
     }
     throw new Error(errorData.errorMessage)

@@ -22,6 +22,13 @@ import type {
   ZoneSettings,
 } from '../types/index.js'
 
+import type { AreaFacade } from './area.js'
+import type { BuildingFacade } from './building.js'
+import type { DeviceAtaFacade } from './device_ata.js'
+import type { DeviceAtwFacade } from './device_atw.js'
+import type { DeviceErvFacade } from './device_erv.js'
+import type { FloorFacade } from './floor.js'
+
 export interface BaseValues {
   readonly power?: boolean
 }
@@ -77,6 +84,18 @@ export interface ErrorLog {
   readonly nextFromDate: string
   readonly nextToDate: string
 }
+
+export interface DeviceFacade {
+  Ata: DeviceAtaFacade
+  Atw: DeviceAtwFacade
+  Erv: DeviceErvFacade
+}
+export type DeviceFacadeAny =
+  | DeviceAtaFacade
+  | DeviceAtwFacade
+  | DeviceErvFacade
+
+export type Facade = AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
 
 export interface IBaseFacade {
   getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>

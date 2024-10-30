@@ -3,11 +3,9 @@ import { BaseModel } from './base.js'
 import type { AreaData, AreaDataAny } from '../types/index.js'
 
 import type { BuildingModel } from './building.js'
-import type { DeviceModel, DeviceModelAny } from './device.js'
+import type { DeviceModel } from './device.js'
 import type { FloorModel } from './floor.js'
-import type { IAreaModel } from './interfaces.js'
-
-export type AreaModelAny = AreaModel<null> | AreaModel<number>
+import type { AreaModelAny, DeviceModelAny, IAreaModel } from './interfaces.js'
 
 export class AreaModel<T extends number | null>
   extends BaseModel

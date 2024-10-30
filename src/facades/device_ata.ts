@@ -56,6 +56,7 @@ export class DeviceAtaFacade extends BaseDeviceFacade<'Ata'> {
       case OperationMode.cool:
       case OperationMode.dry:
         return { max: this.data.MaxTempCoolDry, min: this.data.MinTempCoolDry }
+      case OperationMode.fan:
       case OperationMode.heat:
       default:
         return { max: this.data.MaxTempHeat, min: this.data.MinTempHeat }

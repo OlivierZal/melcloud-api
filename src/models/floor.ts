@@ -4,8 +4,8 @@ import type { FloorData } from '../types/index.js'
 
 import type { AreaModel } from './area.js'
 import type { BuildingModel } from './building.js'
-import type { DeviceModel, DeviceModelAny } from './device.js'
-import type { IFloorModel } from './interfaces.js'
+import type { DeviceModel } from './device.js'
+import type { DeviceModelAny, IFloorModel } from './interfaces.js'
 
 export class FloorModel extends BaseModel implements IFloorModel {
   static #areaModel: typeof AreaModel

@@ -6,15 +6,14 @@ import {
 
 import { BaseModel } from './base.js'
 
-import type { AreaModel, AreaModelAny } from './area.js'
+import type { AreaModel } from './area.js'
 import type { BuildingModel } from './building.js'
 import type { FloorModel } from './floor.js'
-import type { IDeviceModel } from './interfaces.js'
-
-export type DeviceModelAny =
-  | DeviceModel<'Ata'>
-  | DeviceModel<'Atw'>
-  | DeviceModel<'Erv'>
+import type {
+  AreaModelAny,
+  DeviceModelAny,
+  IDeviceModel,
+} from './interfaces.js'
 
 export class DeviceModel<T extends keyof typeof DeviceType>
   extends BaseModel

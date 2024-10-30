@@ -2,10 +2,14 @@ import { BaseModel } from './base.js'
 
 import type { BuildingData, ZoneSettings } from '../types/index.js'
 
-import type { AreaModel, AreaModelAny } from './area.js'
-import type { DeviceModel, DeviceModelAny } from './device.js'
+import type { AreaModel } from './area.js'
+import type { DeviceModel } from './device.js'
 import type { FloorModel } from './floor.js'
-import type { IBuildingModel } from './interfaces.js'
+import type {
+  AreaModelAny,
+  DeviceModelAny,
+  IBuildingModel,
+} from './interfaces.js'
 
 export class BuildingModel extends BaseModel implements IBuildingModel {
   static #areaModel: typeof AreaModel

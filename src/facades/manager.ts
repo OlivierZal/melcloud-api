@@ -5,8 +5,6 @@ import {
   BuildingModel,
   DeviceModel,
   FloorModel,
-  type AreaModelAny,
-  type DeviceModelAny,
 } from '../models/index.js'
 
 import { AreaFacade } from './area.js'
@@ -17,20 +15,16 @@ import { DeviceErvFacade } from './device_erv.js'
 import { FloorFacade } from './floor.js'
 import { DEFAULT_YEAR, now } from './utils.js'
 
+import type { AreaModelAny, Model } from '../models/interfaces.js'
 import type { API } from '../services/api.js'
 import type { DeviceType, ErrorData } from '../types/index.js'
 
-import type { ErrorLog, ErrorLogQuery } from './interfaces.js'
-
-export interface DeviceFacade {
-  Ata: DeviceAtaFacade
-  Atw: DeviceAtwFacade
-  Erv: DeviceErvFacade
-}
-export type DeviceFacadeAny =
-  | DeviceAtaFacade
-  | DeviceAtwFacade
-  | DeviceErvFacade
+import type {
+  DeviceFacade,
+  ErrorLog,
+  ErrorLogQuery,
+  Facade,
+} from './interfaces.js'
 
 const DEFAULT_LIMIT = 1
 const DEFAULT_OFFSET = 0
@@ -74,10 +68,7 @@ const handleErrorLogQuery = ({
 export class FacadeManager {
   public readonly api: API
 
-  readonly #facades = new Map<
-    string,
-    AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
-  >()
+  readonly #facades = new Map<string, Facade>()
 
   public constructor(api: API) {
     this.api = api
@@ -93,18 +84,14 @@ export class FacadeManager {
   public get(
     instance: AreaModelAny | BuildingModel | FloorModel,
   ): AreaFacade | BuildingFacade | FloorFacade
-  public get(
-    instance: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
-  ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
+  public get(instance: Model): Facade
   public get(instance?: AreaModelAny): AreaFacade | undefined
   public get(instance?: BuildingModel): BuildingFacade | undefined
   public get<T extends keyof typeof DeviceType>(
     instance?: DeviceModel<T>,
   ): DeviceFacade[T] | undefined
   public get(instance?: FloorModel): FloorFacade | undefined
-  public get(
-    instance?: AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
-  ): AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade | undefined {
+  public get(instance?: Model): Facade | undefined {
     if (instance) {
       const {
         constructor: { name },
@@ -112,27 +99,7 @@ export class FacadeManager {
       const modelId = String(instance.id)
       const id = `${name}:${modelId}`
       if (!this.#facades.has(id)) {
-        switch (true) {
-          case instance instanceof AreaModel:
-            this.#facades.set(id, new AreaFacade(this, instance))
-            break
-          case instance instanceof BuildingModel:
-            this.#facades.set(id, new BuildingFacade(this, instance))
-            break
-          case instance instanceof DeviceModel && instance.type === 'Ata':
-            this.#facades.set(id, new DeviceAtaFacade(this, instance))
-            break
-          case instance instanceof DeviceModel && instance.type === 'Atw':
-            this.#facades.set(id, new DeviceAtwFacade(this, instance))
-            break
-          case instance instanceof DeviceModel && instance.type === 'Erv':
-            this.#facades.set(id, new DeviceErvFacade(this, instance))
-            break
-          case instance instanceof FloorModel:
-            this.#facades.set(id, new FloorFacade(this, instance))
-            break
-          default:
-        }
+        this.#setFacade(id, instance)
       }
       const facade = this.#facades.get(id)
       if (!facade) {
@@ -190,5 +157,23 @@ export class FacadeManager {
       throw new Error(formatErrors(data.AttributeErrors))
     }
     return data
+  }
+
+  #setFacade(id: string, instance: Model): void {
+    if (instance instanceof AreaModel) {
+      this.#facades.set(id, new AreaFacade(this, instance))
+    } else if (instance instanceof BuildingModel) {
+      this.#facades.set(id, new BuildingFacade(this, instance))
+    } else if (instance instanceof DeviceModel) {
+      if (instance.type === 'Ata') {
+        this.#facades.set(id, new DeviceAtaFacade(this, instance))
+      } else if (instance.type === 'Atw') {
+        this.#facades.set(id, new DeviceAtwFacade(this, instance))
+      } else {
+        this.#facades.set(id, new DeviceErvFacade(this, instance))
+      }
+    } else if (instance instanceof FloorModel) {
+      this.#facades.set(id, new FloorFacade(this, instance))
+    }
   }
 }
