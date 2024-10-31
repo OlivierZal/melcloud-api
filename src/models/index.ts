@@ -1,5 +1,4 @@
 import { AreaModel } from './area.js'
-import { BaseModel } from './base.js'
 import { BuildingModel } from './building.js'
 import { DeviceModel } from './device.js'
 import { FloorModel } from './floor.js'
@@ -16,4 +15,4 @@ BuildingModel.setModels(models)
 DeviceModel.setModels(models)
 FloorModel.setModels(models)
 
-export { AreaModel, BaseModel, BuildingModel, DeviceModel, FloorModel }
+export { AreaModel, BuildingModel, DeviceModel, FloorModel }
