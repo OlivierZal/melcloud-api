@@ -63,16 +63,18 @@ export class FloorModel extends BaseModel implements IFloorModel {
     return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
-  public static setAreaModel(model: typeof AreaModel): void {
-    this.#areaModel = model
-  }
-
-  public static setBuildingModel(model: typeof BuildingModel): void {
-    this.#buildingModel = model
-  }
-
-  public static setDeviceModel(model: typeof DeviceModel): void {
-    this.#deviceModel = model
+  public static setModels({
+    areaModel,
+    buildingModel,
+    deviceModel,
+  }: {
+    areaModel: typeof AreaModel
+    buildingModel: typeof BuildingModel
+    deviceModel: typeof DeviceModel
+  }): void {
+    this.#areaModel = areaModel
+    this.#buildingModel = buildingModel
+    this.#deviceModel = deviceModel
   }
 
   public static sync(floors: FloorData[]): void {

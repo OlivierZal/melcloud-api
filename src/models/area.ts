@@ -72,16 +72,18 @@ export class AreaModel<T extends number | null>
     return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
-  public static setBuildingModel(model: typeof BuildingModel): void {
-    this.#buildingModel = model
-  }
-
-  public static setDeviceModel(model: typeof DeviceModel): void {
-    this.#deviceModel = model
-  }
-
-  public static setFloorModel(model: typeof FloorModel): void {
-    this.#floorModel = model
+  public static setModels({
+    buildingModel,
+    deviceModel,
+    floorModel,
+  }: {
+    buildingModel: typeof BuildingModel
+    deviceModel: typeof DeviceModel
+    floorModel: typeof FloorModel
+  }): void {
+    this.#buildingModel = buildingModel
+    this.#deviceModel = deviceModel
+    this.#floorModel = floorModel
   }
 
   public static sync(areas: AreaDataAny[]): void {

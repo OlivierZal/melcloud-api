@@ -106,16 +106,18 @@ export class DeviceModel<T extends keyof typeof DeviceType>
     ) as DeviceModel<K>[]
   }
 
-  public static setAreaModel(model: typeof AreaModel): void {
-    this.#areaModel = model
-  }
-
-  public static setBuildingModel(model: typeof BuildingModel): void {
-    this.#buildingModel = model
-  }
-
-  public static setFloorModel(model: typeof FloorModel): void {
-    this.#floorModel = model
+  public static setModels({
+    areaModel,
+    buildingModel,
+    floorModel,
+  }: {
+    areaModel: typeof AreaModel
+    buildingModel: typeof BuildingModel
+    floorModel: typeof FloorModel
+  }): void {
+    this.#areaModel = areaModel
+    this.#buildingModel = buildingModel
+    this.#floorModel = floorModel
   }
 
   public static sync(devices: readonly ListDeviceAny[]): void {

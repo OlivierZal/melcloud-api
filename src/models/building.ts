@@ -63,16 +63,18 @@ export class BuildingModel extends BaseModel implements IBuildingModel {
     return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
-  public static setAreaModel(model: typeof AreaModel): void {
-    this.#areaModel = model
-  }
-
-  public static setDeviceModel(model: typeof DeviceModel): void {
-    this.#deviceModel = model
-  }
-
-  public static setFloorModel(model: typeof FloorModel): void {
-    this.#floorModel = model
+  public static setModels({
+    areaModel,
+    deviceModel,
+    floorModel,
+  }: {
+    areaModel: typeof AreaModel
+    deviceModel: typeof DeviceModel
+    floorModel: typeof FloorModel
+  }): void {
+    this.#areaModel = areaModel
+    this.#deviceModel = deviceModel
+    this.#floorModel = floorModel
   }
 
   public static sync(buildings: BuildingData[]): void {
