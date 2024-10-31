@@ -1,16 +1,16 @@
+import { FLAG_UNCHANGED } from '../constants.js'
 import { fromSetToListAta } from '../facades/utils.js'
-import {
-  FLAG_UNCHANGED,
-  type DeviceType,
-  type GetDeviceData,
-  type KeysOfSetDeviceDataAtaNotInList,
-  type ListDevice,
-  type SetDeviceData,
-  type UpdateDeviceData,
-} from '../types/index.js'
 
+import type { DeviceType } from '../enums.js'
 import type { BaseDeviceFacade } from '../facades/base_device.js'
 import type { DeviceModel } from '../models/index.js'
+import type {
+  GetDeviceData,
+  KeysOfSetDeviceDataAtaNotInList,
+  ListDevice,
+  SetDeviceData,
+  UpdateDeviceData,
+} from '../types/index.js'
 
 const convertToListDeviceData = <T extends keyof typeof DeviceType>(
   facade: BaseDeviceFacade<T>,

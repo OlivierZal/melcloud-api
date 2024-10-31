@@ -1,12 +1,8 @@
+import type { DeviceType } from '../enums.js'
 import type { BaseFacade } from '../facades/base.js'
 import type { BuildingModel, FloorModel } from '../models/index.js'
 import type { AreaModelAny } from '../models/interfaces.js'
-import type {
-  DeviceType,
-  FailureData,
-  GroupAtaState,
-  SuccessData,
-} from '../types/index.js'
+import type { FailureData, GroupAtaState, SuccessData } from '../types/index.js'
 
 export const updateDevices =
   <T extends boolean | FailureData | GroupAtaState | SuccessData>(

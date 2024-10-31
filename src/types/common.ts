@@ -1,4 +1,12 @@
 import type {
+  DeviceType,
+  FanSpeed,
+  Horizontal,
+  OperationMode,
+  Vertical,
+} from '../enums.js'
+
+import type {
   EnergyDataAta,
   GetDeviceDataAta,
   ListDeviceAta,
@@ -16,13 +24,6 @@ import type {
   SetDevicePostDataAtw,
   UpdateDeviceDataAtw,
 } from './atw.js'
-import type {
-  DeviceType,
-  FanSpeed,
-  Horizontal,
-  OperationMode,
-  Vertical,
-} from './enums.js'
 import type {
   GetDeviceDataErv,
   ListDeviceDataErv,

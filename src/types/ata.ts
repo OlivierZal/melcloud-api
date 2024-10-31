@@ -1,4 +1,12 @@
 import type {
+  DeviceType,
+  FanSpeed,
+  Horizontal,
+  OperationMode,
+  Vertical,
+} from '../enums.js'
+
+import type {
   BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,
@@ -7,13 +15,6 @@ import type {
   BaseUpdateDeviceData,
   DeviceDataNotInList,
 } from './bases.js'
-import type {
-  DeviceType,
-  FanSpeed,
-  Horizontal,
-  OperationMode,
-  Vertical,
-} from './enums.js'
 
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly OperationMode?: OperationMode

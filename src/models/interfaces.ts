@@ -1,4 +1,5 @@
-import type { DeviceType, ListDevice, ZoneSettings } from '../types/index.js'
+import type { DeviceType } from '../enums.js'
+import type { ListDevice, ZoneSettings } from '../types/index.js'
 
 import type { AreaModel } from './area.js'
 import type { BuildingModel } from './building.js'

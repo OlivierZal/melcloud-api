@@ -1,13 +1,13 @@
 import { alias } from '../decorators/alias.js'
-import {
-  OperationModeZone,
-  flagsAtw,
-  type OperationModeZoneDataAtw,
-  type TemperatureDataAtw,
-  type UpdateDeviceDataAtw,
-} from '../types/index.js'
+import { OperationModeZone } from '../enums.js'
 
 import { BaseDeviceFacade } from './base_device.js'
+
+import type {
+  OperationModeZoneDataAtw,
+  TemperatureDataAtw,
+  UpdateDeviceDataAtw,
+} from '../types/index.js'
 
 const DEFAULT_TEMPERATURE = 0
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
@@ -22,7 +22,19 @@ export class DeviceAtwFacade extends BaseDeviceFacade<'Atw'> {
 
   public override hasZone2 = this.data.HasZone2
 
-  public readonly flags = flagsAtw
+  public readonly flags = {
+    ForcedHotWaterMode: 0x10000,
+    OperationModeZone1: 0x8,
+    OperationModeZone2: 0x10,
+    Power: 0x1,
+    SetCoolFlowTemperatureZone1: 0x1000000000000,
+    SetCoolFlowTemperatureZone2: 0x1000000000000,
+    SetHeatFlowTemperatureZone1: 0x1000000000000,
+    SetHeatFlowTemperatureZone2: 0x1000000000000,
+    SetTankWaterTemperature: 0x1000000000020,
+    SetTemperatureZone1: 0x200000080,
+    SetTemperatureZone2: 0x800000200,
+  } as const
 
   @alias('BoosterHeater1Status')
   public accessor boosterHeater1Status: unknown = undefined

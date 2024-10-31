@@ -1,23 +1,23 @@
+import { FLAG_UNCHANGED } from '../constants.js'
 import { valueSymbol } from '../decorators/alias.js'
 import { fetchDevices } from '../decorators/fetchDevices.js'
 import { updateDevice } from '../decorators/updateDevice.js'
 import { DeviceModel } from '../models/index.js'
-import {
-  FLAG_UNCHANGED,
-  type DeviceType,
-  type EnergyData,
-  type GetDeviceData,
-  type ListDevice,
-  type SetDeviceData,
-  type SetDeviceDataAtaInList,
-  type TilesData,
-  type UpdateDeviceData,
-} from '../types/index.js'
 
 import { BaseFacade } from './base.js'
 import { DEFAULT_YEAR, fromListToSetAta, now } from './utils.js'
 
+import type { DeviceType } from '../enums.js'
 import type { DeviceModelAny } from '../models/interfaces.js'
+import type {
+  EnergyData,
+  GetDeviceData,
+  ListDevice,
+  SetDeviceData,
+  SetDeviceDataAtaInList,
+  TilesData,
+  UpdateDeviceData,
+} from '../types/index.js'
 
 import type { IDeviceFacade, Values } from './interfaces.js'
 import type { FacadeManager } from './manager.js'

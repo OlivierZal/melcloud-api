@@ -10,6 +10,7 @@ import axios, {
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 
 import { syncDevices } from '../decorators/syncDevices.js'
+import { Language, type DeviceType } from '../enums.js'
 import { createAPICallErrorData } from '../logging/error.js'
 import { APICallRequestData } from '../logging/request.js'
 import { APICallResponseData } from '../logging/response.js'
@@ -19,37 +20,6 @@ import {
   DeviceModel,
   FloorModel,
 } from '../models/index.js'
-import {
-  Language,
-  type Building,
-  type DeviceType,
-  type EnergyData,
-  type EnergyPostData,
-  type ErrorData,
-  type ErrorPostData,
-  type FailureData,
-  type FrostProtectionData,
-  type FrostProtectionPostData,
-  type GetDeviceData,
-  type GetDeviceDataParams,
-  type GetGroupAtaData,
-  type GetGroupAtaPostData,
-  type HolidayModeData,
-  type HolidayModePostData,
-  type LoginCredentials,
-  type LoginData,
-  type LoginPostData,
-  type SetDeviceData,
-  type SetDevicePostData,
-  type SetGroupAtaPostData,
-  type SetPowerPostData,
-  type SettingsParams,
-  type SuccessData,
-  type TilesData,
-  type TilesPostData,
-  type WifiData,
-  type WifiPostData,
-} from '../types/index.js'
 
 import {
   isAPISetting,
@@ -58,6 +28,36 @@ import {
   type Logger,
   type SettingManager,
 } from './interfaces.js'
+
+import type {
+  Building,
+  EnergyData,
+  EnergyPostData,
+  ErrorData,
+  ErrorPostData,
+  FailureData,
+  FrostProtectionData,
+  FrostProtectionPostData,
+  GetDeviceData,
+  GetDeviceDataParams,
+  GetGroupAtaData,
+  GetGroupAtaPostData,
+  HolidayModeData,
+  HolidayModePostData,
+  LoginCredentials,
+  LoginData,
+  LoginPostData,
+  SetDeviceData,
+  SetDevicePostData,
+  SetGroupAtaPostData,
+  SetPowerPostData,
+  SettingsParams,
+  SuccessData,
+  TilesData,
+  TilesPostData,
+  WifiData,
+  WifiPostData,
+} from '../types/index.js'
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin2'

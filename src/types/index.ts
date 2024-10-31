@@ -1,15 +1,3 @@
-export {
-  DeviceType,
-  FanSpeed,
-  Horizontal,
-  Language,
-  OperationMode,
-  OperationModeState,
-  OperationModeZone,
-  VentilationMode,
-  Vertical,
-} from './enums.js'
-export { FLAG_UNCHANGED, flagsAta, flagsAtw, flagsErv } from './flags.js'
 export type {
   EnergyDataAta,
   GetDeviceDataAta,

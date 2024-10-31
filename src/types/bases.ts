@@ -1,5 +1,5 @@
-import type { DeviceType } from './enums.js'
-import type { FLAG_UNCHANGED } from './flags.js'
+import type { FLAG_UNCHANGED } from '../constants.js'
+import type { DeviceType } from '../enums.js'
 
 export interface BaseUpdateDeviceData {
   readonly Power?: boolean

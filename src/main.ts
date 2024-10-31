@@ -4,6 +4,17 @@ export { fetchDevices } from './decorators/fetchDevices.js'
 export { syncDevices } from './decorators/syncDevices.js'
 export { updateDevice } from './decorators/updateDevice.js'
 export { updateDevices } from './decorators/updateDevices.js'
+export {
+  DeviceType,
+  FanSpeed,
+  Horizontal,
+  Language,
+  OperationMode,
+  OperationModeState,
+  OperationModeZone,
+  VentilationMode,
+  Vertical,
+} from './enums.js'
 export { AreaFacade } from './facades/area.js'
 export { BuildingFacade } from './facades/building.js'
 export { DeviceAtaFacade } from './facades/device_ata.js'
@@ -18,17 +29,6 @@ export {
   FloorModel,
 } from './models/index.js'
 export { API as MELCloudAPI } from './services/api.js'
-export {
-  DeviceType,
-  FanSpeed,
-  Horizontal,
-  Language,
-  OperationMode,
-  OperationModeState,
-  OperationModeZone,
-  VentilationMode,
-  Vertical,
-} from './types/index.js'
 export type {
   BaseValues,
   DeviceFacade,

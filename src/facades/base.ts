@@ -5,12 +5,12 @@ import { updateDevices } from '../decorators/updateDevices.js'
 
 import { now } from './utils.js'
 
+import type { DeviceType } from '../enums.js'
 import type { BuildingModel, DeviceModel, FloorModel } from '../models/index.js'
 import type { AreaModelAny, DeviceModelAny } from '../models/interfaces.js'
 import type { API } from '../services/api.js'
 import type {
   DateTimeComponents,
-  DeviceType,
   FailureData,
   FrostProtectionData,
   FrostProtectionLocation,

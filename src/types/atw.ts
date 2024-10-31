@@ -1,4 +1,10 @@
 import type {
+  DeviceType,
+  OperationModeState,
+  OperationModeZone,
+} from '../enums.js'
+
+import type {
   BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,
@@ -7,11 +13,6 @@ import type {
   BaseUpdateDeviceData,
   DeviceDataNotInList,
 } from './bases.js'
-import type {
-  DeviceType,
-  OperationModeState,
-  OperationModeZone,
-} from './enums.js'
 
 export type ZoneAtw = 'Zone1' | 'Zone2'
 

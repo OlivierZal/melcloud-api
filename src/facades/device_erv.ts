@@ -1,10 +1,13 @@
 import { alias } from '../decorators/alias.js'
-import { flagsErv } from '../types/index.js'
 
 import { BaseDeviceFacade } from './base_device.js'
 
 export class DeviceErvFacade extends BaseDeviceFacade<'Erv'> {
-  public readonly flags = flagsErv
+  public readonly flags = {
+    Power: 0x1,
+    SetFanSpeed: 0x8,
+    VentilationMode: 0x4,
+  } as const
 
   @alias('RoomCO2Level')
   public accessor co2: unknown = undefined

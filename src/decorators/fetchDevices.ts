@@ -1,7 +1,8 @@
+import type { DeviceType } from '../enums.js'
 import type { BaseFacade } from '../facades/base.js'
 import type { BuildingModel } from '../models/index.js'
 import type { DeviceModelAny } from '../models/interfaces.js'
-import type { DeviceType, ListDevice, ZoneSettings } from '../types/index.js'
+import type { ListDevice, ZoneSettings } from '../types/index.js'
 
 export const fetchDevices = <
   T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,

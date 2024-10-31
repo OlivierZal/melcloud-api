@@ -1,10 +1,8 @@
-import {
-  DeviceType,
-  type ListDevice,
-  type ListDeviceAny,
-} from '../types/index.js'
+import { DeviceType } from '../enums.js'
 
 import { BaseModel } from './base.js'
+
+import type { ListDevice, ListDeviceAny } from '../types/index.js'
 
 import type { AreaModel } from './area.js'
 import type { BuildingModel } from './building.js'

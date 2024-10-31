@@ -1,14 +1,19 @@
 import { alias } from '../decorators/alias.js'
-import {
-  OperationMode,
-  flagsAta,
-  type UpdateDeviceDataAta,
-} from '../types/index.js'
+import { OperationMode } from '../enums.js'
 
 import { BaseDeviceFacade } from './base_device.js'
 
+import type { UpdateDeviceDataAta } from '../types/index.js'
+
 export class DeviceAtaFacade extends BaseDeviceFacade<'Ata'> {
-  public readonly flags = flagsAta
+  public readonly flags = {
+    OperationMode: 0x2,
+    Power: 0x1,
+    SetFanSpeed: 0x8,
+    SetTemperature: 0x4,
+    VaneHorizontal: 0x100,
+    VaneVertical: 0x10,
+  } as const
 
   @alias('ActualFanSpeed')
   public accessor actualFan: unknown = undefined

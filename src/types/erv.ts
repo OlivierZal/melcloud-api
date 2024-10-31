@@ -1,3 +1,5 @@
+import type { DeviceType, FanSpeed, VentilationMode } from '../enums.js'
+
 import type {
   BaseDevicePostData,
   BaseGetDeviceData,
@@ -7,7 +9,6 @@ import type {
   BaseUpdateDeviceData,
   DeviceDataNotInList,
 } from './bases.js'
-import type { DeviceType, FanSpeed, VentilationMode } from './enums.js'
 
 export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
   readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>

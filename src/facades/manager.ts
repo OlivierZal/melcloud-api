@@ -15,9 +15,10 @@ import { DeviceErvFacade } from './device_erv.js'
 import { FloorFacade } from './floor.js'
 import { DEFAULT_YEAR, now } from './utils.js'
 
+import type { DeviceType } from '../enums.js'
 import type { AreaModelAny, Model } from '../models/interfaces.js'
 import type { API } from '../services/api.js'
-import type { DeviceType, ErrorData } from '../types/index.js'
+import type { ErrorData } from '../types/index.js'
 
 import type {
   DeviceFacade,

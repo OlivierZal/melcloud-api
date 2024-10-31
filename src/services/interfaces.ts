@@ -1,6 +1,6 @@
+import type { DeviceType } from '../enums.js'
 import type {
   Building,
-  DeviceType,
   EnergyData,
   EnergyPostData,
   ErrorData,

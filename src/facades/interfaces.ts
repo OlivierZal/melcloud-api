@@ -1,23 +1,25 @@
-import type { DeviceModel } from '../models/index.js'
 import type {
   DeviceType,
+  FanSpeed,
+  Horizontal,
+  OperationMode,
+  OperationModeZone,
+  VentilationMode,
+  Vertical,
+} from '../enums.js'
+import type { DeviceModel } from '../models/index.js'
+import type {
   EnergyData,
   FailureData,
-  FanSpeed,
   FrostProtectionData,
   GetDeviceData,
   GroupAtaState,
   HolidayModeData,
-  Horizontal,
   ListDevice,
-  OperationMode,
-  OperationModeZone,
   SetDeviceData,
   SuccessData,
   TilesData,
   UpdateDeviceData,
-  VentilationMode,
-  Vertical,
   WifiData,
   ZoneSettings,
 } from '../types/index.js'
