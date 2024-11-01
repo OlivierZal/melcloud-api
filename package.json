@@ -25,7 +25,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "docs": "NODE_OPTIONS=--no-experimental-require-module typedoc && npm run format:docs",
+    "docs": "typedoc && npm run format:docs",
     "format": "prettier . --check",
     "format:docs": "prettier README.md --ignore-path --write",
     "format:fix": "prettier . --write",
@@ -42,7 +42,7 @@
   "devDependencies": {
     "@eslint/js": "^9.13.0",
     "@eslint/markdown": "^6.2.1",
-    "@stylistic/eslint-plugin": "^2.10.0",
+    "@stylistic/eslint-plugin": "^2.10.1",
     "@types/luxon": "^3.4.2",
     "@types/node": "^22.8.6",
     "eslint": "^9.13.0",
@@ -54,7 +54,7 @@
     "jsonc-eslint-parser": "^2.4.0",
     "prettier": "^3.3.3",
     "prettier-plugin-packagejson": "^2.5.3",
-    "typedoc": "^0.26.10",
+    "typedoc": "^0.26.11",
     "typedoc-plugin-markdown": "^4.2.9",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.12.2"
