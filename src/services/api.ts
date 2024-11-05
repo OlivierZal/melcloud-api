@@ -392,10 +392,13 @@ export class API implements IAPI {
         this.#pauseListUntil = DateTime.now().plus({ hours: 2 })
         break
       case HttpStatusCode.Unauthorized:
-        if (this.#canRetry() && error.config?.url !== LOGIN_PATH) {
-          if ((await this.login()) && error.config) {
-            return this.#api.request(error.config)
-          }
+        if (
+          this.#canRetry() &&
+          error.config?.url !== LOGIN_PATH &&
+          (await this.login()) &&
+          error.config
+        ) {
+          return this.#api.request(error.config)
         }
         break
       case undefined:
