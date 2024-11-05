@@ -436,15 +436,11 @@ export class API implements IAPI {
   }
 
   async #login({
-    postData: { Email: username, Password: password, ...rest },
+    postData,
   }: {
     postData: LoginPostData
   }): Promise<{ data: LoginData }> {
-    return this.#api.post<LoginData>(LOGIN_PATH, {
-      Email: username,
-      Password: password,
-      ...rest,
-    })
+    return this.#api.post<LoginData>(LOGIN_PATH, postData)
   }
 
   #planNextSync(): void {
