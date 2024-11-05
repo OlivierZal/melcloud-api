@@ -15,6 +15,8 @@ import type {
   HolidayModeData,
   HolidayModePostData,
   LoginCredentials,
+  LoginData,
+  LoginPostData,
   SetDeviceData,
   SetDevicePostData,
   SetGroupAtaPostData,
@@ -65,8 +67,10 @@ export interface APIConfig extends Partial<LoginCredentials> {
 }
 
 export interface IAPI {
+  authenticate: (data?: LoginCredentials) => Promise<boolean>
   clearSync: () => void
-  fetch: () => Promise<Building[]>
+  fetch: () => Promise<{ data: Building[] }>
+  fetchAndSync: () => Promise<Building[]>
   get: ({
     params,
   }: {
@@ -112,10 +116,11 @@ export interface IAPI {
   }: {
     postData: WifiPostData
   }) => Promise<{ data: WifiData }>
-  login: (
-    data?: LoginCredentials,
-    onSuccess?: () => Promise<void>,
-  ) => Promise<boolean>
+  login: ({
+    postData,
+  }: {
+    postData: LoginPostData
+  }) => Promise<{ data: LoginData }>
   set: <T extends keyof typeof DeviceType>({
     heatPumpType,
     postData,

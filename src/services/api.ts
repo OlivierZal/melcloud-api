@@ -130,15 +130,15 @@ export class API implements IAPI {
 
   public static async create(config: APIConfig = {}): Promise<API> {
     const api = new API(config)
-    await api.fetch()
+    await api.fetchAndSync()
     return api
   }
 
   @syncDevices
-  public async fetch(): Promise<Building[]> {
+  public async fetchAndSync(): Promise<Building[]> {
     this.clearSync()
     try {
-      const { data } = await this.#fetch()
+      const { data } = await this.fetch()
       BuildingModel.sync(data)
       FloorModel.sync(
         data.flatMap(({ Structure: { Floors: floors } }) => floors),
@@ -175,11 +175,29 @@ export class API implements IAPI {
     }
   }
 
+  public async authenticate(data?: LoginCredentials): Promise<boolean> {
+    const { password = this.password, username = this.username } = data ?? {}
+    if (username && password) {
+      try {
+        return await this.#authenticate({ password, username })
+      } catch (error) {
+        if (data !== undefined) {
+          throw error
+        }
+      }
+    }
+    return false
+  }
+
   public clearSync(): void {
     if (this.#syncTimeout) {
       clearTimeout(this.#syncTimeout)
       this.#syncTimeout = null
     }
+  }
+
+  public async fetch(): Promise<{ data: Building[] }> {
+    return this.#api.get<Building[]>(LIST_PATH)
   }
 
   public async get({
@@ -262,18 +280,12 @@ export class API implements IAPI {
     return this.#api.post('/Report/GetSignalStrength', postData)
   }
 
-  public async login(data?: LoginCredentials): Promise<boolean> {
-    const { password = this.password, username = this.username } = data ?? {}
-    if (username && password) {
-      try {
-        return await this.#authenticate({ password, username })
-      } catch (error) {
-        if (data !== undefined) {
-          throw error
-        }
-      }
-    }
-    return false
+  public async login({
+    postData,
+  }: {
+    postData: LoginPostData
+  }): Promise<{ data: LoginData }> {
+    return this.#api.post<LoginData>(LOGIN_PATH, postData)
   }
 
   public async set<T extends keyof typeof DeviceType>({
@@ -331,13 +343,10 @@ export class API implements IAPI {
   async #authenticate({
     password,
     username,
-  }: {
-    password: string
-    username: string
-  }): Promise<boolean> {
+  }: LoginCredentials): Promise<boolean> {
     const {
       data: { LoginData: loginData },
-    } = await this.#login({
+    } = await this.login({
       postData: {
         AppVersion: '1.34.10.0',
         Email: username,
@@ -350,7 +359,7 @@ export class API implements IAPI {
       this.username = username
       this.password = password
       ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
-      await this.fetch()
+      await this.fetchAndSync()
     }
     return loginData !== null
   }
@@ -374,10 +383,6 @@ export class API implements IAPI {
     return api
   }
 
-  async #fetch(): Promise<{ data: Building[] }> {
-    return this.#api.get<Building[]>(LIST_PATH)
-  }
-
   #getLanguageCode(language: string = this.language): Language {
     return language in Language ?
         Language[language as keyof typeof Language]
@@ -395,7 +400,7 @@ export class API implements IAPI {
         if (
           this.#canRetry() &&
           error.config?.url !== LOGIN_PATH &&
-          (await this.login()) &&
+          (await this.authenticate()) &&
           error.config
         ) {
           return this.#api.request(error.config)
@@ -422,7 +427,7 @@ export class API implements IAPI {
     if (newConfig.url !== LOGIN_PATH) {
       const { contextKey, expiry } = this
       if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
-        await this.login()
+        await this.authenticate()
       }
       newConfig.headers.set('X-MitsContextKey', contextKey)
     }
@@ -435,18 +440,10 @@ export class API implements IAPI {
     return response
   }
 
-  async #login({
-    postData,
-  }: {
-    postData: LoginPostData
-  }): Promise<{ data: LoginData }> {
-    return this.#api.post<LoginData>(LOGIN_PATH, postData)
-  }
-
   #planNextSync(): void {
     if (this.#autoSyncInterval) {
       this.#syncTimeout = setTimeout(() => {
-        this.fetch().catch(() => {
+        this.fetchAndSync().catch(() => {
           //
         })
       }, this.#autoSyncInterval)
