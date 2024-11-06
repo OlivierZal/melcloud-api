@@ -14,6 +14,6 @@ export const fetchDevices = <
     this: BaseFacade<BuildingModel | DeviceModelAny>,
     ...args: unknown[]
   ) {
-    await this.api.fetchAndSync()
+    await this.api.fetch()
     return target.call(this, ...args)
   }

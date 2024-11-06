@@ -130,15 +130,15 @@ export class API implements IAPI {
 
   public static async create(config: APIConfig = {}): Promise<API> {
     const api = new API(config)
-    await api.fetchAndSync()
+    await api.fetch()
     return api
   }
 
   @syncDevices
-  public async fetchAndSync(): Promise<Building[]> {
+  public async fetch(): Promise<Building[]> {
     this.clearSync()
     try {
-      const { data } = await this.fetch()
+      const { data } = await this.list()
       BuildingModel.sync(data)
       FloorModel.sync(
         data.flatMap(({ Structure: { Floors: floors } }) => floors),
@@ -194,10 +194,6 @@ export class API implements IAPI {
       clearTimeout(this.#syncTimeout)
       this.#syncTimeout = null
     }
-  }
-
-  public async fetch(): Promise<{ data: Building[] }> {
-    return this.#api.get<Building[]>(LIST_PATH)
   }
 
   public async get({
@@ -280,6 +276,10 @@ export class API implements IAPI {
     return this.#api.post('/Report/GetSignalStrength', postData)
   }
 
+  public async list(): Promise<{ data: Building[] }> {
+    return this.#api.get<Building[]>(LIST_PATH)
+  }
+
   public async login({
     postData,
   }: {
@@ -359,7 +359,7 @@ export class API implements IAPI {
       this.username = username
       this.password = password
       ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
-      await this.fetchAndSync()
+      await this.fetch()
     }
     return loginData !== null
   }
@@ -443,7 +443,7 @@ export class API implements IAPI {
   #planNextSync(): void {
     if (this.#autoSyncInterval) {
       this.#syncTimeout = setTimeout(() => {
-        this.fetchAndSync().catch(() => {
+        this.fetch().catch(() => {
           //
         })
       }, this.#autoSyncInterval)

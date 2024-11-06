@@ -69,8 +69,7 @@ export interface APIConfig extends Partial<LoginCredentials> {
 export interface IAPI {
   authenticate: (data?: LoginCredentials) => Promise<boolean>
   clearSync: () => void
-  fetch: () => Promise<{ data: Building[] }>
-  fetchAndSync: () => Promise<Building[]>
+  fetch: () => Promise<Building[]>
   get: ({
     params,
   }: {
@@ -116,6 +115,7 @@ export interface IAPI {
   }: {
     postData: WifiPostData
   }) => Promise<{ data: WifiData }>
+  list: () => Promise<{ data: Building[] }>
   login: ({
     postData,
   }: {
