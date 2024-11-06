@@ -96,12 +96,13 @@ export class FacadeManager {
     if (instance) {
       const {
         constructor: { name },
+        id,
       } = instance
-      const id = `${name}:${String(instance.id)}`
-      if (!this.#facades.has(id)) {
-        this.#setFacade(id, instance)
+      const facadeId = `${name}:${String(id)}`
+      if (!this.#facades.has(facadeId)) {
+        this.#setFacade(facadeId, instance)
       }
-      return this.#facades.get(id)
+      return this.#facades.get(facadeId)
     }
   }
 
