@@ -1,12 +1,4 @@
-import type {
-  DeviceType,
-  FanSpeed,
-  Horizontal,
-  OperationMode,
-  OperationModeZone,
-  VentilationMode,
-  Vertical,
-} from '../enums.js'
+import type { DeviceType } from '../enums.js'
 import type { DeviceModel } from '../models/index.js'
 import type {
   EnergyData,
@@ -30,42 +22,6 @@ import type { DeviceAtaFacade } from './device_ata.js'
 import type { DeviceAtwFacade } from './device_atw.js'
 import type { DeviceErvFacade } from './device_erv.js'
 import type { FloorFacade } from './floor.js'
-
-export interface BaseValues {
-  readonly power?: boolean
-}
-
-export interface ValuesAta extends BaseValues {
-  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly horizontal?: Horizontal
-  readonly mode?: OperationMode
-  readonly temperature?: number
-  readonly vertical?: Vertical
-}
-
-export interface ValuesAtw extends BaseValues {
-  readonly coolFlowTemperature?: number
-  readonly coolFlowTemperatureZone2?: number
-  readonly forcedHotWater?: boolean
-  readonly heatFlowTemperature?: number
-  readonly heatFlowTemperatureZone2?: number
-  readonly hotWaterTemperature?: number
-  readonly mode?: OperationModeZone
-  readonly modeZone2?: OperationModeZone
-  readonly temperature?: number
-  readonly temperatureZone2?: number
-}
-
-export interface ValuesErv extends BaseValues {
-  readonly fan?: Exclude<FanSpeed, FanSpeed.silent>
-  readonly mode?: VentilationMode
-}
-
-export interface Values {
-  readonly Ata: ValuesAta
-  readonly Atw: ValuesAtw
-  readonly Erv: ValuesErv
-}
 
 export interface ErrorLogQuery {
   readonly from?: string
@@ -158,5 +114,5 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
     ((select?: false) => Promise<TilesData<null>>)
   set: (data: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
   type: T
-  values: Values[T]
+  values: Record<string, unknown>
 }

@@ -19,7 +19,7 @@ import type {
   UpdateDeviceData,
 } from '../types/index.js'
 
-import type { IDeviceFacade, Values } from './interfaces.js'
+import type { IDeviceFacade } from './interfaces.js'
 import type { FacadeManager } from './manager.js'
 
 export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
@@ -57,7 +57,7 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
     return this.instance.data
   }
 
-  public get values(): Values[T] {
+  public get values(): Record<string, unknown> {
     return Object.fromEntries([...this.#values].map((key) => [key, this[key]]))
   }
 

@@ -30,7 +30,6 @@ export {
 } from './models/index.js'
 export { API as MELCloudAPI } from './services/api.js'
 export type {
-  BaseValues,
   DeviceFacade,
   DeviceFacadeAny,
   ErrorDetails,
@@ -43,10 +42,6 @@ export type {
   IBaseSuperDeviceFacade,
   IBuildingFacade,
   IDeviceFacade,
-  Values,
-  ValuesAta,
-  ValuesAtw,
-  ValuesErv,
 } from './facades/interfaces.js'
 export type {
   AreaModelAny,
