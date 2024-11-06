@@ -348,7 +348,7 @@ export class API implements IAPI {
       data: { LoginData: loginData },
     } = await this.login({
       postData: {
-        AppVersion: '1.34.10.0',
+        AppVersion: '1.34.12.0',
         Email: username,
         Language: this.#getLanguageCode(),
         Password: password,
