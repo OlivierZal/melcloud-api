@@ -87,6 +87,18 @@ export interface ErrorLog {
   readonly nextToDate: string
 }
 
+export interface FrostProtectionQuery {
+  readonly max: number
+  readonly min: number
+  readonly enabled?: boolean
+}
+
+export interface HolidayModeQuery {
+  readonly days?: number
+  readonly from?: string
+  readonly to?: string | null
+}
+
 export interface DeviceFacade {
   readonly Ata: DeviceAtaFacade
   readonly Atw: DeviceAtwFacade
@@ -110,30 +122,13 @@ export interface IBaseFacade {
   getWifiReport: (hour?: number) => Promise<WifiData>
   id: number
   name: string
-  setFrostProtection: ({
-    enabled,
-    max,
-    min,
-  }: {
-    max: number
-    min: number
-    enabled?: boolean
-  }) => Promise<FailureData | SuccessData>
-  setHolidayMode: (({
-    days,
-    from,
-  }: {
-    days: number
-    from?: string
-  }) => Promise<FailureData | SuccessData>) &
-    (({
-      from,
-      to,
-    }: {
-      to: string | null
-      from?: string
-    }) => Promise<FailureData | SuccessData>)
-  setPower: (enabled?: boolean) => Promise<boolean>
+  setFrostProtection: (
+    query: FrostProtectionQuery,
+  ) => Promise<FailureData | SuccessData>
+  setHolidayMode: (
+    query: HolidayModeQuery,
+  ) => Promise<FailureData | SuccessData>
+  setPower: (power?: boolean) => Promise<boolean>
 }
 
 export interface IBaseSuperDeviceFacade extends IBaseFacade {

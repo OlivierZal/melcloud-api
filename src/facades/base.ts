@@ -23,7 +23,13 @@ import type {
   WifiData,
 } from '../types/index.js'
 
-import type { ErrorLog, ErrorLogQuery, IBaseFacade } from './interfaces.js'
+import type {
+  ErrorLog,
+  ErrorLogQuery,
+  FrostProtectionQuery,
+  HolidayModeQuery,
+  IBaseFacade,
+} from './interfaces.js'
 import type { FacadeManager } from './manager.js'
 
 const temperatureRange = { max: 16, min: 4 } as const
@@ -106,10 +112,10 @@ export abstract class BaseFacade<
 
   @syncDevices
   @updateDevices()
-  public async setPower(enabled = true): Promise<boolean> {
+  public async setPower(power = true): Promise<boolean> {
     return (
       await this.api.setPower({
-        postData: { DeviceIds: this.#deviceIds, Power: enabled },
+        postData: { DeviceIds: this.#deviceIds, Power: power },
       })
     ).data
   }
@@ -179,11 +185,7 @@ export abstract class BaseFacade<
     enabled,
     max,
     min,
-  }: {
-    max: number
-    min: number
-    enabled?: boolean
-  }): Promise<FailureData | SuccessData> {
+  }: FrostProtectionQuery): Promise<FailureData | SuccessData> {
     let [newMin, newMax] = min > max ? [max, min] : [min, max]
     newMin = Math.max(
       temperatureRange.min,
@@ -212,11 +214,7 @@ export abstract class BaseFacade<
     days,
     from,
     to,
-  }: {
-    days?: number
-    from?: string
-    to?: string | null
-  } = {}): Promise<FailureData | SuccessData> {
+  }: HolidayModeQuery = {}): Promise<FailureData | SuccessData> {
     const isEnabled = Boolean(days) || Boolean(to)
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : undefined
     const endDate =

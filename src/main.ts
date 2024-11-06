@@ -37,6 +37,8 @@ export type {
   ErrorLog,
   ErrorLogQuery,
   Facade,
+  FrostProtectionQuery,
+  HolidayModeQuery,
   IBaseFacade,
   IBaseSuperDeviceFacade,
   IBuildingFacade,
