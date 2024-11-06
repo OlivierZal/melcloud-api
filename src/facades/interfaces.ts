@@ -23,19 +23,28 @@ import type { DeviceAtwFacade } from './device_atw.js'
 import type { DeviceErvFacade } from './device_erv.js'
 import type { FloorFacade } from './floor.js'
 
+export interface DeviceFacade {
+  readonly Ata: DeviceAtaFacade
+  readonly Atw: DeviceAtwFacade
+  readonly Erv: DeviceErvFacade
+}
+export type DeviceFacadeAny =
+  | DeviceAtaFacade
+  | DeviceAtwFacade
+  | DeviceErvFacade
+export type Facade = AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
+
 export interface ErrorLogQuery {
   readonly from?: string
   readonly limit?: string
   readonly offset?: string
   readonly to?: string
 }
-
 export interface ErrorDetails {
   readonly date: string
   readonly device: string
   readonly error: string
 }
-
 export interface ErrorLog {
   readonly errors: ErrorDetails[]
   readonly fromDateHuman: string
@@ -54,18 +63,6 @@ export interface HolidayModeQuery {
   readonly from?: string
   readonly to?: string | null
 }
-
-export interface DeviceFacade {
-  readonly Ata: DeviceAtaFacade
-  readonly Atw: DeviceAtwFacade
-  readonly Erv: DeviceErvFacade
-}
-export type DeviceFacadeAny =
-  | DeviceAtaFacade
-  | DeviceAtwFacade
-  | DeviceErvFacade
-
-export type Facade = AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
 
 export interface IBaseFacade {
   getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
