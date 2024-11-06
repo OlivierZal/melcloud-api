@@ -31,19 +31,19 @@ export interface IBaseSubFloorModel extends IBaseSubBuildingModel {
 }
 
 export interface IBaseSuperDeviceModel extends IBaseModel {
-  deviceIds: readonly number[]
-  devices: readonly DeviceModelAny[]
+  deviceIds: number[]
+  devices: DeviceModelAny[]
 }
 
 export interface IBaseSuperAreaModel extends IBaseSuperDeviceModel {
-  areaIds: readonly number[]
-  areas: readonly AreaModel<number>[]
+  areaIds: number[]
+  areas: AreaModel<number>[]
 }
 
 export interface IBuildingModel extends IBaseSuperAreaModel {
   data: ZoneSettings
-  floorIds: readonly number[]
-  floors: readonly FloorModel[]
+  floorIds: number[]
+  floors: FloorModel[]
 }
 
 export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}

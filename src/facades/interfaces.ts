@@ -88,9 +88,9 @@ export interface ErrorLog {
 }
 
 export interface DeviceFacade {
-  Ata: DeviceAtaFacade
-  Atw: DeviceAtwFacade
-  Erv: DeviceErvFacade
+  readonly Ata: DeviceAtaFacade
+  readonly Atw: DeviceAtwFacade
+  readonly Erv: DeviceErvFacade
 }
 export type DeviceFacadeAny =
   | DeviceAtaFacade
