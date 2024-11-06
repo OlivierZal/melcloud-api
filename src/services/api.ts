@@ -289,13 +289,13 @@ export class API implements IAPI {
   }
 
   public async set<T extends keyof typeof DeviceType>({
-    heatPumpType,
     postData,
+    type,
   }: {
-    heatPumpType: T
     postData: SetDevicePostData[T]
+    type: T
   }): Promise<{ data: SetDeviceData[T] }> {
-    return this.#api.post(`/Device/Set${heatPumpType}`, postData)
+    return this.#api.post(`/Device/Set${type}`, postData)
   }
 
   public async setAta({

@@ -126,12 +126,12 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
     }
     return (
       await this.api.set({
-        heatPumpType: this.type,
         postData: {
           ...this.handle(newData),
           DeviceID: this.id,
           EffectiveFlags: flags,
         },
+        type: this.type,
       })
     ).data
   }

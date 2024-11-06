@@ -122,11 +122,11 @@ export interface IAPI {
     postData: LoginPostData
   }) => Promise<{ data: LoginData }>
   set: <T extends keyof typeof DeviceType>({
-    heatPumpType,
     postData,
+    type,
   }: {
-    heatPumpType: T
     postData: SetDevicePostData[T]
+    type: T
   }) => Promise<{ data: SetDeviceData[T] }>
   setAta: ({
     postData,
