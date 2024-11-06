@@ -97,16 +97,11 @@ export class FacadeManager {
       const {
         constructor: { name },
       } = instance
-      const modelId = String(instance.id)
-      const id = `${name}:${modelId}`
+      const id = `${name}:${String(instance.id)}`
       if (!this.#facades.has(id)) {
         this.#setFacade(id, instance)
       }
-      const facade = this.#facades.get(id)
-      if (!facade) {
-        throw new Error(`Facade not found for ${name} with id ${modelId}`)
-      }
-      return facade
+      return this.#facades.get(id)
     }
   }
 
