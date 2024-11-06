@@ -322,14 +322,15 @@ export class API implements IAPI {
     return this.#api.post('/HolidayMode/Update', postData)
   }
 
-  public async setLanguage(language: string): Promise<boolean> {
-    const { data: didLanguageChange } = await this.#setLanguage({
-      postData: { language: this.#getLanguageCode(language) },
-    })
-    if (didLanguageChange) {
-      this.language = language
+  public async setLanguage(language: string): Promise<void> {
+    if (language !== this.language) {
+      const { data: hasLanguageChanged } = await this.updateLanguage({
+        postData: { language: this.#getLanguageCode(language) },
+      })
+      if (hasLanguageChanged) {
+        this.language = language
+      }
     }
-    return didLanguageChange
   }
 
   public async setPower({
@@ -338,6 +339,14 @@ export class API implements IAPI {
     postData: SetPowerPostData
   }): Promise<{ data: boolean }> {
     return this.#api.post('/Device/Power', postData)
+  }
+
+  public async updateLanguage({
+    postData,
+  }: {
+    postData: { language: Language }
+  }): Promise<{ data: boolean }> {
+    return this.#api.post<boolean>('/User/UpdateLanguage', postData)
   }
 
   async #authenticate({
@@ -448,14 +457,6 @@ export class API implements IAPI {
         })
       }, this.#autoSyncInterval)
     }
-  }
-
-  async #setLanguage({
-    postData,
-  }: {
-    postData: { language: Language }
-  }): Promise<{ data: boolean }> {
-    return this.#api.post<boolean>('/User/UpdateLanguage', postData)
   }
 
   #setOptionalProperties({

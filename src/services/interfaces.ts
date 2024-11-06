@@ -1,4 +1,4 @@
-import type { DeviceType } from '../enums.js'
+import type { DeviceType, Language } from '../enums.js'
 import type {
   Building,
   EnergyData,
@@ -143,11 +143,15 @@ export interface IAPI {
   }: {
     postData: HolidayModePostData
   }) => Promise<{ data: FailureData | SuccessData }>
-  setLanguage: (language: string) => Promise<boolean>
   setPower: ({
     postData,
   }: {
     postData: SetPowerPostData
+  }) => Promise<{ data: boolean }>
+  updateLanguage: ({
+    postData,
+  }: {
+    postData: { language: Language }
   }) => Promise<{ data: boolean }>
   onSync?: () => Promise<void>
 }
