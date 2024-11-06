@@ -149,4 +149,5 @@ export interface IAPI {
   }: {
     postData: SetPowerPostData
   }) => Promise<{ data: boolean }>
+  onSync?: () => Promise<void>
 }
