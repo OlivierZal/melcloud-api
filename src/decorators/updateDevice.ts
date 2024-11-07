@@ -41,11 +41,11 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
 
 export const updateDevice = <
   T extends keyof typeof DeviceType,
-  DeviceData extends GetDeviceData[T] | SetDeviceData[T],
+  U extends GetDeviceData[T] | SetDeviceData[T],
 >(
-  target: (...args: any[]) => Promise<DeviceData>,
+  target: (...args: any[]) => Promise<U>,
   _context: ClassMethodDecoratorContext,
-): ((...args: unknown[]) => Promise<DeviceData>) =>
+): ((...args: unknown[]) => Promise<U>) =>
   async function newTarget(this: BaseDeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
     ;(this.instance as DeviceModel<T>).update(
