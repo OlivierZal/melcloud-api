@@ -1,6 +1,7 @@
 import { FLAG_UNCHANGED } from '../constants.js'
 import { valueSymbol } from '../decorators/alias.js'
 import { fetchDevices } from '../decorators/fetchDevices.js'
+import { syncDevices } from '../decorators/syncDevices.js'
 import { updateDevice } from '../decorators/updateDevice.js'
 import { DeviceModel } from '../models/index.js'
 
@@ -98,6 +99,7 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
     return Promise.resolve(this.data)
   }
 
+  @syncDevices
   @updateDevice
   public async get(): Promise<GetDeviceData[T]> {
     return (
@@ -107,6 +109,7 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
     ).data as GetDeviceData[T]
   }
 
+  @syncDevices
   @updateDevice
   public async set(
     data: Partial<UpdateDeviceData[T]>,

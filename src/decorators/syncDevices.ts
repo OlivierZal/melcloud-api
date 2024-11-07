@@ -1,3 +1,4 @@
+import type { DeviceType } from '../enums.js'
 import type { BaseFacade } from '../facades/base.js'
 import type { BuildingModel, FloorModel } from '../models/index.js'
 import type { AreaModelAny, DeviceModelAny } from '../models/interfaces.js'
@@ -5,16 +6,26 @@ import type { API } from '../services/api.js'
 import type {
   Building,
   FailureData,
+  GetDeviceData,
   GroupAtaState,
+  SetDeviceData,
   SuccessData,
 } from '../types/index.js'
 
 export const syncDevices = <
-  T extends boolean | Building[] | FailureData | GroupAtaState | SuccessData,
+  T extends keyof typeof DeviceType,
+  U extends
+    | boolean
+    | Building[]
+    | FailureData
+    | GetDeviceData[T]
+    | GroupAtaState
+    | SetDeviceData[T]
+    | SuccessData,
 >(
-  target: (...args: any[]) => Promise<T>,
+  target: (...args: any[]) => Promise<U>,
   _context: ClassMethodDecoratorContext,
-): ((...args: unknown[]) => Promise<T>) =>
+): ((...args: unknown[]) => Promise<U>) =>
   async function newTarget(
     this:
       | API
