@@ -1,5 +1,10 @@
 import type { DeviceType } from '../enums.js'
+import type { IBaseModel } from '../main.js'
 import type { DeviceModel } from '../models/index.js'
+import type {
+  IBaseBuildingModel,
+  IBaseDeviceModel,
+} from '../models/interfaces.js'
 import type {
   EnergyData,
   FailureData,
@@ -64,7 +69,7 @@ export interface HolidayModeQuery {
   readonly to?: string | null
 }
 
-export interface IBaseFacade {
+export interface IBaseFacade extends IBaseModel {
   getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
@@ -73,8 +78,6 @@ export interface IBaseFacade {
       select: DeviceModel<U>,
     ) => Promise<TilesData<U>>)
   getWifiReport: (hour?: number) => Promise<WifiData>
-  id: number
-  name: string
   setFrostProtection: (
     query: FrostProtectionQuery,
   ) => Promise<FailureData | SuccessData>
@@ -89,14 +92,15 @@ export interface IBaseSuperDeviceFacade extends IBaseFacade {
   setAta: (state: GroupAtaState) => Promise<FailureData | SuccessData>
 }
 
-export interface IBuildingFacade extends IBaseSuperDeviceFacade {
-  data: ZoneSettings
+export interface IBuildingFacade
+  extends IBaseBuildingModel,
+    IBaseSuperDeviceFacade {
   fetch: () => Promise<ZoneSettings>
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>
-  extends IBaseFacade {
-  data: ListDevice[T]['Device']
+  extends IBaseDeviceModel<T>,
+    IBaseFacade {
   fetch: () => Promise<ListDevice[T]['Device']>
   flags: Record<keyof UpdateDeviceData[T], number>
   get: () => Promise<GetDeviceData[T]>
@@ -110,6 +114,5 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   getTiles: ((select: true | DeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
   set: (data: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
-  type: T
   values: Record<string, unknown>
 }

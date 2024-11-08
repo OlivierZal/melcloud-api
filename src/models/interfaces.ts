@@ -40,8 +40,13 @@ export interface IBaseSuperAreaModel extends IBaseSuperDeviceModel {
   areas: AreaModel<number>[]
 }
 
-export interface IBuildingModel extends IBaseSuperAreaModel {
+export interface IBaseBuildingModel {
   data: ZoneSettings
+}
+
+export interface IBuildingModel
+  extends IBaseBuildingModel,
+    IBaseSuperAreaModel {
   floorIds: number[]
   floors: FloorModel[]
 }
@@ -52,11 +57,15 @@ export interface IFloorModel
   extends IBaseSubBuildingModel,
     IBaseSuperAreaModel {}
 
-export interface IDeviceModel<T extends keyof typeof DeviceType>
-  extends IBaseSubFloorModel {
-  areaId: number | null
+export interface IBaseDeviceModel<T extends keyof typeof DeviceType> {
   data: ListDevice[T]['Device']
   type: T
+}
+
+export interface IDeviceModel<T extends keyof typeof DeviceType>
+  extends IBaseDeviceModel<T>,
+    IBaseSubFloorModel {
+  areaId: number | null
   update: (data: Partial<ListDevice[T]['Device']>) => void
   area?: AreaModelAny | null
 }

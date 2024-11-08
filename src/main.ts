@@ -47,6 +47,8 @@ export type {
   AreaModelAny,
   DeviceModelAny,
   IAreaModel,
+  IBaseBuildingModel,
+  IBaseDeviceModel,
   IBaseModel,
   IBaseSubBuildingModel,
   IBaseSubFloorModel,
