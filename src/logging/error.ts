@@ -13,11 +13,11 @@ export interface APICallContextDataWithErrorMessage extends APICallContextData {
   readonly errorMessage: string
 }
 
-const getMessage = (error: AxiosError): string => error.message
+const getMessage = (error: Error): string => error.message
 
 const withErrorMessage = <T extends AxiosResponse | InternalAxiosRequestConfig>(
   base: new (arg?: T) => APICallContextData,
-  error: AxiosError,
+  error: Error,
 ): new (arg?: T) => APICallContextDataWithErrorMessage =>
   class extends base {
     public readonly errorMessage = getMessage(error)
