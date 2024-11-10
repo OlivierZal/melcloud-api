@@ -1,18 +1,12 @@
 import { DateTime } from 'luxon'
 
 import {
-  AreaModel,
-  BuildingModel,
   DeviceModel,
-  FloorModel,
+  type BuildingModel,
+  type FloorModel,
 } from '../models/index.js'
 
-import { AreaFacade } from './area.js'
-import { BuildingFacade } from './building.js'
-import { DeviceAtaFacade } from './device_ata.js'
-import { DeviceAtwFacade } from './device_atw.js'
-import { DeviceErvFacade } from './device_erv.js'
-import { FloorFacade } from './floor.js'
+import { createFacade } from './factory.js'
 import { DEFAULT_YEAR, now } from './utils.js'
 
 import type { DeviceType } from '../enums.js'
@@ -20,6 +14,9 @@ import type { AreaModelAny, Model } from '../models/interfaces.js'
 import type { API } from '../services/api.js'
 import type { ErrorData } from '../types/index.js'
 
+import type { AreaFacade } from './area.js'
+import type { BuildingFacade } from './building.js'
+import type { FloorFacade } from './floor.js'
 import type {
   DeviceFacade,
   ErrorLog,
@@ -100,7 +97,7 @@ export class FacadeManager {
       } = instance
       const facadeId = `${name}:${String(id)}`
       if (!this.#facades.has(facadeId)) {
-        this.#setFacade(facadeId, instance)
+        this.#facades.set(facadeId, createFacade(this, instance))
       }
       return this.#facades.get(facadeId)
     }
@@ -154,23 +151,5 @@ export class FacadeManager {
       throw new Error(formatErrors(data.AttributeErrors))
     }
     return data
-  }
-
-  #setFacade(id: string, instance: Model): void {
-    if (instance instanceof AreaModel) {
-      this.#facades.set(id, new AreaFacade(this, instance))
-    } else if (instance instanceof BuildingModel) {
-      this.#facades.set(id, new BuildingFacade(this, instance))
-    } else if (instance instanceof DeviceModel) {
-      if (instance.type === 'Ata') {
-        this.#facades.set(id, new DeviceAtaFacade(this, instance))
-      } else if (instance.type === 'Atw') {
-        this.#facades.set(id, new DeviceAtwFacade(this, instance))
-      } else {
-        this.#facades.set(id, new DeviceErvFacade(this, instance))
-      }
-    } else if (instance instanceof FloorModel) {
-      this.#facades.set(id, new FloorFacade(this, instance))
-    }
   }
 }
