@@ -20,7 +20,6 @@ export { BuildingFacade } from './facades/building.js'
 export { DeviceAtaFacade } from './facades/device_ata.js'
 export { DeviceAtwFacade } from './facades/device_atw.js'
 export { DeviceErvFacade } from './facades/device_erv.js'
-export { createFacade } from './facades/factory.js'
 export { FloorFacade } from './facades/floor.js'
 export { FacadeManager } from './facades/manager.js'
 export {
