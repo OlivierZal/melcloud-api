@@ -2,8 +2,7 @@ import { DateTime } from 'luxon'
 
 import { syncDevices } from '../decorators/syncDevices.js'
 import { updateDevices } from '../decorators/updateDevices.js'
-
-import { now } from './utils.js'
+import { now } from '../utils.js'
 
 import type { DeviceType } from '../enums.js'
 import type { BuildingModel, DeviceModel, FloorModel } from '../models/index.js'
@@ -28,7 +27,7 @@ import type {
   ErrorLogQuery,
   FrostProtectionQuery,
   HolidayModeQuery,
-  IBaseFacade,
+  IFacade,
 } from './interfaces.js'
 import type { FacadeManager } from './manager.js'
 
@@ -57,11 +56,11 @@ const getEndDate = (
 
 export abstract class BaseFacade<
   T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
-> implements IBaseFacade
+> implements IFacade
 {
-  public readonly api: API
-
   public readonly id: number
+
+  protected readonly api: API
 
   protected isFrostProtectionDefined: boolean | null = null
 
@@ -85,10 +84,6 @@ export abstract class BaseFacade<
     ;({ id: this.id } = instance)
   }
 
-  public get devices(): DeviceModelAny[] {
-    return 'devices' in this.instance ? this.instance.devices : [this.instance]
-  }
-
   public get name(): string {
     return this.instance.name
   }
@@ -108,6 +103,12 @@ export abstract class BaseFacade<
 
   get #deviceIds(): number[] {
     return this.devices.map(({ id }) => id)
+  }
+
+  public abstract get devices(): DeviceModelAny[]
+
+  public async onSync(): Promise<void> {
+    await this.api.onSync?.()
   }
 
   @syncDevices

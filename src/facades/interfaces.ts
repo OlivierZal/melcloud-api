@@ -1,9 +1,10 @@
 import type { DeviceType } from '../enums.js'
-import type { IBaseModel } from '../main.js'
 import type { DeviceModel } from '../models/index.js'
 import type {
+  DeviceModelAny,
   IBaseBuildingModel,
   IBaseDeviceModel,
+  IModel,
 } from '../models/interfaces.js'
 import type {
   EnergyData,
@@ -21,23 +22,14 @@ import type {
   ZoneSettings,
 } from '../types/index.js'
 
-import type { AreaFacade } from './area.js'
-import type { BuildingFacade } from './building.js'
 import type { DeviceAtaFacade } from './device_ata.js'
 import type { DeviceAtwFacade } from './device_atw.js'
 import type { DeviceErvFacade } from './device_erv.js'
-import type { FloorFacade } from './floor.js'
 
-export interface DeviceFacade {
-  readonly Ata: DeviceAtaFacade
-  readonly Atw: DeviceAtwFacade
-  readonly Erv: DeviceErvFacade
-}
 export type DeviceFacadeAny =
   | DeviceAtaFacade
   | DeviceAtwFacade
   | DeviceErvFacade
-export type Facade = AreaFacade | BuildingFacade | DeviceFacadeAny | FloorFacade
 
 export interface ErrorLogQuery {
   readonly from?: string
@@ -69,7 +61,8 @@ export interface HolidayModeQuery {
   readonly to?: string | null
 }
 
-export interface IBaseFacade extends IBaseModel {
+export interface IFacade extends IModel {
+  devices: DeviceModelAny[]
   getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
@@ -78,6 +71,7 @@ export interface IBaseFacade extends IBaseModel {
       select: DeviceModel<U>,
     ) => Promise<TilesData<U>>)
   getWifiReport: (hour?: number) => Promise<WifiData>
+  onSync: () => Promise<void>
   setFrostProtection: (
     query: FrostProtectionQuery,
   ) => Promise<FailureData | SuccessData>
@@ -87,20 +81,20 @@ export interface IBaseFacade extends IBaseModel {
   setPower: (power?: boolean) => Promise<boolean>
 }
 
-export interface IBaseSuperDeviceFacade extends IBaseFacade {
+export interface ISuperDeviceFacade extends IFacade {
   getAta: () => Promise<GroupAtaState>
   setAta: (state: GroupAtaState) => Promise<FailureData | SuccessData>
 }
 
 export interface IBuildingFacade
   extends IBaseBuildingModel,
-    IBaseSuperDeviceFacade {
+    ISuperDeviceFacade {
   fetch: () => Promise<ZoneSettings>
 }
 
 export interface IDeviceFacade<T extends keyof typeof DeviceType>
   extends IBaseDeviceModel<T>,
-    IBaseFacade {
+    IFacade {
   fetch: () => Promise<ListDevice[T]['Device']>
   flags: Record<keyof UpdateDeviceData[T], number>
   get: () => Promise<GetDeviceData[T]>
@@ -114,5 +108,4 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   getTiles: ((select: true | DeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
   set: (data: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
-  values: Record<string, unknown>
 }

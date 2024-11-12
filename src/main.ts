@@ -30,18 +30,16 @@ export {
 } from './models/index.js'
 export { API as MELCloudAPI } from './services/api.js'
 export type {
-  DeviceFacade,
   DeviceFacadeAny,
   ErrorDetails,
   ErrorLog,
   ErrorLogQuery,
-  Facade,
   FrostProtectionQuery,
   HolidayModeQuery,
-  IBaseFacade,
-  IBaseSuperDeviceFacade,
   IBuildingFacade,
   IDeviceFacade,
+  IFacade,
+  ISuperDeviceFacade,
 } from './facades/interfaces.js'
 export type {
   AreaModelAny,
@@ -49,14 +47,14 @@ export type {
   IAreaModel,
   IBaseBuildingModel,
   IBaseDeviceModel,
-  IBaseModel,
-  IBaseSubBuildingModel,
-  IBaseSubFloorModel,
-  IBaseSuperAreaModel,
-  IBaseSuperDeviceModel,
   IBuildingModel,
   IDeviceModel,
   IFloorModel,
+  IModel,
+  ISubBuildingModel,
+  ISubFloorModel,
+  ISuperAreaModel,
+  ISuperDeviceModel,
   Model,
 } from './models/interfaces.js'
 export type {

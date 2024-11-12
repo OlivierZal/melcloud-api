@@ -9,7 +9,6 @@ import axios, {
 } from 'axios'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 
-import { setting } from '../decorators/setting.js'
 import { syncDevices } from '../decorators/syncDevices.js'
 import { Language, type DeviceType } from '../enums.js'
 import { createAPICallErrorData } from '../logging/error.js'
@@ -21,6 +20,14 @@ import {
   DeviceModel,
   FloorModel,
 } from '../models/index.js'
+
+import {
+  isAPISetting,
+  type APIConfig,
+  type IAPI,
+  type Logger,
+  type SettingManager,
+} from './interfaces.js'
 
 import type {
   Building,
@@ -52,8 +59,6 @@ import type {
   WifiPostData,
 } from '../types/index.js'
 
-import type { APIConfig, IAPI, Logger, SettingManager } from './interfaces.js'
-
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin2'
 
@@ -61,8 +66,32 @@ const DEFAULT_SYNC_INTERVAL = 5
 const NO_SYNC_INTERVAL = 0
 const RETRY_DELAY = 1000
 
+const setting = (
+  target: ClassAccessorDecoratorTarget<API, string>,
+  context: ClassAccessorDecoratorContext<API, string>,
+): ClassAccessorDecoratorResult<API, string> => ({
+  get(this: API): string {
+    const key = String(context.name)
+    if (!isAPISetting(key)) {
+      throw new Error(`Invalid setting: ${key}`)
+    }
+    return this.settingManager?.get(key) ?? target.get.call(this)
+  },
+  set(this: API, value: string): void {
+    const key = String(context.name)
+    if (!isAPISetting(key)) {
+      throw new Error(`Invalid setting: ${key}`)
+    }
+    if (this.settingManager) {
+      this.settingManager.set(key, value)
+      return
+    }
+    target.set.call(this, value)
+  },
+})
+
 export class API implements IAPI {
-  public readonly onSync?: () => Promise<void>
+  public readonly onSync?: (id?: number) => Promise<void>
 
   protected readonly settingManager?: SettingManager
 

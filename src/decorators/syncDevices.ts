@@ -1,8 +1,6 @@
 import type { DeviceType } from '../enums.js'
-import type { BaseFacade } from '../facades/base.js'
-import type { BuildingModel, FloorModel } from '../models/index.js'
-import type { AreaModelAny, DeviceModelAny } from '../models/interfaces.js'
-import type { API } from '../services/api.js'
+import type { IFacade } from '../facades/interfaces.js'
+import type { IAPI } from '../services/interfaces.js'
 import type {
   Building,
   FailureData,
@@ -26,13 +24,8 @@ export const syncDevices = <
   target: (...args: any[]) => Promise<U>,
   _context: ClassMethodDecoratorContext,
 ): ((...args: unknown[]) => Promise<U>) =>
-  async function newTarget(
-    this:
-      | API
-      | BaseFacade<AreaModelAny | BuildingModel | DeviceModelAny | FloorModel>,
-    ...args: unknown[]
-  ) {
+  async function newTarget(this: IAPI | IFacade, ...args: unknown[]) {
     const data = await target.call(this, ...args)
-    await ('api' in this ? this.api : this).onSync?.()
+    await this.onSync?.()
     return data
   }

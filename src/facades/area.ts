@@ -4,11 +4,11 @@ import { BaseSuperDeviceFacade } from './base_super_device.js'
 
 import type { AreaModelAny } from '../models/interfaces.js'
 
-import type { IBaseSuperDeviceFacade } from './interfaces.js'
+import type { ISuperDeviceFacade } from './interfaces.js'
 
 export class AreaFacade
   extends BaseSuperDeviceFacade<AreaModelAny>
-  implements IBaseSuperDeviceFacade
+  implements ISuperDeviceFacade
 {
   protected readonly frostProtectionLocation = 'AreaIds'
 

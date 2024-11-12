@@ -1,7 +1,5 @@
 import type { DeviceType } from '../enums.js'
-import type { BaseFacade } from '../facades/base.js'
-import type { BuildingModel, FloorModel } from '../models/index.js'
-import type { AreaModelAny } from '../models/interfaces.js'
+import type { ISuperDeviceFacade } from '../facades/interfaces.js'
 import type { FailureData, GroupAtaState, SuccessData } from '../types/index.js'
 
 export const updateDevices =
@@ -14,10 +12,7 @@ export const updateDevices =
     target: (...args: any[]) => Promise<T>,
     context: ClassMethodDecoratorContext,
   ): ((...args: unknown[]) => Promise<T>) =>
-    async function newTarget(
-      this: BaseFacade<AreaModelAny | BuildingModel | FloorModel>,
-      ...args: unknown[]
-    ) {
+    async function newTarget(this: ISuperDeviceFacade, ...args: unknown[]) {
       const [arg] = args
       if (arg !== null && typeof arg === 'object' && !Object.keys(arg).length) {
         throw new Error('No data to set')

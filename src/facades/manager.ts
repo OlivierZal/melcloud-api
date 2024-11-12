@@ -5,9 +5,9 @@ import {
   type BuildingModel,
   type FloorModel,
 } from '../models/index.js'
+import { DEFAULT_YEAR, now } from '../utils.js'
 
 import { createFacade } from './factory.js'
-import { DEFAULT_YEAR, now } from './utils.js'
 
 import type { DeviceType } from '../enums.js'
 import type { AreaModelAny, Model } from '../models/interfaces.js'
@@ -18,10 +18,10 @@ import type { AreaFacade } from './area.js'
 import type { BuildingFacade } from './building.js'
 import type { FloorFacade } from './floor.js'
 import type {
-  DeviceFacade,
   ErrorLog,
   ErrorLogQuery,
-  Facade,
+  IDeviceFacade,
+  IFacade,
 } from './interfaces.js'
 
 const DEFAULT_LIMIT = 1
@@ -66,7 +66,7 @@ const handleErrorLogQuery = ({
 export class FacadeManager {
   public readonly api: API
 
-  readonly #facades = new Map<string, Facade>()
+  readonly #facades = new Map<string, IFacade>()
 
   public constructor(api: API) {
     this.api = api
@@ -77,19 +77,19 @@ export class FacadeManager {
   public get(instance: BuildingModel): BuildingFacade
   public get<T extends keyof typeof DeviceType>(
     instance: DeviceModel<T>,
-  ): DeviceFacade[T]
+  ): IDeviceFacade<T>
   public get(instance: FloorModel): FloorFacade
   public get(
     instance: AreaModelAny | BuildingModel | FloorModel,
   ): AreaFacade | BuildingFacade | FloorFacade
-  public get(instance: Model): Facade
+  public get(instance: Model): IFacade
   public get(instance?: AreaModelAny): AreaFacade | undefined
   public get(instance?: BuildingModel): BuildingFacade | undefined
   public get<T extends keyof typeof DeviceType>(
     instance?: DeviceModel<T>,
-  ): DeviceFacade[T] | undefined
+  ): IDeviceFacade<T> | undefined
   public get(instance?: FloorModel): FloorFacade | undefined
-  public get(instance?: Model): Facade | undefined {
+  public get(instance?: Model): IFacade | undefined {
     if (instance) {
       const {
         constructor: { name },

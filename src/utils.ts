@@ -3,7 +3,7 @@ import { DateTime } from 'luxon'
 import type {
   KeysOfSetDeviceDataAtaNotInList,
   SetDeviceDataAtaInList,
-} from '../types/index.js'
+} from './types/index.js'
 
 export const DEFAULT_YEAR = '1970-01-01'
 

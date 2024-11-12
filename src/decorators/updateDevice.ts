@@ -1,8 +1,8 @@
 import { FLAG_UNCHANGED } from '../constants.js'
-import { fromSetToListAta } from '../facades/utils.js'
+import { fromSetToListAta } from '../utils.js'
 
 import type { DeviceType } from '../enums.js'
-import type { BaseDeviceFacade } from '../facades/base_device.js'
+import type { IDeviceFacade } from '../facades/interfaces.js'
 import type { DeviceModel } from '../models/index.js'
 import type {
   GetDeviceData,
@@ -13,7 +13,7 @@ import type {
 } from '../types/index.js'
 
 const convertToListDeviceData = <T extends keyof typeof DeviceType>(
-  facade: BaseDeviceFacade<T>,
+  facade: IDeviceFacade<T>,
   data: SetDeviceData[T],
 ): Partial<ListDevice[T]['Device']> => {
   const { EffectiveFlags: flags, ...newData } = data
@@ -46,10 +46,11 @@ export const updateDevice = <
   target: (...args: any[]) => Promise<U>,
   _context: ClassMethodDecoratorContext,
 ): ((...args: unknown[]) => Promise<U>) =>
-  async function newTarget(this: BaseDeviceFacade<T>, ...args: unknown[]) {
+  async function newTarget(this: IDeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
-    ;(this.instance as DeviceModel<T>).update(
-      convertToListDeviceData(this, data),
-    )
+    const {
+      devices: [device],
+    } = this
+    ;(device as DeviceModel<T>).update(convertToListDeviceData(this, data))
     return data
   }

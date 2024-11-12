@@ -15,27 +15,27 @@ export type DeviceModelAny =
 
 export type Model = AreaModelAny | BuildingModel | DeviceModelAny | FloorModel
 
-export interface IBaseModel {
+export interface IModel {
   id: number
   name: string
 }
 
-export interface IBaseSubBuildingModel extends IBaseModel {
+export interface ISubBuildingModel extends IModel {
   buildingId: number
   building?: BuildingModel
 }
 
-export interface IBaseSubFloorModel extends IBaseSubBuildingModel {
+export interface ISubFloorModel extends ISubBuildingModel {
   floorId: number | null
   floor?: FloorModel | null
 }
 
-export interface IBaseSuperDeviceModel extends IBaseModel {
+export interface ISuperDeviceModel extends IModel {
   deviceIds: number[]
   devices: DeviceModelAny[]
 }
 
-export interface IBaseSuperAreaModel extends IBaseSuperDeviceModel {
+export interface ISuperAreaModel extends ISuperDeviceModel {
   areaIds: number[]
   areas: AreaModel<number>[]
 }
@@ -44,18 +44,14 @@ export interface IBaseBuildingModel {
   data: ZoneSettings
 }
 
-export interface IBuildingModel
-  extends IBaseBuildingModel,
-    IBaseSuperAreaModel {
+export interface IBuildingModel extends IBaseBuildingModel, ISuperAreaModel {
   floorIds: number[]
   floors: FloorModel[]
 }
 
-export interface IAreaModel extends IBaseSubFloorModel, IBaseSuperDeviceModel {}
+export interface IAreaModel extends ISubFloorModel, ISuperDeviceModel {}
 
-export interface IFloorModel
-  extends IBaseSubBuildingModel,
-    IBaseSuperAreaModel {}
+export interface IFloorModel extends ISubBuildingModel, ISuperAreaModel {}
 
 export interface IBaseDeviceModel<T extends keyof typeof DeviceType> {
   data: ListDevice[T]['Device']
@@ -64,7 +60,7 @@ export interface IBaseDeviceModel<T extends keyof typeof DeviceType> {
 
 export interface IDeviceModel<T extends keyof typeof DeviceType>
   extends IBaseDeviceModel<T>,
-    IBaseSubFloorModel {
+    ISubFloorModel {
   areaId: number | null
   update: (data: Partial<ListDevice[T]['Device']>) => void
   area?: AreaModelAny | null

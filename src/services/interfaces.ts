@@ -60,7 +60,7 @@ export interface APIConfig extends Partial<LoginCredentials> {
   autoSyncInterval?: number | null
   language?: string
   logger?: Logger
-  onSync?: () => Promise<void>
+  onSync?: (id?: number) => Promise<void>
   settingManager?: SettingManager
   shouldVerifySSL?: boolean
   timezone?: string
@@ -153,5 +153,5 @@ export interface IAPI {
   }: {
     postData: { language: Language }
   }) => Promise<{ data: boolean }>
-  onSync?: () => Promise<void>
+  onSync?: (id?: number) => Promise<void>
 }

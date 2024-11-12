@@ -1,6 +1,6 @@
-import type { IBaseModel } from './interfaces.js'
+import type { IModel } from './interfaces.js'
 
-export abstract class BaseModel implements IBaseModel {
+export abstract class BaseModel implements IModel {
   public readonly id: number
 
   public readonly name: string

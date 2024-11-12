@@ -1,12 +1,11 @@
 import { FLAG_UNCHANGED } from '../constants.js'
-import { valueSymbol } from '../decorators/alias.js'
 import { fetchDevices } from '../decorators/fetchDevices.js'
 import { syncDevices } from '../decorators/syncDevices.js'
 import { updateDevice } from '../decorators/updateDevice.js'
 import { DeviceModel } from '../models/index.js'
+import { DEFAULT_YEAR, fromListToSetAta, now } from '../utils.js'
 
 import { BaseFacade } from './base.js'
-import { DEFAULT_YEAR, fromListToSetAta, now } from './utils.js'
 
 import type { DeviceType } from '../enums.js'
 import type { DeviceModelAny } from '../models/interfaces.js'
@@ -27,10 +26,6 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements IDeviceFacade<T>
 {
-  public readonly canCool: boolean = false
-
-  public readonly hasZone2: boolean = false
-
   public readonly type: T
 
   protected readonly frostProtectionLocation = 'DeviceIds'
@@ -41,25 +36,19 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  readonly #values: Set<keyof this>
-
   public abstract readonly flags: Record<keyof UpdateDeviceData[T], number>
 
   public constructor(manager: FacadeManager, instance: DeviceModel<T>) {
     super(manager, instance as DeviceModelAny)
     ;({ type: this.type } = instance)
-    this.#initMetadata()
-    this.#values = this.constructor[Symbol.metadata]?.[valueSymbol] as Set<
-      keyof this
-    >
+  }
+
+  public override get devices(): DeviceModelAny[] {
+    return [this.instance]
   }
 
   public get data(): ListDevice[T]['Device'] {
     return this.instance.data
-  }
-
-  public get values(): Record<string, unknown> {
-    return Object.fromEntries([...this.#values].map((key) => [key, this[key]]))
   }
 
   protected get setData(): Required<UpdateDeviceData[T]> {
@@ -77,6 +66,10 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
       : Object.entries(this.data)
       ).filter(([key]) => key in this.flags),
     ) as Required<UpdateDeviceData[T]>
+  }
+
+  public override async onSync(): Promise<void> {
+    await this.api.onSync?.(this.id)
   }
 
   public override async getTiles(select?: false): Promise<TilesData<null>>
@@ -164,29 +157,10 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
     return { ...this.setData, ...data }
   }
 
-  #callProperty(name: keyof this): unknown {
-    return this[name]
-  }
-
   #getFlags(keys: (keyof UpdateDeviceData[T])[]): number {
     return keys.reduce(
       (acc, key) => Number(BigInt(this.flags[key]) | BigInt(acc)),
       FLAG_UNCHANGED,
     )
-  }
-
-  #initMetadata(): void {
-    const prototype = Object.getPrototypeOf(this) as unknown
-    Object.getOwnPropertyNames(prototype).forEach((name) => {
-      if (
-        typeof name === 'string' &&
-        !['data', 'model', 'values'].includes(name)
-      ) {
-        const descriptor = Object.getOwnPropertyDescriptor(prototype, name)
-        if (descriptor && typeof descriptor.get === 'function') {
-          this.#callProperty(name as keyof this)
-        }
-      }
-    })
   }
 }

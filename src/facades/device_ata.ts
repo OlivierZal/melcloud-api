@@ -1,11 +1,15 @@
-import { alias } from '../decorators/alias.js'
 import { OperationMode } from '../enums.js'
 
 import { BaseDeviceFacade } from './base_device.js'
 
 import type { UpdateDeviceDataAta } from '../types/index.js'
 
-export class DeviceAtaFacade extends BaseDeviceFacade<'Ata'> {
+import type { IDeviceFacade } from './interfaces.js'
+
+export class DeviceAtaFacade
+  extends BaseDeviceFacade<'Ata'>
+  implements IDeviceFacade<'Ata'>
+{
   public readonly flags = {
     OperationMode: 0x2,
     Power: 0x1,
@@ -14,33 +18,6 @@ export class DeviceAtaFacade extends BaseDeviceFacade<'Ata'> {
     VaneHorizontal: 0x100,
     VaneVertical: 0x10,
   } as const
-
-  @alias('ActualFanSpeed')
-  public accessor actualFan: unknown = undefined
-
-  @alias('FanSpeed')
-  public accessor fan: unknown = undefined
-
-  @alias('VaneHorizontalDirection')
-  public accessor horizontal: unknown = undefined
-
-  @alias('OperationMode')
-  public accessor mode: unknown = undefined
-
-  @alias('OutdoorTemperature')
-  public accessor outdoorTemperature: unknown = undefined
-
-  @alias('Power')
-  public accessor power: unknown = undefined
-
-  @alias('SetTemperature')
-  public accessor targetTemperature: unknown = undefined
-
-  @alias('RoomTemperature')
-  public accessor temperature: unknown = undefined
-
-  @alias('VaneVerticalDirection')
-  public accessor vertical: unknown = undefined
 
   protected override handle(
     data: Partial<UpdateDeviceDataAta>,

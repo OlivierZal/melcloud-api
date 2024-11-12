@@ -14,13 +14,13 @@ import { FloorFacade } from './floor.js'
 
 import type { Model } from '../models/interfaces.js'
 
-import type { Facade } from './interfaces.js'
+import type { IFacade } from './interfaces.js'
 import type { FacadeManager } from './manager.js'
 
 export const createFacade = (
   manager: FacadeManager,
   instance: Model,
-): Facade => {
+): IFacade => {
   if (instance instanceof AreaModel) {
     return new AreaFacade(manager, instance)
   }

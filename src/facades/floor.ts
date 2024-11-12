@@ -2,11 +2,11 @@ import { FloorModel } from '../models/index.js'
 
 import { BaseSuperDeviceFacade } from './base_super_device.js'
 
-import type { IBaseSuperDeviceFacade } from './interfaces.js'
+import type { ISuperDeviceFacade } from './interfaces.js'
 
 export class FloorFacade
   extends BaseSuperDeviceFacade<FloorModel>
-  implements IBaseSuperDeviceFacade
+  implements ISuperDeviceFacade
 {
   protected readonly frostProtectionLocation = 'FloorIds'
 
