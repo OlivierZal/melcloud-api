@@ -22,7 +22,6 @@ export abstract class BaseSuperDeviceFacade<
 {
   protected abstract readonly specification: keyof SetGroupAtaPostData['Specification']
 
-  @syncDevices
   @updateDevices({ type: 'Ata' })
   public async getAta(): Promise<GroupAtaState> {
     try {
