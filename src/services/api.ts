@@ -91,7 +91,10 @@ const setting = (
 })
 
 export class API implements IAPI {
-  public readonly onSync?: (id?: number) => Promise<void>
+  public readonly onSync?: (params?: {
+    id?: number
+    type?: keyof typeof DeviceType
+  }) => Promise<void>
 
   protected readonly settingManager?: SettingManager
 
@@ -163,7 +166,7 @@ export class API implements IAPI {
     return api
   }
 
-  @syncDevices
+  @syncDevices()
   public async fetch(): Promise<Building[]> {
     this.clearSync()
     try {

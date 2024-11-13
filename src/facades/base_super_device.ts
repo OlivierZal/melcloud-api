@@ -41,7 +41,7 @@ export abstract class BaseSuperDeviceFacade<
     }
   }
 
-  @syncDevices
+  @syncDevices({ type: 'Ata' })
   @updateDevices({ type: 'Ata' })
   public async setAta(
     state: GroupAtaState,

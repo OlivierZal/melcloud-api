@@ -3,11 +3,9 @@ import type { ISuperDeviceFacade } from '../facades/interfaces.js'
 import type { FailureData, GroupAtaState, SuccessData } from '../types/index.js'
 
 export const updateDevices =
-  <T extends boolean | FailureData | GroupAtaState | SuccessData>(
-    options: {
-      type?: keyof typeof DeviceType
-    } = {},
-  ) =>
+  <T extends boolean | FailureData | GroupAtaState | SuccessData>(params?: {
+    type?: keyof typeof DeviceType
+  }) =>
   (
     target: (...args: any[]) => Promise<T>,
     context: ClassMethodDecoratorContext,
@@ -26,9 +24,9 @@ export const updateDevices =
               ([, value]) => value !== undefined && value !== null,
             ),
           )
-      ;(options.type ?
+      ;(params?.type ?
         this.devices.filter(
-          ({ type: deviceType }) => deviceType === options.type,
+          ({ type: deviceType }) => deviceType === params.type,
         )
       : this.devices
       ).forEach((device) => {
