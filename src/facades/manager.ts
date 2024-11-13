@@ -16,15 +16,13 @@ import type {
 import type { API } from '../services/api.js'
 import type { ErrorData } from '../types/index.js'
 
-import type { AreaFacade } from './area.js'
-import type { BuildingFacade } from './building.js'
-import type { FloorFacade } from './floor.js'
 import type {
   ErrorLog,
   ErrorLogQuery,
   IBuildingFacade,
   IDeviceFacade,
   IFacade,
+  ISuperDeviceFacade,
 } from './interfaces.js'
 
 const DEFAULT_LIMIT = 1
@@ -75,23 +73,20 @@ export class FacadeManager {
     this.api = api
   }
 
-  public get(): undefined
-  public get(instance: IAreaModel): AreaFacade
-  public get(instance: IBuildingModel): IBuildingFacade
   public get<T extends keyof typeof DeviceType>(
     instance: IDeviceModel<T>,
   ): IDeviceFacade<T>
-  public get(instance: IFloorModel): FloorFacade
-  public get(
-    instance: IAreaModel | IBuildingModel | IFloorModel,
-  ): AreaFacade | BuildingFacade | FloorFacade
+  public get(instance: IAreaModel | IFloorModel): ISuperDeviceFacade
+  public get(instance: IBuildingModel): IBuildingFacade
   public get(instance: IModel): IFacade
-  public get(instance?: IAreaModel): AreaFacade | undefined
-  public get(instance?: IBuildingModel): IBuildingFacade | undefined
+  public get(): undefined
   public get<T extends keyof typeof DeviceType>(
     instance?: IDeviceModel<T>,
   ): IDeviceFacade<T> | undefined
-  public get(instance?: IFloorModel): FloorFacade | undefined
+  public get(
+    instance?: IAreaModel | IFloorModel,
+  ): ISuperDeviceFacade | undefined
+  public get(instance?: IBuildingModel): IBuildingFacade | undefined
   public get(instance?: IModel): IFacade | undefined {
     if (instance) {
       const {
