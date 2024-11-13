@@ -5,7 +5,12 @@ import type { FloorData } from '../types/index.js'
 import type { AreaModel } from './area.js'
 import type { BuildingModel } from './building.js'
 import type { DeviceModel } from './device.js'
-import type { DeviceModelAny, IFloorModel } from './interfaces.js'
+import type {
+  IAreaModel,
+  IBuildingModel,
+  IDeviceModelAny,
+  IFloorModel,
+} from './interfaces.js'
 
 export class FloorModel extends BaseModel implements IFloorModel {
   static #areaModel: typeof AreaModel
@@ -31,11 +36,11 @@ export class FloorModel extends BaseModel implements IFloorModel {
     return this.areas.map(({ id }) => id)
   }
 
-  public get areas(): AreaModel<number>[] {
+  public get areas(): IAreaModel[] {
     return FloorModel.#areaModel.getByFloorId(this.id)
   }
 
-  public get building(): BuildingModel | undefined {
+  public get building(): IBuildingModel | undefined {
     return FloorModel.#buildingModel.getById(this.buildingId)
   }
 
@@ -43,23 +48,23 @@ export class FloorModel extends BaseModel implements IFloorModel {
     return this.devices.map(({ id }) => id)
   }
 
-  public get devices(): DeviceModelAny[] {
+  public get devices(): IDeviceModelAny[] {
     return FloorModel.#deviceModel.getByFloorId(this.id)
   }
 
-  public static getAll(): FloorModel[] {
+  public static getAll(): IFloorModel[] {
     return [...this.#instances.values()]
   }
 
-  public static getByBuildingId(id: number): FloorModel[] {
+  public static getByBuildingId(id: number): IFloorModel[] {
     return this.getAll().filter(({ buildingId }) => buildingId === id)
   }
 
-  public static getById(id: number): FloorModel | undefined {
+  public static getById(id: number): IFloorModel | undefined {
     return this.#instances.get(id)
   }
 
-  public static getByName(name: string): FloorModel | undefined {
+  public static getByName(name: string): IFloorModel | undefined {
     return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 

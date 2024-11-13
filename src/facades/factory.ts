@@ -12,14 +12,14 @@ import { DeviceAtwFacade } from './device_atw.js'
 import { DeviceErvFacade } from './device_erv.js'
 import { FloorFacade } from './floor.js'
 
-import type { Model } from '../models/interfaces.js'
+import type { IModel } from '../models/interfaces.js'
 
 import type { IFacade } from './interfaces.js'
 import type { FacadeManager } from './manager.js'
 
 export const createFacade = (
   manager: FacadeManager,
-  instance: Model,
+  instance: IModel,
 ): IFacade => {
   if (instance instanceof AreaModel) {
     return new AreaFacade(manager, instance)

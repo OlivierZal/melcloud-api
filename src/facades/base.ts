@@ -5,8 +5,13 @@ import { updateDevices } from '../decorators/updateDevices.js'
 import { now } from '../utils.js'
 
 import type { DeviceType } from '../enums.js'
-import type { BuildingModel, DeviceModel, FloorModel } from '../models/index.js'
-import type { AreaModelAny, DeviceModelAny } from '../models/interfaces.js'
+import type {
+  IAreaModel,
+  IBuildingModel,
+  IDeviceModel,
+  IDeviceModelAny,
+  IFloorModel,
+} from '../models/interfaces.js'
 import type { API } from '../services/api.js'
 import type {
   DateTimeComponents,
@@ -55,7 +60,7 @@ const getEndDate = (
   : DateTime.fromISO(endDateInfo)
 
 export abstract class BaseFacade<
-  T extends AreaModelAny | BuildingModel | DeviceModelAny | FloorModel,
+  T extends IAreaModel | IBuildingModel | IDeviceModelAny | IFloorModel,
 > implements IFacade
 {
   public readonly id: number
@@ -105,7 +110,7 @@ export abstract class BaseFacade<
     return this.devices.map(({ id }) => id)
   }
 
-  public abstract get devices(): DeviceModelAny[]
+  public abstract get devices(): IDeviceModelAny[]
 
   public async onSync(): Promise<void> {
     await this.api.onSync?.()
@@ -150,13 +155,13 @@ export abstract class BaseFacade<
         this.#getZoneHolidayMode()
       : this.#getDevicesHolidayMode()
   }
+
   public async getTiles(select?: false): Promise<TilesData<null>>
   public async getTiles<K extends keyof typeof DeviceType>(
-    select: DeviceModel<K>,
+    select: IDeviceModel<K>,
   ): Promise<TilesData<K>>
-
   public async getTiles<K extends keyof typeof DeviceType>(
-    select: false | DeviceModel<K> = false,
+    select: false | IDeviceModel<K> = false,
   ): Promise<TilesData<K | null>> {
     const postData = { DeviceIDs: this.#deviceIds }
     return select === false || !this.#deviceIds.includes(select.id) ?

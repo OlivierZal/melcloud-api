@@ -3,6 +3,7 @@ import { BuildingModel } from '../models/index.js'
 
 import { BaseSuperDeviceFacade } from './base_super_device.js'
 
+import type { IBuildingModel } from '../main.js'
 import type { ZoneSettings } from '../types/index.js'
 
 import type { IBuildingFacade } from './interfaces.js'
@@ -22,7 +23,7 @@ export class BuildingFacade
 
   protected readonly tableName = 'Building'
 
-  public constructor(manager: FacadeManager, instance: BuildingModel) {
+  public constructor(manager: FacadeManager, instance: IBuildingModel) {
     super(manager, instance)
     ;({
       data: {

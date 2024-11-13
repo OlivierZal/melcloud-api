@@ -8,7 +8,7 @@ import { DEFAULT_YEAR, fromListToSetAta, now } from '../utils.js'
 import { BaseFacade } from './base.js'
 
 import type { DeviceType } from '../enums.js'
-import type { DeviceModelAny } from '../models/interfaces.js'
+import type { IDeviceModel, IDeviceModelAny } from '../models/interfaces.js'
 import type {
   EnergyData,
   GetDeviceData,
@@ -23,7 +23,7 @@ import type { IDeviceFacade } from './interfaces.js'
 import type { FacadeManager } from './manager.js'
 
 export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
-  extends BaseFacade<DeviceModelAny>
+  extends BaseFacade<IDeviceModelAny>
   implements IDeviceFacade<T>
 {
   public readonly type: T
@@ -38,12 +38,12 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
 
   public abstract readonly flags: Record<keyof UpdateDeviceData[T], number>
 
-  public constructor(manager: FacadeManager, instance: DeviceModel<T>) {
-    super(manager, instance as DeviceModelAny)
+  public constructor(manager: FacadeManager, instance: IDeviceModel<T>) {
+    super(manager, instance as IDeviceModelAny)
     ;({ type: this.type } = instance)
   }
 
-  public override get devices(): DeviceModelAny[] {
+  public override get devices(): IDeviceModelAny[] {
     return [this.instance]
   }
 
@@ -74,17 +74,17 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
 
   public override async getTiles(select?: false): Promise<TilesData<null>>
   public override async getTiles(
-    select: true | DeviceModel<T>,
+    select: true | IDeviceModel<T>,
   ): Promise<TilesData<T>>
   public override async getTiles(
-    select: boolean | DeviceModel<T> = false,
+    select: boolean | IDeviceModel<T> = false,
   ): Promise<TilesData<T | null>> {
     return (
         select === false ||
           (select instanceof DeviceModel && select.id !== this.id)
       ) ?
         super.getTiles()
-      : super.getTiles(this.instance as DeviceModel<T>)
+      : super.getTiles(this.instance as IDeviceModel<T>)
   }
 
   @fetchDevices

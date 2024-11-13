@@ -1,16 +1,18 @@
 import { DateTime } from 'luxon'
 
-import {
-  DeviceModel,
-  type BuildingModel,
-  type FloorModel,
-} from '../models/index.js'
+import { DeviceModel } from '../models/index.js'
 import { DEFAULT_YEAR, now } from '../utils.js'
 
 import { createFacade } from './factory.js'
 
 import type { DeviceType } from '../enums.js'
-import type { AreaModelAny, Model } from '../models/interfaces.js'
+import type {
+  IAreaModel,
+  IBuildingModel,
+  IDeviceModel,
+  IFloorModel,
+  IModel,
+} from '../models/interfaces.js'
 import type { API } from '../services/api.js'
 import type { ErrorData } from '../types/index.js'
 
@@ -20,6 +22,7 @@ import type { FloorFacade } from './floor.js'
 import type {
   ErrorLog,
   ErrorLogQuery,
+  IBuildingFacade,
   IDeviceFacade,
   IFacade,
 } from './interfaces.js'
@@ -73,23 +76,23 @@ export class FacadeManager {
   }
 
   public get(): undefined
-  public get(instance: AreaModelAny): AreaFacade
-  public get(instance: BuildingModel): BuildingFacade
+  public get(instance: IAreaModel): AreaFacade
+  public get(instance: IBuildingModel): IBuildingFacade
   public get<T extends keyof typeof DeviceType>(
-    instance: DeviceModel<T>,
+    instance: IDeviceModel<T>,
   ): IDeviceFacade<T>
-  public get(instance: FloorModel): FloorFacade
+  public get(instance: IFloorModel): FloorFacade
   public get(
-    instance: AreaModelAny | BuildingModel | FloorModel,
+    instance: IAreaModel | IBuildingModel | IFloorModel,
   ): AreaFacade | BuildingFacade | FloorFacade
-  public get(instance: Model): IFacade
-  public get(instance?: AreaModelAny): AreaFacade | undefined
-  public get(instance?: BuildingModel): BuildingFacade | undefined
+  public get(instance: IModel): IFacade
+  public get(instance?: IAreaModel): AreaFacade | undefined
+  public get(instance?: IBuildingModel): IBuildingFacade | undefined
   public get<T extends keyof typeof DeviceType>(
-    instance?: DeviceModel<T>,
+    instance?: IDeviceModel<T>,
   ): IDeviceFacade<T> | undefined
-  public get(instance?: FloorModel): FloorFacade | undefined
-  public get(instance?: Model): IFacade | undefined {
+  public get(instance?: IFloorModel): FloorFacade | undefined
+  public get(instance?: IModel): IFacade | undefined {
     if (instance) {
       const {
         constructor: { name },

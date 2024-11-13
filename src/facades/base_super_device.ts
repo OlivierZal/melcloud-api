@@ -3,8 +3,12 @@ import { updateDevices } from '../decorators/updateDevices.js'
 
 import { BaseFacade } from './base.js'
 
-import type { BuildingModel, FloorModel } from '../models/index.js'
-import type { AreaModelAny, DeviceModelAny } from '../models/interfaces.js'
+import type {
+  IAreaModel,
+  IBuildingModel,
+  IDeviceModelAny,
+  IFloorModel,
+} from '../models/interfaces.js'
 import type {
   FailureData,
   GroupAtaState,
@@ -15,14 +19,14 @@ import type {
 import type { ISuperDeviceFacade } from './interfaces.js'
 
 export abstract class BaseSuperDeviceFacade<
-    T extends AreaModelAny | BuildingModel | FloorModel,
+    T extends IAreaModel | IBuildingModel | IFloorModel,
   >
   extends BaseFacade<T>
   implements ISuperDeviceFacade
 {
   protected abstract readonly specification: keyof SetGroupAtaPostData['Specification']
 
-  public get devices(): DeviceModelAny[] {
+  public get devices(): IDeviceModelAny[] {
     return this.instance.devices
   }
 

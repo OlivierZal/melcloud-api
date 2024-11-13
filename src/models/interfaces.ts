@@ -1,20 +1,6 @@
 import type { DeviceType } from '../enums.js'
 import type { ListDevice, ZoneSettings } from '../types/index.js'
 
-import type { AreaModel } from './area.js'
-import type { BuildingModel } from './building.js'
-import type { DeviceModel } from './device.js'
-import type { FloorModel } from './floor.js'
-
-export type AreaModelAny = AreaModel<null> | AreaModel<number>
-
-export type DeviceModelAny =
-  | DeviceModel<'Ata'>
-  | DeviceModel<'Atw'>
-  | DeviceModel<'Erv'>
-
-export type Model = AreaModelAny | BuildingModel | DeviceModelAny | FloorModel
-
 export interface IModel {
   id: number
   name: string
@@ -22,22 +8,22 @@ export interface IModel {
 
 export interface ISubBuildingModel extends IModel {
   buildingId: number
-  building?: BuildingModel
+  building?: IBuildingModel
 }
 
 export interface ISubFloorModel extends ISubBuildingModel {
   floorId: number | null
-  floor?: FloorModel | null
+  floor?: IFloorModel | null
 }
 
 export interface ISuperDeviceModel extends IModel {
   deviceIds: number[]
-  devices: DeviceModelAny[]
+  devices: IDeviceModelAny[]
 }
 
 export interface ISuperAreaModel extends ISuperDeviceModel {
   areaIds: number[]
-  areas: AreaModel<number>[]
+  areas: IAreaModel[]
 }
 
 export interface IBaseBuildingModel {
@@ -46,7 +32,7 @@ export interface IBaseBuildingModel {
 
 export interface IBuildingModel extends IBaseBuildingModel, ISuperAreaModel {
   floorIds: number[]
-  floors: FloorModel[]
+  floors: IFloorModel[]
 }
 
 export interface IAreaModel extends ISubFloorModel, ISuperDeviceModel {}
@@ -63,5 +49,10 @@ export interface IDeviceModel<T extends keyof typeof DeviceType>
     ISubFloorModel {
   areaId: number | null
   update: (data: Partial<ListDevice[T]['Device']>) => void
-  area?: AreaModelAny | null
+  area?: IAreaModel | null
 }
+
+export type IDeviceModelAny =
+  | IDeviceModel<'Ata'>
+  | IDeviceModel<'Atw'>
+  | IDeviceModel<'Erv'>

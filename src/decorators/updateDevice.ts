@@ -3,7 +3,7 @@ import { fromSetToListAta } from '../utils.js'
 
 import type { DeviceType } from '../enums.js'
 import type { IDeviceFacade } from '../facades/interfaces.js'
-import type { DeviceModel } from '../models/index.js'
+import type { IDeviceModel } from '../models/interfaces.js'
 import type {
   GetDeviceData,
   KeysOfSetDeviceDataAtaNotInList,
@@ -51,6 +51,6 @@ export const updateDevice = <
     const {
       devices: [device],
     } = this
-    ;(device as DeviceModel<T>).update(convertToListDeviceData(this, data))
+    ;(device as IDeviceModel<T>).update(convertToListDeviceData(this, data))
     return data
   }

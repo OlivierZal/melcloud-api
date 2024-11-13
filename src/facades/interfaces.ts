@@ -1,9 +1,9 @@
 import type { DeviceType } from '../enums.js'
-import type { DeviceModel } from '../models/index.js'
 import type {
-  DeviceModelAny,
   IBaseBuildingModel,
   IBaseDeviceModel,
+  IDeviceModel,
+  IDeviceModelAny,
   IModel,
 } from '../models/interfaces.js'
 import type {
@@ -21,15 +21,6 @@ import type {
   WifiData,
   ZoneSettings,
 } from '../types/index.js'
-
-import type { DeviceAtaFacade } from './device_ata.js'
-import type { DeviceAtwFacade } from './device_atw.js'
-import type { DeviceErvFacade } from './device_erv.js'
-
-export type DeviceFacadeAny =
-  | DeviceAtaFacade
-  | DeviceAtwFacade
-  | DeviceErvFacade
 
 export interface ErrorLogQuery {
   readonly from?: string
@@ -62,13 +53,13 @@ export interface HolidayModeQuery {
 }
 
 export interface IFacade extends IModel {
-  devices: DeviceModelAny[]
+  devices: IDeviceModelAny[]
   getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
   getTiles: ((select?: false) => Promise<TilesData<null>>) &
     (<U extends keyof typeof DeviceType>(
-      select: DeviceModel<U>,
+      select: IDeviceModel<U>,
     ) => Promise<TilesData<U>>)
   getWifiReport: (hour?: number) => Promise<WifiData>
   onSync: () => Promise<void>
@@ -105,7 +96,12 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
     from?: string
     to?: string
   }) => Promise<EnergyData[T]>
-  getTiles: ((select: true | DeviceModel<T>) => Promise<TilesData<T>>) &
+  getTiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
   set: (data: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
 }
+
+export type IDeviceFacadeAny =
+  | IDeviceFacade<'Ata'>
+  | IDeviceFacade<'Atw'>
+  | IDeviceFacade<'Erv'>

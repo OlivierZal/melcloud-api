@@ -8,9 +8,10 @@ import type { AreaModel } from './area.js'
 import type { BuildingModel } from './building.js'
 import type { FloorModel } from './floor.js'
 import type {
-  AreaModelAny,
-  DeviceModelAny,
+  IAreaModel,
   IDeviceModel,
+  IDeviceModelAny,
+  IFloorModel,
 } from './interfaces.js'
 
 export class DeviceModel<T extends keyof typeof DeviceType>
@@ -23,7 +24,7 @@ export class DeviceModel<T extends keyof typeof DeviceType>
 
   static #floorModel: typeof FloorModel
 
-  static #instances = new Map<number, DeviceModelAny>()
+  static #instances = new Map<number, IDeviceModelAny>()
 
   public readonly areaId: number | null = null
 
@@ -52,7 +53,7 @@ export class DeviceModel<T extends keyof typeof DeviceType>
     this.#data = data
   }
 
-  public get area(): AreaModelAny | null | undefined {
+  public get area(): IAreaModel | null | undefined {
     return this.areaId === null ?
         null
       : DeviceModel.#areaModel.getById(this.areaId)
@@ -66,33 +67,33 @@ export class DeviceModel<T extends keyof typeof DeviceType>
     return this.#data
   }
 
-  public get floor(): FloorModel | null | undefined {
+  public get floor(): IFloorModel | null | undefined {
     return this.floorId === null ?
         null
       : DeviceModel.#floorModel.getById(this.floorId)
   }
 
-  public static getAll(): DeviceModelAny[] {
+  public static getAll(): IDeviceModelAny[] {
     return [...this.#instances.values()]
   }
 
-  public static getByAreaId(id: number): DeviceModelAny[] {
+  public static getByAreaId(id: number): IDeviceModelAny[] {
     return this.getAll().filter(({ areaId }) => areaId === id)
   }
 
-  public static getByBuildingId(id: number): DeviceModelAny[] {
+  public static getByBuildingId(id: number): IDeviceModelAny[] {
     return this.getAll().filter(({ buildingId }) => buildingId === id)
   }
 
-  public static getByFloorId(id: number): DeviceModelAny[] {
+  public static getByFloorId(id: number): IDeviceModelAny[] {
     return this.getAll().filter(({ floorId }) => floorId === id)
   }
 
-  public static getById(id: number): DeviceModelAny | undefined {
+  public static getById(id: number): IDeviceModelAny | undefined {
     return this.#instances.get(id)
   }
 
-  public static getByName(name: string): DeviceModelAny | undefined {
+  public static getByName(name: string): IDeviceModelAny | undefined {
     return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
@@ -122,7 +123,7 @@ export class DeviceModel<T extends keyof typeof DeviceType>
     this.#instances = new Map(
       devices.map((device) => [
         device.DeviceID,
-        new this(device) as DeviceModelAny,
+        new this(device) as IDeviceModelAny,
       ]),
     )
   }

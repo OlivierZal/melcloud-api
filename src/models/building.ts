@@ -6,9 +6,10 @@ import type { AreaModel } from './area.js'
 import type { DeviceModel } from './device.js'
 import type { FloorModel } from './floor.js'
 import type {
-  AreaModelAny,
-  DeviceModelAny,
+  IAreaModel,
   IBuildingModel,
+  IDeviceModelAny,
+  IFloorModel,
 } from './interfaces.js'
 
 export class BuildingModel extends BaseModel implements IBuildingModel {
@@ -18,7 +19,7 @@ export class BuildingModel extends BaseModel implements IBuildingModel {
 
   static #floorModel: typeof FloorModel
 
-  static #instances = new Map<number, BuildingModel>()
+  static #instances = new Map<number, IBuildingModel>()
 
   public readonly data: ZoneSettings
 
@@ -31,7 +32,7 @@ export class BuildingModel extends BaseModel implements IBuildingModel {
     return this.areas.map(({ id }) => id)
   }
 
-  public get areas(): AreaModelAny[] {
+  public get areas(): IAreaModel[] {
     return BuildingModel.#areaModel.getByBuildingId(this.id)
   }
 
@@ -39,7 +40,7 @@ export class BuildingModel extends BaseModel implements IBuildingModel {
     return this.devices.map(({ id }) => id)
   }
 
-  public get devices(): DeviceModelAny[] {
+  public get devices(): IDeviceModelAny[] {
     return BuildingModel.#deviceModel.getByBuildingId(this.id)
   }
 
@@ -47,19 +48,19 @@ export class BuildingModel extends BaseModel implements IBuildingModel {
     return this.areas.map(({ id }) => id)
   }
 
-  public get floors(): FloorModel[] {
+  public get floors(): IFloorModel[] {
     return BuildingModel.#floorModel.getByBuildingId(this.id)
   }
 
-  public static getAll(): BuildingModel[] {
+  public static getAll(): IBuildingModel[] {
     return [...this.#instances.values()]
   }
 
-  public static getById(id: number): BuildingModel | undefined {
+  public static getById(id: number): IBuildingModel | undefined {
     return this.#instances.get(id)
   }
 
-  public static getByName(name: string): BuildingModel | undefined {
+  public static getByName(name: string): IBuildingModel | undefined {
     return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 

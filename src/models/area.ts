@@ -5,7 +5,12 @@ import type { AreaData, AreaDataAny } from '../types/index.js'
 import type { BuildingModel } from './building.js'
 import type { DeviceModel } from './device.js'
 import type { FloorModel } from './floor.js'
-import type { AreaModelAny, DeviceModelAny, IAreaModel } from './interfaces.js'
+import type {
+  IAreaModel,
+  IBuildingModel,
+  IDeviceModelAny,
+  IFloorModel,
+} from './interfaces.js'
 
 export class AreaModel<T extends number | null>
   extends BaseModel
@@ -17,7 +22,7 @@ export class AreaModel<T extends number | null>
 
   static #floorModel: typeof FloorModel
 
-  static #instances = new Map<number, AreaModelAny>()
+  static #instances = new Map<number, IAreaModel>()
 
   public readonly buildingId: number
 
@@ -34,7 +39,7 @@ export class AreaModel<T extends number | null>
     this.floorId = floorId
   }
 
-  public get building(): BuildingModel | undefined {
+  public get building(): IBuildingModel | undefined {
     return AreaModel.#buildingModel.getById(this.buildingId)
   }
 
@@ -42,33 +47,33 @@ export class AreaModel<T extends number | null>
     return this.devices.map(({ id }) => id)
   }
 
-  public get devices(): DeviceModelAny[] {
+  public get devices(): IDeviceModelAny[] {
     return AreaModel.#deviceModel.getByAreaId(this.id)
   }
 
-  public get floor(): FloorModel | null | undefined {
+  public get floor(): IFloorModel | null | undefined {
     return this.floorId === null ?
         null
       : AreaModel.#floorModel.getById(this.floorId)
   }
 
-  public static getAll(): AreaModelAny[] {
+  public static getAll(): IAreaModel[] {
     return [...this.#instances.values()]
   }
 
-  public static getByBuildingId(id: number): AreaModelAny[] {
+  public static getByBuildingId(id: number): IAreaModel[] {
     return this.getAll().filter(({ buildingId }) => buildingId === id)
   }
 
-  public static getByFloorId(id: number): AreaModelAny[] {
+  public static getByFloorId(id: number): IAreaModel[] {
     return this.getAll().filter(({ floorId }) => floorId === id)
   }
 
-  public static getById(id: number): AreaModelAny | undefined {
+  public static getById(id: number): IAreaModel | undefined {
     return this.#instances.get(id)
   }
 
-  public static getByName(name: string): AreaModelAny | undefined {
+  public static getByName(name: string): IAreaModel | undefined {
     return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
