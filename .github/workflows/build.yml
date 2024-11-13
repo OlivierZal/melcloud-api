@@ -3,6 +3,9 @@ on:
   pull_request:
   push:
     branches: main
+permissions:
+  contents: write
+  pull-requests: write
 jobs:
   build:
     name: Build package
@@ -23,15 +26,19 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Code maintenance: lint, format and build code, generate docs"
-          if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
-            echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
-            BRANCH_NAME="maintenance-$(date +'%Y%m%d%H%M%S')"
-            git checkout -b "$BRANCH_NAME"
-            git push origin "$BRANCH_NAME"
-            gh pr create --base main --head "$BRANCH_NAME" --title "Maintenance PR" --body "Automatic code maintenance: lint, format and build code, generate docs."
-            gh pr merge --auto --squash --delete-branch ${{ github.event.pull_request.html_url }}
-          else
-            git pull origin ${{ github.head_ref }} --rebase
-            git push origin HEAD:${{ github.head_ref }}
+          if ! git diff --cached --exit-code; then
+            git commit -m "Code maintenance: lint, format and build code, generate docs"
+            if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
+              BRANCH_NAME="maintenance-$(date +'%Y%m%d%H%M%S')"
+              git checkout -b "$BRANCH_NAME"
+              git push origin "$BRANCH_NAME"
+              gh pr create --base main --head "$BRANCH_NAME" --title "Maintenance PR" --body "Automatic code maintenance: lint, format and build code."
+              PR_URL=$(gh pr view "$BRANCH_NAME" --json url -q '.url')
+              gh pr merge --auto --merge --delete-branch "$PR_URL"
+            else
+              git pull origin ${{ github.head_ref }} --rebase
+              git push origin HEAD:${{ github.head_ref }}
+            fi
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
