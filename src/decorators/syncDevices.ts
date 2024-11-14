@@ -22,7 +22,7 @@ export const syncDevices =
       | SetDeviceData[T]
       | SuccessData,
   >(params?: {
-    type?: keyof typeof DeviceType
+    type?: T
   }) =>
   (
     target: (...args: any[]) => Promise<U>,

@@ -56,14 +56,16 @@ export interface Logger {
   log: Console['log']
 }
 
+export type OnSyncFunction = (params?: {
+  ids?: number[]
+  type?: keyof typeof DeviceType
+}) => Promise<void>
+
 export interface APIConfig extends Partial<LoginCredentials> {
   autoSyncInterval?: number | null
   language?: string
   logger?: Logger
-  onSync?: (params?: {
-    id?: number
-    type?: keyof typeof DeviceType
-  }) => Promise<void>
+  onSync?: OnSyncFunction
   settingManager?: SettingManager
   shouldVerifySSL?: boolean
   timezone?: string
@@ -156,8 +158,5 @@ export interface IAPI {
   }: {
     postData: { language: Language }
   }) => Promise<{ data: boolean }>
-  onSync?: (params?: {
-    id?: number
-    type?: keyof typeof DeviceType
-  }) => Promise<void>
+  onSync?: OnSyncFunction
 }

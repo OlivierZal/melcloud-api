@@ -62,7 +62,7 @@ export interface IFacade extends IModel {
       select: IDeviceModel<U>,
     ) => Promise<TilesData<U>>)
   getWifiReport: (hour?: number) => Promise<WifiData>
-  onSync: () => Promise<void>
+  onSync: (params?: { type?: keyof typeof DeviceType }) => Promise<void>
   setFrostProtection: (
     query: FrostProtectionQuery,
   ) => Promise<FailureData | SuccessData>

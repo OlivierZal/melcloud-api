@@ -112,10 +112,12 @@ export abstract class BaseFacade<
 
   public abstract get devices(): IDeviceModelAny[]
 
-  public async onSync(params?: {
+  public async onSync({
+    type,
+  }: {
     type?: keyof typeof DeviceType
-  }): Promise<void> {
-    await this.api.onSync?.(params)
+  } = {}): Promise<void> {
+    await this.api.onSync?.({ ids: this.#deviceIds, type })
   }
 
   @syncDevices()

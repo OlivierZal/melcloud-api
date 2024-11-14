@@ -60,6 +60,7 @@ export type {
   APISettings,
   IAPI,
   Logger,
+  OnSyncFunction,
   SettingManager,
 } from './services/interfaces.js'
 export type {

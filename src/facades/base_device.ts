@@ -68,12 +68,6 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
     ) as Required<UpdateDeviceData[T]>
   }
 
-  public override async onSync(params?: {
-    type?: keyof typeof DeviceType
-  }): Promise<void> {
-    await this.api.onSync?.({ id: this.id, type: params?.type })
-  }
-
   public override async getTiles(select?: false): Promise<TilesData<null>>
   public override async getTiles(
     select: true | IDeviceModel<T>,

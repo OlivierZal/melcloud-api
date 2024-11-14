@@ -26,6 +26,7 @@ import {
   type APIConfig,
   type IAPI,
   type Logger,
+  type OnSyncFunction,
   type SettingManager,
 } from './interfaces.js'
 
@@ -91,10 +92,7 @@ const setting = (
 })
 
 export class API implements IAPI {
-  public readonly onSync?: (params?: {
-    id?: number
-    type?: keyof typeof DeviceType
-  }) => Promise<void>
+  public readonly onSync?: OnSyncFunction
 
   protected readonly settingManager?: SettingManager
 
