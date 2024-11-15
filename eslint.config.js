@@ -405,7 +405,7 @@ const config = [
         ...importPlugin.flatConfigs.typescript.settings,
         'import/resolver': {
           ...importPlugin.flatConfigs.typescript.settings['import/resolver'],
-          typescript: {
+          '@helljs/eslint-import-resolver-x': {
             alwaysTryTypes: true,
           },
         },

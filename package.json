@@ -42,12 +42,12 @@
   "devDependencies": {
     "@eslint/js": "^9.14.0",
     "@eslint/markdown": "^6.2.1",
+    "@helljs/eslint-import-resolver-x": "^1.0.3",
     "@stylistic/eslint-plugin": "^2.10.1",
     "@types/luxon": "^3.4.2",
     "@types/node": "^22.9.0",
     "eslint": "^9.14.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-package-json": "^0.15.6",
     "eslint-plugin-perfectionist": "^3.9.1",
