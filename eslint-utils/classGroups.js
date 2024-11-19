@@ -1,6 +1,6 @@
 import { buildGroups } from './buildGroups.js'
 
-const modifiers = [
+const orderedModifiers = [
   ['declare', 'override', ''],
   ['static', '', 'abstract'],
   ['decorated', ''],
@@ -26,7 +26,7 @@ const selectors = [
   'method',
 ]
 
-const allModifiers = modifiers.flat().filter(Boolean)
+const allModifiers = orderedModifiers.flat().filter(Boolean)
 const baseMethodIncompatibilities = ['declare', 'readonly']
 const accessorIncompatibilities = [...baseMethodIncompatibilities, 'optional']
 const selectorIncompatibilities = {
@@ -67,7 +67,7 @@ export const classGroups = {
   ],
   groups: buildGroups({
     modifierIncompatibilities,
-    modifiers,
+    orderedModifiers,
     selectorIncompatibilities,
     selectors,
   }),

@@ -32,13 +32,6 @@ export interface EnergyDataAta {
   readonly UsageDisclaimerPercentages: string
 }
 
-export type GetDeviceDataAta = BaseGetDeviceData & SetDeviceDataAta
-
-export type KeysOfSetDeviceDataAtaNotInList =
-  | 'SetFanSpeed'
-  | 'VaneHorizontal'
-  | 'VaneVertical'
-
 export interface ListDeviceAta extends BaseListDevice {
   readonly Device: ListDeviceDataAta
 }
@@ -86,3 +79,10 @@ export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly VaneHorizontal?: Horizontal
   readonly VaneVertical?: Vertical
 }
+
+export type GetDeviceDataAta = BaseGetDeviceData & SetDeviceDataAta
+
+export type KeysOfSetDeviceDataAtaNotInList =
+  | 'SetFanSpeed'
+  | 'VaneHorizontal'
+  | 'VaneVertical'

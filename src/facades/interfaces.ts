@@ -78,11 +78,6 @@ export interface IDeviceFacade<T extends keyof typeof DeviceType>
   set: (data: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
 }
 
-export type IDeviceFacadeAny =
-  | IDeviceFacade<'Ata'>
-  | IDeviceFacade<'Atw'>
-  | IDeviceFacade<'Erv'>
-
 export interface IFacade extends IModel {
   devices: IDeviceModelAny[]
   getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
@@ -107,3 +102,8 @@ export interface ISuperDeviceFacade extends IFacade {
   getAta: () => Promise<GroupAtaState>
   setAta: (state: GroupAtaState) => Promise<FailureData | SuccessData>
 }
+
+export type IDeviceFacadeAny =
+  | IDeviceFacade<'Ata'>
+  | IDeviceFacade<'Atw'>
+  | IDeviceFacade<'Erv'>

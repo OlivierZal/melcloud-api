@@ -10,8 +10,6 @@ import type {
   DeviceDataNotInList,
 } from './bases.js'
 
-export type GetDeviceDataErv = BaseGetDeviceData & SetDeviceDataErv
-
 export interface ListDeviceDataErv
   extends BaseListDeviceData,
     Omit<GetDeviceDataErv, keyof DeviceDataNotInList> {
@@ -43,3 +41,5 @@ export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
   readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
   readonly VentilationMode?: VentilationMode
 }
+
+export type GetDeviceDataErv = BaseGetDeviceData & SetDeviceDataErv

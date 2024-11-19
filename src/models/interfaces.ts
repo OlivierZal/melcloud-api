@@ -25,11 +25,6 @@ export interface IDeviceModel<T extends keyof typeof DeviceType>
   area?: IAreaModel | null
 }
 
-export type IDeviceModelAny =
-  | IDeviceModel<'Ata'>
-  | IDeviceModel<'Atw'>
-  | IDeviceModel<'Erv'>
-
 export interface IFloorModel extends ISubBuildingModel, ISuperAreaModel {}
 
 export interface IModel {
@@ -56,3 +51,8 @@ export interface ISuperDeviceModel extends IModel {
   deviceIds: number[]
   devices: IDeviceModelAny[]
 }
+
+export type IDeviceModelAny =
+  | IDeviceModel<'Ata'>
+  | IDeviceModel<'Atw'>
+  | IDeviceModel<'Erv'>

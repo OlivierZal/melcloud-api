@@ -24,8 +24,6 @@ export interface EnergyDataAtw {
   readonly TotalHotWaterProduced: number
 }
 
-export type GetDeviceDataAtw = BaseGetDeviceData & SetDeviceDataAtw
-
 export interface ListDeviceAtw extends BaseListDevice {
   readonly Device: ListDeviceDataAtw
 }
@@ -105,5 +103,7 @@ export interface UpdateDeviceDataAtw
     TemperatureDataAtw {
   readonly ForcedHotWaterMode?: boolean
 }
+
+export type GetDeviceDataAtw = BaseGetDeviceData & SetDeviceDataAtw
 
 export type ZoneAtw = 'Zone1' | 'Zone2'

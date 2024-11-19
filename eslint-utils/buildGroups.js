@@ -10,11 +10,14 @@ const cartesianProduct = (arrays) =>
     [[]],
   )
 
-const allModifierCombos = (modifiers) =>
-  cartesianProduct(modifiers).map((combo) => combo.filter(Boolean))
+const allModifierCombos = (orderedModifiers) =>
+  cartesianProduct(orderedModifiers).map((combo) => combo.filter(Boolean))
 
-const compatibleModifierCombos = ({ modifierIncompatibilities, modifiers }) =>
-  allModifierCombos(modifiers).filter((combo) =>
+const compatibleModifierCombos = ({
+  modifierIncompatibilities,
+  orderedModifiers,
+}) =>
+  allModifierCombos(orderedModifiers).filter((combo) =>
     combo.every((modifier) =>
       (modifierIncompatibilities[modifier] ?? []).every(
         (incompatibleModifier) => !combo.includes(incompatibleModifier),
@@ -24,11 +27,11 @@ const compatibleModifierCombos = ({ modifierIncompatibilities, modifiers }) =>
 
 const buildGroupsForSelector = ({
   modifierIncompatibilities,
-  modifiers,
+  orderedModifiers,
   selector,
   selectorIncompatibilities,
 }) =>
-  compatibleModifierCombos({ modifierIncompatibilities, modifiers })
+  compatibleModifierCombos({ modifierIncompatibilities, orderedModifiers })
     .filter((combo) =>
       combo.every(
         (modifier) =>
@@ -39,7 +42,7 @@ const buildGroupsForSelector = ({
 
 export const buildGroups = ({
   modifierIncompatibilities,
-  modifiers,
+  orderedModifiers,
   selectorIncompatibilities,
   selectors,
 }) =>
@@ -48,7 +51,7 @@ export const buildGroups = ({
       const groupPairs = selector.map((pairedSelector) =>
         buildGroupsForSelector({
           modifierIncompatibilities,
-          modifiers,
+          orderedModifiers,
           selector: pairedSelector,
           selectorIncompatibilities,
         }),
@@ -60,7 +63,7 @@ export const buildGroups = ({
     }
     return buildGroupsForSelector({
       modifierIncompatibilities,
-      modifiers,
+      orderedModifiers,
       selector,
       selectorIncompatibilities,
     })

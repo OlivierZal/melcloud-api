@@ -151,12 +151,12 @@ export interface Logger {
   log: Console['log']
 }
 
-export type OnSyncFunction = (params?: {
-  ids?: number[]
-  type?: keyof typeof DeviceType
-}) => Promise<void>
-
 export interface SettingManager {
   get: <K extends keyof APISettings>(key: K) => APISettings[K]
   set: <K extends keyof APISettings>(key: K, value: APISettings[K]) => void
 }
+
+export type OnSyncFunction = (params?: {
+  ids?: number[]
+  type?: keyof typeof DeviceType
+}) => Promise<void>

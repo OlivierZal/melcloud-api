@@ -8,7 +8,6 @@ import perfectionist from 'eslint-plugin-perfectionist'
 import ts, { configs as tsConfigs } from 'typescript-eslint'
 
 import { classGroups } from './eslint-utils/classGroups.js'
-import { moduleGroups } from './eslint-utils/moduleGroups.js'
 
 const decoratorGroups = {
   customGroups: {
@@ -17,6 +16,31 @@ const decoratorGroups = {
     'update-decorator': '^updateDevice(s)?$',
   },
   groups: ['sync-decorator', 'update-decorator', 'unknown', 'fetch-decorator'],
+}
+
+const moduleGroups = {
+  groups: [
+    'declare-enum',
+    'enum',
+    'export-enum',
+    'declare-interface',
+    'interface',
+    'export-interface',
+    'declare-type',
+    'type',
+    'export-type',
+    'declare-class',
+    'class',
+    'export-class',
+    'declare-function',
+    'function',
+    'export-function',
+    [
+      'export-default-interface',
+      'export-default-class',
+      'export-default-function',
+    ],
+  ],
 }
 
 const importGroups = {

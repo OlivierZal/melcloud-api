@@ -37,8 +37,6 @@ export interface AreaData<T extends number | null> extends FloorData {
   readonly FloorId: T
 }
 
-export type AreaDataAny = AreaData<null> | AreaData<number>
-
 export interface Building extends BuildingData {
   readonly Structure: {
     readonly Areas: readonly (AreaData<null> & {
@@ -58,15 +56,6 @@ export interface BuildingData extends ZoneSettings {
   readonly ID: number
   readonly Name: string
 }
-
-export type DateTimeComponents = {
-  readonly Day: number
-  readonly Hour: number
-  readonly Minute: number
-  readonly Month: number
-  readonly Second: number
-  readonly Year: number
-} | null
 
 export interface EnergyData {
   readonly Ata: EnergyDataAta
@@ -134,6 +123,7 @@ export interface GetDeviceDataParams {
   readonly buildingId: number
   readonly id: number
 }
+
 export interface GetGroupAtaData {
   readonly Data: {
     readonly Group: {
@@ -208,18 +198,11 @@ export interface ListDevice {
   readonly Erv: ListDeviceErv
 }
 
-export type ListDeviceAny = ListDeviceAta | ListDeviceAtw | ListDeviceErv
-
 export interface ListDeviceData {
   readonly Ata: ListDeviceDataAta
   readonly Atw: ListDeviceDataAtw
   readonly Erv: ListDeviceDataErv
 }
-
-export type ListDeviceDataAny =
-  | ListDeviceDataAta
-  | ListDeviceDataAtw
-  | ListDeviceDataErv
 
 export interface LoginCredentials {
   readonly password: string
@@ -286,18 +269,6 @@ export interface TilesData<T extends keyof typeof DeviceType | null> {
   }[]
 }
 
-export type TilesPostData<T extends keyof typeof DeviceType | null> = {
-  readonly DeviceIDs: readonly number[]
-} & (T extends keyof typeof DeviceType ?
-  {
-    readonly SelectedBuilding: number
-    readonly SelectedDevice: number
-  }
-: {
-    readonly SelectedBuilding?: null
-    readonly SelectedDevice?: null
-  })
-
 export interface UpdateDeviceData {
   readonly Ata: UpdateDeviceDataAta
   readonly Atw: UpdateDeviceDataAtw
@@ -315,6 +286,30 @@ export interface WifiPostData {
   readonly devices: readonly number[]
   readonly hour: number
 }
+
 export interface ZoneSettings
   extends FrostProtectionData,
     Omit<HolidayModeData, 'EndDate' | 'StartDate'> {}
+
+export type AreaDataAny = AreaData<null> | AreaData<number>
+
+export type DateTimeComponents = {
+  readonly Day: number
+  readonly Hour: number
+  readonly Minute: number
+  readonly Month: number
+  readonly Second: number
+  readonly Year: number
+} | null
+
+export type ListDeviceAny = ListDeviceAta | ListDeviceAtw | ListDeviceErv
+
+export type ListDeviceDataAny =
+  | ListDeviceDataAta
+  | ListDeviceDataAtw
+  | ListDeviceDataErv
+export type TilesPostData<T extends keyof typeof DeviceType | null> = {
+  readonly DeviceIDs: readonly number[]
+} & (T extends keyof typeof DeviceType ?
+  { readonly SelectedBuilding: number; readonly SelectedDevice: number }
+: { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })
