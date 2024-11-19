@@ -18,31 +18,6 @@ const decoratorGroups = {
   groups: ['sync-decorator', 'update-decorator', 'unknown', 'fetch-decorator'],
 }
 
-const moduleGroups = {
-  groups: [
-    'declare-enum',
-    'enum',
-    'export-enum',
-    'declare-interface',
-    'interface',
-    'export-interface',
-    'declare-type',
-    'type',
-    'export-type',
-    'declare-class',
-    'class',
-    'export-class',
-    'declare-function',
-    'function',
-    'export-function',
-    [
-      'export-default-interface',
-      'export-default-class',
-      'export-default-function',
-    ],
-  ],
-}
-
 const importGroups = {
   groups: [
     'side-effect',
@@ -81,6 +56,31 @@ const typeGroups = {
     'operator',
     'unknown',
     'nullish',
+  ],
+}
+
+const moduleGroups = {
+  groups: [
+    'declare-enum',
+    'enum',
+    'export-enum',
+    'declare-interface',
+    'interface',
+    'export-interface',
+    'declare-type',
+    'type',
+    'export-type',
+    'declare-class',
+    'class',
+    'export-class',
+    'declare-function',
+    'function',
+    'export-function',
+    [
+      'export-default-interface',
+      'export-default-class',
+      'export-default-function',
+    ],
   ],
 }
 
