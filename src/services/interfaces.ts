@@ -46,21 +46,6 @@ export const isAPISetting = (key: string): key is keyof APISettings =>
     ] satisfies (keyof APISettings)[] as string[]
   ).includes(key)
 
-export interface SettingManager {
-  get: <K extends keyof APISettings>(key: K) => APISettings[K]
-  set: <K extends keyof APISettings>(key: K, value: APISettings[K]) => void
-}
-
-export interface Logger {
-  error: Console['error']
-  log: Console['log']
-}
-
-export type OnSyncFunction = (params?: {
-  ids?: number[]
-  type?: keyof typeof DeviceType
-}) => Promise<void>
-
 export interface APIConfig extends Partial<LoginCredentials> {
   autoSyncInterval?: number | null
   language?: string
@@ -159,4 +144,19 @@ export interface IAPI {
     postData: { language: Language }
   }) => Promise<{ data: boolean }>
   onSync?: OnSyncFunction
+}
+
+export interface Logger {
+  error: Console['error']
+  log: Console['log']
+}
+
+export type OnSyncFunction = (params?: {
+  ids?: number[]
+  type?: keyof typeof DeviceType
+}) => Promise<void>
+
+export interface SettingManager {
+  get: <K extends keyof APISettings>(key: K) => APISettings[K]
+  set: <K extends keyof APISettings>(key: K, value: APISettings[K]) => void
 }

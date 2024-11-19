@@ -22,22 +22,24 @@ import type {
   ZoneSettings,
 } from '../types/index.js'
 
-export interface ErrorLogQuery {
-  readonly from?: string
-  readonly limit?: string
-  readonly offset?: string
-  readonly to?: string
-}
 export interface ErrorDetails {
   readonly date: string
   readonly device: string
   readonly error: string
 }
+
 export interface ErrorLog {
   readonly errors: ErrorDetails[]
   readonly fromDateHuman: string
   readonly nextFromDate: string
   readonly nextToDate: string
+}
+
+export interface ErrorLogQuery {
+  readonly from?: string
+  readonly limit?: string
+  readonly offset?: string
+  readonly to?: string
 }
 
 export interface FrostProtectionQuery {
@@ -50,31 +52,6 @@ export interface HolidayModeQuery {
   readonly days?: number
   readonly from?: string
   readonly to?: string | null
-}
-
-export interface IFacade extends IModel {
-  devices: IDeviceModelAny[]
-  getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
-  getFrostProtection: () => Promise<FrostProtectionData>
-  getHolidayMode: () => Promise<HolidayModeData>
-  getTiles: ((select?: false) => Promise<TilesData<null>>) &
-    (<U extends keyof typeof DeviceType>(
-      select: IDeviceModel<U>,
-    ) => Promise<TilesData<U>>)
-  getWifiReport: (hour?: number) => Promise<WifiData>
-  onSync: (params?: { type?: keyof typeof DeviceType }) => Promise<void>
-  setFrostProtection: (
-    query: FrostProtectionQuery,
-  ) => Promise<FailureData | SuccessData>
-  setHolidayMode: (
-    query: HolidayModeQuery,
-  ) => Promise<FailureData | SuccessData>
-  setPower: (power?: boolean) => Promise<boolean>
-}
-
-export interface ISuperDeviceFacade extends IFacade {
-  getAta: () => Promise<GroupAtaState>
-  setAta: (state: GroupAtaState) => Promise<FailureData | SuccessData>
 }
 
 export interface IBuildingFacade
@@ -105,3 +82,28 @@ export type IDeviceFacadeAny =
   | IDeviceFacade<'Ata'>
   | IDeviceFacade<'Atw'>
   | IDeviceFacade<'Erv'>
+
+export interface IFacade extends IModel {
+  devices: IDeviceModelAny[]
+  getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
+  getFrostProtection: () => Promise<FrostProtectionData>
+  getHolidayMode: () => Promise<HolidayModeData>
+  getTiles: ((select?: false) => Promise<TilesData<null>>) &
+    (<U extends keyof typeof DeviceType>(
+      select: IDeviceModel<U>,
+    ) => Promise<TilesData<U>>)
+  getWifiReport: (hour?: number) => Promise<WifiData>
+  onSync: (params?: { type?: keyof typeof DeviceType }) => Promise<void>
+  setFrostProtection: (
+    query: FrostProtectionQuery,
+  ) => Promise<FailureData | SuccessData>
+  setHolidayMode: (
+    query: HolidayModeQuery,
+  ) => Promise<FailureData | SuccessData>
+  setPower: (power?: boolean) => Promise<boolean>
+}
+
+export interface ISuperDeviceFacade extends IFacade {
+  getAta: () => Promise<GroupAtaState>
+  setAta: (state: GroupAtaState) => Promise<FailureData | SuccessData>
+}

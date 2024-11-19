@@ -14,49 +14,21 @@ import type {
   DeviceDataNotInList,
 } from './bases.js'
 
-export type ZoneAtw = 'Zone1' | 'Zone2'
-
-export interface OperationModeZoneDataAtw {
-  readonly OperationModeZone1?: OperationModeZone
-  readonly OperationModeZone2?: OperationModeZone
-}
-export interface TemperatureDataAtw {
-  readonly SetCoolFlowTemperatureZone1?: number
-  readonly SetCoolFlowTemperatureZone2?: number
-  readonly SetHeatFlowTemperatureZone1?: number
-  readonly SetHeatFlowTemperatureZone2?: number
-  readonly SetTankWaterTemperature?: number
-  readonly SetTemperatureZone1?: number
-  readonly SetTemperatureZone2?: number
-}
-export interface UpdateDeviceDataAtw
-  extends BaseUpdateDeviceData,
-    OperationModeZoneDataAtw,
-    TemperatureDataAtw {
-  readonly ForcedHotWaterMode?: boolean
-}
-export interface SetDevicePostDataAtw
-  extends UpdateDeviceDataAtw,
-    BaseDevicePostData {}
-export interface SetDeviceDataAtw
-  extends BaseSetDeviceData,
-    Required<UpdateDeviceDataAtw> {
-  readonly DeviceType: DeviceType.Atw
-  readonly IdleZone1: boolean
-  readonly IdleZone2: boolean
-  readonly OperationMode: OperationModeState
-  readonly OutdoorTemperature: number
-  readonly ProhibitCoolingZone1: boolean
-  readonly ProhibitCoolingZone2: boolean
-  readonly ProhibitHeatingZone1: boolean
-  readonly ProhibitHeatingZone2: boolean
-  readonly ProhibitHotWater: boolean
-  readonly RoomTemperatureZone1: number
-  readonly RoomTemperatureZone2: number
-  readonly TankWaterTemperature: number
+export interface EnergyDataAtw {
+  readonly CoP: readonly number[]
+  readonly TotalCoolingConsumed: number
+  readonly TotalCoolingProduced: number
+  readonly TotalHeatingConsumed: number
+  readonly TotalHeatingProduced: number
+  readonly TotalHotWaterConsumed: number
+  readonly TotalHotWaterProduced: number
 }
 
 export type GetDeviceDataAtw = BaseGetDeviceData & SetDeviceDataAtw
+
+export interface ListDeviceAtw extends BaseListDevice {
+  readonly Device: ListDeviceDataAtw
+}
 
 export interface ListDeviceDataAtw
   extends BaseListDeviceData,
@@ -89,16 +61,49 @@ export interface ListDeviceDataAtw
   readonly Zone2InCoolMode: boolean
   readonly Zone2InHeatMode: boolean
 }
-export interface ListDeviceAtw extends BaseListDevice {
-  readonly Device: ListDeviceDataAtw
+
+export interface OperationModeZoneDataAtw {
+  readonly OperationModeZone1?: OperationModeZone
+  readonly OperationModeZone2?: OperationModeZone
 }
 
-export interface EnergyDataAtw {
-  readonly CoP: readonly number[]
-  readonly TotalCoolingConsumed: number
-  readonly TotalCoolingProduced: number
-  readonly TotalHeatingConsumed: number
-  readonly TotalHeatingProduced: number
-  readonly TotalHotWaterConsumed: number
-  readonly TotalHotWaterProduced: number
+export interface SetDeviceDataAtw
+  extends BaseSetDeviceData,
+    Required<UpdateDeviceDataAtw> {
+  readonly DeviceType: DeviceType.Atw
+  readonly IdleZone1: boolean
+  readonly IdleZone2: boolean
+  readonly OperationMode: OperationModeState
+  readonly OutdoorTemperature: number
+  readonly ProhibitCoolingZone1: boolean
+  readonly ProhibitCoolingZone2: boolean
+  readonly ProhibitHeatingZone1: boolean
+  readonly ProhibitHeatingZone2: boolean
+  readonly ProhibitHotWater: boolean
+  readonly RoomTemperatureZone1: number
+  readonly RoomTemperatureZone2: number
+  readonly TankWaterTemperature: number
 }
+
+export interface SetDevicePostDataAtw
+  extends BaseDevicePostData,
+    UpdateDeviceDataAtw {}
+
+export interface TemperatureDataAtw {
+  readonly SetCoolFlowTemperatureZone1?: number
+  readonly SetCoolFlowTemperatureZone2?: number
+  readonly SetHeatFlowTemperatureZone1?: number
+  readonly SetHeatFlowTemperatureZone2?: number
+  readonly SetTankWaterTemperature?: number
+  readonly SetTemperatureZone1?: number
+  readonly SetTemperatureZone2?: number
+}
+
+export interface UpdateDeviceDataAtw
+  extends BaseUpdateDeviceData,
+    OperationModeZoneDataAtw,
+    TemperatureDataAtw {
+  readonly ForcedHotWaterMode?: boolean
+}
+
+export type ZoneAtw = 'Zone1' | 'Zone2'

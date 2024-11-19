@@ -4,6 +4,27 @@ export enum DeviceType {
   Erv = 3,
 }
 
+export enum FanSpeed {
+  auto = 0,
+  fast = 4,
+  moderate = 3,
+  silent = 255,
+  slow = 2,
+  very_fast = 5,
+  very_slow = 1,
+}
+
+export enum Horizontal {
+  auto = 0,
+  center = 3,
+  center_left = 2,
+  center_right = 4,
+  leftwards = 1,
+  rightwards = 5,
+  swing = 12,
+  wide = 8,
+}
+
 export enum Language {
   bg = 1,
   cs = 2,
@@ -34,43 +55,12 @@ export enum Language {
   uk = 20,
 }
 
-export enum FanSpeed {
-  auto = 0,
-  fast = 4,
-  moderate = 3,
-  silent = 255,
-  slow = 2,
-  very_fast = 5,
-  very_slow = 1,
-}
-
 export enum OperationMode {
   auto = 8,
   cool = 3,
   dry = 2,
   fan = 7,
   heat = 1,
-}
-
-export enum Vertical {
-  auto = 0,
-  downwards = 5,
-  mid_high = 2,
-  mid_low = 4,
-  middle = 3,
-  swing = 7,
-  upwards = 1,
-}
-
-export enum Horizontal {
-  auto = 0,
-  center = 3,
-  center_left = 2,
-  center_right = 4,
-  leftwards = 1,
-  rightwards = 5,
-  swing = 12,
-  wide = 8,
 }
 
 export enum OperationModeState {
@@ -94,4 +84,14 @@ export enum VentilationMode {
   auto = 2,
   bypass = 1,
   recovery = 0,
+}
+
+export enum Vertical {
+  auto = 0,
+  downwards = 5,
+  mid_high = 2,
+  mid_low = 4,
+  middle = 3,
+  swing = 7,
+  upwards = 1,
 }
