@@ -1,6 +1,6 @@
 import { FLAG_UNCHANGED } from '../constants.js'
 import { DeviceType } from '../enums.js'
-import { fromSetToListAta } from '../utils.js'
+import { fromSetToListAta, isKeyofSetDeviceDataAtaNotInList } from '../utils.js'
 
 import type {
   IDeviceFacade,
@@ -11,7 +11,6 @@ import type {
   FailureData,
   GetDeviceData,
   GroupAtaState,
-  KeysOfSetDeviceDataAtaNotInList,
   ListDeviceData,
   SetDeviceData,
   SuccessData,
@@ -51,10 +50,6 @@ export const updateDevices =
       return data
     }
 
-const isKeysOfSetDeviceDataAtaNotInList = (
-  key: string,
-): key is KeysOfSetDeviceDataAtaNotInList => key in fromSetToListAta
-
 const convertToListDeviceData = <T extends DeviceType>(
   facade: IDeviceFacade<T>,
   data: SetDeviceData<T>,
@@ -75,7 +70,7 @@ const convertToListDeviceData = <T extends DeviceType>(
   return Object.fromEntries(
     facade.type === DeviceType.Ata ?
       entries.map(([key, value]) =>
-        isKeysOfSetDeviceDataAtaNotInList(key) ?
+        isKeyofSetDeviceDataAtaNotInList(key) ?
           [fromSetToListAta[key], value]
         : [key, value],
       )

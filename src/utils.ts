@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
 
 import type {
-  KeysOfSetDeviceDataAtaNotInList,
+  KeyofSetDeviceDataAtaNotInList,
   SetDeviceDataAtaInList,
 } from './types/index.js'
 
@@ -10,7 +10,7 @@ export const DEFAULT_YEAR = '1970-01-01'
 export const now = (): string => DateTime.now().toISO({ includeOffset: false })
 
 export const fromSetToListAta: Record<
-  KeysOfSetDeviceDataAtaNotInList,
+  KeyofSetDeviceDataAtaNotInList,
   keyof SetDeviceDataAtaInList
 > = {
   SetFanSpeed: 'FanSpeed',
@@ -18,10 +18,18 @@ export const fromSetToListAta: Record<
   VaneVertical: 'VaneVerticalDirection',
 } as const
 
+export const isKeyofSetDeviceDataAtaNotInList = (
+  key: string,
+): key is KeyofSetDeviceDataAtaNotInList => key in fromSetToListAta
+
 export const fromListToSetAta: Record<
   keyof SetDeviceDataAtaInList,
-  KeysOfSetDeviceDataAtaNotInList
+  KeyofSetDeviceDataAtaNotInList
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
 > = Object.fromEntries(
   Object.entries(fromSetToListAta).map(([key, value]) => [value, key]),
-) as Record<keyof SetDeviceDataAtaInList, KeysOfSetDeviceDataAtaNotInList>
+) as Record<keyof SetDeviceDataAtaInList, KeyofSetDeviceDataAtaNotInList>
+
+export const isKeyofSetDeviceDataAtaInList = (
+  key: string,
+): key is keyof SetDeviceDataAtaInList => key in fromListToSetAta

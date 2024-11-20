@@ -1,6 +1,6 @@
 export type {
   EnergyDataAta,
-  KeysOfSetDeviceDataAtaNotInList,
+  KeyofSetDeviceDataAtaNotInList,
   ListDeviceDataAta,
   SetDeviceDataAta,
   SetDeviceDataAtaInList,

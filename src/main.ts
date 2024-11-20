@@ -95,7 +95,7 @@ export type {
   HolidayModeData,
   HolidayModeLocation,
   HolidayModePostData,
-  KeysOfSetDeviceDataAtaNotInList,
+  KeyofSetDeviceDataAtaNotInList,
   ListDevice,
   ListDeviceAny,
   ListDeviceData,

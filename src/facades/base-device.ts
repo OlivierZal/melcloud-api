@@ -4,7 +4,12 @@ import { syncDevices } from '../decorators/sync-devices.js'
 import { updateDevice } from '../decorators/update-devices.js'
 import { DeviceType } from '../enums.js'
 import { DeviceModel } from '../models/index.js'
-import { DEFAULT_YEAR, fromListToSetAta, now } from '../utils.js'
+import {
+  DEFAULT_YEAR,
+  fromListToSetAta,
+  isKeyofSetDeviceDataAtaInList,
+  now,
+} from '../utils.js'
 
 import { BaseFacade } from './base.js'
 
@@ -14,17 +19,12 @@ import type {
   GetDeviceData,
   ListDeviceData,
   SetDeviceData,
-  SetDeviceDataAtaInList,
   TilesData,
   UpdateDeviceData,
 } from '../types/index.js'
 
 import type { IDeviceFacade } from './interfaces.js'
 import type { FacadeManager } from './manager.js'
-
-const isKeyofSetDeviceDataAtaInList = (
-  key: string,
-): key is keyof SetDeviceDataAtaInList => key in fromListToSetAta
 
 export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<IDeviceModelAny>
