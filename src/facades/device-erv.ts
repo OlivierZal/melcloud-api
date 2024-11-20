@@ -1,4 +1,4 @@
-import { BaseDeviceFacade } from './base_device.js'
+import { BaseDeviceFacade } from './base-device.js'
 
 import type { DeviceType } from '../enums.js'
 

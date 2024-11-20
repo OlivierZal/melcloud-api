@@ -9,7 +9,7 @@ import axios, {
 } from 'axios'
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 
-import { syncDevices } from '../decorators/syncDevices.js'
+import { syncDevices } from '../decorators/sync-devices.js'
 import { DeviceType, Language } from '../enums.js'
 import { createAPICallErrorData } from '../logging/error.js'
 import { APICallRequestData } from '../logging/request.js'

@@ -1,6 +1,6 @@
 import { AreaModel } from '../models/index.js'
 
-import { BaseSuperDeviceFacade } from './base_super_device.js'
+import { BaseSuperDeviceFacade } from './base-super-device.js'
 
 import type { IAreaModel } from '../models/interfaces.js'
 

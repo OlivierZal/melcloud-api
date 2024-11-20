@@ -1,6 +1,6 @@
 import { OperationModeZone, type DeviceType } from '../enums.js'
 
-import { BaseDeviceFacade } from './base_device.js'
+import { BaseDeviceFacade } from './base-device.js'
 
 import type {
   OperationModeZoneDataAtw,

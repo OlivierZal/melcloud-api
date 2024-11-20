@@ -2,15 +2,54 @@ import { FLAG_UNCHANGED } from '../constants.js'
 import { DeviceType } from '../enums.js'
 import { fromSetToListAta } from '../utils.js'
 
-import type { IDeviceFacade } from '../facades/interfaces.js'
+import type {
+  IDeviceFacade,
+  ISuperDeviceFacade,
+} from '../facades/interfaces.js'
 import type { IDeviceModel } from '../models/interfaces.js'
 import type {
+  FailureData,
   GetDeviceData,
+  GroupAtaState,
   KeysOfSetDeviceDataAtaNotInList,
   ListDeviceData,
   SetDeviceData,
+  SuccessData,
   UpdateDeviceData,
 } from '../types/index.js'
+
+export const updateDevices =
+  <T extends boolean | FailureData | GroupAtaState | SuccessData>(params?: {
+    type?: DeviceType
+  }) =>
+  (
+    target: (...args: any[]) => Promise<T>,
+    context: ClassMethodDecoratorContext,
+  ): ((...args: unknown[]) => Promise<T>) =>
+    async function newTarget(this: ISuperDeviceFacade, ...args: unknown[]) {
+      const [arg] = args
+      if (arg !== null && typeof arg === 'object' && !Object.keys(arg).length) {
+        throw new Error('No data to set')
+      }
+      const data = await target.call(this, arg)
+      const newData =
+        String(context.name) === 'SetPower' ?
+          { Power: arg }
+        : Object.fromEntries(
+            Object.entries(arg ?? data).filter(
+              ([, value]) => value !== undefined && value !== null,
+            ),
+          )
+      ;(params?.type === undefined ?
+        this.devices
+      : this.devices.filter(
+          ({ type: deviceType }) => deviceType === params.type,
+        )
+      ).forEach((device) => {
+        device.update(newData)
+      })
+      return data
+    }
 
 const isKeysOfSetDeviceDataAtaNotInList = (
   key: string,

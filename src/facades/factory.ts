@@ -8,9 +8,9 @@ import {
 
 import { AreaFacade } from './area.js'
 import { BuildingFacade } from './building.js'
-import { DeviceAtaFacade } from './device_ata.js'
-import { DeviceAtwFacade } from './device_atw.js'
-import { DeviceErvFacade } from './device_erv.js'
+import { DeviceAtaFacade } from './device-ata.js'
+import { DeviceAtwFacade } from './device-atw.js'
+import { DeviceErvFacade } from './device-erv.js'
 import { FloorFacade } from './floor.js'
 
 import type { IDeviceModel, IModel } from '../models/interfaces.js'

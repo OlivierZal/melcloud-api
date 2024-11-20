@@ -1,5 +1,5 @@
-import { syncDevices } from '../decorators/syncDevices.js'
-import { updateDevices } from '../decorators/updateDevices.js'
+import { syncDevices } from '../decorators/sync-devices.js'
+import { updateDevices } from '../decorators/update-devices.js'
 import { DeviceType } from '../enums.js'
 
 import { BaseFacade } from './base.js'

@@ -7,7 +7,7 @@ import packageJson from 'eslint-plugin-package-json/configs/recommended'
 import perfectionist from 'eslint-plugin-perfectionist'
 import ts, { configs as tsConfigs } from 'typescript-eslint'
 
-import { classGroups } from './eslint-utils/classGroups.js'
+import { classGroups } from './eslint-utils/class-groups.js'
 
 const decoratorGroups = {
   customGroups: {

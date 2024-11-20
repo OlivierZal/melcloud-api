@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
 
-import { syncDevices } from '../decorators/syncDevices.js'
-import { updateDevices } from '../decorators/updateDevices.js'
+import { syncDevices } from '../decorators/sync-devices.js'
+import { updateDevices } from '../decorators/update-devices.js'
 import { now } from '../utils.js'
 
 import type { DeviceType } from '../enums.js'

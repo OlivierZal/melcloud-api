@@ -1,9 +1,8 @@
 import 'source-map-support/register.js'
 
-export { fetchDevices } from './decorators/fetchDevices.js'
-export { syncDevices } from './decorators/syncDevices.js'
-export { updateDevice } from './decorators/updateDevice.js'
-export { updateDevices } from './decorators/updateDevices.js'
+export { fetchDevices } from './decorators/fetch-devices.js'
+export { syncDevices } from './decorators/sync-devices.js'
+export { updateDevice, updateDevices } from './decorators/update-devices.js'
 export {
   DeviceType,
   FanSpeed,
@@ -17,9 +16,9 @@ export {
 } from './enums.js'
 export { AreaFacade } from './facades/area.js'
 export { BuildingFacade } from './facades/building.js'
-export { DeviceAtaFacade } from './facades/device_ata.js'
-export { DeviceAtwFacade } from './facades/device_atw.js'
-export { DeviceErvFacade } from './facades/device_erv.js'
+export { DeviceAtaFacade } from './facades/device-ata.js'
+export { DeviceAtwFacade } from './facades/device-atw.js'
+export { DeviceErvFacade } from './facades/device-erv.js'
 export { FloorFacade } from './facades/floor.js'
 export { FacadeManager } from './facades/manager.js'
 export {

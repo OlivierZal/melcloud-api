@@ -1,7 +1,7 @@
-import { fetchDevices } from '../decorators/fetchDevices.js'
+import { fetchDevices } from '../decorators/fetch-devices.js'
 import { BuildingModel } from '../models/index.js'
 
-import { BaseSuperDeviceFacade } from './base_super_device.js'
+import { BaseSuperDeviceFacade } from './base-super-device.js'
 
 import type { IBuildingModel } from '../main.js'
 import type { ZoneSettings } from '../types/index.js'
