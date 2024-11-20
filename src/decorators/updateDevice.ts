@@ -1,21 +1,25 @@
 import { FLAG_UNCHANGED } from '../constants.js'
+import { DeviceType } from '../enums.js'
 import { fromSetToListAta } from '../utils.js'
 
-import type { DeviceType } from '../enums.js'
 import type { IDeviceFacade } from '../facades/interfaces.js'
 import type { IDeviceModel } from '../models/interfaces.js'
 import type {
   GetDeviceData,
   KeysOfSetDeviceDataAtaNotInList,
-  ListDevice,
+  ListDeviceData,
   SetDeviceData,
   UpdateDeviceData,
 } from '../types/index.js'
 
-const convertToListDeviceData = <T extends keyof typeof DeviceType>(
+const isKeysOfSetDeviceDataAtaNotInList = (
+  key: string,
+): key is KeysOfSetDeviceDataAtaNotInList => key in fromSetToListAta
+
+const convertToListDeviceData = <T extends DeviceType>(
   facade: IDeviceFacade<T>,
-  data: SetDeviceData[T],
-): Partial<ListDevice[T]['Device']> => {
+  data: SetDeviceData<T>,
+): Partial<ListDeviceData<T>> => {
   const { EffectiveFlags: flags, ...newData } = data
   const entries =
     flags === FLAG_UNCHANGED ?
@@ -24,24 +28,25 @@ const convertToListDeviceData = <T extends keyof typeof DeviceType>(
         ([key]) =>
           key in facade.flags &&
           Number(
-            BigInt(facade.flags[key as keyof UpdateDeviceData[T]]) &
+            BigInt(facade.flags[key as keyof UpdateDeviceData<T>]) &
               BigInt(flags),
           ),
       )
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
   return Object.fromEntries(
-    facade.type === 'Ata' ?
+    facade.type === DeviceType.Ata ?
       entries.map(([key, value]) =>
-        key in fromSetToListAta ?
-          [fromSetToListAta[key as KeysOfSetDeviceDataAtaNotInList], value]
+        isKeysOfSetDeviceDataAtaNotInList(key) ?
+          [fromSetToListAta[key], value]
         : [key, value],
       )
     : entries,
-  ) as Partial<ListDevice[T]['Device']>
+  ) as Partial<ListDeviceData<T>>
 }
 
 export const updateDevice = <
-  T extends keyof typeof DeviceType,
-  U extends GetDeviceData[T] | SetDeviceData[T],
+  T extends DeviceType,
+  U extends GetDeviceData<T> | SetDeviceData<T>,
 >(
   target: (...args: any[]) => Promise<U>,
   _context: ClassMethodDecoratorContext,
@@ -51,6 +56,7 @@ export const updateDevice = <
     const {
       devices: [device],
     } = this
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     ;(device as IDeviceModel<T>).update(convertToListDeviceData(this, data))
     return data
   }

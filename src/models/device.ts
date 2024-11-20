@@ -1,8 +1,11 @@
-import { DeviceType } from '../enums.js'
-
 import { BaseModel } from './base.js'
 
-import type { ListDevice, ListDeviceAny } from '../types/index.js'
+import type { DeviceType } from '../enums.js'
+import type {
+  ListDevice,
+  ListDeviceAny,
+  ListDeviceData,
+} from '../types/index.js'
 
 import type { AreaModel } from './area.js'
 import type { BuildingModel } from './building.js'
@@ -14,7 +17,7 @@ import type {
   IFloorModel,
 } from './interfaces.js'
 
-export class DeviceModel<T extends keyof typeof DeviceType>
+export class DeviceModel<T extends DeviceType>
   extends BaseModel
   implements IDeviceModel<T>
 {
@@ -34,7 +37,7 @@ export class DeviceModel<T extends keyof typeof DeviceType>
 
   public readonly type: T
 
-  #data: ListDevice[T]['Device']
+  #data: ListDeviceData<T>
 
   protected constructor({
     AreaID: areaId,
@@ -44,13 +47,13 @@ export class DeviceModel<T extends keyof typeof DeviceType>
     DeviceName: name,
     FloorID: floorId,
     Type: type,
-  }: ListDevice[T]) {
+  }: ListDevice<T>) {
     super({ id, name })
     this.areaId = areaId
     this.buildingId = buildingId
     this.floorId = floorId
-    this.type = DeviceType[type] as T
-    this.#data = data
+    this.type = type as T
+    this.#data = data as ListDeviceData<T>
   }
 
   public get area(): IAreaModel | null | undefined {
@@ -63,7 +66,7 @@ export class DeviceModel<T extends keyof typeof DeviceType>
     return DeviceModel.#buildingModel.getById(this.buildingId)
   }
 
-  public get data(): ListDevice[T]['Device'] {
+  public get data(): ListDeviceData<T> {
     return this.#data
   }
 
@@ -97,12 +100,11 @@ export class DeviceModel<T extends keyof typeof DeviceType>
     return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
-  public static getByType<K extends keyof typeof DeviceType>(
-    type: K,
-  ): DeviceModel<K>[] {
+  public static getByType<K extends DeviceType>(type: K): IDeviceModel<K>[] {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     return this.getAll().filter(
       ({ type: instanceType }) => instanceType === type,
-    ) as DeviceModel<K>[]
+    ) as IDeviceModel<K>[]
   }
 
   public static setModels({
@@ -123,12 +125,13 @@ export class DeviceModel<T extends keyof typeof DeviceType>
     this.#instances = new Map(
       devices.map((device) => [
         device.DeviceID,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
         new this(device) as IDeviceModelAny,
       ]),
     )
   }
 
-  public update(data: Partial<ListDevice[T]['Device']>): void {
+  public update(data: Partial<ListDeviceData<T>>): void {
     this.#data = { ...this.#data, ...data }
   }
 }

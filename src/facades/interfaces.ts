@@ -13,7 +13,7 @@ import type {
   GetDeviceData,
   GroupAtaState,
   HolidayModeData,
-  ListDevice,
+  ListDeviceData,
   SetDeviceData,
   SuccessData,
   TilesData,
@@ -60,22 +60,22 @@ export interface IBuildingFacade
   fetch: () => Promise<ZoneSettings>
 }
 
-export interface IDeviceFacade<T extends keyof typeof DeviceType>
+export interface IDeviceFacade<T extends DeviceType>
   extends IBaseDeviceModel<T>,
     IFacade {
-  fetch: () => Promise<ListDevice[T]['Device']>
-  flags: Record<keyof UpdateDeviceData[T], number>
-  get: () => Promise<GetDeviceData[T]>
+  fetch: () => Promise<ListDeviceData<T>>
+  flags: Record<keyof UpdateDeviceData<T>, number>
+  get: () => Promise<GetDeviceData<T>>
   getEnergyReport: ({
     from,
     to,
   }: {
     from?: string
     to?: string
-  }) => Promise<EnergyData[T]>
+  }) => Promise<EnergyData<T>>
   getTiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
-  set: (data: UpdateDeviceData[T]) => Promise<SetDeviceData[T]>
+  set: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
 }
 
 export interface IFacade extends IModel {
@@ -84,11 +84,9 @@ export interface IFacade extends IModel {
   getFrostProtection: () => Promise<FrostProtectionData>
   getHolidayMode: () => Promise<HolidayModeData>
   getTiles: ((select?: false) => Promise<TilesData<null>>) &
-    (<U extends keyof typeof DeviceType>(
-      select: IDeviceModel<U>,
-    ) => Promise<TilesData<U>>)
+    (<U extends DeviceType>(select: IDeviceModel<U>) => Promise<TilesData<U>>)
   getWifiReport: (hour?: number) => Promise<WifiData>
-  onSync: (params?: { type?: keyof typeof DeviceType }) => Promise<void>
+  onSync: (params?: { type?: DeviceType }) => Promise<void>
   setFrostProtection: (
     query: FrostProtectionQuery,
   ) => Promise<FailureData | SuccessData>
@@ -104,6 +102,5 @@ export interface ISuperDeviceFacade extends IFacade {
 }
 
 export type IDeviceFacadeAny =
-  | IDeviceFacade<'Ata'>
-  | IDeviceFacade<'Atw'>
-  | IDeviceFacade<'Erv'>
+  | IDeviceFacade<DeviceType.Ata>
+  | IDeviceFacade<DeviceType.Atw>

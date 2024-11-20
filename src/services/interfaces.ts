@@ -64,7 +64,7 @@ export interface IAPI {
     params,
   }: {
     params: GetDeviceDataParams
-  }) => Promise<{ data: GetDeviceData[keyof typeof DeviceType] }>
+  }) => Promise<{ data: GetDeviceData<DeviceType> }>
   getAta: ({
     postData,
   }: {
@@ -74,7 +74,7 @@ export interface IAPI {
     postData,
   }: {
     postData: EnergyPostData
-  }) => Promise<{ data: EnergyData[keyof typeof DeviceType] }>
+  }) => Promise<{ data: EnergyData<DeviceType> }>
   getErrors: ({
     postData,
   }: {
@@ -95,7 +95,7 @@ export interface IAPI {
   }: {
     postData: TilesPostData<null>
   }) => Promise<{ data: TilesData<null> }>) &
-    (<T extends keyof typeof DeviceType>({
+    (<T extends DeviceType>({
       postData,
     }: {
       postData: TilesPostData<T>
@@ -111,13 +111,13 @@ export interface IAPI {
   }: {
     postData: LoginPostData
   }) => Promise<{ data: LoginData }>
-  set: <T extends keyof typeof DeviceType>({
+  set: <T extends DeviceType>({
     postData,
     type,
   }: {
-    postData: SetDevicePostData[T]
+    postData: SetDevicePostData<T>
     type: T
-  }) => Promise<{ data: SetDeviceData[T] }>
+  }) => Promise<{ data: SetDeviceData<T> }>
   setAta: ({
     postData,
   }: {
@@ -158,5 +158,5 @@ export interface SettingManager {
 
 export type OnSyncFunction = (params?: {
   ids?: number[]
-  type?: keyof typeof DeviceType
+  type?: DeviceType
 }) => Promise<void>

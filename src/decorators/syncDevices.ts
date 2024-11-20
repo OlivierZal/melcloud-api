@@ -12,14 +12,14 @@ import type {
 
 export const syncDevices =
   <
-    T extends keyof typeof DeviceType,
+    T extends DeviceType,
     U extends
       | boolean
       | Building[]
       | FailureData
-      | GetDeviceData[T]
+      | GetDeviceData<T>
       | GroupAtaState
-      | SetDeviceData[T]
+      | SetDeviceData<T>
       | SuccessData,
   >(params?: {
     type?: T

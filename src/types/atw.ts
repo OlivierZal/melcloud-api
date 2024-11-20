@@ -5,14 +5,12 @@ import type {
 } from '../enums.js'
 
 import type {
-  BaseDevicePostData,
-  BaseGetDeviceData,
-  BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
 } from './bases.js'
+import type { GetDeviceData } from './common.js'
 
 export interface EnergyDataAtw {
   readonly CoP: readonly number[]
@@ -24,13 +22,9 @@ export interface EnergyDataAtw {
   readonly TotalHotWaterProduced: number
 }
 
-export interface ListDeviceAtw extends BaseListDevice {
-  readonly Device: ListDeviceDataAtw
-}
-
 export interface ListDeviceDataAtw
   extends BaseListDeviceData,
-    Omit<GetDeviceDataAtw, keyof DeviceDataNotInList> {
+    Omit<GetDeviceData<DeviceType.Atw>, keyof DeviceDataNotInList> {
   readonly BoosterHeater1Status: boolean
   readonly BoosterHeater2PlusStatus: boolean
   readonly BoosterHeater2Status: boolean
@@ -83,10 +77,6 @@ export interface SetDeviceDataAtw
   readonly TankWaterTemperature: number
 }
 
-export interface SetDevicePostDataAtw
-  extends BaseDevicePostData,
-    UpdateDeviceDataAtw {}
-
 export interface TemperatureDataAtw {
   readonly SetCoolFlowTemperatureZone1?: number
   readonly SetCoolFlowTemperatureZone2?: number
@@ -103,7 +93,5 @@ export interface UpdateDeviceDataAtw
     TemperatureDataAtw {
   readonly ForcedHotWaterMode?: boolean
 }
-
-export type GetDeviceDataAtw = BaseGetDeviceData & SetDeviceDataAtw
 
 export type ZoneAtw = 'Zone1' | 'Zone2'

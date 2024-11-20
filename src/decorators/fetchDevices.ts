@@ -1,9 +1,9 @@
 import type { DeviceType } from '../enums.js'
 import type { IAPI } from '../services/interfaces.js'
-import type { ListDevice, ZoneSettings } from '../types/index.js'
+import type { ListDeviceData, ZoneSettings } from '../types/index.js'
 
 export const fetchDevices = <
-  T extends ListDevice[keyof typeof DeviceType]['Device'] | ZoneSettings,
+  T extends ListDeviceData<DeviceType> | ZoneSettings,
 >(
   target: (...args: unknown[]) => Promise<T>,
   _context: ClassMethodDecoratorContext,

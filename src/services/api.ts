@@ -10,7 +10,7 @@ import axios, {
 import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
 
 import { syncDevices } from '../decorators/syncDevices.js'
-import { Language, type DeviceType } from '../enums.js'
+import { DeviceType, Language } from '../enums.js'
 import { createAPICallErrorData } from '../logging/error.js'
 import { APICallRequestData } from '../logging/request.js'
 import { APICallResponseData } from '../logging/response.js'
@@ -66,6 +66,9 @@ const LOGIN_PATH = '/Login/ClientLogin2'
 const DEFAULT_SYNC_INTERVAL = 5
 const NO_SYNC_INTERVAL = 0
 const RETRY_DELAY = 1000
+
+const isLanguage = (value: string): value is keyof typeof Language =>
+  value in Language
 
 const setting = (
   target: ClassAccessorDecoratorTarget<API, string>,
@@ -230,7 +233,7 @@ export class API implements IAPI {
     params,
   }: {
     params: GetDeviceDataParams
-  }): Promise<{ data: GetDeviceData[keyof typeof DeviceType] }> {
+  }): Promise<{ data: GetDeviceData<DeviceType> }> {
     return this.#api.get('/Device/Get', { params })
   }
 
@@ -246,7 +249,7 @@ export class API implements IAPI {
     postData,
   }: {
     postData: EnergyPostData
-  }): Promise<{ data: EnergyData[keyof typeof DeviceType] }> {
+  }): Promise<{ data: EnergyData<DeviceType> }> {
     return this.#api.post('/EnergyCost/Report', postData)
   }
 
@@ -284,13 +287,13 @@ export class API implements IAPI {
     postData: TilesPostData<null>
   }): Promise<{ data: TilesData<null> }>
 
-  public async getTiles<T extends keyof typeof DeviceType>({
+  public async getTiles<T extends DeviceType>({
     postData,
   }: {
     postData: TilesPostData<T>
   }): Promise<{ data: TilesData<T> }>
 
-  public async getTiles<T extends keyof typeof DeviceType | null>({
+  public async getTiles<T extends DeviceType | null>({
     postData,
   }: {
     postData: TilesPostData<T>
@@ -318,14 +321,14 @@ export class API implements IAPI {
     return this.#api.post<LoginData>(LOGIN_PATH, postData)
   }
 
-  public async set<T extends keyof typeof DeviceType>({
+  public async set<T extends DeviceType>({
     postData,
     type,
   }: {
-    postData: SetDevicePostData[T]
+    postData: SetDevicePostData<T>
     type: T
-  }): Promise<{ data: SetDeviceData[T] }> {
-    return this.#api.post(`/Device/Set${type}`, postData)
+  }): Promise<{ data: SetDeviceData<T> }> {
+    return this.#api.post(`/Device/Set${DeviceType[type]}`, postData)
   }
 
   public async setAta({
@@ -423,9 +426,7 @@ export class API implements IAPI {
   }
 
   #getLanguageCode(language: string = this.language): Language {
-    return language in Language ?
-        Language[language as keyof typeof Language]
-      : Language.en
+    return isLanguage(language) ? Language[language] : Language.en
   }
 
   async #handleError(error: AxiosError): Promise<AxiosError> {

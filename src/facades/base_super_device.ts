@@ -1,5 +1,6 @@
 import { syncDevices } from '../decorators/syncDevices.js'
 import { updateDevices } from '../decorators/updateDevices.js'
+import { DeviceType } from '../enums.js'
 
 import { BaseFacade } from './base.js'
 
@@ -30,7 +31,7 @@ export abstract class BaseSuperDeviceFacade<
     return this.instance.devices
   }
 
-  @updateDevices({ type: 'Ata' })
+  @updateDevices({ type: DeviceType.Ata })
   public async getAta(): Promise<GroupAtaState> {
     try {
       return (
@@ -41,8 +42,8 @@ export abstract class BaseSuperDeviceFacade<
     }
   }
 
-  @syncDevices({ type: 'Ata' })
-  @updateDevices({ type: 'Ata' })
+  @syncDevices({ type: DeviceType.Ata })
+  @updateDevices({ type: DeviceType.Ata })
   public async setAta(
     state: GroupAtaState,
   ): Promise<FailureData | SuccessData> {

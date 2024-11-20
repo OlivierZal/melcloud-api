@@ -1,4 +1,4 @@
-import { OperationModeZone } from '../enums.js'
+import { OperationModeZone, type DeviceType } from '../enums.js'
 
 import { BaseDeviceFacade } from './base_device.js'
 
@@ -19,8 +19,8 @@ const heatFlowTemperatureRange = { max: 60, min: 25 } as const
 const roomTemperatureRange = { max: 30, min: 10 } as const
 
 export class DeviceAtwFacade
-  extends BaseDeviceFacade<'Atw'>
-  implements IDeviceFacade<'Atw'>
+  extends BaseDeviceFacade<DeviceType.Atw>
+  implements IDeviceFacade<DeviceType.Atw>
 {
   public readonly flags = {
     ForcedHotWaterMode: 0x10000,
@@ -60,7 +60,7 @@ export class DeviceAtwFacade
 
   protected override handle(
     data: Partial<UpdateDeviceDataAtw>,
-  ): UpdateDeviceDataAtw {
+  ): Required<UpdateDeviceDataAtw> {
     return super.handle({
       ...data,
       ...this.#handleOperationModes(data),

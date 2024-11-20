@@ -7,14 +7,12 @@ import type {
 } from '../enums.js'
 
 import type {
-  BaseDevicePostData,
-  BaseGetDeviceData,
-  BaseListDevice,
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
 } from './bases.js'
+import type { GetDeviceData } from './common.js'
 
 export interface EnergyDataAta {
   readonly Auto: readonly number[]
@@ -32,14 +30,10 @@ export interface EnergyDataAta {
   readonly UsageDisclaimerPercentages: string
 }
 
-export interface ListDeviceAta extends BaseListDevice {
-  readonly Device: ListDeviceDataAta
-}
-
 export interface ListDeviceDataAta
   extends BaseListDeviceData,
     Omit<
-      GetDeviceDataAta,
+      GetDeviceData<DeviceType.Ata>,
       KeysOfSetDeviceDataAtaNotInList | keyof DeviceDataNotInList
     >,
     SetDeviceDataAtaInList {
@@ -68,10 +62,6 @@ export interface SetDeviceDataAtaInList {
   readonly VaneVerticalDirection: Vertical
 }
 
-export interface SetDevicePostDataAta
-  extends BaseDevicePostData,
-    UpdateDeviceDataAta {}
-
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly OperationMode?: OperationMode
   readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
@@ -79,8 +69,6 @@ export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly VaneHorizontal?: Horizontal
   readonly VaneVertical?: Vertical
 }
-
-export type GetDeviceDataAta = BaseGetDeviceData & SetDeviceDataAta
 
 export type KeysOfSetDeviceDataAtaNotInList =
   | 'SetFanSpeed'

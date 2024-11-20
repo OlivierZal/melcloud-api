@@ -1,4 +1,4 @@
-import { OperationMode } from '../enums.js'
+import { OperationMode, type DeviceType } from '../enums.js'
 
 import { BaseDeviceFacade } from './base_device.js'
 
@@ -7,8 +7,8 @@ import type { UpdateDeviceDataAta } from '../types/index.js'
 import type { IDeviceFacade } from './interfaces.js'
 
 export class DeviceAtaFacade
-  extends BaseDeviceFacade<'Ata'>
-  implements IDeviceFacade<'Ata'>
+  extends BaseDeviceFacade<DeviceType.Ata>
+  implements IDeviceFacade<DeviceType.Ata>
 {
   public readonly flags = {
     OperationMode: 0x2,
@@ -21,7 +21,7 @@ export class DeviceAtaFacade
 
   protected override handle(
     data: Partial<UpdateDeviceDataAta>,
-  ): UpdateDeviceDataAta {
+  ): Required<UpdateDeviceDataAta> {
     return super.handle({ ...data, ...this.#handleTargetTemperature(data) })
   }
 

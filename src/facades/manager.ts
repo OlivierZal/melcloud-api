@@ -73,14 +73,12 @@ export class FacadeManager {
     this.api = api
   }
 
-  public get<T extends keyof typeof DeviceType>(
-    instance: IDeviceModel<T>,
-  ): IDeviceFacade<T>
+  public get<T extends DeviceType>(instance: IDeviceModel<T>): IDeviceFacade<T>
   public get(instance: IAreaModel | IFloorModel): ISuperDeviceFacade
   public get(instance: IBuildingModel): IBuildingFacade
   public get(instance: IModel): IFacade
   public get(): undefined
-  public get<T extends keyof typeof DeviceType>(
+  public get<T extends DeviceType>(
     instance?: IDeviceModel<T>,
   ): IDeviceFacade<T> | undefined
   public get(

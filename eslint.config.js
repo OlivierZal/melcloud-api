@@ -213,7 +213,6 @@ const config = [
             checkTypePredicates: true,
           },
         ],
-        '@typescript-eslint/no-unsafe-type-assertion': 'off',
         '@typescript-eslint/no-unused-vars': [
           'error',
           {

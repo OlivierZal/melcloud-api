@@ -8,28 +8,24 @@ import type {
 
 import type {
   EnergyDataAta,
-  GetDeviceDataAta,
-  ListDeviceAta,
   ListDeviceDataAta,
   SetDeviceDataAta,
-  SetDevicePostDataAta,
   UpdateDeviceDataAta,
 } from './ata.js'
 import type {
   EnergyDataAtw,
-  GetDeviceDataAtw,
-  ListDeviceAtw,
   ListDeviceDataAtw,
   SetDeviceDataAtw,
-  SetDevicePostDataAtw,
   UpdateDeviceDataAtw,
 } from './atw.js'
 import type {
-  GetDeviceDataErv,
+  BaseDevicePostData,
+  BaseGetDeviceData,
+  BaseListDevice,
+} from './bases.js'
+import type {
   ListDeviceDataErv,
-  ListDeviceErv,
   SetDeviceDataErv,
-  SetDevicePostDataErv,
   UpdateDeviceDataErv,
 } from './erv.js'
 
@@ -55,12 +51,6 @@ export interface Building extends BuildingData {
 export interface BuildingData extends ZoneSettings {
   readonly ID: number
   readonly Name: string
-}
-
-export interface EnergyData {
-  readonly Ata: EnergyDataAta
-  readonly Atw: EnergyDataAtw
-  readonly Erv: never
 }
 
 export interface EnergyPostData {
@@ -111,12 +101,6 @@ export interface FrostProtectionPostData extends FrostProtectionLocation {
   readonly Enabled: boolean
   readonly MaximumTemperature: number
   readonly MinimumTemperature: number
-}
-
-export interface GetDeviceData {
-  readonly Ata: GetDeviceDataAta
-  readonly Atw: GetDeviceDataAtw
-  readonly Erv: GetDeviceDataErv
 }
 
 export interface GetDeviceDataParams {
@@ -192,16 +176,8 @@ export interface HolidayModePostData {
   readonly StartDate: DateTimeComponents
 }
 
-export interface ListDevice {
-  readonly Ata: ListDeviceAta
-  readonly Atw: ListDeviceAtw
-  readonly Erv: ListDeviceErv
-}
-
-export interface ListDeviceData {
-  readonly Ata: ListDeviceDataAta
-  readonly Atw: ListDeviceDataAtw
-  readonly Erv: ListDeviceDataErv
+export interface ListDevice<T extends DeviceType> extends BaseListDevice {
+  readonly Device: ListDeviceData<T>
 }
 
 export interface LoginCredentials {
@@ -224,18 +200,6 @@ export interface LoginPostData {
   readonly Persist?: boolean
 }
 
-export interface SetDeviceData {
-  readonly Ata: SetDeviceDataAta
-  readonly Atw: SetDeviceDataAtw
-  readonly Erv: SetDeviceDataErv
-}
-
-export interface SetDevicePostData {
-  readonly Ata: SetDevicePostDataAta
-  readonly Atw: SetDevicePostDataAtw
-  readonly Erv: SetDevicePostDataErv
-}
-
 export interface SetGroupAtaPostData {
   readonly Specification: GetGroupAtaPostData
   readonly State: GroupAtaState
@@ -256,9 +220,8 @@ export interface SuccessData {
   readonly Success: true
 }
 
-export interface TilesData<T extends keyof typeof DeviceType | null> {
-  readonly SelectedDevice: T extends keyof typeof DeviceType ? GetDeviceData[T]
-  : null
+export interface TilesData<T extends DeviceType | null> {
+  readonly SelectedDevice: T extends DeviceType ? GetDeviceData<T> : null
   readonly Tiles: readonly {
     readonly Device: number
     readonly Offline: boolean
@@ -267,12 +230,6 @@ export interface TilesData<T extends keyof typeof DeviceType | null> {
     readonly RoomTemperature2: number
     readonly TankWaterTemperature: number
   }[]
-}
-
-export interface UpdateDeviceData {
-  readonly Ata: UpdateDeviceDataAta
-  readonly Atw: UpdateDeviceDataAtw
-  readonly Erv: UpdateDeviceDataErv
 }
 
 export interface WifiData {
@@ -302,14 +259,44 @@ export type DateTimeComponents = {
   readonly Year: number
 } | null
 
-export type ListDeviceAny = ListDeviceAta | ListDeviceAtw | ListDeviceErv
+export type EnergyData<T extends DeviceType> =
+  T extends DeviceType.Ata ? EnergyDataAta
+  : T extends DeviceType.Atw ? EnergyDataAtw
+  : never
+
+export type GetDeviceData<T extends DeviceType> = BaseGetDeviceData &
+  SetDeviceData<T>
+
+export type ListDeviceAny =
+  | ListDevice<DeviceType.Ata>
+  | ListDevice<DeviceType.Atw>
+  | ListDevice<DeviceType.Erv>
+
+export type ListDeviceData<T extends DeviceType> =
+  T extends DeviceType.Ata ? ListDeviceDataAta
+  : T extends DeviceType.Atw ? ListDeviceDataAtw
+  : ListDeviceDataErv
 
 export type ListDeviceDataAny =
-  | ListDeviceDataAta
-  | ListDeviceDataAtw
-  | ListDeviceDataErv
-export type TilesPostData<T extends keyof typeof DeviceType | null> = {
+  | ListDeviceData<DeviceType.Ata>
+  | ListDeviceData<DeviceType.Atw>
+  | ListDeviceData<DeviceType.Erv>
+
+export type SetDeviceData<T extends DeviceType> =
+  T extends DeviceType.Ata ? SetDeviceDataAta
+  : T extends DeviceType.Atw ? SetDeviceDataAtw
+  : SetDeviceDataErv
+
+export type SetDevicePostData<T extends DeviceType> = BaseDevicePostData &
+  Required<UpdateDeviceData<T>>
+
+export type TilesPostData<T extends DeviceType | null> = {
   readonly DeviceIDs: readonly number[]
-} & (T extends keyof typeof DeviceType ?
+} & (T extends DeviceType ?
   { readonly SelectedBuilding: number; readonly SelectedDevice: number }
 : { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })
+
+export type UpdateDeviceData<T extends DeviceType> =
+  T extends DeviceType.Ata ? UpdateDeviceDataAta
+  : T extends DeviceType.Atw ? UpdateDeviceDataAtw
+  : UpdateDeviceDataErv

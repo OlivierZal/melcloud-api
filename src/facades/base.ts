@@ -115,7 +115,7 @@ export abstract class BaseFacade<
   public async onSync({
     type,
   }: {
-    type?: keyof typeof DeviceType
+    type?: DeviceType
   } = {}): Promise<void> {
     await this.api.onSync?.({ ids: this.#deviceIds, type })
   }
@@ -161,10 +161,10 @@ export abstract class BaseFacade<
   }
 
   public async getTiles(select?: false): Promise<TilesData<null>>
-  public async getTiles<K extends keyof typeof DeviceType>(
+  public async getTiles<K extends DeviceType>(
     select: IDeviceModel<K>,
   ): Promise<TilesData<K>>
-  public async getTiles<K extends keyof typeof DeviceType>(
+  public async getTiles<K extends DeviceType>(
     select: false | IDeviceModel<K> = false,
   ): Promise<TilesData<K | null>> {
     const postData = { DeviceIDs: this.#deviceIds }
@@ -224,12 +224,13 @@ export abstract class BaseFacade<
     days,
     from,
     to,
-  }: HolidayModeQuery = {}): Promise<FailureData | SuccessData> {
-    const isEnabled = Boolean(days) || Boolean(to)
+  }: HolidayModeQuery): Promise<FailureData | SuccessData> {
+    const daysOrTo = days ?? to ?? null
+    const isEnabled = Boolean(daysOrTo)
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : undefined
     const endDate =
-      startDate ?
-        getEndDate(startDate, days ?? (to as number | string))
+      startDate && daysOrTo !== null ?
+        getEndDate(startDate, daysOrTo)
       : undefined
     return (
       await this.api.setHolidayMode({

@@ -4,7 +4,7 @@ import type { FailureData, GroupAtaState, SuccessData } from '../types/index.js'
 
 export const updateDevices =
   <T extends boolean | FailureData | GroupAtaState | SuccessData>(params?: {
-    type?: keyof typeof DeviceType
+    type?: DeviceType
   }) =>
   (
     target: (...args: any[]) => Promise<T>,
@@ -24,11 +24,11 @@ export const updateDevices =
               ([, value]) => value !== undefined && value !== null,
             ),
           )
-      ;(params?.type ?
-        this.devices.filter(
+      ;(params?.type === undefined ?
+        this.devices
+      : this.devices.filter(
           ({ type: deviceType }) => deviceType === params.type,
         )
-      : this.devices
       ).forEach((device) => {
         device.update(newData)
       })

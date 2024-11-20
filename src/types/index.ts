@@ -1,22 +1,16 @@
 export type {
   EnergyDataAta,
-  GetDeviceDataAta,
   KeysOfSetDeviceDataAtaNotInList,
-  ListDeviceAta,
   ListDeviceDataAta,
   SetDeviceDataAta,
   SetDeviceDataAtaInList,
-  SetDevicePostDataAta,
   UpdateDeviceDataAta,
 } from './ata.js'
 export type {
   EnergyDataAtw,
-  GetDeviceDataAtw,
-  ListDeviceAtw,
   ListDeviceDataAtw,
   OperationModeZoneDataAtw,
   SetDeviceDataAtw,
-  SetDevicePostDataAtw,
   TemperatureDataAtw,
   UpdateDeviceDataAtw,
   ZoneAtw,
@@ -75,10 +69,7 @@ export type {
   ZoneSettings,
 } from './common.js'
 export type {
-  GetDeviceDataErv,
   ListDeviceDataErv,
-  ListDeviceErv,
   SetDeviceDataErv,
-  SetDevicePostDataErv,
   UpdateDeviceDataErv,
 } from './erv.js'

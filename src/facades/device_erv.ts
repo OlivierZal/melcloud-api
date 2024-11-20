@@ -1,10 +1,12 @@
 import { BaseDeviceFacade } from './base_device.js'
 
+import type { DeviceType } from '../enums.js'
+
 import type { IDeviceFacade } from './interfaces.js'
 
 export class DeviceErvFacade
-  extends BaseDeviceFacade<'Erv'>
-  implements IDeviceFacade<'Erv'>
+  extends BaseDeviceFacade<DeviceType.Erv>
+  implements IDeviceFacade<DeviceType.Erv>
 {
   public readonly flags = {
     Power: 0x1,

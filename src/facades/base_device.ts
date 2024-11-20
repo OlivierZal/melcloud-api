@@ -2,17 +2,17 @@ import { FLAG_UNCHANGED } from '../constants.js'
 import { fetchDevices } from '../decorators/fetchDevices.js'
 import { syncDevices } from '../decorators/syncDevices.js'
 import { updateDevice } from '../decorators/updateDevice.js'
+import { DeviceType } from '../enums.js'
 import { DeviceModel } from '../models/index.js'
 import { DEFAULT_YEAR, fromListToSetAta, now } from '../utils.js'
 
 import { BaseFacade } from './base.js'
 
-import type { DeviceType } from '../enums.js'
 import type { IDeviceModel, IDeviceModelAny } from '../models/interfaces.js'
 import type {
   EnergyData,
   GetDeviceData,
-  ListDevice,
+  ListDeviceData,
   SetDeviceData,
   SetDeviceDataAtaInList,
   TilesData,
@@ -22,7 +22,11 @@ import type {
 import type { IDeviceFacade } from './interfaces.js'
 import type { FacadeManager } from './manager.js'
 
-export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
+const isKeyofSetDeviceDataAtaInList = (
+  key: string,
+): key is keyof SetDeviceDataAtaInList => key in fromListToSetAta
+
+export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<IDeviceModelAny>
   implements IDeviceFacade<T>
 {
@@ -36,9 +40,10 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  public abstract readonly flags: Record<keyof UpdateDeviceData[T], number>
+  public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
   public constructor(manager: FacadeManager, instance: IDeviceModel<T>) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     super(manager, instance as IDeviceModelAny)
     ;({ type: this.type } = instance)
   }
@@ -47,25 +52,25 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
     return [this.instance]
   }
 
-  public get data(): ListDevice[T]['Device'] {
-    return this.instance.data
+  public get data(): ListDeviceData<T> {
+    return this.instance.data as ListDeviceData<T>
   }
 
-  protected get setData(): Required<UpdateDeviceData[T]> {
+  protected get setData(): Required<UpdateDeviceData<T>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     return Object.fromEntries(
-      (this.type === 'Ata' ?
+      (this.type === DeviceType.Ata ?
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
         (Object.entries(this.data).map(([key, value]) => [
-          key in fromListToSetAta ?
-            fromListToSetAta[key as keyof SetDeviceDataAtaInList]
-          : key,
+          isKeyofSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
           value,
         ]) as [
-          keyof UpdateDeviceData[T],
-          UpdateDeviceData[T][keyof UpdateDeviceData[T]],
+          keyof UpdateDeviceData<T>,
+          UpdateDeviceData<T>[keyof UpdateDeviceData<T>],
         ][])
       : Object.entries(this.data)
       ).filter(([key]) => key in this.flags),
-    ) as Required<UpdateDeviceData[T]>
+    ) as Required<UpdateDeviceData<T>>
   }
 
   public override async getTiles(select?: false): Promise<TilesData<null>>
@@ -80,38 +85,41 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
           (select instanceof DeviceModel && select.id !== this.id)
       ) ?
         super.getTiles()
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
       : super.getTiles(this.instance as IDeviceModel<T>)
   }
 
   @fetchDevices
-  public async fetch(): Promise<ListDevice[T]['Device']> {
+  public async fetch(): Promise<ListDeviceData<T>> {
     return Promise.resolve(this.data)
   }
 
   @syncDevices()
   @updateDevice
-  public async get(): Promise<GetDeviceData[T]> {
+  public async get(): Promise<GetDeviceData<T>> {
     return (
       await this.api.get({
         params: { buildingId: this.instance.buildingId, id: this.id },
       })
-    ).data as GetDeviceData[T]
+    ).data as GetDeviceData<T>
   }
 
   @syncDevices()
   @updateDevice
   public async set(
-    data: Partial<UpdateDeviceData[T]>,
-  ): Promise<SetDeviceData[T]> {
+    data: Partial<UpdateDeviceData<T>>,
+  ): Promise<SetDeviceData<T>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const newData = Object.fromEntries(
       Object.entries(data).filter(
         ([key, value]) =>
           key in this.setData &&
-          this.setData[key as keyof UpdateDeviceData[T]] !== value,
+          this.setData[key as keyof UpdateDeviceData<T>] !== value,
       ),
-    ) as Partial<UpdateDeviceData[T]>
+    ) as Partial<UpdateDeviceData<T>>
     const flags = this.#getFlags(
-      Object.keys(newData) as (keyof UpdateDeviceData[T])[],
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      Object.keys(newData) as (keyof UpdateDeviceData<T>)[],
     )
     if (!flags) {
       throw new Error('No data to set')
@@ -134,8 +142,8 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
   }: {
     from?: string
     to?: string
-  }): Promise<EnergyData[T]> {
-    if (this.type === 'Erv') {
+  }): Promise<EnergyData<T>> {
+    if (this.type === DeviceType.Atw) {
       throw new Error('Erv devices do not support energy reports')
     }
     return (
@@ -146,14 +154,16 @@ export abstract class BaseDeviceFacade<T extends keyof typeof DeviceType>
           ToDate: to ?? now(),
         },
       })
-    ).data as EnergyData[T]
+    ).data as EnergyData<T>
   }
 
-  protected handle(data: Partial<UpdateDeviceData[T]>): UpdateDeviceData[T] {
+  protected handle(
+    data: Partial<UpdateDeviceData<T>>,
+  ): Required<UpdateDeviceData<T>> {
     return { ...this.setData, ...data }
   }
 
-  #getFlags(keys: (keyof UpdateDeviceData[T])[]): number {
+  #getFlags(keys: (keyof UpdateDeviceData<T>)[]): number {
     return keys.reduce(
       (acc, key) => Number(BigInt(this.flags[key]) | BigInt(acc)),
       FLAG_UNCHANGED,

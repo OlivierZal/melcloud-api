@@ -1,5 +1,5 @@
 import type { DeviceType } from '../enums.js'
-import type { ListDevice, ZoneSettings } from '../types/index.js'
+import type { ListDeviceData, ZoneSettings } from '../types/index.js'
 
 export interface IAreaModel extends ISubFloorModel, ISuperDeviceModel {}
 
@@ -7,8 +7,8 @@ export interface IBaseBuildingModel {
   data: ZoneSettings
 }
 
-export interface IBaseDeviceModel<T extends keyof typeof DeviceType> {
-  data: ListDevice[T]['Device']
+export interface IBaseDeviceModel<T extends DeviceType> {
+  data: ListDeviceData<T>
   type: T
 }
 
@@ -17,11 +17,11 @@ export interface IBuildingModel extends IBaseBuildingModel, ISuperAreaModel {
   floors: IFloorModel[]
 }
 
-export interface IDeviceModel<T extends keyof typeof DeviceType>
+export interface IDeviceModel<T extends DeviceType>
   extends IBaseDeviceModel<T>,
     ISubFloorModel {
   areaId: number | null
-  update: (data: Partial<ListDevice[T]['Device']>) => void
+  update: (data: Partial<ListDeviceData<T>>) => void
   area?: IAreaModel | null
 }
 
@@ -53,6 +53,6 @@ export interface ISuperDeviceModel extends IModel {
 }
 
 export type IDeviceModelAny =
-  | IDeviceModel<'Ata'>
-  | IDeviceModel<'Atw'>
-  | IDeviceModel<'Erv'>
+  | IDeviceModel<DeviceType.Ata>
+  | IDeviceModel<DeviceType.Atw>
+  | IDeviceModel<DeviceType.Erv>

@@ -21,6 +21,7 @@ export const fromSetToListAta: Record<
 export const fromListToSetAta: Record<
   keyof SetDeviceDataAtaInList,
   KeysOfSetDeviceDataAtaNotInList
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
 > = Object.fromEntries(
   Object.entries(fromSetToListAta).map(([key, value]) => [value, key]),
 ) as Record<keyof SetDeviceDataAtaInList, KeysOfSetDeviceDataAtaNotInList>
