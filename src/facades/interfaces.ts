@@ -104,3 +104,4 @@ export interface ISuperDeviceFacade extends IFacade {
 export type IDeviceFacadeAny =
   | IDeviceFacade<DeviceType.Ata>
   | IDeviceFacade<DeviceType.Atw>
+  | IDeviceFacade<DeviceType.Erv>

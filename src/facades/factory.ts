@@ -13,10 +13,45 @@ import { DeviceAtwFacade } from './device-atw.js'
 import { DeviceErvFacade } from './device-erv.js'
 import { FloorFacade } from './floor.js'
 
-import type { IDeviceModel, IModel } from '../models/interfaces.js'
+import type { IModel } from '../models/interfaces.js'
 
-import type { IFacade } from './interfaces.js'
+import type { IDeviceFacadeAny, IFacade } from './interfaces.js'
 import type { FacadeManager } from './manager.js'
+
+type DeviceModelAny = DeviceModel<
+  DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
+>
+
+const isDeviceModelAta = (
+  instance: DeviceModelAny,
+): instance is DeviceModel<DeviceType.Ata> =>
+  instance instanceof DeviceModel && instance.type === DeviceType.Ata
+
+const isDeviceModelAtw = (
+  instance: DeviceModelAny,
+): instance is DeviceModel<DeviceType.Atw> =>
+  instance instanceof DeviceModel && instance.type === DeviceType.Atw
+
+const isDeviceModelErv = (
+  instance: DeviceModelAny,
+): instance is DeviceModel<DeviceType.Erv> =>
+  instance instanceof DeviceModel && instance.type === DeviceType.Erv
+
+const createDeviceFacade = <T extends DeviceType>(
+  manager: FacadeManager,
+  instance: DeviceModel<T>,
+): IDeviceFacadeAny => {
+  if (isDeviceModelAta(instance)) {
+    return new DeviceAtaFacade(manager, instance)
+  }
+  if (isDeviceModelAtw(instance)) {
+    return new DeviceAtwFacade(manager, instance)
+  }
+  if (isDeviceModelErv(instance)) {
+    return new DeviceErvFacade(manager, instance)
+  }
+  throw new Error('Device model not supported')
+}
 
 export const createFacade = (
   manager: FacadeManager,
@@ -29,27 +64,7 @@ export const createFacade = (
     return new BuildingFacade(manager, instance)
   }
   if (instance instanceof DeviceModel) {
-    switch (instance.type) {
-      case DeviceType.Ata:
-        return new DeviceAtaFacade(
-          manager,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          instance as IDeviceModel<DeviceType.Ata>,
-        )
-      case DeviceType.Atw:
-        return new DeviceAtwFacade(
-          manager,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          instance as IDeviceModel<DeviceType.Atw>,
-        )
-      case DeviceType.Erv:
-        return new DeviceErvFacade(
-          manager,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-          instance as IDeviceModel<DeviceType.Erv>,
-        )
-      default:
-    }
+    return createDeviceFacade(manager, instance)
   }
   if (instance instanceof FloorModel) {
     return new FloorFacade(manager, instance)
