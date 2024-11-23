@@ -1,5 +1,5 @@
-const cartesianProduct = ({ orderedModifiers }) =>
-  orderedModifiers.reduce(
+const cartesianProduct = (arrays) =>
+  arrays.reduce(
     (acc, array) =>
       acc.flatMap((accItem) =>
         array.map((item) => [
@@ -10,14 +10,14 @@ const cartesianProduct = ({ orderedModifiers }) =>
     [[]],
   )
 
-const allModifierCombos = ({ orderedModifiers }) =>
-  cartesianProduct({ orderedModifiers }).map((combo) => combo.filter(Boolean))
+const modifierCombos = ({ orderedModifiers }) =>
+  cartesianProduct(orderedModifiers).map((combo) => combo.filter(Boolean))
 
 const compatibleModifierCombos = ({
   modifierIncompatibilities,
   orderedModifiers,
 }) =>
-  allModifierCombos({ orderedModifiers }).filter((combo) =>
+  modifierCombos({ orderedModifiers }).filter((combo) =>
     combo.every((modifier) =>
       (modifierIncompatibilities[modifier] ?? []).every(
         (incompatibleModifier) => !combo.includes(incompatibleModifier),
