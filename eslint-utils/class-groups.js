@@ -1,6 +1,6 @@
 import { buildGroups } from './build-groups.js'
 
-const orderedModifiers = [
+const modifiers = [
   ['declare', 'override', ''],
   ['static', '', 'abstract'],
   ['decorated', ''],
@@ -26,7 +26,7 @@ const selectors = [
   'method',
 ]
 
-const modifiers = orderedModifiers.flat().filter(Boolean)
+const allModifiers = modifiers.flat().filter(Boolean)
 const baseMethodIncompatibilities = ['declare', 'readonly']
 const accessorIncompatibilities = [...baseMethodIncompatibilities, 'optional']
 const selectorIncompatibilities = {
@@ -39,7 +39,7 @@ const selectorIncompatibilities = {
     'override',
     'static',
   ],
-  'event-handler': modifiers,
+  'event-handler': allModifiers,
   'function-property': ['abstract', 'declare'],
   'get-method': accessorIncompatibilities,
   'index-signature': [
@@ -54,7 +54,7 @@ const selectorIncompatibilities = {
   method: baseMethodIncompatibilities,
   property: [],
   'set-method': accessorIncompatibilities,
-  'static-block': modifiers,
+  'static-block': allModifiers,
 }
 
 export const classGroups = {
@@ -67,7 +67,7 @@ export const classGroups = {
   ],
   groups: buildGroups({
     modifierIncompatibilities,
-    orderedModifiers,
+    modifiers,
     selectorIncompatibilities,
     selectors,
   }),
