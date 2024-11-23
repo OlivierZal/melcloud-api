@@ -26,7 +26,7 @@ const selectors = [
   'method',
 ]
 
-const allModifiers = orderedModifiers.flat().filter(Boolean)
+const modifiers = orderedModifiers.flat().filter(Boolean)
 const baseMethodIncompatibilities = ['declare', 'readonly']
 const accessorIncompatibilities = [...baseMethodIncompatibilities, 'optional']
 const selectorIncompatibilities = {
@@ -39,7 +39,7 @@ const selectorIncompatibilities = {
     'override',
     'static',
   ],
-  'event-handler': allModifiers,
+  'event-handler': modifiers,
   'function-property': ['abstract', 'declare'],
   'get-method': accessorIncompatibilities,
   'index-signature': [
@@ -54,7 +54,7 @@ const selectorIncompatibilities = {
   method: baseMethodIncompatibilities,
   property: [],
   'set-method': accessorIncompatibilities,
-  'static-block': allModifiers,
+  'static-block': modifiers,
 }
 
 export const classGroups = {
