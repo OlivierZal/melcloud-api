@@ -1,10 +1,4 @@
-import type {
-  DeviceType,
-  FanSpeed,
-  Horizontal,
-  OperationMode,
-  Vertical,
-} from '../enums.js'
+import type { DeviceType } from '../enums.js'
 
 import type {
   EnergyDataAta,
@@ -59,17 +53,19 @@ export interface EnergyPostData {
   readonly ToDate: string
 }
 
-export interface ErrorData {
+export interface ErrorLogData {
   readonly DeviceId: number
   readonly EndDate: string
   readonly ErrorMessage: string | null
   readonly StartDate: string
 }
 
-export interface ErrorPostData {
-  readonly DeviceIDs: readonly number[]
-  readonly FromDate: string
-  readonly ToDate: string
+export interface ErrorLogPostData {
+  readonly DeviceIDs: number | readonly number[]
+  readonly FromDate?: string
+  readonly ToDate?: string
+  // Number of days up to now, replaces `FromDate` and `ToDate` if strictly positive
+  readonly Duration?: number
 }
 
 export interface FailureData {
@@ -91,10 +87,10 @@ export interface FrostProtectionData {
 }
 
 export interface FrostProtectionLocation {
-  readonly AreaIds?: readonly number[]
-  readonly BuildingIds?: readonly number[]
-  readonly DeviceIds?: readonly number[]
-  readonly FloorIds?: readonly number[]
+  readonly AreaIds?: number | readonly number[]
+  readonly BuildingIds?: number | readonly number[]
+  readonly DeviceIds?: number | readonly number[]
+  readonly FloorIds?: number | readonly number[]
 }
 
 export interface FrostProtectionPostData extends FrostProtectionLocation {
@@ -106,32 +102,6 @@ export interface FrostProtectionPostData extends FrostProtectionLocation {
 export interface GetDeviceDataParams {
   readonly buildingId: number
   readonly id: number
-}
-
-export interface GetGroupAtaData {
-  readonly Data: {
-    readonly Group: {
-      readonly Specification: Required<SetGroupAtaPostData['Specification']>
-      readonly State: Required<SetGroupAtaPostData['State']>
-    }
-  }
-}
-
-export interface GetGroupAtaPostData {
-  readonly AreaID?: number | null
-  readonly BuildingID?: number | null
-  readonly FloorID?: number | null
-}
-
-export interface GroupAtaState {
-  readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
-  readonly OperationMode?: OperationMode | null
-  readonly Power?: boolean | null
-  readonly SetTemperature?: number | null
-  readonly VaneHorizontalDirection?: Horizontal | null
-  readonly VaneHorizontalSwing?: boolean | null
-  readonly VaneVerticalDirection?: Vertical | null
-  readonly VaneVerticalSwing?: boolean | null
 }
 
 export interface HMTimeZone extends HolidayModeLocation {
@@ -163,10 +133,10 @@ export interface HolidayModeData {
 }
 
 export interface HolidayModeLocation {
-  readonly Areas?: readonly number[]
-  readonly Buildings?: readonly number[]
-  readonly Devices?: readonly number[]
-  readonly Floors?: readonly number[]
+  readonly Areas?: number | readonly number[]
+  readonly Buildings?: number | readonly number[]
+  readonly Devices?: number | readonly number[]
+  readonly Floors?: number | readonly number[]
 }
 
 export interface HolidayModePostData {
@@ -200,13 +170,23 @@ export interface LoginPostData {
   readonly Persist?: boolean
 }
 
-export interface SetGroupAtaPostData {
-  readonly Specification: GetGroupAtaPostData
-  readonly State: GroupAtaState
+export interface ReportData {
+  readonly Data: readonly (readonly (number | null)[])[]
+  readonly FromDate: string
+  readonly Labels: readonly string[]
+  readonly Points: number
+  readonly Series: number
+  readonly ToDate: string
+}
+
+export interface ReportPostData {
+  readonly DeviceID: number
+  readonly FromDate: string
+  readonly ToDate: string
 }
 
 export interface SetPowerPostData {
-  readonly DeviceIds: readonly number[]
+  readonly DeviceIds: number | readonly number[]
   readonly Power: boolean
 }
 
@@ -232,15 +212,8 @@ export interface TilesData<T extends DeviceType | null> {
   }[]
 }
 
-export interface WifiData {
-  readonly Data: readonly (readonly (number | null)[])[]
-  readonly FromDate: string
-  readonly Labels: readonly string[]
-  readonly ToDate: string
-}
-
 export interface WifiPostData {
-  readonly devices: readonly number[]
+  readonly devices: number | readonly number[]
   readonly hour: number
 }
 
@@ -291,7 +264,7 @@ export type SetDevicePostData<T extends DeviceType> = BaseDevicePostData &
   Required<UpdateDeviceData<T>>
 
 export type TilesPostData<T extends DeviceType | null> = {
-  readonly DeviceIDs: readonly number[]
+  readonly DeviceIDs: number | readonly number[]
 } & (T extends DeviceType ?
   { readonly SelectedBuilding: number; readonly SelectedDevice: number }
 : { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })

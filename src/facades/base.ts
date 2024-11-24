@@ -13,6 +13,7 @@ import type {
   IFloorModel,
 } from '../models/interfaces.js'
 import type { API } from '../services/api.js'
+import type { ErrorLog, ErrorLogQuery } from '../services/interfaces.js'
 import type {
   DateTimeComponents,
   FailureData,
@@ -21,20 +22,17 @@ import type {
   HMTimeZone,
   HolidayModeData,
   HolidayModeLocation,
+  ReportData,
   SettingsParams,
   SuccessData,
   TilesData,
-  WifiData,
 } from '../types/index.js'
 
 import type {
-  ErrorLog,
-  ErrorLogQuery,
   FrostProtectionQuery,
   HolidayModeQuery,
   IFacade,
 } from './interfaces.js'
-import type { FacadeManager } from './manager.js'
 
 const temperatureRange = { max: 16, min: 4 } as const
 const TEMPERATURE_GAP = 2
@@ -51,14 +49,6 @@ const getDateTimeComponents = (date?: DateTime): DateTimeComponents =>
     }
   : null
 
-const getEndDate = (
-  startDate: DateTime,
-  endDateInfo: number | string,
-): DateTime =>
-  typeof endDateInfo === 'number' ?
-    startDate.plus({ days: endDateInfo })
-  : DateTime.fromISO(endDateInfo)
-
 export abstract class BaseFacade<
   T extends IAreaModel | IBuildingModel | IDeviceModelAny | IFloorModel,
 > implements IFacade
@@ -71,8 +61,6 @@ export abstract class BaseFacade<
 
   protected isHolidayModeDefined: boolean | null = null
 
-  readonly #manager: FacadeManager
-
   protected abstract readonly frostProtectionLocation: keyof FrostProtectionLocation
 
   protected abstract readonly holidayModeLocation: keyof HolidayModeLocation
@@ -83,9 +71,8 @@ export abstract class BaseFacade<
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(manager: FacadeManager, instance: T) {
-    this.#manager = manager
-    ;({ api: this.api } = manager)
+  public constructor(api: API, instance: T) {
+    this.api = api
     ;({ id: this.id } = instance)
   }
 
@@ -131,7 +118,7 @@ export abstract class BaseFacade<
   }
 
   public async getErrors(query: ErrorLogQuery): Promise<ErrorLog> {
-    return this.#manager.getErrors(query, this.#deviceIds)
+    return this.api.getErrors(query, this.#deviceIds)
   }
 
   public async getFrostProtection(): Promise<FrostProtectionData> {
@@ -183,7 +170,7 @@ export abstract class BaseFacade<
 
   public async getWifiReport(
     hour: number = DateTime.now().hour,
-  ): Promise<WifiData> {
+  ): Promise<ReportData> {
     return (
       await this.api.getWifiReport({
         postData: { devices: this.#deviceIds, hour },
@@ -220,18 +207,12 @@ export abstract class BaseFacade<
     ).data
   }
 
-  public async setHolidayMode({
-    days,
-    from,
-    to,
-  }: HolidayModeQuery): Promise<FailureData | SuccessData> {
-    const daysOrTo = days ?? to ?? null
-    const isEnabled = Boolean(daysOrTo)
+  public async setHolidayMode({ from, to }: HolidayModeQuery = {}): Promise<
+    FailureData | SuccessData
+  > {
+    const isEnabled = to !== undefined
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : undefined
-    const endDate =
-      startDate && daysOrTo !== null ?
-        getEndDate(startDate, daysOrTo)
-      : undefined
+    const endDate = isEnabled ? DateTime.fromISO(to) : undefined
     return (
       await this.api.setHolidayMode({
         postData: {

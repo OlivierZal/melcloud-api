@@ -4,10 +4,10 @@ import { BuildingModel } from '../models/index.js'
 import { BaseSuperDeviceFacade } from './base-super-device.js'
 
 import type { IBuildingModel } from '../main.js'
+import type { API } from '../services/api.js'
 import type { ZoneSettings } from '../types/index.js'
 
 import type { IBuildingFacade } from './interfaces.js'
-import type { FacadeManager } from './manager.js'
 
 export class BuildingFacade
   extends BaseSuperDeviceFacade<BuildingModel>
@@ -23,8 +23,8 @@ export class BuildingFacade
 
   protected readonly tableName = 'Building'
 
-  public constructor(manager: FacadeManager, instance: IBuildingModel) {
-    super(manager, instance)
+  public constructor(api: API, instance: IBuildingModel) {
+    super(api, instance)
     ;({
       data: {
         FPDefined: this.isFrostProtectionDefined,

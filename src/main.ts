@@ -29,9 +29,6 @@ export {
 } from './models/index.js'
 export { API as MELCloudAPI } from './services/api.js'
 export type {
-  ErrorDetails,
-  ErrorLog,
-  ErrorLogQuery,
   FrostProtectionQuery,
   HolidayModeQuery,
   IBuildingFacade,
@@ -57,6 +54,9 @@ export type {
 export type {
   APIConfig,
   APISettings,
+  ErrorDetails,
+  ErrorLog,
+  ErrorLogQuery,
   IAPI,
   Logger,
   OnSyncFunction,
@@ -79,8 +79,8 @@ export type {
   EnergyDataAta,
   EnergyDataAtw,
   EnergyPostData,
-  ErrorData,
-  ErrorPostData,
+  ErrorLogData,
+  ErrorLogPostData,
   FailureData,
   FloorData,
   FrostProtectionData,
@@ -107,6 +107,8 @@ export type {
   LoginData,
   LoginPostData,
   OperationModeZoneDataAtw,
+  ReportData,
+  ReportPostData,
   SetDeviceData,
   SetDeviceDataAta,
   SetDeviceDataAtaInList,
@@ -124,7 +126,6 @@ export type {
   UpdateDeviceDataAta,
   UpdateDeviceDataAtw,
   UpdateDeviceDataErv,
-  WifiData,
   WifiPostData,
   ZoneAtw,
   ZoneSettings,

@@ -20,10 +20,13 @@ import {
   DeviceModel,
   FloorModel,
 } from '../models/index.js'
+import { now } from '../utils.js'
 
 import {
   isAPISetting,
   type APIConfig,
+  type ErrorLog,
+  type ErrorLogQuery,
   type IAPI,
   type Logger,
   type OnSyncFunction,
@@ -34,8 +37,8 @@ import type {
   Building,
   EnergyData,
   EnergyPostData,
-  ErrorData,
-  ErrorPostData,
+  ErrorLogData,
+  ErrorLogPostData,
   FailureData,
   FrostProtectionData,
   FrostProtectionPostData,
@@ -48,6 +51,8 @@ import type {
   LoginCredentials,
   LoginData,
   LoginPostData,
+  ReportData,
+  ReportPostData,
   SetDeviceData,
   SetDevicePostData,
   SetGroupAtaPostData,
@@ -56,7 +61,6 @@ import type {
   SuccessData,
   TilesData,
   TilesPostData,
-  WifiData,
   WifiPostData,
 } from '../types/index.js'
 
@@ -67,8 +71,9 @@ const DEFAULT_SYNC_INTERVAL = 5
 const NO_SYNC_INTERVAL = 0
 const RETRY_DELAY = 1000
 
-const isLanguage = (value: string): value is keyof typeof Language =>
-  value in Language
+const DEFAULT_LIMIT = 1
+const DEFAULT_OFFSET = 0
+const INVALID_YEAR = 1
 
 const setting = (
   target: ClassAccessorDecoratorTarget<API, string>,
@@ -93,6 +98,44 @@ const setting = (
     target.set.call(this, value)
   },
 })
+
+const isLanguage = (value: string): value is keyof typeof Language =>
+  value in Language
+
+const formatErrors = (errors: Record<string, readonly string[]>): string =>
+  Object.entries(errors)
+    .map(([error, messages]) => `${error}: ${messages.join(', ')}`)
+    .join('\n')
+
+const handleErrorLogQuery = ({
+  from,
+  limit,
+  offset,
+  to,
+}: ErrorLogQuery): {
+  fromDate: DateTime
+  period: number
+  toDate: DateTime
+} => {
+  const fromDate =
+    from !== undefined && from ? DateTime.fromISO(from) : undefined
+  const toDate = to !== undefined && to ? DateTime.fromISO(to) : DateTime.now()
+
+  const numberLimit = Number(limit)
+  const period = Number.isFinite(numberLimit) ? numberLimit : DEFAULT_LIMIT
+
+  const offsetLimit = Number(offset)
+  const daysOffset =
+    !fromDate && Number.isFinite(offsetLimit) ? offsetLimit : DEFAULT_OFFSET
+
+  const daysLimit = fromDate ? DEFAULT_LIMIT : period
+  const days = daysLimit * daysOffset + daysOffset
+  return {
+    fromDate: fromDate ?? toDate.minus({ days: days + daysLimit }),
+    period,
+    toDate: toDate.minus({ days }),
+  }
+}
 
 export class API implements IAPI {
   public readonly onSync?: OnSyncFunction
@@ -229,20 +272,56 @@ export class API implements IAPI {
     }
   }
 
+  public async getErrors(
+    query: ErrorLogQuery,
+    deviceIds = DeviceModel.getAll().map(({ id }) => id),
+  ): Promise<ErrorLog> {
+    const { fromDate, period, toDate } = handleErrorLogQuery(query)
+    const nextToDate = fromDate.minus({ days: 1 })
+    return {
+      errors: (await this.#getErrors(deviceIds, fromDate, toDate))
+        .map(
+          ({
+            DeviceId: deviceId,
+            ErrorMessage: errorMessage,
+            StartDate: startDate,
+          }) => ({
+            date:
+              DateTime.fromISO(startDate).year === INVALID_YEAR ?
+                ''
+              : DateTime.fromISO(startDate).toLocaleString(
+                  DateTime.DATETIME_MED,
+                ),
+            device: DeviceModel.getById(deviceId)?.name ?? '',
+            error: errorMessage?.trim() ?? '',
+          }),
+        )
+        .filter(({ date, error }) => date && error)
+        .reverse(),
+      fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
+      nextFromDate: nextToDate.minus({ days: period }).toISODate() ?? '',
+      nextToDate: nextToDate.toISODate() ?? '',
+    }
+  }
+
+  public async setLanguage(language: string): Promise<void> {
+    if (language !== this.language) {
+      const { data: hasLanguageChanged } = await this.updateLanguage({
+        postData: { language: this.#getLanguageCode(language) },
+      })
+      if (hasLanguageChanged) {
+        this.language = language
+      }
+    }
+  }
+
+  // DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
   public async get({
     params,
   }: {
     params: GetDeviceDataParams
   }): Promise<{ data: GetDeviceData<DeviceType> }> {
     return this.#api.get('/Device/Get', { params })
-  }
-
-  public async getAta({
-    postData,
-  }: {
-    postData: GetGroupAtaPostData
-  }): Promise<{ data: GetGroupAtaData }> {
-    return this.#api.post('/Group/Get', postData)
   }
 
   public async getEnergyReport({
@@ -253,11 +332,11 @@ export class API implements IAPI {
     return this.#api.post('/EnergyCost/Report', postData)
   }
 
-  public async getErrors({
+  public async getErrorLog({
     postData,
   }: {
-    postData: ErrorPostData
-  }): Promise<{ data: ErrorData[] | FailureData }> {
+    postData: ErrorLogPostData
+  }): Promise<{ data: ErrorLogData[] | FailureData }> {
     return this.#api.post('/Report/GetUnitErrorLog2', postData)
   }
 
@@ -305,7 +384,7 @@ export class API implements IAPI {
     postData,
   }: {
     postData: WifiPostData
-  }): Promise<{ data: WifiData }> {
+  }): Promise<{ data: ReportData }> {
     return this.#api.post('/Report/GetSignalStrength', postData)
   }
 
@@ -331,14 +410,6 @@ export class API implements IAPI {
     return this.#api.post(`/Device/Set${DeviceType[type]}`, postData)
   }
 
-  public async setAta({
-    postData,
-  }: {
-    postData: SetGroupAtaPostData
-  }): Promise<{ data: FailureData | SuccessData }> {
-    return this.#api.post('/Group/SetAta', postData)
-  }
-
   public async setFrostProtection({
     postData,
   }: {
@@ -353,17 +424,6 @@ export class API implements IAPI {
     postData: HolidayModePostData
   }): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post('/HolidayMode/Update', postData)
-  }
-
-  public async setLanguage(language: string): Promise<void> {
-    if (language !== this.language) {
-      const { data: hasLanguageChanged } = await this.updateLanguage({
-        postData: { language: this.#getLanguageCode(language) },
-      })
-      if (hasLanguageChanged) {
-        this.language = language
-      }
-    }
   }
 
   public async setPower({
@@ -382,6 +442,32 @@ export class API implements IAPI {
     return this.#api.post<boolean>('/User/UpdateLanguage', postData)
   }
 
+  // DeviceType.Ata
+  public async getAta({
+    postData,
+  }: {
+    postData: GetGroupAtaPostData
+  }): Promise<{ data: GetGroupAtaData }> {
+    return this.#api.post('/Group/Get', postData)
+  }
+
+  public async setAta({
+    postData,
+  }: {
+    postData: SetGroupAtaPostData
+  }): Promise<{ data: FailureData | SuccessData }> {
+    return this.#api.post('/Group/SetAta', postData)
+  }
+
+  // DeviceType.Atw
+  public async getInternalTemperatures({
+    postData,
+  }: {
+    postData: ReportPostData
+  }): Promise<{ data: ReportData }> {
+    return this.#api.post('/Device/GetInternalTemperatures2', postData)
+  }
+
   async #authenticate({
     password,
     username,
@@ -390,7 +476,7 @@ export class API implements IAPI {
       data: { LoginData: loginData },
     } = await this.login({
       postData: {
-        AppVersion: '1.34.12.0',
+        AppVersion: '1.34.13.0',
         Email: username,
         Language: this.#getLanguageCode(),
         Password: password,
@@ -423,6 +509,24 @@ export class API implements IAPI {
     })
     this.#setupAxiosInterceptors(api)
     return api
+  }
+
+  async #getErrors(
+    deviceIds: number[],
+    fromDate: DateTime,
+    toDate: DateTime,
+  ): Promise<ErrorLogData[]> {
+    const { data } = await this.getErrorLog({
+      postData: {
+        DeviceIDs: deviceIds,
+        FromDate: fromDate.toISODate() ?? undefined,
+        ToDate: toDate.toISODate() ?? now(),
+      },
+    })
+    if ('AttributeErrors' in data) {
+      throw new Error(formatErrors(data.AttributeErrors))
+    }
+    return data
   }
 
   #getLanguageCode(language: string = this.language): Language {

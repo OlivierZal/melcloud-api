@@ -3,8 +3,8 @@ import type {
   Building,
   EnergyData,
   EnergyPostData,
-  ErrorData,
-  ErrorPostData,
+  ErrorLogData,
+  ErrorLogPostData,
   FailureData,
   FrostProtectionData,
   FrostProtectionPostData,
@@ -17,6 +17,8 @@ import type {
   LoginCredentials,
   LoginData,
   LoginPostData,
+  ReportData,
+  ReportPostData,
   SetDeviceData,
   SetDevicePostData,
   SetGroupAtaPostData,
@@ -25,7 +27,6 @@ import type {
   SuccessData,
   TilesData,
   TilesPostData,
-  WifiData,
   WifiPostData,
 } from '../types/index.js'
 
@@ -56,30 +57,49 @@ export interface APIConfig extends Partial<LoginCredentials> {
   timezone?: string
 }
 
+export interface ErrorDetails {
+  readonly date: string
+  readonly device: string
+  readonly error: string
+}
+
+export interface ErrorLog {
+  readonly errors: ErrorDetails[]
+  readonly fromDateHuman: string
+  readonly nextFromDate: string
+  readonly nextToDate: string
+}
+
+export interface ErrorLogQuery {
+  readonly from?: string
+  readonly limit?: string
+  readonly offset?: string
+  readonly to?: string
+}
+
 export interface IAPI {
   authenticate: (data?: LoginCredentials) => Promise<boolean>
   clearSync: () => void
   fetch: () => Promise<Building[]>
+  getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
+  setLanguage: (language: string) => Promise<void>
+  onSync?: OnSyncFunction
+  // DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
   get: ({
     params,
   }: {
     params: GetDeviceDataParams
   }) => Promise<{ data: GetDeviceData<DeviceType> }>
-  getAta: ({
-    postData,
-  }: {
-    postData: GetGroupAtaPostData
-  }) => Promise<{ data: GetGroupAtaData }>
   getEnergyReport: ({
     postData,
   }: {
     postData: EnergyPostData
   }) => Promise<{ data: EnergyData<DeviceType> }>
-  getErrors: ({
+  getErrorLog: ({
     postData,
   }: {
-    postData: ErrorPostData
-  }) => Promise<{ data: ErrorData[] | FailureData }>
+    postData: ErrorLogPostData
+  }) => Promise<{ data: ErrorLogData[] | FailureData }>
   getFrostProtection: ({
     params,
   }: {
@@ -104,7 +124,7 @@ export interface IAPI {
     postData,
   }: {
     postData: WifiPostData
-  }) => Promise<{ data: WifiData }>
+  }) => Promise<{ data: ReportData }>
   list: () => Promise<{ data: Building[] }>
   login: ({
     postData,
@@ -118,11 +138,6 @@ export interface IAPI {
     postData: SetDevicePostData<T>
     type: T
   }) => Promise<{ data: SetDeviceData<T> }>
-  setAta: ({
-    postData,
-  }: {
-    postData: SetGroupAtaPostData
-  }) => Promise<{ data: FailureData | SuccessData }>
   setFrostProtection: ({
     postData,
   }: {
@@ -143,7 +158,23 @@ export interface IAPI {
   }: {
     postData: { language: Language }
   }) => Promise<{ data: boolean }>
-  onSync?: OnSyncFunction
+  // DeviceType.Ata
+  getAta: ({
+    postData,
+  }: {
+    postData: GetGroupAtaPostData
+  }) => Promise<{ data: GetGroupAtaData }>
+  setAta: ({
+    postData,
+  }: {
+    postData: SetGroupAtaPostData
+  }) => Promise<{ data: FailureData | SuccessData }>
+  // DeviceType.Atw
+  getInternalTemperatures: ({
+    postData,
+  }: {
+    postData: ReportPostData
+  }) => Promise<{ data: ReportData }>
 }
 
 export interface Logger {

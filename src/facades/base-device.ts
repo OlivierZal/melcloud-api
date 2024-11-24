@@ -5,7 +5,6 @@ import { updateDevice } from '../decorators/update-devices.js'
 import { DeviceType } from '../enums.js'
 import { DeviceModel } from '../models/index.js'
 import {
-  DEFAULT_YEAR,
   fromListToSetAta,
   isKeyofSetDeviceDataAtaInList,
   now,
@@ -14,6 +13,7 @@ import {
 import { BaseFacade } from './base.js'
 
 import type { IDeviceModel, IDeviceModelAny } from '../models/interfaces.js'
+import type { API } from '../services/api.js'
 import type {
   EnergyData,
   GetDeviceData,
@@ -24,7 +24,8 @@ import type {
 } from '../types/index.js'
 
 import type { IDeviceFacade } from './interfaces.js'
-import type { FacadeManager } from './manager.js'
+
+const DEFAULT_YEAR = '1970-01-01'
 
 export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<IDeviceModelAny>
@@ -42,9 +43,9 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
-  public constructor(manager: FacadeManager, instance: IDeviceModel<T>) {
+  public constructor(api: API, instance: IDeviceModel<T>) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    super(manager, instance as IDeviceModelAny)
+    super(api, instance as IDeviceModelAny)
     ;({ type: this.type } = instance)
   }
 

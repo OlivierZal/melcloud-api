@@ -6,6 +6,7 @@ import type {
   IDeviceModelAny,
   IModel,
 } from '../models/interfaces.js'
+import type { ErrorLog, ErrorLogQuery } from '../services/interfaces.js'
 import type {
   EnergyData,
   FailureData,
@@ -14,33 +15,13 @@ import type {
   GroupAtaState,
   HolidayModeData,
   ListDeviceData,
+  ReportData,
   SetDeviceData,
   SuccessData,
   TilesData,
   UpdateDeviceData,
-  WifiData,
   ZoneSettings,
 } from '../types/index.js'
-
-export interface ErrorDetails {
-  readonly date: string
-  readonly device: string
-  readonly error: string
-}
-
-export interface ErrorLog {
-  readonly errors: ErrorDetails[]
-  readonly fromDateHuman: string
-  readonly nextFromDate: string
-  readonly nextToDate: string
-}
-
-export interface ErrorLogQuery {
-  readonly from?: string
-  readonly limit?: string
-  readonly offset?: string
-  readonly to?: string
-}
 
 export interface FrostProtectionQuery {
   readonly max: number
@@ -49,9 +30,8 @@ export interface FrostProtectionQuery {
 }
 
 export interface HolidayModeQuery {
-  readonly days?: number
   readonly from?: string
-  readonly to?: string | null
+  readonly to?: string
 }
 
 export interface IBuildingFacade
@@ -85,7 +65,7 @@ export interface IFacade extends IModel {
   getHolidayMode: () => Promise<HolidayModeData>
   getTiles: ((select?: false) => Promise<TilesData<null>>) &
     (<U extends DeviceType>(select: IDeviceModel<U>) => Promise<TilesData<U>>)
-  getWifiReport: (hour?: number) => Promise<WifiData>
+  getWifiReport: (hour?: number) => Promise<ReportData>
   onSync: (params?: { type?: DeviceType }) => Promise<void>
   setFrostProtection: (
     query: FrostProtectionQuery,
@@ -94,6 +74,10 @@ export interface IFacade extends IModel {
     query: HolidayModeQuery,
   ) => Promise<FailureData | SuccessData>
   setPower: (power?: boolean) => Promise<boolean>
+}
+
+export interface IFacadeManager {
+  get: (instance?: IModel) => IFacade | undefined
 }
 
 export interface ISuperDeviceFacade extends IFacade {

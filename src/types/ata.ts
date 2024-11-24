@@ -30,6 +30,32 @@ export interface EnergyDataAta {
   readonly UsageDisclaimerPercentages: string
 }
 
+export interface GetGroupAtaData {
+  readonly Data: {
+    readonly Group: {
+      readonly Specification: Required<SetGroupAtaPostData['Specification']>
+      readonly State: Required<SetGroupAtaPostData['State']>
+    }
+  }
+}
+
+export interface GetGroupAtaPostData {
+  readonly AreaID?: number | null
+  readonly BuildingID?: number | null
+  readonly FloorID?: number | null
+}
+
+export interface GroupAtaState {
+  readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
+  readonly OperationMode?: OperationMode | null
+  readonly Power?: boolean | null
+  readonly SetTemperature?: number | null
+  readonly VaneHorizontalDirection?: Horizontal | null
+  readonly VaneHorizontalSwing?: boolean | null
+  readonly VaneVerticalDirection?: Vertical | null
+  readonly VaneVerticalSwing?: boolean | null
+}
+
 export interface ListDeviceDataAta
   extends BaseListDeviceData,
     Omit<
@@ -60,6 +86,11 @@ export interface SetDeviceDataAtaInList {
   readonly FanSpeed: FanSpeed
   readonly VaneHorizontalDirection: Horizontal
   readonly VaneVerticalDirection: Vertical
+}
+
+export interface SetGroupAtaPostData {
+  readonly Specification: GetGroupAtaPostData
+  readonly State: GroupAtaState
 }
 
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {

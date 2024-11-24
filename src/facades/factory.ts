@@ -14,9 +14,9 @@ import { DeviceErvFacade } from './device-erv.js'
 import { FloorFacade } from './floor.js'
 
 import type { IModel } from '../models/interfaces.js'
+import type { API } from '../services/api.js'
 
 import type { IDeviceFacadeAny, IFacade } from './interfaces.js'
-import type { FacadeManager } from './manager.js'
 
 type DeviceModelAny = DeviceModel<
   DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
@@ -38,36 +38,33 @@ const isDeviceModelErv = (
   instance instanceof DeviceModel && instance.type === DeviceType.Erv
 
 const createDeviceFacade = <T extends DeviceType>(
-  manager: FacadeManager,
+  api: API,
   instance: DeviceModel<T>,
 ): IDeviceFacadeAny => {
   if (isDeviceModelAta(instance)) {
-    return new DeviceAtaFacade(manager, instance)
+    return new DeviceAtaFacade(api, instance)
   }
   if (isDeviceModelAtw(instance)) {
-    return new DeviceAtwFacade(manager, instance)
+    return new DeviceAtwFacade(api, instance)
   }
   if (isDeviceModelErv(instance)) {
-    return new DeviceErvFacade(manager, instance)
+    return new DeviceErvFacade(api, instance)
   }
   throw new Error('Device model not supported')
 }
 
-export const createFacade = (
-  manager: FacadeManager,
-  instance: IModel,
-): IFacade => {
+export const createFacade = (api: API, instance: IModel): IFacade => {
   if (instance instanceof AreaModel) {
-    return new AreaFacade(manager, instance)
+    return new AreaFacade(api, instance)
   }
   if (instance instanceof BuildingModel) {
-    return new BuildingFacade(manager, instance)
+    return new BuildingFacade(api, instance)
   }
   if (instance instanceof DeviceModel) {
-    return createDeviceFacade(manager, instance)
+    return createDeviceFacade(api, instance)
   }
   if (instance instanceof FloorModel) {
-    return new FloorFacade(manager, instance)
+    return new FloorFacade(api, instance)
   }
   throw new Error('Model not supported')
 }
