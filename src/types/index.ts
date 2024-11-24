@@ -56,6 +56,7 @@ export type {
   LoginCredentials,
   LoginData,
   LoginPostData,
+  OperationModeLogData,
   ReportData,
   ReportPostData,
   SetDeviceData,

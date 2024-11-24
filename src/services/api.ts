@@ -51,6 +51,7 @@ import type {
   LoginCredentials,
   LoginData,
   LoginPostData,
+  OperationModeLogData,
   ReportData,
   ReportPostData,
   SetDeviceData,
@@ -358,6 +359,22 @@ export class API implements IAPI {
     return this.#api.get('/HolidayMode/GetSettings', {
       params,
     })
+  }
+
+  public async getOperationMode({
+    postData,
+  }: {
+    postData: ReportPostData
+  }): Promise<{ data: OperationModeLogData }> {
+    return this.#api.post('/Report/GetOperationModeLog2', postData)
+  }
+
+  public async getTemperatureLog({
+    postData,
+  }: {
+    postData: ReportPostData
+  }): Promise<{ data: ReportData }> {
+    return this.#api.post('/Report/GetTemperatureLog2', postData)
   }
 
   public async getTiles({

@@ -106,6 +106,7 @@ export type {
   LoginCredentials,
   LoginData,
   LoginPostData,
+  OperationModeLogData,
   OperationModeZoneDataAtw,
   ReportData,
   ReportPostData,

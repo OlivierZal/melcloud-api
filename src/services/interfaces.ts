@@ -1,4 +1,5 @@
 import type { DeviceType, Language } from '../enums.js'
+import type { OperationModeLogData } from '../types/common.js'
 import type {
   Building,
   EnergyData,
@@ -110,6 +111,16 @@ export interface IAPI {
   }: {
     params: SettingsParams
   }) => Promise<{ data: HolidayModeData }>
+  getOperationMode: ({
+    postData,
+  }: {
+    postData: ReportPostData
+  }) => Promise<{ data: OperationModeLogData }>
+  getTemperatureLog: ({
+    postData,
+  }: {
+    postData: ReportPostData
+  }) => Promise<{ data: ReportData }>
   getTiles: (({
     postData,
   }: {

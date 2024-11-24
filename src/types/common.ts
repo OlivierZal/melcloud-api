@@ -255,6 +255,11 @@ export type ListDeviceDataAny =
   | ListDeviceData<DeviceType.Atw>
   | ListDeviceData<DeviceType.Erv>
 
+export type OperationModeLogData = {
+  Key: string
+  Value: number
+}[]
+
 export type SetDeviceData<T extends DeviceType> =
   T extends DeviceType.Ata ? SetDeviceDataAta
   : T extends DeviceType.Atw ? SetDeviceDataAtw
