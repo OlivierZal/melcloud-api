@@ -490,7 +490,7 @@ export class API implements IAPI {
   }: {
     postData: ReportPostData
   }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Device/GetInternalTemperatures2', postData)
+    return this.#api.post('/Report/GetInternalTemperatures2', postData)
   }
 
   async #authenticate({
