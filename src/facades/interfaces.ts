@@ -12,7 +12,7 @@ import type {
   FailureData,
   FrostProtectionData,
   GetDeviceData,
-  GroupAtaState,
+  GroupState,
   HolidayModeData,
   ListDeviceData,
   ReportData,
@@ -43,29 +43,26 @@ export interface IBuildingFacade
 export interface IDeviceFacade<T extends DeviceType>
   extends IBaseDeviceModel<T>,
     IFacade {
-  fetch: () => Promise<ListDeviceData<T>>
-  flags: Record<keyof UpdateDeviceData<T>, number>
-  get: () => Promise<GetDeviceData<T>>
-  getEnergyReport: ({
+  energy: ({
     from,
     to,
   }: {
     from?: string
     to?: string
   }) => Promise<EnergyData<T>>
-  getTiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
+  fetch: () => Promise<ListDeviceData<T>>
+  flags: Record<keyof UpdateDeviceData<T>, number>
+  setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
+  tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
-  set: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
+  values: () => Promise<GetDeviceData<T>>
 }
 
 export interface IFacade extends IModel {
   devices: IDeviceModelAny[]
-  getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
-  getFrostProtection: () => Promise<FrostProtectionData>
-  getHolidayMode: () => Promise<HolidayModeData>
-  getTiles: ((select?: false) => Promise<TilesData<null>>) &
-    (<U extends DeviceType>(select: IDeviceModel<U>) => Promise<TilesData<U>>)
-  getWifiReport: (hour?: number) => Promise<ReportData>
+  errors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
+  frostProtection: () => Promise<FrostProtectionData>
+  holidayMode: () => Promise<HolidayModeData>
   onSync: (params?: { type?: DeviceType }) => Promise<void>
   setFrostProtection: (
     query: FrostProtectionQuery,
@@ -73,7 +70,10 @@ export interface IFacade extends IModel {
   setHolidayMode: (
     query: HolidayModeQuery,
   ) => Promise<FailureData | SuccessData>
-  setPower: (power?: boolean) => Promise<boolean>
+  setPower: (value?: boolean) => Promise<boolean>
+  tiles: ((select?: false) => Promise<TilesData<null>>) &
+    (<U extends DeviceType>(select: IDeviceModel<U>) => Promise<TilesData<U>>)
+  wifi: (hour?: number) => Promise<ReportData>
 }
 
 export interface IFacadeManager {
@@ -81,8 +81,8 @@ export interface IFacadeManager {
 }
 
 export interface ISuperDeviceFacade extends IFacade {
-  getAta: () => Promise<GroupAtaState>
-  setAta: (state: GroupAtaState) => Promise<FailureData | SuccessData>
+  group: () => Promise<GroupState>
+  setGroup: (state: GroupState) => Promise<FailureData | SuccessData>
 }
 
 export type IDeviceFacadeAny =

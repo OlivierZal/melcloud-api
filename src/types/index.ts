@@ -1,13 +1,13 @@
 export type {
   EnergyDataAta,
-  GetGroupAtaData,
-  GetGroupAtaPostData,
-  GroupAtaState,
+  GetGroupData,
+  GetGroupPostData,
+  GroupState,
   KeyofSetDeviceDataAtaNotInList,
   ListDeviceDataAta,
   SetDeviceDataAta,
   SetDeviceDataAtaInList,
-  SetGroupAtaPostData,
+  SetGroupPostData,
   UpdateDeviceDataAta,
 } from './ata.js'
 export type {
@@ -49,6 +49,7 @@ export type {
   HolidayModeData,
   HolidayModeLocation,
   HolidayModePostData,
+  HourlyReportPostData,
   ListDevice,
   ListDeviceAny,
   ListDeviceData,
@@ -58,7 +59,6 @@ export type {
   LoginPostData,
   OperationModeLogData,
   ReportData,
-  ReportHourlyPostData,
   ReportPostData,
   SetDeviceData,
   SetDevicePostData,

@@ -146,6 +146,11 @@ export interface HolidayModePostData {
   readonly StartDate: DateTimeComponents
 }
 
+export interface HourlyReportPostData {
+  readonly devices: number[]
+  readonly hour: number
+}
+
 export interface ListDevice<T extends DeviceType> extends BaseListDevice {
   readonly Device: ListDeviceData<T>
 }
@@ -177,11 +182,6 @@ export interface ReportData {
   readonly Points: number
   readonly Series: number
   readonly ToDate: string
-}
-
-export interface ReportHourlyPostData {
-  readonly devices: number[]
-  readonly hour: number
 }
 
 export interface ReportPostData {

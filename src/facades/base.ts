@@ -117,11 +117,11 @@ export abstract class BaseFacade<
     ).data
   }
 
-  public async getErrors(query: ErrorLogQuery): Promise<ErrorLog> {
-    return this.api.getErrors(query, this.#deviceIds)
+  public async errors(query: ErrorLogQuery): Promise<ErrorLog> {
+    return this.api.errors(query, this.#deviceIds)
   }
 
-  public async getFrostProtection(): Promise<FrostProtectionData> {
+  public async frostProtection(): Promise<FrostProtectionData> {
     if (this.isFrostProtectionDefined === null) {
       try {
         return await this.#getZoneFrostProtection()
@@ -134,7 +134,7 @@ export abstract class BaseFacade<
       : this.#getDevicesFrostProtection()
   }
 
-  public async getHolidayMode(): Promise<HolidayModeData> {
+  public async holidayMode(): Promise<HolidayModeData> {
     if (this.isHolidayModeDefined === null) {
       try {
         return await this.#getZoneHolidayMode()
@@ -145,37 +145,6 @@ export abstract class BaseFacade<
     return this.isHolidayModeDefined ?
         this.#getZoneHolidayMode()
       : this.#getDevicesHolidayMode()
-  }
-
-  public async getTiles(select?: false): Promise<TilesData<null>>
-  public async getTiles<K extends DeviceType>(
-    select: IDeviceModel<K>,
-  ): Promise<TilesData<K>>
-  public async getTiles<K extends DeviceType>(
-    select: false | IDeviceModel<K> = false,
-  ): Promise<TilesData<K | null>> {
-    const postData = { DeviceIDs: this.#deviceIds }
-    return select === false || !this.#deviceIds.includes(select.id) ?
-        (await this.api.getTiles({ postData })).data
-      : ((
-          await this.api.getTiles({
-            postData: {
-              ...postData,
-              SelectedBuilding: select.buildingId,
-              SelectedDevice: select.id,
-            },
-          })
-        ).data as TilesData<K>)
-  }
-
-  public async getWifiReport(
-    hour: number = DateTime.now().hour,
-  ): Promise<ReportData> {
-    return (
-      await this.api.getWifiReport({
-        postData: { devices: this.#deviceIds, hour },
-      })
-    ).data
   }
 
   public async setFrostProtection({
@@ -224,12 +193,42 @@ export abstract class BaseFacade<
       })
     ).data
   }
+  public async tiles(select?: false): Promise<TilesData<null>>
+
+  public async tiles<K extends DeviceType>(
+    select: IDeviceModel<K>,
+  ): Promise<TilesData<K>>
+
+  public async tiles<K extends DeviceType>(
+    select: false | IDeviceModel<K> = false,
+  ): Promise<TilesData<K | null>> {
+    const postData = { DeviceIDs: this.#deviceIds }
+    return select === false || !this.#deviceIds.includes(select.id) ?
+        (await this.api.tiles({ postData })).data
+      : ((
+          await this.api.tiles({
+            postData: {
+              ...postData,
+              SelectedBuilding: select.buildingId,
+              SelectedDevice: select.id,
+            },
+          })
+        ).data as TilesData<K>)
+  }
+
+  public async wifi(hour: number = DateTime.now().hour): Promise<ReportData> {
+    return (
+      await this.api.wifi({
+        postData: { devices: this.#deviceIds, hour },
+      })
+    ).data
+  }
 
   async #getBaseFrostProtection(
     params: SettingsParams,
     isDefined = true,
   ): Promise<FrostProtectionData> {
-    const { data } = await this.api.getFrostProtection({ params })
+    const { data } = await this.api.frostProtection({ params })
     this.isFrostProtectionDefined = isDefined
     return data
   }
@@ -238,7 +237,7 @@ export abstract class BaseFacade<
     params: SettingsParams,
     isDefined = true,
   ): Promise<HolidayModeData> {
-    const { data } = await this.api.getHolidayMode({ params })
+    const { data } = await this.api.holidayMode({ params })
     this.isHolidayModeDefined = isDefined
     return data
   }
@@ -259,7 +258,7 @@ export abstract class BaseFacade<
 
   async #getFrostProtectionLocation(): Promise<FrostProtectionLocation> {
     if (this.isFrostProtectionDefined === null) {
-      await this.getFrostProtection()
+      await this.frostProtection()
     }
     if (this.isFrostProtectionDefined === true) {
       return { [this.frostProtectionLocation]: [this.id] }
@@ -269,7 +268,7 @@ export abstract class BaseFacade<
 
   async #getHolidayModeLocation(): Promise<HMTimeZone[]> {
     if (this.isHolidayModeDefined === null) {
-      await this.getHolidayMode()
+      await this.holidayMode()
     }
     if (this.isHolidayModeDefined === true) {
       return [{ [this.holidayModeLocation]: [this.id] }]

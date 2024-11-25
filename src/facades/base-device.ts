@@ -74,20 +74,20 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     ) as Required<UpdateDeviceData<T>>
   }
 
-  public override async getTiles(select?: false): Promise<TilesData<null>>
-  public override async getTiles(
+  public override async tiles(select?: false): Promise<TilesData<null>>
+  public override async tiles(
     select: true | IDeviceModel<T>,
   ): Promise<TilesData<T>>
-  public override async getTiles(
+  public override async tiles(
     select: boolean | IDeviceModel<T> = false,
   ): Promise<TilesData<T | null>> {
     return (
         select === false ||
           (select instanceof DeviceModel && select.id !== this.id)
       ) ?
-        super.getTiles()
+        super.tiles()
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      : super.getTiles(this.instance as IDeviceModel<T>)
+      : super.tiles(this.instance as IDeviceModel<T>)
   }
 
   @fetchDevices
@@ -97,17 +97,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   @syncDevices()
   @updateDevice
-  public async get(): Promise<GetDeviceData<T>> {
-    return (
-      await this.api.get({
-        params: { buildingId: this.instance.buildingId, id: this.id },
-      })
-    ).data as GetDeviceData<T>
-  }
-
-  @syncDevices()
-  @updateDevice
-  public async set(
+  public async setValues(
     data: Partial<UpdateDeviceData<T>>,
   ): Promise<SetDeviceData<T>> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
@@ -126,7 +116,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       throw new Error('No data to set')
     }
     return (
-      await this.api.set({
+      await this.api.setValues({
         postData: {
           ...this.handle(newData),
           DeviceID: this.id,
@@ -137,7 +127,17 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     ).data
   }
 
-  public async getEnergyReport({
+  @syncDevices()
+  @updateDevice
+  public async values(): Promise<GetDeviceData<T>> {
+    return (
+      await this.api.values({
+        params: { buildingId: this.instance.buildingId, id: this.id },
+      })
+    ).data as GetDeviceData<T>
+  }
+
+  public async energy({
     from,
     to,
   }: {
@@ -148,7 +148,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       throw new Error('Erv devices do not support energy reports')
     }
     return (
-      await this.api.getEnergyReport({
+      await this.api.energy({
         postData: {
           DeviceID: this.id,
           FromDate: from ?? DEFAULT_YEAR,

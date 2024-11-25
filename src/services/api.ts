@@ -44,20 +44,20 @@ import type {
   FrostProtectionPostData,
   GetDeviceData,
   GetDeviceDataParams,
-  GetGroupAtaData,
-  GetGroupAtaPostData,
+  GetGroupData,
+  GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
+  HourlyReportPostData,
   LoginCredentials,
   LoginData,
   LoginPostData,
   OperationModeLogData,
   ReportData,
-  ReportHourlyPostData,
   ReportPostData,
   SetDeviceData,
   SetDevicePostData,
-  SetGroupAtaPostData,
+  SetGroupPostData,
   SetPowerPostData,
   SettingsParams,
   SuccessData,
@@ -215,36 +215,7 @@ export class API implements IAPI {
   public async fetch(): Promise<Building[]> {
     this.clearSync()
     try {
-      const { data } = await this.list()
-      BuildingModel.sync(data)
-      FloorModel.sync(
-        data.flatMap(({ Structure: { Floors: floors } }) => floors),
-      )
-      AreaModel.sync(
-        data.flatMap(({ Structure: { Areas: areas, Floors: floors } }) => [
-          ...areas,
-          ...floors.flatMap(({ Areas: floorAreas }) => floorAreas),
-        ]),
-      )
-      DeviceModel.sync(
-        data.flatMap(
-          ({
-            Structure: { Areas: areas, Devices: devices, Floors: floors },
-          }) => [
-            ...devices,
-            ...areas.flatMap(({ Devices: areaDevices }) => areaDevices),
-            ...floors.flatMap(
-              ({ Areas: floorAreas, Devices: floorDevices }) => [
-                ...floorDevices,
-                ...floorAreas.flatMap(
-                  ({ Devices: floorAreaDevices }) => floorAreaDevices,
-                ),
-              ],
-            ),
-          ],
-        ),
-      )
-      return data
+      return await this.#fetch()
     } catch {
       return []
     } finally {
@@ -273,14 +244,30 @@ export class API implements IAPI {
     }
   }
 
-  public async getErrors(
+  public async energy({
+    postData,
+  }: {
+    postData: EnergyPostData
+  }): Promise<{ data: EnergyData<DeviceType> }> {
+    return this.#api.post('/EnergyCost/Report', postData)
+  }
+
+  public async errorLog({
+    postData,
+  }: {
+    postData: ErrorLogPostData
+  }): Promise<{ data: ErrorLogData[] | FailureData }> {
+    return this.#api.post('/Report/GetUnitErrorLog2', postData)
+  }
+
+  public async errors(
     query: ErrorLogQuery,
     deviceIds = DeviceModel.getAll().map(({ id }) => id),
   ): Promise<ErrorLog> {
     const { fromDate, period, toDate } = handleErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
     return {
-      errors: (await this.#getErrors(deviceIds, fromDate, toDate))
+      errors: (await this.#errors(deviceIds, fromDate, toDate))
         .map(
           ({
             DeviceId: deviceId,
@@ -305,43 +292,7 @@ export class API implements IAPI {
     }
   }
 
-  public async setLanguage(language: string): Promise<void> {
-    if (language !== this.language) {
-      const { data: hasLanguageChanged } = await this.updateLanguage({
-        postData: { language: this.#getLanguageCode(language) },
-      })
-      if (hasLanguageChanged) {
-        this.language = language
-      }
-    }
-  }
-
-  // DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
-  public async get({
-    params,
-  }: {
-    params: GetDeviceDataParams
-  }): Promise<{ data: GetDeviceData<DeviceType> }> {
-    return this.#api.get('/Device/Get', { params })
-  }
-
-  public async getEnergyReport({
-    postData,
-  }: {
-    postData: EnergyPostData
-  }): Promise<{ data: EnergyData<DeviceType> }> {
-    return this.#api.post('/EnergyCost/Report', postData)
-  }
-
-  public async getErrorLog({
-    postData,
-  }: {
-    postData: ErrorLogPostData
-  }): Promise<{ data: ErrorLogData[] | FailureData }> {
-    return this.#api.post('/Report/GetUnitErrorLog2', postData)
-  }
-
-  public async getFrostProtection({
+  public async frostProtection({
     params,
   }: {
     params: SettingsParams
@@ -351,7 +302,15 @@ export class API implements IAPI {
     })
   }
 
-  public async getHolidayMode({
+  public async group({
+    postData,
+  }: {
+    postData: GetGroupPostData
+  }): Promise<{ data: GetGroupData }> {
+    return this.#api.post('/Group/Get', postData)
+  }
+
+  public async holidayMode({
     params,
   }: {
     params: SettingsParams
@@ -361,48 +320,20 @@ export class API implements IAPI {
     })
   }
 
-  public async getOperationModeLog({
+  public async hourlyTemperature({
     postData,
   }: {
-    postData: ReportPostData
-  }): Promise<{ data: OperationModeLogData }> {
-    return this.#api.post('/Report/GetOperationModeLog2', postData)
+    postData: HourlyReportPostData
+  }): Promise<{ data: ReportData }> {
+    return this.#api.post('/Report/GetHourlyTemperature', postData)
   }
 
-  public async getTemperatureLog({
+  public async internalTemperatures({
     postData,
   }: {
     postData: ReportPostData
   }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetTemperatureLog2', postData)
-  }
-
-  public async getTiles({
-    postData,
-  }: {
-    postData: TilesPostData<null>
-  }): Promise<{ data: TilesData<null> }>
-
-  public async getTiles<T extends DeviceType>({
-    postData,
-  }: {
-    postData: TilesPostData<T>
-  }): Promise<{ data: TilesData<T> }>
-
-  public async getTiles<T extends DeviceType | null>({
-    postData,
-  }: {
-    postData: TilesPostData<T>
-  }): Promise<{ data: TilesData<T> }> {
-    return this.#api.post('/Tile/Get2', postData)
-  }
-
-  public async getWifiReport({
-    postData,
-  }: {
-    postData: ReportHourlyPostData
-  }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetSignalStrength', postData)
+    return this.#api.post('/Report/GetInternalTemperatures2', postData)
   }
 
   public async list(): Promise<{ data: Building[] }> {
@@ -417,14 +348,12 @@ export class API implements IAPI {
     return this.#api.post(LOGIN_PATH, postData)
   }
 
-  public async set<T extends DeviceType>({
+  public async operationModeLog({
     postData,
-    type,
   }: {
-    postData: SetDevicePostData<T>
-    type: T
-  }): Promise<{ data: SetDeviceData<T> }> {
-    return this.#api.post(`/Device/Set${DeviceType[type]}`, postData)
+    postData: ReportPostData
+  }): Promise<{ data: OperationModeLogData }> {
+    return this.#api.post('/Report/GetOperationModeLog2', postData)
   }
 
   public async setFrostProtection({
@@ -435,12 +364,28 @@ export class API implements IAPI {
     return this.#api.post('/FrostProtection/Update', postData)
   }
 
+  public async setGroup({
+    postData,
+  }: {
+    postData: SetGroupPostData
+  }): Promise<{ data: FailureData | SuccessData }> {
+    return this.#api.post('/Group/SetAta', postData)
+  }
+
   public async setHolidayMode({
     postData,
   }: {
     postData: HolidayModePostData
   }): Promise<{ data: FailureData | SuccessData }> {
     return this.#api.post('/HolidayMode/Update', postData)
+  }
+
+  public async setLanguage({
+    postData,
+  }: {
+    postData: { language: Language }
+  }): Promise<{ data: boolean }> {
+    return this.#api.post('/User/UpdateLanguage', postData)
   }
 
   public async setPower({
@@ -451,46 +396,69 @@ export class API implements IAPI {
     return this.#api.post('/Device/Power', postData)
   }
 
-  public async updateLanguage({
+  public async setValues<T extends DeviceType>({
     postData,
+    type,
   }: {
-    postData: { language: Language }
-  }): Promise<{ data: boolean }> {
-    return this.#api.post('/User/UpdateLanguage', postData)
+    postData: SetDevicePostData<T>
+    type: T
+  }): Promise<{ data: SetDeviceData<T> }> {
+    return this.#api.post(`/Device/Set${DeviceType[type]}`, postData)
   }
 
-  // DeviceType.Ata
-  public async getAta({
-    postData,
-  }: {
-    postData: GetGroupAtaPostData
-  }): Promise<{ data: GetGroupAtaData }> {
-    return this.#api.post('/Group/Get', postData)
-  }
-
-  public async setAta({
-    postData,
-  }: {
-    postData: SetGroupAtaPostData
-  }): Promise<{ data: FailureData | SuccessData }> {
-    return this.#api.post('/Group/SetAta', postData)
-  }
-
-  // DeviceType.Atw
-  public async getHourlyTemperature({
-    postData,
-  }: {
-    postData: ReportHourlyPostData
-  }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetHourlyTemperature', postData)
-  }
-
-  public async getInternalTemperatures({
+  public async temperatureLog({
     postData,
   }: {
     postData: ReportPostData
   }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetInternalTemperatures2', postData)
+    return this.#api.post('/Report/GetTemperatureLog2', postData)
+  }
+
+  public async tiles({
+    postData,
+  }: {
+    postData: TilesPostData<null>
+  }): Promise<{ data: TilesData<null> }>
+
+  public async tiles<T extends DeviceType>({
+    postData,
+  }: {
+    postData: TilesPostData<T>
+  }): Promise<{ data: TilesData<T> }>
+
+  public async tiles<T extends DeviceType | null>({
+    postData,
+  }: {
+    postData: TilesPostData<T>
+  }): Promise<{ data: TilesData<T> }> {
+    return this.#api.post('/Tile/Get2', postData)
+  }
+
+  public async updateLanguage(language: string): Promise<void> {
+    if (language !== this.language) {
+      const { data: hasLanguageChanged } = await this.setLanguage({
+        postData: { language: this.#getLanguageCode(language) },
+      })
+      if (hasLanguageChanged) {
+        this.language = language
+      }
+    }
+  }
+
+  public async values({
+    params,
+  }: {
+    params: GetDeviceDataParams
+  }): Promise<{ data: GetDeviceData<DeviceType> }> {
+    return this.#api.get('/Device/Get', { params })
+  }
+
+  public async wifi({
+    postData,
+  }: {
+    postData: HourlyReportPostData
+  }): Promise<{ data: ReportData }> {
+    return this.#api.post('/Report/GetSignalStrength', postData)
   }
 
   async #authenticate({
@@ -536,12 +504,12 @@ export class API implements IAPI {
     return api
   }
 
-  async #getErrors(
+  async #errors(
     deviceIds: number[],
     fromDate: DateTime,
     toDate: DateTime,
   ): Promise<ErrorLogData[]> {
-    const { data } = await this.getErrorLog({
+    const { data } = await this.errorLog({
       postData: {
         DeviceIDs: deviceIds,
         FromDate: fromDate.toISODate() ?? undefined,
@@ -551,6 +519,33 @@ export class API implements IAPI {
     if ('AttributeErrors' in data) {
       throw new Error(formatErrors(data.AttributeErrors))
     }
+    return data
+  }
+
+  async #fetch(): Promise<Building[]> {
+    const { data } = await this.list()
+    BuildingModel.sync(data)
+    FloorModel.sync(data.flatMap(({ Structure: { Floors: floors } }) => floors))
+    AreaModel.sync(
+      data.flatMap(({ Structure: { Areas: areas, Floors: floors } }) => [
+        ...areas,
+        ...floors.flatMap(({ Areas: floorAreas }) => floorAreas),
+      ]),
+    )
+    DeviceModel.sync(
+      data.flatMap(
+        ({ Structure: { Areas: areas, Devices: devices, Floors: floors } }) => [
+          ...devices,
+          ...areas.flatMap(({ Devices: areaDevices }) => areaDevices),
+          ...floors.flatMap(({ Areas: floorAreas, Devices: floorDevices }) => [
+            ...floorDevices,
+            ...floorAreas.flatMap(
+              ({ Devices: floorAreaDevices }) => floorAreaDevices,
+            ),
+          ]),
+        ],
+      ),
+    )
     return data
   }
 

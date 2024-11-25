@@ -11,19 +11,19 @@ import type {
   FrostProtectionPostData,
   GetDeviceData,
   GetDeviceDataParams,
-  GetGroupAtaData,
-  GetGroupAtaPostData,
+  GetGroupData,
+  GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
+  HourlyReportPostData,
   LoginCredentials,
   LoginData,
   LoginPostData,
   ReportData,
-  ReportHourlyPostData,
   ReportPostData,
   SetDeviceData,
   SetDevicePostData,
-  SetGroupAtaPostData,
+  SetGroupPostData,
   SetPowerPostData,
   SettingsParams,
   SuccessData,
@@ -81,74 +81,42 @@ export interface ErrorLogQuery {
 export interface IAPI {
   authenticate: (data?: LoginCredentials) => Promise<boolean>
   clearSync: () => void
+  errors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
   fetch: () => Promise<Building[]>
-  getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
-  setLanguage: (language: string) => Promise<void>
+  updateLanguage: (language: string) => Promise<void>
   onSync?: OnSyncFunction
   // DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
-  get: ({
-    params,
-  }: {
-    params: GetDeviceDataParams
-  }) => Promise<{ data: GetDeviceData<DeviceType> }>
-  getEnergyReport: ({
+  energy: ({
     postData,
   }: {
     postData: EnergyPostData
   }) => Promise<{ data: EnergyData<DeviceType> }>
-  getErrorLog: ({
+  errorLog: ({
     postData,
   }: {
     postData: ErrorLogPostData
   }) => Promise<{ data: ErrorLogData[] | FailureData }>
-  getFrostProtection: ({
+  frostProtection: ({
     params,
   }: {
     params: SettingsParams
   }) => Promise<{ data: FrostProtectionData }>
-  getHolidayMode: ({
+  holidayMode: ({
     params,
   }: {
     params: SettingsParams
   }) => Promise<{ data: HolidayModeData }>
-  getOperationModeLog: ({
-    postData,
-  }: {
-    postData: ReportPostData
-  }) => Promise<{ data: OperationModeLogData }>
-  getTemperatureLog: ({
-    postData,
-  }: {
-    postData: ReportPostData
-  }) => Promise<{ data: ReportData }>
-  getTiles: (({
-    postData,
-  }: {
-    postData: TilesPostData<null>
-  }) => Promise<{ data: TilesData<null> }>) &
-    (<T extends DeviceType>({
-      postData,
-    }: {
-      postData: TilesPostData<T>
-    }) => Promise<{ data: TilesData<T> }>)
-  getWifiReport: ({
-    postData,
-  }: {
-    postData: ReportHourlyPostData
-  }) => Promise<{ data: ReportData }>
   list: () => Promise<{ data: Building[] }>
   login: ({
     postData,
   }: {
     postData: LoginPostData
   }) => Promise<{ data: LoginData }>
-  set: <T extends DeviceType>({
+  operationModeLog: ({
     postData,
-    type,
   }: {
-    postData: SetDevicePostData<T>
-    type: T
-  }) => Promise<{ data: SetDeviceData<T> }>
+    postData: ReportPostData
+  }) => Promise<{ data: OperationModeLogData }>
   setFrostProtection: ({
     postData,
   }: {
@@ -159,34 +127,66 @@ export interface IAPI {
   }: {
     postData: HolidayModePostData
   }) => Promise<{ data: FailureData | SuccessData }>
+  setLanguage: ({
+    postData,
+  }: {
+    postData: { language: Language }
+  }) => Promise<{ data: boolean }>
   setPower: ({
     postData,
   }: {
     postData: SetPowerPostData
   }) => Promise<{ data: boolean }>
-  updateLanguage: ({
+  setValues: <T extends DeviceType>({
+    postData,
+    type,
+  }: {
+    postData: SetDevicePostData<T>
+    type: T
+  }) => Promise<{ data: SetDeviceData<T> }>
+  temperatureLog: ({
     postData,
   }: {
-    postData: { language: Language }
-  }) => Promise<{ data: boolean }>
+    postData: ReportPostData
+  }) => Promise<{ data: ReportData }>
+  tiles: (({
+    postData,
+  }: {
+    postData: TilesPostData<null>
+  }) => Promise<{ data: TilesData<null> }>) &
+    (<T extends DeviceType>({
+      postData,
+    }: {
+      postData: TilesPostData<T>
+    }) => Promise<{ data: TilesData<T> }>)
+  values: ({
+    params,
+  }: {
+    params: GetDeviceDataParams
+  }) => Promise<{ data: GetDeviceData<DeviceType> }>
+  wifi: ({
+    postData,
+  }: {
+    postData: HourlyReportPostData
+  }) => Promise<{ data: ReportData }>
   // DeviceType.Ata
-  getAta: ({
+  group: ({
     postData,
   }: {
-    postData: GetGroupAtaPostData
-  }) => Promise<{ data: GetGroupAtaData }>
-  setAta: ({
+    postData: GetGroupPostData
+  }) => Promise<{ data: GetGroupData }>
+  setGroup: ({
     postData,
   }: {
-    postData: SetGroupAtaPostData
+    postData: SetGroupPostData
   }) => Promise<{ data: FailureData | SuccessData }>
   // DeviceType.Atw
-  getHourlyTemperature: ({
+  hourlyTemperature: ({
     postData,
   }: {
-    postData: ReportHourlyPostData
+    postData: HourlyReportPostData
   }) => Promise<{ data: ReportData }>
-  getInternalTemperatures: ({
+  internalTemperatures: ({
     postData,
   }: {
     postData: ReportPostData

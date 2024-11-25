@@ -5,7 +5,7 @@ import type {
   Building,
   FailureData,
   GetDeviceData,
-  GroupAtaState,
+  GroupState,
   SetDeviceData,
   SuccessData,
 } from '../types/index.js'
@@ -18,7 +18,7 @@ export const syncDevices =
       | Building[]
       | FailureData
       | GetDeviceData<T>
-      | GroupAtaState
+      | GroupState
       | SetDeviceData<T>
       | SuccessData,
   >(params?: {

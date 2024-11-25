@@ -12,8 +12,8 @@ import type {
 } from '../models/interfaces.js'
 import type {
   FailureData,
-  GroupAtaState,
-  SetGroupAtaPostData,
+  GroupState,
+  SetGroupPostData,
   SuccessData,
 } from '../types/index.js'
 
@@ -25,17 +25,17 @@ export abstract class BaseSuperDeviceFacade<
   extends BaseFacade<T>
   implements ISuperDeviceFacade
 {
-  protected abstract readonly specification: keyof SetGroupAtaPostData['Specification']
+  protected abstract readonly specification: keyof SetGroupPostData['Specification']
 
   public get devices(): IDeviceModelAny[] {
     return this.instance.devices
   }
 
   @updateDevices({ type: DeviceType.Ata })
-  public async getAta(): Promise<GroupAtaState> {
+  public async group(): Promise<GroupState> {
     try {
       return (
-        await this.api.getAta({ postData: { [this.specification]: this.id } })
+        await this.api.group({ postData: { [this.specification]: this.id } })
       ).data.Data.Group.State
     } catch {
       throw new Error('No air-to-air device found')
@@ -44,12 +44,10 @@ export abstract class BaseSuperDeviceFacade<
 
   @syncDevices({ type: DeviceType.Ata })
   @updateDevices({ type: DeviceType.Ata })
-  public async setAta(
-    state: GroupAtaState,
-  ): Promise<FailureData | SuccessData> {
+  public async setGroup(state: GroupState): Promise<FailureData | SuccessData> {
     try {
       return (
-        await this.api.setAta({
+        await this.api.setGroup({
           postData: {
             Specification: { [this.specification]: this.id },
             State: state,

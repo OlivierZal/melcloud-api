@@ -10,7 +10,7 @@ import type { IDeviceModel } from '../models/interfaces.js'
 import type {
   FailureData,
   GetDeviceData,
-  GroupAtaState,
+  GroupState,
   ListDeviceData,
   SetDeviceData,
   SuccessData,
@@ -18,7 +18,7 @@ import type {
 } from '../types/index.js'
 
 export const updateDevices =
-  <T extends boolean | FailureData | GroupAtaState | SuccessData>(params?: {
+  <T extends boolean | FailureData | GroupState | SuccessData>(params?: {
     type?: DeviceType
   }) =>
   (
