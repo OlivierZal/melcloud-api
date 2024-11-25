@@ -406,7 +406,7 @@ export class API implements IAPI {
   }
 
   public async list(): Promise<{ data: Building[] }> {
-    return this.#api.get<Building[]>(LIST_PATH)
+    return this.#api.get(LIST_PATH)
   }
 
   public async login({
@@ -414,7 +414,7 @@ export class API implements IAPI {
   }: {
     postData: LoginPostData
   }): Promise<{ data: LoginData }> {
-    return this.#api.post<LoginData>(LOGIN_PATH, postData)
+    return this.#api.post(LOGIN_PATH, postData)
   }
 
   public async set<T extends DeviceType>({
@@ -456,7 +456,7 @@ export class API implements IAPI {
   }: {
     postData: { language: Language }
   }): Promise<{ data: boolean }> {
-    return this.#api.post<boolean>('/User/UpdateLanguage', postData)
+    return this.#api.post('/User/UpdateLanguage', postData)
   }
 
   // DeviceType.Ata

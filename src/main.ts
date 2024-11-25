@@ -35,6 +35,7 @@ export type {
   IDeviceFacade,
   IDeviceFacadeAny,
   IFacade,
+  IFacadeManager,
   ISuperDeviceFacade,
 } from './facades/interfaces.js'
 export type {
