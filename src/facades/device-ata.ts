@@ -4,11 +4,11 @@ import { BaseDeviceFacade } from './base-device.js'
 
 import type { UpdateDeviceDataAta } from '../types/ata.js'
 
-import type { IDeviceFacadeAta } from './interfaces.js'
+import type { IDeviceFacade } from './interfaces.js'
 
 export class DeviceAtaFacade
   extends BaseDeviceFacade<DeviceType.Ata>
-  implements IDeviceFacadeAta
+  implements IDeviceFacade<DeviceType.Ata>
 {
   public readonly flags = {
     OperationMode: 0x2,

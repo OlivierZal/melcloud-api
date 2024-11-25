@@ -33,6 +33,7 @@ export type {
   HolidayModeQuery,
   IBaseDeviceFacade,
   IBuildingFacade,
+  IDeviceFacade,
   IDeviceFacadeAny,
   IDeviceFacadeAta,
   IDeviceFacadeAtw,

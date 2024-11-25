@@ -250,7 +250,8 @@ export type ListDeviceAny =
 export type ListDeviceData<T extends DeviceType> =
   T extends DeviceType.Ata ? ListDeviceDataAta
   : T extends DeviceType.Atw ? ListDeviceDataAtw
-  : ListDeviceDataErv
+  : T extends DeviceType.Erv ? ListDeviceDataErv
+  : never
 
 export type ListDeviceDataAny =
   | ListDeviceData<DeviceType.Ata>
@@ -265,7 +266,8 @@ export type OperationModeLogData = {
 export type SetDeviceData<T extends DeviceType> =
   T extends DeviceType.Ata ? SetDeviceDataAta
   : T extends DeviceType.Atw ? SetDeviceDataAtw
-  : SetDeviceDataErv
+  : T extends DeviceType.Erv ? SetDeviceDataErv
+  : never
 
 export type SetDevicePostData<T extends DeviceType> = BaseDevicePostData &
   Required<UpdateDeviceData<T>>
@@ -279,4 +281,5 @@ export type TilesPostData<T extends DeviceType | null> = {
 export type UpdateDeviceData<T extends DeviceType> =
   T extends DeviceType.Ata ? UpdateDeviceDataAta
   : T extends DeviceType.Atw ? UpdateDeviceDataAtw
-  : UpdateDeviceDataErv
+  : T extends DeviceType.Erv ? UpdateDeviceDataErv
+  : never

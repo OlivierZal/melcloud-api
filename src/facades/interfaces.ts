@@ -103,9 +103,15 @@ export interface ReportQuery {
   to?: string
 }
 
+export type IDeviceFacade<T extends DeviceType> =
+  T extends DeviceType.Ata ? IDeviceFacadeAta
+  : T extends DeviceType.Atw ? IDeviceFacadeAtw
+  : T extends DeviceType.Erv ? IDeviceFacadeErv
+  : never
+
 export type IDeviceFacadeAny =
-  | IDeviceFacadeAta
-  | IDeviceFacadeAtw
-  | IDeviceFacadeErv
+  | IDeviceFacade<DeviceType.Ata>
+  | IDeviceFacade<DeviceType.Atw>
+  | IDeviceFacade<DeviceType.Erv>
 
 export type IDeviceFacadeErv = IBaseDeviceFacade<DeviceType.Erv>
