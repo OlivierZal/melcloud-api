@@ -111,7 +111,7 @@ export interface IAPI {
   }: {
     params: SettingsParams
   }) => Promise<{ data: HolidayModeData }>
-  getOperationMode: ({
+  getOperationModeLog: ({
     postData,
   }: {
     postData: ReportPostData
@@ -181,6 +181,11 @@ export interface IAPI {
     postData: SetGroupAtaPostData
   }) => Promise<{ data: FailureData | SuccessData }>
   // DeviceType.Atw
+  getHourlyTemperature: ({
+    postData,
+  }: {
+    postData: ReportHourlyPostData
+  }) => Promise<{ data: ReportData }>
   getInternalTemperatures: ({
     postData,
   }: {

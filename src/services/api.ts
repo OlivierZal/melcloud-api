@@ -361,7 +361,7 @@ export class API implements IAPI {
     })
   }
 
-  public async getOperationMode({
+  public async getOperationModeLog({
     postData,
   }: {
     postData: ReportPostData
@@ -477,6 +477,14 @@ export class API implements IAPI {
   }
 
   // DeviceType.Atw
+  public async getHourlyTemperature({
+    postData,
+  }: {
+    postData: ReportHourlyPostData
+  }): Promise<{ data: ReportData }> {
+    return this.#api.post('/Report/GetHourlyTemperature', postData)
+  }
+
   public async getInternalTemperatures({
     postData,
   }: {

@@ -180,7 +180,7 @@ export interface ReportData {
 }
 
 export interface ReportHourlyPostData {
-  readonly devices: number
+  readonly devices: number[]
   readonly hour: number
 }
 
