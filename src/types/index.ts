@@ -49,7 +49,6 @@ export type {
   HolidayModeData,
   HolidayModeLocation,
   HolidayModePostData,
-  HourlyReportPostData,
   ListDevice,
   ListDeviceAny,
   ListDeviceData,

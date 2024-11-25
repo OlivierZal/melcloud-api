@@ -37,6 +37,7 @@ export type {
   IFacade,
   IFacadeManager,
   ISuperDeviceFacade,
+  ReportQuery,
 } from './facades/interfaces.js'
 export type {
   IAreaModel,
@@ -96,7 +97,6 @@ export type {
   HolidayModeData,
   HolidayModeLocation,
   HolidayModePostData,
-  HourlyReportPostData,
   KeyofSetDeviceDataAtaNotInList,
   ListDevice,
   ListDeviceAny,

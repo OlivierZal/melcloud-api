@@ -193,6 +193,15 @@ export abstract class BaseFacade<
       })
     ).data
   }
+
+  public async signal(hour = DateTime.now().hour): Promise<ReportData> {
+    return (
+      await this.api.signal({
+        postData: { devices: this.#deviceIds, hour },
+      })
+    ).data
+  }
+
   public async tiles(select?: false): Promise<TilesData<null>>
 
   public async tiles<K extends DeviceType>(
@@ -214,14 +223,6 @@ export abstract class BaseFacade<
             },
           })
         ).data as TilesData<K>)
-  }
-
-  public async wifi(hour: number = DateTime.now().hour): Promise<ReportData> {
-    return (
-      await this.api.wifi({
-        postData: { devices: this.#deviceIds, hour },
-      })
-    ).data
   }
 
   async #getBaseFrostProtection(

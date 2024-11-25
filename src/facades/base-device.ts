@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon'
+
 import { FLAG_UNCHANGED } from '../constants.js'
 import { fetchDevices } from '../decorators/fetch-devices.js'
 import { syncDevices } from '../decorators/sync-devices.js'
@@ -18,12 +20,15 @@ import type {
   EnergyData,
   GetDeviceData,
   ListDeviceData,
+  OperationModeLogData,
+  ReportData,
+  ReportPostData,
   SetDeviceData,
   TilesData,
   UpdateDeviceData,
 } from '../types/index.js'
 
-import type { IDeviceFacade } from './interfaces.js'
+import type { IDeviceFacade, ReportQuery } from './interfaces.js'
 
 const DEFAULT_YEAR = '1970-01-01'
 
@@ -137,25 +142,37 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     ).data as GetDeviceData<T>
   }
 
-  public async energy({
-    from,
-    to,
-  }: {
-    from?: string
-    to?: string
-  }): Promise<EnergyData<T>> {
-    if (this.type === DeviceType.Atw) {
-      throw new Error('Erv devices do not support energy reports')
-    }
+  public async energy(query: ReportQuery = {}): Promise<EnergyData<T>> {
+    return (await this.api.energy(this.#getReportPostData(query)))
+      .data as EnergyData<T>
+  }
+
+  public async hourlyTemperature(
+    hour = DateTime.now().hour,
+  ): Promise<ReportData> {
     return (
-      await this.api.energy({
-        postData: {
-          DeviceID: this.id,
-          FromDate: from ?? DEFAULT_YEAR,
-          ToDate: to ?? now(),
-        },
+      await this.api.hourlyTemperature({
+        postData: { device: this.id, hour },
       })
-    ).data as EnergyData<T>
+    ).data
+  }
+
+  public async internalTemperatures(
+    query: ReportQuery = {},
+  ): Promise<ReportData> {
+    return (await this.api.internalTemperatures(this.#getReportPostData(query)))
+      .data
+  }
+
+  public async operationModeLog(
+    query: ReportQuery = {},
+  ): Promise<OperationModeLogData> {
+    return (await this.api.operationModeLog(this.#getReportPostData(query)))
+      .data
+  }
+
+  public async temperatureLog(query: ReportQuery = {}): Promise<ReportData> {
+    return (await this.api.temperatureLog(this.#getReportPostData(query))).data
   }
 
   protected handle(
@@ -169,5 +186,15 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       (acc, key) => Number(BigInt(this.flags[key]) | BigInt(acc)),
       FLAG_UNCHANGED,
     )
+  }
+
+  #getReportPostData({ from, to }: ReportQuery): { postData: ReportPostData } {
+    return {
+      postData: {
+        DeviceID: this.id,
+        FromDate: from ?? DEFAULT_YEAR,
+        ToDate: to ?? now(),
+      },
+    }
   }
 }

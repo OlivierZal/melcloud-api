@@ -3,7 +3,7 @@ import { BuildingModel } from '../models/index.js'
 
 import { BaseSuperDeviceFacade } from './base-super-device.js'
 
-import type { IBuildingModel } from '../main.js'
+import type { IBuildingModel } from '../models/interfaces.js'
 import type { API } from '../services/api.js'
 import type { ZoneSettings } from '../types/index.js'
 

@@ -2,7 +2,7 @@ import { FloorModel } from '../models/index.js'
 
 import { BaseSuperDeviceFacade } from './base-super-device.js'
 
-import type { IFloorModel } from '../main.js'
+import type { IFloorModel } from '../models/interfaces.js'
 
 import type { ISuperDeviceFacade } from './interfaces.js'
 

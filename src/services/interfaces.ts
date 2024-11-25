@@ -1,5 +1,6 @@
+import type { HourNumbers } from 'luxon'
+
 import type { DeviceType, Language } from '../enums.js'
-import type { OperationModeLogData } from '../types/common.js'
 import type {
   Building,
   EnergyData,
@@ -15,10 +16,10 @@ import type {
   GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
-  HourlyReportPostData,
   LoginCredentials,
   LoginData,
   LoginPostData,
+  OperationModeLogData,
   ReportData,
   ReportPostData,
   SetDeviceData,
@@ -72,10 +73,10 @@ export interface ErrorLog {
 }
 
 export interface ErrorLogQuery {
-  readonly from?: string
-  readonly limit?: string
-  readonly offset?: string
-  readonly to?: string
+  from?: string
+  limit?: string
+  offset?: string
+  to?: string
 }
 
 export interface IAPI {
@@ -144,6 +145,11 @@ export interface IAPI {
     postData: SetDevicePostData<T>
     type: T
   }) => Promise<{ data: SetDeviceData<T> }>
+  signal: ({
+    postData,
+  }: {
+    postData: { devices: number | number[]; hour: HourNumbers }
+  }) => Promise<{ data: ReportData }>
   temperatureLog: ({
     postData,
   }: {
@@ -164,11 +170,6 @@ export interface IAPI {
   }: {
     params: GetDeviceDataParams
   }) => Promise<{ data: GetDeviceData<DeviceType> }>
-  wifi: ({
-    postData,
-  }: {
-    postData: HourlyReportPostData
-  }) => Promise<{ data: ReportData }>
   // DeviceType.Ata
   group: ({
     postData,
@@ -184,7 +185,7 @@ export interface IAPI {
   hourlyTemperature: ({
     postData,
   }: {
-    postData: HourlyReportPostData
+    postData: { device: number; hour: HourNumbers }
   }) => Promise<{ data: ReportData }>
   internalTemperatures: ({
     postData,

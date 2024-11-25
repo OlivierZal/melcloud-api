@@ -7,7 +7,12 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from 'axios'
-import { DateTime, Duration, Settings as LuxonSettings } from 'luxon'
+import {
+  DateTime,
+  Duration,
+  Settings as LuxonSettings,
+  type HourNumbers,
+} from 'luxon'
 
 import { syncDevices } from '../decorators/sync-devices.js'
 import { DeviceType, Language } from '../enums.js'
@@ -48,7 +53,6 @@ import type {
   GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
-  HourlyReportPostData,
   LoginCredentials,
   LoginData,
   LoginPostData,
@@ -323,7 +327,7 @@ export class API implements IAPI {
   public async hourlyTemperature({
     postData,
   }: {
-    postData: HourlyReportPostData
+    postData: { device: number; hour: HourNumbers }
   }): Promise<{ data: ReportData }> {
     return this.#api.post('/Report/GetHourlyTemperature', postData)
   }
@@ -406,6 +410,14 @@ export class API implements IAPI {
     return this.#api.post(`/Device/Set${DeviceType[type]}`, postData)
   }
 
+  public async signal({
+    postData,
+  }: {
+    postData: { devices: number | number[]; hour: HourNumbers }
+  }): Promise<{ data: ReportData }> {
+    return this.#api.post('/Report/GetSignalStrength', postData)
+  }
+
   public async temperatureLog({
     postData,
   }: {
@@ -451,14 +463,6 @@ export class API implements IAPI {
     params: GetDeviceDataParams
   }): Promise<{ data: GetDeviceData<DeviceType> }> {
     return this.#api.get('/Device/Get', { params })
-  }
-
-  public async wifi({
-    postData,
-  }: {
-    postData: HourlyReportPostData
-  }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetSignalStrength', postData)
   }
 
   async #authenticate({

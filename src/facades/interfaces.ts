@@ -1,3 +1,5 @@
+import type { HourNumbers } from 'luxon'
+
 import type { DeviceType } from '../enums.js'
 import type {
   IBaseBuildingModel,
@@ -15,6 +17,7 @@ import type {
   GroupState,
   HolidayModeData,
   ListDeviceData,
+  OperationModeLogData,
   ReportData,
   SetDeviceData,
   SuccessData,
@@ -24,14 +27,14 @@ import type {
 } from '../types/index.js'
 
 export interface FrostProtectionQuery {
-  readonly max: number
-  readonly min: number
-  readonly enabled?: boolean
+  max: number
+  min: number
+  enabled?: boolean
 }
 
 export interface HolidayModeQuery {
-  readonly from?: string
-  readonly to?: string
+  from?: string
+  to?: string
 }
 
 export interface IBuildingFacade
@@ -43,16 +46,14 @@ export interface IBuildingFacade
 export interface IDeviceFacade<T extends DeviceType>
   extends IBaseDeviceModel<T>,
     IFacade {
-  energy: ({
-    from,
-    to,
-  }: {
-    from?: string
-    to?: string
-  }) => Promise<EnergyData<T>>
+  energy: (query: ReportQuery) => Promise<EnergyData<T>>
   fetch: () => Promise<ListDeviceData<T>>
   flags: Record<keyof UpdateDeviceData<T>, number>
+  hourlyTemperature: (hour?: HourNumbers) => Promise<ReportData>
+  internalTemperatures: (query: ReportQuery) => Promise<ReportData>
+  operationModeLog: (query: ReportQuery) => Promise<OperationModeLogData>
   setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
+  temperatureLog: (query: ReportQuery) => Promise<ReportData>
   tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
   values: () => Promise<GetDeviceData<T>>
@@ -71,9 +72,9 @@ export interface IFacade extends IModel {
     query: HolidayModeQuery,
   ) => Promise<FailureData | SuccessData>
   setPower: (value?: boolean) => Promise<boolean>
+  signal: (hour?: HourNumbers) => Promise<ReportData>
   tiles: ((select?: false) => Promise<TilesData<null>>) &
     (<U extends DeviceType>(select: IDeviceModel<U>) => Promise<TilesData<U>>)
-  wifi: (hour?: number) => Promise<ReportData>
 }
 
 export interface IFacadeManager {
@@ -83,6 +84,11 @@ export interface IFacadeManager {
 export interface ISuperDeviceFacade extends IFacade {
   group: () => Promise<GroupState>
   setGroup: (state: GroupState) => Promise<FailureData | SuccessData>
+}
+
+export interface ReportQuery {
+  from?: string
+  to?: string
 }
 
 export type IDeviceFacadeAny =

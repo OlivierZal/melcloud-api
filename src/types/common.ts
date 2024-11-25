@@ -1,3 +1,5 @@
+import type { HourNumbers } from 'luxon'
+
 import type { DeviceType } from '../enums.js'
 
 import type {
@@ -148,7 +150,7 @@ export interface HolidayModePostData {
 
 export interface HourlyReportPostData {
   readonly devices: number[]
-  readonly hour: number
+  readonly hour: HourNumbers
 }
 
 export interface ListDevice<T extends DeviceType> extends BaseListDevice {
