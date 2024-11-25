@@ -89,11 +89,6 @@ export interface IAPI {
   updateLanguage: (language: string) => Promise<void>
   onSync?: OnSyncFunction
   // DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
-  energy: ({
-    postData,
-  }: {
-    postData: EnergyPostData
-  }) => Promise<{ data: EnergyData<DeviceType> }>
   errors: ({
     postData,
   }: {
@@ -172,6 +167,12 @@ export interface IAPI {
   }: {
     params: GetDeviceDataParams
   }) => Promise<{ data: GetDeviceData<DeviceType> }>
+  // DeviceType.Ata | DeviceType.Atw
+  energy: ({
+    postData,
+  }: {
+    postData: EnergyPostData
+  }) => Promise<{ data: EnergyData<DeviceType> }>
   // DeviceType.Ata
   group: ({
     postData,

@@ -28,13 +28,13 @@ import type {
   UpdateDeviceData,
 } from '../types/common.js'
 
-import type { IBaseDeviceFacade, ReportQuery } from './interfaces.js'
+import type { IDeviceFacade, ReportQuery } from './interfaces.js'
 
 const DEFAULT_YEAR = '1970-01-01'
 
 export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<IDeviceModelAny>
-  implements IBaseDeviceFacade<T>
+  implements IDeviceFacade<T>
 {
   public readonly type: T
 

@@ -31,13 +31,9 @@ export { API as MELCloudAPI } from './services/api.js'
 export type {
   FrostProtectionQuery,
   HolidayModeQuery,
-  IBaseDeviceFacade,
   IBuildingFacade,
   IDeviceFacade,
   IDeviceFacadeAny,
-  IDeviceFacadeAta,
-  IDeviceFacadeAtw,
-  IDeviceFacadeErv,
   IFacade,
   IFacadeManager,
   ISuperDeviceFacade,

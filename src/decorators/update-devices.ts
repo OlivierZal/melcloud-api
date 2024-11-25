@@ -3,7 +3,7 @@ import { DeviceType } from '../enums.js'
 import { fromSetToListAta, isKeyofSetDeviceDataAtaNotInList } from '../utils.js'
 
 import type {
-  IBaseDeviceFacade,
+  IDeviceFacade,
   ISuperDeviceFacade,
 } from '../facades/interfaces.js'
 import type { IDeviceModel } from '../models/interfaces.js'
@@ -51,7 +51,7 @@ export const updateDevices =
     }
 
 const convertToListDeviceData = <T extends DeviceType>(
-  facade: IBaseDeviceFacade<T>,
+  facade: IDeviceFacade<T>,
   data: SetDeviceData<T>,
 ): Partial<ListDeviceData<T>> => {
   const { EffectiveFlags: flags, ...newData } = data
@@ -85,7 +85,7 @@ export const updateDevice = <
   target: (...args: any[]) => Promise<U>,
   _context: ClassMethodDecoratorContext,
 ): ((...args: unknown[]) => Promise<U>) =>
-  async function newTarget(this: IBaseDeviceFacade<T>, ...args: unknown[]) {
+  async function newTarget(this: IDeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
     const {
       devices: [device],

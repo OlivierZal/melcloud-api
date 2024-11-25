@@ -26,10 +26,6 @@ import type {
   ZoneSettings,
 } from '../types/common.js'
 
-interface IFacadeWithEnergy<T extends DeviceType> extends IBaseDeviceFacade<T> {
-  energy: (query: ReportQuery) => Promise<EnergyData<T>>
-}
-
 export interface FrostProtectionQuery {
   max: number
   min: number
@@ -41,7 +37,13 @@ export interface HolidayModeQuery {
   to?: string
 }
 
-export interface IBaseDeviceFacade<T extends DeviceType>
+export interface IBuildingFacade
+  extends IBaseBuildingModel,
+    ISuperDeviceFacade {
+  fetch: () => Promise<ZoneSettings>
+}
+
+export interface IDeviceFacade<T extends DeviceType>
   extends IBaseDeviceModel<T>,
     IFacade {
   fetch: () => Promise<ListDeviceData<T>>
@@ -52,21 +54,9 @@ export interface IBaseDeviceFacade<T extends DeviceType>
   tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
   values: () => Promise<GetDeviceData<T>>
-}
-
-export interface IBuildingFacade
-  extends IBaseBuildingModel,
-    ISuperDeviceFacade {
-  fetch: () => Promise<ZoneSettings>
-}
-
-export interface IDeviceFacadeAta
-  extends IBaseDeviceFacade<DeviceType.Ata>,
-    IFacadeWithEnergy<DeviceType.Ata> {}
-
-export interface IDeviceFacadeAtw
-  extends IBaseDeviceFacade<DeviceType.Atw>,
-    IFacadeWithEnergy<DeviceType.Atw> {
+  // DeviceType.Ata | DeviceType.Atw
+  energy: (query: ReportQuery) => Promise<EnergyData<T>>
+  // DeviceType.Atw
   hourlyTemperature: (hour?: HourNumbers) => Promise<ReportData>
   internalTemperatures: (query: ReportQuery) => Promise<ReportData>
 }
@@ -103,15 +93,7 @@ export interface ReportQuery {
   to?: string
 }
 
-export type IDeviceFacade<T extends DeviceType> =
-  T extends DeviceType.Ata ? IDeviceFacadeAta
-  : T extends DeviceType.Atw ? IDeviceFacadeAtw
-  : T extends DeviceType.Erv ? IDeviceFacadeErv
-  : never
-
 export type IDeviceFacadeAny =
   | IDeviceFacade<DeviceType.Ata>
   | IDeviceFacade<DeviceType.Atw>
   | IDeviceFacade<DeviceType.Erv>
-
-export type IDeviceFacadeErv = IBaseDeviceFacade<DeviceType.Erv>
