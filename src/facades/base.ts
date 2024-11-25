@@ -26,7 +26,7 @@ import type {
   SettingsParams,
   SuccessData,
   TilesData,
-} from '../types/index.js'
+} from '../types/common.js'
 
 import type {
   FrostProtectionQuery,
@@ -109,16 +109,16 @@ export abstract class BaseFacade<
 
   @syncDevices()
   @updateDevices()
-  public async setPower(power = true): Promise<boolean> {
+  public async setPower(value = true): Promise<boolean> {
     return (
       await this.api.setPower({
-        postData: { DeviceIds: this.#deviceIds, Power: power },
+        postData: { DeviceIds: this.#deviceIds, Power: value },
       })
     ).data
   }
 
   public async errors(query: ErrorLogQuery): Promise<ErrorLog> {
-    return this.api.errors(query, this.#deviceIds)
+    return this.api.errorLog(query, this.#deviceIds)
   }
 
   public async frostProtection(): Promise<FrostProtectionData> {
@@ -203,14 +203,12 @@ export abstract class BaseFacade<
   }
 
   public async tiles(select?: false): Promise<TilesData<null>>
-
-  public async tiles<K extends DeviceType>(
-    select: IDeviceModel<K>,
-  ): Promise<TilesData<K>>
-
-  public async tiles<K extends DeviceType>(
-    select: false | IDeviceModel<K> = false,
-  ): Promise<TilesData<K | null>> {
+  public async tiles<U extends DeviceType>(
+    select: IDeviceModel<U>,
+  ): Promise<TilesData<U>>
+  public async tiles<U extends DeviceType>(
+    select: false | IDeviceModel<U> = false,
+  ): Promise<TilesData<U | null>> {
     const postData = { DeviceIDs: this.#deviceIds }
     return select === false || !this.#deviceIds.includes(select.id) ?
         (await this.api.tiles({ postData })).data
@@ -222,7 +220,7 @@ export abstract class BaseFacade<
               SelectedDevice: select.id,
             },
           })
-        ).data as TilesData<K>)
+        ).data as TilesData<U>)
   }
 
   async #getBaseFrostProtection(

@@ -5,6 +5,7 @@ import type {
   IAreaModel,
   IBuildingModel,
   IDeviceModel,
+  IDeviceModelAny,
   IFloorModel,
   IModel,
 } from '../models/interfaces.js'
@@ -12,7 +13,9 @@ import type { API } from '../services/api.js'
 
 import type {
   IBuildingFacade,
-  IDeviceFacade,
+  IDeviceFacadeAny,
+  IDeviceFacadeAta,
+  IDeviceFacadeAtw,
   IFacade,
   IFacadeManager,
   ISuperDeviceFacade,
@@ -27,18 +30,28 @@ export class FacadeManager implements IFacadeManager {
     this.#api = api
   }
 
-  public get<T extends DeviceType>(instance: IDeviceModel<T>): IDeviceFacade<T>
   public get(instance: IAreaModel | IFloorModel): ISuperDeviceFacade
   public get(instance: IBuildingModel): IBuildingFacade
+  public get(instance: IDeviceModel<DeviceType.Ata>): IDeviceFacadeAta
+  public get(instance: IDeviceModel<DeviceType.Atw>): IDeviceFacadeAtw
+  public get(instance: IDeviceModel<DeviceType.Ata>): IDeviceFacadeAta
+  public get(instance: IDeviceModelAny): IDeviceFacadeAny
   public get(instance: IModel): IFacade
   public get(): undefined
-  public get<T extends DeviceType>(
-    instance?: IDeviceModel<T>,
-  ): IDeviceFacade<T> | undefined
   public get(
     instance?: IAreaModel | IFloorModel,
   ): ISuperDeviceFacade | undefined
   public get(instance?: IBuildingModel): IBuildingFacade | undefined
+  public get(
+    instance?: IDeviceModel<DeviceType.Ata>,
+  ): IDeviceFacadeAta | undefined
+  public get(
+    instance?: IDeviceModel<DeviceType.Atw>,
+  ): IDeviceFacadeAtw | undefined
+  public get(
+    instance?: IDeviceModel<DeviceType.Ata>,
+  ): IDeviceFacadeAta | undefined
+  public get(instance?: IDeviceModelAny): IDeviceFacadeAny | undefined
   public get(instance?: IModel): IFacade | undefined {
     if (instance) {
       const {

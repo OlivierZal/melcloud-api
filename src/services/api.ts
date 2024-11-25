@@ -39,6 +39,11 @@ import {
 } from './interfaces.js'
 
 import type {
+  GetGroupData,
+  GetGroupPostData,
+  SetGroupPostData,
+} from '../types/ata.js'
+import type {
   Building,
   EnergyData,
   EnergyPostData,
@@ -49,8 +54,6 @@ import type {
   FrostProtectionPostData,
   GetDeviceData,
   GetDeviceDataParams,
-  GetGroupData,
-  GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
   LoginCredentials,
@@ -61,13 +64,12 @@ import type {
   ReportPostData,
   SetDeviceData,
   SetDevicePostData,
-  SetGroupPostData,
   SetPowerPostData,
   SettingsParams,
   SuccessData,
   TilesData,
   TilesPostData,
-} from '../types/index.js'
+} from '../types/common.js'
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin2'
@@ -256,15 +258,7 @@ export class API implements IAPI {
     return this.#api.post('/EnergyCost/Report', postData)
   }
 
-  public async errorLog({
-    postData,
-  }: {
-    postData: ErrorLogPostData
-  }): Promise<{ data: ErrorLogData[] | FailureData }> {
-    return this.#api.post('/Report/GetUnitErrorLog2', postData)
-  }
-
-  public async errors(
+  public async errorLog(
     query: ErrorLogQuery,
     deviceIds = DeviceModel.getAll().map(({ id }) => id),
   ): Promise<ErrorLog> {
@@ -294,6 +288,14 @@ export class API implements IAPI {
       nextFromDate: nextToDate.minus({ days: period }).toISODate() ?? '',
       nextToDate: nextToDate.toISODate() ?? '',
     }
+  }
+
+  public async errors({
+    postData,
+  }: {
+    postData: ErrorLogPostData
+  }): Promise<{ data: ErrorLogData[] | FailureData }> {
+    return this.#api.post('/Report/GetUnitErrorLog2', postData)
   }
 
   public async frostProtection({
@@ -352,7 +354,7 @@ export class API implements IAPI {
     return this.#api.post(LOGIN_PATH, postData)
   }
 
-  public async operationModeLog({
+  public async operationModes({
     postData,
   }: {
     postData: ReportPostData
@@ -418,7 +420,7 @@ export class API implements IAPI {
     return this.#api.post('/Report/GetSignalStrength', postData)
   }
 
-  public async temperatureLog({
+  public async temperatures({
     postData,
   }: {
     postData: ReportPostData
@@ -513,7 +515,7 @@ export class API implements IAPI {
     fromDate: DateTime,
     toDate: DateTime,
   ): Promise<ErrorLogData[]> {
-    const { data } = await this.errorLog({
+    const { data } = await this.errors({
       postData: {
         DeviceIDs: deviceIds,
         FromDate: fromDate.toISODate() ?? undefined,

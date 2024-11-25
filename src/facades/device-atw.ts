@@ -6,9 +6,9 @@ import type {
   OperationModeZoneDataAtw,
   TemperatureDataAtw,
   UpdateDeviceDataAtw,
-} from '../types/index.js'
+} from '../types/atw.js'
 
-import type { IDeviceFacade } from './interfaces.js'
+import type { IDeviceFacadeAtw } from './interfaces.js'
 
 const DEFAULT_TEMPERATURE = 0
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
@@ -20,7 +20,7 @@ const roomTemperatureRange = { max: 30, min: 10 } as const
 
 export class DeviceAtwFacade
   extends BaseDeviceFacade<DeviceType.Atw>
-  implements IDeviceFacade<DeviceType.Atw>
+  implements IDeviceFacadeAtw
 {
   public readonly flags = {
     ForcedHotWaterMode: 0x10000,

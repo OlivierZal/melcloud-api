@@ -9,12 +9,12 @@ import type {
   IModel,
 } from '../models/interfaces.js'
 import type { ErrorLog, ErrorLogQuery } from '../services/interfaces.js'
+import type { GroupState } from '../types/ata.js'
 import type {
   EnergyData,
   FailureData,
   FrostProtectionData,
   GetDeviceData,
-  GroupState,
   HolidayModeData,
   ListDeviceData,
   OperationModeLogData,
@@ -24,7 +24,11 @@ import type {
   TilesData,
   UpdateDeviceData,
   ZoneSettings,
-} from '../types/index.js'
+} from '../types/common.js'
+
+interface IFacadeWithEnergy<T extends DeviceType> extends IBaseDeviceFacade<T> {
+  energy: (query: ReportQuery) => Promise<EnergyData<T>>
+}
 
 export interface FrostProtectionQuery {
   max: number
@@ -37,26 +41,34 @@ export interface HolidayModeQuery {
   to?: string
 }
 
+export interface IBaseDeviceFacade<T extends DeviceType>
+  extends IBaseDeviceModel<T>,
+    IFacade {
+  fetch: () => Promise<ListDeviceData<T>>
+  flags: Record<keyof UpdateDeviceData<T>, number>
+  operationModes: (query: ReportQuery) => Promise<OperationModeLogData>
+  setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
+  temperatures: (query: ReportQuery) => Promise<ReportData>
+  tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
+    ((select?: false) => Promise<TilesData<null>>)
+  values: () => Promise<GetDeviceData<T>>
+}
+
 export interface IBuildingFacade
   extends IBaseBuildingModel,
     ISuperDeviceFacade {
   fetch: () => Promise<ZoneSettings>
 }
 
-export interface IDeviceFacade<T extends DeviceType>
-  extends IBaseDeviceModel<T>,
-    IFacade {
-  energy: (query: ReportQuery) => Promise<EnergyData<T>>
-  fetch: () => Promise<ListDeviceData<T>>
-  flags: Record<keyof UpdateDeviceData<T>, number>
+export interface IDeviceFacadeAta
+  extends IBaseDeviceFacade<DeviceType.Ata>,
+    IFacadeWithEnergy<DeviceType.Ata> {}
+
+export interface IDeviceFacadeAtw
+  extends IBaseDeviceFacade<DeviceType.Atw>,
+    IFacadeWithEnergy<DeviceType.Atw> {
   hourlyTemperature: (hour?: HourNumbers) => Promise<ReportData>
   internalTemperatures: (query: ReportQuery) => Promise<ReportData>
-  operationModeLog: (query: ReportQuery) => Promise<OperationModeLogData>
-  setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
-  temperatureLog: (query: ReportQuery) => Promise<ReportData>
-  tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
-    ((select?: false) => Promise<TilesData<null>>)
-  values: () => Promise<GetDeviceData<T>>
 }
 
 export interface IFacade extends IModel {
@@ -92,6 +104,8 @@ export interface ReportQuery {
 }
 
 export type IDeviceFacadeAny =
-  | IDeviceFacade<DeviceType.Ata>
-  | IDeviceFacade<DeviceType.Atw>
-  | IDeviceFacade<DeviceType.Erv>
+  | IDeviceFacadeAta
+  | IDeviceFacadeAtw
+  | IDeviceFacadeErv
+
+export type IDeviceFacadeErv = IBaseDeviceFacade<DeviceType.Erv>

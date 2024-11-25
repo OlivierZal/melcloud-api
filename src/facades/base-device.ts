@@ -26,15 +26,15 @@ import type {
   SetDeviceData,
   TilesData,
   UpdateDeviceData,
-} from '../types/index.js'
+} from '../types/common.js'
 
-import type { IDeviceFacade, ReportQuery } from './interfaces.js'
+import type { IBaseDeviceFacade, ReportQuery } from './interfaces.js'
 
 const DEFAULT_YEAR = '1970-01-01'
 
 export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<IDeviceModelAny>
-  implements IDeviceFacade<T>
+  implements IBaseDeviceFacade<T>
 {
   public readonly type: T
 
@@ -164,15 +164,14 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       .data
   }
 
-  public async operationModeLog(
+  public async operationModes(
     query: ReportQuery = {},
   ): Promise<OperationModeLogData> {
-    return (await this.api.operationModeLog(this.#getReportPostData(query)))
-      .data
+    return (await this.api.operationModes(this.#getReportPostData(query))).data
   }
 
-  public async temperatureLog(query: ReportQuery = {}): Promise<ReportData> {
-    return (await this.api.temperatureLog(this.#getReportPostData(query))).data
+  public async temperatures(query: ReportQuery = {}): Promise<ReportData> {
+    return (await this.api.temperatures(this.#getReportPostData(query))).data
   }
 
   protected handle(

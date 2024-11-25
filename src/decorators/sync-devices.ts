@@ -1,14 +1,14 @@
 import type { DeviceType } from '../enums.js'
 import type { IFacade } from '../facades/interfaces.js'
 import type { IAPI } from '../services/interfaces.js'
+import type { GroupState } from '../types/ata.js'
 import type {
   Building,
   FailureData,
   GetDeviceData,
-  GroupState,
   SetDeviceData,
   SuccessData,
-} from '../types/index.js'
+} from '../types/common.js'
 
 export const syncDevices =
   <

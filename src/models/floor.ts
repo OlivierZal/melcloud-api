@@ -1,6 +1,6 @@
 import { BaseModel } from './base.js'
 
-import type { FloorData } from '../types/index.js'
+import type { FloorData } from '../types/common.js'
 
 import type { AreaModel } from './area.js'
 import type { BuildingModel } from './building.js'

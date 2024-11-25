@@ -5,7 +5,7 @@ import type {
   ListDevice,
   ListDeviceAny,
   ListDeviceData,
-} from '../types/index.js'
+} from '../types/common.js'
 
 import type { AreaModel } from './area.js'
 import type { BuildingModel } from './building.js'
@@ -100,11 +100,11 @@ export class DeviceModel<T extends DeviceType>
     return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
-  public static getByType<K extends DeviceType>(type: K): IDeviceModel<K>[] {
+  public static getByType<U extends DeviceType>(type: U): IDeviceModel<U>[] {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     return this.getAll().filter(
       ({ type: instanceType }) => instanceType === type,
-    ) as IDeviceModel<K>[]
+    ) as IDeviceModel<U>[]
   }
 
   public static setModels({

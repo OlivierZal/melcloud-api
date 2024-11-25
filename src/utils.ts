@@ -3,7 +3,7 @@ import { DateTime } from 'luxon'
 import type {
   KeyofSetDeviceDataAtaNotInList,
   SetDeviceDataAtaInList,
-} from './types/index.js'
+} from './types/ata.js'
 
 export const now = (): string => DateTime.now().toISO({ includeOffset: false })
 

@@ -2,6 +2,11 @@ import type { HourNumbers } from 'luxon'
 
 import type { DeviceType, Language } from '../enums.js'
 import type {
+  GetGroupData,
+  GetGroupPostData,
+  SetGroupPostData,
+} from '../types/ata.js'
+import type {
   Building,
   EnergyData,
   EnergyPostData,
@@ -12,8 +17,6 @@ import type {
   FrostProtectionPostData,
   GetDeviceData,
   GetDeviceDataParams,
-  GetGroupData,
-  GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
   LoginCredentials,
@@ -24,13 +27,12 @@ import type {
   ReportPostData,
   SetDeviceData,
   SetDevicePostData,
-  SetGroupPostData,
   SetPowerPostData,
   SettingsParams,
   SuccessData,
   TilesData,
   TilesPostData,
-} from '../types/index.js'
+} from '../types/common.js'
 
 export interface APISettings {
   contextKey?: string | null
@@ -82,7 +84,7 @@ export interface ErrorLogQuery {
 export interface IAPI {
   authenticate: (data?: LoginCredentials) => Promise<boolean>
   clearSync: () => void
-  errors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
+  errorLog: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
   fetch: () => Promise<Building[]>
   updateLanguage: (language: string) => Promise<void>
   onSync?: OnSyncFunction
@@ -92,7 +94,7 @@ export interface IAPI {
   }: {
     postData: EnergyPostData
   }) => Promise<{ data: EnergyData<DeviceType> }>
-  errorLog: ({
+  errors: ({
     postData,
   }: {
     postData: ErrorLogPostData
@@ -113,7 +115,7 @@ export interface IAPI {
   }: {
     postData: LoginPostData
   }) => Promise<{ data: LoginData }>
-  operationModeLog: ({
+  operationModes: ({
     postData,
   }: {
     postData: ReportPostData
@@ -150,7 +152,7 @@ export interface IAPI {
   }: {
     postData: { devices: number | number[]; hour: HourNumbers }
   }) => Promise<{ data: ReportData }>
-  temperatureLog: ({
+  temperatures: ({
     postData,
   }: {
     postData: ReportPostData
@@ -200,8 +202,8 @@ export interface Logger {
 }
 
 export interface SettingManager {
-  get: <K extends keyof APISettings>(key: K) => APISettings[K]
-  set: <K extends keyof APISettings>(key: K, value: APISettings[K]) => void
+  get: <T extends keyof APISettings>(key: T) => APISettings[T]
+  set: <T extends keyof APISettings>(key: T, value: APISettings[T]) => void
 }
 
 export type OnSyncFunction = (params?: {

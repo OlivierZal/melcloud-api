@@ -5,7 +5,7 @@ import { BaseSuperDeviceFacade } from './base-super-device.js'
 
 import type { IBuildingModel } from '../models/interfaces.js'
 import type { API } from '../services/api.js'
-import type { ZoneSettings } from '../types/index.js'
+import type { ZoneSettings } from '../types/common.js'
 
 import type { IBuildingFacade } from './interfaces.js'
 

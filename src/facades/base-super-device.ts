@@ -10,12 +10,8 @@ import type {
   IDeviceModelAny,
   IFloorModel,
 } from '../models/interfaces.js'
-import type {
-  FailureData,
-  GroupState,
-  SetGroupPostData,
-  SuccessData,
-} from '../types/index.js'
+import type { GroupState, SetGroupPostData } from '../types/ata.js'
+import type { FailureData, SuccessData } from '../types/common.js'
 
 import type { ISuperDeviceFacade } from './interfaces.js'
 

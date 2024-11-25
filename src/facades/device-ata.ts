@@ -2,13 +2,13 @@ import { OperationMode, type DeviceType } from '../enums.js'
 
 import { BaseDeviceFacade } from './base-device.js'
 
-import type { UpdateDeviceDataAta } from '../types/index.js'
+import type { UpdateDeviceDataAta } from '../types/ata.js'
 
-import type { IDeviceFacade } from './interfaces.js'
+import type { IDeviceFacadeAta } from './interfaces.js'
 
 export class DeviceAtaFacade
   extends BaseDeviceFacade<DeviceType.Ata>
-  implements IDeviceFacade<DeviceType.Ata>
+  implements IDeviceFacadeAta
 {
   public readonly flags = {
     OperationMode: 0x2,

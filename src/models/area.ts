@@ -1,6 +1,6 @@
 import { BaseModel } from './base.js'
 
-import type { AreaData, AreaDataAny } from '../types/index.js'
+import type { AreaData, AreaDataAny } from '../types/common.js'
 
 import type { BuildingModel } from './building.js'
 import type { DeviceModel } from './device.js'
