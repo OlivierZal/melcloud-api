@@ -179,6 +179,11 @@ export interface ReportData {
   readonly ToDate: string
 }
 
+export interface ReportHourlyPostData {
+  readonly devices: number
+  readonly hour: number
+}
+
 export interface ReportPostData {
   readonly DeviceID: number
   readonly FromDate: string
@@ -210,11 +215,6 @@ export interface TilesData<T extends DeviceType | null> {
     readonly RoomTemperature2: number
     readonly TankWaterTemperature: number
   }[]
-}
-
-export interface WifiPostData {
-  readonly devices: number | readonly number[]
-  readonly hour: number
 }
 
 export interface ZoneSettings

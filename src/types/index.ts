@@ -58,6 +58,7 @@ export type {
   LoginPostData,
   OperationModeLogData,
   ReportData,
+  ReportHourlyPostData,
   ReportPostData,
   SetDeviceData,
   SetDevicePostData,
@@ -67,7 +68,6 @@ export type {
   TilesData,
   TilesPostData,
   UpdateDeviceData,
-  WifiPostData,
   ZoneSettings,
 } from './common.js'
 export type {

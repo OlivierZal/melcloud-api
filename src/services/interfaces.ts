@@ -19,6 +19,7 @@ import type {
   LoginData,
   LoginPostData,
   ReportData,
+  ReportHourlyPostData,
   ReportPostData,
   SetDeviceData,
   SetDevicePostData,
@@ -28,7 +29,6 @@ import type {
   SuccessData,
   TilesData,
   TilesPostData,
-  WifiPostData,
 } from '../types/index.js'
 
 export interface APISettings {
@@ -134,7 +134,7 @@ export interface IAPI {
   getWifiReport: ({
     postData,
   }: {
-    postData: WifiPostData
+    postData: ReportHourlyPostData
   }) => Promise<{ data: ReportData }>
   list: () => Promise<{ data: Building[] }>
   login: ({

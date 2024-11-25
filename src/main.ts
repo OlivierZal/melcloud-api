@@ -109,6 +109,7 @@ export type {
   OperationModeLogData,
   OperationModeZoneDataAtw,
   ReportData,
+  ReportHourlyPostData,
   ReportPostData,
   SetDeviceData,
   SetDeviceDataAta,
@@ -127,7 +128,6 @@ export type {
   UpdateDeviceDataAta,
   UpdateDeviceDataAtw,
   UpdateDeviceDataErv,
-  WifiPostData,
   ZoneAtw,
   ZoneSettings,
 } from './types/index.js'

@@ -53,6 +53,7 @@ import type {
   LoginPostData,
   OperationModeLogData,
   ReportData,
+  ReportHourlyPostData,
   ReportPostData,
   SetDeviceData,
   SetDevicePostData,
@@ -62,7 +63,6 @@ import type {
   SuccessData,
   TilesData,
   TilesPostData,
-  WifiPostData,
 } from '../types/index.js'
 
 const LIST_PATH = '/User/ListDevices'
@@ -400,7 +400,7 @@ export class API implements IAPI {
   public async getWifiReport({
     postData,
   }: {
-    postData: WifiPostData
+    postData: ReportHourlyPostData
   }): Promise<{ data: ReportData }> {
     return this.#api.post('/Report/GetSignalStrength', postData)
   }
