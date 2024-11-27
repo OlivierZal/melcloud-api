@@ -130,6 +130,7 @@ export type {
   SetPowerPostData,
   SettingsParams,
   SuccessData,
+  TemperatureLogPostData,
   TilesData,
   TilesPostData,
   UpdateDeviceData,

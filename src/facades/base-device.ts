@@ -32,6 +32,20 @@ import type { IDeviceFacade, ReportQuery } from './interfaces.ts'
 
 const DEFAULT_YEAR = '1970-01-01'
 
+const getReportPostDataDates = ({
+  from,
+  to,
+}: ReportQuery): Required<ReportQuery> => ({
+  from: from ?? DEFAULT_YEAR,
+  to: to ?? now(),
+})
+
+const getReportPostDataDuration = ({
+  from,
+  to,
+}: Required<ReportQuery>): number =>
+  Math.ceil(DateTime.fromISO(to).diff(DateTime.fromISO(from), 'days').days)
+
 export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<IDeviceModelAny>
   implements IDeviceFacade<T>
@@ -143,8 +157,11 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   public async energy(query: ReportQuery = {}): Promise<EnergyData<T>> {
-    return (await this.api.energy(this.#getReportPostData(query)))
-      .data as EnergyData<T>
+    return (
+      await this.api.energy({
+        postData: this.#getReportPostData(query),
+      })
+    ).data as EnergyData<T>
   }
 
   public async hourlyTemperature(
@@ -160,18 +177,35 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public async internalTemperatures(
     query: ReportQuery = {},
   ): Promise<ReportData> {
-    return (await this.api.internalTemperatures(this.#getReportPostData(query)))
-      .data
+    return (
+      await this.api.internalTemperatures({
+        postData: this.#getReportPostData(query),
+      })
+    ).data
   }
 
   public async operationModes(
     query: ReportQuery = {},
   ): Promise<OperationModeLogData> {
-    return (await this.api.operationModes(this.#getReportPostData(query))).data
+    return (
+      await this.api.operationModes({
+        postData: this.#getReportPostData(query),
+      })
+    ).data
   }
 
-  public async temperatures(query: ReportQuery = {}): Promise<ReportData> {
-    return (await this.api.temperatures(this.#getReportPostData(query))).data
+  public async temperatures(
+    query: ReportQuery = {},
+    useExactRange = true,
+  ): Promise<ReportData> {
+    return (
+      await this.api.temperatures({
+        postData: {
+          ...this.#getReportPostData(query, useExactRange),
+          Location: this.instance.building?.location,
+        },
+      })
+    ).data
   }
 
   protected handle(
@@ -187,13 +221,19 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     )
   }
 
-  #getReportPostData({ from, to }: ReportQuery): { postData: ReportPostData } {
+  #getReportPostData(
+    { from, to }: ReportQuery,
+    useExactRange = true,
+  ): ReportPostData {
+    const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
-      postData: {
-        DeviceID: this.id,
-        FromDate: from ?? DEFAULT_YEAR,
-        ToDate: to ?? now(),
-      },
+      DeviceID: this.id,
+      Duration:
+        useExactRange ?
+          getReportPostDataDuration({ from: newFrom, to: newTo })
+        : undefined,
+      FromDate: newFrom,
+      ToDate: newTo,
     }
   }
 }

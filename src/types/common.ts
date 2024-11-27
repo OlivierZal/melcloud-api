@@ -46,6 +46,7 @@ export interface Building extends BuildingData {
 
 export interface BuildingData extends ZoneSettings {
   readonly ID: number
+  readonly Location: number
   readonly Name: string
 }
 
@@ -190,6 +191,7 @@ export interface ReportPostData {
   readonly DeviceID: number
   readonly FromDate: string
   readonly ToDate: string
+  readonly Duration?: number
 }
 
 export interface SetPowerPostData {
@@ -205,6 +207,10 @@ export interface SettingsParams {
 export interface SuccessData {
   readonly AttributeErrors: null
   readonly Success: true
+}
+
+export interface TemperatureLogPostData extends ReportPostData {
+  readonly Location?: number
 }
 
 export interface TilesData<T extends DeviceType | null> {

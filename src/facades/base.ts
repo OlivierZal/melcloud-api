@@ -152,14 +152,13 @@ export abstract class BaseFacade<
     max,
     min,
   }: FrostProtectionQuery): Promise<FailureData | SuccessData> {
-    let [newMin, newMax] = min > max ? [max, min] : [min, max]
-    newMin = Math.max(
+    const newMin = Math.max(
       temperatureRange.min,
-      Math.min(newMin, temperatureRange.max - TEMPERATURE_GAP),
+      Math.min(min, temperatureRange.max - TEMPERATURE_GAP),
     )
-    newMax = Math.min(
+    let newMax = Math.min(
       temperatureRange.max,
-      Math.max(newMax, temperatureRange.min + TEMPERATURE_GAP),
+      Math.max(max, temperatureRange.min + TEMPERATURE_GAP),
     )
     if (newMax - newMin < TEMPERATURE_GAP) {
       newMax = newMin + TEMPERATURE_GAP

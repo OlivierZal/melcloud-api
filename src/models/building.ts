@@ -23,8 +23,16 @@ export class BuildingModel extends BaseModel implements IBuildingModel {
 
   public readonly data: ZoneSettings
 
-  private constructor({ ID: id, Name: name, ...data }: BuildingData) {
+  public readonly location: number
+
+  private constructor({
+    ID: id,
+    Location: location,
+    Name: name,
+    ...data
+  }: BuildingData) {
     super({ id, name })
+    this.location = location
     this.data = data
   }
 

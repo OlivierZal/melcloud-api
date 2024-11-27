@@ -15,6 +15,7 @@ export interface IBaseDeviceModel<T extends DeviceType> {
 export interface IBuildingModel extends IBaseBuildingModel, ISuperAreaModel {
   floorIds: number[]
   floors: IFloorModel[]
+  location: number
 }
 
 export interface IDeviceModel<T extends DeviceType>

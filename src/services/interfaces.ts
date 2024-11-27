@@ -30,6 +30,7 @@ import type {
   SetPowerPostData,
   SettingsParams,
   SuccessData,
+  TemperatureLogPostData,
   TilesData,
   TilesPostData,
 } from '../types/common.ts'
@@ -150,7 +151,7 @@ export interface IAPI {
   temperatures: ({
     postData,
   }: {
-    postData: ReportPostData
+    postData: TemperatureLogPostData
   }) => Promise<{ data: ReportData }>
   tiles: (({
     postData,

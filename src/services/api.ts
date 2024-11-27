@@ -67,6 +67,7 @@ import type {
   SetPowerPostData,
   SettingsParams,
   SuccessData,
+  TemperatureLogPostData,
   TilesData,
   TilesPostData,
 } from '../types/common.ts'
@@ -423,7 +424,7 @@ export class API implements IAPI {
   public async temperatures({
     postData,
   }: {
-    postData: ReportPostData
+    postData: TemperatureLogPostData
   }): Promise<{ data: ReportData }> {
     return this.#api.post('/Report/GetTemperatureLog2', postData)
   }
