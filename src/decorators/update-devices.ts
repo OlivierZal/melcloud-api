@@ -1,13 +1,13 @@
-import { FLAG_UNCHANGED } from '../constants.js'
-import { DeviceType } from '../enums.js'
-import { fromSetToListAta, isKeyofSetDeviceDataAtaNotInList } from '../utils.js'
+import { FLAG_UNCHANGED } from '../constants.ts'
+import { DeviceType } from '../enums.ts'
+import { fromSetToListAta, isKeyofSetDeviceDataAtaNotInList } from '../utils.ts'
 
 import type {
   IDeviceFacade,
   ISuperDeviceFacade,
-} from '../facades/interfaces.js'
-import type { IDeviceModel } from '../models/interfaces.js'
-import type { GroupState } from '../types/ata.js'
+} from '../facades/interfaces.ts'
+import type { IDeviceModel } from '../models/interfaces.ts'
+import type { GroupState } from '../types/ata.ts'
 import type {
   FailureData,
   GetDeviceData,
@@ -15,7 +15,7 @@ import type {
   SetDeviceData,
   SuccessData,
   UpdateDeviceData,
-} from '../types/common.js'
+} from '../types/common.ts'
 
 export const updateDevices =
   <T extends boolean | FailureData | GroupState | SuccessData>(params?: {

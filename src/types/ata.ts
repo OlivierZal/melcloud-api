@@ -4,15 +4,15 @@ import type {
   Horizontal,
   OperationMode,
   Vertical,
-} from '../enums.js'
+} from '../enums.ts'
 
 import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
-} from './bases.js'
-import type { GetDeviceData } from './common.js'
+} from './bases.ts'
+import type { GetDeviceData } from './common.ts'
 
 export interface EnergyDataAta {
   readonly Auto: readonly number[]

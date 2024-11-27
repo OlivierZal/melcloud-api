@@ -1,8 +1,8 @@
 import 'source-map-support/register.js'
 
-export { fetchDevices } from './decorators/fetch-devices.js'
-export { syncDevices } from './decorators/sync-devices.js'
-export { updateDevice, updateDevices } from './decorators/update-devices.js'
+export { fetchDevices } from './decorators/fetch-devices.ts'
+export { syncDevices } from './decorators/sync-devices.ts'
+export { updateDevice, updateDevices } from './decorators/update-devices.ts'
 export {
   DeviceType,
   FanSpeed,
@@ -13,21 +13,21 @@ export {
   OperationModeZone,
   VentilationMode,
   Vertical,
-} from './enums.js'
-export { AreaFacade } from './facades/area.js'
-export { BuildingFacade } from './facades/building.js'
-export { DeviceAtaFacade } from './facades/device-ata.js'
-export { DeviceAtwFacade } from './facades/device-atw.js'
-export { DeviceErvFacade } from './facades/device-erv.js'
-export { FloorFacade } from './facades/floor.js'
-export { FacadeManager } from './facades/manager.js'
+} from './enums.ts'
+export { AreaFacade } from './facades/area.ts'
+export { BuildingFacade } from './facades/building.ts'
+export { DeviceAtaFacade } from './facades/device-ata.ts'
+export { DeviceAtwFacade } from './facades/device-atw.ts'
+export { DeviceErvFacade } from './facades/device-erv.ts'
+export { FloorFacade } from './facades/floor.ts'
+export { FacadeManager } from './facades/manager.ts'
 export {
   AreaModel,
   BuildingModel,
   DeviceModel,
   FloorModel,
-} from './models/index.js'
-export { API as MELCloudAPI } from './services/api.js'
+} from './models/index.ts'
+export { API as MELCloudAPI } from './services/api.ts'
 export type {
   FrostProtectionQuery,
   HolidayModeQuery,
@@ -38,7 +38,7 @@ export type {
   IFacadeManager,
   ISuperDeviceFacade,
   ReportQuery,
-} from './facades/interfaces.js'
+} from './facades/interfaces.ts'
 export type {
   IAreaModel,
   IBaseBuildingModel,
@@ -52,7 +52,7 @@ export type {
   ISubFloorModel,
   ISuperAreaModel,
   ISuperDeviceModel,
-} from './models/interfaces.js'
+} from './models/interfaces.ts'
 export type {
   APIConfig,
   APISettings,
@@ -63,7 +63,7 @@ export type {
   Logger,
   OnSyncFunction,
   SettingManager,
-} from './services/interfaces.js'
+} from './services/interfaces.ts'
 export type {
   EnergyDataAta,
   GetGroupData,
@@ -75,7 +75,7 @@ export type {
   SetDeviceDataAtaInList,
   SetGroupPostData,
   UpdateDeviceDataAta,
-} from './types/ata.js'
+} from './types/ata.ts'
 export type {
   EnergyDataAtw,
   ListDeviceDataAtw,
@@ -84,7 +84,7 @@ export type {
   TemperatureDataAtw,
   UpdateDeviceDataAtw,
   ZoneAtw,
-} from './types/atw.js'
+} from './types/atw.ts'
 export type {
   BaseDevicePostData,
   BaseGetDeviceData,
@@ -93,7 +93,7 @@ export type {
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
-} from './types/bases.js'
+} from './types/bases.ts'
 export type {
   AreaData,
   AreaDataAny,
@@ -134,9 +134,9 @@ export type {
   TilesPostData,
   UpdateDeviceData,
   ZoneSettings,
-} from './types/common.js'
+} from './types/common.ts'
 export type {
   ListDeviceDataErv,
   SetDeviceDataErv,
   UpdateDeviceDataErv,
-} from './types/erv.js'
+} from './types/erv.ts'

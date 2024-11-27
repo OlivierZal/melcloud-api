@@ -1,21 +1,21 @@
 import { DateTime } from 'luxon'
 
-import { FLAG_UNCHANGED } from '../constants.js'
-import { fetchDevices } from '../decorators/fetch-devices.js'
-import { syncDevices } from '../decorators/sync-devices.js'
-import { updateDevice } from '../decorators/update-devices.js'
-import { DeviceType } from '../enums.js'
-import { DeviceModel } from '../models/index.js'
+import { FLAG_UNCHANGED } from '../constants.ts'
+import { fetchDevices } from '../decorators/fetch-devices.ts'
+import { syncDevices } from '../decorators/sync-devices.ts'
+import { updateDevice } from '../decorators/update-devices.ts'
+import { DeviceType } from '../enums.ts'
+import { DeviceModel } from '../models/index.ts'
 import {
   fromListToSetAta,
   isKeyofSetDeviceDataAtaInList,
   now,
-} from '../utils.js'
+} from '../utils.ts'
 
-import { BaseFacade } from './base.js'
+import { BaseFacade } from './base.ts'
 
-import type { IDeviceModel, IDeviceModelAny } from '../models/interfaces.js'
-import type { API } from '../services/api.js'
+import type { IDeviceModel, IDeviceModelAny } from '../models/interfaces.ts'
+import type { API } from '../services/api.ts'
 import type {
   EnergyData,
   GetDeviceData,
@@ -26,9 +26,9 @@ import type {
   SetDeviceData,
   TilesData,
   UpdateDeviceData,
-} from '../types/common.js'
+} from '../types/common.ts'
 
-import type { IDeviceFacade, ReportQuery } from './interfaces.js'
+import type { IDeviceFacade, ReportQuery } from './interfaces.ts'
 
 const DEFAULT_YEAR = '1970-01-01'
 

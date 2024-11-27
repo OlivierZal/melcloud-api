@@ -1,21 +1,21 @@
-import { BaseModel } from './base.js'
+import { BaseModel } from './base.ts'
 
-import type { DeviceType } from '../enums.js'
+import type { DeviceType } from '../enums.ts'
 import type {
   ListDevice,
   ListDeviceAny,
   ListDeviceData,
-} from '../types/common.js'
+} from '../types/common.ts'
 
-import type { AreaModel } from './area.js'
-import type { BuildingModel } from './building.js'
-import type { FloorModel } from './floor.js'
+import type { AreaModel } from './area.ts'
+import type { BuildingModel } from './building.ts'
+import type { FloorModel } from './floor.ts'
 import type {
   IAreaModel,
   IDeviceModel,
   IDeviceModelAny,
   IFloorModel,
-} from './interfaces.js'
+} from './interfaces.ts'
 
 export class DeviceModel<T extends DeviceType>
   extends BaseModel

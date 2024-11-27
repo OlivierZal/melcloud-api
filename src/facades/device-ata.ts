@@ -1,10 +1,10 @@
-import { OperationMode, type DeviceType } from '../enums.js'
+import { OperationMode, type DeviceType } from '../enums.ts'
 
-import { BaseDeviceFacade } from './base-device.js'
+import { BaseDeviceFacade } from './base-device.ts'
 
-import type { UpdateDeviceDataAta } from '../types/ata.js'
+import type { UpdateDeviceDataAta } from '../types/ata.ts'
 
-import type { IDeviceFacade } from './interfaces.js'
+import type { IDeviceFacade } from './interfaces.ts'
 
 export class DeviceAtaFacade
   extends BaseDeviceFacade<DeviceType.Ata>

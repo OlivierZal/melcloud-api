@@ -1,16 +1,16 @@
-import { BaseModel } from './base.js'
+import { BaseModel } from './base.ts'
 
-import type { FloorData } from '../types/common.js'
+import type { FloorData } from '../types/common.ts'
 
-import type { AreaModel } from './area.js'
-import type { BuildingModel } from './building.js'
-import type { DeviceModel } from './device.js'
+import type { AreaModel } from './area.ts'
+import type { BuildingModel } from './building.ts'
+import type { DeviceModel } from './device.ts'
 import type {
   IAreaModel,
   IBuildingModel,
   IDeviceModelAny,
   IFloorModel,
-} from './interfaces.js'
+} from './interfaces.ts'
 
 export class FloorModel extends BaseModel implements IFloorModel {
   static #areaModel: typeof AreaModel

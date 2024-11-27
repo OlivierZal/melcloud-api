@@ -1,4 +1,4 @@
-import type { IModel } from './interfaces.js'
+import type { IModel } from './interfaces.ts'
 
 export abstract class BaseModel implements IModel {
   public readonly id: number

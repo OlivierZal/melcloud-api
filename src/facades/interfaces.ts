@@ -1,15 +1,15 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType } from '../enums.js'
+import type { DeviceType } from '../enums.ts'
 import type {
   IBaseBuildingModel,
   IBaseDeviceModel,
   IDeviceModel,
   IDeviceModelAny,
   IModel,
-} from '../models/interfaces.js'
-import type { ErrorLog, ErrorLogQuery } from '../services/interfaces.js'
-import type { GroupState } from '../types/ata.js'
+} from '../models/interfaces.ts'
+import type { ErrorLog, ErrorLogQuery } from '../services/interfaces.ts'
+import type { GroupState } from '../types/ata.ts'
 import type {
   EnergyData,
   FailureData,
@@ -24,7 +24,7 @@ import type {
   TilesData,
   UpdateDeviceData,
   ZoneSettings,
-} from '../types/common.js'
+} from '../types/common.ts'
 
 export interface FrostProtectionQuery {
   max: number

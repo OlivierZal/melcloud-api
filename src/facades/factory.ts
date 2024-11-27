@@ -1,22 +1,22 @@
-import { DeviceType } from '../enums.js'
+import { DeviceType } from '../enums.ts'
 import {
   AreaModel,
   BuildingModel,
   DeviceModel,
   FloorModel,
-} from '../models/index.js'
+} from '../models/index.ts'
 
-import { AreaFacade } from './area.js'
-import { BuildingFacade } from './building.js'
-import { DeviceAtaFacade } from './device-ata.js'
-import { DeviceAtwFacade } from './device-atw.js'
-import { DeviceErvFacade } from './device-erv.js'
-import { FloorFacade } from './floor.js'
+import { AreaFacade } from './area.ts'
+import { BuildingFacade } from './building.ts'
+import { DeviceAtaFacade } from './device-ata.ts'
+import { DeviceAtwFacade } from './device-atw.ts'
+import { DeviceErvFacade } from './device-erv.ts'
+import { FloorFacade } from './floor.ts'
 
-import type { IModel } from '../models/interfaces.js'
-import type { API } from '../services/api.js'
+import type { IModel } from '../models/interfaces.ts'
+import type { API } from '../services/api.ts'
 
-import type { IDeviceFacadeAny, IFacade } from './interfaces.js'
+import type { IDeviceFacadeAny, IFacade } from './interfaces.ts'
 
 type DeviceModelAny = DeviceModel<
   DeviceType.Ata | DeviceType.Atw | DeviceType.Erv

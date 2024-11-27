@@ -1,29 +1,29 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType } from '../enums.js'
+import type { DeviceType } from '../enums.ts'
 
 import type {
   EnergyDataAta,
   ListDeviceDataAta,
   SetDeviceDataAta,
   UpdateDeviceDataAta,
-} from './ata.js'
+} from './ata.ts'
 import type {
   EnergyDataAtw,
   ListDeviceDataAtw,
   SetDeviceDataAtw,
   UpdateDeviceDataAtw,
-} from './atw.js'
+} from './atw.ts'
 import type {
   BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,
-} from './bases.js'
+} from './bases.ts'
 import type {
   ListDeviceDataErv,
   SetDeviceDataErv,
   UpdateDeviceDataErv,
-} from './erv.js'
+} from './erv.ts'
 
 export interface AreaData<T extends number | null> extends FloorData {
   readonly FloorId: T

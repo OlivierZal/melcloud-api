@@ -1,16 +1,16 @@
-import { BaseModel } from './base.js'
+import { BaseModel } from './base.ts'
 
-import type { AreaData, AreaDataAny } from '../types/common.js'
+import type { AreaData, AreaDataAny } from '../types/common.ts'
 
-import type { BuildingModel } from './building.js'
-import type { DeviceModel } from './device.js'
-import type { FloorModel } from './floor.js'
+import type { BuildingModel } from './building.ts'
+import type { DeviceModel } from './device.ts'
+import type { FloorModel } from './floor.ts'
 import type {
   IAreaModel,
   IBuildingModel,
   IDeviceModelAny,
   IFloorModel,
-} from './interfaces.js'
+} from './interfaces.ts'
 
 export class AreaModel<T extends number | null>
   extends BaseModel

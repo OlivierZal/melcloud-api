@@ -1,14 +1,14 @@
-import { OperationModeZone, type DeviceType } from '../enums.js'
+import { OperationModeZone, type DeviceType } from '../enums.ts'
 
-import { BaseDeviceFacade } from './base-device.js'
+import { BaseDeviceFacade } from './base-device.ts'
 
 import type {
   OperationModeZoneDataAtw,
   TemperatureDataAtw,
   UpdateDeviceDataAtw,
-} from '../types/atw.js'
+} from '../types/atw.ts'
 
-import type { IDeviceFacade } from './interfaces.js'
+import type { IDeviceFacade } from './interfaces.ts'
 
 const DEFAULT_TEMPERATURE = 0
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room

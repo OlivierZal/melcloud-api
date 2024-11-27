@@ -1,19 +1,19 @@
-import { syncDevices } from '../decorators/sync-devices.js'
-import { updateDevices } from '../decorators/update-devices.js'
-import { DeviceType } from '../enums.js'
+import { syncDevices } from '../decorators/sync-devices.ts'
+import { updateDevices } from '../decorators/update-devices.ts'
+import { DeviceType } from '../enums.ts'
 
-import { BaseFacade } from './base.js'
+import { BaseFacade } from './base.ts'
 
 import type {
   IAreaModel,
   IBuildingModel,
   IDeviceModelAny,
   IFloorModel,
-} from '../models/interfaces.js'
-import type { GroupState, SetGroupPostData } from '../types/ata.js'
-import type { FailureData, SuccessData } from '../types/common.js'
+} from '../models/interfaces.ts'
+import type { GroupState, SetGroupPostData } from '../types/ata.ts'
+import type { FailureData, SuccessData } from '../types/common.ts'
 
-import type { ISuperDeviceFacade } from './interfaces.js'
+import type { ISuperDeviceFacade } from './interfaces.ts'
 
 export abstract class BaseSuperDeviceFacade<
     T extends IAreaModel | IBuildingModel | IFloorModel,

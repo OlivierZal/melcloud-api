@@ -14,18 +14,18 @@ import {
   type HourNumbers,
 } from 'luxon'
 
-import { syncDevices } from '../decorators/sync-devices.js'
-import { DeviceType, Language } from '../enums.js'
-import { createAPICallErrorData } from '../logging/error.js'
-import { APICallRequestData } from '../logging/request.js'
-import { APICallResponseData } from '../logging/response.js'
+import { syncDevices } from '../decorators/sync-devices.ts'
+import { DeviceType, Language } from '../enums.ts'
+import { createAPICallErrorData } from '../logging/error.ts'
+import { APICallRequestData } from '../logging/request.ts'
+import { APICallResponseData } from '../logging/response.ts'
 import {
   AreaModel,
   BuildingModel,
   DeviceModel,
   FloorModel,
-} from '../models/index.js'
-import { now } from '../utils.js'
+} from '../models/index.ts'
+import { now } from '../utils.ts'
 
 import {
   isAPISetting,
@@ -36,13 +36,13 @@ import {
   type Logger,
   type OnSyncFunction,
   type SettingManager,
-} from './interfaces.js'
+} from './interfaces.ts'
 
 import type {
   GetGroupData,
   GetGroupPostData,
   SetGroupPostData,
-} from '../types/ata.js'
+} from '../types/ata.ts'
 import type {
   Building,
   EnergyData,
@@ -69,7 +69,7 @@ import type {
   SuccessData,
   TilesData,
   TilesPostData,
-} from '../types/common.js'
+} from '../types/common.ts'
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin2'

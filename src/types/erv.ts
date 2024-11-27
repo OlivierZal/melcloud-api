@@ -1,12 +1,12 @@
-import type { DeviceType, FanSpeed, VentilationMode } from '../enums.js'
+import type { DeviceType, FanSpeed, VentilationMode } from '../enums.ts'
 
 import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   DeviceDataNotInList,
-} from './bases.js'
-import type { GetDeviceData } from './common.js'
+} from './bases.ts'
+import type { GetDeviceData } from './common.ts'
 
 export interface ListDeviceDataErv
   extends BaseListDeviceData,

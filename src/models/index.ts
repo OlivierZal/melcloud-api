@@ -1,7 +1,7 @@
-import { AreaModel } from './area.js'
-import { BuildingModel } from './building.js'
-import { DeviceModel } from './device.js'
-import { FloorModel } from './floor.js'
+import { AreaModel } from './area.ts'
+import { BuildingModel } from './building.ts'
+import { DeviceModel } from './device.ts'
+import { FloorModel } from './floor.ts'
 
 const models = {
   areaModel: AreaModel,

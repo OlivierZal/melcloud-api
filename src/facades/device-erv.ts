@@ -1,8 +1,8 @@
-import { BaseDeviceFacade } from './base-device.js'
+import { BaseDeviceFacade } from './base-device.ts'
 
-import type { DeviceType } from '../enums.js'
+import type { DeviceType } from '../enums.ts'
 
-import type { IDeviceFacade } from './interfaces.js'
+import type { IDeviceFacade } from './interfaces.ts'
 
 export class DeviceErvFacade
   extends BaseDeviceFacade<DeviceType.Erv>

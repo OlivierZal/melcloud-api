@@ -1,5 +1,5 @@
-import type { DeviceType } from '../enums.js'
-import type { ListDeviceData, ZoneSettings } from '../types/common.js'
+import type { DeviceType } from '../enums.ts'
+import type { ListDeviceData, ZoneSettings } from '../types/common.ts'
 
 export interface IAreaModel extends ISubFloorModel, ISuperDeviceModel {}
 

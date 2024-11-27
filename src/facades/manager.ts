@@ -1,6 +1,6 @@
-import { createFacade } from './factory.js'
+import { createFacade } from './factory.ts'
 
-import type { DeviceType } from '../enums.js'
+import type { DeviceType } from '../enums.ts'
 import type {
   IAreaModel,
   IBuildingModel,
@@ -8,8 +8,8 @@ import type {
   IDeviceModelAny,
   IFloorModel,
   IModel,
-} from '../models/interfaces.js'
-import type { API } from '../services/api.js'
+} from '../models/interfaces.ts'
+import type { API } from '../services/api.ts'
 
 import type {
   IBuildingFacade,
@@ -18,7 +18,7 @@ import type {
   IFacade,
   IFacadeManager,
   ISuperDeviceFacade,
-} from './interfaces.js'
+} from './interfaces.ts'
 
 export class FacadeManager implements IFacadeManager {
   readonly #api: API

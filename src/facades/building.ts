@@ -1,13 +1,13 @@
-import { fetchDevices } from '../decorators/fetch-devices.js'
-import { BuildingModel } from '../models/index.js'
+import { fetchDevices } from '../decorators/fetch-devices.ts'
+import { BuildingModel } from '../models/index.ts'
 
-import { BaseSuperDeviceFacade } from './base-super-device.js'
+import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
-import type { IBuildingModel } from '../models/interfaces.js'
-import type { API } from '../services/api.js'
-import type { ZoneSettings } from '../types/common.js'
+import type { IBuildingModel } from '../models/interfaces.ts'
+import type { API } from '../services/api.ts'
+import type { ZoneSettings } from '../types/common.ts'
 
-import type { IBuildingFacade } from './interfaces.js'
+import type { IBuildingFacade } from './interfaces.ts'
 
 export class BuildingFacade
   extends BaseSuperDeviceFacade<BuildingModel>

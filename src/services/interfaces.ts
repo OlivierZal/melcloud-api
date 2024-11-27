@@ -1,11 +1,11 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType, Language } from '../enums.js'
+import type { DeviceType, Language } from '../enums.ts'
 import type {
   GetGroupData,
   GetGroupPostData,
   SetGroupPostData,
-} from '../types/ata.js'
+} from '../types/ata.ts'
 import type {
   Building,
   EnergyData,
@@ -32,7 +32,7 @@ import type {
   SuccessData,
   TilesData,
   TilesPostData,
-} from '../types/common.js'
+} from '../types/common.ts'
 
 export interface APISettings {
   contextKey?: string | null

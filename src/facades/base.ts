@@ -1,19 +1,19 @@
 import { DateTime } from 'luxon'
 
-import { syncDevices } from '../decorators/sync-devices.js'
-import { updateDevices } from '../decorators/update-devices.js'
-import { now } from '../utils.js'
+import { syncDevices } from '../decorators/sync-devices.ts'
+import { updateDevices } from '../decorators/update-devices.ts'
+import { now } from '../utils.ts'
 
-import type { DeviceType } from '../enums.js'
+import type { DeviceType } from '../enums.ts'
 import type {
   IAreaModel,
   IBuildingModel,
   IDeviceModel,
   IDeviceModelAny,
   IFloorModel,
-} from '../models/interfaces.js'
-import type { API } from '../services/api.js'
-import type { ErrorLog, ErrorLogQuery } from '../services/interfaces.js'
+} from '../models/interfaces.ts'
+import type { API } from '../services/api.ts'
+import type { ErrorLog, ErrorLogQuery } from '../services/interfaces.ts'
 import type {
   DateTimeComponents,
   FailureData,
@@ -26,13 +26,13 @@ import type {
   SettingsParams,
   SuccessData,
   TilesData,
-} from '../types/common.js'
+} from '../types/common.ts'
 
 import type {
   FrostProtectionQuery,
   HolidayModeQuery,
   IFacade,
-} from './interfaces.js'
+} from './interfaces.ts'
 
 const temperatureRange = { max: 16, min: 4 } as const
 const TEMPERATURE_GAP = 2
