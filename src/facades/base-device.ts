@@ -34,6 +34,7 @@ import type {
   TemperatureLog,
 } from './interfaces.ts'
 
+const DAYS_IN_A_MONTH = 31
 const DAYS_IN_A_WEEK = 7
 const DEFAULT_YEAR = '1970-01-01'
 const YEAR_MONTH_DIVISOR = 100
@@ -49,30 +50,42 @@ const getReportPostDataDates = ({
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(DateTime.fromISO(to).diff(DateTime.fromISO(from), 'days').days)
 
+const isTodayOrYesterday = (to: string): boolean => {
+  const today = DateTime.now()
+  const yesterday = today.minus({ days: 1 })
+  const toDate = DateTime.fromISO(to)
+  return toDate.hasSame(today, 'day') || toDate.hasSame(yesterday, 'day')
+}
+
 const renderXAxis = (
   labels: readonly string[],
   { from, to }: Required<ReportQuery>,
-): string[] =>
-  labels.map((label) => {
-    if (!label.includes(':')) {
-      if (label.length === 'MMMMYY'.length) {
-        return DateTime.local(
+): readonly string[] => {
+  const [firstLabel] = labels
+  if (!firstLabel.includes(':')) {
+    if (firstLabel.length === 'MMMMYY'.length) {
+      return labels.map((label) =>
+        DateTime.local(
           Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
           Number(label) % YEAR_MONTH_DIVISOR,
-        ).toFormat('MMM yyyy')
-      }
-      const today = DateTime.now()
-      const yesterday = today.minus({ days: 1 })
-      const toDate = DateTime.fromISO(to)
-      if (
-        getDuration({ from, to }) <= DAYS_IN_A_WEEK &&
-        (toDate.hasSame(today, 'day') || toDate.hasSame(yesterday, 'day'))
-      ) {
-        return DateTime.fromFormat(label, 'c').toFormat('ccc')
-      }
+        ).toFormat('MMM yyyy'),
+      )
     }
-    return label
-  })
+    const duration = getDuration({ from, to })
+    if (duration <= DAYS_IN_A_WEEK) {
+      if (isTodayOrYesterday(to)) {
+        return labels.map((label) =>
+          DateTime.fromFormat(label, 'c').toFormat('ccc'),
+        )
+      }
+    } else if (duration <= DAYS_IN_A_MONTH) {
+      return labels.map((label) =>
+        DateTime.fromObject({ month: Number(label) }).toFormat('MMM'),
+      )
+    }
+  }
+  return labels
+}
 
 export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<IDeviceModelAny>
