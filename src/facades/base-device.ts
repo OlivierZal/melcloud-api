@@ -66,7 +66,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
-  protected abstract readonly temperatureLegend: string[]
+  protected abstract readonly temperatureLegend: (string | undefined)[]
 
   public constructor(api: API, instance: IDeviceModel<T>) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
@@ -214,8 +214,10 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     })
     return {
       from,
-      legend: this.temperatureLegend,
-      series,
+      legend: this.temperatureLegend.filter((legend) => legend !== undefined),
+      series: series.filter(
+        (_serie, index) => this.temperatureLegend.at(index) !== undefined,
+      ),
       to,
       xAxis,
     }

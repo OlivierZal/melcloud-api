@@ -28,7 +28,6 @@ export class DeviceAtwFacade
     'OutdoorTemperature',
     'TankWaterTemperature',
     'SetTankWaterTemperature',
-    '',
   ]
 
   public readonly flags = {

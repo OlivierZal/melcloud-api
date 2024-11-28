@@ -9,9 +9,9 @@ export class DeviceErvFacade
   implements IDeviceFacade<DeviceType.Erv>
 {
   protected override readonly temperatureLegend = [
-    '',
+    undefined,
     'RoomTemperature',
-    '',
+    undefined,
     'OutdoorTemperature',
   ]
 
