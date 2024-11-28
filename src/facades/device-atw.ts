@@ -22,6 +22,15 @@ export class DeviceAtwFacade
   extends BaseDeviceFacade<DeviceType.Atw>
   implements IDeviceFacade<DeviceType.Atw>
 {
+  protected override readonly temperatureLegend = [
+    'SetTemperatureZone1',
+    'RoomTemperatureZone1',
+    'OutdoorTemperature',
+    'TankWaterTemperature',
+    'SetTankWaterTemperature',
+    '',
+  ]
+
   public readonly flags = {
     ForcedHotWaterMode: 0x10000,
     OperationModeZone1: 0x8,

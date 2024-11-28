@@ -50,7 +50,7 @@ export interface IDeviceFacade<T extends DeviceType>
   flags: Record<keyof UpdateDeviceData<T>, number>
   operationModes: (query: ReportQuery) => Promise<OperationModeLogData>
   setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
-  temperatures: (query: ReportQuery) => Promise<ReportData>
+  temperatures: (query: ReportQuery) => Promise<TemperatureLog>
   tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
   values: () => Promise<GetDeviceData<T>>
@@ -91,6 +91,14 @@ export interface ISuperDeviceFacade extends IFacade {
 export interface ReportQuery {
   from?: string
   to?: string
+}
+
+export interface TemperatureLog {
+  from: string
+  legend: readonly string[]
+  series: readonly (readonly (number | null)[])[]
+  to: string
+  xAxis: readonly string[]
 }
 
 export type IDeviceFacadeAny =

@@ -266,7 +266,7 @@ export class API implements IAPI {
     const { fromDate, period, toDate } = handleErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
     return {
-      errors: (await this.#errors(deviceIds, fromDate, toDate))
+      errors: (await this.#errorLog(deviceIds, fromDate, toDate))
         .map(
           ({
             DeviceId: deviceId,
@@ -511,7 +511,7 @@ export class API implements IAPI {
     return api
   }
 
-  async #errors(
+  async #errorLog(
     deviceIds: number[],
     fromDate: DateTime,
     toDate: DateTime,

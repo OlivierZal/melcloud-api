@@ -28,7 +28,11 @@ import type {
   UpdateDeviceData,
 } from '../types/common.ts'
 
-import type { IDeviceFacade, ReportQuery } from './interfaces.ts'
+import type {
+  IDeviceFacade,
+  ReportQuery,
+  TemperatureLog,
+} from './interfaces.ts'
 
 const DEFAULT_YEAR = '1970-01-01'
 
@@ -61,6 +65,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   protected readonly tableName = 'DeviceLocation'
 
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
+
+  protected abstract readonly temperatureLegend: string[]
 
   public constructor(api: API, instance: IDeviceModel<T>) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
@@ -197,15 +203,22 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public async temperatures(
     query: ReportQuery = {},
     useExactRange = true,
-  ): Promise<ReportData> {
-    return (
-      await this.api.temperatures({
-        postData: {
-          ...this.#getReportPostData(query, useExactRange),
-          Location: this.instance.building?.location,
-        },
-      })
-    ).data
+  ): Promise<TemperatureLog> {
+    const {
+      data: { Data: series, FromDate: from, Labels: xAxis, ToDate: to },
+    } = await this.api.temperatures({
+      postData: {
+        ...this.#getReportPostData(query, useExactRange),
+        Location: this.instance.building?.location,
+      },
+    })
+    return {
+      from,
+      legend: this.temperatureLegend,
+      series,
+      to,
+      xAxis,
+    }
   }
 
   protected handle(

@@ -8,6 +8,13 @@ export class DeviceErvFacade
   extends BaseDeviceFacade<DeviceType.Erv>
   implements IDeviceFacade<DeviceType.Erv>
 {
+  protected override readonly temperatureLegend = [
+    '',
+    'RoomTemperature',
+    '',
+    'OutdoorTemperature',
+  ]
+
   public readonly flags = {
     Power: 0x1,
     SetFanSpeed: 0x8,
