@@ -10,12 +10,6 @@ export class DeviceAtaFacade
   extends BaseDeviceFacade<DeviceType.Ata>
   implements IDeviceFacade<DeviceType.Ata>
 {
-  protected override readonly temperatureLegend = [
-    'SetTemperature',
-    'RoomTemperature',
-    'OutdoorTemperature',
-  ]
-
   public readonly flags = {
     OperationMode: 0x2,
     Power: 0x1,
@@ -24,6 +18,12 @@ export class DeviceAtaFacade
     VaneHorizontal: 0x100,
     VaneVertical: 0x10,
   } as const
+
+  protected readonly temperatureLegend = [
+    'SetTemperature',
+    'RoomTemperature',
+    'OutdoorTemperature',
+  ]
 
   protected override handle(
     data: Partial<UpdateDeviceDataAta>,

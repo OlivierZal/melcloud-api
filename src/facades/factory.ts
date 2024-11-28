@@ -9,6 +9,7 @@ import {
 import { AreaFacade } from './area.ts'
 import { BuildingFacade } from './building.ts'
 import { DeviceAtaFacade } from './device-ata.ts'
+import { DeviceAtwHasZone2Facade } from './device-atw-has-zone2.ts'
 import { DeviceAtwFacade } from './device-atw.ts'
 import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
@@ -45,6 +46,9 @@ const createDeviceFacade = <T extends DeviceType>(
     return new DeviceAtaFacade(api, instance)
   }
   if (isDeviceModelAtw(instance)) {
+    if (instance.data.HasZone2) {
+      return new DeviceAtwHasZone2Facade(api, instance)
+    }
     return new DeviceAtwFacade(api, instance)
   }
   if (isDeviceModelErv(instance)) {

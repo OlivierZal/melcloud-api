@@ -17,7 +17,7 @@ export {
 export { AreaFacade } from './facades/area.ts'
 export { BuildingFacade } from './facades/building.ts'
 export { DeviceAtaFacade } from './facades/device-ata.ts'
-export { DeviceAtwFacade } from './facades/device-atw.ts'
+export { BaseDeviceAtwFacade as DeviceAtwFacade } from './facades/base-device-atw.ts'
 export { DeviceErvFacade } from './facades/device-erv.ts'
 export { FloorFacade } from './facades/floor.ts'
 export { FacadeManager } from './facades/manager.ts'
