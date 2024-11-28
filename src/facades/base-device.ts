@@ -72,15 +72,14 @@ const renderXAxis = (
       )
     }
     const duration = getDuration({ from, to })
-    if (duration <= DAYS_IN_A_WEEK) {
-      if (isTodayOrYesterday(to)) {
-        return labels.map((label) =>
-          DateTime.fromFormat(label, 'c').toFormat('ccc'),
-        )
-      }
-    } else if (duration <= DAYS_IN_A_MONTH) {
+    if (duration > DAYS_IN_A_MONTH) {
       return labels.map((label) =>
         DateTime.fromObject({ month: Number(label) }).toFormat('MMM'),
+      )
+    }
+    if (duration <= DAYS_IN_A_WEEK && isTodayOrYesterday(to)) {
+      return labels.map((label) =>
+        DateTime.fromFormat(label, 'c').toFormat('ccc'),
       )
     }
   }
