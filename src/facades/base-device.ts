@@ -34,7 +34,9 @@ import type {
   TemperatureLog,
 } from './interfaces.ts'
 
+const DAYS_IN_A_WEEK = 7
 const DEFAULT_YEAR = '1970-01-01'
+const YEAR_MONTH_DIVISOR = 100
 
 const getReportPostDataDates = ({
   from,
@@ -44,11 +46,33 @@ const getReportPostDataDates = ({
   to: to ?? now(),
 })
 
-const getReportPostDataDuration = ({
-  from,
-  to,
-}: Required<ReportQuery>): number =>
+const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(DateTime.fromISO(to).diff(DateTime.fromISO(from), 'days').days)
+
+const renderXAxis = (
+  labels: readonly string[],
+  { from, to }: Required<ReportQuery>,
+): string[] =>
+  labels.map((label) => {
+    if (!label.includes(':')) {
+      if (label.length === 'MMMMYY'.length) {
+        return DateTime.local(
+          Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
+          Number(label) % YEAR_MONTH_DIVISOR,
+        ).toFormat('MMM yyyy')
+      }
+      const today = DateTime.now()
+      const yesterday = today.minus({ days: 1 })
+      const toDate = DateTime.fromISO(to)
+      if (
+        getDuration({ from, to }) <= DAYS_IN_A_WEEK &&
+        (toDate.hasSame(today, 'day') || toDate.hasSame(yesterday, 'day'))
+      ) {
+        return DateTime.fromFormat(label, 'c').toFormat('ccc')
+      }
+    }
+    return label
+  })
 
 export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<IDeviceModelAny>
@@ -219,7 +243,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
         (_serie, index) => this.temperatureLegend.at(index) !== undefined,
       ),
       to,
-      xAxis,
+      xAxis: renderXAxis(xAxis, { from, to }),
     }
   }
 
@@ -244,9 +268,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return {
       DeviceID: this.id,
       Duration:
-        useExactRange ?
-          getReportPostDataDuration({ from: newFrom, to: newTo })
-        : undefined,
+        useExactRange ? getDuration({ from: newFrom, to: newTo }) : undefined,
       FromDate: newFrom,
       ToDate: newTo,
     }
