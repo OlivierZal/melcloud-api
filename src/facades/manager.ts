@@ -1,7 +1,6 @@
 import { createFacade } from './factory.ts'
 
 import type { DeviceType } from '../enums.ts'
-import type { IAPI } from '../main.ts'
 import type {
   IAreaModel,
   IBuildingModel,
@@ -10,6 +9,7 @@ import type {
   IFloorModel,
   IModel,
 } from '../models/interfaces.ts'
+import type { IAPI } from '../services/interfaces.ts'
 
 import type {
   IBuildingFacade,

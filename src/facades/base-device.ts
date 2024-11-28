@@ -14,8 +14,8 @@ import {
 
 import { BaseFacade } from './base.ts'
 
-import type { IAPI } from '../main.ts'
 import type { IDeviceModel, IDeviceModelAny } from '../models/interfaces.ts'
+import type { IAPI } from '../services/interfaces.ts'
 import type {
   EnergyData,
   GetDeviceData,

@@ -1,6 +1,6 @@
 import { OperationModeZone } from '../enums.ts'
 
-import { BaseDeviceAtwFacade } from './base-device-atw.ts'
+import { DeviceAtwFacade } from './device-atw.ts'
 
 import type {
   OperationModeZoneDataAtw,
@@ -10,8 +10,8 @@ import type {
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
 const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
 
-export class DeviceAtwHasZone2Facade extends BaseDeviceAtwFacade {
-  protected readonly temperatureLegend = [
+export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
+  protected override readonly temperatureLegend = [
     'SetTemperatureZone1',
     'RoomTemperatureZone1',
     'SetTemperatureZone2',
