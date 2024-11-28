@@ -1,6 +1,7 @@
 import { createFacade } from './factory.ts'
 
 import type { DeviceType } from '../enums.ts'
+import type { IAPI } from '../main.ts'
 import type {
   IAreaModel,
   IBuildingModel,
@@ -9,7 +10,6 @@ import type {
   IFloorModel,
   IModel,
 } from '../models/interfaces.ts'
-import type { API } from '../services/api.ts'
 
 import type {
   IBuildingFacade,
@@ -21,11 +21,11 @@ import type {
 } from './interfaces.ts'
 
 export class FacadeManager implements IFacadeManager {
-  readonly #api: API
+  readonly #api: IAPI
 
   readonly #facades = new Map<string, IFacade>()
 
-  public constructor(api: API) {
+  public constructor(api: IAPI) {
     this.#api = api
   }
 

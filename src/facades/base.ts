@@ -12,8 +12,7 @@ import type {
   IDeviceModelAny,
   IFloorModel,
 } from '../models/interfaces.ts'
-import type { API } from '../services/api.ts'
-import type { ErrorLog, ErrorLogQuery } from '../services/interfaces.ts'
+import type { ErrorLog, ErrorLogQuery, IAPI } from '../services/interfaces.ts'
 import type {
   DateTimeComponents,
   FailureData,
@@ -55,7 +54,7 @@ export abstract class BaseFacade<
 {
   public readonly id: number
 
-  protected readonly api: API
+  protected readonly api: IAPI
 
   protected isFrostProtectionDefined: boolean | null = null
 
@@ -71,7 +70,7 @@ export abstract class BaseFacade<
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(api: API, instance: T) {
+  public constructor(api: IAPI, instance: T) {
     this.api = api
     ;({ id: this.id } = instance)
   }

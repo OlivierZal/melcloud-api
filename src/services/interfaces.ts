@@ -85,7 +85,7 @@ export interface ErrorLogQuery {
 export interface IAPI {
   authenticate: (data?: LoginCredentials) => Promise<boolean>
   clearSync: () => void
-  errorLog: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
+  errorLog: (query: ErrorLogQuery, deviceIds: number[]) => Promise<ErrorLog>
   fetch: () => Promise<Building[]>
   updateLanguage: (language: string) => Promise<void>
   onSync?: OnSyncFunction

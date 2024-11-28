@@ -14,8 +14,8 @@ import {
 
 import { BaseFacade } from './base.ts'
 
+import type { IAPI } from '../main.ts'
 import type { IDeviceModel, IDeviceModelAny } from '../models/interfaces.ts'
-import type { API } from '../services/api.ts'
 import type {
   EnergyData,
   GetDeviceData,
@@ -68,7 +68,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   protected abstract readonly temperatureLegend: (string | undefined)[]
 
-  public constructor(api: API, instance: IDeviceModel<T>) {
+  public constructor(api: IAPI, instance: IDeviceModel<T>) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     super(api, instance as IDeviceModelAny)
     ;({ type: this.type } = instance)

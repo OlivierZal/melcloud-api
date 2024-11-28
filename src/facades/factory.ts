@@ -15,7 +15,7 @@ import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
 import type { IModel } from '../models/interfaces.ts'
-import type { API } from '../services/api.ts'
+import type { IAPI } from '../services/interfaces.ts'
 
 import type { IDeviceFacadeAny, IFacade } from './interfaces.ts'
 
@@ -39,7 +39,7 @@ const isDeviceModelErv = (
   instance instanceof DeviceModel && instance.type === DeviceType.Erv
 
 const createDeviceFacade = <T extends DeviceType>(
-  api: API,
+  api: IAPI,
   instance: DeviceModel<T>,
 ): IDeviceFacadeAny => {
   if (isDeviceModelAta(instance)) {
@@ -57,7 +57,7 @@ const createDeviceFacade = <T extends DeviceType>(
   throw new Error('Device model not supported')
 }
 
-export const createFacade = (api: API, instance: IModel): IFacade => {
+export const createFacade = (api: IAPI, instance: IModel): IFacade => {
   if (instance instanceof AreaModel) {
     return new AreaFacade(api, instance)
   }

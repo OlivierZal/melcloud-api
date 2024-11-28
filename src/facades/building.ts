@@ -3,8 +3,8 @@ import { BuildingModel } from '../models/index.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
+import type { IAPI } from '../main.ts'
 import type { IBuildingModel } from '../models/interfaces.ts'
-import type { API } from '../services/api.ts'
 import type { ZoneSettings } from '../types/common.ts'
 
 import type { IBuildingFacade } from './interfaces.ts'
@@ -23,7 +23,7 @@ export class BuildingFacade
 
   protected readonly tableName = 'Building'
 
-  public constructor(api: API, instance: IBuildingModel) {
+  public constructor(api: IAPI, instance: IBuildingModel) {
     super(api, instance)
     ;({
       data: {
