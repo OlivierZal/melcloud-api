@@ -7,6 +7,7 @@ export {
   DeviceType,
   FanSpeed,
   Horizontal,
+  LabelType,
   Language,
   OperationMode,
   OperationModeState,

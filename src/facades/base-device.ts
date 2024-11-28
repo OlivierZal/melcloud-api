@@ -4,20 +4,8 @@ import { FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices } from '../decorators/fetch-devices.ts'
 import { syncDevices } from '../decorators/sync-devices.ts'
 import { updateDevice } from '../decorators/update-devices.ts'
-import { DeviceType } from '../enums.ts'
+import { DeviceType, LabelType } from '../enums.ts'
 import { DeviceModel } from '../models/index.ts'
-import {
-  LabelType,
-  type EnergyData,
-  type GetDeviceData,
-  type ListDeviceData,
-  type OperationModeLogData,
-  type ReportData,
-  type ReportPostData,
-  type SetDeviceData,
-  type TilesData,
-  type UpdateDeviceData,
-} from '../types/common.js'
 import {
   fromListToSetAta,
   isKeyofSetDeviceDataAtaInList,
@@ -28,6 +16,17 @@ import { BaseFacade } from './base.ts'
 
 import type { IDeviceModel, IDeviceModelAny } from '../models/interfaces.ts'
 import type { IAPI } from '../services/interfaces.ts'
+import type {
+  EnergyData,
+  GetDeviceData,
+  ListDeviceData,
+  OperationModeLogData,
+  ReportData,
+  ReportPostData,
+  SetDeviceData,
+  TilesData,
+  UpdateDeviceData,
+} from '../types/common.js'
 
 import type {
   IDeviceFacade,

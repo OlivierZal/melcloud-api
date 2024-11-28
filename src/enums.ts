@@ -25,6 +25,14 @@ export enum Horizontal {
   wide = 8,
 }
 
+export enum LabelType {
+  day = 1,
+  day_of_week = 4,
+  hour = 0,
+  month = 3,
+  month_of_year = 2,
+}
+
 export enum Language {
   bg = 1,
   cs = 2,

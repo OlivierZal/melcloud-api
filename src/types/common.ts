@@ -1,6 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType, LabelType } from '../enums.ts'
 
 import type {
   EnergyDataAta,
@@ -24,14 +24,6 @@ import type {
   SetDeviceDataErv,
   UpdateDeviceDataErv,
 } from './erv.ts'
-
-export enum LabelType {
-  day = 1,
-  day_of_week = 4,
-  hour = 0,
-  month = 3,
-  month_of_year = 2,
-}
 
 export interface AreaData<T extends number | null> extends FloorData {
   readonly FloorId: T
