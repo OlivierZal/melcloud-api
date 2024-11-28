@@ -15,9 +15,9 @@ export {
   Vertical,
 } from './enums.ts'
 export { AreaFacade } from './facades/area.ts'
+export { BaseDeviceAtwFacade as DeviceAtwFacade } from './facades/base-device-atw.ts'
 export { BuildingFacade } from './facades/building.ts'
 export { DeviceAtaFacade } from './facades/device-ata.ts'
-export { BaseDeviceAtwFacade as DeviceAtwFacade } from './facades/base-device-atw.ts'
 export { DeviceErvFacade } from './facades/device-erv.ts'
 export { FloorFacade } from './facades/floor.ts'
 export { FacadeManager } from './facades/manager.ts'
