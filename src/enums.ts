@@ -29,8 +29,8 @@ export enum LabelType {
   day = 1,
   day_of_week = 4,
   hour = 0,
-  month = 3,
-  month_of_year = 2,
+  month = 2,
+  month_of_year = 3,
 }
 
 export enum Language {
