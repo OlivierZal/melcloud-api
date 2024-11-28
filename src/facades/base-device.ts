@@ -7,6 +7,18 @@ import { updateDevice } from '../decorators/update-devices.ts'
 import { DeviceType } from '../enums.ts'
 import { DeviceModel } from '../models/index.ts'
 import {
+  LabelType,
+  type EnergyData,
+  type GetDeviceData,
+  type ListDeviceData,
+  type OperationModeLogData,
+  type ReportData,
+  type ReportPostData,
+  type SetDeviceData,
+  type TilesData,
+  type UpdateDeviceData,
+} from '../types/common.js'
+import {
   fromListToSetAta,
   isKeyofSetDeviceDataAtaInList,
   now,
@@ -16,17 +28,6 @@ import { BaseFacade } from './base.ts'
 
 import type { IDeviceModel, IDeviceModelAny } from '../models/interfaces.ts'
 import type { IAPI } from '../services/interfaces.ts'
-import type {
-  EnergyData,
-  GetDeviceData,
-  ListDeviceData,
-  OperationModeLogData,
-  ReportData,
-  ReportPostData,
-  SetDeviceData,
-  TilesData,
-  UpdateDeviceData,
-} from '../types/common.ts'
 
 import type {
   IDeviceFacade,
@@ -34,8 +35,6 @@ import type {
   TemperatureLog,
 } from './interfaces.ts'
 
-const DAYS_IN_A_MONTH = 31
-const DAYS_IN_A_WEEK = 7
 const DEFAULT_YEAR = '1970-01-01'
 const YEAR_MONTH_DIVISOR = 100
 
@@ -50,40 +49,31 @@ const getReportPostDataDates = ({
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(DateTime.fromISO(to).diff(DateTime.fromISO(from), 'days').days)
 
-const isTodayOrYesterday = (to: string): boolean => {
-  const today = DateTime.now()
-  const yesterday = today.minus({ days: 1 })
-  const toDate = DateTime.fromISO(to)
-  return toDate.hasSame(today, 'day') || toDate.hasSame(yesterday, 'day')
-}
-
 const renderXAxis = (
   labels: readonly string[],
-  { from, to }: Required<ReportQuery>,
+  labelType: LabelType,
 ): readonly string[] => {
-  const [firstLabel] = labels
-  if (!firstLabel.includes(':')) {
-    if (firstLabel.length === 'MMMMYY'.length) {
+  switch (labelType) {
+    case LabelType.day_of_week:
+      return labels.map((label) =>
+        DateTime.fromFormat(label, 'c').toFormat('ccc'),
+      )
+    case LabelType.month:
+      return labels.map((label) =>
+        DateTime.fromObject({ month: Number(label) }).toFormat('MMM'),
+      )
+    case LabelType.month_of_year:
       return labels.map((label) =>
         DateTime.local(
           Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
           Number(label) % YEAR_MONTH_DIVISOR,
         ).toFormat('MMM yyyy'),
       )
-    }
-    const duration = getDuration({ from, to })
-    if (duration > DAYS_IN_A_MONTH) {
-      return labels.map((label) =>
-        DateTime.fromObject({ month: Number(label) }).toFormat('MMM'),
-      )
-    }
-    if (duration <= DAYS_IN_A_WEEK && isTodayOrYesterday(to)) {
-      return labels.map((label) =>
-        DateTime.fromFormat(label, 'c').toFormat('ccc'),
-      )
-    }
+    case LabelType.day:
+    case LabelType.hour:
+    default:
+      return labels
   }
-  return labels
 }
 
 export abstract class BaseDeviceFacade<T extends DeviceType>
@@ -241,7 +231,13 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     useExactRange = true,
   ): Promise<TemperatureLog> {
     const {
-      data: { Data: series, FromDate: from, Labels: xAxis, ToDate: to },
+      data: {
+        Data: series,
+        FromDate: from,
+        Labels: xAxis,
+        LabelType: labelType,
+        ToDate: to,
+      },
     } = await this.api.temperatures({
       postData: {
         ...this.#getReportPostData(query, useExactRange),
@@ -255,7 +251,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
         (_serie, index) => this.temperatureLegend.at(index) !== undefined,
       ),
       to,
-      xAxis: renderXAxis(xAxis, { from, to }),
+      xAxis: renderXAxis(xAxis, labelType),
     }
   }
 

@@ -25,6 +25,14 @@ import type {
   UpdateDeviceDataErv,
 } from './erv.ts'
 
+export enum LabelType {
+  day = 1,
+  day_of_week = 4,
+  hour = 0,
+  month = 3,
+  month_of_year = 2,
+}
+
 export interface AreaData<T extends number | null> extends FloorData {
   readonly FloorId: T
 }
@@ -182,6 +190,7 @@ export interface ReportData {
   readonly Data: readonly (readonly (number | null)[])[]
   readonly FromDate: string
   readonly Labels: readonly string[]
+  readonly LabelType: LabelType
   readonly Points: number
   readonly Series: number
   readonly ToDate: string
