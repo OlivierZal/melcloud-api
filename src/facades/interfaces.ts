@@ -95,10 +95,12 @@ export interface ReportQuery {
 
 export interface TemperatureLog {
   from: string
-  legend: readonly string[]
-  series: readonly (readonly (number | null)[])[]
+  labels: readonly string[]
+  series: {
+    data: (number | null)[]
+    name: string
+  }[]
   to: string
-  xAxis: readonly string[]
 }
 
 export type IDeviceFacadeAny =

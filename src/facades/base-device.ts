@@ -48,7 +48,7 @@ const getReportPostDataDates = ({
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(DateTime.fromISO(to).diff(DateTime.fromISO(from), 'days').days)
 
-const renderXAxis = (
+const formatLabels = (
   labels: readonly string[],
   labelType: LabelType,
 ): readonly string[] => {
@@ -231,9 +231,9 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   ): Promise<TemperatureLog> {
     const {
       data: {
-        Data: series,
+        Data: data,
         FromDate: from,
-        Labels: xAxis,
+        Labels: labels,
         LabelType: labelType,
         ToDate: to,
       },
@@ -245,12 +245,11 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     })
     return {
       from,
-      legend: this.temperatureLegend.filter((legend) => legend !== undefined),
-      series: series.filter(
-        (_serie, index) => this.temperatureLegend.at(index) !== undefined,
-      ),
+      labels: formatLabels(labels, labelType),
+      series: this.temperatureLegend
+        .filter((name) => name !== undefined)
+        .map((name, index) => ({ data: [...(data.at(index) ?? [])], name })),
       to,
-      xAxis: renderXAxis(xAxis, labelType),
     }
   }
 
