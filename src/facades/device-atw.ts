@@ -3,13 +3,28 @@ import { BaseDeviceFacade } from './base-device.ts'
 import type { DeviceType } from '../enums.ts'
 import type { TemperatureDataAtw, UpdateDeviceDataAtw } from '../types/atw.ts'
 
-import type { IDeviceFacade } from './interfaces.ts'
+import type {
+  IDeviceFacade,
+  ReportChartLineOptions,
+  ReportQuery,
+} from './interfaces.ts'
 
 const DEFAULT_TEMPERATURE = 0
 
 const coolFlowTemperatureRange = { max: 25, min: 5 } as const
 const heatFlowTemperatureRange = { max: 60, min: 25 } as const
 const roomTemperatureRange = { max: 30, min: 10 } as const
+
+const mergeSeries = (
+  series1: ReportChartLineOptions['series'],
+  series2: ReportChartLineOptions['series'],
+): ReportChartLineOptions['series'] => [
+  ...series1,
+  ...series2.filter(
+    ({ name }) =>
+      !series1.map(({ name: serieName }) => serieName).includes(name),
+  ),
+]
 
 export class DeviceAtwFacade
   extends BaseDeviceFacade<DeviceType.Atw>
@@ -62,6 +77,19 @@ export class DeviceAtwFacade
       ['SetTemperatureZone1', roomTemperatureRange],
       ['SetTemperatureZone2', roomTemperatureRange],
     ]
+  }
+
+  public override async temperatures(
+    query: ReportQuery = {},
+    useExactRange = true,
+  ): Promise<ReportChartLineOptions> {
+    const temperatures = await super.temperatures(query, useExactRange)
+    const { series: internalTemperaturesSeries } =
+      await this.internalTemperatures(query, useExactRange)
+    return {
+      ...temperatures,
+      series: mergeSeries(temperatures.series, internalTemperaturesSeries),
+    }
   }
 
   protected override handle(

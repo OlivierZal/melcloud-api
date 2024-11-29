@@ -185,11 +185,12 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async internalTemperatures(
     query: ReportQuery = {},
+    useExactRange = true,
   ): Promise<ReportChartLineOptions> {
     return getChartLineOptions(
       (
         await this.api.internalTemperatures({
-          postData: this.#getReportPostData(query),
+          postData: this.#getReportPostData(query, useExactRange),
         })
       ).data,
       this.internalTemperaturesLegend,
@@ -198,8 +199,9 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async operationModes(
     query: ReportQuery = {},
+    useExactRange = true,
   ): Promise<ReportChartPieOptions> {
-    const postData = this.#getReportPostData(query)
+    const postData = this.#getReportPostData(query, useExactRange)
     const { FromDate: from, ToDate: to } = postData
     return getChartPieOptions(
       (
@@ -243,7 +245,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   #getReportPostData(
     { from, to }: ReportQuery,
-    useExactRange = true,
+    useExactRange = false,
   ): ReportPostData {
     const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
