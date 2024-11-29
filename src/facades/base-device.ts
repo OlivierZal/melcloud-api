@@ -180,6 +180,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
         })
       ).data,
       this.internalTemperaturesLegend,
+      '°C',
     )
   }
 
@@ -194,6 +195,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
         })
       ).data,
       this.internalTemperaturesLegend,
+      '°C',
     )
   }
 
@@ -227,6 +229,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
         })
       ).data,
       this.temperaturesLegend,
+      '°C',
     )
   }
 

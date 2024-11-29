@@ -91,6 +91,7 @@ export interface ReportChartLineOptions extends ReportChartOptions {
     data: (number | null)[]
     name: string
   }[]
+  unit: string
 }
 
 export interface ReportChartOptions {

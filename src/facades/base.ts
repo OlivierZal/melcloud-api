@@ -206,6 +206,7 @@ export abstract class BaseFacade<
         })
       ).data,
       this.#deviceNames,
+      'dBm',
     )
   }
 

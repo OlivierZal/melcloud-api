@@ -89,11 +89,13 @@ export const getChartLineOptions = (
     ToDate: to,
   }: ReportData,
   legend: (string | undefined)[],
+  unit: string,
 ): ReportChartLineOptions => ({
   from,
   labels: formatLabels(labels, labelType),
   series: getChartLineSeries({ data, legend }),
   to,
+  unit,
 })
 
 export const getChartPieOptions = (
