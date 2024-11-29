@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 
 import { syncDevices } from '../decorators/sync-devices.ts'
 import { updateDevices } from '../decorators/update-devices.ts'
-import { now } from '../utils.ts'
+import { now, renderForChart } from '../utils.ts'
 
 import type { DeviceType } from '../enums.ts'
 import type {
@@ -21,7 +21,6 @@ import type {
   HMTimeZone,
   HolidayModeData,
   HolidayModeLocation,
-  ReportData,
   SettingsParams,
   SuccessData,
   TilesData,
@@ -31,6 +30,7 @@ import type {
   FrostProtectionQuery,
   HolidayModeQuery,
   IFacade,
+  ReportChart,
 } from './interfaces.ts'
 
 const temperatureRange = { max: 16, min: 4 } as const
@@ -192,12 +192,15 @@ export abstract class BaseFacade<
     ).data
   }
 
-  public async signal(hour = DateTime.now().hour): Promise<ReportData> {
-    return (
-      await this.api.signal({
-        postData: { devices: this.#deviceIds, hour },
-      })
-    ).data
+  public async signal(hour = DateTime.now().hour): Promise<ReportChart> {
+    return renderForChart(
+      (
+        await this.api.signal({
+          postData: { devices: this.#deviceIds, hour },
+        })
+      ).data,
+      ['WifiSignalStrength'],
+    )
   }
 
   public async tiles(select?: false): Promise<TilesData<null>>

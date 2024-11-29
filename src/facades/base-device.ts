@@ -4,12 +4,13 @@ import { FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices } from '../decorators/fetch-devices.ts'
 import { syncDevices } from '../decorators/sync-devices.ts'
 import { updateDevice } from '../decorators/update-devices.ts'
-import { DeviceType, LabelType } from '../enums.ts'
+import { DeviceType } from '../enums.ts'
 import { DeviceModel } from '../models/index.ts'
 import {
   fromListToSetAta,
   isKeyofSetDeviceDataAtaInList,
   now,
+  renderForChart,
 } from '../utils.ts'
 
 import { BaseFacade } from './base.ts'
@@ -21,21 +22,15 @@ import type {
   GetDeviceData,
   ListDeviceData,
   OperationModeLogData,
-  ReportData,
   ReportPostData,
   SetDeviceData,
   TilesData,
   UpdateDeviceData,
 } from '../types/common.js'
 
-import type {
-  IDeviceFacade,
-  ReportQuery,
-  TemperatureLog,
-} from './interfaces.ts'
+import type { IDeviceFacade, ReportChart, ReportQuery } from './interfaces.ts'
 
 const DEFAULT_YEAR = '1970-01-01'
-const YEAR_MONTH_DIVISOR = 100
 
 const getReportPostDataDates = ({
   from,
@@ -47,33 +42,6 @@ const getReportPostDataDates = ({
 
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(DateTime.fromISO(to).diff(DateTime.fromISO(from), 'days').days)
-
-const formatLabels = (
-  labels: readonly string[],
-  labelType: LabelType,
-): readonly string[] => {
-  switch (labelType) {
-    case LabelType.day_of_week:
-      return labels.map((label) =>
-        DateTime.fromFormat(label, 'c').toFormat('ccc'),
-      )
-    case LabelType.month:
-      return labels.map((label) =>
-        DateTime.fromObject({ month: Number(label) }).toFormat('MMM'),
-      )
-    case LabelType.month_of_year:
-      return labels.map((label) =>
-        DateTime.local(
-          Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
-          Number(label) % YEAR_MONTH_DIVISOR,
-        ).toFormat('MMM yyyy'),
-      )
-    case LabelType.day:
-    case LabelType.hour:
-    default:
-      return labels
-  }
-}
 
 export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<IDeviceModelAny>
@@ -197,22 +165,28 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async hourlyTemperature(
     hour = DateTime.now().hour,
-  ): Promise<ReportData> {
-    return (
-      await this.api.hourlyTemperature({
-        postData: { device: this.id, hour },
-      })
-    ).data
+  ): Promise<ReportChart> {
+    return renderForChart(
+      (
+        await this.api.hourlyTemperature({
+          postData: { device: this.id, hour },
+        })
+      ).data,
+      [undefined],
+    )
   }
 
   public async internalTemperatures(
     query: ReportQuery = {},
-  ): Promise<ReportData> {
-    return (
-      await this.api.internalTemperatures({
-        postData: this.#getReportPostData(query),
-      })
-    ).data
+  ): Promise<ReportChart> {
+    return renderForChart(
+      (
+        await this.api.internalTemperatures({
+          postData: this.#getReportPostData(query),
+        })
+      ).data,
+      [undefined],
+    )
   }
 
   public async operationModes(
@@ -228,29 +202,18 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public async temperatures(
     query: ReportQuery = {},
     useExactRange = true,
-  ): Promise<TemperatureLog> {
-    const {
-      data: {
-        Data: data,
-        FromDate: from,
-        Labels: labels,
-        LabelType: labelType,
-        ToDate: to,
-      },
-    } = await this.api.temperatures({
-      postData: {
-        ...this.#getReportPostData(query, useExactRange),
-        Location: this.instance.building?.location,
-      },
-    })
-    return {
-      from,
-      labels: formatLabels(labels, labelType),
-      series: this.temperatureLegend
-        .filter((name) => name !== undefined)
-        .map((name, index) => ({ data: [...(data.at(index) ?? [])], name })),
-      to,
-    }
+  ): Promise<ReportChart> {
+    return renderForChart(
+      (
+        await this.api.temperatures({
+          postData: {
+            ...this.#getReportPostData(query, useExactRange),
+            Location: this.instance.building?.location,
+          },
+        })
+      ).data,
+      this.temperatureLegend,
+    )
   }
 
   protected handle(

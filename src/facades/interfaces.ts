@@ -18,7 +18,6 @@ import type {
   HolidayModeData,
   ListDeviceData,
   OperationModeLogData,
-  ReportData,
   SetDeviceData,
   SuccessData,
   TilesData,
@@ -50,15 +49,15 @@ export interface IDeviceFacade<T extends DeviceType>
   flags: Record<keyof UpdateDeviceData<T>, number>
   operationModes: (query: ReportQuery) => Promise<OperationModeLogData>
   setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
-  temperatures: (query: ReportQuery) => Promise<TemperatureLog>
+  temperatures: (query: ReportQuery) => Promise<ReportChart>
   tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
   values: () => Promise<GetDeviceData<T>>
   // DeviceType.Ata | DeviceType.Atw
   energy: (query: ReportQuery) => Promise<EnergyData<T>>
   // DeviceType.Atw
-  hourlyTemperature: (hour?: HourNumbers) => Promise<ReportData>
-  internalTemperatures: (query: ReportQuery) => Promise<ReportData>
+  hourlyTemperature: (hour?: HourNumbers) => Promise<ReportChart>
+  internalTemperatures: (query: ReportQuery) => Promise<ReportChart>
 }
 
 export interface IFacade extends IModel {
@@ -74,7 +73,7 @@ export interface IFacade extends IModel {
     query: HolidayModeQuery,
   ) => Promise<FailureData | SuccessData>
   setPower: (value?: boolean) => Promise<boolean>
-  signal: (hour?: HourNumbers) => Promise<ReportData>
+  signal: (hour?: HourNumbers) => Promise<ReportChart>
   tiles: ((select?: false) => Promise<TilesData<null>>) &
     (<U extends DeviceType>(select: IDeviceModel<U>) => Promise<TilesData<U>>)
 }
@@ -88,12 +87,7 @@ export interface ISuperDeviceFacade extends IFacade {
   setGroup: (state: GroupState) => Promise<FailureData | SuccessData>
 }
 
-export interface ReportQuery {
-  from?: string
-  to?: string
-}
-
-export interface TemperatureLog {
+export interface ReportChart {
   from: string
   labels: readonly string[]
   series: {
@@ -101,6 +95,11 @@ export interface TemperatureLog {
     name: string
   }[]
   to: string
+}
+
+export interface ReportQuery {
+  from?: string
+  to?: string
 }
 
 export type IDeviceFacadeAny =

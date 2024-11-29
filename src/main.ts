@@ -32,8 +32,8 @@ export type {
   IFacade,
   IFacadeManager,
   ISuperDeviceFacade,
+  ReportChart,
   ReportQuery,
-  TemperatureLog,
 } from './facades/interfaces.ts'
 export type {
   IAreaModel,
