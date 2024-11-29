@@ -49,15 +49,15 @@ export interface IDeviceFacade<T extends DeviceType>
   flags: Record<keyof UpdateDeviceData<T>, number>
   operationModes: (query: ReportQuery) => Promise<OperationModeLogData>
   setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
-  temperatures: (query: ReportQuery) => Promise<ReportChart>
+  temperatures: (query: ReportQuery) => Promise<ReportChartOptions>
   tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
   values: () => Promise<GetDeviceData<T>>
   // DeviceType.Ata | DeviceType.Atw
   energy: (query: ReportQuery) => Promise<EnergyData<T>>
   // DeviceType.Atw
-  hourlyTemperature: (hour?: HourNumbers) => Promise<ReportChart>
-  internalTemperatures: (query: ReportQuery) => Promise<ReportChart>
+  hourlyTemperature: (hour?: HourNumbers) => Promise<ReportChartOptions>
+  internalTemperatures: (query: ReportQuery) => Promise<ReportChartOptions>
 }
 
 export interface IFacade extends IModel {
@@ -73,7 +73,7 @@ export interface IFacade extends IModel {
     query: HolidayModeQuery,
   ) => Promise<FailureData | SuccessData>
   setPower: (value?: boolean) => Promise<boolean>
-  signal: (hour?: HourNumbers) => Promise<ReportChart>
+  signal: (hour?: HourNumbers) => Promise<ReportChartOptions>
   tiles: ((select?: false) => Promise<TilesData<null>>) &
     (<U extends DeviceType>(select: IDeviceModel<U>) => Promise<TilesData<U>>)
 }
@@ -87,7 +87,7 @@ export interface ISuperDeviceFacade extends IFacade {
   setGroup: (state: GroupState) => Promise<FailureData | SuccessData>
 }
 
-export interface ReportChart {
+export interface ReportChartOptions {
   from: string
   labels: readonly string[]
   series: {

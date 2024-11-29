@@ -8,9 +8,9 @@ import { DeviceType } from '../enums.ts'
 import { DeviceModel } from '../models/index.ts'
 import {
   fromListToSetAta,
+  getChartOptions,
   isKeyofSetDeviceDataAtaInList,
   now,
-  renderForChart,
 } from '../utils.ts'
 
 import { BaseFacade } from './base.ts'
@@ -28,7 +28,11 @@ import type {
   UpdateDeviceData,
 } from '../types/common.js'
 
-import type { IDeviceFacade, ReportChart, ReportQuery } from './interfaces.ts'
+import type {
+  IDeviceFacade,
+  ReportChartOptions,
+  ReportQuery,
+} from './interfaces.ts'
 
 const DEFAULT_YEAR = '1970-01-01'
 
@@ -165,8 +169,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async hourlyTemperature(
     hour = DateTime.now().hour,
-  ): Promise<ReportChart> {
-    return renderForChart(
+  ): Promise<ReportChartOptions> {
+    return getChartOptions(
       (
         await this.api.hourlyTemperature({
           postData: { device: this.id, hour },
@@ -178,8 +182,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async internalTemperatures(
     query: ReportQuery = {},
-  ): Promise<ReportChart> {
-    return renderForChart(
+  ): Promise<ReportChartOptions> {
+    return getChartOptions(
       (
         await this.api.internalTemperatures({
           postData: this.#getReportPostData(query),
@@ -202,8 +206,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public async temperatures(
     query: ReportQuery = {},
     useExactRange = true,
-  ): Promise<ReportChart> {
-    return renderForChart(
+  ): Promise<ReportChartOptions> {
+    return getChartOptions(
       (
         await this.api.temperatures({
           postData: {

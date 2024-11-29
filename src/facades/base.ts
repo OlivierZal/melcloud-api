@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 
 import { syncDevices } from '../decorators/sync-devices.ts'
 import { updateDevices } from '../decorators/update-devices.ts'
-import { now, renderForChart } from '../utils.ts'
+import { getChartOptions, now } from '../utils.ts'
 
 import type { DeviceType } from '../enums.ts'
 import type {
@@ -30,7 +30,7 @@ import type {
   FrostProtectionQuery,
   HolidayModeQuery,
   IFacade,
-  ReportChart,
+  ReportChartOptions,
 } from './interfaces.ts'
 
 const temperatureRange = { max: 16, min: 4 } as const
@@ -192,8 +192,8 @@ export abstract class BaseFacade<
     ).data
   }
 
-  public async signal(hour = DateTime.now().hour): Promise<ReportChart> {
-    return renderForChart(
+  public async signal(hour = DateTime.now().hour): Promise<ReportChartOptions> {
+    return getChartOptions(
       (
         await this.api.signal({
           postData: { devices: this.#deviceIds, hour },

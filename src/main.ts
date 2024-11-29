@@ -32,7 +32,7 @@ export type {
   IFacade,
   IFacadeManager,
   ISuperDeviceFacade,
-  ReportChart,
+  ReportChartOptions,
   ReportQuery,
 } from './facades/interfaces.ts'
 export type {

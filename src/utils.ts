@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 
 import { LabelType } from './enums.ts'
 
-import type { ReportChart } from './facades/interfaces.ts'
+import type { ReportChartOptions } from './facades/interfaces.ts'
 import type {
   KeyofSetDeviceDataAtaNotInList,
   SetDeviceDataAtaInList,
@@ -65,7 +65,7 @@ const formatLabels = (
   }
 }
 
-export const renderForChart = (
+export const getChartOptions = (
   {
     Data: data,
     FromDate: from,
@@ -74,7 +74,7 @@ export const renderForChart = (
     ToDate: to,
   }: ReportData,
   legend: (string | undefined)[],
-): ReportChart => ({
+): ReportChartOptions => ({
   from,
   labels: formatLabels(labels, labelType),
   series: legend
