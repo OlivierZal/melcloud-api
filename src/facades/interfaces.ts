@@ -17,7 +17,6 @@ import type {
   GetDeviceData,
   HolidayModeData,
   ListDeviceData,
-  OperationModeLogData,
   SetDeviceData,
   SuccessData,
   TilesData,
@@ -47,17 +46,17 @@ export interface IDeviceFacade<T extends DeviceType>
     IFacade {
   fetch: () => Promise<ListDeviceData<T>>
   flags: Record<keyof UpdateDeviceData<T>, number>
-  operationModes: (query: ReportQuery) => Promise<OperationModeLogData>
+  operationModes: (query: ReportQuery) => Promise<ReportChartPieOptions>
   setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
-  temperatures: (query: ReportQuery) => Promise<ReportChartOptions>
+  temperatures: (query: ReportQuery) => Promise<ReportChartLineOptions>
   tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
   values: () => Promise<GetDeviceData<T>>
   // DeviceType.Ata | DeviceType.Atw
   energy: (query: ReportQuery) => Promise<EnergyData<T>>
   // DeviceType.Atw
-  hourlyTemperature: (hour?: HourNumbers) => Promise<ReportChartOptions>
-  internalTemperatures: (query: ReportQuery) => Promise<ReportChartOptions>
+  hourlyTemperature: (hour?: HourNumbers) => Promise<ReportChartLineOptions>
+  internalTemperatures: (query: ReportQuery) => Promise<ReportChartLineOptions>
 }
 
 export interface IFacade extends IModel {
@@ -73,7 +72,7 @@ export interface IFacade extends IModel {
     query: HolidayModeQuery,
   ) => Promise<FailureData | SuccessData>
   setPower: (value?: boolean) => Promise<boolean>
-  signal: (hour?: HourNumbers) => Promise<ReportChartOptions>
+  signal: (hour?: HourNumbers) => Promise<ReportChartLineOptions>
   tiles: ((select?: false) => Promise<TilesData<null>>) &
     (<U extends DeviceType>(select: IDeviceModel<U>) => Promise<TilesData<U>>)
 }
@@ -87,14 +86,24 @@ export interface ISuperDeviceFacade extends IFacade {
   setGroup: (state: GroupState) => Promise<FailureData | SuccessData>
 }
 
-export interface ReportChartOptions {
-  from: string
-  labels: readonly string[]
+export interface ReportChartLineOptions extends ReportChartOptions {
   series: {
     data: (number | null)[]
     name: string
   }[]
+  type: 'line'
+}
+
+export interface ReportChartOptions {
+  from: string
+  labels: readonly string[]
   to: string
+  type: 'line' | 'pie'
+}
+
+export interface ReportChartPieOptions extends ReportChartOptions {
+  series: number[]
+  type: 'pie'
 }
 
 export interface ReportQuery {

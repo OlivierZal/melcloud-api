@@ -8,7 +8,8 @@ import { DeviceType } from '../enums.ts'
 import { DeviceModel } from '../models/index.ts'
 import {
   fromListToSetAta,
-  getChartOptions,
+  getChartLineOptions,
+  getChartPieOptions,
   isKeyofSetDeviceDataAtaInList,
   now,
 } from '../utils.ts'
@@ -21,7 +22,6 @@ import type {
   EnergyData,
   GetDeviceData,
   ListDeviceData,
-  OperationModeLogData,
   ReportPostData,
   SetDeviceData,
   TilesData,
@@ -30,7 +30,8 @@ import type {
 
 import type {
   IDeviceFacade,
-  ReportChartOptions,
+  ReportChartLineOptions,
+  ReportChartPieOptions,
   ReportQuery,
 } from './interfaces.ts'
 
@@ -169,8 +170,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async hourlyTemperature(
     hour = DateTime.now().hour,
-  ): Promise<ReportChartOptions> {
-    return getChartOptions(
+  ): Promise<ReportChartLineOptions> {
+    return getChartLineOptions(
       (
         await this.api.hourlyTemperature({
           postData: { device: this.id, hour },
@@ -182,8 +183,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async internalTemperatures(
     query: ReportQuery = {},
-  ): Promise<ReportChartOptions> {
-    return getChartOptions(
+  ): Promise<ReportChartLineOptions> {
+    return getChartLineOptions(
       (
         await this.api.internalTemperatures({
           postData: this.#getReportPostData(query),
@@ -195,19 +196,24 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async operationModes(
     query: ReportQuery = {},
-  ): Promise<OperationModeLogData> {
-    return (
-      await this.api.operationModes({
-        postData: this.#getReportPostData(query),
-      })
-    ).data
+  ): Promise<ReportChartPieOptions> {
+    const postData = this.#getReportPostData(query)
+    const { FromDate: from, ToDate: to } = postData
+    return getChartPieOptions(
+      (
+        await this.api.operationModes({
+          postData,
+        })
+      ).data,
+      { from, to },
+    )
   }
 
   public async temperatures(
     query: ReportQuery = {},
     useExactRange = true,
-  ): Promise<ReportChartOptions> {
-    return getChartOptions(
+  ): Promise<ReportChartLineOptions> {
+    return getChartLineOptions(
       (
         await this.api.temperatures({
           postData: {

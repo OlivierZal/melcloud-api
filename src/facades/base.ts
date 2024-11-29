@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 
 import { syncDevices } from '../decorators/sync-devices.ts'
 import { updateDevices } from '../decorators/update-devices.ts'
-import { getChartOptions, now } from '../utils.ts'
+import { getChartLineOptions, now } from '../utils.ts'
 
 import type { DeviceType } from '../enums.ts'
 import type {
@@ -30,7 +30,7 @@ import type {
   FrostProtectionQuery,
   HolidayModeQuery,
   IFacade,
-  ReportChartOptions,
+  ReportChartLineOptions,
 } from './interfaces.ts'
 
 const temperatureRange = { max: 16, min: 4 } as const
@@ -94,6 +94,10 @@ export abstract class BaseFacade<
 
   get #deviceIds(): number[] {
     return this.devices.map(({ id }) => id)
+  }
+
+  get #deviceNames(): string[] {
+    return this.devices.map(({ name }) => name)
   }
 
   public abstract get devices(): IDeviceModelAny[]
@@ -192,14 +196,16 @@ export abstract class BaseFacade<
     ).data
   }
 
-  public async signal(hour = DateTime.now().hour): Promise<ReportChartOptions> {
-    return getChartOptions(
+  public async signal(
+    hour = DateTime.now().hour,
+  ): Promise<ReportChartLineOptions> {
+    return getChartLineOptions(
       (
         await this.api.signal({
           postData: { devices: this.#deviceIds, hour },
         })
       ).data,
-      ['WifiSignalStrength'],
+      this.#deviceNames,
     )
   }
 

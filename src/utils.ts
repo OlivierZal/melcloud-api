@@ -2,12 +2,16 @@ import { DateTime } from 'luxon'
 
 import { LabelType } from './enums.ts'
 
-import type { ReportChartOptions } from './facades/interfaces.ts'
+import type {
+  ReportChartLineOptions,
+  ReportChartPieOptions,
+  ReportQuery,
+} from './facades/interfaces.ts'
 import type {
   KeyofSetDeviceDataAtaNotInList,
   SetDeviceDataAtaInList,
 } from './types/ata.ts'
-import type { ReportData } from './types/common.ts'
+import type { OperationModeLogData, ReportData } from './types/common.ts'
 
 const YEAR_MONTH_DIVISOR = 100
 
@@ -65,7 +69,18 @@ const formatLabels = (
   }
 }
 
-export const getChartOptions = (
+const getChartLineSeries = ({
+  data,
+  legend,
+}: {
+  data: readonly (readonly (number | null)[])[]
+  legend: (string | undefined)[]
+}): { data: (number | null)[]; name: string }[] =>
+  legend
+    .filter((name) => name !== undefined)
+    .map((name, index) => ({ data: [...(data.at(index) ?? [])], name }))
+
+export const getChartLineOptions = (
   {
     Data: data,
     FromDate: from,
@@ -74,11 +89,21 @@ export const getChartOptions = (
     ToDate: to,
   }: ReportData,
   legend: (string | undefined)[],
-): ReportChartOptions => ({
+): ReportChartLineOptions => ({
   from,
   labels: formatLabels(labels, labelType),
-  series: legend
-    .filter((name) => name !== undefined)
-    .map((name, index) => ({ data: [...(data.at(index) ?? [])], name })),
+  series: getChartLineSeries({ data, legend }),
   to,
+  type: 'line',
+})
+
+export const getChartPieOptions = (
+  data: OperationModeLogData,
+  { from, to }: Required<ReportQuery>,
+): ReportChartPieOptions => ({
+  from,
+  labels: data.map(({ Key: label }) => label),
+  series: data.map(({ Value: value }) => value),
+  to,
+  type: 'pie',
 })
