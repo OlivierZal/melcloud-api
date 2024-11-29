@@ -58,13 +58,15 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   protected readonly holidayModeLocation = 'Devices'
 
+  protected readonly internalTemperaturesLegend: (string | undefined)[] = []
+
   protected readonly model = DeviceModel<T>
 
   protected readonly tableName = 'DeviceLocation'
 
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
-  protected abstract readonly temperatureLegend: (string | undefined)[]
+  protected abstract readonly temperaturesLegend: (string | undefined)[]
 
   public constructor(api: IAPI, instance: IDeviceModel<T>) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
@@ -177,7 +179,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
           postData: { device: this.id, hour },
         })
       ).data,
-      [undefined],
+      this.internalTemperaturesLegend,
     )
   }
 
@@ -190,7 +192,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
           postData: this.#getReportPostData(query),
         })
       ).data,
-      [undefined],
+      this.internalTemperaturesLegend,
     )
   }
 
@@ -222,7 +224,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
           },
         })
       ).data,
-      this.temperatureLegend,
+      this.temperaturesLegend,
     )
   }
 

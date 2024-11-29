@@ -14,7 +14,7 @@ export class DeviceErvFacade
     VentilationMode: 0x4,
   } as const
 
-  protected readonly temperatureLegend = [
+  protected readonly temperaturesLegend = [
     undefined,
     'RoomTemperature',
     undefined,

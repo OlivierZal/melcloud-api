@@ -15,6 +15,15 @@ export class DeviceAtwFacade
   extends BaseDeviceFacade<DeviceType.Atw>
   implements IDeviceFacade<DeviceType.Atw>
 {
+  protected override readonly internalTemperaturesLegend = [
+    'FlowTemperature',
+    undefined,
+    'ReturnTemperature',
+    undefined,
+    'SetTankWaterTemperature',
+    'TankWaterTemperature',
+  ]
+
   public readonly flags = {
     ForcedHotWaterMode: 0x10000,
     OperationModeZone1: 0x8,
@@ -29,12 +38,12 @@ export class DeviceAtwFacade
     SetTemperatureZone2: 0x800000200,
   } as const
 
-  protected readonly temperatureLegend = [
+  protected readonly temperaturesLegend = [
     'SetTemperatureZone1',
     'RoomTemperatureZone1',
     'OutdoorTemperature',
-    'TankWaterTemperature',
     'SetTankWaterTemperature',
+    'TankWaterTemperature',
   ]
 
   get #targetTemperatureRanges(): [

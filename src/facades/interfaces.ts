@@ -91,19 +91,16 @@ export interface ReportChartLineOptions extends ReportChartOptions {
     data: (number | null)[]
     name: string
   }[]
-  type: 'line'
 }
 
 export interface ReportChartOptions {
   from: string
   labels: readonly string[]
   to: string
-  type: 'line' | 'pie'
 }
 
 export interface ReportChartPieOptions extends ReportChartOptions {
   series: number[]
-  type: 'pie'
 }
 
 export interface ReportQuery {

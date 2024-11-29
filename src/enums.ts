@@ -26,11 +26,11 @@ export enum Horizontal {
 }
 
 export enum LabelType {
-  day = 1,
   day_of_week = 4,
-  hour = 0,
   month = 2,
   month_of_year = 3,
+  raw = 1,
+  time = 0,
 }
 
 export enum Language {

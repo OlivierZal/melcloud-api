@@ -19,7 +19,7 @@ export class DeviceAtaFacade
     VaneVertical: 0x10,
   } as const
 
-  protected readonly temperatureLegend = [
+  protected readonly temperaturesLegend = [
     'SetTemperature',
     'RoomTemperature',
     'OutdoorTemperature',

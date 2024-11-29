@@ -62,8 +62,8 @@ const formatLabels = (
           Number(label) % YEAR_MONTH_DIVISOR,
         ).toFormat('MMM yyyy'),
       )
-    case LabelType.day:
-    case LabelType.hour:
+    case LabelType.raw:
+    case LabelType.time:
     default:
       return labels
   }
@@ -94,7 +94,6 @@ export const getChartLineOptions = (
   labels: formatLabels(labels, labelType),
   series: getChartLineSeries({ data, legend }),
   to,
-  type: 'line',
 })
 
 export const getChartPieOptions = (
@@ -105,5 +104,4 @@ export const getChartPieOptions = (
   labels: data.map(({ Key: label }) => label),
   series: data.map(({ Value: value }) => value),
   to,
-  type: 'pie',
 })
