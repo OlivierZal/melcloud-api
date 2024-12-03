@@ -96,7 +96,7 @@ export interface ReportChartLineOptions extends ReportChartOptions {
 
 export interface ReportChartOptions {
   from: string
-  labels: readonly string[]
+  labels: string[]
   to: string
 }
 

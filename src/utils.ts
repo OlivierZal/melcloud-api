@@ -45,7 +45,7 @@ export const isKeyofSetDeviceDataAtaInList = (
 const formatLabels = (
   labels: readonly string[],
   labelType: LabelType,
-): readonly string[] => {
+): string[] => {
   switch (labelType) {
     case LabelType.day_of_week:
       return labels.map((label) =>
@@ -65,7 +65,7 @@ const formatLabels = (
     case LabelType.raw:
     case LabelType.time:
     default:
-      return labels
+      return [...labels]
   }
 }
 
