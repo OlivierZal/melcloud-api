@@ -211,12 +211,12 @@ export abstract class BaseFacade<
   }
 
   public async tiles(select?: false): Promise<TilesData<null>>
-  public async tiles<T extends DeviceType>(
-    select: IDeviceModel<T>,
-  ): Promise<TilesData<T>>
-  public async tiles<T extends DeviceType>(
-    select: false | IDeviceModel<T> = false,
-  ): Promise<TilesData<T | null>> {
+  public async tiles<U extends DeviceType>(
+    select: IDeviceModel<U>,
+  ): Promise<TilesData<U>>
+  public async tiles<U extends DeviceType>(
+    select: false | IDeviceModel<U> = false,
+  ): Promise<TilesData<U | null>> {
     const postData = { DeviceIDs: this.#deviceIds }
     return select === false || !this.#deviceIds.includes(select.id) ?
         (await this.api.tiles({ postData })).data
@@ -228,7 +228,7 @@ export abstract class BaseFacade<
               SelectedDevice: select.id,
             },
           })
-        ).data as TilesData<T>)
+        ).data as TilesData<U>)
   }
 
   async #getBaseFrostProtection(
