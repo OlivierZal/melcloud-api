@@ -62,7 +62,7 @@ export interface IDeviceFacade<T extends DeviceType>
 export interface IFacade extends IModel {
   devices: IDeviceModelAny[]
   tiles: ((select?: false) => Promise<TilesData<null>>) &
-    (<U extends DeviceType>(select: IDeviceModel<U>) => Promise<TilesData<U>>)
+    (<T extends DeviceType>(select: IDeviceModel<T>) => Promise<TilesData<T>>)
   errors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
   frostProtection: () => Promise<FrostProtectionData>
   holidayMode: () => Promise<HolidayModeData>
