@@ -41,35 +41,6 @@ const importGroups = {
   ],
 }
 
-const typeGroups = {
-  groups: [
-    'import',
-    'keyword',
-    'literal',
-    'named',
-    'function',
-    'object',
-    'tuple',
-    'union',
-    'intersection',
-    'conditional',
-    'operator',
-    'unknown',
-    'nullish',
-  ],
-}
-
-const objectLikeGroups = {
-  groups: [
-    'required-index-signature',
-    'optional-index-signature',
-    'required-property',
-    'optional-property',
-    'required-method',
-    'optional-method',
-  ],
-}
-
 const moduleGroups = {
   groups: [
     'declare-enum',
@@ -92,6 +63,35 @@ const moduleGroups = {
       'export-default-class',
       'export-default-function',
     ],
+  ],
+}
+
+const typeGroups = {
+  groups: [
+    'import',
+    'keyword',
+    'literal',
+    'named',
+    'function',
+    'object',
+    'tuple',
+    'union',
+    'intersection',
+    'conditional',
+    'operator',
+    'unknown',
+    'nullish',
+  ],
+}
+
+const typeLikeGroups = {
+  groups: [
+    'required-index-signature',
+    'optional-index-signature',
+    'required-property',
+    'optional-property',
+    'required-method',
+    'optional-method',
   ],
 }
 
@@ -301,13 +301,13 @@ const config = [
         'perfectionist/sort-exports': ['error', valuesFirst],
         'perfectionist/sort-heritage-clauses': 'error',
         'perfectionist/sort-imports': ['error', importGroups],
-        'perfectionist/sort-interfaces': ['error', objectLikeGroups],
+        'perfectionist/sort-interfaces': ['error', typeLikeGroups],
         'perfectionist/sort-intersection-types': ['error', typeGroups],
         'perfectionist/sort-maps': 'error',
         'perfectionist/sort-modules': ['error', moduleGroups],
         'perfectionist/sort-named-exports': ['error', valuesFirst],
         'perfectionist/sort-named-imports': ['error', valuesFirst],
-        'perfectionist/sort-object-types': ['error', objectLikeGroups],
+        'perfectionist/sort-object-types': ['error', typeLikeGroups],
         'perfectionist/sort-objects': 'error',
         'perfectionist/sort-sets': 'error',
         'perfectionist/sort-switch-case': 'error',
