@@ -42,8 +42,8 @@ export interface IDeviceModel<T extends DeviceType>
   extends IBaseDeviceModel<T>,
     ISubFloorModel {
   areaId: number | null
-  update: (data: Partial<ListDeviceData<T>>) => void
   area?: IAreaModel | null
+  update: (data: Partial<ListDeviceData<T>>) => void
 }
 
 export interface IFloorModel extends ISubBuildingModel, ISuperAreaModel {}

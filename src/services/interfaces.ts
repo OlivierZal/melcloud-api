@@ -83,13 +83,23 @@ export interface ErrorLogQuery {
 }
 
 export interface IAPI {
+  onSync?: OnSyncFunction
   authenticate: (data?: LoginCredentials) => Promise<boolean>
   clearSync: () => void
   errorLog: (query: ErrorLogQuery, deviceIds: number[]) => Promise<ErrorLog>
   fetch: () => Promise<Building[]>
   updateLanguage: (language: string) => Promise<void>
-  onSync?: OnSyncFunction
   // DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
+  tiles: (({
+    postData,
+  }: {
+    postData: TilesPostData<null>
+  }) => Promise<{ data: TilesData<null> }>) &
+    (<T extends DeviceType>({
+      postData,
+    }: {
+      postData: TilesPostData<T>
+    }) => Promise<{ data: TilesData<T> }>)
   errors: ({
     postData,
   }: {
@@ -153,16 +163,6 @@ export interface IAPI {
   }: {
     postData: TemperatureLogPostData
   }) => Promise<{ data: ReportData }>
-  tiles: (({
-    postData,
-  }: {
-    postData: TilesPostData<null>
-  }) => Promise<{ data: TilesData<null> }>) &
-    (<T extends DeviceType>({
-      postData,
-    }: {
-      postData: TilesPostData<T>
-    }) => Promise<{ data: TilesData<T> }>)
   values: ({
     params,
   }: {
