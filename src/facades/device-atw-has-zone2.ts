@@ -22,6 +22,7 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     'ReturnTemperatureZone2',
     'SetTankWaterTemperature',
     'TankWaterTemperature',
+    'MixingTankWaterTemperature',
   ]
 
   protected override readonly temperaturesLegend = [

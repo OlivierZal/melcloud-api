@@ -37,6 +37,7 @@ export class DeviceAtwFacade
     undefined,
     'SetTankWaterTemperature',
     'TankWaterTemperature',
+    'MixingTankWaterTemperature',
   ]
 
   public readonly flags = {
