@@ -170,12 +170,12 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     ).data as EnergyData<T>
   }
 
-  public async hourlyTemperature(
+  public async hourlyTemperatures(
     hour = DateTime.now().hour,
   ): Promise<ReportChartLineOptions> {
     return getChartLineOptions(
       (
-        await this.api.hourlyTemperature({
+        await this.api.hourlyTemperatures({
           postData: { device: this.id, hour },
         })
       ).data,

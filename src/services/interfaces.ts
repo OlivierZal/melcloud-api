@@ -186,7 +186,7 @@ export interface IAPI {
     postData: SetGroupPostData
   }) => Promise<{ data: FailureData | SuccessData }>
   // DeviceType.Atw
-  hourlyTemperature: ({
+  hourlyTemperatures: ({
     postData,
   }: {
     postData: { device: number; hour: HourNumbers }

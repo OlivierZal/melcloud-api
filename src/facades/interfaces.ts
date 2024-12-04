@@ -55,7 +55,7 @@ export interface IDeviceFacade<T extends DeviceType>
   // DeviceType.Ata | DeviceType.Atw
   energy: (query: ReportQuery) => Promise<EnergyData<T>>
   // DeviceType.Atw
-  hourlyTemperature: (hour?: HourNumbers) => Promise<ReportChartLineOptions>
+  hourlyTemperatures: (hour?: HourNumbers) => Promise<ReportChartLineOptions>
   internalTemperatures: (query: ReportQuery) => Promise<ReportChartLineOptions>
 }
 

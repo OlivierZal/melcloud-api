@@ -327,7 +327,7 @@ export class API implements IAPI {
     })
   }
 
-  public async hourlyTemperature({
+  public async hourlyTemperatures({
     postData,
   }: {
     postData: { device: number; hour: HourNumbers }
