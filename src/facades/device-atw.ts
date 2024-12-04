@@ -32,9 +32,9 @@ export class DeviceAtwFacade
 {
   protected override readonly internalTemperaturesLegend = [
     'FlowTemperature',
-    undefined,
+    'FlowTemperatureBoiler',
     'ReturnTemperature',
-    undefined,
+    'ReturnTemperatureBoiler',
     'SetTankWaterTemperature',
     'TankWaterTemperature',
     'MixingTankWaterTemperature',

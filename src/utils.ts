@@ -76,9 +76,12 @@ const getChartLineSeries = ({
   data: readonly (readonly (number | null)[])[]
   legend: (string | undefined)[]
 }): { data: (number | null)[]; name: string }[] =>
-  legend
-    .filter((name) => name !== undefined)
-    .map((name, index) => ({ data: [...(data.at(index) ?? [])], name }))
+  data
+    .map((values, index) => ({ data: values, name: legend.at(index) }))
+    .filter(
+      (item): item is { data: (number | null)[]; name: string } =>
+        item.name !== undefined,
+    )
 
 export const getChartLineOptions = (
   {

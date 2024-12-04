@@ -13,11 +13,11 @@ const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
 export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
   protected override readonly internalTemperaturesLegend = [
     'FlowTemperature',
-    undefined,
+    'FlowTemperatureBoiler',
     'FlowTemperatureZone1',
     'FlowTemperatureZone2',
     'ReturnTemperature',
-    undefined,
+    'ReturnTemperatureBoiler',
     'ReturnTemperatureZone1',
     'ReturnTemperatureZone2',
     'SetTankWaterTemperature',
