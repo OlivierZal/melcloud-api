@@ -2,7 +2,16 @@ import { BaseDeviceFacade } from './base-device.ts'
 
 import type { DeviceType } from '../enums.ts'
 
-import type { IDeviceFacade } from './interfaces.ts'
+import type {
+  IDeviceFacade,
+  ReportChartPieOptions,
+  ReportQuery,
+} from './interfaces.ts'
+
+const filterVentilationModes = (label?: string): boolean =>
+  label !== undefined &&
+  (label === 'Power' ||
+    (label.startsWith('Actual') && label.endsWith('VentilationMode')))
 
 export class DeviceErvFacade
   extends BaseDeviceFacade<DeviceType.Erv>
@@ -20,4 +29,19 @@ export class DeviceErvFacade
     undefined,
     'OutdoorTemperature',
   ]
+
+  public override async operationModes(
+    query: ReportQuery = {},
+    useExactRange = true,
+  ): Promise<ReportChartPieOptions> {
+    const options = await super.operationModes(query, useExactRange)
+    const { labels, series } = options
+    return {
+      ...options,
+      labels: labels.filter(filterVentilationModes),
+      series: series.filter((_serie, index) =>
+        filterVentilationModes(labels.at(index)),
+      ),
+    }
+  }
 }
