@@ -11,7 +11,7 @@ import type {
 const filterVentilationModes = (label?: string): boolean =>
   label !== undefined &&
   (label === 'Power' ||
-    (label.startsWith('Actual') && label.endsWith('VentilationMode')))
+    (label.startsWith('Actual') && !label.endsWith('OperationMode')))
 
 export class DeviceErvFacade
   extends BaseDeviceFacade<DeviceType.Erv>
