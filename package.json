@@ -42,7 +42,7 @@
   "devDependencies": {
     "@eslint/js": "^9.16.0",
     "@eslint/markdown": "^6.2.1",
-    "@helljs/eslint-import-resolver-x": "^1.0.3",
+    "@helljs/eslint-import-resolver-x": "^1.0.5",
     "@stylistic/eslint-plugin": "^2.11.0",
     "@types/luxon": "^3.4.2",
     "@types/node": "^22.10.1",
