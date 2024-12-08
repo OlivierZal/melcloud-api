@@ -125,8 +125,7 @@ const handleErrorLogQuery = ({
   period: number
   toDate: DateTime
 } => {
-  const fromDate =
-    from !== undefined && from ? DateTime.fromISO(from) : undefined
+  const fromDate = from !== undefined && from ? DateTime.fromISO(from) : null
   const toDate = to !== undefined && to ? DateTime.fromISO(to) : DateTime.now()
 
   const numberLimit = Number(limit)

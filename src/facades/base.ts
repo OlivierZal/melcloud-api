@@ -36,7 +36,7 @@ import type {
 const temperatureRange = { max: 16, min: 4 } as const
 const TEMPERATURE_GAP = 2
 
-const getDateTimeComponents = (date?: DateTime): DateTimeComponents =>
+const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
   date ?
     {
       Day: date.day,
@@ -182,8 +182,8 @@ export abstract class BaseFacade<
     FailureData | SuccessData
   > {
     const isEnabled = to !== undefined
-    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : undefined
-    const endDate = isEnabled ? DateTime.fromISO(to) : undefined
+    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
+    const endDate = isEnabled ? DateTime.fromISO(to) : null
     return (
       await this.api.setHolidayMode({
         postData: {

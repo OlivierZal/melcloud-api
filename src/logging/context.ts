@@ -38,9 +38,9 @@ export abstract class APICallContextData {
             }`
           }
         }
-        return undefined
+        return null
       })
-      .filter((line) => line !== undefined)
+      .filter((line) => line !== null)
       .join('\n')
   }
 }
