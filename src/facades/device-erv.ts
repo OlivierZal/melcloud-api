@@ -31,7 +31,7 @@ export class DeviceErvFacade
   ]
 
   public override async operationModes(
-    query: ReportQuery = {},
+    query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartPieOptions> {
     const options = await super.operationModes(query, useExactRange)

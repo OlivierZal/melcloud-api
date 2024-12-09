@@ -211,7 +211,7 @@ export class API implements IAPI {
     LuxonSettings.defaultLocale = value
   }
 
-  public static async create(config: APIConfig = {}): Promise<API> {
+  public static async create(config?: APIConfig): Promise<API> {
     const api = new API(config)
     await api.fetch()
     return api

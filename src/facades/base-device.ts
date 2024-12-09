@@ -162,7 +162,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     ).data as GetDeviceData<T>
   }
 
-  public async energy(query: ReportQuery = {}): Promise<EnergyData<T>> {
+  public async energy(query?: ReportQuery): Promise<EnergyData<T>> {
     return (
       await this.api.energy({
         postData: this.#getReportPostData(query),
@@ -185,7 +185,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   public async internalTemperatures(
-    query: ReportQuery = {},
+    query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartLineOptions> {
     return getChartLineOptions(
@@ -200,7 +200,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   public async operationModes(
-    query: ReportQuery = {},
+    query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartPieOptions> {
     const postData = this.#getReportPostData(query, useExactRange)
@@ -216,7 +216,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   public async temperatures(
-    query: ReportQuery = {},
+    query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartLineOptions> {
     return getChartLineOptions(
@@ -247,7 +247,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   #getReportPostData(
-    { from, to }: ReportQuery,
+    { from, to }: ReportQuery = {},
     useExactRange = false,
   ): ReportPostData {
     const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })

@@ -81,7 +81,7 @@ export class DeviceAtwFacade
   }
 
   public override async temperatures(
-    query: ReportQuery = {},
+    query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartLineOptions> {
     const temperatures = await super.temperatures(query, useExactRange)
