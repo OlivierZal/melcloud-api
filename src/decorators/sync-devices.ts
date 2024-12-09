@@ -21,15 +21,17 @@ export const syncDevices =
       | GroupState
       | SetDeviceData<T>
       | SuccessData,
-  >(params?: {
+  >({
+    type,
+  }: {
     type?: T
-  }) =>
+  } = {}) =>
   (
     target: (...args: any[]) => Promise<U>,
     _context: ClassMethodDecoratorContext,
   ): ((...args: unknown[]) => Promise<U>) =>
     async function newTarget(this: IAPI | IFacade, ...args: unknown[]) {
       const data = await target.call(this, ...args)
-      await this.onSync?.(params)
+      await this.onSync?.({ type })
       return data
     }

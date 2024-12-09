@@ -18,9 +18,11 @@ import type {
 } from '../types/common.ts'
 
 export const updateDevices =
-  <T extends boolean | FailureData | GroupState | SuccessData>(params?: {
+  <T extends boolean | FailureData | GroupState | SuccessData>({
+    type,
+  }: {
     type?: DeviceType
-  }) =>
+  } = {}) =>
   (
     target: (...args: any[]) => Promise<T>,
     context: ClassMethodDecoratorContext,
@@ -39,11 +41,9 @@ export const updateDevices =
               ([, value]) => value !== undefined && value !== null,
             ),
           )
-      ;(params?.type === undefined ?
+      ;(type === undefined ?
         this.devices
-      : this.devices.filter(
-          ({ type: deviceType }) => deviceType === params.type,
-        )
+      : this.devices.filter(({ type: deviceType }) => deviceType === type)
       ).forEach((device) => {
         device.update(newData)
       })
