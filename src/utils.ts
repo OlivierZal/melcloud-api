@@ -27,8 +27,8 @@ export const fromSetToListAta: Record<
 } as const
 
 export const isKeyofSetDeviceDataAtaNotInList = (
-  key: string,
-): key is KeyofSetDeviceDataAtaNotInList => key in fromSetToListAta
+  value: string,
+): value is KeyofSetDeviceDataAtaNotInList => value in fromSetToListAta
 
 export const fromListToSetAta: Record<
   keyof SetDeviceDataAtaInList,
@@ -39,8 +39,8 @@ export const fromListToSetAta: Record<
 ) as Record<keyof SetDeviceDataAtaInList, KeyofSetDeviceDataAtaNotInList>
 
 export const isKeyofSetDeviceDataAtaInList = (
-  key: string,
-): key is keyof SetDeviceDataAtaInList => key in fromListToSetAta
+  value: string,
+): value is keyof SetDeviceDataAtaInList => value in fromListToSetAta
 
 const formatLabels = (
   labels: readonly string[],

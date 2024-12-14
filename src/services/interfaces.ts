@@ -42,7 +42,7 @@ export interface APISettings {
   username?: string | null
 }
 
-export const isAPISetting = (key: string): key is keyof APISettings =>
+export const isAPISetting = (value: string): value is keyof APISettings =>
   (
     [
       'contextKey',
@@ -50,7 +50,7 @@ export const isAPISetting = (key: string): key is keyof APISettings =>
       'password',
       'username',
     ] satisfies (keyof APISettings)[] as string[]
-  ).includes(key)
+  ).includes(value)
 
 export interface APIConfig extends Partial<LoginCredentials> {
   autoSyncInterval?: number | null
