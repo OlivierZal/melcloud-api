@@ -10,7 +10,7 @@ import {
   fromListToSetAta,
   getChartLineOptions,
   getChartPieOptions,
-  isKeyofSetDeviceDataAtaInList,
+  isSetDeviceDataAtaInList,
   now,
 } from '../utils.ts'
 
@@ -88,7 +88,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       (this.type === DeviceType.Ata ?
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
         (Object.entries(this.data).map(([key, value]) => [
-          isKeyofSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
+          isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
           value,
         ]) as [
           keyof UpdateDeviceData<T>,

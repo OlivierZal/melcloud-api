@@ -1,6 +1,6 @@
 import { FLAG_UNCHANGED } from '../constants.ts'
 import { DeviceType } from '../enums.ts'
-import { fromSetToListAta, isKeyofSetDeviceDataAtaNotInList } from '../utils.ts'
+import { fromSetToListAta, isSetDeviceDataAtaNotInList } from '../utils.ts'
 
 import type {
   IDeviceFacade,
@@ -70,7 +70,7 @@ const convertToListDeviceData = <T extends DeviceType>(
   return Object.fromEntries(
     facade.type === DeviceType.Ata ?
       entries.map(([key, value]) =>
-        isKeyofSetDeviceDataAtaNotInList(key) ?
+        isSetDeviceDataAtaNotInList(key) ?
           [fromSetToListAta[key], value]
         : [key, value],
       )

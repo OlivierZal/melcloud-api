@@ -26,7 +26,7 @@ export const fromSetToListAta: Record<
   VaneVertical: 'VaneVerticalDirection',
 } as const
 
-export const isKeyofSetDeviceDataAtaNotInList = (
+export const isSetDeviceDataAtaNotInList = (
   value: string,
 ): value is KeyofSetDeviceDataAtaNotInList => value in fromSetToListAta
 
@@ -38,7 +38,7 @@ export const fromListToSetAta: Record<
   Object.entries(fromSetToListAta).map(([key, value]) => [value, key]),
 ) as Record<keyof SetDeviceDataAtaInList, KeyofSetDeviceDataAtaNotInList>
 
-export const isKeyofSetDeviceDataAtaInList = (
+export const isSetDeviceDataAtaInList = (
   value: string,
 ): value is keyof SetDeviceDataAtaInList => value in fromListToSetAta
 
