@@ -11,6 +11,7 @@ import {
   getChartLineOptions,
   getChartPieOptions,
   isSetDeviceDataAtaInList,
+  isUpdateDeviceData,
   now,
 } from '../utils.ts'
 
@@ -79,6 +80,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   public get data(): ListDeviceData<T> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     return this.instance.data as ListDeviceData<T>
   }
 
@@ -129,7 +131,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     const newData = Object.fromEntries(
       Object.entries(data).filter(
         ([key, value]) =>
-          key in this.setData &&
+          isUpdateDeviceData(this.setData, key) &&
           this.setData[key as keyof UpdateDeviceData<T>] !== value,
       ),
     ) as Partial<UpdateDeviceData<T>>
@@ -155,6 +157,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   @syncDevices()
   @updateDevice
   public async values(): Promise<GetDeviceData<T>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     return (
       await this.api.values({
         params: { buildingId: this.instance.buildingId, id: this.id },
@@ -163,6 +166,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   public async energy(query?: ReportQuery): Promise<EnergyData<T>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     return (
       await this.api.energy({
         postData: this.#getReportPostData(query),

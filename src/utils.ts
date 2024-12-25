@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
 
-import { LabelType } from './enums.ts'
+import { LabelType, type DeviceType } from './enums.ts'
 
 import type {
   ReportChartLineOptions,
@@ -11,7 +11,11 @@ import type {
   KeyofSetDeviceDataAtaNotInList,
   SetDeviceDataAtaInList,
 } from './types/ata.ts'
-import type { OperationModeLogData, ReportData } from './types/common.ts'
+import type {
+  OperationModeLogData,
+  ReportData,
+  UpdateDeviceData,
+} from './types/common.ts'
 
 const YEAR_MONTH_DIVISOR = 100
 
@@ -68,6 +72,11 @@ const formatLabels = (
       return [...labels]
   }
 }
+
+export const isUpdateDeviceData = <T extends DeviceType>(
+  data: Record<keyof UpdateDeviceData<T>, unknown>,
+  key: string,
+): key is string & keyof UpdateDeviceData<T> => key in data
 
 const getChartLineSeries = ({
   data,

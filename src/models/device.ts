@@ -49,10 +49,11 @@ export class DeviceModel<T extends DeviceType>
     Type: type,
   }: ListDevice<T>) {
     super({ id, name })
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    this.type = type as T
     this.areaId = areaId
     this.buildingId = buildingId
     this.floorId = floorId
-    this.type = type as T
     this.#data = data as ListDeviceData<T>
   }
 

@@ -1,6 +1,10 @@
 import { FLAG_UNCHANGED } from '../constants.ts'
 import { DeviceType } from '../enums.ts'
-import { fromSetToListAta, isSetDeviceDataAtaNotInList } from '../utils.ts'
+import {
+  fromSetToListAta,
+  isSetDeviceDataAtaNotInList,
+  isUpdateDeviceData,
+} from '../utils.ts'
 
 import type {
   IDeviceFacade,
@@ -14,7 +18,6 @@ import type {
   ListDeviceData,
   SetDeviceData,
   SuccessData,
-  UpdateDeviceData,
 } from '../types/common.ts'
 
 export const updateDevices =
@@ -54,21 +57,19 @@ const convertToListDeviceData = <T extends DeviceType>(
   facade: IDeviceFacade<T>,
   data: SetDeviceData<T>,
 ): Partial<ListDeviceData<T>> => {
-  const { EffectiveFlags: flags, ...newData } = data
+  const { flags, type } = facade
+  const { EffectiveFlags: effectiveFlags, ...newData } = data
   const entries =
-    flags === FLAG_UNCHANGED ?
+    effectiveFlags === FLAG_UNCHANGED ?
       Object.entries(newData)
     : Object.entries(newData).filter(
         ([key]) =>
-          key in facade.flags &&
-          Number(
-            BigInt(facade.flags[key as keyof UpdateDeviceData<T>]) &
-              BigInt(flags),
-          ),
+          isUpdateDeviceData(flags, key) &&
+          Number(BigInt(flags[key]) & BigInt(effectiveFlags)),
       )
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
   return Object.fromEntries(
-    facade.type === DeviceType.Ata ?
+    type === DeviceType.Ata ?
       entries.map(([key, value]) =>
         isSetDeviceDataAtaNotInList(key) ?
           [fromSetToListAta[key], value]

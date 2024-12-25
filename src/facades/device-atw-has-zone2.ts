@@ -73,7 +73,7 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
 
   #handleOperationModes(
     data: Partial<UpdateDeviceDataAtw>,
-  ): OperationModeZoneDataAtw | undefined {
+  ): OperationModeZoneDataAtw | null {
     const [operationModeZone1, operationModeZone2]: {
       key: keyof OperationModeZoneDataAtw
       value?: OperationModeZone
@@ -82,10 +82,10 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
       { key: 'OperationModeZone2', value: data.OperationModeZone2 },
     ]
     const [primaryOperationMode, secondaryOperationMode] =
-      operationModeZone1.value === undefined ?
+      operationModeZone1?.value === undefined ?
         [operationModeZone2, operationModeZone1]
       : [operationModeZone1, operationModeZone2]
-    if (primaryOperationMode.value !== undefined) {
+    if (primaryOperationMode?.value !== undefined && secondaryOperationMode) {
       return {
         [primaryOperationMode.key]: primaryOperationMode.value,
         [secondaryOperationMode.key]: this.#getSecondaryOperationMode(
@@ -95,5 +95,6 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
         ),
       }
     }
+    return null
   }
 }

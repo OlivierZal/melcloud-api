@@ -89,6 +89,9 @@ export abstract class BaseFacade<
 
   get #deviceId(): number {
     const [id] = this.#deviceIds
+    if (id === undefined) {
+      throw new Error('No device id found')
+    }
     return id
   }
 

@@ -78,7 +78,7 @@ export interface IFacade extends IModel {
 }
 
 export interface IFacadeManager {
-  get: (instance?: IModel) => IFacade | undefined
+  get: (instance?: IModel) => IFacade | null
 }
 
 export interface ISuperDeviceFacade extends IFacade {

@@ -34,16 +34,14 @@ export class FacadeManager implements IFacadeManager {
   public get(instance: IBuildingModel): IBuildingFacade
   public get(instance: IDeviceModelAny): IDeviceFacadeAny
   public get(instance: IModel): IFacade
-  public get(): undefined
+  public get(): null
   public get<T extends DeviceType>(
     instance?: IDeviceModel<T>,
-  ): IDeviceFacade<T> | undefined
-  public get(
-    instance?: IAreaModel | IFloorModel,
-  ): ISuperDeviceFacade | undefined
-  public get(instance?: IBuildingModel): IBuildingFacade | undefined
-  public get(instance?: IDeviceModelAny): IDeviceFacadeAny | undefined
-  public get(instance?: IModel): IFacade | undefined {
+  ): IDeviceFacade<T> | null
+  public get(instance?: IAreaModel | IFloorModel): ISuperDeviceFacade | null
+  public get(instance?: IBuildingModel): IBuildingFacade | null
+  public get(instance?: IDeviceModelAny): IDeviceFacadeAny | null
+  public get(instance?: IModel): IFacade | null {
     if (instance) {
       const {
         constructor: { name },
@@ -53,7 +51,8 @@ export class FacadeManager implements IFacadeManager {
       if (!this.#facades.has(facadeId)) {
         this.#facades.set(facadeId, createFacade(this.#api, instance))
       }
-      return this.#facades.get(facadeId)
+      return this.#facades.get(facadeId) ?? null
     }
+    return null
   }
 }
