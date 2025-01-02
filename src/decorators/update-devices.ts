@@ -65,7 +65,7 @@ const convertToListDeviceData = <T extends DeviceType>(
     : Object.entries(newData).filter(
         ([key]) =>
           isUpdateDeviceData(flags, key) &&
-          Number(BigInt(flags[key]) & BigInt(effectiveFlags)),
+          Boolean(BigInt(flags[key]) & BigInt(effectiveFlags)),
       )
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
   return Object.fromEntries(

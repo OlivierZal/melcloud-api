@@ -282,7 +282,7 @@ export class API implements IAPI {
             error: errorMessage?.trim() ?? '',
           }),
         )
-        .filter(({ date, error }) => date && error)
+        .filter(({ date, error }) => Boolean(date && error))
         .reverse(),
       fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
       nextFromDate: nextToDate.minus({ days: period }).toISODate() ?? '',
