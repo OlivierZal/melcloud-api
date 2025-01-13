@@ -158,6 +158,14 @@ const config = [
           },
         ],
         '@typescript-eslint/consistent-return': 'off',
+        '@typescript-eslint/consistent-type-assertions': [
+          'error',
+          {
+            arrayLiteralTypeAssertions: 'never',
+            assertionStyle: 'as',
+            objectLiteralTypeAssertions: 'never',
+          },
+        ],
         '@typescript-eslint/member-ordering': 'off',
         '@typescript-eslint/naming-convention': [
           'error',
