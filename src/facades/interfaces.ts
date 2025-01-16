@@ -25,88 +25,94 @@ import type {
 } from '../types/common.ts'
 
 export interface FrostProtectionQuery {
-  max: number
-  min: number
-  enabled?: boolean
+  readonly max: number
+  readonly min: number
+  readonly enabled?: boolean
 }
 
 export interface HolidayModeQuery {
-  from?: string
-  to?: string
+  readonly from?: string
+  readonly to?: string
 }
 
 export interface IBuildingFacade
   extends IBaseBuildingModel,
     ISuperDeviceFacade {
-  fetch: () => Promise<ZoneSettings>
+  readonly fetch: () => Promise<ZoneSettings>
 }
 
 export interface IDeviceFacade<T extends DeviceType>
   extends IBaseDeviceModel<T>,
     IFacade {
-  flags: Record<keyof UpdateDeviceData<T>, number>
-  fetch: () => Promise<ListDeviceData<T>>
-  operationModes: (query: ReportQuery) => Promise<ReportChartPieOptions>
-  setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
-  temperatures: (query: ReportQuery) => Promise<ReportChartLineOptions>
-  tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
+  readonly flags: Record<keyof UpdateDeviceData<T>, number>
+  readonly fetch: () => Promise<ListDeviceData<T>>
+  readonly operationModes: (
+    query: ReportQuery,
+  ) => Promise<ReportChartPieOptions>
+  readonly setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
+  readonly temperatures: (query: ReportQuery) => Promise<ReportChartLineOptions>
+  readonly tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
-  values: () => Promise<GetDeviceData<T>>
+  readonly values: () => Promise<GetDeviceData<T>>
   // DeviceType.Ata | DeviceType.Atw
-  energy: (query: ReportQuery) => Promise<EnergyData<T>>
+  readonly energy: (query: ReportQuery) => Promise<EnergyData<T>>
   // DeviceType.Atw
-  hourlyTemperatures: (hour?: HourNumbers) => Promise<ReportChartLineOptions>
-  internalTemperatures: (query: ReportQuery) => Promise<ReportChartLineOptions>
+  readonly hourlyTemperatures: (
+    hour?: HourNumbers,
+  ) => Promise<ReportChartLineOptions>
+  readonly internalTemperatures: (
+    query: ReportQuery,
+  ) => Promise<ReportChartLineOptions>
 }
 
 export interface IFacade extends IModel {
-  devices: IDeviceModelAny[]
-  errors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
-  frostProtection: () => Promise<FrostProtectionData>
-  holidayMode: () => Promise<HolidayModeData>
-  onSync: (params?: { type?: DeviceType }) => Promise<void>
-  setFrostProtection: (
+  readonly devices: readonly IDeviceModelAny[]
+  readonly errors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
+  readonly frostProtection: () => Promise<FrostProtectionData>
+  readonly holidayMode: () => Promise<HolidayModeData>
+  readonly onSync: (params?: { type?: DeviceType }) => Promise<void>
+  readonly setFrostProtection: (
     query: FrostProtectionQuery,
   ) => Promise<FailureData | SuccessData>
-  setHolidayMode: (
+  readonly setHolidayMode: (
     query: HolidayModeQuery,
   ) => Promise<FailureData | SuccessData>
-  setPower: (value?: boolean) => Promise<boolean>
-  signal: (hour?: HourNumbers) => Promise<ReportChartLineOptions>
-  tiles: ((select?: false) => Promise<TilesData<null>>) &
+  readonly setPower: (value?: boolean) => Promise<boolean>
+  readonly signal: (hour?: HourNumbers) => Promise<ReportChartLineOptions>
+  readonly tiles: ((select?: false) => Promise<TilesData<null>>) &
     (<T extends DeviceType>(select: IDeviceModel<T>) => Promise<TilesData<T>>)
 }
 
 export interface IFacadeManager {
-  get: (instance?: IModel) => IFacade | null
+  readonly get: (instance?: IModel) => IFacade | null
 }
 
 export interface ISuperDeviceFacade extends IFacade {
-  group: () => Promise<GroupState>
-  setGroup: (state: GroupState) => Promise<FailureData | SuccessData>
+  readonly group: () => Promise<GroupState>
+  readonly setGroup: (state: GroupState) => Promise<FailureData | SuccessData>
 }
 
 export interface ReportChartLineOptions extends ReportChartOptions {
-  series: {
-    data: (number | null)[]
-    name: string
+  readonly series: readonly {
+    readonly data: (number | null)[]
+    readonly name: string
   }[]
-  unit: string
+  readonly unit: string
 }
 
 export interface ReportChartOptions {
-  from: string
-  labels: string[]
-  to: string
+  readonly from: string
+  readonly labels: readonly string[]
+  readonly to: string
 }
 
 export interface ReportChartPieOptions extends ReportChartOptions {
-  series: number[]
+  readonly series: number[]
 }
 
 export interface ReportQuery {
-  from?: string
-  to?: string
+  readonly from?: string
+  readonly to?: string
 }
 
 export type IDeviceFacadeAny =

@@ -33,8 +33,9 @@ import type {
   ReportChartLineOptions,
 } from './interfaces.ts'
 
-const temperatureRange = { max: 16, min: 4 } as const
 const TEMPERATURE_GAP = 2
+
+const temperatureRange = { max: 16, min: 4 }
 
 const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
   date ?

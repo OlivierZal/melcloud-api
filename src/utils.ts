@@ -28,7 +28,7 @@ export const fromSetToListAta: Record<
   SetFanSpeed: 'FanSpeed',
   VaneHorizontal: 'VaneHorizontalDirection',
   VaneVertical: 'VaneVerticalDirection',
-} as const
+}
 
 export const isSetDeviceDataAtaNotInList = (
   value: string,

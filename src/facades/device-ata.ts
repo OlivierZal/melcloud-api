@@ -17,7 +17,7 @@ export class DeviceAtaFacade
     SetTemperature: 0x4,
     VaneHorizontal: 0x100,
     VaneVertical: 0x10,
-  } as const
+  }
 
   protected readonly temperaturesLegend = [
     'SetTemperature',

@@ -11,9 +11,9 @@ import type {
 
 const DEFAULT_TEMPERATURE = 0
 
-const coolFlowTemperatureRange = { max: 25, min: 5 } as const
-const heatFlowTemperatureRange = { max: 60, min: 25 } as const
-const roomTemperatureRange = { max: 30, min: 10 } as const
+const coolFlowTemperatureRange = { max: 25, min: 5 }
+const heatFlowTemperatureRange = { max: 60, min: 25 }
+const roomTemperatureRange = { max: 30, min: 10 }
 
 const mergeSeries = (
   series1: ReportChartLineOptions['series'],
@@ -52,7 +52,7 @@ export class DeviceAtwFacade
     SetTankWaterTemperature: 0x1000000000020,
     SetTemperatureZone1: 0x200000080,
     SetTemperatureZone2: 0x800000200,
-  } as const
+  }
 
   protected readonly temperaturesLegend = [
     'SetTemperatureZone1',

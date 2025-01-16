@@ -21,7 +21,7 @@ export class DeviceErvFacade
     Power: 0x1,
     SetFanSpeed: 0x8,
     VentilationMode: 0x4,
-  } as const
+  }
 
   protected readonly temperaturesLegend = [
     undefined,

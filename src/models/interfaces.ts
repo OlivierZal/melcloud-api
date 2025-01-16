@@ -2,55 +2,55 @@ import type { DeviceType } from '../enums.ts'
 import type { ListDeviceData, ZoneSettings } from '../types/common.ts'
 
 interface ISubBuildingModel extends IModel {
-  buildingId: number
-  building?: IBuildingModel
+  readonly buildingId: number
+  readonly building?: IBuildingModel
 }
 
 interface ISubFloorModel extends ISubBuildingModel {
-  floorId: number | null
-  floor?: IFloorModel | null
+  readonly floorId: number | null
+  readonly floor?: IFloorModel | null
 }
 
 interface ISuperAreaModel extends ISuperDeviceModel {
-  areaIds: number[]
-  areas: IAreaModel[]
+  readonly areaIds: number[]
+  readonly areas: IAreaModel[]
 }
 
 interface ISuperDeviceModel extends IModel {
-  deviceIds: number[]
-  devices: IDeviceModelAny[]
+  readonly deviceIds: number[]
+  readonly devices: IDeviceModelAny[]
 }
 
 export interface IAreaModel extends ISubFloorModel, ISuperDeviceModel {}
 
 export interface IBaseBuildingModel {
-  data: ZoneSettings
+  readonly data: ZoneSettings
 }
 
 export interface IBaseDeviceModel<T extends DeviceType> {
-  data: ListDeviceData<T>
-  type: T
+  readonly data: ListDeviceData<T>
+  readonly type: T
 }
 
 export interface IBuildingModel extends IBaseBuildingModel, ISuperAreaModel {
-  floorIds: number[]
-  floors: IFloorModel[]
-  location: number
+  readonly floorIds: number[]
+  readonly floors: IFloorModel[]
+  readonly location: number
 }
 
 export interface IDeviceModel<T extends DeviceType>
   extends IBaseDeviceModel<T>,
     ISubFloorModel {
-  areaId: number | null
-  area?: IAreaModel | null
-  update: (data: Partial<ListDeviceData<T>>) => void
+  readonly areaId: number | null
+  readonly area?: IAreaModel | null
+  readonly update: (data: Partial<ListDeviceData<T>>) => void
 }
 
 export interface IFloorModel extends ISubBuildingModel, ISuperAreaModel {}
 
 export interface IModel {
-  id: number
-  name: string
+  readonly id: number
+  readonly name: string
 }
 
 export type IDeviceModelAny =
