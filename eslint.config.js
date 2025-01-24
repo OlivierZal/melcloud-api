@@ -5,6 +5,7 @@ import prettier from 'eslint-config-prettier'
 import importPlugin from 'eslint-plugin-import'
 import packageJson from 'eslint-plugin-package-json/configs/recommended'
 import perfectionist from 'eslint-plugin-perfectionist'
+import yml from 'eslint-plugin-yml'
 import ts, { configs as tsConfigs } from 'typescript-eslint'
 
 import { classGroups } from './eslint-utils/class-groups.js'
@@ -370,6 +371,22 @@ const config = [
     },
   ),
   ...markdown.configs.recommended,
+  ...yml.configs['flat/standard'],
+  ...yml.configs['flat/prettier'],
+  {
+    rules: {
+      'yml/block-mapping-colon-indicator-newline': 'error',
+      'yml/file-extension': [
+        'error',
+        {
+          extension: 'yml',
+        },
+      ],
+      'yml/no-multiple-empty-lines': 'error',
+      'yml/no-trailing-zeros': 'error',
+      'yml/require-string-key': 'error',
+    },
+  },
   packageJson,
 ]
 

@@ -1,5 +1,6 @@
 name: Build package
 on:
+  # eslint-disable-next-line yml/no-empty-mapping-value
   pull_request:
   push:
     branches: main
@@ -17,8 +18,8 @@ jobs:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
       - uses: actions/setup-node@v4
         with:
-          node-version: 'latest'
-          cache: 'npm'
+          node-version: latest
+          cache: npm
       - name: Lint, format & build code, generate docs
         run: npm ci
       - name: Commit & push changes
