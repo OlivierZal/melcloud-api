@@ -45,7 +45,7 @@
     "@helljs/eslint-import-resolver-x": "^1.1.0",
     "@stylistic/eslint-plugin": "^2.13.0",
     "@types/luxon": "^3.4.2",
-    "@types/node": "^22.10.8",
+    "@types/node": "^22.10.10",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-import": "^2.31.0",
