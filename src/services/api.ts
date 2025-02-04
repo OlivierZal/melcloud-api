@@ -433,13 +433,11 @@ export class API implements IAPI {
   }: {
     postData: TilesPostData<null>
   }): Promise<{ data: TilesData<null> }>
-
   public async tiles<T extends DeviceType>({
     postData,
   }: {
     postData: TilesPostData<T>
   }): Promise<{ data: TilesData<T> }>
-
   public async tiles<T extends DeviceType | null>({
     postData,
   }: {
