@@ -6,7 +6,11 @@ import importPlugin from 'eslint-plugin-import'
 import packageJson from 'eslint-plugin-package-json/configs/recommended'
 import perfectionist from 'eslint-plugin-perfectionist'
 import yml from 'eslint-plugin-yml'
-import ts, { configs as tsConfigs } from 'typescript-eslint'
+import { defineConfig } from 'eslint/config'
+import {
+  config as defineTSConfig,
+  configs as tsConfigs,
+} from 'typescript-eslint'
 
 import { classGroups } from './eslint-utils/class-groups.js'
 
@@ -132,11 +136,11 @@ const typeLikeSortOptions = {
   newlinesBetween: 'never',
 }
 
-const config = [
+const config = defineConfig([
   {
     ignores: ['dist/'],
   },
-  ...ts.config(
+  ...defineTSConfig(
     {
       extends: [
         js.configs.all,
@@ -398,9 +402,8 @@ const config = [
     },
   ),
   ...markdown.configs.recommended,
-  ...yml.configs['flat/standard'],
-  ...yml.configs['flat/prettier'],
   {
+    extends: [yml.configs['flat/standard'], yml.configs['flat/prettier']],
     rules: {
       'yml/block-mapping-colon-indicator-newline': 'error',
       'yml/file-extension': [
@@ -415,6 +418,6 @@ const config = [
     },
   },
   packageJson,
-]
+])
 
 export default config
