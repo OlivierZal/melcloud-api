@@ -1,8 +1,11 @@
 import 'source-map-support/register.js'
 
-export { fetchDevices } from './decorators/fetch-devices.ts'
-export { syncDevices } from './decorators/sync-devices.ts'
-export { updateDevice, updateDevices } from './decorators/update-devices.ts'
+export {
+  fetchDevices,
+  syncDevices,
+  updateDevice,
+  updateDevices,
+} from './decorators/index.ts'
 export {
   DeviceType,
   FanSpeed,

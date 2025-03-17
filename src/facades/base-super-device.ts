@@ -1,5 +1,4 @@
-import { syncDevices } from '../decorators/sync-devices.ts'
-import { updateDevices } from '../decorators/update-devices.ts'
+import { syncDevices, updateDevices } from '../decorators/index.ts'
 import { DeviceType } from '../enums.ts'
 
 import { BaseFacade } from './base.ts'

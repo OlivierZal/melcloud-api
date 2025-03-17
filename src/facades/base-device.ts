@@ -1,9 +1,7 @@
 import { DateTime } from 'luxon'
 
 import { FLAG_UNCHANGED } from '../constants.ts'
-import { fetchDevices } from '../decorators/fetch-devices.ts'
-import { syncDevices } from '../decorators/sync-devices.ts'
-import { updateDevice } from '../decorators/update-devices.ts'
+import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { DeviceType } from '../enums.ts'
 import { DeviceModel } from '../models/index.ts'
 import {

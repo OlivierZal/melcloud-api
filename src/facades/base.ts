@@ -1,7 +1,6 @@
 import { DateTime } from 'luxon'
 
-import { syncDevices } from '../decorators/sync-devices.ts'
-import { updateDevices } from '../decorators/update-devices.ts'
+import { syncDevices, updateDevices } from '../decorators/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'
 
 import type { DeviceType } from '../enums.ts'

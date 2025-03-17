@@ -1,4 +1,4 @@
-import { fetchDevices } from '../decorators/fetch-devices.ts'
+import { fetchDevices } from '../decorators/index.ts'
 import { BuildingModel } from '../models/index.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
