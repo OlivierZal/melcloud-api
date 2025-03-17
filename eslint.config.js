@@ -3,7 +3,7 @@ import markdown from '@eslint/markdown'
 import stylistic from '@stylistic/eslint-plugin'
 import prettier from 'eslint-config-prettier/flat'
 import importX from 'eslint-plugin-import-x'
-import packageJson from 'eslint-plugin-package-json/configs/recommended'
+import { configs as packageJsonConfigs } from 'eslint-plugin-package-json'
 import perfectionist from 'eslint-plugin-perfectionist'
 import yml from 'eslint-plugin-yml'
 import { defineConfig } from 'eslint/config'
@@ -406,7 +406,16 @@ const config = defineConfig([
       'yml/require-string-key': 'error',
     },
   },
-  packageJson,
+  {
+    ...packageJsonConfigs.recommended,
+    rules: {
+      ...packageJsonConfigs.recommended.rules,
+      'package-json/no-redundant-files': 'error',
+      'package-json/require-author': 'error',
+      'package-json/require-files': 'error',
+      'package-json/require-keywords': 'error',
+    },
+  },
 ])
 
 export default config
