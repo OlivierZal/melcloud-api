@@ -6,10 +6,7 @@ import {
   isUpdateDeviceData,
 } from '../utils.ts'
 
-import type {
-  IDeviceFacade,
-  ISuperDeviceFacade,
-} from '../facades/interfaces.ts'
+import type { IDeviceFacade, ISuperDeviceFacade } from '../facades/index.ts'
 import type { IDeviceModel } from '../models/index.ts'
 import type { GroupState } from '../types/ata.ts'
 import type {

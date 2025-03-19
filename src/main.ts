@@ -18,7 +18,20 @@ export {
   VentilationMode,
   Vertical,
 } from './enums.ts'
-export { FacadeManager } from './facades/manager.ts'
+export {
+  FacadeManager,
+  type FrostProtectionQuery,
+  type HolidayModeQuery,
+  type IBuildingFacade,
+  type IDeviceFacade,
+  type IDeviceFacadeAny,
+  type IFacade,
+  type IFacadeManager,
+  type ISuperDeviceFacade,
+  type ReportChartLineOptions,
+  type ReportChartPieOptions,
+  type ReportQuery,
+} from './facades/index.ts'
 export {
   AreaModel,
   BuildingModel,
@@ -31,31 +44,18 @@ export {
   type IFloorModel,
   type IModel,
 } from './models/index.ts'
-export { API as MELCloudAPI } from './services/api.ts'
-export type {
-  FrostProtectionQuery,
-  HolidayModeQuery,
-  IBuildingFacade,
-  IDeviceFacade,
-  IDeviceFacadeAny,
-  IFacade,
-  IFacadeManager,
-  ISuperDeviceFacade,
-  ReportChartLineOptions,
-  ReportChartPieOptions,
-  ReportQuery,
-} from './facades/interfaces.ts'
-export type {
-  APIConfig,
-  APISettings,
-  ErrorDetails,
-  ErrorLog,
-  ErrorLogQuery,
-  IAPI,
-  Logger,
-  OnSyncFunction,
-  SettingManager,
-} from './services/interfaces.ts'
+export {
+  API as MELCloudAPI,
+  type APIConfig,
+  type APISettings,
+  type ErrorDetails,
+  type ErrorLog,
+  type ErrorLogQuery,
+  type IAPI,
+  type Logger,
+  type OnSyncFunction,
+  type SettingManager,
+} from './services/index.ts'
 export type {
   EnergyDataAta,
   GetGroupData,

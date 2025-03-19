@@ -6,7 +6,7 @@ import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
-} from './facades/interfaces.ts'
+} from './facades/index.ts'
 import type {
   KeyofSetDeviceDataAtaNotInList,
   SetDeviceDataAtaInList,

@@ -1,5 +1,5 @@
 import type { DeviceType } from '../enums.ts'
-import type { IFacade } from '../facades/interfaces.ts'
+import type { IFacade } from '../facades/index.ts'
 import type { IAPI } from '../services/index.ts'
 import type { GroupState } from '../types/ata.ts'
 import type {
