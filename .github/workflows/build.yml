@@ -1,9 +1,5 @@
 name: Build package
-on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-  push:
-    branches: main
+on: [pull_request, push]
 permissions:
   contents: write
   pull-requests: write
