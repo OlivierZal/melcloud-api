@@ -10,7 +10,7 @@ import type {
   IDeviceModel,
   IDeviceModelAny,
   IFloorModel,
-} from '../models/interfaces.ts'
+} from '../models/index.ts'
 import type { ErrorLog, ErrorLogQuery, IAPI } from '../services/interfaces.ts'
 import type {
   DateTimeComponents,

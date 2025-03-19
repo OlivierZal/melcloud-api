@@ -10,7 +10,7 @@ import type {
   IDeviceFacade,
   ISuperDeviceFacade,
 } from '../facades/interfaces.ts'
-import type { IDeviceModel } from '../models/interfaces.ts'
+import type { IDeviceModel } from '../models/index.ts'
 import type { GroupState } from '../types/ata.ts'
 import type {
   FailureData,

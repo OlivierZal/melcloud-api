@@ -8,7 +8,7 @@ import type {
   IBuildingModel,
   IDeviceModelAny,
   IFloorModel,
-} from '../models/interfaces.ts'
+} from '../models/index.ts'
 import type { GroupState, SetGroupPostData } from '../types/ata.ts'
 import type { FailureData, SuccessData } from '../types/common.ts'
 

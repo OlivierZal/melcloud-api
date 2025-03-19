@@ -8,7 +8,7 @@ import type {
   IDeviceModelAny,
   IFloorModel,
   IModel,
-} from '../models/interfaces.ts'
+} from '../models/index.ts'
 import type { IAPI } from '../services/interfaces.ts'
 
 import type {

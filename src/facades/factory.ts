@@ -4,6 +4,7 @@ import {
   BuildingModel,
   DeviceModel,
   FloorModel,
+  type IModel,
 } from '../models/index.ts'
 
 import { AreaFacade } from './area.ts'
@@ -14,7 +15,6 @@ import { DeviceAtwFacade } from './device-atw.ts'
 import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
-import type { IModel } from '../models/interfaces.ts'
 import type { IAPI } from '../services/interfaces.ts'
 
 import type { IDeviceFacadeAny, IFacade } from './interfaces.ts'

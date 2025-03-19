@@ -7,7 +7,7 @@ import type {
   IDeviceModel,
   IDeviceModelAny,
   IModel,
-} from '../models/interfaces.ts'
+} from '../models/index.ts'
 import type { ErrorLog, ErrorLogQuery } from '../services/interfaces.ts'
 import type { GroupState } from '../types/ata.ts'
 import type {

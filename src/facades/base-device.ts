@@ -3,7 +3,11 @@ import { DateTime } from 'luxon'
 import { FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { DeviceType } from '../enums.ts'
-import { DeviceModel } from '../models/index.ts'
+import {
+  DeviceModel,
+  type IDeviceModel,
+  type IDeviceModelAny,
+} from '../models/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -15,7 +19,6 @@ import {
 
 import { BaseFacade } from './base.ts'
 
-import type { IDeviceModel, IDeviceModelAny } from '../models/interfaces.ts'
 import type { IAPI } from '../services/interfaces.ts'
 import type {
   EnergyData,

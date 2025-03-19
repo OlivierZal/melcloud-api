@@ -1,8 +1,6 @@
-import { FloorModel } from '../models/index.ts'
+import { FloorModel, type IFloorModel } from '../models/index.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
-
-import type { IFloorModel } from '../models/interfaces.ts'
 
 import type { ISuperDeviceFacade } from './interfaces.ts'
 

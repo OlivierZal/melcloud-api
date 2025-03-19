@@ -1,8 +1,6 @@
-import { AreaModel } from '../models/index.ts'
+import { AreaModel, type IAreaModel } from '../models/index.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
-
-import type { IAreaModel } from '../models/interfaces.ts'
 
 import type { ISuperDeviceFacade } from './interfaces.ts'
 

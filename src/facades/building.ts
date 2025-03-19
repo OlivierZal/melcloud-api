@@ -1,9 +1,8 @@
 import { fetchDevices } from '../decorators/index.ts'
-import { BuildingModel } from '../models/index.ts'
+import { BuildingModel, type IBuildingModel } from '../models/index.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
-import type { IBuildingModel } from '../models/interfaces.ts'
 import type { IAPI } from '../services/interfaces.ts'
 import type { ZoneSettings } from '../types/common.ts'
 

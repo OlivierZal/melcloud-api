@@ -24,6 +24,12 @@ export {
   BuildingModel,
   DeviceModel,
   FloorModel,
+  type IAreaModel,
+  type IBuildingModel,
+  type IDeviceModel,
+  type IDeviceModelAny,
+  type IFloorModel,
+  type IModel,
 } from './models/index.ts'
 export { API as MELCloudAPI } from './services/api.ts'
 export type {
@@ -39,14 +45,6 @@ export type {
   ReportChartPieOptions,
   ReportQuery,
 } from './facades/interfaces.ts'
-export type {
-  IAreaModel,
-  IBuildingModel,
-  IDeviceModel,
-  IDeviceModelAny,
-  IFloorModel,
-  IModel,
-} from './models/interfaces.ts'
 export type {
   APIConfig,
   APISettings,

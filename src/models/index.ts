@@ -16,3 +16,13 @@ DeviceModel.setModels(models)
 FloorModel.setModels(models)
 
 export { AreaModel, BuildingModel, DeviceModel, FloorModel }
+export type {
+  IAreaModel,
+  IBaseBuildingModel,
+  IBaseDeviceModel,
+  IBuildingModel,
+  IDeviceModel,
+  IDeviceModelAny,
+  IFloorModel,
+  IModel,
+} from './interfaces.ts'
