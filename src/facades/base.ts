@@ -11,7 +11,7 @@ import type {
   IDeviceModelAny,
   IFloorModel,
 } from '../models/index.ts'
-import type { ErrorLog, ErrorLogQuery, IAPI } from '../services/interfaces.ts'
+import type { ErrorLog, ErrorLogQuery, IAPI } from '../services/index.ts'
 import type {
   DateTimeComponents,
   FailureData,

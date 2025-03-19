@@ -3,7 +3,7 @@ import { BuildingModel, type IBuildingModel } from '../models/index.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
-import type { IAPI } from '../services/interfaces.ts'
+import type { IAPI } from '../services/index.ts'
 import type { ZoneSettings } from '../types/common.ts'
 
 import type { IBuildingFacade } from './interfaces.ts'

@@ -15,7 +15,7 @@ import { DeviceAtwFacade } from './device-atw.ts'
 import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
-import type { IAPI } from '../services/interfaces.ts'
+import type { IAPI } from '../services/index.ts'
 
 import type { IDeviceFacadeAny, IFacade } from './interfaces.ts'
 

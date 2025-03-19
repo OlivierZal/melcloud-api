@@ -8,7 +8,7 @@ import type {
   IDeviceModelAny,
   IModel,
 } from '../models/index.ts'
-import type { ErrorLog, ErrorLogQuery } from '../services/interfaces.ts'
+import type { ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type { GroupState } from '../types/ata.ts'
 import type {
   EnergyData,

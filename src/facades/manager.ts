@@ -9,7 +9,7 @@ import type {
   IFloorModel,
   IModel,
 } from '../models/index.ts'
-import type { IAPI } from '../services/interfaces.ts'
+import type { IAPI } from '../services/index.ts'
 
 import type {
   IBuildingFacade,

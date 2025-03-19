@@ -19,7 +19,7 @@ import {
 
 import { BaseFacade } from './base.ts'
 
-import type { IAPI } from '../services/interfaces.ts'
+import type { IAPI } from '../services/index.ts'
 import type {
   EnergyData,
   GetDeviceData,
