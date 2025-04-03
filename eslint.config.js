@@ -51,7 +51,6 @@ const importSortOptions = {
     'index',
     'object',
     'style',
-    'unknown',
     'builtin-type',
     'external-type',
     'internal-type',
