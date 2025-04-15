@@ -403,6 +403,28 @@ const config = defineConfig([
       'yml/no-multiple-empty-lines': 'error',
       'yml/no-trailing-zeros': 'error',
       'yml/require-string-key': 'error',
+      'yml/sort-keys': [
+        'error',
+        {
+          order: {
+            caseSensitive: true,
+            natural: true,
+            type: 'asc',
+          },
+          pathPattern: '^.*$',
+        },
+      ],
+      'yml/sort-sequence-values': [
+        'error',
+        {
+          order: {
+            caseSensitive: true,
+            natural: true,
+            type: 'asc',
+          },
+          pathPattern: '^.*$',
+        },
+      ],
     },
   },
   {

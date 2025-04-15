@@ -1,12 +1,12 @@
-version: 2
 updates:
-  - package-ecosystem: github-actions
-    directory: /
+  - directory: /
+    package-ecosystem: github-actions
     schedule:
       interval: daily
       time: '05:00'
-  - package-ecosystem: npm
-    directory: /
+  - directory: /
+    package-ecosystem: npm
     schedule:
       interval: daily
       time: '05:00'
+version: 2

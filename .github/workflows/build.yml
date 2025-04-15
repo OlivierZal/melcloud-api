@@ -1,24 +1,21 @@
-name: Build package
-on: [pull_request, push]
-permissions:
-  contents: write
-  pull-requests: write
 jobs:
   build:
+    if: github.actor != 'dependabot[bot]'
     name: Build package
     runs-on: ubuntu-latest
-    if: github.actor != 'dependabot[bot]'
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
       - uses: actions/setup-node@v4
         with:
-          node-version: latest
           cache: npm
+          node-version: latest
       - name: Lint, format & build code, generate docs
         run: npm ci
-      - name: Commit & push changes
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: Commit & push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -37,5 +34,8 @@ jobs:
               git push origin HEAD:${{ github.head_ref }}
             fi
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+name: Build package
+on: [pull_request, push]
+permissions:
+  contents: write
+  pull-requests: write
