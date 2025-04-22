@@ -1,5 +1,3 @@
-import { createFacade } from './factory.ts'
-
 import type { DeviceType } from '../enums.ts'
 import type {
   IAreaModel,
@@ -19,6 +17,8 @@ import type {
   IFacadeManager,
   ISuperDeviceFacade,
 } from './interfaces.ts'
+
+import { createFacade } from './factory.ts'
 
 export class FacadeManager implements IFacadeManager {
   readonly #api: IAPI

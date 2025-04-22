@@ -1,15 +1,24 @@
 import js from '@eslint/js'
 import markdown from '@eslint/markdown'
 import stylistic from '@stylistic/eslint-plugin'
+import { defineConfig } from 'eslint/config'
 import prettier from 'eslint-config-prettier/flat'
 import { flatConfigs as importXConfigs } from 'eslint-plugin-import-x'
 import { configs as packageJsonConfigs } from 'eslint-plugin-package-json'
 import perfectionist from 'eslint-plugin-perfectionist'
+import { Alphabet } from 'eslint-plugin-perfectionist/alphabet'
 import yml from 'eslint-plugin-yml'
-import { defineConfig } from 'eslint/config'
 import { configs as tsConfigs } from 'typescript-eslint'
 
 import { classGroups } from './eslint-utils/class-groups.js'
+
+const buildExportImportGroup = (selector) =>
+  ['type', 'value'].map((group) => `${group}-${selector}`)
+
+const alphabet = Alphabet.generateRecommendedAlphabet()
+  .sortByNaturalSort()
+  .placeCharacterBefore({ characterAfter: '-', characterBefore: '/' })
+  .getCharacters()
 
 const arrayLikeSortOptions = {
   groups: ['literal', 'spread'],
@@ -36,28 +45,28 @@ const enumSortOptions = {
 }
 
 const exportSortOptions = {
-  groups: ['value-export', 'type-export'],
+  groups: buildExportImportGroup('export'),
+  newlinesBetween: 'always',
+}
+
+const importNamedSortOptions = {
+  groups: buildExportImportGroup('import'),
+  newlinesBetween: 'always',
 }
 
 const importSortOptions = {
   groups: [
-    'side-effect',
-    'side-effect-style',
-    'builtin',
-    'external',
-    'internal',
-    'parent',
-    'sibling',
-    'index',
-    'object',
-    'style',
-    'builtin-type',
-    'external-type',
-    'internal-type',
-    'parent-type',
-    'sibling-type',
-    'index-type',
-    'type',
+    ...buildExportImportGroup('side-effect'),
+    ...buildExportImportGroup('side-effect-style'),
+    ...buildExportImportGroup('builtin'),
+    ...buildExportImportGroup('subpath'),
+    ...buildExportImportGroup('external'),
+    ...buildExportImportGroup('internal'),
+    ...buildExportImportGroup('tsconfig-path'),
+    ...buildExportImportGroup('parent'),
+    ...buildExportImportGroup('sibling'),
+    ...buildExportImportGroup('index'),
+    ...buildExportImportGroup('style'),
   ],
   newlinesBetween: 'always',
 }
@@ -92,7 +101,6 @@ const moduleSortOptions = {
 }
 
 const namedSortOptions = {
-  groupKind: 'values-first',
   ignoreAlias: true,
 }
 
@@ -346,8 +354,20 @@ const config = defineConfig([
       'perfectionist/sort-intersection-types': ['error', typeGroups],
       'perfectionist/sort-maps': ['error', mapSortOptions],
       'perfectionist/sort-modules': ['error', moduleSortOptions],
-      'perfectionist/sort-named-exports': ['error', namedSortOptions],
-      'perfectionist/sort-named-imports': ['error', namedSortOptions],
+      'perfectionist/sort-named-exports': [
+        'error',
+        {
+          ...namedSortOptions,
+          ...exportSortOptions,
+        },
+      ],
+      'perfectionist/sort-named-imports': [
+        'error',
+        {
+          ...namedSortOptions,
+          ...importNamedSortOptions,
+        },
+      ],
       'perfectionist/sort-object-types': ['error', typeLikeSortOptions],
       'perfectionist/sort-objects': ['error', objectSortOptions],
       'perfectionist/sort-sets': ['error', arrayLikeSortOptions],
@@ -358,12 +378,13 @@ const config = defineConfig([
     },
     settings: {
       perfectionist: {
+        alphabet,
         ignoreCase: false,
         locales: 'en_US',
         order: 'asc',
         partitionByComment: true,
         partitionByNewLine: false,
-        type: 'natural',
+        type: 'custom',
       },
     },
   },
@@ -435,6 +456,14 @@ const config = defineConfig([
       'package-json/require-author': 'error',
       'package-json/require-files': 'error',
       'package-json/require-keywords': 'error',
+      'package-json/restrict-dependency-ranges': [
+        'error',
+        [
+          {
+            rangeType: 'caret',
+          },
+        ],
+      ],
     },
   },
 ])

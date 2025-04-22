@@ -1,5 +1,3 @@
-import { BaseModel } from './base.ts'
-
 import type { DeviceType } from '../enums.ts'
 import type {
   ListDevice,
@@ -16,6 +14,8 @@ import type {
   IDeviceModelAny,
   IFloorModel,
 } from './interfaces.ts'
+
+import { BaseModel } from './base.ts'
 
 export class DeviceModel<T extends DeviceType>
   extends BaseModel

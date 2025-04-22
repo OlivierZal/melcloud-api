@@ -1,5 +1,3 @@
-import { BaseModel } from './base.ts'
-
 import type { AreaData, AreaDataAny } from '../types/common.ts'
 
 import type { BuildingModel } from './building.ts'
@@ -11,6 +9,8 @@ import type {
   IDeviceModelAny,
   IFloorModel,
 } from './interfaces.ts'
+
+import { BaseModel } from './base.ts'
 
 export class AreaModel<T extends number | null>
   extends BaseModel

@@ -1,5 +1,3 @@
-import { BaseDeviceFacade } from './base-device.ts'
-
 import type { DeviceType } from '../enums.ts'
 import type { TemperatureDataAtw, UpdateDeviceDataAtw } from '../types/atw.ts'
 
@@ -8,6 +6,8 @@ import type {
   ReportChartLineOptions,
   ReportQuery,
 } from './interfaces.ts'
+
+import { BaseDeviceFacade } from './base-device.ts'
 
 const DEFAULT_TEMPERATURE = 0
 

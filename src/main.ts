@@ -1,61 +1,5 @@
 import 'source-map-support/register.js'
 
-export {
-  fetchDevices,
-  syncDevices,
-  updateDevice,
-  updateDevices,
-} from './decorators/index.ts'
-export {
-  DeviceType,
-  FanSpeed,
-  Horizontal,
-  LabelType,
-  Language,
-  OperationMode,
-  OperationModeState,
-  OperationModeZone,
-  VentilationMode,
-  Vertical,
-} from './enums.ts'
-export {
-  FacadeManager,
-  type FrostProtectionQuery,
-  type HolidayModeQuery,
-  type IBuildingFacade,
-  type IDeviceFacade,
-  type IDeviceFacadeAny,
-  type IFacade,
-  type IFacadeManager,
-  type ISuperDeviceFacade,
-  type ReportChartLineOptions,
-  type ReportChartPieOptions,
-  type ReportQuery,
-} from './facades/index.ts'
-export {
-  AreaModel,
-  BuildingModel,
-  DeviceModel,
-  FloorModel,
-  type IAreaModel,
-  type IBuildingModel,
-  type IDeviceModel,
-  type IDeviceModelAny,
-  type IFloorModel,
-  type IModel,
-} from './models/index.ts'
-export {
-  API as MELCloudAPI,
-  type APIConfig,
-  type APISettings,
-  type ErrorDetails,
-  type ErrorLog,
-  type ErrorLogQuery,
-  type IAPI,
-  type Logger,
-  type OnSyncFunction,
-  type SettingManager,
-} from './services/index.ts'
 export type {
   EnergyDataAta,
   GetGroupData,
@@ -125,3 +69,60 @@ export type {
   SetDeviceDataErv,
   UpdateDeviceDataErv,
 } from './types/erv.ts'
+
+export {
+  fetchDevices,
+  syncDevices,
+  updateDevice,
+  updateDevices,
+} from './decorators/index.ts'
+export {
+  DeviceType,
+  FanSpeed,
+  Horizontal,
+  LabelType,
+  Language,
+  OperationMode,
+  OperationModeState,
+  OperationModeZone,
+  VentilationMode,
+  Vertical,
+} from './enums.ts'
+export {
+  type FrostProtectionQuery,
+  type HolidayModeQuery,
+  type IBuildingFacade,
+  type IDeviceFacade,
+  type IDeviceFacadeAny,
+  type IFacade,
+  type IFacadeManager,
+  type ISuperDeviceFacade,
+  type ReportChartLineOptions,
+  type ReportChartPieOptions,
+  type ReportQuery,
+  FacadeManager,
+} from './facades/index.ts'
+export {
+  type IAreaModel,
+  type IBuildingModel,
+  type IDeviceModel,
+  type IDeviceModelAny,
+  type IFloorModel,
+  type IModel,
+  AreaModel,
+  BuildingModel,
+  DeviceModel,
+  FloorModel,
+} from './models/index.ts'
+export {
+  type APIConfig,
+  type APISettings,
+  type ErrorDetails,
+  type ErrorLog,
+  type ErrorLogQuery,
+  type IAPI,
+  type Logger,
+  type OnSyncFunction,
+  type SettingManager,
+  API as MELCloudAPI,
+} from './services/index.ts'

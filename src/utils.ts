@@ -1,7 +1,5 @@
 import { DateTime } from 'luxon'
 
-import { LabelType, type DeviceType } from './enums.ts'
-
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
@@ -16,6 +14,8 @@ import type {
   ReportData,
   UpdateDeviceData,
 } from './types/common.ts'
+
+import { type DeviceType, LabelType } from './enums.ts'
 
 const YEAR_MONTH_DIVISOR = 100
 

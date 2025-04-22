@@ -1,5 +1,3 @@
-import { BaseModel } from './base.ts'
-
 import type { FloorData } from '../types/common.ts'
 
 import type { AreaModel } from './area.ts'
@@ -11,6 +9,8 @@ import type {
   IDeviceModelAny,
   IFloorModel,
 } from './interfaces.ts'
+
+import { BaseModel } from './base.ts'
 
 export class FloorModel extends BaseModel implements IFloorModel {
   static #areaModel: typeof AreaModel

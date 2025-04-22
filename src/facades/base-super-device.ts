@@ -1,8 +1,3 @@
-import { syncDevices, updateDevices } from '../decorators/index.ts'
-import { DeviceType } from '../enums.ts'
-
-import { BaseFacade } from './base.ts'
-
 import type {
   IAreaModel,
   IBuildingModel,
@@ -12,7 +7,12 @@ import type {
 import type { GroupState, SetGroupPostData } from '../types/ata.ts'
 import type { FailureData, SuccessData } from '../types/common.ts'
 
+import { syncDevices, updateDevices } from '../decorators/index.ts'
+import { DeviceType } from '../enums.ts'
+
 import type { ISuperDeviceFacade } from './interfaces.ts'
+
+import { BaseFacade } from './base.ts'
 
 export abstract class BaseSuperDeviceFacade<
     T extends IAreaModel | IBuildingModel | IFloorModel,

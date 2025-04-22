@@ -1,6 +1,3 @@
-import { APICallRequestData } from './request.ts'
-import { APICallResponseData } from './response.ts'
-
 import type {
   AxiosError,
   AxiosResponse,
@@ -8,6 +5,9 @@ import type {
 } from 'axios'
 
 import type { APICallContextData } from './context.ts'
+
+import { APICallRequestData } from './request.ts'
+import { APICallResponseData } from './response.ts'
 
 export interface APICallContextDataWithErrorMessage extends APICallContextData {
   readonly errorMessage: string

@@ -1,8 +1,5 @@
 import { DateTime } from 'luxon'
 
-import { syncDevices, updateDevices } from '../decorators/index.ts'
-import { getChartLineOptions, now } from '../utils.ts'
-
 import type { DeviceType } from '../enums.ts'
 import type {
   IAreaModel,
@@ -24,6 +21,9 @@ import type {
   SuccessData,
   TilesData,
 } from '../types/common.ts'
+
+import { syncDevices, updateDevices } from '../decorators/index.ts'
+import { getChartLineOptions, now } from '../utils.ts'
 
 import type {
   FrostProtectionQuery,

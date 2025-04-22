@@ -1,44 +1,18 @@
 import https from 'https'
 
 import axios, {
-  HttpStatusCode,
   type AxiosError,
   type AxiosInstance,
   type AxiosResponse,
   type InternalAxiosRequestConfig,
+  HttpStatusCode,
 } from 'axios'
 import {
+  type HourNumbers,
   DateTime,
   Duration,
   Settings as LuxonSettings,
-  type HourNumbers,
 } from 'luxon'
-
-import { syncDevices } from '../decorators/index.ts'
-import { DeviceType, Language } from '../enums.ts'
-import {
-  APICallRequestData,
-  APICallResponseData,
-  createAPICallErrorData,
-} from '../logging/index.ts'
-import {
-  AreaModel,
-  BuildingModel,
-  DeviceModel,
-  FloorModel,
-} from '../models/index.ts'
-import { now } from '../utils.ts'
-
-import {
-  isAPISetting,
-  type APIConfig,
-  type ErrorLog,
-  type ErrorLogQuery,
-  type IAPI,
-  type Logger,
-  type OnSyncFunction,
-  type SettingManager,
-} from './interfaces.ts'
 
 import type {
   GetGroupData,
@@ -73,6 +47,32 @@ import type {
   TilesData,
   TilesPostData,
 } from '../types/common.ts'
+
+import { syncDevices } from '../decorators/index.ts'
+import { DeviceType, Language } from '../enums.ts'
+import {
+  APICallRequestData,
+  APICallResponseData,
+  createAPICallErrorData,
+} from '../logging/index.ts'
+import {
+  AreaModel,
+  BuildingModel,
+  DeviceModel,
+  FloorModel,
+} from '../models/index.ts'
+import { now } from '../utils.ts'
+
+import {
+  type APIConfig,
+  type ErrorLog,
+  type ErrorLogQuery,
+  type IAPI,
+  type Logger,
+  type OnSyncFunction,
+  type SettingManager,
+  isAPISetting,
+} from './interfaces.ts'
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin2'

@@ -1,11 +1,15 @@
+import type { IAPI } from '../services/index.ts'
+
 import { DeviceType } from '../enums.ts'
 import {
+  type IModel,
   AreaModel,
   BuildingModel,
   DeviceModel,
   FloorModel,
-  type IModel,
 } from '../models/index.ts'
+
+import type { IDeviceFacadeAny, IFacade } from './interfaces.ts'
 
 import { AreaFacade } from './area.ts'
 import { BuildingFacade } from './building.ts'
@@ -14,10 +18,6 @@ import { DeviceAtwHasZone2Facade } from './device-atw-has-zone2.ts'
 import { DeviceAtwFacade } from './device-atw.ts'
 import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
-
-import type { IAPI } from '../services/index.ts'
-
-import type { IDeviceFacadeAny, IFacade } from './interfaces.ts'
 
 type DeviceModelAny = DeviceModel<
   DeviceType.Ata | DeviceType.Atw | DeviceType.Erv

@@ -1,12 +1,12 @@
-import { fetchDevices } from '../decorators/index.ts'
-import { BuildingModel, type IBuildingModel } from '../models/index.ts'
-
-import { BaseSuperDeviceFacade } from './base-super-device.ts'
-
 import type { IAPI } from '../services/index.ts'
 import type { ZoneSettings } from '../types/common.ts'
 
+import { fetchDevices } from '../decorators/index.ts'
+import { type IBuildingModel, BuildingModel } from '../models/index.ts'
+
 import type { IBuildingFacade } from './interfaces.ts'
+
+import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
 export class BuildingFacade
   extends BaseSuperDeviceFacade<BuildingModel>

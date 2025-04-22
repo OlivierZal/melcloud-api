@@ -1,8 +1,8 @@
-import { FloorModel, type IFloorModel } from '../models/index.ts'
-
-import { BaseSuperDeviceFacade } from './base-super-device.ts'
+import { type IFloorModel, FloorModel } from '../models/index.ts'
 
 import type { ISuperDeviceFacade } from './interfaces.ts'
+
+import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
 export class FloorFacade
   extends BaseSuperDeviceFacade<IFloorModel>

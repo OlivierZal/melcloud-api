@@ -1,5 +1,3 @@
-import { BaseDeviceFacade } from './base-device.ts'
-
 import type { DeviceType } from '../enums.ts'
 
 import type {
@@ -7,6 +5,8 @@ import type {
   ReportChartPieOptions,
   ReportQuery,
 } from './interfaces.ts'
+
+import { BaseDeviceFacade } from './base-device.ts'
 
 const filterVentilationModes = (label?: string): boolean =>
   label !== undefined &&

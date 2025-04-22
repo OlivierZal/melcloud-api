@@ -1,4 +1,3 @@
-export { FacadeManager } from './manager.ts'
 export type {
   FrostProtectionQuery,
   HolidayModeQuery,
@@ -12,3 +11,5 @@ export type {
   ReportChartPieOptions,
   ReportQuery,
 } from './interfaces.ts'
+
+export { FacadeManager } from './manager.ts'

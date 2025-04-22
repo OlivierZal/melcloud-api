@@ -1,11 +1,11 @@
-import { OperationModeZone } from '../enums.ts'
-
-import { DeviceAtwFacade } from './device-atw.ts'
-
 import type {
   OperationModeZoneDataAtw,
   UpdateDeviceDataAtw,
 } from '../types/atw.ts'
+
+import { OperationModeZone } from '../enums.ts'
+
+import { DeviceAtwFacade } from './device-atw.ts'
 
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
 const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room

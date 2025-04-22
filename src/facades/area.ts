@@ -1,8 +1,8 @@
-import { AreaModel, type IAreaModel } from '../models/index.ts'
-
-import { BaseSuperDeviceFacade } from './base-super-device.ts'
+import { type IAreaModel, AreaModel } from '../models/index.ts'
 
 import type { ISuperDeviceFacade } from './interfaces.ts'
+
+import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
 export class AreaFacade
   extends BaseSuperDeviceFacade<IAreaModel>
