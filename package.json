@@ -44,7 +44,7 @@
     "@eslint/markdown": "^6.4.0",
     "@stylistic/eslint-plugin": "^4.2.0",
     "@types/luxon": "^3.6.2",
-    "@types/node": "^22.15.3",
+    "@types/node": "^22.15.8",
     "eslint": "^9.26.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-import-resolver-typescript": "^4.3.4",
@@ -54,10 +54,10 @@
     "eslint-plugin-yml": "^1.18.0",
     "jsonc-eslint-parser": "^2.4.0",
     "prettier": "^3.5.3",
-    "prettier-plugin-packagejson": "^2.5.10",
+    "prettier-plugin-packagejson": "^2.5.11",
     "typedoc": "^0.28.4",
     "typedoc-plugin-markdown": "^4.6.3",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.31.1"
+    "typescript-eslint": "^8.32.0"
   }
 }
