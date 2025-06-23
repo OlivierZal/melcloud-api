@@ -1,5 +1,4 @@
 import js from '@eslint/js'
-import markdown from '@eslint/markdown'
 import stylistic from '@stylistic/eslint-plugin'
 import { defineConfig } from 'eslint/config'
 import prettier from 'eslint-config-prettier/flat'
@@ -415,7 +414,6 @@ const config = defineConfig([
       },
     },
   ),
-  ...markdown.configs.recommended,
   {
     extends: [yml.configs['flat/standard'], yml.configs['flat/prettier']],
     rules: {
