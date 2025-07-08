@@ -58,6 +58,6 @@
     "typedoc": "^0.28.7",
     "typedoc-plugin-markdown": "^4.7.0",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.35.1"
+    "typescript-eslint": "^8.36.0"
   }
 }
