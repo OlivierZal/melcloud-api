@@ -469,6 +469,7 @@ const config = defineConfig([
       'package-json/require-author': 'error',
       'package-json/require-files': 'error',
       'package-json/require-keywords': 'error',
+      'package-json/require-types': 'error',
       'package-json/restrict-dependency-ranges': [
         'error',
         [
