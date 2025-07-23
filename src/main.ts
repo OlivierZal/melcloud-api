@@ -1,5 +1,5 @@
 import 'source-map-support/register.js'
-import 'core-js/actual/array/to-sorted.js'
+import 'core-js/actual/array/to-reversed.js'
 
 export type {
   EnergyDataAta,
