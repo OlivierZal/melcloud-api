@@ -38,6 +38,7 @@ export enum Language {
   cs = 2,
   da = 3,
   de = 4,
+  // eslint-disable-next-line unicorn/prevent-abbreviations
   el = 22,
   en = 0,
   es = 6,

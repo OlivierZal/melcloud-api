@@ -37,7 +37,8 @@ export class BuildingFacade
   }
 
   @fetchDevices
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async fetch(): Promise<ZoneSettings> {
-    return Promise.resolve(this.data)
+    return this.data
   }
 }

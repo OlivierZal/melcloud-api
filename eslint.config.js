@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
 import prettier from 'eslint-config-prettier/flat'
 import perfectionist from 'eslint-plugin-perfectionist'
+import unicorn from 'eslint-plugin-unicorn'
 import yml from 'eslint-plugin-yml'
 
 import { defineConfig } from 'eslint/config'
@@ -150,6 +151,7 @@ const config = defineConfig([
   {
     extends: [
       js.configs.all,
+      unicorn.configs.all,
       tsConfigs.all,
       tsConfigs.strictTypeChecked,
       importXConfigs.errors,
@@ -262,6 +264,7 @@ const config = defineConfig([
       '@typescript-eslint/no-magic-numbers': [
         'error',
         {
+          ignore: [0, 1],
           ignoreEnums: true,
         },
       ],
@@ -327,7 +330,7 @@ const config = defineConfig([
       'import-x/no-unassigned-import': [
         'error',
         {
-          allow: ['source-map-support/register.js'],
+          allow: ['source-map-support/register.js', 'core-js/actual/**'],
         },
       ],
       'import-x/no-unused-modules': 'error',
@@ -336,6 +339,7 @@ const config = defineConfig([
       'import-x/unambiguous': 'error',
       'max-lines': 'off',
       'no-bitwise': 'off',
+      'no-continue': 'off',
       'no-else-return': [
         'error',
         {
@@ -389,6 +393,21 @@ const config = defineConfig([
       'perfectionist/sort-union-types': ['error', typeSortOptions],
       'sort-imports': 'off',
       'sort-keys': 'off',
+      'unicorn/no-keyword-prefix': 'off',
+      'unicorn/no-null': 'off',
+      'unicorn/no-useless-switch-case': 'off',
+      'unicorn/prevent-abbreviations': [
+        'error',
+        {
+          replacements: {
+            arg: false,
+            args: false,
+            param: false,
+            params: false,
+            utils: false,
+          },
+        },
+      ],
     },
     settings: {
       perfectionist: {

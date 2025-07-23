@@ -119,8 +119,9 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   @fetchDevices
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async fetch(): Promise<ListDeviceData<T>> {
-    return Promise.resolve(this.data)
+    return this.data
   }
 
   @syncDevices()
@@ -143,65 +144,52 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     if (!flags) {
       throw new Error('No data to set')
     }
-    return (
-      await this.api.setValues({
-        postData: {
-          ...this.handle(newData),
-          DeviceID: this.id,
-          EffectiveFlags: flags,
-        },
-        type: this.type,
-      })
-    ).data
+    const { data: finalData } = await this.api.setValues({
+      postData: {
+        ...this.handle(newData),
+        DeviceID: this.id,
+        EffectiveFlags: flags,
+      },
+      type: this.type,
+    })
+    return finalData
   }
 
   @syncDevices()
   @updateDevice
   public async values(): Promise<GetDeviceData<T>> {
+    const { data } = await this.api.values({
+      params: { buildingId: this.instance.buildingId, id: this.id },
+    })
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return (
-      await this.api.values({
-        params: { buildingId: this.instance.buildingId, id: this.id },
-      })
-    ).data as GetDeviceData<T>
+    return data as GetDeviceData<T>
   }
 
   public async energy(query?: ReportQuery): Promise<EnergyData<T>> {
+    const { data } = await this.api.energy({
+      postData: this.#getReportPostData(query),
+    })
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return (
-      await this.api.energy({
-        postData: this.#getReportPostData(query),
-      })
-    ).data as EnergyData<T>
+    return data as EnergyData<T>
   }
 
   public async hourlyTemperatures(
     hour = DateTime.now().hour,
   ): Promise<ReportChartLineOptions> {
-    return getChartLineOptions(
-      (
-        await this.api.hourlyTemperatures({
-          postData: { device: this.id, hour },
-        })
-      ).data,
-      this.internalTemperaturesLegend,
-      '°C',
-    )
+    const { data } = await this.api.hourlyTemperatures({
+      postData: { device: this.id, hour },
+    })
+    return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
   }
 
   public async internalTemperatures(
     query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartLineOptions> {
-    return getChartLineOptions(
-      (
-        await this.api.internalTemperatures({
-          postData: this.#getReportPostData(query, useExactRange),
-        })
-      ).data,
-      this.internalTemperaturesLegend,
-      '°C',
-    )
+    const { data } = await this.api.internalTemperatures({
+      postData: this.#getReportPostData(query, useExactRange),
+    })
+    return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
   }
 
   public async operationModes(
@@ -210,32 +198,21 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   ): Promise<ReportChartPieOptions> {
     const postData = this.#getReportPostData(query, useExactRange)
     const { FromDate: from, ToDate: to } = postData
-    return getChartPieOptions(
-      (
-        await this.api.operationModes({
-          postData,
-        })
-      ).data,
-      { from, to },
-    )
+    const { data } = await this.api.operationModes({ postData })
+    return getChartPieOptions(data, { from, to })
   }
 
   public async temperatures(
     query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartLineOptions> {
-    return getChartLineOptions(
-      (
-        await this.api.temperatures({
-          postData: {
-            ...this.#getReportPostData(query, useExactRange),
-            Location: this.instance.building?.location,
-          },
-        })
-      ).data,
-      this.temperaturesLegend,
-      '°C',
-    )
+    const { data } = await this.api.temperatures({
+      postData: {
+        ...this.#getReportPostData(query, useExactRange),
+        Location: this.instance.building?.location,
+      },
+    })
+    return getChartLineOptions(data, this.temperaturesLegend, '°C')
   }
 
   protected handle(
@@ -245,10 +222,11 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   #getFlags(keys: (keyof UpdateDeviceData<T>)[]): number {
-    return keys.reduce(
-      (acc, key) => Number(BigInt(this.flags[key]) | BigInt(acc)),
-      FLAG_UNCHANGED,
-    )
+    let flag = FLAG_UNCHANGED
+    for (const key of keys) {
+      flag = Number(BigInt(this.flags[key]) | BigInt(flag))
+    }
+    return flag
   }
 
   #getReportPostData(

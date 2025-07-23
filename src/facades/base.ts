@@ -112,11 +112,10 @@ export abstract class BaseFacade<
   @syncDevices()
   @updateDevices()
   public async setPower(value = true): Promise<boolean> {
-    return (
-      await this.api.setPower({
-        postData: { DeviceIds: this.#deviceIds, Power: value },
-      })
-    ).data
+    const { data: isOn } = await this.api.setPower({
+      postData: { DeviceIds: this.#deviceIds, Power: value },
+    })
+    return isOn
   }
 
   public async errors(query: ErrorLogQuery): Promise<ErrorLog> {
@@ -165,16 +164,15 @@ export abstract class BaseFacade<
     if (newMax - newMin < TEMPERATURE_GAP) {
       newMax = newMin + TEMPERATURE_GAP
     }
-    return (
-      await this.api.setFrostProtection({
-        postData: {
-          Enabled: enabled ?? true,
-          MaximumTemperature: newMax,
-          MinimumTemperature: newMin,
-          ...(await this.#getFrostProtectionLocation()),
-        },
-      })
-    ).data
+    const { data } = await this.api.setFrostProtection({
+      postData: {
+        Enabled: enabled ?? true,
+        MaximumTemperature: newMax,
+        MinimumTemperature: newMin,
+        ...(await this.#getFrostProtectionLocation()),
+      },
+    })
+    return data
   }
 
   public async setHolidayMode({ from, to }: HolidayModeQuery = {}): Promise<
@@ -183,30 +181,24 @@ export abstract class BaseFacade<
     const isEnabled = to !== undefined
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
     const endDate = isEnabled ? DateTime.fromISO(to) : null
-    return (
-      await this.api.setHolidayMode({
-        postData: {
-          Enabled: isEnabled,
-          EndDate: getDateTimeComponents(endDate),
-          HMTimeZones: await this.#getHolidayModeLocation(),
-          StartDate: getDateTimeComponents(startDate),
-        },
-      })
-    ).data
+    const { data } = await this.api.setHolidayMode({
+      postData: {
+        Enabled: isEnabled,
+        EndDate: getDateTimeComponents(endDate),
+        HMTimeZones: await this.#getHolidayModeLocation(),
+        StartDate: getDateTimeComponents(startDate),
+      },
+    })
+    return data
   }
 
   public async signal(
     hour = DateTime.now().hour,
   ): Promise<ReportChartLineOptions> {
-    return getChartLineOptions(
-      (
-        await this.api.signal({
-          postData: { devices: this.#deviceIds, hour },
-        })
-      ).data,
-      this.#deviceNames,
-      'dBm',
-    )
+    const { data } = await this.api.signal({
+      postData: { devices: this.#deviceIds, hour },
+    })
+    return getChartLineOptions(data, this.#deviceNames, 'dBm')
   }
 
   public async tiles(select?: false): Promise<TilesData<null>>
@@ -217,17 +209,18 @@ export abstract class BaseFacade<
     select: false | IDeviceModel<U> = false,
   ): Promise<TilesData<U | null>> {
     const postData = { DeviceIDs: this.#deviceIds }
-    return select === false || !this.#deviceIds.includes(select.id) ?
-        (await this.api.tiles({ postData })).data
-      : ((
-          await this.api.tiles({
-            postData: {
-              ...postData,
-              SelectedBuilding: select.buildingId,
-              SelectedDevice: select.id,
-            },
-          })
-        ).data as TilesData<U>)
+    if (select === false || !this.#deviceIds.includes(select.id)) {
+      const { data } = await this.api.tiles({ postData })
+      return data
+    }
+    const { data } = await this.api.tiles({
+      postData: {
+        ...postData,
+        SelectedBuilding: select.buildingId,
+        SelectedDevice: select.id,
+      },
+    })
+    return data as TilesData<U>
   }
 
   async #getBaseFrostProtection(

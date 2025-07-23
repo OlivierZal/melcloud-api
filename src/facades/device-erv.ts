@@ -34,11 +34,13 @@ export class DeviceErvFacade
     query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartPieOptions> {
-    const options = await super.operationModes(query, useExactRange)
-    const { labels, series } = options
+    const { labels, series, ...options } = await super.operationModes(
+      query,
+      useExactRange,
+    )
     return {
       ...options,
-      labels: labels.filter(filterVentilationModes),
+      labels: labels.filter((label) => filterVentilationModes(label)),
       series: series.filter((_serie, index) =>
         filterVentilationModes(labels.at(index)),
       ),

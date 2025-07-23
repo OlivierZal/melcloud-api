@@ -1,4 +1,4 @@
-import https from 'https'
+import https from 'node:https'
 
 import axios, {
   type AxiosError,
@@ -79,11 +79,8 @@ const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin2'
 
 const DEFAULT_SYNC_INTERVAL = 5
-const NO_SYNC_INTERVAL = 0
 const RETRY_DELAY = 1000
 
-const DEFAULT_LIMIT = 1
-const DEFAULT_OFFSET = 0
 const INVALID_YEAR = 1
 
 const setting = (
@@ -132,13 +129,12 @@ const handleErrorLogQuery = ({
   const toDate = to !== undefined && to ? DateTime.fromISO(to) : DateTime.now()
 
   const numberLimit = Number(limit)
-  const period = Number.isFinite(numberLimit) ? numberLimit : DEFAULT_LIMIT
+  const period = Number.isFinite(numberLimit) ? numberLimit : 1
 
   const offsetLimit = Number(offset)
-  const daysOffset =
-    !fromDate && Number.isFinite(offsetLimit) ? offsetLimit : DEFAULT_OFFSET
+  const daysOffset = !fromDate && Number.isFinite(offsetLimit) ? offsetLimit : 0
 
-  const daysLimit = fromDate ? DEFAULT_LIMIT : period
+  const daysLimit = fromDate ? 1 : period
   const days = daysLimit * daysOffset + daysOffset
   return {
     fromDate: fromDate ?? toDate.minus({ days: days + daysLimit }),
@@ -179,7 +175,7 @@ export class API implements IAPI {
       username,
     } = config
     this.#autoSyncInterval = Duration.fromObject({
-      minutes: autoSyncInterval ?? NO_SYNC_INTERVAL,
+      minutes: autoSyncInterval ?? 0,
     }).as('milliseconds')
     this.#logger = logger
     this.onSync = onSync
@@ -267,8 +263,9 @@ export class API implements IAPI {
   ): Promise<ErrorLog> {
     const { fromDate, period, toDate } = handleErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
+    const errorLog = await this.#errorLog(deviceIds, fromDate, toDate)
     return {
-      errors: (await this.#errorLog(deviceIds, fromDate, toDate))
+      errors: errorLog
         .map(
           ({
             DeviceId: deviceId,
@@ -286,7 +283,7 @@ export class API implements IAPI {
           }),
         )
         .filter(({ date, error }) => Boolean(date && error))
-        .reverse(),
+        .toReversed(),
       fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
       nextFromDate: nextToDate.minus({ days: period }).toISODate() ?? '',
       nextToDate: nextToDate.toISODate() ?? '',
@@ -563,22 +560,17 @@ export class API implements IAPI {
   async #handleError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
     this.#logger.error(String(errorData))
-    switch (error.response?.status) {
-      case HttpStatusCode.TooManyRequests:
-        this.#pauseListUntil = DateTime.now().plus({ hours: 2 })
-        break
-      case HttpStatusCode.Unauthorized:
-        if (
-          this.#canRetry() &&
-          error.config?.url !== LOGIN_PATH &&
-          (await this.authenticate()) &&
-          error.config
-        ) {
-          return this.#api.request(error.config)
-        }
-        break
-      case undefined:
-      default:
+    const { config, response: { status } = {} } = error
+    if (status === HttpStatusCode.TooManyRequests) {
+      this.#pauseListUntil = DateTime.now().plus({ hours: 2 })
+    } else if (
+      status === HttpStatusCode.Unauthorized &&
+      this.#canRetry() &&
+      config &&
+      config.url !== LOGIN_PATH &&
+      (await this.authenticate())
+    ) {
+      return this.#api.request(config)
     }
     throw new Error(errorData.errorMessage)
   }

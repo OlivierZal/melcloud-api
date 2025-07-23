@@ -15,7 +15,7 @@ export class DeviceAtaFacade
     Power: 0x1,
     SetFanSpeed: 0x8,
     SetTemperature: 0x4,
-    VaneHorizontal: 0x100,
+    VaneHorizontal: 0x1_00,
     VaneVertical: 0x10,
   }
 
@@ -35,20 +35,38 @@ export class DeviceAtaFacade
     max: number
     min: number
   } {
-    switch (operationMode) {
-      case OperationMode.auto:
-        return {
-          max: this.data.MaxTempAutomatic,
-          min: this.data.MinTempAutomatic,
-        }
-      case OperationMode.cool:
-      case OperationMode.dry:
-        return { max: this.data.MaxTempCoolDry, min: this.data.MinTempCoolDry }
-      case OperationMode.fan:
-      case OperationMode.heat:
-      default:
-        return { max: this.data.MaxTempHeat, min: this.data.MinTempHeat }
-    }
+    const {
+      data: {
+        MaxTempAutomatic: maxTemperatureAutomatic,
+        MaxTempCoolDry: maxTemperatureCoolDry,
+        MaxTempHeat: maxTemperatureHeatFan,
+        MinTempAutomatic: minTemperatureAutomatic,
+        MinTempCoolDry: minTemperatureCoolDry,
+        MinTempHeat: minTemperatureHeatFan,
+      },
+    } = this
+    return {
+      [OperationMode.auto]: {
+        max: maxTemperatureAutomatic,
+        min: minTemperatureAutomatic,
+      },
+      [OperationMode.cool]: {
+        max: maxTemperatureCoolDry,
+        min: minTemperatureCoolDry,
+      },
+      [OperationMode.dry]: {
+        max: maxTemperatureCoolDry,
+        min: minTemperatureCoolDry,
+      },
+      [OperationMode.fan]: {
+        max: maxTemperatureHeatFan,
+        min: minTemperatureHeatFan,
+      },
+      [OperationMode.heat]: {
+        max: maxTemperatureHeatFan,
+        min: minTemperatureHeatFan,
+      },
+    }[operationMode]
   }
 
   #handleTargetTemperature(data: Partial<UpdateDeviceDataAta>): {

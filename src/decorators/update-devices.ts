@@ -29,7 +29,7 @@ export const updateDevices =
   ): ((...args: unknown[]) => Promise<T>) =>
     async function newTarget(this: ISuperDeviceFacade, ...args: unknown[]) {
       const [arg] = args
-      if (arg !== null && typeof arg === 'object' && !Object.keys(arg).length) {
+      if (arg !== null && typeof arg === 'object' && Object.keys(arg).length === 0) {
         throw new Error('No data to set')
       }
       const data = await target.call(this, arg)
@@ -41,12 +41,11 @@ export const updateDevices =
               ([, value]) => value !== undefined && value !== null,
             ),
           )
-      ;(type === undefined ?
+      ;for (const device of (type === undefined ?
         this.devices
-      : this.devices.filter(({ type: deviceType }) => deviceType === type)
-      ).forEach((device) => {
+      : this.devices.filter(({ type: deviceType }) => deviceType === type))) {
         device.update(newData)
-      })
+      }
       return data
     }
 

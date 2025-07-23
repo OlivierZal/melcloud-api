@@ -9,8 +9,6 @@ import type {
 
 import { BaseDeviceFacade } from './base-device.ts'
 
-const DEFAULT_TEMPERATURE = 0
-
 const coolFlowTemperatureRange = { max: 25, min: 5 }
 const heatFlowTemperatureRange = { max: 60, min: 25 }
 const roomTemperatureRange = { max: 30, min: 10 }
@@ -41,17 +39,17 @@ export class DeviceAtwFacade
   ]
 
   public readonly flags = {
-    ForcedHotWaterMode: 0x10000,
+    ForcedHotWaterMode: 0x1_00_00,
     OperationModeZone1: 0x8,
     OperationModeZone2: 0x10,
     Power: 0x1,
-    SetCoolFlowTemperatureZone1: 0x1000000000000,
-    SetCoolFlowTemperatureZone2: 0x1000000000000,
-    SetHeatFlowTemperatureZone1: 0x1000000000000,
-    SetHeatFlowTemperatureZone2: 0x1000000000000,
-    SetTankWaterTemperature: 0x1000000000020,
-    SetTemperatureZone1: 0x200000080,
-    SetTemperatureZone2: 0x800000200,
+    SetCoolFlowTemperatureZone1: 0x1_00_00_00_00_00_00,
+    SetCoolFlowTemperatureZone2: 0x1_00_00_00_00_00_00,
+    SetHeatFlowTemperatureZone1: 0x1_00_00_00_00_00_00,
+    SetHeatFlowTemperatureZone2: 0x1_00_00_00_00_00_00,
+    SetTankWaterTemperature: 0x1_00_00_00_00_00_20,
+    SetTemperatureZone1: 0x2_00_00_00_80,
+    SetTemperatureZone2: 0x8_00_00_02_00,
   }
 
   protected readonly temperaturesLegend = [
@@ -107,7 +105,7 @@ export class DeviceAtwFacade
         .filter(([key]) => key in data)
         .map(([key, { max, min }]) => [
           key,
-          Math.min(Math.max(data[key] ?? DEFAULT_TEMPERATURE, min), max),
+          Math.min(Math.max(data[key] ?? 0, min), max),
         ]),
     )
   }

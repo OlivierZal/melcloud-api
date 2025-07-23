@@ -29,9 +29,14 @@ export abstract class BaseSuperDeviceFacade<
   @updateDevices({ type: DeviceType.Ata })
   public async group(): Promise<GroupState> {
     try {
-      return (
-        await this.api.group({ postData: { [this.specification]: this.id } })
-      ).data.Data.Group.State
+      const {
+        data: {
+          Data: {
+            Group: { State: state },
+          },
+        },
+      } = await this.api.group({ postData: { [this.specification]: this.id } })
+      return state
     } catch {
       throw new Error('No air-to-air device found')
     }
@@ -41,14 +46,13 @@ export abstract class BaseSuperDeviceFacade<
   @updateDevices({ type: DeviceType.Ata })
   public async setGroup(state: GroupState): Promise<FailureData | SuccessData> {
     try {
-      return (
-        await this.api.setGroup({
-          postData: {
-            Specification: { [this.specification]: this.id },
-            State: state,
-          },
-        })
-      ).data
+      const { data } = await this.api.setGroup({
+        postData: {
+          Specification: { [this.specification]: this.id },
+          State: state,
+        },
+      })
+      return data
     } catch {
       throw new Error('No air-to-air device found')
     }
