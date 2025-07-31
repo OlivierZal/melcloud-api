@@ -9,6 +9,8 @@ import type {
 
 import { BaseDeviceFacade } from './base-device.ts'
 
+const DEFAULT_TEMPERATURE = 0
+
 const coolFlowTemperatureRange = { max: 25, min: 5 }
 const heatFlowTemperatureRange = { max: 60, min: 25 }
 const roomTemperatureRange = { max: 30, min: 10 }
@@ -105,7 +107,7 @@ export class DeviceAtwFacade
         .filter(([key]) => key in data)
         .map(([key, { max, min }]) => [
           key,
-          Math.min(Math.max(data[key] ?? 0, min), max),
+          Math.min(Math.max(data[key] ?? DEFAULT_TEMPERATURE, min), max),
         ]),
     )
   }

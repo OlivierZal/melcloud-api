@@ -17,6 +17,8 @@ import {
   isUpdateDeviceData,
 } from '../utils.ts'
 
+const LENGTH_ZERO = 0
+
 export const updateDevices =
   <T extends boolean | FailureData | GroupState | SuccessData>({
     type,
@@ -32,7 +34,7 @@ export const updateDevices =
       if (
         arg !== null &&
         typeof arg === 'object' &&
-        Object.keys(arg).length === 0
+        Object.keys(arg).length === LENGTH_ZERO
       ) {
         throw new Error('No data to set')
       }

@@ -78,9 +78,12 @@ import {
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin2'
 
+const NO_SYNC_INTERVAL = 0
 const DEFAULT_SYNC_INTERVAL = 5
 const RETRY_DELAY = 1000
 
+const DEFAULT_ERROR_LOG_OFFSET = 0
+const DEFAULT_ERROR_LOG_PERIOD = 1
 const INVALID_YEAR = 1
 
 const setting = (
@@ -129,12 +132,16 @@ const handleErrorLogQuery = ({
   const toDate = to !== undefined && to ? DateTime.fromISO(to) : DateTime.now()
 
   const numberLimit = Number(limit)
-  const period = Number.isFinite(numberLimit) ? numberLimit : 1
+  const period =
+    Number.isFinite(numberLimit) ? numberLimit : DEFAULT_ERROR_LOG_PERIOD
 
-  const offsetLimit = Number(offset)
-  const daysOffset = !fromDate && Number.isFinite(offsetLimit) ? offsetLimit : 0
+  const numberOffset = Number(offset)
+  const daysOffset =
+    !fromDate && Number.isFinite(numberOffset) ?
+      numberOffset
+    : DEFAULT_ERROR_LOG_OFFSET
 
-  const daysLimit = fromDate ? 1 : period
+  const daysLimit = fromDate ? DEFAULT_ERROR_LOG_PERIOD : period
   const days = daysLimit * daysOffset + daysOffset
   return {
     fromDate: fromDate ?? toDate.minus({ days: days + daysLimit }),
@@ -175,7 +182,7 @@ export class API implements IAPI {
       username,
     } = config
     this.#autoSyncInterval = Duration.fromObject({
-      minutes: autoSyncInterval ?? 0,
+      minutes: autoSyncInterval ?? NO_SYNC_INTERVAL,
     }).as('milliseconds')
     this.#logger = logger
     this.onSync = onSync
