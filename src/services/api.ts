@@ -16,11 +16,6 @@ import {
 } from 'luxon'
 
 import type {
-  GetGroupData,
-  GetGroupPostData,
-  SetGroupPostData,
-} from '../types/ata.ts'
-import type {
   Building,
   EnergyData,
   EnergyPostData,
@@ -31,6 +26,8 @@ import type {
   FrostProtectionPostData,
   GetDeviceData,
   GetDeviceDataParams,
+  GetGroupData,
+  GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
   LoginCredentials,
@@ -41,13 +38,14 @@ import type {
   ReportPostData,
   SetDeviceData,
   SetDevicePostData,
+  SetGroupPostData,
   SetPowerPostData,
   SettingsParams,
   SuccessData,
   TemperatureLogPostData,
   TilesData,
   TilesPostData,
-} from '../types/common.ts'
+} from '../types/index.ts'
 
 import { syncDevices } from '../decorators/index.ts'
 import { DeviceType, Language } from '../enums.ts'

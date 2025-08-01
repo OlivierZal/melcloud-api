@@ -1,4 +1,4 @@
-import type { UpdateDeviceDataAta } from '../types/ata.ts'
+import type { UpdateDeviceDataAta } from '../types/index.ts'
 
 import { type DeviceType, OperationMode } from '../enums.ts'
 

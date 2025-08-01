@@ -1,4 +1,4 @@
-import type { AreaData, AreaDataAny } from '../types/common.ts'
+import type { AreaData, AreaDataAny } from '../types/index.ts'
 
 import type { BuildingModel } from './building.ts'
 import type { DeviceModel } from './device.ts'

@@ -1,7 +1,7 @@
 import type {
   OperationModeZoneDataAtw,
   UpdateDeviceDataAtw,
-} from '../types/atw.ts'
+} from '../types/index.ts'
 
 import { OperationModeZone } from '../enums.ts'
 

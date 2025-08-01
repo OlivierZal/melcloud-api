@@ -1,13 +1,13 @@
 import type { IDeviceFacade, ISuperDeviceFacade } from '../facades/index.ts'
 import type { IDeviceModel } from '../models/index.ts'
-import type { GroupState } from '../types/ata.ts'
 import type {
   FailureData,
   GetDeviceData,
+  GroupState,
   ListDeviceData,
   SetDeviceData,
   SuccessData,
-} from '../types/common.ts'
+} from '../types/index.ts'
 
 import { FLAG_UNCHANGED } from '../constants.ts'
 import { DeviceType } from '../enums.ts'

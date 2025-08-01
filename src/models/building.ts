@@ -1,4 +1,4 @@
-import type { BuildingData, ZoneSettings } from '../types/common.ts'
+import type { BuildingData, ZoneSettings } from '../types/index.ts'
 
 import type { AreaModel } from './area.ts'
 import type { DeviceModel } from './device.ts'

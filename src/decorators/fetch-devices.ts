@@ -1,6 +1,6 @@
 import type { DeviceType } from '../enums.ts'
 import type { IAPI } from '../services/index.ts'
-import type { ListDeviceData, ZoneSettings } from '../types/common.ts'
+import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 
 export const fetchDevices = <
   T extends ListDeviceData<DeviceType> | ZoneSettings,

@@ -7,13 +7,11 @@ import type {
 } from './facades/index.ts'
 import type {
   KeyofSetDeviceDataAtaNotInList,
-  SetDeviceDataAtaInList,
-} from './types/ata.ts'
-import type {
   OperationModeLogData,
   ReportData,
+  SetDeviceDataAtaInList,
   UpdateDeviceData,
-} from './types/common.ts'
+} from './types/index.ts'
 
 import { type DeviceType, LabelType } from './enums.ts'
 

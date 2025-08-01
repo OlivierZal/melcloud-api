@@ -1,4 +1,4 @@
-import type { FloorData } from '../types/common.ts'
+import type { FloorData } from '../types/index.ts'
 
 import type { AreaModel } from './area.ts'
 import type { BuildingModel } from './building.ts'

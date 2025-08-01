@@ -1,5 +1,5 @@
 import type { DeviceType } from '../enums.ts'
-import type { TemperatureDataAtw, UpdateDeviceDataAtw } from '../types/atw.ts'
+import type { TemperatureDataAtw, UpdateDeviceDataAtw } from '../types/index.ts'
 
 import type {
   IDeviceFacade,

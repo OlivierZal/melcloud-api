@@ -6,7 +6,7 @@ import type {
   BaseUpdateDeviceData,
   DeviceDataNotInList,
 } from './bases.ts'
-import type { GetDeviceData } from './common.ts'
+import type { GetDeviceData } from './generic.ts'
 
 export interface ListDeviceDataErv
   extends BaseListDeviceData,

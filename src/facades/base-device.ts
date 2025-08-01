@@ -9,7 +9,7 @@ import type {
   SetDeviceData,
   TilesData,
   UpdateDeviceData,
-} from '../types/common.js'
+} from '../types/index.ts'
 
 import { FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'

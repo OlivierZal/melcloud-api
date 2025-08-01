@@ -1,5 +1,5 @@
 import type { IAPI } from '../services/index.ts'
-import type { ZoneSettings } from '../types/common.ts'
+import type { ZoneSettings } from '../types/index.ts'
 
 import { fetchDevices } from '../decorators/index.ts'
 import { type IBuildingModel, BuildingModel } from '../models/index.ts'

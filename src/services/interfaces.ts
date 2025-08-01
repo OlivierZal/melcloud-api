@@ -2,11 +2,6 @@ import type { HourNumbers } from 'luxon'
 
 import type { DeviceType, Language } from '../enums.ts'
 import type {
-  GetGroupData,
-  GetGroupPostData,
-  SetGroupPostData,
-} from '../types/ata.ts'
-import type {
   Building,
   EnergyData,
   EnergyPostData,
@@ -17,6 +12,8 @@ import type {
   FrostProtectionPostData,
   GetDeviceData,
   GetDeviceDataParams,
+  GetGroupData,
+  GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
   LoginCredentials,
@@ -27,13 +24,14 @@ import type {
   ReportPostData,
   SetDeviceData,
   SetDevicePostData,
+  SetGroupPostData,
   SetPowerPostData,
   SettingsParams,
   SuccessData,
   TemperatureLogPostData,
   TilesData,
   TilesPostData,
-} from '../types/common.ts'
+} from '../types/index.ts'
 
 export interface APIConfig extends Partial<LoginCredentials> {
   readonly autoSyncInterval?: number | null

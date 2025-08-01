@@ -9,12 +9,12 @@ import type {
   IModel,
 } from '../models/index.ts'
 import type { ErrorLog, ErrorLogQuery } from '../services/index.ts'
-import type { GroupState } from '../types/ata.ts'
 import type {
   EnergyData,
   FailureData,
   FrostProtectionData,
   GetDeviceData,
+  GroupState,
   HolidayModeData,
   ListDeviceData,
   SetDeviceData,
@@ -22,7 +22,7 @@ import type {
   TilesData,
   UpdateDeviceData,
   ZoneSettings,
-} from '../types/common.ts'
+} from '../types/index.ts'
 
 export interface FrostProtectionQuery {
   readonly max: number

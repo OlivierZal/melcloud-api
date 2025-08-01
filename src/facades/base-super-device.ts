@@ -4,8 +4,12 @@ import type {
   IDeviceModelAny,
   IFloorModel,
 } from '../models/index.ts'
-import type { GroupState, SetGroupPostData } from '../types/ata.ts'
-import type { FailureData, SuccessData } from '../types/common.ts'
+import type {
+  FailureData,
+  GroupState,
+  SetGroupPostData,
+  SuccessData,
+} from '../types/index.ts'
 
 import { syncDevices, updateDevices } from '../decorators/index.ts'
 import { DeviceType } from '../enums.ts'

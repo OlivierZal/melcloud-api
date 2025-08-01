@@ -1,5 +1,5 @@
 import type { DeviceType } from '../enums.ts'
-import type { ListDeviceData, ZoneSettings } from '../types/common.ts'
+import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 
 interface ISubBuildingModel extends IModel {
   readonly buildingId: number

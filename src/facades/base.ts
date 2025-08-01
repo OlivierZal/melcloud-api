@@ -20,7 +20,7 @@ import type {
   SettingsParams,
   SuccessData,
   TilesData,
-} from '../types/common.ts'
+} from '../types/index.ts'
 
 import { syncDevices, updateDevices } from '../decorators/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'

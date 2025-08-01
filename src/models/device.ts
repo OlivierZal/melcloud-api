@@ -3,7 +3,7 @@ import type {
   ListDevice,
   ListDeviceAny,
   ListDeviceData,
-} from '../types/common.ts'
+} from '../types/index.ts'
 
 import type { AreaModel } from './area.ts'
 import type { BuildingModel } from './building.ts'
