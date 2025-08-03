@@ -3,7 +3,7 @@ export type {
   GetGroupData,
   GetGroupPostData,
   GroupState,
-  KeyofSetDeviceDataAtaNotInList,
+  KeyOfSetDeviceDataAtaNotInList,
   ListDeviceDataAta,
   SetDeviceDataAta,
   SetDeviceDataAtaInList,

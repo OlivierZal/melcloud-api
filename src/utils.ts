@@ -6,7 +6,7 @@ import type {
   ReportQuery,
 } from './facades/index.ts'
 import type {
-  KeyofSetDeviceDataAtaNotInList,
+  KeyOfSetDeviceDataAtaNotInList,
   OperationModeLogData,
   ReportData,
   SetDeviceDataAtaInList,
@@ -20,7 +20,7 @@ const YEAR_MONTH_DIVISOR = 100
 export const now = (): string => DateTime.now().toISO({ includeOffset: false })
 
 export const fromSetToListAta: Record<
-  KeyofSetDeviceDataAtaNotInList,
+  KeyOfSetDeviceDataAtaNotInList,
   keyof SetDeviceDataAtaInList
 > = {
   SetFanSpeed: 'FanSpeed',
@@ -30,15 +30,15 @@ export const fromSetToListAta: Record<
 
 export const isSetDeviceDataAtaNotInList = (
   value: string,
-): value is KeyofSetDeviceDataAtaNotInList => value in fromSetToListAta
+): value is KeyOfSetDeviceDataAtaNotInList => value in fromSetToListAta
 
 export const fromListToSetAta: Record<
   keyof SetDeviceDataAtaInList,
-  KeyofSetDeviceDataAtaNotInList
+  KeyOfSetDeviceDataAtaNotInList
   // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
 > = Object.fromEntries(
   Object.entries(fromSetToListAta).map(([key, value]) => [value, key]),
-) as Record<keyof SetDeviceDataAtaInList, KeyofSetDeviceDataAtaNotInList>
+) as Record<keyof SetDeviceDataAtaInList, KeyOfSetDeviceDataAtaNotInList>
 
 export const isSetDeviceDataAtaInList = (
   value: string,
