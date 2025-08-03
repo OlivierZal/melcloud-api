@@ -9,6 +9,10 @@ import { DeviceAtwFacade } from './device-atw.ts'
 
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
 const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
+const roomOperationModeZones = new Set([
+  OperationModeZone.room,
+  OperationModeZone.room_cool,
+])
 
 export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
   protected override readonly internalTemperaturesLegend = [
@@ -61,9 +65,7 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
       }
     }
     if (
-      [OperationModeZone.room, OperationModeZone.room_cool].includes(
-        primaryValue,
-      ) &&
+      roomOperationModeZones.has(primaryValue) &&
       primaryValue === secondaryValue
     ) {
       secondaryValue += ROOM_FLOW_GAP

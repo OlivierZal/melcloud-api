@@ -18,13 +18,10 @@ const roomTemperatureRange = { max: 30, min: 10 }
 const mergeSeries = (
   series1: ReportChartLineOptions['series'],
   series2: ReportChartLineOptions['series'],
-): ReportChartLineOptions['series'] => [
-  ...series1,
-  ...series2.filter(
-    ({ name }) =>
-      !series1.map(({ name: serieName }) => serieName).includes(name),
-  ),
-]
+): ReportChartLineOptions['series'] => {
+  const series1Names = new Set(series1.map(({ name }) => name))
+  return [...series1, ...series2.filter(({ name }) => !series1Names.has(name))]
+}
 
 export class DeviceAtwFacade
   extends BaseDeviceFacade<DeviceType.Atw>

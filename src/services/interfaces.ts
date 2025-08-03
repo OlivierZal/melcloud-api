@@ -33,6 +33,13 @@ import type {
   TilesPostData,
 } from '../types/index.ts'
 
+const apiSettingKeys = new Set([
+  'contextKey',
+  'expiry',
+  'password',
+  'username',
+]) satisfies Set<keyof APISettings> as Set<string>
+
 export interface APIConfig extends Partial<LoginCredentials> {
   readonly autoSyncInterval?: number | null
   readonly language?: string
@@ -208,11 +215,4 @@ export type OnSyncFunction = (params?: {
 }) => Promise<void>
 
 export const isAPISetting = (value: string): value is keyof APISettings =>
-  (
-    [
-      'contextKey',
-      'expiry',
-      'password',
-      'username',
-    ] satisfies (keyof APISettings)[] as string[]
-  ).includes(value)
+  apiSettingKeys.has(value)
