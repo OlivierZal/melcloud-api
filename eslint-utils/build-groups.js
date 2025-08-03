@@ -19,7 +19,7 @@ const compatibleModifierCombos = ({ modifierIncompatibilities, modifiers }) =>
   modifierCombos({ modifiers }).filter((combo) => {
     const comboSet = new Set(combo)
     return comboSet.every((modifier) =>
-      new Set(modifierIncompatibilities[modifier] ?? []).every(
+      (modifierIncompatibilities[modifier] ?? []).every(
         (incompatibleModifier) => !comboSet.has(incompatibleModifier),
       ),
     )
