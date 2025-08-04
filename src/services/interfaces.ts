@@ -33,12 +33,12 @@ import type {
   TilesPostData,
 } from '../types/index.ts'
 
-const apiSettingKeys = new Set<keyof APISettings>([
+const apiSettingKeys: Set<string> = new Set([
   'contextKey',
   'expiry',
   'password',
   'username',
-]) as Set<string>
+]) satisfies Set<keyof APISettings>
 
 export interface APIConfig extends Partial<LoginCredentials> {
   readonly autoSyncInterval?: number | null
