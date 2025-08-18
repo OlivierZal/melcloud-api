@@ -485,6 +485,7 @@ const config = defineConfig([
       ...packageJsonConfigs.recommended.rules,
       'package-json/no-redundant-files': 'error',
       'package-json/require-author': 'error',
+      'package-json/require-bugs': 'error',
       'package-json/require-files': 'error',
       'package-json/require-keywords': 'error',
       'package-json/require-types': 'error',
