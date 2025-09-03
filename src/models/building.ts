@@ -53,7 +53,7 @@ export class BuildingModel extends BaseModel implements IBuildingModel {
   }
 
   public get floorIds(): number[] {
-    return this.areas.map(({ id }) => id)
+    return this.floors.map(({ id }) => id)
   }
 
   public get floors(): IFloorModel[] {
