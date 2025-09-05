@@ -29,11 +29,7 @@ export const updateDevices =
   ): ((...args: unknown[]) => Promise<T>) =>
     async function newTarget(this: ISuperDeviceFacade, ...args: unknown[]) {
       const [arg] = args
-      if (
-        arg !== null &&
-        typeof arg === 'object' &&
-        !Object.keys(arg).length
-      ) {
+      if (arg !== null && typeof arg === 'object' && !Object.keys(arg).length) {
         throw new Error('No data to set')
       }
       const data = await target.call(this, arg)
