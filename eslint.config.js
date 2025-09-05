@@ -392,6 +392,7 @@ const config = defineConfig([
       'perfectionist/sort-union-types': ['error', typeSortOptions],
       'sort-imports': 'off',
       'sort-keys': 'off',
+      'unicorn/explicit-length-check': 'off',
       'unicorn/no-keyword-prefix': 'off',
       'unicorn/no-null': 'off',
       'unicorn/no-useless-switch-case': 'off',
@@ -483,7 +484,6 @@ const config = defineConfig([
     ...packageJsonConfigs.recommended,
     rules: {
       ...packageJsonConfigs.recommended.rules,
-      'package-json/no-redundant-files': 'error',
       'package-json/require-author': 'error',
       'package-json/require-bugs': 'error',
       'package-json/require-files': 'error',
