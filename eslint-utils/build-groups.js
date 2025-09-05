@@ -52,7 +52,7 @@ export const buildGroups = ({
       )
       const [{ length }] = groupPairs
       return [...Array.from({ length }).keys()].map((index) =>
-        groupPairs.map((group) => group[index]),
+        groupPairs.map((groupPair) => groupPair[index]),
       )
     }
     return buildGroupsForSelector({
