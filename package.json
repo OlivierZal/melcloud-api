@@ -54,7 +54,7 @@
     "eslint-plugin-perfectionist": "^4.15.0",
     "eslint-plugin-unicorn": "^61.0.2",
     "eslint-plugin-yml": "^1.18.0",
-    "jsonc-eslint-parser": "^2.4.0",
+    "jsonc-eslint-parser": "^2.4.1",
     "prettier": "^3.6.2",
     "prettier-plugin-packagejson": "^2.5.19",
     "typedoc": "^0.28.13",
