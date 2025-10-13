@@ -74,7 +74,7 @@ import {
 } from './interfaces.ts'
 
 const LIST_PATH = '/User/ListDevices'
-const LOGIN_PATH = '/Login/ClientLogin2'
+const LOGIN_PATH = '/Login/ClientLogin3'
 
 const NO_SYNC_INTERVAL = 0
 const DEFAULT_SYNC_INTERVAL = 5
@@ -478,7 +478,7 @@ export class API implements IAPI {
       data: { LoginData: loginData },
     } = await this.login({
       postData: {
-        AppVersion: '1.34.14.0',
+        AppVersion: '1.37.2.0',
         Email: username,
         Language: this.#getLanguageCode(),
         Password: password,
