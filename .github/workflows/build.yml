@@ -15,6 +15,7 @@ jobs:
         run: npm ci
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_REF: ${{ github.head_ref }}
         name: Commit & push changes
         run: |
           git config user.name "github-actions[bot]"
@@ -30,8 +31,8 @@ jobs:
               PR_URL=$(gh pr view "$BRANCH_NAME" --json url -q '.url')
               gh pr merge --auto --merge --delete-branch "$PR_URL"
             else
-              git pull origin ${{ github.head_ref }} --rebase
-              git push origin HEAD:${{ github.head_ref }}
+              git pull origin $HEAD_REF --rebase
+              git push origin HEAD:$HEAD_REF
             fi
           fi
 name: Build package
