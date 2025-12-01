@@ -1,13 +1,15 @@
 import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
 import prettier from 'eslint-config-prettier/flat'
+import packageJson, {
+  configs as packageJsonConfigs,
+} from 'eslint-plugin-package-json'
 import perfectionist from 'eslint-plugin-perfectionist'
 import unicorn from 'eslint-plugin-unicorn'
 import yml from 'eslint-plugin-yml'
 
 import { defineConfig } from 'eslint/config'
 import { flatConfigs as importXConfigs } from 'eslint-plugin-import-x'
-import { configs as packageJsonConfigs } from 'eslint-plugin-package-json'
 import { Alphabet } from 'eslint-plugin-perfectionist/alphabet'
 import { configs as tsConfigs } from 'typescript-eslint'
 
@@ -480,14 +482,15 @@ const config = defineConfig([
       ],
     },
   },
+  packageJsonConfigs['recommended-publishable'],
+  packageJsonConfigs.stylistic,
   {
-    ...packageJsonConfigs.recommended,
+    plugins: {
+      'package-json': packageJson,
+    },
     rules: {
-      ...packageJsonConfigs.recommended.rules,
-      'package-json/exports-subpaths-style': 'error',
       'package-json/require-author': 'error',
       'package-json/require-bugs': 'error',
-      'package-json/require-files': 'error',
       'package-json/require-keywords': 'error',
       'package-json/require-types': 'error',
       'package-json/restrict-dependency-ranges': [
@@ -497,12 +500,6 @@ const config = defineConfig([
             rangeType: 'caret',
           },
         ],
-      ],
-      'package-json/valid-bin': [
-        'error',
-        {
-          enforceCase: true,
-        },
       ],
     },
   },
