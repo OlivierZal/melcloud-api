@@ -36,14 +36,12 @@ export interface HolidayModeQuery {
 }
 
 export interface IBuildingFacade
-  extends IBaseBuildingModel,
-    ISuperDeviceFacade {
+  extends IBaseBuildingModel, ISuperDeviceFacade {
   readonly fetch: () => Promise<ZoneSettings>
 }
 
 export interface IDeviceFacade<T extends DeviceType>
-  extends IBaseDeviceModel<T>,
-    IFacade {
+  extends IBaseDeviceModel<T>, IFacade {
   readonly flags: Record<keyof UpdateDeviceData<T>, number>
   readonly fetch: () => Promise<ListDeviceData<T>>
   readonly operationModes: (

@@ -19,8 +19,8 @@ import type { ISuperDeviceFacade } from './interfaces.ts'
 import { BaseFacade } from './base.ts'
 
 export abstract class BaseSuperDeviceFacade<
-    T extends IAreaModel | IBuildingModel | IFloorModel,
-  >
+  T extends IAreaModel | IBuildingModel | IFloorModel,
+>
   extends BaseFacade<T>
   implements ISuperDeviceFacade
 {

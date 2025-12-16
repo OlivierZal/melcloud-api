@@ -9,7 +9,8 @@ import type {
 import type { GetDeviceData } from './generic.ts'
 
 export interface ListDeviceDataErv
-  extends BaseListDeviceData,
+  extends
+    BaseListDeviceData,
     Omit<GetDeviceData<DeviceType.Erv>, keyof DeviceDataNotInList> {
   readonly HasAutomaticFanSpeed: boolean
   readonly HasCO2Sensor: boolean
@@ -18,8 +19,7 @@ export interface ListDeviceDataErv
 }
 
 export interface SetDeviceDataErv
-  extends BaseSetDeviceData,
-    Required<UpdateDeviceDataErv> {
+  extends BaseSetDeviceData, Required<UpdateDeviceDataErv> {
   readonly DeviceType: DeviceType.Erv
   readonly NumberOfFanSpeeds: number
   readonly OutdoorTemperature: number

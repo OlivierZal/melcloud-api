@@ -19,14 +19,15 @@ export interface BaseListDevice {
   readonly Type: DeviceType
 }
 
-export interface BaseListDeviceData
-  extends Omit<BaseGetDeviceData, keyof DeviceDataNotInList> {
+export interface BaseListDeviceData extends Omit<
+  BaseGetDeviceData,
+  keyof DeviceDataNotInList
+> {
   readonly WifiSignalStrength: number
 }
 
 export interface BaseSetDeviceData
-  extends DeviceDataNotInList,
-    Required<BaseUpdateDeviceData> {
+  extends DeviceDataNotInList, Required<BaseUpdateDeviceData> {
   readonly EffectiveFlags: number
   readonly Offline: boolean
 }

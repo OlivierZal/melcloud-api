@@ -227,8 +227,7 @@ export interface TilesData<T extends DeviceType | null> {
 }
 
 export interface ZoneSettings
-  extends FrostProtectionData,
-    Omit<HolidayModeData, 'EndDate' | 'StartDate'> {}
+  extends FrostProtectionData, Omit<HolidayModeData, 'EndDate' | 'StartDate'> {}
 
 export type AreaDataAny = AreaData<null> | AreaData<number>
 

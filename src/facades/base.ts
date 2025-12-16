@@ -50,8 +50,7 @@ const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
 
 export abstract class BaseFacade<
   T extends IAreaModel | IBuildingModel | IDeviceModelAny | IFloorModel,
-> implements IFacade
-{
+> implements IFacade {
   public readonly id: number
 
   protected readonly api: IAPI

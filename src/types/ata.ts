@@ -57,7 +57,8 @@ export interface GroupState {
 }
 
 export interface ListDeviceDataAta
-  extends BaseListDeviceData,
+  extends
+    BaseListDeviceData,
     Omit<
       GetDeviceData<DeviceType.Ata>,
       KeyOfSetDeviceDataAtaNotInList | keyof DeviceDataNotInList
@@ -75,8 +76,7 @@ export interface ListDeviceDataAta
 }
 
 export interface SetDeviceDataAta
-  extends BaseSetDeviceData,
-    Required<UpdateDeviceDataAta> {
+  extends BaseSetDeviceData, Required<UpdateDeviceDataAta> {
   readonly DeviceType: DeviceType.Ata
   readonly NumberOfFanSpeeds: number
   readonly RoomTemperature: number

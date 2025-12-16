@@ -23,7 +23,8 @@ export interface EnergyDataAtw {
 }
 
 export interface ListDeviceDataAtw
-  extends BaseListDeviceData,
+  extends
+    BaseListDeviceData,
     Omit<GetDeviceData<DeviceType.Atw>, keyof DeviceDataNotInList> {
   readonly BoosterHeater1Status: boolean
   readonly BoosterHeater2PlusStatus: boolean
@@ -60,8 +61,7 @@ export interface OperationModeZoneDataAtw {
 }
 
 export interface SetDeviceDataAtw
-  extends BaseSetDeviceData,
-    Required<UpdateDeviceDataAtw> {
+  extends BaseSetDeviceData, Required<UpdateDeviceDataAtw> {
   readonly DeviceType: DeviceType.Atw
   readonly IdleZone1: boolean
   readonly IdleZone2: boolean
@@ -88,9 +88,7 @@ export interface TemperatureDataAtw {
 }
 
 export interface UpdateDeviceDataAtw
-  extends BaseUpdateDeviceData,
-    OperationModeZoneDataAtw,
-    TemperatureDataAtw {
+  extends BaseUpdateDeviceData, OperationModeZoneDataAtw, TemperatureDataAtw {
   readonly ForcedHotWaterMode?: boolean
 }
 

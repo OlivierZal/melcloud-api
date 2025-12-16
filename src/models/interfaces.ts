@@ -39,8 +39,7 @@ export interface IBuildingModel extends IBaseBuildingModel, ISuperAreaModel {
 }
 
 export interface IDeviceModel<T extends DeviceType>
-  extends IBaseDeviceModel<T>,
-    ISubFloorModel {
+  extends IBaseDeviceModel<T>, ISubFloorModel {
   readonly areaId: number | null
   readonly area?: IAreaModel | null
   readonly update: (data: Partial<ListDeviceData<T>>) => void
