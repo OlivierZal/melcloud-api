@@ -6,101 +6,101 @@ export enum DeviceType {
 
 export enum FanSpeed {
   auto = 0,
-  fast = 4,
-  moderate = 3,
-  silent = 255,
-  slow = 2,
-  very_fast = 5,
   very_slow = 1,
+  slow = 2,
+  moderate = 3,
+  fast = 4,
+  very_fast = 5,
+  silent = 255,
 }
 
 export enum Horizontal {
   auto = 0,
-  center = 3,
-  center_left = 2,
-  center_right = 4,
   leftwards = 1,
+  center_left = 2,
+  center = 3,
+  center_right = 4,
   rightwards = 5,
-  swing = 12,
   wide = 8,
+  swing = 12,
 }
 
 export enum LabelType {
-  day_of_week = 4,
+  time = 0,
+  raw = 1,
   month = 2,
   month_of_year = 3,
-  raw = 1,
-  time = 0,
+  day_of_week = 4,
 }
 
 export enum Language {
+  en = 0,
   bg = 1,
   cs = 2,
   da = 3,
   de = 4,
-  // eslint-disable-next-line unicorn/prevent-abbreviations
-  el = 22,
-  en = 0,
-  es = 6,
   et = 5,
-  fi = 17,
+  es = 6,
   fr = 7,
-  hr = 23,
-  hu = 11,
   hy = 8,
-  it = 19,
-  lt = 10,
   lv = 9,
+  lt = 10,
+  hu = 11,
   nl = 12,
   no = 13,
   pl = 14,
   pt = 15,
-  ro = 24,
   ru = 16,
+  fi = 17,
+  sv = 18,
+  it = 19,
+  uk = 20,
+  tr = 21,
+  // eslint-disable-next-line unicorn/prevent-abbreviations
+  el = 22,
+  hr = 23,
+  ro = 24,
   sl = 25,
   sq = 26,
-  sv = 18,
-  tr = 21,
-  uk = 20,
 }
 
 export enum OperationMode {
-  auto = 8,
-  cool = 3,
-  dry = 2,
-  fan = 7,
   heat = 1,
+  dry = 2,
+  cool = 3,
+  fan = 7,
+  auto = 8,
 }
 
 export enum OperationModeState {
-  cooling = 3,
-  defrost = 5,
+  idle = 0,
   dhw = 1,
   heating = 2,
-  idle = 0,
+  cooling = 3,
+  defrost = 5,
   legionella = 6,
 }
 
 export enum OperationModeZone {
-  curve = 2,
-  flow = 1,
-  flow_cool = 4,
   room = 0,
+  flow = 1,
+  curve = 2,
   room_cool = 3,
+  flow_cool = 4,
 }
 
 export enum VentilationMode {
-  auto = 2,
-  bypass = 1,
   recovery = 0,
+  bypass = 1,
+  auto = 2,
 }
 
 export enum Vertical {
   auto = 0,
-  downwards = 5,
-  mid_high = 2,
-  mid_low = 4,
-  middle = 3,
-  swing = 7,
   upwards = 1,
+  mid_high = 2,
+  middle = 3,
+  mid_low = 4,
+  downwards = 5,
+  swing = 7,
 }
