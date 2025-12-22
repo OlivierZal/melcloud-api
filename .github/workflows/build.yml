@@ -31,7 +31,9 @@ jobs:
               PR_URL=$(gh pr view "$BRANCH_NAME" --json url -q '.url')
               gh pr merge --auto --merge --delete-branch "$PR_URL"
             else
-              git pull origin $HEAD_REF --rebase
+              git fetch origin "$HEAD_REF":"refs/remotes/origin/$HEAD_REF"
+              git checkout -B "$HEAD_REF"
+              git rebase "origin/$HEAD_REF"
               git push origin HEAD:$HEAD_REF
             fi
           fi
