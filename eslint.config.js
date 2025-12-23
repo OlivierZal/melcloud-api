@@ -65,7 +65,7 @@ const config = defineConfig([
       importXConfigs.typescript,
       prettier,
     ],
-    files: ['**/*.{ts,js}'],
+    files: ['**/*.{ts,mts,js}'],
     languageOptions: {
       ecmaVersion: 'latest',
       parserOptions: {
