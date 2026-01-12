@@ -27,7 +27,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsgo",
+    "build": "tsc",
     "docs": "typedoc && npm run format:docs",
     "format": "prettier . --check",
     "format:docs": "prettier README.md --ignore-path --write",
@@ -64,6 +64,6 @@
     "typedoc": "^0.28.16",
     "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.52.0"
+    "typescript-eslint": "^8.53.0"
   }
 }
