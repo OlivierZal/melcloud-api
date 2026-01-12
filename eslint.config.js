@@ -498,7 +498,9 @@ const config = defineConfig([
     rules: {
       'package-json/require-author': 'error',
       'package-json/require-bugs': 'error',
+      'package-json/require-homepage': 'error',
       'package-json/require-keywords': 'error',
+      'package-json/require-scripts': 'error',
       'package-json/require-types': 'error',
       'package-json/restrict-dependency-ranges': [
         'error',

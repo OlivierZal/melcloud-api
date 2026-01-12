@@ -27,14 +27,13 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc",
     "docs": "typedoc && npm run format:docs",
     "format": "prettier . --check",
     "format:docs": "prettier README.md --ignore-path --write",
     "format:fix": "prettier . --write",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
-    "prepare": "npm run docs && npm run lint:fix && npm run format:fix && npm run build"
+    "prepare": "npm run docs && npm run lint:fix && npm run format:fix && tsc"
   },
   "dependencies": {
     "axios": "^1.13.2",
