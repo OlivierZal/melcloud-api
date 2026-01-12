@@ -60,7 +60,7 @@
     "jsonc-eslint-parser": "^2.4.2",
     "prettier": "^3.7.4",
     "prettier-plugin-packagejson": "^2.5.20",
-    "typedoc": "^0.28.15",
+    "typedoc": "^0.28.16",
     "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.52.0"
