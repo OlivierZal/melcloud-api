@@ -193,6 +193,9 @@ const config = defineConfig([
         'error',
         {
           argsIgnorePattern: '^_context$',
+          enableAutofixRemoval: {
+            imports: true,
+          },
         },
       ],
       '@typescript-eslint/prefer-destructuring': [
