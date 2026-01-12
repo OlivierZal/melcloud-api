@@ -33,7 +33,7 @@
     "format:fix": "prettier . --write",
     "lint": "eslint .",
     "lint:fix": "npm run lint -- --fix",
-    "prepare": "npm run docs && npm run lint:fix && npm run format:fix && tsc"
+    "prepare": "npm run docs && npm run lint:fix && npm run format:fix && tsgo"
   },
   "dependencies": {
     "axios": "^1.13.2",
@@ -48,6 +48,7 @@
     "@stylistic/eslint-plugin": "^5.7.0",
     "@types/luxon": "^3.7.1",
     "@types/node": "^25.0.6",
+    "@typescript/native-preview": "^7.0.0-dev.20260112.1",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -61,7 +62,6 @@
     "prettier-plugin-packagejson": "^2.5.20",
     "typedoc": "^0.28.16",
     "typedoc-plugin-markdown": "^4.9.0",
-    "typescript": "^5.9.3",
     "typescript-eslint": "^8.52.0"
   }
 }
