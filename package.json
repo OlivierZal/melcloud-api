@@ -59,7 +59,7 @@
     "eslint-plugin-unicorn": "^62.0.0",
     "eslint-plugin-yml": "^1.19.1",
     "jsonc-eslint-parser": "^2.4.2",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.0",
     "prettier-plugin-packagejson": "^2.5.21",
     "typedoc": "^0.28.16",
     "typedoc-plugin-markdown": "^4.9.0",
