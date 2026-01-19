@@ -119,9 +119,9 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   @fetchDevices
-  // eslint-disable-next-line @typescript-eslint/require-await
   public async fetch(): Promise<ListDeviceData<T>> {
-    return this.data
+    // eslint-disable-next-line unicorn/no-useless-promise-resolve-reject
+    return Promise.resolve(this.data)
   }
 
   @syncDevices()
