@@ -15,9 +15,6 @@ BuildingModel.setModels(models)
 DeviceModel.setModels(models)
 FloorModel.setModels(models)
 
-// eslint-disable-next-line unicorn/prefer-export-from
-export { AreaModel, BuildingModel, DeviceModel, FloorModel }
-
 export type {
   IAreaModel,
   IBaseBuildingModel,
@@ -28,3 +25,4 @@ export type {
   IFloorModel,
   IModel,
 } from './interfaces.ts'
+export { AreaModel, BuildingModel, DeviceModel, FloorModel }
