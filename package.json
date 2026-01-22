@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "axios": "^1.13.2",
-    "core-js": "^3.47.0",
+    "core-js": "^3.48.0",
     "https": "^1.0.0",
     "luxon": "^3.7.2",
     "source-map-support": "^0.5.21"
