@@ -48,7 +48,7 @@
     "@eslint/markdown": "^7.5.1",
     "@stylistic/eslint-plugin": "^5.7.1",
     "@types/luxon": "^3.7.1",
-    "@types/node": "^25.0.10",
+    "@types/node": "^25.1.0",
     "@typescript/native-preview": "^7.0.0-dev.20260128.1",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
