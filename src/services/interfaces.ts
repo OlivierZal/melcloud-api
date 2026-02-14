@@ -40,6 +40,163 @@ const apiSettingKeys: Set<string> = new Set([
   'username',
 ]) satisfies Set<keyof APISettings>
 
+// --- Focused sub-interfaces ---
+// Each sub-interface groups related API capabilities.
+// A new API adapter can implement any subset of these.
+
+export interface IAuthAPI {
+  readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
+  readonly login: ({
+    postData,
+  }: {
+    postData: LoginPostData
+  }) => Promise<{ data: LoginData }>
+  readonly setLanguage: ({
+    postData,
+  }: {
+    postData: { language: Language }
+  }) => Promise<{ data: boolean }>
+  readonly updateLanguage: (language: string) => Promise<void>
+}
+
+export interface IDeviceAPI {
+  readonly list: () => Promise<{ data: Building[] }>
+  readonly setPower: ({
+    postData,
+  }: {
+    postData: SetPowerPostData
+  }) => Promise<{ data: boolean }>
+  readonly setValues: <T extends DeviceType>({
+    postData,
+    type,
+  }: {
+    postData: SetDevicePostData<T>
+    type: T
+  }) => Promise<{ data: SetDeviceData<T> }>
+  readonly tiles: (({
+    postData,
+  }: {
+    postData: TilesPostData<null>
+  }) => Promise<{ data: TilesData<null> }>) &
+    (<T extends DeviceType>({
+      postData,
+    }: {
+      postData: TilesPostData<T>
+    }) => Promise<{ data: TilesData<T> }>)
+  readonly values: ({
+    params,
+  }: {
+    params: GetDeviceDataParams
+  }) => Promise<{ data: GetDeviceData<DeviceType> }>
+}
+
+export interface IEnergyAPI {
+  // DeviceType.Ata | DeviceType.Atw
+  readonly energy: ({
+    postData,
+  }: {
+    postData: EnergyPostData
+  }) => Promise<{ data: EnergyData<DeviceType> }>
+}
+
+export interface IGroupAPI {
+  // DeviceType.Ata
+  readonly group: ({
+    postData,
+  }: {
+    postData: GetGroupPostData
+  }) => Promise<{ data: GetGroupData }>
+  readonly setGroup: ({
+    postData,
+  }: {
+    postData: SetGroupPostData
+  }) => Promise<{ data: FailureData | SuccessData }>
+}
+
+export interface IReportAPI {
+  readonly errors: ({
+    postData,
+  }: {
+    postData: ErrorLogPostData
+  }) => Promise<{ data: ErrorLogData[] | FailureData }>
+  readonly operationModes: ({
+    postData,
+  }: {
+    postData: ReportPostData
+  }) => Promise<{ data: OperationModeLogData }>
+  readonly signal: ({
+    postData,
+  }: {
+    postData: { devices: number | number[]; hour: HourNumbers }
+  }) => Promise<{ data: ReportData }>
+  readonly temperatures: ({
+    postData,
+  }: {
+    postData: TemperatureLogPostData
+  }) => Promise<{ data: ReportData }>
+}
+
+export interface ISettingsAPI {
+  readonly frostProtection: ({
+    params,
+  }: {
+    params: SettingsParams
+  }) => Promise<{ data: FrostProtectionData }>
+  readonly holidayMode: ({
+    params,
+  }: {
+    params: SettingsParams
+  }) => Promise<{ data: HolidayModeData }>
+  readonly setFrostProtection: ({
+    postData,
+  }: {
+    postData: FrostProtectionPostData
+  }) => Promise<{ data: FailureData | SuccessData }>
+  readonly setHolidayMode: ({
+    postData,
+  }: {
+    postData: HolidayModePostData
+  }) => Promise<{ data: FailureData | SuccessData }>
+}
+
+export interface ISyncAPI {
+  readonly onSync?: OnSyncFunction
+  readonly clearSync: () => void
+  readonly errorLog: (
+    query: ErrorLogQuery,
+    deviceIds: number[],
+  ) => Promise<ErrorLog>
+  readonly fetch: () => Promise<Building[]>
+}
+
+export interface IAtwAPI {
+  // DeviceType.Atw
+  readonly hourlyTemperatures: ({
+    postData,
+  }: {
+    postData: { device: number; hour: HourNumbers }
+  }) => Promise<{ data: ReportData }>
+  readonly internalTemperatures: ({
+    postData,
+  }: {
+    postData: ReportPostData
+  }) => Promise<{ data: ReportData }>
+}
+
+// --- Composite interface (full API capability) ---
+
+export interface IAPI
+  extends IAuthAPI,
+    IAtwAPI,
+    IDeviceAPI,
+    IEnergyAPI,
+    IGroupAPI,
+    IReportAPI,
+    ISettingsAPI,
+    ISyncAPI {}
+
+// --- Config & support types ---
+
 export interface APIConfig extends Partial<LoginCredentials> {
   readonly autoSyncInterval?: number | null
   readonly language?: string
@@ -75,125 +232,6 @@ export interface ErrorLogQuery {
   readonly limit?: string
   readonly offset?: string
   readonly to?: string
-}
-
-export interface IAPI {
-  readonly onSync?: OnSyncFunction
-  readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
-  readonly clearSync: () => void
-  readonly errorLog: (
-    query: ErrorLogQuery,
-    deviceIds: number[],
-  ) => Promise<ErrorLog>
-  readonly fetch: () => Promise<Building[]>
-  readonly updateLanguage: (language: string) => Promise<void>
-  // DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
-  readonly errors: ({
-    postData,
-  }: {
-    postData: ErrorLogPostData
-  }) => Promise<{ data: ErrorLogData[] | FailureData }>
-  readonly frostProtection: ({
-    params,
-  }: {
-    params: SettingsParams
-  }) => Promise<{ data: FrostProtectionData }>
-  readonly holidayMode: ({
-    params,
-  }: {
-    params: SettingsParams
-  }) => Promise<{ data: HolidayModeData }>
-  readonly list: () => Promise<{ data: Building[] }>
-  readonly login: ({
-    postData,
-  }: {
-    postData: LoginPostData
-  }) => Promise<{ data: LoginData }>
-  readonly operationModes: ({
-    postData,
-  }: {
-    postData: ReportPostData
-  }) => Promise<{ data: OperationModeLogData }>
-  readonly setFrostProtection: ({
-    postData,
-  }: {
-    postData: FrostProtectionPostData
-  }) => Promise<{ data: FailureData | SuccessData }>
-  readonly setHolidayMode: ({
-    postData,
-  }: {
-    postData: HolidayModePostData
-  }) => Promise<{ data: FailureData | SuccessData }>
-  readonly setLanguage: ({
-    postData,
-  }: {
-    postData: { language: Language }
-  }) => Promise<{ data: boolean }>
-  readonly setPower: ({
-    postData,
-  }: {
-    postData: SetPowerPostData
-  }) => Promise<{ data: boolean }>
-  readonly setValues: <T extends DeviceType>({
-    postData,
-    type,
-  }: {
-    postData: SetDevicePostData<T>
-    type: T
-  }) => Promise<{ data: SetDeviceData<T> }>
-  readonly signal: ({
-    postData,
-  }: {
-    postData: { devices: number | number[]; hour: HourNumbers }
-  }) => Promise<{ data: ReportData }>
-  readonly temperatures: ({
-    postData,
-  }: {
-    postData: TemperatureLogPostData
-  }) => Promise<{ data: ReportData }>
-  readonly tiles: (({
-    postData,
-  }: {
-    postData: TilesPostData<null>
-  }) => Promise<{ data: TilesData<null> }>) &
-    (<T extends DeviceType>({
-      postData,
-    }: {
-      postData: TilesPostData<T>
-    }) => Promise<{ data: TilesData<T> }>)
-  readonly values: ({
-    params,
-  }: {
-    params: GetDeviceDataParams
-  }) => Promise<{ data: GetDeviceData<DeviceType> }>
-  // DeviceType.Ata | DeviceType.Atw
-  readonly energy: ({
-    postData,
-  }: {
-    postData: EnergyPostData
-  }) => Promise<{ data: EnergyData<DeviceType> }>
-  // DeviceType.Ata
-  readonly group: ({
-    postData,
-  }: {
-    postData: GetGroupPostData
-  }) => Promise<{ data: GetGroupData }>
-  readonly setGroup: ({
-    postData,
-  }: {
-    postData: SetGroupPostData
-  }) => Promise<{ data: FailureData | SuccessData }>
-  // DeviceType.Atw
-  readonly hourlyTemperatures: ({
-    postData,
-  }: {
-    postData: { device: number; hour: HourNumbers }
-  }) => Promise<{ data: ReportData }>
-  readonly internalTemperatures: ({
-    postData,
-  }: {
-    postData: ReportPostData
-  }) => Promise<{ data: ReportData }>
 }
 
 export interface Logger {

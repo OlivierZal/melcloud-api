@@ -45,22 +45,17 @@ import type {
   TemperatureLogPostData,
   TilesData,
   TilesPostData,
-} from '../types/index.ts'
+} from '../../types/index.ts'
 
-import { syncDevices } from '../decorators/index.ts'
-import { DeviceType, Language } from '../enums.ts'
-import {
-  APICallRequestData,
-  APICallResponseData,
-  createAPICallErrorData,
-} from '../logging/index.ts'
+import { syncDevices } from '../../decorators/index.ts'
+import { DeviceType, Language } from '../../enums.ts'
 import {
   AreaModel,
   BuildingModel,
   DeviceModel,
   FloorModel,
-} from '../models/index.ts'
-import { now } from '../utils.ts'
+} from '../../models/index.ts'
+import { now } from '../../utils.ts'
 
 import {
   type APIConfig,
@@ -71,7 +66,13 @@ import {
   type OnSyncFunction,
   type SettingManager,
   isAPISetting,
-} from './interfaces.ts'
+} from '../../services/interfaces.ts'
+
+import {
+  APICallRequestData,
+  APICallResponseData,
+  createAPICallErrorData,
+} from './logging/index.ts'
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
