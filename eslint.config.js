@@ -19,7 +19,7 @@ const buildImportGroup = (selector) =>
   )
 
 const arrayLikeSortOptions = {
-  groups: ['literal', 'spread'],
+  groups: ['literal'],
 }
 
 const typeSortOptions = {
@@ -508,14 +508,6 @@ const config = defineConfig([
       'package-json/require-keywords': 'error',
       'package-json/require-scripts': 'error',
       'package-json/require-types': 'error',
-      'package-json/restrict-dependency-ranges': [
-        'error',
-        [
-          {
-            rangeType: 'caret',
-          },
-        ],
-      ],
     },
   },
 ])
