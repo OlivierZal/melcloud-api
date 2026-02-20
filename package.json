@@ -46,7 +46,7 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@eslint/markdown": "^7.5.1",
-    "@stylistic/eslint-plugin": "^5.8.0",
+    "@stylistic/eslint-plugin": "^5.9.0",
     "@types/luxon": "^3.7.1",
     "@types/node": "^25.3.0",
     "@typescript/native-preview": "^7.0.0-dev.20260219.1",
