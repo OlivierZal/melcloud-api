@@ -49,7 +49,7 @@
     "@stylistic/eslint-plugin": "^5.8.0",
     "@types/luxon": "^3.7.1",
     "@types/node": "^25.3.0",
-    "@typescript/native-preview": "^7.0.0-dev.20260218.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260219.1",
     "eslint": "10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
