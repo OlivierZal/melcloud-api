@@ -1,3 +1,14 @@
+export enum AtwFlag {
+  ForcedHotWaterMode = 0x1_00_00,
+  OperationModeZone1 = 0x8,
+  OperationModeZone2 = 0x10,
+  Power = 0x1,
+  SetFlowTemperature = 0x1_00_00_00_00_00_00,
+  SetTankWaterTemperature = 0x1_00_00_00_00_00_20,
+  SetTemperatureZone1 = 0x2_00_00_00_80,
+  SetTemperatureZone2 = 0x8_00_00_02_00,
+}
+
 export enum DeviceType {
   Ata = 0,
   Atw = 1,

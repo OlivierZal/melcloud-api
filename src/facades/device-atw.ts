@@ -1,4 +1,4 @@
-import type { DeviceType } from '../enums.ts'
+import { AtwFlag, type DeviceType } from '../enums.ts'
 import type { TemperatureDataAtw, UpdateDeviceDataAtw } from '../types/index.ts'
 
 import type {
@@ -38,17 +38,17 @@ export class DeviceAtwFacade
   ]
 
   public readonly flags = {
-    ForcedHotWaterMode: 0x1_00_00,
-    OperationModeZone1: 0x8,
-    OperationModeZone2: 0x10,
-    Power: 0x1,
-    SetCoolFlowTemperatureZone1: 0x1_00_00_00_00_00_00,
-    SetCoolFlowTemperatureZone2: 0x1_00_00_00_00_00_00,
-    SetHeatFlowTemperatureZone1: 0x1_00_00_00_00_00_00,
-    SetHeatFlowTemperatureZone2: 0x1_00_00_00_00_00_00,
-    SetTankWaterTemperature: 0x1_00_00_00_00_00_20,
-    SetTemperatureZone1: 0x2_00_00_00_80,
-    SetTemperatureZone2: 0x8_00_00_02_00,
+    ForcedHotWaterMode: AtwFlag.ForcedHotWaterMode,
+    OperationModeZone1: AtwFlag.OperationModeZone1,
+    OperationModeZone2: AtwFlag.OperationModeZone2,
+    Power: AtwFlag.Power,
+    SetCoolFlowTemperatureZone1: AtwFlag.SetFlowTemperature,
+    SetCoolFlowTemperatureZone2: AtwFlag.SetFlowTemperature,
+    SetHeatFlowTemperatureZone1: AtwFlag.SetFlowTemperature,
+    SetHeatFlowTemperatureZone2: AtwFlag.SetFlowTemperature,
+    SetTankWaterTemperature: AtwFlag.SetTankWaterTemperature,
+    SetTemperatureZone1: AtwFlag.SetTemperatureZone1,
+    SetTemperatureZone2: AtwFlag.SetTemperatureZone2,
   }
 
   protected readonly temperaturesLegend = [
