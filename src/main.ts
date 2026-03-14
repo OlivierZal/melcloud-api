@@ -91,9 +91,11 @@ export {
   Vertical,
 } from './enums.ts'
 export {
+  type BuildingFacade,
   type DeviceFacade,
   type DeviceFacadeAny,
   type Facade,
+  type FacadeManagerContract,
   type FrostProtectionQuery,
   type HolidayModeQuery,
   type ReportChartLineOptions,

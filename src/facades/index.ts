@@ -1,7 +1,9 @@
 export type {
+  BuildingFacade,
   DeviceFacade,
   DeviceFacadeAny,
   Facade,
+  FacadeManager as FacadeManagerContract,
   FrostProtectionQuery,
   HolidayModeQuery,
   ReportChartLineOptions,
