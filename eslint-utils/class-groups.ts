@@ -1,6 +1,6 @@
-import { buildGroups } from './build-groups.js'
+import { buildGroups } from './build-groups.ts'
 
-const modifiers = [
+const modifiers: string[][] = [
   ['declare', 'override', ''],
   ['static', '', 'abstract'],
   ['decorated', ''],
@@ -9,12 +9,12 @@ const modifiers = [
   ['readonly', ''],
 ]
 
-const modifierIncompatibilities = {
+const modifierIncompatibilities: Record<string, string[]> = {
   abstract: ['decorated', 'private', 'static'],
   declare: ['decorated', 'override'],
 }
 
-const selectors = [
+const selectors: (string | string[])[] = [
   'index-signature',
   'property',
   'function-property',
@@ -29,7 +29,7 @@ const selectors = [
 const allModifiers = modifiers.flat().filter(Boolean)
 const baseMethodIncompatibilities = ['declare', 'readonly']
 const accessorIncompatibilities = [...baseMethodIncompatibilities, 'optional']
-const selectorIncompatibilities = {
+const selectorIncompatibilities: Record<string, string[]> = {
   'accessor-property': accessorIncompatibilities,
   constructor: [
     ...baseMethodIncompatibilities,

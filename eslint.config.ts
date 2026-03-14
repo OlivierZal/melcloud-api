@@ -13,9 +13,9 @@ import { Alphabet } from 'eslint-plugin-perfectionist/alphabet'
 import { configs as ymlConfigs } from 'eslint-plugin-yml'
 import { configs as tsConfigs } from 'typescript-eslint'
 
-import { classGroups } from './eslint-utils/class-groups.js'
+import { classGroups } from './eslint-utils/class-groups.ts'
 
-const buildImportGroup = (selector) =>
+const buildImportGroup = (selector: string): string[] =>
   ['type', 'default', 'named', 'wildcard', 'require', 'ts-equals'].map(
     (modifier) => `${modifier}-${selector}`,
   )
@@ -73,7 +73,7 @@ const config = defineConfig([
       ecmaVersion: 'latest',
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['*.js'],
+          allowDefaultProject: ['*.js', '*.config.ts', 'eslint-utils/*.ts'],
         },
         warnOnUnsupportedTypeScriptVersion: false,
       },
@@ -480,6 +480,7 @@ const config = defineConfig([
       '@typescript-eslint/unbound-method': 'off',
       'id-length': 'off',
       'import-x/max-dependencies': 'off',
+      'jsdoc/require-jsdoc': 'off',
       'max-lines-per-function': 'off',
       'max-statements': 'off',
       'unicorn/consistent-function-scoping': 'off',
@@ -491,21 +492,30 @@ const config = defineConfig([
       'vitest/prefer-expect-assertions': 'off',
       'vitest/prefer-lowercase-title': 'off',
       'vitest/require-hook': 'off',
-      'jsdoc/require-jsdoc': 'off',
       'vitest/require-mock-type-parameters': 'off',
     },
   },
   {
-    files: ['**/*.config.{ts,js}'],
+    files: ['**/*.config.{ts,js}', 'eslint-utils/*.ts'],
     rules: {
+      '@typescript-eslint/naming-convention': 'off',
+      '@typescript-eslint/no-magic-numbers': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
       'import-x/max-dependencies': 'off',
       'import-x/no-default-export': 'off',
+      'import-x/no-named-as-default': 'off',
       'import-x/prefer-default-export': [
         'error',
         {
           target: 'any',
         },
       ],
+    },
+  },
+  {
+    files: ['eslint-utils/*.ts'],
+    rules: {
+      'import-x/prefer-default-export': 'off',
     },
   },
   {
