@@ -79,7 +79,6 @@ const buildDeviceZones = (
  * Synced from the API response and queryable by ID or parent relationship.
  */
 export class ModelRegistry {
-
   /*
    * Pre-computed indexes for O(1) lookups by parent relationship.
    * Public accessors expose readonly query interfaces over private maps,

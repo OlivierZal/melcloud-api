@@ -62,7 +62,7 @@ describe('deviceModel', () => {
 
   it('returns device data', () => {
     const device = new DeviceModel(createAtaDevice())
-    const {data} = device
+    const { data } = device
 
     expect(data.Power).toBe(true)
     expect(data.SetTemperature).toBe(24)
@@ -71,7 +71,7 @@ describe('deviceModel', () => {
   it('updates device data partially', () => {
     const device = new DeviceModel(createAtaDevice())
     device.update({ Power: false })
-    const {data} = device
+    const { data } = device
 
     expect(data.Power).toBe(false)
     expect(data.SetTemperature).toBe(24)
@@ -80,7 +80,7 @@ describe('deviceModel', () => {
   it('updates device data with multiple fields', () => {
     const device = new DeviceModel(createAtaDevice())
     device.update({ Power: false, SetTemperature: 20 })
-    const {data} = device
+    const { data } = device
 
     expect(data.Power).toBe(false)
     expect(data.SetTemperature).toBe(20)

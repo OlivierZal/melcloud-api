@@ -146,7 +146,6 @@ const handleErrorLogQuery = ({
   period: number
   toDate: DateTime
 } => {
-
   /*
    * When fromDate is specified, period is fixed and offset is ignored, allowing
    * queries around a specific date. Otherwise, offset pages through history

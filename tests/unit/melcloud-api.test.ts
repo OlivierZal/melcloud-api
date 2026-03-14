@@ -116,7 +116,7 @@ describe('mELCloudAPI', () => {
       username: 'test-user',
     })
 
-    expect(settingManager.set).toHaveBeenCalledWith()
+    expect(settingManager.set).toHaveBeenCalled()
   })
 
   it('fetches building list and syncs registry', async () => {
@@ -880,7 +880,7 @@ describe('mELCloudAPI', () => {
       })
       const result = await responseErrorHandler(error)
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith()
+      expect(mockAxiosInstance.request).toHaveBeenCalled()
       expect(result).toStrictEqual({ data: 'retried' })
     })
 

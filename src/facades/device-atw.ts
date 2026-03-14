@@ -49,9 +49,7 @@ const getHotWaterOperationalState = (
   if (data.ProhibitHotWater) {
     return OperationModeStateHotWater.prohibited
   }
-  return (
-    hotWaterStateMap[data.OperationMode] ?? OperationModeStateHotWater.idle
-  )
+  return hotWaterStateMap[data.OperationMode] ?? OperationModeStateHotWater.idle
 }
 
 const getZoneOperationalState = (
