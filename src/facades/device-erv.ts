@@ -35,12 +35,17 @@ export class DeviceErvFacade
       query,
       useExactRange,
     )
+    // Filter labels and series together to keep indices in sync
+    const filtered = labels
+      .map((label, index) => ({ label, value: series[index] }))
+      .filter(
+        (item): item is { label: string; value: number } =>
+          filterVentilationModes(item.label),
+      )
     return {
       ...options,
-      labels: labels.filter((label) => filterVentilationModes(label)),
-      series: series.filter((_serie, index) =>
-        filterVentilationModes(labels.at(index)),
-      ),
+      labels: filtered.map(({ label }) => label),
+      series: filtered.map(({ value }) => value),
     }
   }
 }

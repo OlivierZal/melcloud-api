@@ -23,6 +23,10 @@ export class DisposableTimeout implements Disposable {
   /** Schedule a callback after `ms` milliseconds, replacing any existing timeout. */
   public schedule(callback: () => void, ms: number): void {
     this.clear()
-    this.#timeout = setTimeout(callback, ms)
+    // Auto-clear after firing so isActive reflects the actual state
+    this.#timeout = setTimeout(() => {
+      this.#timeout = undefined
+      callback()
+    }, ms)
   }
 }

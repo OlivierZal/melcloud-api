@@ -25,8 +25,9 @@ import { FloorModel } from './floor.ts'
 export class ModelRegistry {
 
   /*
+   * Pre-computed indexes for O(1) lookups by parent relationship.
    * Public accessors expose readonly query interfaces over private maps,
-   * preventing callers from clearing or replacing entire collections
+   * preventing callers from clearing or replacing entire collections.
    */
   readonly #areas = new Map<number, AreaModelContract>()
 
@@ -50,17 +51,28 @@ export class ModelRegistry {
   readonly #floors = new Map<number, FloorModelContract>()
 
   public readonly floors = {
-    getById: (id: number): FloorModelContract | undefined => this.#floors.get(id),
+    getById: (id: number): FloorModelContract | undefined =>
+      this.#floors.get(id),
   }
 
+  #areasByBuildingId = new Map<number, AreaModelContract[]>()
+
+  #areasByFloorId = new Map<number, AreaModelContract[]>()
+
+  #devicesByAreaId = new Map<number, DeviceModelAny[]>()
+
+  #devicesByBuildingId = new Map<number, DeviceModelAny[]>()
+
+  #devicesByFloorId = new Map<number, DeviceModelAny[]>()
+
+  #floorsByBuildingId = new Map<number, FloorModelContract[]>()
+
   public getAreasByBuildingId(id: number): AreaModelContract[] {
-    return [...this.#areas.values()].filter(
-      ({ buildingId }) => buildingId === id,
-    )
+    return this.#areasByBuildingId.get(id) ?? []
   }
 
   public getAreasByFloorId(id: number): AreaModelContract[] {
-    return [...this.#areas.values()].filter(({ floorId }) => floorId === id)
+    return this.#areasByFloorId.get(id) ?? []
   }
 
   public getDevices(): DeviceModelAny[] {
@@ -68,17 +80,15 @@ export class ModelRegistry {
   }
 
   public getDevicesByAreaId(id: number): DeviceModelAny[] {
-    return [...this.#devices.values()].filter(({ areaId }) => areaId === id)
+    return this.#devicesByAreaId.get(id) ?? []
   }
 
   public getDevicesByBuildingId(id: number): DeviceModelAny[] {
-    return [...this.#devices.values()].filter(
-      ({ buildingId }) => buildingId === id,
-    )
+    return this.#devicesByBuildingId.get(id) ?? []
   }
 
   public getDevicesByFloorId(id: number): DeviceModelAny[] {
-    return [...this.#devices.values()].filter(({ floorId }) => floorId === id)
+    return this.#devicesByFloorId.get(id) ?? []
   }
 
   public getDevicesByType<U extends DeviceType>(
@@ -91,16 +101,24 @@ export class ModelRegistry {
   }
 
   public getFloorsByBuildingId(id: number): FloorModelContract[] {
-    return [...this.#floors.values()].filter(
-      ({ buildingId }) => buildingId === id,
-    )
+    return this.#floorsByBuildingId.get(id) ?? []
   }
 
   public syncAreas(areas: AreaDataAny[]): void {
     this.#areas.clear()
-    for (const area of areas) {
-      this.#areas.set(area.ID, new AreaModel(area))
-    }
+    const models = areas.map((area) => {
+      const model = new AreaModel(area)
+      this.#areas.set(area.ID, model)
+      return model
+    })
+    this.#areasByBuildingId = Map.groupBy(models, ({ buildingId }) => buildingId)
+    this.#areasByFloorId = Map.groupBy(
+      models.filter(
+        (model): model is AreaModelContract & { floorId: number } =>
+          model.floorId !== null,
+      ),
+      ({ floorId }) => floorId,
+    )
   }
 
   public syncBuildings(buildings: BuildingData[]): void {
@@ -112,19 +130,42 @@ export class ModelRegistry {
 
   public syncDevices(devices: readonly ListDeviceAny[]): void {
     this.#devices.clear()
-    for (const device of devices) {
-      this.#devices.set(
-        device.DeviceID,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModel instances are always one of the three DeviceType variants
-        new DeviceModel(device) as DeviceModelAny,
-      )
-    }
+    const models = devices.map((device) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModel instances are always one of the three DeviceType variants
+      const model = new DeviceModel(device) as DeviceModelAny
+      this.#devices.set(device.DeviceID, model)
+      return model
+    })
+    this.#devicesByBuildingId = Map.groupBy(
+      models,
+      ({ buildingId }) => buildingId,
+    )
+    this.#devicesByFloorId = Map.groupBy(
+      models.filter(
+        (model): model is DeviceModelAny & { floorId: number } =>
+          model.floorId !== null,
+      ),
+      ({ floorId }) => floorId,
+    )
+    this.#devicesByAreaId = Map.groupBy(
+      models.filter(
+        (model): model is DeviceModelAny & { areaId: number } =>
+          model.areaId !== null,
+      ),
+      ({ areaId }) => areaId,
+    )
   }
 
   public syncFloors(floors: FloorData[]): void {
     this.#floors.clear()
-    for (const floor of floors) {
-      this.#floors.set(floor.ID, new FloorModel(floor))
-    }
+    const models = floors.map((floor) => {
+      const model = new FloorModel(floor)
+      this.#floors.set(floor.ID, model)
+      return model
+    })
+    this.#floorsByBuildingId = Map.groupBy(
+      models,
+      ({ buildingId }) => buildingId,
+    )
   }
 }

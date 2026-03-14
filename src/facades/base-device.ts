@@ -19,7 +19,6 @@ import { FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { DeviceType } from '../enums.ts'
 import { type ModelRegistry, DeviceModel } from '../models/index.ts'
-import { typedKeys } from '../type-helpers.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -27,6 +26,7 @@ import {
   isSetDeviceDataAtaInList,
   isUpdateDeviceData,
   now,
+  typedKeys,
 } from '../utils.ts'
 
 import type {
@@ -239,11 +239,12 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
    * which device settings were actually changed
    */
   #getFlags(keys: (keyof UpdateDeviceData<T>)[]): number {
-    let flag = FLAG_UNCHANGED
-    for (const key of keys) {
-      flag = Number(BigInt(this.flags[key]) | BigInt(flag))
-    }
-    return flag
+    return Number(
+      keys.reduce(
+        (flag, key) => flag | BigInt(this.flags[key]),
+        BigInt(FLAG_UNCHANGED),
+      ),
+    )
   }
 
   #getReportPostData(

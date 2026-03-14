@@ -16,6 +16,7 @@ import {
 } from 'luxon'
 
 import type {
+  AreaDataAny,
   Building,
   EnergyData,
   EnergyPostData,
@@ -30,6 +31,7 @@ import type {
   GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
+  ListDeviceAny,
   LoginCredentials,
   LoginData,
   LoginPostData,
@@ -77,6 +79,8 @@ const DEVICE_TYPE_NAMES: Record<DeviceType, string> = {
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
+// eslint-disable-next-line @typescript-eslint/no-empty-function -- intentional noop for cooldown timers
+const noop = (): void => {}
 
 const NO_SYNC_INTERVAL = 0
 const DEFAULT_SYNC_INTERVAL = 5
@@ -89,31 +93,30 @@ const INVALID_YEAR = 1
 
 /*
  * Accessor decorator that delegates storage to an external SettingManager
- * (e.g., persistent settings), falling back to the in-memory field when none is configured
+ * (e.g., persistent settings), falling back to the in-memory field when none is configured.
+ * Validates the setting key once at decoration time rather than on every get/set.
  */
 const setting = (
   target: ClassAccessorDecoratorTarget<MELCloudAPI, string>,
   context: ClassAccessorDecoratorContext<MELCloudAPI, string>,
-): ClassAccessorDecoratorResult<MELCloudAPI, string> => ({
-  get(this: MELCloudAPI): string {
-    const key = String(context.name)
-    if (!isAPISetting(key)) {
-      throw new Error(`Invalid setting: ${key}`)
-    }
-    return this.settingManager?.get(key) ?? target.get.call(this)
-  },
-  set(this: MELCloudAPI, value: string): void {
-    const key = String(context.name)
-    if (!isAPISetting(key)) {
-      throw new Error(`Invalid setting: ${key}`)
-    }
-    if (this.settingManager) {
-      this.settingManager.set(key, value)
-      return
-    }
-    target.set.call(this, value)
-  },
-})
+): ClassAccessorDecoratorResult<MELCloudAPI, string> => {
+  const key = String(context.name)
+  if (!isAPISetting(key)) {
+    throw new Error(`Invalid setting: ${key}`)
+  }
+  return {
+    get(this: MELCloudAPI): string {
+      return this.settingManager?.get(key) ?? target.get.call(this)
+    },
+    set(this: MELCloudAPI, value: string): void {
+      if (this.settingManager) {
+        this.settingManager.set(key, value)
+        return
+      }
+      target.set.call(this, value)
+    },
+  }
+}
 
 const isLanguage = (value: string): value is keyof typeof Language =>
   value in Language
@@ -139,8 +142,10 @@ const handleErrorLogQuery = ({
    * queries around a specific date. Otherwise, offset pages through history
    * in period-sized chunks.
    */
-  const fromDate = from !== undefined && from ? DateTime.fromISO(from) : null
-  const toDate = to !== undefined && to ? DateTime.fromISO(to) : DateTime.now()
+  const fromDate =
+    from !== undefined && from !== '' ? DateTime.fromISO(from) : null
+  const toDate =
+    to !== undefined && to !== '' ? DateTime.fromISO(to) : DateTime.now()
 
   const numberLimit = Number(limit)
   const period =
@@ -160,6 +165,28 @@ const handleErrorLogQuery = ({
     toDate: toDate.minus({ days }),
   }
 }
+
+// Collect all areas from both building-level and floor-level
+const collectAreas = (buildings: Building[]): AreaDataAny[] =>
+  buildings.flatMap(({ Structure: { Areas: areas, Floors: floors } }) => [
+    ...areas,
+    ...floors.flatMap(({ Areas: floorAreas }) => floorAreas),
+  ])
+
+// Collect all devices from every level of the hierarchy
+const collectDevices = (buildings: Building[]): ListDeviceAny[] =>
+  buildings.flatMap(
+    ({ Structure: { Areas: areas, Devices: devices, Floors: floors } }) => [
+      ...devices,
+      ...areas.flatMap(({ Devices: areaDevices }) => areaDevices),
+      ...floors.flatMap(({ Areas: floorAreas, Devices: floorDevices }) => [
+        ...floorDevices,
+        ...floorAreas.flatMap(
+          ({ Devices: floorAreaDevices }) => floorAreaDevices,
+        ),
+      ]),
+    ],
+  )
 
 /**
  * Main MELCloud API client. Handles authentication, device syncing, and all
@@ -307,16 +334,17 @@ export class MELCloudAPI implements API, Disposable {
             DeviceId: deviceId,
             ErrorMessage: errorMessage,
             StartDate: startDate,
-          }) => ({
-            date:
-              DateTime.fromISO(startDate).year === INVALID_YEAR ?
-                ''
-              : DateTime.fromISO(startDate).toLocaleString(
-                  DateTime.DATETIME_MED,
-                ),
-            device: this.#registry.devices.getById(deviceId)?.name ?? '',
-            error: errorMessage?.trim() ?? '',
-          }),
+          }) => {
+            const dateTime = DateTime.fromISO(startDate)
+            return {
+              date:
+                dateTime.year === INVALID_YEAR ?
+                  ''
+                : dateTime.toLocaleString(DateTime.DATETIME_MED),
+              device: this.#registry.devices.getById(deviceId)?.name ?? '',
+              error: errorMessage?.trim() ?? '',
+            }
+          },
         )
         .filter(({ date, error }) => Boolean(date && error))
         .toReversed(),
@@ -532,11 +560,10 @@ export class MELCloudAPI implements API, Disposable {
     return loginData !== null
   }
 
+  // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
   #canRetry(): boolean {
     if (!this.#retryTimeout.isActive) {
-      this.#retryTimeout.schedule(() => {
-        this.#retryTimeout.clear()
-      }, RETRY_DELAY)
+      this.#retryTimeout.schedule(noop, RETRY_DELAY)
       return true
     }
     return false
@@ -575,26 +602,8 @@ export class MELCloudAPI implements API, Disposable {
     this.#registry.syncFloors(
       data.flatMap(({ Structure: { Floors: floors } }) => floors),
     )
-    this.#registry.syncAreas(
-      data.flatMap(({ Structure: { Areas: areas, Floors: floors } }) => [
-        ...areas,
-        ...floors.flatMap(({ Areas: floorAreas }) => floorAreas),
-      ]),
-    )
-    this.#registry.syncDevices(
-      data.flatMap(
-        ({ Structure: { Areas: areas, Devices: devices, Floors: floors } }) => [
-          ...devices,
-          ...areas.flatMap(({ Devices: areaDevices }) => areaDevices),
-          ...floors.flatMap(({ Areas: floorAreas, Devices: floorDevices }) => [
-            ...floorDevices,
-            ...floorAreas.flatMap(
-              ({ Devices: floorAreaDevices }) => floorAreaDevices,
-            ),
-          ]),
-        ],
-      ),
-    )
+    this.#registry.syncAreas(collectAreas(data))
+    this.#registry.syncDevices(collectDevices(data))
     return data
   }
 
@@ -653,8 +662,8 @@ export class MELCloudAPI implements API, Disposable {
   #planNextSync(): void {
     if (this.#autoSyncInterval) {
       this.#syncTimeout.schedule(() => {
-        this.fetch().catch(() => {
-          //
+        this.fetch().catch((error: unknown) => {
+          this.#logger.error('Auto-sync failed:', error)
         })
       }, this.#autoSyncInterval)
     }

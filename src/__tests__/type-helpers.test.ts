@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { typedKeys } from '../type-helpers.ts'
+import { typedKeys } from '../utils.ts'
 
 describe('typedKeys', () => {
   it('returns keys of a simple object', () => {
