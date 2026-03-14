@@ -154,7 +154,7 @@ export interface HourlyReportPostData {
   readonly hour: HourNumbers
 }
 
-export interface ListDevice<T extends DeviceType> extends BaseListDevice {
+export interface ListDevice<T extends DeviceType> extends BaseListDevice<T> {
   readonly Device: ListDeviceData<T>
 }
 

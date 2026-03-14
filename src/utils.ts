@@ -35,10 +35,11 @@ export const isSetDeviceDataAtaNotInList = (
 export const fromListToSetAta: Record<
   keyof SetDeviceDataAtaInList,
   KeyOfSetDeviceDataAtaNotInList
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-> = Object.fromEntries(
-  Object.entries(fromSetToListAta).map(([key, value]) => [value, key]),
-) as Record<keyof SetDeviceDataAtaInList, KeyOfSetDeviceDataAtaNotInList>
+> = {
+  FanSpeed: 'SetFanSpeed',
+  VaneHorizontalDirection: 'VaneHorizontal',
+  VaneVerticalDirection: 'VaneVertical',
+}
 
 export const isSetDeviceDataAtaInList = (
   value: string,

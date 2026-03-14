@@ -2,11 +2,9 @@ import { DateTime } from 'luxon'
 
 import type { DeviceType } from '../enums.ts'
 import type {
-  IAreaModel,
-  IBuildingModel,
   IDeviceModel,
   IDeviceModelAny,
-  IFloorModel,
+  IModel,
 } from '../models/index.ts'
 import type { ErrorLog, ErrorLogQuery, IAPI } from '../services/index.ts'
 import type {
@@ -48,9 +46,7 @@ const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
     }
   : null
 
-export abstract class BaseFacade<
-  T extends IAreaModel | IBuildingModel | IDeviceModelAny | IFloorModel,
-> implements IFacade {
+export abstract class BaseFacade<T extends IModel> implements IFacade {
   public readonly id: number
 
   protected readonly api: IAPI

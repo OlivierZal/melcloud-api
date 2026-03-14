@@ -117,18 +117,6 @@ const config = defineConfig([
       '@typescript-eslint/naming-convention': [
         'error',
         {
-          filter: {
-            match: true,
-            regex: '^(Ata|Atw|Erv)$',
-          },
-          format: null,
-          selector: ['enumMember'],
-        },
-        {
-          format: ['snake_case'],
-          selector: ['enumMember'],
-        },
-        {
           format: ['camelCase', 'PascalCase', 'snake_case'],
           selector: ['objectLiteralProperty', 'typeProperty'],
         },
@@ -149,8 +137,13 @@ const config = defineConfig([
           types: ['boolean', 'number', 'string'],
         },
         {
+          format: ['PascalCase', 'UPPER_CASE', 'camelCase'],
+          modifiers: ['const', 'global'],
+          selector: ['variable'],
+        },
+        {
           format: ['PascalCase'],
-          selector: ['enumMember', 'typeLike'],
+          selector: ['typeLike'],
         },
         {
           format: ['camelCase'],
@@ -174,6 +167,13 @@ const config = defineConfig([
         'error',
         {
           ignoreEnums: true,
+          ignoreNumericLiteralTypes: true,
+        },
+      ],
+      '@typescript-eslint/no-namespace': [
+        'error',
+        {
+          allowDeclarations: true,
         },
       ],
       '@typescript-eslint/no-redeclare': 'off',
@@ -238,12 +238,7 @@ const config = defineConfig([
       'import-x/no-named-default': 'error',
       'import-x/no-relative-packages': 'error',
       'import-x/no-self-import': 'error',
-      'import-x/no-unassigned-import': [
-        'error',
-        {
-          allow: ['source-map-support/register.js'],
-        },
-      ],
+      'import-x/no-unassigned-import': 'error',
       'import-x/no-unused-modules': 'error',
       'import-x/no-useless-path-segments': 'error',
       'import-x/no-webpack-loader-syntax': 'error',
@@ -415,6 +410,7 @@ const config = defineConfig([
           replacements: {
             arg: false,
             args: false,
+            el: false,
             param: false,
             params: false,
             utils: false,
@@ -446,6 +442,12 @@ const config = defineConfig([
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       'import-x/named': 'error',
+    },
+  },
+  {
+    files: ['src/enums.ts'],
+    rules: {
+      '@typescript-eslint/no-magic-numbers': 'off',
     },
   },
   {

@@ -46,7 +46,7 @@ export interface GetGroupPostData {
 }
 
 export interface GroupState {
-  readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
+  readonly FanSpeed?: Exclude<FanSpeed, typeof FanSpeed.silent> | null
   readonly OperationMode?: OperationMode | null
   readonly Power?: boolean | null
   readonly SetTemperature?: number | null
@@ -95,7 +95,7 @@ export interface SetGroupPostData {
 
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly OperationMode?: OperationMode
-  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly SetFanSpeed?: Exclude<FanSpeed, typeof FanSpeed.silent>
   readonly SetTemperature?: number
   readonly VaneHorizontal?: Horizontal
   readonly VaneVertical?: Vertical

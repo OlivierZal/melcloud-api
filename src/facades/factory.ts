@@ -2,6 +2,7 @@ import type { IAPI } from '../services/index.ts'
 
 import { DeviceType } from '../enums.ts'
 import {
+  type IDeviceModelAny,
   type IModel,
   AreaModel,
   BuildingModel,
@@ -19,42 +20,25 @@ import { DeviceAtwFacade } from './device-atw.ts'
 import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
-type DeviceModelAny = DeviceModel<
-  DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
->
-
-const isDeviceModelAta = (
-  instance: DeviceModelAny,
-): instance is DeviceModel<DeviceType.Ata> =>
-  instance instanceof DeviceModel && instance.type === DeviceType.Ata
-
-const isDeviceModelAtw = (
-  instance: DeviceModelAny,
-): instance is DeviceModel<DeviceType.Atw> =>
-  instance instanceof DeviceModel && instance.type === DeviceType.Atw
-
-const isDeviceModelErv = (
-  instance: DeviceModelAny,
-): instance is DeviceModel<DeviceType.Erv> =>
-  instance instanceof DeviceModel && instance.type === DeviceType.Erv
-
-const createDeviceFacade = <T extends DeviceType>(
+const createDeviceFacade = (
   api: IAPI,
-  instance: DeviceModel<T>,
+  instance: IDeviceModelAny,
 ): IDeviceFacadeAny => {
-  if (isDeviceModelAta(instance)) {
-    return new DeviceAtaFacade(api, instance)
-  }
-  if (isDeviceModelAtw(instance)) {
-    if (instance.data.HasZone2) {
-      return new DeviceAtwHasZone2Facade(api, instance)
+  switch (instance.type) {
+    case DeviceType.Ata: {
+      return new DeviceAtaFacade(api, instance)
     }
-    return new DeviceAtwFacade(api, instance)
+    case DeviceType.Atw: {
+      if (instance.data.HasZone2) {
+        return new DeviceAtwHasZone2Facade(api, instance)
+      }
+      return new DeviceAtwFacade(api, instance)
+    }
+    case DeviceType.Erv: {
+      return new DeviceErvFacade(api, instance)
+    }
+    // No default
   }
-  if (isDeviceModelErv(instance)) {
-    return new DeviceErvFacade(api, instance)
-  }
-  throw new Error('Device model not supported')
 }
 
 export const createFacade = (api: IAPI, instance: IModel): IFacade => {
@@ -65,7 +49,8 @@ export const createFacade = (api: IAPI, instance: IModel): IFacade => {
     return new BuildingFacade(api, instance)
   }
   if (instance instanceof DeviceModel) {
-    return createDeviceFacade(api, instance)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModel instances are always one of the three DeviceType variants
+    return createDeviceFacade(api, instance as IDeviceModelAny)
   }
   if (instance instanceof FloorModel) {
     return new FloorFacade(api, instance)

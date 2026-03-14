@@ -73,6 +73,12 @@ import {
   isAPISetting,
 } from './interfaces.ts'
 
+const DEVICE_TYPE_NAMES: Record<DeviceType, string> = {
+  [DeviceType.Ata]: 'Ata',
+  [DeviceType.Atw]: 'Atw',
+  [DeviceType.Erv]: 'Erv',
+}
+
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
 
@@ -414,7 +420,7 @@ export class API implements IAPI {
     postData: SetDevicePostData<T>
     type: T
   }): Promise<{ data: SetDeviceData<T> }> {
-    return this.#api.post(`/Device/Set${DeviceType[type]}`, postData)
+    return this.#api.post(`/Device/Set${DEVICE_TYPE_NAMES[type]}`, postData)
   }
 
   public async signal({

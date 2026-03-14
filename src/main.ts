@@ -1,5 +1,3 @@
-import 'source-map-support/register.js'
-
 export type {
   AreaData,
   AreaDataAny,

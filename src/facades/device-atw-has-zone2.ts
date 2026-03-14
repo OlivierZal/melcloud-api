@@ -9,7 +9,7 @@ import { DeviceAtwFacade } from './device-atw.ts'
 
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
 const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
-const roomOperationModeZones = new Set([
+const roomOperationModeZones: ReadonlySet<OperationModeZone> = new Set([
   OperationModeZone.room,
   OperationModeZone.room_cool,
 ])
@@ -53,7 +53,7 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     primaryValue: OperationModeZone,
     value?: OperationModeZone,
   ): OperationModeZone {
-    let secondaryValue = value ?? this.data[secondaryKey]
+    let secondaryValue: number = value ?? this.data[secondaryKey]
     if (this.data.CanCool) {
       if (primaryValue > OperationModeZone.curve) {
         secondaryValue =
@@ -70,7 +70,8 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     ) {
       secondaryValue += ROOM_FLOW_GAP
     }
-    return secondaryValue
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- arithmetic on OperationModeZone values produces valid zone values
+    return secondaryValue as OperationModeZone
   }
 
   #handleOperationModes(

@@ -28,6 +28,6 @@ export interface SetDeviceDataErv
 }
 
 export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
-  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly SetFanSpeed?: Exclude<FanSpeed, typeof FanSpeed.silent>
   readonly VentilationMode?: VentilationMode
 }

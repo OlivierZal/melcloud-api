@@ -37,8 +37,8 @@ export class BuildingFacade
   }
 
   @fetchDevices
+  // eslint-disable-next-line @typescript-eslint/require-await -- async required by @fetchDevices decorator
   public async fetch(): Promise<ZoneSettings> {
-    // eslint-disable-next-line unicorn/no-useless-promise-resolve-reject
-    return Promise.resolve(this.data)
+    return this.data
   }
 }

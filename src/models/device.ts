@@ -49,12 +49,11 @@ export class DeviceModel<T extends DeviceType>
     Type: type,
   }: ListDevice<T>) {
     super({ id, name })
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    this.type = type as T
+    this.type = type
     this.areaId = areaId
     this.buildingId = buildingId
     this.floorId = floorId
-    this.#data = data as ListDeviceData<T>
+    this.#data = data
   }
 
   public get area(): IAreaModel | null | undefined {
@@ -101,11 +100,13 @@ export class DeviceModel<T extends DeviceType>
     return this.getAll().find(({ name: instanceName }) => instanceName === name)
   }
 
-  public static getByType<U extends DeviceType>(type: U): IDeviceModel<U>[] {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+  public static getByType<U extends DeviceType>(
+    type: U,
+  ): (IDeviceModelAny & { type: U })[] {
     return this.getAll().filter(
-      ({ type: instanceType }) => instanceType === type,
-    ) as IDeviceModel<U>[]
+      (instance): instance is IDeviceModelAny & { type: U } =>
+        instance.type === type,
+    )
   }
 
   public static setModels({

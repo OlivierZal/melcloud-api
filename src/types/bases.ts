@@ -10,13 +10,13 @@ export interface BaseGetDeviceData extends BaseSetDeviceData {
   readonly EffectiveFlags: typeof FLAG_UNCHANGED
 }
 
-export interface BaseListDevice {
+export interface BaseListDevice<T extends DeviceType = DeviceType> {
   readonly AreaID: number | null
   readonly BuildingID: number
   readonly DeviceID: number
   readonly DeviceName: string
   readonly FloorID: number | null
-  readonly Type: DeviceType
+  readonly Type: T
 }
 
 export interface BaseListDeviceData extends Omit<

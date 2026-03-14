@@ -19,6 +19,7 @@ import {
   type IDeviceModelAny,
   DeviceModel,
 } from '../models/index.ts'
+import { typedKeys } from '../type-helpers.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -71,7 +72,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   protected abstract readonly temperaturesLegend: (string | undefined)[]
 
   public constructor(api: IAPI, instance: IDeviceModel<T>) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- IDeviceModel<T> is a member of IDeviceModelAny union
     super(api, instance as IDeviceModelAny)
     ;({ type: this.type } = instance)
   }
@@ -81,25 +82,22 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   public get data(): ListDeviceData<T> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- instance.type === this.type guarantees the narrowing
     return this.instance.data as ListDeviceData<T>
   }
 
   protected get setData(): Required<UpdateDeviceData<T>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return Object.fromEntries(
-      (this.type === DeviceType.Ata ?
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        (Object.entries(this.data).map(([key, value]) => [
+    const entries = (
+      this.type === DeviceType.Ata ?
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- Object.entries returns any values for conditional generic types
+        Object.entries(this.data).map(([key, value]) => [
           isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
           value,
-        ]) as [
-          keyof UpdateDeviceData<T>,
-          UpdateDeviceData<T>[keyof UpdateDeviceData<T>],
-        ][])
+        ])
       : Object.entries(this.data)
-      ).filter(([key]) => key in this.flags),
-    ) as Required<UpdateDeviceData<T>>
+    ).filter(([key]) => key in this.flags)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- entries are filtered by flags keys
+    return Object.fromEntries(entries) as Required<UpdateDeviceData<T>>
   }
 
   public override async tiles(select?: false): Promise<TilesData<null>>
@@ -119,9 +117,9 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   @fetchDevices
+  // eslint-disable-next-line @typescript-eslint/require-await -- async required by @fetchDevices decorator
   public async fetch(): Promise<ListDeviceData<T>> {
-    // eslint-disable-next-line unicorn/no-useless-promise-resolve-reject
-    return Promise.resolve(this.data)
+    return this.data
   }
 
   @syncDevices()
@@ -129,7 +127,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public async setValues(
     data: Partial<UpdateDeviceData<T>>,
   ): Promise<SetDeviceData<T>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- entries filtered by isUpdateDeviceData
     const newData = Object.fromEntries(
       Object.entries(data).filter(
         ([key, value]) =>
@@ -137,10 +135,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
           this.setData[key as keyof UpdateDeviceData<T>] !== value,
       ),
     ) as Partial<UpdateDeviceData<T>>
-    const flags = this.#getFlags(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      Object.keys(newData) as (keyof UpdateDeviceData<T>)[],
-    )
+    const flags = this.#getFlags(typedKeys(newData))
     if (!flags) {
       throw new Error('No data to set')
     }
