@@ -108,9 +108,9 @@ export class ModelRegistry {
   public syncDevices(devices: readonly ListDeviceAny[]): void {
     this.#devices.clear()
     for (const device of devices) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
       this.#devices.set(
         device.DeviceID,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModel instances are always one of the three DeviceType variants
         new DeviceModel(device) as IDeviceModelAny,
       )
     }
