@@ -1,13 +1,13 @@
-import type { IDeviceModelAny, IFloorModel } from '../models/index.ts'
-
-import type { ISuperDeviceFacade } from './interfaces.ts'
+import type {
+  DeviceModelAny,
+  FloorModel as FloorModelContract,
+} from '../models/interfaces.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
 /** Facade for a floor, grouping devices on that floor within a building. */
 export class FloorFacade
-  extends BaseSuperDeviceFacade<IFloorModel>
-  implements ISuperDeviceFacade
+  extends BaseSuperDeviceFacade<FloorModelContract>
 {
   protected readonly frostProtectionLocation = 'FloorIds'
 
@@ -17,11 +17,11 @@ export class FloorFacade
 
   protected readonly tableName = 'Floor'
 
-  public override get devices(): IDeviceModelAny[] {
+  public override get devices(): DeviceModelAny[] {
     return this.registry.getDevicesByFloorId(this.id)
   }
 
-  protected get model(): { getById: (id: number) => IFloorModel | undefined } {
+  protected get model(): { getById: (id: number) => FloorModelContract | undefined } {
     return this.registry.floors
   }
 }

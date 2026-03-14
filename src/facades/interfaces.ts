@@ -2,12 +2,12 @@ import type { HourNumbers } from 'luxon'
 
 import type { DeviceType } from '../enums.ts'
 import type {
-  IBaseBuildingModel,
-  IBaseDeviceModel,
-  IDeviceModel,
-  IDeviceModelAny,
-  IModel,
-} from '../models/index.ts'
+  BaseBuildingModel,
+  BaseDeviceModel,
+  DeviceModel,
+  DeviceModelAny,
+  Model,
+} from '../models/interfaces.ts'
 import type { ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type {
   EnergyData,
@@ -48,16 +48,16 @@ export interface HolidayModeQuery {
 }
 
 /** Facade for a MELCloud building, combining zone settings with super device operations. */
-export interface IBuildingFacade
-  extends IBaseBuildingModel, ISuperDeviceFacade {
+export interface BuildingFacade
+  extends BaseBuildingModel, SuperDeviceFacade {
 
   /** Fetch the latest building zone settings after syncing devices. */
   readonly fetch: () => Promise<ZoneSettings>
 }
 
 /** Facade for an individual MELCloud device with type-safe data access and control. */
-export interface IDeviceFacade<T extends DeviceType>
-  extends IBaseDeviceModel<T>, IFacade {
+export interface DeviceFacade<T extends DeviceType>
+  extends BaseDeviceModel<T>, Facade {
 
   /** Bitfield flags mapping each updatable property to its effective flag value. */
   readonly flags: Record<keyof UpdateDeviceData<T>, number>
@@ -77,7 +77,7 @@ export interface IDeviceFacade<T extends DeviceType>
   readonly temperatures: (query: ReportQuery) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
-  readonly tiles: ((select: true | IDeviceModel<T>) => Promise<TilesData<T>>) &
+  readonly tiles: ((select: true | DeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
 
   /** Fetch current device values from the API. */
@@ -98,10 +98,10 @@ export interface IDeviceFacade<T extends DeviceType>
 }
 
 /** Base facade contract shared by all facade types (building, floor, area, device). */
-export interface IFacade extends IModel {
+export interface Facade extends Model {
 
   /** All devices managed by this facade. */
-  readonly devices: readonly IDeviceModelAny[]
+  readonly devices: readonly DeviceModelAny[]
 
   /** Retrieve the error log for all devices in this facade. */
   readonly errors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
@@ -133,18 +133,18 @@ export interface IFacade extends IModel {
 
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly tiles: ((select?: false) => Promise<TilesData<null>>) &
-    (<T extends DeviceType>(select: IDeviceModel<T>) => Promise<TilesData<T>>)
+    (<T extends DeviceType>(select: DeviceModel<T>) => Promise<TilesData<T>>)
 }
 
 /** Manager for lazily creating and caching facade instances. */
-export interface IFacadeManager {
+export interface FacadeManager {
 
   /** Get or create a facade for the given model instance. Returns `null` if no instance is provided. */
-  readonly get: (instance?: IModel) => IFacade | null
+  readonly get: (instance?: Model) => Facade | null
 }
 
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
-export interface ISuperDeviceFacade extends IFacade {
+export interface SuperDeviceFacade extends Facade {
 
   /** Get the current group state for all ATA devices. */
   readonly group: () => Promise<GroupState>
@@ -195,7 +195,7 @@ export interface ReportQuery {
 }
 
 /** Union of all device facade types. */
-export type IDeviceFacadeAny =
-  | IDeviceFacade<DeviceType.Ata>
-  | IDeviceFacade<DeviceType.Atw>
-  | IDeviceFacade<DeviceType.Erv>
+export type DeviceFacadeAny =
+  | DeviceFacade<DeviceType.Ata>
+  | DeviceFacade<DeviceType.Atw>
+  | DeviceFacade<DeviceType.Erv>

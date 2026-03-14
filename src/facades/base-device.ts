@@ -1,6 +1,10 @@
 import { DateTime } from 'luxon'
 
-import type { IAPIAdapter } from '../services/index.ts'
+import type {
+  DeviceModelAny,
+  DeviceModel as DeviceModelContract,
+} from '../models/interfaces.ts'
+import type { APIAdapter } from '../services/index.ts'
 import type {
   EnergyData,
   GetDeviceData,
@@ -14,12 +18,7 @@ import type {
 import { FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { DeviceType } from '../enums.ts'
-import {
-  type IDeviceModel,
-  type IDeviceModelAny,
-  type ModelRegistry,
-  DeviceModel,
-} from '../models/index.ts'
+import { type ModelRegistry, DeviceModel } from '../models/index.ts'
 import { typedKeys } from '../type-helpers.ts'
 import {
   fromListToSetAta,
@@ -31,7 +30,7 @@ import {
 } from '../utils.ts'
 
 import type {
-  IDeviceFacade,
+  DeviceFacade,
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
@@ -57,8 +56,8 @@ const getDuration = ({ from, to }: Required<ReportQuery>): number =>
  * value updates with effective flags, and ATA key conversion between set/list formats.
  */
 export abstract class BaseDeviceFacade<T extends DeviceType>
-  extends BaseFacade<IDeviceModelAny>
-  implements IDeviceFacade<T>
+  extends BaseFacade<DeviceModelAny>
+  implements DeviceFacade<T>
 {
   public readonly type: T
 
@@ -75,16 +74,16 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   protected abstract readonly temperaturesLegend: (string | undefined)[]
 
   public constructor(
-    api: IAPIAdapter,
+    api: APIAdapter,
     registry: ModelRegistry,
-    instance: IDeviceModel<T>,
+    instance: DeviceModelContract<T>,
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- IDeviceModel<T> is a member of IDeviceModelAny union
-    super(api, registry, instance as IDeviceModelAny)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModelContract<T> is a member of DeviceModelAny union
+    super(api, registry, instance as DeviceModelAny)
     ;({ type: this.type } = instance)
   }
 
-  public override get devices(): IDeviceModelAny[] {
+  public override get devices(): DeviceModelAny[] {
     return [this.instance]
   }
 
@@ -94,7 +93,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   protected get model(): {
-    getById: (id: number) => IDeviceModelAny | undefined
+    getById: (id: number) => DeviceModelAny | undefined
   } {
     return this.registry.devices
   }
@@ -114,10 +113,10 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public override async tiles(select?: false): Promise<TilesData<null>>
   public override async tiles(
-    select: true | IDeviceModel<T>,
+    select: true | DeviceModelContract<T>,
   ): Promise<TilesData<T>>
   public override async tiles(
-    select: boolean | IDeviceModel<T> = false,
+    select: boolean | DeviceModelContract<T> = false,
   ): Promise<TilesData<T | null>> {
     return (
         select === false ||
@@ -125,7 +124,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       ) ?
         super.tiles()
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      : super.tiles(this.instance as IDeviceModel<T>)
+      : super.tiles(this.instance as DeviceModelContract<T>)
   }
 
   @fetchDevices

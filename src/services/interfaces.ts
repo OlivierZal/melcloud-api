@@ -128,7 +128,7 @@ export interface ErrorLogQuery {
 }
 
 /** Full MELCloud API contract including authentication and device listing. */
-export interface IAPI extends IAPIAdapter {
+export interface API extends APIAdapter {
 
   /** Central model registry containing all synced buildings, floors, areas, and devices. */
   readonly registry: ModelRegistry
@@ -164,7 +164,7 @@ export interface IAPI extends IAPIAdapter {
  * Low-level API adapter exposing all MELCloud HTTP endpoints.
  * Methods are grouped by supported device types.
  */
-export interface IAPIAdapter {
+export interface APIAdapter {
 
   /** Callback invoked after sync operations. */
   readonly onSync?: OnSyncFunction

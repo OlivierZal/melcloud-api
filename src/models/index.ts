@@ -1,12 +1,8 @@
 export type {
-  IAreaModel,
-  IBaseBuildingModel,
-  IBaseDeviceModel,
-  IBuildingModel,
-  IDeviceModel,
-  IDeviceModelAny,
-  IFloorModel,
-  IModel,
+  BaseBuildingModel,
+  BaseDeviceModel,
+  DeviceModelAny,
+  Model,
 } from './interfaces.ts'
 
 export { AreaModel } from './area.ts'

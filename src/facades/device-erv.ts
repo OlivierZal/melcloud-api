@@ -1,11 +1,7 @@
 import type { DeviceType } from '../enums.ts'
 import type { UpdateDeviceData } from '../types/index.ts'
 
-import type {
-  IDeviceFacade,
-  ReportChartPieOptions,
-  ReportQuery,
-} from './interfaces.ts'
+import type { ReportChartPieOptions, ReportQuery } from './interfaces.ts'
 
 import { BaseDeviceFacade } from './base-device.ts'
 
@@ -17,7 +13,6 @@ const filterVentilationModes = (label?: string): boolean =>
 /** Facade for Energy Recovery Ventilation (ERV) devices with filtered ventilation mode reporting. */
 export class DeviceErvFacade
   extends BaseDeviceFacade<DeviceType.Erv>
-  implements IDeviceFacade<DeviceType.Erv>
 {
   public readonly flags = {
     Power: 0x1,

@@ -1,11 +1,9 @@
 import type { BuildingData, ZoneSettings } from '../types/index.ts'
 
-import type { IBuildingModel } from './interfaces.ts'
-
 import { BaseModel } from './base.ts'
 
 /** Building model holding zone settings and geographic location. */
-export class BuildingModel extends BaseModel implements IBuildingModel {
+export class BuildingModel extends BaseModel {
   public readonly data: ZoneSettings
 
   public readonly location: number

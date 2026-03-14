@@ -1,15 +1,13 @@
 export type {
+  DeviceFacade,
+  DeviceFacadeAny,
+  Facade,
   FrostProtectionQuery,
   HolidayModeQuery,
-  IBuildingFacade,
-  IDeviceFacade,
-  IDeviceFacadeAny,
-  IFacade,
-  IFacadeManager,
-  ISuperDeviceFacade,
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
+  SuperDeviceFacade,
 } from './interfaces.ts'
 
 export { FacadeManager } from './manager.ts'

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { IAPIAdapter } from '../services/index.ts'
+import type { APIAdapter } from '../services/index.ts'
 import type {
   BuildingData,
   ListDeviceAny,
@@ -148,7 +148,7 @@ const createRegistry = (): ModelRegistry => {
   return registry
 }
 
-const createMockApi = (overrides: Partial<IAPIAdapter> = {}): IAPIAdapter =>
+const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
   ({
     energy: vi.fn().mockResolvedValue({ data: {} }),
     errorLog: vi.fn().mockResolvedValue({ errors: [] }),
@@ -255,7 +255,7 @@ const createMockApi = (overrides: Partial<IAPIAdapter> = {}): IAPIAdapter =>
     }),
     values: vi.fn().mockResolvedValue({ data: {} }),
     ...overrides,
-  }) as IAPIAdapter
+  }) as APIAdapter
 
 describe('buildingFacade', () => {
   it('returns building data', () => {

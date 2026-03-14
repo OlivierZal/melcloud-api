@@ -1,5 +1,5 @@
-import type { IDeviceFacade, ISuperDeviceFacade } from '../facades/index.ts'
-import type { IDeviceModel } from '../models/index.ts'
+import type { DeviceFacade, SuperDeviceFacade } from '../facades/index.ts'
+import type { DeviceModel } from '../models/interfaces.ts'
 import type {
   FailureData,
   GetDeviceData,
@@ -32,7 +32,7 @@ export const updateDevices =
     target: (...args: any[]) => Promise<T>,
     context: ClassMethodDecoratorContext,
   ): ((...args: unknown[]) => Promise<T>) =>
-    async function newTarget(this: ISuperDeviceFacade, ...args: unknown[]) {
+    async function newTarget(this: SuperDeviceFacade, ...args: unknown[]) {
       const [arg] = args
       if (arg !== null && typeof arg === 'object' && !Object.keys(arg).length) {
         throw new Error('No data to set')
@@ -55,7 +55,7 @@ export const updateDevices =
     }
 
 const convertToListDeviceData = <T extends DeviceType>(
-  facade: IDeviceFacade<T>,
+  facade: DeviceFacade<T>,
   data: SetDeviceData<T>,
 ): Partial<ListDeviceData<T>> => {
   const { flags, type } = facade
@@ -91,12 +91,12 @@ export const updateDevice = <
   target: (...args: any[]) => Promise<U>,
   _context: ClassMethodDecoratorContext,
 ): ((...args: unknown[]) => Promise<U>) =>
-  async function newTarget(this: IDeviceFacade<T>, ...args: unknown[]) {
+  async function newTarget(this: DeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
     const {
       devices: [device],
     } = this
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    ;(device as IDeviceModel<T>).update(convertToListDeviceData(this, data))
+    ;(device as DeviceModel<T>).update(convertToListDeviceData(this, data))
     return data
   }

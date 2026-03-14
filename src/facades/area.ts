@@ -1,13 +1,13 @@
-import type { IAreaModel, IDeviceModelAny } from '../models/index.ts'
-
-import type { ISuperDeviceFacade } from './interfaces.ts'
+import type {
+  AreaModel as AreaModelContract,
+  DeviceModelAny,
+} from '../models/interfaces.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
 /** Facade for an area, grouping devices within a floor or building. */
 export class AreaFacade
-  extends BaseSuperDeviceFacade<IAreaModel>
-  implements ISuperDeviceFacade
+  extends BaseSuperDeviceFacade<AreaModelContract>
 {
   protected readonly frostProtectionLocation = 'AreaIds'
 
@@ -17,11 +17,11 @@ export class AreaFacade
 
   protected readonly tableName = 'Area'
 
-  public override get devices(): IDeviceModelAny[] {
+  public override get devices(): DeviceModelAny[] {
     return this.registry.getDevicesByAreaId(this.id)
   }
 
-  protected get model(): { getById: (id: number) => IAreaModel | undefined } {
+  protected get model(): { getById: (id: number) => AreaModelContract | undefined } {
     return this.registry.areas
   }
 }

@@ -1,21 +1,18 @@
+import type { ModelRegistry } from '../models/index.ts'
 import type {
-  IBuildingModel,
-  IDeviceModelAny,
-  ModelRegistry,
-} from '../models/index.ts'
-import type { IAPIAdapter } from '../services/index.ts'
+  BuildingModel as BuildingModelContract,
+  DeviceModelAny,
+} from '../models/interfaces.ts'
+import type { APIAdapter } from '../services/index.ts'
 import type { ZoneSettings } from '../types/index.ts'
 
 import { fetchDevices } from '../decorators/index.ts'
-
-import type { IBuildingFacade } from './interfaces.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
 export class BuildingFacade
-  extends BaseSuperDeviceFacade<IBuildingModel>
-  implements IBuildingFacade
+  extends BaseSuperDeviceFacade<BuildingModelContract>
 {
   protected readonly frostProtectionLocation = 'BuildingIds'
 
@@ -26,9 +23,9 @@ export class BuildingFacade
   protected readonly tableName = 'Building'
 
   public constructor(
-    api: IAPIAdapter,
+    api: APIAdapter,
     registry: ModelRegistry,
-    instance: IBuildingModel,
+    instance: BuildingModelContract,
   ) {
     super(api, registry, instance)
     ;({
@@ -39,7 +36,7 @@ export class BuildingFacade
     } = this)
   }
 
-  public override get devices(): IDeviceModelAny[] {
+  public override get devices(): DeviceModelAny[] {
     return this.registry.getDevicesByBuildingId(this.id)
   }
 
@@ -48,7 +45,7 @@ export class BuildingFacade
   }
 
   protected get model(): {
-    getById: (id: number) => IBuildingModel | undefined
+    getById: (id: number) => BuildingModelContract | undefined
   } {
     return this.registry.buildings
   }

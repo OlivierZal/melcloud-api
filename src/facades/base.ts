@@ -1,13 +1,13 @@
 import { DateTime } from 'luxon'
 
 import type { DeviceType } from '../enums.ts'
+import type { ModelRegistry } from '../models/index.ts'
 import type {
-  IDeviceModel,
-  IDeviceModelAny,
-  IModel,
-  ModelRegistry,
-} from '../models/index.ts'
-import type { ErrorLog, ErrorLogQuery, IAPIAdapter } from '../services/index.ts'
+  DeviceModel,
+  DeviceModelAny,
+  Model,
+} from '../models/interfaces.ts'
+import type { APIAdapter, ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type {
   DateTimeComponents,
   FailureData,
@@ -25,9 +25,9 @@ import { syncDevices, updateDevices } from '../decorators/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'
 
 import type {
+  Facade,
   FrostProtectionQuery,
   HolidayModeQuery,
-  IFacade,
   ReportChartLineOptions,
 } from './interfaces.ts'
 
@@ -52,10 +52,10 @@ const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
  * holiday mode, power control, signal strength, tiles, and error log retrieval.
  * Settings resolution falls back from zone level to device level when needed.
  */
-export abstract class BaseFacade<T extends IModel> implements IFacade {
+export abstract class BaseFacade<T extends Model> implements Facade {
   public readonly id: number
 
-  protected readonly api: IAPIAdapter
+  protected readonly api: APIAdapter
 
   protected readonly registry: ModelRegistry
 
@@ -73,7 +73,7 @@ export abstract class BaseFacade<T extends IModel> implements IFacade {
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(api: IAPIAdapter, registry: ModelRegistry, instance: T) {
+  public constructor(api: APIAdapter, registry: ModelRegistry, instance: T) {
     this.api = api
     this.registry = registry
     ;({ id: this.id } = instance)
@@ -107,7 +107,7 @@ export abstract class BaseFacade<T extends IModel> implements IFacade {
     return this.devices.map(({ name }) => name)
   }
 
-  public abstract get devices(): IDeviceModelAny[]
+  public abstract get devices(): DeviceModelAny[]
 
   public async onSync({ type }: { type?: DeviceType } = {}): Promise<void> {
     await this.api.onSync?.({ ids: this.#deviceIds, type })
@@ -207,10 +207,10 @@ export abstract class BaseFacade<T extends IModel> implements IFacade {
 
   public async tiles(select?: false): Promise<TilesData<null>>
   public async tiles<U extends DeviceType>(
-    select: IDeviceModel<U>,
+    select: DeviceModel<U>,
   ): Promise<TilesData<U>>
   public async tiles<U extends DeviceType>(
-    select: false | IDeviceModel<U> = false,
+    select: false | DeviceModel<U> = false,
   ): Promise<TilesData<U | null>> {
     const postData = { DeviceIDs: this.#deviceIds }
     if (select === false || !this.#deviceIds.includes(select.id)) {

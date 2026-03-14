@@ -1,7 +1,7 @@
-import type { IModel } from './interfaces.ts'
+import type { Model } from './interfaces.ts'
 
 /** Abstract base model providing common `id` and `name` properties. */
-export abstract class BaseModel implements IModel {
+export abstract class BaseModel implements Model {
   public readonly id: number
 
   public readonly name: string

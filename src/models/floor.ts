@@ -1,11 +1,9 @@
 import type { FloorData } from '../types/index.ts'
 
-import type { IFloorModel } from './interfaces.ts'
-
 import { BaseModel } from './base.ts'
 
 /** Floor model representing a level within a building. */
-export class FloorModel extends BaseModel implements IFloorModel {
+export class FloorModel extends BaseModel {
   public readonly buildingId: number
 
   public constructor({

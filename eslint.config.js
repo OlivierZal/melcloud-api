@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
 import vitest from '@vitest/eslint-plugin'
 import prettier from 'eslint-config-prettier/flat'
+import jsdoc from 'eslint-plugin-jsdoc'
 import perfectionist from 'eslint-plugin-perfectionist'
 import unicorn from 'eslint-plugin-unicorn'
 
@@ -64,6 +65,7 @@ const config = defineConfig([
       tsConfigs.strictTypeChecked,
       importXConfigs.errors,
       importXConfigs.typescript,
+      jsdoc.configs['flat/recommended-typescript-error'],
       prettier,
     ],
     files: ['**/*.{ts,mts,js}'],
@@ -244,6 +246,8 @@ const config = defineConfig([
       'import-x/no-useless-path-segments': 'error',
       'import-x/no-webpack-loader-syntax': 'error',
       'import-x/unambiguous': 'error',
+      'jsdoc/require-param': 'off',
+      'jsdoc/require-returns': 'off',
       'max-lines': 'off',
       'no-bitwise': 'off',
       'no-continue': 'off',
@@ -487,6 +491,7 @@ const config = defineConfig([
       'vitest/prefer-expect-assertions': 'off',
       'vitest/prefer-lowercase-title': 'off',
       'vitest/require-hook': 'off',
+      'jsdoc/require-jsdoc': 'off',
       'vitest/require-mock-type-parameters': 'off',
     },
   },

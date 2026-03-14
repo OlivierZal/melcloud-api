@@ -7,10 +7,10 @@ import type {
 } from '../types/index.ts'
 
 import type {
-  IAreaModel,
-  IBuildingModel,
-  IDeviceModelAny,
-  IFloorModel,
+  AreaModel as AreaModelContract,
+  BuildingModel as BuildingModelContract,
+  DeviceModelAny,
+  FloorModel as FloorModelContract,
 } from './interfaces.ts'
 
 import { AreaModel } from './area.ts'
@@ -23,73 +23,73 @@ import { FloorModel } from './floor.ts'
  * Synced from the API response and queryable by ID or parent relationship.
  */
 export class ModelRegistry {
-  readonly #areas = new Map<number, IAreaModel>()
+  readonly #areas = new Map<number, AreaModelContract>()
 
   public readonly areas = {
-    getById: (id: number): IAreaModel | undefined => this.#areas.get(id),
+    getById: (id: number): AreaModelContract | undefined => this.#areas.get(id),
   }
 
-  readonly #buildings = new Map<number, IBuildingModel>()
+  readonly #buildings = new Map<number, BuildingModelContract>()
 
   public readonly buildings = {
-    getById: (id: number): IBuildingModel | undefined =>
+    getById: (id: number): BuildingModelContract | undefined =>
       this.#buildings.get(id),
   }
 
-  readonly #devices = new Map<number, IDeviceModelAny>()
+  readonly #devices = new Map<number, DeviceModelAny>()
 
   public readonly devices = {
-    getById: (id: number): IDeviceModelAny | undefined => this.#devices.get(id),
+    getById: (id: number): DeviceModelAny | undefined => this.#devices.get(id),
   }
 
-  readonly #floors = new Map<number, IFloorModel>()
+  readonly #floors = new Map<number, FloorModelContract>()
 
   public readonly floors = {
-    getById: (id: number): IFloorModel | undefined => this.#floors.get(id),
+    getById: (id: number): FloorModelContract | undefined => this.#floors.get(id),
   }
 
-  public getAllDevices(): IDeviceModelAny[] {
+  public getAllDevices(): DeviceModelAny[] {
     return [...this.#devices.values()]
   }
 
-  public getAreasByBuildingId(id: number): IAreaModel[] {
+  public getAreasByBuildingId(id: number): AreaModelContract[] {
     return [...this.#areas.values()].filter(
       ({ buildingId }) => buildingId === id,
     )
   }
 
-  public getAreasByFloorId(id: number): IAreaModel[] {
+  public getAreasByFloorId(id: number): AreaModelContract[] {
     return [...this.#areas.values()].filter(({ floorId }) => floorId === id)
   }
 
-  public getDeviceById(id: number): IDeviceModelAny | undefined {
+  public getDeviceById(id: number): DeviceModelAny | undefined {
     return this.#devices.get(id)
   }
 
-  public getDevicesByAreaId(id: number): IDeviceModelAny[] {
+  public getDevicesByAreaId(id: number): DeviceModelAny[] {
     return [...this.#devices.values()].filter(({ areaId }) => areaId === id)
   }
 
-  public getDevicesByBuildingId(id: number): IDeviceModelAny[] {
+  public getDevicesByBuildingId(id: number): DeviceModelAny[] {
     return [...this.#devices.values()].filter(
       ({ buildingId }) => buildingId === id,
     )
   }
 
-  public getDevicesByFloorId(id: number): IDeviceModelAny[] {
+  public getDevicesByFloorId(id: number): DeviceModelAny[] {
     return [...this.#devices.values()].filter(({ floorId }) => floorId === id)
   }
 
   public getDevicesByType<U extends DeviceType>(
     type: U,
-  ): (IDeviceModelAny & { type: U })[] {
+  ): (DeviceModelAny & { type: U })[] {
     return this.getAllDevices().filter(
-      (instance): instance is IDeviceModelAny & { type: U } =>
+      (instance): instance is DeviceModelAny & { type: U } =>
         instance.type === type,
     )
   }
 
-  public getFloorsByBuildingId(id: number): IFloorModel[] {
+  public getFloorsByBuildingId(id: number): FloorModelContract[] {
     return [...this.#floors.values()].filter(
       ({ buildingId }) => buildingId === id,
     )
@@ -115,7 +115,7 @@ export class ModelRegistry {
       this.#devices.set(
         device.DeviceID,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModel instances are always one of the three DeviceType variants
-        new DeviceModel(device) as IDeviceModelAny,
+        new DeviceModel(device) as DeviceModelAny,
       )
     }
   }

@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import type { IAPIAdapter } from '../services/index.ts'
+import type { APIAdapter } from '../services/index.ts'
 import type { ListDeviceAny } from '../types/index.ts'
 
 import { DeviceType } from '../enums.ts'
 import { createFacade } from '../facades/factory.ts'
-import { type IModel, ModelRegistry } from '../models/index.ts'
+import { type Model, ModelRegistry } from '../models/index.ts'
 
-const mockApi = {} as IAPIAdapter
+const mockApi = {} as APIAdapter
 
 const buildingData = {
   FPDefined: true,
@@ -129,7 +129,7 @@ describe('createFacade', () => {
 
   it('throws for unsupported model types', () => {
     const registry = new ModelRegistry()
-    const unknown = { id: 1, name: 'unknown' } as IModel
+    const unknown = { id: 1, name: 'unknown' } as Model
 
     expect(() => createFacade(mockApi, registry, unknown)).toThrow(
       'Model not supported',

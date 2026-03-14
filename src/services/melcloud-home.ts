@@ -1,3 +1,3 @@
-import type { IAPIAdapter } from './interfaces.ts'
+import type { APIAdapter } from './interfaces.ts'
 
-export type MELCloudHomeAPI = IAPIAdapter
+export type MELCloudHomeAPI = APIAdapter

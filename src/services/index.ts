@@ -1,11 +1,11 @@
 export type {
+  API,
+  APIAdapter,
   APIConfig,
   APISettings,
   ErrorDetails,
   ErrorLog,
   ErrorLogQuery,
-  IAPI,
-  IAPIAdapter,
   Logger,
   OnSyncFunction,
   SettingManager,

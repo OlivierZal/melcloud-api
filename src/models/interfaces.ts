@@ -2,32 +2,32 @@ import type { DeviceType } from '../enums.ts'
 import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 
 /** Area model with parent building and optional floor references. */
-export interface IAreaModel extends IModel {
+export interface AreaModel extends Model {
   readonly buildingId: number
   readonly floorId: number | null
 }
 
 /** Base building model providing zone settings (frost protection, holiday mode). */
-export interface IBaseBuildingModel {
+export interface BaseBuildingModel {
   readonly data: ZoneSettings
 }
 
 /** Base device model with type-discriminated device data. */
-export interface IBaseDeviceModel<T extends DeviceType> {
+export interface BaseDeviceModel<T extends DeviceType> {
   readonly data: ListDeviceData<T>
   readonly type: T
 }
 
 /** Building model with geographic location. */
-export interface IBuildingModel extends IBaseBuildingModel, IModel {
+export interface BuildingModel extends BaseBuildingModel, Model {
 
   /** Numeric location identifier used by the MELCloud API. */
   readonly location: number
 }
 
 /** Device model with full hierarchy references and mutable data. */
-export interface IDeviceModel<T extends DeviceType>
-  extends IBaseDeviceModel<T>, IModel {
+export interface DeviceModel<T extends DeviceType>
+  extends BaseDeviceModel<T>, Model {
   readonly areaId: number | null
   readonly buildingId: number
   readonly floorId: number | null
@@ -37,18 +37,18 @@ export interface IDeviceModel<T extends DeviceType>
 }
 
 /** Floor model with parent building reference. */
-export interface IFloorModel extends IModel {
+export interface FloorModel extends Model {
   readonly buildingId: number
 }
 
 /** Base identifiable model with numeric ID and display name. */
-export interface IModel {
+export interface Model {
   readonly id: number
   readonly name: string
 }
 
 /** Union of all device model types. */
-export type IDeviceModelAny =
-  | IDeviceModel<DeviceType.Ata>
-  | IDeviceModel<DeviceType.Atw>
-  | IDeviceModel<DeviceType.Erv>
+export type DeviceModelAny =
+  | DeviceModel<DeviceType.Ata>
+  | DeviceModel<DeviceType.Atw>
+  | DeviceModel<DeviceType.Erv>

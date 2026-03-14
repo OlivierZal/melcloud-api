@@ -5,11 +5,7 @@ import type {
   UpdateDeviceDataAtw,
 } from '../types/index.ts'
 
-import type {
-  IDeviceFacade,
-  ReportChartLineOptions,
-  ReportQuery,
-} from './interfaces.ts'
+import type { ReportChartLineOptions, ReportQuery } from './interfaces.ts'
 
 import { BaseDeviceFacade } from './base-device.ts'
 
@@ -30,7 +26,6 @@ const mergeSeries = (
 /** Facade for Air-to-Water (ATW) devices with per-zone temperature clamping and merged temperature reports. */
 export class DeviceAtwFacade
   extends BaseDeviceFacade<DeviceType.Atw>
-  implements IDeviceFacade<DeviceType.Atw>
 {
   protected override readonly internalTemperaturesLegend = [
     'FlowTemperature',

@@ -1,9 +1,8 @@
-import type { IAPIAdapter } from '../services/index.ts'
+import type { DeviceModelAny, Model } from '../models/interfaces.ts'
+import type { APIAdapter } from '../services/index.ts'
 
 import { DeviceType } from '../enums.ts'
 import {
-  type IDeviceModelAny,
-  type IModel,
   type ModelRegistry,
   AreaModel,
   BuildingModel,
@@ -11,7 +10,7 @@ import {
   FloorModel,
 } from '../models/index.ts'
 
-import type { IDeviceFacadeAny, IFacade } from './interfaces.ts'
+import type { DeviceFacadeAny, Facade } from './interfaces.ts'
 
 import { AreaFacade } from './area.ts'
 import { BuildingFacade } from './building.ts'
@@ -22,10 +21,10 @@ import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
 const createDeviceFacade = (
-  api: IAPIAdapter,
+  api: APIAdapter,
   registry: ModelRegistry,
-  instance: IDeviceModelAny,
-): IDeviceFacadeAny => {
+  instance: DeviceModelAny,
+): DeviceFacadeAny => {
   switch (instance.type) {
     case DeviceType.Ata: {
       return new DeviceAtaFacade(api, registry, instance)
@@ -45,10 +44,10 @@ const createDeviceFacade = (
 
 /** Create the appropriate facade for a model instance based on its runtime type. */
 export const createFacade = (
-  api: IAPIAdapter,
+  api: APIAdapter,
   registry: ModelRegistry,
-  instance: IModel,
-): IFacade => {
+  instance: Model,
+): Facade => {
   if (instance instanceof AreaModel) {
     return new AreaFacade(api, registry, instance)
   }
@@ -57,7 +56,7 @@ export const createFacade = (
   }
   if (instance instanceof DeviceModel) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModel instances are always one of the three DeviceType variants
-    return createDeviceFacade(api, registry, instance as IDeviceModelAny)
+    return createDeviceFacade(api, registry, instance as DeviceModelAny)
   }
   if (instance instanceof FloorModel) {
     return new FloorFacade(api, registry, instance)

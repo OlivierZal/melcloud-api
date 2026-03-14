@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { IAPIAdapter } from '../services/index.ts'
+import type { APIAdapter } from '../services/index.ts'
 import type { ListDeviceDataAta, SetDeviceDataAta } from '../types/index.ts'
 
 import { FLAG_UNCHANGED } from '../constants.ts'
@@ -12,7 +12,7 @@ describe('fetchDevices', () => {
     const fetchMock = vi.fn()
     const target = vi.fn().mockResolvedValue('result')
     const decorated = fetchDevices(target, {} as ClassMethodDecoratorContext)
-    const context = { api: { fetch: fetchMock } as unknown as IAPIAdapter }
+    const context = { api: { fetch: fetchMock } as unknown as APIAdapter }
     await decorated.call(context)
 
     expect(fetchMock).toHaveBeenCalledTimes(1)

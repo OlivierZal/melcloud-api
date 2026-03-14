@@ -59,10 +59,10 @@ import { now } from '../utils.ts'
 
 import { DisposableTimeout } from './disposable-timeout.ts'
 import {
+  type API,
   type APIConfig,
   type ErrorLog,
   type ErrorLogQuery,
-  type IAPI,
   type Logger,
   type OnSyncFunction,
   type SettingManager,
@@ -154,7 +154,7 @@ const handleErrorLogQuery = ({
  * Main MELCloud API client. Handles authentication, device syncing, and all
  * API endpoint calls. Uses a private constructor — create instances via {@link MELCloudAPI.create}.
  */
-export class MELCloudAPI implements Disposable, IAPI {
+export class MELCloudAPI implements API, Disposable {
   public readonly onSync?: OnSyncFunction
 
   protected readonly settingManager?: SettingManager

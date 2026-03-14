@@ -1,5 +1,5 @@
 import type { DeviceType } from '../enums.ts'
-import type { IAPIAdapter } from '../services/index.ts'
+import type { APIAdapter } from '../services/index.ts'
 import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 
 /** Method decorator that triggers an API fetch before executing the decorated method. */
@@ -9,7 +9,7 @@ export const fetchDevices = <
   target: (...args: unknown[]) => Promise<T>,
   _context: ClassMethodDecoratorContext,
 ): ((...args: unknown[]) => Promise<T>) =>
-  async function newTarget(this: { api: IAPIAdapter }, ...args: unknown[]) {
+  async function newTarget(this: { api: APIAdapter }, ...args: unknown[]) {
     await this.api.fetch()
     return target.call(this, ...args)
   }

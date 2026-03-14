@@ -2,14 +2,11 @@ import type { UpdateDeviceData, UpdateDeviceDataAta } from '../types/index.ts'
 
 import { type DeviceType, OperationMode } from '../enums.ts'
 
-import type { IDeviceFacade } from './interfaces.ts'
-
 import { BaseDeviceFacade } from './base-device.ts'
 
 /** Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping. */
 export class DeviceAtaFacade
   extends BaseDeviceFacade<DeviceType.Ata>
-  implements IDeviceFacade<DeviceType.Ata>
 {
   public readonly flags = {
     OperationMode: 0x2,

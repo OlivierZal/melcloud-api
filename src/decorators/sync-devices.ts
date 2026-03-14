@@ -1,6 +1,6 @@
 import type { DeviceType } from '../enums.ts'
-import type { IFacade } from '../facades/index.ts'
-import type { IAPIAdapter } from '../services/index.ts'
+import type { Facade } from '../facades/index.ts'
+import type { APIAdapter } from '../services/index.ts'
 import type {
   Building,
   FailureData,
@@ -31,7 +31,7 @@ export const syncDevices =
     target: (...args: any[]) => Promise<U>,
     _context: ClassMethodDecoratorContext,
   ): ((...args: unknown[]) => Promise<U>) =>
-    async function newTarget(this: IAPIAdapter | IFacade, ...args: unknown[]) {
+    async function newTarget(this: APIAdapter | Facade, ...args: unknown[]) {
       const data = await target.call(this, ...args)
       await this.onSync?.({ type })
       return data
