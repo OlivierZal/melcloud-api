@@ -9,6 +9,7 @@ import type {
   Model,
 } from '../models/interfaces.ts'
 import type { APIAdapter } from '../services/index.ts'
+import type { BuildingZone, Zone } from '../types/index.ts'
 
 import type {
   BuildingFacade,
@@ -60,5 +61,13 @@ export class FacadeManager implements FacadeManagerContract {
       return this.#facades.get(instance) ?? null
     }
     return null
+  }
+
+  public getBuildings(params?: { type?: DeviceType }): BuildingZone[] {
+    return this.#registry.getBuildings(params)
+  }
+
+  public getZones(params?: { type?: DeviceType }): Zone[] {
+    return this.#registry.getZones(params)
   }
 }

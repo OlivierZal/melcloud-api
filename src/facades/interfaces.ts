@@ -108,12 +108,6 @@ export interface Facade extends Model {
   /** Retrieve the error log for all devices in this facade. */
   readonly errors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
 
-  /** Build a hierarchical zone structure, optionally filtered by device type. */
-  readonly getBuildings: (params?: { type?: DeviceType }) => BuildingZone[]
-
-  /** Flatten the building hierarchy into a sorted list of all zones. */
-  readonly getZones: (params?: { type?: DeviceType }) => Zone[]
-
   /** Get the current frost protection settings. */
   readonly frostProtection: () => Promise<FrostProtectionData>
 
@@ -149,6 +143,12 @@ export interface FacadeManager {
 
   /** Get or create a facade for the given model instance. Returns `null` if no instance is provided. */
   readonly get: (instance?: Model) => Facade | null
+
+  /** Build a hierarchical zone structure, optionally filtered by device type. */
+  readonly getBuildings: (params?: { type?: DeviceType }) => BuildingZone[]
+
+  /** Flatten the building hierarchy into a sorted list of all zones. */
+  readonly getZones: (params?: { type?: DeviceType }) => Zone[]
 }
 
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
