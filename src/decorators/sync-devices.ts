@@ -10,6 +10,7 @@ import type {
   SuccessData,
 } from '../types/index.ts'
 
+/** Method decorator factory that invokes the `onSync` callback after the decorated method completes. */
 export const syncDevices =
   <
     T extends DeviceType,

@@ -4,6 +4,7 @@ import type { IFloorModel } from './interfaces.ts'
 
 import { BaseModel } from './base.ts'
 
+/** Floor model representing a level within a building. */
 export class FloorModel extends BaseModel implements IFloorModel {
   public readonly buildingId: number
 

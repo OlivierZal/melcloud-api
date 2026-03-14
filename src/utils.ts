@@ -17,8 +17,10 @@ import { type DeviceType, LabelType } from './enums.ts'
 
 const YEAR_MONTH_DIVISOR = 100
 
+/** Get the current date/time as an ISO 8601 string without timezone offset. */
 export const now = (): string => DateTime.now().toISO({ includeOffset: false })
 
+/** Maps ATA set-command keys to their corresponding list-data keys. */
 export const fromSetToListAta: Record<
   KeyOfSetDeviceDataAtaNotInList,
   keyof SetDeviceDataAtaInList
@@ -28,10 +30,12 @@ export const fromSetToListAta: Record<
   VaneVertical: 'VaneVerticalDirection',
 }
 
+/** Type guard for ATA set-command keys that differ from list-data keys. */
 export const isSetDeviceDataAtaNotInList = (
   value: string,
 ): value is KeyOfSetDeviceDataAtaNotInList => value in fromSetToListAta
 
+/** Maps ATA list-data keys to their corresponding set-command keys. */
 export const fromListToSetAta: Record<
   keyof SetDeviceDataAtaInList,
   KeyOfSetDeviceDataAtaNotInList
@@ -41,6 +45,7 @@ export const fromListToSetAta: Record<
   VaneVerticalDirection: 'VaneVertical',
 }
 
+/** Type guard for ATA list-data keys that map to different set-command keys. */
 export const isSetDeviceDataAtaInList = (
   value: string,
 ): value is keyof SetDeviceDataAtaInList => value in fromListToSetAta
@@ -76,6 +81,7 @@ const formatLabels = (
   }
 }
 
+/** Type guard checking whether a key belongs to the updatable device data fields. */
 export const isUpdateDeviceData = <T extends DeviceType>(
   data: Record<keyof UpdateDeviceData<T>, unknown>,
   key: string,
@@ -95,6 +101,7 @@ const getChartLineSeries = ({
         item.name !== undefined,
     )
 
+/** Transform raw API report data into structured line chart options with formatted labels. */
 export const getChartLineOptions = (
   {
     Data: data,
@@ -113,6 +120,7 @@ export const getChartLineOptions = (
   unit,
 })
 
+/** Transform operation mode log data into structured pie chart options. */
 export const getChartPieOptions = (
   data: OperationModeLogData,
   { from, to }: Required<ReportQuery>,

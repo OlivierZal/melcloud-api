@@ -1,7 +1,14 @@
+/** MELCloud device type identifiers. */
 // eslint-disable-next-line import-x/export
 export const DeviceType = {
+
+  /** Air-to-Air (ATA) heat pump. */
   Ata: 0,
+
+  /** Air-to-Water (ATW) heat pump. */
   Atw: 1,
+
+  /** Energy Recovery Ventilation (ERV) unit. */
   Erv: 3,
 } as const
 export type DeviceType = (typeof DeviceType)[keyof typeof DeviceType]
@@ -15,6 +22,7 @@ export declare namespace DeviceType {
   type Erv = (typeof DeviceType)['Erv']
 }
 
+/** Fan speed levels for ATA and ERV devices. */
 export const FanSpeed = {
   auto: 0,
   fast: 4,
@@ -26,6 +34,7 @@ export const FanSpeed = {
 } as const
 export type FanSpeed = (typeof FanSpeed)[keyof typeof FanSpeed]
 
+/** Horizontal vane positions for ATA devices. */
 export const Horizontal = {
   auto: 0,
   center: 3,
@@ -38,6 +47,7 @@ export const Horizontal = {
 } as const
 export type Horizontal = (typeof Horizontal)[keyof typeof Horizontal]
 
+/** Report axis label formatting types. */
 export const LabelType = {
   day_of_week: 4,
   month: 2,
@@ -47,6 +57,7 @@ export const LabelType = {
 } as const
 export type LabelType = (typeof LabelType)[keyof typeof LabelType]
 
+/** MELCloud supported language codes. */
 export const Language = {
   bg: 1,
   cs: 2,
@@ -78,6 +89,7 @@ export const Language = {
 } as const
 export type Language = (typeof Language)[keyof typeof Language]
 
+/** ATA device operation modes. */
 export const OperationMode = {
   auto: 8,
   cool: 3,
@@ -87,6 +99,7 @@ export const OperationMode = {
 } as const
 export type OperationMode = (typeof OperationMode)[keyof typeof OperationMode]
 
+/** ATW device real-time operation state. */
 export const OperationModeState = {
   cooling: 3,
   defrost: 5,
@@ -98,16 +111,28 @@ export const OperationModeState = {
 export type OperationModeState =
   (typeof OperationModeState)[keyof typeof OperationModeState]
 
+/** ATW zone operation modes controlling temperature regulation strategy. */
 export const OperationModeZone = {
+
+  /** Temperature curve-based regulation. */
   curve: 2,
+
+  /** Fixed flow temperature. */
   flow: 1,
+
+  /** Fixed flow temperature with cooling. */
   flow_cool: 4,
+
+  /** Room thermostat regulation. */
   room: 0,
+
+  /** Room thermostat regulation with cooling. */
   room_cool: 3,
 } as const
 export type OperationModeZone =
   (typeof OperationModeZone)[keyof typeof OperationModeZone]
 
+/** ERV ventilation modes. */
 export const VentilationMode = {
   auto: 2,
   bypass: 1,
@@ -116,6 +141,7 @@ export const VentilationMode = {
 export type VentilationMode =
   (typeof VentilationMode)[keyof typeof VentilationMode]
 
+/** Vertical vane positions for ATA devices. */
 export const Vertical = {
   auto: 0,
   downwards: 5,

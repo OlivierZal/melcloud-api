@@ -2,6 +2,7 @@ import type { DeviceType } from '../enums.ts'
 import type { IAPIAdapter } from '../services/index.ts'
 import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 
+/** Method decorator that triggers an API fetch before executing the decorated method. */
 export const fetchDevices = <
   T extends ListDeviceData<DeviceType> | ZoneSettings,
 >(

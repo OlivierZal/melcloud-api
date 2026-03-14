@@ -14,6 +14,10 @@ const roomOperationModeZones: ReadonlySet<OperationModeZone> = new Set([
   OperationModeZone.room_cool,
 ])
 
+/**
+ * Extended ATW facade for units with two zones. Automatically couples zone operation
+ * modes so that cooling and room/flow modes stay consistent between zones.
+ */
 export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
   protected override readonly internalTemperaturesLegend = [
     'FlowTemperature',

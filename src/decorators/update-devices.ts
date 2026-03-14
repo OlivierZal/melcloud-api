@@ -17,6 +17,11 @@ import {
   isUpdateDeviceData,
 } from '../utils.ts'
 
+/**
+ * Method decorator factory that propagates data changes to device models after
+ * the decorated method completes. Supports filtering by device type and handles
+ * the special `SetPower` method name for power state updates.
+ */
 export const updateDevices =
   <T extends boolean | FailureData | GroupState | SuccessData>({
     type,
@@ -75,6 +80,10 @@ const convertToListDeviceData = <T extends DeviceType>(
   ) as Partial<ListDeviceData<T>>
 }
 
+/**
+ * Method decorator that converts API response data back to list format
+ * and updates the device model, using effective flags to determine which fields changed.
+ */
 export const updateDevice = <
   T extends DeviceType,
   U extends GetDeviceData<T> | SetDeviceData<T>,

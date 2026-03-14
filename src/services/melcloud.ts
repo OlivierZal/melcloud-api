@@ -150,6 +150,10 @@ const handleErrorLogQuery = ({
   }
 }
 
+/**
+ * Main MELCloud API client. Handles authentication, device syncing, and all
+ * API endpoint calls. Uses a private constructor — create instances via {@link MELCloudAPI.create}.
+ */
 export class MELCloudAPI implements Disposable, IAPI {
   public readonly onSync?: OnSyncFunction
 
@@ -223,12 +227,14 @@ export class MELCloudAPI implements Disposable, IAPI {
     LuxonSettings.defaultLocale = value
   }
 
+  /** Create and initialize a new API instance, performing an initial device sync. */
   public static async create(config?: APIConfig): Promise<MELCloudAPI> {
     const api = new MELCloudAPI(config)
     await api.fetch()
     return api
   }
 
+  /** Fetch all buildings, sync the model registry, and schedule the next auto-sync. */
   @syncDevices()
   public async fetch(): Promise<Building[]> {
     this.clearSync()
@@ -241,6 +247,10 @@ export class MELCloudAPI implements Disposable, IAPI {
     }
   }
 
+  /**
+   * Authenticate with MELCloud. If credentials are provided explicitly, errors
+   * are thrown to the caller. If using stored credentials, errors are swallowed.
+   */
   public async authenticate(data?: LoginCredentials): Promise<boolean> {
     const { password = this.password, username = this.username } = data ?? {}
     if (username && password) {
@@ -255,6 +265,7 @@ export class MELCloudAPI implements Disposable, IAPI {
     return false
   }
 
+  /** Cancel any pending automatic sync timer. */
   public clearSync(): void {
     this.#syncTimeout.clear()
   }
@@ -267,6 +278,10 @@ export class MELCloudAPI implements Disposable, IAPI {
     return this.#api.post('/EnergyCost/Report', postData)
   }
 
+  /**
+   * Retrieve a parsed, paginated error log for the specified devices.
+   * Filters out entries with invalid dates or empty messages.
+   */
   public async errorLog(
     query: ErrorLogQuery,
     deviceIds = this.#registry.getAllDevices().map(({ id }) => id),
@@ -372,6 +387,7 @@ export class MELCloudAPI implements Disposable, IAPI {
     return this.#api.post('/Report/GetOperationModeLog2', postData)
   }
 
+  /** Dispose both sync and retry timers. */
   public [Symbol.dispose](): void {
     this.#syncTimeout[Symbol.dispose]()
     this.#retryTimeout[Symbol.dispose]()
@@ -461,6 +477,7 @@ export class MELCloudAPI implements Disposable, IAPI {
     return this.#api.post('/Tile/Get2', postData)
   }
 
+  /** Update the user's language on the server if it differs from the current locale. */
   public async updateLanguage(language: string): Promise<void> {
     if (language !== this.language) {
       const { data: hasLanguageChanged } = await this.setLanguage({

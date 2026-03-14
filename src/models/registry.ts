@@ -18,6 +18,10 @@ import { BuildingModel } from './building.ts'
 import { DeviceModel } from './device.ts'
 import { FloorModel } from './floor.ts'
 
+/**
+ * Central in-memory registry of all MELCloud models (buildings, floors, areas, devices).
+ * Synced from the API response and queryable by ID or parent relationship.
+ */
 export class ModelRegistry {
   readonly #areas = new Map<number, IAreaModel>()
 

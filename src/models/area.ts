@@ -4,6 +4,7 @@ import type { IAreaModel } from './interfaces.ts'
 
 import { BaseModel } from './base.ts'
 
+/** Area model representing a zone within a building or floor. */
 export class AreaModel<T extends number | null = number | null>
   extends BaseModel
   implements IAreaModel

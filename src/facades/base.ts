@@ -47,6 +47,11 @@ const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
     }
   : null
 
+/**
+ * Abstract base for all facades. Provides common functionality for frost protection,
+ * holiday mode, power control, signal strength, tiles, and error log retrieval.
+ * Settings resolution falls back from zone level to device level when needed.
+ */
 export abstract class BaseFacade<T extends IModel> implements IFacade {
   public readonly id: number
 

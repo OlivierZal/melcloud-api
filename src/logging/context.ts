@@ -14,6 +14,7 @@ const LOG_KEYS = [
 
 const SPACE = 2
 
+/** Abstract base for API call logging data, serializable to JSON with a fixed set of log keys. */
 export abstract class APICallContextData {
   public readonly method: InternalAxiosRequestConfig['method']
 

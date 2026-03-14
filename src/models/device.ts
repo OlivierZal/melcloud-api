@@ -5,6 +5,7 @@ import type { IDeviceModel } from './interfaces.ts'
 
 import { BaseModel } from './base.ts'
 
+/** Concrete device model holding mutable device data that can be partially updated after API calls. */
 export class DeviceModel<T extends DeviceType>
   extends BaseModel
   implements IDeviceModel<T>

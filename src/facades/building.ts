@@ -12,6 +12,7 @@ import type { IBuildingFacade } from './interfaces.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
+/** Facade for a building, providing access to all its devices and zone settings. */
 export class BuildingFacade
   extends BaseSuperDeviceFacade<IBuildingModel>
   implements IBuildingFacade

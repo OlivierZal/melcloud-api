@@ -43,6 +43,7 @@ const createDeviceFacade = (
   }
 }
 
+/** Create the appropriate facade for a model instance based on its runtime type. */
 export const createFacade = (
   api: IAPIAdapter,
   registry: ModelRegistry,

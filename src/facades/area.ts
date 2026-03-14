@@ -4,6 +4,7 @@ import type { ISuperDeviceFacade } from './interfaces.ts'
 
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
+/** Facade for an area, grouping devices within a floor or building. */
 export class AreaFacade
   extends BaseSuperDeviceFacade<IAreaModel>
   implements ISuperDeviceFacade

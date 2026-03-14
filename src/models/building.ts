@@ -4,6 +4,7 @@ import type { IBuildingModel } from './interfaces.ts'
 
 import { BaseModel } from './base.ts'
 
+/** Building model holding zone settings and geographic location. */
 export class BuildingModel extends BaseModel implements IBuildingModel {
   public readonly data: ZoneSettings
 

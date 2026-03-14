@@ -21,6 +21,10 @@ import type {
 
 import { createFacade } from './factory.ts'
 
+/**
+ * Lazily creates and caches facade instances using a WeakMap keyed by model reference.
+ * Ensures each model instance maps to exactly one facade throughout its lifetime.
+ */
 export class FacadeManager implements IFacadeManager {
   readonly #api: IAPIAdapter
 

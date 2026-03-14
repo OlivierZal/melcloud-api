@@ -52,6 +52,10 @@ const getReportPostDataDates = ({
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(DateTime.fromISO(to).diff(DateTime.fromISO(from), 'days').days)
 
+/**
+ * Abstract base for device-specific facades. Handles device data access, report generation,
+ * value updates with effective flags, and ATA key conversion between set/list formats.
+ */
 export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<IDeviceModelAny>
   implements IDeviceFacade<T>

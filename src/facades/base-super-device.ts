@@ -17,6 +17,7 @@ import type { ISuperDeviceFacade } from './interfaces.ts'
 
 import { BaseFacade } from './base.ts'
 
+/** Abstract base for zone facades (building, floor, area) that support ATA group operations. */
 export abstract class BaseSuperDeviceFacade<
   T extends IAreaModel | IBuildingModel | IFloorModel,
 >
