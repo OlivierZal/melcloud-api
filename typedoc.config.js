@@ -1,6 +1,7 @@
 const config = {
-  cleanOutputDir: false,
+  cleanOutputDir: true,
   entryPoints: ['src/main.ts'],
+  tsconfig: 'tsconfig.build.json',
   enumMembersFormat: 'table',
   excludePrivate: true,
   expandObjects: true,
@@ -8,7 +9,7 @@ const config = {
   hidePageHeader: true,
   includeVersion: true,
   indexFormat: 'table',
-  out: '.',
+  out: 'docs',
   router: 'module',
   parametersFormat: 'table',
   plugin: ['typedoc-plugin-markdown'],
