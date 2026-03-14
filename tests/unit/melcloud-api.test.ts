@@ -2,9 +2,9 @@ import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axio
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Building } from '../types/index.ts'
+import type { Building } from '../../src/types/index.ts'
 
-import { isAPISetting } from '../services/interfaces.ts'
+import { isAPISetting } from '../../src/services/interfaces.ts'
 
 const mockInterceptors = {
   request: { use: vi.fn() },
@@ -43,7 +43,7 @@ describe('isAPISetting', () => {
 })
 
 describe('mELCloudAPI', () => {
-  let MELCloudAPI: typeof import('../services/melcloud.ts').MELCloudAPI
+  let MELCloudAPI: typeof import('../../src/services/melcloud.ts').MELCloudAPI
   let requestHandler: (
     config: InternalAxiosRequestConfig,
   ) => Promise<InternalAxiosRequestConfig>
@@ -56,7 +56,7 @@ describe('mELCloudAPI', () => {
     vi.clearAllMocks()
     mockAxiosInstance.get.mockResolvedValue({ data: [] })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
-    const mod = await import('../services/melcloud.ts')
+    const mod = await import('../../src/services/melcloud.ts')
     MELCloudAPI = mod.MELCloudAPI
   })
 
@@ -65,7 +65,7 @@ describe('mELCloudAPI', () => {
   })
 
   const createApi = async (
-    config: import('../services/interfaces.ts').APIConfig = {},
+    config: import('../../src/services/interfaces.ts').APIConfig = {},
   ) => {
     const api = await MELCloudAPI.create({ autoSyncInterval: 0, ...config })
     const reqCalls = mockInterceptors.request.use.mock.calls

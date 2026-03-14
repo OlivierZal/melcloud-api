@@ -5,10 +5,10 @@ import type {
   BuildingData,
   FloorData,
   ListDeviceAny,
-} from '../types/index.ts'
+} from '../../src/types/index.ts'
 
-import { DeviceType } from '../enums.ts'
-import { ModelRegistry } from '../models/index.ts'
+import { DeviceType } from '../../src/enums.ts'
+import { ModelRegistry } from '../../src/models/index.ts'
 
 const buildingData: BuildingData[] = [
   {

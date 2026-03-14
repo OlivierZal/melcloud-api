@@ -10,7 +10,7 @@ import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-} from '../logging/index.ts'
+} from '../../src/logging/index.ts'
 
 const createConfig = (
   overrides: Partial<InternalAxiosRequestConfig> = {},

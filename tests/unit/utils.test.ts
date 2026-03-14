@@ -6,7 +6,7 @@ import {
   isSetDeviceDataAtaInList,
   isSetDeviceDataAtaNotInList,
   isUpdateDeviceData,
-} from '../utils.ts'
+} from '../../src/utils.ts'
 
 describe('fromSetToListAta', () => {
   it('maps set keys to list keys', () => {

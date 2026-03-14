@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import type { APIAdapter } from '../services/index.ts'
-import type { ListDeviceAny } from '../types/index.ts'
+import type { APIAdapter } from '../../src/services/index.ts'
+import type { ListDeviceAny } from '../../src/types/index.ts'
 
-import { DeviceType } from '../enums.ts'
-import { createFacade } from '../facades/factory.ts'
-import { type Model, ModelRegistry } from '../models/index.ts'
+import { DeviceType } from '../../src/enums.ts'
+import { createFacade } from '../../src/facades/factory.ts'
+import { type Model, ModelRegistry } from '../../src/models/index.ts'
 
 const mockApi = {} as APIAdapter
 

@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { APIAdapter } from '../services/index.ts'
-import type { ListDeviceDataAta, SetDeviceDataAta } from '../types/index.ts'
+import type { APIAdapter } from '../../src/services/index.ts'
+import type { ListDeviceDataAta, SetDeviceDataAta } from '../../src/types/index.ts'
 
-import { FLAG_UNCHANGED } from '../constants.ts'
-import { fetchDevices, syncDevices, updateDevice, updateDevices } from '../decorators/index.ts'
-import { DeviceType, OperationMode } from '../enums.ts'
+import { FLAG_UNCHANGED } from '../../src/constants.ts'
+import { fetchDevices, syncDevices, updateDevice, updateDevices } from '../../src/decorators/index.ts'
+import { DeviceType, OperationMode } from '../../src/enums.ts'
 
 describe('fetchDevices', () => {
   it('calls api.fetch before the target method', async () => {

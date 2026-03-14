@@ -1,10 +1,10 @@
 import { DateTime, Settings as LuxonSettings } from 'luxon'
 import { describe, expect, it } from 'vitest'
 
-import type { OperationModeLogData, ReportData } from '../types/index.ts'
+import type { OperationModeLogData, ReportData } from '../../src/types/index.ts'
 
-import { LabelType } from '../enums.ts'
-import { getChartLineOptions, getChartPieOptions, now } from '../utils.ts'
+import { LabelType } from '../../src/enums.ts'
+import { getChartLineOptions, getChartPieOptions, now } from '../../src/utils.ts'
 
 describe('now', () => {
   it('returns an ISO string without offset', () => {

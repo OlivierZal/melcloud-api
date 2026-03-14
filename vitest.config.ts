@@ -21,6 +21,6 @@ export default defineConfig({
       exclude: ['src/**/index.ts', 'src/**/interfaces.ts', 'src/services/melcloud-home.ts', 'src/main.ts', 'src/types/**/*.ts'],
       include: ['src/**/*.ts'],
     },
-    include: ['src/**/__tests__/**/*.test.ts'],
+    include: ['tests/**/*.test.ts'],
   },
 })

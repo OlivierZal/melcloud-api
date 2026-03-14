@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ListDevice, ListDeviceDataAta } from '../types/index.ts'
+import type { ListDevice, ListDeviceDataAta } from '../../src/types/index.ts'
 
-import { DeviceType } from '../enums.ts'
-import { DeviceModel } from '../models/index.ts'
+import { DeviceType } from '../../src/enums.ts'
+import { DeviceModel } from '../../src/models/index.ts'
 
 const createAtaDevice = (
   overrides: Partial<ListDevice<DeviceType.Ata>> = {},

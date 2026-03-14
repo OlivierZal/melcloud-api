@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { APIAdapter } from '../services/index.ts'
+import type { APIAdapter } from '../../src/services/index.ts'
 import type {
   BuildingData,
   ListDeviceAny,
@@ -9,18 +9,18 @@ import type {
   ListDeviceDataErv,
   ReportData,
   SetDeviceDataAta,
-} from '../types/index.ts'
+} from '../../src/types/index.ts'
 
-import { DeviceType, LabelType, OperationMode, OperationModeZone } from '../enums.ts'
-import { AreaFacade } from '../facades/area.ts'
-import { BaseDeviceFacade } from '../facades/base-device.ts'
-import { BuildingFacade } from '../facades/building.ts'
-import { DeviceAtaFacade } from '../facades/device-ata.ts'
-import { DeviceAtwHasZone2Facade } from '../facades/device-atw-has-zone2.ts'
-import { DeviceAtwFacade } from '../facades/device-atw.ts'
-import { DeviceErvFacade } from '../facades/device-erv.ts'
-import { FloorFacade } from '../facades/floor.ts'
-import { ModelRegistry } from '../models/index.ts'
+import { DeviceType, LabelType, OperationMode, OperationModeZone } from '../../src/enums.ts'
+import { AreaFacade } from '../../src/facades/area.ts'
+import { BaseDeviceFacade } from '../../src/facades/base-device.ts'
+import { BuildingFacade } from '../../src/facades/building.ts'
+import { DeviceAtaFacade } from '../../src/facades/device-ata.ts'
+import { DeviceAtwHasZone2Facade } from '../../src/facades/device-atw-has-zone2.ts'
+import { DeviceAtwFacade } from '../../src/facades/device-atw.ts'
+import { DeviceErvFacade } from '../../src/facades/device-erv.ts'
+import { FloorFacade } from '../../src/facades/floor.ts'
+import { ModelRegistry } from '../../src/models/index.ts'
 
 const buildingData: BuildingData = {
   FPDefined: true,
