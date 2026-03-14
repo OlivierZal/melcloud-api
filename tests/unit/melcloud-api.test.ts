@@ -672,7 +672,7 @@ describe('mELCloudAPI', () => {
     it('request handler sets context key header', async () => {
       await createApi()
       const headers = new Map()
-      vi.spyOn(headers, 'set').mockImplementation((() => {}) as any)
+      vi.spyOn(headers, 'set')
       const config = {
         headers,
         url: '/Device/Get',
@@ -685,7 +685,7 @@ describe('mELCloudAPI', () => {
     it('request handler does not set header for login path', async () => {
       await createApi()
       const headers = new Map()
-      vi.spyOn(headers, 'set').mockImplementation((() => {}) as any)
+      vi.spyOn(headers, 'set')
       const config = {
         headers,
         url: '/Login/ClientLogin3',
@@ -728,7 +728,7 @@ describe('mELCloudAPI', () => {
       })
       mockAxiosInstance.get.mockResolvedValue({ data: [] })
       const headers = new Map()
-      vi.spyOn(headers, 'set').mockImplementation((() => {}) as any)
+      vi.spyOn(headers, 'set')
       const config = {
         headers,
         url: '/Device/Get',
@@ -958,7 +958,7 @@ describe('mELCloudAPI', () => {
       )
 
       const headers = new Map()
-      vi.spyOn(headers, 'set').mockImplementation((() => {}) as any)
+      vi.spyOn(headers, 'set')
       const config = {
         headers,
         url: '/User/ListDevices',

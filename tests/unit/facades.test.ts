@@ -589,7 +589,7 @@ describe('baseFacade frostProtection fallback', () => {
     const result1 = await facade.frostProtection()
     const result2 = await facade.frostProtection()
 
-    expect(result2).toEqual(result1)
+    expect(result2).toStrictEqual(result1)
     expect(fpMock).toHaveBeenCalledTimes(2)
   })
 
@@ -612,7 +612,7 @@ describe('baseFacade frostProtection fallback', () => {
     const result1 = await facade.frostProtection()
     const result2 = await facade.frostProtection()
 
-    expect(result2).toEqual(result1)
+    expect(result2).toStrictEqual(result1)
     expect(fpMock).toHaveBeenCalledTimes(3)
   })
 })
@@ -662,7 +662,7 @@ describe('baseFacade holidayMode fallback', () => {
     const result1 = await facade.holidayMode()
     const result2 = await facade.holidayMode()
 
-    expect(result2).toEqual(result1)
+    expect(result2).toStrictEqual(result1)
     expect(hmMock).toHaveBeenCalledTimes(2)
   })
 
@@ -688,7 +688,7 @@ describe('baseFacade holidayMode fallback', () => {
     const result1 = await facade.holidayMode()
     const result2 = await facade.holidayMode()
 
-    expect(result2).toEqual(result1)
+    expect(result2).toStrictEqual(result1)
     expect(hmMock).toHaveBeenCalledTimes(3)
   })
 })

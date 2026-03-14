@@ -55,7 +55,7 @@ const typeLikeSortOptions = {
 
 const config = defineConfig([
   {
-    ignores: ['dist/'],
+    ignores: ['coverage/', 'dist/'],
   },
   {
     extends: [
@@ -485,7 +485,7 @@ const config = defineConfig([
       'max-statements': 'off',
       'unicorn/consistent-function-scoping': 'off',
       'unicorn/prevent-abbreviations': 'off',
-      'vitest/max-expects': ['warn', { max: 10 }],
+      'vitest/max-expects': ['warn', { max: 15 }],
       'vitest/no-hooks': 'off',
       'vitest/prefer-called-with': 'off',
       'vitest/prefer-describe-function-title': 'off',
