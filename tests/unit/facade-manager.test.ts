@@ -6,6 +6,7 @@ import type {
   BuildingData,
   FloorData,
   ListDeviceAny,
+  ListDeviceDataAta,
 } from '../../src/types/index.ts'
 
 import { DeviceType } from '../../src/constants.ts'
@@ -40,7 +41,7 @@ const areaData: AreaDataAny = {
 const deviceData = mock<ListDeviceAny>({
   AreaID: 100,
   BuildingID: 1,
-  Device: mock<ListDeviceAny['Device']>({
+  Device: mock<ListDeviceDataAta>({
     ActualFanSpeed: 3,
     EffectiveFlags: 0,
     FanSpeed: 3,

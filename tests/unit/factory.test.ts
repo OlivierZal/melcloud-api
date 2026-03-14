@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import type { APIAdapter } from '../../src/services/index.ts'
-import type { ListDeviceAny } from '../../src/types/index.ts'
+import type {
+  ListDevice,
+  ListDeviceDataAta,
+  ListDeviceDataAtw,
+  ListDeviceDataErv,
+} from '../../src/types/index.ts'
 
 import { DeviceType } from '../../src/constants.ts'
 import { createFacade } from '../../src/facades/factory.ts'
@@ -34,10 +39,10 @@ const areaData = {
   Name: 'Area',
 } as const
 
-const deviceListData = mock<ListDeviceAny>({
+const deviceListData = mock<ListDevice<typeof DeviceType.Ata>>({
   AreaID: null,
   BuildingID: 1,
-  Device: mock<ListDeviceAny['Device']>(),
+  Device: mock<ListDeviceDataAta>(),
   DeviceID: 1000,
   DeviceName: 'ATA',
   FloorID: null,
@@ -87,9 +92,13 @@ describe('createFacade', () => {
   it('creates a DeviceAtwFacade for ATW devices without zone2', () => {
     const registry = new ModelRegistry()
     registry.syncDevices([
-      mock<ListDeviceAny>({
-        ...deviceListData,
-        Device: mock<ListDeviceAny['Device']>({ HasZone2: false }),
+      mock<ListDevice<typeof DeviceType.Atw>>({
+        AreaID: null,
+        BuildingID: 1,
+        Device: mock<ListDeviceDataAtw>({ HasZone2: false }),
+        DeviceID: 1000,
+        DeviceName: 'ATW',
+        FloorID: null,
         Type: DeviceType.Atw,
       }),
     ])
@@ -102,9 +111,13 @@ describe('createFacade', () => {
   it('creates a DeviceAtwHasZone2Facade for ATW devices with zone2', () => {
     const registry = new ModelRegistry()
     registry.syncDevices([
-      mock<ListDeviceAny>({
-        ...deviceListData,
-        Device: mock<ListDeviceAny['Device']>({ HasZone2: true }),
+      mock<ListDevice<typeof DeviceType.Atw>>({
+        AreaID: null,
+        BuildingID: 1,
+        Device: mock<ListDeviceDataAtw>({ HasZone2: true }),
+        DeviceID: 1000,
+        DeviceName: 'ATW',
+        FloorID: null,
         Type: DeviceType.Atw,
       }),
     ])
@@ -117,9 +130,13 @@ describe('createFacade', () => {
   it('creates a DeviceErvFacade for ERV devices', () => {
     const registry = new ModelRegistry()
     registry.syncDevices([
-      mock<ListDeviceAny>({
-        ...deviceListData,
-        Device: mock<ListDeviceAny['Device']>(),
+      mock<ListDevice<typeof DeviceType.Erv>>({
+        AreaID: null,
+        BuildingID: 1,
+        Device: mock<ListDeviceDataErv>(),
+        DeviceID: 1000,
+        DeviceName: 'ERV',
+        FloorID: null,
         Type: DeviceType.Erv,
       }),
     ])

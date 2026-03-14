@@ -1,5 +1,5 @@
 import type { DeviceType } from '../src/constants.ts'
-import type { DeviceModel, DeviceModelAny } from '../src/models/interfaces.ts'
+import type { DeviceModelAny } from '../src/models/interfaces.ts'
 
 /**
  * Create a mock object typed as `T` from a partial value.
@@ -11,10 +11,14 @@ export function mock(value: unknown = {}): unknown {
 }
 
 /** Narrow a `DeviceModelAny` to a specific `DeviceModel<T>` via assertion. */
-export const assertDeviceType = <T extends DeviceType>(
+export function assertDeviceType<T extends DeviceType>(
   device: DeviceModelAny | undefined,
   type: T,
-): asserts device is DeviceModel<T> => {
+): asserts device is Extract<DeviceModelAny, { type: T }>
+export function assertDeviceType(
+  device: DeviceModelAny | undefined,
+  type: DeviceType,
+): void {
   if (device?.type !== type) {
     throw new Error(
       `Expected device of type ${String(type)}, got ${device ? String(device.type) : 'undefined'}`,

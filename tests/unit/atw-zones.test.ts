@@ -16,7 +16,7 @@ import {
 } from '../../src/constants.ts'
 import { DeviceAtwHasZone2Facade } from '../../src/facades/device-atw-has-zone2.ts'
 import { DeviceAtwFacade } from '../../src/facades/device-atw.ts'
-import { DeviceModel, ModelRegistry } from '../../src/models/index.ts'
+import { ModelRegistry } from '../../src/models/index.ts'
 import { assertDeviceType, mock } from '../helpers.ts'
 
 const buildingData: BuildingData = {
@@ -107,7 +107,7 @@ const createDevice = (
 
 const mockApi = mock<APIAdapter>({
   fetch: vi.fn().mockResolvedValue([]),
-  onSync: vi.fn().mockResolvedValue(),
+  onSync: vi.fn().mockImplementation(async () => {}),
 })
 
 const createFacade = (

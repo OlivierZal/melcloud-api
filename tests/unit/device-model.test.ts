@@ -7,8 +7,8 @@ import { DeviceModel } from '../../src/models/index.ts'
 import { mock } from '../helpers.ts'
 
 const createAtaDevice = (
-  overrides: Partial<ListDevice<DeviceType.Ata>> = {},
-): ListDevice<DeviceType.Ata> => ({
+  overrides: Partial<ListDevice<typeof DeviceType.Ata>> = {},
+): ListDevice<typeof DeviceType.Ata> => ({
   AreaID: 100,
   BuildingID: 1,
   Device: mock<ListDeviceDataAta>({
@@ -62,24 +62,27 @@ describe('deviceModel', () => {
 
   it('returns device data', () => {
     const device = new DeviceModel(createAtaDevice())
+    const data = device.data as ListDeviceDataAta
 
-    expect(device.data.Power).toBe(true)
-    expect(device.data.SetTemperature).toBe(24)
+    expect(data.Power).toBe(true)
+    expect(data.SetTemperature).toBe(24)
   })
 
   it('updates device data partially', () => {
     const device = new DeviceModel(createAtaDevice())
     device.update({ Power: false })
+    const data = device.data as ListDeviceDataAta
 
-    expect(device.data.Power).toBe(false)
-    expect(device.data.SetTemperature).toBe(24)
+    expect(data.Power).toBe(false)
+    expect(data.SetTemperature).toBe(24)
   })
 
   it('updates device data with multiple fields', () => {
     const device = new DeviceModel(createAtaDevice())
     device.update({ Power: false, SetTemperature: 20 })
+    const data = device.data as ListDeviceDataAta
 
-    expect(device.data.Power).toBe(false)
-    expect(device.data.SetTemperature).toBe(20)
+    expect(data.Power).toBe(false)
+    expect(data.SetTemperature).toBe(20)
   })
 })

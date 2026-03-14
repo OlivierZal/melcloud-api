@@ -28,7 +28,7 @@ import { FloorFacade } from '../../src/facades/floor.ts'
 import { DeviceModel, ModelRegistry } from '../../src/models/index.ts'
 import { assertDeviceType, mock } from '../helpers.ts'
 
-type DeviceModelAta = DeviceModel<DeviceType.Ata>
+type DeviceModelAta = DeviceModel<typeof DeviceType.Ata>
 
 const buildingData: BuildingData = {
   FPDefined: true,
@@ -1017,7 +1017,7 @@ describe('deviceAtaFacade', () => {
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
 
     expect(
-      (call.postData as SetDevicePostData<DeviceType.Ata>).SetTemperature,
+      mock<SetDevicePostData<typeof DeviceType.Ata>>(call.postData).SetTemperature,
     ).toBeGreaterThanOrEqual(10)
   })
 
@@ -1034,7 +1034,7 @@ describe('deviceAtaFacade', () => {
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
 
     expect(
-      (call.postData as SetDevicePostData<DeviceType.Ata>).SetTemperature,
+      mock<SetDevicePostData<typeof DeviceType.Ata>>(call.postData).SetTemperature,
     ).toBeLessThanOrEqual(31)
   })
 })
@@ -1081,7 +1081,7 @@ describe('deviceAtwFacade', () => {
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
 
     expect(
-      (call.postData as SetDevicePostData<DeviceType.Atw>).SetTemperatureZone1,
+      mock<SetDevicePostData<typeof DeviceType.Atw>>(call.postData).SetTemperatureZone1,
     ).toBeGreaterThanOrEqual(10)
   })
 
@@ -1118,7 +1118,7 @@ describe('deviceAtwFacade', () => {
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
 
     expect(
-      (call.postData as SetDevicePostData<DeviceType.Atw>).SetTemperatureZone1,
+      mock<SetDevicePostData<typeof DeviceType.Atw>>(call.postData).SetTemperatureZone1,
     ).toBe(10)
   })
 
@@ -1337,7 +1337,10 @@ describe('baseDeviceFacade tiles', () => {
     const facade = new DeviceAtaFacade(api, registry, instance)
     const otherDevice = registry.devices.getById(1001)!
     assertDeviceType(otherDevice, DeviceType.Atw)
-    const result = await facade.tiles(mock<DeviceModelAta>(otherDevice))
+    const result = await facade.tiles(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      mock<DeviceModelAta>(otherDevice as unknown as Partial<DeviceModelAta>),
+    )
 
     expect(result).toHaveProperty('Tiles')
   })
@@ -1491,7 +1494,7 @@ describe('deviceAtwHasZone2Facade CanCool false', () => {
     })
 
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
-    const postData = call.postData as SetDevicePostData<DeviceType.Atw>
+    const postData = mock<SetDevicePostData<typeof DeviceType.Atw>>(call.postData)
 
     expect(postData.OperationModeZone2).toBe(OperationModeZone.flow)
   })

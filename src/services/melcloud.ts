@@ -311,11 +311,11 @@ export class MELCloudAPI implements API, Disposable {
     this.#syncTimeout.clear()
   }
 
-  public async energy({
+  public async energy<T extends DeviceType>({
     postData,
   }: {
     postData: EnergyPostData
-  }): Promise<{ data: EnergyData<DeviceType> }> {
+  }): Promise<{ data: EnergyData<T> }> {
     return this.#api.post('/EnergyCost/Report', postData)
   }
 
@@ -531,11 +531,11 @@ export class MELCloudAPI implements API, Disposable {
     }
   }
 
-  public async values({
+  public async values<T extends DeviceType>({
     params,
   }: {
     params: GetDeviceDataParams
-  }): Promise<{ data: GetDeviceData<DeviceType> }> {
+  }): Promise<{ data: GetDeviceData<T> }> {
     return this.#api.get('/Device/Get', { params })
   }
 

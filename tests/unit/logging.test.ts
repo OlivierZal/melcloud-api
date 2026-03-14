@@ -1,5 +1,6 @@
 import type {
   AxiosError,
+  AxiosRequestHeaders,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios'
@@ -18,7 +19,9 @@ const createConfig = (
 ): InternalAxiosRequestConfig =>
   mock<InternalAxiosRequestConfig>({
     data: { key: 'value' },
-    headers: mock({ 'Content-Type': 'application/json' }),
+    headers: mock<AxiosRequestHeaders>({
+      'Content-Type': 'application/json',
+    }),
     method: 'post',
     params: { id: 1 },
     url: '/test/endpoint',

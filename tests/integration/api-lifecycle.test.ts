@@ -1,3 +1,5 @@
+import type { AxiosStatic, HttpStatusCode } from 'axios'
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Building, ListDeviceDataAta } from '../../src/types/index.ts'
@@ -88,8 +90,8 @@ const mockAxiosInstance = {
 
 vi.mock(import('axios'), () =>
   mock<typeof import('axios')>({
-    default: mock({ create: vi.fn().mockReturnValue(mockAxiosInstance) }),
-    HttpStatusCode: mock({
+    default: mock<AxiosStatic>({ create: vi.fn().mockReturnValue(mockAxiosInstance) }),
+    HttpStatusCode: mock<typeof HttpStatusCode>({
       TooManyRequests: 429,
       Unauthorized: 401,
     }),
@@ -209,7 +211,7 @@ describe('API lifecycle', () => {
   })
 
   it('onSync callback is invoked after fetch', async () => {
-    const onSync = vi.fn().mockResolvedValue()
+    const onSync = vi.fn().mockImplementation(async () => {})
     await MELCloudAPI.create({ autoSyncInterval: 0, onSync })
 
     expect(onSync).toHaveBeenCalled()

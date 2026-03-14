@@ -24,7 +24,6 @@ import {
   isSetDeviceDataAtaInList,
   isUpdateDeviceData,
   now,
-  typedFromEntries,
   typedKeys,
 } from '../utils.ts'
 
@@ -86,7 +85,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     if (!this.#isMatchingDevice(instance)) {
       throw new Error('Device type mismatch')
     }
-    return instance
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified
+    return instance as unknown as DeviceModelContract<T>
   }
 
   protected get model(): {
@@ -95,7 +95,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return this.registry.devices
   }
 
-  #isMatchingDevice(device: DeviceModelAny): device is DeviceModelContract<T> {
+  #isMatchingDevice(device: DeviceModelAny): boolean {
     return device.type === this.type
   }
 
@@ -105,7 +105,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
    * to set format, then keep only the fields tracked by flags.
    */
   protected get setData(): Required<UpdateDeviceData<T>> {
-    const dataEntries: [string, unknown][] = Object.entries(this.data)
+    const dataEntries = Object.entries(this.data)
     const entries =
       this.type === DeviceType.Ata ?
         dataEntries
@@ -115,7 +115,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
           ])
           .filter(([key]) => key in this.flags)
       : dataEntries.filter(([key]) => key in this.flags)
-    return typedFromEntries<Required<UpdateDeviceData<T>>>(entries)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    return Object.fromEntries(entries) as Required<UpdateDeviceData<T>>
   }
 
   public override async tiles(select?: false): Promise<TilesData<null>>
@@ -144,13 +145,16 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public async setValues(
     data: Partial<UpdateDeviceData<T>>,
   ): Promise<SetDeviceData<T>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
     const newData = Object.fromEntries(
       Object.entries(data).filter(
         ([key, value]) =>
           isUpdateDeviceData(this.setData, key) && this.setData[key] !== value,
       ),
+    ) as Partial<UpdateDeviceData<T>>
+    const flags = this.#getFlags(
+      typedKeys(newData) as (keyof UpdateDeviceData<T>)[],
     )
-    const flags = this.#getFlags(typedKeys(newData))
     if (!flags) {
       throw new Error('No data to set')
     }

@@ -1,5 +1,6 @@
 import type {
   AxiosError,
+  AxiosRequestHeaders,
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios'
@@ -9,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { DeviceType } from '../../src/constants.ts'
 import type {
   Building,
-  ListDeviceDataAny,
+  ListDeviceAny,
   SetDevicePostData,
 } from '../../src/types/index.ts'
 
@@ -26,14 +27,12 @@ const mockAxiosInstance = {
   request: vi.fn(),
 }
 
-vi.mock(import('axios'), () => ({
+vi.mock(import('axios'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
   default: {
     create: vi.fn().mockReturnValue(mockAxiosInstance),
-  },
-  HttpStatusCode: {
-    TooManyRequests: 429,
-    Unauthorized: 401,
-  },
+  } as unknown as typeof import('axios').default,
 }))
 
 describe('mELCloudAPI', () => {
@@ -66,10 +65,12 @@ describe('mELCloudAPI', () => {
     const resCalls = mockInterceptors.response.use.mock.calls
     const lastReq = reqCalls.at(-1)!
     const lastRes = resCalls.at(-1)!
+    /* eslint-disable @typescript-eslint/no-unsafe-type-assertion */
     ;[requestHandler, requestErrorHandler] =
-      mock<[typeof requestHandler, typeof requestErrorHandler]>(lastReq)
+      lastReq as [typeof requestHandler, typeof requestErrorHandler]
     ;[responseHandler, responseErrorHandler] =
-      mock<[typeof responseHandler, typeof responseErrorHandler]>(lastRes)
+      lastRes as [typeof responseHandler, typeof responseErrorHandler]
+    /* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
     return api
   }
 
@@ -624,15 +625,14 @@ describe('mELCloudAPI', () => {
         Structure: {
           Areas: [],
           Devices: [
-            {
+            mock<ListDeviceAny>({
               AreaID: null,
               BuildingID: 1,
-              Device: mock<ListDeviceDataAny>(),
               DeviceID: 42,
               DeviceName: 'D1',
               FloorID: null,
               Type: 0,
-            },
+            }),
           ],
           Floors: [],
         },
@@ -672,7 +672,8 @@ describe('mELCloudAPI', () => {
   describe('interceptors', () => {
     it('request handler sets context key header', async () => {
       await createApi()
-      const headers = new Map()
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      const headers = new Map() as unknown as AxiosRequestHeaders
       vi.spyOn(headers, 'set')
       const config = mock<InternalAxiosRequestConfig>({
         headers,
@@ -688,7 +689,8 @@ describe('mELCloudAPI', () => {
 
     it('request handler does not set header for login path', async () => {
       await createApi()
-      const headers = new Map()
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      const headers = new Map() as unknown as AxiosRequestHeaders
       vi.spyOn(headers, 'set')
       const config = mock<InternalAxiosRequestConfig>({
         headers,
@@ -731,7 +733,8 @@ describe('mELCloudAPI', () => {
         },
       })
       mockAxiosInstance.get.mockResolvedValue({ data: [] })
-      const headers = new Map()
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      const headers = new Map() as unknown as AxiosRequestHeaders
       vi.spyOn(headers, 'set')
       const config = mock<InternalAxiosRequestConfig>({
         headers,
@@ -1021,7 +1024,8 @@ describe('mELCloudAPI', () => {
         'too many',
       )
 
-      const headers = new Map()
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      const headers = new Map() as unknown as AxiosRequestHeaders
       vi.spyOn(headers, 'set')
       const config = mock<InternalAxiosRequestConfig>({
         headers,
@@ -1051,15 +1055,14 @@ describe('mELCloudAPI', () => {
             {
               BuildingId: 1,
               Devices: [
-                {
+                mock<ListDeviceAny>({
                   AreaID: 100,
                   BuildingID: 1,
-                  Device: mock<ListDeviceDataAny>(),
                   DeviceID: 2000,
                   DeviceName: 'Area Device',
                   FloorID: null,
                   Type: 0,
-                },
+                }),
               ],
               FloorId: null,
               ID: 100,
@@ -1067,15 +1070,14 @@ describe('mELCloudAPI', () => {
             },
           ],
           Devices: [
-            {
+            mock<ListDeviceAny>({
               AreaID: null,
               BuildingID: 1,
-              Device: mock<ListDeviceDataAny>(),
               DeviceID: 1000,
               DeviceName: 'Building Device',
               FloorID: null,
               Type: 0,
-            },
+            }),
           ],
           Floors: [
             {
@@ -1083,15 +1085,14 @@ describe('mELCloudAPI', () => {
                 {
                   BuildingId: 1,
                   Devices: [
-                    {
+                    mock<ListDeviceAny>({
                       AreaID: 200,
                       BuildingID: 1,
-                      Device: mock<ListDeviceDataAny>(),
                       DeviceID: 3000,
                       DeviceName: 'Floor Area Device',
                       FloorID: 10,
                       Type: 0,
-                    },
+                    }),
                   ],
                   FloorId: 10,
                   ID: 200,
@@ -1100,15 +1101,14 @@ describe('mELCloudAPI', () => {
               ],
               BuildingId: 1,
               Devices: [
-                {
+                mock<ListDeviceAny>({
                   AreaID: null,
                   BuildingID: 1,
-                  Device: mock<ListDeviceDataAny>(),
                   DeviceID: 4000,
                   DeviceName: 'Floor Device',
                   FloorID: 10,
                   Type: 0,
-                },
+                }),
               ],
               ID: 10,
               Name: 'F1',

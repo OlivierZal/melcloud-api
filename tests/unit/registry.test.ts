@@ -4,7 +4,11 @@ import type {
   AreaDataAny,
   BuildingData,
   FloorData,
+  ListDevice,
   ListDeviceAny,
+  ListDeviceDataAta,
+  ListDeviceDataAtw,
+  ListDeviceDataErv,
 } from '../../src/types/index.ts'
 
 import { DeviceType } from '../../src/constants.ts'
@@ -55,28 +59,28 @@ const areaData: AreaDataAny[] = [
 ]
 
 const deviceData: ListDeviceAny[] = [
-  mock<ListDeviceAny>({
+  mock<ListDevice<typeof DeviceType.Ata>>({
     AreaID: 100,
     BuildingID: 1,
-    Device: mock<ListDeviceAny['Device']>(),
+    Device: mock<ListDeviceDataAta>(),
     DeviceID: 1000,
     DeviceName: 'Device ATA',
     FloorID: 10,
     Type: DeviceType.Ata,
   }),
-  mock<ListDeviceAny>({
+  mock<ListDevice<typeof DeviceType.Atw>>({
     AreaID: 102,
     BuildingID: 2,
-    Device: mock<ListDeviceAny['Device']>(),
+    Device: mock<ListDeviceDataAtw>(),
     DeviceID: 1001,
     DeviceName: 'Device ATW',
     FloorID: 12,
     Type: DeviceType.Atw,
   }),
-  mock<ListDeviceAny>({
+  mock<ListDevice<typeof DeviceType.Erv>>({
     AreaID: null,
     BuildingID: 1,
-    Device: mock<ListDeviceAny['Device']>(),
+    Device: mock<ListDeviceDataErv>(),
     DeviceID: 1002,
     DeviceName: 'Device ERV',
     FloorID: null,
