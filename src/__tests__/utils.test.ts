@@ -63,11 +63,13 @@ describe('isUpdateDeviceData', () => {
 
   it('returns true for keys in the data record', () => {
     const key = String('Power')
+
     expect(isUpdateDeviceData(data, key)).toBe(true)
   })
 
   it('returns false for keys not in the data record', () => {
     const key = String('NonExistent')
+
     expect(isUpdateDeviceData(data, key)).toBe(false)
   })
 })

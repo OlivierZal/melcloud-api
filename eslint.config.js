@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
+import vitest from '@vitest/eslint-plugin'
 import prettier from 'eslint-config-prettier/flat'
 import perfectionist from 'eslint-plugin-perfectionist'
 import unicorn from 'eslint-plugin-unicorn'
@@ -451,16 +452,42 @@ const config = defineConfig([
     },
   },
   {
+    extends: [vitest.configs.all],
     files: ['src/**/__tests__/**'],
     rules: {
       '@typescript-eslint/consistent-type-assertions': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/init-declarations': 'off',
+      '@typescript-eslint/naming-convention': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-magic-numbers': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
       '@typescript-eslint/no-unnecessary-type-conversion': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/prefer-destructuring': 'off',
+      '@typescript-eslint/strict-void-return': 'off',
+      '@typescript-eslint/unbound-method': 'off',
       'id-length': 'off',
+      'import-x/max-dependencies': 'off',
       'max-lines-per-function': 'off',
+      'max-statements': 'off',
+      'unicorn/consistent-function-scoping': 'off',
+      'unicorn/prevent-abbreviations': 'off',
+      'vitest/max-expects': ['warn', { max: 10 }],
+      'vitest/no-hooks': 'off',
+      'vitest/prefer-called-with': 'off',
+      'vitest/prefer-describe-function-title': 'off',
+      'vitest/prefer-expect-assertions': 'off',
+      'vitest/prefer-lowercase-title': 'off',
+      'vitest/require-hook': 'off',
+      'vitest/require-mock-type-parameters': 'off',
     },
   },
   {

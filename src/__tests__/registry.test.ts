@@ -95,6 +95,7 @@ describe('modelRegistry', () => {
     it('syncs buildings', () => {
       const registry = new ModelRegistry()
       registry.syncBuildings(buildingData)
+
       expect(registry.buildings.getById(1)?.name).toBe('Building 1')
       expect(registry.buildings.getById(2)?.name).toBe('Building 2')
       expect(registry.buildings.getById(999)).toBeUndefined()
@@ -103,6 +104,7 @@ describe('modelRegistry', () => {
     it('syncs floors', () => {
       const registry = new ModelRegistry()
       registry.syncFloors(floorData)
+
       expect(registry.floors.getById(10)?.name).toBe('Floor 1')
       expect(registry.floors.getById(11)?.buildingId).toBe(1)
     })
@@ -110,6 +112,7 @@ describe('modelRegistry', () => {
     it('syncs areas', () => {
       const registry = new ModelRegistry()
       registry.syncAreas(areaData)
+
       expect(registry.areas.getById(100)?.name).toBe('Area 1')
       expect(registry.areas.getById(100)?.floorId).toBe(10)
       expect(registry.areas.getById(101)?.floorId).toBeNull()
@@ -118,6 +121,7 @@ describe('modelRegistry', () => {
     it('syncs devices', () => {
       const registry = new ModelRegistry()
       registry.syncDevices(deviceData)
+
       expect(registry.devices.getById(1000)?.name).toBe('Device ATA')
       expect(registry.devices.getById(1000)?.type).toBe(DeviceType.Ata)
     })
@@ -125,10 +129,13 @@ describe('modelRegistry', () => {
     it('replaces previous data on re-sync', () => {
       const registry = new ModelRegistry()
       registry.syncBuildings(buildingData)
+
       expect(registry.buildings.getById(1)?.name).toBe('Building 1')
+
       registry.syncBuildings([
         { ...buildingData[0]!, Name: 'Updated Building' },
       ])
+
       expect(registry.buildings.getById(1)?.name).toBe('Updated Building')
       expect(registry.buildings.getById(2)).toBeUndefined()
     })
@@ -137,23 +144,27 @@ describe('modelRegistry', () => {
   describe('queries', () => {
     it('getAllDevices returns all devices', () => {
       const registry = createPopulatedRegistry()
+
       expect(registry.getAllDevices()).toHaveLength(3)
     })
 
     it('getDeviceById returns a device by id', () => {
       const registry = createPopulatedRegistry()
       const device = registry.getDeviceById(1000)
+
       expect(device?.name).toBe('Device ATA')
     })
 
     it('getDeviceById returns undefined for unknown id', () => {
       const registry = createPopulatedRegistry()
+
       expect(registry.getDeviceById(9999)).toBeUndefined()
     })
 
     it('getDevicesByType filters by device type', () => {
       const registry = createPopulatedRegistry()
       const ataDevices = registry.getDevicesByType(DeviceType.Ata)
+
       expect(ataDevices).toHaveLength(1)
       expect(ataDevices[0]?.type).toBe(DeviceType.Ata)
     })
@@ -161,6 +172,7 @@ describe('modelRegistry', () => {
     it('getDevicesByType returns empty for absent type', () => {
       const registry = new ModelRegistry()
       registry.syncDevices([deviceData[0]!])
+
       expect(registry.getDevicesByType(DeviceType.Atw)).toHaveLength(0)
     })
   })
@@ -169,6 +181,7 @@ describe('modelRegistry', () => {
     it('getFloorsByBuildingId returns floors belonging to a building', () => {
       const registry = createPopulatedRegistry()
       const floors = registry.getFloorsByBuildingId(1)
+
       expect(floors).toHaveLength(2)
       expect(floors.map(({ name }) => name)).toStrictEqual([
         'Floor 1',
@@ -179,35 +192,41 @@ describe('modelRegistry', () => {
     it('getAreasByBuildingId returns areas belonging to a building', () => {
       const registry = createPopulatedRegistry()
       const areas = registry.getAreasByBuildingId(1)
+
       expect(areas).toHaveLength(2)
     })
 
     it('getAreasByFloorId returns areas belonging to a floor', () => {
       const registry = createPopulatedRegistry()
+
       expect(registry.getAreasByFloorId(10)).toHaveLength(1)
       expect(registry.getAreasByFloorId(11)).toHaveLength(0)
     })
 
     it('getDevicesByBuildingId returns devices belonging to a building', () => {
       const registry = createPopulatedRegistry()
+
       expect(registry.getDevicesByBuildingId(1)).toHaveLength(2)
       expect(registry.getDevicesByBuildingId(2)).toHaveLength(1)
     })
 
     it('getDevicesByFloorId returns devices belonging to a floor', () => {
       const registry = createPopulatedRegistry()
+
       expect(registry.getDevicesByFloorId(10)).toHaveLength(1)
       expect(registry.getDevicesByFloorId(11)).toHaveLength(0)
     })
 
     it('getDevicesByAreaId returns devices belonging to an area', () => {
       const registry = createPopulatedRegistry()
+
       expect(registry.getDevicesByAreaId(100)).toHaveLength(1)
       expect(registry.getDevicesByAreaId(101)).toHaveLength(0)
     })
 
     it('returns empty arrays for unknown building id', () => {
       const registry = createPopulatedRegistry()
+
       expect(registry.getFloorsByBuildingId(999)).toHaveLength(0)
       expect(registry.getAreasByBuildingId(999)).toHaveLength(0)
       expect(registry.getDevicesByBuildingId(999)).toHaveLength(0)

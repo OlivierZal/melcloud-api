@@ -48,6 +48,7 @@ describe('createFacade', () => {
     registry.syncBuildings([buildingData])
     const instance = registry.buildings.getById(1)!
     const facade = createFacade(mockApi, registry, instance)
+
     expect(facade.id).toBe(1)
     expect(facade.name).toBe('Building')
   })
@@ -57,6 +58,7 @@ describe('createFacade', () => {
     registry.syncFloors([floorData])
     const instance = registry.floors.getById(10)!
     const facade = createFacade(mockApi, registry, instance)
+
     expect(facade.id).toBe(10)
     expect(facade.name).toBe('Floor')
   })
@@ -66,6 +68,7 @@ describe('createFacade', () => {
     registry.syncAreas([areaData])
     const instance = registry.areas.getById(100)!
     const facade = createFacade(mockApi, registry, instance)
+
     expect(facade.id).toBe(100)
     expect(facade.name).toBe('Area')
   })
@@ -75,12 +78,59 @@ describe('createFacade', () => {
     registry.syncDevices([deviceListData])
     const instance = registry.devices.getById(1000)!
     const facade = createFacade(mockApi, registry, instance)
+
+    expect(facade.id).toBe(1000)
+  })
+
+  it('creates a DeviceAtwFacade for ATW devices without zone2', () => {
+    const registry = new ModelRegistry()
+    registry.syncDevices([
+      {
+        ...deviceListData,
+        Device: { HasZone2: false } as ListDeviceAny['Device'],
+        Type: DeviceType.Atw,
+      },
+    ])
+    const instance = registry.devices.getById(1000)!
+    const facade = createFacade(mockApi, registry, instance)
+
+    expect(facade.id).toBe(1000)
+  })
+
+  it('creates a DeviceAtwHasZone2Facade for ATW devices with zone2', () => {
+    const registry = new ModelRegistry()
+    registry.syncDevices([
+      {
+        ...deviceListData,
+        Device: { HasZone2: true } as ListDeviceAny['Device'],
+        Type: DeviceType.Atw,
+      },
+    ])
+    const instance = registry.devices.getById(1000)!
+    const facade = createFacade(mockApi, registry, instance)
+
+    expect(facade.id).toBe(1000)
+  })
+
+  it('creates a DeviceErvFacade for ERV devices', () => {
+    const registry = new ModelRegistry()
+    registry.syncDevices([
+      {
+        ...deviceListData,
+        Device: {} as ListDeviceAny['Device'],
+        Type: DeviceType.Erv,
+      },
+    ])
+    const instance = registry.devices.getById(1000)!
+    const facade = createFacade(mockApi, registry, instance)
+
     expect(facade.id).toBe(1000)
   })
 
   it('throws for unsupported model types', () => {
     const registry = new ModelRegistry()
     const unknown = { id: 1, name: 'unknown' } as IModel
+
     expect(() => createFacade(mockApi, registry, unknown)).toThrow(
       'Model not supported',
     )

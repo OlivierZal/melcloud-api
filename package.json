@@ -49,6 +49,8 @@
     "@types/luxon": "^3.7.1",
     "@types/node": "^25.5.0",
     "@typescript/native-preview": "^7.0.0-dev.20260312.1",
+    "@vitest/coverage-v8": "^4.1.0",
+    "@vitest/eslint-plugin": "^1.6.12",
     "eslint": "10.0.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
