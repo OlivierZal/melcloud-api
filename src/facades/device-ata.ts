@@ -23,6 +23,10 @@ export class DeviceAtaFacade
     'OutdoorTemperature',
   ]
 
+  /*
+   * Clamp SetTemperature to the valid range for the current or requested
+   * operation mode before sending to the API
+   */
   protected override handle(
     data: Partial<UpdateDeviceDataAta>,
   ): Required<UpdateDeviceDataAta> {

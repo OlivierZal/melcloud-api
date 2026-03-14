@@ -23,6 +23,11 @@ import { FloorModel } from './floor.ts'
  * Synced from the API response and queryable by ID or parent relationship.
  */
 export class ModelRegistry {
+
+  /*
+   * Public accessors expose readonly query interfaces over private maps,
+   * preventing callers from clearing or replacing entire collections
+   */
   readonly #areas = new Map<number, AreaModelContract>()
 
   public readonly areas = {

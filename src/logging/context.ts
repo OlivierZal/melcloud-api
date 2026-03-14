@@ -1,5 +1,6 @@
 import type { InternalAxiosRequestConfig } from 'axios'
 
+// Fixed key order for consistent, readable JSON log output
 const LOG_KEYS = [
   'dataType',
   'method',

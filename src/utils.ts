@@ -15,6 +15,7 @@ import type {
 
 import { type DeviceType, LabelType } from './enums.ts'
 
+// API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
 const YEAR_MONTH_DIVISOR = 100
 
 /** Get the current date/time as an ISO 8601 string without timezone offset. */
@@ -50,6 +51,10 @@ export const isSetDeviceDataAtaInList = (
   value: string,
 ): value is keyof SetDeviceDataAtaInList => value in fromListToSetAta
 
+/*
+ * Transform raw API label formats into human-readable strings based on
+ * report granularity (day of week, month name, year-month, etc.)
+ */
 const formatLabels = (
   labels: readonly string[],
   labelType: LabelType,

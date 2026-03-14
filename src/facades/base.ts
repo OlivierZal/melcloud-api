@@ -31,6 +31,7 @@ import type {
   ReportChartLineOptions,
 } from './interfaces.ts'
 
+// Minimum 2°C gap between min and max to prevent invalid frost protection ranges
 const TEMPERATURE_GAP = 2
 
 const temperatureRange = { max: 16, min: 4 }
@@ -126,6 +127,10 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     return this.api.errorLog(query, this.#deviceIds)
   }
 
+  /*
+   * Frost protection can be defined at zone or device level. Try zone first;
+   * if unsupported, fall back to device level and cache the result.
+   */
   public async frostProtection(): Promise<FrostProtectionData> {
     if (this.isFrostProtectionDefined === null) {
       try {
@@ -139,6 +144,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
       : this.#getDevicesFrostProtection()
   }
 
+  // Same zone-then-device fallback strategy as frostProtection
   public async holidayMode(): Promise<HolidayModeData> {
     if (this.isHolidayModeDefined === null) {
       try {
@@ -157,6 +163,11 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     max,
     min,
   }: FrostProtectionQuery): Promise<FailureData | SuccessData> {
+
+    /*
+     * Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
+     * in case the adjustment pushed max out of bounds
+     */
     const newMin = Math.max(
       temperatureRange.min,
       Math.min(min, temperatureRange.max - TEMPERATURE_GAP),

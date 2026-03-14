@@ -38,6 +38,11 @@ export const updateDevices =
         throw new Error('No data to set')
       }
       const data = await target.call(this, arg)
+
+      /*
+       * SetPower takes a boolean directly, not an object. For other methods,
+       * filter out null/undefined values to avoid clearing fields unintentionally.
+       */
       const newData =
         String(context.name) === 'SetPower' ?
           { Power: arg }
@@ -54,6 +59,11 @@ export const updateDevices =
       return data
     }
 
+/*
+ * EffectiveFlags from the API response indicates which fields were actually
+ * changed by the device. Use this to update only those fields, converting
+ * ATA set-command keys back to list-data keys (e.g., SetFanSpeed → FanSpeed).
+ */
 const convertToListDeviceData = <T extends DeviceType>(
   facade: DeviceFacade<T>,
   data: SetDeviceData<T>,

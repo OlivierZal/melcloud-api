@@ -16,6 +16,7 @@ export interface APICallContextDataWithErrorMessage extends APICallContextData {
 
 const getMessage = (error: Error): string => error.message
 
+// Mixin that extends a log data class with the error message from the failure
 const withErrorMessage = <T extends AxiosResponse | InternalAxiosRequestConfig>(
   base: new (arg?: T) => APICallContextData,
   error: Error,

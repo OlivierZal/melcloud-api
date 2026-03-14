@@ -84,8 +84,13 @@ const RETRY_DELAY = 1000
 
 const DEFAULT_ERROR_LOG_OFFSET = 0
 const DEFAULT_ERROR_LOG_PERIOD = 1
+// MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
 
+/*
+ * Accessor decorator that delegates storage to an external SettingManager
+ * (e.g., persistent settings), falling back to the in-memory field when none is configured
+ */
 const setting = (
   target: ClassAccessorDecoratorTarget<MELCloudAPI, string>,
   context: ClassAccessorDecoratorContext<MELCloudAPI, string>,
@@ -128,6 +133,12 @@ const handleErrorLogQuery = ({
   period: number
   toDate: DateTime
 } => {
+
+  /*
+   * When fromDate is specified, period is fixed and offset is ignored, allowing
+   * queries around a specific date. Otherwise, offset pages through history
+   * in period-sized chunks.
+   */
   const fromDate = from !== undefined && from ? DateTime.fromISO(from) : null
   const toDate = to !== undefined && to ? DateTime.fromISO(to) : DateTime.now()
 
@@ -596,6 +607,7 @@ export class MELCloudAPI implements API, Disposable {
     this.#logger.error(String(errorData))
     const { config, response: { status } = {} } = error
     if (status === HttpStatusCode.TooManyRequests) {
+      // Pause list operations for 2 hours to avoid repeated 429 responses
       this.#pauseListUntil = DateTime.now().plus({ hours: 2 })
     } else if (
       status === HttpStatusCode.Unauthorized &&
@@ -622,6 +634,7 @@ export class MELCloudAPI implements API, Disposable {
       )
     }
     if (newConfig.url !== LOGIN_PATH) {
+      // Re-authenticate proactively if session token has expired
       const { contextKey, expiry } = this
       if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
         await this.authenticate()

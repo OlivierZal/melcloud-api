@@ -15,6 +15,10 @@ const coolFlowTemperatureRange = { max: 25, min: 5 }
 const heatFlowTemperatureRange = { max: 60, min: 25 }
 const roomTemperatureRange = { max: 30, min: 10 }
 
+/*
+ * Merge external and internal temperature reports, deduplicating series
+ * that appear in both (e.g., FlowTemperature from different endpoints)
+ */
 const mergeSeries = (
   series1: ReportChartLineOptions['series'],
   series2: ReportChartLineOptions['series'],
@@ -77,6 +81,10 @@ export class DeviceAtwFacade
     ]
   }
 
+  /*
+   * ATW reports both external (building) and internal (tank/boiler)
+   * temperatures — merge them into a single chart
+   */
   public override async temperatures(
     query?: ReportQuery,
     useExactRange = true,

@@ -38,6 +38,7 @@ import type {
 
 import { BaseFacade } from './base.ts'
 
+// Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
 
 const getReportPostDataDates = ({
@@ -98,6 +99,11 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return this.registry.devices
   }
 
+  /*
+   * For ATA devices, API list responses use different property names than set
+   * requests (e.g., "FanSpeed" in list vs "SetFanSpeed" in set). Convert keys
+   * to set format, then keep only the fields tracked by flags.
+   */
   protected get setData(): Required<UpdateDeviceData<T>> {
     const entries = (
       this.type === DeviceType.Ata ?
@@ -228,6 +234,10 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return { ...this.setData, ...data }
   }
 
+  /*
+   * Combine individual field flags via bitwise OR to tell the API
+   * which device settings were actually changed
+   */
   #getFlags(keys: (keyof UpdateDeviceData<T>)[]): number {
     let flag = FLAG_UNCHANGED
     for (const key of keys) {
