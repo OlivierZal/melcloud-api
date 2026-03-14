@@ -1,10 +1,20 @@
 import type { InternalAxiosRequestConfig } from 'axios'
 
+const LOG_KEYS = [
+  'dataType',
+  'method',
+  'url',
+  'params',
+  'headers',
+  'requestData',
+  'responseData',
+  'status',
+  'errorMessage',
+] as const
+
 const SPACE = 2
 
 export abstract class APICallContextData {
-  [key: string]: unknown
-
   public readonly method: InternalAxiosRequestConfig['method']
 
   public readonly params: InternalAxiosRequestConfig['params']
@@ -18,27 +28,6 @@ export abstract class APICallContextData {
   }
 
   public toString(): string {
-    return [
-      'dataType',
-      'method',
-      'url',
-      'params',
-      'headers',
-      'requestData',
-      'responseData',
-      'status',
-      'errorMessage',
-    ]
-      .map((key) => {
-        if (key in this) {
-          const { [key]: value } = this
-          if (value !== undefined) {
-            return `${key}: ${JSON.stringify(value, null, SPACE)}`
-          }
-        }
-        return null
-      })
-      .filter((line) => line !== null)
-      .join('\n')
+    return JSON.stringify(this, [...LOG_KEYS], SPACE)
   }
 }

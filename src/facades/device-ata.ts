@@ -1,4 +1,4 @@
-import type { UpdateDeviceDataAta } from '../types/index.ts'
+import type { UpdateDeviceData, UpdateDeviceDataAta } from '../types/index.ts'
 
 import { type DeviceType, OperationMode } from '../enums.ts'
 
@@ -17,7 +17,7 @@ export class DeviceAtaFacade
     SetTemperature: 0x4,
     VaneHorizontal: 0x1_00,
     VaneVertical: 0x10,
-  }
+  } satisfies Record<keyof UpdateDeviceData<DeviceType.Ata>, number>
 
   protected readonly temperaturesLegend = [
     'SetTemperature',

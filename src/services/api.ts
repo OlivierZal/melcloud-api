@@ -62,6 +62,7 @@ import {
 } from '../models/index.ts'
 import { now } from '../utils.ts'
 
+import { DisposableTimeout } from './disposable-timeout.ts'
 import {
   type APIConfig,
   type ErrorLog,
@@ -154,7 +155,7 @@ const handleErrorLogQuery = ({
   }
 }
 
-export class API implements IAPI {
+export class API implements Disposable, IAPI {
   public readonly onSync?: OnSyncFunction
 
   protected readonly settingManager?: SettingManager
@@ -165,13 +166,13 @@ export class API implements IAPI {
 
   readonly #logger: Logger
 
+  readonly #retryTimeout = new DisposableTimeout()
+
+  readonly #syncTimeout = new DisposableTimeout()
+
   #language = 'en'
 
   #pauseListUntil = DateTime.now()
-
-  #retryTimeout: NodeJS.Timeout | null = null
-
-  #syncTimeout: NodeJS.Timeout | null = null
 
   private constructor(config: APIConfig = {}) {
     const {
@@ -254,10 +255,7 @@ export class API implements IAPI {
   }
 
   public clearSync(): void {
-    if (this.#syncTimeout) {
-      clearTimeout(this.#syncTimeout)
-      this.#syncTimeout = null
-    }
+    this.#syncTimeout.clear()
   }
 
   public async energy({
@@ -371,6 +369,11 @@ export class API implements IAPI {
     postData: ReportPostData
   }): Promise<{ data: OperationModeLogData }> {
     return this.#api.post('/Report/GetOperationModeLog2', postData)
+  }
+
+  public [Symbol.dispose](): void {
+    this.#syncTimeout[Symbol.dispose]()
+    this.#retryTimeout[Symbol.dispose]()
   }
 
   public async setFrostProtection({
@@ -501,9 +504,9 @@ export class API implements IAPI {
   }
 
   #canRetry(): boolean {
-    if (!this.#retryTimeout) {
-      this.#retryTimeout = setTimeout(() => {
-        this.#retryTimeout = null
+    if (!this.#retryTimeout.isActive) {
+      this.#retryTimeout.schedule(() => {
+        this.#retryTimeout.clear()
       }, RETRY_DELAY)
       return true
     }
@@ -616,7 +619,7 @@ export class API implements IAPI {
 
   #planNextSync(): void {
     if (this.#autoSyncInterval) {
-      this.#syncTimeout = setTimeout(() => {
+      this.#syncTimeout.schedule(() => {
         this.fetch().catch(() => {
           //
         })

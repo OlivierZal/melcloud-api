@@ -1,4 +1,5 @@
 import type { DeviceType } from '../enums.ts'
+import type { UpdateDeviceData } from '../types/index.ts'
 
 import type {
   IDeviceFacade,
@@ -21,7 +22,7 @@ export class DeviceErvFacade
     Power: 0x1,
     SetFanSpeed: 0x8,
     VentilationMode: 0x4,
-  }
+  } satisfies Record<keyof UpdateDeviceData<DeviceType.Erv>, number>
 
   protected readonly temperaturesLegend = [
     undefined,

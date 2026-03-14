@@ -48,24 +48,33 @@ export const isSetDeviceDataAtaInList = (
 const formatLabels = (
   labels: readonly string[],
   labelType: LabelType,
-): string[] =>
-  ({
-    [LabelType.day_of_week]: () =>
-      labels.map((label) => DateTime.fromFormat(label, 'c').toFormat('ccc')),
-    [LabelType.month]: () =>
-      labels.map((label) =>
+): string[] => {
+  switch (labelType) {
+    case LabelType.day_of_week: {
+      return labels.map((label) =>
+        DateTime.fromFormat(label, 'c').toFormat('ccc'),
+      )
+    }
+    case LabelType.month: {
+      return labels.map((label) =>
         DateTime.fromObject({ month: Number(label) }).toFormat('MMM'),
-      ),
-    [LabelType.month_of_year]: () =>
-      labels.map((label) =>
+      )
+    }
+    case LabelType.month_of_year: {
+      return labels.map((label) =>
         DateTime.local(
           Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
           Number(label) % YEAR_MONTH_DIVISOR,
         ).toFormat('MMM yyyy'),
-      ),
-    [LabelType.raw]: () => [...labels],
-    [LabelType.time]: () => [...labels],
-  })[labelType]()
+      )
+    }
+    case LabelType.raw:
+    case LabelType.time: {
+      return [...labels]
+    }
+    // No default
+  }
+}
 
 export const isUpdateDeviceData = <T extends DeviceType>(
   data: Record<keyof UpdateDeviceData<T>, unknown>,

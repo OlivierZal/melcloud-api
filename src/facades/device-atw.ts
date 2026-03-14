@@ -1,5 +1,9 @@
 import type { DeviceType } from '../enums.ts'
-import type { TemperatureDataAtw, UpdateDeviceDataAtw } from '../types/index.ts'
+import type {
+  TemperatureDataAtw,
+  UpdateDeviceData,
+  UpdateDeviceDataAtw,
+} from '../types/index.ts'
 
 import type {
   IDeviceFacade,
@@ -49,7 +53,7 @@ export class DeviceAtwFacade
     SetTankWaterTemperature: 0x1_00_00_00_00_00_20,
     SetTemperatureZone1: 0x2_00_00_00_80,
     SetTemperatureZone2: 0x8_00_00_02_00,
-  }
+  } satisfies Record<keyof UpdateDeviceData<DeviceType.Atw>, number>
 
   protected readonly temperaturesLegend = [
     'SetTemperatureZone1',
