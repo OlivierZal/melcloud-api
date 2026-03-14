@@ -20,6 +20,12 @@ export default defineConfig({
     coverage: {
       exclude: ['src/**/index.ts', 'src/**/interfaces.ts', 'src/services/melcloud-home.ts', 'src/main.ts', 'src/types/**/*.ts'],
       include: ['src/**/*.ts'],
+      thresholds: {
+        branches: 100,
+        functions: 100,
+        lines: 100,
+        statements: 100,
+      },
     },
     include: ['tests/**/*.test.ts'],
   },

@@ -27,7 +27,7 @@ jobs:
           node-version: latest
       - run: npm ci --ignore-scripts
       - run: npm run build
-      - run: npm test
+      - run: npm test -- --coverage
   audit:
     if: github.actor != 'dependabot[bot]'
     name: Audit

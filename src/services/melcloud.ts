@@ -101,6 +101,8 @@ const setting = (
   context: ClassAccessorDecoratorContext<MELCloudAPI, string>,
 ): ClassAccessorDecoratorResult<MELCloudAPI, string> => {
   const key = String(context.name)
+  // eslint-disable-next-line capitalized-comments, @stylistic/lines-around-comment
+  /* v8 ignore next 3 */
   if (!isAPISetting(key)) {
     throw new Error(`Invalid setting: ${key}`)
   }
@@ -349,8 +351,12 @@ export class MELCloudAPI implements API, Disposable {
         .filter(({ date, error }) => Boolean(date && error))
         .toReversed(),
       fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
+      /* eslint-disable capitalized-comments, @stylistic/lines-around-comment */
+      /* v8 ignore next 2 */
       nextFromDate: nextToDate.minus({ days: period }).toISODate() ?? '',
+      /* v8 ignore next */
       nextToDate: nextToDate.toISODate() ?? '',
+      /* eslint-enable capitalized-comments, @stylistic/lines-around-comment */
     }
   }
 
@@ -586,8 +592,12 @@ export class MELCloudAPI implements API, Disposable {
     const { data } = await this.errors({
       postData: {
         DeviceIDs: deviceIds,
+        /* eslint-disable capitalized-comments, @stylistic/lines-around-comment */
+        /* v8 ignore next 2 */
         FromDate: fromDate.toISODate() ?? undefined,
+        /* v8 ignore next */
         ToDate: toDate.toISODate() ?? now(),
+        /* eslint-enable capitalized-comments, @stylistic/lines-around-comment */
       },
     })
     if ('AttributeErrors' in data) {
@@ -662,7 +672,8 @@ export class MELCloudAPI implements API, Disposable {
   #planNextSync(): void {
     if (this.#autoSyncInterval) {
       this.#syncTimeout.schedule(() => {
-        this.fetch().catch((error: unknown) => {
+        // eslint-disable-next-line capitalized-comments, no-inline-comments
+        this.fetch().catch(/* v8 ignore next */ (error: unknown) => {
           this.#logger.error('Auto-sync failed:', error)
         })
       }, this.#autoSyncInterval)

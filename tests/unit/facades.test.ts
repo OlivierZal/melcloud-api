@@ -584,10 +584,34 @@ describe('baseFacade frostProtection fallback', () => {
     const registry = createRegistry()
     const instance = registry.areas.getById(100)!
     const facade = new AreaFacade(api, registry, instance)
-    await facade.frostProtection()
-    await facade.frostProtection()
+    const result1 = await facade.frostProtection()
+    const result2 = await facade.frostProtection()
 
+    expect(result2).toEqual(result1)
     expect(fpMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('uses cached device-level frost protection on subsequent calls', async () => {
+    const fpMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('zone not found'))
+      .mockResolvedValue({
+        data: {
+          FPDefined: false,
+          FPEnabled: false,
+          FPMaxTemperature: 16,
+          FPMinTemperature: 4,
+        },
+      })
+    const api = createMockApi({ frostProtection: fpMock })
+    const registry = createRegistry()
+    const instance = registry.areas.getById(100)!
+    const facade = new AreaFacade(api, registry, instance)
+    const result1 = await facade.frostProtection()
+    const result2 = await facade.frostProtection()
+
+    expect(result2).toEqual(result1)
+    expect(fpMock).toHaveBeenCalledTimes(3)
   })
 })
 
@@ -615,6 +639,55 @@ describe('baseFacade holidayMode fallback', () => {
 
     expect(result).toHaveProperty('HMDefined')
     expect(hmMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('uses cached zone-level holiday mode on subsequent calls', async () => {
+    const hmMock = vi.fn().mockResolvedValue({
+      data: {
+        EndDate: { Day: 1, Hour: 0, Minute: 0, Month: 1, Second: 0, Year: 2024 },
+        HMDefined: true,
+        HMEnabled: false,
+        HMEndDate: null,
+        HMStartDate: null,
+        StartDate: { Day: 1, Hour: 0, Minute: 0, Month: 1, Second: 0, Year: 2024 },
+        TimeZone: 0,
+      },
+    })
+    const api = createMockApi({ holidayMode: hmMock })
+    const registry = createRegistry()
+    const instance = registry.areas.getById(100)!
+    const facade = new AreaFacade(api, registry, instance)
+    const result1 = await facade.holidayMode()
+    const result2 = await facade.holidayMode()
+
+    expect(result2).toEqual(result1)
+    expect(hmMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('uses cached device-level holiday mode on subsequent calls', async () => {
+    const hmMock = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('zone not found'))
+      .mockResolvedValue({
+        data: {
+          EndDate: { Day: 1, Hour: 0, Minute: 0, Month: 1, Second: 0, Year: 2024 },
+          HMDefined: false,
+          HMEnabled: false,
+          HMEndDate: null,
+          HMStartDate: null,
+          StartDate: { Day: 1, Hour: 0, Minute: 0, Month: 1, Second: 0, Year: 2024 },
+          TimeZone: 0,
+        },
+      })
+    const api = createMockApi({ holidayMode: hmMock })
+    const registry = createRegistry()
+    const instance = registry.areas.getById(100)!
+    const facade = new AreaFacade(api, registry, instance)
+    const result1 = await facade.holidayMode()
+    const result2 = await facade.holidayMode()
+
+    expect(result2).toEqual(result1)
+    expect(hmMock).toHaveBeenCalledTimes(3)
   })
 })
 
@@ -913,6 +986,42 @@ describe('deviceAtwFacade', () => {
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
 
     expect((call.postData as SetDevicePostData<DeviceType.Atw>).SetTemperatureZone1).toBeGreaterThanOrEqual(10)
+  })
+
+  it('uses DEFAULT_TEMPERATURE when a temperature key is null', async () => {
+    const api = createMockApi({
+      setValues: vi.fn().mockResolvedValue({
+        data: {
+          DeviceType: DeviceType.Atw,
+          EffectiveFlags: 0x1,
+          ForcedHotWaterMode: false,
+          LastCommunication: '',
+          NextCommunication: '',
+          Offline: false,
+          OperationModeZone1: 0,
+          OperationModeZone2: 0,
+          Power: true,
+          SetCoolFlowTemperatureZone1: 5,
+          SetCoolFlowTemperatureZone2: 5,
+          SetHeatFlowTemperatureZone1: 25,
+          SetHeatFlowTemperatureZone2: 25,
+          SetTankWaterTemperature: 40,
+          SetTemperatureZone1: 10,
+          SetTemperatureZone2: 10,
+        },
+      }),
+    })
+    const registry = createRegistry()
+    const instance = registry.devices.getById(1001)! as DeviceModelAtw
+    const facade = new DeviceAtwFacade(api, registry, instance)
+    await facade.setValues({
+      SetTemperatureZone1: null as unknown as number,
+    })
+    const call = vi.mocked(api.setValues).mock.calls[0]![0]
+
+    expect(
+      (call.postData as SetDevicePostData<DeviceType.Atw>).SetTemperatureZone1,
+    ).toBe(10)
   })
 
   it('merges internal temperatures into temperatures', async () => {
@@ -1223,6 +1332,60 @@ describe('deviceAtwHasZone2Facade no operation mode change', () => {
     await facade.setValues({ Power: false })
 
     expect(api.setValues).toHaveBeenCalled()
+  })
+})
+
+describe('deviceAtwHasZone2Facade CanCool false', () => {
+  it('skips cool adjustment when CanCool is false', async () => {
+    const zone2Registry = new ModelRegistry()
+    zone2Registry.syncBuildings([buildingData])
+    zone2Registry.syncFloors([{ BuildingId: 1, ID: 10, Name: 'Floor' }])
+    zone2Registry.syncAreas([
+      { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Area' },
+    ])
+    const zone2Data: ListDeviceAny = {
+      ...atwDeviceData,
+      Device: {
+        ...atwDeviceData.Device,
+        CanCool: false,
+        HasZone2: true,
+        OperationModeZone1: OperationModeZone.room,
+        OperationModeZone2: OperationModeZone.flow,
+      } as ListDeviceDataAtw,
+    }
+    zone2Registry.syncDevices([zone2Data])
+    const api = createMockApi({
+      setValues: vi.fn().mockResolvedValue({
+        data: {
+          DeviceType: DeviceType.Atw,
+          EffectiveFlags: 0x8,
+          ForcedHotWaterMode: false,
+          LastCommunication: '',
+          NextCommunication: '',
+          Offline: false,
+          OperationModeZone1: OperationModeZone.flow,
+          OperationModeZone2: OperationModeZone.flow,
+          Power: true,
+          SetCoolFlowTemperatureZone1: 20,
+          SetCoolFlowTemperatureZone2: 20,
+          SetHeatFlowTemperatureZone1: 40,
+          SetHeatFlowTemperatureZone2: 40,
+          SetTankWaterTemperature: 50,
+          SetTemperatureZone1: 22,
+          SetTemperatureZone2: 22,
+        },
+      }),
+    })
+    const instance = zone2Registry.devices.getById(1001)! as DeviceModelAtw
+    const facade = new DeviceAtwHasZone2Facade(api, zone2Registry, instance)
+    await facade.setValues({
+      OperationModeZone1: OperationModeZone.flow,
+    })
+
+    const call = vi.mocked(api.setValues).mock.calls[0]![0]
+    const postData = call.postData as SetDevicePostData<DeviceType.Atw>
+
+    expect(postData.OperationModeZone2).toBe(OperationModeZone.flow)
   })
 })
 

@@ -608,11 +608,46 @@ describe('mELCloudAPI', () => {
     })
 
     it('uses all devices when no deviceIds provided', async () => {
+      const building: Building = {
+        FPDefined: false,
+        FPEnabled: false,
+        FPMaxTemperature: 16,
+        FPMinTemperature: 4,
+        HMDefined: false,
+        HMEnabled: false,
+        HMEndDate: null,
+        HMStartDate: null,
+        ID: 1,
+        Location: 10,
+        Name: 'Test',
+        Structure: {
+          Areas: [],
+          Devices: [
+            {
+              AreaID: null,
+              BuildingID: 1,
+              Device: {} as any,
+              DeviceID: 42,
+              DeviceName: 'D1',
+              FloorID: null,
+              Type: 0,
+            },
+          ],
+          Floors: [],
+        },
+        TimeZone: 0,
+      } as Building
+      mockAxiosInstance.get.mockResolvedValue({ data: [building] })
       const api = await createApi()
+      await api.fetch()
       mockAxiosInstance.post.mockResolvedValue({ data: [] })
       const result = await api.errorLog({})
 
       expect(result).toHaveProperty('errors')
+      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+        '/Report/GetUnitErrorLog2',
+        expect.objectContaining({ DeviceIDs: [42] }),
+      )
     })
 
     it('filters null/empty error messages', async () => {
