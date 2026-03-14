@@ -29,6 +29,17 @@ export interface AreaData<T extends number | null> extends FloorData {
   readonly FloorId: T
 }
 
+export interface AreaZone extends BaseZone {
+  readonly devices: readonly DeviceZone[]
+  readonly model: 'areas'
+}
+
+export interface BaseZone {
+  readonly id: number
+  readonly level: number
+  readonly name: string
+}
+
 export interface Building extends BuildingData {
   readonly Structure: {
     readonly Areas: readonly (AreaData<null> & {
@@ -48,6 +59,17 @@ export interface BuildingData extends ZoneSettings {
   readonly ID: number
   readonly Location: number
   readonly Name: string
+}
+
+export interface BuildingZone extends BaseZone {
+  readonly areas: readonly AreaZone[]
+  readonly devices: readonly DeviceZone[]
+  readonly floors: readonly FloorZone[]
+  readonly model: 'buildings'
+}
+
+export interface DeviceZone extends BaseZone {
+  readonly model: 'devices'
 }
 
 export interface EnergyPostData {
@@ -80,6 +102,12 @@ export interface FloorData {
   readonly BuildingId: number
   readonly ID: number
   readonly Name: string
+}
+
+export interface FloorZone extends BaseZone {
+  readonly areas: readonly AreaZone[]
+  readonly devices: readonly DeviceZone[]
+  readonly model: 'floors'
 }
 
 export interface FrostProtectionData {
@@ -289,3 +317,5 @@ export type UpdateDeviceData<T extends DeviceType> =
   : T extends DeviceType.Atw ? UpdateDeviceDataAtw
   : T extends DeviceType.Erv ? UpdateDeviceDataErv
   : never
+
+export type Zone = AreaZone | BuildingZone | DeviceZone | FloorZone

@@ -1,9 +1,14 @@
 import type { DeviceType } from '../enums.ts'
 import type {
   AreaDataAny,
+  AreaZone,
   BuildingData,
+  BuildingZone,
+  DeviceZone,
   FloorData,
+  FloorZone,
   ListDeviceAny,
+  Zone,
 } from '../types/index.ts'
 
 import type {
@@ -17,6 +22,37 @@ import { AreaModel } from './area.ts'
 import { BuildingModel } from './building.ts'
 import { DeviceModel } from './device.ts'
 import { FloorModel } from './floor.ts'
+
+const BUILDING_LEVEL = 0
+const CHILD_LEVEL = 1
+const GRANDCHILD_LEVEL = 2
+const GREAT_GRANDCHILD_LEVEL = 3
+
+const compareNames = (
+  { name: name1 }: { name: string },
+  { name: name2 }: { name: string },
+): number => name1.localeCompare(name2)
+
+const buildDeviceZones = (
+  devices: DeviceModelAny[],
+  type?: DeviceType,
+): DeviceZone[] => {
+  const filtered =
+    type === undefined ?
+      devices
+    : devices.filter(({ type: deviceType }) => deviceType === type)
+  return filtered
+    .map(({ areaId, floorId, id, name }) => ({
+      id,
+      level:
+        areaId !== null && floorId !== null ? GREAT_GRANDCHILD_LEVEL
+        : areaId !== null || floorId !== null ? GRANDCHILD_LEVEL
+        : CHILD_LEVEL,
+      model: 'devices' as const,
+      name,
+    }))
+    .toSorted(compareNames)
+}
 
 /**
  * Central in-memory registry of all MELCloud models (buildings, floors, areas, devices).
@@ -67,6 +103,37 @@ export class ModelRegistry {
 
   #floorsByBuildingId = new Map<number, FloorModelContract[]>()
 
+  /** Build a hierarchical zone structure from the registry, optionally filtered by device type. */
+  public getBuildings({ type }: { type?: DeviceType } = {}): BuildingZone[] {
+    return [...this.#buildings.values()]
+      .filter((building) => this.#hasDevices(building.id, 'building', type))
+      .map((building) => ({
+        areas: this.#buildAreaZones(
+          this.getAreasByBuildingId(building.id).filter(
+            ({ floorId }) => floorId === null,
+          ),
+          CHILD_LEVEL,
+          type,
+        ),
+        devices: buildDeviceZones(
+          this.getDevicesByBuildingId(building.id).filter(
+            ({ areaId, floorId }) => areaId === null && floorId === null,
+          ),
+          type,
+        ),
+        floors: this.#buildFloorZones(
+          this.getFloorsByBuildingId(building.id),
+          type,
+        ),
+        id: building.id,
+        level: BUILDING_LEVEL,
+        model: 'buildings' as const,
+        name: building.name,
+      }))
+      .toSorted(compareNames)
+  }
+
+  /** Flatten the building hierarchy into a sorted list of all zones. */
   public getAreasByBuildingId(id: number): AreaModelContract[] {
     return this.#areasByBuildingId.get(id) ?? []
   }
@@ -102,6 +169,24 @@ export class ModelRegistry {
 
   public getFloorsByBuildingId(id: number): FloorModelContract[] {
     return this.#floorsByBuildingId.get(id) ?? []
+  }
+
+  public getZones({ type }: { type?: DeviceType } = {}): Zone[] {
+    return this.getBuildings({ type })
+      .flatMap((building): Zone[] => [
+        building,
+        ...building.devices,
+        ...building.areas.flatMap((area): Zone[] => [area, ...area.devices]),
+        ...building.floors.flatMap((floor): Zone[] => [
+          floor,
+          ...floor.devices,
+          ...floor.areas.flatMap((floorArea): Zone[] => [
+            floorArea,
+            ...floorArea.devices,
+          ]),
+        ]),
+      ])
+      .toSorted(compareNames)
   }
 
   public syncAreas(areas: AreaDataAny[]): void {
@@ -167,5 +252,65 @@ export class ModelRegistry {
       models,
       ({ buildingId }) => buildingId,
     )
+  }
+
+  #buildAreaZones(
+    areas: AreaModelContract[],
+    level: number,
+    type?: DeviceType,
+  ): AreaZone[] {
+    return areas
+      .filter((area) => this.#hasDevices(area.id, 'area', type))
+      .map((area) => ({
+        devices: buildDeviceZones(
+          this.getDevicesByAreaId(area.id),
+          type,
+        ),
+        id: area.id,
+        level,
+        model: 'areas' as const,
+        name: area.name,
+      }))
+      .toSorted(compareNames)
+  }
+
+  #buildFloorZones(
+    floors: FloorModelContract[],
+    type?: DeviceType,
+  ): FloorZone[] {
+    return floors
+      .filter((floor) => this.#hasDevices(floor.id, 'floor', type))
+      .map((floor) => ({
+        areas: this.#buildAreaZones(
+          this.getAreasByFloorId(floor.id),
+          GRANDCHILD_LEVEL,
+          type,
+        ),
+        devices: buildDeviceZones(
+          this.getDevicesByFloorId(floor.id).filter(
+            ({ areaId }) => areaId === null,
+          ),
+          type,
+        ),
+        id: floor.id,
+        level: CHILD_LEVEL,
+        model: 'floors' as const,
+        name: floor.name,
+      }))
+      .toSorted(compareNames)
+  }
+
+  #hasDevices(
+    id: number,
+    zone: 'area' | 'building' | 'floor',
+    type?: DeviceType,
+  ): boolean {
+    const devices =
+      zone === 'building' ? this.getDevicesByBuildingId(id)
+      : zone === 'floor' ? this.getDevicesByFloorId(id)
+      : this.getDevicesByAreaId(id)
+    return type === undefined ?
+        Boolean(devices.length)
+      : devices.some(({ type: deviceType }) => deviceType === type)
   }
 }

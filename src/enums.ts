@@ -111,6 +111,27 @@ export const OperationModeState = {
 export type OperationModeState =
   (typeof OperationModeState)[keyof typeof OperationModeState]
 
+/** ATW hot water derived operational state. */
+export const OperationModeStateHotWater = {
+  dhw: 'dhw',
+  idle: 'idle',
+  legionella: 'legionella',
+  prohibited: 'prohibited',
+} as const
+export type OperationModeStateHotWater =
+  (typeof OperationModeStateHotWater)[keyof typeof OperationModeStateHotWater]
+
+/** ATW zone derived operational state. */
+export const OperationModeStateZone = {
+  cooling: 'cooling',
+  defrost: 'defrost',
+  heating: 'heating',
+  idle: 'idle',
+  prohibited: 'prohibited',
+} as const
+export type OperationModeStateZone =
+  (typeof OperationModeStateZone)[keyof typeof OperationModeStateZone]
+
 /** ATW zone operation modes controlling temperature regulation strategy. */
 export const OperationModeZone = {
 

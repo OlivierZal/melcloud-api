@@ -1,6 +1,7 @@
 import type {
   OperationModeZoneDataAtw,
   UpdateDeviceDataAtw,
+  ZoneState,
 } from '../types/index.ts'
 
 import { OperationModeZone } from '../enums.ts'
@@ -46,6 +47,10 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     'TankWaterTemperature',
     'SetTankWaterTemperature',
   ]
+
+  public get zone2(): ZoneState {
+    return this.getZoneState('Zone2')
+  }
 
   protected override handle(
     data: Partial<UpdateDeviceDataAtw>,

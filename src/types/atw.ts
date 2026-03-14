@@ -1,6 +1,8 @@
 import type {
   DeviceType,
   OperationModeState,
+  OperationModeStateHotWater,
+  OperationModeStateZone,
   OperationModeZone,
 } from '../enums.ts'
 
@@ -90,6 +92,30 @@ export interface TemperatureDataAtw {
 export interface UpdateDeviceDataAtw
   extends BaseUpdateDeviceData, OperationModeZoneDataAtw, TemperatureDataAtw {
   readonly ForcedHotWaterMode?: boolean
+}
+
+/** ATW hot water state derived from device data. */
+export interface HotWaterState {
+  readonly ecoHotWater: boolean
+  readonly forcedMode: boolean
+  readonly maxTankTemperature: number
+  readonly operationalState: OperationModeStateHotWater
+  readonly prohibited: boolean
+  readonly setTankWaterTemperature: number
+  readonly tankWaterTemperature: number
+}
+
+/** ATW zone state derived from device data. */
+export interface ZoneState {
+  readonly idle: boolean
+  readonly inCoolMode: boolean
+  readonly inHeatMode: boolean
+  readonly operationalState: OperationModeStateZone
+  readonly operationMode: OperationModeZone
+  readonly prohibitCooling: boolean
+  readonly prohibitHeating: boolean
+  readonly roomTemperature: number
+  readonly setTemperature: number
 }
 
 export type ZoneAtw = 'Zone1' | 'Zone2'

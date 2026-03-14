@@ -1,9 +1,19 @@
-import type { DeviceType } from '../enums.ts'
 import type {
+  HotWaterState,
+  ListDeviceDataAtw,
   TemperatureDataAtw,
   UpdateDeviceData,
   UpdateDeviceDataAtw,
+  ZoneAtw,
+  ZoneState,
 } from '../types/index.ts'
+
+import {
+  type DeviceType,
+  OperationModeState,
+  OperationModeStateHotWater,
+  OperationModeStateZone,
+} from '../enums.ts'
 
 import type { ReportChartLineOptions, ReportQuery } from './interfaces.ts'
 
@@ -14,6 +24,53 @@ const DEFAULT_TEMPERATURE = 0
 const coolFlowTemperatureRange = { max: 25, min: 5 }
 const heatFlowTemperatureRange = { max: 60, min: 25 }
 const roomTemperatureRange = { max: 30, min: 10 }
+
+const HOT_WATER_STATE_MAP: Partial<
+  Record<OperationModeState, OperationModeStateHotWater>
+> = {
+  [OperationModeState.dhw]: OperationModeStateHotWater.dhw,
+  [OperationModeState.legionella]: OperationModeStateHotWater.legionella,
+}
+
+const ZONE_STATE_MAP: Partial<
+  Record<OperationModeState, OperationModeStateZone>
+> = {
+  [OperationModeState.cooling]: OperationModeStateZone.cooling,
+  [OperationModeState.defrost]: OperationModeStateZone.defrost,
+  [OperationModeState.heating]: OperationModeStateZone.heating,
+}
+
+const getHotWaterOperationalState = (
+  data: ListDeviceDataAtw,
+): OperationModeStateHotWater => {
+  if (data.ForcedHotWaterMode) {
+    return OperationModeStateHotWater.dhw
+  }
+  if (data.ProhibitHotWater) {
+    return OperationModeStateHotWater.prohibited
+  }
+  return (
+    HOT_WATER_STATE_MAP[data.OperationMode] ??
+    OperationModeStateHotWater.idle
+  )
+}
+
+const getZoneOperationalState = (
+  data: ListDeviceDataAtw,
+  zone: ZoneAtw,
+): OperationModeStateZone => {
+  if (
+    (data[`${zone}InCoolMode`] && data[`ProhibitCooling${zone}`]) ||
+    (data[`${zone}InHeatMode`] && data[`ProhibitHeating${zone}`])
+  ) {
+    return OperationModeStateZone.prohibited
+  }
+  const { OperationMode: operationMode } = data
+  if (!data[`Idle${zone}`]) {
+    return ZONE_STATE_MAP[operationMode] ?? OperationModeStateZone.idle
+  }
+  return OperationModeStateZone.idle
+}
 
 /*
  * Merge external and internal temperature reports, deduplicating series
@@ -63,6 +120,23 @@ export class DeviceAtwFacade
     'TankWaterTemperature',
   ]
 
+  public get hotWater(): HotWaterState {
+    const { data } = this
+    return {
+      ecoHotWater: data.EcoHotWater,
+      forcedMode: data.ForcedHotWaterMode,
+      maxTankTemperature: data.MaxTankTemperature,
+      operationalState: getHotWaterOperationalState(data),
+      prohibited: data.ProhibitHotWater,
+      setTankWaterTemperature: data.SetTankWaterTemperature,
+      tankWaterTemperature: data.TankWaterTemperature,
+    }
+  }
+
+  public get zone1(): ZoneState {
+    return this.getZoneState('Zone1')
+  }
+
   get #targetTemperatureRanges(): [
     keyof TemperatureDataAtw,
     { max: number; min: number },
@@ -102,6 +176,21 @@ export class DeviceAtwFacade
     data: Partial<UpdateDeviceDataAtw>,
   ): Required<UpdateDeviceDataAtw> {
     return super.handle({ ...data, ...this.#handleTargetTemperatures(data) })
+  }
+
+  protected getZoneState(zone: ZoneAtw): ZoneState {
+    const { data } = this
+    return {
+      idle: data[`Idle${zone}`],
+      inCoolMode: data[`${zone}InCoolMode`],
+      inHeatMode: data[`${zone}InHeatMode`],
+      operationalState: getZoneOperationalState(data, zone),
+      operationMode: data[`OperationMode${zone}`],
+      prohibitCooling: data[`ProhibitCooling${zone}`],
+      prohibitHeating: data[`ProhibitHeating${zone}`],
+      roomTemperature: data[`RoomTemperature${zone}`],
+      setTemperature: data[`SetTemperature${zone}`],
+    }
   }
 
   #handleTargetTemperatures(
