@@ -284,7 +284,7 @@ export class MELCloudAPI implements API, Disposable {
    */
   public async errorLog(
     query: ErrorLogQuery,
-    deviceIds = this.#registry.getAllDevices().map(({ id }) => id),
+    deviceIds = this.#registry.getDevices().map(({ id }) => id),
   ): Promise<ErrorLog> {
     const { fromDate, period, toDate } = handleErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
@@ -303,7 +303,7 @@ export class MELCloudAPI implements API, Disposable {
               : DateTime.fromISO(startDate).toLocaleString(
                   DateTime.DATETIME_MED,
                 ),
-            device: this.#registry.getDeviceById(deviceId)?.name ?? '',
+            device: this.#registry.devices.getById(deviceId)?.name ?? '',
             error: errorMessage?.trim() ?? '',
           }),
         )

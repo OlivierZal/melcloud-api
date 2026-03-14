@@ -48,10 +48,6 @@ export class ModelRegistry {
     getById: (id: number): FloorModelContract | undefined => this.#floors.get(id),
   }
 
-  public getAllDevices(): DeviceModelAny[] {
-    return [...this.#devices.values()]
-  }
-
   public getAreasByBuildingId(id: number): AreaModelContract[] {
     return [...this.#areas.values()].filter(
       ({ buildingId }) => buildingId === id,
@@ -62,8 +58,8 @@ export class ModelRegistry {
     return [...this.#areas.values()].filter(({ floorId }) => floorId === id)
   }
 
-  public getDeviceById(id: number): DeviceModelAny | undefined {
-    return this.#devices.get(id)
+  public getDevices(): DeviceModelAny[] {
+    return [...this.#devices.values()]
   }
 
   public getDevicesByAreaId(id: number): DeviceModelAny[] {
@@ -83,7 +79,7 @@ export class ModelRegistry {
   public getDevicesByType<U extends DeviceType>(
     type: U,
   ): (DeviceModelAny & { type: U })[] {
-    return this.getAllDevices().filter(
+    return this.getDevices().filter(
       (instance): instance is DeviceModelAny & { type: U } =>
         instance.type === type,
     )

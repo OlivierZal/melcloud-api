@@ -142,23 +142,10 @@ describe('modelRegistry', () => {
   })
 
   describe('queries', () => {
-    it('getAllDevices returns all devices', () => {
+    it('getDevices returns all devices', () => {
       const registry = createPopulatedRegistry()
 
-      expect(registry.getAllDevices()).toHaveLength(3)
-    })
-
-    it('getDeviceById returns a device by id', () => {
-      const registry = createPopulatedRegistry()
-      const device = registry.getDeviceById(1000)
-
-      expect(device?.name).toBe('Device ATA')
-    })
-
-    it('getDeviceById returns undefined for unknown id', () => {
-      const registry = createPopulatedRegistry()
-
-      expect(registry.getDeviceById(9999)).toBeUndefined()
+      expect(registry.getDevices()).toHaveLength(3)
     })
 
     it('getDevicesByType filters by device type', () => {
