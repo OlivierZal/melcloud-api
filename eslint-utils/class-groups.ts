@@ -9,9 +9,9 @@ const modifiers: string[][] = [
   ['readonly', ''],
 ]
 
-const modifierIncompatibilities: Record<string, string[]> = {
-  abstract: ['decorated', 'private', 'static'],
-  declare: ['decorated', 'override'],
+const modifierIncompatibilities: Record<string, Set<string>> = {
+  abstract: new Set(['decorated', 'private', 'static']),
+  declare: new Set(['decorated', 'override']),
 }
 
 const selectors: (string | string[])[] = [
@@ -26,23 +26,26 @@ const selectors: (string | string[])[] = [
   'method',
 ]
 
-const allModifiers = modifiers.flat().filter(Boolean)
-const baseMethodIncompatibilities = ['declare', 'readonly']
-const accessorIncompatibilities = [...baseMethodIncompatibilities, 'optional']
-const selectorIncompatibilities: Record<string, string[]> = {
+const allModifiers = new Set(modifiers.flat().filter(Boolean))
+const baseMethodIncompatibilities = new Set(['declare', 'readonly'])
+const accessorIncompatibilities = new Set([
+  ...baseMethodIncompatibilities,
+  'optional',
+])
+const selectorIncompatibilities = {
   'accessor-property': accessorIncompatibilities,
-  constructor: [
+  constructor: new Set([
     ...baseMethodIncompatibilities,
     'abstract',
     'decorated',
     'optional',
     'override',
     'static',
-  ],
+  ]),
   'event-handler': allModifiers,
-  'function-property': ['abstract', 'declare'],
+  'function-property': new Set(['abstract', 'declare']),
   'get-method': accessorIncompatibilities,
-  'index-signature': [
+  'index-signature': new Set([
     'abstract',
     'declare',
     'decorated',
@@ -50,9 +53,9 @@ const selectorIncompatibilities: Record<string, string[]> = {
     'override',
     'private',
     'protected',
-  ],
+  ]),
   method: baseMethodIncompatibilities,
-  property: [],
+  property: new Set(),
   'set-method': accessorIncompatibilities,
   'static-block': allModifiers,
 }

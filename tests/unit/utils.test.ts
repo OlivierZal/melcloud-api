@@ -31,7 +31,7 @@ describe('fromListToSetAta', () => {
   })
 })
 
-describe('isSetDeviceDataAtaNotInList', () => {
+describe(isSetDeviceDataAtaNotInList, () => {
   it('returns true for keys in fromSetToListAta', () => {
     expect(isSetDeviceDataAtaNotInList('SetFanSpeed')).toBe(true)
     expect(isSetDeviceDataAtaNotInList('VaneHorizontal')).toBe(true)
@@ -44,7 +44,7 @@ describe('isSetDeviceDataAtaNotInList', () => {
   })
 })
 
-describe('isSetDeviceDataAtaInList', () => {
+describe(isSetDeviceDataAtaInList, () => {
   it('returns true for keys in fromListToSetAta', () => {
     expect(isSetDeviceDataAtaInList('FanSpeed')).toBe(true)
     expect(isSetDeviceDataAtaInList('VaneHorizontalDirection')).toBe(true)
@@ -57,7 +57,7 @@ describe('isSetDeviceDataAtaInList', () => {
   })
 })
 
-describe('typedFromEntries', () => {
+describe(typedFromEntries, () => {
   it('converts entries to an object', () => {
     const entries: [string, number][] = [
       ['a', 1],
@@ -68,7 +68,7 @@ describe('typedFromEntries', () => {
   })
 })
 
-describe('isUpdateDeviceData', () => {
+describe(isUpdateDeviceData, () => {
   const data = { Power: 0, SetTemperature: 0 } as const
 
   it('returns true for keys in the data record', () => {

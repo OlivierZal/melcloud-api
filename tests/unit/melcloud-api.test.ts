@@ -49,8 +49,8 @@ describe('mELCloudAPI', () => {
     vi.clearAllMocks()
     mockAxiosInstance.get.mockResolvedValue({ data: [] })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
-    const mod = await import('../../src/services/melcloud.ts')
-    MELCloudAPI = mod.MELCloudAPI
+    const module = await import('../../src/services/melcloud.ts')
+    MELCloudAPI = module.MELCloudAPI
   })
 
   afterEach(() => {
@@ -61,12 +61,12 @@ describe('mELCloudAPI', () => {
     config: import('../../src/services/interfaces.ts').APIConfig = {},
   ) => {
     const api = await MELCloudAPI.create({ autoSyncInterval: 0, ...config })
-    const reqCalls = mockInterceptors.request.use.mock.calls
+    const requestCalls = mockInterceptors.request.use.mock.calls
     const resCalls = mockInterceptors.response.use.mock.calls
-    const lastReq = reqCalls.at(-1)!
+    const lastRequest = requestCalls.at(-1)!
     const lastRes = resCalls.at(-1)!
     /* eslint-disable @typescript-eslint/no-unsafe-type-assertion */
-    ;[requestHandler, requestErrorHandler] = lastReq as [
+    ;[requestHandler, requestErrorHandler] = lastRequest as [
       typeof requestHandler,
       typeof requestErrorHandler,
     ]
@@ -116,7 +116,7 @@ describe('mELCloudAPI', () => {
       username: 'test-user',
     })
 
-    expect(settingManager.set).toHaveBeenCalled()
+    expect(settingManager.set).toHaveBeenCalledWith()
   })
 
   it('fetches building list and syncs registry', async () => {
@@ -880,7 +880,7 @@ describe('mELCloudAPI', () => {
       })
       const result = await responseErrorHandler(error)
 
-      expect(mockAxiosInstance.request).toHaveBeenCalled()
+      expect(mockAxiosInstance.request).toHaveBeenCalledWith()
       expect(result).toStrictEqual({ data: 'retried' })
     })
 

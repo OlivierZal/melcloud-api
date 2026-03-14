@@ -72,7 +72,7 @@ describe('disposableTimeout', () => {
     expect(timeout.isActive).toBe(false)
   })
 
-  it('Symbol.dispose clears the timeout', () => {
+  it('symbol.dispose clears the timeout', () => {
     const timeout = new DisposableTimeout()
     const callback = vi.fn()
     timeout.schedule(callback, 1000)

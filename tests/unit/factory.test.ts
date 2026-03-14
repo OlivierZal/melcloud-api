@@ -49,7 +49,7 @@ const deviceListData = mock<ListDevice<typeof DeviceType.Ata>>({
   Type: DeviceType.Ata,
 })
 
-describe('createFacade', () => {
+describe(createFacade, () => {
   it('creates a BuildingFacade for BuildingModel instances', () => {
     const registry = new ModelRegistry()
     registry.syncBuildings([buildingData])

@@ -2,7 +2,10 @@
 export class DisposableTimeout implements Disposable {
   #timeout: ReturnType<typeof setTimeout> | undefined
 
-  /** Whether a timeout is currently scheduled and has not yet fired or been cleared. */
+  /**
+   * Whether a timeout is currently scheduled and has not yet fired or been cleared.
+   * @returns `true` if a timeout is pending.
+   */
   public get isActive(): boolean {
     return this.#timeout !== undefined
   }
@@ -20,7 +23,11 @@ export class DisposableTimeout implements Disposable {
     this.clear()
   }
 
-  /** Schedule a callback after `ms` milliseconds, replacing any existing timeout. */
+  /**
+   * Schedule a callback after `ms` milliseconds, replacing any existing timeout.
+   * @param callback - The function to invoke when the timeout fires.
+   * @param ms - The delay in milliseconds before invoking the callback.
+   */
   public schedule(callback: () => void, ms: number): void {
     this.clear()
     // Auto-clear after firing so isActive reflects the actual state

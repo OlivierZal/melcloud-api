@@ -31,6 +31,7 @@ const toOperationModeZone = (value: number): OperationModeZone => {
   if (mode === undefined) {
     throw new Error(`Invalid OperationModeZone: ${String(value)}`)
   }
+
   /* v8 ignore stop */
   /* eslint-enable capitalized-comments */
   return mode
@@ -83,6 +84,7 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     primaryValue: OperationModeZone,
     value?: OperationModeZone,
   ): OperationModeZone {
+
     /*
      * Keep zone 2's cool/heat status in sync with zone 1, and prevent
      * both zones from using the same room-based mode (must be room vs flow)

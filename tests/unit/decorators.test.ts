@@ -16,7 +16,7 @@ import {
 } from '../../src/decorators/index.ts'
 import { mock } from '../helpers.ts'
 
-describe('fetchDevices', () => {
+describe(fetchDevices, () => {
   it('calls api.fetch before the target method', async () => {
     const fetchMock = vi.fn()
     const target = vi.fn().mockResolvedValue('result')
@@ -29,7 +29,7 @@ describe('fetchDevices', () => {
   })
 })
 
-describe('syncDevices', () => {
+describe(syncDevices, () => {
   it('calls onSync after the target method', async () => {
     const onSyncMock = vi.fn()
     const target = vi.fn().mockResolvedValue('result')
@@ -64,7 +64,7 @@ describe('syncDevices', () => {
   })
 })
 
-describe('updateDevices', () => {
+describe(updateDevices, () => {
   const createMockFacade = (
     devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[] = [],
   ) => ({
@@ -115,7 +115,7 @@ describe('updateDevices', () => {
     )
     await decorated.call(facade, { Power: true })
 
-    expect(updateAta).toHaveBeenCalled()
+    expect(updateAta).toHaveBeenCalledWith()
     expect(updateAtw).not.toHaveBeenCalled()
   })
 
@@ -150,7 +150,7 @@ describe('updateDevices', () => {
   })
 })
 
-describe('updateDevice', () => {
+describe(updateDevice, () => {
   it('updates the device model with converted data', async () => {
     const update = vi.fn()
     const device = { type: DeviceType.Ata, update }

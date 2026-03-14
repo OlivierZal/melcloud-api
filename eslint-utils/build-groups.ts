@@ -15,16 +15,16 @@ const compatibleModifierCombos = ({
   modifierIncompatibilities,
   modifiers,
 }: {
-  modifierIncompatibilities: Record<string, string[]>
+  modifierIncompatibilities: Record<string, Set<string>>
   modifiers: string[][]
 }): string[][] =>
-  modifierCombos({ modifiers }).filter((combo) =>
-    combo.every((modifier) =>
-      (modifierIncompatibilities[modifier] ?? []).every(
-        (incompatibleModifier) => !combo.includes(incompatibleModifier),
-      ),
-    ),
-  )
+  modifierCombos({ modifiers }).filter((combo) => {
+    const comboSet = new Set(combo)
+    return combo.every((modifier) => {
+      const { [modifier]: incompatibles } = modifierIncompatibilities
+      return !incompatibles || incompatibles.isDisjointFrom(comboSet)
+    })
+  })
 
 const buildGroupsForSelector = ({
   modifierIncompatibilities,
@@ -32,18 +32,16 @@ const buildGroupsForSelector = ({
   selector,
   selectorIncompatibilities,
 }: {
-  modifierIncompatibilities: Record<string, string[]>
+  modifierIncompatibilities: Record<string, Set<string>>
   modifiers: string[][]
   selector: string
-  selectorIncompatibilities: Record<string, string[]>
-}): string[] => {
-  const incompatibilities = new Set(selectorIncompatibilities[selector])
-  return compatibleModifierCombos({ modifierIncompatibilities, modifiers })
+  selectorIncompatibilities: Record<string, Set<string>>
+}): string[] =>
+  compatibleModifierCombos({ modifierIncompatibilities, modifiers })
     .filter((combo) =>
-      combo.every((modifier) => !incompatibilities.has(modifier)),
+      selectorIncompatibilities[selector].isDisjointFrom(new Set(combo)),
     )
     .map((combo) => [...combo, selector].join('-'))
-}
 
 export const buildGroups = ({
   modifierIncompatibilities,
@@ -51,12 +49,12 @@ export const buildGroups = ({
   selectorIncompatibilities,
   selectors,
 }: {
-  modifierIncompatibilities: Record<string, string[]>
+  modifierIncompatibilities: Record<string, Set<string>>
   modifiers: string[][]
-  selectorIncompatibilities: Record<string, string[]>
+  selectorIncompatibilities: Record<string, Set<string>>
   selectors: (string | string[])[]
-}): (string | string[])[] =>
-  selectors.flatMap((selector) => {
+}): string[] =>
+  selectors.flatMap((selector: string | string[]): string | string[] => {
     if (Array.isArray(selector)) {
       const groupPairs = selector.map((pairedSelector) =>
         buildGroupsForSelector({
@@ -66,10 +64,9 @@ export const buildGroups = ({
           selectorIncompatibilities,
         }),
       )
-      const [first] = groupPairs
-      const { length } = first!
-      return [...Array.from({ length }).keys()].map((index) =>
-        groupPairs.map((groupPair) => groupPair[index]!),
+      const [firstGroup] = groupPairs
+      return firstGroup.map((_value, index) =>
+        groupPairs.map((groupPair) => groupPair[index]),
       )
     }
     return buildGroupsForSelector({

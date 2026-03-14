@@ -53,7 +53,13 @@ const getDeviceFromRegistry = (
   return device
 }
 
-/** Create the appropriate facade for a model instance based on its runtime type. */
+/**
+ * Create the appropriate facade for a model instance based on its runtime type.
+ * @param api - The API adapter for making requests.
+ * @param registry - The model registry containing all synced models.
+ * @param instance - The model instance to create a facade for.
+ * @returns The facade matching the model's runtime type.
+ */
 export const createFacade = (
   api: APIAdapter,
   registry: ModelRegistry,

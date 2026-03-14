@@ -25,14 +25,14 @@ const coolFlowTemperatureRange = { max: 25, min: 5 }
 const heatFlowTemperatureRange = { max: 60, min: 25 }
 const roomTemperatureRange = { max: 30, min: 10 }
 
-const HOT_WATER_STATE_MAP: Partial<
+const hotWaterStateMap: Partial<
   Record<OperationModeState, OperationModeStateHotWater>
 > = {
   [OperationModeState.dhw]: OperationModeStateHotWater.dhw,
   [OperationModeState.legionella]: OperationModeStateHotWater.legionella,
 }
 
-const ZONE_STATE_MAP: Partial<
+const zoneStateMap: Partial<
   Record<OperationModeState, OperationModeStateZone>
 > = {
   [OperationModeState.cooling]: OperationModeStateZone.cooling,
@@ -50,7 +50,7 @@ const getHotWaterOperationalState = (
     return OperationModeStateHotWater.prohibited
   }
   return (
-    HOT_WATER_STATE_MAP[data.OperationMode] ?? OperationModeStateHotWater.idle
+    hotWaterStateMap[data.OperationMode] ?? OperationModeStateHotWater.idle
   )
 }
 
@@ -66,7 +66,7 @@ const getZoneOperationalState = (
   }
   const { OperationMode: operationMode } = data
   if (!data[`Idle${zone}`]) {
-    return ZONE_STATE_MAP[operationMode] ?? OperationModeStateZone.idle
+    return zoneStateMap[operationMode] ?? OperationModeStateZone.idle
   }
   return OperationModeStateZone.idle
 }

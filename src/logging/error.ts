@@ -28,6 +28,8 @@ const withErrorMessage = <T extends AxiosResponse | InternalAxiosRequestConfig>(
 /**
  * Create structured error log data from an Axios error.
  * Uses response data if available, otherwise falls back to request data.
+ * @param error - The Axios error to extract log data from.
+ * @returns Structured log data including the error message.
  */
 export const createAPICallErrorData = (
   error: AxiosError,

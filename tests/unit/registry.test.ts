@@ -135,7 +135,7 @@ describe('modelRegistry', () => {
 
     it('throws for unsupported device type', () => {
       const registry = new ModelRegistry()
-      const invalidDevice = mock<ListDeviceAny>({
+      const invalidDevice = mock<ListDevice<0>>({
         AreaID: null,
         BuildingID: 1,
         Device: mock<ListDeviceDataAta>(),
@@ -143,8 +143,8 @@ describe('modelRegistry', () => {
         DeviceName: 'Invalid',
         FloorID: null,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- intentional invalid type for testing
-        Type: 999 as DeviceType,
-      })
+        Type: 999 as unknown as 0,
+      }) as ListDeviceAny
 
       expect(() => {
         registry.syncDevices([invalidDevice])

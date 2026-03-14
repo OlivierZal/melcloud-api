@@ -28,6 +28,7 @@ import type {
 
 /** Parameters for configuring frost protection temperature bounds. */
 export interface FrostProtectionQuery {
+
   /** Maximum temperature threshold (clamped to 4–16 °C range). */
   readonly max: number
 
@@ -40,6 +41,7 @@ export interface FrostProtectionQuery {
 
 /** Parameters for enabling or disabling holiday mode. */
 export interface HolidayModeQuery {
+
   /** Start date in ISO 8601 format. Defaults to now when `to` is provided. */
   readonly from?: string
 
@@ -49,6 +51,7 @@ export interface HolidayModeQuery {
 
 /** Facade for a MELCloud building, combining zone settings with super device operations. */
 export interface BuildingFacade extends BaseBuildingModel, SuperDeviceFacade {
+
   /** Fetch the latest building zone settings after syncing devices. */
   readonly fetch: () => Promise<ZoneSettings>
 }
@@ -56,6 +59,7 @@ export interface BuildingFacade extends BaseBuildingModel, SuperDeviceFacade {
 /** Facade for an individual MELCloud device with type-safe data access and control. */
 export interface DeviceFacade<T extends DeviceType>
   extends BaseDeviceModel<T>, Facade {
+
   /** Bitfield flags mapping each updatable property to its effective flag value. */
   readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
@@ -96,6 +100,7 @@ export interface DeviceFacade<T extends DeviceType>
 
 /** Base facade contract shared by all facade types (building, floor, area, device). */
 export interface Facade extends Model {
+
   /** All devices managed by this facade. */
   readonly devices: readonly DeviceModelAny[]
 
@@ -134,6 +139,7 @@ export interface Facade extends Model {
 
 /** Manager for lazily creating and caching facade instances. */
 export interface FacadeManager {
+
   /** Get or create a facade for the given model instance. Returns `null` if no instance is provided. */
   readonly get: (instance?: Model) => Facade | null
 
@@ -146,6 +152,7 @@ export interface FacadeManager {
 
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
 export interface SuperDeviceFacade extends Facade {
+
   /** Get the current group state for all ATA devices. */
   readonly group: () => Promise<GroupState>
 
@@ -166,6 +173,7 @@ export interface ReportChartLineOptions extends ReportChartOptions {
 
 /** Base chart options with date range and formatted axis labels. */
 export interface ReportChartOptions {
+
   /** Start date of the report period. */
   readonly from: string
 
@@ -178,12 +186,14 @@ export interface ReportChartOptions {
 
 /** Pie chart data with labeled segments. */
 export interface ReportChartPieOptions extends ReportChartOptions {
+
   /** Numeric values for each pie segment. */
   readonly series: number[]
 }
 
 /** Date range query for report endpoints. */
 export interface ReportQuery {
+
   /** Start date in ISO 8601 format. Defaults to `'1970-01-01'`. */
   readonly from?: string
 

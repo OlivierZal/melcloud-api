@@ -2,12 +2,12 @@ import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
 import vitest from '@vitest/eslint-plugin'
 import prettier from 'eslint-config-prettier/flat'
-import jsdoc from 'eslint-plugin-jsdoc'
 import perfectionist from 'eslint-plugin-perfectionist'
 import unicorn from 'eslint-plugin-unicorn'
 
 import { defineConfig } from 'eslint/config'
 import { flatConfigs as importXConfigs } from 'eslint-plugin-import-x'
+import { jsdoc } from 'eslint-plugin-jsdoc'
 import { configs as packageJsonConfigs } from 'eslint-plugin-package-json'
 import { Alphabet } from 'eslint-plugin-perfectionist/alphabet'
 import { configs as ymlConfigs } from 'eslint-plugin-yml'
@@ -57,6 +57,7 @@ const config = defineConfig([
   {
     ignores: ['coverage/', 'dist/'],
   },
+  jsdoc({ config: 'flat/recommended-tsdoc-error' }),
   {
     extends: [
       js.configs.all,
@@ -65,7 +66,6 @@ const config = defineConfig([
       tsConfigs.strictTypeChecked,
       importXConfigs.errors,
       importXConfigs.typescript,
-      jsdoc.configs['flat/recommended-typescript-error'],
       prettier,
     ],
     files: ['**/*.{ts,mts,js}'],
@@ -88,6 +88,7 @@ const config = defineConfig([
     },
     rules: {
       '@stylistic/line-comment-position': 'error',
+      '@stylistic/lines-around-comment': 'error',
       '@stylistic/multiline-comment-style': 'error',
       '@stylistic/quotes': [
         'error',
@@ -139,13 +140,8 @@ const config = defineConfig([
           types: ['boolean', 'number', 'string'],
         },
         {
-          format: ['PascalCase', 'UPPER_CASE', 'camelCase'],
-          modifiers: ['const', 'global'],
-          selector: ['variable'],
-        },
-        {
           format: ['PascalCase'],
-          selector: ['typeLike'],
+          selector: ['enumMember', 'typeLike'],
         },
         {
           format: ['camelCase'],
@@ -165,19 +161,6 @@ const config = defineConfig([
         },
       ],
       '@typescript-eslint/no-invalid-this': 'off',
-      '@typescript-eslint/no-magic-numbers': [
-        'error',
-        {
-          ignoreEnums: true,
-          ignoreNumericLiteralTypes: true,
-        },
-      ],
-      '@typescript-eslint/no-namespace': [
-        'error',
-        {
-          allowDeclarations: true,
-        },
-      ],
       '@typescript-eslint/no-redeclare': 'off',
       '@typescript-eslint/no-unnecessary-condition': [
         'error',
@@ -241,12 +224,17 @@ const config = defineConfig([
       'import-x/no-relative-packages': 'error',
       'import-x/no-self-import': 'error',
       'import-x/no-unassigned-import': 'error',
-      'import-x/no-unused-modules': 'error',
+      'import-x/no-unused-modules': [
+        'error',
+        {
+          missingExports: true,
+          suppressMissingFileEnumeratorAPIWarning: true,
+          unusedExports: true,
+        },
+      ],
       'import-x/no-useless-path-segments': 'error',
       'import-x/no-webpack-loader-syntax': 'error',
       'import-x/unambiguous': 'error',
-      'jsdoc/require-param': 'off',
-      'jsdoc/require-returns': 'off',
       'max-lines': 'off',
       'no-bitwise': 'off',
       'no-continue': 'off',
@@ -414,7 +402,6 @@ const config = defineConfig([
           replacements: {
             arg: false,
             args: false,
-            el: false,
             param: false,
             params: false,
             utils: false,
@@ -440,6 +427,19 @@ const config = defineConfig([
     },
   },
   {
+    files: ['src/constants.ts'],
+    rules: {
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          format: ['PascalCase', 'UPPER_CASE'],
+          modifiers: ['const', 'exported'],
+          selector: ['variable'],
+        },
+      ],
+    },
+  },
+  {
     extends: [tsConfigs.disableTypeChecked],
     files: ['**/*.js'],
     rules: {
@@ -449,9 +449,23 @@ const config = defineConfig([
     },
   },
   {
-    files: ['src/constants.ts'],
+    files: ['**/*.config.{ts,js}'],
     rules: {
-      '@typescript-eslint/no-magic-numbers': 'off',
+      '@typescript-eslint/naming-convention': 'off',
+      'import-x/max-dependencies': 'off',
+      'import-x/no-default-export': 'off',
+      'import-x/prefer-default-export': [
+        'error',
+        {
+          target: 'any',
+        },
+      ],
+    },
+  },
+  {
+    files: ['eslint-utils/**'],
+    rules: {
+      '@typescript-eslint/naming-convention': 'off',
     },
   },
   {
@@ -480,6 +494,8 @@ const config = defineConfig([
       'id-length': 'off',
       'import-x/max-dependencies': 'off',
       'jsdoc/require-jsdoc': 'off',
+      'jsdoc/require-param-description': 'off',
+      'jsdoc/require-returns': 'off',
       'max-lines-per-function': 'off',
       'max-statements': 'off',
       'unicorn/consistent-function-scoping': 'off',
@@ -493,28 +509,10 @@ const config = defineConfig([
       'vitest/require-hook': 'off',
       'vitest/require-mock-type-parameters': 'off',
     },
-  },
-  {
-    files: ['**/*.config.{ts,js}', 'eslint-utils/*.ts'],
-    rules: {
-      '@typescript-eslint/naming-convention': 'off',
-      '@typescript-eslint/no-magic-numbers': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
-      'import-x/max-dependencies': 'off',
-      'import-x/no-default-export': 'off',
-      'import-x/no-named-as-default': 'off',
-      'import-x/prefer-default-export': [
-        'error',
-        {
-          target: 'any',
-        },
-      ],
-    },
-  },
-  {
-    files: ['eslint-utils/*.ts'],
-    rules: {
-      'import-x/prefer-default-export': 'off',
+    settings: {
+      vitest: {
+        typecheck: true,
+      },
     },
   },
   {

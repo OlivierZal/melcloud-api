@@ -16,8 +16,6 @@ import {
   isUpdateDeviceData,
 } from '../utils.ts'
 
-const FIRST_DEVICE_INDEX = 0
-
 const isDeviceOfType = (device: DeviceModelAny, type: DeviceType): boolean =>
   device.type === type
 
@@ -25,6 +23,9 @@ const isDeviceOfType = (device: DeviceModelAny, type: DeviceType): boolean =>
  * Method decorator factory that propagates data changes to device models after
  * the decorated method completes. Supports filtering by device type and handles
  * the special `SetPower` method name for power state updates.
+ * @param root0 - Options object.
+ * @param root0.type - Optional device type to filter which devices are updated.
+ * @returns A method decorator that updates device models after execution.
  */
 export const updateDevices =
   <T extends boolean | FailureData | GroupState | SuccessData>({
@@ -97,6 +98,9 @@ const convertToListDeviceData = <T extends DeviceType>(
 /**
  * Method decorator that converts API response data back to list format
  * and updates the device model, using effective flags to determine which fields changed.
+ * @param target - The original method to wrap.
+ * @param _context - Decorator context provided by the runtime.
+ * @returns A wrapper that updates the device model after calling the original method.
  */
 export const updateDevice = <
   T extends DeviceType,
@@ -107,7 +111,9 @@ export const updateDevice = <
 ): ((...args: unknown[]) => Promise<U>) =>
   async function newTarget(this: DeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
-    const device = this.devices.at(FIRST_DEVICE_INDEX)
+    const {
+      devices: [device],
+    } = this
     if (device && isDeviceOfType(device, this.type)) {
       /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- runtime-verified */
       ;(

@@ -70,7 +70,7 @@ import type {
 
 import { DisposableTimeout } from './disposable-timeout.ts'
 
-const DEVICE_TYPE_NAMES: Record<DeviceType, string> = {
+const deviceTypeNames: Record<DeviceType, string> = {
   [DeviceType.Ata]: 'Ata',
   [DeviceType.Atw]: 'Atw',
   [DeviceType.Erv]: 'Erv',
@@ -98,6 +98,7 @@ const toISODate = (dateTime: DateTime): string => {
   if (result === null) {
     throw new Error('Invalid DateTime: cannot convert to ISO date')
   }
+
   /* v8 ignore stop */
   /* eslint-enable capitalized-comments */
   return result
@@ -145,6 +146,7 @@ const handleErrorLogQuery = ({
   period: number
   toDate: DateTime
 } => {
+
   /*
    * When fromDate is specified, period is fixed and offset is ignored, allowing
    * queries around a specific date. Otherwise, offset pages through history
@@ -273,14 +275,21 @@ export class MELCloudAPI implements API, Disposable {
     LuxonSettings.defaultLocale = value
   }
 
-  /** Create and initialize a new API instance, performing an initial device sync. */
+  /**
+   * Create and initialize a new API instance, performing an initial device sync.
+   * @param config - Optional configuration for the API client.
+   * @returns The initialized API instance.
+   */
   public static async create(config?: APIConfig): Promise<MELCloudAPI> {
     const api = new MELCloudAPI(config)
     await api.fetch()
     return api
   }
 
-  /** Fetch all buildings, sync the model registry, and schedule the next auto-sync. */
+  /**
+   * Fetch all buildings, sync the model registry, and schedule the next auto-sync.
+   * @returns The list of fetched buildings.
+   */
   @syncDevices()
   public async fetch(): Promise<Building[]> {
     this.clearSync()
@@ -296,6 +305,8 @@ export class MELCloudAPI implements API, Disposable {
   /**
    * Authenticate with MELCloud. If credentials are provided explicitly, errors
    * are thrown to the caller. If using stored credentials, errors are swallowed.
+   * @param data - Optional login credentials to use instead of stored ones.
+   * @returns Whether authentication was successful.
    */
   public async authenticate(data?: LoginCredentials): Promise<boolean> {
     const { password = this.password, username = this.username } = data ?? {}
@@ -327,6 +338,9 @@ export class MELCloudAPI implements API, Disposable {
   /**
    * Retrieve a parsed, paginated error log for the specified devices.
    * Filters out entries with invalid dates or empty messages.
+   * @param query - The error log query parameters (date range, pagination).
+   * @param deviceIds - Device IDs to fetch errors for; defaults to all devices.
+   * @returns Parsed error log with pagination metadata.
    */
   public async errorLog(
     query: ErrorLogQuery,
@@ -487,7 +501,7 @@ export class MELCloudAPI implements API, Disposable {
     postData: SetDevicePostData<T>
     type: T
   }): Promise<{ data: SetDeviceData<T> }> {
-    return this.#api.post(`/Device/Set${DEVICE_TYPE_NAMES[type]}`, postData)
+    return this.#api.post(`/Device/Set${deviceTypeNames[type]}`, postData)
   }
 
   public async signal({
@@ -524,7 +538,10 @@ export class MELCloudAPI implements API, Disposable {
     return this.#api.post('/Tile/Get2', postData)
   }
 
-  /** Update the user's language on the server if it differs from the current locale. */
+  /**
+   * Update the user's language on the server if it differs from the current locale.
+   * @param language - The language code to set.
+   */
   public async updateLanguage(language: string): Promise<void> {
     if (language !== this.language) {
       const { data: hasLanguageChanged } = await this.setLanguage({

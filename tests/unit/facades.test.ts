@@ -25,7 +25,7 @@ import { DeviceAtwHasZone2Facade } from '../../src/facades/device-atw-has-zone2.
 import { DeviceAtwFacade } from '../../src/facades/device-atw.ts'
 import { DeviceErvFacade } from '../../src/facades/device-erv.ts'
 import { FloorFacade } from '../../src/facades/floor.ts'
-import { DeviceModel, ModelRegistry } from '../../src/models/index.ts'
+import { type DeviceModel, ModelRegistry } from '../../src/models/index.ts'
 import { assertDeviceType, mock } from '../helpers.ts'
 
 type DeviceModelAta = DeviceModel<typeof DeviceType.Ata>
@@ -307,7 +307,7 @@ describe('buildingFacade', () => {
     const data = await facade.fetch()
 
     expect(data.FPDefined).toBe(true)
-    expect(api.fetch).toHaveBeenCalled()
+    expect(api.fetch).toHaveBeenCalledWith()
   })
 
   it('calls setPower', async () => {
@@ -318,7 +318,7 @@ describe('buildingFacade', () => {
     const result = await facade.setPower(true)
 
     expect(result).toBe(true)
-    expect(api.setPower).toHaveBeenCalled()
+    expect(api.setPower).toHaveBeenCalledWith()
   })
 
   it('calls errors', async () => {
@@ -339,7 +339,7 @@ describe('buildingFacade', () => {
     const result = await facade.signal(12)
 
     expect(result).toHaveProperty('series')
-    expect(api.signal).toHaveBeenCalled()
+    expect(api.signal).toHaveBeenCalledWith()
   })
 
   it('calls tiles without selection', async () => {
@@ -361,7 +361,7 @@ describe('buildingFacade', () => {
     assertDeviceType(device, DeviceType.Ata)
     const result = await facade.tiles(device)
 
-    expect(api.tiles).toHaveBeenCalled()
+    expect(api.tiles).toHaveBeenCalledWith()
     expect(result).toHaveProperty('Tiles')
   })
 
@@ -373,7 +373,7 @@ describe('buildingFacade', () => {
     const facade = new BuildingFacade(api, registry, instance)
     await facade.onSync()
 
-    expect(onSync).toHaveBeenCalled()
+    expect(onSync).toHaveBeenCalledWith()
   })
 })
 
@@ -386,7 +386,7 @@ describe('buildingFacade frostProtection', () => {
     const result = await facade.frostProtection()
 
     expect(result).toHaveProperty('FPDefined')
-    expect(api.frostProtection).toHaveBeenCalled()
+    expect(api.frostProtection).toHaveBeenCalledWith()
   })
 
   it('sets frost protection', async () => {
@@ -402,7 +402,7 @@ describe('buildingFacade frostProtection', () => {
     })
 
     expect(result).toHaveProperty('Success')
-    expect(api.setFrostProtection).toHaveBeenCalled()
+    expect(api.setFrostProtection).toHaveBeenCalledWith()
   })
 
   it('clamps frost protection temperatures', async () => {
@@ -892,7 +892,7 @@ describe('deviceAtaFacade', () => {
     const data = await facade.fetch()
 
     expect(data.Power).toBe(true)
-    expect(api.fetch).toHaveBeenCalled()
+    expect(api.fetch).toHaveBeenCalledWith()
   })
 
   it('calls values', async () => {
@@ -903,7 +903,7 @@ describe('deviceAtaFacade', () => {
     const facade = new DeviceAtaFacade(api, registry, instance)
     await facade.values()
 
-    expect(api.values).toHaveBeenCalled()
+    expect(api.values).toHaveBeenCalledWith()
   })
 
   it('calls energy', async () => {
@@ -914,7 +914,7 @@ describe('deviceAtaFacade', () => {
     const facade = new DeviceAtaFacade(api, registry, instance)
     await facade.energy()
 
-    expect(api.energy).toHaveBeenCalled()
+    expect(api.energy).toHaveBeenCalledWith()
   })
 
   it('calls energy with query', async () => {
@@ -925,7 +925,7 @@ describe('deviceAtaFacade', () => {
     const facade = new DeviceAtaFacade(api, registry, instance)
     await facade.energy({ from: '2024-01-01', to: '2024-01-31' })
 
-    expect(api.energy).toHaveBeenCalled()
+    expect(api.energy).toHaveBeenCalledWith()
   })
 
   it('calls operationModes', async () => {
@@ -949,7 +949,7 @@ describe('deviceAtaFacade', () => {
     const result = await facade.temperatures()
 
     expect(result).toHaveProperty('series')
-    expect(api.temperatures).toHaveBeenCalled()
+    expect(api.temperatures).toHaveBeenCalledWith()
   })
 
   it('calls internalTemperatures', async () => {
@@ -961,7 +961,7 @@ describe('deviceAtaFacade', () => {
     const result = await facade.internalTemperatures()
 
     expect(result).toHaveProperty('series')
-    expect(api.internalTemperatures).toHaveBeenCalled()
+    expect(api.internalTemperatures).toHaveBeenCalledWith()
   })
 
   it('calls hourlyTemperatures', async () => {
@@ -973,7 +973,7 @@ describe('deviceAtaFacade', () => {
     const result = await facade.hourlyTemperatures(12)
 
     expect(result).toHaveProperty('series')
-    expect(api.hourlyTemperatures).toHaveBeenCalled()
+    expect(api.hourlyTemperatures).toHaveBeenCalledWith()
   })
 
   it('calls tiles without selection', async () => {
@@ -1006,7 +1006,7 @@ describe('deviceAtaFacade', () => {
     const facade = new DeviceAtaFacade(api, registry, instance)
     await facade.setValues({ Power: false })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith()
   })
 
   it('setValues throws when no data differs', async () => {
@@ -1201,7 +1201,7 @@ describe('deviceAtwHasZone2Facade', () => {
       OperationModeZone1: OperationModeZone.flow,
     })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith()
   })
 
   it('adjusts secondary zone when primary changes to cool mode', async () => {
@@ -1249,7 +1249,7 @@ describe('deviceAtwHasZone2Facade', () => {
       OperationModeZone1: OperationModeZone.room_cool,
     })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith()
   })
 
   it('adjusts secondary zone down from cool when primary is not cool', async () => {
@@ -1299,7 +1299,7 @@ describe('deviceAtwHasZone2Facade', () => {
       OperationModeZone1: OperationModeZone.room,
     })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith()
   })
 
   it('adjusts secondary when both zones change', async () => {
@@ -1346,7 +1346,7 @@ describe('deviceAtwHasZone2Facade', () => {
       OperationModeZone2: OperationModeZone.flow,
     })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith()
   })
 })
 
@@ -1416,7 +1416,7 @@ describe('deviceAtwHasZone2Facade secondary curve to cool', () => {
       OperationModeZone1: OperationModeZone.room_cool,
     })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith()
   })
 })
 
@@ -1463,7 +1463,7 @@ describe('deviceAtwHasZone2Facade no operation mode change', () => {
     const facade = new DeviceAtwHasZone2Facade(api, zone2Registry, instance)
     await facade.setValues({ Power: false })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith()
   })
 })
 

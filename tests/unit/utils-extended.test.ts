@@ -10,7 +10,7 @@ import {
   now,
 } from '../../src/utils.ts'
 
-describe('now', () => {
+describe(now, () => {
   it('returns an ISO string without offset', () => {
     const result = now()
 
@@ -90,7 +90,7 @@ describe('formatLabels (via getChartLineOptions)', () => {
   })
 })
 
-describe('getChartLineOptions', () => {
+describe(getChartLineOptions, () => {
   const reportData: ReportData = {
     Data: [
       [1, 2, 3],
@@ -137,7 +137,7 @@ describe('getChartLineOptions', () => {
   })
 })
 
-describe('getChartPieOptions', () => {
+describe(getChartPieOptions, () => {
   it('maps operation mode log data', () => {
     const data: OperationModeLogData = [
       { Key: 'Heating', Value: 60 },

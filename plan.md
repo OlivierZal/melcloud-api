@@ -44,7 +44,7 @@ Idem pour : `FanSpeed`, `Horizontal`, `LabelType`, `Language`, `OperationMode`, 
 - L'ESLint rule `perfectionist/sort-enums` ne s'applique plus (pas de breaking)
 - Le naming convention `enumMember` dans ESLint doit être adapté -> utiliser `objectLiteralProperty` à la place
 - Le `no-magic-numbers.ignoreEnums` ne s'applique plus -> les valeurs sont dans un objet `as const`, qui est une constante
-- `DeviceType[type]` dans `api.ts:417` (`DeviceType[type]` pour construire l'URL) utilise le reverse mapping des enums numériques -> remplacer par un objet de lookup explicite `const DEVICE_TYPE_NAMES: Record<DeviceType, string> = { [DeviceType.Ata]: 'Ata', ... }`
+- `DeviceType[type]` dans `api.ts:417` (`DeviceType[type]` pour construire l'URL) utilise le reverse mapping des enums numériques -> remplacer par un objet de lookup explicite `const deviceTypeNames: Record<DeviceType, string> = { [DeviceType.Ata]: 'Ata', ... }`
 - `Language[language]` dans `api.ts:562` utilise aussi le reverse mapping -> même pattern
 - `isLanguage` type guard à adapter
 

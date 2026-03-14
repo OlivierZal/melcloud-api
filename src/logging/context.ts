@@ -1,7 +1,7 @@
 import type { InternalAxiosRequestConfig } from 'axios'
 
 // Fixed key order for consistent, readable JSON log output
-const LOG_KEYS = [
+const logKeys = [
   'dataType',
   'method',
   'url',
@@ -32,6 +32,6 @@ export abstract class APICallContextData {
   }
 
   public toString(): string {
-    return JSON.stringify(this, [...LOG_KEYS], SPACE)
+    return JSON.stringify(this, [...logKeys], SPACE)
   }
 }

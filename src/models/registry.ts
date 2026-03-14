@@ -79,6 +79,7 @@ const buildDeviceZones = (
  * Synced from the API response and queryable by ID or parent relationship.
  */
 export class ModelRegistry {
+
   /*
    * Pre-computed indexes for O(1) lookups by parent relationship.
    * Public accessors expose readonly query interfaces over private maps,
@@ -122,7 +123,12 @@ export class ModelRegistry {
 
   #floorsByBuildingId = new Map<number, FloorModelContract[]>()
 
-  /** Build a hierarchical zone structure from the registry, optionally filtered by device type. */
+  /**
+   * Build a hierarchical zone structure from the registry, optionally filtered by device type.
+   * @param root0 - Options object.
+   * @param root0.type - Optional device type to filter the zone structure.
+   * @returns The hierarchical building zone structure.
+   */
   public getBuildings({ type }: { type?: DeviceType } = {}): BuildingZone[] {
     return [...this.#buildings.values()]
       .filter((building) => this.#hasDevices(building.id, 'building', type))
@@ -152,7 +158,11 @@ export class ModelRegistry {
       .toSorted(compareNames)
   }
 
-  /** Flatten the building hierarchy into a sorted list of all zones. */
+  /**
+   * Flatten the building hierarchy into a sorted list of all zones.
+   * @param id - The building ID to look up areas for.
+   * @returns The areas belonging to the specified building.
+   */
   public getAreasByBuildingId(id: number): AreaModelContract[] {
     return this.#areasByBuildingId.get(id) ?? []
   }

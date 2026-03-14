@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { typedKeys } from '../../src/utils.ts'
 
-describe('typedKeys', () => {
+describe(typedKeys, () => {
   it('returns keys of a simple object', () => {
     const object = { alpha: 1, beta: 2, gamma: 3 }
 

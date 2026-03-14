@@ -61,7 +61,7 @@ describe('aPICallRequestData', () => {
     expect(data.headers).toBeUndefined()
   })
 
-  it('serializes to JSON with LOG_KEYS', () => {
+  it('serializes to JSON with logKeys', () => {
     const data = new APICallRequestData(createConfig())
     const parsed = JSON.parse(data.toString())
 
@@ -96,7 +96,7 @@ describe('aPICallResponseData', () => {
     expect(data.requestData).toBeUndefined()
   })
 
-  it('serializes to JSON with LOG_KEYS', () => {
+  it('serializes to JSON with logKeys', () => {
     const data = new APICallResponseData(createResponse())
     const parsed = JSON.parse(data.toString())
 
@@ -109,7 +109,7 @@ describe('aPICallResponseData', () => {
   })
 })
 
-describe('createAPICallErrorData', () => {
+describe(createAPICallErrorData, () => {
   it('creates error data from response error', () => {
     const error = mock<AxiosError>({
       config: createConfig(),

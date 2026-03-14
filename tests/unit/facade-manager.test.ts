@@ -92,8 +92,8 @@ describe('facadeManager', () => {
     const facade = manager.get(building)
 
     expect(facade).not.toBeNull()
-    expect(facade!.id).toBe(1)
-    expect(facade!.name).toBe('Building')
+    expect(facade.id).toBe(1)
+    expect(facade.name).toBe('Building')
   })
 
   it('returns a facade for a floor instance', () => {
@@ -103,7 +103,7 @@ describe('facadeManager', () => {
     const facade = manager.get(floor)
 
     expect(facade).not.toBeNull()
-    expect(facade!.id).toBe(10)
+    expect(facade.id).toBe(10)
   })
 
   it('returns a facade for an area instance', () => {
@@ -113,7 +113,7 @@ describe('facadeManager', () => {
     const facade = manager.get(area)
 
     expect(facade).not.toBeNull()
-    expect(facade!.id).toBe(100)
+    expect(facade.id).toBe(100)
   })
 
   it('returns a facade for a device instance', () => {
@@ -123,7 +123,7 @@ describe('facadeManager', () => {
     const facade = manager.get(device)
 
     expect(facade).not.toBeNull()
-    expect(facade!.id).toBe(1000)
+    expect(facade.id).toBe(1000)
   })
 
   it('caches facades for the same instance', () => {

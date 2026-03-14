@@ -100,7 +100,7 @@ vi.mock(import('axios'), () =>
   }),
 )
 
-describe('API lifecycle', () => {
+describe('aPI lifecycle', () => {
   let MELCloudAPI: typeof import('../../src/services/melcloud.ts').MELCloudAPI
 
   beforeEach(async () => {
@@ -108,8 +108,8 @@ describe('API lifecycle', () => {
     vi.clearAllMocks()
     mockAxiosInstance.get.mockResolvedValue({ data: buildingResponse })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
-    const mod = await import('../../src/services/melcloud.ts')
-    MELCloudAPI = mod.MELCloudAPI
+    const module = await import('../../src/services/melcloud.ts')
+    MELCloudAPI = module.MELCloudAPI
   })
 
   afterEach(() => {
@@ -132,7 +132,7 @@ describe('API lifecycle', () => {
     expect(device!.type).toBe(DeviceType.Ata)
   })
 
-  it('FacadeManager works with registry populated by API', async () => {
+  it('facadeManager works with registry populated by API', async () => {
     const api = await MELCloudAPI.create({ autoSyncInterval: 0 })
     const manager = new FacadeManager(api, api.registry)
 
@@ -216,6 +216,6 @@ describe('API lifecycle', () => {
     const onSync = vi.fn().mockImplementation(async () => {})
     await MELCloudAPI.create({ autoSyncInterval: 0, onSync })
 
-    expect(onSync).toHaveBeenCalled()
+    expect(onSync).toHaveBeenCalledWith()
   })
 })
