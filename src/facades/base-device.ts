@@ -94,8 +94,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
           isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
           value,
         ])
-      : Object.entries(this.data)
-    ).filter(([key]) => key in this.flags)
+      : Object.entries(this.data)).filter(([key]) => key in this.flags)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- entries are filtered by flags keys
     return Object.fromEntries(entries) as Required<UpdateDeviceData<T>>
   }

@@ -5,6 +5,7 @@
 Refonte complète du module en 5 phases incrémentales. Chaque phase compile et lint proprement avant de passer à la suivante. Version finale : v22.0.0 (breaking changes en phases 3-4).
 
 **Objectifs principaux :**
+
 - Migrer les `enum` vers `as const` objects + union types
 - Réduire les `eslint-disable` de 18 à ~2
 - Remplacer les `Map` statiques par un `ModelRegistry` (injection de dépendances)
@@ -24,16 +25,21 @@ Remplacer les 10 enums par des objets `as const` + union types. Exemple :
 
 ```typescript
 // Avant
-export enum DeviceType { Ata = 0, Atw = 1, Erv = 3 }
+export enum DeviceType {
+  Ata = 0,
+  Atw = 1,
+  Erv = 3,
+}
 
 // Après
 export const DeviceType = { Ata: 0, Atw: 1, Erv: 3 } as const
-export type DeviceType = typeof DeviceType[keyof typeof DeviceType]
+export type DeviceType = (typeof DeviceType)[keyof typeof DeviceType]
 ```
 
 Idem pour : `FanSpeed`, `Horizontal`, `LabelType`, `Language`, `OperationMode`, `OperationModeState`, `OperationModeZone`, `VentilationMode`, `Vertical`.
 
 **Impact :**
+
 - `enums.ts` supprimé, contenu fusionné dans `constants.ts`
 - L'ESLint rule `perfectionist/sort-enums` ne s'applique plus (pas de breaking)
 - Le naming convention `enumMember` dans ESLint doit être adapté -> utiliser `objectLiteralProperty` à la place
@@ -73,7 +79,7 @@ Rendre `BaseListDevice` générique pour que `Type` soit déjà narrowé :
 
 ```typescript
 export interface BaseListDevice<T extends DeviceType = DeviceType> {
-  readonly Type: T  // narrowed au lieu de DeviceType
+  readonly Type: T // narrowed au lieu de DeviceType
   // ... reste identique
 }
 ```
@@ -105,13 +111,16 @@ export abstract class BaseFacade<T extends IModel>
 Remplacer les 3 fonctions `isDeviceModelAta/Atw/Erv` par un `switch (instance.type)`. Le discriminant `type` dans `IDeviceModelAny` (union) permet le narrowing automatique par TypeScript.
 
 ```typescript
-const createDeviceFacade = (api: IAPI, instance: IDeviceModelAny): IDeviceFacadeAny => {
+const createDeviceFacade = (
+  api: IAPI,
+  instance: IDeviceModelAny,
+): IDeviceFacadeAny => {
   switch (instance.type) {
     case DeviceType.Ata:
       return new DeviceAtaFacade(api, instance)
     case DeviceType.Atw:
-      return instance.data.HasZone2
-        ? new DeviceAtwHasZone2Facade(api, instance)
+      return instance.data.HasZone2 ?
+          new DeviceAtwHasZone2Facade(api, instance)
         : new DeviceAtwFacade(api, instance)
     case DeviceType.Erv:
       return new DeviceErvFacade(api, instance)
@@ -129,7 +138,10 @@ Supprimer le type local `DeviceModelAny` - utiliser `IDeviceModelAny` directemen
 Au lieu de construire `fromListToSetAta` par inversion de `fromSetToListAta` avec `Object.fromEntries` (qui perd les types), le définir explicitement :
 
 ```typescript
-export const fromListToSetAta: Record<keyof SetDeviceDataAtaInList, KeyOfSetDeviceDataAtaNotInList> = {
+export const fromListToSetAta: Record<
+  keyof SetDeviceDataAtaInList,
+  KeyOfSetDeviceDataAtaNotInList
+> = {
   FanSpeed: 'SetFanSpeed',
   VaneHorizontalDirection: 'VaneHorizontal',
   VaneVerticalDirection: 'VaneVertical',
@@ -268,6 +280,7 @@ export class ModelRegistry {
 **Fichiers :** `building.ts`, `floor.ts`, `area.ts`, `device.ts`
 
 Supprimer de chaque modèle :
+
 - Toutes les `static #instances` Maps
 - Toutes les `static #xModel` références
 - `setModels()`
@@ -373,11 +386,11 @@ export type { IAPIAdapter } from './services/adapter.ts'
 
 ## Résumé des eslint-disable
 
-| Phase | Avant | Après | Commentaire |
-|-------|-------|-------|-------------|
-| Initial | 18 | 18 | État actuel |
-| Phase 1 | 18 | 2 | Seulement `typedFromEntries` + `typedKeys` |
-| Phase 2-5 | 2 | 2 | Stable - minimum irréductible |
+| Phase     | Avant | Après | Commentaire                                |
+| --------- | ----- | ----- | ------------------------------------------ |
+| Initial   | 18    | 18    | État actuel                                |
+| Phase 1   | 18    | 2     | Seulement `typedFromEntries` + `typedKeys` |
+| Phase 2-5 | 2     | 2     | Stable - minimum irréductible              |
 
 ## Fichiers créés
 

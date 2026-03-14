@@ -1,11 +1,7 @@
 import { DateTime } from 'luxon'
 
 import type { DeviceType } from '../enums.ts'
-import type {
-  IDeviceModel,
-  IDeviceModelAny,
-  IModel,
-} from '../models/index.ts'
+import type { IDeviceModel, IDeviceModelAny, IModel } from '../models/index.ts'
 import type { ErrorLog, ErrorLogQuery, IAPI } from '../services/index.ts'
 import type {
   DateTimeComponents,
