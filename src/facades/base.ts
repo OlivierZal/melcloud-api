@@ -9,6 +9,7 @@ import type {
 } from '../models/interfaces.ts'
 import type { APIAdapter, ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type {
+  BuildingZone,
   DateTimeComponents,
   FailureData,
   FrostProtectionData,
@@ -19,6 +20,7 @@ import type {
   SettingsParams,
   SuccessData,
   TilesData,
+  Zone,
 } from '../types/index.ts'
 
 import { syncDevices, updateDevices } from '../decorators/index.ts'
@@ -125,6 +127,14 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   public async errors(query: ErrorLogQuery): Promise<ErrorLog> {
     return this.api.errorLog(query, this.#deviceIds)
+  }
+
+  public getBuildings(params?: { type?: DeviceType }): BuildingZone[] {
+    return this.registry.getBuildings(params)
+  }
+
+  public getZones(params?: { type?: DeviceType }): Zone[] {
+    return this.registry.getZones(params)
   }
 
   /*

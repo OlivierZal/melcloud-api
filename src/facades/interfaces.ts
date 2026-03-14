@@ -10,6 +10,7 @@ import type {
 } from '../models/interfaces.ts'
 import type { ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type {
+  BuildingZone,
   EnergyData,
   FailureData,
   FrostProtectionData,
@@ -21,6 +22,7 @@ import type {
   SuccessData,
   TilesData,
   UpdateDeviceData,
+  Zone,
   ZoneSettings,
 } from '../types/index.ts'
 
@@ -105,6 +107,12 @@ export interface Facade extends Model {
 
   /** Retrieve the error log for all devices in this facade. */
   readonly errors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
+
+  /** Build a hierarchical zone structure, optionally filtered by device type. */
+  readonly getBuildings: (params?: { type?: DeviceType }) => BuildingZone[]
+
+  /** Flatten the building hierarchy into a sorted list of all zones. */
+  readonly getZones: (params?: { type?: DeviceType }) => Zone[]
 
   /** Get the current frost protection settings. */
   readonly frostProtection: () => Promise<FrostProtectionData>
