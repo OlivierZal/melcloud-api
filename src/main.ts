@@ -115,8 +115,9 @@ export {
   type ErrorLog,
   type ErrorLogQuery,
   type IAPI,
+  type IAPIAdapter,
   type Logger,
   type OnSyncFunction,
   type SettingManager,
-  API as MELCloudAPI,
+  MELCloudAPI,
 } from './services/index.ts'

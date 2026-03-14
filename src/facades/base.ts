@@ -7,7 +7,7 @@ import type {
   IModel,
   ModelRegistry,
 } from '../models/index.ts'
-import type { ErrorLog, ErrorLogQuery, IAPI } from '../services/index.ts'
+import type { ErrorLog, ErrorLogQuery, IAPIAdapter } from '../services/index.ts'
 import type {
   DateTimeComponents,
   FailureData,
@@ -50,7 +50,7 @@ const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
 export abstract class BaseFacade<T extends IModel> implements IFacade {
   public readonly id: number
 
-  protected readonly api: IAPI
+  protected readonly api: IAPIAdapter
 
   protected readonly registry: ModelRegistry
 
@@ -68,7 +68,7 @@ export abstract class BaseFacade<T extends IModel> implements IFacade {
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(api: IAPI, registry: ModelRegistry, instance: T) {
+  public constructor(api: IAPIAdapter, registry: ModelRegistry, instance: T) {
     this.api = api
     this.registry = registry
     ;({ id: this.id } = instance)

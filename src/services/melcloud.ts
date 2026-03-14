@@ -87,17 +87,17 @@ const DEFAULT_ERROR_LOG_PERIOD = 1
 const INVALID_YEAR = 1
 
 const setting = (
-  target: ClassAccessorDecoratorTarget<API, string>,
-  context: ClassAccessorDecoratorContext<API, string>,
-): ClassAccessorDecoratorResult<API, string> => ({
-  get(this: API): string {
+  target: ClassAccessorDecoratorTarget<MELCloudAPI, string>,
+  context: ClassAccessorDecoratorContext<MELCloudAPI, string>,
+): ClassAccessorDecoratorResult<MELCloudAPI, string> => ({
+  get(this: MELCloudAPI): string {
     const key = String(context.name)
     if (!isAPISetting(key)) {
       throw new Error(`Invalid setting: ${key}`)
     }
     return this.settingManager?.get(key) ?? target.get.call(this)
   },
-  set(this: API, value: string): void {
+  set(this: MELCloudAPI, value: string): void {
     const key = String(context.name)
     if (!isAPISetting(key)) {
       throw new Error(`Invalid setting: ${key}`)
@@ -150,7 +150,7 @@ const handleErrorLogQuery = ({
   }
 }
 
-export class API implements Disposable, IAPI {
+export class MELCloudAPI implements Disposable, IAPI {
   public readonly onSync?: OnSyncFunction
 
   protected readonly settingManager?: SettingManager
@@ -223,8 +223,8 @@ export class API implements Disposable, IAPI {
     LuxonSettings.defaultLocale = value
   }
 
-  public static async create(config?: APIConfig): Promise<API> {
-    const api = new API(config)
+  public static async create(config?: APIConfig): Promise<MELCloudAPI> {
+    const api = new MELCloudAPI(config)
     await api.fetch()
     return api
   }

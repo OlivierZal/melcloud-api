@@ -5,9 +5,10 @@ export type {
   ErrorLog,
   ErrorLogQuery,
   IAPI,
+  IAPIAdapter,
   Logger,
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
 
-export { API } from './api.ts'
+export { MELCloudAPI } from './melcloud.ts'

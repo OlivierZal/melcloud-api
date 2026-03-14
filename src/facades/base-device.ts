@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
 
-import type { IAPI } from '../services/index.ts'
+import type { IAPIAdapter } from '../services/index.ts'
 import type {
   EnergyData,
   GetDeviceData,
@@ -71,7 +71,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   protected abstract readonly temperaturesLegend: (string | undefined)[]
 
   public constructor(
-    api: IAPI,
+    api: IAPIAdapter,
     registry: ModelRegistry,
     instance: IDeviceModel<T>,
   ) {

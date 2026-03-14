@@ -78,23 +78,37 @@ export interface ErrorLogQuery {
   readonly to?: string
 }
 
-export interface IAPI {
+export interface IAPI extends IAPIAdapter {
   readonly registry: ModelRegistry
-  readonly onSync?: OnSyncFunction
   readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
   readonly clearSync: () => void
+  readonly list: () => Promise<{ data: Building[] }>
+  readonly login: ({
+    postData,
+  }: {
+    postData: LoginPostData
+  }) => Promise<{ data: LoginData }>
+  readonly setLanguage: ({
+    postData,
+  }: {
+    postData: { language: Language }
+  }) => Promise<{ data: boolean }>
+  readonly updateLanguage: (language: string) => Promise<void>
+}
+
+export interface IAPIAdapter {
+  readonly onSync?: OnSyncFunction
+  // DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
   readonly errorLog: (
     query: ErrorLogQuery,
     deviceIds: number[],
   ) => Promise<ErrorLog>
-  readonly fetch: () => Promise<Building[]>
-  readonly updateLanguage: (language: string) => Promise<void>
-  // DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
   readonly errors: ({
     postData,
   }: {
     postData: ErrorLogPostData
   }) => Promise<{ data: ErrorLogData[] | FailureData }>
+  readonly fetch: () => Promise<Building[]>
   readonly frostProtection: ({
     params,
   }: {
@@ -105,12 +119,6 @@ export interface IAPI {
   }: {
     params: SettingsParams
   }) => Promise<{ data: HolidayModeData }>
-  readonly list: () => Promise<{ data: Building[] }>
-  readonly login: ({
-    postData,
-  }: {
-    postData: LoginPostData
-  }) => Promise<{ data: LoginData }>
   readonly operationModes: ({
     postData,
   }: {
@@ -126,11 +134,6 @@ export interface IAPI {
   }: {
     postData: HolidayModePostData
   }) => Promise<{ data: FailureData | SuccessData }>
-  readonly setLanguage: ({
-    postData,
-  }: {
-    postData: { language: Language }
-  }) => Promise<{ data: boolean }>
   readonly setPower: ({
     postData,
   }: {

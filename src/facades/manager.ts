@@ -8,7 +8,7 @@ import type {
   IModel,
   ModelRegistry,
 } from '../models/index.ts'
-import type { IAPI } from '../services/index.ts'
+import type { IAPIAdapter } from '../services/index.ts'
 
 import type {
   IBuildingFacade,
@@ -22,13 +22,13 @@ import type {
 import { createFacade } from './factory.ts'
 
 export class FacadeManager implements IFacadeManager {
-  readonly #api: IAPI
+  readonly #api: IAPIAdapter
 
   readonly #facades = new WeakMap<IModel, IFacade>()
 
   readonly #registry: ModelRegistry
 
-  public constructor(api: IAPI, registry: ModelRegistry) {
+  public constructor(api: IAPIAdapter, registry: ModelRegistry) {
     this.#api = api
     this.#registry = registry
   }

@@ -3,7 +3,7 @@ import type {
   IDeviceModelAny,
   ModelRegistry,
 } from '../models/index.ts'
-import type { IAPI } from '../services/index.ts'
+import type { IAPIAdapter } from '../services/index.ts'
 import type { ZoneSettings } from '../types/index.ts'
 
 import { fetchDevices } from '../decorators/index.ts'
@@ -25,7 +25,7 @@ export class BuildingFacade
   protected readonly tableName = 'Building'
 
   public constructor(
-    api: IAPI,
+    api: IAPIAdapter,
     registry: ModelRegistry,
     instance: IBuildingModel,
   ) {

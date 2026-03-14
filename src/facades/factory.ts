@@ -1,4 +1,4 @@
-import type { IAPI } from '../services/index.ts'
+import type { IAPIAdapter } from '../services/index.ts'
 
 import { DeviceType } from '../enums.ts'
 import {
@@ -22,7 +22,7 @@ import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
 const createDeviceFacade = (
-  api: IAPI,
+  api: IAPIAdapter,
   registry: ModelRegistry,
   instance: IDeviceModelAny,
 ): IDeviceFacadeAny => {
@@ -44,7 +44,7 @@ const createDeviceFacade = (
 }
 
 export const createFacade = (
-  api: IAPI,
+  api: IAPIAdapter,
   registry: ModelRegistry,
   instance: IModel,
 ): IFacade => {
