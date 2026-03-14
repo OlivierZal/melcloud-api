@@ -1,4 +1,8 @@
-import type { IBuildingModel, IDeviceModelAny, ModelRegistry } from '../models/index.ts'
+import type {
+  IBuildingModel,
+  IDeviceModelAny,
+  ModelRegistry,
+} from '../models/index.ts'
 import type { IAPI } from '../services/index.ts'
 import type { ZoneSettings } from '../types/index.ts'
 
@@ -20,7 +24,11 @@ export class BuildingFacade
 
   protected readonly tableName = 'Building'
 
-  public constructor(api: IAPI, registry: ModelRegistry, instance: IBuildingModel) {
+  public constructor(
+    api: IAPI,
+    registry: ModelRegistry,
+    instance: IBuildingModel,
+  ) {
     super(api, registry, instance)
     ;({
       data: {
@@ -38,7 +46,9 @@ export class BuildingFacade
     return this.instance.data
   }
 
-  protected get model(): { getById: (id: number) => IBuildingModel | undefined } {
+  protected get model(): {
+    getById: (id: number) => IBuildingModel | undefined
+  } {
     return this.registry.buildings
   }
 

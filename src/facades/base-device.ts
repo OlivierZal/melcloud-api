@@ -70,7 +70,11 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   protected abstract readonly temperaturesLegend: (string | undefined)[]
 
-  public constructor(api: IAPI, registry: ModelRegistry, instance: IDeviceModel<T>) {
+  public constructor(
+    api: IAPI,
+    registry: ModelRegistry,
+    instance: IDeviceModel<T>,
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- IDeviceModel<T> is a member of IDeviceModelAny union
     super(api, registry, instance as IDeviceModelAny)
     ;({ type: this.type } = instance)
@@ -85,7 +89,9 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return this.instance.data as ListDeviceData<T>
   }
 
-  protected get model(): { getById: (id: number) => IDeviceModelAny | undefined } {
+  protected get model(): {
+    getById: (id: number) => IDeviceModelAny | undefined
+  } {
     return this.registry.devices
   }
 

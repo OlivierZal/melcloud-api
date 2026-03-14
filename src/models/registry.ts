@@ -35,8 +35,7 @@ export class ModelRegistry {
   readonly #devices = new Map<number, IDeviceModelAny>()
 
   public readonly devices = {
-    getById: (id: number): IDeviceModelAny | undefined =>
-      this.#devices.get(id),
+    getById: (id: number): IDeviceModelAny | undefined => this.#devices.get(id),
   }
 
   readonly #floors = new Map<number, IFloorModel>()
@@ -110,7 +109,10 @@ export class ModelRegistry {
     this.#devices.clear()
     for (const device of devices) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      this.#devices.set(device.DeviceID, new DeviceModel(device) as IDeviceModelAny)
+      this.#devices.set(
+        device.DeviceID,
+        new DeviceModel(device) as IDeviceModelAny,
+      )
     }
   }
 
