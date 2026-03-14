@@ -982,7 +982,6 @@ describe('mELCloudAPI', () => {
         ID: 1,
         Location: 10,
         Name: 'B1',
-        TimeZone: 0,
         Structure: {
           Areas: [
             {
@@ -1052,6 +1051,7 @@ describe('mELCloudAPI', () => {
             },
           ],
         },
+        TimeZone: 0,
       } as Building
       mockAxiosInstance.get.mockResolvedValue({ data: [building] })
       const api = await createApi()

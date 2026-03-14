@@ -58,7 +58,7 @@ export class FacadeManager implements FacadeManagerContract {
           createFacade(this.#api, this.#registry, instance),
         )
       }
-      // eslint-disable-next-line capitalized-comments, @stylistic/lines-around-comment
+      // eslint-disable-next-line capitalized-comments
       /* v8 ignore next */
       return this.#facades.get(instance) ?? null
     }

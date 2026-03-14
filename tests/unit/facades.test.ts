@@ -12,10 +12,6 @@ import type {
   SetDevicePostData,
 } from '../../src/types/index.ts'
 
-type DeviceModelAta = DeviceModel<DeviceType.Ata>
-type DeviceModelAtw = DeviceModel<DeviceType.Atw>
-type DeviceModelErv = DeviceModel<DeviceType.Erv>
-
 import { DeviceType, LabelType, OperationMode, OperationModeZone } from '../../src/enums.ts'
 import { AreaFacade } from '../../src/facades/area.ts'
 import { BuildingFacade } from '../../src/facades/building.ts'
@@ -25,6 +21,12 @@ import { DeviceAtwFacade } from '../../src/facades/device-atw.ts'
 import { DeviceErvFacade } from '../../src/facades/device-erv.ts'
 import { FloorFacade } from '../../src/facades/floor.ts'
 import { DeviceModel, ModelRegistry } from '../../src/models/index.ts'
+
+type DeviceModelAta = DeviceModel<DeviceType.Ata>
+
+type DeviceModelAtw = DeviceModel<DeviceType.Atw>
+
+type DeviceModelErv = DeviceModel<DeviceType.Erv>
 
 const buildingData: BuildingData = {
   FPDefined: true,

@@ -210,7 +210,7 @@ describe('API lifecycle', () => {
   })
 
   it('onSync callback is invoked after fetch', async () => {
-    const onSync = vi.fn().mockResolvedValue(undefined)
+    const onSync = vi.fn().mockResolvedValue()
     await MELCloudAPI.create({ autoSyncInterval: 0, onSync })
 
     expect(onSync).toHaveBeenCalled()

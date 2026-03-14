@@ -1,7 +1,6 @@
 const config = {
   cleanOutputDir: true,
   entryPoints: ['src/main.ts'],
-  tsconfig: 'tsconfig.build.json',
   enumMembersFormat: 'table',
   excludePrivate: true,
   expandObjects: true,
@@ -10,14 +9,15 @@ const config = {
   includeVersion: true,
   indexFormat: 'table',
   out: 'docs',
-  router: 'module',
   parametersFormat: 'table',
   plugin: ['typedoc-plugin-markdown'],
   propertiesFormat: 'table',
   readme: 'none',
+  router: 'module',
   textContentMappings: {
     'title.indexPage': 'MELCloud API for Node.js - {version}',
   },
+  tsconfig: 'tsconfig.build.json',
   typeDeclarationFormat: 'table',
   useCodeBlocks: true,
 }

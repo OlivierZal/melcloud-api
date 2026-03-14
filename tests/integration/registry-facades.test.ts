@@ -174,7 +174,7 @@ const createMockApi = (): APIAdapter =>
     holidayMode: vi.fn().mockResolvedValue({ data: { HMEnabled: false } }),
     hourlyTemperatures: vi.fn(),
     internalTemperatures: vi.fn(),
-    onSync: vi.fn().mockResolvedValue(undefined),
+    onSync: vi.fn().mockResolvedValue(),
     operationModes: vi.fn(),
     setFrostProtection: vi
       .fn()

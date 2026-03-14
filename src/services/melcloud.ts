@@ -101,7 +101,7 @@ const setting = (
   context: ClassAccessorDecoratorContext<MELCloudAPI, string>,
 ): ClassAccessorDecoratorResult<MELCloudAPI, string> => {
   const key = String(context.name)
-  // eslint-disable-next-line capitalized-comments, @stylistic/lines-around-comment
+  // eslint-disable-next-line capitalized-comments
   /* v8 ignore next 3 */
   if (!isAPISetting(key)) {
     throw new Error(`Invalid setting: ${key}`)
