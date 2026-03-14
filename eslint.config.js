@@ -451,6 +451,19 @@ const config = defineConfig([
     },
   },
   {
+    files: ['src/**/__tests__/**'],
+    rules: {
+      '@typescript-eslint/consistent-type-assertions': 'off',
+      '@typescript-eslint/no-magic-numbers': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/no-unnecessary-type-conversion': 'off',
+      '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      'id-length': 'off',
+      'max-lines-per-function': 'off',
+    },
+  },
+  {
     files: ['**/*.config.{ts,js}'],
     rules: {
       'import-x/max-dependencies': 'off',
