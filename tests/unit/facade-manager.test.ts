@@ -136,4 +136,37 @@ describe('facadeManager', () => {
 
     expect(facade1).toBe(facade2)
   })
+
+  it('returns buildings via getBuildings', () => {
+    const registry = createPopulatedRegistry()
+    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const buildings = manager.getBuildings()
+
+    expect(buildings).toHaveLength(1)
+    expect(buildings[0]!.name).toBe('Building')
+  })
+
+  it('filters buildings by device type via getBuildings', () => {
+    const registry = createPopulatedRegistry()
+    const manager = new FacadeManager({} as typeof mockApi, registry)
+
+    expect(manager.getBuildings({ type: DeviceType.Ata })).toHaveLength(1)
+    expect(manager.getBuildings({ type: DeviceType.Atw })).toHaveLength(0)
+  })
+
+  it('returns zones via getZones', () => {
+    const registry = createPopulatedRegistry()
+    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const zones = manager.getZones()
+
+    expect(zones.length).toBeGreaterThan(0)
+  })
+
+  it('filters zones by device type via getZones', () => {
+    const registry = createPopulatedRegistry()
+    const manager = new FacadeManager({} as typeof mockApi, registry)
+
+    expect(manager.getZones({ type: DeviceType.Ata }).length).toBeGreaterThan(0)
+    expect(manager.getZones({ type: DeviceType.Atw })).toHaveLength(0)
+  })
 })
