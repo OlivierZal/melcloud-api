@@ -9,7 +9,7 @@ const config = {
   includeVersion: true,
   indexFormat: 'table',
   out: '.',
-  outputFileStrategy: 'modules',
+  router: 'module',
   parametersFormat: 'table',
   plugin: ['typedoc-plugin-markdown'],
   propertiesFormat: 'table',

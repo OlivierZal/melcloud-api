@@ -627,7 +627,7 @@ export class MELCloudAPI implements API, Disposable {
     ) {
       return this.#api.request(config)
     }
-    throw new Error(errorData.errorMessage)
+    throw new Error(errorData.errorMessage, { cause: error })
   }
 
   async #handleRequest(
