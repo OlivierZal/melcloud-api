@@ -44,7 +44,6 @@ const buildingResponse: Building[] = [
       Devices: [],
       Floors: [
         {
-          AreaCount: 1,
           Areas: [
             {
               BuildingId: 1,
@@ -86,15 +85,17 @@ const mockAxiosInstance = {
   request: vi.fn(),
 }
 
-vi.mock(import('axios'), () => ({
-  default: {
-    create: vi.fn().mockReturnValue(mockAxiosInstance),
-  },
-  HttpStatusCode: {
-    TooManyRequests: 429,
-    Unauthorized: 401,
-  },
-}))
+vi.mock(import('axios'), () =>
+  ({
+    default: {
+      create: vi.fn().mockReturnValue(mockAxiosInstance),
+    },
+    HttpStatusCode: {
+      TooManyRequests: 429,
+      Unauthorized: 401,
+    },
+  }) as unknown as typeof import('axios'),
+)
 
 describe('API lifecycle', () => {
   let MELCloudAPI: typeof import('../../src/services/melcloud.ts').MELCloudAPI
@@ -209,7 +210,7 @@ describe('API lifecycle', () => {
   })
 
   it('onSync callback is invoked after fetch', async () => {
-    const onSync = vi.fn().mockResolvedValue()
+    const onSync = vi.fn().mockResolvedValue(undefined)
     await MELCloudAPI.create({ autoSyncInterval: 0, onSync })
 
     expect(onSync).toHaveBeenCalled()

@@ -21,6 +21,7 @@ const buildingData = {
   ID: 1,
   Location: 10,
   Name: 'Building',
+  TimeZone: 0,
 } as const
 
 const floorData = { BuildingId: 1, ID: 10, Name: 'Floor' } as const
@@ -40,7 +41,7 @@ const deviceListData = {
   DeviceName: 'ATA',
   FloorID: null,
   Type: DeviceType.Ata,
-} as const
+} as ListDeviceAny
 
 describe('createFacade', () => {
   it('creates a BuildingFacade for BuildingModel instances', () => {
@@ -89,7 +90,7 @@ describe('createFacade', () => {
         ...deviceListData,
         Device: { HasZone2: false } as ListDeviceAny['Device'],
         Type: DeviceType.Atw,
-      },
+      } as ListDeviceAny,
     ])
     const instance = registry.devices.getById(1000)!
     const facade = createFacade(mockApi, registry, instance)
@@ -104,7 +105,7 @@ describe('createFacade', () => {
         ...deviceListData,
         Device: { HasZone2: true } as ListDeviceAny['Device'],
         Type: DeviceType.Atw,
-      },
+      } as ListDeviceAny,
     ])
     const instance = registry.devices.getById(1000)!
     const facade = createFacade(mockApi, registry, instance)
@@ -119,7 +120,7 @@ describe('createFacade', () => {
         ...deviceListData,
         Device: {} as ListDeviceAny['Device'],
         Type: DeviceType.Erv,
-      },
+      } as ListDeviceAny,
     ])
     const instance = registry.devices.getById(1000)!
     const facade = createFacade(mockApi, registry, instance)

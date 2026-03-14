@@ -17,15 +17,17 @@ const mockAxiosInstance = {
   request: vi.fn(),
 }
 
-vi.mock(import('axios'), () => ({
-  default: {
-    create: vi.fn().mockReturnValue(mockAxiosInstance),
-  },
-  HttpStatusCode: {
-    TooManyRequests: 429,
-    Unauthorized: 401,
-  },
-}))
+vi.mock(import('axios'), () =>
+  ({
+    default: {
+      create: vi.fn().mockReturnValue(mockAxiosInstance),
+    },
+    HttpStatusCode: {
+      TooManyRequests: 429,
+      Unauthorized: 401,
+    },
+  }) as unknown as typeof import('axios'),
+)
 
 describe('isAPISetting', () => {
   it('returns true for valid API setting keys', () => {
@@ -138,6 +140,7 @@ describe('mELCloudAPI', () => {
       Location: 10,
       Name: 'Test',
       Structure: { Areas: [], Devices: [], Floors: [] },
+      TimeZone: 0,
     } as Building
     mockAxiosInstance.get.mockResolvedValue({ data: [building] })
     const api = await createApi()
@@ -634,7 +637,7 @@ describe('mELCloudAPI', () => {
     it('request handler sets context key header', async () => {
       await createApi()
       const headers = new Map()
-      vi.spyOn(headers, 'set').mockImplementation()
+      vi.spyOn(headers, 'set').mockImplementation((() => {}) as any)
       const config = {
         headers,
         url: '/Device/Get',
@@ -647,7 +650,7 @@ describe('mELCloudAPI', () => {
     it('request handler does not set header for login path', async () => {
       await createApi()
       const headers = new Map()
-      vi.spyOn(headers, 'set').mockImplementation()
+      vi.spyOn(headers, 'set').mockImplementation((() => {}) as any)
       const config = {
         headers,
         url: '/Login/ClientLogin3',
@@ -690,7 +693,7 @@ describe('mELCloudAPI', () => {
       })
       mockAxiosInstance.get.mockResolvedValue({ data: [] })
       const headers = new Map()
-      vi.spyOn(headers, 'set').mockImplementation()
+      vi.spyOn(headers, 'set').mockImplementation((() => {}) as any)
       const config = {
         headers,
         url: '/Device/Get',
@@ -920,7 +923,7 @@ describe('mELCloudAPI', () => {
       )
 
       const headers = new Map()
-      vi.spyOn(headers, 'set').mockImplementation()
+      vi.spyOn(headers, 'set').mockImplementation((() => {}) as any)
       const config = {
         headers,
         url: '/User/ListDevices',
@@ -944,6 +947,7 @@ describe('mELCloudAPI', () => {
         ID: 1,
         Location: 10,
         Name: 'B1',
+        TimeZone: 0,
         Structure: {
           Areas: [
             {

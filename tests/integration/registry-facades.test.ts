@@ -63,16 +63,21 @@ const atwDeviceData: ListDeviceDataAtw = {
 const ervDeviceData: ListDeviceDataErv = {
   EffectiveFlags: 0,
   HasAutomaticFanSpeed: false,
+  HasCO2Sensor: true,
+  HasPM25Sensor: false,
   NumberOfFanSpeeds: 4,
+  Offline: false,
   OperationMode: 0,
   OutdoorTemperature: 15,
+  PM25Level: 0,
   Power: true,
   RoomCO2Level: 500,
   RoomTemperature: 22,
   SetFanSpeed: 2,
   SetTemperature: 24,
   VentilationMode: 0,
-} as ListDeviceDataErv
+  WifiSignalStrength: -50,
+} as unknown as ListDeviceDataErv
 
 const buildings: BuildingData[] = [
   {
@@ -106,8 +111,8 @@ const buildings: BuildingData[] = [
 ]
 
 const floors: FloorData[] = [
-  { AreaCount: 2, BuildingId: 1, ID: 10, Name: 'Ground floor' },
-  { AreaCount: 1, BuildingId: 1, ID: 11, Name: 'First floor' },
+  { BuildingId: 1, ID: 10, Name: 'Ground floor' },
+  { BuildingId: 1, ID: 11, Name: 'First floor' },
 ]
 
 const areas: AreaDataAny[] = [
@@ -169,7 +174,7 @@ const createMockApi = (): APIAdapter =>
     holidayMode: vi.fn().mockResolvedValue({ data: { HMEnabled: false } }),
     hourlyTemperatures: vi.fn(),
     internalTemperatures: vi.fn(),
-    onSync: vi.fn().mockResolvedValue(),
+    onSync: vi.fn().mockResolvedValue(undefined),
     operationModes: vi.fn(),
     setFrostProtection: vi
       .fn()

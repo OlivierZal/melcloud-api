@@ -106,7 +106,7 @@ const createDevice = (
 
 const mockApi = {
   fetch: vi.fn().mockResolvedValue([]),
-  onSync: vi.fn().mockResolvedValue(),
+  onSync: vi.fn().mockResolvedValue(undefined),
 } as unknown as APIAdapter
 
 const createFacade = (

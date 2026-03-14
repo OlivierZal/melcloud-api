@@ -23,6 +23,7 @@ const buildingData: BuildingData = {
   ID: 1,
   Location: 10,
   Name: 'Building',
+  TimeZone: 0,
 }
 
 const floorData: FloorData = { BuildingId: 1, ID: 10, Name: 'Floor' }
@@ -34,7 +35,7 @@ const areaData: AreaDataAny = {
   Name: 'Area',
 }
 
-const deviceData: ListDeviceAny = {
+const deviceData = {
   AreaID: 100,
   BuildingID: 1,
   Device: {
@@ -62,7 +63,7 @@ const deviceData: ListDeviceAny = {
   DeviceName: 'Device ATA',
   FloorID: 10,
   Type: DeviceType.Ata,
-}
+} as ListDeviceAny
 
 const mockApi = {} as Parameters<typeof FacadeManager.prototype.get>[0] extends
   infer _T

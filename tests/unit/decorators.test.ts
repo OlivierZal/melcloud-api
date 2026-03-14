@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { APIAdapter } from '../../src/services/index.ts'
-import type { ListDeviceDataAta, SetDeviceDataAta } from '../../src/types/index.ts'
+import type { SetDeviceDataAta } from '../../src/types/index.ts'
 
 import { FLAG_UNCHANGED } from '../../src/constants.ts'
 import { fetchDevices, syncDevices, updateDevice, updateDevices } from '../../src/decorators/index.ts'

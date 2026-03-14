@@ -23,6 +23,7 @@ const buildingData: BuildingData[] = [
     ID: 1,
     Location: 10,
     Name: 'Building 1',
+    TimeZone: 0,
   },
   {
     FPDefined: false,
@@ -36,6 +37,7 @@ const buildingData: BuildingData[] = [
     ID: 2,
     Location: 20,
     Name: 'Building 2',
+    TimeZone: 0,
   },
 ]
 
@@ -60,7 +62,7 @@ const deviceData: ListDeviceAny[] = [
     DeviceName: 'Device ATA',
     FloorID: 10,
     Type: DeviceType.Ata,
-  },
+  } as ListDeviceAny,
   {
     AreaID: 102,
     BuildingID: 2,
@@ -69,7 +71,7 @@ const deviceData: ListDeviceAny[] = [
     DeviceName: 'Device ATW',
     FloorID: 12,
     Type: DeviceType.Atw,
-  },
+  } as ListDeviceAny,
   {
     AreaID: null,
     BuildingID: 1,
@@ -78,7 +80,7 @@ const deviceData: ListDeviceAny[] = [
     DeviceName: 'Device ERV',
     FloorID: null,
     Type: DeviceType.Erv,
-  },
+  } as ListDeviceAny,
 ]
 
 const createPopulatedRegistry = (): ModelRegistry => {
