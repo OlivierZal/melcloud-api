@@ -4,6 +4,7 @@ import { DeviceType } from '../enums.ts'
 import {
   type IDeviceModelAny,
   type IModel,
+  type ModelRegistry,
   AreaModel,
   BuildingModel,
   DeviceModel,
@@ -22,38 +23,43 @@ import { FloorFacade } from './floor.ts'
 
 const createDeviceFacade = (
   api: IAPI,
+  registry: ModelRegistry,
   instance: IDeviceModelAny,
 ): IDeviceFacadeAny => {
   switch (instance.type) {
     case DeviceType.Ata: {
-      return new DeviceAtaFacade(api, instance)
+      return new DeviceAtaFacade(api, registry, instance)
     }
     case DeviceType.Atw: {
       if (instance.data.HasZone2) {
-        return new DeviceAtwHasZone2Facade(api, instance)
+        return new DeviceAtwHasZone2Facade(api, registry, instance)
       }
-      return new DeviceAtwFacade(api, instance)
+      return new DeviceAtwFacade(api, registry, instance)
     }
     case DeviceType.Erv: {
-      return new DeviceErvFacade(api, instance)
+      return new DeviceErvFacade(api, registry, instance)
     }
     // No default
   }
 }
 
-export const createFacade = (api: IAPI, instance: IModel): IFacade => {
+export const createFacade = (
+  api: IAPI,
+  registry: ModelRegistry,
+  instance: IModel,
+): IFacade => {
   if (instance instanceof AreaModel) {
-    return new AreaFacade(api, instance)
+    return new AreaFacade(api, registry, instance)
   }
   if (instance instanceof BuildingModel) {
-    return new BuildingFacade(api, instance)
+    return new BuildingFacade(api, registry, instance)
   }
   if (instance instanceof DeviceModel) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModel instances are always one of the three DeviceType variants
-    return createDeviceFacade(api, instance as IDeviceModelAny)
+    return createDeviceFacade(api, registry, instance as IDeviceModelAny)
   }
   if (instance instanceof FloorModel) {
-    return new FloorFacade(api, instance)
+    return new FloorFacade(api, registry, instance)
   }
   throw new Error('Model not supported')
 }

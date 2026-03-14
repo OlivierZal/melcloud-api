@@ -1,7 +1,12 @@
 import { DateTime } from 'luxon'
 
 import type { DeviceType } from '../enums.ts'
-import type { IDeviceModel, IDeviceModelAny, IModel } from '../models/index.ts'
+import type {
+  IDeviceModel,
+  IDeviceModelAny,
+  IModel,
+  ModelRegistry,
+} from '../models/index.ts'
 import type { ErrorLog, ErrorLogQuery, IAPI } from '../services/index.ts'
 import type {
   DateTimeComponents,
@@ -47,6 +52,8 @@ export abstract class BaseFacade<T extends IModel> implements IFacade {
 
   protected readonly api: IAPI
 
+  protected readonly registry: ModelRegistry
+
   protected isFrostProtectionDefined: boolean | null = null
 
   protected isHolidayModeDefined: boolean | null = null
@@ -61,8 +68,9 @@ export abstract class BaseFacade<T extends IModel> implements IFacade {
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(api: IAPI, instance: T) {
+  public constructor(api: IAPI, registry: ModelRegistry, instance: T) {
     this.api = api
+    this.registry = registry
     ;({ id: this.id } = instance)
   }
 

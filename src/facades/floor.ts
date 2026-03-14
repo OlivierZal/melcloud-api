@@ -1,4 +1,4 @@
-import { type IFloorModel, FloorModel } from '../models/index.ts'
+import type { IDeviceModelAny, IFloorModel } from '../models/index.ts'
 
 import type { ISuperDeviceFacade } from './interfaces.ts'
 
@@ -12,9 +12,15 @@ export class FloorFacade
 
   protected readonly holidayModeLocation = 'Floors'
 
-  protected readonly model = FloorModel
-
   protected readonly specification = 'FloorID'
 
   protected readonly tableName = 'Floor'
+
+  public override get devices(): IDeviceModelAny[] {
+    return this.registry.getDevicesByFloorId(this.id)
+  }
+
+  protected get model(): { getById: (id: number) => IFloorModel | undefined } {
+    return this.registry.floors
+  }
 }

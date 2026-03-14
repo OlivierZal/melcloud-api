@@ -54,12 +54,7 @@ import {
   APICallResponseData,
   createAPICallErrorData,
 } from '../logging/index.ts'
-import {
-  AreaModel,
-  BuildingModel,
-  DeviceModel,
-  FloorModel,
-} from '../models/index.ts'
+import { ModelRegistry } from '../models/index.ts'
 import { now } from '../utils.ts'
 
 import { DisposableTimeout } from './disposable-timeout.ts'
@@ -166,6 +161,8 @@ export class API implements Disposable, IAPI {
 
   readonly #logger: Logger
 
+  readonly #registry = new ModelRegistry()
+
   readonly #retryTimeout = new DisposableTimeout()
 
   readonly #syncTimeout = new DisposableTimeout()
@@ -212,6 +209,10 @@ export class API implements Disposable, IAPI {
 
   @setting
   private accessor username = ''
+
+  public get registry(): ModelRegistry {
+    return this.#registry
+  }
 
   private get language(): string {
     return this.#language
@@ -268,7 +269,7 @@ export class API implements Disposable, IAPI {
 
   public async errorLog(
     query: ErrorLogQuery,
-    deviceIds = DeviceModel.getAll().map(({ id }) => id),
+    deviceIds = this.#registry.getAllDevices().map(({ id }) => id),
   ): Promise<ErrorLog> {
     const { fromDate, period, toDate } = handleErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
@@ -287,7 +288,7 @@ export class API implements Disposable, IAPI {
               : DateTime.fromISO(startDate).toLocaleString(
                   DateTime.DATETIME_MED,
                 ),
-            device: DeviceModel.getById(deviceId)?.name ?? '',
+            device: this.#registry.getDeviceById(deviceId)?.name ?? '',
             error: errorMessage?.trim() ?? '',
           }),
         )
@@ -542,15 +543,17 @@ export class API implements Disposable, IAPI {
 
   async #fetch(): Promise<Building[]> {
     const { data } = await this.list()
-    BuildingModel.sync(data)
-    FloorModel.sync(data.flatMap(({ Structure: { Floors: floors } }) => floors))
-    AreaModel.sync(
+    this.#registry.syncBuildings(data)
+    this.#registry.syncFloors(
+      data.flatMap(({ Structure: { Floors: floors } }) => floors),
+    )
+    this.#registry.syncAreas(
       data.flatMap(({ Structure: { Areas: areas, Floors: floors } }) => [
         ...areas,
         ...floors.flatMap(({ Areas: floorAreas }) => floorAreas),
       ]),
     )
-    DeviceModel.sync(
+    this.#registry.syncDevices(
       data.flatMap(
         ({ Structure: { Areas: areas, Devices: devices, Floors: floors } }) => [
           ...devices,

@@ -1,6 +1,7 @@
 import type { HourNumbers } from 'luxon'
 
 import type { DeviceType, Language } from '../enums.ts'
+import type { ModelRegistry } from '../models/index.ts'
 import type {
   Building,
   EnergyData,
@@ -78,6 +79,7 @@ export interface ErrorLogQuery {
 }
 
 export interface IAPI {
+  readonly registry: ModelRegistry
   readonly onSync?: OnSyncFunction
   readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
   readonly clearSync: () => void

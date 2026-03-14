@@ -1,7 +1,6 @@
 import type {
   IAreaModel,
   IBuildingModel,
-  IDeviceModelAny,
   IFloorModel,
 } from '../models/index.ts'
 import type {
@@ -25,10 +24,6 @@ export abstract class BaseSuperDeviceFacade<
   implements ISuperDeviceFacade
 {
   protected abstract readonly specification: keyof SetGroupPostData['Specification']
-
-  public get devices(): IDeviceModelAny[] {
-    return this.instance.devices
-  }
 
   @updateDevices({ type: DeviceType.Ata })
   public async group(): Promise<GroupState> {

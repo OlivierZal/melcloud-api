@@ -6,6 +6,7 @@ import type {
   IDeviceModelAny,
   IFloorModel,
   IModel,
+  ModelRegistry,
 } from '../models/index.ts'
 import type { IAPI } from '../services/index.ts'
 
@@ -23,10 +24,13 @@ import { createFacade } from './factory.ts'
 export class FacadeManager implements IFacadeManager {
   readonly #api: IAPI
 
-  readonly #facades = new Map<string, IFacade>()
+  readonly #facades = new WeakMap<IModel, IFacade>()
 
-  public constructor(api: IAPI) {
+  readonly #registry: ModelRegistry
+
+  public constructor(api: IAPI, registry: ModelRegistry) {
     this.#api = api
+    this.#registry = registry
   }
 
   public get<T extends DeviceType>(instance: IDeviceModel<T>): IDeviceFacade<T>
@@ -43,15 +47,13 @@ export class FacadeManager implements IFacadeManager {
   public get(instance?: IDeviceModelAny): IDeviceFacadeAny | null
   public get(instance?: IModel): IFacade | null {
     if (instance) {
-      const {
-        constructor: { name },
-        id,
-      } = instance
-      const facadeId = `${name}:${String(id)}`
-      if (!this.#facades.has(facadeId)) {
-        this.#facades.set(facadeId, createFacade(this.#api, instance))
+      if (!this.#facades.has(instance)) {
+        this.#facades.set(
+          instance,
+          createFacade(this.#api, this.#registry, instance),
+        )
       }
-      return this.#facades.get(facadeId) ?? null
+      return this.#facades.get(instance) ?? null
     }
     return null
   }

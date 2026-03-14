@@ -106,6 +106,7 @@ export {
   BuildingModel,
   DeviceModel,
   FloorModel,
+  ModelRegistry,
 } from './models/index.ts'
 export {
   type APIConfig,

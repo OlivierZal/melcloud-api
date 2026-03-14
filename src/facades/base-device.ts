@@ -17,6 +17,7 @@ import { DeviceType } from '../enums.ts'
 import {
   type IDeviceModel,
   type IDeviceModelAny,
+  type ModelRegistry,
   DeviceModel,
 } from '../models/index.ts'
 import { typedKeys } from '../type-helpers.ts'
@@ -63,17 +64,15 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   protected readonly internalTemperaturesLegend: (string | undefined)[] = []
 
-  protected readonly model = DeviceModel<T>
-
   protected readonly tableName = 'DeviceLocation'
 
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
   protected abstract readonly temperaturesLegend: (string | undefined)[]
 
-  public constructor(api: IAPI, instance: IDeviceModel<T>) {
+  public constructor(api: IAPI, registry: ModelRegistry, instance: IDeviceModel<T>) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- IDeviceModel<T> is a member of IDeviceModelAny union
-    super(api, instance as IDeviceModelAny)
+    super(api, registry, instance as IDeviceModelAny)
     ;({ type: this.type } = instance)
   }
 
@@ -84,6 +83,10 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public get data(): ListDeviceData<T> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- instance.type === this.type guarantees the narrowing
     return this.instance.data as ListDeviceData<T>
+  }
+
+  protected get model(): { getById: (id: number) => IDeviceModelAny | undefined } {
+    return this.registry.devices
   }
 
   protected get setData(): Required<UpdateDeviceData<T>> {
@@ -203,7 +206,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     const { data } = await this.api.temperatures({
       postData: {
         ...this.#getReportPostData(query, useExactRange),
-        Location: this.instance.building?.location,
+        Location: this.registry.buildings.getById(this.instance.buildingId)
+          ?.location,
       },
     })
     return getChartLineOptions(data, this.temperaturesLegend, '°C')
