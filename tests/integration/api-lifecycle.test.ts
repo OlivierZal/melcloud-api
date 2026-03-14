@@ -39,22 +39,15 @@ const buildingResponse: Building[] = [
     ID: 1,
     Location: 0,
     Name: 'Home',
-    TimeZone: 1,
     Structure: {
       Areas: [],
       Devices: [],
       Floors: [
         {
           AreaCount: 1,
-          BuildingId: 1,
-          ID: 10,
-          Name: 'Ground floor',
           Areas: [
             {
               BuildingId: 1,
-              FloorId: 10,
-              ID: 100,
-              Name: 'Living room',
               Devices: [
                 {
                   AreaID: 100,
@@ -66,12 +59,19 @@ const buildingResponse: Building[] = [
                   Type: DeviceType.Ata,
                 },
               ],
+              FloorId: 10,
+              ID: 100,
+              Name: 'Living room',
             },
           ],
+          BuildingId: 1,
           Devices: [],
+          ID: 10,
+          Name: 'Ground floor',
         },
       ],
     },
+    TimeZone: 1,
   },
 ]
 
@@ -122,6 +122,7 @@ describe('API lifecycle', () => {
     expect(api.registry.getDevicesByAreaId(100)).toHaveLength(1)
 
     const device = api.registry.devices.getById(1001)
+
     expect(device).toBeDefined()
     expect(device!.name).toBe('AC unit')
     expect(device!.type).toBe(DeviceType.Ata)
@@ -133,6 +134,7 @@ describe('API lifecycle', () => {
 
     const building = api.registry.buildings.getById(1)!
     const facade = manager.get(building)
+
     expect(facade.name).toBe('Home')
     expect(facade.devices).toHaveLength(1)
     expect(facade.devices[0]!.name).toBe('AC unit')
@@ -141,6 +143,7 @@ describe('API lifecycle', () => {
   it('authenticate → fetch → registry reflects updated data', async () => {
     mockAxiosInstance.get.mockResolvedValue({ data: [] })
     const api = await MELCloudAPI.create({ autoSyncInterval: 0 })
+
     expect(api.registry.getDevices()).toHaveLength(0)
 
     // Simulate authentication returning login data
@@ -152,7 +155,7 @@ describe('API lifecycle', () => {
     // After auth, fetch returns buildings
     mockAxiosInstance.get.mockResolvedValue({ data: buildingResponse })
 
-    await api.authenticate({ username: 'user@test.com', password: 'pass' })
+    await api.authenticate({ password: 'pass', username: 'user@test.com' })
 
     // Registry should now be populated after the post-auth fetch
     expect(api.registry.getDevices()).toHaveLength(1)
@@ -180,7 +183,7 @@ describe('API lifecycle', () => {
       settingManager,
     })
 
-    await api.authenticate({ username: 'me@test.com', password: 'secret' })
+    await api.authenticate({ password: 'secret', username: 'me@test.com' })
 
     // Verify credentials were persisted
     expect(settingManager.set).toHaveBeenCalledWith('username', 'me@test.com')
@@ -194,6 +197,7 @@ describe('API lifecycle', () => {
 
   it('re-sync replaces registry data', async () => {
     const api = await MELCloudAPI.create({ autoSyncInterval: 0 })
+
     expect(api.registry.getDevices()).toHaveLength(1)
 
     // Next fetch returns empty buildings
@@ -205,7 +209,7 @@ describe('API lifecycle', () => {
   })
 
   it('onSync callback is invoked after fetch', async () => {
-    const onSync = vi.fn().mockResolvedValue(undefined)
+    const onSync = vi.fn().mockResolvedValue()
     await MELCloudAPI.create({ autoSyncInterval: 0, onSync })
 
     expect(onSync).toHaveBeenCalled()

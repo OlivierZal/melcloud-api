@@ -457,7 +457,7 @@ const config = defineConfig([
   },
   {
     extends: [vitest.configs.all],
-    files: ['src/**/__tests__/**'],
+    files: ['tests/**'],
     rules: {
       '@typescript-eslint/consistent-type-assertions': 'off',
       '@typescript-eslint/consistent-type-imports': 'off',

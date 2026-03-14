@@ -54,9 +54,9 @@ const atwDeviceData: ListDeviceDataAtw = {
   SetCoolFlowTemperatureZone2: 25,
   SetHeatFlowTemperatureZone1: 40,
   SetHeatFlowTemperatureZone2: 35,
+  SetTankWaterTemperature: 50,
   SetTemperatureZone1: 22,
   SetTemperatureZone2: 20,
-  SetTankWaterTemperature: 50,
   TankWaterTemperature: 48,
 } as ListDeviceDataAtw
 
@@ -169,7 +169,7 @@ const createMockApi = (): APIAdapter =>
     holidayMode: vi.fn().mockResolvedValue({ data: { HMEnabled: false } }),
     hourlyTemperatures: vi.fn(),
     internalTemperatures: vi.fn(),
-    onSync: vi.fn().mockResolvedValue(undefined),
+    onSync: vi.fn().mockResolvedValue(),
     operationModes: vi.fn(),
     setFrostProtection: vi
       .fn()
@@ -179,7 +179,7 @@ const createMockApi = (): APIAdapter =>
     setPower: vi.fn().mockResolvedValue({ data: true }),
     setValues: vi.fn(),
     signal: vi.fn().mockResolvedValue({
-      data: { Labels: ['12:00'], Data: [[{ Data: [-60], Name: 'Device' }]] },
+      data: { Data: [[{ Data: [-60], Name: 'Device' }]], Labels: ['12:00'] },
     }),
     temperatures: vi.fn(),
     tiles: vi.fn().mockResolvedValue({ data: {} }),
@@ -254,6 +254,7 @@ describe('registry + facade manager integration', () => {
     const manager = new FacadeManager(api, registry)
 
     const building = registry.buildings.getById(1)!
+
     expect(manager.get(building)).toBe(manager.get(building))
   })
 
@@ -301,6 +302,7 @@ describe('registry + facade manager integration', () => {
 
     const building = registry.buildings.getById(2)!
     const facade = manager.get(building)
+
     expect(facade.devices).toHaveLength(1)
 
     // Add a new device to building 2
