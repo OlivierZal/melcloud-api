@@ -14,8 +14,13 @@ describe('typedKeys', () => {
   })
 
   it('returns keys preserving their insertion order', () => {
-    // Intentionally unsorted to verify insertion order
-    const object = { zulu: 0, alpha: 1, mike: 2 } // eslint-disable-line perfectionist/sort-objects -- testing insertion order
+    const object = {
+      zulu: 0,
+      // Intentionally unsorted
+      alpha: 1,
+      // To verify insertion order
+      mike: 2,
+    }
 
     expect(typedKeys(object)).toStrictEqual(['zulu', 'alpha', 'mike'])
   })
