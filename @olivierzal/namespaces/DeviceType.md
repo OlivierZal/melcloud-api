@@ -10,7 +10,7 @@
 type Ata = (typeof DeviceType)['Ata']
 ```
 
-Defined in: [enums.ts:11](https://github.com/OlivierZal/melcloud-api/blob/0ba21daaefe779915661d924c88eb79402491b33/src/enums.ts#L11)
+Defined in: [enums.ts:11](https://github.com/OlivierZal/melcloud-api/blob/082a48f69b27b605c0c0d4c21ab8751d16f75e32/src/enums.ts#L11)
 
 ---
 
@@ -20,7 +20,7 @@ Defined in: [enums.ts:11](https://github.com/OlivierZal/melcloud-api/blob/0ba21d
 type Atw = (typeof DeviceType)['Atw']
 ```
 
-Defined in: [enums.ts:13](https://github.com/OlivierZal/melcloud-api/blob/0ba21daaefe779915661d924c88eb79402491b33/src/enums.ts#L13)
+Defined in: [enums.ts:13](https://github.com/OlivierZal/melcloud-api/blob/082a48f69b27b605c0c0d4c21ab8751d16f75e32/src/enums.ts#L13)
 
 ---
 
@@ -30,4 +30,4 @@ Defined in: [enums.ts:13](https://github.com/OlivierZal/melcloud-api/blob/0ba21d
 type Erv = (typeof DeviceType)['Erv']
 ```
 
-Defined in: [enums.ts:15](https://github.com/OlivierZal/melcloud-api/blob/0ba21daaefe779915661d924c88eb79402491b33/src/enums.ts#L15)
+Defined in: [enums.ts:15](https://github.com/OlivierZal/melcloud-api/blob/082a48f69b27b605c0c0d4c21ab8751d16f75e32/src/enums.ts#L15)
