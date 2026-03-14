@@ -9,11 +9,12 @@ import type {
   ListDeviceDataAtw,
 } from '../../src/types/index.ts'
 
-import { DeviceType } from '../../src/enums.ts'
+import { DeviceType } from '../../src/constants.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
+import { mock } from '../helpers.ts'
 
-const ataData = { EffectiveFlags: 0 } as ListDeviceDataAta
-const atwData = { EffectiveFlags: 0, HasZone2: false } as ListDeviceDataAtw
+const ataData = mock<ListDeviceDataAta>({ EffectiveFlags: 0 })
+const atwData = mock<ListDeviceDataAtw>({ EffectiveFlags: 0, HasZone2: false })
 
 const buildings: BuildingData[] = [
   {
@@ -46,9 +47,7 @@ const buildings: BuildingData[] = [
   },
 ]
 
-const floors: FloorData[] = [
-  { BuildingId: 1, ID: 10, Name: 'Ground floor' },
-]
+const floors: FloorData[] = [{ BuildingId: 1, ID: 10, Name: 'Ground floor' }]
 
 const areas: AreaDataAny[] = [
   { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Salon' },

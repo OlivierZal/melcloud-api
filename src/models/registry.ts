@@ -1,4 +1,3 @@
-import type { DeviceType } from '../enums.ts'
 import type {
   AreaDataAny,
   AreaZone,
@@ -11,6 +10,8 @@ import type {
   Zone,
 } from '../types/index.ts'
 
+import { DeviceType } from '../constants.ts'
+
 import type {
   AreaModel as AreaModelContract,
   BuildingModel as BuildingModelContract,
@@ -22,6 +23,23 @@ import { AreaModel } from './area.ts'
 import { BuildingModel } from './building.ts'
 import { DeviceModel } from './device.ts'
 import { FloorModel } from './floor.ts'
+
+const createDeviceModel = (device: ListDeviceAny): DeviceModelAny => {
+  switch (device.Type) {
+    case DeviceType.Ata: {
+      return new DeviceModel(device)
+    }
+    case DeviceType.Atw: {
+      return new DeviceModel(device)
+    }
+    case DeviceType.Erv: {
+      return new DeviceModel(device)
+    }
+    default: {
+      throw new Error(`Unsupported device type: ${String(device.Type)}`)
+    }
+  }
+}
 
 const BUILDING_LEVEL = 0
 const CHILD_LEVEL = 1
@@ -38,9 +56,9 @@ const buildDeviceZones = (
   type?: DeviceType,
 ): DeviceZone[] => {
   const filtered =
-    type === undefined ?
-      devices
-    : devices.filter(({ type: deviceType }) => deviceType === type)
+    type === undefined ? devices : (
+      devices.filter(({ type: deviceType }) => deviceType === type)
+    )
   return filtered
     .map(({ areaId, floorId, id, name }) => ({
       id,
@@ -196,7 +214,10 @@ export class ModelRegistry {
       this.#areas.set(area.ID, model)
       return model
     })
-    this.#areasByBuildingId = Map.groupBy(models, ({ buildingId }) => buildingId)
+    this.#areasByBuildingId = Map.groupBy(
+      models,
+      ({ buildingId }) => buildingId,
+    )
     this.#areasByFloorId = Map.groupBy(
       models.filter(
         (model): model is AreaModelContract & { floorId: number } =>
@@ -216,8 +237,7 @@ export class ModelRegistry {
   public syncDevices(devices: readonly ListDeviceAny[]): void {
     this.#devices.clear()
     const models = devices.map((device) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModel instances are always one of the three DeviceType variants
-      const model = new DeviceModel(device) as DeviceModelAny
+      const model = createDeviceModel(device)
       this.#devices.set(device.DeviceID, model)
       return model
     })
@@ -262,10 +282,7 @@ export class ModelRegistry {
     return areas
       .filter((area) => this.#hasDevices(area.id, 'area', type))
       .map((area) => ({
-        devices: buildDeviceZones(
-          this.getDevicesByAreaId(area.id),
-          type,
-        ),
+        devices: buildDeviceZones(this.getDevicesByAreaId(area.id), type),
         id: area.id,
         level,
         model: 'areas' as const,

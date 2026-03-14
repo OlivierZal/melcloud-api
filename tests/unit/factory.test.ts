@@ -3,11 +3,12 @@ import { describe, expect, it } from 'vitest'
 import type { APIAdapter } from '../../src/services/index.ts'
 import type { ListDeviceAny } from '../../src/types/index.ts'
 
-import { DeviceType } from '../../src/enums.ts'
+import { DeviceType } from '../../src/constants.ts'
 import { createFacade } from '../../src/facades/factory.ts'
 import { type Model, ModelRegistry } from '../../src/models/index.ts'
+import { mock } from '../helpers.ts'
 
-const mockApi = {} as APIAdapter
+const mockApi = mock<APIAdapter>()
 
 const buildingData = {
   FPDefined: true,
@@ -33,15 +34,15 @@ const areaData = {
   Name: 'Area',
 } as const
 
-const deviceListData = {
+const deviceListData = mock<ListDeviceAny>({
   AreaID: null,
   BuildingID: 1,
-  Device: {} as ListDeviceAny['Device'],
+  Device: mock<ListDeviceAny['Device']>(),
   DeviceID: 1000,
   DeviceName: 'ATA',
   FloorID: null,
   Type: DeviceType.Ata,
-} as ListDeviceAny
+})
 
 describe('createFacade', () => {
   it('creates a BuildingFacade for BuildingModel instances', () => {
@@ -86,11 +87,11 @@ describe('createFacade', () => {
   it('creates a DeviceAtwFacade for ATW devices without zone2', () => {
     const registry = new ModelRegistry()
     registry.syncDevices([
-      {
+      mock<ListDeviceAny>({
         ...deviceListData,
-        Device: { HasZone2: false } as ListDeviceAny['Device'],
+        Device: mock<ListDeviceAny['Device']>({ HasZone2: false }),
         Type: DeviceType.Atw,
-      } as ListDeviceAny,
+      }),
     ])
     const instance = registry.devices.getById(1000)!
     const facade = createFacade(mockApi, registry, instance)
@@ -101,11 +102,11 @@ describe('createFacade', () => {
   it('creates a DeviceAtwHasZone2Facade for ATW devices with zone2', () => {
     const registry = new ModelRegistry()
     registry.syncDevices([
-      {
+      mock<ListDeviceAny>({
         ...deviceListData,
-        Device: { HasZone2: true } as ListDeviceAny['Device'],
+        Device: mock<ListDeviceAny['Device']>({ HasZone2: true }),
         Type: DeviceType.Atw,
-      } as ListDeviceAny,
+      }),
     ])
     const instance = registry.devices.getById(1000)!
     const facade = createFacade(mockApi, registry, instance)
@@ -116,11 +117,11 @@ describe('createFacade', () => {
   it('creates a DeviceErvFacade for ERV devices', () => {
     const registry = new ModelRegistry()
     registry.syncDevices([
-      {
+      mock<ListDeviceAny>({
         ...deviceListData,
-        Device: {} as ListDeviceAny['Device'],
+        Device: mock<ListDeviceAny['Device']>(),
         Type: DeviceType.Erv,
-      } as ListDeviceAny,
+      }),
     ])
     const instance = registry.devices.getById(1000)!
     const facade = createFacade(mockApi, registry, instance)
@@ -130,7 +131,7 @@ describe('createFacade', () => {
 
   it('throws for unsupported model types', () => {
     const registry = new ModelRegistry()
-    const unknown = { id: 1, name: 'unknown' } as Model
+    const unknown = mock<Model>({ id: 1, name: 'unknown' })
 
     expect(() => createFacade(mockApi, registry, unknown)).toThrow(
       'Model not supported',

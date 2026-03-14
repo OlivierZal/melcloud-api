@@ -7,8 +7,9 @@ import type {
   ListDeviceAny,
 } from '../../src/types/index.ts'
 
-import { DeviceType } from '../../src/enums.ts'
+import { DeviceType } from '../../src/constants.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
+import { mock } from '../helpers.ts'
 
 const buildingData: BuildingData[] = [
   {
@@ -54,33 +55,33 @@ const areaData: AreaDataAny[] = [
 ]
 
 const deviceData: ListDeviceAny[] = [
-  {
+  mock<ListDeviceAny>({
     AreaID: 100,
     BuildingID: 1,
-    Device: {} as ListDeviceAny['Device'],
+    Device: mock<ListDeviceAny['Device']>(),
     DeviceID: 1000,
     DeviceName: 'Device ATA',
     FloorID: 10,
     Type: DeviceType.Ata,
-  } as ListDeviceAny,
-  {
+  }),
+  mock<ListDeviceAny>({
     AreaID: 102,
     BuildingID: 2,
-    Device: {} as ListDeviceAny['Device'],
+    Device: mock<ListDeviceAny['Device']>(),
     DeviceID: 1001,
     DeviceName: 'Device ATW',
     FloorID: 12,
     Type: DeviceType.Atw,
-  } as ListDeviceAny,
-  {
+  }),
+  mock<ListDeviceAny>({
     AreaID: null,
     BuildingID: 1,
-    Device: {} as ListDeviceAny['Device'],
+    Device: mock<ListDeviceAny['Device']>(),
     DeviceID: 1002,
     DeviceName: 'Device ERV',
     FloorID: null,
     Type: DeviceType.Erv,
-  } as ListDeviceAny,
+  }),
 ]
 
 const createPopulatedRegistry = (): ModelRegistry => {

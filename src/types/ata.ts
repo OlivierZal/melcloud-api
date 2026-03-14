@@ -4,7 +4,7 @@ import type {
   Horizontal,
   OperationMode,
   Vertical,
-} from '../enums.ts'
+} from '../constants.ts'
 
 import type {
   BaseListDeviceData,
@@ -60,7 +60,7 @@ export interface ListDeviceDataAta
   extends
     BaseListDeviceData,
     Omit<
-      GetDeviceData<DeviceType.Ata>,
+      GetDeviceData<typeof DeviceType.Ata>,
       KeyOfSetDeviceDataAtaNotInList | keyof DeviceDataNotInList
     >,
     SetDeviceDataAtaInList {
@@ -77,7 +77,7 @@ export interface ListDeviceDataAta
 
 export interface SetDeviceDataAta
   extends BaseSetDeviceData, Required<UpdateDeviceDataAta> {
-  readonly DeviceType: DeviceType.Ata
+  readonly DeviceType: typeof DeviceType.Ata
   readonly NumberOfFanSpeeds: number
   readonly RoomTemperature: number
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import type { APIAdapter } from '../../src/services/index.ts'
 import type {
   AreaDataAny,
   BuildingData,
@@ -7,9 +8,10 @@ import type {
   ListDeviceAny,
 } from '../../src/types/index.ts'
 
-import { DeviceType } from '../../src/enums.ts'
+import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
+import { mock } from '../helpers.ts'
 
 const buildingData: BuildingData = {
   FPDefined: true,
@@ -35,10 +37,10 @@ const areaData: AreaDataAny = {
   Name: 'Area',
 }
 
-const deviceData = {
+const deviceData = mock<ListDeviceAny>({
   AreaID: 100,
   BuildingID: 1,
-  Device: {
+  Device: mock<ListDeviceAny['Device']>({
     ActualFanSpeed: 3,
     EffectiveFlags: 0,
     FanSpeed: 3,
@@ -58,17 +60,12 @@ const deviceData = {
     VaneHorizontalDirection: 0,
     VaneVerticalDirection: 0,
     WifiSignalStrength: -50,
-  } as ListDeviceAny['Device'],
+  }),
   DeviceID: 1000,
   DeviceName: 'Device ATA',
   FloorID: 10,
   Type: DeviceType.Ata,
-} as ListDeviceAny
-
-const mockApi = {} as Parameters<typeof FacadeManager.prototype.get>[0] extends
-  infer _T
-  ? ConstructorParameters<typeof FacadeManager>[0]
-  : never
+})
 
 const createPopulatedRegistry = (): ModelRegistry => {
   const registry = new ModelRegistry()
@@ -82,14 +79,14 @@ const createPopulatedRegistry = (): ModelRegistry => {
 describe('facadeManager', () => {
   it('returns null when no instance is provided', () => {
     const registry = new ModelRegistry()
-    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const manager = new FacadeManager(mock<APIAdapter>(), registry)
 
     expect(manager.get()).toBeNull()
   })
 
   it('returns a facade for a building instance', () => {
     const registry = createPopulatedRegistry()
-    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const manager = new FacadeManager(mock<APIAdapter>(), registry)
     const building = registry.buildings.getById(1)!
     const facade = manager.get(building)
 
@@ -100,7 +97,7 @@ describe('facadeManager', () => {
 
   it('returns a facade for a floor instance', () => {
     const registry = createPopulatedRegistry()
-    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const manager = new FacadeManager(mock<APIAdapter>(), registry)
     const floor = registry.floors.getById(10)!
     const facade = manager.get(floor)
 
@@ -110,7 +107,7 @@ describe('facadeManager', () => {
 
   it('returns a facade for an area instance', () => {
     const registry = createPopulatedRegistry()
-    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const manager = new FacadeManager(mock<APIAdapter>(), registry)
     const area = registry.areas.getById(100)!
     const facade = manager.get(area)
 
@@ -120,7 +117,7 @@ describe('facadeManager', () => {
 
   it('returns a facade for a device instance', () => {
     const registry = createPopulatedRegistry()
-    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const manager = new FacadeManager(mock<APIAdapter>(), registry)
     const device = registry.devices.getById(1000)!
     const facade = manager.get(device)
 
@@ -130,7 +127,7 @@ describe('facadeManager', () => {
 
   it('caches facades for the same instance', () => {
     const registry = createPopulatedRegistry()
-    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const manager = new FacadeManager(mock<APIAdapter>(), registry)
     const building = registry.buildings.getById(1)!
     const facade1 = manager.get(building)
     const facade2 = manager.get(building)
@@ -140,7 +137,7 @@ describe('facadeManager', () => {
 
   it('returns buildings via getBuildings', () => {
     const registry = createPopulatedRegistry()
-    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const manager = new FacadeManager(mock<APIAdapter>(), registry)
     const buildings = manager.getBuildings()
 
     expect(buildings).toHaveLength(1)
@@ -149,7 +146,7 @@ describe('facadeManager', () => {
 
   it('filters buildings by device type via getBuildings', () => {
     const registry = createPopulatedRegistry()
-    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const manager = new FacadeManager(mock<APIAdapter>(), registry)
 
     expect(manager.getBuildings({ type: DeviceType.Ata })).toHaveLength(1)
     expect(manager.getBuildings({ type: DeviceType.Atw })).toHaveLength(0)
@@ -157,7 +154,7 @@ describe('facadeManager', () => {
 
   it('returns zones via getZones', () => {
     const registry = createPopulatedRegistry()
-    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const manager = new FacadeManager(mock<APIAdapter>(), registry)
     const zones = manager.getZones()
 
     expect(zones.length).toBeGreaterThan(0)
@@ -165,7 +162,7 @@ describe('facadeManager', () => {
 
   it('filters zones by device type via getZones', () => {
     const registry = createPopulatedRegistry()
-    const manager = new FacadeManager({} as typeof mockApi, registry)
+    const manager = new FacadeManager(mock<APIAdapter>(), registry)
 
     expect(manager.getZones({ type: DeviceType.Ata }).length).toBeGreaterThan(0)
     expect(manager.getZones({ type: DeviceType.Atw })).toHaveLength(0)

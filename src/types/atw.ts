@@ -4,7 +4,7 @@ import type {
   OperationModeStateHotWater,
   OperationModeStateZone,
   OperationModeZone,
-} from '../enums.ts'
+} from '../constants.ts'
 
 import type {
   BaseListDeviceData,
@@ -27,7 +27,7 @@ export interface EnergyDataAtw {
 export interface ListDeviceDataAtw
   extends
     BaseListDeviceData,
-    Omit<GetDeviceData<DeviceType.Atw>, keyof DeviceDataNotInList> {
+    Omit<GetDeviceData<typeof DeviceType.Atw>, keyof DeviceDataNotInList> {
   readonly BoosterHeater1Status: boolean
   readonly BoosterHeater2PlusStatus: boolean
   readonly BoosterHeater2Status: boolean
@@ -64,7 +64,7 @@ export interface OperationModeZoneDataAtw {
 
 export interface SetDeviceDataAtw
   extends BaseSetDeviceData, Required<UpdateDeviceDataAtw> {
-  readonly DeviceType: DeviceType.Atw
+  readonly DeviceType: typeof DeviceType.Atw
   readonly IdleZone1: boolean
   readonly IdleZone2: boolean
   readonly OperationMode: OperationModeState

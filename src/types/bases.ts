@@ -1,5 +1,4 @@
-import type { FLAG_UNCHANGED } from '../constants.ts'
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 
 export interface BaseDevicePostData {
   readonly DeviceID: number

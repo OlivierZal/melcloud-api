@@ -49,27 +49,26 @@ import type {
   TilesPostData,
 } from '../types/index.ts'
 
+import { DeviceType, Language } from '../constants.ts'
 import { syncDevices } from '../decorators/index.ts'
-import { DeviceType, Language } from '../enums.ts'
 import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
 } from '../logging/index.ts'
 import { ModelRegistry } from '../models/index.ts'
-import { now } from '../utils.ts'
+
+import type {
+  API,
+  APIConfig,
+  ErrorLog,
+  ErrorLogQuery,
+  Logger,
+  OnSyncFunction,
+  SettingManager,
+} from './interfaces.ts'
 
 import { DisposableTimeout } from './disposable-timeout.ts'
-import {
-  type API,
-  type APIConfig,
-  type ErrorLog,
-  type ErrorLogQuery,
-  type Logger,
-  type OnSyncFunction,
-  type SettingManager,
-  isAPISetting,
-} from './interfaces.ts'
 
 const DEVICE_TYPE_NAMES: Record<DeviceType, string> = {
   [DeviceType.Ata]: 'Ata',
@@ -79,8 +78,7 @@ const DEVICE_TYPE_NAMES: Record<DeviceType, string> = {
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
-// eslint-disable-next-line @typescript-eslint/no-empty-function -- intentional noop for cooldown timers
-const noop = (): void => {}
+const noop = (): void => undefined
 
 const NO_SYNC_INTERVAL = 0
 const DEFAULT_SYNC_INTERVAL = 5
@@ -90,6 +88,14 @@ const DEFAULT_ERROR_LOG_OFFSET = 0
 const DEFAULT_ERROR_LOG_PERIOD = 1
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
+
+const toISODate = (dateTime: DateTime): string => {
+  const result = dateTime.toISODate()
+  if (result === null) {
+    throw new Error('Invalid DateTime: cannot convert to ISO date')
+  }
+  return result
+}
 
 /*
  * Accessor decorator that delegates storage to an external SettingManager
@@ -101,11 +107,6 @@ const setting = (
   context: ClassAccessorDecoratorContext<MELCloudAPI, string>,
 ): ClassAccessorDecoratorResult<MELCloudAPI, string> => {
   const key = String(context.name)
-  // eslint-disable-next-line capitalized-comments
-  /* v8 ignore next 3 */
-  if (!isAPISetting(key)) {
-    throw new Error(`Invalid setting: ${key}`)
-  }
   return {
     get(this: MELCloudAPI): string {
       return this.settingManager?.get(key) ?? target.get.call(this)
@@ -351,12 +352,8 @@ export class MELCloudAPI implements API, Disposable {
         .filter(({ date, error }) => Boolean(date && error))
         .toReversed(),
       fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
-      /* eslint-disable capitalized-comments, @stylistic/lines-around-comment */
-      /* v8 ignore next 2 */
-      nextFromDate: nextToDate.minus({ days: period }).toISODate() ?? '',
-      /* v8 ignore next */
-      nextToDate: nextToDate.toISODate() ?? '',
-      /* eslint-enable capitalized-comments, @stylistic/lines-around-comment */
+      nextFromDate: toISODate(nextToDate.minus({ days: period })),
+      nextToDate: toISODate(nextToDate),
     }
   }
 
@@ -592,12 +589,8 @@ export class MELCloudAPI implements API, Disposable {
     const { data } = await this.errors({
       postData: {
         DeviceIDs: deviceIds,
-        /* eslint-disable capitalized-comments, @stylistic/lines-around-comment */
-        /* v8 ignore next 2 */
-        FromDate: fromDate.toISODate() ?? undefined,
-        /* v8 ignore next */
-        ToDate: toDate.toISODate() ?? now(),
-        /* eslint-enable capitalized-comments, @stylistic/lines-around-comment */
+        FromDate: toISODate(fromDate),
+        ToDate: toISODate(toDate),
       },
     })
     if ('AttributeErrors' in data) {
@@ -669,12 +662,15 @@ export class MELCloudAPI implements API, Disposable {
     return response
   }
 
+  #handleSyncError(error: unknown): void {
+    this.#logger.error('Auto-sync failed:', error)
+  }
+
   #planNextSync(): void {
     if (this.#autoSyncInterval) {
       this.#syncTimeout.schedule(() => {
-        // eslint-disable-next-line capitalized-comments, no-inline-comments
-        this.fetch().catch(/* v8 ignore next */ (error: unknown) => {
-          this.#logger.error('Auto-sync failed:', error)
+        this.fetch().catch((error: unknown) => {
+          this.#handleSyncError(error)
         })
       }, this.#autoSyncInterval)
     }

@@ -450,7 +450,7 @@ const config = defineConfig([
     },
   },
   {
-    files: ['src/enums.ts'],
+    files: ['src/constants.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
     },
@@ -473,7 +473,7 @@ const config = defineConfig([
       '@typescript-eslint/no-unnecessary-type-conversion': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-type-assertion': 'off',
+      '@typescript-eslint/no-unsafe-type-assertion': 'error',
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/prefer-destructuring': 'off',
       '@typescript-eslint/strict-void-return': 'off',

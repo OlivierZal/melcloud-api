@@ -13,10 +13,11 @@ import {
   OperationModeStateHotWater,
   OperationModeStateZone,
   OperationModeZone,
-} from '../../src/enums.ts'
+} from '../../src/constants.ts'
 import { DeviceAtwHasZone2Facade } from '../../src/facades/device-atw-has-zone2.ts'
 import { DeviceAtwFacade } from '../../src/facades/device-atw.ts'
 import { DeviceModel, ModelRegistry } from '../../src/models/index.ts'
+import { assertDeviceType, mock } from '../helpers.ts'
 
 const buildingData: BuildingData = {
   FPDefined: true,
@@ -36,7 +37,7 @@ const buildingData: BuildingData = {
 const createAtwData = (
   overrides: Partial<ListDeviceDataAtw> = {},
 ): ListDeviceDataAtw =>
-  ({
+  mock<ListDeviceDataAtw>({
     BoosterHeater1Status: false,
     BoosterHeater2PlusStatus: false,
     BoosterHeater2Status: false,
@@ -90,7 +91,7 @@ const createAtwData = (
     Zone2InCoolMode: false,
     Zone2InHeatMode: false,
     ...overrides,
-  }) as ListDeviceDataAtw
+  })
 
 const createDevice = (
   data: ListDeviceDataAtw = createAtwData(),
@@ -104,10 +105,10 @@ const createDevice = (
   Type: DeviceType.Atw,
 })
 
-const mockApi = {
+const mockApi = mock<APIAdapter>({
   fetch: vi.fn().mockResolvedValue([]),
   onSync: vi.fn().mockResolvedValue(),
-} as unknown as APIAdapter
+})
 
 const createFacade = (
   data: ListDeviceDataAtw = createAtwData(),
@@ -115,12 +116,9 @@ const createFacade = (
   const registry = new ModelRegistry()
   registry.syncBuildings([buildingData])
   registry.syncDevices([createDevice(data)])
-  const device = registry.devices.getById(1001)!
-  return new DeviceAtwFacade(
-    mockApi,
-    registry,
-    device as DeviceModel<DeviceType.Atw>,
-  )
+  const device = registry.devices.getById(1001)
+  assertDeviceType(device, DeviceType.Atw)
+  return new DeviceAtwFacade(mockApi, registry, device)
 }
 
 const createZone2Facade = (
@@ -129,12 +127,9 @@ const createZone2Facade = (
   const registry = new ModelRegistry()
   registry.syncBuildings([buildingData])
   registry.syncDevices([createDevice(data)])
-  const device = registry.devices.getById(1001)!
-  return new DeviceAtwHasZone2Facade(
-    mockApi,
-    registry,
-    device as DeviceModel<DeviceType.Atw>,
-  )
+  const device = registry.devices.getById(1001)
+  assertDeviceType(device, DeviceType.Atw)
+  return new DeviceAtwHasZone2Facade(mockApi, registry, device)
 }
 
 describe('DeviceAtwFacade zone1', () => {
@@ -154,7 +149,10 @@ describe('DeviceAtwFacade zone1', () => {
 
   it('returns idle when device is idle', () => {
     const facade = createFacade(
-      createAtwData({ IdleZone1: true, OperationMode: OperationModeState.heating }),
+      createAtwData({
+        IdleZone1: true,
+        OperationMode: OperationModeState.heating,
+      }),
     )
 
     expect(facade.zone1.operationalState).toBe(OperationModeStateZone.idle)
@@ -197,7 +195,9 @@ describe('DeviceAtwFacade zone1', () => {
       }),
     )
 
-    expect(facade.zone1.operationalState).toBe(OperationModeStateZone.prohibited)
+    expect(facade.zone1.operationalState).toBe(
+      OperationModeStateZone.prohibited,
+    )
   })
 
   it('returns prohibited when zone is in cool mode and cooling is prohibited', () => {
@@ -209,7 +209,9 @@ describe('DeviceAtwFacade zone1', () => {
       }),
     )
 
-    expect(facade.zone1.operationalState).toBe(OperationModeStateZone.prohibited)
+    expect(facade.zone1.operationalState).toBe(
+      OperationModeStateZone.prohibited,
+    )
   })
 
   it('returns idle when device is in DHW mode', () => {
@@ -237,7 +239,9 @@ describe('DeviceAtwFacade hotWater', () => {
   it('returns idle when device is idle', () => {
     const facade = createFacade()
 
-    expect(facade.hotWater.operationalState).toBe(OperationModeStateHotWater.idle)
+    expect(facade.hotWater.operationalState).toBe(
+      OperationModeStateHotWater.idle,
+    )
   })
 
   it('returns dhw when device is heating water', () => {
@@ -245,15 +249,17 @@ describe('DeviceAtwFacade hotWater', () => {
       createAtwData({ OperationMode: OperationModeState.dhw }),
     )
 
-    expect(facade.hotWater.operationalState).toBe(OperationModeStateHotWater.dhw)
+    expect(facade.hotWater.operationalState).toBe(
+      OperationModeStateHotWater.dhw,
+    )
   })
 
   it('returns dhw when forced hot water mode is on', () => {
-    const facade = createFacade(
-      createAtwData({ ForcedHotWaterMode: true }),
-    )
+    const facade = createFacade(createAtwData({ ForcedHotWaterMode: true }))
 
-    expect(facade.hotWater.operationalState).toBe(OperationModeStateHotWater.dhw)
+    expect(facade.hotWater.operationalState).toBe(
+      OperationModeStateHotWater.dhw,
+    )
   })
 
   it('returns dhw when forced mode overrides heating state', () => {
@@ -264,15 +270,17 @@ describe('DeviceAtwFacade hotWater', () => {
       }),
     )
 
-    expect(facade.hotWater.operationalState).toBe(OperationModeStateHotWater.dhw)
+    expect(facade.hotWater.operationalState).toBe(
+      OperationModeStateHotWater.dhw,
+    )
   })
 
   it('returns prohibited when hot water is prohibited', () => {
-    const facade = createFacade(
-      createAtwData({ ProhibitHotWater: true }),
-    )
+    const facade = createFacade(createAtwData({ ProhibitHotWater: true }))
 
-    expect(facade.hotWater.operationalState).toBe(OperationModeStateHotWater.prohibited)
+    expect(facade.hotWater.operationalState).toBe(
+      OperationModeStateHotWater.prohibited,
+    )
   })
 
   it('returns legionella during legionella cycle', () => {
@@ -280,7 +288,9 @@ describe('DeviceAtwFacade hotWater', () => {
       createAtwData({ OperationMode: OperationModeState.legionella }),
     )
 
-    expect(facade.hotWater.operationalState).toBe(OperationModeStateHotWater.legionella)
+    expect(facade.hotWater.operationalState).toBe(
+      OperationModeStateHotWater.legionella,
+    )
   })
 
   it('returns idle when device is heating zones', () => {
@@ -288,7 +298,9 @@ describe('DeviceAtwFacade hotWater', () => {
       createAtwData({ OperationMode: OperationModeState.heating }),
     )
 
-    expect(facade.hotWater.operationalState).toBe(OperationModeStateHotWater.idle)
+    expect(facade.hotWater.operationalState).toBe(
+      OperationModeStateHotWater.idle,
+    )
   })
 })
 
@@ -324,7 +336,9 @@ describe('DeviceAtwHasZone2Facade zone2', () => {
       }),
     )
 
-    expect(facade.zone2.operationalState).toBe(OperationModeStateZone.prohibited)
+    expect(facade.zone2.operationalState).toBe(
+      OperationModeStateZone.prohibited,
+    )
   })
 
   it('also exposes zone1 and hotWater', () => {

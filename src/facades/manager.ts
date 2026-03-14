@@ -1,4 +1,4 @@
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType } from '../constants.ts'
 import type { ModelRegistry } from '../models/index.ts'
 import type {
   AreaModel,
@@ -52,15 +52,12 @@ export class FacadeManager implements FacadeManagerContract {
   public get(instance?: DeviceModelAny): DeviceFacadeAny | null
   public get(instance?: Model): Facade | null {
     if (instance) {
-      if (!this.#facades.has(instance)) {
-        this.#facades.set(
-          instance,
-          createFacade(this.#api, this.#registry, instance),
-        )
+      let facade = this.#facades.get(instance)
+      if (!facade) {
+        facade = createFacade(this.#api, this.#registry, instance)
+        this.#facades.set(instance, facade)
       }
-      // eslint-disable-next-line capitalized-comments
-      /* v8 ignore next */
-      return this.#facades.get(instance) ?? null
+      return facade
     }
     return null
   }

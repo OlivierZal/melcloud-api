@@ -1,7 +1,7 @@
 import type { DeviceModelAny, Model } from '../models/interfaces.ts'
 import type { APIAdapter } from '../services/index.ts'
 
-import { DeviceType } from '../enums.ts'
+import { DeviceType } from '../constants.ts'
 import {
   type ModelRegistry,
   AreaModel,
@@ -42,6 +42,17 @@ const createDeviceFacade = (
   }
 }
 
+const getDeviceFromRegistry = (
+  registry: ModelRegistry,
+  id: number,
+): DeviceModelAny => {
+  const device = registry.devices.getById(id)
+  if (!device) {
+    throw new Error('Device not found in registry')
+  }
+  return device
+}
+
 /** Create the appropriate facade for a model instance based on its runtime type. */
 export const createFacade = (
   api: APIAdapter,
@@ -55,8 +66,11 @@ export const createFacade = (
     return new BuildingFacade(api, registry, instance)
   }
   if (instance instanceof DeviceModel) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModel instances are always one of the three DeviceType variants
-    return createDeviceFacade(api, registry, instance as DeviceModelAny)
+    return createDeviceFacade(
+      api,
+      registry,
+      getDeviceFromRegistry(registry, instance.id),
+    )
   }
   if (instance instanceof FloorModel) {
     return new FloorFacade(api, registry, instance)

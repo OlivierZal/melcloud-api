@@ -2,10 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Building, ListDeviceDataAta } from '../../src/types/index.ts'
 
-import { DeviceType } from '../../src/enums.ts'
+import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
+import { mock } from '../helpers.ts'
 
-const ataDeviceData = {
+const ataDeviceData = mock<ListDeviceDataAta>({
   ActualFanSpeed: 3,
   EffectiveFlags: 0,
   FanSpeed: 3,
@@ -24,7 +25,7 @@ const ataDeviceData = {
   SetTemperature: 23,
   VaneHorizontalDirection: 0,
   VaneVerticalDirection: 0,
-} as ListDeviceDataAta
+})
 
 const buildingResponse: Building[] = [
   {
@@ -86,15 +87,13 @@ const mockAxiosInstance = {
 }
 
 vi.mock(import('axios'), () =>
-  ({
-    default: {
-      create: vi.fn().mockReturnValue(mockAxiosInstance),
-    },
-    HttpStatusCode: {
+  mock<typeof import('axios')>({
+    default: mock({ create: vi.fn().mockReturnValue(mockAxiosInstance) }),
+    HttpStatusCode: mock({
       TooManyRequests: 429,
       Unauthorized: 401,
-    },
-  }) as unknown as typeof import('axios'),
+    }),
+  }),
 )
 
 describe('API lifecycle', () => {

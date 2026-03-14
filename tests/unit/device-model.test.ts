@@ -2,15 +2,16 @@ import { describe, expect, it } from 'vitest'
 
 import type { ListDevice, ListDeviceDataAta } from '../../src/types/index.ts'
 
-import { DeviceType } from '../../src/enums.ts'
+import { DeviceType } from '../../src/constants.ts'
 import { DeviceModel } from '../../src/models/index.ts'
+import { mock } from '../helpers.ts'
 
 const createAtaDevice = (
   overrides: Partial<ListDevice<DeviceType.Ata>> = {},
 ): ListDevice<DeviceType.Ata> => ({
   AreaID: 100,
   BuildingID: 1,
-  Device: {
+  Device: mock<ListDeviceDataAta>({
     ActualFanSpeed: 3,
     EffectiveFlags: 0,
     FanSpeed: 3,
@@ -30,7 +31,7 @@ const createAtaDevice = (
     VaneHorizontalDirection: 0,
     VaneVerticalDirection: 0,
     WifiSignalStrength: -50,
-  } as ListDeviceDataAta,
+  }),
   DeviceID: 1000,
   DeviceName: 'Test ATA',
   FloorID: 10,

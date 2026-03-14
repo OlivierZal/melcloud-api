@@ -4,7 +4,7 @@ import type {
   ZoneState,
 } from '../types/index.ts'
 
-import { OperationModeZone } from '../enums.ts'
+import { OperationModeZone } from '../constants.ts'
 
 import { DeviceAtwFacade } from './device-atw.ts'
 
@@ -18,6 +18,17 @@ const roomOperationModeZones: ReadonlySet<OperationModeZone> = new Set([
   OperationModeZone.room,
   OperationModeZone.room_cool,
 ])
+const operationModeZoneByValue = new Map<number, OperationModeZone>(
+  Object.values(OperationModeZone).map((value) => [value, value]),
+)
+
+const toOperationModeZone = (value: number): OperationModeZone => {
+  const mode = operationModeZoneByValue.get(value)
+  if (mode === undefined) {
+    throw new Error(`Invalid OperationModeZone: ${String(value)}`)
+  }
+  return mode
+}
 
 /**
  * Extended ATW facade for units with two zones. Automatically couples zone operation
@@ -88,8 +99,7 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     ) {
       secondaryValue += ROOM_FLOW_GAP
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- arithmetic on OperationModeZone values produces valid zone values
-    return secondaryValue as OperationModeZone
+    return toOperationModeZone(secondaryValue)
   }
 
   #handleOperationModes(

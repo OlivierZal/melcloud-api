@@ -25,9 +25,7 @@ describe('fromListToSetAta', () => {
 
   it('is the inverse of fromSetToListAta', () => {
     for (const [key, value] of Object.entries(fromSetToListAta)) {
-      expect(
-        fromListToSetAta[value],
-      ).toBe(key)
+      expect(fromListToSetAta[value]).toBe(key)
     }
   })
 })

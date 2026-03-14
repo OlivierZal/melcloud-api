@@ -1,6 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType, LabelType } from '../enums.ts'
+import type { DeviceType, LabelType } from '../constants.ts'
 
 import type {
   EnergyDataAta,
@@ -269,28 +269,28 @@ export type DateTimeComponents = {
 } | null
 
 export type EnergyData<T extends DeviceType> =
-  T extends DeviceType.Ata ? EnergyDataAta
-  : T extends DeviceType.Atw ? EnergyDataAtw
+  T extends typeof DeviceType.Ata ? EnergyDataAta
+  : T extends typeof DeviceType.Atw ? EnergyDataAtw
   : never
 
 export type GetDeviceData<T extends DeviceType> = BaseGetDeviceData &
   SetDeviceData<T>
 
 export type ListDeviceAny =
-  | ListDevice<DeviceType.Ata>
-  | ListDevice<DeviceType.Atw>
-  | ListDevice<DeviceType.Erv>
+  | ListDevice<typeof DeviceType.Ata>
+  | ListDevice<typeof DeviceType.Atw>
+  | ListDevice<typeof DeviceType.Erv>
 
 export type ListDeviceData<T extends DeviceType> =
-  T extends DeviceType.Ata ? ListDeviceDataAta
-  : T extends DeviceType.Atw ? ListDeviceDataAtw
-  : T extends DeviceType.Erv ? ListDeviceDataErv
+  T extends typeof DeviceType.Ata ? ListDeviceDataAta
+  : T extends typeof DeviceType.Atw ? ListDeviceDataAtw
+  : T extends typeof DeviceType.Erv ? ListDeviceDataErv
   : never
 
 export type ListDeviceDataAny =
-  | ListDeviceData<DeviceType.Ata>
-  | ListDeviceData<DeviceType.Atw>
-  | ListDeviceData<DeviceType.Erv>
+  | ListDeviceData<typeof DeviceType.Ata>
+  | ListDeviceData<typeof DeviceType.Atw>
+  | ListDeviceData<typeof DeviceType.Erv>
 
 export type OperationModeLogData = {
   Key: string
@@ -298,9 +298,9 @@ export type OperationModeLogData = {
 }[]
 
 export type SetDeviceData<T extends DeviceType> =
-  T extends DeviceType.Ata ? SetDeviceDataAta
-  : T extends DeviceType.Atw ? SetDeviceDataAtw
-  : T extends DeviceType.Erv ? SetDeviceDataErv
+  T extends typeof DeviceType.Ata ? SetDeviceDataAta
+  : T extends typeof DeviceType.Atw ? SetDeviceDataAtw
+  : T extends typeof DeviceType.Erv ? SetDeviceDataErv
   : never
 
 export type SetDevicePostData<T extends DeviceType> = BaseDevicePostData &
@@ -313,9 +313,9 @@ export type TilesPostData<T extends DeviceType | null> = {
 : { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })
 
 export type UpdateDeviceData<T extends DeviceType> =
-  T extends DeviceType.Ata ? UpdateDeviceDataAta
-  : T extends DeviceType.Atw ? UpdateDeviceDataAtw
-  : T extends DeviceType.Erv ? UpdateDeviceDataErv
+  T extends typeof DeviceType.Ata ? UpdateDeviceDataAta
+  : T extends typeof DeviceType.Atw ? UpdateDeviceDataAtw
+  : T extends typeof DeviceType.Erv ? UpdateDeviceDataErv
   : never
 
 export type Zone = AreaZone | BuildingZone | DeviceZone | FloorZone

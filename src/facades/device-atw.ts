@@ -9,11 +9,11 @@ import type {
 } from '../types/index.ts'
 
 import {
-  type DeviceType,
+  DeviceType,
   OperationModeState,
   OperationModeStateHotWater,
   OperationModeStateZone,
-} from '../enums.ts'
+} from '../constants.ts'
 
 import type { ReportChartLineOptions, ReportQuery } from './interfaces.ts'
 
@@ -50,8 +50,7 @@ const getHotWaterOperationalState = (
     return OperationModeStateHotWater.prohibited
   }
   return (
-    HOT_WATER_STATE_MAP[data.OperationMode] ??
-    OperationModeStateHotWater.idle
+    HOT_WATER_STATE_MAP[data.OperationMode] ?? OperationModeStateHotWater.idle
   )
 }
 
@@ -85,9 +84,7 @@ const mergeSeries = (
 }
 
 /** Facade for Air-to-Water (ATW) devices with per-zone temperature clamping and merged temperature reports. */
-export class DeviceAtwFacade
-  extends BaseDeviceFacade<DeviceType.Atw>
-{
+export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
   protected override readonly internalTemperaturesLegend = [
     'FlowTemperature',
     'FlowTemperatureBoiler',
@@ -110,7 +107,9 @@ export class DeviceAtwFacade
     SetTankWaterTemperature: 0x1_00_00_00_00_00_20,
     SetTemperatureZone1: 0x2_00_00_00_80,
     SetTemperatureZone2: 0x8_00_00_02_00,
-  } satisfies Record<keyof UpdateDeviceData<DeviceType.Atw>, number>
+  } satisfies Record<keyof UpdateDeviceData<typeof DeviceType.Atw>, number>
+
+  public readonly type = DeviceType.Atw
 
   protected readonly temperaturesLegend = [
     'SetTemperatureZone1',

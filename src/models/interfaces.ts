@@ -1,4 +1,4 @@
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType } from '../constants.ts'
 import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 
 /** Area model with parent building and optional floor references. */
@@ -49,6 +49,6 @@ export interface Model {
 
 /** Union of all device model types. */
 export type DeviceModelAny =
-  | DeviceModel<DeviceType.Ata>
-  | DeviceModel<DeviceType.Atw>
-  | DeviceModel<DeviceType.Erv>
+  | DeviceModel<typeof DeviceType.Ata>
+  | DeviceModel<typeof DeviceType.Atw>
+  | DeviceModel<typeof DeviceType.Erv>

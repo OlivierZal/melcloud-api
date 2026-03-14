@@ -11,9 +11,7 @@ import { fetchDevices } from '../decorators/index.ts'
 import { BaseSuperDeviceFacade } from './base-super-device.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
-export class BuildingFacade
-  extends BaseSuperDeviceFacade<BuildingModelContract>
-{
+export class BuildingFacade extends BaseSuperDeviceFacade<BuildingModelContract> {
   protected readonly frostProtectionLocation = 'BuildingIds'
 
   protected readonly holidayModeLocation = 'Buildings'
@@ -51,8 +49,8 @@ export class BuildingFacade
   }
 
   @fetchDevices
-  // eslint-disable-next-line @typescript-eslint/require-await -- async required by @fetchDevices decorator
   public async fetch(): Promise<ZoneSettings> {
-    return this.data
+    const data = await Promise.resolve(this.data)
+    return data
   }
 }

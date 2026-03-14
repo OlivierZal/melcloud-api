@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon'
 
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType } from '../constants.ts'
 import type { ModelRegistry } from '../models/index.ts'
 import type {
   DeviceModel,
@@ -74,7 +74,11 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(api: APIAdapter, registry: ModelRegistry, instance: T) {
+  public constructor(
+    api: APIAdapter,
+    registry: ModelRegistry,
+    instance: Model,
+  ) {
     this.api = api
     this.registry = registry
     ;({ id: this.id } = instance)

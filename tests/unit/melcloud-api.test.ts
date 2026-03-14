@@ -1,10 +1,19 @@
-import type { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import type {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Building } from '../../src/types/index.ts'
+import type { DeviceType } from '../../src/constants.ts'
+import type {
+  Building,
+  ListDeviceDataAny,
+  SetDevicePostData,
+} from '../../src/types/index.ts'
 
-import { isAPISetting } from '../../src/services/interfaces.ts'
+import { mock } from '../helpers.ts'
 
 const mockInterceptors = {
   request: { use: vi.fn() },
@@ -17,32 +26,15 @@ const mockAxiosInstance = {
   request: vi.fn(),
 }
 
-vi.mock(import('axios'), () =>
-  ({
-    default: {
-      create: vi.fn().mockReturnValue(mockAxiosInstance),
-    },
-    HttpStatusCode: {
-      TooManyRequests: 429,
-      Unauthorized: 401,
-    },
-  }) as unknown as typeof import('axios'),
-)
-
-describe('isAPISetting', () => {
-  it('returns true for valid API setting keys', () => {
-    expect(isAPISetting('contextKey')).toBe(true)
-    expect(isAPISetting('expiry')).toBe(true)
-    expect(isAPISetting('password')).toBe(true)
-    expect(isAPISetting('username')).toBe(true)
-  })
-
-  it('returns false for invalid keys', () => {
-    expect(isAPISetting('invalid')).toBe(false)
-    expect(isAPISetting('language')).toBe(false)
-    expect(isAPISetting('')).toBe(false)
-  })
-})
+vi.mock(import('axios'), () => ({
+  default: {
+    create: vi.fn().mockReturnValue(mockAxiosInstance),
+  },
+  HttpStatusCode: {
+    TooManyRequests: 429,
+    Unauthorized: 401,
+  },
+}))
 
 describe('mELCloudAPI', () => {
   let MELCloudAPI: typeof import('../../src/services/melcloud.ts').MELCloudAPI
@@ -74,14 +66,10 @@ describe('mELCloudAPI', () => {
     const resCalls = mockInterceptors.response.use.mock.calls
     const lastReq = reqCalls.at(-1)!
     const lastRes = resCalls.at(-1)!
-    ;[requestHandler, requestErrorHandler] = lastReq as [
-      typeof requestHandler,
-      typeof requestErrorHandler,
-    ]
-    ;[responseHandler, responseErrorHandler] = lastRes as [
-      typeof responseHandler,
-      typeof responseErrorHandler,
-    ]
+    ;[requestHandler, requestErrorHandler] =
+      mock<[typeof requestHandler, typeof requestErrorHandler]>(lastReq)
+    ;[responseHandler, responseErrorHandler] =
+      mock<[typeof responseHandler, typeof responseErrorHandler]>(lastRes)
     return api
   }
 
@@ -301,7 +289,11 @@ describe('mELCloudAPI', () => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({ data: { Success: true } })
       await api.setFrostProtection({
-        postData: { Enabled: true, MaximumTemperature: 16, MinimumTemperature: 4 },
+        postData: {
+          Enabled: true,
+          MaximumTemperature: 16,
+          MinimumTemperature: 4,
+        },
       })
 
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
@@ -367,7 +359,10 @@ describe('mELCloudAPI', () => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({ data: {} })
       await api.setValues({
-        postData: { DeviceID: 1, EffectiveFlags: 1 } as any,
+        postData: mock<SetDevicePostData<typeof DeviceType.Ata>>({
+          DeviceID: 1,
+          EffectiveFlags: 1,
+        }),
         type: 0,
       })
 
@@ -378,7 +373,10 @@ describe('mELCloudAPI', () => {
 
       mockAxiosInstance.post.mockClear()
       await api.setValues({
-        postData: { DeviceID: 1, EffectiveFlags: 1 } as any,
+        postData: mock<SetDevicePostData<typeof DeviceType.Atw>>({
+          DeviceID: 1,
+          EffectiveFlags: 1,
+        }),
         type: 1,
       })
 
@@ -389,7 +387,10 @@ describe('mELCloudAPI', () => {
 
       mockAxiosInstance.post.mockClear()
       await api.setValues({
-        postData: { DeviceID: 1, EffectiveFlags: 1 } as any,
+        postData: mock<SetDevicePostData<typeof DeviceType.Erv>>({
+          DeviceID: 1,
+          EffectiveFlags: 1,
+        }),
         type: 3,
       })
 
@@ -608,7 +609,7 @@ describe('mELCloudAPI', () => {
     })
 
     it('uses all devices when no deviceIds provided', async () => {
-      const building: Building = {
+      const building = mock<Building>({
         FPDefined: false,
         FPEnabled: false,
         FPMaxTemperature: 16,
@@ -626,7 +627,7 @@ describe('mELCloudAPI', () => {
             {
               AreaID: null,
               BuildingID: 1,
-              Device: {} as any,
+              Device: mock<ListDeviceDataAny>(),
               DeviceID: 42,
               DeviceName: 'D1',
               FloorID: null,
@@ -636,7 +637,7 @@ describe('mELCloudAPI', () => {
           Floors: [],
         },
         TimeZone: 0,
-      } as Building
+      })
       mockAxiosInstance.get.mockResolvedValue({ data: [building] })
       const api = await createApi()
       await api.fetch()
@@ -673,23 +674,26 @@ describe('mELCloudAPI', () => {
       await createApi()
       const headers = new Map()
       vi.spyOn(headers, 'set')
-      const config = {
+      const config = mock<InternalAxiosRequestConfig>({
         headers,
         url: '/Device/Get',
-      } as unknown as InternalAxiosRequestConfig
+      })
       await requestHandler(config)
 
-      expect(headers.set).toHaveBeenCalledWith('X-MitsContextKey', expect.any(String))
+      expect(headers.set).toHaveBeenCalledWith(
+        'X-MitsContextKey',
+        expect.any(String),
+      )
     })
 
     it('request handler does not set header for login path', async () => {
       await createApi()
       const headers = new Map()
       vi.spyOn(headers, 'set')
-      const config = {
+      const config = mock<InternalAxiosRequestConfig>({
         headers,
         url: '/Login/ClientLogin3',
-      } as unknown as InternalAxiosRequestConfig
+      })
       await requestHandler(config)
 
       expect(headers.set).not.toHaveBeenCalled()
@@ -729,10 +733,10 @@ describe('mELCloudAPI', () => {
       mockAxiosInstance.get.mockResolvedValue({ data: [] })
       const headers = new Map()
       vi.spyOn(headers, 'set')
-      const config = {
+      const config = mock<InternalAxiosRequestConfig>({
         headers,
         url: '/Device/Get',
-      } as unknown as InternalAxiosRequestConfig
+      })
 
       await expect(requestHandler(config)).resolves.toMatchObject({
         url: '/Device/Get',
@@ -741,12 +745,15 @@ describe('mELCloudAPI', () => {
 
     it('response handler returns response', async () => {
       await createApi({ logger: { error: vi.fn(), log: vi.fn() } })
-      const response = {
-        config: { method: 'get', url: '/test' },
+      const response = mock<AxiosResponse>({
+        config: mock<InternalAxiosRequestConfig>({
+          method: 'get',
+          url: '/test',
+        }),
         data: {},
         headers: {},
         status: 200,
-      } as unknown as AxiosResponse
+      })
       const result = responseHandler(response)
 
       expect(result).toBe(response)
@@ -755,16 +762,23 @@ describe('mELCloudAPI', () => {
     it('error handler logs and throws', async () => {
       const logger = { error: vi.fn(), log: vi.fn() }
       await createApi({ logger })
-      const error = {
-        config: { method: 'get', url: '/test' },
+      const error = mock<AxiosError>({
+        config: mock<InternalAxiosRequestConfig>({
+          method: 'get',
+          url: '/test',
+        }),
         message: 'test error',
-        response: {
-          config: { data: null, method: 'get', url: '/test' },
+        response: mock<AxiosResponse>({
+          config: mock<InternalAxiosRequestConfig>({
+            data: null,
+            method: 'get',
+            url: '/test',
+          }),
           data: {},
           headers: {},
           status: 500,
-        },
-      } as unknown as AxiosError
+        }),
+      })
 
       await expect(requestErrorHandler(error)).rejects.toThrow('test error')
     })
@@ -772,10 +786,13 @@ describe('mELCloudAPI', () => {
     it('error handler handles request-only errors (no response)', async () => {
       const logger = { error: vi.fn(), log: vi.fn() }
       await createApi({ logger })
-      const error = {
-        config: { method: 'get', url: '/test' },
+      const error = mock<AxiosError>({
+        config: mock<InternalAxiosRequestConfig>({
+          method: 'get',
+          url: '/test',
+        }),
         message: 'network error',
-      } as unknown as AxiosError
+      })
 
       await expect(requestErrorHandler(error)).rejects.toThrow('network error')
     })
@@ -783,16 +800,23 @@ describe('mELCloudAPI', () => {
     it('error handler pauses list on 429', async () => {
       const logger = { error: vi.fn(), log: vi.fn() }
       await createApi({ logger })
-      const error = {
-        config: { method: 'get', url: '/User/ListDevices' },
+      const error = mock<AxiosError>({
+        config: mock<InternalAxiosRequestConfig>({
+          method: 'get',
+          url: '/User/ListDevices',
+        }),
         message: 'too many',
-        response: {
-          config: { data: null, method: 'get', url: '/User/ListDevices' },
+        response: mock<AxiosResponse>({
+          config: mock<InternalAxiosRequestConfig>({
+            data: null,
+            method: 'get',
+            url: '/User/ListDevices',
+          }),
           data: {},
           headers: {},
           status: 429,
-        },
-      } as unknown as AxiosError
+        }),
+      })
 
       await expect(responseErrorHandler(error)).rejects.toThrow('too many')
     })
@@ -813,16 +837,23 @@ describe('mELCloudAPI', () => {
       })
       mockAxiosInstance.get.mockResolvedValue({ data: [] })
       mockAxiosInstance.request.mockResolvedValue({ data: 'retried' })
-      const error = {
-        config: { method: 'get', url: '/Device/Get' },
+      const error = mock<AxiosError>({
+        config: mock<InternalAxiosRequestConfig>({
+          method: 'get',
+          url: '/Device/Get',
+        }),
         message: 'unauthorized',
-        response: {
-          config: { data: null, method: 'get', url: '/Device/Get' },
+        response: mock<AxiosResponse>({
+          config: mock<InternalAxiosRequestConfig>({
+            data: null,
+            method: 'get',
+            url: '/Device/Get',
+          }),
           data: {},
           headers: {},
           status: 401,
-        },
-      } as unknown as AxiosError
+        }),
+      })
       const result = await responseErrorHandler(error)
 
       expect(mockAxiosInstance.request).toHaveBeenCalled()
@@ -832,16 +863,21 @@ describe('mELCloudAPI', () => {
     it('error handler does not retry on 401 for login path', async () => {
       const logger = { error: vi.fn(), log: vi.fn() }
       await createApi({ logger })
-      const error = {
-        config: { url: '/Login/ClientLogin3' },
+      const error = mock<AxiosError>({
+        config: mock<InternalAxiosRequestConfig>({
+          url: '/Login/ClientLogin3',
+        }),
         message: 'unauthorized',
-        response: {
-          config: { data: null, url: '/Login/ClientLogin3' },
+        response: mock<AxiosResponse>({
+          config: mock<InternalAxiosRequestConfig>({
+            data: null,
+            url: '/Login/ClientLogin3',
+          }),
           data: {},
           headers: {},
           status: 401,
-        },
-      } as unknown as AxiosError
+        }),
+      })
 
       await expect(responseErrorHandler(error)).rejects.toThrow('unauthorized')
     })
@@ -862,27 +898,41 @@ describe('mELCloudAPI', () => {
       })
       mockAxiosInstance.get.mockResolvedValue({ data: [] })
       mockAxiosInstance.request.mockResolvedValue({ data: 'retried' })
-      const error1 = {
-        config: { method: 'get', url: '/Device/Get' },
+      const error1 = mock<AxiosError>({
+        config: mock<InternalAxiosRequestConfig>({
+          method: 'get',
+          url: '/Device/Get',
+        }),
         message: 'unauthorized',
-        response: {
-          config: { data: null, method: 'get', url: '/Device/Get' },
+        response: mock<AxiosResponse>({
+          config: mock<InternalAxiosRequestConfig>({
+            data: null,
+            method: 'get',
+            url: '/Device/Get',
+          }),
           data: {},
           headers: {},
           status: 401,
-        },
-      } as unknown as AxiosError
+        }),
+      })
       await responseErrorHandler(error1)
-      const error2 = {
-        config: { method: 'get', url: '/Device/Get' },
+      const error2 = mock<AxiosError>({
+        config: mock<InternalAxiosRequestConfig>({
+          method: 'get',
+          url: '/Device/Get',
+        }),
         message: 'unauthorized again',
-        response: {
-          config: { data: null, method: 'get', url: '/Device/Get' },
+        response: mock<AxiosResponse>({
+          config: mock<InternalAxiosRequestConfig>({
+            data: null,
+            method: 'get',
+            url: '/Device/Get',
+          }),
           data: {},
           headers: {},
           status: 401,
-        },
-      } as unknown as AxiosError
+        }),
+      })
 
       await expect(responseErrorHandler(error2)).rejects.toThrow(
         'unauthorized again',
@@ -905,16 +955,23 @@ describe('mELCloudAPI', () => {
       })
       mockAxiosInstance.get.mockResolvedValue({ data: [] })
       mockAxiosInstance.request.mockResolvedValue({ data: 'retried' })
-      const error = {
-        config: { method: 'get', url: '/Device/Get' },
+      const error = mock<AxiosError>({
+        config: mock<InternalAxiosRequestConfig>({
+          method: 'get',
+          url: '/Device/Get',
+        }),
         message: 'unauthorized',
-        response: {
-          config: { data: null, method: 'get', url: '/Device/Get' },
+        response: mock<AxiosResponse>({
+          config: mock<InternalAxiosRequestConfig>({
+            data: null,
+            method: 'get',
+            url: '/Device/Get',
+          }),
           data: {},
           headers: {},
           status: 401,
-        },
-      } as unknown as AxiosError
+        }),
+      })
       await responseErrorHandler(error)
       vi.advanceTimersByTime(1500)
       mockAxiosInstance.post.mockResolvedValue({
@@ -924,16 +981,23 @@ describe('mELCloudAPI', () => {
       })
       mockAxiosInstance.get.mockResolvedValue({ data: [] })
       mockAxiosInstance.request.mockResolvedValue({ data: 'retried again' })
-      const error2 = {
-        config: { method: 'get', url: '/Device/Get' },
+      const error2 = mock<AxiosError>({
+        config: mock<InternalAxiosRequestConfig>({
+          method: 'get',
+          url: '/Device/Get',
+        }),
         message: 'unauthorized',
-        response: {
-          config: { data: null, method: 'get', url: '/Device/Get' },
+        response: mock<AxiosResponse>({
+          config: mock<InternalAxiosRequestConfig>({
+            data: null,
+            method: 'get',
+            url: '/Device/Get',
+          }),
           data: {},
           headers: {},
           status: 401,
-        },
-      } as unknown as AxiosError
+        }),
+      })
       const result = await responseErrorHandler(error2)
 
       expect(result).toStrictEqual({ data: 'retried again' })
@@ -942,16 +1006,16 @@ describe('mELCloudAPI', () => {
     it('request handler blocks list path when paused', async () => {
       const logger = { error: vi.fn(), log: vi.fn() }
       await createApi({ logger })
-      const tooManyError = {
-        config: { url: '/api' },
+      const tooManyError = mock<AxiosError>({
+        config: mock<InternalAxiosRequestConfig>({ url: '/api' }),
         message: 'too many',
-        response: {
-          config: { data: null, url: '/api' },
+        response: mock<AxiosResponse>({
+          config: mock<InternalAxiosRequestConfig>({ data: null, url: '/api' }),
           data: {},
           headers: {},
           status: 429,
-        },
-      } as unknown as AxiosError
+        }),
+      })
 
       await expect(responseErrorHandler(tooManyError)).rejects.toThrow(
         'too many',
@@ -959,10 +1023,10 @@ describe('mELCloudAPI', () => {
 
       const headers = new Map()
       vi.spyOn(headers, 'set')
-      const config = {
+      const config = mock<InternalAxiosRequestConfig>({
         headers,
         url: '/User/ListDevices',
-      } as unknown as InternalAxiosRequestConfig
+      })
 
       await expect(requestHandler(config)).rejects.toThrow('on hold')
     })
@@ -970,7 +1034,7 @@ describe('mELCloudAPI', () => {
 
   describe('fetch with complex building structure', () => {
     it('syncs floors, areas, and devices from building structure', async () => {
-      const building: Building = {
+      const building = mock<Building>({
         FPDefined: false,
         FPEnabled: false,
         FPMaxTemperature: 16,
@@ -990,7 +1054,7 @@ describe('mELCloudAPI', () => {
                 {
                   AreaID: 100,
                   BuildingID: 1,
-                  Device: {} as any,
+                  Device: mock<ListDeviceDataAny>(),
                   DeviceID: 2000,
                   DeviceName: 'Area Device',
                   FloorID: null,
@@ -1006,7 +1070,7 @@ describe('mELCloudAPI', () => {
             {
               AreaID: null,
               BuildingID: 1,
-              Device: {} as any,
+              Device: mock<ListDeviceDataAny>(),
               DeviceID: 1000,
               DeviceName: 'Building Device',
               FloorID: null,
@@ -1022,7 +1086,7 @@ describe('mELCloudAPI', () => {
                     {
                       AreaID: 200,
                       BuildingID: 1,
-                      Device: {} as any,
+                      Device: mock<ListDeviceDataAny>(),
                       DeviceID: 3000,
                       DeviceName: 'Floor Area Device',
                       FloorID: 10,
@@ -1039,7 +1103,7 @@ describe('mELCloudAPI', () => {
                 {
                   AreaID: null,
                   BuildingID: 1,
-                  Device: {} as any,
+                  Device: mock<ListDeviceDataAny>(),
                   DeviceID: 4000,
                   DeviceName: 'Floor Device',
                   FloorID: 10,
@@ -1052,7 +1116,7 @@ describe('mELCloudAPI', () => {
           ],
         },
         TimeZone: 0,
-      } as Building
+      })
       mockAxiosInstance.get.mockResolvedValue({ data: [building] })
       const api = await createApi()
       const buildings = await api.fetch()
@@ -1064,9 +1128,7 @@ describe('mELCloudAPI', () => {
       expect(api.registry.areas.getById(200)?.name).toBe('FA1')
       expect(api.registry.devices.getById(1000)?.name).toBe('Building Device')
       expect(api.registry.devices.getById(2000)?.name).toBe('Area Device')
-      expect(api.registry.devices.getById(3000)?.name).toBe(
-        'Floor Area Device',
-      )
+      expect(api.registry.devices.getById(3000)?.name).toBe('Floor Area Device')
       expect(api.registry.devices.getById(4000)?.name).toBe('Floor Device')
     })
   })

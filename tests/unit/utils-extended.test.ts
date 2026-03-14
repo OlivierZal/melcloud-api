@@ -3,8 +3,12 @@ import { describe, expect, it } from 'vitest'
 
 import type { OperationModeLogData, ReportData } from '../../src/types/index.ts'
 
-import { LabelType } from '../../src/enums.ts'
-import { getChartLineOptions, getChartPieOptions, now } from '../../src/utils.ts'
+import { LabelType } from '../../src/constants.ts'
+import {
+  getChartLineOptions,
+  getChartPieOptions,
+  now,
+} from '../../src/utils.ts'
 
 describe('now', () => {
   it('returns an ISO string without offset', () => {
@@ -127,11 +131,7 @@ describe('getChartLineOptions', () => {
   })
 
   it('returns empty series when all legends are undefined', () => {
-    const result = getChartLineOptions(
-      reportData,
-      [undefined, undefined],
-      '°C',
-    )
+    const result = getChartLineOptions(reportData, [undefined, undefined], '°C')
 
     expect(result.series).toHaveLength(0)
   })

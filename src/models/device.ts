@@ -1,12 +1,10 @@
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType } from '../constants.ts'
 import type { ListDevice, ListDeviceData } from '../types/index.ts'
 
 import { BaseModel } from './base.ts'
 
 /** Concrete device model holding mutable device data that can be partially updated after API calls. */
-export class DeviceModel<T extends DeviceType>
-  extends BaseModel
-{
+export class DeviceModel<T extends DeviceType> extends BaseModel {
   public readonly areaId: number | null = null
 
   public readonly buildingId: number

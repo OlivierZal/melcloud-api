@@ -1,5 +1,5 @@
 import type { DeviceFacade, SuperDeviceFacade } from '../facades/index.ts'
-import type { DeviceModel } from '../models/interfaces.ts'
+import type { DeviceModel, DeviceModelAny } from '../models/interfaces.ts'
 import type {
   FailureData,
   GetDeviceData,
@@ -9,13 +9,19 @@ import type {
   SuccessData,
 } from '../types/index.ts'
 
-import { FLAG_UNCHANGED } from '../constants.ts'
-import { DeviceType } from '../enums.ts'
+import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import {
   fromSetToListAta,
   isSetDeviceDataAtaNotInList,
   isUpdateDeviceData,
 } from '../utils.ts'
+
+const FIRST_DEVICE_INDEX = 0
+
+const isDeviceOfType = <T extends DeviceType>(
+  device: DeviceModelAny,
+  type: T,
+): device is DeviceModel<T> => device.type === type
 
 /**
  * Method decorator factory that propagates data changes to device models after
@@ -78,7 +84,6 @@ const convertToListDeviceData = <T extends DeviceType>(
           isUpdateDeviceData(flags, key) &&
           Boolean(BigInt(flags[key]) & BigInt(effectiveFlags)),
       )
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
   return Object.fromEntries(
     type === DeviceType.Ata ?
       entries.map(([key, value]) =>
@@ -87,7 +92,7 @@ const convertToListDeviceData = <T extends DeviceType>(
         : [key, value],
       )
     : entries,
-  ) as Partial<ListDeviceData<T>>
+  )
 }
 
 /**
@@ -103,10 +108,9 @@ export const updateDevice = <
 ): ((...args: unknown[]) => Promise<U>) =>
   async function newTarget(this: DeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
-    const {
-      devices: [device],
-    } = this
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    ;(device as DeviceModel<T>).update(convertToListDeviceData(this, data))
+    const device = this.devices.at(FIRST_DEVICE_INDEX)
+    if (device && isDeviceOfType(device, this.type)) {
+      device.update(convertToListDeviceData(this, data))
+    }
     return data
   }

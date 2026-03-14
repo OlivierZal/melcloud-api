@@ -13,7 +13,7 @@ import type {
   UpdateDeviceData,
 } from './types/index.ts'
 
-import { type DeviceType, LabelType } from './enums.ts'
+import { type DeviceType, LabelType } from './constants.ts'
 
 // API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
 const YEAR_MONTH_DIVISOR = 100
@@ -90,6 +90,16 @@ const formatLabels = (
 export const typedKeys = <T extends Record<string, unknown>>(
   object: T,
 ): (string & keyof T)[] => Object.keys(object) as (string & keyof T)[]
+
+/** Type-safe `Object.fromEntries` that returns a properly typed object. */
+export function typedFromEntries<T extends Record<string, unknown>>(
+  entries: Iterable<readonly [PropertyKey, T[keyof T]]>,
+): T
+export function typedFromEntries(
+  entries: Iterable<readonly [PropertyKey, unknown]>,
+): Record<string, unknown> {
+  return Object.fromEntries(entries)
+}
 
 /** Type guard checking whether a key belongs to the updatable device data fields. */
 export const isUpdateDeviceData = <T extends DeviceType>(

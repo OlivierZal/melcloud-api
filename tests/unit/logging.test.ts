@@ -11,29 +11,30 @@ import {
   APICallResponseData,
   createAPICallErrorData,
 } from '../../src/logging/index.ts'
+import { mock } from '../helpers.ts'
 
 const createConfig = (
   overrides: Partial<InternalAxiosRequestConfig> = {},
 ): InternalAxiosRequestConfig =>
-  ({
+  mock<InternalAxiosRequestConfig>({
     data: { key: 'value' },
-    headers: { 'Content-Type': 'application/json' },
+    headers: mock({ 'Content-Type': 'application/json' }),
     method: 'post',
     params: { id: 1 },
     url: '/test/endpoint',
     ...overrides,
-  }) as InternalAxiosRequestConfig
+  })
 
 const createResponse = (
   overrides: Partial<AxiosResponse> = {},
 ): AxiosResponse =>
-  ({
+  mock<AxiosResponse>({
     config: createConfig(),
     data: { result: 'ok' },
     headers: { 'x-custom': 'header' },
     status: 200,
     ...overrides,
-  }) as AxiosResponse
+  })
 
 describe('aPICallRequestData', () => {
   it('extracts request fields from config', () => {
@@ -107,11 +108,11 @@ describe('aPICallResponseData', () => {
 
 describe('createAPICallErrorData', () => {
   it('creates error data from response error', () => {
-    const error = {
+    const error = mock<AxiosError>({
       config: createConfig(),
       message: 'Request failed',
       response: createResponse({ status: 500 }),
-    } as AxiosError
+    })
     const data = createAPICallErrorData(error)
 
     expect(data.errorMessage).toBe('Request failed')
@@ -119,10 +120,10 @@ describe('createAPICallErrorData', () => {
   })
 
   it('creates error data from request error (no response)', () => {
-    const error = {
+    const error = mock<AxiosError>({
       config: createConfig(),
       message: 'Network Error',
-    } as AxiosError
+    })
     const data = createAPICallErrorData(error)
 
     expect(data.errorMessage).toBe('Network Error')
@@ -130,11 +131,11 @@ describe('createAPICallErrorData', () => {
   })
 
   it('serializes error data with errorMessage included', () => {
-    const error = {
+    const error = mock<AxiosError>({
       config: createConfig(),
       message: 'Timeout',
       response: createResponse(),
-    } as AxiosError
+    })
     const data = createAPICallErrorData(error)
     const parsed = JSON.parse(data.toString())
 

@@ -17,7 +17,7 @@ const SPACE = 2
 
 /** Abstract base for API call logging data, serializable to JSON with a fixed set of log keys. */
 export abstract class APICallContextData {
-  public declare readonly dataType: string
+  declare public readonly dataType: string
 
   public readonly method: InternalAxiosRequestConfig['method']
 

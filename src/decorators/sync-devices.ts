@@ -1,4 +1,4 @@
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType } from '../constants.ts'
 import type { Facade } from '../facades/index.ts'
 import type { APIAdapter } from '../services/index.ts'
 import type {

@@ -1,6 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType } from '../constants.ts'
 import type {
   BaseBuildingModel,
   BaseDeviceModel,
@@ -50,8 +50,7 @@ export interface HolidayModeQuery {
 }
 
 /** Facade for a MELCloud building, combining zone settings with super device operations. */
-export interface BuildingFacade
-  extends BaseBuildingModel, SuperDeviceFacade {
+export interface BuildingFacade extends BaseBuildingModel, SuperDeviceFacade {
 
   /** Fetch the latest building zone settings after syncing devices. */
   readonly fetch: () => Promise<ZoneSettings>
@@ -204,6 +203,6 @@ export interface ReportQuery {
 
 /** Union of all device facade types. */
 export type DeviceFacadeAny =
-  | DeviceFacade<DeviceType.Ata>
-  | DeviceFacade<DeviceType.Atw>
-  | DeviceFacade<DeviceType.Erv>
+  | DeviceFacade<typeof DeviceType.Ata>
+  | DeviceFacade<typeof DeviceType.Atw>
+  | DeviceFacade<typeof DeviceType.Erv>

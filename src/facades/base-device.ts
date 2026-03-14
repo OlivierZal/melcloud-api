@@ -4,7 +4,6 @@ import type {
   DeviceModelAny,
   DeviceModel as DeviceModelContract,
 } from '../models/interfaces.ts'
-import type { APIAdapter } from '../services/index.ts'
 import type {
   EnergyData,
   GetDeviceData,
@@ -15,10 +14,9 @@ import type {
   UpdateDeviceData,
 } from '../types/index.ts'
 
-import { FLAG_UNCHANGED } from '../constants.ts'
+import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
-import { DeviceType } from '../enums.ts'
-import { type ModelRegistry, DeviceModel } from '../models/index.ts'
+import { DeviceModel } from '../models/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -26,6 +24,7 @@ import {
   isSetDeviceDataAtaInList,
   isUpdateDeviceData,
   now,
+  typedFromEntries,
   typedKeys,
 } from '../utils.ts'
 
@@ -60,8 +59,6 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements DeviceFacade<T>
 {
-  public readonly type: T
-
   protected readonly frostProtectionLocation = 'DeviceIds'
 
   protected readonly holidayModeLocation = 'Devices'
@@ -72,25 +69,24 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
-  protected abstract readonly temperaturesLegend: (string | undefined)[]
+  public abstract readonly type: T
 
-  public constructor(
-    api: APIAdapter,
-    registry: ModelRegistry,
-    instance: DeviceModelContract<T>,
-  ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- DeviceModelContract<T> is a member of DeviceModelAny union
-    super(api, registry, instance as DeviceModelAny)
-    ;({ type: this.type } = instance)
-  }
+  protected abstract readonly temperaturesLegend: (string | undefined)[]
 
   public override get devices(): DeviceModelAny[] {
     return [this.instance]
   }
 
   public get data(): ListDeviceData<T> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- instance.type === this.type guarantees the narrowing
-    return this.instance.data as ListDeviceData<T>
+    return this.device.data
+  }
+
+  protected get device(): DeviceModelContract<T> {
+    const { instance } = this
+    if (!this.#isMatchingDevice(instance)) {
+      throw new Error('Device type mismatch')
+    }
+    return instance
   }
 
   protected get model(): {
@@ -99,22 +95,27 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return this.registry.devices
   }
 
+  #isMatchingDevice(device: DeviceModelAny): device is DeviceModelContract<T> {
+    return device.type === this.type
+  }
+
   /*
    * For ATA devices, API list responses use different property names than set
    * requests (e.g., "FanSpeed" in list vs "SetFanSpeed" in set). Convert keys
    * to set format, then keep only the fields tracked by flags.
    */
   protected get setData(): Required<UpdateDeviceData<T>> {
-    const entries = (
+    const dataEntries: [string, unknown][] = Object.entries(this.data)
+    const entries =
       this.type === DeviceType.Ata ?
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- Object.entries returns any values for conditional generic types
-        Object.entries(this.data).map(([key, value]) => [
-          isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
-          value,
-        ])
-      : Object.entries(this.data)).filter(([key]) => key in this.flags)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- entries are filtered by flags keys
-    return Object.fromEntries(entries) as Required<UpdateDeviceData<T>>
+        dataEntries
+          .map(([key, value]): [string, unknown] => [
+            isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
+            value,
+          ])
+          .filter(([key]) => key in this.flags)
+      : dataEntries.filter(([key]) => key in this.flags)
+    return typedFromEntries<Required<UpdateDeviceData<T>>>(entries)
   }
 
   public override async tiles(select?: false): Promise<TilesData<null>>
@@ -129,14 +130,13 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
           (select instanceof DeviceModel && select.id !== this.id)
       ) ?
         super.tiles()
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      : super.tiles(this.instance as DeviceModelContract<T>)
+      : super.tiles(this.device)
   }
 
   @fetchDevices
-  // eslint-disable-next-line @typescript-eslint/require-await -- async required by @fetchDevices decorator
   public async fetch(): Promise<ListDeviceData<T>> {
-    return this.data
+    const data = await Promise.resolve(this.data)
+    return data
   }
 
   @syncDevices()
@@ -144,14 +144,12 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public async setValues(
     data: Partial<UpdateDeviceData<T>>,
   ): Promise<SetDeviceData<T>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- entries filtered by isUpdateDeviceData
     const newData = Object.fromEntries(
       Object.entries(data).filter(
         ([key, value]) =>
-          isUpdateDeviceData(this.setData, key) &&
-          this.setData[key as keyof UpdateDeviceData<T>] !== value,
+          isUpdateDeviceData(this.setData, key) && this.setData[key] !== value,
       ),
-    ) as Partial<UpdateDeviceData<T>>
+    )
     const flags = this.#getFlags(typedKeys(newData))
     if (!flags) {
       throw new Error('No data to set')
@@ -170,19 +168,17 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   @syncDevices()
   @updateDevice
   public async values(): Promise<GetDeviceData<T>> {
-    const { data } = await this.api.values({
-      params: { buildingId: this.instance.buildingId, id: this.id },
+    const { data } = await this.api.values<T>({
+      params: { buildingId: this.device.buildingId, id: this.id },
     })
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return data as GetDeviceData<T>
+    return data
   }
 
   public async energy(query?: ReportQuery): Promise<EnergyData<T>> {
-    const { data } = await this.api.energy({
+    const { data } = await this.api.energy<T>({
       postData: this.#getReportPostData(query),
     })
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return data as EnergyData<T>
+    return data
   }
 
   public async hourlyTemperatures(
@@ -221,7 +217,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     const { data } = await this.api.temperatures({
       postData: {
         ...this.#getReportPostData(query, useExactRange),
-        Location: this.registry.buildings.getById(this.instance.buildingId)
+        Location: this.registry.buildings.getById(this.device.buildingId)
           ?.location,
       },
     })

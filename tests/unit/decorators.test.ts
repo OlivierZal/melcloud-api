@@ -3,16 +3,25 @@ import { describe, expect, it, vi } from 'vitest'
 import type { APIAdapter } from '../../src/services/index.ts'
 import type { SetDeviceDataAta } from '../../src/types/index.ts'
 
-import { FLAG_UNCHANGED } from '../../src/constants.ts'
-import { fetchDevices, syncDevices, updateDevice, updateDevices } from '../../src/decorators/index.ts'
-import { DeviceType, OperationMode } from '../../src/enums.ts'
+import {
+  DeviceType,
+  FLAG_UNCHANGED,
+  OperationMode,
+} from '../../src/constants.ts'
+import {
+  fetchDevices,
+  syncDevices,
+  updateDevice,
+  updateDevices,
+} from '../../src/decorators/index.ts'
+import { mock } from '../helpers.ts'
 
 describe('fetchDevices', () => {
   it('calls api.fetch before the target method', async () => {
     const fetchMock = vi.fn()
     const target = vi.fn().mockResolvedValue('result')
-    const decorated = fetchDevices(target, {} as ClassMethodDecoratorContext)
-    const context = { api: { fetch: fetchMock } as unknown as APIAdapter }
+    const decorated = fetchDevices(target, mock<ClassMethodDecoratorContext>())
+    const context = { api: mock<APIAdapter>({ fetch: fetchMock }) }
     await decorated.call(context)
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
@@ -24,7 +33,7 @@ describe('syncDevices', () => {
   it('calls onSync after the target method', async () => {
     const onSyncMock = vi.fn()
     const target = vi.fn().mockResolvedValue('result')
-    const decorated = syncDevices()(target, {} as ClassMethodDecoratorContext)
+    const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
     const context = { onSync: onSyncMock }
     const result = await decorated.call(context)
 
@@ -37,7 +46,7 @@ describe('syncDevices', () => {
     const target = vi.fn().mockResolvedValue('result')
     const decorated = syncDevices({ type: DeviceType.Ata })(
       target,
-      {} as ClassMethodDecoratorContext,
+      mock<ClassMethodDecoratorContext>(),
     )
     const context = { onSync: onSyncMock }
     await decorated.call(context)
@@ -47,7 +56,7 @@ describe('syncDevices', () => {
 
   it('works when onSync is undefined', async () => {
     const target = vi.fn().mockResolvedValue('result')
-    const decorated = syncDevices()(target, {} as ClassMethodDecoratorContext)
+    const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
     const context = {}
     const result = await decorated.call(context)
 
@@ -64,13 +73,14 @@ describe('updateDevices', () => {
 
   it('updates all devices with the arg data', async () => {
     const update = vi.fn()
-    const facade = createMockFacade([
-      { type: DeviceType.Ata, update },
-    ])
+    const facade = createMockFacade([{ type: DeviceType.Ata, update }])
     const target = vi.fn().mockResolvedValue(true)
-    const decorated = updateDevices()(target, {
-      name: 'setPower',
-    } as unknown as ClassMethodDecoratorContext)
+    const decorated = updateDevices()(
+      target,
+      mock<ClassMethodDecoratorContext>({
+        name: 'setPower',
+      }),
+    )
     await decorated.call(facade, { Power: true })
 
     expect(update).toHaveBeenCalledWith({ Power: true })
@@ -79,9 +89,12 @@ describe('updateDevices', () => {
   it('throws when arg is empty object', async () => {
     const facade = createMockFacade([])
     const target = vi.fn().mockResolvedValue(true)
-    const decorated = updateDevices()(target, {
-      name: 'setGroup',
-    } as unknown as ClassMethodDecoratorContext)
+    const decorated = updateDevices()(
+      target,
+      mock<ClassMethodDecoratorContext>({
+        name: 'setGroup',
+      }),
+    )
 
     await expect(decorated.call(facade, {})).rejects.toThrow('No data to set')
   })
@@ -94,9 +107,12 @@ describe('updateDevices', () => {
       { type: DeviceType.Atw, update: updateAtw },
     ])
     const target = vi.fn().mockResolvedValue(true)
-    const decorated = updateDevices({ type: DeviceType.Ata })(target, {
-      name: 'setGroup',
-    } as unknown as ClassMethodDecoratorContext)
+    const decorated = updateDevices({ type: DeviceType.Ata })(
+      target,
+      mock<ClassMethodDecoratorContext>({
+        name: 'setGroup',
+      }),
+    )
     await decorated.call(facade, { Power: true })
 
     expect(updateAta).toHaveBeenCalled()
@@ -105,13 +121,14 @@ describe('updateDevices', () => {
 
   it('uses SetPower logic when method name is SetPower', async () => {
     const update = vi.fn()
-    const facade = createMockFacade([
-      { type: DeviceType.Ata, update },
-    ])
+    const facade = createMockFacade([{ type: DeviceType.Ata, update }])
     const target = vi.fn().mockResolvedValue(true)
-    const decorated = updateDevices()(target, {
-      name: 'SetPower',
-    } as unknown as ClassMethodDecoratorContext)
+    const decorated = updateDevices()(
+      target,
+      mock<ClassMethodDecoratorContext>({
+        name: 'SetPower',
+      }),
+    )
     await decorated.call(facade, true)
 
     expect(update).toHaveBeenCalledWith({ Power: true })
@@ -119,13 +136,14 @@ describe('updateDevices', () => {
 
   it('filters null/undefined values from data when no SetPower', async () => {
     const update = vi.fn()
-    const facade = createMockFacade([
-      { type: DeviceType.Ata, update },
-    ])
+    const facade = createMockFacade([{ type: DeviceType.Ata, update }])
     const target = vi.fn().mockResolvedValue({ Alpha: null, Power: true })
-    const decorated = updateDevices()(target, {
-      name: 'setGroup',
-    } as unknown as ClassMethodDecoratorContext)
+    const decorated = updateDevices()(
+      target,
+      mock<ClassMethodDecoratorContext>({
+        name: 'setGroup',
+      }),
+    )
     await decorated.call(facade, null)
 
     expect(update).toHaveBeenCalledWith({ Power: true })
@@ -135,7 +153,7 @@ describe('updateDevices', () => {
 describe('updateDevice', () => {
   it('updates the device model with converted data', async () => {
     const update = vi.fn()
-    const device = { update }
+    const device = { type: DeviceType.Ata, update }
     const facade = {
       devices: [device],
       flags: {
@@ -148,7 +166,7 @@ describe('updateDevice', () => {
       },
       type: DeviceType.Ata,
     }
-    const setData: SetDeviceDataAta = {
+    const setData = mock<SetDeviceDataAta>({
       DeviceType: DeviceType.Ata,
       EffectiveFlags: 0x1,
       LastCommunication: '',
@@ -162,9 +180,9 @@ describe('updateDevice', () => {
       SetTemperature: 24,
       VaneHorizontal: 0,
       VaneVertical: 0,
-    } as SetDeviceDataAta
+    })
     const target = vi.fn().mockResolvedValue(setData)
-    const decorated = updateDevice(target, {} as ClassMethodDecoratorContext)
+    const decorated = updateDevice(target, mock<ClassMethodDecoratorContext>())
     await decorated.call(facade)
 
     expect(update).toHaveBeenCalledTimes(1)
@@ -173,7 +191,7 @@ describe('updateDevice', () => {
 
   it('converts ATA set keys to list keys', async () => {
     const update = vi.fn()
-    const device = { update }
+    const device = { type: DeviceType.Ata, update }
     const facade = {
       devices: [device],
       flags: {
@@ -186,7 +204,7 @@ describe('updateDevice', () => {
       },
       type: DeviceType.Ata,
     }
-    const setData: SetDeviceDataAta = {
+    const setData = mock<SetDeviceDataAta>({
       DeviceType: DeviceType.Ata,
       EffectiveFlags: 0x8,
       LastCommunication: '',
@@ -200,9 +218,9 @@ describe('updateDevice', () => {
       SetTemperature: 24,
       VaneHorizontal: 0,
       VaneVertical: 0,
-    } as SetDeviceDataAta
+    })
     const target = vi.fn().mockResolvedValue(setData)
-    const decorated = updateDevice(target, {} as ClassMethodDecoratorContext)
+    const decorated = updateDevice(target, mock<ClassMethodDecoratorContext>())
     await decorated.call(facade)
 
     expect(update.mock.calls[0]![0]).toHaveProperty('FanSpeed', 4)
@@ -210,7 +228,7 @@ describe('updateDevice', () => {
 
   it('passes through non-ATA data without key conversion', async () => {
     const update = vi.fn()
-    const device = { update }
+    const device = { type: DeviceType.Erv, update }
     const facade = {
       devices: [device],
       flags: {
@@ -232,7 +250,7 @@ describe('updateDevice', () => {
       VentilationMode: 0,
     }
     const target = vi.fn().mockResolvedValue(setData)
-    const decorated = updateDevice(target, {} as ClassMethodDecoratorContext)
+    const decorated = updateDevice(target, mock<ClassMethodDecoratorContext>())
     await decorated.call(facade)
 
     expect(update.mock.calls[0]![0]).toHaveProperty('Power', true)
@@ -240,7 +258,7 @@ describe('updateDevice', () => {
 
   it('handles FLAG_UNCHANGED by including all data', async () => {
     const update = vi.fn()
-    const device = { update }
+    const device = { type: DeviceType.Erv, update }
     const facade = {
       devices: [device],
       flags: {
@@ -262,7 +280,7 @@ describe('updateDevice', () => {
       VentilationMode: 1,
     }
     const target = vi.fn().mockResolvedValue(setData)
-    const decorated = updateDevice(target, {} as ClassMethodDecoratorContext)
+    const decorated = updateDevice(target, mock<ClassMethodDecoratorContext>())
     await decorated.call(facade)
 
     expect(update).toHaveBeenCalledTimes(1)

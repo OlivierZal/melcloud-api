@@ -11,11 +11,12 @@ import type {
   ListDeviceDataErv,
 } from '../../src/types/index.ts'
 
-import { DeviceType } from '../../src/enums.ts'
+import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
+import { mock } from '../helpers.ts'
 
-const ataDeviceData: ListDeviceDataAta = {
+const ataDeviceData = mock<ListDeviceDataAta>({
   ActualFanSpeed: 3,
   EffectiveFlags: 0,
   FanSpeed: 3,
@@ -34,9 +35,9 @@ const ataDeviceData: ListDeviceDataAta = {
   SetTemperature: 23,
   VaneHorizontalDirection: 0,
   VaneVerticalDirection: 0,
-} as ListDeviceDataAta
+})
 
-const atwDeviceData: ListDeviceDataAtw = {
+const atwDeviceData = mock<ListDeviceDataAtw>({
   EffectiveFlags: 0,
   HasZone2: true,
   IdleZone1: false,
@@ -58,9 +59,9 @@ const atwDeviceData: ListDeviceDataAtw = {
   SetTemperatureZone1: 22,
   SetTemperatureZone2: 20,
   TankWaterTemperature: 48,
-} as ListDeviceDataAtw
+})
 
-const ervDeviceData: ListDeviceDataErv = {
+const ervDeviceData = mock<ListDeviceDataErv>({
   EffectiveFlags: 0,
   HasAutomaticFanSpeed: false,
   HasCO2Sensor: true,
@@ -77,7 +78,7 @@ const ervDeviceData: ListDeviceDataErv = {
   SetTemperature: 24,
   VentilationMode: 0,
   WifiSignalStrength: -50,
-} as unknown as ListDeviceDataErv
+})
 
 const buildings: BuildingData[] = [
   {
@@ -153,7 +154,7 @@ const devices: ListDeviceAny[] = [
   {
     AreaID: 200,
     BuildingID: 2,
-    Device: { ...ataDeviceData, Power: false } as ListDeviceDataAta,
+    Device: mock<ListDeviceDataAta>({ ...ataDeviceData, Power: false }),
     DeviceID: 2001,
     DeviceName: 'Studio AC',
     FloorID: null,
@@ -162,23 +163,19 @@ const devices: ListDeviceAny[] = [
 ]
 
 const createMockApi = (): APIAdapter =>
-  ({
+  mock<APIAdapter>({
     energy: vi.fn(),
     errorLog: vi.fn(),
     errors: vi.fn(),
     fetch: vi.fn().mockResolvedValue([]),
-    frostProtection: vi
-      .fn()
-      .mockResolvedValue({ data: { FPEnabled: false } }),
+    frostProtection: vi.fn().mockResolvedValue({ data: { FPEnabled: false } }),
     group: vi.fn(),
     holidayMode: vi.fn().mockResolvedValue({ data: { HMEnabled: false } }),
     hourlyTemperatures: vi.fn(),
     internalTemperatures: vi.fn(),
     onSync: vi.fn().mockResolvedValue(),
     operationModes: vi.fn(),
-    setFrostProtection: vi
-      .fn()
-      .mockResolvedValue({ data: { Success: true } }),
+    setFrostProtection: vi.fn().mockResolvedValue({ data: { Success: true } }),
     setGroup: vi.fn(),
     setHolidayMode: vi.fn().mockResolvedValue({ data: { Success: true } }),
     setPower: vi.fn().mockResolvedValue({ data: true }),
@@ -189,7 +186,7 @@ const createMockApi = (): APIAdapter =>
     temperatures: vi.fn(),
     tiles: vi.fn().mockResolvedValue({ data: {} }),
     values: vi.fn(),
-  }) as unknown as APIAdapter
+  })
 
 const syncAll = (registry: ModelRegistry): void => {
   registry.syncBuildings(buildings)
@@ -362,7 +359,9 @@ describe('registry + facade manager integration', () => {
     const registry = new ModelRegistry()
     registry.syncBuildings([buildings[1]!])
     registry.syncFloors([])
-    registry.syncAreas([{ BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' }])
+    registry.syncAreas([
+      { BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' },
+    ])
     registry.syncDevices([devices[3]!])
 
     const api = createMockApi()

@@ -71,12 +71,6 @@ export type {
 } from './types/index.ts'
 
 export {
-  fetchDevices,
-  syncDevices,
-  updateDevice,
-  updateDevices,
-} from './decorators/index.ts'
-export {
   DeviceType,
   FanSpeed,
   Horizontal,
@@ -89,7 +83,13 @@ export {
   OperationModeZone,
   VentilationMode,
   Vertical,
-} from './enums.ts'
+} from './constants.ts'
+export {
+  fetchDevices,
+  syncDevices,
+  updateDevice,
+  updateDevices,
+} from './decorators/index.ts'
 export {
   type BuildingFacade,
   type DeviceFacade,

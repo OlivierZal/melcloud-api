@@ -1,6 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType, Language } from '../enums.ts'
+import type { DeviceType, Language } from '../constants.ts'
 import type { ModelRegistry } from '../models/index.ts'
 import type {
   Building,
@@ -33,13 +33,6 @@ import type {
   TilesData,
   TilesPostData,
 } from '../types/index.ts'
-
-const apiSettingKeys: Set<string> = new Set([
-  'contextKey',
-  'expiry',
-  'password',
-  'username',
-]) satisfies Set<keyof APISettings>
 
 /** Configuration options for creating a MELCloud API instance. */
 export interface APIConfig extends Partial<LoginCredentials> {
@@ -266,18 +259,18 @@ export interface APIAdapter {
     }) => Promise<{ data: TilesData<T> }>)
 
   /** Fetch current device data by device and building ID. */
-  readonly values: ({
+  readonly values: <T extends DeviceType>({
     params,
   }: {
     params: GetDeviceDataParams
-  }) => Promise<{ data: GetDeviceData<DeviceType> }>
+  }) => Promise<{ data: GetDeviceData<T> }>
 
   /** Fetch energy consumption report. Supported by ATA and ATW devices. */
-  readonly energy: ({
+  readonly energy: <T extends DeviceType>({
     postData,
   }: {
     postData: EnergyPostData
-  }) => Promise<{ data: EnergyData<DeviceType> }>
+  }) => Promise<{ data: EnergyData<T> }>
 
   /** Fetch ATA device group state. ATA only. */
   readonly group: ({
@@ -321,14 +314,11 @@ export interface Logger {
 /** External storage adapter for persisting API session settings. */
 export interface SettingManager {
 
-  /** Retrieve a setting value by key. */
-  readonly get: <T extends keyof APISettings>(key: T) => APISettings[T]
+  /** Retrieve a setting value by key. Returns the stored value, or `null`/`undefined` if absent. */
+  readonly get: (key: string) => string | null | undefined
 
   /** Store a setting value by key. */
-  readonly set: <T extends keyof APISettings>(
-    key: T,
-    value: APISettings[T],
-  ) => void
+  readonly set: (key: string, value: string) => void
 }
 
 /** Callback invoked after sync operations, with optional device IDs and type filter. */
@@ -336,7 +326,3 @@ export type OnSyncFunction = (params?: {
   ids?: number[]
   type?: DeviceType
 }) => Promise<void>
-
-/** Type guard checking whether a string is a valid API setting key. */
-export const isAPISetting = (value: string): value is keyof APISettings =>
-  apiSettingKeys.has(value)

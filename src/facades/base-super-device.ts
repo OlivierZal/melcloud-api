@@ -10,8 +10,8 @@ import type {
   SuccessData,
 } from '../types/index.ts'
 
+import { DeviceType } from '../constants.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
-import { DeviceType } from '../enums.ts'
 
 import type { SuperDeviceFacade } from './interfaces.ts'
 

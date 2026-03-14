@@ -1,4 +1,4 @@
-import type { DeviceType, FanSpeed, VentilationMode } from '../enums.ts'
+import type { DeviceType, FanSpeed, VentilationMode } from '../constants.ts'
 
 import type {
   BaseListDeviceData,
@@ -11,7 +11,7 @@ import type { GetDeviceData } from './generic.ts'
 export interface ListDeviceDataErv
   extends
     BaseListDeviceData,
-    Omit<GetDeviceData<DeviceType.Erv>, keyof DeviceDataNotInList> {
+    Omit<GetDeviceData<typeof DeviceType.Erv>, keyof DeviceDataNotInList> {
   readonly HasAutomaticFanSpeed: boolean
   readonly HasCO2Sensor: boolean
   readonly HasPM25Sensor: boolean
@@ -20,7 +20,7 @@ export interface ListDeviceDataErv
 
 export interface SetDeviceDataErv
   extends BaseSetDeviceData, Required<UpdateDeviceDataErv> {
-  readonly DeviceType: DeviceType.Erv
+  readonly DeviceType: typeof DeviceType.Erv
   readonly NumberOfFanSpeeds: number
   readonly OutdoorTemperature: number
   readonly RoomCO2Level: number
