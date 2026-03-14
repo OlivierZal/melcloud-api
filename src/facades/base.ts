@@ -167,7 +167,6 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     max,
     min,
   }: FrostProtectionQuery): Promise<FailureData | SuccessData> {
-
     /*
      * Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
      * in case the adjustment pushed max out of bounds

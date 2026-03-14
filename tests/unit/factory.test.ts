@@ -146,6 +146,17 @@ describe('createFacade', () => {
     expect(facade.id).toBe(1000)
   })
 
+  it('throws when device not found in registry', () => {
+    const registry = new ModelRegistry()
+    registry.syncDevices([deviceListData])
+    const instance = registry.devices.getById(1000)!
+    registry.syncDevices([])
+
+    expect(() => createFacade(mockApi, registry, instance)).toThrow(
+      'Device not found in registry',
+    )
+  })
+
   it('throws for unsupported model types', () => {
     const registry = new ModelRegistry()
     const unknown = mock<Model>({ id: 1, name: 'unknown' })

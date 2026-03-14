@@ -90,7 +90,9 @@ const mockAxiosInstance = {
 
 vi.mock(import('axios'), () =>
   mock<typeof import('axios')>({
-    default: mock<AxiosStatic>({ create: vi.fn().mockReturnValue(mockAxiosInstance) }),
+    default: mock<AxiosStatic>({
+      create: vi.fn().mockReturnValue(mockAxiosInstance),
+    }),
     HttpStatusCode: mock<typeof HttpStatusCode>({
       TooManyRequests: 429,
       Unauthorized: 401,

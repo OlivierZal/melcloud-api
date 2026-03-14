@@ -66,10 +66,14 @@ describe('mELCloudAPI', () => {
     const lastReq = reqCalls.at(-1)!
     const lastRes = resCalls.at(-1)!
     /* eslint-disable @typescript-eslint/no-unsafe-type-assertion */
-    ;[requestHandler, requestErrorHandler] =
-      lastReq as [typeof requestHandler, typeof requestErrorHandler]
-    ;[responseHandler, responseErrorHandler] =
-      lastRes as [typeof responseHandler, typeof responseErrorHandler]
+    ;[requestHandler, requestErrorHandler] = lastReq as [
+      typeof requestHandler,
+      typeof requestErrorHandler,
+    ]
+    ;[responseHandler, responseErrorHandler] = lastRes as [
+      typeof responseHandler,
+      typeof responseErrorHandler,
+    ]
     /* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
     return api
   }
@@ -168,6 +172,23 @@ describe('mELCloudAPI', () => {
     expect(() => {
       vi.advanceTimersByTime(60_000)
     }).not.toThrow()
+  })
+
+  it('logs error when auto-sync onSync callback throws', async () => {
+    const logger = { error: vi.fn(), log: vi.fn() }
+    const onSync = vi.fn().mockImplementationOnce(() => {
+      // First call (initial create) succeeds, subsequent calls can throw
+    })
+    await MELCloudAPI.create({ autoSyncInterval: 1, logger, onSync })
+    onSync.mockImplementation(() => {
+      throw new Error('sync callback failed')
+    })
+    await vi.advanceTimersByTimeAsync(60_000)
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'Auto-sync failed:',
+      expect.any(Error),
+    )
   })
 
   describe('api endpoints', () => {

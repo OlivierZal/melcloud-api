@@ -1,6 +1,5 @@
 /** MELCloud device type identifiers. */
 export const DeviceType = {
-
   /** Air-to-Air (ATA) heat pump. */
   Ata: 0,
 
@@ -127,7 +126,6 @@ export type OperationModeStateZone =
 
 /** ATW zone operation modes controlling temperature regulation strategy. */
 export const OperationModeZone = {
-
   /** Temperature curve-based regulation. */
   curve: 2,
 

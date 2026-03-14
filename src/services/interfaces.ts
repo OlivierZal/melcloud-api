@@ -36,7 +36,6 @@ import type {
 
 /** Configuration options for creating a MELCloud API instance. */
 export interface APIConfig extends Partial<LoginCredentials> {
-
   /** Interval in minutes between automatic syncs. Set to `null` to disable. */
   readonly autoSyncInterval?: number | null
 
@@ -61,7 +60,6 @@ export interface APIConfig extends Partial<LoginCredentials> {
 
 /** Persistent settings managed by the API for session authentication. */
 export interface APISettings {
-
   /** MELCloud session context key. */
   readonly contextKey?: string | null
 
@@ -77,7 +75,6 @@ export interface APISettings {
 
 /** A single error entry from the device error log. */
 export interface ErrorDetails {
-
   /** Human-readable date of the error occurrence. */
   readonly date: string
 
@@ -90,7 +87,6 @@ export interface ErrorDetails {
 
 /** Parsed error log with pagination support. */
 export interface ErrorLog {
-
   /** List of error entries, sorted in reverse chronological order. */
   readonly errors: readonly ErrorDetails[]
 
@@ -106,7 +102,6 @@ export interface ErrorLog {
 
 /** Query parameters for paginating the error log. */
 export interface ErrorLogQuery {
-
   /** Start date in ISO 8601 format. */
   readonly from?: string
 
@@ -122,7 +117,6 @@ export interface ErrorLogQuery {
 
 /** Full MELCloud API contract including authentication and device listing. */
 export interface API extends APIAdapter {
-
   /** Central model registry containing all synced buildings, floors, areas, and devices. */
   readonly registry: ModelRegistry
 
@@ -158,7 +152,6 @@ export interface API extends APIAdapter {
  * Methods are grouped by supported device types.
  */
 export interface APIAdapter {
-
   /** Callback invoked after sync operations. */
   readonly onSync?: OnSyncFunction
 
@@ -303,7 +296,6 @@ export interface APIAdapter {
 
 /** Logger interface for API call tracing. */
 export interface Logger {
-
   /** Log error messages. */
   readonly error: Console['error']
 
@@ -313,7 +305,6 @@ export interface Logger {
 
 /** External storage adapter for persisting API session settings. */
 export interface SettingManager {
-
   /** Retrieve a setting value by key. Returns the stored value, or `null`/`undefined` if absent. */
   readonly get: (key: string) => string | null | undefined
 

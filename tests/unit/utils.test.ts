@@ -6,6 +6,7 @@ import {
   isSetDeviceDataAtaInList,
   isSetDeviceDataAtaNotInList,
   isUpdateDeviceData,
+  typedFromEntries,
 } from '../../src/utils.ts'
 
 describe('fromSetToListAta', () => {
@@ -53,6 +54,17 @@ describe('isSetDeviceDataAtaInList', () => {
   it('returns false for keys not in fromListToSetAta', () => {
     expect(isSetDeviceDataAtaInList('SetFanSpeed')).toBe(false)
     expect(isSetDeviceDataAtaInList('Power')).toBe(false)
+  })
+})
+
+describe('typedFromEntries', () => {
+  it('converts entries to an object', () => {
+    const entries: [string, number][] = [
+      ['a', 1],
+      ['b', 2],
+    ]
+
+    expect(typedFromEntries(entries)).toStrictEqual({ a: 1, b: 2 })
   })
 })
 

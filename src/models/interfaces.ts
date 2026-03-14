@@ -20,7 +20,6 @@ export interface BaseDeviceModel<T extends DeviceType> {
 
 /** Building model with geographic location. */
 export interface BuildingModel extends BaseBuildingModel, Model {
-
   /** Numeric location identifier used by the MELCloud API. */
   readonly location: number
 }

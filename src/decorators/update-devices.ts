@@ -18,10 +18,8 @@ import {
 
 const FIRST_DEVICE_INDEX = 0
 
-const isDeviceOfType = (
-  device: DeviceModelAny,
-  type: DeviceType,
-): boolean => device.type === type
+const isDeviceOfType = (device: DeviceModelAny, type: DeviceType): boolean =>
+  device.type === type
 
 /**
  * Method decorator factory that propagates data changes to device models after
@@ -111,10 +109,11 @@ export const updateDevice = <
     const data = await target.call(this, ...args)
     const device = this.devices.at(FIRST_DEVICE_INDEX)
     if (device && isDeviceOfType(device, this.type)) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified
-      ;(device as unknown as { update: (d: Partial<ListDeviceData<T>>) => void }).update(
-        convertToListDeviceData(this, data),
-      )
+      /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- runtime-verified */
+      ;(
+        device as unknown as { update: (d: Partial<ListDeviceData<T>>) => void }
+      ).update(convertToListDeviceData(this, data))
+      /* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
     }
     return data
   }

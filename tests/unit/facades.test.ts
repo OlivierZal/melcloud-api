@@ -817,6 +817,24 @@ describe('baseFacade setHolidayMode with device fallback', () => {
   })
 })
 
+describe('baseDeviceFacade device type mismatch', () => {
+  it('throws when device type does not match facade type', () => {
+    const registry = createRegistry()
+    const api = createMockApi()
+    const instance = registry.devices.getById(1001)!
+    assertDeviceType(instance, DeviceType.Atw)
+    /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- intentional mismatch for testing */
+    const facade = new DeviceAtaFacade(
+      api,
+      registry,
+      instance as unknown as DeviceModel<typeof DeviceType.Ata>,
+    )
+    /* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
+
+    expect(() => facade.data).toThrow('Device type mismatch')
+  })
+})
+
 describe('baseFacade instance error', () => {
   it('throws when instance not found in registry', () => {
     const api = createMockApi()
@@ -1017,7 +1035,8 @@ describe('deviceAtaFacade', () => {
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Ata>>(call.postData).SetTemperature,
+      mock<SetDevicePostData<typeof DeviceType.Ata>>(call.postData)
+        .SetTemperature,
     ).toBeGreaterThanOrEqual(10)
   })
 
@@ -1034,7 +1053,8 @@ describe('deviceAtaFacade', () => {
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Ata>>(call.postData).SetTemperature,
+      mock<SetDevicePostData<typeof DeviceType.Ata>>(call.postData)
+        .SetTemperature,
     ).toBeLessThanOrEqual(31)
   })
 })
@@ -1081,7 +1101,8 @@ describe('deviceAtwFacade', () => {
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Atw>>(call.postData).SetTemperatureZone1,
+      mock<SetDevicePostData<typeof DeviceType.Atw>>(call.postData)
+        .SetTemperatureZone1,
     ).toBeGreaterThanOrEqual(10)
   })
 
@@ -1118,7 +1139,8 @@ describe('deviceAtwFacade', () => {
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Atw>>(call.postData).SetTemperatureZone1,
+      mock<SetDevicePostData<typeof DeviceType.Atw>>(call.postData)
+        .SetTemperatureZone1,
     ).toBe(10)
   })
 
@@ -1494,7 +1516,9 @@ describe('deviceAtwHasZone2Facade CanCool false', () => {
     })
 
     const call = vi.mocked(api.setValues).mock.calls[0]![0]
-    const postData = mock<SetDevicePostData<typeof DeviceType.Atw>>(call.postData)
+    const postData = mock<SetDevicePostData<typeof DeviceType.Atw>>(
+      call.postData,
+    )
 
     expect(postData.OperationModeZone2).toBe(OperationModeZone.flow)
   })

@@ -133,6 +133,24 @@ describe('modelRegistry', () => {
       expect(registry.devices.getById(1000)?.type).toBe(DeviceType.Ata)
     })
 
+    it('throws for unsupported device type', () => {
+      const registry = new ModelRegistry()
+      const invalidDevice = mock<ListDeviceAny>({
+        AreaID: null,
+        BuildingID: 1,
+        Device: mock<ListDeviceDataAta>(),
+        DeviceID: 9999,
+        DeviceName: 'Invalid',
+        FloorID: null,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- intentional invalid type for testing
+        Type: 999 as DeviceType,
+      })
+
+      expect(() => {
+        registry.syncDevices([invalidDevice])
+      }).toThrow(/Unsupported device type/u)
+    })
+
     it('replaces previous data on re-sync', () => {
       const registry = new ModelRegistry()
       registry.syncBuildings(buildingData)

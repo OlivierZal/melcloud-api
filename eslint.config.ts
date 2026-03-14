@@ -88,7 +88,6 @@ const config = defineConfig([
     },
     rules: {
       '@stylistic/line-comment-position': 'error',
-      '@stylistic/lines-around-comment': 'error',
       '@stylistic/multiline-comment-style': 'error',
       '@stylistic/quotes': [
         'error',

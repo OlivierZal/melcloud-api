@@ -256,6 +256,34 @@ describe('updateDevice', () => {
     expect(update.mock.calls[0]![0]).toHaveProperty('Power', true)
   })
 
+  it('skips update when devices array is empty', async () => {
+    const facade = {
+      devices: [],
+      flags: { Power: 0x1 },
+      type: DeviceType.Ata,
+    }
+    const setData = mock<SetDeviceDataAta>({
+      DeviceType: DeviceType.Ata,
+      EffectiveFlags: 0x1,
+      LastCommunication: '',
+      NextCommunication: '',
+      NumberOfFanSpeeds: 5,
+      Offline: false,
+      OperationMode: OperationMode.heat,
+      Power: true,
+      RoomTemperature: 22,
+      SetFanSpeed: 3,
+      SetTemperature: 24,
+      VaneHorizontal: 0,
+      VaneVertical: 0,
+    })
+    const target = vi.fn().mockResolvedValue(setData)
+    const decorated = updateDevice(target, mock<ClassMethodDecoratorContext>())
+    const result = await decorated.call(facade)
+
+    expect(result).toBe(setData)
+  })
+
   it('handles FLAG_UNCHANGED by including all data', async () => {
     const update = vi.fn()
     const device = { type: DeviceType.Erv, update }
