@@ -78,7 +78,7 @@ vi.mock(import('axios'), () =>
   }),
 )
 
-describe('API lifecycle', () => {
+describe('api lifecycle', () => {
   let melCloudApi: typeof MELCloudAPI = cast(null)
 
   beforeEach(async () => {
@@ -194,6 +194,6 @@ describe('API lifecycle', () => {
     const onSync = vi.fn()
     await melCloudApi.create({ autoSyncInterval: 0, onSync })
 
-    expect(onSync).toHaveBeenCalled()
+    expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
   })
 })

@@ -243,7 +243,7 @@ describe('buildingFacade', () => {
     const data = await facade.fetch()
 
     expect(data.FPDefined).toBe(true)
-    expect(api.fetch).toHaveBeenCalled()
+    expect(api.fetch).toHaveBeenCalledWith()
   })
 
   it('calls setPower', async () => {
@@ -251,7 +251,7 @@ describe('buildingFacade', () => {
     const isPowered = await facade.setPower(true)
 
     expect(isPowered).toBe(true)
-    expect(api.setPower).toHaveBeenCalled()
+    expect(api.setPower).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls getErrors', async () => {
@@ -266,7 +266,7 @@ describe('buildingFacade', () => {
     const result = await facade.getSignalStrength(12)
 
     expect(result).toHaveProperty('series')
-    expect(api.getSignal).toHaveBeenCalled()
+    expect(api.getSignal).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls getTiles without selection', async () => {
@@ -290,7 +290,7 @@ describe('buildingFacade', () => {
     const { facade } = createBuildingFacade({ onSync })
     await facade.notifySync()
 
-    expect(onSync).toHaveBeenCalled()
+    expect(onSync).toHaveBeenCalledWith(expect.any(Object))
   })
 })
 
@@ -300,7 +300,7 @@ describe('buildingFacade frostProtection', () => {
     const result = await facade.getFrostProtection()
 
     expect(result).toHaveProperty('FPDefined')
-    expect(api.getFrostProtection).toHaveBeenCalled()
+    expect(api.getFrostProtection).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('sets frost protection', async () => {
@@ -313,7 +313,7 @@ describe('buildingFacade frostProtection', () => {
     })
 
     expect(result).toHaveProperty('Success')
-    expect(api.setFrostProtection).toHaveBeenCalled()
+    expect(api.setFrostProtection).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('clamps frost protection temperatures', async () => {
@@ -625,28 +625,28 @@ describe('deviceAtaFacade', () => {
     const data = await facade.fetch()
 
     expect(data.Power).toBe(true)
-    expect(api.fetch).toHaveBeenCalled()
+    expect(api.fetch).toHaveBeenCalledWith()
   })
 
   it('calls getValues', async () => {
     const { api, facade } = createAtaFacade()
     await facade.getValues()
 
-    expect(api.getValues).toHaveBeenCalled()
+    expect(api.getValues).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls energy', async () => {
     const { api, facade } = createAtaFacade()
     await facade.getEnergy()
 
-    expect(api.getEnergy).toHaveBeenCalled()
+    expect(api.getEnergy).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls energy with query', async () => {
     const { api, facade } = createAtaFacade()
     await facade.getEnergy({ from: '2024-01-01', to: '2024-01-31' })
 
-    expect(api.getEnergy).toHaveBeenCalled()
+    expect(api.getEnergy).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls operationModes', async () => {
@@ -662,7 +662,7 @@ describe('deviceAtaFacade', () => {
     const result = await facade.getTemperatures()
 
     expect(result).toHaveProperty('series')
-    expect(api.getTemperatures).toHaveBeenCalled()
+    expect(api.getTemperatures).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls internalTemperatures', async () => {
@@ -670,7 +670,7 @@ describe('deviceAtaFacade', () => {
     const result = await facade.getInternalTemperatures()
 
     expect(result).toHaveProperty('series')
-    expect(api.getInternalTemperatures).toHaveBeenCalled()
+    expect(api.getInternalTemperatures).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls hourlyTemperatures', async () => {
@@ -678,7 +678,7 @@ describe('deviceAtaFacade', () => {
     const result = await facade.getHourlyTemperatures(12)
 
     expect(result).toHaveProperty('series')
-    expect(api.getHourlyTemperatures).toHaveBeenCalled()
+    expect(api.getHourlyTemperatures).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls getTiles without selection', async () => {
@@ -699,7 +699,7 @@ describe('deviceAtaFacade', () => {
     const { api, facade } = createAtaFacade()
     await facade.setValues({ Power: false })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('setValues throws when no data differs', async () => {
@@ -821,7 +821,7 @@ describe('deviceAtwHasZone2Facade', () => {
       OperationModeZone1: OperationModeZone.flow,
     })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('adjusts secondary zone when primary changes to cool mode', async () => {
@@ -837,7 +837,7 @@ describe('deviceAtwHasZone2Facade', () => {
       OperationModeZone1: OperationModeZone.room_cool,
     })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('adjusts secondary zone down from cool when primary is not cool', async () => {
@@ -857,7 +857,7 @@ describe('deviceAtwHasZone2Facade', () => {
       OperationModeZone1: OperationModeZone.room,
     })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('adjusts secondary when both zones change', async () => {
@@ -873,7 +873,7 @@ describe('deviceAtwHasZone2Facade', () => {
       OperationModeZone2: OperationModeZone.flow,
     })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
   })
 })
 
@@ -908,7 +908,7 @@ describe('deviceAtwHasZone2Facade secondary curve to cool', () => {
       OperationModeZone1: OperationModeZone.room_cool,
     })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
   })
 })
 
@@ -924,7 +924,7 @@ describe('deviceAtwHasZone2Facade no operation mode change', () => {
     )
     await facade.setValues({ Power: false })
 
-    expect(api.setValues).toHaveBeenCalled()
+    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
   })
 })
 

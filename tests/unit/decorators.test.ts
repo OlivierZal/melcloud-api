@@ -206,7 +206,7 @@ describe(updateDevices, () => {
     })
     await decorated.call(facade, { Power: true })
 
-    expect(updateAta).toHaveBeenCalled()
+    expect(updateAta).toHaveBeenCalledWith({ Power: true })
     expect(updateAtw).not.toHaveBeenCalled()
   })
 
