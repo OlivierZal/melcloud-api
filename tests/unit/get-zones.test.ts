@@ -64,19 +64,18 @@ const devices = [
   }),
 ]
 
-const syncAll = (registry: ModelRegistry): void => {
+const createSyncedRegistry = (): ModelRegistry => {
+  const registry = new ModelRegistry()
   registry.syncBuildings(buildings)
   registry.syncFloors(floors)
   registry.syncAreas(areas)
   registry.syncDevices(devices)
+  return registry
 }
 
 describe('getBuildings', () => {
   it('returns all buildings with their hierarchy', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    const result = registry.getBuildings()
+    const result = createSyncedRegistry().getBuildings()
 
     expect(result).toHaveLength(2)
     expect(result[0]!.name).toBe('Alpha')
@@ -84,20 +83,16 @@ describe('getBuildings', () => {
   })
 
   it('sets correct model and level for buildings', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    const [alpha] = registry.getBuildings()
+    const [alpha] = createSyncedRegistry().getBuildings()
 
     expect(alpha!.model).toBe('buildings')
     expect(alpha!.level).toBe(0)
   })
 
   it('includes floors, areas, and devices in hierarchy', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    const bravo = registry.getBuildings().find(({ name }) => name === 'Bravo')!
+    const bravo = createSyncedRegistry()
+      .getBuildings()
+      .find(({ name }) => name === 'Bravo')!
 
     expect(bravo.floors).toHaveLength(1)
     expect(bravo.floors[0]!.name).toBe('Ground floor')
@@ -108,18 +103,16 @@ describe('getBuildings', () => {
   })
 
   it('puts building-level devices (no floor/area) directly on the building', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    const bravo = registry.getBuildings().find(({ name }) => name === 'Bravo')!
+    const bravo = createSyncedRegistry()
+      .getBuildings()
+      .find(({ name }) => name === 'Bravo')!
 
     expect(bravo.devices).toHaveLength(1)
     expect(bravo.devices[0]!.name).toBe('Heat pump')
   })
 
   it('filters by device type', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
+    const registry = createSyncedRegistry()
 
     const ataBuildings = registry.getBuildings({ type: DeviceType.Ata })
     const atwBuildings = registry.getBuildings({ type: DeviceType.Atw })
@@ -130,19 +123,15 @@ describe('getBuildings', () => {
   })
 
   it('excludes buildings with no matching devices', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    const result = registry.getBuildings({ type: DeviceType.Erv })
-
-    expect(result).toHaveLength(0)
+    expect(
+      createSyncedRegistry().getBuildings({ type: DeviceType.Erv }),
+    ).toHaveLength(0)
   })
 
   it('sets correct levels for nested items', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    const bravo = registry.getBuildings().find(({ name }) => name === 'Bravo')!
+    const bravo = createSyncedRegistry()
+      .getBuildings()
+      .find(({ name }) => name === 'Bravo')!
     const floor = bravo.floors[0]!
     const area = floor.areas[0]!
     const device = area.devices[0]!
@@ -153,10 +142,9 @@ describe('getBuildings', () => {
   })
 
   it('assigns level 1 to building-level devices', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    const bravo = registry.getBuildings().find(({ name }) => name === 'Bravo')!
+    const bravo = createSyncedRegistry()
+      .getBuildings()
+      .find(({ name }) => name === 'Bravo')!
 
     expect(bravo.devices[0]!.level).toBe(1)
   })
@@ -164,11 +152,9 @@ describe('getBuildings', () => {
 
 describe('getZones', () => {
   it('returns a flat, sorted list of all zones', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    const zones = registry.getZones()
-    const names = zones.map(({ name }) => name)
+    const names = createSyncedRegistry()
+      .getZones()
+      .map(({ name }) => name)
 
     expect(names).toStrictEqual([
       'AC unit',
@@ -183,10 +169,7 @@ describe('getZones', () => {
   })
 
   it('filters zones by device type', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    const atwZones = registry.getZones({ type: DeviceType.Atw })
+    const atwZones = createSyncedRegistry().getZones({ type: DeviceType.Atw })
 
     expect(atwZones.map(({ name }) => name)).toStrictEqual([
       'Bravo',
@@ -195,11 +178,9 @@ describe('getZones', () => {
   })
 
   it('includes model type for each zone', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    const zones = registry.getZones()
-    const models = zones.map(({ model, name }) => ({ model, name }))
+    const models = createSyncedRegistry()
+      .getZones()
+      .map(({ model, name }) => ({ model, name }))
 
     expect(models).toContainEqual({ model: 'buildings', name: 'Alpha' })
     expect(models).toContainEqual({ model: 'floors', name: 'Ground floor' })
@@ -208,9 +189,8 @@ describe('getZones', () => {
   })
 
   it('returns empty list when no devices match', () => {
-    const registry = new ModelRegistry()
-    syncAll(registry)
-
-    expect(registry.getZones({ type: DeviceType.Erv })).toHaveLength(0)
+    expect(
+      createSyncedRegistry().getZones({ type: DeviceType.Erv }),
+    ).toHaveLength(0)
   })
 })
