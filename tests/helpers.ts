@@ -36,7 +36,7 @@ export const createMockApi = (
     holidayMode: vi.fn().mockResolvedValue({ data: { HMEnabled: false } }),
     hourlyTemperatures: vi.fn(),
     internalTemperatures: vi.fn(),
-    onSync: vi.fn().mockImplementation(async () => {}),
+    onSync: vi.fn(),
     operationModes: vi.fn(),
     setFrostProtection: vi.fn().mockResolvedValue({ data: { Success: true } }),
     setGroup: vi.fn(),

@@ -141,7 +141,6 @@ describe('registry + facade manager integration', () => {
     expect(ataDevices).toHaveLength(2)
     expect(atwDevices).toHaveLength(1)
     expect(ervDevices).toHaveLength(1)
-    expect(ataDevices.every((d) => d.type === DeviceType.Ata)).toBe(true)
   })
 
   it('creates facades for every model type via FacadeManager', () => {

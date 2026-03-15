@@ -16,6 +16,102 @@ import {
 } from '../../src/decorators/index.ts'
 import { mock } from '../helpers.ts'
 
+const createMockFacade = (
+  devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[] = [],
+): { devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[] } => ({
+  devices,
+})
+
+const decorateUpdateDevices = (
+  name: string,
+  target: ReturnType<typeof vi.fn>,
+  options?: { type?: DeviceType },
+): ReturnType<ReturnType<typeof updateDevices>> =>
+  updateDevices(options)(target, mock<ClassMethodDecoratorContext>({ name }))
+
+const ataFlags = {
+  OperationMode: 0x2,
+  Power: 0x1,
+  SetFanSpeed: 0x8,
+  SetTemperature: 0x4,
+  VaneHorizontal: 0x1_00,
+  VaneVertical: 0x10,
+}
+
+const ervFlags = {
+  Power: 0x1,
+  SetFanSpeed: 0x8,
+  VentilationMode: 0x4,
+}
+
+const createAtaSetData = (
+  overrides: Partial<SetDeviceDataAta> = {},
+): SetDeviceDataAta =>
+  mock<SetDeviceDataAta>({
+    DeviceType: DeviceType.Ata,
+    EffectiveFlags: 0x1,
+    LastCommunication: '',
+    NextCommunication: '',
+    NumberOfFanSpeeds: 5,
+    Offline: false,
+    OperationMode: OperationMode.heat,
+    Power: true,
+    RoomTemperature: 22,
+    SetFanSpeed: 3,
+    SetTemperature: 24,
+    VaneHorizontal: 0,
+    VaneVertical: 0,
+    ...overrides,
+  })
+
+const createErvSetData = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> => ({
+  DeviceType: DeviceType.Erv,
+  EffectiveFlags: 0x1,
+  LastCommunication: '',
+  NextCommunication: '',
+  NumberOfFanSpeeds: 5,
+  Offline: false,
+  Power: true,
+  SetFanSpeed: 3,
+  VentilationMode: 0,
+  ...overrides,
+})
+
+const createAtaFacade = (
+  update: ReturnType<typeof vi.fn>,
+): {
+  devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[]
+  flags: typeof ataFlags
+  type: DeviceType
+} => ({
+  devices: [{ type: DeviceType.Ata, update }],
+  flags: ataFlags,
+  type: DeviceType.Ata,
+})
+
+const createErvFacade = (
+  update: ReturnType<typeof vi.fn>,
+): {
+  devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[]
+  flags: typeof ervFlags
+  type: DeviceType
+} => ({
+  devices: [{ type: DeviceType.Erv, update }],
+  flags: ervFlags,
+  type: DeviceType.Erv,
+})
+
+const callUpdateDevice = async (
+  facade: unknown,
+  setData: unknown,
+): Promise<unknown> => {
+  const target = vi.fn().mockResolvedValue(setData)
+  const decorated = updateDevice(target, mock<ClassMethodDecoratorContext>())
+  return decorated.call(facade)
+}
+
 describe(fetchDevices, () => {
   it('calls api.fetch before the target method', async () => {
     const fetchMock = vi.fn()
@@ -65,19 +161,6 @@ describe(syncDevices, () => {
 })
 
 describe(updateDevices, () => {
-  const createMockFacade = (
-    devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[] = [],
-  ) => ({
-    devices,
-  })
-
-  const decorateUpdateDevices = (
-    name: string,
-    target: ReturnType<typeof vi.fn>,
-    options?: { type?: DeviceType },
-  ) =>
-    updateDevices(options)(target, mock<ClassMethodDecoratorContext>({ name }))
-
   it('updates all devices with the arg data', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: DeviceType.Ata, update }])
@@ -144,78 +227,12 @@ describe(updateDevices, () => {
 })
 
 describe(updateDevice, () => {
-  const ataFlags = {
-    OperationMode: 0x2,
-    Power: 0x1,
-    SetFanSpeed: 0x8,
-    SetTemperature: 0x4,
-    VaneHorizontal: 0x1_00,
-    VaneVertical: 0x10,
-  }
-
-  const ervFlags = {
-    Power: 0x1,
-    SetFanSpeed: 0x8,
-    VentilationMode: 0x4,
-  }
-
-  const createAtaSetData = (
-    overrides: Partial<SetDeviceDataAta> = {},
-  ): SetDeviceDataAta =>
-    mock<SetDeviceDataAta>({
-      DeviceType: DeviceType.Ata,
-      EffectiveFlags: 0x1,
-      LastCommunication: '',
-      NextCommunication: '',
-      NumberOfFanSpeeds: 5,
-      Offline: false,
-      OperationMode: OperationMode.heat,
-      Power: true,
-      RoomTemperature: 22,
-      SetFanSpeed: 3,
-      SetTemperature: 24,
-      VaneHorizontal: 0,
-      VaneVertical: 0,
-      ...overrides,
-    })
-
-  const createAtaFacade = (update: ReturnType<typeof vi.fn>) => ({
-    devices: [{ type: DeviceType.Ata, update }],
-    flags: ataFlags,
-    type: DeviceType.Ata,
-  })
-
-  const createErvSetData = (overrides: Record<string, unknown> = {}) => ({
-    DeviceType: DeviceType.Erv,
-    EffectiveFlags: 0x1,
-    LastCommunication: '',
-    NextCommunication: '',
-    NumberOfFanSpeeds: 5,
-    Offline: false,
-    Power: true,
-    SetFanSpeed: 3,
-    VentilationMode: 0,
-    ...overrides,
-  })
-
-  const createErvFacade = (update: ReturnType<typeof vi.fn>) => ({
-    devices: [{ type: DeviceType.Erv, update }],
-    flags: ervFlags,
-    type: DeviceType.Erv,
-  })
-
-  const callUpdateDevice = async (facade: unknown, setData: unknown) => {
-    const target = vi.fn().mockResolvedValue(setData)
-    const decorated = updateDevice(target, mock<ClassMethodDecoratorContext>())
-    return decorated.call(facade)
-  }
-
   it('updates the device model with converted data', async () => {
     const update = vi.fn()
     await callUpdateDevice(createAtaFacade(update), createAtaSetData())
 
     expect(update).toHaveBeenCalledTimes(1)
-    expect(update.mock.calls[0]![0]).toHaveProperty('Power', true)
+    expect(update.mock.lastCall?.[0]).toHaveProperty('Power', true)
   })
 
   it('converts ATA set keys to list keys', async () => {
@@ -225,14 +242,14 @@ describe(updateDevice, () => {
       createAtaSetData({ EffectiveFlags: 0x8, SetFanSpeed: 4 }),
     )
 
-    expect(update.mock.calls[0]![0]).toHaveProperty('FanSpeed', 4)
+    expect(update.mock.lastCall?.[0]).toHaveProperty('FanSpeed', 4)
   })
 
   it('passes through non-ATA data without key conversion', async () => {
     const update = vi.fn()
     await callUpdateDevice(createErvFacade(update), createErvSetData())
 
-    expect(update.mock.calls[0]![0]).toHaveProperty('Power', true)
+    expect(update.mock.lastCall?.[0]).toHaveProperty('Power', true)
   })
 
   it('skips update when devices array is empty', async () => {

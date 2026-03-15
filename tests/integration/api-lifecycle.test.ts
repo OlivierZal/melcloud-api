@@ -2,15 +2,16 @@ import type { AxiosStatic, HttpStatusCode } from 'axios'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { MELCloudAPI } from '../../src/services/melcloud.ts'
 import type { BuildingWithStructure } from '../../src/types/index.ts'
 
 import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
-import { mock } from '../helpers.ts'
+import { cast, mock } from '../helpers.ts'
 
 const buildingResponse: BuildingWithStructure[] = [
-  {
+  mock<BuildingWithStructure>({
     ...buildingData({
       HMDefined: true,
       Location: 0,
@@ -51,7 +52,7 @@ const buildingResponse: BuildingWithStructure[] = [
         },
       ],
     },
-  } as BuildingWithStructure,
+  }),
 ]
 
 const mockInterceptors = {
@@ -66,7 +67,7 @@ const mockAxiosInstance = {
 }
 
 vi.mock(import('axios'), () =>
-  mock<typeof import('axios')>({
+  mock<{ default: AxiosStatic; HttpStatusCode: typeof HttpStatusCode }>({
     default: mock<AxiosStatic>({
       create: vi.fn().mockReturnValue(mockAxiosInstance),
     }),
@@ -78,15 +79,15 @@ vi.mock(import('axios'), () =>
 )
 
 describe('API lifecycle', () => {
-  let MELCloudAPI: typeof import('../../src/services/melcloud.ts').MELCloudAPI
+  let melCloudApi: typeof MELCloudAPI = cast(null)
 
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
     mockAxiosInstance.get.mockResolvedValue({ data: buildingResponse })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
-    const module = await import('../../src/services/melcloud.ts')
-    MELCloudAPI = module.MELCloudAPI
+    ;({ MELCloudAPI: melCloudApi } =
+      await import('../../src/services/melcloud.ts'))
   })
 
   afterEach(() => {
@@ -94,7 +95,7 @@ describe('API lifecycle', () => {
   })
 
   it('creates API, syncs buildings, and populates the registry', async () => {
-    const api = await MELCloudAPI.create({ autoSyncInterval: 0 })
+    const api = await melCloudApi.create({ autoSyncInterval: 0 })
 
     expect(api.registry.getDevices()).toHaveLength(1)
     expect(api.registry.getDevicesByBuildingId(1)).toHaveLength(1)
@@ -110,7 +111,7 @@ describe('API lifecycle', () => {
   })
 
   it('facadeManager works with registry populated by API', async () => {
-    const api = await MELCloudAPI.create({ autoSyncInterval: 0 })
+    const api = await melCloudApi.create({ autoSyncInterval: 0 })
     const manager = new FacadeManager(api, api.registry)
 
     const building = api.registry.buildings.getById(1)!
@@ -123,7 +124,7 @@ describe('API lifecycle', () => {
 
   it('authenticate → fetch → registry reflects updated data', async () => {
     mockAxiosInstance.get.mockResolvedValue({ data: [] })
-    const api = await MELCloudAPI.create({ autoSyncInterval: 0 })
+    const api = await melCloudApi.create({ autoSyncInterval: 0 })
 
     expect(api.registry.getDevices()).toHaveLength(0)
 
@@ -159,7 +160,7 @@ describe('API lifecycle', () => {
     })
     mockAxiosInstance.get.mockResolvedValue({ data: buildingResponse })
 
-    const api = await MELCloudAPI.create({
+    const api = await melCloudApi.create({
       autoSyncInterval: 0,
       settingManager,
     })
@@ -177,7 +178,7 @@ describe('API lifecycle', () => {
   })
 
   it('re-sync replaces registry data', async () => {
-    const api = await MELCloudAPI.create({ autoSyncInterval: 0 })
+    const api = await melCloudApi.create({ autoSyncInterval: 0 })
 
     expect(api.registry.getDevices()).toHaveLength(1)
 
@@ -190,8 +191,8 @@ describe('API lifecycle', () => {
   })
 
   it('onSync callback is invoked after fetch', async () => {
-    const onSync = vi.fn().mockImplementation(async () => {})
-    await MELCloudAPI.create({ autoSyncInterval: 0, onSync })
+    const onSync = vi.fn()
+    await melCloudApi.create({ autoSyncInterval: 0, onSync })
 
     expect(onSync).toHaveBeenCalled()
   })

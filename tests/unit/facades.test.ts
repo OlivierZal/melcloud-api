@@ -50,7 +50,7 @@ const createRegistry = (): ModelRegistry => {
 }
 
 const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
-  ({
+  mock<APIAdapter>({
     energy: vi.fn().mockResolvedValue({ data: {} }),
     fetch: vi.fn().mockResolvedValue([]),
     frostProtection: vi.fn().mockResolvedValue({
@@ -84,7 +84,7 @@ const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
     }),
     setPower: vi.fn().mockResolvedValue({ data: true }),
     setValues: vi.fn().mockResolvedValue({
-      data: {
+      data: mock<SetDeviceDataAta>({
         DeviceType: DeviceType.Ata,
         EffectiveFlags: 0x1,
         LastCommunication: '',
@@ -98,7 +98,7 @@ const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
         SetTemperature: 24,
         VaneHorizontal: 0,
         VaneVertical: 0,
-      } as SetDeviceDataAta,
+      }),
     }),
     signal: vi.fn().mockResolvedValue({
       data: reportData(),
@@ -111,7 +111,7 @@ const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
     }),
     values: vi.fn().mockResolvedValue({ data: {} }),
     ...overrides,
-  }) as APIAdapter
+  })
 
 describe('buildingFacade', () => {
   it('returns building data', () => {
@@ -148,9 +148,9 @@ describe('buildingFacade', () => {
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    const result = await facade.setPower(true)
+    const isPowered = await facade.setPower(true)
 
-    expect(result).toBe(true)
+    expect(isPowered).toBe(true)
     expect(api.setPower).toHaveBeenCalled()
   })
 
@@ -248,7 +248,7 @@ describe('buildingFacade frostProtection', () => {
       max: 2,
       min: 1,
     })
-    const call = vi.mocked(api.setFrostProtection).mock.calls[0]![0]
+    const call = vi.mocked(api.setFrostProtection).mock.lastCall?.[0]
 
     expect(call.postData.MinimumTemperature).toBeGreaterThanOrEqual(4)
     expect(call.postData.MaximumTemperature).toBeGreaterThanOrEqual(
@@ -266,7 +266,7 @@ describe('buildingFacade frostProtection', () => {
       max: 15,
       min: 14,
     })
-    const call = vi.mocked(api.setFrostProtection).mock.calls[0]![0]
+    const call = vi.mocked(api.setFrostProtection).mock.lastCall?.[0]
 
     expect(
       call.postData.MaximumTemperature - call.postData.MinimumTemperature,
@@ -306,7 +306,7 @@ describe('buildingFacade holidayMode', () => {
     const facade = new BuildingFacade(api, registry, instance)
     await facade.getHolidayMode()
     await facade.setHolidayMode({})
-    const call = vi.mocked(api.setHolidayMode).mock.calls[0]![0]
+    const call = vi.mocked(api.setHolidayMode).mock.lastCall?.[0]
 
     expect(call.postData.Enabled).toBe(false)
   })
@@ -519,7 +519,7 @@ describe('baseFacade setFrostProtection with device fallback', () => {
     const instance = registry.areas.getById(100)!
     const facade = new AreaFacade(api, registry, instance)
     await facade.setFrostProtection({ max: 14, min: 6 })
-    const call = vi.mocked(api.setFrostProtection).mock.calls[0]![0]
+    const call = vi.mocked(api.setFrostProtection).mock.lastCall?.[0]
 
     expect(call.postData).toHaveProperty('DeviceIds')
   })
@@ -538,7 +538,7 @@ describe('baseFacade setHolidayMode with device fallback', () => {
     const instance = registry.areas.getById(100)!
     const facade = new AreaFacade(api, registry, instance)
     await facade.setHolidayMode({ to: '2024-12-31' })
-    const call = vi.mocked(api.setHolidayMode).mock.calls[0]![0]
+    const call = vi.mocked(api.setHolidayMode).mock.lastCall?.[0]
 
     expect(call.postData.HMTimeZones[0]).toHaveProperty('Devices')
   })
@@ -755,7 +755,7 @@ describe('deviceAtaFacade', () => {
     assertDeviceType(instance, DeviceType.Ata)
     const facade = new DeviceAtaFacade(api, registry, instance)
     await facade.setValues({ SetTemperature: 0 })
-    const call = vi.mocked(api.setValues).mock.calls[0]![0]
+    const call = vi.mocked(api.setValues).mock.lastCall?.[0]
 
     expect(
       mock<SetDevicePostData<typeof DeviceType.Ata>>(call.postData)
@@ -773,7 +773,7 @@ describe('deviceAtaFacade', () => {
       OperationMode: OperationMode.cool,
       SetTemperature: 50,
     })
-    const call = vi.mocked(api.setValues).mock.calls[0]![0]
+    const call = vi.mocked(api.setValues).mock.lastCall?.[0]
 
     expect(
       mock<SetDevicePostData<typeof DeviceType.Ata>>(call.postData)
@@ -821,7 +821,7 @@ describe('deviceAtwFacade', () => {
     assertDeviceType(instance, DeviceType.Atw)
     const facade = new DeviceAtwFacade(api, registry, instance)
     await facade.setValues({ SetTemperatureZone1: 0 })
-    const call = vi.mocked(api.setValues).mock.calls[0]![0]
+    const call = vi.mocked(api.setValues).mock.lastCall?.[0]
 
     expect(
       mock<SetDevicePostData<typeof DeviceType.Atw>>(call.postData)
@@ -859,7 +859,7 @@ describe('deviceAtwFacade', () => {
     await facade.setValues({
       SetTemperatureZone1: mock<{ value: number }>().value,
     })
-    const call = vi.mocked(api.setValues).mock.calls[0]![0]
+    const call = vi.mocked(api.setValues).mock.lastCall?.[0]
 
     expect(
       mock<SetDevicePostData<typeof DeviceType.Atw>>(call.postData)
@@ -1199,7 +1199,7 @@ describe('deviceAtwHasZone2Facade CanCool false', () => {
       OperationModeZone1: OperationModeZone.flow,
     })
 
-    const call = vi.mocked(api.setValues).mock.calls[0]![0]
+    const call = vi.mocked(api.setValues).mock.lastCall?.[0]
     const postData = mock<SetDevicePostData<typeof DeviceType.Atw>>(
       call.postData,
     )

@@ -12,7 +12,7 @@ import {
   APICallResponseData,
   createAPICallErrorData,
 } from '../../src/logging/index.ts'
-import { mock } from '../helpers.ts'
+import { cast, mock } from '../helpers.ts'
 
 const createConfig = (
   overrides: Partial<InternalAxiosRequestConfig> = {},
@@ -63,11 +63,11 @@ describe('aPICallRequestData', () => {
 
   it('serializes to JSON with logKeys', () => {
     const data = new APICallRequestData(createConfig())
-    const parsed = JSON.parse(data.toString())
+    const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 
-    expect(parsed.dataType).toBe('API request')
-    expect(parsed.method).toBe('POST')
-    expect(parsed.url).toBe('/test/endpoint')
+    expect(parsed['dataType']).toBe('API request')
+    expect(parsed['method']).toBe('POST')
+    expect(parsed['url']).toBe('/test/endpoint')
     expect(parsed).toHaveProperty('headers')
     expect(parsed).toHaveProperty('params')
     expect(parsed).toHaveProperty('requestData')
@@ -98,12 +98,12 @@ describe('aPICallResponseData', () => {
 
   it('serializes to JSON with logKeys', () => {
     const data = new APICallResponseData(createResponse())
-    const parsed = JSON.parse(data.toString())
+    const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 
-    expect(parsed.dataType).toBe('API response')
-    expect(parsed.method).toBe('POST')
-    expect(parsed.url).toBe('/test/endpoint')
-    expect(parsed.status).toBe(200)
+    expect(parsed['dataType']).toBe('API response')
+    expect(parsed['method']).toBe('POST')
+    expect(parsed['url']).toBe('/test/endpoint')
+    expect(parsed['status']).toBe(200)
     expect(parsed).toHaveProperty('requestData')
     expect(parsed).toHaveProperty('responseData')
   })
@@ -140,8 +140,8 @@ describe(createAPICallErrorData, () => {
       response: createResponse(),
     })
     const data = createAPICallErrorData(error)
-    const parsed = JSON.parse(data.toString())
+    const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 
-    expect(parsed.errorMessage).toBe('Timeout')
+    expect(parsed['errorMessage']).toBe('Timeout')
   })
 })
