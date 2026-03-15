@@ -74,11 +74,11 @@ export interface DeviceFacade<T extends DeviceType>
   readonly temperatures: (query: ReportQuery) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
-  readonly tiles: ((select: true | DeviceModel<T>) => Promise<TilesData<T>>) &
+  readonly getTiles: ((select: true | DeviceModel<T>) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
 
   /** Fetch current device values from the API. */
-  readonly values: () => Promise<GetDeviceData<T>>
+  readonly getValues: () => Promise<GetDeviceData<T>>
 
   /** Fetch energy consumption report. ATA and ATW only. */
   readonly energy: (query: ReportQuery) => Promise<EnergyData<T>>
@@ -100,16 +100,16 @@ export interface Facade extends Model {
   readonly devices: readonly DeviceModelAny[]
 
   /** Retrieve the error log for all devices in this facade. */
-  readonly errors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
+  readonly getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
 
   /** Get the current frost protection settings. */
-  readonly frostProtection: () => Promise<FrostProtectionData>
+  readonly getFrostProtection: () => Promise<FrostProtectionData>
 
   /** Get the current holiday mode settings. */
-  readonly holidayMode: () => Promise<HolidayModeData>
+  readonly getHolidayMode: () => Promise<HolidayModeData>
 
   /** Trigger a sync callback for downstream consumers. */
-  readonly onSync: (params?: { type?: DeviceType }) => Promise<void>
+  readonly notifySync: (params?: { type?: DeviceType }) => Promise<void>
 
   /** Update frost protection settings with temperature clamping. */
   readonly setFrostProtection: (
@@ -125,10 +125,10 @@ export interface Facade extends Model {
   readonly setPower: (value?: boolean) => Promise<boolean>
 
   /** Fetch WiFi signal strength report as line chart data. */
-  readonly signal: (hour?: HourNumbers) => Promise<ReportChartLineOptions>
+  readonly getSignalStrength: (hour?: HourNumbers) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
-  readonly tiles: ((select?: false) => Promise<TilesData<null>>) &
+  readonly getTiles: ((select?: false) => Promise<TilesData<null>>) &
     (<T extends DeviceType>(select: DeviceModel<T>) => Promise<TilesData<T>>)
 }
 
@@ -147,7 +147,7 @@ export interface FacadeManager {
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
 export interface SuperDeviceFacade extends Facade {
   /** Get the current group state for all ATA devices. */
-  readonly group: () => Promise<GroupState>
+  readonly getGroup: () => Promise<GroupState>
 
   /** Update the group state for all ATA devices. */
   readonly setGroup: (state: GroupState) => Promise<FailureData | SuccessData>

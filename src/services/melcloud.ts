@@ -70,11 +70,11 @@ import type {
 
 import { DisposableTimeout } from './disposable-timeout.ts'
 
-const deviceTypeNames: Record<DeviceType, string> = {
+const DEVICE_TYPE_NAMES = {
   [DeviceType.Ata]: 'Ata',
   [DeviceType.Atw]: 'Atw',
   [DeviceType.Erv]: 'Erv',
-}
+} as const satisfies Record<DeviceType, string>
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
@@ -500,7 +500,7 @@ export class MELCloudAPI implements API, Disposable {
     postData: SetDevicePostData<T>
     type: T
   }): Promise<{ data: SetDeviceData<T> }> {
-    return this.#api.post(`/Device/Set${deviceTypeNames[type]}`, postData)
+    return this.#api.post(`/Device/Set${DEVICE_TYPE_NAMES[type]}`, postData)
   }
 
   public async signal({

@@ -96,24 +96,24 @@ export interface UpdateDeviceDataAtw
 
 /** ATW hot water state derived from device data. */
 export interface HotWaterState {
-  readonly ecoHotWater: boolean
-  readonly forcedMode: boolean
+  readonly isEcoHotWater: boolean
+  readonly isForcedMode: boolean
+  readonly isProhibited: boolean
   readonly maxTankTemperature: number
   readonly operationalState: OperationModeStateHotWater
-  readonly prohibited: boolean
   readonly setTankWaterTemperature: number
   readonly tankWaterTemperature: number
 }
 
 /** ATW zone state derived from device data. */
 export interface ZoneState {
-  readonly idle: boolean
-  readonly inCoolMode: boolean
-  readonly inHeatMode: boolean
+  readonly isIdle: boolean
+  readonly isInCoolMode: boolean
+  readonly isInHeatMode: boolean
+  readonly isProhibitCooling: boolean
+  readonly isProhibitHeating: boolean
   readonly operationalState: OperationModeStateZone
   readonly operationMode: OperationModeZone
-  readonly prohibitCooling: boolean
-  readonly prohibitHeating: boolean
   readonly roomTemperature: number
   readonly setTemperature: number
 }

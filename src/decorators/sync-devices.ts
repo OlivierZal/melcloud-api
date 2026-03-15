@@ -11,7 +11,7 @@ import type {
 } from '../types/index.ts'
 
 /**
- * Method decorator factory that invokes the `onSync` callback after the decorated method completes.
+ * Method decorator factory that invokes the sync callback after the decorated method completes.
  * @param root0 - Options object.
  * @param root0.type - Optional device type to pass to the sync callback.
  * @returns A method decorator that triggers sync after execution.
@@ -38,6 +38,10 @@ export const syncDevices =
   ): ((...args: unknown[]) => Promise<U>) =>
     async function newTarget(this: APIAdapter | Facade, ...args: unknown[]) {
       const data = await target.call(this, ...args)
-      await this.onSync?.({ type })
+      if ('notifySync' in this) {
+        await this.notifySync({ type })
+      } else {
+        await this.onSync?.({ type })
+      }
       return data
     }

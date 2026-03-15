@@ -64,11 +64,11 @@ describe('deviceAtwFacade zone1', () => {
     expect(zone1.operationMode).toBe(OperationModeZone.room)
     expect(zone1.roomTemperature).toBe(21)
     expect(zone1.setTemperature).toBe(22)
-    expect(zone1.idle).toBe(false)
-    expect(zone1.inHeatMode).toBe(true)
-    expect(zone1.inCoolMode).toBe(false)
-    expect(zone1.prohibitHeating).toBe(false)
-    expect(zone1.prohibitCooling).toBe(false)
+    expect(zone1.isIdle).toBe(false)
+    expect(zone1.isInHeatMode).toBe(true)
+    expect(zone1.isInCoolMode).toBe(false)
+    expect(zone1.isProhibitHeating).toBe(false)
+    expect(zone1.isProhibitCooling).toBe(false)
   })
 
   it('returns idle when device is idle', () => {
@@ -155,9 +155,9 @@ describe('deviceAtwFacade hotWater', () => {
     expect(hotWater.tankWaterTemperature).toBe(48)
     expect(hotWater.setTankWaterTemperature).toBe(50)
     expect(hotWater.maxTankTemperature).toBe(60)
-    expect(hotWater.ecoHotWater).toBe(false)
-    expect(hotWater.forcedMode).toBe(false)
-    expect(hotWater.prohibited).toBe(false)
+    expect(hotWater.isEcoHotWater).toBe(false)
+    expect(hotWater.isForcedMode).toBe(false)
+    expect(hotWater.isProhibited).toBe(false)
   })
 
   it('returns idle when device is idle', () => {

@@ -18,7 +18,7 @@ import type { SuperDeviceFacade } from './interfaces.ts'
 import { BaseFacade } from './base.ts'
 
 /** Abstract base for zone facades (building, floor, area) that support ATA group operations. */
-export abstract class BaseSuperDeviceFacade<
+export abstract class BaseZoneFacade<
   T extends AreaModel | BuildingModel | FloorModel,
 >
   extends BaseFacade<T>
@@ -27,7 +27,7 @@ export abstract class BaseSuperDeviceFacade<
   protected abstract readonly specification: keyof SetGroupPostData['Specification']
 
   @updateDevices({ type: DeviceType.Ata })
-  public async group(): Promise<GroupState> {
+  public async getGroup(): Promise<GroupState> {
     try {
       const {
         data: {

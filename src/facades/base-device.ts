@@ -119,19 +119,19 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return Object.fromEntries(entries) as Required<UpdateDeviceData<T>>
   }
 
-  public override async tiles(select?: false): Promise<TilesData<null>>
-  public override async tiles(
+  public override async getTiles(select?: false): Promise<TilesData<null>>
+  public override async getTiles(
     select: true | DeviceModelContract<T>,
   ): Promise<TilesData<T>>
-  public override async tiles(
+  public override async getTiles(
     select: boolean | DeviceModelContract<T> = false,
   ): Promise<TilesData<T | null>> {
     return (
         select === false ||
           (select instanceof DeviceModel && select.id !== this.id)
       ) ?
-        super.tiles()
-      : super.tiles(this.device)
+        super.getTiles()
+      : super.getTiles(this.device)
   }
 
   @fetchDevices
@@ -160,7 +160,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     }
     const { data: finalData } = await this.api.setValues({
       postData: {
-        ...this.handle(newData),
+        ...this.prepareUpdateData(newData),
         DeviceID: this.id,
         EffectiveFlags: flags,
       },
@@ -171,7 +171,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   @syncDevices()
   @updateDevice
-  public async values(): Promise<GetDeviceData<T>> {
+  public async getValues(): Promise<GetDeviceData<T>> {
     const { data } = await this.api.values<T>({
       params: { buildingId: this.device.buildingId, id: this.id },
     })
@@ -228,7 +228,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return getChartLineOptions(data, this.temperaturesLegend, '°C')
   }
 
-  protected handle(
+  protected prepareUpdateData(
     data: Partial<UpdateDeviceData<T>>,
   ): Required<UpdateDeviceData<T>> {
     return { ...this.setData, ...data }

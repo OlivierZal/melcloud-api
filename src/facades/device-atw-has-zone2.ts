@@ -70,10 +70,10 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     return this.getZoneState('Zone2')
   }
 
-  protected override handle(
+  protected override prepareUpdateData(
     data: Partial<UpdateDeviceDataAtw>,
   ): Required<UpdateDeviceDataAtw> {
-    return super.handle({
+    return super.prepareUpdateData({
       ...data,
       ...this.#handleOperationModes(data),
     })

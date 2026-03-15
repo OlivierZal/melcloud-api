@@ -3,10 +3,10 @@ import type {
   DeviceModelAny,
 } from '../models/interfaces.ts'
 
-import { BaseSuperDeviceFacade } from './base-super-device.ts'
+import { BaseZoneFacade } from './base-super-device.ts'
 
 /** Facade for an area, grouping devices within a floor or building. */
-export class AreaFacade extends BaseSuperDeviceFacade<AreaModelContract> {
+export class AreaFacade extends BaseZoneFacade<AreaModelContract> {
   protected readonly frostProtectionLocation = 'AreaIds'
 
   protected readonly holidayModeLocation = 'Areas'

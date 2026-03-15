@@ -154,57 +154,57 @@ describe('buildingFacade', () => {
     expect(api.setPower).toHaveBeenCalled()
   })
 
-  it('calls errors', async () => {
+  it('calls getErrors', async () => {
     const api = createMockApi()
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    const result = await facade.errors({})
+    const result = await facade.getErrors({})
 
     expect(result).toStrictEqual({ errors: [] })
   })
 
-  it('calls signal', async () => {
+  it('calls getSignalStrength', async () => {
     const api = createMockApi()
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    const result = await facade.signal(12)
+    const result = await facade.getSignalStrength(12)
 
     expect(result).toHaveProperty('series')
     expect(api.signal).toHaveBeenCalled()
   })
 
-  it('calls tiles without selection', async () => {
+  it('calls getTiles without selection', async () => {
     const api = createMockApi()
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    const result = await facade.tiles()
+    const result = await facade.getTiles()
 
     expect(result).toHaveProperty('Tiles')
   })
 
-  it('calls tiles with device selection', async () => {
+  it('calls getTiles with device selection', async () => {
     const api = createMockApi()
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
     const device = registry.devices.getById(1000)!
     assertDeviceType(device, DeviceType.Ata)
-    const result = await facade.tiles(device)
+    const result = await facade.getTiles(device)
 
     expect(api.tiles).toHaveBeenCalled()
     expect(result).toHaveProperty('Tiles')
   })
 
-  it('calls onSync', async () => {
+  it('calls notifySync', async () => {
     const onSync = vi.fn()
     const api = createMockApi({ onSync })
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    await facade.onSync()
+    await facade.notifySync()
 
     expect(onSync).toHaveBeenCalled()
   })
@@ -216,7 +216,7 @@ describe('buildingFacade frostProtection', () => {
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    const result = await facade.frostProtection()
+    const result = await facade.getFrostProtection()
 
     expect(result).toHaveProperty('FPDefined')
     expect(api.frostProtection).toHaveBeenCalled()
@@ -227,7 +227,7 @@ describe('buildingFacade frostProtection', () => {
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    await facade.frostProtection()
+    await facade.getFrostProtection()
     const result = await facade.setFrostProtection({
       enabled: true,
       max: 14,
@@ -243,7 +243,7 @@ describe('buildingFacade frostProtection', () => {
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    await facade.frostProtection()
+    await facade.getFrostProtection()
     await facade.setFrostProtection({
       max: 2,
       min: 1,
@@ -261,7 +261,7 @@ describe('buildingFacade frostProtection', () => {
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    await facade.frostProtection()
+    await facade.getFrostProtection()
     await facade.setFrostProtection({
       max: 15,
       min: 14,
@@ -280,7 +280,7 @@ describe('buildingFacade holidayMode', () => {
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    const result = await facade.holidayMode()
+    const result = await facade.getHolidayMode()
 
     expect(result).toHaveProperty('HMDefined')
   })
@@ -290,7 +290,7 @@ describe('buildingFacade holidayMode', () => {
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    await facade.holidayMode()
+    await facade.getHolidayMode()
     const result = await facade.setHolidayMode({
       from: '2024-06-01',
       to: '2024-06-15',
@@ -304,7 +304,7 @@ describe('buildingFacade holidayMode', () => {
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    await facade.holidayMode()
+    await facade.getHolidayMode()
     await facade.setHolidayMode({})
     const call = vi.mocked(api.setHolidayMode).mock.calls[0]![0]
 
@@ -313,12 +313,12 @@ describe('buildingFacade holidayMode', () => {
 })
 
 describe('buildingFacade group', () => {
-  it('calls group', async () => {
+  it('calls getGroup', async () => {
     const api = createMockApi()
     const registry = createRegistry()
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
-    const result = await facade.group()
+    const result = await facade.getGroup()
 
     expect(result).toHaveProperty('Power')
   })
@@ -341,7 +341,7 @@ describe('buildingFacade group', () => {
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
 
-    await expect(facade.group()).rejects.toThrow('No air-to-air device found')
+    await expect(facade.getGroup()).rejects.toThrow('No air-to-air device found')
   })
 
   it('throws when setGroup API fails', async () => {
@@ -412,7 +412,7 @@ describe('baseFacade frostProtection fallback', () => {
     const registry = createRegistry()
     const instance = registry.areas.getById(100)!
     const facade = new AreaFacade(api, registry, instance)
-    const result = await facade.frostProtection()
+    const result = await facade.getFrostProtection()
 
     expect(result).toHaveProperty('FPDefined')
     expect(fpMock).toHaveBeenCalledTimes(2)
@@ -426,8 +426,8 @@ describe('baseFacade frostProtection fallback', () => {
     const registry = createRegistry()
     const instance = registry.areas.getById(100)!
     const facade = new AreaFacade(api, registry, instance)
-    const result1 = await facade.frostProtection()
-    const result2 = await facade.frostProtection()
+    const result1 = await facade.getFrostProtection()
+    const result2 = await facade.getFrostProtection()
 
     expect(result2).toStrictEqual(result1)
     expect(fpMock).toHaveBeenCalledTimes(2)
@@ -444,8 +444,8 @@ describe('baseFacade frostProtection fallback', () => {
     const registry = createRegistry()
     const instance = registry.areas.getById(100)!
     const facade = new AreaFacade(api, registry, instance)
-    const result1 = await facade.frostProtection()
-    const result2 = await facade.frostProtection()
+    const result1 = await facade.getFrostProtection()
+    const result2 = await facade.getFrostProtection()
 
     expect(result2).toStrictEqual(result1)
     expect(fpMock).toHaveBeenCalledTimes(3)
@@ -464,7 +464,7 @@ describe('baseFacade holidayMode fallback', () => {
     const registry = createRegistry()
     const instance = registry.areas.getById(100)!
     const facade = new AreaFacade(api, registry, instance)
-    const result = await facade.holidayMode()
+    const result = await facade.getHolidayMode()
 
     expect(result).toHaveProperty('HMDefined')
     expect(hmMock).toHaveBeenCalledTimes(2)
@@ -478,8 +478,8 @@ describe('baseFacade holidayMode fallback', () => {
     const registry = createRegistry()
     const instance = registry.areas.getById(100)!
     const facade = new AreaFacade(api, registry, instance)
-    const result1 = await facade.holidayMode()
-    const result2 = await facade.holidayMode()
+    const result1 = await facade.getHolidayMode()
+    const result2 = await facade.getHolidayMode()
 
     expect(result2).toStrictEqual(result1)
     expect(hmMock).toHaveBeenCalledTimes(2)
@@ -496,8 +496,8 @@ describe('baseFacade holidayMode fallback', () => {
     const registry = createRegistry()
     const instance = registry.areas.getById(100)!
     const facade = new AreaFacade(api, registry, instance)
-    const result1 = await facade.holidayMode()
-    const result2 = await facade.holidayMode()
+    const result1 = await facade.getHolidayMode()
+    const result2 = await facade.getHolidayMode()
 
     expect(result2).toStrictEqual(result1)
     expect(hmMock).toHaveBeenCalledTimes(3)
@@ -581,7 +581,7 @@ describe('baseFacade instance error', () => {
     const instance = registry.areas.getById(200)!
     const facade = new AreaFacade(api, registry, instance)
 
-    await expect(facade.frostProtection()).rejects.toThrow('No device id found')
+    await expect(facade.getFrostProtection()).rejects.toThrow('No device id found')
   })
 })
 
@@ -620,13 +620,13 @@ describe('deviceAtaFacade', () => {
     expect(api.fetch).toHaveBeenCalled()
   })
 
-  it('calls values', async () => {
+  it('calls getValues', async () => {
     const api = createMockApi()
     const registry = createRegistry()
     const instance = registry.devices.getById(1000)!
     assertDeviceType(instance, DeviceType.Ata)
     const facade = new DeviceAtaFacade(api, registry, instance)
-    await facade.values()
+    await facade.getValues()
 
     expect(api.values).toHaveBeenCalled()
   })
@@ -701,24 +701,24 @@ describe('deviceAtaFacade', () => {
     expect(api.hourlyTemperatures).toHaveBeenCalled()
   })
 
-  it('calls tiles without selection', async () => {
+  it('calls getTiles without selection', async () => {
     const api = createMockApi()
     const registry = createRegistry()
     const instance = registry.devices.getById(1000)!
     assertDeviceType(instance, DeviceType.Ata)
     const facade = new DeviceAtaFacade(api, registry, instance)
-    const result = await facade.tiles()
+    const result = await facade.getTiles()
 
     expect(result).toHaveProperty('Tiles')
   })
 
-  it('calls tiles with true selection', async () => {
+  it('calls getTiles with true selection', async () => {
     const api = createMockApi()
     const registry = createRegistry()
     const instance = registry.devices.getById(1000)!
     assertDeviceType(instance, DeviceType.Ata)
     const facade = new DeviceAtaFacade(api, registry, instance)
-    const result = await facade.tiles(true)
+    const result = await facade.getTiles(true)
 
     expect(result).toHaveProperty('Tiles')
   })
@@ -1050,8 +1050,8 @@ describe('deviceAtwHasZone2Facade', () => {
   })
 })
 
-describe('baseDeviceFacade tiles', () => {
-  it('calls super.tiles when passed a different device instance', async () => {
+describe('baseDeviceFacade getTiles', () => {
+  it('calls super.getTiles when passed a different device instance', async () => {
     const api = createMockApi()
     const registry = createRegistry()
     const instance = registry.devices.getById(1000)!
@@ -1059,7 +1059,7 @@ describe('baseDeviceFacade tiles', () => {
     const facade = new DeviceAtaFacade(api, registry, instance)
     const otherDevice = registry.devices.getById(1001)!
     assertDeviceType(otherDevice, DeviceType.Atw)
-    const result = await facade.tiles(
+    const result = await facade.getTiles(
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
       mock<DeviceModelAta>(otherDevice as unknown as Partial<DeviceModelAta>),
     )

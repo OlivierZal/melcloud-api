@@ -27,10 +27,10 @@ export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
    * Clamp SetTemperature to the valid range for the current or requested
    * operation mode before sending to the API
    */
-  protected override handle(
+  protected override prepareUpdateData(
     data: Partial<UpdateDeviceDataAta>,
   ): Required<UpdateDeviceDataAta> {
-    return super.handle({ ...data, ...this.#handleTargetTemperature(data) })
+    return super.prepareUpdateData({ ...data, ...this.#handleTargetTemperature(data) })
   }
 
   #getTargetTemperatureRange(operationMode = this.setData.OperationMode): {
