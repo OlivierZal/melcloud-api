@@ -91,6 +91,37 @@ const createAxiosError = ({
     }),
   })
 
+const createDevice = (overrides: Record<string, unknown> = {}): ListDeviceAny =>
+  cast({
+    AreaID: null,
+    BuildingID: 1,
+    DeviceID: 1,
+    DeviceName: 'Device',
+    FloorID: null,
+    Type: 0,
+    ...overrides,
+  })
+
+const createBuilding = (
+  overrides: Partial<BuildingWithStructure> = {},
+): BuildingWithStructure =>
+  mock<BuildingWithStructure>({
+    FPDefined: false,
+    FPEnabled: false,
+    FPMaxTemperature: 16,
+    FPMinTemperature: 4,
+    HMDefined: false,
+    HMEnabled: false,
+    HMEndDate: null,
+    HMStartDate: null,
+    ID: 1,
+    Location: 10,
+    Name: 'Test',
+    Structure: { Areas: [], Devices: [], Floors: [] },
+    TimeZone: 0,
+    ...overrides,
+  })
+
 const isInterceptorTuple = (
   value: unknown,
 ): value is [
@@ -212,21 +243,7 @@ describe('mELCloudAPI', () => {
   })
 
   it('fetches building list and syncs registry', async () => {
-    const building: BuildingWithStructure = {
-      FPDefined: false,
-      FPEnabled: false,
-      FPMaxTemperature: 16,
-      FPMinTemperature: 4,
-      HMDefined: false,
-      HMEnabled: false,
-      HMEndDate: null,
-      HMStartDate: null,
-      ID: 1,
-      Location: 10,
-      Name: 'Test',
-      Structure: { Areas: [], Devices: [], Floors: [] },
-      TimeZone: 0,
-    }
+    const building = createBuilding()
     mockAxiosInstance.get.mockResolvedValue({ data: [building] })
     const api = await createApi()
     const buildings = await api.fetch()
@@ -642,33 +659,12 @@ describe('mELCloudAPI', () => {
     })
 
     it('uses all devices when no deviceIds provided', async () => {
-      const building = mock<BuildingWithStructure>({
-        FPDefined: false,
-        FPEnabled: false,
-        FPMaxTemperature: 16,
-        FPMinTemperature: 4,
-        HMDefined: false,
-        HMEnabled: false,
-        HMEndDate: null,
-        HMStartDate: null,
-        ID: 1,
-        Location: 10,
-        Name: 'Test',
+      const building = createBuilding({
         Structure: {
           Areas: [],
-          Devices: [
-            mock<ListDeviceAny>({
-              AreaID: null,
-              BuildingID: 1,
-              DeviceID: 42,
-              DeviceName: 'D1',
-              FloorID: null,
-              Type: 0,
-            }),
-          ],
+          Devices: [createDevice({ DeviceID: 42, DeviceName: 'D1' })],
           Floors: [],
         },
-        TimeZone: 0,
       })
       mockAxiosInstance.get.mockResolvedValue({ data: [building] })
       const api = await createApi()
@@ -933,30 +929,17 @@ describe('mELCloudAPI', () => {
 
   describe('fetch with complex building structure', () => {
     it('syncs floors, areas, and devices from building structure', async () => {
-      const building = mock<BuildingWithStructure>({
-        FPDefined: false,
-        FPEnabled: false,
-        FPMaxTemperature: 16,
-        FPMinTemperature: 4,
-        HMDefined: false,
-        HMEnabled: false,
-        HMEndDate: null,
-        HMStartDate: null,
-        ID: 1,
-        Location: 10,
+      const building = createBuilding({
         Name: 'B1',
         Structure: {
           Areas: [
             {
               BuildingId: 1,
               Devices: [
-                mock<ListDeviceAny>({
+                createDevice({
                   AreaID: 100,
-                  BuildingID: 1,
                   DeviceID: 2000,
                   DeviceName: 'Area Device',
-                  FloorID: null,
-                  Type: 0,
                 }),
               ],
               FloorId: null,
@@ -965,14 +948,7 @@ describe('mELCloudAPI', () => {
             },
           ],
           Devices: [
-            mock<ListDeviceAny>({
-              AreaID: null,
-              BuildingID: 1,
-              DeviceID: 1000,
-              DeviceName: 'Building Device',
-              FloorID: null,
-              Type: 0,
-            }),
+            createDevice({ DeviceID: 1000, DeviceName: 'Building Device' }),
           ],
           Floors: [
             {
@@ -980,13 +956,11 @@ describe('mELCloudAPI', () => {
                 {
                   BuildingId: 1,
                   Devices: [
-                    mock<ListDeviceAny>({
+                    createDevice({
                       AreaID: 200,
-                      BuildingID: 1,
                       DeviceID: 3000,
                       DeviceName: 'Floor Area Device',
                       FloorID: 10,
-                      Type: 0,
                     }),
                   ],
                   FloorId: 10,
@@ -996,13 +970,10 @@ describe('mELCloudAPI', () => {
               ],
               BuildingId: 1,
               Devices: [
-                mock<ListDeviceAny>({
-                  AreaID: null,
-                  BuildingID: 1,
+                createDevice({
                   DeviceID: 4000,
                   DeviceName: 'Floor Device',
                   FloorID: 10,
-                  Type: 0,
                 }),
               ],
               ID: 10,
@@ -1010,7 +981,6 @@ describe('mELCloudAPI', () => {
             },
           ],
         },
-        TimeZone: 0,
       })
       mockAxiosInstance.get.mockResolvedValue({ data: [building] })
       const api = await createApi()
