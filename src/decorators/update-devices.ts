@@ -1,4 +1,4 @@
-import type { DeviceFacade, SuperDeviceFacade } from '../facades/index.ts'
+import type { DeviceFacade, ZoneFacade } from '../facades/index.ts'
 import type { DeviceModelAny } from '../models/interfaces.ts'
 import type {
   FailureData,
@@ -38,7 +38,7 @@ export const updateDevices =
     target: (...args: any[]) => Promise<T>,
     context: ClassMethodDecoratorContext,
   ): ((...args: unknown[]) => Promise<T>) =>
-    async function newTarget(this: SuperDeviceFacade, ...args: unknown[]) {
+    async function newTarget(this: ZoneFacade, ...args: unknown[]) {
       const [arg] = args
       if (arg !== null && typeof arg === 'object' && !Object.keys(arg).length) {
         throw new Error('No data to set')

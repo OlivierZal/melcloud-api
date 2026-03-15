@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { DeviceType } from '../../src/constants.ts'
 import type {
-  Building,
+  BuildingWithStructure,
   ListDeviceAny,
   SetDevicePostData,
 } from '../../src/types/index.ts'
@@ -111,7 +111,7 @@ describe('mELCloudAPI', () => {
   })
 
   it('fetches building list and syncs registry', async () => {
-    const building: Building = {
+    const building: BuildingWithStructure = {
       FPDefined: false,
       FPEnabled: false,
       FPMaxTemperature: 16,
@@ -125,7 +125,7 @@ describe('mELCloudAPI', () => {
       Name: 'Test',
       Structure: { Areas: [], Devices: [], Floors: [] },
       TimeZone: 0,
-    } as Building
+    } as BuildingWithStructure
     mockAxiosInstance.get.mockResolvedValue({ data: [building] })
     const api = await createApi()
     const buildings = await api.fetch()
@@ -196,10 +196,10 @@ describe('mELCloudAPI', () => {
       )
     })
 
-    it('calls errors', async () => {
+    it('calls getErrorEntries', async () => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({ data: [] })
-      await api.errors({ postData: { DeviceIDs: [1] } })
+      await api.getErrorEntries({ postData: { DeviceIDs: [1] } })
 
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
         '/Report/GetUnitErrorLog2',
@@ -561,7 +561,7 @@ describe('mELCloudAPI', () => {
     })
   })
 
-  describe('errorLog', () => {
+  describe('getErrorLog', () => {
     it('returns parsed error log', async () => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({
@@ -574,7 +574,7 @@ describe('mELCloudAPI', () => {
           },
         ],
       })
-      const result = await api.errorLog(
+      const result = await api.getErrorLog(
         { from: '2024-01-01', to: '2024-01-02' },
         [1],
       )
@@ -595,7 +595,7 @@ describe('mELCloudAPI', () => {
           },
         ],
       })
-      const result = await api.errorLog({}, [1])
+      const result = await api.getErrorLog({}, [1])
 
       expect(result.errors).toHaveLength(0)
     })
@@ -606,13 +606,13 @@ describe('mELCloudAPI', () => {
         data: { AttributeErrors: { f: ['e'] }, Success: false },
       })
 
-      await expect(api.errorLog({}, [1])).rejects.toThrow('f')
+      await expect(api.getErrorLog({}, [1])).rejects.toThrow('f')
     })
 
     it('handles offset and limit', async () => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({ data: [] })
-      const result = await api.errorLog(
+      const result = await api.getErrorLog(
         { limit: '5', offset: '2', to: '2024-06-01' },
         [1],
       )
@@ -622,7 +622,7 @@ describe('mELCloudAPI', () => {
     })
 
     it('uses all devices when no deviceIds provided', async () => {
-      const building = mock<Building>({
+      const building = mock<BuildingWithStructure>({
         FPDefined: false,
         FPEnabled: false,
         FPMaxTemperature: 16,
@@ -654,7 +654,7 @@ describe('mELCloudAPI', () => {
       const api = await createApi()
       await api.fetch()
       mockAxiosInstance.post.mockResolvedValue({ data: [] })
-      const result = await api.errorLog({})
+      const result = await api.getErrorLog({})
 
       expect(result).toHaveProperty('errors')
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
@@ -675,7 +675,7 @@ describe('mELCloudAPI', () => {
           },
         ],
       })
-      const result = await api.errorLog({ from: '2024-01-01' }, [1])
+      const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
 
       expect(result.errors).toHaveLength(0)
     })
@@ -1046,7 +1046,7 @@ describe('mELCloudAPI', () => {
 
   describe('fetch with complex building structure', () => {
     it('syncs floors, areas, and devices from building structure', async () => {
-      const building = mock<Building>({
+      const building = mock<BuildingWithStructure>({
         FPDefined: false,
         FPEnabled: false,
         FPMaxTemperature: 16,

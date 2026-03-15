@@ -13,7 +13,7 @@ import type {
 import { DeviceType } from '../constants.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
 
-import type { SuperDeviceFacade } from './interfaces.ts'
+import type { ZoneFacade } from './interfaces.ts'
 
 import { BaseFacade } from './base.ts'
 
@@ -22,9 +22,9 @@ export abstract class BaseZoneFacade<
   T extends AreaModel | BuildingModel | FloorModel,
 >
   extends BaseFacade<T>
-  implements SuperDeviceFacade
+  implements ZoneFacade
 {
-  protected abstract readonly specification: keyof SetGroupPostData['Specification']
+  protected abstract readonly groupSpecificationKey: keyof SetGroupPostData['Specification']
 
   @updateDevices({ type: DeviceType.Ata })
   public async getGroup(): Promise<GroupState> {
@@ -35,7 +35,9 @@ export abstract class BaseZoneFacade<
             Group: { State: state },
           },
         },
-      } = await this.api.group({ postData: { [this.specification]: this.id } })
+      } = await this.api.group({
+        postData: { [this.groupSpecificationKey]: this.id },
+      })
       return state
     } catch {
       throw new Error('No air-to-air device found')
@@ -48,7 +50,7 @@ export abstract class BaseZoneFacade<
     try {
       const { data } = await this.api.setGroup({
         postData: {
-          Specification: { [this.specification]: this.id },
+          Specification: { [this.groupSpecificationKey]: this.id },
           State: state,
         },
       })

@@ -17,7 +17,7 @@ import {
 
 import type {
   AreaDataAny,
-  Building,
+  BuildingWithStructure,
   EnergyData,
   EnergyPostData,
   ErrorLogData,
@@ -134,7 +134,7 @@ const formatErrors = (errors: Record<string, readonly string[]>): string =>
     .map(([error, messages]) => `${error}: ${messages.join(', ')}`)
     .join('\n')
 
-const handleErrorLogQuery = ({
+const parseErrorLogQuery = ({
   from,
   limit,
   offset,
@@ -174,14 +174,14 @@ const handleErrorLogQuery = ({
 }
 
 // Collect all areas from both building-level and floor-level
-const collectAreas = (buildings: Building[]): AreaDataAny[] =>
+const collectAreas = (buildings: BuildingWithStructure[]): AreaDataAny[] =>
   buildings.flatMap(({ Structure: { Areas: areas, Floors: floors } }) => [
     ...areas,
     ...floors.flatMap(({ Areas: floorAreas }) => floorAreas),
   ])
 
 // Collect all devices from every level of the hierarchy
-const collectDevices = (buildings: Building[]): ListDeviceAny[] =>
+const collectDevices = (buildings: BuildingWithStructure[]): ListDeviceAny[] =>
   buildings.flatMap(
     ({ Structure: { Areas: areas, Devices: devices, Floors: floors } }) => [
       ...devices,
@@ -288,7 +288,7 @@ export class MELCloudAPI implements API, Disposable {
    * @returns The list of fetched buildings.
    */
   @syncDevices()
-  public async fetch(): Promise<Building[]> {
+  public async fetch(): Promise<BuildingWithStructure[]> {
     this.clearSync()
     try {
       return await this.#fetch()
@@ -332,6 +332,24 @@ export class MELCloudAPI implements API, Disposable {
     return this.#api.post('/EnergyCost/Report', postData)
   }
 
+  public async frostProtection({
+    params,
+  }: {
+    params: SettingsParams
+  }): Promise<{ data: FrostProtectionData }> {
+    return this.#api.get('/FrostProtection/GetSettings', {
+      params,
+    })
+  }
+
+  public async getErrorEntries({
+    postData,
+  }: {
+    postData: ErrorLogPostData
+  }): Promise<{ data: ErrorLogData[] | FailureData }> {
+    return this.#api.post('/Report/GetUnitErrorLog2', postData)
+  }
+
   /**
    * Retrieve a parsed, paginated error log for the specified devices.
    * Filters out entries with invalid dates or empty messages.
@@ -339,11 +357,11 @@ export class MELCloudAPI implements API, Disposable {
    * @param deviceIds - Device IDs to fetch errors for; defaults to all devices.
    * @returns Parsed error log with pagination metadata.
    */
-  public async errorLog(
+  public async getErrorLog(
     query: ErrorLogQuery,
     deviceIds = this.#registry.getDevices().map(({ id }) => id),
   ): Promise<ErrorLog> {
-    const { fromDate, period, toDate } = handleErrorLogQuery(query)
+    const { fromDate, period, toDate } = parseErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
     const errorLog = await this.#errorLog(deviceIds, fromDate, toDate)
     return {
@@ -371,24 +389,6 @@ export class MELCloudAPI implements API, Disposable {
       nextFromDate: toISODate(nextToDate.minus({ days: period })),
       nextToDate: toISODate(nextToDate),
     }
-  }
-
-  public async errors({
-    postData,
-  }: {
-    postData: ErrorLogPostData
-  }): Promise<{ data: ErrorLogData[] | FailureData }> {
-    return this.#api.post('/Report/GetUnitErrorLog2', postData)
-  }
-
-  public async frostProtection({
-    params,
-  }: {
-    params: SettingsParams
-  }): Promise<{ data: FrostProtectionData }> {
-    return this.#api.get('/FrostProtection/GetSettings', {
-      params,
-    })
   }
 
   public async group({
@@ -425,7 +425,7 @@ export class MELCloudAPI implements API, Disposable {
     return this.#api.post('/Report/GetInternalTemperatures2', postData)
   }
 
-  public async list(): Promise<{ data: Building[] }> {
+  public async list(): Promise<{ data: BuildingWithStructure[] }> {
     return this.#api.get(LIST_PATH)
   }
 
@@ -605,7 +605,7 @@ export class MELCloudAPI implements API, Disposable {
     fromDate: DateTime,
     toDate: DateTime,
   ): Promise<ErrorLogData[]> {
-    const { data } = await this.errors({
+    const { data } = await this.getErrorEntries({
       postData: {
         DeviceIDs: deviceIds,
         FromDate: toISODate(fromDate),
@@ -618,7 +618,7 @@ export class MELCloudAPI implements API, Disposable {
     return data
   }
 
-  async #fetch(): Promise<Building[]> {
+  async #fetch(): Promise<BuildingWithStructure[]> {
     const { data } = await this.list()
     this.#registry.syncBuildings(data)
     this.#registry.syncFloors(

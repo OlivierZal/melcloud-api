@@ -28,10 +28,10 @@ export const createMockApi = (
 ): APIAdapter =>
   mock<APIAdapter>({
     energy: vi.fn(),
-    errorLog: vi.fn(),
-    errors: vi.fn(),
     fetch: vi.fn().mockResolvedValue([]),
     frostProtection: vi.fn().mockResolvedValue({ data: { FPEnabled: false } }),
+    getErrorEntries: vi.fn(),
+    getErrorLog: vi.fn(),
     group: vi.fn(),
     holidayMode: vi.fn().mockResolvedValue({ data: { HMEnabled: false } }),
     hourlyTemperatures: vi.fn(),

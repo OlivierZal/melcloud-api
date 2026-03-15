@@ -2,7 +2,7 @@ import type { DeviceType } from '../constants.ts'
 import type { Facade } from '../facades/index.ts'
 import type { APIAdapter } from '../services/index.ts'
 import type {
-  Building,
+  BuildingWithStructure,
   FailureData,
   GetDeviceData,
   GroupState,
@@ -21,7 +21,7 @@ export const syncDevices =
     T extends DeviceType,
     U extends
       | boolean
-      | Building[]
+      | BuildingWithStructure[]
       | FailureData
       | GetDeviceData<T>
       | GroupState

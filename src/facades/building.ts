@@ -14,9 +14,9 @@ import { BaseZoneFacade } from './base-super-device.ts'
 export class BuildingFacade extends BaseZoneFacade<BuildingModelContract> {
   protected readonly frostProtectionLocation = 'BuildingIds'
 
-  protected readonly holidayModeLocation = 'Buildings'
+  protected readonly groupSpecificationKey = 'BuildingID'
 
-  protected readonly specification = 'BuildingID'
+  protected readonly holidayModeLocation = 'Buildings'
 
   protected readonly tableName = 'Building'
 
@@ -28,8 +28,8 @@ export class BuildingFacade extends BaseZoneFacade<BuildingModelContract> {
     super(api, registry, instance)
     ;({
       data: {
-        FPDefined: this.isFrostProtectionDefined,
-        HMDefined: this.isHolidayModeDefined,
+        FPDefined: this.isFrostProtectionAtZoneLevel,
+        HMDefined: this.isHolidayModeAtZoneLevel,
       },
     } = this)
   }

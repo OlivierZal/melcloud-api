@@ -9,9 +9,9 @@ import { BaseZoneFacade } from './base-super-device.ts'
 export class FloorFacade extends BaseZoneFacade<FloorModelContract> {
   protected readonly frostProtectionLocation = 'FloorIds'
 
-  protected readonly holidayModeLocation = 'Floors'
+  protected readonly groupSpecificationKey = 'FloorID'
 
-  protected readonly specification = 'FloorID'
+  protected readonly holidayModeLocation = 'Floors'
 
   protected readonly tableName = 'Floor'
 

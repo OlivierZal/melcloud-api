@@ -3,7 +3,7 @@ import type { HourNumbers } from 'luxon'
 import type { DeviceType, Language } from '../constants.ts'
 import type { ModelRegistry } from '../models/index.ts'
 import type {
-  Building,
+  BuildingWithStructure,
   EnergyData,
   EnergyPostData,
   ErrorLogData,
@@ -127,7 +127,7 @@ export interface API extends APIAdapter {
   readonly clearSync: () => void
 
   /** List all buildings and their device hierarchy. */
-  readonly list: () => Promise<{ data: Building[] }>
+  readonly list: () => Promise<{ data: BuildingWithStructure[] }>
 
   /** Perform a login request against the MELCloud API. */
   readonly login: ({
@@ -159,20 +159,20 @@ export interface APIAdapter {
    * Retrieve a parsed and paginated error log for the given devices.
    * Supported by all device types.
    */
-  readonly errorLog: (
+  readonly getErrorLog: (
     query: ErrorLogQuery,
     deviceIds: number[],
   ) => Promise<ErrorLog>
 
   /** Fetch raw error log entries from the API. */
-  readonly errors: ({
+  readonly getErrorEntries: ({
     postData,
   }: {
     postData: ErrorLogPostData
   }) => Promise<{ data: ErrorLogData[] | FailureData }>
 
   /** Fetch all buildings and sync the model registry. */
-  readonly fetch: () => Promise<Building[]>
+  readonly fetch: () => Promise<BuildingWithStructure[]>
 
   /** Get frost protection settings for a building, floor, area, or device. */
   readonly frostProtection: ({

@@ -40,7 +40,13 @@ export interface BaseZone {
   readonly name: string
 }
 
-export interface Building extends BuildingData {
+export interface BuildingData extends ZoneSettings {
+  readonly ID: number
+  readonly Location: number
+  readonly Name: string
+}
+
+export interface BuildingWithStructure extends BuildingData {
   readonly Structure: {
     readonly Areas: readonly (AreaData<null> & {
       readonly Devices: readonly ListDeviceAny[]
@@ -53,12 +59,6 @@ export interface Building extends BuildingData {
       readonly Devices: readonly ListDeviceAny[]
     })[]
   }
-}
-
-export interface BuildingData extends ZoneSettings {
-  readonly ID: number
-  readonly Location: number
-  readonly Name: string
 }
 
 export interface BuildingZone extends BaseZone {
@@ -135,10 +135,6 @@ export interface GetDeviceDataParams {
   readonly id: number
 }
 
-export interface HMTimeZone extends HolidayModeLocation {
-  readonly TimeZone?: number
-}
-
 export interface HolidayModeData {
   readonly EndDate: {
     readonly Day: number
@@ -173,8 +169,12 @@ export interface HolidayModeLocation {
 export interface HolidayModePostData {
   readonly Enabled: boolean
   readonly EndDate: DateTimeComponents
-  readonly HMTimeZones: readonly HMTimeZone[]
+  readonly HMTimeZones: readonly HolidayModeTimeZone[]
   readonly StartDate: DateTimeComponents
+}
+
+export interface HolidayModeTimeZone extends HolidayModeLocation {
+  readonly TimeZone?: number
 }
 
 export interface HourlyReportPostData {

@@ -10,7 +10,7 @@ import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
-  DeviceDataNotInList,
+  TransientDeviceData,
 } from './bases.ts'
 import type { GetDeviceData } from './generic.ts'
 
@@ -27,7 +27,7 @@ export interface EnergyDataAtw {
 export interface ListDeviceDataAtw
   extends
     BaseListDeviceData,
-    Omit<GetDeviceData<typeof DeviceType.Atw>, keyof DeviceDataNotInList> {
+    Omit<GetDeviceData<typeof DeviceType.Atw>, keyof TransientDeviceData> {
   readonly BoosterHeater1Status: boolean
   readonly BoosterHeater2PlusStatus: boolean
   readonly BoosterHeater2Status: boolean

@@ -119,16 +119,16 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return typedFromEntries<Required<UpdateDeviceData<T>>>(entries)
   }
 
-  public override async getTiles(select?: false): Promise<TilesData<null>>
+  public override async getTiles(device?: false): Promise<TilesData<null>>
   public override async getTiles(
-    select: true | DeviceModelContract<T>,
+    device: true | DeviceModelContract<T>,
   ): Promise<TilesData<T>>
   public override async getTiles(
-    select: boolean | DeviceModelContract<T> = false,
+    device: boolean | DeviceModelContract<T> = false,
   ): Promise<TilesData<T | null>> {
     return (
-        select === false ||
-          (select instanceof DeviceModel && select.id !== this.id)
+        device === false ||
+          (device instanceof DeviceModel && device.id !== this.id)
       ) ?
         super.getTiles()
       : super.getTiles(this.device)

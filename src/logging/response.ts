@@ -1,9 +1,9 @@
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
-import { APICallContextData } from './context.ts'
+import { APICallLogData } from './context.ts'
 
 /** Structured log data for an API response. */
-export class APICallResponseData extends APICallContextData {
+export class APICallResponseData extends APICallLogData {
   public override readonly dataType = 'API response'
 
   public readonly requestData: InternalAxiosRequestConfig['data']

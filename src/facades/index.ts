@@ -9,7 +9,7 @@ export type {
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
-  SuperDeviceFacade,
+  ZoneFacade,
 } from './interfaces.ts'
 
 export { FacadeManager } from './manager.ts'

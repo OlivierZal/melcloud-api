@@ -17,7 +17,7 @@ import type {
   DeviceFacadeAny,
   Facade,
   FacadeManager as FacadeManagerContract,
-  SuperDeviceFacade,
+  ZoneFacade,
 } from './interfaces.ts'
 
 import { createFacade } from './factory.ts'
@@ -39,7 +39,7 @@ export class FacadeManager implements FacadeManagerContract {
   }
 
   public get<T extends DeviceType>(instance: DeviceModel<T>): DeviceFacade<T>
-  public get(instance: AreaModel | FloorModel): SuperDeviceFacade
+  public get(instance: AreaModel | FloorModel): ZoneFacade
   public get(instance: BuildingModel): BuildingFacade
   public get(instance: DeviceModelAny): DeviceFacadeAny
   public get(instance: Model): Facade
@@ -47,7 +47,7 @@ export class FacadeManager implements FacadeManagerContract {
   public get<T extends DeviceType>(
     instance?: DeviceModel<T>,
   ): DeviceFacade<T> | null
-  public get(instance?: AreaModel | FloorModel): SuperDeviceFacade | null
+  public get(instance?: AreaModel | FloorModel): ZoneFacade | null
   public get(instance?: BuildingModel): BuildingFacade | null
   public get(instance?: DeviceModelAny): DeviceFacadeAny | null
   public get(instance?: Model): Facade | null {

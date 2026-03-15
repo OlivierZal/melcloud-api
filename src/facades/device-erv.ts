@@ -6,7 +6,7 @@ import type { ReportChartPieOptions, ReportQuery } from './interfaces.ts'
 
 import { BaseDeviceFacade } from './base-device.ts'
 
-const filterVentilationModes = (label?: string): boolean =>
+const isRelevantVentilationMode = (label?: string): boolean =>
   label !== undefined &&
   (label === 'Power' ||
     (label.startsWith('Actual') && !label.endsWith('OperationMode')))
@@ -40,7 +40,7 @@ export class DeviceErvFacade extends BaseDeviceFacade<typeof DeviceType.Erv> {
     const filtered = labels
       .map((label, index) => ({ label, value: series[index] }))
       .filter((item): item is { label: string; value: number } =>
-        filterVentilationModes(item.label),
+        isRelevantVentilationMode(item.label),
       )
     return {
       ...options,

@@ -2,14 +2,14 @@ import type { AxiosStatic, HttpStatusCode } from 'axios'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Building } from '../../src/types/index.ts'
+import type { BuildingWithStructure } from '../../src/types/index.ts'
 
 import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
 import { mock } from '../helpers.ts'
 
-const buildingResponse: Building[] = [
+const buildingResponse: BuildingWithStructure[] = [
   {
     ...buildingData({
       HMDefined: true,
@@ -51,7 +51,7 @@ const buildingResponse: Building[] = [
         },
       ],
     },
-  } as Building,
+  } as BuildingWithStructure,
 ]
 
 const mockInterceptors = {

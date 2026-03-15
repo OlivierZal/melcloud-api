@@ -10,7 +10,7 @@ import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
-  DeviceDataNotInList,
+  TransientDeviceData,
 } from './bases.ts'
 import type { GetDeviceData } from './generic.ts'
 
@@ -61,7 +61,7 @@ export interface ListDeviceDataAta
     BaseListDeviceData,
     Omit<
       GetDeviceData<typeof DeviceType.Ata>,
-      KeyOfSetDeviceDataAtaNotInList | keyof DeviceDataNotInList
+      KeyOfSetDeviceDataAtaNotInList | keyof TransientDeviceData
     >,
     SetDeviceDataAtaInList {
   readonly ActualFanSpeed: number
@@ -82,6 +82,7 @@ export interface SetDeviceDataAta
   readonly RoomTemperature: number
 }
 
+/** ATA properties that use different names in list responses vs set requests (e.g., `FanSpeed` in list, `SetFanSpeed` in set). */
 export interface SetDeviceDataAtaInList {
   readonly FanSpeed: FanSpeed
   readonly VaneHorizontalDirection: Horizontal
@@ -101,6 +102,7 @@ export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly VaneVertical?: Vertical
 }
 
+/** Set-request property names that have no direct counterpart in list responses (they map to `SetDeviceDataAtaInList` names instead). */
 export type KeyOfSetDeviceDataAtaNotInList =
   | 'SetFanSpeed'
   | 'VaneHorizontal'

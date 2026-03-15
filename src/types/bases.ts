@@ -20,13 +20,13 @@ export interface BaseListDevice<T extends DeviceType = DeviceType> {
 
 export interface BaseListDeviceData extends Omit<
   BaseGetDeviceData,
-  keyof DeviceDataNotInList
+  keyof TransientDeviceData
 > {
   readonly WifiSignalStrength: number
 }
 
 export interface BaseSetDeviceData
-  extends DeviceDataNotInList, Required<BaseUpdateDeviceData> {
+  extends Required<BaseUpdateDeviceData>, TransientDeviceData {
   readonly EffectiveFlags: number
   readonly Offline: boolean
 }
@@ -35,7 +35,7 @@ export interface BaseUpdateDeviceData {
   readonly Power?: boolean
 }
 
-export interface DeviceDataNotInList {
+export interface TransientDeviceData {
   readonly LastCommunication: string
   readonly NextCommunication: string
 }

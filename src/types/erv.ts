@@ -4,14 +4,14 @@ import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
-  DeviceDataNotInList,
+  TransientDeviceData,
 } from './bases.ts'
 import type { GetDeviceData } from './generic.ts'
 
 export interface ListDeviceDataErv
   extends
     BaseListDeviceData,
-    Omit<GetDeviceData<typeof DeviceType.Erv>, keyof DeviceDataNotInList> {
+    Omit<GetDeviceData<typeof DeviceType.Erv>, keyof TransientDeviceData> {
   readonly HasAutomaticFanSpeed: boolean
   readonly HasCO2Sensor: boolean
   readonly HasPM25Sensor: boolean

@@ -48,7 +48,7 @@ export interface HolidayModeQuery {
 }
 
 /** Facade for a MELCloud building, combining zone settings with super device operations. */
-export interface BuildingFacade extends BaseBuildingModel, SuperDeviceFacade {
+export interface BuildingFacade extends BaseBuildingModel, ZoneFacade {
   /** Fetch the latest building zone settings after syncing devices. */
   readonly fetch: () => Promise<ZoneSettings>
 }
@@ -75,9 +75,9 @@ export interface DeviceFacade<T extends DeviceType>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((
-    select: true | DeviceModel<T>,
+    device: true | DeviceModel<T>,
   ) => Promise<TilesData<T>>) &
-    ((select?: false) => Promise<TilesData<null>>)
+    ((device?: false) => Promise<TilesData<null>>)
 
   /** Fetch current device values from the API. */
   readonly getValues: () => Promise<GetDeviceData<T>>
@@ -132,8 +132,8 @@ export interface Facade extends Model {
   ) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
-  readonly getTiles: ((select?: false) => Promise<TilesData<null>>) &
-    (<T extends DeviceType>(select: DeviceModel<T>) => Promise<TilesData<T>>)
+  readonly getTiles: ((device?: false) => Promise<TilesData<null>>) &
+    (<T extends DeviceType>(device: DeviceModel<T>) => Promise<TilesData<T>>)
 }
 
 /** Manager for lazily creating and caching facade instances. */
@@ -149,7 +149,7 @@ export interface FacadeManager {
 }
 
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
-export interface SuperDeviceFacade extends Facade {
+export interface ZoneFacade extends Facade {
   /** Get the current group state for all ATA devices. */
   readonly getGroup: () => Promise<GroupState>
 

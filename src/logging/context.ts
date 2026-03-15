@@ -13,10 +13,10 @@ const logKeys = [
   'errorMessage',
 ] as const
 
-const SPACE = 2
+const JSON_INDENT = 2
 
 /** Abstract base for API call logging data, serializable to JSON with a fixed set of log keys. */
-export abstract class APICallContextData {
+export abstract class APICallLogData {
   declare public readonly dataType: string
 
   public readonly method: InternalAxiosRequestConfig['method']
@@ -32,6 +32,6 @@ export abstract class APICallContextData {
   }
 
   public toString(): string {
-    return JSON.stringify(this, [...logKeys], SPACE)
+    return JSON.stringify(this, [...logKeys], JSON_INDENT)
   }
 }

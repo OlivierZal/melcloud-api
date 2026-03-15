@@ -52,12 +52,12 @@ const createRegistry = (): ModelRegistry => {
 const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
   ({
     energy: vi.fn().mockResolvedValue({ data: {} }),
-    errorLog: vi.fn().mockResolvedValue({ errors: [] }),
-    errors: vi.fn().mockResolvedValue({ data: [] }),
     fetch: vi.fn().mockResolvedValue([]),
     frostProtection: vi.fn().mockResolvedValue({
       data: frostProtectionResponse({ FPDefined: true }),
     }),
+    getErrorEntries: vi.fn().mockResolvedValue({ data: [] }),
+    getErrorLog: vi.fn().mockResolvedValue({ errors: [] }),
     group: vi.fn().mockResolvedValue({
       data: { Data: { Group: { State: { Power: true } } } },
     }),
