@@ -2,19 +2,12 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { APIAdapter } from '../../src/services/index.ts'
 import type {
-  BuildingData,
-  ListDeviceAny,
-  ListDeviceDataAta,
-  ListDeviceDataAtw,
-  ListDeviceDataErv,
-  ReportData,
   SetDeviceDataAta,
   SetDevicePostData,
 } from '../../src/types/index.ts'
 
 import {
   DeviceType,
-  LabelType,
   OperationMode,
   OperationModeZone,
 } from '../../src/constants.ts'
@@ -26,134 +19,33 @@ import { DeviceAtwFacade } from '../../src/facades/device-atw.ts'
 import { DeviceErvFacade } from '../../src/facades/device-erv.ts'
 import { FloorFacade } from '../../src/facades/floor.ts'
 import { type DeviceModel, ModelRegistry } from '../../src/models/index.ts'
+import {
+  areaData,
+  ataDevice,
+  ataDeviceData,
+  atwDevice,
+  atwDeviceData,
+  buildingData,
+  ervDevice,
+  floorData,
+  frostProtectionResponse,
+  holidayModeResponse,
+  reportData,
+} from '../fixtures.ts'
 import { assertDeviceType, mock } from '../helpers.ts'
 
 type DeviceModelAta = DeviceModel<typeof DeviceType.Ata>
 
-const buildingData: BuildingData = {
-  FPDefined: true,
-  FPEnabled: false,
-  FPMaxTemperature: 16,
-  FPMinTemperature: 4,
-  HMDefined: true,
-  HMEnabled: false,
-  HMEndDate: null,
-  HMStartDate: null,
-  ID: 1,
-  Location: 10,
-  Name: 'Building',
-  TimeZone: 0,
-}
-
-const ataDeviceData: ListDeviceAny = {
-  AreaID: 100,
-  BuildingID: 1,
-  Device: mock<ListDeviceDataAta>({
-    ActualFanSpeed: 3,
-    EffectiveFlags: 0,
-    FanSpeed: 3,
-    HasAutomaticFanSpeed: true,
-    MaxTempAutomatic: 31,
-    MaxTempCoolDry: 31,
-    MaxTempHeat: 31,
-    MinTempAutomatic: 16,
-    MinTempCoolDry: 16,
-    MinTempHeat: 10,
-    Offline: false,
-    OperationMode: OperationMode.heat,
-    OutdoorTemperature: 20,
-    Power: true,
-    RoomTemperature: 22,
-    SetTemperature: 24,
-    VaneHorizontalDirection: 0,
-    VaneVerticalDirection: 0,
-    WifiSignalStrength: -50,
-  }),
-  DeviceID: 1000,
-  DeviceName: 'ATA Device',
-  FloorID: 10,
-  Type: DeviceType.Ata,
-}
-
-const atwDeviceData: ListDeviceAny = {
-  AreaID: 100,
-  BuildingID: 1,
-  Device: mock<ListDeviceDataAtw>({
-    BoosterHeater1Status: false,
-    BoosterHeater2PlusStatus: false,
-    BoosterHeater2Status: false,
-    CanCool: true,
-    CondensingTemperature: 40,
-    CurrentEnergyConsumed: 0,
-    CurrentEnergyProduced: 0,
-    DefrostMode: 0,
-    EcoHotWater: false,
-    EffectiveFlags: 0,
-    FlowTemperature: 35,
-    FlowTemperatureZone1: 35,
-    FlowTemperatureZone2: 35,
-    ForcedHotWaterMode: false,
-    HasZone2: false,
-    HeatPumpFrequency: 50,
-    ImmersionHeaterStatus: false,
-    LastLegionellaActivationTime: '',
-    MaxTankTemperature: 60,
-    MixingTankWaterTemperature: 0,
-    Offline: false,
-    OperationModeZone1: OperationModeZone.room,
-    OperationModeZone2: OperationModeZone.room,
-    Power: true,
-    ReturnTemperature: 30,
-    ReturnTemperatureZone1: 30,
-    ReturnTemperatureZone2: 30,
-    SetCoolFlowTemperatureZone1: 20,
-    SetCoolFlowTemperatureZone2: 20,
-    SetHeatFlowTemperatureZone1: 40,
-    SetHeatFlowTemperatureZone2: 40,
-    SetTankWaterTemperature: 50,
-    SetTemperatureZone1: 22,
-    SetTemperatureZone2: 22,
-    TargetHCTemperatureZone1: 22,
-    TargetHCTemperatureZone2: 22,
-    WifiSignalStrength: -50,
-    Zone1InCoolMode: false,
-    Zone1InHeatMode: true,
-    Zone2InCoolMode: false,
-    Zone2InHeatMode: false,
-  }),
-  DeviceID: 1001,
-  DeviceName: 'ATW Device',
-  FloorID: 10,
-  Type: DeviceType.Atw,
-}
-
-const ervDeviceData: ListDeviceAny = {
-  AreaID: 100,
-  BuildingID: 1,
-  Device: mock<ListDeviceDataErv>({
-    EffectiveFlags: 0,
-    HasAutomaticFanSpeed: true,
-    HasCO2Sensor: false,
-    HasPM25Sensor: false,
-    Offline: false,
-    PM25Level: 0,
-    Power: true,
-    SetFanSpeed: 3,
-    VentilationMode: 0,
-    WifiSignalStrength: -50,
-  }),
-  DeviceID: 1002,
-  DeviceName: 'ERV Device',
-  FloorID: null,
-  Type: DeviceType.Erv,
-}
-
 const createRegistry = (): ModelRegistry => {
   const registry = new ModelRegistry()
-  registry.syncBuildings([buildingData])
-  registry.syncFloors([{ BuildingId: 1, ID: 10, Name: 'Floor' }])
-  registry.syncAreas([{ BuildingId: 1, FloorId: 10, ID: 100, Name: 'Area' }])
-  registry.syncDevices([ataDeviceData, atwDeviceData, ervDeviceData])
+  registry.syncBuildings([buildingData({ HMDefined: true })])
+  registry.syncFloors([floorData()])
+  registry.syncAreas([areaData()])
+  registry.syncDevices([
+    ataDevice({ Device: ataDeviceData({ OperationMode: OperationMode.heat }) }),
+    atwDevice({ Device: atwDeviceData({ SetTemperatureZone2: 22 }) }),
+    ervDevice(),
+  ])
   return registry
 }
 
@@ -164,62 +56,19 @@ const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
     errors: vi.fn().mockResolvedValue({ data: [] }),
     fetch: vi.fn().mockResolvedValue([]),
     frostProtection: vi.fn().mockResolvedValue({
-      data: {
-        FPDefined: true,
-        FPEnabled: false,
-        FPMaxTemperature: 16,
-        FPMinTemperature: 4,
-      },
+      data: frostProtectionResponse({ FPDefined: true }),
     }),
     group: vi.fn().mockResolvedValue({
       data: { Data: { Group: { State: { Power: true } } } },
     }),
     holidayMode: vi.fn().mockResolvedValue({
-      data: {
-        EndDate: {
-          Day: 1,
-          Hour: 0,
-          Minute: 0,
-          Month: 1,
-          Second: 0,
-          Year: 2024,
-        },
-        HMDefined: true,
-        HMEnabled: false,
-        HMEndDate: null,
-        HMStartDate: null,
-        StartDate: {
-          Day: 1,
-          Hour: 0,
-          Minute: 0,
-          Month: 1,
-          Second: 0,
-          Year: 2024,
-        },
-        TimeZone: 0,
-      },
+      data: holidayModeResponse({ HMDefined: true }),
     }),
     hourlyTemperatures: vi.fn().mockResolvedValue({
-      data: {
-        Data: [[1]],
-        FromDate: '2024-01-01',
-        Labels: ['a'],
-        LabelType: LabelType.raw,
-        Points: 1,
-        Series: 1,
-        ToDate: '2024-01-01',
-      } satisfies ReportData,
+      data: reportData(),
     }),
     internalTemperatures: vi.fn().mockResolvedValue({
-      data: {
-        Data: [[1]],
-        FromDate: '2024-01-01',
-        Labels: ['a'],
-        LabelType: LabelType.raw,
-        Points: 1,
-        Series: 1,
-        ToDate: '2024-01-01',
-      } satisfies ReportData,
+      data: reportData(),
     }),
     operationModes: vi.fn().mockResolvedValue({
       data: [{ Key: 'Heating', Value: 100 }],
@@ -252,26 +101,10 @@ const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
       } as SetDeviceDataAta,
     }),
     signal: vi.fn().mockResolvedValue({
-      data: {
-        Data: [[1]],
-        FromDate: '2024-01-01',
-        Labels: ['a'],
-        LabelType: LabelType.raw,
-        Points: 1,
-        Series: 1,
-        ToDate: '2024-01-01',
-      } satisfies ReportData,
+      data: reportData(),
     }),
     temperatures: vi.fn().mockResolvedValue({
-      data: {
-        Data: [[1]],
-        FromDate: '2024-01-01',
-        Labels: ['a'],
-        LabelType: LabelType.raw,
-        Points: 1,
-        Series: 1,
-        ToDate: '2024-01-01',
-      } satisfies ReportData,
+      data: reportData(),
     }),
     tiles: vi.fn().mockResolvedValue({
       data: { SelectedDevice: null, Tiles: [] },
@@ -573,12 +406,7 @@ describe('baseFacade frostProtection fallback', () => {
       .fn()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: {
-          FPDefined: false,
-          FPEnabled: false,
-          FPMaxTemperature: 16,
-          FPMinTemperature: 4,
-        },
+        data: frostProtectionResponse(),
       })
     const api = createMockApi({ frostProtection: fpMock })
     const registry = createRegistry()
@@ -592,12 +420,7 @@ describe('baseFacade frostProtection fallback', () => {
 
   it('uses cached frost protection state on subsequent calls', async () => {
     const fpMock = vi.fn().mockResolvedValue({
-      data: {
-        FPDefined: true,
-        FPEnabled: false,
-        FPMaxTemperature: 16,
-        FPMinTemperature: 4,
-      },
+      data: frostProtectionResponse({ FPDefined: true }),
     })
     const api = createMockApi({ frostProtection: fpMock })
     const registry = createRegistry()
@@ -615,12 +438,7 @@ describe('baseFacade frostProtection fallback', () => {
       .fn()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: {
-          FPDefined: false,
-          FPEnabled: false,
-          FPMaxTemperature: 16,
-          FPMinTemperature: 4,
-        },
+        data: frostProtectionResponse(),
       })
     const api = createMockApi({ frostProtection: fpMock })
     const registry = createRegistry()
@@ -640,29 +458,7 @@ describe('baseFacade holidayMode fallback', () => {
       .fn()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: {
-          EndDate: {
-            Day: 1,
-            Hour: 0,
-            Minute: 0,
-            Month: 1,
-            Second: 0,
-            Year: 2024,
-          },
-          HMDefined: false,
-          HMEnabled: false,
-          HMEndDate: null,
-          HMStartDate: null,
-          StartDate: {
-            Day: 1,
-            Hour: 0,
-            Minute: 0,
-            Month: 1,
-            Second: 0,
-            Year: 2024,
-          },
-          TimeZone: 0,
-        },
+        data: holidayModeResponse(),
       })
     const api = createMockApi({ holidayMode: hmMock })
     const registry = createRegistry()
@@ -676,29 +472,7 @@ describe('baseFacade holidayMode fallback', () => {
 
   it('uses cached zone-level holiday mode on subsequent calls', async () => {
     const hmMock = vi.fn().mockResolvedValue({
-      data: {
-        EndDate: {
-          Day: 1,
-          Hour: 0,
-          Minute: 0,
-          Month: 1,
-          Second: 0,
-          Year: 2024,
-        },
-        HMDefined: true,
-        HMEnabled: false,
-        HMEndDate: null,
-        HMStartDate: null,
-        StartDate: {
-          Day: 1,
-          Hour: 0,
-          Minute: 0,
-          Month: 1,
-          Second: 0,
-          Year: 2024,
-        },
-        TimeZone: 0,
-      },
+      data: holidayModeResponse({ HMDefined: true }),
     })
     const api = createMockApi({ holidayMode: hmMock })
     const registry = createRegistry()
@@ -716,29 +490,7 @@ describe('baseFacade holidayMode fallback', () => {
       .fn()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: {
-          EndDate: {
-            Day: 1,
-            Hour: 0,
-            Minute: 0,
-            Month: 1,
-            Second: 0,
-            Year: 2024,
-          },
-          HMDefined: false,
-          HMEnabled: false,
-          HMEndDate: null,
-          HMStartDate: null,
-          StartDate: {
-            Day: 1,
-            Hour: 0,
-            Minute: 0,
-            Month: 1,
-            Second: 0,
-            Year: 2024,
-          },
-          TimeZone: 0,
-        },
+        data: holidayModeResponse(),
       })
     const api = createMockApi({ holidayMode: hmMock })
     const registry = createRegistry()
@@ -758,12 +510,7 @@ describe('baseFacade setFrostProtection with device fallback', () => {
       .fn()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: {
-          FPDefined: false,
-          FPEnabled: false,
-          FPMaxTemperature: 16,
-          FPMinTemperature: 4,
-        },
+        data: frostProtectionResponse(),
       })
     const api = createMockApi({ frostProtection: fpMock })
     const registry = createRegistry()
@@ -782,29 +529,7 @@ describe('baseFacade setHolidayMode with device fallback', () => {
       .fn()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: {
-          EndDate: {
-            Day: 1,
-            Hour: 0,
-            Minute: 0,
-            Month: 1,
-            Second: 0,
-            Year: 2024,
-          },
-          HMDefined: false,
-          HMEnabled: false,
-          HMEndDate: null,
-          HMStartDate: null,
-          StartDate: {
-            Day: 1,
-            Hour: 0,
-            Minute: 0,
-            Month: 1,
-            Second: 0,
-            Year: 2024,
-          },
-          TimeZone: 0,
-        },
+        data: holidayModeResponse(),
       })
     const api = createMockApi({ holidayMode: hmMock })
     const registry = createRegistry()
@@ -1159,19 +884,12 @@ describe('deviceAtwFacade', () => {
 describe('deviceAtwHasZone2Facade', () => {
   it('handles operation mode zone adjustments', async () => {
     const zone2Registry = new ModelRegistry()
-    zone2Registry.syncBuildings([buildingData])
-    zone2Registry.syncFloors([{ BuildingId: 1, ID: 10, Name: 'Floor' }])
-    zone2Registry.syncAreas([
-      { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Area' },
+    zone2Registry.syncBuildings([buildingData({ HMDefined: true })])
+    zone2Registry.syncFloors([floorData()])
+    zone2Registry.syncAreas([areaData()])
+    zone2Registry.syncDevices([
+      atwDevice({ Device: atwDeviceData({ HasZone2: true }) }),
     ])
-    const zone2Data: ListDeviceAny = {
-      ...atwDeviceData,
-      Device: {
-        ...atwDeviceData.Device,
-        HasZone2: true,
-      } as ListDeviceDataAtw,
-    }
-    zone2Registry.syncDevices([zone2Data])
     const api = createMockApi({
       setValues: vi.fn().mockResolvedValue({
         data: {
@@ -1206,20 +924,12 @@ describe('deviceAtwHasZone2Facade', () => {
 
   it('adjusts secondary zone when primary changes to cool mode', async () => {
     const zone2Registry = new ModelRegistry()
-    zone2Registry.syncBuildings([buildingData])
-    zone2Registry.syncFloors([{ BuildingId: 1, ID: 10, Name: 'Floor' }])
-    zone2Registry.syncAreas([
-      { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Area' },
+    zone2Registry.syncBuildings([buildingData({ HMDefined: true })])
+    zone2Registry.syncFloors([floorData()])
+    zone2Registry.syncAreas([areaData()])
+    zone2Registry.syncDevices([
+      atwDevice({ Device: atwDeviceData({ CanCool: true, HasZone2: true }) }),
     ])
-    const zone2Data: ListDeviceAny = {
-      ...atwDeviceData,
-      Device: {
-        ...atwDeviceData.Device,
-        CanCool: true,
-        HasZone2: true,
-      } as ListDeviceDataAtw,
-    }
-    zone2Registry.syncDevices([zone2Data])
     const api = createMockApi({
       setValues: vi.fn().mockResolvedValue({
         data: {
@@ -1254,22 +964,19 @@ describe('deviceAtwHasZone2Facade', () => {
 
   it('adjusts secondary zone down from cool when primary is not cool', async () => {
     const zone2Registry = new ModelRegistry()
-    zone2Registry.syncBuildings([buildingData])
-    zone2Registry.syncFloors([{ BuildingId: 1, ID: 10, Name: 'Floor' }])
-    zone2Registry.syncAreas([
-      { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Area' },
+    zone2Registry.syncBuildings([buildingData({ HMDefined: true })])
+    zone2Registry.syncFloors([floorData()])
+    zone2Registry.syncAreas([areaData()])
+    zone2Registry.syncDevices([
+      atwDevice({
+        Device: atwDeviceData({
+          CanCool: true,
+          HasZone2: true,
+          OperationModeZone1: OperationModeZone.room_cool,
+          OperationModeZone2: OperationModeZone.room_cool,
+        }),
+      }),
     ])
-    const zone2Data: ListDeviceAny = {
-      ...atwDeviceData,
-      Device: {
-        ...atwDeviceData.Device,
-        CanCool: true,
-        HasZone2: true,
-        OperationModeZone1: OperationModeZone.room_cool,
-        OperationModeZone2: OperationModeZone.room_cool,
-      } as ListDeviceDataAtw,
-    }
-    zone2Registry.syncDevices([zone2Data])
     const api = createMockApi({
       setValues: vi.fn().mockResolvedValue({
         data: {
@@ -1304,19 +1011,12 @@ describe('deviceAtwHasZone2Facade', () => {
 
   it('adjusts secondary when both zones change', async () => {
     const zone2Registry = new ModelRegistry()
-    zone2Registry.syncBuildings([buildingData])
-    zone2Registry.syncFloors([{ BuildingId: 1, ID: 10, Name: 'Floor' }])
-    zone2Registry.syncAreas([
-      { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Area' },
+    zone2Registry.syncBuildings([buildingData({ HMDefined: true })])
+    zone2Registry.syncFloors([floorData()])
+    zone2Registry.syncAreas([areaData()])
+    zone2Registry.syncDevices([
+      atwDevice({ Device: atwDeviceData({ HasZone2: true }) }),
     ])
-    const zone2Data: ListDeviceAny = {
-      ...atwDeviceData,
-      Device: {
-        ...atwDeviceData.Device,
-        HasZone2: true,
-      } as ListDeviceDataAtw,
-    }
-    zone2Registry.syncDevices([zone2Data])
     const api = createMockApi({
       setValues: vi.fn().mockResolvedValue({
         data: {
@@ -1371,22 +1071,19 @@ describe('baseDeviceFacade tiles', () => {
 describe('deviceAtwHasZone2Facade secondary curve to cool', () => {
   it('converts curve to room_cool when primary is cool', async () => {
     const zone2Registry = new ModelRegistry()
-    zone2Registry.syncBuildings([buildingData])
-    zone2Registry.syncFloors([{ BuildingId: 1, ID: 10, Name: 'Floor' }])
-    zone2Registry.syncAreas([
-      { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Area' },
+    zone2Registry.syncBuildings([buildingData({ HMDefined: true })])
+    zone2Registry.syncFloors([floorData()])
+    zone2Registry.syncAreas([areaData()])
+    zone2Registry.syncDevices([
+      atwDevice({
+        Device: atwDeviceData({
+          CanCool: true,
+          HasZone2: true,
+          OperationModeZone1: OperationModeZone.room,
+          OperationModeZone2: OperationModeZone.curve,
+        }),
+      }),
     ])
-    const zone2Data: ListDeviceAny = {
-      ...atwDeviceData,
-      Device: {
-        ...atwDeviceData.Device,
-        CanCool: true,
-        HasZone2: true,
-        OperationModeZone1: OperationModeZone.room,
-        OperationModeZone2: OperationModeZone.curve,
-      } as ListDeviceDataAtw,
-    }
-    zone2Registry.syncDevices([zone2Data])
     const api = createMockApi({
       setValues: vi.fn().mockResolvedValue({
         data: {
@@ -1423,19 +1120,12 @@ describe('deviceAtwHasZone2Facade secondary curve to cool', () => {
 describe('deviceAtwHasZone2Facade no operation mode change', () => {
   it('returns null when neither zone changes', async () => {
     const zone2Registry = new ModelRegistry()
-    zone2Registry.syncBuildings([buildingData])
-    zone2Registry.syncFloors([{ BuildingId: 1, ID: 10, Name: 'Floor' }])
-    zone2Registry.syncAreas([
-      { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Area' },
+    zone2Registry.syncBuildings([buildingData({ HMDefined: true })])
+    zone2Registry.syncFloors([floorData()])
+    zone2Registry.syncAreas([areaData()])
+    zone2Registry.syncDevices([
+      atwDevice({ Device: atwDeviceData({ HasZone2: true }) }),
     ])
-    const zone2Data: ListDeviceAny = {
-      ...atwDeviceData,
-      Device: {
-        ...atwDeviceData.Device,
-        HasZone2: true,
-      } as ListDeviceDataAtw,
-    }
-    zone2Registry.syncDevices([zone2Data])
     const api = createMockApi({
       setValues: vi.fn().mockResolvedValue({
         data: {
@@ -1470,22 +1160,19 @@ describe('deviceAtwHasZone2Facade no operation mode change', () => {
 describe('deviceAtwHasZone2Facade CanCool false', () => {
   it('skips cool adjustment when CanCool is false', async () => {
     const zone2Registry = new ModelRegistry()
-    zone2Registry.syncBuildings([buildingData])
-    zone2Registry.syncFloors([{ BuildingId: 1, ID: 10, Name: 'Floor' }])
-    zone2Registry.syncAreas([
-      { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Area' },
+    zone2Registry.syncBuildings([buildingData({ HMDefined: true })])
+    zone2Registry.syncFloors([floorData()])
+    zone2Registry.syncAreas([areaData()])
+    zone2Registry.syncDevices([
+      atwDevice({
+        Device: atwDeviceData({
+          CanCool: false,
+          HasZone2: true,
+          OperationModeZone1: OperationModeZone.room,
+          OperationModeZone2: OperationModeZone.flow,
+        }),
+      }),
     ])
-    const zone2Data: ListDeviceAny = {
-      ...atwDeviceData,
-      Device: {
-        ...atwDeviceData.Device,
-        CanCool: false,
-        HasZone2: true,
-        OperationModeZone1: OperationModeZone.room,
-        OperationModeZone2: OperationModeZone.flow,
-      } as ListDeviceDataAtw,
-    }
-    zone2Registry.syncDevices([zone2Data])
     const api = createMockApi({
       setValues: vi.fn().mockResolvedValue({
         data: {

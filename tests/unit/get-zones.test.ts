@@ -1,87 +1,67 @@
 import { describe, expect, it } from 'vitest'
 
-import type {
-  AreaDataAny,
-  BuildingData,
-  FloorData,
-  ListDeviceAny,
-  ListDeviceDataAta,
-  ListDeviceDataAtw,
-} from '../../src/types/index.ts'
-
 import { DeviceType } from '../../src/constants.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
-import { mock } from '../helpers.ts'
+import {
+  areaData,
+  ataDevice,
+  ataDeviceData,
+  atwDevice,
+  atwDeviceData,
+  buildingData,
+  floorData,
+} from '../fixtures.ts'
 
-const ataData = mock<ListDeviceDataAta>({ EffectiveFlags: 0 })
-const atwData = mock<ListDeviceDataAtw>({ EffectiveFlags: 0, HasZone2: false })
-
-const buildings: BuildingData[] = [
-  {
-    FPDefined: true,
-    FPEnabled: false,
-    FPMaxTemperature: 16,
-    FPMinTemperature: 4,
+const buildings = [
+  buildingData({
     HMDefined: false,
-    HMEnabled: false,
-    HMEndDate: null,
-    HMStartDate: null,
     ID: 1,
     Location: 0,
     Name: 'Bravo',
     TimeZone: 1,
-  },
-  {
+  }),
+  buildingData({
     FPDefined: false,
-    FPEnabled: false,
-    FPMaxTemperature: 16,
-    FPMinTemperature: 4,
     HMDefined: false,
-    HMEnabled: false,
-    HMEndDate: null,
-    HMStartDate: null,
     ID: 2,
     Location: 0,
     Name: 'Alpha',
     TimeZone: 1,
-  },
+  }),
 ]
 
-const floors: FloorData[] = [{ BuildingId: 1, ID: 10, Name: 'Ground floor' }]
+const floors = [floorData({ BuildingId: 1, ID: 10, Name: 'Ground floor' })]
 
-const areas: AreaDataAny[] = [
-  { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Salon' },
-  { BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' },
+const areas = [
+  areaData({ BuildingId: 1, FloorId: 10, ID: 100, Name: 'Salon' }),
+  areaData({ BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' }),
 ]
 
-const devices: ListDeviceAny[] = [
-  {
+const devices = [
+  ataDevice({
     AreaID: 100,
     BuildingID: 1,
-    Device: ataData,
+    Device: ataDeviceData(),
     DeviceID: 1001,
     DeviceName: 'AC unit',
     FloorID: 10,
-    Type: DeviceType.Ata,
-  },
-  {
+  }),
+  atwDevice({
     AreaID: null,
     BuildingID: 1,
-    Device: atwData,
+    Device: atwDeviceData({ HasZone2: false }),
     DeviceID: 1002,
     DeviceName: 'Heat pump',
     FloorID: null,
-    Type: DeviceType.Atw,
-  },
-  {
+  }),
+  ataDevice({
     AreaID: 200,
     BuildingID: 2,
-    Device: ataData,
+    Device: ataDeviceData(),
     DeviceID: 2001,
     DeviceName: 'Studio AC',
     FloorID: null,
-    Type: DeviceType.Ata,
-  },
+  }),
 ]
 
 const syncAll = (registry: ModelRegistry): void => {

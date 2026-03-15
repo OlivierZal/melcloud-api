@@ -2,46 +2,21 @@ import type { AxiosStatic, HttpStatusCode } from 'axios'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Building, ListDeviceDataAta } from '../../src/types/index.ts'
+import type { Building } from '../../src/types/index.ts'
 
 import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
+import { ataDeviceData, buildingData } from '../fixtures.ts'
 import { mock } from '../helpers.ts'
-
-const ataDeviceData = mock<ListDeviceDataAta>({
-  ActualFanSpeed: 3,
-  EffectiveFlags: 0,
-  FanSpeed: 3,
-  HasAutomaticFanSpeed: true,
-  MaxTempAutomatic: 31,
-  MaxTempCoolDry: 31,
-  MaxTempHeat: 31,
-  MinTempAutomatic: 16,
-  MinTempCoolDry: 16,
-  MinTempHeat: 10,
-  NumberOfFanSpeeds: 5,
-  OperationMode: 1,
-  OutdoorTemperature: 20,
-  Power: true,
-  RoomTemperature: 22,
-  SetTemperature: 23,
-  VaneHorizontalDirection: 0,
-  VaneVerticalDirection: 0,
-})
 
 const buildingResponse: Building[] = [
   {
-    FPDefined: true,
-    FPEnabled: false,
-    FPMaxTemperature: 16,
-    FPMinTemperature: 4,
-    HMDefined: true,
-    HMEnabled: false,
-    HMEndDate: null,
-    HMStartDate: null,
-    ID: 1,
-    Location: 0,
-    Name: 'Home',
+    ...buildingData({
+      HMDefined: true,
+      Location: 0,
+      Name: 'Home',
+      TimeZone: 1,
+    }),
     Structure: {
       Areas: [],
       Devices: [],
@@ -54,7 +29,10 @@ const buildingResponse: Building[] = [
                 {
                   AreaID: 100,
                   BuildingID: 1,
-                  Device: ataDeviceData,
+                  Device: ataDeviceData({
+                    NumberOfFanSpeeds: 5,
+                    SetTemperature: 23,
+                  }),
                   DeviceID: 1001,
                   DeviceName: 'AC unit',
                   FloorID: 10,
@@ -73,8 +51,7 @@ const buildingResponse: Building[] = [
         },
       ],
     },
-    TimeZone: 1,
-  },
+  } as Building,
 ]
 
 const mockInterceptors = {

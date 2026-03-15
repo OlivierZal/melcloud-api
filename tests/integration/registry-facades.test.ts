@@ -1,163 +1,104 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { APIAdapter } from '../../src/services/index.ts'
-import type {
-  AreaDataAny,
-  BuildingData,
-  FloorData,
-  ListDeviceAny,
-  ListDeviceDataAta,
-  ListDeviceDataAtw,
-  ListDeviceDataErv,
-} from '../../src/types/index.ts'
 
 import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
+import {
+  areaData,
+  ataDevice,
+  ataDeviceData,
+  atwDevice,
+  atwDeviceData,
+  buildingData,
+  ervDevice,
+  ervDeviceData,
+  floorData,
+} from '../fixtures.ts'
 import { mock } from '../helpers.ts'
 
-const ataDeviceData = mock<ListDeviceDataAta>({
-  ActualFanSpeed: 3,
-  EffectiveFlags: 0,
-  FanSpeed: 3,
-  HasAutomaticFanSpeed: true,
-  MaxTempAutomatic: 31,
-  MaxTempCoolDry: 31,
-  MaxTempHeat: 31,
-  MinTempAutomatic: 16,
-  MinTempCoolDry: 16,
-  MinTempHeat: 10,
+const ataData = ataDeviceData({
   NumberOfFanSpeeds: 5,
-  OperationMode: 1,
-  OutdoorTemperature: 20,
-  Power: true,
-  RoomTemperature: 22,
   SetTemperature: 23,
-  VaneHorizontalDirection: 0,
-  VaneVerticalDirection: 0,
 })
 
-const atwDeviceData = mock<ListDeviceDataAtw>({
-  EffectiveFlags: 0,
+const atwData = atwDeviceData({
   HasZone2: true,
-  IdleZone1: false,
-  IdleZone2: false,
   OperationMode: 0,
   OutdoorTemperature: 10,
-  Power: true,
-  ProhibitCoolingZone1: false,
-  ProhibitCoolingZone2: false,
-  ProhibitHeatingZone1: false,
-  ProhibitHeatingZone2: false,
-  RoomTemperatureZone1: 21,
-  RoomTemperatureZone2: 19,
   SetCoolFlowTemperatureZone1: 25,
   SetCoolFlowTemperatureZone2: 25,
-  SetHeatFlowTemperatureZone1: 40,
   SetHeatFlowTemperatureZone2: 35,
-  SetTankWaterTemperature: 50,
-  SetTemperatureZone1: 22,
-  SetTemperatureZone2: 20,
-  TankWaterTemperature: 48,
 })
 
-const ervDeviceData = mock<ListDeviceDataErv>({
-  EffectiveFlags: 0,
+const ervData = ervDeviceData({
   HasAutomaticFanSpeed: false,
   HasCO2Sensor: true,
-  HasPM25Sensor: false,
   NumberOfFanSpeeds: 4,
-  Offline: false,
   OutdoorTemperature: 15,
-  PM25Level: 0,
-  Power: true,
   RoomCO2Level: 500,
   RoomTemperature: 22,
   SetFanSpeed: 2,
-  VentilationMode: 0,
-  WifiSignalStrength: -50,
 })
 
-const buildings: BuildingData[] = [
-  {
-    FPDefined: true,
-    FPEnabled: false,
-    FPMaxTemperature: 16,
-    FPMinTemperature: 4,
+const buildings = [
+  buildingData({
     HMDefined: true,
-    HMEnabled: false,
-    HMEndDate: null,
-    HMStartDate: null,
-    ID: 1,
     Location: 0,
     Name: 'Main house',
     TimeZone: 1,
-  },
-  {
+  }),
+  buildingData({
     FPDefined: false,
-    FPEnabled: false,
-    FPMaxTemperature: 16,
-    FPMinTemperature: 4,
     HMDefined: false,
-    HMEnabled: false,
-    HMEndDate: null,
-    HMStartDate: null,
     ID: 2,
     Location: 0,
     Name: 'Guest house',
     TimeZone: 1,
-  },
+  }),
 ]
 
-const floors: FloorData[] = [
-  { BuildingId: 1, ID: 10, Name: 'Ground floor' },
-  { BuildingId: 1, ID: 11, Name: 'First floor' },
+const floors = [
+  floorData({ Name: 'Ground floor' }),
+  floorData({ ID: 11, Name: 'First floor' }),
 ]
 
-const areas: AreaDataAny[] = [
-  { BuildingId: 1, FloorId: 10, ID: 100, Name: 'Living room' },
-  { BuildingId: 1, FloorId: 10, ID: 101, Name: 'Kitchen' },
-  { BuildingId: 1, FloorId: 11, ID: 102, Name: 'Bedroom' },
-  { BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' },
+const areas = [
+  areaData({ Name: 'Living room' }),
+  areaData({ ID: 101, Name: 'Kitchen' }),
+  areaData({ FloorId: 11, ID: 102, Name: 'Bedroom' }),
+  areaData({ BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' }),
 ]
 
-const devices: ListDeviceAny[] = [
-  {
-    AreaID: 100,
-    BuildingID: 1,
-    Device: ataDeviceData,
+const devices = [
+  ataDevice({
+    Device: ataData,
     DeviceID: 1001,
     DeviceName: 'Living room AC',
-    FloorID: 10,
-    Type: DeviceType.Ata,
-  },
-  {
+  }),
+  atwDevice({
     AreaID: 101,
-    BuildingID: 1,
-    Device: atwDeviceData,
+    Device: atwData,
     DeviceID: 1002,
     DeviceName: 'Kitchen heat pump',
-    FloorID: 10,
-    Type: DeviceType.Atw,
-  },
-  {
+  }),
+  ervDevice({
     AreaID: 102,
     BuildingID: 1,
-    Device: ervDeviceData,
+    Device: ervData,
     DeviceID: 1003,
     DeviceName: 'Bedroom ERV',
     FloorID: 11,
-    Type: DeviceType.Erv,
-  },
-  {
+  }),
+  ataDevice({
     AreaID: 200,
     BuildingID: 2,
-    Device: mock<ListDeviceDataAta>({ ...ataDeviceData, Power: false }),
+    Device: ataDeviceData({ ...ataData, Power: false }),
     DeviceID: 2001,
     DeviceName: 'Studio AC',
     FloorID: null,
-    Type: DeviceType.Ata,
-  },
+  }),
 ]
 
 const createMockApi = (): APIAdapter =>
@@ -308,15 +249,14 @@ describe('registry + facade manager integration', () => {
     // Add a new device to building 2
     registry.syncDevices([
       ...devices,
-      {
+      ataDevice({
         AreaID: 200,
         BuildingID: 2,
-        Device: ataDeviceData,
+        Device: ataData,
         DeviceID: 2002,
         DeviceName: 'Studio AC 2',
         FloorID: null,
-        Type: DeviceType.Ata,
-      },
+      }),
     ])
 
     // Facade reflects updated registry
@@ -358,7 +298,7 @@ describe('registry + facade manager integration', () => {
     registry.syncBuildings([buildings[1]!])
     registry.syncFloors([])
     registry.syncAreas([
-      { BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' },
+      areaData({ BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' }),
     ])
     registry.syncDevices([devices[3]!])
 

@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { APIAdapter } from '../../src/services/index.ts'
-import type {
-  BuildingData,
-  ListDeviceAny,
-  ListDeviceDataAtw,
-} from '../../src/types/index.ts'
+import type { ListDeviceDataAtw } from '../../src/types/index.ts'
 
 import {
   DeviceType,
@@ -17,93 +13,13 @@ import {
 import { DeviceAtwHasZone2Facade } from '../../src/facades/device-atw-has-zone2.ts'
 import { DeviceAtwFacade } from '../../src/facades/device-atw.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
+import { atwDevice, atwDeviceData, buildingData } from '../fixtures.ts'
 import { assertDeviceType, mock } from '../helpers.ts'
-
-const buildingData: BuildingData = {
-  FPDefined: true,
-  FPEnabled: false,
-  FPMaxTemperature: 16,
-  FPMinTemperature: 4,
-  HMDefined: true,
-  HMEnabled: false,
-  HMEndDate: null,
-  HMStartDate: null,
-  ID: 1,
-  Location: 0,
-  Name: 'Building',
-  TimeZone: 1,
-}
 
 const createAtwData = (
   overrides: Partial<ListDeviceDataAtw> = {},
 ): ListDeviceDataAtw =>
-  mock<ListDeviceDataAtw>({
-    BoosterHeater1Status: false,
-    BoosterHeater2PlusStatus: false,
-    BoosterHeater2Status: false,
-    CanCool: true,
-    CondensingTemperature: 40,
-    CurrentEnergyConsumed: 0,
-    CurrentEnergyProduced: 0,
-    DefrostMode: 0,
-    EcoHotWater: false,
-    EffectiveFlags: 0,
-    FlowTemperature: 35,
-    FlowTemperatureZone1: 35,
-    FlowTemperatureZone2: 35,
-    ForcedHotWaterMode: false,
-    HasZone2: false,
-    HeatPumpFrequency: 50,
-    IdleZone1: false,
-    IdleZone2: false,
-    ImmersionHeaterStatus: false,
-    LastLegionellaActivationTime: '',
-    MaxTankTemperature: 60,
-    MixingTankWaterTemperature: 0,
-    Offline: false,
-    OperationMode: OperationModeState.idle,
-    OperationModeZone1: OperationModeZone.room,
-    OperationModeZone2: OperationModeZone.room,
-    Power: true,
-    ProhibitCoolingZone1: false,
-    ProhibitCoolingZone2: false,
-    ProhibitHeatingZone1: false,
-    ProhibitHeatingZone2: false,
-    ProhibitHotWater: false,
-    ReturnTemperature: 30,
-    ReturnTemperatureZone1: 30,
-    ReturnTemperatureZone2: 30,
-    RoomTemperatureZone1: 21,
-    RoomTemperatureZone2: 19,
-    SetCoolFlowTemperatureZone1: 20,
-    SetCoolFlowTemperatureZone2: 20,
-    SetHeatFlowTemperatureZone1: 40,
-    SetHeatFlowTemperatureZone2: 40,
-    SetTankWaterTemperature: 50,
-    SetTemperatureZone1: 22,
-    SetTemperatureZone2: 20,
-    TankWaterTemperature: 48,
-    TargetHCTemperatureZone1: 22,
-    TargetHCTemperatureZone2: 22,
-    WifiSignalStrength: -50,
-    Zone1InCoolMode: false,
-    Zone1InHeatMode: true,
-    Zone2InCoolMode: false,
-    Zone2InHeatMode: false,
-    ...overrides,
-  })
-
-const createDevice = (
-  data: ListDeviceDataAtw = createAtwData(),
-): ListDeviceAny => ({
-  AreaID: null,
-  BuildingID: 1,
-  Device: data,
-  DeviceID: 1001,
-  DeviceName: 'ATW Device',
-  FloorID: null,
-  Type: DeviceType.Atw,
-})
+  atwDeviceData({ OperationMode: OperationModeState.idle, ...overrides })
 
 const mockApi = mock<APIAdapter>({
   fetch: vi.fn().mockResolvedValue([]),
@@ -114,8 +30,12 @@ const createFacade = (
   data: ListDeviceDataAtw = createAtwData(),
 ): DeviceAtwFacade => {
   const registry = new ModelRegistry()
-  registry.syncBuildings([buildingData])
-  registry.syncDevices([createDevice(data)])
+  registry.syncBuildings([
+    buildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
+  ])
+  registry.syncDevices([
+    atwDevice({ AreaID: null, Device: data, FloorID: null }),
+  ])
   const device = registry.devices.getById(1001)
   assertDeviceType(device, DeviceType.Atw)
   return new DeviceAtwFacade(mockApi, registry, device)
@@ -125,8 +45,12 @@ const createZone2Facade = (
   data: ListDeviceDataAtw = createAtwData({ HasZone2: true }),
 ): DeviceAtwHasZone2Facade => {
   const registry = new ModelRegistry()
-  registry.syncBuildings([buildingData])
-  registry.syncDevices([createDevice(data)])
+  registry.syncBuildings([
+    buildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
+  ])
+  registry.syncDevices([
+    atwDevice({ AreaID: null, Device: data, FloorID: null }),
+  ])
   const device = registry.devices.getById(1001)
   assertDeviceType(device, DeviceType.Atw)
   return new DeviceAtwHasZone2Facade(mockApi, registry, device)
