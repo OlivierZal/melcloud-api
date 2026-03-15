@@ -1,5 +1,4 @@
-import type { FLAG_UNCHANGED } from '../constants.ts'
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 
 export interface BaseDevicePostData {
   readonly DeviceID: number
@@ -10,13 +9,13 @@ export interface BaseGetDeviceData extends BaseSetDeviceData {
   readonly EffectiveFlags: typeof FLAG_UNCHANGED
 }
 
-export interface BaseListDevice {
+export interface BaseListDevice<T extends DeviceType = DeviceType> {
   readonly AreaID: number | null
   readonly BuildingID: number
   readonly DeviceID: number
   readonly DeviceName: string
   readonly FloorID: number | null
-  readonly Type: DeviceType
+  readonly Type: T
 }
 
 export interface BaseListDeviceData extends Omit<

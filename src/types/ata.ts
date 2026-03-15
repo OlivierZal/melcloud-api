@@ -4,7 +4,7 @@ import type {
   Horizontal,
   OperationMode,
   Vertical,
-} from '../enums.ts'
+} from '../constants.ts'
 
 import type {
   BaseListDeviceData,
@@ -46,7 +46,7 @@ export interface GetGroupPostData {
 }
 
 export interface GroupState {
-  readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
+  readonly FanSpeed?: Exclude<FanSpeed, typeof FanSpeed.silent> | null
   readonly OperationMode?: OperationMode | null
   readonly Power?: boolean | null
   readonly SetTemperature?: number | null
@@ -60,7 +60,7 @@ export interface ListDeviceDataAta
   extends
     BaseListDeviceData,
     Omit<
-      GetDeviceData<DeviceType.Ata>,
+      GetDeviceData<typeof DeviceType.Ata>,
       KeyOfSetDeviceDataAtaNotInList | keyof DeviceDataNotInList
     >,
     SetDeviceDataAtaInList {
@@ -77,7 +77,7 @@ export interface ListDeviceDataAta
 
 export interface SetDeviceDataAta
   extends BaseSetDeviceData, Required<UpdateDeviceDataAta> {
-  readonly DeviceType: DeviceType.Ata
+  readonly DeviceType: typeof DeviceType.Ata
   readonly NumberOfFanSpeeds: number
   readonly RoomTemperature: number
 }
@@ -95,7 +95,7 @@ export interface SetGroupPostData {
 
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly OperationMode?: OperationMode
-  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly SetFanSpeed?: Exclude<FanSpeed, typeof FanSpeed.silent>
   readonly SetTemperature?: number
   readonly VaneHorizontal?: Horizontal
   readonly VaneVertical?: Vertical

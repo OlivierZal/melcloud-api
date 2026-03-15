@@ -1,13 +1,14 @@
-import 'source-map-support/register.js'
-
 export type {
   AreaData,
   AreaDataAny,
+  AreaZone,
   BaseDevicePostData,
   BaseGetDeviceData,
   Building,
   BuildingData,
+  BuildingZone,
   DateTimeComponents,
+  DeviceZone,
   EnergyData,
   EnergyDataAta,
   EnergyDataAtw,
@@ -16,6 +17,7 @@ export type {
   ErrorLogPostData,
   FailureData,
   FloorData,
+  FloorZone,
   FrostProtectionData,
   FrostProtectionLocation,
   FrostProtectionPostData,
@@ -28,6 +30,7 @@ export type {
   HolidayModeData,
   HolidayModeLocation,
   HolidayModePostData,
+  HotWaterState,
   KeyOfSetDeviceDataAtaNotInList,
   ListDevice,
   ListDeviceAny,
@@ -61,16 +64,12 @@ export type {
   UpdateDeviceDataAta,
   UpdateDeviceDataAtw,
   UpdateDeviceDataErv,
+  Zone,
   ZoneAtw,
   ZoneSettings,
+  ZoneState,
 } from './types/index.ts'
 
-export {
-  fetchDevices,
-  syncDevices,
-  updateDevice,
-  updateDevices,
-} from './decorators/index.ts'
 export {
   DeviceType,
   FanSpeed,
@@ -79,45 +78,51 @@ export {
   Language,
   OperationMode,
   OperationModeState,
+  OperationModeStateHotWater,
+  OperationModeStateZone,
   OperationModeZone,
   VentilationMode,
   Vertical,
-} from './enums.ts'
+} from './constants.ts'
 export {
+  fetchDevices,
+  syncDevices,
+  updateDevice,
+  updateDevices,
+} from './decorators/index.ts'
+export {
+  type BuildingFacade,
+  type DeviceFacade,
+  type DeviceFacadeAny,
+  type Facade,
+  type FacadeManagerContract,
   type FrostProtectionQuery,
   type HolidayModeQuery,
-  type IBuildingFacade,
-  type IDeviceFacade,
-  type IDeviceFacadeAny,
-  type IFacade,
-  type IFacadeManager,
-  type ISuperDeviceFacade,
   type ReportChartLineOptions,
   type ReportChartPieOptions,
   type ReportQuery,
+  type SuperDeviceFacade,
   FacadeManager,
 } from './facades/index.ts'
 export {
-  type IAreaModel,
-  type IBuildingModel,
-  type IDeviceModel,
-  type IDeviceModelAny,
-  type IFloorModel,
-  type IModel,
+  type DeviceModelAny,
+  type Model,
   AreaModel,
   BuildingModel,
   DeviceModel,
   FloorModel,
+  ModelRegistry,
 } from './models/index.ts'
 export {
+  type API,
+  type APIAdapter,
   type APIConfig,
   type APISettings,
   type ErrorDetails,
   type ErrorLog,
   type ErrorLogQuery,
-  type IAPI,
   type Logger,
   type OnSyncFunction,
   type SettingManager,
-  API as MELCloudAPI,
+  MELCloudAPI,
 } from './services/index.ts'

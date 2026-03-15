@@ -1,58 +1,53 @@
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType } from '../constants.ts'
 import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 
-interface ISubBuildingModel extends IModel {
+/** Area model with parent building and optional floor references. */
+export interface AreaModel extends Model {
   readonly buildingId: number
-  readonly building?: IBuildingModel
-}
-
-interface ISubFloorModel extends ISubBuildingModel {
   readonly floorId: number | null
-  readonly floor?: IFloorModel | null
 }
 
-interface ISuperAreaModel extends ISuperDeviceModel {
-  readonly areaIds: number[]
-  readonly areas: IAreaModel[]
-}
-
-interface ISuperDeviceModel extends IModel {
-  readonly deviceIds: number[]
-  readonly devices: IDeviceModelAny[]
-}
-
-export interface IAreaModel extends ISubFloorModel, ISuperDeviceModel {}
-
-export interface IBaseBuildingModel {
+/** Base building model providing zone settings (frost protection, holiday mode). */
+export interface BaseBuildingModel {
   readonly data: ZoneSettings
 }
 
-export interface IBaseDeviceModel<T extends DeviceType> {
+/** Base device model with type-discriminated device data. */
+export interface BaseDeviceModel<T extends DeviceType> {
   readonly data: ListDeviceData<T>
   readonly type: T
 }
 
-export interface IBuildingModel extends IBaseBuildingModel, ISuperAreaModel {
-  readonly floorIds: number[]
-  readonly floors: IFloorModel[]
+/** Building model with geographic location. */
+export interface BuildingModel extends BaseBuildingModel, Model {
+  /** Numeric location identifier used by the MELCloud API. */
   readonly location: number
 }
 
-export interface IDeviceModel<T extends DeviceType>
-  extends IBaseDeviceModel<T>, ISubFloorModel {
+/** Device model with full hierarchy references and mutable data. */
+export interface DeviceModel<T extends DeviceType>
+  extends BaseDeviceModel<T>, Model {
   readonly areaId: number | null
-  readonly area?: IAreaModel | null
+  readonly buildingId: number
+  readonly floorId: number | null
+
+  /** Merge partial device data into the current state. */
   readonly update: (data: Partial<ListDeviceData<T>>) => void
 }
 
-export interface IFloorModel extends ISubBuildingModel, ISuperAreaModel {}
+/** Floor model with parent building reference. */
+export interface FloorModel extends Model {
+  readonly buildingId: number
+}
 
-export interface IModel {
+/** Base identifiable model with numeric ID and display name. */
+export interface Model {
   readonly id: number
   readonly name: string
 }
 
-export type IDeviceModelAny =
-  | IDeviceModel<DeviceType.Ata>
-  | IDeviceModel<DeviceType.Atw>
-  | IDeviceModel<DeviceType.Erv>
+/** Union of all device model types. */
+export type DeviceModelAny =
+  | DeviceModel<typeof DeviceType.Ata>
+  | DeviceModel<typeof DeviceType.Atw>
+  | DeviceModel<typeof DeviceType.Erv>

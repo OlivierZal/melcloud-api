@@ -1,9 +1,8 @@
 import type {
-  IAreaModel,
-  IBuildingModel,
-  IDeviceModelAny,
-  IFloorModel,
-} from '../models/index.ts'
+  AreaModel,
+  BuildingModel,
+  FloorModel,
+} from '../models/interfaces.ts'
 import type {
   FailureData,
   GroupState,
@@ -11,24 +10,21 @@ import type {
   SuccessData,
 } from '../types/index.ts'
 
+import { DeviceType } from '../constants.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
-import { DeviceType } from '../enums.ts'
 
-import type { ISuperDeviceFacade } from './interfaces.ts'
+import type { SuperDeviceFacade } from './interfaces.ts'
 
 import { BaseFacade } from './base.ts'
 
+/** Abstract base for zone facades (building, floor, area) that support ATA group operations. */
 export abstract class BaseSuperDeviceFacade<
-  T extends IAreaModel | IBuildingModel | IFloorModel,
+  T extends AreaModel | BuildingModel | FloorModel,
 >
   extends BaseFacade<T>
-  implements ISuperDeviceFacade
+  implements SuperDeviceFacade
 {
   protected abstract readonly specification: keyof SetGroupPostData['Specification']
-
-  public get devices(): IDeviceModelAny[] {
-    return this.instance.devices
-  }
 
   @updateDevices({ type: DeviceType.Ata })
   public async group(): Promise<GroupState> {

@@ -9,12 +9,14 @@ import type { APICallContextData } from './context.ts'
 import { APICallRequestData } from './request.ts'
 import { APICallResponseData } from './response.ts'
 
+/** Log data extended with the error message from a failed API call. */
 export interface APICallContextDataWithErrorMessage extends APICallContextData {
   readonly errorMessage: string
 }
 
 const getMessage = (error: Error): string => error.message
 
+// Mixin that extends a log data class with the error message from the failure
 const withErrorMessage = <T extends AxiosResponse | InternalAxiosRequestConfig>(
   base: new (arg?: T) => APICallContextData,
   error: Error,
@@ -23,6 +25,12 @@ const withErrorMessage = <T extends AxiosResponse | InternalAxiosRequestConfig>(
     public readonly errorMessage = getMessage(error)
   }
 
+/**
+ * Create structured error log data from an Axios error.
+ * Uses response data if available, otherwise falls back to request data.
+ * @param error - The Axios error to extract log data from.
+ * @returns Structured log data including the error message.
+ */
 export const createAPICallErrorData = (
   error: AxiosError,
 ): APICallContextDataWithErrorMessage =>

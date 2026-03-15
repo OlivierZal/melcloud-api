@@ -1,19 +1,21 @@
 import js from '@eslint/js'
 import stylistic from '@stylistic/eslint-plugin'
+import vitest from '@vitest/eslint-plugin'
 import prettier from 'eslint-config-prettier/flat'
 import perfectionist from 'eslint-plugin-perfectionist'
 import unicorn from 'eslint-plugin-unicorn'
 
 import { defineConfig } from 'eslint/config'
 import { flatConfigs as importXConfigs } from 'eslint-plugin-import-x'
+import { jsdoc } from 'eslint-plugin-jsdoc'
 import { configs as packageJsonConfigs } from 'eslint-plugin-package-json'
 import { Alphabet } from 'eslint-plugin-perfectionist/alphabet'
 import { configs as ymlConfigs } from 'eslint-plugin-yml'
 import { configs as tsConfigs } from 'typescript-eslint'
 
-import { classGroups } from './eslint-utils/class-groups.js'
+import { classGroups } from './eslint-utils/class-groups.ts'
 
-const buildImportGroup = (selector) =>
+const buildImportGroup = (selector: string): string[] =>
   ['type', 'default', 'named', 'wildcard', 'require', 'ts-equals'].map(
     (modifier) => `${modifier}-${selector}`,
   )
@@ -53,8 +55,9 @@ const typeLikeSortOptions = {
 
 const config = defineConfig([
   {
-    ignores: ['dist/'],
+    ignores: ['coverage/', 'dist/'],
   },
+  jsdoc({ config: 'flat/recommended-tsdoc-error' }),
   {
     extends: [
       js.configs.all,
@@ -70,7 +73,7 @@ const config = defineConfig([
       ecmaVersion: 'latest',
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['*.js'],
+          allowDefaultProject: ['*.js', '*.config.ts', 'eslint-utils/*.ts'],
         },
         warnOnUnsupportedTypeScriptVersion: false,
       },
@@ -85,7 +88,6 @@ const config = defineConfig([
     },
     rules: {
       '@stylistic/line-comment-position': 'error',
-      '@stylistic/lines-around-comment': 'error',
       '@stylistic/multiline-comment-style': 'error',
       '@stylistic/quotes': [
         'error',
@@ -116,18 +118,6 @@ const config = defineConfig([
       '@typescript-eslint/member-ordering': 'off',
       '@typescript-eslint/naming-convention': [
         'error',
-        {
-          filter: {
-            match: true,
-            regex: '^(Ata|Atw|Erv)$',
-          },
-          format: null,
-          selector: ['enumMember'],
-        },
-        {
-          format: ['snake_case'],
-          selector: ['enumMember'],
-        },
         {
           format: ['camelCase', 'PascalCase', 'snake_case'],
           selector: ['objectLiteralProperty', 'typeProperty'],
@@ -170,12 +160,6 @@ const config = defineConfig([
         },
       ],
       '@typescript-eslint/no-invalid-this': 'off',
-      '@typescript-eslint/no-magic-numbers': [
-        'error',
-        {
-          ignoreEnums: true,
-        },
-      ],
       '@typescript-eslint/no-redeclare': 'off',
       '@typescript-eslint/no-unnecessary-condition': [
         'error',
@@ -238,13 +222,15 @@ const config = defineConfig([
       'import-x/no-named-default': 'error',
       'import-x/no-relative-packages': 'error',
       'import-x/no-self-import': 'error',
-      'import-x/no-unassigned-import': [
+      'import-x/no-unassigned-import': 'error',
+      'import-x/no-unused-modules': [
         'error',
         {
-          allow: ['source-map-support/register.js'],
+          missingExports: true,
+          suppressMissingFileEnumeratorAPIWarning: true,
+          unusedExports: true,
         },
       ],
-      'import-x/no-unused-modules': 'error',
       'import-x/no-useless-path-segments': 'error',
       'import-x/no-webpack-loader-syntax': 'error',
       'import-x/unambiguous': 'error',
@@ -440,6 +426,19 @@ const config = defineConfig([
     },
   },
   {
+    files: ['src/constants.ts'],
+    rules: {
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          format: ['PascalCase', 'UPPER_CASE'],
+          modifiers: ['const', 'exported'],
+          selector: ['variable'],
+        },
+      ],
+    },
+  },
+  {
     extends: [tsConfigs.disableTypeChecked],
     files: ['**/*.js'],
     rules: {
@@ -451,6 +450,7 @@ const config = defineConfig([
   {
     files: ['**/*.config.{ts,js}'],
     rules: {
+      '@typescript-eslint/naming-convention': 'off',
       'import-x/max-dependencies': 'off',
       'import-x/no-default-export': 'off',
       'import-x/prefer-default-export': [
@@ -459,6 +459,59 @@ const config = defineConfig([
           target: 'any',
         },
       ],
+    },
+  },
+  {
+    files: ['eslint-utils/**'],
+    rules: {
+      '@typescript-eslint/naming-convention': 'off',
+    },
+  },
+  {
+    extends: [vitest.configs.all],
+    files: ['tests/**'],
+    rules: {
+      '@typescript-eslint/consistent-type-assertions': 'off',
+      '@typescript-eslint/consistent-type-imports': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/init-declarations': 'off',
+      '@typescript-eslint/naming-convention': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-magic-numbers': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'off',
+      '@typescript-eslint/no-unnecessary-type-conversion': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-type-assertion': 'error',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/prefer-destructuring': 'off',
+      '@typescript-eslint/strict-void-return': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      'id-length': 'off',
+      'import-x/max-dependencies': 'off',
+      'jsdoc/require-jsdoc': 'off',
+      'jsdoc/require-param-description': 'off',
+      'jsdoc/require-returns': 'off',
+      'max-lines-per-function': 'off',
+      'max-statements': 'off',
+      'unicorn/consistent-function-scoping': 'off',
+      'unicorn/prevent-abbreviations': 'off',
+      'vitest/max-expects': ['warn', { max: 15 }],
+      'vitest/no-hooks': 'off',
+      'vitest/prefer-called-with': 'off',
+      'vitest/prefer-describe-function-title': 'off',
+      'vitest/prefer-expect-assertions': 'off',
+      'vitest/prefer-lowercase-title': 'off',
+      'vitest/require-hook': 'off',
+      'vitest/require-mock-type-parameters': 'off',
+    },
+    settings: {
+      vitest: {
+        typecheck: true,
+      },
     },
   },
   {

@@ -1,14 +1,13 @@
 import { DateTime } from 'luxon'
 
-import type { DeviceType } from '../enums.ts'
+import type { DeviceType } from '../constants.ts'
+import type { ModelRegistry } from '../models/index.ts'
 import type {
-  IAreaModel,
-  IBuildingModel,
-  IDeviceModel,
-  IDeviceModelAny,
-  IFloorModel,
-} from '../models/index.ts'
-import type { ErrorLog, ErrorLogQuery, IAPI } from '../services/index.ts'
+  DeviceModel,
+  DeviceModelAny,
+  Model,
+} from '../models/interfaces.ts'
+import type { APIAdapter, ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type {
   DateTimeComponents,
   FailureData,
@@ -26,12 +25,13 @@ import { syncDevices, updateDevices } from '../decorators/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'
 
 import type {
+  Facade,
   FrostProtectionQuery,
   HolidayModeQuery,
-  IFacade,
   ReportChartLineOptions,
 } from './interfaces.ts'
 
+// Minimum 2°C gap between min and max to prevent invalid frost protection ranges
 const TEMPERATURE_GAP = 2
 
 const temperatureRange = { max: 16, min: 4 }
@@ -48,12 +48,17 @@ const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
     }
   : null
 
-export abstract class BaseFacade<
-  T extends IAreaModel | IBuildingModel | IDeviceModelAny | IFloorModel,
-> implements IFacade {
+/**
+ * Abstract base for all facades. Provides common functionality for frost protection,
+ * holiday mode, power control, signal strength, tiles, and error log retrieval.
+ * Settings resolution falls back from zone level to device level when needed.
+ */
+export abstract class BaseFacade<T extends Model> implements Facade {
   public readonly id: number
 
-  protected readonly api: IAPI
+  protected readonly api: APIAdapter
+
+  protected readonly registry: ModelRegistry
 
   protected isFrostProtectionDefined: boolean | null = null
 
@@ -69,8 +74,13 @@ export abstract class BaseFacade<
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public constructor(api: IAPI, instance: T) {
+  public constructor(
+    api: APIAdapter,
+    registry: ModelRegistry,
+    instance: Model,
+  ) {
     this.api = api
+    this.registry = registry
     ;({ id: this.id } = instance)
   }
 
@@ -102,7 +112,7 @@ export abstract class BaseFacade<
     return this.devices.map(({ name }) => name)
   }
 
-  public abstract get devices(): IDeviceModelAny[]
+  public abstract get devices(): DeviceModelAny[]
 
   public async onSync({ type }: { type?: DeviceType } = {}): Promise<void> {
     await this.api.onSync?.({ ids: this.#deviceIds, type })
@@ -121,6 +131,10 @@ export abstract class BaseFacade<
     return this.api.errorLog(query, this.#deviceIds)
   }
 
+  /*
+   * Frost protection can be defined at zone or device level. Try zone first;
+   * if unsupported, fall back to device level and cache the result.
+   */
   public async frostProtection(): Promise<FrostProtectionData> {
     if (this.isFrostProtectionDefined === null) {
       try {
@@ -134,6 +148,7 @@ export abstract class BaseFacade<
       : this.#getDevicesFrostProtection()
   }
 
+  // Same zone-then-device fallback strategy as frostProtection
   public async holidayMode(): Promise<HolidayModeData> {
     if (this.isHolidayModeDefined === null) {
       try {
@@ -152,6 +167,10 @@ export abstract class BaseFacade<
     max,
     min,
   }: FrostProtectionQuery): Promise<FailureData | SuccessData> {
+    /*
+     * Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
+     * in case the adjustment pushed max out of bounds
+     */
     const newMin = Math.max(
       temperatureRange.min,
       Math.min(min, temperatureRange.max - TEMPERATURE_GAP),
@@ -202,10 +221,10 @@ export abstract class BaseFacade<
 
   public async tiles(select?: false): Promise<TilesData<null>>
   public async tiles<U extends DeviceType>(
-    select: IDeviceModel<U>,
+    select: DeviceModel<U>,
   ): Promise<TilesData<U>>
   public async tiles<U extends DeviceType>(
-    select: false | IDeviceModel<U> = false,
+    select: false | DeviceModel<U> = false,
   ): Promise<TilesData<U | null>> {
     const postData = { DeviceIDs: this.#deviceIds }
     if (select === false || !this.#deviceIds.includes(select.id)) {

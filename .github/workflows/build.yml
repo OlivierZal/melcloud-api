@@ -1,45 +1,49 @@
+concurrency:
+  cancel-in-progress: true
+  group: ci-${{ github.ref }}
 jobs:
-  build:
+  audit:
     if: github.actor != 'dependabot[bot]'
-    name: Build package
+    name: Audit
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           cache: npm
           node-version: latest
-      - name: Lint, format & build code, generate docs
-        run: npm ci
-      - env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_REF: ${{ github.head_ref }}
-        name: Commit & push changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if ! git diff --cached --exit-code; then
-            git commit -m "Code maintenance: lint, format and build code, generate docs"
-            if [[ ${{ github.ref }} == "refs/heads/main" ]]; then
-              BRANCH_NAME="maintenance-$(date +'%Y%m%d%H%M%S')"
-              git checkout -b "$BRANCH_NAME"
-              git push origin "$BRANCH_NAME"
-              gh pr create --base main --head "$BRANCH_NAME" --title "Maintenance PR" --body "Automatic code maintenance: lint, format and build code."
-              PR_URL=$(gh pr view "$BRANCH_NAME" --json url -q '.url')
-              gh pr merge --auto --merge --delete-branch "$PR_URL"
-            else
-              git fetch origin "$HEAD_REF":"refs/remotes/origin/$HEAD_REF"
-              git checkout -B "$HEAD_REF"
-              git rebase "origin/$HEAD_REF"
-              git push origin HEAD:$HEAD_REF
-            fi
-          fi
+      - run: npm audit --omit=dev
+  lint:
+    if: github.actor != 'dependabot[bot]'
+    name: Lint
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          cache: npm
+          node-version: latest
+      - run: npm ci --ignore-scripts
+      - run: npm run lint
+      - run: npm run format
+  test:
+    if: github.actor != 'dependabot[bot]'
+    name: Test
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          cache: npm
+          node-version: latest
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npm test -- --coverage
 name: Build package
 on: [pull_request, push]
-permissions:
-  contents: write
-  pull-requests: write

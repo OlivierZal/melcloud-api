@@ -1,4 +1,5 @@
 {
+  "include": ["src", "tests"],
   "compilerOptions": {
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -16,7 +17,6 @@
     "noUnusedParameters": true,
     "outDir": "dist",
     "rewriteRelativeImportExtensions": true,
-    "rootDir": "src",
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,

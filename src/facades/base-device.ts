@@ -1,6 +1,9 @@
 import { DateTime } from 'luxon'
 
-import type { IAPI } from '../services/index.ts'
+import type {
+  DeviceModelAny,
+  DeviceModel as DeviceModelContract,
+} from '../models/interfaces.ts'
 import type {
   EnergyData,
   GetDeviceData,
@@ -11,14 +14,9 @@ import type {
   UpdateDeviceData,
 } from '../types/index.ts'
 
-import { FLAG_UNCHANGED } from '../constants.ts'
+import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
-import { DeviceType } from '../enums.ts'
-import {
-  type IDeviceModel,
-  type IDeviceModelAny,
-  DeviceModel,
-} from '../models/index.ts'
+import { DeviceModel } from '../models/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -26,10 +24,11 @@ import {
   isSetDeviceDataAtaInList,
   isUpdateDeviceData,
   now,
+  typedKeys,
 } from '../utils.ts'
 
 import type {
-  IDeviceFacade,
+  DeviceFacade,
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
@@ -37,6 +36,7 @@ import type {
 
 import { BaseFacade } from './base.ts'
 
+// Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
 
 const getReportPostDataDates = ({
@@ -50,78 +50,94 @@ const getReportPostDataDates = ({
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(DateTime.fromISO(to).diff(DateTime.fromISO(from), 'days').days)
 
+/**
+ * Abstract base for device-specific facades. Handles device data access, report generation,
+ * value updates with effective flags, and ATA key conversion between set/list formats.
+ */
 export abstract class BaseDeviceFacade<T extends DeviceType>
-  extends BaseFacade<IDeviceModelAny>
-  implements IDeviceFacade<T>
+  extends BaseFacade<DeviceModelAny>
+  implements DeviceFacade<T>
 {
-  public readonly type: T
-
   protected readonly frostProtectionLocation = 'DeviceIds'
 
   protected readonly holidayModeLocation = 'Devices'
 
   protected readonly internalTemperaturesLegend: (string | undefined)[] = []
 
-  protected readonly model = DeviceModel<T>
-
   protected readonly tableName = 'DeviceLocation'
 
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
+  public abstract readonly type: T
+
   protected abstract readonly temperaturesLegend: (string | undefined)[]
 
-  public constructor(api: IAPI, instance: IDeviceModel<T>) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    super(api, instance as IDeviceModelAny)
-    ;({ type: this.type } = instance)
-  }
-
-  public override get devices(): IDeviceModelAny[] {
+  public override get devices(): DeviceModelAny[] {
     return [this.instance]
   }
 
   public get data(): ListDeviceData<T> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return this.instance.data as ListDeviceData<T>
+    return this.device.data
   }
 
+  protected get device(): DeviceModelContract<T> {
+    const { instance } = this
+    if (!this.#isMatchingDevice(instance)) {
+      throw new Error('Device type mismatch')
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified
+    return instance as unknown as DeviceModelContract<T>
+  }
+
+  protected get model(): {
+    getById: (id: number) => DeviceModelAny | undefined
+  } {
+    return this.registry.devices
+  }
+
+  #isMatchingDevice(device: DeviceModelAny): boolean {
+    return device.type === this.type
+  }
+
+  /*
+   * For ATA devices, API list responses use different property names than set
+   * requests (e.g., "FanSpeed" in list vs "SetFanSpeed" in set). Convert keys
+   * to set format, then keep only the fields tracked by flags.
+   */
   protected get setData(): Required<UpdateDeviceData<T>> {
+    const dataEntries = Object.entries(this.data)
+    const entries =
+      this.type === DeviceType.Ata ?
+        dataEntries
+          .map(([key, value]): [string, unknown] => [
+            isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
+            value,
+          ])
+          .filter(([key]) => key in this.flags)
+      : dataEntries.filter(([key]) => key in this.flags)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return Object.fromEntries(
-      (this.type === DeviceType.Ata ?
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        (Object.entries(this.data).map(([key, value]) => [
-          isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
-          value,
-        ]) as [
-          keyof UpdateDeviceData<T>,
-          UpdateDeviceData<T>[keyof UpdateDeviceData<T>],
-        ][])
-      : Object.entries(this.data)
-      ).filter(([key]) => key in this.flags),
-    ) as Required<UpdateDeviceData<T>>
+    return Object.fromEntries(entries) as Required<UpdateDeviceData<T>>
   }
 
   public override async tiles(select?: false): Promise<TilesData<null>>
   public override async tiles(
-    select: true | IDeviceModel<T>,
+    select: true | DeviceModelContract<T>,
   ): Promise<TilesData<T>>
   public override async tiles(
-    select: boolean | IDeviceModel<T> = false,
+    select: boolean | DeviceModelContract<T> = false,
   ): Promise<TilesData<T | null>> {
     return (
         select === false ||
           (select instanceof DeviceModel && select.id !== this.id)
       ) ?
         super.tiles()
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      : super.tiles(this.instance as IDeviceModel<T>)
+      : super.tiles(this.device)
   }
 
   @fetchDevices
   public async fetch(): Promise<ListDeviceData<T>> {
-    // eslint-disable-next-line unicorn/no-useless-promise-resolve-reject
-    return Promise.resolve(this.data)
+    const data = await Promise.resolve(this.data)
+    return data
   }
 
   @syncDevices()
@@ -133,13 +149,11 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     const newData = Object.fromEntries(
       Object.entries(data).filter(
         ([key, value]) =>
-          isUpdateDeviceData(this.setData, key) &&
-          this.setData[key as keyof UpdateDeviceData<T>] !== value,
+          isUpdateDeviceData(this.setData, key) && this.setData[key] !== value,
       ),
     ) as Partial<UpdateDeviceData<T>>
     const flags = this.#getFlags(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      Object.keys(newData) as (keyof UpdateDeviceData<T>)[],
+      typedKeys(newData) as (keyof UpdateDeviceData<T>)[],
     )
     if (!flags) {
       throw new Error('No data to set')
@@ -158,19 +172,17 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   @syncDevices()
   @updateDevice
   public async values(): Promise<GetDeviceData<T>> {
-    const { data } = await this.api.values({
-      params: { buildingId: this.instance.buildingId, id: this.id },
+    const { data } = await this.api.values<T>({
+      params: { buildingId: this.device.buildingId, id: this.id },
     })
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return data as GetDeviceData<T>
+    return data
   }
 
   public async energy(query?: ReportQuery): Promise<EnergyData<T>> {
-    const { data } = await this.api.energy({
+    const { data } = await this.api.energy<T>({
       postData: this.#getReportPostData(query),
     })
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return data as EnergyData<T>
+    return data
   }
 
   public async hourlyTemperatures(
@@ -209,7 +221,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     const { data } = await this.api.temperatures({
       postData: {
         ...this.#getReportPostData(query, useExactRange),
-        Location: this.instance.building?.location,
+        Location: this.registry.buildings.getById(this.device.buildingId)
+          ?.location,
       },
     })
     return getChartLineOptions(data, this.temperaturesLegend, '°C')
@@ -221,12 +234,17 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return { ...this.setData, ...data }
   }
 
+  /*
+   * Combine individual field flags via bitwise OR to tell the API
+   * which device settings were actually changed
+   */
   #getFlags(keys: (keyof UpdateDeviceData<T>)[]): number {
-    let flag = FLAG_UNCHANGED
-    for (const key of keys) {
-      flag = Number(BigInt(this.flags[key]) | BigInt(flag))
-    }
-    return flag
+    return Number(
+      keys.reduce(
+        (flag, key) => flag | BigInt(this.flags[key]),
+        BigInt(FLAG_UNCHANGED),
+      ),
+    )
   }
 
   #getReportPostData(
