@@ -26,14 +26,12 @@ const toOperationModeZone = (value: number): OperationModeZone => {
   const mode = operationModeZoneByValue.get(value)
 
   // Defensive: arithmetic on valid OperationModeZone values always yields valid results
-  /* eslint-disable capitalized-comments */
   /* v8 ignore start */
   if (mode === undefined) {
     throw new Error(`Invalid OperationModeZone: ${String(value)}`)
   }
 
   /* v8 ignore stop */
-  /* eslint-enable capitalized-comments */
   return mode
 }
 

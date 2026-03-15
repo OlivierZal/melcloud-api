@@ -16,7 +16,7 @@ import {
   ervDevice,
   floorData,
 } from '../fixtures.ts'
-import { mock } from '../helpers.ts'
+import { cast, mock } from '../helpers.ts'
 
 const allBuildings = [
   buildingData({ Name: 'Building 1' }),
@@ -105,8 +105,7 @@ describe('modelRegistry', () => {
         DeviceID: 9999,
         DeviceName: 'Invalid',
         FloorID: null,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- intentional invalid type for testing
-        Type: 999 as unknown as 0,
+        Type: cast(999),
       }) as ListDeviceAny
 
       expect(() => {

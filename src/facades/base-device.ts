@@ -24,6 +24,7 @@ import {
   isSetDeviceDataAtaInList,
   isUpdateDeviceData,
   now,
+  typedFromEntries,
   typedKeys,
 } from '../utils.ts'
 
@@ -115,8 +116,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
           ])
           .filter(([key]) => key in this.flags)
       : dataEntries.filter(([key]) => key in this.flags)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return Object.fromEntries(entries) as Required<UpdateDeviceData<T>>
+    return typedFromEntries<Required<UpdateDeviceData<T>>>(entries)
   }
 
   public override async getTiles(select?: false): Promise<TilesData<null>>
@@ -154,13 +154,12 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public async setValues(
     data: Partial<UpdateDeviceData<T>>,
   ): Promise<SetDeviceData<T>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    const newData = Object.fromEntries(
+    const newData = typedFromEntries<Partial<UpdateDeviceData<T>>>(
       Object.entries(data).filter(
         ([key, value]) =>
           isUpdateDeviceData(this.setData, key) && this.setData[key] !== value,
       ),
-    ) as Partial<UpdateDeviceData<T>>
+    )
     const flags = this.#getFlags(
       typedKeys(newData) as (keyof UpdateDeviceData<T>)[],
     )

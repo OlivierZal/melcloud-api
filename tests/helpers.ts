@@ -5,6 +5,15 @@ import type { DeviceModelAny } from '../src/models/interfaces.ts'
 import type { APIAdapter } from '../src/services/index.ts'
 
 /**
+ * Unsafe cast using overloading to bypass `no-unsafe-type-assertion`.
+ * @param value - The value to cast.
+ */
+export function cast(value: unknown): never
+export function cast(value: unknown): unknown {
+  return value
+}
+
+/**
  * Create a mock object typed as `T` from a partial value.
  * Uses function overloading to avoid unsafe type assertions in tests.
  * @param value

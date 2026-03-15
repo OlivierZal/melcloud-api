@@ -14,7 +14,7 @@ import type {
   SetDevicePostData,
 } from '../../src/types/index.ts'
 
-import { mock } from '../helpers.ts'
+import { cast, mock } from '../helpers.ts'
 
 const mockInterceptors = {
   request: { use: vi.fn() },
@@ -29,10 +29,9 @@ const mockAxiosInstance = {
 
 vi.mock(import('axios'), async (importOriginal) => ({
   ...(await importOriginal()),
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-  default: {
+  default: cast({
     create: vi.fn().mockReturnValue(mockAxiosInstance),
-  } as unknown as typeof import('axios').default,
+  }),
 }))
 
 describe('mELCloudAPI', () => {
@@ -65,16 +64,8 @@ describe('mELCloudAPI', () => {
     const resCalls = mockInterceptors.response.use.mock.calls
     const lastRequest = requestCalls.at(-1)!
     const lastRes = resCalls.at(-1)!
-    /* eslint-disable @typescript-eslint/no-unsafe-type-assertion */
-    ;[requestHandler, requestErrorHandler] = lastRequest as [
-      typeof requestHandler,
-      typeof requestErrorHandler,
-    ]
-    ;[responseHandler, responseErrorHandler] = lastRes as [
-      typeof responseHandler,
-      typeof responseErrorHandler,
-    ]
-    /* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
+    ;[requestHandler, requestErrorHandler] = cast(lastRequest)
+    ;[responseHandler, responseErrorHandler] = cast(lastRes)
     return api
   }
 
@@ -693,8 +684,7 @@ describe('mELCloudAPI', () => {
   describe('interceptors', () => {
     it('request handler sets context key header', async () => {
       await createApi()
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      const headers = new Map() as unknown as AxiosRequestHeaders
+      const headers: AxiosRequestHeaders = cast(new Map())
       vi.spyOn(headers, 'set')
       const config = mock<InternalAxiosRequestConfig>({
         headers,
@@ -710,8 +700,7 @@ describe('mELCloudAPI', () => {
 
     it('request handler does not set header for login path', async () => {
       await createApi()
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      const headers = new Map() as unknown as AxiosRequestHeaders
+      const headers: AxiosRequestHeaders = cast(new Map())
       vi.spyOn(headers, 'set')
       const config = mock<InternalAxiosRequestConfig>({
         headers,
@@ -754,8 +743,7 @@ describe('mELCloudAPI', () => {
         },
       })
       mockAxiosInstance.get.mockResolvedValue({ data: [] })
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      const headers = new Map() as unknown as AxiosRequestHeaders
+      const headers: AxiosRequestHeaders = cast(new Map())
       vi.spyOn(headers, 'set')
       const config = mock<InternalAxiosRequestConfig>({
         headers,
@@ -1045,8 +1033,7 @@ describe('mELCloudAPI', () => {
         'too many',
       )
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      const headers = new Map() as unknown as AxiosRequestHeaders
+      const headers: AxiosRequestHeaders = cast(new Map())
       vi.spyOn(headers, 'set')
       const config = mock<InternalAxiosRequestConfig>({
         headers,

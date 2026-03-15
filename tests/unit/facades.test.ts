@@ -32,7 +32,7 @@ import {
   holidayModeResponse,
   reportData,
 } from '../fixtures.ts'
-import { assertDeviceType, mock } from '../helpers.ts'
+import { assertDeviceType, cast, mock } from '../helpers.ts'
 
 type DeviceModelAta = DeviceModel<typeof DeviceType.Ata>
 
@@ -550,13 +550,7 @@ describe('baseDeviceFacade device type mismatch', () => {
     const api = createMockApi()
     const instance = registry.devices.getById(1001)!
     assertDeviceType(instance, DeviceType.Atw)
-    /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- intentional mismatch for testing */
-    const facade = new DeviceAtaFacade(
-      api,
-      registry,
-      instance as unknown as DeviceModel<typeof DeviceType.Ata>,
-    )
-    /* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
+    const facade = new DeviceAtaFacade(api, registry, cast(instance))
 
     expect(() => facade.data).toThrow('Device type mismatch')
   })
@@ -1064,8 +1058,7 @@ describe('baseDeviceFacade getTiles', () => {
     const otherDevice = registry.devices.getById(1001)!
     assertDeviceType(otherDevice, DeviceType.Atw)
     const result = await facade.getTiles(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      mock<DeviceModelAta>(otherDevice as unknown as Partial<DeviceModelAta>),
+      mock<DeviceModelAta>(cast(otherDevice)),
     )
 
     expect(result).toHaveProperty('Tiles')

@@ -197,6 +197,15 @@ const config = defineConfig([
       '@typescript-eslint/return-await': ['error', 'in-try-catch'],
       '@typescript-eslint/typedef': 'off',
       camelcase: 'off',
+      'capitalized-comments': [
+        'error',
+        'always',
+        {
+          block: {
+            ignorePattern: String.raw`v8\s`,
+          },
+        },
+      ],
       curly: 'error',
       'import-x/first': 'error',
       'import-x/max-dependencies': [

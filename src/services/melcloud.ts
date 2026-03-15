@@ -93,14 +93,12 @@ const toISODate = (dateTime: DateTime): string => {
   const result = dateTime.toISODate()
 
   // Defensive: DateTime from valid ISO string always produces valid date
-  /* eslint-disable capitalized-comments */
   /* v8 ignore start */
   if (result === null) {
     throw new Error('Invalid DateTime: cannot convert to ISO date')
   }
 
   /* v8 ignore stop */
-  /* eslint-enable capitalized-comments */
   return result
 }
 

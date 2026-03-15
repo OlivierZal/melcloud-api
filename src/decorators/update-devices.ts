@@ -14,6 +14,7 @@ import {
   fromSetToListAta,
   isSetDeviceDataAtaNotInList,
   isUpdateDeviceData,
+  typedFromEntries,
 } from '../utils.ts'
 
 const isDeviceOfType = (device: DeviceModelAny, type: DeviceType): boolean =>
@@ -83,8 +84,7 @@ const convertToListDeviceData = <T extends DeviceType>(
           isUpdateDeviceData(flags, key) &&
           Boolean(BigInt(flags[key]) & BigInt(effectiveFlags)),
       )
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-  return Object.fromEntries(
+  return typedFromEntries<Partial<ListDeviceData<T>>>(
     type === DeviceType.Ata ?
       entries.map(([key, value]) =>
         isSetDeviceDataAtaNotInList(key) ?
@@ -92,7 +92,7 @@ const convertToListDeviceData = <T extends DeviceType>(
         : [key, value],
       )
     : entries,
-  ) as Partial<ListDeviceData<T>>
+  )
 }
 
 /**
