@@ -1,8 +1,9 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType, Language } from '../enums.ts'
+import type { DeviceType } from '../constants.ts'
+import type { ModelRegistry } from '../models/index.ts'
 import type {
-  Building,
+  BuildingWithStructure,
   EnergyData,
   EnergyPostData,
   ErrorLogData,
@@ -33,107 +34,185 @@ import type {
   TilesPostData,
 } from '../types/index.ts'
 
-const apiSettingKeys: Set<string> = new Set([
-  'contextKey',
-  'expiry',
-  'password',
-  'username',
-]) satisfies Set<keyof APISettings>
-
+/** Configuration options for creating a MELCloud API instance. */
 export interface APIConfig extends Partial<LoginCredentials> {
+  /** Interval in minutes between automatic syncs. Set to `null` to disable. */
   readonly autoSyncInterval?: number | null
+
+  /** Locale language code (e.g. `'en'`, `'fr'`). */
   readonly language?: string
+
+  /** Custom logger for API request/response/error logging. Defaults to `console`. */
   readonly logger?: Logger
+
+  /** Callback invoked after each sync operation completes. */
   readonly onSync?: OnSyncFunction
+
+  /** External setting manager for persisting credentials and session data. */
   readonly settingManager?: SettingManager
+
+  /** Whether to verify SSL certificates. Defaults to `true`. */
   readonly shouldVerifySSL?: boolean
+
+  /** IANA timezone identifier (e.g. `'Europe/Paris'`). */
   readonly timezone?: string
 }
 
+/** Persistent settings managed by the API for session authentication. */
 export interface APISettings {
+  /** MELCloud session context key. */
   readonly contextKey?: string | null
+
+  /** Session expiry timestamp in ISO 8601 format. */
   readonly expiry?: string | null
+
+  /** MELCloud account password. */
   readonly password?: string | null
+
+  /** MELCloud account username (email). */
   readonly username?: string | null
 }
 
+/** A single error entry from the device error log. */
 export interface ErrorDetails {
+  /** Human-readable date of the error occurrence. */
   readonly date: string
+
+  /** Name of the device that reported the error. */
   readonly device: string
+
+  /** Error message text. */
   readonly error: string
 }
 
+/** Parsed error log with pagination support. */
 export interface ErrorLog {
+  /** List of error entries, sorted in reverse chronological order. */
   readonly errors: readonly ErrorDetails[]
+
+  /** Human-readable start date of the queried period. */
   readonly fromDateHuman: string
+
+  /** ISO date string for the next page's start date. */
   readonly nextFromDate: string
+
+  /** ISO date string for the next page's end date. */
   readonly nextToDate: string
 }
 
+/** Query parameters for paginating the error log. */
 export interface ErrorLogQuery {
+  /** Start date in ISO 8601 format. */
   readonly from?: string
+
+  /** Number of days per page. */
   readonly limit?: string
+
+  /** Page offset (number of pages to skip). */
   readonly offset?: string
+
+  /** End date in ISO 8601 format. Defaults to now. */
   readonly to?: string
 }
 
-export interface IAPI {
-  readonly onSync?: OnSyncFunction
+/** Full MELCloud API contract including authentication and device listing. */
+export interface API extends APIAdapter {
+  /** Central model registry containing all synced buildings, floors, areas, and devices. */
+  readonly registry: ModelRegistry
+
+  /** Authenticate with MELCloud using the provided or stored credentials. */
   readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
+
+  /** Cancel any pending automatic sync. */
   readonly clearSync: () => void
-  readonly errorLog: (
-    query: ErrorLogQuery,
-    deviceIds: number[],
-  ) => Promise<ErrorLog>
-  readonly fetch: () => Promise<Building[]>
-  readonly updateLanguage: (language: string) => Promise<void>
-  // DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
-  readonly errors: ({
-    postData,
-  }: {
-    postData: ErrorLogPostData
-  }) => Promise<{ data: ErrorLogData[] | FailureData }>
-  readonly frostProtection: ({
-    params,
-  }: {
-    params: SettingsParams
-  }) => Promise<{ data: FrostProtectionData }>
-  readonly holidayMode: ({
-    params,
-  }: {
-    params: SettingsParams
-  }) => Promise<{ data: HolidayModeData }>
-  readonly list: () => Promise<{ data: Building[] }>
+
+  /** List all buildings and their device hierarchy. */
+  readonly list: () => Promise<{ data: BuildingWithStructure[] }>
+
+  /** Perform a login request against the MELCloud API. */
   readonly login: ({
     postData,
   }: {
     postData: LoginPostData
   }) => Promise<{ data: LoginData }>
-  readonly operationModes: ({
+
+  /** Update the user's language on the server if it differs from the current locale. */
+  readonly setLanguage: (language: string) => Promise<void>
+
+  /** Update the automatic sync interval and reschedule. Set to `0` or `null` to disable. */
+  readonly setSyncInterval: (minutes: number | null) => void
+}
+
+/**
+ * Low-level API adapter exposing all MELCloud HTTP endpoints.
+ * Methods are grouped by supported device types.
+ */
+export interface APIAdapter {
+  /** Callback invoked after sync operations. */
+  readonly onSync?: OnSyncFunction
+
+  /**
+   * Retrieve a parsed and paginated error log for the given devices.
+   * Supported by all device types.
+   */
+  readonly getErrorLog: (
+    query: ErrorLogQuery,
+    deviceIds: number[],
+  ) => Promise<ErrorLog>
+
+  /** Fetch raw error log entries from the API. */
+  readonly getErrorEntries: ({
+    postData,
+  }: {
+    postData: ErrorLogPostData
+  }) => Promise<{ data: ErrorLogData[] | FailureData }>
+
+  /** Fetch all buildings and sync the model registry. */
+  readonly fetch: () => Promise<BuildingWithStructure[]>
+
+  /** Get frost protection settings for a building, floor, area, or device. */
+  readonly getFrostProtection: ({
+    params,
+  }: {
+    params: SettingsParams
+  }) => Promise<{ data: FrostProtectionData }>
+
+  /** Get holiday mode settings for a building, floor, area, or device. */
+  readonly getHolidayMode: ({
+    params,
+  }: {
+    params: SettingsParams
+  }) => Promise<{ data: HolidayModeData }>
+
+  /** Fetch operation mode log data for charting. */
+  readonly getOperationModes: ({
     postData,
   }: {
     postData: ReportPostData
   }) => Promise<{ data: OperationModeLogData }>
+
+  /** Update frost protection settings. */
   readonly setFrostProtection: ({
     postData,
   }: {
     postData: FrostProtectionPostData
   }) => Promise<{ data: FailureData | SuccessData }>
+
+  /** Update holiday mode settings. */
   readonly setHolidayMode: ({
     postData,
   }: {
     postData: HolidayModePostData
   }) => Promise<{ data: FailureData | SuccessData }>
-  readonly setLanguage: ({
-    postData,
-  }: {
-    postData: { language: Language }
-  }) => Promise<{ data: boolean }>
+
+  /** Turn devices on or off. */
   readonly setPower: ({
     postData,
   }: {
     postData: SetPowerPostData
   }) => Promise<{ data: boolean }>
+
+  /** Send updated device values to the API. */
   readonly setValues: <T extends DeviceType>({
     postData,
     type,
@@ -141,17 +220,23 @@ export interface IAPI {
     postData: SetDevicePostData<T>
     type: T
   }) => Promise<{ data: SetDeviceData<T> }>
-  readonly signal: ({
+
+  /** Fetch WiFi signal strength report. */
+  readonly getSignal: ({
     postData,
   }: {
     postData: { devices: number | number[]; hour: HourNumbers }
   }) => Promise<{ data: ReportData }>
-  readonly temperatures: ({
+
+  /** Fetch temperature log data. */
+  readonly getTemperatures: ({
     postData,
   }: {
     postData: TemperatureLogPostData
   }) => Promise<{ data: ReportData }>
-  readonly tiles: (({
+
+  /** Fetch tile data for device overview. */
+  readonly getTiles: (({
     postData,
   }: {
     postData: TilesPostData<null>
@@ -161,58 +246,70 @@ export interface IAPI {
     }: {
       postData: TilesPostData<T>
     }) => Promise<{ data: TilesData<T> }>)
-  readonly values: ({
+
+  /** Fetch current device data by device and building ID. */
+  readonly getValues: <T extends DeviceType>({
     params,
   }: {
     params: GetDeviceDataParams
-  }) => Promise<{ data: GetDeviceData<DeviceType> }>
-  // DeviceType.Ata | DeviceType.Atw
-  readonly energy: ({
+  }) => Promise<{ data: GetDeviceData<T> }>
+
+  /** Fetch energy consumption report. Supported by ATA and ATW devices. */
+  readonly getEnergy: <T extends DeviceType>({
     postData,
   }: {
     postData: EnergyPostData
-  }) => Promise<{ data: EnergyData<DeviceType> }>
-  // DeviceType.Ata
-  readonly group: ({
+  }) => Promise<{ data: EnergyData<T> }>
+
+  /** Fetch ATA device group state. ATA only. */
+  readonly getGroup: ({
     postData,
   }: {
     postData: GetGroupPostData
   }) => Promise<{ data: GetGroupData }>
+
+  /** Update ATA device group state. ATA only. */
   readonly setGroup: ({
     postData,
   }: {
     postData: SetGroupPostData
   }) => Promise<{ data: FailureData | SuccessData }>
-  // DeviceType.Atw
-  readonly hourlyTemperatures: ({
+
+  /** Fetch hourly temperature report. ATW only. */
+  readonly getHourlyTemperatures: ({
     postData,
   }: {
     postData: { device: number; hour: HourNumbers }
   }) => Promise<{ data: ReportData }>
-  readonly internalTemperatures: ({
+
+  /** Fetch internal temperature report. ATW only. */
+  readonly getInternalTemperatures: ({
     postData,
   }: {
     postData: ReportPostData
   }) => Promise<{ data: ReportData }>
 }
 
+/** Logger interface for API call tracing. */
 export interface Logger {
+  /** Log error messages. */
   readonly error: Console['error']
+
+  /** Log informational messages. */
   readonly log: Console['log']
 }
 
+/** External storage adapter for persisting API session settings. */
 export interface SettingManager {
-  readonly get: <T extends keyof APISettings>(key: T) => APISettings[T]
-  readonly set: <T extends keyof APISettings>(
-    key: T,
-    value: APISettings[T],
-  ) => void
+  /** Retrieve a setting value by key. Returns the stored value, or `null`/`undefined` if absent. */
+  readonly get: (key: string) => string | null | undefined
+
+  /** Store a setting value by key. */
+  readonly set: (key: string, value: string) => void
 }
 
+/** Callback invoked after sync operations, with optional device IDs and type filter. */
 export type OnSyncFunction = (params?: {
   ids?: number[]
   type?: DeviceType
 }) => Promise<void>
-
-export const isAPISetting = (value: string): value is keyof APISettings =>
-  apiSettingKeys.has(value)

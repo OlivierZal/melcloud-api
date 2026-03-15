@@ -12,12 +12,14 @@ export type {
 } from './ata.ts'
 export type {
   EnergyDataAtw,
+  HotWaterState,
   ListDeviceDataAtw,
   OperationModeZoneDataAtw,
   SetDeviceDataAtw,
   TemperatureDataAtw,
   UpdateDeviceDataAtw,
   ZoneAtw,
+  ZoneState,
 } from './atw.ts'
 export type { BaseDevicePostData, BaseGetDeviceData } from './bases.ts'
 export type {
@@ -28,24 +30,28 @@ export type {
 export type {
   AreaData,
   AreaDataAny,
-  Building,
+  AreaZone,
   BuildingData,
+  BuildingWithStructure,
+  BuildingZone,
   DateTimeComponents,
+  DeviceZone,
   EnergyData,
   EnergyPostData,
   ErrorLogData,
   ErrorLogPostData,
   FailureData,
   FloorData,
+  FloorZone,
   FrostProtectionData,
   FrostProtectionLocation,
   FrostProtectionPostData,
   GetDeviceData,
   GetDeviceDataParams,
-  HMTimeZone,
   HolidayModeData,
   HolidayModeLocation,
   HolidayModePostData,
+  HolidayModeTimeZone,
   ListDevice,
   ListDeviceAny,
   ListDeviceData,
@@ -65,5 +71,6 @@ export type {
   TilesData,
   TilesPostData,
   UpdateDeviceData,
+  Zone,
   ZoneSettings,
 } from './generic.ts'

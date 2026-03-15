@@ -1,15 +1,17 @@
-import type { IAPI } from '../services/index.ts'
+import type { APIAdapter } from '../services/index.ts'
 
-import { DeviceType } from '../enums.ts'
+import { DeviceType } from '../constants.ts'
 import {
-  type IModel,
+  type DeviceModelAny,
+  type Model,
+  type ModelRegistry,
   AreaModel,
   BuildingModel,
   DeviceModel,
   FloorModel,
 } from '../models/index.ts'
 
-import type { IDeviceFacadeAny, IFacade } from './interfaces.ts'
+import type { DeviceFacadeAny, Facade } from './interfaces.ts'
 
 import { AreaFacade } from './area.ts'
 import { BuildingFacade } from './building.ts'
@@ -19,56 +21,66 @@ import { DeviceAtwFacade } from './device-atw.ts'
 import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
-type DeviceModelAny = DeviceModel<
-  DeviceType.Ata | DeviceType.Atw | DeviceType.Erv
->
-
-const isDeviceModelAta = (
+const createDeviceFacade = (
+  api: APIAdapter,
+  registry: ModelRegistry,
   instance: DeviceModelAny,
-): instance is DeviceModel<DeviceType.Ata> =>
-  instance instanceof DeviceModel && instance.type === DeviceType.Ata
-
-const isDeviceModelAtw = (
-  instance: DeviceModelAny,
-): instance is DeviceModel<DeviceType.Atw> =>
-  instance instanceof DeviceModel && instance.type === DeviceType.Atw
-
-const isDeviceModelErv = (
-  instance: DeviceModelAny,
-): instance is DeviceModel<DeviceType.Erv> =>
-  instance instanceof DeviceModel && instance.type === DeviceType.Erv
-
-const createDeviceFacade = <T extends DeviceType>(
-  api: IAPI,
-  instance: DeviceModel<T>,
-): IDeviceFacadeAny => {
-  if (isDeviceModelAta(instance)) {
-    return new DeviceAtaFacade(api, instance)
-  }
-  if (isDeviceModelAtw(instance)) {
-    if (instance.data.HasZone2) {
-      return new DeviceAtwHasZone2Facade(api, instance)
+): DeviceFacadeAny => {
+  switch (instance.type) {
+    case DeviceType.Ata: {
+      return new DeviceAtaFacade(api, registry, instance)
     }
-    return new DeviceAtwFacade(api, instance)
+    case DeviceType.Atw: {
+      if (instance.data.HasZone2) {
+        return new DeviceAtwHasZone2Facade(api, registry, instance)
+      }
+      return new DeviceAtwFacade(api, registry, instance)
+    }
+    case DeviceType.Erv: {
+      return new DeviceErvFacade(api, registry, instance)
+    }
+    // No default
   }
-  if (isDeviceModelErv(instance)) {
-    return new DeviceErvFacade(api, instance)
-  }
-  throw new Error('Device model not supported')
 }
 
-export const createFacade = (api: IAPI, instance: IModel): IFacade => {
+const getDeviceFromRegistry = (
+  registry: ModelRegistry,
+  id: number,
+): DeviceModelAny => {
+  const device = registry.devices.getById(id)
+  if (!device) {
+    throw new Error('Device not found in registry')
+  }
+  return device
+}
+
+/**
+ * Create the appropriate facade for a model instance based on its runtime type.
+ * @param api - The API adapter for making requests.
+ * @param registry - The model registry containing all synced models.
+ * @param instance - The model instance to create a facade for.
+ * @returns The facade matching the model's runtime type.
+ */
+export const createFacade = (
+  api: APIAdapter,
+  registry: ModelRegistry,
+  instance: Model,
+): Facade => {
   if (instance instanceof AreaModel) {
-    return new AreaFacade(api, instance)
+    return new AreaFacade(api, registry, instance)
   }
   if (instance instanceof BuildingModel) {
-    return new BuildingFacade(api, instance)
+    return new BuildingFacade(api, registry, instance)
   }
   if (instance instanceof DeviceModel) {
-    return createDeviceFacade(api, instance)
+    return createDeviceFacade(
+      api,
+      registry,
+      getDeviceFromRegistry(registry, instance.id),
+    )
   }
   if (instance instanceof FloorModel) {
-    return new FloorFacade(api, instance)
+    return new FloorFacade(api, registry, instance)
   }
   throw new Error('Model not supported')
 }

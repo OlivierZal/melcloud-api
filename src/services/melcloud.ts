@@ -16,7 +16,8 @@ import {
 } from 'luxon'
 
 import type {
-  Building,
+  AreaDataAny,
+  BuildingWithStructure,
   EnergyData,
   EnergyPostData,
   ErrorLogData,
@@ -30,6 +31,7 @@ import type {
   GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
+  ListDeviceAny,
   LoginCredentials,
   LoginData,
   LoginPostData,
@@ -47,34 +49,36 @@ import type {
   TilesPostData,
 } from '../types/index.ts'
 
+import { DeviceType, Language } from '../constants.ts'
 import { syncDevices } from '../decorators/index.ts'
-import { DeviceType, Language } from '../enums.ts'
 import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
 } from '../logging/index.ts'
-import {
-  AreaModel,
-  BuildingModel,
-  DeviceModel,
-  FloorModel,
-} from '../models/index.ts'
-import { now } from '../utils.ts'
+import { ModelRegistry } from '../models/index.ts'
 
-import {
-  type APIConfig,
-  type ErrorLog,
-  type ErrorLogQuery,
-  type IAPI,
-  type Logger,
-  type OnSyncFunction,
-  type SettingManager,
-  isAPISetting,
+import type {
+  API,
+  APIConfig,
+  ErrorLog,
+  ErrorLogQuery,
+  Logger,
+  OnSyncFunction,
+  SettingManager,
 } from './interfaces.ts'
+
+import { DisposableTimeout } from './disposable-timeout.ts'
+
+const deviceTypeNames = {
+  [DeviceType.Ata]: 'Ata',
+  [DeviceType.Atw]: 'Atw',
+  [DeviceType.Erv]: 'Erv',
+} as const satisfies Record<DeviceType, string>
 
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
+const noop = (): void => undefined
 
 const NO_SYNC_INTERVAL = 0
 const DEFAULT_SYNC_INTERVAL = 5
@@ -82,31 +86,45 @@ const RETRY_DELAY = 1000
 
 const DEFAULT_ERROR_LOG_OFFSET = 0
 const DEFAULT_ERROR_LOG_PERIOD = 1
+// MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
 
+const toISODate = (dateTime: DateTime): string => {
+  const result = dateTime.toISODate()
+
+  // Defensive: DateTime from valid ISO string always produces valid date
+  /* v8 ignore start */
+  if (result === null) {
+    throw new Error('Invalid DateTime: cannot convert to ISO date')
+  }
+
+  /* v8 ignore stop */
+  return result
+}
+
+/*
+ * Accessor decorator that delegates storage to an external SettingManager
+ * (e.g., persistent settings), falling back to the in-memory field when none is configured.
+ * Validates the setting key once at decoration time rather than on every get/set.
+ */
 const setting = (
-  target: ClassAccessorDecoratorTarget<API, string>,
-  context: ClassAccessorDecoratorContext<API, string>,
-): ClassAccessorDecoratorResult<API, string> => ({
-  get(this: API): string {
-    const key = String(context.name)
-    if (!isAPISetting(key)) {
-      throw new Error(`Invalid setting: ${key}`)
-    }
-    return this.settingManager?.get(key) ?? target.get.call(this)
-  },
-  set(this: API, value: string): void {
-    const key = String(context.name)
-    if (!isAPISetting(key)) {
-      throw new Error(`Invalid setting: ${key}`)
-    }
-    if (this.settingManager) {
-      this.settingManager.set(key, value)
-      return
-    }
-    target.set.call(this, value)
-  },
-})
+  target: ClassAccessorDecoratorTarget<MELCloudAPI, string>,
+  context: ClassAccessorDecoratorContext<MELCloudAPI, string>,
+): ClassAccessorDecoratorResult<MELCloudAPI, string> => {
+  const key = String(context.name)
+  return {
+    get(this: MELCloudAPI): string {
+      return this.settingManager?.get(key) ?? target.get.call(this)
+    },
+    set(this: MELCloudAPI, value: string): void {
+      if (this.settingManager) {
+        this.settingManager.set(key, value)
+        return
+      }
+      target.set.call(this, value)
+    },
+  }
+}
 
 const isLanguage = (value: string): value is keyof typeof Language =>
   value in Language
@@ -116,7 +134,7 @@ const formatErrors = (errors: Record<string, readonly string[]>): string =>
     .map(([error, messages]) => `${error}: ${messages.join(', ')}`)
     .join('\n')
 
-const handleErrorLogQuery = ({
+const parseErrorLogQuery = ({
   from,
   limit,
   offset,
@@ -126,8 +144,15 @@ const handleErrorLogQuery = ({
   period: number
   toDate: DateTime
 } => {
-  const fromDate = from !== undefined && from ? DateTime.fromISO(from) : null
-  const toDate = to !== undefined && to ? DateTime.fromISO(to) : DateTime.now()
+  /*
+   * When fromDate is specified, period is fixed and offset is ignored, allowing
+   * queries around a specific date. Otherwise, offset pages through history
+   * in period-sized chunks.
+   */
+  const fromDate =
+    from !== undefined && from !== '' ? DateTime.fromISO(from) : null
+  const toDate =
+    to !== undefined && to !== '' ? DateTime.fromISO(to) : DateTime.now()
 
   const numberLimit = Number(limit)
   const period =
@@ -148,24 +173,52 @@ const handleErrorLogQuery = ({
   }
 }
 
-export class API implements IAPI {
+// Collect all areas from both building-level and floor-level
+const collectAreas = (buildings: BuildingWithStructure[]): AreaDataAny[] =>
+  buildings.flatMap(({ Structure: { Areas: areas, Floors: floors } }) => [
+    ...areas,
+    ...floors.flatMap(({ Areas: floorAreas }) => floorAreas),
+  ])
+
+// Collect all devices from every level of the hierarchy
+const collectDevices = (buildings: BuildingWithStructure[]): ListDeviceAny[] =>
+  buildings.flatMap(
+    ({ Structure: { Areas: areas, Devices: devices, Floors: floors } }) => [
+      ...devices,
+      ...areas.flatMap(({ Devices: areaDevices }) => areaDevices),
+      ...floors.flatMap(({ Areas: floorAreas, Devices: floorDevices }) => [
+        ...floorDevices,
+        ...floorAreas.flatMap(
+          ({ Devices: floorAreaDevices }) => floorAreaDevices,
+        ),
+      ]),
+    ],
+  )
+
+/**
+ * Main MELCloud API client. Handles authentication, device syncing, and all
+ * API endpoint calls. Uses a private constructor — create instances via {@link MELCloudAPI.create}.
+ */
+export class MELCloudAPI implements API, Disposable {
   public readonly onSync?: OnSyncFunction
 
   protected readonly settingManager?: SettingManager
 
   readonly #api: AxiosInstance
 
-  readonly #autoSyncInterval: number
-
   readonly #logger: Logger
+
+  readonly #registry = new ModelRegistry()
+
+  readonly #retryTimeout = new DisposableTimeout()
+
+  readonly #syncTimeout = new DisposableTimeout()
+
+  #autoSyncInterval: number
 
   #language = 'en'
 
   #pauseListUntil = DateTime.now()
-
-  #retryTimeout: NodeJS.Timeout | null = null
-
-  #syncTimeout: NodeJS.Timeout | null = null
 
   private constructor(config: APIConfig = {}) {
     const {
@@ -206,6 +259,10 @@ export class API implements IAPI {
   @setting
   private accessor username = ''
 
+  public get registry(): ModelRegistry {
+    return this.#registry
+  }
+
   private get language(): string {
     return this.#language
   }
@@ -215,14 +272,23 @@ export class API implements IAPI {
     LuxonSettings.defaultLocale = value
   }
 
-  public static async create(config?: APIConfig): Promise<API> {
-    const api = new API(config)
+  /**
+   * Create and initialize a new API instance, performing an initial device sync.
+   * @param config - Optional configuration for the API client.
+   * @returns The initialized API instance.
+   */
+  public static async create(config?: APIConfig): Promise<MELCloudAPI> {
+    const api = new MELCloudAPI(config)
     await api.fetch()
     return api
   }
 
+  /**
+   * Fetch all buildings, sync the model registry, and schedule the next auto-sync.
+   * @returns The list of fetched buildings.
+   */
   @syncDevices()
-  public async fetch(): Promise<Building[]> {
+  public async fetch(): Promise<BuildingWithStructure[]> {
     this.clearSync()
     try {
       return await this.#fetch()
@@ -233,69 +299,41 @@ export class API implements IAPI {
     }
   }
 
+  /**
+   * Authenticate with MELCloud. If credentials are provided explicitly, errors
+   * are thrown to the caller. If using stored credentials, errors are swallowed.
+   * @param data - Optional login credentials to use instead of stored ones.
+   * @returns Whether authentication was successful.
+   */
   public async authenticate(data?: LoginCredentials): Promise<boolean> {
     const { password = this.password, username = this.username } = data ?? {}
-    if (username && password) {
-      try {
-        return await this.#authenticate({ password, username })
-      } catch (error) {
-        if (data !== undefined) {
-          throw error
-        }
+    if (!username || !password) {
+      return false
+    }
+    try {
+      return await this.#authenticate({ password, username })
+    } catch (error) {
+      if (data !== undefined) {
+        throw error
       }
+      return false
     }
-    return false
   }
 
+  /** Cancel any pending automatic sync timer. */
   public clearSync(): void {
-    if (this.#syncTimeout) {
-      clearTimeout(this.#syncTimeout)
-      this.#syncTimeout = null
-    }
+    this.#syncTimeout.clear()
   }
 
-  public async energy({
+  public async getEnergy<T extends DeviceType>({
     postData,
   }: {
     postData: EnergyPostData
-  }): Promise<{ data: EnergyData<DeviceType> }> {
+  }): Promise<{ data: EnergyData<T> }> {
     return this.#api.post('/EnergyCost/Report', postData)
   }
 
-  public async errorLog(
-    query: ErrorLogQuery,
-    deviceIds = DeviceModel.getAll().map(({ id }) => id),
-  ): Promise<ErrorLog> {
-    const { fromDate, period, toDate } = handleErrorLogQuery(query)
-    const nextToDate = fromDate.minus({ days: 1 })
-    const errorLog = await this.#errorLog(deviceIds, fromDate, toDate)
-    return {
-      errors: errorLog
-        .map(
-          ({
-            DeviceId: deviceId,
-            ErrorMessage: errorMessage,
-            StartDate: startDate,
-          }) => ({
-            date:
-              DateTime.fromISO(startDate).year === INVALID_YEAR ?
-                ''
-              : DateTime.fromISO(startDate).toLocaleString(
-                  DateTime.DATETIME_MED,
-                ),
-            device: DeviceModel.getById(deviceId)?.name ?? '',
-            error: errorMessage?.trim() ?? '',
-          }),
-        )
-        .filter(({ date, error }) => Boolean(date && error))
-        .toReversed(),
-      fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
-      nextFromDate: nextToDate.minus({ days: period }).toISODate() ?? '',
-      nextToDate: nextToDate.toISODate() ?? '',
-    }
-  }
-
-  public async errors({
+  public async getErrorEntries({
     postData,
   }: {
     postData: ErrorLogPostData
@@ -303,7 +341,7 @@ export class API implements IAPI {
     return this.#api.post('/Report/GetUnitErrorLog2', postData)
   }
 
-  public async frostProtection({
+  public async getFrostProtection({
     params,
   }: {
     params: SettingsParams
@@ -313,7 +351,49 @@ export class API implements IAPI {
     })
   }
 
-  public async group({
+  /**
+   * Retrieve a parsed, paginated error log for the specified devices.
+   * Filters out entries with invalid dates or empty messages.
+   * @param query - The error log query parameters (date range, pagination).
+   * @param deviceIds - Device IDs to fetch errors for; defaults to all devices.
+   * @returns Parsed error log with pagination metadata.
+   */
+  public async getErrorLog(
+    query: ErrorLogQuery,
+    deviceIds = this.#registry.getDevices().map(({ id }) => id),
+  ): Promise<ErrorLog> {
+    const { fromDate, period, toDate } = parseErrorLogQuery(query)
+    const nextToDate = fromDate.minus({ days: 1 })
+    const errorLog = await this.#errorLog(deviceIds, fromDate, toDate)
+
+    return {
+      errors: errorLog
+        .map(
+          ({
+            DeviceId: deviceId,
+            ErrorMessage: errorMessage,
+            StartDate: startDate,
+          }) => {
+            const dateTime = DateTime.fromISO(startDate)
+            return {
+              date:
+                dateTime.year === INVALID_YEAR ?
+                  ''
+                : dateTime.toLocaleString(DateTime.DATETIME_MED),
+              device: this.#registry.devices.getById(deviceId)?.name ?? '',
+              error: errorMessage?.trim() ?? '',
+            }
+          },
+        )
+        .filter(({ date, error }) => Boolean(date && error))
+        .toReversed(),
+      fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
+      nextFromDate: toISODate(nextToDate.minus({ days: period })),
+      nextToDate: toISODate(nextToDate),
+    }
+  }
+
+  public async getGroup({
     postData,
   }: {
     postData: GetGroupPostData
@@ -321,7 +401,7 @@ export class API implements IAPI {
     return this.#api.post('/Group/Get', postData)
   }
 
-  public async holidayMode({
+  public async getHolidayMode({
     params,
   }: {
     params: SettingsParams
@@ -331,7 +411,7 @@ export class API implements IAPI {
     })
   }
 
-  public async hourlyTemperatures({
+  public async getHourlyTemperatures({
     postData,
   }: {
     postData: { device: number; hour: HourNumbers }
@@ -339,7 +419,7 @@ export class API implements IAPI {
     return this.#api.post('/Report/GetHourlyTemperature', postData)
   }
 
-  public async internalTemperatures({
+  public async getInternalTemperatures({
     postData,
   }: {
     postData: ReportPostData
@@ -347,7 +427,57 @@ export class API implements IAPI {
     return this.#api.post('/Report/GetInternalTemperatures2', postData)
   }
 
-  public async list(): Promise<{ data: Building[] }> {
+  public async getOperationModes({
+    postData,
+  }: {
+    postData: ReportPostData
+  }): Promise<{ data: OperationModeLogData }> {
+    return this.#api.post('/Report/GetOperationModeLog2', postData)
+  }
+
+  public async getSignal({
+    postData,
+  }: {
+    postData: { devices: number | number[]; hour: HourNumbers }
+  }): Promise<{ data: ReportData }> {
+    return this.#api.post('/Report/GetSignalStrength', postData)
+  }
+
+  public async getTemperatures({
+    postData,
+  }: {
+    postData: TemperatureLogPostData
+  }): Promise<{ data: ReportData }> {
+    return this.#api.post('/Report/GetTemperatureLog2', postData)
+  }
+
+  public async getTiles({
+    postData,
+  }: {
+    postData: TilesPostData<null>
+  }): Promise<{ data: TilesData<null> }>
+  public async getTiles<T extends DeviceType>({
+    postData,
+  }: {
+    postData: TilesPostData<T>
+  }): Promise<{ data: TilesData<T> }>
+  public async getTiles<T extends DeviceType | null>({
+    postData,
+  }: {
+    postData: TilesPostData<T>
+  }): Promise<{ data: TilesData<T> }> {
+    return this.#api.post('/Tile/Get2', postData)
+  }
+
+  public async getValues<T extends DeviceType>({
+    params,
+  }: {
+    params: GetDeviceDataParams
+  }): Promise<{ data: GetDeviceData<T> }> {
+    return this.#api.get('/Device/Get', { params })
+  }
+
+  public async list(): Promise<{ data: BuildingWithStructure[] }> {
     return this.#api.get(LIST_PATH)
   }
 
@@ -359,12 +489,10 @@ export class API implements IAPI {
     return this.#api.post(LOGIN_PATH, postData)
   }
 
-  public async operationModes({
-    postData,
-  }: {
-    postData: ReportPostData
-  }): Promise<{ data: OperationModeLogData }> {
-    return this.#api.post('/Report/GetOperationModeLog2', postData)
+  /** Dispose both sync and retry timers. */
+  public [Symbol.dispose](): void {
+    this.#syncTimeout[Symbol.dispose]()
+    this.#retryTimeout[Symbol.dispose]()
   }
 
   public async setFrostProtection({
@@ -391,12 +519,19 @@ export class API implements IAPI {
     return this.#api.post('/HolidayMode/Update', postData)
   }
 
-  public async setLanguage({
-    postData,
-  }: {
-    postData: { language: Language }
-  }): Promise<{ data: boolean }> {
-    return this.#api.post('/User/UpdateLanguage', postData)
+  /**
+   * Update the user's language on the server if it differs from the current locale.
+   * @param language - The language code to set.
+   */
+  public async setLanguage(language: string): Promise<void> {
+    if (language !== this.language) {
+      const { data: hasLanguageChanged } = await this.#postLanguage(
+        this.#getLanguageCode(language),
+      )
+      if (hasLanguageChanged) {
+        this.language = language
+      }
+    }
   }
 
   public async setPower({
@@ -407,6 +542,18 @@ export class API implements IAPI {
     return this.#api.post('/Device/Power', postData)
   }
 
+  /**
+   * Update the automatic sync interval and reschedule.
+   * @param minutes - Interval in minutes. Set to `0` or `null` to disable auto-sync.
+   */
+  public setSyncInterval(minutes: number | null): void {
+    this.#autoSyncInterval = Duration.fromObject({
+      minutes: minutes ?? NO_SYNC_INTERVAL,
+    }).as('milliseconds')
+    this.clearSync()
+    this.#planNextSync()
+  }
+
   public async setValues<T extends DeviceType>({
     postData,
     type,
@@ -414,60 +561,7 @@ export class API implements IAPI {
     postData: SetDevicePostData<T>
     type: T
   }): Promise<{ data: SetDeviceData<T> }> {
-    return this.#api.post(`/Device/Set${DeviceType[type]}`, postData)
-  }
-
-  public async signal({
-    postData,
-  }: {
-    postData: { devices: number | number[]; hour: HourNumbers }
-  }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetSignalStrength', postData)
-  }
-
-  public async temperatures({
-    postData,
-  }: {
-    postData: TemperatureLogPostData
-  }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetTemperatureLog2', postData)
-  }
-
-  public async tiles({
-    postData,
-  }: {
-    postData: TilesPostData<null>
-  }): Promise<{ data: TilesData<null> }>
-  public async tiles<T extends DeviceType>({
-    postData,
-  }: {
-    postData: TilesPostData<T>
-  }): Promise<{ data: TilesData<T> }>
-  public async tiles<T extends DeviceType | null>({
-    postData,
-  }: {
-    postData: TilesPostData<T>
-  }): Promise<{ data: TilesData<T> }> {
-    return this.#api.post('/Tile/Get2', postData)
-  }
-
-  public async updateLanguage(language: string): Promise<void> {
-    if (language !== this.language) {
-      const { data: hasLanguageChanged } = await this.setLanguage({
-        postData: { language: this.#getLanguageCode(language) },
-      })
-      if (hasLanguageChanged) {
-        this.language = language
-      }
-    }
-  }
-
-  public async values({
-    params,
-  }: {
-    params: GetDeviceDataParams
-  }): Promise<{ data: GetDeviceData<DeviceType> }> {
-    return this.#api.get('/Device/Get', { params })
+    return this.#api.post(`/Device/Set${deviceTypeNames[type]}`, postData)
   }
 
   async #authenticate({
@@ -494,11 +588,10 @@ export class API implements IAPI {
     return loginData !== null
   }
 
+  // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
   #canRetry(): boolean {
-    if (!this.#retryTimeout) {
-      this.#retryTimeout = setTimeout(() => {
-        this.#retryTimeout = null
-      }, RETRY_DELAY)
+    if (!this.#retryTimeout.isActive) {
+      this.#retryTimeout.schedule(noop, RETRY_DELAY)
       return true
     }
     return false
@@ -518,11 +611,11 @@ export class API implements IAPI {
     fromDate: DateTime,
     toDate: DateTime,
   ): Promise<ErrorLogData[]> {
-    const { data } = await this.errors({
+    const { data } = await this.getErrorEntries({
       postData: {
         DeviceIDs: deviceIds,
-        FromDate: fromDate.toISODate() ?? undefined,
-        ToDate: toDate.toISODate() ?? now(),
+        FromDate: toISODate(fromDate),
+        ToDate: toISODate(toDate),
       },
     })
     if ('AttributeErrors' in data) {
@@ -531,30 +624,14 @@ export class API implements IAPI {
     return data
   }
 
-  async #fetch(): Promise<Building[]> {
+  async #fetch(): Promise<BuildingWithStructure[]> {
     const { data } = await this.list()
-    BuildingModel.sync(data)
-    FloorModel.sync(data.flatMap(({ Structure: { Floors: floors } }) => floors))
-    AreaModel.sync(
-      data.flatMap(({ Structure: { Areas: areas, Floors: floors } }) => [
-        ...areas,
-        ...floors.flatMap(({ Areas: floorAreas }) => floorAreas),
-      ]),
+    this.#registry.syncBuildings(data)
+    this.#registry.syncFloors(
+      data.flatMap(({ Structure: { Floors: floors } }) => floors),
     )
-    DeviceModel.sync(
-      data.flatMap(
-        ({ Structure: { Areas: areas, Devices: devices, Floors: floors } }) => [
-          ...devices,
-          ...areas.flatMap(({ Devices: areaDevices }) => areaDevices),
-          ...floors.flatMap(({ Areas: floorAreas, Devices: floorDevices }) => [
-            ...floorDevices,
-            ...floorAreas.flatMap(
-              ({ Devices: floorAreaDevices }) => floorAreaDevices,
-            ),
-          ]),
-        ],
-      ),
-    )
+    this.#registry.syncAreas(collectAreas(data))
+    this.#registry.syncDevices(collectDevices(data))
     return data
   }
 
@@ -565,8 +642,10 @@ export class API implements IAPI {
   async #handleError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
     this.#logger.error(String(errorData))
+
     const { config, response: { status } = {} } = error
     if (status === HttpStatusCode.TooManyRequests) {
+      // Pause list operations for 2 hours to avoid repeated 429 responses
       this.#pauseListUntil = DateTime.now().plus({ hours: 2 })
     } else if (
       status === HttpStatusCode.Unauthorized &&
@@ -577,7 +656,7 @@ export class API implements IAPI {
     ) {
       return this.#api.request(config)
     }
-    throw new Error(errorData.errorMessage)
+    throw new Error(errorData.errorMessage, { cause: error })
   }
 
   async #handleRequest(
@@ -593,6 +672,7 @@ export class API implements IAPI {
       )
     }
     if (newConfig.url !== LOGIN_PATH) {
+      // Re-authenticate proactively if session token has expired
       const { contextKey, expiry } = this
       if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
         await this.authenticate()
@@ -608,14 +688,22 @@ export class API implements IAPI {
     return response
   }
 
+  #handleSyncError(error: unknown): void {
+    this.#logger.error('Auto-sync failed:', error)
+  }
+
   #planNextSync(): void {
     if (this.#autoSyncInterval) {
-      this.#syncTimeout = setTimeout(() => {
-        this.fetch().catch(() => {
-          //
+      this.#syncTimeout.schedule(() => {
+        this.fetch().catch((error: unknown) => {
+          this.#handleSyncError(error)
         })
       }, this.#autoSyncInterval)
     }
+  }
+
+  async #postLanguage(language: Language): Promise<{ data: boolean }> {
+    return this.#api.post('/User/UpdateLanguage', { language })
   }
 
   #setOptionalProperties({

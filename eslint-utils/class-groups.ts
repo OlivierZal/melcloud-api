@@ -1,4 +1,4 @@
-import { buildGroups } from './build-groups.js'
+import { buildGroups } from './build-groups.ts'
 
 const modifiers = [
   ['declare', 'override', ''],
@@ -10,8 +10,8 @@ const modifiers = [
 ]
 
 const modifierIncompatibilities = {
-  abstract: ['decorated', 'private', 'static'],
-  declare: ['decorated', 'override'],
+  abstract: new Set(['decorated', 'private', 'static']),
+  declare: new Set(['decorated', 'override']),
 }
 
 const selectors = [
@@ -26,23 +26,26 @@ const selectors = [
   'method',
 ]
 
-const allModifiers = modifiers.flat().filter(Boolean)
-const baseMethodIncompatibilities = ['declare', 'readonly']
-const accessorIncompatibilities = [...baseMethodIncompatibilities, 'optional']
+const allModifiers = new Set(modifiers.flat().filter(Boolean))
+const baseMethodIncompatibilities = new Set(['declare', 'readonly'])
+const accessorIncompatibilities = new Set([
+  ...baseMethodIncompatibilities,
+  'optional',
+])
 const selectorIncompatibilities = {
   'accessor-property': accessorIncompatibilities,
-  constructor: [
+  constructor: new Set([
     ...baseMethodIncompatibilities,
     'abstract',
     'decorated',
     'optional',
     'override',
     'static',
-  ],
+  ]),
   'event-handler': allModifiers,
-  'function-property': ['abstract', 'declare'],
+  'function-property': new Set(['abstract', 'declare']),
   'get-method': accessorIncompatibilities,
-  'index-signature': [
+  'index-signature': new Set([
     'abstract',
     'declare',
     'decorated',
@@ -50,9 +53,9 @@ const selectorIncompatibilities = {
     'override',
     'private',
     'protected',
-  ],
+  ]),
   method: baseMethodIncompatibilities,
-  property: [],
+  property: new Set(),
   'set-method': accessorIncompatibilities,
   'static-block': allModifiers,
 }

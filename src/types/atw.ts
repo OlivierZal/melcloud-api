@@ -1,14 +1,16 @@
 import type {
   DeviceType,
   OperationModeState,
+  OperationModeStateHotWater,
+  OperationModeStateZone,
   OperationModeZone,
-} from '../enums.ts'
+} from '../constants.ts'
 
 import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
-  DeviceDataNotInList,
+  TransientDeviceData,
 } from './bases.ts'
 import type { GetDeviceData } from './generic.ts'
 
@@ -25,7 +27,7 @@ export interface EnergyDataAtw {
 export interface ListDeviceDataAtw
   extends
     BaseListDeviceData,
-    Omit<GetDeviceData<DeviceType.Atw>, keyof DeviceDataNotInList> {
+    Omit<GetDeviceData<typeof DeviceType.Atw>, keyof TransientDeviceData> {
   readonly BoosterHeater1Status: boolean
   readonly BoosterHeater2PlusStatus: boolean
   readonly BoosterHeater2Status: boolean
@@ -62,7 +64,7 @@ export interface OperationModeZoneDataAtw {
 
 export interface SetDeviceDataAtw
   extends BaseSetDeviceData, Required<UpdateDeviceDataAtw> {
-  readonly DeviceType: DeviceType.Atw
+  readonly DeviceType: typeof DeviceType.Atw
   readonly IdleZone1: boolean
   readonly IdleZone2: boolean
   readonly OperationMode: OperationModeState
@@ -90,6 +92,30 @@ export interface TemperatureDataAtw {
 export interface UpdateDeviceDataAtw
   extends BaseUpdateDeviceData, OperationModeZoneDataAtw, TemperatureDataAtw {
   readonly ForcedHotWaterMode?: boolean
+}
+
+/** ATW hot water state derived from device data. */
+export interface HotWaterState {
+  readonly isEcoHotWater: boolean
+  readonly isForcedMode: boolean
+  readonly isProhibited: boolean
+  readonly maxTankTemperature: number
+  readonly operationalState: OperationModeStateHotWater
+  readonly setTankWaterTemperature: number
+  readonly tankWaterTemperature: number
+}
+
+/** ATW zone state derived from device data. */
+export interface ZoneState {
+  readonly isIdle: boolean
+  readonly isInCoolMode: boolean
+  readonly isInHeatMode: boolean
+  readonly isProhibitCooling: boolean
+  readonly isProhibitHeating: boolean
+  readonly operationalState: OperationModeStateZone
+  readonly operationMode: OperationModeZone
+  readonly roomTemperature: number
+  readonly setTemperature: number
 }
 
 export type ZoneAtw = 'Zone1' | 'Zone2'

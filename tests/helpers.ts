@@ -1,0 +1,61 @@
+import { vi } from 'vitest'
+
+import type { DeviceType } from '../src/constants.ts'
+import type { DeviceModelAny } from '../src/models/index.ts'
+import type { APIAdapter } from '../src/services/index.ts'
+
+export function cast(value: unknown): never
+export function cast(value: unknown): unknown {
+  return value
+}
+
+export function mock<T extends object>(value?: Partial<T>): T
+export function mock(value: unknown = {}): unknown {
+  return value
+}
+
+export const createMockApi = (
+  overrides: Partial<APIAdapter> = {},
+): APIAdapter =>
+  mock<APIAdapter>({
+    fetch: vi.fn().mockResolvedValue([]),
+    getEnergy: vi.fn(),
+    getErrorEntries: vi.fn(),
+    getErrorLog: vi.fn(),
+    getFrostProtection: vi
+      .fn()
+      .mockResolvedValue({ data: { FPEnabled: false } }),
+    getGroup: vi.fn(),
+    getHolidayMode: vi.fn().mockResolvedValue({ data: { HMEnabled: false } }),
+    getHourlyTemperatures: vi.fn(),
+    getInternalTemperatures: vi.fn(),
+    getOperationModes: vi.fn(),
+    getSignal: vi.fn().mockResolvedValue({
+      data: { Data: [[{ Data: [-60], Name: 'Device' }]], Labels: ['12:00'] },
+    }),
+    getTemperatures: vi.fn(),
+    getTiles: vi.fn().mockResolvedValue({ data: {} }),
+    getValues: vi.fn(),
+    onSync: vi.fn(),
+    setFrostProtection: vi.fn().mockResolvedValue({ data: { Success: true } }),
+    setGroup: vi.fn(),
+    setHolidayMode: vi.fn().mockResolvedValue({ data: { Success: true } }),
+    setPower: vi.fn().mockResolvedValue({ data: true }),
+    setValues: vi.fn(),
+    ...overrides,
+  })
+
+export function assertDeviceType<T extends DeviceType>(
+  device: DeviceModelAny | undefined,
+  type: T,
+): asserts device is Extract<DeviceModelAny, { type: T }>
+export function assertDeviceType(
+  device: DeviceModelAny | undefined,
+  type: DeviceType,
+): void {
+  if (device?.type !== type) {
+    throw new Error(
+      `Expected device of type ${String(type)}, got ${device ? String(device.type) : 'undefined'}`,
+    )
+  }
+}

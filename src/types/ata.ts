@@ -4,13 +4,13 @@ import type {
   Horizontal,
   OperationMode,
   Vertical,
-} from '../enums.ts'
+} from '../constants.ts'
 
 import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
-  DeviceDataNotInList,
+  TransientDeviceData,
 } from './bases.ts'
 import type { GetDeviceData } from './generic.ts'
 
@@ -46,7 +46,7 @@ export interface GetGroupPostData {
 }
 
 export interface GroupState {
-  readonly FanSpeed?: Exclude<FanSpeed, FanSpeed.silent> | null
+  readonly FanSpeed?: Exclude<FanSpeed, typeof FanSpeed.silent> | null
   readonly OperationMode?: OperationMode | null
   readonly Power?: boolean | null
   readonly SetTemperature?: number | null
@@ -60,8 +60,8 @@ export interface ListDeviceDataAta
   extends
     BaseListDeviceData,
     Omit<
-      GetDeviceData<DeviceType.Ata>,
-      KeyOfSetDeviceDataAtaNotInList | keyof DeviceDataNotInList
+      GetDeviceData<typeof DeviceType.Ata>,
+      KeyOfSetDeviceDataAtaNotInList | keyof TransientDeviceData
     >,
     SetDeviceDataAtaInList {
   readonly ActualFanSpeed: number
@@ -77,11 +77,12 @@ export interface ListDeviceDataAta
 
 export interface SetDeviceDataAta
   extends BaseSetDeviceData, Required<UpdateDeviceDataAta> {
-  readonly DeviceType: DeviceType.Ata
+  readonly DeviceType: typeof DeviceType.Ata
   readonly NumberOfFanSpeeds: number
   readonly RoomTemperature: number
 }
 
+/** ATA properties that use different names in list responses vs set requests (e.g., `FanSpeed` in list, `SetFanSpeed` in set). */
 export interface SetDeviceDataAtaInList {
   readonly FanSpeed: FanSpeed
   readonly VaneHorizontalDirection: Horizontal
@@ -95,12 +96,13 @@ export interface SetGroupPostData {
 
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly OperationMode?: OperationMode
-  readonly SetFanSpeed?: Exclude<FanSpeed, FanSpeed.silent>
+  readonly SetFanSpeed?: Exclude<FanSpeed, typeof FanSpeed.silent>
   readonly SetTemperature?: number
   readonly VaneHorizontal?: Horizontal
   readonly VaneVertical?: Vertical
 }
 
+/** Set-request property names that have no direct counterpart in list responses (they map to `SetDeviceDataAtaInList` names instead). */
 export type KeyOfSetDeviceDataAtaNotInList =
   | 'SetFanSpeed'
   | 'VaneHorizontal'

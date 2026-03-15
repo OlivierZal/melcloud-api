@@ -1,13 +1,14 @@
 export type {
+  API,
+  APIAdapter,
   APIConfig,
   APISettings,
   ErrorDetails,
   ErrorLog,
   ErrorLogQuery,
-  IAPI,
   Logger,
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
 
-export { API } from './api.ts'
+export { MELCloudAPI } from './melcloud.ts'

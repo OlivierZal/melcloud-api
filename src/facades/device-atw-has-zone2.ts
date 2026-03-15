@@ -1,19 +1,44 @@
 import type {
   OperationModeZoneDataAtw,
   UpdateDeviceDataAtw,
+  ZoneState,
 } from '../types/index.ts'
 
-import { OperationModeZone } from '../enums.ts'
+import { OperationModeZone } from '../constants.ts'
 
 import { DeviceAtwFacade } from './device-atw.ts'
 
+/*
+ * Operation modes follow a pattern: room (0) vs flow (1), with cool variants
+ * offset by 3. These gaps let us auto-adjust zone 2 when zone 1 changes.
+ */
 const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
 const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
-const roomOperationModeZones = new Set([
+const roomOperationModeZones: ReadonlySet<OperationModeZone> = new Set([
   OperationModeZone.room,
   OperationModeZone.room_cool,
 ])
+const operationModeZoneByValue = new Map<number, OperationModeZone>(
+  Object.values(OperationModeZone).map((value) => [value, value]),
+)
 
+const toOperationModeZone = (value: number): OperationModeZone => {
+  const mode = operationModeZoneByValue.get(value)
+
+  // Defensive: arithmetic on valid OperationModeZone values always yields valid results
+  /* v8 ignore start */
+  if (mode === undefined) {
+    throw new Error(`Invalid OperationModeZone: ${String(value)}`)
+  }
+
+  /* v8 ignore stop */
+  return mode
+}
+
+/**
+ * Extended ATW facade for units with two zones. Automatically couples zone operation
+ * modes so that cooling and room/flow modes stay consistent between zones.
+ */
 export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
   protected override readonly internalTemperaturesLegend = [
     'FlowTemperature',
@@ -39,10 +64,14 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     'SetTankWaterTemperature',
   ]
 
-  protected override handle(
+  public get zone2(): ZoneState {
+    return this.getZoneState('Zone2')
+  }
+
+  protected override prepareUpdateData(
     data: Partial<UpdateDeviceDataAtw>,
   ): Required<UpdateDeviceDataAtw> {
-    return super.handle({
+    return super.prepareUpdateData({
       ...data,
       ...this.#handleOperationModes(data),
     })
@@ -53,7 +82,11 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     primaryValue: OperationModeZone,
     value?: OperationModeZone,
   ): OperationModeZone {
-    let secondaryValue = value ?? this.data[secondaryKey]
+    /*
+     * Keep zone 2's cool/heat status in sync with zone 1, and prevent
+     * both zones from using the same room-based mode (must be room vs flow)
+     */
+    let secondaryValue: number = value ?? this.data[secondaryKey]
     if (this.data.CanCool) {
       if (primaryValue > OperationModeZone.curve) {
         secondaryValue =
@@ -70,7 +103,7 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     ) {
       secondaryValue += ROOM_FLOW_GAP
     }
-    return secondaryValue
+    return toOperationModeZone(secondaryValue)
   }
 
   #handleOperationModes(
@@ -83,19 +116,26 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
       { key: 'OperationModeZone1', value: data.OperationModeZone1 },
       { key: 'OperationModeZone2', value: data.OperationModeZone2 },
     ]
+
+    /*
+     * Whichever zone was explicitly changed becomes the primary; the other
+     * is automatically adjusted to maintain consistency
+     */
     const [primaryOperationMode, secondaryOperationMode] =
       operationModeZone1?.value === undefined ?
         [operationModeZone2, operationModeZone1]
       : [operationModeZone1, operationModeZone2]
-    return primaryOperationMode?.value !== undefined && secondaryOperationMode ?
-        {
-          [primaryOperationMode.key]: primaryOperationMode.value,
-          [secondaryOperationMode.key]: this.#getSecondaryOperationMode(
-            secondaryOperationMode.key,
-            primaryOperationMode.value,
-            secondaryOperationMode.value,
-          ),
-        }
-      : null
+
+    if (primaryOperationMode?.value === undefined || !secondaryOperationMode) {
+      return null
+    }
+    return {
+      [primaryOperationMode.key]: primaryOperationMode.value,
+      [secondaryOperationMode.key]: this.#getSecondaryOperationMode(
+        secondaryOperationMode.key,
+        primaryOperationMode.value,
+        secondaryOperationMode.value,
+      ),
+    }
   }
 }

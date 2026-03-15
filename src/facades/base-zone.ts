@@ -1,9 +1,8 @@
 import type {
-  IAreaModel,
-  IBuildingModel,
-  IDeviceModelAny,
-  IFloorModel,
-} from '../models/index.ts'
+  AreaModel,
+  BuildingModel,
+  FloorModel,
+} from '../models/interfaces.ts'
 import type {
   FailureData,
   GroupState,
@@ -11,27 +10,24 @@ import type {
   SuccessData,
 } from '../types/index.ts'
 
+import { DeviceType } from '../constants.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
-import { DeviceType } from '../enums.ts'
 
-import type { ISuperDeviceFacade } from './interfaces.ts'
+import type { ZoneFacade } from './interfaces.ts'
 
 import { BaseFacade } from './base.ts'
 
-export abstract class BaseSuperDeviceFacade<
-  T extends IAreaModel | IBuildingModel | IFloorModel,
+/** Abstract base for zone facades (building, floor, area) that support ATA group operations. */
+export abstract class BaseZoneFacade<
+  T extends AreaModel | BuildingModel | FloorModel,
 >
   extends BaseFacade<T>
-  implements ISuperDeviceFacade
+  implements ZoneFacade
 {
-  protected abstract readonly specification: keyof SetGroupPostData['Specification']
-
-  public get devices(): IDeviceModelAny[] {
-    return this.instance.devices
-  }
+  protected abstract readonly groupSpecificationKey: keyof SetGroupPostData['Specification']
 
   @updateDevices({ type: DeviceType.Ata })
-  public async group(): Promise<GroupState> {
+  public async getGroup(): Promise<GroupState> {
     try {
       const {
         data: {
@@ -39,7 +35,9 @@ export abstract class BaseSuperDeviceFacade<
             Group: { State: state },
           },
         },
-      } = await this.api.group({ postData: { [this.specification]: this.id } })
+      } = await this.api.getGroup({
+        postData: { [this.groupSpecificationKey]: this.id },
+      })
       return state
     } catch {
       throw new Error('No air-to-air device found')
@@ -52,7 +50,7 @@ export abstract class BaseSuperDeviceFacade<
     try {
       const { data } = await this.api.setGroup({
         postData: {
-          Specification: { [this.specification]: this.id },
+          Specification: { [this.groupSpecificationKey]: this.id },
           State: state,
         },
       })

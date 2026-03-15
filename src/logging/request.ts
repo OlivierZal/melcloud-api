@@ -1,9 +1,10 @@
 import type { InternalAxiosRequestConfig } from 'axios'
 
-import { APICallContextData } from './context.ts'
+import { APICallLogData } from './context.ts'
 
-export class APICallRequestData extends APICallContextData {
-  public readonly dataType = 'API request'
+/** Structured log data for an outgoing API request. */
+export class APICallRequestData extends APICallLogData {
+  public override readonly dataType = 'API request'
 
   public readonly requestData: InternalAxiosRequestConfig['data']
 

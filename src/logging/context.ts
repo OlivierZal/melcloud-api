@@ -1,9 +1,23 @@
 import type { InternalAxiosRequestConfig } from 'axios'
 
-const SPACE = 2
+// Fixed key order for consistent, readable JSON log output
+const logKeys = [
+  'dataType',
+  'method',
+  'url',
+  'params',
+  'headers',
+  'requestData',
+  'responseData',
+  'status',
+  'errorMessage',
+] as const
 
-export abstract class APICallContextData {
-  [key: string]: unknown
+const JSON_INDENT = 2
+
+/** Abstract base for API call logging data, serializable to JSON with a fixed set of log keys. */
+export abstract class APICallLogData {
+  declare public readonly dataType: string
 
   public readonly method: InternalAxiosRequestConfig['method']
 
@@ -18,27 +32,6 @@ export abstract class APICallContextData {
   }
 
   public toString(): string {
-    return [
-      'dataType',
-      'method',
-      'url',
-      'params',
-      'headers',
-      'requestData',
-      'responseData',
-      'status',
-      'errorMessage',
-    ]
-      .map((key) => {
-        if (key in this) {
-          const { [key]: value } = this
-          if (value !== undefined) {
-            return `${key}: ${JSON.stringify(value, null, SPACE)}`
-          }
-        }
-        return null
-      })
-      .filter((line) => line !== null)
-      .join('\n')
+    return JSON.stringify(this, [...logKeys], JSON_INDENT)
   }
 }
