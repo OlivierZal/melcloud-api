@@ -291,6 +291,12 @@ export class ModelRegistry {
     )
   }
 
+  readonly #devicesByZone = {
+    area: (id: number): DeviceModelAny[] => this.getDevicesByAreaId(id),
+    building: (id: number): DeviceModelAny[] => this.getDevicesByBuildingId(id),
+    floor: (id: number): DeviceModelAny[] => this.getDevicesByFloorId(id),
+  }
+
   #buildAreaZones(
     areas: AreaModelContract[],
     level: number,
@@ -332,12 +338,6 @@ export class ModelRegistry {
         name: floor.name,
       }))
       .toSorted(compareNames)
-  }
-
-  readonly #devicesByZone = {
-    area: (id: number): DeviceModelAny[] => this.getDevicesByAreaId(id),
-    building: (id: number): DeviceModelAny[] => this.getDevicesByBuildingId(id),
-    floor: (id: number): DeviceModelAny[] => this.getDevicesByFloorId(id),
   }
 
   #hasDevices(
