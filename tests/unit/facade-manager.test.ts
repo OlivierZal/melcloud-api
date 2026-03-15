@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DeviceType } from '../../src/constants.ts'
-import { FacadeManager } from '../../src/facades/manager.ts'
+import { FacadeManager } from '../../src/facades/index.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
 import { areaData, ataDevice, buildingData, floorData } from '../fixtures.ts'
 import { createMockApi } from '../helpers.ts'

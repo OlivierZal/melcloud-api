@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { APIAdapter } from '../../src/services/index.ts'
 
-import { createFacade } from '../../src/facades/factory.ts'
+import { createFacade } from '../../src/facades/index.ts'
 import { type Model, ModelRegistry } from '../../src/models/index.ts'
 import {
   areaData,

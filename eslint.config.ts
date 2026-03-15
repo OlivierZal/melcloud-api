@@ -483,12 +483,12 @@ const config = defineConfig([
     extends: [vitest.configs.all],
     files: ['tests/**'],
     rules: {
-      '@typescript-eslint/naming-convention': 'off',
       '@typescript-eslint/no-magic-numbers': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
-      '@typescript-eslint/no-unsafe-type-assertion': 'error',
-      'id-length': 'off',
-      'import-x/max-dependencies': 'off',
+      'import-x/max-dependencies': [
+        'error',
+        { ignoreTypeImports: true, max: 15 },
+      ],
       'max-lines-per-function': 'off',
       'max-statements': 'off',
       'vitest/max-expects': ['warn', { max: 15 }],

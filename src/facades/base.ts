@@ -165,7 +165,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   public async getSignalStrength(
     hour = DateTime.now().hour,
   ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.signal({
+    const { data } = await this.api.getSignal({
       postData: { devices: this.#deviceIds, hour },
     })
     return getChartLineOptions(data, this.#deviceNames, 'dBm')
@@ -180,10 +180,10 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   ): Promise<TilesData<U | null>> {
     const postData = { DeviceIDs: this.#deviceIds }
     if (device === false || !this.#deviceIds.includes(device.id)) {
-      const { data } = await this.api.tiles({ postData })
+      const { data } = await this.api.getTiles({ postData })
       return data
     }
-    const { data } = await this.api.tiles({
+    const { data } = await this.api.getTiles({
       postData: {
         ...postData,
         SelectedBuilding: device.buildingId,
@@ -245,7 +245,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     params: SettingsParams,
     isDefined = true,
   ): Promise<FrostProtectionData> {
-    const { data } = await this.api.frostProtection({ params })
+    const { data } = await this.api.getFrostProtection({ params })
     this.isFrostProtectionAtZoneLevel = isDefined
     return data
   }
@@ -254,7 +254,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     params: SettingsParams,
     isDefined = true,
   ): Promise<HolidayModeData> {
-    const { data } = await this.api.holidayMode({ params })
+    const { data } = await this.api.getHolidayMode({ params })
     this.isHolidayModeAtZoneLevel = isDefined
     return data
   }

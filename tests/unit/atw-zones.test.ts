@@ -9,8 +9,10 @@ import {
   OperationModeStateZone,
   OperationModeZone,
 } from '../../src/constants.ts'
-import { DeviceAtwHasZone2Facade } from '../../src/facades/device-atw-has-zone2.ts'
-import { DeviceAtwFacade } from '../../src/facades/device-atw.ts'
+import {
+  DeviceAtwFacade,
+  DeviceAtwHasZone2Facade,
+} from '../../src/facades/index.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
 import { atwDevice, atwDeviceData, buildingData } from '../fixtures.ts'
 import { assertDeviceType, createMockApi } from '../helpers.ts'

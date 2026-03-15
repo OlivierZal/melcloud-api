@@ -14,13 +14,16 @@ import {
 } from '../../src/logging/index.ts'
 import { cast, mock } from '../helpers.ts'
 
+const CONTENT_TYPE = 'Content-Type'
+const X_CUSTOM = 'x-custom'
+
 const createConfig = (
   overrides: Partial<InternalAxiosRequestConfig> = {},
 ): InternalAxiosRequestConfig =>
   mock<InternalAxiosRequestConfig>({
     data: { key: 'value' },
     headers: mock<AxiosRequestHeaders>({
-      'Content-Type': 'application/json',
+      [CONTENT_TYPE]: 'application/json',
     }),
     method: 'post',
     params: { id: 1 },
@@ -34,7 +37,7 @@ const createResponse = (
   mock<AxiosResponse>({
     config: createConfig(),
     data: { result: 'ok' },
-    headers: { 'x-custom': 'header' },
+    headers: { [X_CUSTOM]: 'header' },
     status: 200,
     ...overrides,
   })
@@ -48,7 +51,7 @@ describe('aPICallRequestData', () => {
     expect(data.url).toBe('/test/endpoint')
     expect(data.params).toStrictEqual({ id: 1 })
     expect(data.requestData).toStrictEqual({ key: 'value' })
-    expect(data.headers).toStrictEqual({ 'Content-Type': 'application/json' })
+    expect(data.headers).toStrictEqual({ [CONTENT_TYPE]: 'application/json' })
   })
 
   it('handles undefined config', () => {

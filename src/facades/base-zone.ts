@@ -35,7 +35,7 @@ export abstract class BaseZoneFacade<
             Group: { State: state },
           },
         },
-      } = await this.api.group({
+      } = await this.api.getGroup({
         postData: { [this.groupSpecificationKey]: this.id },
       })
       return state

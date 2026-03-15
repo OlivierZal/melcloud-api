@@ -155,13 +155,13 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
    * ATW reports both external (building) and internal (tank/boiler)
    * temperatures — merge them into a single chart
    */
-  public override async temperatures(
+  public override async getTemperatures(
     query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartLineOptions> {
-    const temperatures = await super.temperatures(query, useExactRange)
+    const temperatures = await super.getTemperatures(query, useExactRange)
     const { series: internalTemperaturesSeries } =
-      await this.internalTemperatures(query, useExactRange)
+      await this.getInternalTemperatures(query, useExactRange)
     return {
       ...temperatures,
       series: mergeSeries(temperatures.series, internalTemperaturesSeries),

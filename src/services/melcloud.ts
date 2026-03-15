@@ -206,8 +206,6 @@ export class MELCloudAPI implements API, Disposable {
 
   readonly #api: AxiosInstance
 
-  readonly #autoSyncInterval: number
-
   readonly #logger: Logger
 
   readonly #registry = new ModelRegistry()
@@ -215,6 +213,8 @@ export class MELCloudAPI implements API, Disposable {
   readonly #retryTimeout = new DisposableTimeout()
 
   readonly #syncTimeout = new DisposableTimeout()
+
+  #autoSyncInterval: number
 
   #language = 'en'
 
@@ -325,22 +325,12 @@ export class MELCloudAPI implements API, Disposable {
     this.#syncTimeout.clear()
   }
 
-  public async energy<T extends DeviceType>({
+  public async getEnergy<T extends DeviceType>({
     postData,
   }: {
     postData: EnergyPostData
   }): Promise<{ data: EnergyData<T> }> {
     return this.#api.post('/EnergyCost/Report', postData)
-  }
-
-  public async frostProtection({
-    params,
-  }: {
-    params: SettingsParams
-  }): Promise<{ data: FrostProtectionData }> {
-    return this.#api.get('/FrostProtection/GetSettings', {
-      params,
-    })
   }
 
   public async getErrorEntries({
@@ -349,6 +339,16 @@ export class MELCloudAPI implements API, Disposable {
     postData: ErrorLogPostData
   }): Promise<{ data: ErrorLogData[] | FailureData }> {
     return this.#api.post('/Report/GetUnitErrorLog2', postData)
+  }
+
+  public async getFrostProtection({
+    params,
+  }: {
+    params: SettingsParams
+  }): Promise<{ data: FrostProtectionData }> {
+    return this.#api.get('/FrostProtection/GetSettings', {
+      params,
+    })
   }
 
   /**
@@ -393,7 +393,7 @@ export class MELCloudAPI implements API, Disposable {
     }
   }
 
-  public async group({
+  public async getGroup({
     postData,
   }: {
     postData: GetGroupPostData
@@ -401,7 +401,7 @@ export class MELCloudAPI implements API, Disposable {
     return this.#api.post('/Group/Get', postData)
   }
 
-  public async holidayMode({
+  public async getHolidayMode({
     params,
   }: {
     params: SettingsParams
@@ -411,7 +411,7 @@ export class MELCloudAPI implements API, Disposable {
     })
   }
 
-  public async hourlyTemperatures({
+  public async getHourlyTemperatures({
     postData,
   }: {
     postData: { device: number; hour: HourNumbers }
@@ -419,12 +419,62 @@ export class MELCloudAPI implements API, Disposable {
     return this.#api.post('/Report/GetHourlyTemperature', postData)
   }
 
-  public async internalTemperatures({
+  public async getInternalTemperatures({
     postData,
   }: {
     postData: ReportPostData
   }): Promise<{ data: ReportData }> {
     return this.#api.post('/Report/GetInternalTemperatures2', postData)
+  }
+
+  public async getOperationModes({
+    postData,
+  }: {
+    postData: ReportPostData
+  }): Promise<{ data: OperationModeLogData }> {
+    return this.#api.post('/Report/GetOperationModeLog2', postData)
+  }
+
+  public async getSignal({
+    postData,
+  }: {
+    postData: { devices: number | number[]; hour: HourNumbers }
+  }): Promise<{ data: ReportData }> {
+    return this.#api.post('/Report/GetSignalStrength', postData)
+  }
+
+  public async getTemperatures({
+    postData,
+  }: {
+    postData: TemperatureLogPostData
+  }): Promise<{ data: ReportData }> {
+    return this.#api.post('/Report/GetTemperatureLog2', postData)
+  }
+
+  public async getTiles({
+    postData,
+  }: {
+    postData: TilesPostData<null>
+  }): Promise<{ data: TilesData<null> }>
+  public async getTiles<T extends DeviceType>({
+    postData,
+  }: {
+    postData: TilesPostData<T>
+  }): Promise<{ data: TilesData<T> }>
+  public async getTiles<T extends DeviceType | null>({
+    postData,
+  }: {
+    postData: TilesPostData<T>
+  }): Promise<{ data: TilesData<T> }> {
+    return this.#api.post('/Tile/Get2', postData)
+  }
+
+  public async getValues<T extends DeviceType>({
+    params,
+  }: {
+    params: GetDeviceDataParams
+  }): Promise<{ data: GetDeviceData<T> }> {
+    return this.#api.get('/Device/Get', { params })
   }
 
   public async list(): Promise<{ data: BuildingWithStructure[] }> {
@@ -437,14 +487,6 @@ export class MELCloudAPI implements API, Disposable {
     postData: LoginPostData
   }): Promise<{ data: LoginData }> {
     return this.#api.post(LOGIN_PATH, postData)
-  }
-
-  public async operationModes({
-    postData,
-  }: {
-    postData: ReportPostData
-  }): Promise<{ data: OperationModeLogData }> {
-    return this.#api.post('/Report/GetOperationModeLog2', postData)
   }
 
   /** Dispose both sync and retry timers. */
@@ -477,12 +519,19 @@ export class MELCloudAPI implements API, Disposable {
     return this.#api.post('/HolidayMode/Update', postData)
   }
 
-  public async setLanguage({
-    postData,
-  }: {
-    postData: { language: Language }
-  }): Promise<{ data: boolean }> {
-    return this.#api.post('/User/UpdateLanguage', postData)
+  /**
+   * Update the user's language on the server if it differs from the current locale.
+   * @param language - The language code to set.
+   */
+  public async setLanguage(language: string): Promise<void> {
+    if (language !== this.language) {
+      const { data: hasLanguageChanged } = await this.#postLanguage(
+        this.#getLanguageCode(language),
+      )
+      if (hasLanguageChanged) {
+        this.language = language
+      }
+    }
   }
 
   public async setPower({
@@ -493,6 +542,18 @@ export class MELCloudAPI implements API, Disposable {
     return this.#api.post('/Device/Power', postData)
   }
 
+  /**
+   * Update the automatic sync interval and reschedule.
+   * @param minutes - Interval in minutes. Set to `0` or `null` to disable auto-sync.
+   */
+  public setSyncInterval(minutes: number | null): void {
+    this.#autoSyncInterval = Duration.fromObject({
+      minutes: minutes ?? NO_SYNC_INTERVAL,
+    }).as('milliseconds')
+    this.clearSync()
+    this.#planNextSync()
+  }
+
   public async setValues<T extends DeviceType>({
     postData,
     type,
@@ -501,63 +562,6 @@ export class MELCloudAPI implements API, Disposable {
     type: T
   }): Promise<{ data: SetDeviceData<T> }> {
     return this.#api.post(`/Device/Set${deviceTypeNames[type]}`, postData)
-  }
-
-  public async signal({
-    postData,
-  }: {
-    postData: { devices: number | number[]; hour: HourNumbers }
-  }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetSignalStrength', postData)
-  }
-
-  public async temperatures({
-    postData,
-  }: {
-    postData: TemperatureLogPostData
-  }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetTemperatureLog2', postData)
-  }
-
-  public async tiles({
-    postData,
-  }: {
-    postData: TilesPostData<null>
-  }): Promise<{ data: TilesData<null> }>
-  public async tiles<T extends DeviceType>({
-    postData,
-  }: {
-    postData: TilesPostData<T>
-  }): Promise<{ data: TilesData<T> }>
-  public async tiles<T extends DeviceType | null>({
-    postData,
-  }: {
-    postData: TilesPostData<T>
-  }): Promise<{ data: TilesData<T> }> {
-    return this.#api.post('/Tile/Get2', postData)
-  }
-
-  /**
-   * Update the user's language on the server if it differs from the current locale.
-   * @param language - The language code to set.
-   */
-  public async updateLanguage(language: string): Promise<void> {
-    if (language !== this.language) {
-      const { data: hasLanguageChanged } = await this.setLanguage({
-        postData: { language: this.#getLanguageCode(language) },
-      })
-      if (hasLanguageChanged) {
-        this.language = language
-      }
-    }
-  }
-
-  public async values<T extends DeviceType>({
-    params,
-  }: {
-    params: GetDeviceDataParams
-  }): Promise<{ data: GetDeviceData<T> }> {
-    return this.#api.get('/Device/Get', { params })
   }
 
   async #authenticate({
@@ -696,6 +700,10 @@ export class MELCloudAPI implements API, Disposable {
         })
       }, this.#autoSyncInterval)
     }
+  }
+
+  async #postLanguage(language: Language): Promise<{ data: boolean }> {
+    return this.#api.post('/User/UpdateLanguage', { language })
   }
 
   #setOptionalProperties({

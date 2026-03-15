@@ -1,6 +1,6 @@
 import { buildGroups } from './build-groups.ts'
 
-const modifiers: string[][] = [
+const modifiers = [
   ['declare', 'override', ''],
   ['static', '', 'abstract'],
   ['decorated', ''],
@@ -9,12 +9,12 @@ const modifiers: string[][] = [
   ['readonly', ''],
 ]
 
-const modifierIncompatibilities: Record<string, Set<string>> = {
+const modifierIncompatibilities = {
   abstract: new Set(['decorated', 'private', 'static']),
   declare: new Set(['decorated', 'override']),
 }
 
-const selectors: (string | string[])[] = [
+const selectors = [
   'index-signature',
   'property',
   'function-property',

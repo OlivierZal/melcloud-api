@@ -63,7 +63,7 @@ export interface DeviceFacade<T extends DeviceType>
   readonly fetch: () => Promise<ListDeviceData<T>>
 
   /** Fetch operation mode usage as pie chart data. */
-  readonly operationModes: (
+  readonly getOperationModes: (
     query: ReportQuery,
   ) => Promise<ReportChartPieOptions>
 
@@ -71,7 +71,9 @@ export interface DeviceFacade<T extends DeviceType>
   readonly setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
 
   /** Fetch temperature history as line chart data. */
-  readonly temperatures: (query: ReportQuery) => Promise<ReportChartLineOptions>
+  readonly getTemperatures: (
+    query: ReportQuery,
+  ) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((
@@ -83,15 +85,15 @@ export interface DeviceFacade<T extends DeviceType>
   readonly getValues: () => Promise<GetDeviceData<T>>
 
   /** Fetch energy consumption report. ATA and ATW only. */
-  readonly energy: (query: ReportQuery) => Promise<EnergyData<T>>
+  readonly getEnergy: (query: ReportQuery) => Promise<EnergyData<T>>
 
   /** Fetch hourly temperature report. ATW only. */
-  readonly hourlyTemperatures: (
+  readonly getHourlyTemperatures: (
     hour?: HourNumbers,
   ) => Promise<ReportChartLineOptions>
 
   /** Fetch internal temperature report. ATW only. */
-  readonly internalTemperatures: (
+  readonly getInternalTemperatures: (
     query: ReportQuery,
   ) => Promise<ReportChartLineOptions>
 }

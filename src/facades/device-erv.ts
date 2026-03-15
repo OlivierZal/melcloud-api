@@ -28,11 +28,11 @@ export class DeviceErvFacade extends BaseDeviceFacade<typeof DeviceType.Erv> {
     'OutdoorTemperature',
   ]
 
-  public override async operationModes(
+  public override async getOperationModes(
     query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartPieOptions> {
-    const { labels, series, ...options } = await super.operationModes(
+    const { labels, series, ...options } = await super.getOperationModes(
       query,
       useExactRange,
     )

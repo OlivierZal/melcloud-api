@@ -143,7 +143,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   @syncDevices()
   @updateDevice
   public async getValues(): Promise<GetDeviceData<T>> {
-    const { data } = await this.api.values<T>({
+    const { data } = await this.api.getValues<T>({
       params: { buildingId: this.device.buildingId, id: this.id },
     })
     return data
@@ -178,47 +178,47 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return finalData
   }
 
-  public async energy(query?: ReportQuery): Promise<EnergyData<T>> {
-    const { data } = await this.api.energy<T>({
+  public async getEnergy(query?: ReportQuery): Promise<EnergyData<T>> {
+    const { data } = await this.api.getEnergy<T>({
       postData: this.#getReportPostData(query),
     })
     return data
   }
 
-  public async hourlyTemperatures(
+  public async getHourlyTemperatures(
     hour = DateTime.now().hour,
   ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.hourlyTemperatures({
+    const { data } = await this.api.getHourlyTemperatures({
       postData: { device: this.id, hour },
     })
     return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
   }
 
-  public async internalTemperatures(
+  public async getInternalTemperatures(
     query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.internalTemperatures({
+    const { data } = await this.api.getInternalTemperatures({
       postData: this.#getReportPostData(query, useExactRange),
     })
     return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
   }
 
-  public async operationModes(
+  public async getOperationModes(
     query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartPieOptions> {
     const postData = this.#getReportPostData(query, useExactRange)
     const dateRange = { from: postData.FromDate, to: postData.ToDate }
-    const { data } = await this.api.operationModes({ postData })
+    const { data } = await this.api.getOperationModes({ postData })
     return getChartPieOptions(data, dateRange)
   }
 
-  public async temperatures(
+  public async getTemperatures(
     query?: ReportQuery,
     useExactRange = true,
   ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.temperatures({
+    const { data } = await this.api.getTemperatures({
       postData: {
         ...this.#getReportPostData(query, useExactRange),
         Location: this.registry.buildings.getById(this.device.buildingId)

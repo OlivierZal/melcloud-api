@@ -1,8 +1,9 @@
-import type { DeviceModelAny, Model } from '../models/interfaces.ts'
 import type { APIAdapter } from '../services/index.ts'
 
 import { DeviceType } from '../constants.ts'
 import {
+  type DeviceModelAny,
+  type Model,
   type ModelRegistry,
   AreaModel,
   BuildingModel,

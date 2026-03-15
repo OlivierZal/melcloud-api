@@ -1,6 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType, Language } from '../constants.ts'
+import type { DeviceType } from '../constants.ts'
 import type { ModelRegistry } from '../models/index.ts'
 import type {
   BuildingWithStructure,
@@ -136,15 +136,11 @@ export interface API extends APIAdapter {
     postData: LoginPostData
   }) => Promise<{ data: LoginData }>
 
-  /** Update the user's preferred language on the MELCloud server. */
-  readonly setLanguage: ({
-    postData,
-  }: {
-    postData: { language: Language }
-  }) => Promise<{ data: boolean }>
+  /** Update the user's language on the server if it differs from the current locale. */
+  readonly setLanguage: (language: string) => Promise<void>
 
-  /** Update the language if it differs from the current one. */
-  readonly updateLanguage: (language: string) => Promise<void>
+  /** Update the automatic sync interval and reschedule. Set to `0` or `null` to disable. */
+  readonly setSyncInterval: (minutes: number | null) => void
 }
 
 /**
@@ -175,21 +171,21 @@ export interface APIAdapter {
   readonly fetch: () => Promise<BuildingWithStructure[]>
 
   /** Get frost protection settings for a building, floor, area, or device. */
-  readonly frostProtection: ({
+  readonly getFrostProtection: ({
     params,
   }: {
     params: SettingsParams
   }) => Promise<{ data: FrostProtectionData }>
 
   /** Get holiday mode settings for a building, floor, area, or device. */
-  readonly holidayMode: ({
+  readonly getHolidayMode: ({
     params,
   }: {
     params: SettingsParams
   }) => Promise<{ data: HolidayModeData }>
 
   /** Fetch operation mode log data for charting. */
-  readonly operationModes: ({
+  readonly getOperationModes: ({
     postData,
   }: {
     postData: ReportPostData
@@ -226,21 +222,21 @@ export interface APIAdapter {
   }) => Promise<{ data: SetDeviceData<T> }>
 
   /** Fetch WiFi signal strength report. */
-  readonly signal: ({
+  readonly getSignal: ({
     postData,
   }: {
     postData: { devices: number | number[]; hour: HourNumbers }
   }) => Promise<{ data: ReportData }>
 
   /** Fetch temperature log data. */
-  readonly temperatures: ({
+  readonly getTemperatures: ({
     postData,
   }: {
     postData: TemperatureLogPostData
   }) => Promise<{ data: ReportData }>
 
   /** Fetch tile data for device overview. */
-  readonly tiles: (({
+  readonly getTiles: (({
     postData,
   }: {
     postData: TilesPostData<null>
@@ -252,21 +248,21 @@ export interface APIAdapter {
     }) => Promise<{ data: TilesData<T> }>)
 
   /** Fetch current device data by device and building ID. */
-  readonly values: <T extends DeviceType>({
+  readonly getValues: <T extends DeviceType>({
     params,
   }: {
     params: GetDeviceDataParams
   }) => Promise<{ data: GetDeviceData<T> }>
 
   /** Fetch energy consumption report. Supported by ATA and ATW devices. */
-  readonly energy: <T extends DeviceType>({
+  readonly getEnergy: <T extends DeviceType>({
     postData,
   }: {
     postData: EnergyPostData
   }) => Promise<{ data: EnergyData<T> }>
 
   /** Fetch ATA device group state. ATA only. */
-  readonly group: ({
+  readonly getGroup: ({
     postData,
   }: {
     postData: GetGroupPostData
@@ -280,14 +276,14 @@ export interface APIAdapter {
   }) => Promise<{ data: FailureData | SuccessData }>
 
   /** Fetch hourly temperature report. ATW only. */
-  readonly hourlyTemperatures: ({
+  readonly getHourlyTemperatures: ({
     postData,
   }: {
     postData: { device: number; hour: HourNumbers }
   }) => Promise<{ data: ReportData }>
 
   /** Fetch internal temperature report. ATW only. */
-  readonly internalTemperatures: ({
+  readonly getInternalTemperatures: ({
     postData,
   }: {
     postData: ReportPostData

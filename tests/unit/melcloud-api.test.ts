@@ -8,8 +8,7 @@ import type {
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { DeviceType } from '../../src/constants.ts'
-import type { APIConfig } from '../../src/services/interfaces.ts'
-import type { MELCloudAPI } from '../../src/services/melcloud.ts'
+import type { APIConfig, MELCloudAPI } from '../../src/services/index.ts'
 import type {
   BuildingWithStructure,
   ListDeviceAny,
@@ -29,23 +28,11 @@ const mockAxiosInstance = {
   request: vi.fn(),
 }
 
-const isRequestInterceptorTuple = (
+const isInterceptorTuple = (
   value: unknown,
 ): value is [
-  (config: InternalAxiosRequestConfig) => Promise<InternalAxiosRequestConfig>,
-  (error: AxiosError) => Promise<AxiosError>,
-] => {
-  if (!Array.isArray(value) || value.length < 2) {
-    return false
-  }
-  return typeof value[0] === 'function' && typeof value[1] === 'function'
-}
-
-const isResponseInterceptorTuple = (
-  value: unknown,
-): value is [
-  (response: AxiosResponse) => AxiosResponse,
-  (error: AxiosError) => Promise<AxiosError>,
+  (...args: unknown[]) => unknown,
+  (...args: unknown[]) => unknown,
 ] => {
   if (!Array.isArray(value) || value.length < 2) {
     return false
@@ -101,18 +88,20 @@ describe('mELCloudAPI', () => {
       },
     } = mockInterceptors
 
-    expect(isRequestInterceptorTuple(requestCall)).toBe(true)
-    expect(isResponseInterceptorTuple(responseCall)).toBe(true)
+    expect(isInterceptorTuple(requestCall)).toBe(true)
+    expect(isInterceptorTuple(responseCall)).toBe(true)
 
-    if (!isRequestInterceptorTuple(requestCall)) {
+    if (!isInterceptorTuple(requestCall)) {
       throw new Error('Expected request interceptor handlers')
     }
-    if (!isResponseInterceptorTuple(responseCall)) {
+    if (!isInterceptorTuple(responseCall)) {
       throw new Error('Expected response interceptor handlers')
     }
 
-    ;[requestHandler, requestErrorHandler] = requestCall
-    ;[responseHandler, responseErrorHandler] = responseCall
+    requestHandler = cast(requestCall[0])
+    requestErrorHandler = cast(requestCall[1])
+    responseHandler = cast(responseCall[0])
+    responseErrorHandler = cast(responseCall[1])
     return api
   }
 
@@ -230,83 +219,135 @@ describe('mELCloudAPI', () => {
   })
 
   describe('api endpoints', () => {
-    it('calls energy', async () => {
+    const reportPostData = {
+      DeviceID: 1,
+      FromDate: '2024-01-01',
+      ToDate: '2024-01-31',
+    }
+
+    it.each([
+      {
+        args: { postData: reportPostData },
+        method: 'getEnergy' as const,
+        path: '/EnergyCost/Report',
+      },
+      {
+        args: { postData: { DeviceIDs: [1] } },
+        method: 'getErrorEntries' as const,
+        path: '/Report/GetUnitErrorLog2',
+      },
+      {
+        args: { postData: { BuildingID: 1 } },
+        method: 'getGroup' as const,
+        path: '/Group/Get',
+      },
+      {
+        args: { postData: { device: 1, hour: 12 } },
+        method: 'getHourlyTemperatures' as const,
+        path: '/Report/GetHourlyTemperature',
+      },
+      {
+        args: { postData: reportPostData },
+        method: 'getInternalTemperatures' as const,
+        path: '/Report/GetInternalTemperatures2',
+      },
+      {
+        args: { postData: reportPostData },
+        method: 'getOperationModes' as const,
+        path: '/Report/GetOperationModeLog2',
+      },
+      {
+        args: { postData: { devices: [1], hour: 12 } },
+        method: 'getSignal' as const,
+        path: '/Report/GetSignalStrength',
+      },
+      {
+        args: { postData: reportPostData },
+        method: 'getTemperatures' as const,
+        path: '/Report/GetTemperatureLog2',
+      },
+      {
+        args: { postData: { DeviceIDs: [1] } },
+        method: 'getTiles' as const,
+        path: '/Tile/Get2',
+      },
+      {
+        args: { postData: { AppVersion: '1.0', Email: 'u', Password: 'p' } },
+        method: 'login' as const,
+        path: '/Login/ClientLogin3',
+      },
+      {
+        args: {
+          postData: {
+            Enabled: true,
+            MaximumTemperature: 16,
+            MinimumTemperature: 4,
+          },
+        },
+        method: 'setFrostProtection' as const,
+        path: '/FrostProtection/Update',
+      },
+      {
+        args: {
+          postData: {
+            Specification: { BuildingID: 1 },
+            State: { Power: true },
+          },
+        },
+        method: 'setGroup' as const,
+        path: '/Group/SetAta',
+      },
+      {
+        args: {
+          postData: {
+            Enabled: true,
+            EndDate: null,
+            HMTimeZones: [],
+            StartDate: null,
+          },
+        },
+        method: 'setHolidayMode' as const,
+        path: '/HolidayMode/Update',
+      },
+      {
+        args: { postData: { DeviceIds: [1], Power: true } },
+        method: 'setPower' as const,
+        path: '/Device/Power',
+      },
+    ])('calls $method via POST', async ({ args, method, path }) => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({ data: {} })
-      await api.energy({
-        postData: { DeviceID: 1, FromDate: '2024-01-01', ToDate: '2024-01-31' },
-      })
+      await api[method](cast(args))
 
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/EnergyCost/Report',
+        path,
         expect.any(Object),
       )
     })
 
-    it('calls getErrorEntries', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: [] })
-      await api.getErrorEntries({ postData: { DeviceIDs: [1] } })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Report/GetUnitErrorLog2',
-        expect.any(Object),
-      )
-    })
-
-    it('calls frostProtection', async () => {
+    it.each([
+      {
+        args: { params: { id: 1, tableName: 'Building' } },
+        method: 'getFrostProtection' as const,
+        path: '/FrostProtection/GetSettings',
+      },
+      {
+        args: { params: { id: 1, tableName: 'Building' } },
+        method: 'getHolidayMode' as const,
+        path: '/HolidayMode/GetSettings',
+      },
+      {
+        args: { params: { buildingId: 1, id: 1 } },
+        method: 'getValues' as const,
+        path: '/Device/Get',
+      },
+    ])('calls $method via GET', async ({ args, method, path }) => {
       const api = await createApi()
       mockAxiosInstance.get.mockResolvedValue({ data: {} })
-      await api.frostProtection({ params: { id: 1, tableName: 'Building' } })
+      await api[method](cast(args))
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        '/FrostProtection/GetSettings',
-        expect.any(Object),
-      )
-    })
-
-    it('calls group', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: {} })
-      await api.group({ postData: { BuildingID: 1 } })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Group/Get',
-        expect.any(Object),
-      )
-    })
-
-    it('calls holidayMode', async () => {
-      const api = await createApi()
-      mockAxiosInstance.get.mockResolvedValue({ data: {} })
-      await api.holidayMode({ params: { id: 1, tableName: 'Building' } })
-
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        '/HolidayMode/GetSettings',
-        expect.any(Object),
-      )
-    })
-
-    it('calls hourlyTemperatures', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: {} })
-      await api.hourlyTemperatures({ postData: { device: 1, hour: 12 } })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Report/GetHourlyTemperature',
-        expect.any(Object),
-      )
-    })
-
-    it('calls internalTemperatures', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: {} })
-      await api.internalTemperatures({
-        postData: { DeviceID: 1, FromDate: '2024-01-01', ToDate: '2024-01-31' },
-      })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Report/GetInternalTemperatures2',
+        path,
         expect.any(Object),
       )
     })
@@ -317,102 +358,6 @@ describe('mELCloudAPI', () => {
       await api.list()
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith('/User/ListDevices')
-    })
-
-    it('calls login', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: { LoginData: null } })
-      await api.login({
-        postData: { AppVersion: '1.0', Email: 'u', Password: 'p' },
-      })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Login/ClientLogin3',
-        expect.any(Object),
-      )
-    })
-
-    it('calls operationModes', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: [] })
-      await api.operationModes({
-        postData: { DeviceID: 1, FromDate: '2024-01-01', ToDate: '2024-01-31' },
-      })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Report/GetOperationModeLog2',
-        expect.any(Object),
-      )
-    })
-
-    it('calls setFrostProtection', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: { Success: true } })
-      await api.setFrostProtection({
-        postData: {
-          Enabled: true,
-          MaximumTemperature: 16,
-          MinimumTemperature: 4,
-        },
-      })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/FrostProtection/Update',
-        expect.any(Object),
-      )
-    })
-
-    it('calls setGroup', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: {} })
-      await api.setGroup({
-        postData: { Specification: { BuildingID: 1 }, State: { Power: true } },
-      })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Group/SetAta',
-        expect.any(Object),
-      )
-    })
-
-    it('calls setHolidayMode', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: {} })
-      await api.setHolidayMode({
-        postData: {
-          Enabled: true,
-          EndDate: null,
-          HMTimeZones: [],
-          StartDate: null,
-        },
-      })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/HolidayMode/Update',
-        expect.any(Object),
-      )
-    })
-
-    it('calls setLanguage', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: true })
-      await api.setLanguage({ postData: { language: 0 } })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/User/UpdateLanguage',
-        expect.any(Object),
-      )
-    })
-
-    it('calls setPower', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: true })
-      await api.setPower({ postData: { DeviceIds: [1], Power: true } })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Device/Power',
-        expect.any(Object),
-      )
     })
 
     it('calls setValues for each device type', async () => {
@@ -456,52 +401,6 @@ describe('mELCloudAPI', () => {
 
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
         '/Device/SetErv',
-        expect.any(Object),
-      )
-    })
-
-    it('calls signal', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: {} })
-      await api.signal({ postData: { devices: [1], hour: 12 } })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Report/GetSignalStrength',
-        expect.any(Object),
-      )
-    })
-
-    it('calls temperatures', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: {} })
-      await api.temperatures({
-        postData: { DeviceID: 1, FromDate: '2024-01-01', ToDate: '2024-01-31' },
-      })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Report/GetTemperatureLog2',
-        expect.any(Object),
-      )
-    })
-
-    it('calls tiles', async () => {
-      const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({ data: {} })
-      await api.tiles({ postData: { DeviceIDs: [1] } })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Tile/Get2',
-        expect.any(Object),
-      )
-    })
-
-    it('calls values', async () => {
-      const api = await createApi()
-      mockAxiosInstance.get.mockResolvedValue({ data: {} })
-      await api.values({ params: { buildingId: 1, id: 1 } })
-
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        '/Device/Get',
         expect.any(Object),
       )
     })
@@ -566,11 +465,11 @@ describe('mELCloudAPI', () => {
     })
   })
 
-  describe('updateLanguage', () => {
+  describe('setLanguage', () => {
     it('updates language when different', async () => {
       const api = await createApi({ language: 'en' })
       mockAxiosInstance.post.mockResolvedValue({ data: true })
-      await api.updateLanguage('fr')
+      await api.setLanguage('fr')
 
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
         '/User/UpdateLanguage',
@@ -581,7 +480,7 @@ describe('mELCloudAPI', () => {
     it('does not update when same language', async () => {
       const api = await createApi({ language: 'en' })
       mockAxiosInstance.post.mockClear()
-      await api.updateLanguage('en')
+      await api.setLanguage('en')
 
       expect(mockAxiosInstance.post).not.toHaveBeenCalled()
     })
@@ -589,7 +488,7 @@ describe('mELCloudAPI', () => {
     it('handles invalid language codes', async () => {
       const api = await createApi({ language: 'en' })
       mockAxiosInstance.post.mockResolvedValue({ data: true })
-      await api.updateLanguage('invalid')
+      await api.setLanguage('invalid')
 
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
         '/User/UpdateLanguage',
@@ -600,11 +499,27 @@ describe('mELCloudAPI', () => {
     it('does not change internal language when API returns false', async () => {
       const api = await createApi({ language: 'en' })
       mockAxiosInstance.post.mockResolvedValue({ data: false })
-      await api.updateLanguage('fr')
+      await api.setLanguage('fr')
       mockAxiosInstance.post.mockClear()
-      await api.updateLanguage('en')
+      await api.setLanguage('en')
 
       expect(mockAxiosInstance.post).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('setSyncInterval', () => {
+    it('reschedules sync with new interval', async () => {
+      const api = await createApi({ autoSyncInterval: 0 })
+      api.setSyncInterval(10)
+
+      expect(vi.getTimerCount()).toBe(1)
+    })
+
+    it('disables sync when set to null', async () => {
+      const api = await createApi({ autoSyncInterval: 5 })
+      api.setSyncInterval(null)
+
+      expect(vi.getTimerCount()).toBe(0)
     })
   })
 
@@ -650,10 +565,10 @@ describe('mELCloudAPI', () => {
     it('throws when API returns failure data', async () => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({
-        data: { AttributeErrors: { f: ['e'] }, Success: false },
+        data: { AttributeErrors: { field: ['error'] }, Success: false },
       })
 
-      await expect(api.getErrorLog({}, [1])).rejects.toThrow('f')
+      await expect(api.getErrorLog({}, [1])).rejects.toThrow('field')
     })
 
     it('handles offset and limit', async () => {

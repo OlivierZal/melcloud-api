@@ -60,11 +60,11 @@ describe(isSetDeviceDataAtaInList, () => {
 describe(typedFromEntries, () => {
   it('converts entries to an object', () => {
     const entries: [string, number][] = [
-      ['a', 1],
-      ['b', 2],
+      ['key1', 1],
+      ['key2', 2],
     ]
 
-    expect(typedFromEntries(entries)).toStrictEqual({ a: 1, b: 2 })
+    expect(typedFromEntries(entries)).toStrictEqual({ key1: 1, key2: 2 })
   })
 })
 

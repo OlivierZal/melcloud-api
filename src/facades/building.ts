@@ -8,7 +8,7 @@ import type { ZoneSettings } from '../types/index.ts'
 
 import { fetchDevices } from '../decorators/index.ts'
 
-import { BaseZoneFacade } from './base-super-device.ts'
+import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
 export class BuildingFacade extends BaseZoneFacade<BuildingModelContract> {
