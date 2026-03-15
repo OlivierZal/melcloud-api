@@ -53,7 +53,10 @@ const compareNames = (
   { name: name2 }: { name: string },
 ): number => name1.localeCompare(name2)
 
-const getDeviceLevel = (areaId: number | null, floorId: number | null): number => {
+const getDeviceLevel = (
+  areaId: number | null,
+  floorId: number | null,
+): number => {
   if (areaId !== null && floorId !== null) {
     return GREAT_GRANDCHILD_LEVEL
   }
@@ -115,6 +118,12 @@ export class ModelRegistry {
   public readonly floors = {
     getById: (id: number): FloorModelContract | undefined =>
       this.#floors.get(id),
+  }
+
+  readonly #devicesByZone = {
+    area: (id: number): DeviceModelAny[] => this.getDevicesByAreaId(id),
+    building: (id: number): DeviceModelAny[] => this.getDevicesByBuildingId(id),
+    floor: (id: number): DeviceModelAny[] => this.getDevicesByFloorId(id),
   }
 
   #areasByBuildingId = new Map<number, AreaModelContract[]>()
@@ -289,12 +298,6 @@ export class ModelRegistry {
       models,
       ({ buildingId }) => buildingId,
     )
-  }
-
-  readonly #devicesByZone = {
-    area: (id: number): DeviceModelAny[] => this.getDevicesByAreaId(id),
-    building: (id: number): DeviceModelAny[] => this.getDevicesByBuildingId(id),
-    floor: (id: number): DeviceModelAny[] => this.getDevicesByFloorId(id),
   }
 
   #buildAreaZones(
