@@ -53,6 +53,16 @@ const compareNames = (
   { name: name2 }: { name: string },
 ): number => name1.localeCompare(name2)
 
+const getDeviceLevel = (areaId: number | null, floorId: number | null): number => {
+  if (areaId !== null && floorId !== null) {
+    return GREAT_GRANDCHILD_LEVEL
+  }
+  if (areaId !== null || floorId !== null) {
+    return GRANDCHILD_LEVEL
+  }
+  return CHILD_LEVEL
+}
+
 const buildDeviceZones = (
   devices: DeviceModelAny[],
   type?: DeviceType,
@@ -64,10 +74,7 @@ const buildDeviceZones = (
   return filtered
     .map(({ areaId, floorId, id, name }) => ({
       id,
-      level:
-        areaId !== null && floorId !== null ? GREAT_GRANDCHILD_LEVEL
-        : areaId !== null || floorId !== null ? GRANDCHILD_LEVEL
-        : CHILD_LEVEL,
+      level: getDeviceLevel(areaId, floorId),
       model: 'devices' as const,
       name,
     }))
@@ -327,15 +334,18 @@ export class ModelRegistry {
       .toSorted(compareNames)
   }
 
+  readonly #devicesByZone = {
+    area: (id: number): DeviceModelAny[] => this.getDevicesByAreaId(id),
+    building: (id: number): DeviceModelAny[] => this.getDevicesByBuildingId(id),
+    floor: (id: number): DeviceModelAny[] => this.getDevicesByFloorId(id),
+  }
+
   #hasDevices(
     id: number,
     zone: 'area' | 'building' | 'floor',
     type?: DeviceType,
   ): boolean {
-    const devices =
-      zone === 'building' ? this.getDevicesByBuildingId(id)
-      : zone === 'floor' ? this.getDevicesByFloorId(id)
-      : this.getDevicesByAreaId(id)
+    const devices = this.#devicesByZone[zone](id)
     return type === undefined ?
         Boolean(devices.length)
       : devices.some(({ type: deviceType }) => deviceType === type)
