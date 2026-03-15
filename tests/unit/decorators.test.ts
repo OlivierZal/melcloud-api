@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { APIAdapter } from '../../src/services/index.ts'
-import type { SetDeviceDataAta } from '../../src/types/index.ts'
+import type {
+  FailureData,
+  GroupState,
+  SetDeviceDataAta,
+  SuccessData,
+} from '../../src/types/index.ts'
 
 import {
   DeviceType,
@@ -24,7 +29,9 @@ const createMockFacade = (
 
 const decorateUpdateDevices = (
   name: string,
-  target: ReturnType<typeof vi.fn>,
+  target: (
+    ...args: unknown[]
+  ) => Promise<boolean | FailureData | GroupState | SuccessData>,
   options?: { type?: DeviceType },
 ): ReturnType<ReturnType<typeof updateDevices>> =>
   updateDevices(options)(target, mock<ClassMethodDecoratorContext>({ name }))
@@ -112,6 +119,16 @@ const callUpdateDevice = async (
   return decorated.call(facade)
 }
 
+const resolveTrue = async (): Promise<true> => {
+  await Promise.resolve()
+  return true
+}
+
+const resolvePowerData = async (): Promise<{ Alpha: null; Power: true }> => {
+  const result = await Promise.resolve({ Alpha: null, Power: true } as const)
+  return result
+}
+
 describe(fetchDevices, () => {
   it('calls api.fetch before the target method', async () => {
     const fetchMock = vi.fn()
@@ -164,10 +181,7 @@ describe(updateDevices, () => {
   it('updates all devices with the arg data', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: DeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices(
-      'setPower',
-      vi.fn().mockResolvedValue(true),
-    )
+    const decorated = decorateUpdateDevices('setPower', resolveTrue)
     await decorated.call(facade, { Power: true })
 
     expect(update).toHaveBeenCalledWith({ Power: true })
@@ -175,10 +189,7 @@ describe(updateDevices, () => {
 
   it('throws when arg is empty object', async () => {
     const facade = createMockFacade([])
-    const decorated = decorateUpdateDevices(
-      'setGroup',
-      vi.fn().mockResolvedValue(true),
-    )
+    const decorated = decorateUpdateDevices('setGroup', resolveTrue)
 
     await expect(decorated.call(facade, {})).rejects.toThrow('No data to set')
   })
@@ -190,11 +201,9 @@ describe(updateDevices, () => {
       { type: DeviceType.Ata, update: updateAta },
       { type: DeviceType.Atw, update: updateAtw },
     ])
-    const decorated = decorateUpdateDevices(
-      'setGroup',
-      vi.fn().mockResolvedValue(true),
-      { type: DeviceType.Ata },
-    )
+    const decorated = decorateUpdateDevices('setGroup', resolveTrue, {
+      type: DeviceType.Ata,
+    })
     await decorated.call(facade, { Power: true })
 
     expect(updateAta).toHaveBeenCalled()
@@ -204,10 +213,7 @@ describe(updateDevices, () => {
   it('uses SetPower logic when method name is SetPower', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: DeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices(
-      'SetPower',
-      vi.fn().mockResolvedValue(true),
-    )
+    const decorated = decorateUpdateDevices('SetPower', resolveTrue)
     await decorated.call(facade, true)
 
     expect(update).toHaveBeenCalledWith({ Power: true })
@@ -216,10 +222,7 @@ describe(updateDevices, () => {
   it('filters null/undefined values from data when no SetPower', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: DeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices(
-      'setGroup',
-      vi.fn().mockResolvedValue({ Alpha: null, Power: true }),
-    )
+    const decorated = decorateUpdateDevices('setGroup', resolvePowerData)
     await decorated.call(facade, null)
 
     expect(update).toHaveBeenCalledWith({ Power: true })

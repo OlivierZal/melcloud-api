@@ -29,6 +29,30 @@ const mockAxiosInstance = {
   request: vi.fn(),
 }
 
+const isRequestInterceptorTuple = (
+  value: unknown,
+): value is [
+  (config: InternalAxiosRequestConfig) => Promise<InternalAxiosRequestConfig>,
+  (error: AxiosError) => Promise<AxiosError>,
+] => {
+  if (!Array.isArray(value) || value.length < 2) {
+    return false
+  }
+  return typeof value[0] === 'function' && typeof value[1] === 'function'
+}
+
+const isResponseInterceptorTuple = (
+  value: unknown,
+): value is [
+  (response: AxiosResponse) => AxiosResponse,
+  (error: AxiosError) => Promise<AxiosError>,
+] => {
+  if (!Array.isArray(value) || value.length < 2) {
+    return false
+  }
+  return typeof value[0] === 'function' && typeof value[1] === 'function'
+}
+
 vi.mock(import('axios'), async (importOriginal) => ({
   ...(await importOriginal()),
   default: cast({
@@ -64,12 +88,31 @@ describe('mELCloudAPI', () => {
     config: APIConfig = {},
   ): Promise<Awaited<ReturnType<typeof melCloudApi.create>>> => {
     const api = await melCloudApi.create({ autoSyncInterval: 0, ...config })
-    ;[requestHandler, requestErrorHandler] = cast(
-      mockInterceptors.request.use.mock.lastCall,
-    )
-    ;[responseHandler, responseErrorHandler] = cast(
-      mockInterceptors.response.use.mock.lastCall,
-    )
+    const {
+      request: {
+        use: {
+          mock: { lastCall: requestCall },
+        },
+      },
+      response: {
+        use: {
+          mock: { lastCall: responseCall },
+        },
+      },
+    } = mockInterceptors
+
+    expect(isRequestInterceptorTuple(requestCall)).toBe(true)
+    expect(isResponseInterceptorTuple(responseCall)).toBe(true)
+
+    if (!isRequestInterceptorTuple(requestCall)) {
+      throw new Error('Expected request interceptor handlers')
+    }
+    if (!isResponseInterceptorTuple(responseCall)) {
+      throw new Error('Expected response interceptor handlers')
+    }
+
+    ;[requestHandler, requestErrorHandler] = requestCall
+    ;[responseHandler, responseErrorHandler] = responseCall
     return api
   }
 

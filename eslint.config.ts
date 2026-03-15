@@ -57,7 +57,10 @@ const config = defineConfig([
   {
     ignores: ['coverage/', 'dist/'],
   },
-  jsdoc({ config: 'flat/recommended-tsdoc-error' }),
+  {
+    ...jsdoc({ config: 'flat/recommended-tsdoc-error' }),
+    files: ['src/**/*.{ts,mts,js}'],
+  },
   {
     extends: [
       js.configs.all,
@@ -486,9 +489,6 @@ const config = defineConfig([
       '@typescript-eslint/no-unsafe-type-assertion': 'error',
       'id-length': 'off',
       'import-x/max-dependencies': 'off',
-      'jsdoc/require-jsdoc': 'off',
-      'jsdoc/require-param-description': 'off',
-      'jsdoc/require-returns': 'off',
       'max-lines-per-function': 'off',
       'max-statements': 'off',
       'vitest/max-expects': ['warn', { max: 15 }],

@@ -4,7 +4,7 @@ import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
 import { areaData, ataDevice, buildingData, floorData } from '../fixtures.ts'
-import { createMockApi, mock } from '../helpers.ts'
+import { createMockApi } from '../helpers.ts'
 
 const createManagerWithRegistry = (): {
   manager: FacadeManager
@@ -22,7 +22,7 @@ const createManagerWithRegistry = (): {
 describe('facadeManager', () => {
   it('returns null when no instance is provided', () => {
     const registry = new ModelRegistry()
-    const manager = new FacadeManager(mock<object>(), registry)
+    const manager = new FacadeManager(createMockApi(), registry)
 
     expect(manager.get()).toBeNull()
   })
