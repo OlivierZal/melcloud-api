@@ -160,6 +160,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
           isUpdateDeviceData(this.setData, key) && this.setData[key] !== value,
       ),
     )
+
     const flags = this.#getFlags(
       typedKeys(newData) as (keyof UpdateDeviceData<T>)[],
     )
@@ -208,9 +209,9 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     useExactRange = true,
   ): Promise<ReportChartPieOptions> {
     const postData = this.#getReportPostData(query, useExactRange)
-    const { FromDate: from, ToDate: to } = postData
+    const dateRange = { from: postData.FromDate, to: postData.ToDate }
     const { data } = await this.api.operationModes({ postData })
-    return getChartPieOptions(data, { from, to })
+    return getChartPieOptions(data, dateRange)
   }
 
   public async temperatures(

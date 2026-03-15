@@ -51,15 +51,15 @@ export class FacadeManager implements FacadeManagerContract {
   public get(instance?: BuildingModel): BuildingFacade | null
   public get(instance?: DeviceModelAny): DeviceFacadeAny | null
   public get(instance?: Model): Facade | null {
-    if (instance) {
-      let facade = this.#facades.get(instance)
-      if (!facade) {
-        facade = createFacade(this.#api, this.#registry, instance)
-        this.#facades.set(instance, facade)
-      }
-      return facade
+    if (!instance) {
+      return null
     }
-    return null
+    let facade = this.#facades.get(instance)
+    if (!facade) {
+      facade = createFacade(this.#api, this.#registry, instance)
+      this.#facades.set(instance, facade)
+    }
+    return facade
   }
 
   public getBuildings(params?: { type?: DeviceType }): BuildingZone[] {

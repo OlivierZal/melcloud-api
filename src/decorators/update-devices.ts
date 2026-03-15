@@ -57,9 +57,12 @@ export const updateDevices =
               ([, value]) => value !== undefined && value !== null,
             ),
           )
-      for (const device of type === undefined ?
-        this.devices
-      : this.devices.filter(({ type: deviceType }) => deviceType === type)) {
+
+      const targetDevices =
+        type === undefined ?
+          this.devices
+        : this.devices.filter(({ type: deviceType }) => deviceType === type)
+      for (const device of targetDevices) {
         device.update(newData)
       }
       return data

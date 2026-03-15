@@ -62,11 +62,10 @@ const getZoneOperationalState = (
   ) {
     return OperationModeStateZone.prohibited
   }
-  const { OperationMode: operationMode } = data
-  if (!data[`Idle${zone}`]) {
-    return zoneStateMap[operationMode] ?? OperationModeStateZone.idle
+  if (data[`Idle${zone}`]) {
+    return OperationModeStateZone.idle
   }
-  return OperationModeStateZone.idle
+  return zoneStateMap[data.OperationMode] ?? OperationModeStateZone.idle
 }
 
 /*

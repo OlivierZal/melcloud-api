@@ -307,16 +307,17 @@ export class MELCloudAPI implements API, Disposable {
    */
   public async authenticate(data?: LoginCredentials): Promise<boolean> {
     const { password = this.password, username = this.username } = data ?? {}
-    if (username && password) {
-      try {
-        return await this.#authenticate({ password, username })
-      } catch (error) {
-        if (data !== undefined) {
-          throw error
-        }
-      }
+    if (!username || !password) {
+      return false
     }
-    return false
+    try {
+      return await this.#authenticate({ password, username })
+    } catch (error) {
+      if (data !== undefined) {
+        throw error
+      }
+      return false
+    }
   }
 
   /** Cancel any pending automatic sync timer. */
@@ -364,6 +365,7 @@ export class MELCloudAPI implements API, Disposable {
     const { fromDate, period, toDate } = parseErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
     const errorLog = await this.#errorLog(deviceIds, fromDate, toDate)
+
     return {
       errors: errorLog
         .map(
@@ -636,6 +638,7 @@ export class MELCloudAPI implements API, Disposable {
   async #handleError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
     this.#logger.error(String(errorData))
+
     const { config, response: { status } = {} } = error
     if (status === HttpStatusCode.TooManyRequests) {
       // Pause list operations for 2 hours to avoid repeated 429 responses

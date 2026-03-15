@@ -42,6 +42,7 @@ export class DeviceErvFacade extends BaseDeviceFacade<typeof DeviceType.Erv> {
       .filter((item): item is { label: string; value: number } =>
         isRelevantVentilationMode(item.label),
       )
+
     return {
       ...options,
       labels: filtered.map(({ label }) => label),

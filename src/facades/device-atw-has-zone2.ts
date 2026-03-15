@@ -125,15 +125,17 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
       operationModeZone1?.value === undefined ?
         [operationModeZone2, operationModeZone1]
       : [operationModeZone1, operationModeZone2]
-    return primaryOperationMode?.value !== undefined && secondaryOperationMode ?
-        {
-          [primaryOperationMode.key]: primaryOperationMode.value,
-          [secondaryOperationMode.key]: this.#getSecondaryOperationMode(
-            secondaryOperationMode.key,
-            primaryOperationMode.value,
-            secondaryOperationMode.value,
-          ),
-        }
-      : null
+
+    if (primaryOperationMode?.value === undefined || !secondaryOperationMode) {
+      return null
+    }
+    return {
+      [primaryOperationMode.key]: primaryOperationMode.value,
+      [secondaryOperationMode.key]: this.#getSecondaryOperationMode(
+        secondaryOperationMode.key,
+        primaryOperationMode.value,
+        secondaryOperationMode.value,
+      ),
+    }
   }
 }
