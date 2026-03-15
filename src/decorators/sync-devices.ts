@@ -38,10 +38,8 @@ export const syncDevices =
   ): ((...args: unknown[]) => Promise<U>) =>
     async function newTarget(this: APIAdapter | Facade, ...args: unknown[]) {
       const data = await target.call(this, ...args)
-      if ('notifySync' in this) {
-        await this.notifySync({ type })
-      } else {
-        await this.onSync?.({ type })
-      }
+      await ('notifySync' in this ?
+        this.notifySync({ type })
+      : this.onSync?.({ type }))
       return data
     }

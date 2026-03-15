@@ -74,7 +74,9 @@ export interface DeviceFacade<T extends DeviceType>
   readonly temperatures: (query: ReportQuery) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
-  readonly getTiles: ((select: true | DeviceModel<T>) => Promise<TilesData<T>>) &
+  readonly getTiles: ((
+    select: true | DeviceModel<T>,
+  ) => Promise<TilesData<T>>) &
     ((select?: false) => Promise<TilesData<null>>)
 
   /** Fetch current device values from the API. */
@@ -125,7 +127,9 @@ export interface Facade extends Model {
   readonly setPower: (value?: boolean) => Promise<boolean>
 
   /** Fetch WiFi signal strength report as line chart data. */
-  readonly getSignalStrength: (hour?: HourNumbers) => Promise<ReportChartLineOptions>
+  readonly getSignalStrength: (
+    hour?: HourNumbers,
+  ) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((select?: false) => Promise<TilesData<null>>) &

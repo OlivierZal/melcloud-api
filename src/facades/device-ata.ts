@@ -30,7 +30,10 @@ export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
   protected override prepareUpdateData(
     data: Partial<UpdateDeviceDataAta>,
   ): Required<UpdateDeviceDataAta> {
-    return super.prepareUpdateData({ ...data, ...this.#handleTargetTemperature(data) })
+    return super.prepareUpdateData({
+      ...data,
+      ...this.#handleTargetTemperature(data),
+    })
   }
 
   #getTargetTemperatureRange(operationMode = this.setData.OperationMode): {

@@ -21,18 +21,18 @@ import { BaseDeviceFacade } from './base-device.ts'
 
 const DEFAULT_TEMPERATURE = 0
 
-const COOL_FLOW_TEMPERATURE_RANGE = { max: 25, min: 5 } as const
-const HEAT_FLOW_TEMPERATURE_RANGE = { max: 60, min: 25 } as const
-const ROOM_TEMPERATURE_RANGE = { max: 30, min: 10 } as const
+const coolFlowTemperatureRange = { max: 25, min: 5 } as const
+const heatFlowTemperatureRange = { max: 60, min: 25 } as const
+const roomTemperatureRange = { max: 30, min: 10 } as const
 
-const HOT_WATER_STATE_MAP: Partial<
+const hotWaterStateMap: Partial<
   Record<OperationModeState, OperationModeStateHotWater>
 > = {
   [OperationModeState.dhw]: OperationModeStateHotWater.dhw,
   [OperationModeState.legionella]: OperationModeStateHotWater.legionella,
 }
 
-const ZONE_STATE_MAP: Partial<
+const zoneStateMap: Partial<
   Record<OperationModeState, OperationModeStateZone>
 > = {
   [OperationModeState.cooling]: OperationModeStateZone.cooling,
@@ -49,7 +49,7 @@ const getHotWaterOperationalState = (
   if (data.ProhibitHotWater) {
     return OperationModeStateHotWater.prohibited
   }
-  return HOT_WATER_STATE_MAP[data.OperationMode] ?? OperationModeStateHotWater.idle
+  return hotWaterStateMap[data.OperationMode] ?? OperationModeStateHotWater.idle
 }
 
 const getZoneOperationalState = (
@@ -64,7 +64,7 @@ const getZoneOperationalState = (
   }
   const { OperationMode: operationMode } = data
   if (!data[`Idle${zone}`]) {
-    return ZONE_STATE_MAP[operationMode] ?? OperationModeStateZone.idle
+    return zoneStateMap[operationMode] ?? OperationModeStateZone.idle
   }
   return OperationModeStateZone.idle
 }
@@ -139,16 +139,16 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
     { max: number; min: number },
   ][] {
     return [
-      ['SetCoolFlowTemperatureZone1', COOL_FLOW_TEMPERATURE_RANGE],
-      ['SetCoolFlowTemperatureZone2', COOL_FLOW_TEMPERATURE_RANGE],
-      ['SetHeatFlowTemperatureZone1', HEAT_FLOW_TEMPERATURE_RANGE],
-      ['SetHeatFlowTemperatureZone2', HEAT_FLOW_TEMPERATURE_RANGE],
+      ['SetCoolFlowTemperatureZone1', coolFlowTemperatureRange],
+      ['SetCoolFlowTemperatureZone2', coolFlowTemperatureRange],
+      ['SetHeatFlowTemperatureZone1', heatFlowTemperatureRange],
+      ['SetHeatFlowTemperatureZone2', heatFlowTemperatureRange],
       [
         'SetTankWaterTemperature',
         { max: this.data.MaxTankTemperature, min: 40 },
       ],
-      ['SetTemperatureZone1', ROOM_TEMPERATURE_RANGE],
-      ['SetTemperatureZone2', ROOM_TEMPERATURE_RANGE],
+      ['SetTemperatureZone1', roomTemperatureRange],
+      ['SetTemperatureZone2', roomTemperatureRange],
     ]
   }
 
@@ -172,7 +172,10 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
   protected override prepareUpdateData(
     data: Partial<UpdateDeviceDataAtw>,
   ): Required<UpdateDeviceDataAtw> {
-    return super.prepareUpdateData({ ...data, ...this.#handleTargetTemperatures(data) })
+    return super.prepareUpdateData({
+      ...data,
+      ...this.#handleTargetTemperatures(data),
+    })
   }
 
   protected getZoneState(zone: ZoneAtw): ZoneState {

@@ -142,6 +142,15 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   @syncDevices()
   @updateDevice
+  public async getValues(): Promise<GetDeviceData<T>> {
+    const { data } = await this.api.values<T>({
+      params: { buildingId: this.device.buildingId, id: this.id },
+    })
+    return data
+  }
+
+  @syncDevices()
+  @updateDevice
   public async setValues(
     data: Partial<UpdateDeviceData<T>>,
   ): Promise<SetDeviceData<T>> {
@@ -167,15 +176,6 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       type: this.type,
     })
     return finalData
-  }
-
-  @syncDevices()
-  @updateDevice
-  public async getValues(): Promise<GetDeviceData<T>> {
-    const { data } = await this.api.values<T>({
-      params: { buildingId: this.device.buildingId, id: this.id },
-    })
-    return data
   }
 
   public async energy(query?: ReportQuery): Promise<EnergyData<T>> {

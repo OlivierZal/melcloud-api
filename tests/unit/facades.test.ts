@@ -341,7 +341,9 @@ describe('buildingFacade group', () => {
     const instance = registry.buildings.getById(1)!
     const facade = new BuildingFacade(api, registry, instance)
 
-    await expect(facade.getGroup()).rejects.toThrow('No air-to-air device found')
+    await expect(facade.getGroup()).rejects.toThrow(
+      'No air-to-air device found',
+    )
   })
 
   it('throws when setGroup API fails', async () => {
@@ -581,7 +583,9 @@ describe('baseFacade instance error', () => {
     const instance = registry.areas.getById(200)!
     const facade = new AreaFacade(api, registry, instance)
 
-    await expect(facade.getFrostProtection()).rejects.toThrow('No device id found')
+    await expect(facade.getFrostProtection()).rejects.toThrow(
+      'No device id found',
+    )
   })
 })
 

@@ -34,7 +34,7 @@ import type {
 // Minimum 2°C gap between min and max to prevent invalid frost protection ranges
 const TEMPERATURE_GAP = 2
 
-const TEMPERATURE_RANGE = { max: 16, min: 4 } as const
+const temperatureRange = { max: 16, min: 4 }
 
 const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
   date ?
@@ -114,10 +114,6 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   public abstract get devices(): DeviceModelAny[]
 
-  public async notifySync({ type }: { type?: DeviceType } = {}): Promise<void> {
-    await this.api.onSync?.({ ids: this.#deviceIds, type })
-  }
-
   @syncDevices()
   @updateDevices()
   public async setPower(value = true): Promise<boolean> {
@@ -129,6 +125,10 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   public async getErrors(query: ErrorLogQuery): Promise<ErrorLog> {
     return this.api.errorLog(query, this.#deviceIds)
+  }
+
+  public async notifySync({ type }: { type?: DeviceType } = {}): Promise<void> {
+    await this.api.onSync?.({ ids: this.#deviceIds, type })
   }
 
   /*
@@ -162,6 +162,37 @@ export abstract class BaseFacade<T extends Model> implements Facade {
       : this.#getDevicesHolidayMode()
   }
 
+  public async getSignalStrength(
+    hour = DateTime.now().hour,
+  ): Promise<ReportChartLineOptions> {
+    const { data } = await this.api.signal({
+      postData: { devices: this.#deviceIds, hour },
+    })
+    return getChartLineOptions(data, this.#deviceNames, 'dBm')
+  }
+
+  public async getTiles(select?: false): Promise<TilesData<null>>
+  public async getTiles<U extends DeviceType>(
+    select: DeviceModel<U>,
+  ): Promise<TilesData<U>>
+  public async getTiles<U extends DeviceType>(
+    select: false | DeviceModel<U> = false,
+  ): Promise<TilesData<U | null>> {
+    const postData = { DeviceIDs: this.#deviceIds }
+    if (select === false || !this.#deviceIds.includes(select.id)) {
+      const { data } = await this.api.tiles({ postData })
+      return data
+    }
+    const { data } = await this.api.tiles({
+      postData: {
+        ...postData,
+        SelectedBuilding: select.buildingId,
+        SelectedDevice: select.id,
+      },
+    })
+    return data as TilesData<U>
+  }
+
   public async setFrostProtection({
     enabled,
     max,
@@ -172,12 +203,12 @@ export abstract class BaseFacade<T extends Model> implements Facade {
      * in case the adjustment pushed max out of bounds
      */
     const newMin = Math.max(
-      TEMPERATURE_RANGE.min,
-      Math.min(min, TEMPERATURE_RANGE.max - TEMPERATURE_GAP),
+      temperatureRange.min,
+      Math.min(min, temperatureRange.max - TEMPERATURE_GAP),
     )
     let newMax = Math.min(
-      TEMPERATURE_RANGE.max,
-      Math.max(max, TEMPERATURE_RANGE.min + TEMPERATURE_GAP),
+      temperatureRange.max,
+      Math.max(max, temperatureRange.min + TEMPERATURE_GAP),
     )
     if (newMax - newMin < TEMPERATURE_GAP) {
       newMax = newMin + TEMPERATURE_GAP
@@ -208,37 +239,6 @@ export abstract class BaseFacade<T extends Model> implements Facade {
       },
     })
     return data
-  }
-
-  public async getSignalStrength(
-    hour = DateTime.now().hour,
-  ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.signal({
-      postData: { devices: this.#deviceIds, hour },
-    })
-    return getChartLineOptions(data, this.#deviceNames, 'dBm')
-  }
-
-  public async getTiles(select?: false): Promise<TilesData<null>>
-  public async getTiles<U extends DeviceType>(
-    select: DeviceModel<U>,
-  ): Promise<TilesData<U>>
-  public async getTiles<U extends DeviceType>(
-    select: false | DeviceModel<U> = false,
-  ): Promise<TilesData<U | null>> {
-    const postData = { DeviceIDs: this.#deviceIds }
-    if (select === false || !this.#deviceIds.includes(select.id)) {
-      const { data } = await this.api.tiles({ postData })
-      return data
-    }
-    const { data } = await this.api.tiles({
-      postData: {
-        ...postData,
-        SelectedBuilding: select.buildingId,
-        SelectedDevice: select.id,
-      },
-    })
-    return data as TilesData<U>
   }
 
   async #getBaseFrostProtection(
