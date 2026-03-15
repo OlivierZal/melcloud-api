@@ -1,6 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import type { APIAdapter } from '../../src/services/index.ts'
 import type { ListDeviceDataAtw } from '../../src/types/index.ts'
 
 import {
@@ -14,21 +13,16 @@ import { DeviceAtwHasZone2Facade } from '../../src/facades/device-atw-has-zone2.
 import { DeviceAtwFacade } from '../../src/facades/device-atw.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
 import { atwDevice, atwDeviceData, buildingData } from '../fixtures.ts'
-import { assertDeviceType, mock } from '../helpers.ts'
+import { assertDeviceType, createMockApi } from '../helpers.ts'
 
 const createAtwData = (
   overrides: Partial<ListDeviceDataAtw> = {},
 ): ListDeviceDataAtw =>
   atwDeviceData({ OperationMode: OperationModeState.idle, ...overrides })
 
-const mockApi = mock<APIAdapter>({
-  fetch: vi.fn().mockResolvedValue([]),
-  onSync: vi.fn().mockImplementation(async () => {}),
-})
+const mockApi = createMockApi()
 
-const createFacade = (
-  data: ListDeviceDataAtw = createAtwData(),
-): DeviceAtwFacade => {
+const createAtwRegistry = (data: ListDeviceDataAtw): ModelRegistry => {
   const registry = new ModelRegistry()
   registry.syncBuildings([
     buildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
@@ -36,6 +30,13 @@ const createFacade = (
   registry.syncDevices([
     atwDevice({ AreaID: null, Device: data, FloorID: null }),
   ])
+  return registry
+}
+
+const createFacade = (
+  data: ListDeviceDataAtw = createAtwData(),
+): DeviceAtwFacade => {
+  const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
   assertDeviceType(device, DeviceType.Atw)
   return new DeviceAtwFacade(mockApi, registry, device)
@@ -44,13 +45,7 @@ const createFacade = (
 const createZone2Facade = (
   data: ListDeviceDataAtw = createAtwData({ HasZone2: true }),
 ): DeviceAtwHasZone2Facade => {
-  const registry = new ModelRegistry()
-  registry.syncBuildings([
-    buildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
-  ])
-  registry.syncDevices([
-    atwDevice({ AreaID: null, Device: data, FloorID: null }),
-  ])
+  const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
   assertDeviceType(device, DeviceType.Atw)
   return new DeviceAtwHasZone2Facade(mockApi, registry, device)

@@ -1,5 +1,8 @@
+import { vi } from 'vitest'
+
 import type { DeviceType } from '../src/constants.ts'
 import type { DeviceModelAny } from '../src/models/interfaces.ts'
+import type { APIAdapter } from '../src/services/index.ts'
 
 /**
  * Create a mock object typed as `T` from a partial value.
@@ -10,6 +13,35 @@ export function mock<T extends object>(value?: Partial<T>): T
 export function mock(value: unknown = {}): unknown {
   return value
 }
+
+export const createMockApi = (
+  overrides: Partial<APIAdapter> = {},
+): APIAdapter =>
+  mock<APIAdapter>({
+    energy: vi.fn(),
+    errorLog: vi.fn(),
+    errors: vi.fn(),
+    fetch: vi.fn().mockResolvedValue([]),
+    frostProtection: vi.fn().mockResolvedValue({ data: { FPEnabled: false } }),
+    group: vi.fn(),
+    holidayMode: vi.fn().mockResolvedValue({ data: { HMEnabled: false } }),
+    hourlyTemperatures: vi.fn(),
+    internalTemperatures: vi.fn(),
+    onSync: vi.fn().mockImplementation(async () => {}),
+    operationModes: vi.fn(),
+    setFrostProtection: vi.fn().mockResolvedValue({ data: { Success: true } }),
+    setGroup: vi.fn(),
+    setHolidayMode: vi.fn().mockResolvedValue({ data: { Success: true } }),
+    setPower: vi.fn().mockResolvedValue({ data: true }),
+    setValues: vi.fn(),
+    signal: vi.fn().mockResolvedValue({
+      data: { Data: [[{ Data: [-60], Name: 'Device' }]], Labels: ['12:00'] },
+    }),
+    temperatures: vi.fn(),
+    tiles: vi.fn().mockResolvedValue({ data: {} }),
+    values: vi.fn(),
+    ...overrides,
+  })
 
 /**
  * Narrow a `DeviceModelAny` to a specific `DeviceModel<T>` via assertion.

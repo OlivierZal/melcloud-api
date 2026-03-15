@@ -1,6 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
-
-import type { APIAdapter } from '../../src/services/index.ts'
+import { describe, expect, it } from 'vitest'
 
 import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
@@ -16,7 +14,7 @@ import {
   ervDeviceData,
   floorData,
 } from '../fixtures.ts'
-import { mock } from '../helpers.ts'
+import { createMockApi } from '../helpers.ts'
 
 const ataData = ataDeviceData({
   NumberOfFanSpeeds: 5,
@@ -100,32 +98,6 @@ const devices = [
     FloorID: null,
   }),
 ]
-
-const createMockApi = (): APIAdapter =>
-  mock<APIAdapter>({
-    energy: vi.fn(),
-    errorLog: vi.fn(),
-    errors: vi.fn(),
-    fetch: vi.fn().mockResolvedValue([]),
-    frostProtection: vi.fn().mockResolvedValue({ data: { FPEnabled: false } }),
-    group: vi.fn(),
-    holidayMode: vi.fn().mockResolvedValue({ data: { HMEnabled: false } }),
-    hourlyTemperatures: vi.fn(),
-    internalTemperatures: vi.fn(),
-    onSync: vi.fn().mockImplementation(async () => {}),
-    operationModes: vi.fn(),
-    setFrostProtection: vi.fn().mockResolvedValue({ data: { Success: true } }),
-    setGroup: vi.fn(),
-    setHolidayMode: vi.fn().mockResolvedValue({ data: { Success: true } }),
-    setPower: vi.fn().mockResolvedValue({ data: true }),
-    setValues: vi.fn(),
-    signal: vi.fn().mockResolvedValue({
-      data: { Data: [[{ Data: [-60], Name: 'Device' }]], Labels: ['12:00'] },
-    }),
-    temperatures: vi.fn(),
-    tiles: vi.fn().mockResolvedValue({ data: {} }),
-    values: vi.fn(),
-  })
 
 const syncAll = (registry: ModelRegistry): void => {
   registry.syncBuildings(buildings)
