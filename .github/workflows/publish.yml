@@ -19,13 +19,8 @@ jobs:
       - env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          if [[ "$VERSION" == *-rc.* ]]; then
-            npm publish --tag rc
-          elif [[ "$VERSION" == *-alpha.* ]]; then
-            npm publish --tag alpha
-          elif [[ "$VERSION" == *-beta.* ]]; then
-            npm publish --tag beta
+          if [ "${{ github.event.release.prerelease }}" = "true" ]; then
+            npm publish --tag next
           else
             npm publish
           fi
