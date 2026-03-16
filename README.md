@@ -1,5 +1,3 @@
-# MELCloud API for Node.js
-
 A typed Node.js client for the [MELCloud](https://app.melcloud.com/) API, providing access to Mitsubishi Electric air-to-air (Ata), air-to-water (Atw) and energy recovery ventilation (Erv) devices.
 
 ## Installation
@@ -57,6 +55,10 @@ await facade.setValues({ Power: true })
 | `logger` | Custom logger |
 | `onSync` | Callback invoked after each device sync |
 | `shouldVerifySSL` | Whether to verify SSL certificates |
+
+## API documentation
+
+Full generated API docs are available at <https://olivierzal.github.io/melcloud-api/>.
 
 ## License
 
