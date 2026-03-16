@@ -535,21 +535,8 @@ const config = defineConfig([
       ],
     },
   },
-  {
-    extends: [
-      packageJsonConfigs['recommended-publishable'],
-      packageJsonConfigs.stylistic,
-    ],
-    files: ['package.json'],
-    rules: {
-      'package-json/require-author': 'error',
-      'package-json/require-bugs': 'error',
-      'package-json/require-homepage': 'error',
-      'package-json/require-keywords': 'error',
-      'package-json/require-scripts': 'error',
-      'package-json/require-types': 'error',
-    },
-  },
+  packageJsonConfigs.recommended,
+  packageJsonConfigs.stylistic,
 ])
 
 export default config
