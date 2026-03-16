@@ -18,7 +18,12 @@ jobs:
       - run: npm run build
       - env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish
+        run: |
+          if [ "${{ github.event.release.prerelease }}" = "true" ]; then
+            npm publish --tag next
+          else
+            npm publish
+          fi
 name: Publish package to GitHub Packages
 on:
   release:
