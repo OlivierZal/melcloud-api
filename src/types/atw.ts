@@ -106,6 +106,8 @@ export interface HotWaterState {
 }
 
 /** ATW zone state derived from device data. */
+export type ZoneAtw = 'Zone1' | 'Zone2'
+
 export interface ZoneState {
   readonly isIdle: boolean
   readonly isInCoolMode: boolean
@@ -117,5 +119,3 @@ export interface ZoneState {
   readonly roomTemperature: number
   readonly setTemperature: number
 }
-
-export type ZoneAtw = 'Zone1' | 'Zone2'

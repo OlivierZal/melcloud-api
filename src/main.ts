@@ -92,10 +92,11 @@ export {
 } from './decorators/index.ts'
 export {
   type BuildingFacade,
+  type DeviceAtwFacade,
+  type DeviceAtwHasZone2Facade,
   type DeviceFacade,
   type DeviceFacadeAny,
   type Facade,
-  type FacadeManagerContract,
   type FrostProtectionQuery,
   type HolidayModeQuery,
   type ReportChartLineOptions,

@@ -13,7 +13,7 @@ import {
 } from '../../src/constants.ts'
 import {
   AreaFacade,
-  BuildingFacadeImpl as BuildingFacade,
+  BuildingFacade,
   DeviceAtaFacade,
   DeviceAtwFacade,
   DeviceAtwHasZone2Facade,

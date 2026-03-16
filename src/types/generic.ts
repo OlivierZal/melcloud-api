@@ -29,6 +29,8 @@ export interface AreaData<T extends number | null> extends FloorData {
   readonly FloorId: T
 }
 
+export type AreaDataAny = AreaData<null> | AreaData<number>
+
 export interface AreaZone extends BaseZone {
   readonly devices: readonly DeviceZone[]
   readonly model: 'areas'
@@ -68,9 +70,23 @@ export interface BuildingZone extends BaseZone {
   readonly model: 'buildings'
 }
 
+export type DateTimeComponents = {
+  readonly Day: number
+  readonly Hour: number
+  readonly Minute: number
+  readonly Month: number
+  readonly Second: number
+  readonly Year: number
+} | null
+
 export interface DeviceZone extends BaseZone {
   readonly model: 'devices'
 }
+
+export type EnergyData<T extends DeviceType> =
+  T extends typeof DeviceType.Ata ? EnergyDataAta
+  : T extends typeof DeviceType.Atw ? EnergyDataAtw
+  : never
 
 export interface EnergyPostData {
   readonly DeviceID: number
@@ -130,6 +146,9 @@ export interface FrostProtectionPostData extends FrostProtectionLocation {
   readonly MinimumTemperature: number
 }
 
+export type GetDeviceData<T extends DeviceType> = BaseGetDeviceData &
+  SetDeviceData<T>
+
 export interface GetDeviceDataParams {
   readonly buildingId: number
   readonly id: number
@@ -186,6 +205,22 @@ export interface ListDevice<T extends DeviceType> extends BaseListDevice<T> {
   readonly Device: ListDeviceData<T>
 }
 
+export type ListDeviceAny =
+  | ListDevice<typeof DeviceType.Ata>
+  | ListDevice<typeof DeviceType.Atw>
+  | ListDevice<typeof DeviceType.Erv>
+
+export type ListDeviceData<T extends DeviceType> =
+  T extends typeof DeviceType.Ata ? ListDeviceDataAta
+  : T extends typeof DeviceType.Atw ? ListDeviceDataAtw
+  : T extends typeof DeviceType.Erv ? ListDeviceDataErv
+  : never
+
+export type ListDeviceDataAny =
+  | ListDeviceData<typeof DeviceType.Ata>
+  | ListDeviceData<typeof DeviceType.Atw>
+  | ListDeviceData<typeof DeviceType.Erv>
+
 export interface LoginCredentials {
   readonly password: string
   readonly username: string
@@ -206,6 +241,11 @@ export interface LoginPostData {
   readonly Persist?: boolean
 }
 
+export type OperationModeLogData = {
+  Key: string
+  Value: number
+}[]
+
 export interface ReportData {
   readonly Data: readonly (readonly (number | null)[])[]
   readonly FromDate: string
@@ -222,6 +262,15 @@ export interface ReportPostData {
   readonly ToDate: string
   readonly Duration?: number
 }
+
+export type SetDeviceData<T extends DeviceType> =
+  T extends typeof DeviceType.Ata ? SetDeviceDataAta
+  : T extends typeof DeviceType.Atw ? SetDeviceDataAtw
+  : T extends typeof DeviceType.Erv ? SetDeviceDataErv
+  : never
+
+export type SetDevicePostData<T extends DeviceType> = BaseDevicePostData &
+  Required<UpdateDeviceData<T>>
 
 export interface SetPowerPostData {
   readonly DeviceIds: number | readonly number[]
@@ -254,58 +303,6 @@ export interface TilesData<T extends DeviceType | null> {
   }[]
 }
 
-export interface ZoneSettings
-  extends FrostProtectionData, Omit<HolidayModeData, 'EndDate' | 'StartDate'> {}
-
-export type AreaDataAny = AreaData<null> | AreaData<number>
-
-export type DateTimeComponents = {
-  readonly Day: number
-  readonly Hour: number
-  readonly Minute: number
-  readonly Month: number
-  readonly Second: number
-  readonly Year: number
-} | null
-
-export type EnergyData<T extends DeviceType> =
-  T extends typeof DeviceType.Ata ? EnergyDataAta
-  : T extends typeof DeviceType.Atw ? EnergyDataAtw
-  : never
-
-export type GetDeviceData<T extends DeviceType> = BaseGetDeviceData &
-  SetDeviceData<T>
-
-export type ListDeviceAny =
-  | ListDevice<typeof DeviceType.Ata>
-  | ListDevice<typeof DeviceType.Atw>
-  | ListDevice<typeof DeviceType.Erv>
-
-export type ListDeviceData<T extends DeviceType> =
-  T extends typeof DeviceType.Ata ? ListDeviceDataAta
-  : T extends typeof DeviceType.Atw ? ListDeviceDataAtw
-  : T extends typeof DeviceType.Erv ? ListDeviceDataErv
-  : never
-
-export type ListDeviceDataAny =
-  | ListDeviceData<typeof DeviceType.Ata>
-  | ListDeviceData<typeof DeviceType.Atw>
-  | ListDeviceData<typeof DeviceType.Erv>
-
-export type OperationModeLogData = {
-  Key: string
-  Value: number
-}[]
-
-export type SetDeviceData<T extends DeviceType> =
-  T extends typeof DeviceType.Ata ? SetDeviceDataAta
-  : T extends typeof DeviceType.Atw ? SetDeviceDataAtw
-  : T extends typeof DeviceType.Erv ? SetDeviceDataErv
-  : never
-
-export type SetDevicePostData<T extends DeviceType> = BaseDevicePostData &
-  Required<UpdateDeviceData<T>>
-
 export type TilesPostData<T extends DeviceType | null> = {
   readonly DeviceIDs: number | readonly number[]
 } & (T extends DeviceType ?
@@ -319,3 +316,6 @@ export type UpdateDeviceData<T extends DeviceType> =
   : never
 
 export type Zone = AreaZone | BuildingZone | DeviceZone | FloorZone
+
+export interface ZoneSettings
+  extends FrostProtectionData, Omit<HolidayModeData, 'EndDate' | 'StartDate'> {}

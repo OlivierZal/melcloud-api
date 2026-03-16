@@ -1,9 +1,7 @@
 export type {
-  BuildingFacade,
   DeviceFacade,
   DeviceFacadeAny,
   Facade,
-  FacadeManager as FacadeManagerContract,
   FrostProtectionQuery,
   HolidayModeQuery,
   ReportChartLineOptions,
@@ -13,7 +11,7 @@ export type {
 } from './interfaces.ts'
 
 export { AreaFacade } from './area.ts'
-export { BuildingFacade as BuildingFacadeImpl } from './building.ts'
+export { BuildingFacade } from './building.ts'
 export { DeviceAtaFacade } from './device-ata.ts'
 export { DeviceAtwHasZone2Facade } from './device-atw-has-zone2.ts'
 export { DeviceAtwFacade } from './device-atw.ts'

@@ -17,6 +17,7 @@ import type {
   GetDeviceData,
   GroupState,
   HolidayModeData,
+  HotWaterState,
   ListDeviceData,
   SetDeviceData,
   SuccessData,
@@ -24,6 +25,7 @@ import type {
   UpdateDeviceData,
   Zone,
   ZoneSettings,
+  ZoneState,
 } from '../types/index.ts'
 
 /** Parameters for configuring frost protection temperature bounds. */
@@ -51,6 +53,21 @@ export interface HolidayModeQuery {
 export interface BuildingFacade extends BaseBuildingModel, ZoneFacade {
   /** Fetch the latest building zone settings after syncing devices. */
   readonly fetch: () => Promise<ZoneSettings>
+}
+
+/** Facade for Air-to-Water (ATW) devices with hot water and zone state access. */
+export interface DeviceAtwFacade extends DeviceFacade<typeof DeviceType.Atw> {
+  /** Current hot water state. */
+  readonly hotWater: HotWaterState
+
+  /** Current zone 1 state. */
+  readonly zone1: ZoneState
+}
+
+/** Facade for ATW devices with two heating/cooling zones. */
+export interface DeviceAtwHasZone2Facade extends DeviceAtwFacade {
+  /** Current zone 2 state. */
+  readonly zone2: ZoneState
 }
 
 /** Facade for an individual MELCloud device with type-safe data access and control. */

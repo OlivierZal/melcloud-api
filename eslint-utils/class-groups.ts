@@ -1,8 +1,9 @@
 import { buildGroups } from './build-groups.ts'
 
 const modifiers = [
-  ['declare', 'override', ''],
+  ['declare', ''],
   ['static', '', 'abstract'],
+  ['override', ''],
   ['decorated', ''],
   ['', 'protected', 'private'],
   ['', 'optional'],
