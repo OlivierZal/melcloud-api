@@ -59,7 +59,7 @@ const config = defineConfig([
   },
   {
     ...jsdoc({ config: 'flat/recommended-tsdoc-error' }),
-    files: ['src/**/*.{ts,mts,js}'],
+    files: ['src/**/*.{ts,js}'],
   },
   {
     extends: [
@@ -71,7 +71,7 @@ const config = defineConfig([
       importXConfigs.typescript,
       prettier,
     ],
-    files: ['**/*.{ts,mts,js}'],
+    files: ['**/*.{ts,js}'],
     languageOptions: {
       ecmaVersion: 'latest',
       parserOptions: {
