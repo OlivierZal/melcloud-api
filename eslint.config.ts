@@ -479,7 +479,7 @@ const config = defineConfig([
   },
   {
     extends: [vitest.configs.all],
-    files: ['tests/**'],
+    files: ['tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
