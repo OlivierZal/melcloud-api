@@ -11,6 +11,7 @@ import {
   buildingData,
   floorData,
 } from '../fixtures.ts'
+import { defined } from '../helpers.ts'
 
 const buildings = [
   buildingData({
@@ -78,37 +79,46 @@ describe('getBuildings', () => {
     const result = createSyncedRegistry().getBuildings()
 
     expect(result).toHaveLength(2)
-    expect(result[0]!.name).toBe('Alpha')
-    expect(result[1]!.name).toBe('Bravo')
+    expect(defined(result[0]).name).toBe('Alpha')
+    expect(defined(result[1]).name).toBe('Bravo')
   })
 
   it('sets correct model and level for buildings', () => {
     const [alpha] = createSyncedRegistry().getBuildings()
 
-    expect(alpha!.model).toBe('buildings')
-    expect(alpha!.level).toBe(0)
+    expect(defined(alpha).model).toBe('buildings')
+    expect(defined(alpha).level).toBe(0)
   })
 
   it('includes floors, areas, and devices in hierarchy', () => {
     const bravo = createSyncedRegistry()
       .getBuildings()
-      .find(({ name }) => name === 'Bravo')!
+      .find(({ name }) => name === 'Bravo')
 
-    expect(bravo.floors).toHaveLength(1)
-    expect(bravo.floors[0]!.name).toBe('Ground floor')
-    expect(bravo.floors[0]!.areas).toHaveLength(1)
-    expect(bravo.floors[0]!.areas[0]!.name).toBe('Salon')
-    expect(bravo.floors[0]!.areas[0]!.devices).toHaveLength(1)
-    expect(bravo.floors[0]!.areas[0]!.devices[0]!.name).toBe('AC unit')
+    expect(bravo).toBeDefined()
+
+    const floor = defined(defined(bravo).floors[0])
+
+    expect(defined(bravo).floors).toHaveLength(1)
+    expect(floor.name).toBe('Ground floor')
+    expect(floor.areas).toHaveLength(1)
+
+    const area = defined(floor.areas[0])
+
+    expect(area.name).toBe('Salon')
+    expect(area.devices).toHaveLength(1)
+    expect(defined(area.devices[0]).name).toBe('AC unit')
   })
 
   it('puts building-level devices (no floor/area) directly on the building', () => {
-    const bravo = createSyncedRegistry()
-      .getBuildings()
-      .find(({ name }) => name === 'Bravo')!
+    const bravo = defined(
+      createSyncedRegistry()
+        .getBuildings()
+        .find(({ name }) => name === 'Bravo'),
+    )
 
     expect(bravo.devices).toHaveLength(1)
-    expect(bravo.devices[0]!.name).toBe('Heat pump')
+    expect(defined(bravo.devices[0]).name).toBe('Heat pump')
   })
 
   it('filters by device type', () => {
@@ -119,7 +129,7 @@ describe('getBuildings', () => {
 
     expect(ataBuildings).toHaveLength(2)
     expect(atwBuildings).toHaveLength(1)
-    expect(atwBuildings[0]!.name).toBe('Bravo')
+    expect(defined(atwBuildings[0]).name).toBe('Bravo')
   })
 
   it('excludes buildings with no matching devices', () => {
@@ -129,12 +139,14 @@ describe('getBuildings', () => {
   })
 
   it('sets correct levels for nested items', () => {
-    const bravo = createSyncedRegistry()
-      .getBuildings()
-      .find(({ name }) => name === 'Bravo')!
-    const floor = bravo.floors[0]!
-    const area = floor.areas[0]!
-    const device = area.devices[0]!
+    const bravo = defined(
+      createSyncedRegistry()
+        .getBuildings()
+        .find(({ name }) => name === 'Bravo'),
+    )
+    const floor = defined(bravo.floors[0])
+    const area = defined(floor.areas[0])
+    const device = defined(area.devices[0])
 
     expect(floor.level).toBe(1)
     expect(area.level).toBe(2)
@@ -142,11 +154,13 @@ describe('getBuildings', () => {
   })
 
   it('assigns level 1 to building-level devices', () => {
-    const bravo = createSyncedRegistry()
-      .getBuildings()
-      .find(({ name }) => name === 'Bravo')!
+    const bravo = defined(
+      createSyncedRegistry()
+        .getBuildings()
+        .find(({ name }) => name === 'Bravo'),
+    )
 
-    expect(bravo.devices[0]!.level).toBe(1)
+    expect(defined(bravo.devices[0]).level).toBe(1)
   })
 })
 

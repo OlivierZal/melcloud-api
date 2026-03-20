@@ -14,7 +14,7 @@ import {
   ervDeviceData,
   floorData,
 } from '../fixtures.ts'
-import { createMockApi } from '../helpers.ts'
+import { createMockApi, defined } from '../helpers.ts'
 
 const ataData = ataDeviceData({
   NumberOfFanSpeeds: 5,
@@ -146,15 +146,15 @@ describe('registry + facade manager integration', () => {
   it('creates facades for every model type via FacadeManager', () => {
     const { manager, registry } = createContext()
 
-    expect(manager.get(registry.buildings.getById(1)!)).toBeDefined()
-    expect(manager.get(registry.floors.getById(10)!)).toBeDefined()
-    expect(manager.get(registry.areas.getById(100)!)).toBeDefined()
-    expect(manager.get(registry.devices.getById(1001)!)).toBeDefined()
+    expect(manager.get(defined(registry.buildings.getById(1)))).toBeDefined()
+    expect(manager.get(defined(registry.floors.getById(10)))).toBeDefined()
+    expect(manager.get(defined(registry.areas.getById(100)))).toBeDefined()
+    expect(manager.get(defined(registry.devices.getById(1001)))).toBeDefined()
   })
 
   it('caches facades — same model instance returns same facade', () => {
     const { manager, registry } = createContext()
-    const building = registry.buildings.getById(1)!
+    const building = defined(registry.buildings.getById(1))
 
     expect(manager.get(building)).toBe(manager.get(building))
   })
@@ -162,8 +162,8 @@ describe('registry + facade manager integration', () => {
   it('building facade lists all devices belonging to the building', () => {
     const { manager, registry } = createContext()
 
-    const facade1 = manager.get(registry.buildings.getById(1)!)
-    const facade2 = manager.get(registry.buildings.getById(2)!)
+    const facade1 = manager.get(defined(registry.buildings.getById(1)))
+    const facade2 = manager.get(defined(registry.buildings.getById(2)))
 
     expect(facade1.devices).toHaveLength(3)
     expect(facade2.devices).toHaveLength(1)
@@ -174,7 +174,7 @@ describe('registry + facade manager integration', () => {
   it('building facade delegates setPower to API with correct device IDs', async () => {
     const { api, manager, registry } = createContext()
 
-    const facade = manager.get(registry.buildings.getById(1)!)
+    const facade = manager.get(defined(registry.buildings.getById(1)))
     await facade.setPower(false)
 
     expect(api.setPower).toHaveBeenCalledWith({
@@ -188,7 +188,7 @@ describe('registry + facade manager integration', () => {
   it('re-sync updates models and facades reflect new data', () => {
     const { manager, registry } = createContext()
 
-    const facade = manager.get(registry.buildings.getById(2)!)
+    const facade = manager.get(defined(registry.buildings.getById(2)))
 
     expect(facade.devices).toHaveLength(1)
 
@@ -210,34 +210,34 @@ describe('registry + facade manager integration', () => {
   it('floor facade resolves devices on that floor only', () => {
     const { manager, registry } = createContext()
 
-    const groundFacade = manager.get(registry.floors.getById(10)!)
-    const firstFacade = manager.get(registry.floors.getById(11)!)
+    const groundFacade = manager.get(defined(registry.floors.getById(10)))
+    const firstFacade = manager.get(defined(registry.floors.getById(11)))
 
     expect(groundFacade.devices).toHaveLength(2)
     expect(firstFacade.devices).toHaveLength(1)
-    expect(firstFacade.devices[0]!.name).toBe('Bedroom ERV')
+    expect(defined(firstFacade.devices[0]).name).toBe('Bedroom ERV')
   })
 
   it('area facade resolves devices in that area only', () => {
     const { manager, registry } = createContext()
 
-    const facade = manager.get(registry.areas.getById(100)!)
+    const facade = manager.get(defined(registry.areas.getById(100)))
 
     expect(facade.devices).toHaveLength(1)
-    expect(facade.devices[0]!.name).toBe('Living room AC')
+    expect(defined(facade.devices[0]).name).toBe('Living room AC')
   })
 
   it('handles buildings with no floors or areas', () => {
     const registry = new ModelRegistry()
-    registry.syncBuildings([buildings[1]!])
+    registry.syncBuildings([defined(buildings[1])])
     registry.syncFloors([])
     registry.syncAreas([
       areaData({ BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' }),
     ])
-    registry.syncDevices([devices[3]!])
+    registry.syncDevices([defined(devices[3])])
 
     const manager = new FacadeManager(createMockApi(), registry)
-    const facade = manager.get(registry.buildings.getById(2)!)
+    const facade = manager.get(defined(registry.buildings.getById(2)))
 
     expect(facade.devices).toHaveLength(1)
     expect(registry.getFloorsByBuildingId(2)).toHaveLength(0)

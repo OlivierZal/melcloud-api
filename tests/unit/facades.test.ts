@@ -34,7 +34,7 @@ import {
   holidayModeResponse,
   reportData,
 } from '../fixtures.ts'
-import { assertDeviceType, cast, mock } from '../helpers.ts'
+import { assertDeviceType, cast, defined, mock } from '../helpers.ts'
 
 type DeviceModelAta = DeviceModel<typeof DeviceType.Ata>
 
@@ -120,7 +120,7 @@ const createBuildingFacade = (
 ): { api: APIAdapter; facade: BuildingFacade; registry: ModelRegistry } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
-  const instance = registry.buildings.getById(1)!
+  const instance = defined(registry.buildings.getById(1))
   return { api, facade: new BuildingFacade(api, registry, instance), registry }
 }
 
@@ -129,7 +129,7 @@ const createFloorFacade = (
 ): { api: APIAdapter; facade: FloorFacade; registry: ModelRegistry } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
-  const instance = registry.floors.getById(10)!
+  const instance = defined(registry.floors.getById(10))
   return { api, facade: new FloorFacade(api, registry, instance), registry }
 }
 
@@ -138,7 +138,7 @@ const createAreaFacade = (
 ): { api: APIAdapter; facade: AreaFacade; registry: ModelRegistry } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
-  const instance = registry.areas.getById(100)!
+  const instance = defined(registry.areas.getById(100))
   return { api, facade: new AreaFacade(api, registry, instance), registry }
 }
 
@@ -147,7 +147,7 @@ const createAtaFacade = (
 ): { api: APIAdapter; facade: DeviceAtaFacade; registry: ModelRegistry } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
-  const instance = registry.devices.getById(1000)!
+  const instance = defined(registry.devices.getById(1000))
   assertDeviceType(instance, DeviceType.Ata)
   return { api, facade: new DeviceAtaFacade(api, registry, instance), registry }
 }
@@ -157,7 +157,7 @@ const createAtwFacade = (
 ): { api: APIAdapter; facade: DeviceAtwFacade; registry: ModelRegistry } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
-  const instance = registry.devices.getById(1001)!
+  const instance = defined(registry.devices.getById(1001))
   assertDeviceType(instance, DeviceType.Atw)
   return { api, facade: new DeviceAtwFacade(api, registry, instance), registry }
 }
@@ -167,7 +167,7 @@ const createErvFacade = (
 ): { api: APIAdapter; facade: DeviceErvFacade; registry: ModelRegistry } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
-  const instance = registry.devices.getById(1002)!
+  const instance = defined(registry.devices.getById(1002))
   assertDeviceType(instance, DeviceType.Erv)
   return { api, facade: new DeviceErvFacade(api, registry, instance), registry }
 }
@@ -216,7 +216,7 @@ const createZone2Facade = (
     }),
   ])
   const api = createMockApi(apiOverrides)
-  const instance = registry.devices.getById(1001)!
+  const instance = defined(registry.devices.getById(1001))
   assertDeviceType(instance, DeviceType.Atw)
   return {
     api,
@@ -278,7 +278,7 @@ describe('buildingFacade', () => {
 
   it('calls getTiles with device selection', async () => {
     const { facade, registry } = createBuildingFacade()
-    const device = registry.devices.getById(1000)!
+    const device = defined(registry.devices.getById(1000))
     assertDeviceType(device, DeviceType.Ata)
     const result = await facade.getTiles(device)
 
@@ -327,9 +327,9 @@ describe('buildingFacade frostProtection', () => {
 
     expect(call).toBeDefined()
 
-    expect(call!.postData.MinimumTemperature).toBeGreaterThanOrEqual(4)
-    expect(call!.postData.MaximumTemperature).toBeGreaterThanOrEqual(
-      call!.postData.MinimumTemperature + 2,
+    expect(defined(call).postData.MinimumTemperature).toBeGreaterThanOrEqual(4)
+    expect(defined(call).postData.MaximumTemperature).toBeGreaterThanOrEqual(
+      defined(call).postData.MinimumTemperature + 2,
     )
   })
 
@@ -345,7 +345,8 @@ describe('buildingFacade frostProtection', () => {
     expect(call).toBeDefined()
 
     expect(
-      call!.postData.MaximumTemperature - call!.postData.MinimumTemperature,
+      defined(call).postData.MaximumTemperature -
+        defined(call).postData.MinimumTemperature,
     ).toBeGreaterThanOrEqual(2)
   })
 })
@@ -377,7 +378,7 @@ describe('buildingFacade holidayMode', () => {
 
     expect(call).toBeDefined()
 
-    expect(call!.postData.Enabled).toBe(false)
+    expect(defined(call).postData.Enabled).toBe(false)
   })
 })
 
@@ -547,7 +548,7 @@ describe('baseFacade setFrostProtection with device fallback', () => {
 
     expect(call).toBeDefined()
 
-    expect(call!.postData).toHaveProperty('DeviceIds')
+    expect(defined(call).postData).toHaveProperty('DeviceIds')
   })
 })
 
@@ -565,7 +566,7 @@ describe('baseFacade setHolidayMode with device fallback', () => {
 
     expect(call).toBeDefined()
 
-    expect(call!.postData.HMTimeZones[0]).toHaveProperty('Devices')
+    expect(defined(call).postData.HMTimeZones[0]).toHaveProperty('Devices')
   })
 })
 
@@ -573,7 +574,7 @@ describe('baseDeviceFacade device type mismatch', () => {
   it('throws when device type does not match facade type', () => {
     const registry = createRegistry()
     const api = createMockApi()
-    const instance = registry.devices.getById(1001)!
+    const instance = defined(registry.devices.getById(1001))
     assertDeviceType(instance, DeviceType.Atw)
     const facade = new DeviceAtaFacade(api, registry, cast(instance))
 
@@ -596,7 +597,7 @@ describe('baseFacade instance error', () => {
     registry.syncAreas([
       { BuildingId: 1, FloorId: null, ID: 200, Name: 'Empty Area' },
     ])
-    const instance = registry.areas.getById(200)!
+    const instance = defined(registry.areas.getById(200))
     const facade = new AreaFacade(api, registry, instance)
 
     await expect(facade.getFrostProtection()).rejects.toThrow(
@@ -617,7 +618,7 @@ describe('deviceAtaFacade', () => {
     const { facade } = createAtaFacade()
 
     expect(facade.devices).toHaveLength(1)
-    expect(facade.devices[0]!.id).toBe(1000)
+    expect(defined(facade.devices[0]).id).toBe(1000)
   })
 
   it('fetches device data', async () => {
@@ -722,7 +723,7 @@ describe('deviceAtaFacade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Ata>>(call!.postData)
+      mock<SetDevicePostData<typeof DeviceType.Ata>>(defined(call).postData)
         .SetTemperature,
     ).toBeGreaterThanOrEqual(10)
   })
@@ -738,7 +739,7 @@ describe('deviceAtaFacade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Ata>>(call!.postData)
+      mock<SetDevicePostData<typeof DeviceType.Ata>>(defined(call).postData)
         .SetTemperature,
     ).toBeLessThanOrEqual(31)
   })
@@ -769,7 +770,7 @@ describe('deviceAtwFacade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Atw>>(call!.postData)
+      mock<SetDevicePostData<typeof DeviceType.Atw>>(defined(call).postData)
         .SetTemperatureZone1,
     ).toBeGreaterThanOrEqual(10)
   })
@@ -794,7 +795,7 @@ describe('deviceAtwFacade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Atw>>(call!.postData)
+      mock<SetDevicePostData<typeof DeviceType.Atw>>(defined(call).postData)
         .SetTemperatureZone1,
     ).toBe(10)
   })
@@ -880,7 +881,7 @@ describe('deviceAtwHasZone2Facade', () => {
 describe('baseDeviceFacade getTiles', () => {
   it('calls super.getTiles when passed a different device instance', async () => {
     const { facade, registry } = createAtaFacade()
-    const otherDevice = registry.devices.getById(1001)!
+    const otherDevice = defined(registry.devices.getById(1001))
     assertDeviceType(otherDevice, DeviceType.Atw)
     const result = await facade.getTiles(
       mock<DeviceModelAta>(cast(otherDevice)),
@@ -951,7 +952,7 @@ describe('deviceAtwHasZone2Facade CanCool false', () => {
     expect(call).toBeDefined()
 
     const postData = mock<SetDevicePostData<typeof DeviceType.Atw>>(
-      call!.postData,
+      defined(call).postData,
     )
 
     expect(postData.OperationModeZone2).toBe(OperationModeZone.flow)

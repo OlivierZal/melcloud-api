@@ -255,12 +255,6 @@ const config = defineConfig([
           allowElseIf: false,
         },
       ],
-      'no-empty': [
-        'error',
-        {
-          allowEmptyCatch: true,
-        },
-      ],
       'no-ternary': 'off',
       'no-undefined': 'off',
       'one-var': ['error', 'never'],
@@ -482,7 +476,6 @@ const config = defineConfig([
     files: ['tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
-      '@typescript-eslint/no-non-null-assertion': 'off',
       'import-x/max-dependencies': [
         'error',
         { ignoreTypeImports: true, max: 15 },

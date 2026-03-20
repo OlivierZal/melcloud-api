@@ -16,7 +16,7 @@ import {
   ervDevice,
   floorData,
 } from '../fixtures.ts'
-import { cast, mock } from '../helpers.ts'
+import { cast, defined, mock } from '../helpers.ts'
 
 const allBuildings = [
   buildingData({ Name: 'Building 1' }),
@@ -120,7 +120,7 @@ describe('modelRegistry', () => {
       expect(registry.buildings.getById(1)?.name).toBe('Building 1')
 
       registry.syncBuildings([
-        { ...allBuildings[0]!, Name: 'Updated Building' },
+        { ...defined(allBuildings[0]), Name: 'Updated Building' },
       ])
 
       expect(registry.buildings.getById(1)?.name).toBe('Updated Building')
@@ -145,7 +145,7 @@ describe('modelRegistry', () => {
 
     it('getDevicesByType returns empty for absent type', () => {
       const registry = new ModelRegistry()
-      registry.syncDevices([allDevices[0]!])
+      registry.syncDevices([defined(allDevices[0])])
 
       expect(registry.getDevicesByType(DeviceType.Atw)).toHaveLength(0)
     })

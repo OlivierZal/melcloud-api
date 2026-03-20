@@ -4,7 +4,7 @@ import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/index.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
 import { areaData, ataDevice, buildingData, floorData } from '../fixtures.ts'
-import { createMockApi } from '../helpers.ts'
+import { createMockApi, defined } from '../helpers.ts'
 
 const createManagerWithRegistry = (): {
   manager: FacadeManager
@@ -29,7 +29,7 @@ describe('facadeManager', () => {
 
   it('returns a facade for a building instance', () => {
     const { manager, registry } = createManagerWithRegistry()
-    const building = registry.buildings.getById(1)!
+    const building = defined(registry.buildings.getById(1))
 
     expect(manager.get(building)).not.toBeNull()
     expect(manager.get(building).id).toBe(1)
@@ -38,7 +38,7 @@ describe('facadeManager', () => {
 
   it('returns a facade for a floor instance', () => {
     const { manager, registry } = createManagerWithRegistry()
-    const facade = manager.get(registry.floors.getById(10)!)
+    const facade = manager.get(defined(registry.floors.getById(10)))
 
     expect(facade).not.toBeNull()
     expect(facade.id).toBe(10)
@@ -46,7 +46,7 @@ describe('facadeManager', () => {
 
   it('returns a facade for an area instance', () => {
     const { manager, registry } = createManagerWithRegistry()
-    const facade = manager.get(registry.areas.getById(100)!)
+    const facade = manager.get(defined(registry.areas.getById(100)))
 
     expect(facade).not.toBeNull()
     expect(facade.id).toBe(100)
@@ -54,7 +54,7 @@ describe('facadeManager', () => {
 
   it('returns a facade for a device instance', () => {
     const { manager, registry } = createManagerWithRegistry()
-    const facade = manager.get(registry.devices.getById(1000)!)
+    const facade = manager.get(defined(registry.devices.getById(1000)))
 
     expect(facade).not.toBeNull()
     expect(facade.id).toBe(1000)
@@ -62,7 +62,7 @@ describe('facadeManager', () => {
 
   it('caches facades for the same instance', () => {
     const { manager, registry } = createManagerWithRegistry()
-    const building = registry.buildings.getById(1)!
+    const building = defined(registry.buildings.getById(1))
 
     expect(manager.get(building)).toBe(manager.get(building))
   })
@@ -72,7 +72,7 @@ describe('facadeManager', () => {
     const buildings = manager.getBuildings()
 
     expect(buildings).toHaveLength(1)
-    expect(buildings[0]!.name).toBe('Building')
+    expect(defined(buildings[0]).name).toBe('Building')
   })
 
   it('filters buildings by device type via getBuildings', () => {

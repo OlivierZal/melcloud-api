@@ -8,7 +8,7 @@ import type { BuildingWithStructure } from '../../src/types/index.ts'
 import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
-import { cast, mock } from '../helpers.ts'
+import { cast, defined, mock } from '../helpers.ts'
 
 const buildingResponse: BuildingWithStructure[] = [
   mock<BuildingWithStructure>({
@@ -106,20 +106,20 @@ describe('api lifecycle', () => {
     const device = api.registry.devices.getById(1001)
 
     expect(device).toBeDefined()
-    expect(device!.name).toBe('AC unit')
-    expect(device!.type).toBe(DeviceType.Ata)
+    expect(defined(device).name).toBe('AC unit')
+    expect(defined(device).type).toBe(DeviceType.Ata)
   })
 
   it('facadeManager works with registry populated by API', async () => {
     const api = await melCloudApi.create({ autoSyncInterval: 0 })
     const manager = new FacadeManager(api, api.registry)
 
-    const building = api.registry.buildings.getById(1)!
+    const building = defined(api.registry.buildings.getById(1))
     const facade = manager.get(building)
 
     expect(facade.name).toBe('Home')
     expect(facade.devices).toHaveLength(1)
-    expect(facade.devices[0]!.name).toBe('AC unit')
+    expect(defined(facade.devices[0]).name).toBe('AC unit')
   })
 
   it('authenticate → fetch → registry reflects updated data', async () => {
@@ -141,7 +141,7 @@ describe('api lifecycle', () => {
 
     // Registry should now be populated after the post-auth fetch
     expect(api.registry.getDevices()).toHaveLength(1)
-    expect(api.registry.buildings.getById(1)!.name).toBe('Home')
+    expect(defined(api.registry.buildings.getById(1)).name).toBe('Home')
   })
 
   it('settingManager persists credentials across API operations', async () => {

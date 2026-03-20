@@ -9,6 +9,13 @@ export function cast(value: unknown): unknown {
   return value
 }
 
+export const defined = <T>(value: T | null | undefined): T => {
+  if (value === undefined || value === null) {
+    throw new Error('Expected value to be defined')
+  }
+  return value
+}
+
 export function mock<T extends object>(value?: Partial<T>): T
 export function mock(value: unknown = {}): unknown {
   return value
