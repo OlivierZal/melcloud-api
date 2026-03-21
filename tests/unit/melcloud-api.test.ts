@@ -91,6 +91,21 @@ const createAxiosError = ({
     }),
   })
 
+const errorEntry = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> => ({
+  DeviceId: 1,
+  EndDate: '2024-01-02',
+  ErrorMessage: 'Some error',
+  StartDate: '2024-01-01T12:00:00',
+  ...overrides,
+})
+
+const unauthorizedError = (
+  url = '/Device/Get',
+  message = 'unauthorized',
+): AxiosError => createAxiosError({ message, status: 401, url })
+
 const createDevice = (overrides: Record<string, unknown> = {}): ListDeviceAny =>
   cast({
     AreaID: null,
@@ -442,7 +457,11 @@ describe('mELCloudAPI', () => {
       expect(mockAxiosInstance.get).toHaveBeenCalledWith('/User/ListDevices')
     })
 
-    it('calls setValues for each device type', async () => {
+    it.each([
+      { path: '/Device/SetAta', type: 0 as const },
+      { path: '/Device/SetAtw', type: 1 as const },
+      { path: '/Device/SetErv', type: 3 as const },
+    ])('calls setValues for type $type via $path', async ({ path, type }) => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({ data: {} })
       await api.setValues({
@@ -450,39 +469,11 @@ describe('mELCloudAPI', () => {
           DeviceID: 1,
           EffectiveFlags: 1,
         }),
-        type: 0,
+        type,
       })
 
       expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Device/SetAta',
-        expect.any(Object),
-      )
-
-      mockAxiosInstance.post.mockClear()
-      await api.setValues({
-        postData: mock<SetDevicePostData<typeof DeviceType.Atw>>({
-          DeviceID: 1,
-          EffectiveFlags: 1,
-        }),
-        type: 1,
-      })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Device/SetAtw',
-        expect.any(Object),
-      )
-
-      mockAxiosInstance.post.mockClear()
-      await api.setValues({
-        postData: mock<SetDevicePostData<typeof DeviceType.Erv>>({
-          DeviceID: 1,
-          EffectiveFlags: 1,
-        }),
-        type: 3,
-      })
-
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
-        '/Device/SetErv',
+        path,
         expect.any(Object),
       )
     })
@@ -601,16 +592,7 @@ describe('mELCloudAPI', () => {
   describe('getErrorLog', () => {
     it('returns parsed error log', async () => {
       const api = await createApi()
-      mockAxiosInstance.post.mockResolvedValue({
-        data: [
-          {
-            DeviceId: 1,
-            EndDate: '2024-01-02',
-            ErrorMessage: 'Some error',
-            StartDate: '2024-01-01T12:00:00',
-          },
-        ],
-      })
+      mockAxiosInstance.post.mockResolvedValue({ data: [errorEntry()] })
       const result = await api.getErrorLog(
         { from: '2024-01-01', to: '2024-01-02' },
         [1],
@@ -624,12 +606,11 @@ describe('mELCloudAPI', () => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({
         data: [
-          {
-            DeviceId: 1,
+          errorEntry({
             EndDate: '0001-01-01',
             ErrorMessage: 'Bad',
             StartDate: '0001-01-01T00:00:00',
-          },
+          }),
         ],
       })
       const result = await api.getErrorLog({}, [1])
@@ -682,14 +663,7 @@ describe('mELCloudAPI', () => {
     it('filters null/empty error messages', async () => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({
-        data: [
-          {
-            DeviceId: 1,
-            EndDate: '2024-01-02',
-            ErrorMessage: null,
-            StartDate: '2024-01-01T12:00:00',
-          },
-        ],
+        data: [errorEntry({ ErrorMessage: null })],
       })
       const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
 
@@ -824,13 +798,7 @@ describe('mELCloudAPI', () => {
       })
       mockLoginAndList('new-ctx')
       mockAxiosInstance.request.mockResolvedValue({ data: 'retried' })
-      const result = await responseErrorHandler(
-        createAxiosError({
-          message: 'unauthorized',
-          status: 401,
-          url: '/Device/Get',
-        }),
-      )
+      const result = await responseErrorHandler(unauthorizedError())
 
       expect(mockAxiosInstance.request).toHaveBeenCalledWith(expect.any(Object))
       expect(result).toStrictEqual({ data: 'retried' })
@@ -840,13 +808,7 @@ describe('mELCloudAPI', () => {
       await createApi({ logger: createLogger() })
 
       await expect(
-        responseErrorHandler(
-          createAxiosError({
-            message: 'unauthorized',
-            status: 401,
-            url: '/Login/ClientLogin3',
-          }),
-        ),
+        responseErrorHandler(unauthorizedError('/Login/ClientLogin3')),
       ).rejects.toThrow('unauthorized')
     })
 
@@ -859,21 +821,11 @@ describe('mELCloudAPI', () => {
       })
       mockLoginAndList('ctx2')
       mockAxiosInstance.request.mockResolvedValue({ data: 'retried' })
-      await responseErrorHandler(
-        createAxiosError({
-          message: 'unauthorized',
-          status: 401,
-          url: '/Device/Get',
-        }),
-      )
+      await responseErrorHandler(unauthorizedError())
 
       await expect(
         responseErrorHandler(
-          createAxiosError({
-            message: 'unauthorized again',
-            status: 401,
-            url: '/Device/Get',
-          }),
+          unauthorizedError('/Device/Get', 'unauthorized again'),
         ),
       ).rejects.toThrow('unauthorized again')
     })
@@ -887,23 +839,11 @@ describe('mELCloudAPI', () => {
       })
       mockLoginAndList('ctx3')
       mockAxiosInstance.request.mockResolvedValue({ data: 'retried' })
-      await responseErrorHandler(
-        createAxiosError({
-          message: 'unauthorized',
-          status: 401,
-          url: '/Device/Get',
-        }),
-      )
+      await responseErrorHandler(unauthorizedError())
       vi.advanceTimersByTime(1500)
       mockLoginAndList('ctx4')
       mockAxiosInstance.request.mockResolvedValue({ data: 'retried again' })
-      const result = await responseErrorHandler(
-        createAxiosError({
-          message: 'unauthorized',
-          status: 401,
-          url: '/Device/Get',
-        }),
-      )
+      const result = await responseErrorHandler(unauthorizedError())
 
       expect(result).toStrictEqual({ data: 'retried again' })
     })
