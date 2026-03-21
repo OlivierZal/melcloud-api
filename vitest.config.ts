@@ -19,14 +19,8 @@ export default defineConfig({
   ],
   test: {
     coverage: {
-      exclude: [
-        'src/**/index.ts',
-        'src/**/interfaces.ts',
-        'src/services/melcloud-home.ts',
-        'src/main.ts',
-        'src/types/**/*.ts',
-      ],
       include: ['src/**/*.ts'],
+      reporter: ['text', 'lcov'],
       thresholds: {
         branches: 100,
         functions: 100,
