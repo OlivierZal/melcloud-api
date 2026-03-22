@@ -4,6 +4,8 @@ import { BaseModel } from './base.ts'
 
 /** Building model holding zone settings and geographic location. */
 export class BuildingModel extends BaseModel {
+  public readonly modelKind = 'building'
+
   public data: ZoneSettings
 
   public location: number

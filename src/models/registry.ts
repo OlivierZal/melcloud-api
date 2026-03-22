@@ -64,23 +64,20 @@ const syncMap = <TModel, TData>(
   return models
 }
 
+const SUPPORTED_DEVICE_TYPES: ReadonlySet<number> = new Set<number>([
+  DeviceType.Ata,
+  DeviceType.Atw,
+  DeviceType.Erv,
+])
+
 const createDeviceModel = (device: ListDeviceAny): DeviceModelAny => {
-  switch (device.Type) {
-    case DeviceType.Ata: {
-      return new DeviceModel(device)
-    }
-    case DeviceType.Atw: {
-      return new DeviceModel(device)
-    }
-    case DeviceType.Erv: {
-      return new DeviceModel(device)
-    }
-    default: {
-      throw new Error(
-        `Unsupported device type: ${String((device as { Type: unknown }).Type)}`,
-      )
-    }
+  if (!SUPPORTED_DEVICE_TYPES.has(device.Type)) {
+    throw new Error(
+      `Unsupported device type: ${String((device as { Type: unknown }).Type)}`,
+    )
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified via SUPPORTED_DEVICE_TYPES
+  return new DeviceModel(device) as DeviceModelAny
 }
 
 const BUILDING_LEVEL = 0

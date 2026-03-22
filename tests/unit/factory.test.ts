@@ -13,7 +13,7 @@ import {
   ervDevice,
   floorData,
 } from '../fixtures.ts'
-import { defined, mock } from '../helpers.ts'
+import { cast, defined, mock } from '../helpers.ts'
 
 const mockApi = mock<APIAdapter>()
 
@@ -107,7 +107,7 @@ describe(createFacade, () => {
 
   it('throws for unsupported model types', () => {
     const registry = new ModelRegistry()
-    const unknown = mock<Model>({ id: 1, name: 'unknown' })
+    const unknown = mock<Model>({ id: 1, modelKind: cast('unknown'), name: 'unknown' })
 
     expect(() => createFacade(mockApi, registry, unknown)).toThrow(
       'Model not supported',

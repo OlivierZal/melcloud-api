@@ -12,20 +12,17 @@ import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
 export class BuildingFacade extends BaseZoneFacade<BuildingModelContract> {
-  protected readonly frostProtectionLocation = 'BuildingIds'
-
-  protected readonly groupSpecificationKey = 'BuildingID'
-
-  protected readonly holidayModeLocation = 'Buildings'
-
-  protected readonly tableName = 'Building'
-
   public constructor(
     api: APIAdapter,
     registry: ModelRegistry,
     instance: BuildingModelContract,
   ) {
-    super(api, registry, instance)
+    super(api, registry, instance, {
+      frostProtectionLocation: 'BuildingIds',
+      groupSpecificationKey: 'BuildingID',
+      holidayModeLocation: 'Buildings',
+      tableName: 'Building',
+    })
     ;({
       data: {
         FPDefined: this.isFrostProtectionAtZoneLevel,

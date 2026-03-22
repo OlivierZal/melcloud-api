@@ -14,14 +14,12 @@ import type {
   UpdateDeviceData,
 } from '../types/index.ts'
 
-import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
+import { type DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { DeviceModel } from '../models/index.ts'
 import {
-  fromListToSetAta,
   getChartLineOptions,
   getChartPieOptions,
-  isSetDeviceDataAtaInList,
   isUpdateDeviceData,
   now,
   typedFromEntries,
@@ -103,21 +101,12 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   /*
-   * For ATA devices, API list responses use different property names than set
-   * requests (e.g., "FanSpeed" in list vs "SetFanSpeed" in set). Convert keys
-   * to set format, then keep only the fields tracked by flags.
+   * Build the current set-data snapshot from list data. Subclasses override
+   * `convertListToSetEntries` when API list keys differ from set keys (e.g. ATA).
    */
   protected get setData(): Required<UpdateDeviceData<T>> {
-    const dataEntries = Object.entries(this.data)
-    const entries =
-      this.type === DeviceType.Ata ?
-        dataEntries
-          .map(([key, value]): [string, unknown] => [
-            isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
-            value,
-          ])
-          .filter(([key]) => key in this.flags)
-      : dataEntries.filter(([key]) => key in this.flags)
+    const entries = this.convertListToSetEntries(Object.entries(this.data))
+      .filter(([key]) => key in this.flags)
     return typedFromEntries<Required<UpdateDeviceData<T>>>(entries)
   }
 
@@ -180,6 +169,16 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       type,
     })
     return finalData
+  }
+
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-explicit-any -- polymorphic hook, matches Object.entries return type
+  public convertListToSetEntries(entries: [string, any][]): [string, any][] {
+    return entries
+  }
+
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-explicit-any -- polymorphic hook, matches Object.entries return type
+  public convertSetToListEntries(entries: [string, any][]): [string, any][] {
+    return entries
   }
 
   public async getEnergy(query?: ReportQuery): Promise<EnergyData<T>> {

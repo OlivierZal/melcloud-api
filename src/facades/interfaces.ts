@@ -6,6 +6,7 @@ import type {
   BaseDeviceModel,
   DeviceModel,
   DeviceModelAny,
+  Identifiable,
   Model,
 } from '../models/interfaces.ts'
 import type { ErrorLog, ErrorLogQuery } from '../services/index.ts'
@@ -76,6 +77,14 @@ export interface DeviceFacade<T extends DeviceType>
   /** Bitfield flags mapping each updatable property to its effective flag value. */
   readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
+  /** Convert list-data key entries to set-command key entries (identity for most devices, ATA remaps keys). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches Object.entries return type
+  readonly convertListToSetEntries: (entries: [string, any][]) => [string, any][]
+
+  /** Convert set-command key entries to list-data key entries (identity for most devices, ATA remaps keys). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches Object.entries return type
+  readonly convertSetToListEntries: (entries: [string, any][]) => [string, any][]
+
   /** Fetch the latest device data after syncing. */
   readonly fetch: () => Promise<ListDeviceData<T>>
 
@@ -116,7 +125,7 @@ export interface DeviceFacade<T extends DeviceType>
 }
 
 /** Base facade contract shared by all facade types (building, floor, area, device). */
-export interface Facade extends Model {
+export interface Facade extends Identifiable {
   /** All devices managed by this facade. */
   readonly devices: readonly DeviceModelAny[]
 

@@ -5,6 +5,8 @@ import { BaseModel } from './base.ts'
 
 /** Concrete device model holding mutable device data that can be partially updated after API calls. */
 export class DeviceModel<T extends DeviceType> extends BaseModel {
+  public readonly modelKind = 'device'
+
   public readonly type: T
 
   public areaId: number | null = null
