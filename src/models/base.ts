@@ -4,7 +4,7 @@ import type { Model } from './interfaces.ts'
 export abstract class BaseModel implements Model {
   public readonly id: number
 
-  public readonly name: string
+  public name: string
 
   protected constructor({ id, name }: { id: number; name: string }) {
     this.id = id

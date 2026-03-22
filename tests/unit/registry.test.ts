@@ -113,17 +113,20 @@ describe('modelRegistry', () => {
       }).toThrow(/Unsupported device type/u)
     })
 
-    it('replaces previous data on re-sync', () => {
+    it('updates data in-place on re-sync, preserving identity', () => {
       const registry = new ModelRegistry()
       registry.syncBuildings(allBuildings)
+      const buildingBefore = registry.buildings.getById(1)
 
-      expect(registry.buildings.getById(1)?.name).toBe('Building 1')
+      expect(buildingBefore?.name).toBe('Building 1')
 
       registry.syncBuildings([
         { ...defined(allBuildings[0]), Name: 'Updated Building' },
       ])
+      const buildingAfter = registry.buildings.getById(1)
 
-      expect(registry.buildings.getById(1)?.name).toBe('Updated Building')
+      expect(buildingAfter?.name).toBe('Updated Building')
+      expect(buildingAfter).toBe(buildingBefore)
       expect(registry.buildings.getById(2)).toBeUndefined()
     })
   })

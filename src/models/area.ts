@@ -6,9 +6,9 @@ import { BaseModel } from './base.ts'
 export class AreaModel<
   T extends number | null = number | null,
 > extends BaseModel {
-  public readonly buildingId: number
+  public buildingId: number
 
-  public readonly floorId: number | null
+  public floorId: number | null
 
   public constructor({
     BuildingId: buildingId,
@@ -17,6 +17,16 @@ export class AreaModel<
     Name: name,
   }: AreaData<T> | AreaDataAny) {
     super({ id, name })
+    this.buildingId = buildingId
+    this.floorId = floorId
+  }
+
+  public sync({
+    BuildingId: buildingId,
+    FloorId: floorId,
+    Name: name,
+  }: AreaData<T> | AreaDataAny): void {
+    this.name = name
     this.buildingId = buildingId
     this.floorId = floorId
   }

@@ -4,9 +4,9 @@ import { BaseModel } from './base.ts'
 
 /** Building model holding zone settings and geographic location. */
 export class BuildingModel extends BaseModel {
-  public readonly data: ZoneSettings
+  public data: ZoneSettings
 
-  public readonly location: number
+  public location: number
 
   public constructor({
     ID: id,
@@ -15,6 +15,12 @@ export class BuildingModel extends BaseModel {
     ...data
   }: BuildingData) {
     super({ id, name })
+    this.location = location
+    this.data = data
+  }
+
+  public sync({ Location: location, Name: name, ...data }: BuildingData): void {
+    this.name = name
     this.location = location
     this.data = data
   }

@@ -6,6 +6,7 @@ import type {
   DeviceZone,
   FloorData,
   FloorZone,
+  ListDevice,
   ListDeviceAny,
   Zone,
 } from '../types/index.ts'
@@ -23,6 +24,45 @@ import { AreaModel } from './area.ts'
 import { BuildingModel } from './building.ts'
 import { DeviceModel } from './device.ts'
 import { FloorModel } from './floor.ts'
+
+/*
+ * Upsert + prune: update existing models in-place, create new ones,
+ * and remove stale entries. Preserves object identity across syncs
+ * so that facade references remain valid.
+ */
+const syncMap = <TModel, TData>(
+  map: Map<number, TModel>,
+  items: readonly TData[],
+  {
+    create,
+    getId,
+    update,
+  }: {
+    create: (item: TData) => TModel
+    getId: (item: TData) => number
+    update: (model: TModel, item: TData) => void
+  },
+): TModel[] => {
+  const activeIds = new Set<number>()
+  const models = items.map((item) => {
+    const id = getId(item)
+    activeIds.add(id)
+    const existing = map.get(id)
+    if (existing !== undefined) {
+      update(existing, item)
+      return existing
+    }
+    const model = create(item)
+    map.set(id, model)
+    return model
+  })
+  for (const id of map.keys()) {
+    if (!activeIds.has(id)) {
+      map.delete(id)
+    }
+  }
+  return models
+}
 
 const createDeviceModel = (device: ListDeviceAny): DeviceModelAny => {
   switch (device.Type) {
@@ -234,11 +274,13 @@ export class ModelRegistry {
   }
 
   public syncAreas(areas: AreaDataAny[]): void {
-    this.#areas.clear()
-    const models = areas.map((area) => {
-      const model = new AreaModel(area)
-      this.#areas.set(area.ID, model)
-      return model
+    const models = syncMap(this.#areas, areas, {
+      create: (area) => new AreaModel(area),
+      getId: (area) => area.ID,
+      update: (model, area) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- registry-created instance
+        ;(model as AreaModel).sync(area)
+      },
     })
     this.#areasByBuildingId = Map.groupBy(
       models,
@@ -254,18 +296,34 @@ export class ModelRegistry {
   }
 
   public syncBuildings(buildings: BuildingData[]): void {
-    this.#buildings.clear()
-    for (const building of buildings) {
-      this.#buildings.set(building.ID, new BuildingModel(building))
-    }
+    syncMap(this.#buildings, buildings, {
+      create: (building) => new BuildingModel(building),
+      getId: (building) => building.ID,
+      update: (model, building) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- registry-created instance
+        ;(model as BuildingModel).sync(building)
+      },
+    })
   }
 
   public syncDevices(devices: readonly ListDeviceAny[]): void {
-    this.#devices.clear()
-    const models = devices.map((device) => {
-      const model = createDeviceModel(device)
-      this.#devices.set(device.DeviceID, model)
-      return model
+    const models = syncMap(this.#devices, devices, {
+      create: createDeviceModel,
+      getId: (device) => device.DeviceID,
+      update: (model, device) => {
+        /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- runtime-verified via type guard */
+        // Defensive: device type should never change between syncs
+        /* v8 ignore start */
+        if (model.type !== device.Type) {
+          return
+        }
+
+        /* v8 ignore stop */
+        ;(model as DeviceModel<typeof device.Type>).sync(
+          device as ListDevice<typeof device.Type>,
+        )
+        /* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
+      },
     })
     this.#devicesByBuildingId = Map.groupBy(
       models,
@@ -288,11 +346,13 @@ export class ModelRegistry {
   }
 
   public syncFloors(floors: FloorData[]): void {
-    this.#floors.clear()
-    const models = floors.map((floor) => {
-      const model = new FloorModel(floor)
-      this.#floors.set(floor.ID, model)
-      return model
+    const models = syncMap(this.#floors, floors, {
+      create: (floor) => new FloorModel(floor),
+      getId: (floor) => floor.ID,
+      update: (model, floor) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- registry-created instance
+        ;(model as FloorModel).sync(floor)
+      },
     })
     this.#floorsByBuildingId = Map.groupBy(
       models,

@@ -4,7 +4,7 @@ import { BaseModel } from './base.ts'
 
 /** Floor model representing a level within a building. */
 export class FloorModel extends BaseModel {
-  public readonly buildingId: number
+  public buildingId: number
 
   public constructor({
     BuildingId: buildingId,
@@ -12,6 +12,11 @@ export class FloorModel extends BaseModel {
     Name: name,
   }: FloorData) {
     super({ id, name })
+    this.buildingId = buildingId
+  }
+
+  public sync({ BuildingId: buildingId, Name: name }: FloorData): void {
+    this.name = name
     this.buildingId = buildingId
   }
 }
