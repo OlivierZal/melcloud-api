@@ -7,7 +7,7 @@ import type {
 } from '../../src/types/index.ts'
 
 import { DeviceType } from '../../src/constants.ts'
-import { ModelRegistry } from '../../src/models/index.ts'
+import { isDeviceOfType, ModelRegistry } from '../../src/models/index.ts'
 import {
   areaData,
   ataDevice,
@@ -129,6 +129,59 @@ describe('modelRegistry', () => {
       expect(buildingAfter).toBe(buildingBefore)
       expect(registry.buildings.getById(2)).toBeUndefined()
     })
+
+    it('updates devices in-place on re-sync for all device types', () => {
+      const registry = createPopulatedRegistry()
+      const ataBefore = registry.devices.getById(1000)
+      const atwBefore = registry.devices.getById(1001)
+      const ervBefore = registry.devices.getById(1002)
+
+      registry.syncDevices([
+        ataDevice({ DeviceName: 'Updated ATA' }),
+        atwDevice({
+          AreaID: 102,
+          BuildingID: 2,
+          DeviceName: 'Updated ATW',
+          FloorID: 12,
+        }),
+        ervDevice({ AreaID: null, DeviceName: 'Updated ERV' }),
+      ])
+
+      expect(registry.devices.getById(1000)).toBe(ataBefore)
+      expect(registry.devices.getById(1000)?.name).toBe('Updated ATA')
+      expect(registry.devices.getById(1001)).toBe(atwBefore)
+      expect(registry.devices.getById(1001)?.name).toBe('Updated ATW')
+      expect(registry.devices.getById(1002)).toBe(ervBefore)
+      expect(registry.devices.getById(1002)?.name).toBe('Updated ERV')
+    })
+
+    it('skips sync when device type changes between syncs', () => {
+      const registry = new ModelRegistry()
+      registry.syncDevices(allDevices)
+
+      // Re-sync each device ID with a mismatched Type to cover all false branches
+      registry.syncDevices([
+        cast({
+          ...ataDevice(),
+          DeviceName: 'Mismatched',
+          Type: DeviceType.Atw,
+        }),
+        cast({
+          ...atwDevice(),
+          DeviceName: 'Mismatched',
+          Type: DeviceType.Erv,
+        }),
+        cast({
+          ...ervDevice(),
+          DeviceName: 'Mismatched',
+          Type: DeviceType.Ata,
+        }),
+      ])
+
+      expect(registry.devices.getById(1000)?.name).toBe('Device ATA')
+      expect(registry.devices.getById(1001)?.name).toBe('Device ATW')
+      expect(registry.devices.getById(1002)?.name).toBe('Device ERV')
+    })
   })
 
   describe('queries', () => {
@@ -208,5 +261,15 @@ describe('modelRegistry', () => {
       expect(registry.getAreasByBuildingId(999)).toHaveLength(0)
       expect(registry.getDevicesByBuildingId(999)).toHaveLength(0)
     })
+  })
+})
+
+describe(isDeviceOfType, () => {
+  it('narrows device to specific type', () => {
+    const registry = createPopulatedRegistry()
+    const device = defined(registry.devices.getById(1000))
+
+    expect(isDeviceOfType(device, DeviceType.Ata)).toBe(true)
+    expect(isDeviceOfType(device, DeviceType.Atw)).toBe(false)
   })
 })

@@ -25,13 +25,10 @@ const operationModeZoneByValue = new Map<number, OperationModeZone>(
 const toOperationModeZone = (value: number): OperationModeZone => {
   const mode = operationModeZoneByValue.get(value)
 
-  // Defensive: arithmetic on valid OperationModeZone values always yields valid results
-  /* v8 ignore start */
   if (mode === undefined) {
     throw new Error(`Invalid OperationModeZone: ${String(value)}`)
   }
 
-  /* v8 ignore stop */
   return mode
 }
 

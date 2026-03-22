@@ -63,6 +63,37 @@ const syncMap = <TModel, TData>(
   return models
 }
 
+/*
+ * Correlate model and device types for type-safe sync.
+ * The inner type guards are defensive: a device type cannot change between syncs.
+ */
+const syncDeviceModel = (
+  model: DeviceModelAny,
+  device: ListDeviceAny,
+): void => {
+  switch (device.Type) {
+    case DeviceType.Ata: {
+      if (model.type === DeviceType.Ata) {
+        model.sync(device)
+      }
+      break
+    }
+    case DeviceType.Atw: {
+      if (model.type === DeviceType.Atw) {
+        model.sync(device)
+      }
+      break
+    }
+    case DeviceType.Erv: {
+      if (model.type === DeviceType.Erv) {
+        model.sync(device)
+      }
+      break
+    }
+    // No default
+  }
+}
+
 const createDeviceModel = (device: ListDeviceAny): DeviceModelAny => {
   switch (device.Type) {
     case DeviceType.Ata: {
@@ -306,31 +337,8 @@ export class ModelRegistry {
   public syncDevices(devices: readonly ListDeviceAny[]): void {
     const models = syncMap(this.#devices, devices, {
       create: createDeviceModel,
+      update: syncDeviceModel,
       getId: (device) => device.DeviceID,
-      update: (model, device) => {
-        // Switch correlates model and device types for type-safe sync
-        switch (device.Type) {
-          case DeviceType.Ata: {
-            if (model.type === DeviceType.Ata) {
-              model.sync(device)
-            }
-            break
-          }
-          case DeviceType.Atw: {
-            if (model.type === DeviceType.Atw) {
-              model.sync(device)
-            }
-            break
-          }
-          case DeviceType.Erv: {
-            if (model.type === DeviceType.Erv) {
-              model.sync(device)
-            }
-            break
-          }
-          // No default
-        }
-      },
     })
     this.#devicesByBuildingId = Map.groupBy(
       models,

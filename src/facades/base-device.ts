@@ -1,6 +1,9 @@
 import { DateTime } from 'luxon'
 
-import type { DeviceModelAny } from '../models/interfaces.ts'
+import type {
+  DeviceModelAny,
+  DeviceModel as DeviceModelInterface,
+} from '../models/interfaces.ts'
 import type {
   EnergyData,
   GetDeviceData,
@@ -75,18 +78,18 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   public get data(): ListDeviceData<T> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified via device getter type guard
-    return this.device.data as ListDeviceData<T>
+    return this.device.data
   }
 
-  protected get device(): DeviceModelAny {
+  protected get device(): DeviceModelInterface<T> {
     const { instance } = this
     if (instance.type !== this.type) {
       throw new Error(
         `Device type mismatch: expected ${String(this.type)}, got ${String(instance.type)}`,
       )
     }
-    return instance
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified by type guard above
+    return instance as DeviceModelInterface<T>
   }
 
   protected get model(): {
@@ -127,7 +130,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     ) {
       return super.getTiles()
     }
-    return super.getTiles(this.device) as Promise<TilesData<T>>
+    return super.getTiles(this.device)
   }
 
   @fetchDevices

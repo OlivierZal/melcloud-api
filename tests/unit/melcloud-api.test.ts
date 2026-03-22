@@ -673,6 +673,15 @@ describe('mELCloudAPI', () => {
 
       expect(result.errors).toHaveLength(0)
     })
+
+    it('throws on invalid date in query', async () => {
+      const api = await createApi()
+      mockAxiosInstance.post.mockResolvedValue({ data: [] })
+
+      await expect(api.getErrorLog({ to: 'not-a-date' }, [1])).rejects.toThrow(
+        'Invalid DateTime',
+      )
+    })
   })
 
   describe('interceptors', () => {

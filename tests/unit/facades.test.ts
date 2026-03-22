@@ -876,6 +876,19 @@ describe('deviceAtwHasZone2Facade', () => {
 
     expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
   })
+
+  it('throws on invalid secondary operation mode zone value', async () => {
+    const { facade } = createZone2Facade({
+      CanCool: true,
+      OperationModeZone2: OperationModeZone.flow_cool,
+    })
+
+    await expect(
+      facade.setValues({
+        OperationModeZone1: OperationModeZone.room_cool,
+      }),
+    ).rejects.toThrow('Invalid OperationModeZone')
+  })
 })
 
 describe('baseDeviceFacade getTiles', () => {
