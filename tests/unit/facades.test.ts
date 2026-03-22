@@ -19,6 +19,7 @@ import {
   DeviceAtwHasZone2Facade,
   DeviceErvFacade,
   FloorFacade,
+  hasZone2,
 } from '../../src/facades/index.ts'
 import { type DeviceModel, ModelRegistry } from '../../src/models/index.ts'
 import {
@@ -888,6 +889,20 @@ describe('deviceAtwHasZone2Facade', () => {
         OperationModeZone1: OperationModeZone.room_cool,
       }),
     ).rejects.toThrow('Invalid OperationModeZone')
+  })
+})
+
+describe(hasZone2, () => {
+  it('returns true for zone2 facade', () => {
+    const { facade } = createZone2Facade()
+
+    expect(hasZone2(facade)).toBe(true)
+  })
+
+  it('returns false for non-zone2 facade', () => {
+    const { facade } = createAtwFacade()
+
+    expect(hasZone2(facade)).toBe(false)
   })
 })
 

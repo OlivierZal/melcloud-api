@@ -104,6 +104,7 @@ export {
   type ReportQuery,
   type ZoneFacade,
   FacadeManager,
+  hasZone2,
 } from './facades/index.ts'
 export {
   type DeviceModelAny,

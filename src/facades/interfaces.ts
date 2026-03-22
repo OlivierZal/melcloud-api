@@ -217,6 +217,17 @@ export interface ReportQuery {
 
 /** Union of all device facade types. */
 export type DeviceFacadeAny =
+  | DeviceAtwFacade
+  | DeviceAtwHasZone2Facade
   | DeviceFacade<typeof DeviceType.Ata>
-  | DeviceFacade<typeof DeviceType.Atw>
   | DeviceFacade<typeof DeviceType.Erv>
+
+/**
+ * Type guard that narrows an ATW facade to the zone 2 variant.
+ * Allows consumers to safely access `zone2` without type assertions.
+ * @param facade - The ATW device facade to check.
+ * @returns Whether the facade supports zone 2.
+ */
+export const hasZone2 = (
+  facade: DeviceAtwFacade,
+): facade is DeviceAtwHasZone2Facade => 'zone2' in facade
