@@ -76,6 +76,8 @@ const deviceTypeNames = {
   [DeviceType.Erv]: 'Erv',
 } as const satisfies Record<DeviceType, string>
 
+const API_BASE_URL = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
+const APP_VERSION = '1.37.2.0'
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
 const noop = (): void => undefined
@@ -292,7 +294,8 @@ export class MELCloudAPI implements API, Disposable {
     this.clearSync()
     try {
       return await this.#fetch()
-    } catch {
+    } catch (error) {
+      this.#logger.warn('Failed to fetch devices:', error)
       return []
     } finally {
       this.#planNextSync()
@@ -316,6 +319,7 @@ export class MELCloudAPI implements API, Disposable {
       if (data !== undefined) {
         throw error
       }
+      this.#logger.warn('Stored credentials authentication failed:', error)
       return false
     }
   }
@@ -572,7 +576,7 @@ export class MELCloudAPI implements API, Disposable {
       data: { LoginData: loginData },
     } = await this.login({
       postData: {
-        AppVersion: '1.37.2.0',
+        AppVersion: APP_VERSION,
         Email: username,
         Language: this.#getLanguageCode(),
         Password: password,
@@ -597,10 +601,12 @@ export class MELCloudAPI implements API, Disposable {
     return false
   }
 
-  #createAPI(rejectUnauthorized: boolean): AxiosInstance {
+  #createAPI(shouldRejectUnauthorized: boolean): AxiosInstance {
     const api = axios.create({
-      baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
-      httpsAgent: new https.Agent({ rejectUnauthorized }),
+      baseURL: API_BASE_URL,
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: shouldRejectUnauthorized,
+      }),
     })
     this.#setupAxiosInterceptors(api)
     return api
@@ -643,10 +649,17 @@ export class MELCloudAPI implements API, Disposable {
     const errorData = createAPICallErrorData(error)
     this.#logger.error(String(errorData))
 
-    const { config, response: { status } = {} } = error
+    const { config, response: { headers, status } = {} } = error
     if (status === HttpStatusCode.TooManyRequests) {
-      // Pause list operations for 2 hours to avoid repeated 429 responses
-      this.#pauseListUntil = DateTime.now().plus({ hours: 2 })
+      const retryAfterSeconds = Number(headers?.['retry-after'])
+      const retryDuration =
+        Number.isFinite(retryAfterSeconds) ?
+          { seconds: retryAfterSeconds }
+        : { hours: 2 }
+      this.#pauseListUntil = DateTime.now().plus(retryDuration)
+      this.#logger.warn(
+        `Rate limited (429): pausing list operations for ${this.#pauseListUntil.diffNow().shiftTo('minutes').toHuman()}`,
+      )
     } else if (
       status === HttpStatusCode.Unauthorized &&
       this.#canRetry() &&
@@ -689,7 +702,7 @@ export class MELCloudAPI implements API, Disposable {
   }
 
   #handleSyncError(error: unknown): void {
-    this.#logger.error('Auto-sync failed:', error)
+    this.#logger.warn('Auto-sync failed:', error)
   }
 
   #planNextSync(): void {

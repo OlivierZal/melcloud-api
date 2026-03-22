@@ -202,11 +202,11 @@ export class ModelRegistry {
     return this.#devicesByFloorId.get(id) ?? []
   }
 
-  public getDevicesByType<U extends DeviceType>(
-    type: U,
-  ): (DeviceModelAny & { type: U })[] {
+  public getDevicesByType<TDeviceType extends DeviceType>(
+    type: TDeviceType,
+  ): (DeviceModelAny & { type: TDeviceType })[] {
     return this.getDevices().filter(
-      (instance): instance is DeviceModelAny & { type: U } =>
+      (instance): instance is DeviceModelAny & { type: TDeviceType } =>
         instance.type === type,
     )
   }

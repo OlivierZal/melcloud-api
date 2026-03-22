@@ -37,7 +37,7 @@ export interface FrostProtectionQuery {
   readonly min: number
 
   /** Whether frost protection is enabled. Defaults to `true`. */
-  readonly enabled?: boolean
+  readonly isEnabled?: boolean
 }
 
 /** Parameters for enabling or disabling holiday mode. */

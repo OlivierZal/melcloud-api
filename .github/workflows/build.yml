@@ -47,8 +47,8 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run build
       - run: npm test -- --coverage
-      - uses: SonarSource/sonarqube-scan-action@v6
-        env:
+      - env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        uses: SonarSource/sonarqube-scan-action@v6
 name: Build package
 on: [pull_request, push]

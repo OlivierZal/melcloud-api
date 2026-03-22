@@ -31,6 +31,25 @@ import type {
   ReportChartLineOptions,
 } from './interfaces.ts'
 
+/*
+ * Settings can be defined at zone or device level. Try zone first;
+ * if unsupported, fall back to device level and cache the result.
+ */
+const getWithZoneFallback = async <TResult>(
+  isAtZoneLevel: boolean | null,
+  zoneGetter: () => Promise<TResult>,
+  deviceGetter: () => Promise<TResult>,
+): Promise<TResult> => {
+  if (isAtZoneLevel === null) {
+    try {
+      return await zoneGetter()
+    } catch {
+      return deviceGetter()
+    }
+  }
+  return isAtZoneLevel ? zoneGetter() : deviceGetter()
+}
+
 // Minimum 2°C gap between min and max to prevent invalid frost protection ranges
 const TEMPERATURE_GAP = 2
 
@@ -91,7 +110,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   protected get instance(): T {
     const instance = this.model.getById(this.id)
     if (!instance) {
-      throw new Error(`${this.tableName} not found`)
+      throw new Error(`${this.tableName} with id ${String(this.id)} not found`)
     }
     return instance
   }
@@ -99,7 +118,9 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   get #deviceId(): number {
     const [id] = this.#deviceIds
     if (id === undefined) {
-      throw new Error('No device id found')
+      throw new Error(
+        `No device found for ${this.tableName} with id ${String(this.id)}`,
+      )
     }
     return id
   }
@@ -116,50 +137,31 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   @syncDevices()
   @updateDevices()
-  public async setPower(value = true): Promise<boolean> {
-    const { data: isOn } = await this.api.setPower({
-      postData: { DeviceIds: this.#deviceIds, Power: value },
+  public async setPower(isOn = true): Promise<boolean> {
+    const { data: isPowered } = await this.api.setPower({
+      postData: { DeviceIds: this.#deviceIds, Power: isOn },
     })
-    return isOn
+    return isPowered
   }
 
   public async getErrors(query: ErrorLogQuery): Promise<ErrorLog> {
     return this.api.getErrorLog(query, this.#deviceIds)
   }
 
-  public async notifySync({ type }: { type?: DeviceType } = {}): Promise<void> {
-    await this.api.onSync?.({ ids: this.#deviceIds, type })
-  }
-
-  /*
-   * Frost protection can be defined at zone or device level. Try zone first;
-   * if unsupported, fall back to device level and cache the result.
-   */
   public async getFrostProtection(): Promise<FrostProtectionData> {
-    if (this.isFrostProtectionAtZoneLevel === null) {
-      try {
-        return await this.#getZoneFrostProtection()
-      } catch {
-        return this.#getDevicesFrostProtection()
-      }
-    }
-    return this.isFrostProtectionAtZoneLevel ?
-        this.#getZoneFrostProtection()
-      : this.#getDevicesFrostProtection()
+    return getWithZoneFallback(
+      this.isFrostProtectionAtZoneLevel,
+      async () => this.#getZoneFrostProtection(),
+      async () => this.#getDevicesFrostProtection(),
+    )
   }
 
-  // Same zone-then-device fallback strategy as getFrostProtection
   public async getHolidayMode(): Promise<HolidayModeData> {
-    if (this.isHolidayModeAtZoneLevel === null) {
-      try {
-        return await this.#getZoneHolidayMode()
-      } catch {
-        return this.#getDevicesHolidayMode()
-      }
-    }
-    return this.isHolidayModeAtZoneLevel ?
-        this.#getZoneHolidayMode()
-      : this.#getDevicesHolidayMode()
+    return getWithZoneFallback(
+      this.isHolidayModeAtZoneLevel,
+      async () => this.#getZoneHolidayMode(),
+      async () => this.#getDevicesHolidayMode(),
+    )
   }
 
   public async getSignalStrength(
@@ -172,12 +174,12 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   }
 
   public async getTiles(device?: false): Promise<TilesData<null>>
-  public async getTiles<U extends DeviceType>(
-    device: DeviceModel<U>,
-  ): Promise<TilesData<U>>
-  public async getTiles<U extends DeviceType>(
-    device: false | DeviceModel<U> = false,
-  ): Promise<TilesData<U | null>> {
+  public async getTiles<TDeviceType extends DeviceType>(
+    device: DeviceModel<TDeviceType>,
+  ): Promise<TilesData<TDeviceType>>
+  public async getTiles<TDeviceType extends DeviceType>(
+    device: false | DeviceModel<TDeviceType> = false,
+  ): Promise<TilesData<TDeviceType | null>> {
     const postData = { DeviceIDs: this.#deviceIds }
     if (device === false || !this.#deviceIds.includes(device.id)) {
       const { data } = await this.api.getTiles({ postData })
@@ -190,11 +192,15 @@ export abstract class BaseFacade<T extends Model> implements Facade {
         SelectedDevice: device.id,
       },
     })
-    return data as TilesData<U>
+    return data as TilesData<TDeviceType>
+  }
+
+  public async notifySync({ type }: { type?: DeviceType } = {}): Promise<void> {
+    await this.api.onSync?.({ ids: this.#deviceIds, type })
   }
 
   public async setFrostProtection({
-    enabled,
+    isEnabled,
     max,
     min,
   }: FrostProtectionQuery): Promise<FailureData | SuccessData> {
@@ -215,7 +221,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     }
     const { data } = await this.api.setFrostProtection({
       postData: {
-        Enabled: enabled ?? true,
+        Enabled: isEnabled ?? true,
         MaximumTemperature: newMax,
         MinimumTemperature: newMin,
         ...(await this.#getFrostProtectionLocation()),

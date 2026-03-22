@@ -1,5 +1,4 @@
 import type { DeviceFacade, ZoneFacade } from '../facades/index.ts'
-import type { DeviceModelAny } from '../models/interfaces.ts'
 import type {
   FailureData,
   GetDeviceData,
@@ -16,9 +15,6 @@ import {
   isUpdateDeviceData,
   typedFromEntries,
 } from '../utils.ts'
-
-const isDeviceOfType = (device: DeviceModelAny, type: DeviceType): boolean =>
-  device.type === type
 
 /**
  * Method decorator factory that propagates data changes to device models after
@@ -79,14 +75,16 @@ const convertToListDeviceData = <T extends DeviceType>(
 ): Partial<ListDeviceData<T>> => {
   const { flags, type } = facade
   const { EffectiveFlags: effectiveFlags, ...newData } = data
-  const entries =
-    effectiveFlags === FLAG_UNCHANGED ?
-      Object.entries(newData)
-    : Object.entries(newData).filter(
-        ([key]) =>
-          isUpdateDeviceData(flags, key) &&
-          Boolean(BigInt(flags[key]) & BigInt(effectiveFlags)),
-      )
+  const allEntries = Object.entries(newData)
+  let entries = allEntries
+  if (effectiveFlags !== FLAG_UNCHANGED) {
+    const effectiveFlagsBigInt = BigInt(effectiveFlags)
+    entries = allEntries.filter(
+      ([key]) =>
+        isUpdateDeviceData(flags, key) &&
+        Boolean(BigInt(flags[key]) & effectiveFlagsBigInt),
+    )
+  }
   return typedFromEntries<Partial<ListDeviceData<T>>>(
     type === DeviceType.Ata ?
       entries.map(([key, value]) =>
@@ -107,17 +105,17 @@ const convertToListDeviceData = <T extends DeviceType>(
  */
 export const updateDevice = <
   T extends DeviceType,
-  U extends GetDeviceData<T> | SetDeviceData<T>,
+  TData extends GetDeviceData<T> | SetDeviceData<T>,
 >(
-  target: (...args: any[]) => Promise<U>,
+  target: (...args: any[]) => Promise<TData>,
   _context: ClassMethodDecoratorContext,
-): ((...args: unknown[]) => Promise<U>) =>
+): ((...args: unknown[]) => Promise<TData>) =>
   async function newTarget(this: DeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
     const {
       devices: [device],
     } = this
-    if (device && isDeviceOfType(device, this.type)) {
+    if (device?.type === this.type) {
       /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- runtime-verified */
       ;(
         device as unknown as { update: (d: Partial<ListDeviceData<T>>) => void }

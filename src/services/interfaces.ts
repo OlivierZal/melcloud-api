@@ -297,6 +297,9 @@ export interface Logger {
 
   /** Log informational messages. */
   readonly log: Console['log']
+
+  /** Log warning messages (e.g. rate limiting, fallback behavior). */
+  readonly warn: Console['warn']
 }
 
 /** External storage adapter for persisting API session settings. */

@@ -84,7 +84,9 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   protected get device(): DeviceModelContract<T> {
     const { instance } = this
     if (!this.#isMatchingDevice(instance)) {
-      throw new Error('Device type mismatch')
+      throw new Error(
+        `Device type mismatch: expected ${String(this.type)}, got ${String(instance.type)}`,
+      )
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified
     return instance as unknown as DeviceModelContract<T>
@@ -154,10 +156,12 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public async setValues(
     data: Partial<UpdateDeviceData<T>>,
   ): Promise<SetDeviceData<T>> {
+    const { api, id, setData: currentSetData, type } = this
     const newData = typedFromEntries<Partial<UpdateDeviceData<T>>>(
       Object.entries(data).filter(
         ([key, value]) =>
-          isUpdateDeviceData(this.setData, key) && this.setData[key] !== value,
+          isUpdateDeviceData(currentSetData, key) &&
+          currentSetData[key] !== value,
       ),
     )
 
@@ -165,15 +169,15 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       typedKeys(newData) as (keyof UpdateDeviceData<T>)[],
     )
     if (!flags) {
-      throw new Error('No data to set')
+      throw new Error(`No data to set for device ${String(id)}`)
     }
-    const { data: finalData } = await this.api.setValues({
+    const { data: finalData } = await api.setValues({
       postData: {
         ...this.prepareUpdateData(newData),
-        DeviceID: this.id,
+        DeviceID: id,
         EffectiveFlags: flags,
       },
-      type: this.type,
+      type,
     })
     return finalData
   }
@@ -196,19 +200,19 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async getInternalTemperatures(
     query?: ReportQuery,
-    useExactRange = true,
+    shouldUseExactRange = true,
   ): Promise<ReportChartLineOptions> {
     const { data } = await this.api.getInternalTemperatures({
-      postData: this.#getReportPostData(query, useExactRange),
+      postData: this.#getReportPostData(query, shouldUseExactRange),
     })
     return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
   }
 
   public async getOperationModes(
     query?: ReportQuery,
-    useExactRange = true,
+    shouldUseExactRange = true,
   ): Promise<ReportChartPieOptions> {
-    const postData = this.#getReportPostData(query, useExactRange)
+    const postData = this.#getReportPostData(query, shouldUseExactRange)
     const dateRange = { from: postData.FromDate, to: postData.ToDate }
     const { data } = await this.api.getOperationModes({ postData })
     return getChartPieOptions(data, dateRange)
@@ -216,11 +220,11 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async getTemperatures(
     query?: ReportQuery,
-    useExactRange = true,
+    shouldUseExactRange = true,
   ): Promise<ReportChartLineOptions> {
     const { data } = await this.api.getTemperatures({
       postData: {
-        ...this.#getReportPostData(query, useExactRange),
+        ...this.#getReportPostData(query, shouldUseExactRange),
         Location: this.registry.buildings.getById(this.device.buildingId)
           ?.location,
       },
@@ -249,13 +253,15 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   #getReportPostData(
     { from, to }: ReportQuery = {},
-    useExactRange = false,
+    shouldUseExactRange = false,
   ): ReportPostData {
     const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
       DeviceID: this.id,
       Duration:
-        useExactRange ? getDuration({ from: newFrom, to: newTo }) : undefined,
+        shouldUseExactRange ?
+          getDuration({ from: newFrom, to: newTo })
+        : undefined,
       FromDate: newFrom,
       ToDate: newTo,
     }

@@ -121,38 +121,107 @@ const config = defineConfig([
       '@typescript-eslint/member-ordering': 'off',
       '@typescript-eslint/naming-convention': [
         'error',
+        // ── Catch-all ────────────────────────────────────────
         {
-          format: ['camelCase', 'PascalCase', 'snake_case'],
-          selector: ['objectLiteralProperty', 'typeProperty'],
+          format: ['camelCase'],
+          leadingUnderscore: 'forbid',
+          selector: 'default',
+          trailingUnderscore: 'forbid',
         },
+        /*
+         * ── Variables ────────────────────────────────────────
+         * PascalCase: React components, class-like refs, `as const` objects.
+         * UPPER_CASE: allowed for legacy/team preference on primitives — not enforced.
+         */
         {
-          format: ['camelCase', 'PascalCase'],
-          selector: ['import'],
+          format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
+          selector: 'variable',
         },
+        // Destructured — we don't control external shapes (API responses, libs).
         {
+          format: null,
+          modifiers: ['destructured'],
+          selector: 'variable',
+        },
+        /*
+         * ── Booleans (variables, parameters, class properties) ──
+         * Semantic prefixes make intent obvious at the call site.
+         * `device` is excluded: its type includes `false` as a sentinel but it is not a boolean flag.
+         */
+        {
+          filter: { match: false, regex: '^device$' },
           format: ['PascalCase'],
-          prefix: ['can', 'did', 'has', 'is', 'should', 'will'],
-          selector: ['variable'],
+          prefix: ['is', 'has', 'can', 'should'],
+          selector: ['variable', 'parameter', 'classProperty'],
           types: ['boolean'],
         },
+        /*
+         * ── Parameters ───────────────────────────────────────
+         * Leading underscore for intentionally unused params (_event, _ctx).
+         */
         {
-          format: ['UPPER_CASE'],
-          modifiers: ['const', 'global'],
-          selector: ['variable'],
-          types: ['boolean', 'number', 'string'],
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
+          selector: 'parameter',
         },
+        /*
+         * ── Functions & methods ──────────────────────────────
+         * PascalCase covers HOCs, factory functions (CreateApp), React hooks wrappers.
+         */
         {
-          format: ['PascalCase'],
-          selector: ['enumMember', 'typeLike'],
+          format: ['camelCase', 'PascalCase'],
+          selector: [
+            'function',
+            'classMethod',
+            'objectLiteralMethod',
+            'typeMethod',
+          ],
+        },
+        /*
+         * ── Properties ───────────────────────────────────────
+         * Permissive: DTOs, API contracts, and serialization use mixed conventions.
+         */
+        {
+          format: ['camelCase', 'PascalCase', 'snake_case', 'UPPER_CASE'],
+          selector: ['objectLiteralProperty', 'typeProperty'],
+        },
+        // Quoted keys ('Content-Type', 'x-api-key', '@scope/pkg') — skip entirely.
+        {
+          format: null,
+          modifiers: ['requiresQuotes'],
+          selector: ['objectLiteralProperty', 'typeProperty'],
         },
         {
           format: ['camelCase'],
           leadingUnderscore: 'allow',
-          selector: ['parameter'],
+          selector: 'classProperty',
         },
+        // ── Imports ──────────────────────────────────────────
         {
-          format: ['camelCase'],
-          selector: ['default'],
+          format: ['camelCase', 'PascalCase'],
+          selector: 'import',
+        },
+        // ── Types, interfaces, classes, enums ────────────────
+        {
+          format: ['PascalCase'],
+          selector: 'typeLike',
+        },
+        /*
+         * PascalCase enum members: modern TS convention (Status.Active, not Status.ACTIVE).
+         * Aligns with the `as const` + union type pattern that increasingly replaces enums.
+         */
+        {
+          format: ['PascalCase'],
+          selector: 'enumMember',
+        },
+        /*
+         * ── Type parameters (generics) ───────────────────────
+         * T-prefix: T, TKey, TValue, TResult — universal TS convention.
+         */
+        {
+          format: ['PascalCase'],
+          prefix: ['T'],
+          selector: 'typeParameter',
         },
       ],
       '@typescript-eslint/no-dupe-class-members': 'off',
@@ -427,19 +496,6 @@ const config = defineConfig([
         partitionByNewLine: false,
         type: 'custom',
       },
-    },
-  },
-  {
-    files: ['src/constants.ts'],
-    rules: {
-      '@typescript-eslint/naming-convention': [
-        'error',
-        {
-          format: ['PascalCase', 'UPPER_CASE'],
-          modifiers: ['const', 'exported'],
-          selector: ['variable'],
-        },
-      ],
     },
   },
   {

@@ -19,7 +19,7 @@ import type {
 export const syncDevices =
   <
     T extends DeviceType,
-    U extends
+    TResult extends
       | boolean
       | BuildingWithStructure[]
       | FailureData
@@ -33,9 +33,9 @@ export const syncDevices =
     type?: T
   } = {}) =>
   (
-    target: (...args: any[]) => Promise<U>,
+    target: (...args: any[]) => Promise<TResult>,
     _context: ClassMethodDecoratorContext,
-  ): ((...args: unknown[]) => Promise<U>) =>
+  ): ((...args: unknown[]) => Promise<TResult>) =>
     async function newTarget(this: APIAdapter | Facade, ...args: unknown[]) {
       const data = await target.call(this, ...args)
       await ('notifySync' in this ?

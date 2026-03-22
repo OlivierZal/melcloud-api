@@ -39,8 +39,8 @@ export abstract class BaseZoneFacade<
         postData: { [this.groupSpecificationKey]: this.id },
       })
       return state
-    } catch {
-      throw new Error('No air-to-air device found')
+    } catch (error) {
+      throw new Error('No air-to-air device found', { cause: error })
     }
   }
 
@@ -55,8 +55,8 @@ export abstract class BaseZoneFacade<
         },
       })
       return data
-    } catch {
-      throw new Error('No air-to-air device found')
+    } catch (error) {
+      throw new Error('No air-to-air device found', { cause: error })
     }
   }
 }

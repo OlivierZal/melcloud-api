@@ -109,11 +109,11 @@ export interface HotWaterState {
 export type ZoneAtw = 'Zone1' | 'Zone2'
 
 export interface ZoneState {
+  readonly isCoolingProhibited: boolean
+  readonly isHeatingProhibited: boolean
   readonly isIdle: boolean
   readonly isInCoolMode: boolean
   readonly isInHeatMode: boolean
-  readonly isProhibitCooling: boolean
-  readonly isProhibitHeating: boolean
   readonly operationalState: OperationModeStateZone
   readonly operationMode: OperationModeZone
   readonly roomTemperature: number

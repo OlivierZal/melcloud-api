@@ -43,6 +43,7 @@ const mockAxiosInstance = {
 const createLogger = (): Logger => ({
   error: vi.fn<(...data: unknown[]) => void>(),
   log: vi.fn<(...data: unknown[]) => void>(),
+  warn: vi.fn<(...data: unknown[]) => void>(),
 })
 
 const loginResponse = (
@@ -72,6 +73,7 @@ const createHeaders = (): {
 const createAxiosError = ({
   message,
   method = 'get',
+  responseHeaders = {},
   status,
   url,
 }: {
@@ -79,6 +81,7 @@ const createAxiosError = ({
   status: number
   url: string
   method?: string
+  responseHeaders?: Record<string, string>
 }): AxiosError =>
   mock<AxiosError>({
     config: mock<InternalAxiosRequestConfig>({ method, url }),
@@ -86,7 +89,7 @@ const createAxiosError = ({
     response: mock<AxiosResponse>({
       config: mock<InternalAxiosRequestConfig>({ data: null, method, url }),
       data: {},
-      headers: {},
+      headers: responseHeaders,
       status,
     }),
   })
@@ -298,7 +301,7 @@ describe('mELCloudAPI', () => {
     }).not.toThrow()
   })
 
-  it('logs error when auto-sync onSync callback throws', async () => {
+  it('logs warning when auto-sync onSync callback throws', async () => {
     const logger = createLogger()
     const onSync = vi.fn().mockImplementationOnce(() => {
       // First call (initial create) succeeds, subsequent calls can throw
@@ -309,7 +312,7 @@ describe('mELCloudAPI', () => {
     })
     await vi.advanceTimersByTimeAsync(60_000)
 
-    expect(logger.error).toHaveBeenCalledWith(
+    expect(logger.warn).toHaveBeenCalledWith(
       'Auto-sync failed:',
       expect.any(Error),
     )
@@ -782,6 +785,21 @@ describe('mELCloudAPI', () => {
         responseErrorHandler(
           createAxiosError({
             message: 'too many',
+            status: 429,
+            url: '/User/ListDevices',
+          }),
+        ),
+      ).rejects.toThrow('too many')
+    })
+
+    it('error handler uses retry-after header for 429 pause duration', async () => {
+      await createApi({ logger: createLogger() })
+
+      await expect(
+        responseErrorHandler(
+          createAxiosError({
+            message: 'too many',
+            responseHeaders: { 'retry-after': '120' },
             status: 429,
             url: '/User/ListDevices',
           }),

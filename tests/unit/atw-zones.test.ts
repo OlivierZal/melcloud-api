@@ -64,8 +64,8 @@ describe('deviceAtwFacade zone1', () => {
     expect(zone1.isIdle).toBe(false)
     expect(zone1.isInHeatMode).toBe(true)
     expect(zone1.isInCoolMode).toBe(false)
-    expect(zone1.isProhibitHeating).toBe(false)
-    expect(zone1.isProhibitCooling).toBe(false)
+    expect(zone1.isHeatingProhibited).toBe(false)
+    expect(zone1.isCoolingProhibited).toBe(false)
   })
 
   it('returns idle when device is idle', () => {

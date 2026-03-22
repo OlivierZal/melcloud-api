@@ -157,11 +157,11 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
    */
   public override async getTemperatures(
     query?: ReportQuery,
-    useExactRange = true,
+    shouldUseExactRange = true,
   ): Promise<ReportChartLineOptions> {
-    const temperatures = await super.getTemperatures(query, useExactRange)
+    const temperatures = await super.getTemperatures(query, shouldUseExactRange)
     const { series: internalTemperaturesSeries } =
-      await this.getInternalTemperatures(query, useExactRange)
+      await this.getInternalTemperatures(query, shouldUseExactRange)
     return {
       ...temperatures,
       series: mergeSeries(temperatures.series, internalTemperaturesSeries),
@@ -180,11 +180,11 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
   protected getZoneState(zone: ZoneAtw): ZoneState {
     const { data } = this
     return {
+      isCoolingProhibited: data[`ProhibitCooling${zone}`],
+      isHeatingProhibited: data[`ProhibitHeating${zone}`],
       isIdle: data[`Idle${zone}`],
       isInCoolMode: data[`${zone}InCoolMode`],
       isInHeatMode: data[`${zone}InHeatMode`],
-      isProhibitCooling: data[`ProhibitCooling${zone}`],
-      isProhibitHeating: data[`ProhibitHeating${zone}`],
       operationalState: getZoneOperationalState(data, zone),
       operationMode: data[`OperationMode${zone}`],
       roomTemperature: data[`RoomTemperature${zone}`],

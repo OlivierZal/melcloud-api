@@ -84,7 +84,7 @@ const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
     getTiles: vi.fn().mockResolvedValue({
       data: { SelectedDevice: null, Tiles: [] },
     }),
-    getValues: vi.fn().mockResolvedValue({ data: {} }),
+    getValues: vi.fn().mockResolvedValue({ data: { EffectiveFlags: 0 } }),
     setFrostProtection: vi.fn().mockResolvedValue({
       data: { AttributeErrors: null, Success: true },
     }),
@@ -307,7 +307,7 @@ describe('buildingFacade frostProtection', () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
     const result = await facade.setFrostProtection({
-      enabled: true,
+      isEnabled: true,
       max: 14,
       min: 6,
     })
@@ -587,7 +587,7 @@ describe('baseFacade instance error', () => {
     const { facade, registry } = createAreaFacade()
     registry.syncAreas([])
 
-    expect(() => facade.name).toThrow('Area not found')
+    expect(() => facade.name).toThrow('not found')
   })
 
   it('throws when no device id for device-level frost protection fallback', async () => {
@@ -601,7 +601,7 @@ describe('baseFacade instance error', () => {
     const facade = new AreaFacade(api, registry, instance)
 
     await expect(facade.getFrostProtection()).rejects.toThrow(
-      'No device id found',
+      'No device found for',
     )
   })
 })
