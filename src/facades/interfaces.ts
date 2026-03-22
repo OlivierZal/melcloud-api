@@ -6,6 +6,7 @@ import type {
   BaseDeviceModel,
   DeviceModel,
   DeviceModelAny,
+  Identifiable,
   Model,
 } from '../models/interfaces.ts'
 import type { ErrorLog, ErrorLogQuery } from '../services/index.ts'
@@ -94,7 +95,7 @@ export interface DeviceFacade<T extends DeviceType>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((
-    device: true | DeviceModel<T>,
+    device: true | DeviceModelAny,
   ) => Promise<TilesData<T>>) &
     ((device?: false) => Promise<TilesData<null>>)
 
@@ -116,7 +117,7 @@ export interface DeviceFacade<T extends DeviceType>
 }
 
 /** Base facade contract shared by all facade types (building, floor, area, device). */
-export interface Facade extends Model {
+export interface Facade extends Identifiable {
   /** All devices managed by this facade. */
   readonly devices: readonly DeviceModelAny[]
 
@@ -216,6 +217,17 @@ export interface ReportQuery {
 
 /** Union of all device facade types. */
 export type DeviceFacadeAny =
+  | DeviceAtwFacade
+  | DeviceAtwHasZone2Facade
   | DeviceFacade<typeof DeviceType.Ata>
-  | DeviceFacade<typeof DeviceType.Atw>
   | DeviceFacade<typeof DeviceType.Erv>
+
+/**
+ * Type guard that narrows an ATW facade to the zone 2 variant.
+ * Allows consumers to safely access `zone2` without type assertions.
+ * @param facade - The ATW device facade to check.
+ * @returns Whether the facade supports zone 2.
+ */
+export const hasZone2 = (
+  facade: DeviceAtwFacade,
+): facade is DeviceAtwHasZone2Facade => 'zone2' in facade

@@ -63,39 +63,27 @@ export const isSetDeviceDataAtaInList = (
 ): value is keyof SetDeviceDataAtaInList => value in fromListToSetAta
 
 /*
- * Transform raw API label formats into human-readable strings based on
- * report granularity (day of week, month name, year-month, etc.)
+ * Strategy map: transform raw API label formats into human-readable strings
+ * based on report granularity (day of week, month name, year-month, etc.)
  */
+const labelFormatters: Record<LabelType, (label: string) => string> = {
+  [LabelType.day_of_week]: (label) =>
+    DateTime.fromFormat(label, 'c').toFormat('ccc'),
+  [LabelType.month]: (label) =>
+    DateTime.fromObject({ month: Number(label) }).toFormat('MMM'),
+  [LabelType.month_of_year]: (label) =>
+    DateTime.local(
+      Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
+      Number(label) % YEAR_MONTH_DIVISOR,
+    ).toFormat('MMM yyyy'),
+  [LabelType.raw]: (label) => label,
+  [LabelType.time]: (label) => label,
+}
+
 const formatLabels = (
   labels: readonly string[],
   labelType: LabelType,
-): string[] => {
-  switch (labelType) {
-    case LabelType.day_of_week: {
-      return labels.map((label) =>
-        DateTime.fromFormat(label, 'c').toFormat('ccc'),
-      )
-    }
-    case LabelType.month: {
-      return labels.map((label) =>
-        DateTime.fromObject({ month: Number(label) }).toFormat('MMM'),
-      )
-    }
-    case LabelType.month_of_year: {
-      return labels.map((label) =>
-        DateTime.local(
-          Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
-          Number(label) % YEAR_MONTH_DIVISOR,
-        ).toFormat('MMM yyyy'),
-      )
-    }
-    case LabelType.raw:
-    case LabelType.time: {
-      return [...labels]
-    }
-    // No default
-  }
-}
+): string[] => labels.map((label) => labelFormatters[labelType](label))
 
 /**
  * Type-safe `Object.keys` that preserves the key type of the input object.

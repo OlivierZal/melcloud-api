@@ -113,6 +113,7 @@ const createDevice = (overrides: Record<string, unknown> = {}): ListDeviceAny =>
   cast({
     AreaID: null,
     BuildingID: 1,
+    Device: {},
     DeviceID: 1,
     DeviceName: 'Device',
     FloorID: null,
@@ -671,6 +672,15 @@ describe('mELCloudAPI', () => {
       const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
 
       expect(result.errors).toHaveLength(0)
+    })
+
+    it('throws on invalid date in query', async () => {
+      const api = await createApi()
+      mockAxiosInstance.post.mockResolvedValue({ data: [] })
+
+      await expect(api.getErrorLog({ to: 'not-a-date' }, [1])).rejects.toThrow(
+        'Invalid DateTime',
+      )
     })
   })
 

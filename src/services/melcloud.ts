@@ -94,13 +94,10 @@ const INVALID_YEAR = 1
 const toISODate = (dateTime: DateTime): string => {
   const result = dateTime.toISODate()
 
-  // Defensive: DateTime from valid ISO string always produces valid date
-  /* v8 ignore start */
   if (result === null) {
     throw new Error('Invalid DateTime: cannot convert to ISO date')
   }
 
-  /* v8 ignore stop */
   return result
 }
 

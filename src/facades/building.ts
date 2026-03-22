@@ -2,6 +2,7 @@ import type { ModelRegistry } from '../models/index.ts'
 import type {
   BuildingModel as BuildingModelContract,
   DeviceModelAny,
+  Model,
 } from '../models/interfaces.ts'
 import type { APIAdapter } from '../services/index.ts'
 import type { ZoneSettings } from '../types/index.ts'
@@ -23,7 +24,7 @@ export class BuildingFacade extends BaseZoneFacade<BuildingModelContract> {
   public constructor(
     api: APIAdapter,
     registry: ModelRegistry,
-    instance: BuildingModelContract,
+    instance: Model,
   ) {
     super(api, registry, instance)
     ;({

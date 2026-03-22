@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 
 import type {
   DeviceModelAny,
-  DeviceModel as DeviceModelContract,
+  DeviceModel as DeviceModelInterface,
 } from '../models/interfaces.ts'
 import type {
   EnergyData,
@@ -81,25 +81,21 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return this.device.data
   }
 
-  protected get device(): DeviceModelContract<T> {
+  protected get device(): DeviceModelInterface<T> {
     const { instance } = this
-    if (!this.#isMatchingDevice(instance)) {
+    if (instance.type !== this.type) {
       throw new Error(
         `Device type mismatch: expected ${String(this.type)}, got ${String(instance.type)}`,
       )
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified
-    return instance as unknown as DeviceModelContract<T>
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified by type guard above
+    return instance as DeviceModelInterface<T>
   }
 
   protected get model(): {
     getById: (id: number) => DeviceModelAny | undefined
   } {
     return this.registry.devices
-  }
-
-  #isMatchingDevice(device: DeviceModelAny): boolean {
-    return device.type === this.type
   }
 
   /*
@@ -123,17 +119,18 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public override async getTiles(device?: false): Promise<TilesData<null>>
   public override async getTiles(
-    device: true | DeviceModelContract<T>,
+    device: true | DeviceModelAny,
   ): Promise<TilesData<T>>
   public override async getTiles(
-    device: boolean | DeviceModelContract<T> = false,
+    device: boolean | DeviceModelAny = false,
   ): Promise<TilesData<T | null>> {
-    return (
-        device === false ||
-          (device instanceof DeviceModel && device.id !== this.id)
-      ) ?
-        super.getTiles()
-      : super.getTiles(this.device)
+    if (
+      device === false ||
+      (device instanceof DeviceModel && device.id !== this.id)
+    ) {
+      return super.getTiles()
+    }
+    return super.getTiles(this.device)
   }
 
   @fetchDevices
