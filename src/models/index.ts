@@ -2,7 +2,9 @@ export type {
   BaseBuildingModel,
   BaseDeviceModel,
   DeviceModelAny,
+  Identifiable,
   Model,
+  ModelKind,
 } from './interfaces.ts'
 
 export { AreaModel } from './area.ts'

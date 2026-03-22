@@ -6,6 +6,8 @@ import { BaseModel } from './base.ts'
 export class AreaModel<
   T extends number | null = number | null,
 > extends BaseModel {
+  public readonly modelKind = 'area'
+
   public buildingId: number
 
   public floorId: number | null

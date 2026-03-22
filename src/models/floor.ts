@@ -4,6 +4,8 @@ import { BaseModel } from './base.ts'
 
 /** Floor model representing a level within a building. */
 export class FloorModel extends BaseModel {
+  public readonly modelKind = 'floor'
+
   public buildingId: number
 
   public constructor({

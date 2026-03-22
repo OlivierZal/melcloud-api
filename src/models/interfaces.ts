@@ -5,6 +5,7 @@ import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 export interface AreaModel extends Model {
   readonly buildingId: number
   readonly floorId: number | null
+  readonly modelKind: 'area'
 }
 
 /** Base building model providing zone settings (frost protection, holiday mode). */
@@ -22,6 +23,7 @@ export interface BaseDeviceModel<T extends DeviceType> {
 export interface BuildingModel extends BaseBuildingModel, Model {
   /** Numeric location identifier used by the MELCloud API. */
   readonly location: number
+  readonly modelKind: 'building'
 }
 
 /** Device model with full hierarchy references and mutable data. */
@@ -30,6 +32,7 @@ export interface DeviceModel<T extends DeviceType>
   readonly areaId: number | null
   readonly buildingId: number
   readonly floorId: number | null
+  readonly modelKind: 'device'
 
   /** Merge partial device data into the current state. */
   readonly update: (data: Partial<ListDeviceData<T>>) => void
@@ -38,12 +41,21 @@ export interface DeviceModel<T extends DeviceType>
 /** Floor model with parent building reference. */
 export interface FloorModel extends Model {
   readonly buildingId: number
+  readonly modelKind: 'floor'
 }
 
-/** Base identifiable model with numeric ID and display name. */
-export interface Model {
+/** Model kind discriminants for polymorphic dispatch without instanceof. */
+export type ModelKind = 'area' | 'building' | 'device' | 'floor'
+
+/** Base identifiable entity with numeric ID and display name. */
+export interface Identifiable {
   readonly id: number
   readonly name: string
+}
+
+/** Base identifiable model with kind discriminant for polymorphic dispatch. */
+export interface Model extends Identifiable {
+  readonly modelKind: ModelKind
 }
 
 /** Union of all device model types. */
