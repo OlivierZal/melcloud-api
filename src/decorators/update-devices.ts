@@ -116,11 +116,7 @@ export const updateDevice = <
       devices: [device],
     } = this
     if (device?.type === this.type) {
-      /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- runtime-verified */
-      ;(
-        device as unknown as { update: (d: Partial<ListDeviceData<T>>) => void }
-      ).update(convertToListDeviceData(this, data))
-      /* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
+      device.update(convertToListDeviceData(this, data))
     }
     return data
   }

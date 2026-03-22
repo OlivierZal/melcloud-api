@@ -95,7 +95,7 @@ export interface DeviceFacade<T extends DeviceType>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((
-    device: true | DeviceModel<T>,
+    device: true | DeviceModelAny,
   ) => Promise<TilesData<T>>) &
     ((device?: false) => Promise<TilesData<null>>)
 

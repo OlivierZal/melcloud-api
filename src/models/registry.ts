@@ -6,7 +6,6 @@ import type {
   DeviceZone,
   FloorData,
   FloorZone,
-  ListDevice,
   ListDeviceAny,
   Zone,
 } from '../types/index.ts'
@@ -278,8 +277,7 @@ export class ModelRegistry {
       create: (area) => new AreaModel(area),
       getId: (area) => area.ID,
       update: (model, area) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- registry-created instance
-        ;(model as AreaModel).sync(area)
+        model.sync(area)
       },
     })
     this.#areasByBuildingId = Map.groupBy(
@@ -300,8 +298,7 @@ export class ModelRegistry {
       create: (building) => new BuildingModel(building),
       getId: (building) => building.ID,
       update: (model, building) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- registry-created instance
-        ;(model as BuildingModel).sync(building)
+        model.sync(building)
       },
     })
   }
@@ -311,18 +308,28 @@ export class ModelRegistry {
       create: createDeviceModel,
       getId: (device) => device.DeviceID,
       update: (model, device) => {
-        /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- runtime-verified via type guard */
-        // Defensive: device type should never change between syncs
-        /* v8 ignore start */
-        if (model.type !== device.Type) {
-          return
+        // Switch correlates model and device types for type-safe sync
+        switch (device.Type) {
+          case DeviceType.Ata: {
+            if (model.type === DeviceType.Ata) {
+              model.sync(device)
+            }
+            break
+          }
+          case DeviceType.Atw: {
+            if (model.type === DeviceType.Atw) {
+              model.sync(device)
+            }
+            break
+          }
+          case DeviceType.Erv: {
+            if (model.type === DeviceType.Erv) {
+              model.sync(device)
+            }
+            break
+          }
+          // No default
         }
-
-        /* v8 ignore stop */
-        ;(model as DeviceModel<typeof device.Type>).sync(
-          device as ListDevice<typeof device.Type>,
-        )
-        /* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
       },
     })
     this.#devicesByBuildingId = Map.groupBy(
@@ -350,8 +357,7 @@ export class ModelRegistry {
       create: (floor) => new FloorModel(floor),
       getId: (floor) => floor.ID,
       update: (model, floor) => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- registry-created instance
-        ;(model as FloorModel).sync(floor)
+        model.sync(floor)
       },
     })
     this.#floorsByBuildingId = Map.groupBy(

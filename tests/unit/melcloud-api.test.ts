@@ -113,6 +113,7 @@ const createDevice = (overrides: Record<string, unknown> = {}): ListDeviceAny =>
   cast({
     AreaID: null,
     BuildingID: 1,
+    Device: {},
     DeviceID: 1,
     DeviceName: 'Device',
     FloorID: null,

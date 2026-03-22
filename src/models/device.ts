@@ -1,5 +1,10 @@
 import type { DeviceType } from '../constants.ts'
-import type { ListDevice, ListDeviceData } from '../types/index.ts'
+import type {
+  ListDevice,
+  ListDeviceAny,
+  ListDeviceData,
+  ListDeviceDataAny,
+} from '../types/index.ts'
 
 import { BaseModel } from './base.ts'
 
@@ -15,7 +20,7 @@ export class DeviceModel<T extends DeviceType> extends BaseModel {
 
   public floorId: number | null = null
 
-  #data: ListDeviceData<T>
+  readonly #data: ListDeviceData<T>
 
   public constructor({
     AreaID: areaId,
@@ -44,15 +49,15 @@ export class DeviceModel<T extends DeviceType> extends BaseModel {
     Device: data,
     DeviceName: name,
     FloorID: floorId,
-  }: ListDevice<T>): void {
+  }: ListDeviceAny): void {
     this.name = name
     this.areaId = areaId
     this.buildingId = buildingId
     this.floorId = floorId
-    this.#data = data
+    Object.assign(this.#data, data)
   }
 
-  public update(data: Partial<ListDeviceData<T>>): void {
-    this.#data = { ...this.#data, ...data }
+  public update(data: Partial<ListDeviceDataAny>): void {
+    Object.assign(this.#data, data)
   }
 }
