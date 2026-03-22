@@ -14,7 +14,7 @@ jobs:
         with:
           cache: npm
           node-version: latest
-      - run: npm audit --omit=dev
+      - run: npm audit --audit-level=high --omit=dev
   lint:
     if: github.actor != 'dependabot[bot]'
     name: Lint
@@ -28,6 +28,7 @@ jobs:
           cache: npm
           node-version: latest
       - run: npm ci --ignore-scripts
+      - run: npm run typecheck
       - run: npm run lint
       - run: npm run format
   test:
