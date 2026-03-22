@@ -8,8 +8,13 @@ import type {
   SuccessData,
 } from '../types/index.ts'
 
-import { type DeviceType, FLAG_UNCHANGED } from '../constants.ts'
-import { isUpdateDeviceData, typedFromEntries } from '../utils.ts'
+import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
+import {
+  fromSetToListAta,
+  isSetDeviceDataAtaNotInList,
+  isUpdateDeviceData,
+  typedFromEntries,
+} from '../utils.ts'
 
 /**
  * Method decorator factory that propagates data changes to device models after
@@ -61,14 +66,14 @@ export const updateDevices =
 
 /*
  * EffectiveFlags from the API response indicates which fields were actually
- * changed by the device. Use this to update only those fields, delegating
- * key conversion to the facade's polymorphic method (e.g., ATA: SetFanSpeed → FanSpeed).
+ * changed by the device. Use this to update only those fields, converting
+ * ATA set-command keys back to list-data keys (e.g., SetFanSpeed → FanSpeed).
  */
 const convertToListDeviceData = <T extends DeviceType>(
   facade: DeviceFacade<T>,
   data: SetDeviceData<T>,
 ): Partial<ListDeviceData<T>> => {
-  const { flags } = facade
+  const { flags, type } = facade
   const { EffectiveFlags: effectiveFlags, ...newData } = data
   const allEntries = Object.entries(newData)
   let entries = allEntries
@@ -81,7 +86,13 @@ const convertToListDeviceData = <T extends DeviceType>(
     )
   }
   return typedFromEntries<Partial<ListDeviceData<T>>>(
-    facade.convertSetToListEntries(entries),
+    type === DeviceType.Ata ?
+      entries.map(([key, value]) =>
+        isSetDeviceDataAtaNotInList(key) ?
+          [fromSetToListAta[key], value]
+        : [key, value],
+      )
+    : entries,
   )
 }
 

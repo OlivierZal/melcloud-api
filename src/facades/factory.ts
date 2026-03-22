@@ -1,12 +1,7 @@
 import type { ModelRegistry } from '../models/index.ts'
 import type {
-  AreaModel,
-  BuildingModel,
-  DeviceModel,
   DeviceModelAny,
-  FloorModel,
   Model,
-  ModelKind,
 } from '../models/interfaces.ts'
 import type { APIAdapter } from '../services/index.ts'
 
@@ -22,29 +17,6 @@ import { DeviceAtwFacade } from './device-atw.ts'
 import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
-type FacadeFactory = (
-  api: APIAdapter,
-  registry: ModelRegistry,
-  instance: Model,
-) => Facade
-
-const deviceFacadeFactories: Record<
-  DeviceType,
-  (api: APIAdapter, registry: ModelRegistry, instance: DeviceModelAny) => DeviceFacadeAny
-> = {
-  [DeviceType.Ata]: (api, registry, instance) =>
-    new DeviceAtaFacade(api, registry, instance),
-  [DeviceType.Atw]: (api, registry, instance) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- type-narrowed by factory dispatch
-    const atw = instance as DeviceModel<typeof DeviceType.Atw>
-    return atw.data.HasZone2 ?
-        new DeviceAtwHasZone2Facade(api, registry, instance)
-      : new DeviceAtwFacade(api, registry, instance)
-  },
-  [DeviceType.Erv]: (api, registry, instance) =>
-    new DeviceErvFacade(api, registry, instance),
-}
-
 const getDeviceFromRegistry = (
   registry: ModelRegistry,
   id: number,
@@ -56,23 +28,27 @@ const getDeviceFromRegistry = (
   return device
 }
 
-const createDeviceFacade: FacadeFactory = (api, registry, instance) => {
+const createDeviceFacade = (
+  api: APIAdapter,
+  registry: ModelRegistry,
+  instance: Model,
+): DeviceFacadeAny => {
   const device = getDeviceFromRegistry(registry, instance.id)
-  return deviceFacadeFactories[device.type](api, registry, device)
-}
-
-const facadeFactories: Record<ModelKind, FacadeFactory> = {
-  area: (api, registry, instance) =>
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- dispatched by modelKind
-    new AreaFacade(api, registry, instance as AreaModel),
-  building: (api, registry, instance) =>
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- dispatched by modelKind
-    new BuildingFacade(api, registry, instance as BuildingModel),
-  // eslint-disable-next-line perfectionist/sort-objects -- device is a pre-defined function reference
-  device: createDeviceFacade,
-  floor: (api, registry, instance) =>
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- dispatched by modelKind
-    new FloorFacade(api, registry, instance as FloorModel),
+  switch (device.type) {
+    case DeviceType.Ata: {
+      return new DeviceAtaFacade(api, registry, device)
+    }
+    case DeviceType.Atw: {
+      if (device.data.HasZone2) {
+        return new DeviceAtwHasZone2Facade(api, registry, device)
+      }
+      return new DeviceAtwFacade(api, registry, device)
+    }
+    case DeviceType.Erv: {
+      return new DeviceErvFacade(api, registry, device)
+    }
+    // No default
+  }
 }
 
 /**
@@ -87,11 +63,19 @@ export const createFacade = (
   registry: ModelRegistry,
   instance: Model,
 ): Facade => {
-  const factory = facadeFactories[instance.modelKind] as
-    | FacadeFactory
-    | undefined
-  if (!factory) {
-    throw new Error('Model not supported')
+  switch (instance.modelKind) {
+    case 'area': {
+      return new AreaFacade(api, registry, instance)
+    }
+    case 'building': {
+      return new BuildingFacade(api, registry, instance)
+    }
+    case 'device': {
+      return createDeviceFacade(api, registry, instance)
+    }
+    case 'floor': {
+      return new FloorFacade(api, registry, instance)
+    }
+    // No default
   }
-  return factory(api, registry, instance)
 }

@@ -2,6 +2,7 @@ import type { ModelRegistry } from '../models/index.ts'
 import type {
   BuildingModel as BuildingModelContract,
   DeviceModelAny,
+  Model,
 } from '../models/interfaces.ts'
 import type { APIAdapter } from '../services/index.ts'
 import type { ZoneSettings } from '../types/index.ts'
@@ -12,17 +13,20 @@ import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
 export class BuildingFacade extends BaseZoneFacade<BuildingModelContract> {
+  protected readonly frostProtectionLocation = 'BuildingIds'
+
+  protected readonly groupSpecificationKey = 'BuildingID'
+
+  protected readonly holidayModeLocation = 'Buildings'
+
+  protected readonly tableName = 'Building'
+
   public constructor(
     api: APIAdapter,
     registry: ModelRegistry,
-    instance: BuildingModelContract,
+    instance: Model,
   ) {
-    super(api, registry, instance, {
-      frostProtectionLocation: 'BuildingIds',
-      groupSpecificationKey: 'BuildingID',
-      holidayModeLocation: 'Buildings',
-      tableName: 'Building',
-    })
+    super(api, registry, instance)
     ;({
       data: {
         FPDefined: this.isFrostProtectionAtZoneLevel,

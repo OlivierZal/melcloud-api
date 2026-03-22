@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { APIAdapter } from '../../src/services/index.ts'
 
 import { createFacade } from '../../src/facades/index.ts'
-import { type Model, ModelRegistry } from '../../src/models/index.ts'
+import { ModelRegistry } from '../../src/models/index.ts'
 import {
   areaData,
   ataDevice,
@@ -13,7 +13,7 @@ import {
   ervDevice,
   floorData,
 } from '../fixtures.ts'
-import { cast, defined, mock } from '../helpers.ts'
+import { defined, mock } from '../helpers.ts'
 
 const mockApi = mock<APIAdapter>()
 
@@ -105,12 +105,5 @@ describe(createFacade, () => {
     )
   })
 
-  it('throws for unsupported model types', () => {
-    const registry = new ModelRegistry()
-    const unknown = mock<Model>({ id: 1, modelKind: cast('unknown'), name: 'unknown' })
-
-    expect(() => createFacade(mockApi, registry, unknown)).toThrow(
-      'Model not supported',
-    )
-  })
+  // Unsupported model types are now a compile-time error via exhaustive modelKind switch
 })

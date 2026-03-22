@@ -1,12 +1,6 @@
 import type { UpdateDeviceData, UpdateDeviceDataAta } from '../types/index.ts'
 
 import { DeviceType, OperationMode } from '../constants.ts'
-import {
-  fromListToSetAta,
-  fromSetToListAta,
-  isSetDeviceDataAtaInList,
-  isSetDeviceDataAtaNotInList,
-} from '../utils.ts'
 
 import { BaseDeviceFacade } from './base-device.ts'
 
@@ -28,22 +22,6 @@ export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
     'RoomTemperature',
     'OutdoorTemperature',
   ]
-
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-explicit-any -- polymorphic override, matches Object.entries return type
-  public override convertListToSetEntries(entries: [string, any][]): [string, any][] {
-    return entries.map(([key, value]) => [
-      isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
-      value,
-    ])
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/no-explicit-any -- polymorphic override, matches Object.entries return type
-  public override convertSetToListEntries(entries: [string, any][]): [string, any][] {
-    return entries.map(([key, value]) => [
-      isSetDeviceDataAtaNotInList(key) ? fromSetToListAta[key] : key,
-      value,
-    ])
-  }
 
   /*
    * Clamp SetTemperature to the valid range for the current or requested

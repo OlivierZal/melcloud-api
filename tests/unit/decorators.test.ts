@@ -19,10 +19,6 @@ import {
   updateDevice,
   updateDevices,
 } from '../../src/decorators/index.ts'
-import {
-  fromSetToListAta,
-  isSetDeviceDataAtaNotInList,
-} from '../../src/utils.ts'
 import { mock } from '../helpers.ts'
 
 const createMockFacade = (
@@ -90,25 +86,13 @@ const createErvSetData = (
   ...overrides,
 })
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches Object.entries return type
-const ataConvertSetToListEntries = (entries: [string, any][]): [string, any][] =>
-  entries.map(([key, value]) => [
-    isSetDeviceDataAtaNotInList(key) ? fromSetToListAta[key] : key,
-    value,
-  ])
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches Object.entries return type
-const identityEntries = (entries: [string, any][]): [string, any][] => entries
-
 const createAtaFacade = (
   update: ReturnType<typeof vi.fn>,
 ): {
-  convertSetToListEntries: typeof ataConvertSetToListEntries
   devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[]
   flags: typeof ataFlags
   type: DeviceType
 } => ({
-  convertSetToListEntries: ataConvertSetToListEntries,
   devices: [{ type: DeviceType.Ata, update }],
   flags: ataFlags,
   type: DeviceType.Ata,
@@ -117,12 +101,10 @@ const createAtaFacade = (
 const createErvFacade = (
   update: ReturnType<typeof vi.fn>,
 ): {
-  convertSetToListEntries: typeof identityEntries
   devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[]
   flags: typeof ervFlags
   type: DeviceType
 } => ({
-  convertSetToListEntries: identityEntries,
   devices: [{ type: DeviceType.Erv, update }],
   flags: ervFlags,
   type: DeviceType.Erv,
