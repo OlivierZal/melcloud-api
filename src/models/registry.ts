@@ -169,8 +169,7 @@ export class ModelRegistry {
   readonly #buildings = new Map<number, BuildingModel>()
 
   public readonly buildings = {
-    getById: (id: number): BuildingModel | undefined =>
-      this.#buildings.get(id),
+    getById: (id: number): BuildingModel | undefined => this.#buildings.get(id),
   }
 
   readonly #devices = new Map<number, DeviceModelAny>()
@@ -182,8 +181,7 @@ export class ModelRegistry {
   readonly #floors = new Map<number, FloorModel>()
 
   public readonly floors = {
-    getById: (id: number): FloorModel | undefined =>
-      this.#floors.get(id),
+    getById: (id: number): FloorModel | undefined => this.#floors.get(id),
   }
 
   readonly #devicesByZone = {
@@ -393,10 +391,7 @@ export class ModelRegistry {
       .toSorted(compareNames)
   }
 
-  #buildFloorZones(
-    floors: FloorModel[],
-    type?: DeviceType,
-  ): FloorZone[] {
+  #buildFloorZones(floors: FloorModel[], type?: DeviceType): FloorZone[] {
     return floors
       .filter((floor) => this.#hasDevices(floor.id, 'floor', type))
       .map((floor) => ({
