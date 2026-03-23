@@ -181,7 +181,7 @@ describe(updateDevices, () => {
   it('updates all devices with the arg data', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: DeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices('setPower', resolveTrue)
+    const decorated = decorateUpdateDevices('setGroup', resolveTrue)
     await decorated.call(facade, { Power: true })
 
     expect(update).toHaveBeenCalledWith({ Power: true })
@@ -210,16 +210,16 @@ describe(updateDevices, () => {
     expect(updateAtw).not.toHaveBeenCalled()
   })
 
-  it('uses SetPower logic when method name is SetPower', async () => {
+  it('uses setPower logic when method name is setPower', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: DeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices('SetPower', resolveTrue)
+    const decorated = decorateUpdateDevices('setPower', resolveTrue)
     await decorated.call(facade, true)
 
     expect(update).toHaveBeenCalledWith({ Power: true })
   })
 
-  it('filters null/undefined values from data when no SetPower', async () => {
+  it('filters null/undefined values from data when not setPower', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: DeviceType.Ata, update }])
     const decorated = decorateUpdateDevices('setGroup', resolvePowerData)
