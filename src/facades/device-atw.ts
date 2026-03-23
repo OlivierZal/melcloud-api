@@ -21,9 +21,9 @@ import { BaseDeviceFacade } from './base-device.ts'
 
 const DEFAULT_TEMPERATURE = 0
 
-const coolFlowTemperatureRange = { max: 25, min: 5 } as const
-const heatFlowTemperatureRange = { max: 60, min: 25 } as const
-const roomTemperatureRange = { max: 30, min: 10 } as const
+const coolFlowTemperatureRange = { max: 25, min: 5 }
+const heatFlowTemperatureRange = { max: 60, min: 25 }
+const roomTemperatureRange = { max: 30, min: 10 }
 
 const hotWaterStateMap: Partial<
   Record<OperationModeState, OperationModeStateHotWater>

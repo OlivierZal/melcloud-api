@@ -69,7 +69,7 @@ describe(typedFromEntries, () => {
 })
 
 describe(isUpdateDeviceData, () => {
-  const data = { Power: 0, SetTemperature: 0 } as const
+  const data = { Power: 0, SetTemperature: 0 }
 
   it('returns true for keys in the data record', () => {
     const key = 'Power' as string

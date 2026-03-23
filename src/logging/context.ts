@@ -11,7 +11,7 @@ const logKeys = [
   'responseData',
   'status',
   'errorMessage',
-] as const
+]
 
 const JSON_INDENT = 2
 

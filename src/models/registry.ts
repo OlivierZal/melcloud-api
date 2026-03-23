@@ -114,6 +114,30 @@ const CHILD_LEVEL = 1
 const GRANDCHILD_LEVEL = 2
 const GREAT_GRANDCHILD_LEVEL = 3
 
+const flattenAreas = function* flattenAreas(
+  areas: readonly AreaZone[],
+): Generator<Zone> {
+  for (const area of areas) {
+    yield area
+    yield* area.devices
+  }
+}
+
+const flattenBuildings = function* flattenBuildings(
+  buildings: readonly BuildingZone[],
+): Generator<Zone> {
+  for (const building of buildings) {
+    yield building
+    yield* building.devices
+    yield* flattenAreas(building.areas)
+    for (const floor of building.floors) {
+      yield floor
+      yield* floor.devices
+      yield* flattenAreas(floor.areas)
+    }
+  }
+}
+
 const compareNames = (
   { name: name1 }: { name: string },
   { name: name2 }: { name: string },
@@ -276,9 +300,7 @@ export class ModelRegistry {
     type: typeof DeviceType.Erv,
   ): DeviceModel<typeof DeviceType.Erv>[]
   public getDevicesByType(type: DeviceType): DeviceModelAny[] {
-    return this.getDevices().filter(
-      (instance): instance is DeviceModelAny => instance.type === type,
-    )
+    return this.getDevices().filter((instance) => instance.type === type)
   }
 
   public getFloorsByBuildingId(id: number): FloorModel[] {
@@ -286,21 +308,9 @@ export class ModelRegistry {
   }
 
   public getZones({ type }: { type?: DeviceType } = {}): Zone[] {
-    return this.getBuildings({ type })
-      .flatMap((building): Zone[] => [
-        building,
-        ...building.devices,
-        ...building.areas.flatMap((area): Zone[] => [area, ...area.devices]),
-        ...building.floors.flatMap((floor): Zone[] => [
-          floor,
-          ...floor.devices,
-          ...floor.areas.flatMap((floorArea): Zone[] => [
-            floorArea,
-            ...floorArea.devices,
-          ]),
-        ]),
-      ])
-      .toSorted(compareNames)
+    return [...flattenBuildings(this.getBuildings({ type }))].toSorted(
+      compareNames,
+    )
   }
 
   public syncAreas(areas: AreaDataAny[]): void {

@@ -53,7 +53,7 @@ const getWithZoneFallback = async <TResult>(
 // Minimum 2°C gap between min and max to prevent invalid frost protection ranges
 const TEMPERATURE_GAP = 2
 
-const temperatureRange = { max: 16, min: 4 } as const
+const temperatureRange = { max: 16, min: 4 }
 
 const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
   date ?

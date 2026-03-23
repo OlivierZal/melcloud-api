@@ -74,7 +74,7 @@ const deviceTypeNames = {
   [DeviceType.Ata]: 'Ata',
   [DeviceType.Atw]: 'Atw',
   [DeviceType.Erv]: 'Erv',
-} as const satisfies Record<DeviceType, string>
+} satisfies Record<DeviceType, string>
 
 const API_BASE_URL = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
 const APP_VERSION = '1.37.2.0'
@@ -173,26 +173,38 @@ const parseErrorLogQuery = ({
 }
 
 // Collect all areas from both building-level and floor-level
-const collectAreas = (buildings: BuildingWithStructure[]): AreaDataAny[] =>
-  buildings.flatMap(({ Structure: { Areas: areas, Floors: floors } }) => [
-    ...areas,
-    ...floors.flatMap(({ Areas: floorAreas }) => floorAreas),
-  ])
+const collectAreas = function* collectAreas(
+  buildings: BuildingWithStructure[],
+): Generator<AreaDataAny> {
+  for (const {
+    Structure: { Areas: areas, Floors: floors },
+  } of buildings) {
+    yield* areas
+    for (const { Areas: floorAreas } of floors) {
+      yield* floorAreas
+    }
+  }
+}
 
 // Collect all devices from every level of the hierarchy
-const collectDevices = (buildings: BuildingWithStructure[]): ListDeviceAny[] =>
-  buildings.flatMap(
-    ({ Structure: { Areas: areas, Devices: devices, Floors: floors } }) => [
-      ...devices,
-      ...areas.flatMap(({ Devices: areaDevices }) => areaDevices),
-      ...floors.flatMap(({ Areas: floorAreas, Devices: floorDevices }) => [
-        ...floorDevices,
-        ...floorAreas.flatMap(
-          ({ Devices: floorAreaDevices }) => floorAreaDevices,
-        ),
-      ]),
-    ],
-  )
+const collectDevices = function* collectDevices(
+  buildings: BuildingWithStructure[],
+): Generator<ListDeviceAny> {
+  for (const {
+    Structure: { Areas: areas, Devices: devices, Floors: floors },
+  } of buildings) {
+    yield* devices
+    for (const { Devices: areaDevices } of areas) {
+      yield* areaDevices
+    }
+    for (const { Areas: floorAreas, Devices: floorDevices } of floors) {
+      yield* floorDevices
+      for (const { Devices: floorAreaDevices } of floorAreas) {
+        yield* floorAreaDevices
+      }
+    }
+  }
+}
 
 /**
  * Main MELCloud API client. Handles authentication, device syncing, and all
@@ -633,8 +645,8 @@ export class MELCloudAPI implements API, Disposable {
     this.#registry.syncFloors(
       data.flatMap(({ Structure: { Floors: floors } }) => floors),
     )
-    this.#registry.syncAreas(collectAreas(data))
-    this.#registry.syncDevices(collectDevices(data))
+    this.#registry.syncAreas([...collectAreas(data)])
+    this.#registry.syncDevices([...collectDevices(data)])
     return data
   }
 

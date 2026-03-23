@@ -18,9 +18,8 @@ const roomOperationModeZones: ReadonlySet<OperationModeZone> = new Set([
   OperationModeZone.room,
   OperationModeZone.room_cool,
 ])
-const operationModeZoneByValue = new Map<number, OperationModeZone>(
-  Object.values(OperationModeZone).map((value) => [value, value]),
-)
+const operationModeZoneByValue: ReadonlyMap<number, OperationModeZone> =
+  new Map(Object.values(OperationModeZone).map((value) => [value, value]))
 
 const toOperationModeZone = (value: number): OperationModeZone => {
   const mode = operationModeZoneByValue.get(value)
