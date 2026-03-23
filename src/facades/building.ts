@@ -1,9 +1,9 @@
-import type { ModelRegistry } from '../models/index.ts'
 import type {
-  BuildingModel as BuildingModelContract,
+  BuildingModel,
   DeviceModelAny,
   Model,
-} from '../models/interfaces.ts'
+  ModelRegistry,
+} from '../models/index.ts'
 import type { APIAdapter } from '../services/index.ts'
 import type { ZoneSettings } from '../types/index.ts'
 
@@ -12,7 +12,7 @@ import { fetchDevices } from '../decorators/index.ts'
 import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
-export class BuildingFacade extends BaseZoneFacade<BuildingModelContract> {
+export class BuildingFacade extends BaseZoneFacade<BuildingModel> {
   protected readonly frostProtectionLocation = 'BuildingIds'
 
   protected readonly groupSpecificationKey = 'BuildingID'
@@ -44,7 +44,7 @@ export class BuildingFacade extends BaseZoneFacade<BuildingModelContract> {
   }
 
   protected get model(): {
-    getById: (id: number) => BuildingModelContract | undefined
+    getById: (id: number) => BuildingModel | undefined
   } {
     return this.registry.buildings
   }

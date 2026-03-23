@@ -8,7 +8,7 @@ import type {
   DeviceModelAny,
   Identifiable,
   Model,
-} from '../models/interfaces.ts'
+} from '../models/index.ts'
 import type { ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type {
   BuildingZone,

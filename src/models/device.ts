@@ -7,6 +7,7 @@ import type {
 } from '../types/index.ts'
 
 import { BaseModel } from './base.ts'
+import { syncModel } from './symbols.ts'
 
 /** Concrete device model holding mutable device data that can be partially updated after API calls. */
 export class DeviceModel<T extends DeviceType> extends BaseModel {
@@ -43,7 +44,7 @@ export class DeviceModel<T extends DeviceType> extends BaseModel {
     return this.#data
   }
 
-  public sync({
+  public [syncModel]({
     AreaID: areaId,
     BuildingID: buildingId,
     Device: data,

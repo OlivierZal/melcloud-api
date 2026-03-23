@@ -12,17 +12,13 @@ import type {
 
 import { DeviceType } from '../constants.ts'
 
-import type {
-  AreaModel as AreaModelContract,
-  BuildingModel as BuildingModelContract,
-  DeviceModelAny,
-  FloorModel as FloorModelContract,
-} from './interfaces.ts'
+import type { DeviceModelAny } from './interfaces.ts'
 
 import { AreaModel } from './area.ts'
 import { BuildingModel } from './building.ts'
 import { DeviceModel } from './device.ts'
 import { FloorModel } from './floor.ts'
+import { syncModel } from './symbols.ts'
 
 /*
  * Upsert + prune: update existing models in-place, create new ones,
@@ -74,19 +70,19 @@ const syncDeviceModel = (
   switch (device.Type) {
     case DeviceType.Ata: {
       if (model.type === DeviceType.Ata) {
-        model.sync(device)
+        model[syncModel](device)
       }
       break
     }
     case DeviceType.Atw: {
       if (model.type === DeviceType.Atw) {
-        model.sync(device)
+        model[syncModel](device)
       }
       break
     }
     case DeviceType.Erv: {
       if (model.type === DeviceType.Erv) {
-        model.sync(device)
+        model[syncModel](device)
       }
       break
     }
@@ -164,16 +160,16 @@ export class ModelRegistry {
    * Public accessors expose readonly query interfaces over private maps,
    * preventing callers from clearing or replacing entire collections.
    */
-  readonly #areas = new Map<number, AreaModelContract>()
+  readonly #areas = new Map<number, AreaModel>()
 
   public readonly areas = {
-    getById: (id: number): AreaModelContract | undefined => this.#areas.get(id),
+    getById: (id: number): AreaModel | undefined => this.#areas.get(id),
   }
 
-  readonly #buildings = new Map<number, BuildingModelContract>()
+  readonly #buildings = new Map<number, BuildingModel>()
 
   public readonly buildings = {
-    getById: (id: number): BuildingModelContract | undefined =>
+    getById: (id: number): BuildingModel | undefined =>
       this.#buildings.get(id),
   }
 
@@ -183,10 +179,10 @@ export class ModelRegistry {
     getById: (id: number): DeviceModelAny | undefined => this.#devices.get(id),
   }
 
-  readonly #floors = new Map<number, FloorModelContract>()
+  readonly #floors = new Map<number, FloorModel>()
 
   public readonly floors = {
-    getById: (id: number): FloorModelContract | undefined =>
+    getById: (id: number): FloorModel | undefined =>
       this.#floors.get(id),
   }
 
@@ -196,9 +192,9 @@ export class ModelRegistry {
     floor: (id: number): DeviceModelAny[] => this.getDevicesByFloorId(id),
   }
 
-  #areasByBuildingId = new Map<number, AreaModelContract[]>()
+  #areasByBuildingId = new Map<number, AreaModel[]>()
 
-  #areasByFloorId = new Map<number, AreaModelContract[]>()
+  #areasByFloorId = new Map<number, AreaModel[]>()
 
   #devicesByAreaId = new Map<number, DeviceModelAny[]>()
 
@@ -206,7 +202,7 @@ export class ModelRegistry {
 
   #devicesByFloorId = new Map<number, DeviceModelAny[]>()
 
-  #floorsByBuildingId = new Map<number, FloorModelContract[]>()
+  #floorsByBuildingId = new Map<number, FloorModel[]>()
 
   /**
    * Build a hierarchical zone structure from the registry, optionally filtered by device type.
@@ -248,11 +244,11 @@ export class ModelRegistry {
    * @param id - The building ID to look up areas for.
    * @returns The areas belonging to the specified building.
    */
-  public getAreasByBuildingId(id: number): AreaModelContract[] {
+  public getAreasByBuildingId(id: number): AreaModel[] {
     return this.#areasByBuildingId.get(id) ?? []
   }
 
-  public getAreasByFloorId(id: number): AreaModelContract[] {
+  public getAreasByFloorId(id: number): AreaModel[] {
     return this.#areasByFloorId.get(id) ?? []
   }
 
@@ -272,16 +268,22 @@ export class ModelRegistry {
     return this.#devicesByFloorId.get(id) ?? []
   }
 
-  public getDevicesByType<TDeviceType extends DeviceType>(
-    type: TDeviceType,
-  ): (DeviceModelAny & { type: TDeviceType })[] {
+  public getDevicesByType(
+    type: typeof DeviceType.Ata,
+  ): DeviceModel<typeof DeviceType.Ata>[]
+  public getDevicesByType(
+    type: typeof DeviceType.Atw,
+  ): DeviceModel<typeof DeviceType.Atw>[]
+  public getDevicesByType(
+    type: typeof DeviceType.Erv,
+  ): DeviceModel<typeof DeviceType.Erv>[]
+  public getDevicesByType(type: DeviceType): DeviceModelAny[] {
     return this.getDevices().filter(
-      (instance): instance is DeviceModelAny & { type: TDeviceType } =>
-        instance.type === type,
+      (instance): instance is DeviceModelAny => instance.type === type,
     )
   }
 
-  public getFloorsByBuildingId(id: number): FloorModelContract[] {
+  public getFloorsByBuildingId(id: number): FloorModel[] {
     return this.#floorsByBuildingId.get(id) ?? []
   }
 
@@ -308,7 +310,7 @@ export class ModelRegistry {
       create: (area) => new AreaModel(area),
       getId: (area) => area.ID,
       update: (model, area) => {
-        model.sync(area)
+        model[syncModel](area)
       },
     })
     this.#areasByBuildingId = Map.groupBy(
@@ -317,7 +319,7 @@ export class ModelRegistry {
     )
     this.#areasByFloorId = Map.groupBy(
       models.filter(
-        (model): model is AreaModelContract & { floorId: number } =>
+        (model): model is AreaModel & { floorId: number } =>
           model.floorId !== null,
       ),
       ({ floorId }) => floorId,
@@ -329,7 +331,7 @@ export class ModelRegistry {
       create: (building) => new BuildingModel(building),
       getId: (building) => building.ID,
       update: (model, building) => {
-        model.sync(building)
+        model[syncModel](building)
       },
     })
   }
@@ -365,7 +367,7 @@ export class ModelRegistry {
       create: (floor) => new FloorModel(floor),
       getId: (floor) => floor.ID,
       update: (model, floor) => {
-        model.sync(floor)
+        model[syncModel](floor)
       },
     })
     this.#floorsByBuildingId = Map.groupBy(
@@ -375,7 +377,7 @@ export class ModelRegistry {
   }
 
   #buildAreaZones(
-    areas: AreaModelContract[],
+    areas: AreaModel[],
     level: number,
     type?: DeviceType,
   ): AreaZone[] {
@@ -392,7 +394,7 @@ export class ModelRegistry {
   }
 
   #buildFloorZones(
-    floors: FloorModelContract[],
+    floors: FloorModel[],
     type?: DeviceType,
   ): FloorZone[] {
     return floors

@@ -1,6 +1,7 @@
 import type { BuildingData, ZoneSettings } from '../types/index.ts'
 
 import { BaseModel } from './base.ts'
+import { syncModel } from './symbols.ts'
 
 /** Building model holding zone settings and geographic location. */
 export class BuildingModel extends BaseModel {
@@ -21,7 +22,11 @@ export class BuildingModel extends BaseModel {
     this.data = data
   }
 
-  public sync({ Location: location, Name: name, ...data }: BuildingData): void {
+  public [syncModel]({
+    Location: location,
+    Name: name,
+    ...data
+  }: BuildingData): void {
     this.name = name
     this.location = location
     this.data = data

@@ -1,6 +1,7 @@
 import type { AreaData, AreaDataAny } from '../types/index.ts'
 
 import { BaseModel } from './base.ts'
+import { syncModel } from './symbols.ts'
 
 /** Area model representing a zone within a building or floor. */
 export class AreaModel<
@@ -23,7 +24,7 @@ export class AreaModel<
     this.floorId = floorId
   }
 
-  public sync({
+  public [syncModel]({
     BuildingId: buildingId,
     FloorId: floorId,
     Name: name,

@@ -1,5 +1,4 @@
 import type { DeviceType } from '../constants.ts'
-import type { ModelRegistry } from '../models/index.ts'
 import type {
   AreaModel,
   BuildingModel,
@@ -7,7 +6,8 @@ import type {
   DeviceModelAny,
   FloorModel,
   Model,
-} from '../models/interfaces.ts'
+  ModelRegistry,
+} from '../models/index.ts'
 import type { APIAdapter } from '../services/index.ts'
 import type { BuildingZone, Zone } from '../types/index.ts'
 

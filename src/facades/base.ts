@@ -1,12 +1,12 @@
 import { DateTime } from 'luxon'
 
 import type { DeviceType } from '../constants.ts'
-import type { ModelRegistry } from '../models/index.ts'
 import type {
   DeviceModel,
   DeviceModelAny,
   Model,
-} from '../models/interfaces.ts'
+  ModelRegistry,
+} from '../models/index.ts'
 import type { APIAdapter, ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type {
   DateTimeComponents,

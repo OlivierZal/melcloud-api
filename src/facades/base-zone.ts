@@ -1,8 +1,4 @@
-import type {
-  AreaModel,
-  BuildingModel,
-  FloorModel,
-} from '../models/interfaces.ts'
+import type { AreaModel, BuildingModel, FloorModel } from '../models/index.ts'
 import type {
   FailureData,
   GroupState,

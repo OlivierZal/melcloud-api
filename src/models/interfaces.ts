@@ -1,61 +1,20 @@
 import type { DeviceType } from '../constants.ts'
-import type {
-  AreaDataAny,
-  BuildingData,
-  FloorData,
-  ListDeviceAny,
-  ListDeviceData,
-  ListDeviceDataAny,
-  ZoneSettings,
-} from '../types/index.ts'
+import type { ListDeviceData } from '../types/index.ts'
 
-/** Area model with parent building and optional floor references. */
-export interface AreaModel extends Model {
-  readonly buildingId: number
-  readonly floorId: number | null
-  readonly modelKind: 'area'
-  readonly sync: (data: AreaDataAny) => void
-}
+import type { BaseModel } from './base.ts'
+import type { BuildingModel } from './building.ts'
+import type { DeviceModel } from './device.ts'
 
 /** Base building model providing zone settings (frost protection, holiday mode). */
-export interface BaseBuildingModel {
-  readonly data: ZoneSettings
-}
+export type BaseBuildingModel = Pick<BuildingModel, 'data'>
+
+/** Base type for all model classes. */
+export type Model = BaseModel
 
 /** Base device model with type-discriminated device data. */
 export interface BaseDeviceModel<T extends DeviceType> {
   readonly data: ListDeviceData<T>
   readonly type: T
-}
-
-/** Building model with geographic location. */
-export interface BuildingModel extends BaseBuildingModel, Model {
-  /** Numeric location identifier used by the MELCloud API. */
-  readonly location: number
-  readonly modelKind: 'building'
-  readonly sync: (data: BuildingData) => void
-}
-
-/** Device model with full hierarchy references and mutable data. */
-export interface DeviceModel<T extends DeviceType>
-  extends BaseDeviceModel<T>, Model {
-  readonly areaId: number | null
-  readonly buildingId: number
-  readonly floorId: number | null
-  readonly modelKind: 'device'
-
-  /** Sync device data from an API response (type-checked at call site). */
-  readonly sync: (data: ListDeviceAny) => void
-
-  /** Merge partial device data into the current state (type-checked at call site). */
-  readonly update: (data: Partial<ListDeviceDataAny>) => void
-}
-
-/** Floor model with parent building reference. */
-export interface FloorModel extends Model {
-  readonly buildingId: number
-  readonly modelKind: 'floor'
-  readonly sync: (data: FloorData) => void
 }
 
 /**
@@ -91,11 +50,6 @@ export type ModelKind = 'area' | 'building' | 'device' | 'floor'
 export interface Identifiable {
   readonly id: number
   readonly name: string
-}
-
-/** Base identifiable model with kind discriminant for polymorphic dispatch. */
-export interface Model extends Identifiable {
-  readonly modelKind: ModelKind
 }
 
 /** Union of all device model types. */

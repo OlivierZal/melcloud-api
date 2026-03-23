@@ -1,10 +1,6 @@
 import { DateTime } from 'luxon'
 
 import type {
-  DeviceModelAny,
-  DeviceModel as DeviceModelInterface,
-} from '../models/interfaces.ts'
-import type {
   EnergyData,
   GetDeviceData,
   ListDeviceData,
@@ -16,7 +12,7 @@ import type {
 
 import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
-import { DeviceModel } from '../models/index.ts'
+import { type DeviceModelAny, DeviceModel } from '../models/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -81,7 +77,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return this.device.data
   }
 
-  protected get device(): DeviceModelInterface<T> {
+  protected get device(): DeviceModel<T> {
     const { instance } = this
     if (instance.type !== this.type) {
       throw new Error(
@@ -89,7 +85,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       )
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified by type guard above
-    return instance as DeviceModelInterface<T>
+    return instance as DeviceModel<T>
   }
 
   protected get model(): {

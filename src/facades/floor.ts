@@ -1,12 +1,9 @@
-import type {
-  DeviceModelAny,
-  FloorModel as FloorModelContract,
-} from '../models/interfaces.ts'
+import type { DeviceModelAny, FloorModel } from '../models/index.ts'
 
 import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a floor, grouping devices on that floor within a building. */
-export class FloorFacade extends BaseZoneFacade<FloorModelContract> {
+export class FloorFacade extends BaseZoneFacade<FloorModel> {
   protected readonly frostProtectionLocation = 'FloorIds'
 
   protected readonly groupSpecificationKey = 'FloorID'
@@ -20,7 +17,7 @@ export class FloorFacade extends BaseZoneFacade<FloorModelContract> {
   }
 
   protected get model(): {
-    getById: (id: number) => FloorModelContract | undefined
+    getById: (id: number) => FloorModel | undefined
   } {
     return this.registry.floors
   }

@@ -1,7 +1,7 @@
-import type { Model, ModelKind } from './interfaces.ts'
+import type { ModelKind } from './interfaces.ts'
 
 /** Abstract base model providing common `id` and `name` properties. */
-export abstract class BaseModel implements Model {
+export abstract class BaseModel {
   public readonly id: number
 
   public name: string
