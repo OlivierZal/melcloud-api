@@ -110,7 +110,9 @@ export {
   type ZoneFacade,
   FacadeManager,
   hasZone2,
+  isAtaFacade,
   isAtwFacade,
+  isErvFacade,
 } from './facades/index.ts'
 export {
   type DeviceModelAny,

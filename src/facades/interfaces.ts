@@ -1,6 +1,5 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType } from '../constants.ts'
 import type {
   BaseBuildingModel,
   BaseDeviceModel,
@@ -28,6 +27,8 @@ import type {
   ZoneSettings,
   ZoneState,
 } from '../types/index.ts'
+
+import { DeviceType } from '../constants.ts'
 
 /** Parameters for configuring frost protection temperature bounds. */
 export interface FrostProtectionQuery {
@@ -223,14 +224,34 @@ export type DeviceFacadeAny =
   | DeviceFacade<typeof DeviceType.Erv>
 
 /**
+ * Type guard that narrows a device facade to the ATA variant.
+ * @param facade - The device facade to check.
+ * @returns Whether the facade is an ATA facade.
+ */
+export const isAtaFacade = (
+  facade: DeviceFacade<DeviceType>,
+): facade is DeviceFacade<typeof DeviceType.Ata> =>
+  facade.type === DeviceType.Ata
+
+/**
  * Type guard that narrows a device facade to the ATW variant.
  * Allows consumers to safely access `hotWater` and `zone1` without type assertions.
  * @param facade - The device facade to check.
  * @returns Whether the facade is an ATW facade.
  */
 export const isAtwFacade = (
-  facade: DeviceFacadeAny,
-): facade is DeviceAtwFacade => 'hotWater' in facade
+  facade: DeviceFacade<DeviceType>,
+): facade is DeviceAtwFacade => facade.type === DeviceType.Atw
+
+/**
+ * Type guard that narrows a device facade to the ERV variant.
+ * @param facade - The device facade to check.
+ * @returns Whether the facade is an ERV facade.
+ */
+export const isErvFacade = (
+  facade: DeviceFacade<DeviceType>,
+): facade is DeviceFacade<typeof DeviceType.Erv> =>
+  facade.type === DeviceType.Erv
 
 /**
  * Type guard that narrows an ATW facade to the zone 2 variant.
