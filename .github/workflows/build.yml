@@ -46,7 +46,6 @@ jobs:
           cache: npm
           node-version: latest
       - run: npm ci --ignore-scripts
-      - run: npm run build
       - run: npm test -- --coverage
       - env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
