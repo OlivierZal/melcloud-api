@@ -50,7 +50,7 @@ jobs:
       - env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6
-name: Build package
+name: CI
 on:
   pull_request: {}
   push:
