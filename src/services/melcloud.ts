@@ -298,7 +298,7 @@ export class MELCloudAPI implements API, Disposable {
     try {
       return await this.#fetch()
     } catch (error) {
-      this.#logger.warn('Failed to fetch devices:', error)
+      this.#logger.error('Failed to fetch devices:', error)
       return []
     } finally {
       this.#planNextSync()
@@ -322,7 +322,7 @@ export class MELCloudAPI implements API, Disposable {
       if (data !== undefined) {
         throw error
       }
-      this.#logger.warn('Stored credentials authentication failed:', error)
+      this.#logger.error('Stored credentials authentication failed:', error)
       return false
     }
   }
@@ -660,7 +660,7 @@ export class MELCloudAPI implements API, Disposable {
           { seconds: retryAfterSeconds }
         : { hours: 2 }
       this.#pauseListUntil = DateTime.now().plus(retryDuration)
-      this.#logger.warn(
+      this.#logger.error(
         `Rate limited (429): pausing list operations for ${this.#pauseListUntil.diffNow().shiftTo('minutes').toHuman()}`,
       )
     } else if (
@@ -705,7 +705,7 @@ export class MELCloudAPI implements API, Disposable {
   }
 
   #handleSyncError(error: unknown): void {
-    this.#logger.warn('Auto-sync failed:', error)
+    this.#logger.error('Auto-sync failed:', error)
   }
 
   #planNextSync(): void {

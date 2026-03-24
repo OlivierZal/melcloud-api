@@ -43,7 +43,6 @@ const mockAxiosInstance = {
 const createLogger = (): Logger => ({
   error: vi.fn<(...data: unknown[]) => void>(),
   log: vi.fn<(...data: unknown[]) => void>(),
-  warn: vi.fn<(...data: unknown[]) => void>(),
 })
 
 const loginResponse = (
@@ -302,7 +301,7 @@ describe('mELCloudAPI', () => {
     }).not.toThrow()
   })
 
-  it('logs warning when auto-sync onSync callback throws', async () => {
+  it('logs error when auto-sync onSync callback throws', async () => {
     const logger = createLogger()
     const onSync = vi.fn().mockImplementationOnce(() => {
       // First call (initial create) succeeds, subsequent calls can throw
@@ -313,7 +312,7 @@ describe('mELCloudAPI', () => {
     })
     await vi.advanceTimersByTimeAsync(60_000)
 
-    expect(logger.warn).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       'Auto-sync failed:',
       expect.any(Error),
     )
