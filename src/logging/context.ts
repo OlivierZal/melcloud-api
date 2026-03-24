@@ -13,8 +13,6 @@ const logKeys = [
   'errorMessage',
 ]
 
-const JSON_INDENT = 2
-
 /** Abstract base for API call logging data, serializable to JSON with a fixed set of log keys. */
 export abstract class APICallLogData {
   declare public readonly dataType: string
@@ -32,6 +30,6 @@ export abstract class APICallLogData {
   }
 
   public toString(): string {
-    return JSON.stringify(this, [...logKeys], JSON_INDENT)
+    return JSON.stringify(this, [...logKeys], 2)
   }
 }

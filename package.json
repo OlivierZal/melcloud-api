@@ -19,7 +19,8 @@
   "sideEffects": false,
   "type": "module",
   "exports": {
-    ".": "./dist/main.js"
+    ".": "./dist/main.js",
+    "./constants": "./dist/constants.js"
   },
   "types": "dist/main.d.ts",
   "files": [

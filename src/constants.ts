@@ -26,6 +26,12 @@ export type FanSpeed = (typeof FanSpeed)[keyof typeof FanSpeed]
 /** Effective flags value indicating no specific fields were changed; all data should be included. */
 export const FLAG_UNCHANGED = 0x0
 
+/**
+ * Synthetic operation mode for buildings with devices in different modes.
+ * Not a real API value — used at the application layer for mixed-state display.
+ */
+export const OPERATION_MODE_MIXED = 0
+
 /** Horizontal vane positions for ATA devices. */
 export const Horizontal = {
   auto: 0,
@@ -91,6 +97,17 @@ export const OperationMode = {
 } as const
 export type OperationMode = (typeof OperationMode)[keyof typeof OperationMode]
 
+/** Pre-built sets of ATA operation modes that support cooling or heating. */
+export const coolModes: ReadonlySet<OperationMode> = new Set([
+  OperationMode.auto,
+  OperationMode.cool,
+  OperationMode.dry,
+])
+export const heatModes: ReadonlySet<OperationMode> = new Set([
+  OperationMode.auto,
+  OperationMode.heat,
+])
+
 /** ATW device real-time operation state. */
 export const OperationModeState = {
   cooling: 3,
@@ -143,6 +160,14 @@ export const OperationModeZone = {
 } as const
 export type OperationModeZone =
   (typeof OperationModeZone)[keyof typeof OperationModeZone]
+
+/** ATA set-temperature limits (universal across all ATA models). */
+export const Temperature = {
+  cooling_min: 16,
+  max: 31,
+  min: 10,
+} as const
+export type Temperature = (typeof Temperature)[keyof typeof Temperature]
 
 /** ERV ventilation modes. */
 export const VentilationMode = {

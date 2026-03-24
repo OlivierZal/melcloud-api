@@ -109,10 +109,12 @@ const createDeviceModel = (device: ListDeviceAny): DeviceModelAny => {
   }
 }
 
-const BUILDING_LEVEL = 0
-const CHILD_LEVEL = 1
-const GRANDCHILD_LEVEL = 2
-const GREAT_GRANDCHILD_LEVEL = 3
+const level = {
+  building: 0,
+  child: 1,
+  grandchild: 2,
+  great_grandchild: 3,
+}
 
 const flattenAreas = function* flattenAreas(
   areas: readonly AreaZone[],
@@ -148,12 +150,9 @@ const getDeviceLevel = (
   floorId: number | null,
 ): number => {
   if (areaId !== null && floorId !== null) {
-    return GREAT_GRANDCHILD_LEVEL
+    return level.great_grandchild
   }
-  if (areaId !== null || floorId !== null) {
-    return GRANDCHILD_LEVEL
-  }
-  return CHILD_LEVEL
+  return areaId !== null || floorId !== null ? level.grandchild : level.child
 }
 
 const buildDeviceZones = (
@@ -240,7 +239,7 @@ export class ModelRegistry {
           this.getAreasByBuildingId(building.id).filter(
             ({ floorId }) => floorId === null,
           ),
-          CHILD_LEVEL,
+          level.child,
           type,
         ),
         devices: buildDeviceZones(
@@ -254,7 +253,7 @@ export class ModelRegistry {
           type,
         ),
         id: building.id,
-        level: BUILDING_LEVEL,
+        level: level.building,
         model: 'buildings' as const,
         name: building.name,
       }))
@@ -386,7 +385,7 @@ export class ModelRegistry {
 
   #buildAreaZones(
     areas: AreaModel[],
-    level: number,
+    areaLevel: number,
     type?: DeviceType,
   ): AreaZone[] {
     return areas
@@ -394,7 +393,7 @@ export class ModelRegistry {
       .map((area) => ({
         devices: buildDeviceZones(this.getDevicesByAreaId(area.id), type),
         id: area.id,
-        level,
+        level: areaLevel,
         model: 'areas' as const,
         name: area.name,
       }))
@@ -407,7 +406,7 @@ export class ModelRegistry {
       .map((floor) => ({
         areas: this.#buildAreaZones(
           this.getAreasByFloorId(floor.id),
-          GRANDCHILD_LEVEL,
+          level.grandchild,
           type,
         ),
         devices: buildDeviceZones(
@@ -417,7 +416,7 @@ export class ModelRegistry {
           type,
         ),
         id: floor.id,
-        level: CHILD_LEVEL,
+        level: level.child,
         model: 'floors' as const,
         name: floor.name,
       }))

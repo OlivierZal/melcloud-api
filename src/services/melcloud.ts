@@ -82,12 +82,9 @@ const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
 const noop = (): void => undefined
 
-const NO_SYNC_INTERVAL = 0
 const DEFAULT_SYNC_INTERVAL = 5
 const RETRY_DELAY = 1000
 
-const DEFAULT_ERROR_LOG_OFFSET = 0
-const DEFAULT_ERROR_LOG_PERIOD = 1
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
 
@@ -154,16 +151,13 @@ const parseErrorLogQuery = ({
     to !== undefined && to !== '' ? DateTime.fromISO(to) : DateTime.now()
 
   const numberLimit = Number(limit)
-  const period =
-    Number.isFinite(numberLimit) ? numberLimit : DEFAULT_ERROR_LOG_PERIOD
+  const period = Number.isFinite(numberLimit) ? numberLimit : 1
 
   const numberOffset = Number(offset)
   const daysOffset =
-    !fromDate && Number.isFinite(numberOffset) ?
-      numberOffset
-    : DEFAULT_ERROR_LOG_OFFSET
+    !fromDate && Number.isFinite(numberOffset) ? numberOffset : 0
 
-  const daysLimit = fromDate ? DEFAULT_ERROR_LOG_PERIOD : period
+  const daysLimit = fromDate ? 1 : period
   const days = daysLimit * daysOffset + daysOffset
   return {
     fromDate: fromDate ?? toDate.minus({ days: days + daysLimit }),
@@ -244,7 +238,7 @@ export class MELCloudAPI implements API, Disposable {
       username,
     } = config
     this.#autoSyncInterval = Duration.fromObject({
-      minutes: autoSyncInterval ?? NO_SYNC_INTERVAL,
+      minutes: autoSyncInterval ?? 0,
     }).as('milliseconds')
     this.#logger = logger
     this.onSync = onSync
@@ -561,7 +555,7 @@ export class MELCloudAPI implements API, Disposable {
    */
   public setSyncInterval(minutes: number | null): void {
     this.#autoSyncInterval = Duration.fromObject({
-      minutes: minutes ?? NO_SYNC_INTERVAL,
+      minutes: minutes ?? 0,
     }).as('milliseconds')
     this.clearSync()
     this.#planNextSync()

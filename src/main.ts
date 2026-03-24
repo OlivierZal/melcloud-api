@@ -71,16 +71,21 @@ export type {
 } from './types/index.ts'
 
 export {
+  coolModes,
   DeviceType,
   FanSpeed,
+  FLAG_UNCHANGED,
   Horizontal,
+  heatModes,
   LabelType,
   Language,
+  OPERATION_MODE_MIXED,
   OperationMode,
   OperationModeState,
   OperationModeStateHotWater,
   OperationModeStateZone,
   OperationModeZone,
+  Temperature,
   VentilationMode,
   Vertical,
 } from './constants.ts'

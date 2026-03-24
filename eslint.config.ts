@@ -130,8 +130,8 @@ const config = defineConfig([
         },
         /*
          * ── Variables ────────────────────────────────────────
-         * PascalCase: React components, class-like refs, `as const` objects.
-         * UPPER_CASE: allowed for legacy/team preference on primitives — not enforced.
+         * PascalCase: `as const` enum-like objects.
+         * UPPER_CASE: scalar constants.
          */
         {
           format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
@@ -157,19 +157,16 @@ const config = defineConfig([
         },
         /*
          * ── Parameters ───────────────────────────────────────
-         * Leading underscore for intentionally unused params (_event, _ctx).
+         * Leading underscore for intentionally unused params.
          */
         {
           format: ['camelCase'],
           leadingUnderscore: 'allow',
           selector: 'parameter',
         },
-        /*
-         * ── Functions & methods ──────────────────────────────
-         * PascalCase covers HOCs, factory functions (CreateApp), React hooks wrappers.
-         */
+        // ── Functions & methods ──────────────────────────────
         {
-          format: ['camelCase', 'PascalCase'],
+          format: ['camelCase'],
           selector: [
             'function',
             'classMethod',
@@ -207,14 +204,6 @@ const config = defineConfig([
           selector: 'typeLike',
         },
         /*
-         * PascalCase enum members: modern TS convention (Status.Active, not Status.ACTIVE).
-         * Aligns with the `as const` + union type pattern that increasingly replaces enums.
-         */
-        {
-          format: ['PascalCase'],
-          selector: 'enumMember',
-        },
-        /*
          * ── Type parameters (generics) ───────────────────────
          * T-prefix: T, TKey, TValue, TResult — universal TS convention.
          */
@@ -232,6 +221,15 @@ const config = defineConfig([
         },
       ],
       '@typescript-eslint/no-invalid-this': 'off',
+      '@typescript-eslint/no-magic-numbers': [
+        'error',
+        {
+          ignore: [0, 1, 2],
+          ignoreNumericLiteralTypes: true,
+          ignoreReadonlyClassProperties: true,
+          ignoreTypeIndexes: true,
+        },
+      ],
       '@typescript-eslint/no-redeclare': 'off',
       '@typescript-eslint/no-unnecessary-condition': [
         'error',
