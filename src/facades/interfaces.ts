@@ -223,6 +223,16 @@ export type DeviceFacadeAny =
   | DeviceFacade<typeof DeviceType.Erv>
 
 /**
+ * Type guard that narrows a device facade to the ATW variant.
+ * Allows consumers to safely access `hotWater` and `zone1` without type assertions.
+ * @param facade - The device facade to check.
+ * @returns Whether the facade is an ATW facade.
+ */
+export const isAtwFacade = (
+  facade: DeviceFacadeAny,
+): facade is DeviceAtwFacade => 'hotWater' in facade
+
+/**
  * Type guard that narrows an ATW facade to the zone 2 variant.
  * Allows consumers to safely access `zone2` without type assertions.
  * @param facade - The ATW device facade to check.
