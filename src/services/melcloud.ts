@@ -82,6 +82,7 @@ const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
 const noop = (): void => undefined
 
+const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL = 5
 const RETRY_DELAY = 1000
 
@@ -658,7 +659,7 @@ export class MELCloudAPI implements API, Disposable {
       const retryDuration =
         Number.isFinite(retryAfterSeconds) ?
           { seconds: retryAfterSeconds }
-        : { hours: 2 }
+        : { hours: DEFAULT_RETRY_HOURS }
       this.#pauseListUntil = DateTime.now().plus(retryDuration)
       this.#logger.error(
         `Rate limited (429): pausing list operations for ${this.#pauseListUntil.diffNow().shiftTo('minutes').toHuman()}`,

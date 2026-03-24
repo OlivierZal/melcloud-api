@@ -20,6 +20,9 @@ import {
   DeviceErvFacade,
   FloorFacade,
   hasZone2,
+  isAtaFacade,
+  isAtwFacade,
+  isErvFacade,
 } from '../../src/facades/index.ts'
 import { type DeviceModel, ModelRegistry } from '../../src/models/index.ts'
 import {
@@ -890,6 +893,35 @@ describe('deviceAtwHasZone2Facade', () => {
       }),
     ).rejects.toThrow('Invalid OperationModeZone')
   })
+})
+
+describe('device type guards', () => {
+  it.each([
+    {
+      guard: isAtaFacade,
+      match: createAtaFacade,
+      name: 'isAtaFacade',
+      noMatch: createAtwFacade,
+    },
+    {
+      guard: isAtwFacade,
+      match: createAtwFacade,
+      name: 'isAtwFacade',
+      noMatch: createAtaFacade,
+    },
+    {
+      guard: isErvFacade,
+      match: createErvFacade,
+      name: 'isErvFacade',
+      noMatch: createAtaFacade,
+    },
+  ])(
+    '$name returns true for matching facade and false otherwise',
+    ({ guard, match, noMatch }) => {
+      expect(guard(match().facade)).toBe(true)
+      expect(guard(noMatch().facade)).toBe(false)
+    },
+  )
 })
 
 describe(hasZone2, () => {

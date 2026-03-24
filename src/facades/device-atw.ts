@@ -21,6 +21,8 @@ import { BaseDeviceFacade } from './base-device.ts'
 
 const DEFAULT_TEMPERATURE = 0
 
+const MIN_TANK_TEMPERATURE = 40
+
 const coolFlowTemperatureRange = { max: 25, min: 5 }
 const heatFlowTemperatureRange = { max: 60, min: 25 }
 const roomTemperatureRange = { max: 30, min: 10 }
@@ -144,7 +146,7 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
       ['SetHeatFlowTemperatureZone2', heatFlowTemperatureRange],
       [
         'SetTankWaterTemperature',
-        { max: this.data.MaxTankTemperature, min: 40 },
+        { max: this.data.MaxTankTemperature, min: MIN_TANK_TEMPERATURE },
       ],
       ['SetTemperatureZone1', roomTemperatureRange],
       ['SetTemperatureZone2', roomTemperatureRange],

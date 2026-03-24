@@ -422,7 +422,7 @@ export class ModelRegistry {
   ): boolean {
     const devices = this.#devicesByZone[zone](id)
     return type === undefined ?
-        Boolean(devices.length)
+        devices.length > 0
       : devices.some(({ type: deviceType }) => deviceType === type)
   }
 }
