@@ -37,5 +37,5 @@ name: Generate & deploy docs
 on:
   release:
     types: [published]
-  workflow_dispatch: ~
+  workflow_dispatch: {}
 permissions: {}
