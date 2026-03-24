@@ -121,6 +121,7 @@ export {
   BuildingModel,
   DeviceModel,
   FloorModel,
+  isDeviceOfType,
   ModelRegistry,
 } from './models/index.ts'
 export {
