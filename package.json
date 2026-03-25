@@ -28,7 +28,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json",
     "docs": "typedoc",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
