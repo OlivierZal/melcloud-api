@@ -52,7 +52,7 @@ const createZone2Facade = (
   return new DeviceAtwHasZone2Facade(mockApi, registry, device)
 }
 
-describe('deviceAtwFacade zone1', () => {
+describe('atw device facade zone 1', () => {
   it('returns zone1 state', () => {
     const facade = createFacade()
     const { zone1 } = facade
@@ -143,7 +143,7 @@ describe('deviceAtwFacade zone1', () => {
   })
 })
 
-describe('deviceAtwFacade hotWater', () => {
+describe('atw device facade hot water', () => {
   it('returns hot water state', () => {
     const facade = createFacade()
     const { hotWater } = facade
@@ -224,7 +224,7 @@ describe('deviceAtwFacade hotWater', () => {
   })
 })
 
-describe('deviceAtwHasZone2Facade zone2', () => {
+describe('atw device facade zone 2', () => {
   it('returns zone2 state', () => {
     const facade = createZone2Facade()
     const { zone2 } = facade

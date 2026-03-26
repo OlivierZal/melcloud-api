@@ -157,7 +157,7 @@ vi.mock(import('axios'), async (importOriginal) => ({
   }),
 }))
 
-describe('mELCloudAPI', () => {
+describe('melcloud API', () => {
   let melCloudApi: typeof MELCloudAPI = cast(null)
   let requestHandler: (
     config: InternalAxiosRequestConfig,
@@ -480,7 +480,7 @@ describe('mELCloudAPI', () => {
     })
   })
 
-  describe('authenticate', () => {
+  describe('authentication', () => {
     it('authenticates with credentials', async () => {
       mockAxiosInstance.post.mockResolvedValue(
         loginResponse('ctx', '2025-12-31T00:00:00'),
@@ -532,7 +532,7 @@ describe('mELCloudAPI', () => {
     })
   })
 
-  describe('setLanguage', () => {
+  describe('language settings', () => {
     it('updates language when different', async () => {
       const api = await createApi({ language: 'en' })
       mockAxiosInstance.post.mockResolvedValue({ data: true })
@@ -574,7 +574,7 @@ describe('mELCloudAPI', () => {
     })
   })
 
-  describe('setSyncInterval', () => {
+  describe('sync interval', () => {
     it('reschedules sync with new interval', async () => {
       const api = await createApi({ autoSyncInterval: 0 })
       api.setSyncInterval(10)
@@ -590,7 +590,7 @@ describe('mELCloudAPI', () => {
     })
   })
 
-  describe('getErrorLog', () => {
+  describe('error log retrieval', () => {
     it('returns parsed error log', async () => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({ data: [errorEntry()] })

@@ -98,7 +98,7 @@ const setupSuccessfulLogin = (): void => {
     })
 }
 
-describe('mELCloudHomeAPI', () => {
+describe('melcloud home API', () => {
   let melCloudHomeApi: { create: typeof MELCloudHomeAPI.create } = cast(null)
 
   beforeEach(async () => {
@@ -119,7 +119,7 @@ describe('mELCloudHomeAPI', () => {
       ...config,
     })
 
-  describe('create', () => {
+  describe('instance creation', () => {
     it('should authenticate and return user on success', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
@@ -141,7 +141,7 @@ describe('mELCloudHomeAPI', () => {
     })
   })
 
-  describe('authenticate', () => {
+  describe('authentication', () => {
     it('should return false without credentials', async () => {
       const api = await melCloudHomeApi.create({ baseURL: BASE_URL })
       const isAuthenticated = await api.authenticate()
@@ -204,7 +204,7 @@ describe('mELCloudHomeAPI', () => {
     })
   })
 
-  describe('getUser', () => {
+  describe('user retrieval', () => {
     it('should return null on failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()

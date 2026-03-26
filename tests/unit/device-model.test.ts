@@ -17,7 +17,7 @@ const expectAtaData = (data: unknown): ListDeviceDataAta => {
   return data
 }
 
-describe('deviceModel', () => {
+describe('device model', () => {
   it('creates a device with correct properties', () => {
     const device = new DeviceModel(ataDevice())
 

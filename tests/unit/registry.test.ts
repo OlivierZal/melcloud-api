@@ -59,7 +59,7 @@ const createPopulatedRegistry = (): ModelRegistry => {
   return registry
 }
 
-describe('modelRegistry', () => {
+describe('model registry', () => {
   describe('sync', () => {
     it('syncs buildings', () => {
       const registry = new ModelRegistry()

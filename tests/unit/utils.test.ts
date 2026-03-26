@@ -9,7 +9,7 @@ import {
   typedFromEntries,
 } from '../../src/utils.ts'
 
-describe('fromSetToListAta', () => {
+describe('ata set-to-list conversion', () => {
   it('maps set keys to list keys', () => {
     expect(fromSetToListAta.SetFanSpeed).toBe('FanSpeed')
     expect(fromSetToListAta.VaneHorizontal).toBe('VaneHorizontalDirection')
@@ -17,7 +17,7 @@ describe('fromSetToListAta', () => {
   })
 })
 
-describe('fromListToSetAta', () => {
+describe('ata list-to-set conversion', () => {
   it('maps list keys to set keys', () => {
     expect(fromListToSetAta.FanSpeed).toBe('SetFanSpeed')
     expect(fromListToSetAta.VaneHorizontalDirection).toBe('VaneHorizontal')

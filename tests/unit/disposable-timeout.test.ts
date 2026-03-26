@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DisposableTimeout } from '../../src/services/disposable-timeout.ts'
 
-describe('disposableTimeout', () => {
+describe('disposable timeout', () => {
   beforeEach(() => {
     vi.useFakeTimers()
   })

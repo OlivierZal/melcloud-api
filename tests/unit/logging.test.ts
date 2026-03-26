@@ -38,7 +38,7 @@ const createResponse = (
     ...overrides,
   })
 
-describe('aPICallRequestData', () => {
+describe('api call request data', () => {
   it('extracts request fields from config', () => {
     const data = new APICallRequestData(createConfig())
 
@@ -73,7 +73,7 @@ describe('aPICallRequestData', () => {
   })
 })
 
-describe('aPICallResponseData', () => {
+describe('api call response data', () => {
   it('extracts response fields', () => {
     const data = new APICallResponseData(createResponse())
 
