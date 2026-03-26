@@ -348,24 +348,23 @@ export class MELCloudAPI implements API, Disposable {
 
     return {
       errors: errorLog
-        .map(
+        .flatMap(
           ({
             DeviceId: deviceId,
             ErrorMessage: errorMessage,
             StartDate: startDate,
           }) => {
             const dateTime = DateTime.fromISO(startDate)
-            return {
-              date:
-                dateTime.year === INVALID_YEAR ?
-                  ''
-                : dateTime.toLocaleString(DateTime.DATETIME_MED),
-              device: this.#registry.devices.getById(deviceId)?.name ?? '',
-              error: errorMessage?.trim() ?? '',
-            }
+            const date =
+              dateTime.year === INVALID_YEAR ?
+                ''
+              : dateTime.toLocaleString(DateTime.DATETIME_MED)
+            const device =
+              this.#registry.devices.getById(deviceId)?.name ?? ''
+            const error = errorMessage?.trim() ?? ''
+            return date && error ? [{ date, device, error }] : []
           },
         )
-        .filter(({ date, error }) => Boolean(date && error))
         .toReversed(),
       fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
       nextFromDate: toISODate(nextToDate.minus({ days: period })),

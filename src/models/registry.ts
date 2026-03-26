@@ -56,34 +56,12 @@ const syncMap = <TModel, TData>(
   return models
 }
 
-/*
- * Correlate model and device types for type-safe sync.
- * The inner type guards are defensive: a device type cannot change between syncs.
- */
 const syncDeviceModel = (
   model: DeviceModelAny,
   device: ListDeviceAny,
 ): void => {
-  switch (device.Type) {
-    case DeviceType.Ata: {
-      if (model.type === DeviceType.Ata) {
-        model[syncModel](device)
-      }
-      break
-    }
-    case DeviceType.Atw: {
-      if (model.type === DeviceType.Atw) {
-        model[syncModel](device)
-      }
-      break
-    }
-    case DeviceType.Erv: {
-      if (model.type === DeviceType.Erv) {
-        model[syncModel](device)
-      }
-      break
-    }
-    // No default
+  if (model.type === device.Type) {
+    model[syncModel](device)
   }
 }
 

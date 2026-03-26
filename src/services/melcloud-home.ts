@@ -42,29 +42,29 @@ const extractFormAction = (html: string): string | null => {
 
 const extractHiddenFields = (html: string): Record<string, string> =>
   Object.fromEntries(
-    [...html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu)]
-      .map((match) => {
-        const [tag] = match
+    [...html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu)].flatMap(
+      ([tag]) => {
         const name = /name="(?<name>[^"]+)"/u.exec(tag)?.groups?.['name']
         const value =
           /value="(?<value>[^"]*)"/u.exec(tag)?.groups?.['value'] ?? ''
-        return name === undefined ? undefined : ([name, value] as const)
-      })
-      .filter((entry) => entry !== undefined),
+        return name === undefined ? [] : [[name, value] as const]
+      },
+    ),
   )
 
+const getClaimValue = (
+  claims: MELCloudHomeClaim[],
+  type: string,
+): string => claims.find((claim) => claim.type === type)?.value ?? ''
+
 const parseClaims = (
-  claims: readonly MELCloudHomeClaim[],
-): MELCloudHomeUser => {
-  const get = (type: string): string =>
-    claims.find((claim) => claim.type === type)?.value ?? ''
-  return {
-    email: get('email'),
-    firstName: get('given_name'),
-    lastName: get('family_name'),
-    sub: get('sub'),
-  }
-}
+  claims: MELCloudHomeClaim[],
+): MELCloudHomeUser => ({
+  email: getClaimValue(claims, 'email'),
+  firstName: getClaimValue(claims, 'given_name'),
+  lastName: getClaimValue(claims, 'family_name'),
+  sub: getClaimValue(claims, 'sub'),
+})
 
 const resolveUrl = (location: string, base: string): string =>
   location.startsWith('http') ? location : new URL(location, base).href
@@ -81,7 +81,7 @@ const storeCookies = async (
         try {
           await jar.setCookie(raw, url)
         } catch {
-          /* Ignore invalid Set-Cookie values */
+          // Ignore invalid Set-Cookie values
         }
       }),
     )
@@ -203,8 +203,7 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
   async #authenticate(credentials: LoginCredentials): Promise<boolean> {
     this.#user = null
     await this.#performOidcLogin(credentials)
-    ;({ username: this.username } = credentials)
-    ;({ password: this.password } = credentials)
+    ;({ password: this.password, username: this.username } = credentials)
     return (await this.getUser()) !== null
   }
 
@@ -252,24 +251,21 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
   async #request<T = unknown>(
     method: string,
     url: string,
-    config: Record<string, unknown> = {},
+    { headers: configHeaders, ...config }: {
+      [key: string]: unknown
+      headers?: Record<string, string>
+    } = {},
   ): Promise<AxiosResponse<T>> {
     /* v8 ignore next -- baseURL is always set via constructor config */
     const baseURL = this.#api.defaults.baseURL ?? ''
     const absoluteUrl = url.startsWith('http') ? url : `${baseURL}${url}`
     const cookieHeader = await this.#jar.getCookieString(absoluteUrl)
-    const { headers: configHeaders, ...configWithoutHeaders } = config
-    const existingHeaders =
-      typeof configHeaders === 'object' && configHeaders !== null ?
-        configHeaders
-      : {}
-    const headers = {
-      ...existingHeaders,
-      ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
-    }
     const response = await this.#api.request<T>({
-      ...configWithoutHeaders,
-      headers,
+      ...config,
+      headers: {
+        ...configHeaders,
+        ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
+      },
       method,
       url,
     })

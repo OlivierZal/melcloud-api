@@ -407,7 +407,7 @@ describe('mELCloudHomeAPI', () => {
 
     it('should handle missing claim types with empty string fallback', async () => {
       const partialClaims: MELCloudHomeClaim[] = [
-        { type: 'sub', value: 'user-456', valueType: 'null' },
+        { type: 'email', value: 'only@email.com', valueType: 'null' },
       ]
       mockRequest
         .mockResolvedValueOnce({
@@ -432,10 +432,10 @@ describe('mELCloudHomeAPI', () => {
       const api = await createApi()
 
       expect(api.user).toStrictEqual({
-        email: '',
+        email: 'only@email.com',
         firstName: '',
         lastName: '',
-        sub: 'user-456',
+        sub: '',
       })
     })
 
