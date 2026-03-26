@@ -1,13 +1,12 @@
 import type { FloorData } from '../types/index.ts'
-
 import { BaseModel } from './base.ts'
 import { syncModel } from './symbols.ts'
 
 /** Floor model representing a level within a building. */
 export class FloorModel extends BaseModel {
-  public readonly modelKind = 'floor'
-
   public buildingId: number
+
+  public readonly modelKind = 'floor'
 
   public constructor({
     BuildingId: buildingId,

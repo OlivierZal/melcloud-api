@@ -2,7 +2,6 @@ import { DateTime, Settings as LuxonSettings } from 'luxon'
 import { describe, expect, it } from 'vitest'
 
 import type { OperationModeLogData, ReportData } from '../../src/types/index.ts'
-
 import { LabelType } from '../../src/constants.ts'
 import {
   getChartLineOptions,

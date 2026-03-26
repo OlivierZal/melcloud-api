@@ -1,6 +1,5 @@
 import type { DeviceType } from '../constants.ts'
 import type { ListDeviceData } from '../types/index.ts'
-
 import type { BaseModel } from './base.ts'
 import type { BuildingModel } from './building.ts'
 import type { DeviceModel } from './device.ts'

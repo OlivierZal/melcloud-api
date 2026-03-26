@@ -27,7 +27,6 @@ import type {
   ZoneSettings,
   ZoneState,
 } from '../types/index.ts'
-
 import { DeviceType } from '../constants.ts'
 
 /** Parameters for configuring frost protection temperature bounds. */

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ListDeviceDataAta } from '../../src/types/index.ts'
-
 import { DeviceType } from '../../src/constants.ts'
 import { DeviceModel } from '../../src/models/index.ts'
 import { ataDevice } from '../fixtures.ts'

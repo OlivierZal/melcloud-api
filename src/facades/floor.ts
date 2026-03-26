@@ -1,5 +1,4 @@
 import type { DeviceModelAny, FloorModel } from '../models/index.ts'
-
 import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a floor, grouping devices on that floor within a building. */

@@ -1,7 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
 import type { DeviceType, LabelType } from '../constants.ts'
-
 import type {
   EnergyDataAta,
   ListDeviceDataAta,

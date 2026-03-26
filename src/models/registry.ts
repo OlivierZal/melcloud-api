@@ -9,11 +9,8 @@ import type {
   ListDeviceAny,
   Zone,
 } from '../types/index.ts'
-
 import { DeviceType } from '../constants.ts'
-
 import type { DeviceModelAny } from './interfaces.ts'
-
 import { AreaModel } from './area.ts'
 import { BuildingModel } from './building.ts'
 import { DeviceModel } from './device.ts'
@@ -185,37 +182,13 @@ export class ModelRegistry {
    */
   readonly #areas = new Map<number, AreaModel>()
 
-  public readonly areas = {
-    getById: (id: number): AreaModel | undefined => this.#areas.get(id),
-  }
-
-  readonly #buildings = new Map<number, BuildingModel>()
-
-  public readonly buildings = {
-    getById: (id: number): BuildingModel | undefined => this.#buildings.get(id),
-  }
-
-  readonly #devices = new Map<number, DeviceModelAny>()
-
-  public readonly devices = {
-    getById: (id: number): DeviceModelAny | undefined => this.#devices.get(id),
-  }
-
-  readonly #floors = new Map<number, FloorModel>()
-
-  public readonly floors = {
-    getById: (id: number): FloorModel | undefined => this.#floors.get(id),
-  }
-
-  readonly #devicesByZone = {
-    area: (id: number): DeviceModelAny[] => this.getDevicesByAreaId(id),
-    building: (id: number): DeviceModelAny[] => this.getDevicesByBuildingId(id),
-    floor: (id: number): DeviceModelAny[] => this.getDevicesByFloorId(id),
-  }
-
   #areasByBuildingId = new Map<number, AreaModel[]>()
 
   #areasByFloorId = new Map<number, AreaModel[]>()
+
+  readonly #buildings = new Map<number, BuildingModel>()
+
+  readonly #devices = new Map<number, DeviceModelAny>()
 
   #devicesByAreaId = new Map<number, DeviceModelAny[]>()
 
@@ -223,7 +196,31 @@ export class ModelRegistry {
 
   #devicesByFloorId = new Map<number, DeviceModelAny[]>()
 
+  readonly #devicesByZone = {
+    area: (id: number): DeviceModelAny[] => this.getDevicesByAreaId(id),
+    building: (id: number): DeviceModelAny[] => this.getDevicesByBuildingId(id),
+    floor: (id: number): DeviceModelAny[] => this.getDevicesByFloorId(id),
+  }
+
+  readonly #floors = new Map<number, FloorModel>()
+
   #floorsByBuildingId = new Map<number, FloorModel[]>()
+
+  public readonly areas = {
+    getById: (id: number): AreaModel | undefined => this.#areas.get(id),
+  }
+
+  public readonly buildings = {
+    getById: (id: number): BuildingModel | undefined => this.#buildings.get(id),
+  }
+
+  public readonly devices = {
+    getById: (id: number): DeviceModelAny | undefined => this.#devices.get(id),
+  }
+
+  public readonly floors = {
+    getById: (id: number): FloorModel | undefined => this.#floors.get(id),
+  }
 
   /**
    * Build a hierarchical zone structure from the registry, optionally filtered by device type.

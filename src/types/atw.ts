@@ -5,7 +5,6 @@ import type {
   OperationModeStateZone,
   OperationModeZone,
 } from '../constants.ts'
-
 import type {
   BaseListDeviceData,
   BaseSetDeviceData,

@@ -9,9 +9,7 @@ import type {
   ListDeviceDataErv,
   ReportData,
 } from '../src/types/index.ts'
-
 import { DeviceType, LabelType, OperationModeZone } from '../src/constants.ts'
-
 import { mock } from './helpers.ts'
 
 /*

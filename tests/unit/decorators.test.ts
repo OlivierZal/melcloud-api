@@ -7,7 +7,6 @@ import type {
   SetDeviceDataAta,
   SuccessData,
 } from '../../src/types/index.ts'
-
 import {
   DeviceType,
   FLAG_UNCHANGED,

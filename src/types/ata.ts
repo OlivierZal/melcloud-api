@@ -5,7 +5,6 @@ import type {
   OperationMode,
   Vertical,
 } from '../constants.ts'
-
 import type {
   BaseListDeviceData,
   BaseSetDeviceData,

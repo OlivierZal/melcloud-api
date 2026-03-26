@@ -1,13 +1,11 @@
-import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
-
 import { CookieJar } from 'tough-cookie'
+import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 
 import type { LoginCredentials } from '../types/index.ts'
 import type {
   MELCloudHomeClaim,
   MELCloudHomeUser,
 } from '../types/melcloud-home.ts'
-
 import type {
   Logger,
   MELCloudHomeAuthService,
@@ -116,6 +114,10 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
 
   #username = ''
 
+  public get user(): MELCloudHomeUser | null {
+    return this.#user
+  }
+
   private constructor(config: MELCloudHomeConfig = {}) {
     const { baseURL, logger = console, password, username } = config
     this.#logger = logger
@@ -126,10 +128,6 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
       this.#password = password
     }
     this.#api = axios.create({ baseURL, headers: { 'x-csrf': '1' } })
-  }
-
-  public get user(): MELCloudHomeUser | null {
-    return this.#user
   }
 
   /**

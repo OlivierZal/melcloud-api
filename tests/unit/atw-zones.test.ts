@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ListDeviceDataAtw } from '../../src/types/index.ts'
-
 import {
   DeviceType,
   OperationModeState,

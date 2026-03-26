@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Logger, MELCloudHomeConfig } from '../../src/services/index.ts'
 import type { MELCloudHomeAPI } from '../../src/services/melcloud-home.ts'
 import type { MELCloudHomeClaim } from '../../src/types/melcloud-home.ts'
-
 import { cast } from '../helpers.ts'
 
 const BASE_URL = 'https://melcloudhome.com'

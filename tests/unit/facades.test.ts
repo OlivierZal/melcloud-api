@@ -5,7 +5,6 @@ import type {
   SetDeviceDataAta,
   SetDevicePostData,
 } from '../../src/types/index.ts'
-
 import {
   DeviceType,
   OperationMode,

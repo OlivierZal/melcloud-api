@@ -1,5 +1,11 @@
 import https from 'node:https'
 
+import {
+  type HourNumbers,
+  DateTime,
+  Duration,
+  Settings as LuxonSettings,
+} from 'luxon'
 import axios, {
   type AxiosError,
   type AxiosInstance,
@@ -7,13 +13,6 @@ import axios, {
   type InternalAxiosRequestConfig,
   HttpStatusCode,
 } from 'axios'
-
-import {
-  type HourNumbers,
-  DateTime,
-  Duration,
-  Settings as LuxonSettings,
-} from 'luxon'
 
 import type {
   AreaDataAny,
@@ -48,7 +47,6 @@ import type {
   TilesData,
   TilesPostData,
 } from '../types/index.ts'
-
 import { DeviceType, Language } from '../constants.ts'
 import { syncDevices } from '../decorators/index.ts'
 import {
@@ -57,7 +55,6 @@ import {
   createAPICallErrorData,
 } from '../logging/index.ts'
 import { ModelRegistry } from '../models/index.ts'
-
 import type {
   API,
   APIConfig,
@@ -67,7 +64,6 @@ import type {
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
-
 import { DisposableTimeout } from './disposable-timeout.ts'
 
 const deviceTypeNames = {
@@ -206,13 +202,15 @@ const collectDevices = function* collectDevices(
  * API endpoint calls. Uses a private constructor — create instances via {@link MELCloudAPI.create}.
  */
 export class MELCloudAPI implements API, Disposable {
-  public readonly onSync?: OnSyncFunction
-
-  protected readonly settingManager?: SettingManager
-
   readonly #api: AxiosInstance
 
+  #autoSyncInterval: number
+
+  #language = 'en'
+
   readonly #logger: Logger
+
+  #pauseListUntil = DateTime.now()
 
   readonly #registry = new ModelRegistry()
 
@@ -220,11 +218,34 @@ export class MELCloudAPI implements API, Disposable {
 
   readonly #syncTimeout = new DisposableTimeout()
 
-  #autoSyncInterval: number
+  public readonly onSync?: OnSyncFunction
 
-  #language = 'en'
+  protected readonly settingManager?: SettingManager
 
-  #pauseListUntil = DateTime.now()
+  @setting
+  private accessor contextKey = ''
+
+  @setting
+  private accessor expiry = ''
+
+  @setting
+  private accessor password = ''
+
+  @setting
+  private accessor username = ''
+
+  private get language(): string {
+    return this.#language
+  }
+
+  private set language(value: string) {
+    this.#language = value
+    LuxonSettings.defaultLocale = value
+  }
+
+  public get registry(): ModelRegistry {
+    return this.#registry
+  }
 
   private constructor(config: APIConfig = {}) {
     const {
@@ -251,31 +272,6 @@ export class MELCloudAPI implements API, Disposable {
       username,
     })
     this.#api = this.#createAPI(shouldVerifySSL)
-  }
-
-  @setting
-  private accessor contextKey = ''
-
-  @setting
-  private accessor expiry = ''
-
-  @setting
-  private accessor password = ''
-
-  @setting
-  private accessor username = ''
-
-  public get registry(): ModelRegistry {
-    return this.#registry
-  }
-
-  private get language(): string {
-    return this.#language
-  }
-
-  private set language(value: string) {
-    this.#language = value
-    LuxonSettings.defaultLocale = value
   }
 
   /**

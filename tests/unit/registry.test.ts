@@ -5,7 +5,6 @@ import type {
   ListDeviceAny,
   ListDeviceDataAta,
 } from '../../src/types/index.ts'
-
 import { DeviceType } from '../../src/constants.ts'
 import { isDeviceOfType, ModelRegistry } from '../../src/models/index.ts'
 import {

@@ -4,9 +4,9 @@ import type { ModelKind } from './interfaces.ts'
 export abstract class BaseModel {
   public readonly id: number
 
-  public name: string
-
   public abstract readonly modelKind: ModelKind
+
+  public name: string
 
   protected constructor({ id, name }: { id: number; name: string }) {
     this.id = id

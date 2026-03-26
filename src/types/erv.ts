@@ -1,5 +1,4 @@
 import type { DeviceType, FanSpeed, VentilationMode } from '../constants.ts'
-
 import type {
   BaseListDeviceData,
   BaseSetDeviceData,

@@ -4,7 +4,6 @@ import type {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios'
-
 import {
   type MockInstance,
   afterEach,
@@ -26,7 +25,6 @@ import type {
   ListDeviceAny,
   SetDevicePostData,
 } from '../../src/types/index.ts'
-
 import { cast, mock } from '../helpers.ts'
 
 const mockInterceptors = {

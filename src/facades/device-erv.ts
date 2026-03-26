@@ -1,9 +1,6 @@
 import type { UpdateDeviceData } from '../types/index.ts'
-
 import { DeviceType } from '../constants.ts'
-
 import type { ReportChartPieOptions, ReportQuery } from './interfaces.ts'
-
 import { BaseDeviceFacade } from './base-device.ts'
 
 const isRelevantVentilationMode = (label?: string): boolean =>
@@ -19,14 +16,14 @@ export class DeviceErvFacade extends BaseDeviceFacade<typeof DeviceType.Erv> {
     VentilationMode: 0x4,
   } satisfies Record<keyof UpdateDeviceData<typeof DeviceType.Erv>, number>
 
-  public readonly type = DeviceType.Erv
-
   protected readonly temperaturesLegend = [
     undefined,
     'RoomTemperature',
     undefined,
     'OutdoorTemperature',
   ]
+
+  public readonly type = DeviceType.Erv
 
   public override async getOperationModes(
     query?: ReportQuery,

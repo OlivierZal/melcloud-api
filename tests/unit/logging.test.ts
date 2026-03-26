@@ -4,7 +4,6 @@ import type {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios'
-
 import { describe, expect, it } from 'vitest'
 
 import {
