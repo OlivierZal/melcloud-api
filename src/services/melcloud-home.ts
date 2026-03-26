@@ -24,7 +24,7 @@ const USER_PATH = '/bff/user'
 const HTTP_REDIRECT_MIN = 300
 const HTTP_REDIRECT_MAX = 400
 
-/* v8 ignore next */
+/* v8 ignore next -- callback executed inside axios, not directly traceable by v8 */
 const acceptAnyStatus = (): boolean => true
 
 const isRedirect = (status: number): boolean =>
@@ -90,7 +90,8 @@ const storeCookies = async (
 
 /* v8 ignore next -- `path` is always defined from split but TS requires the fallback */
 const stripQueryParams = (url: string): string => {
-  const [path] = url.startsWith('http') ? [new URL(url).pathname] : url.split('?')
+  const [path] =
+    url.startsWith('http') ? [new URL(url).pathname] : url.split('?')
   return path ?? url
 }
 
@@ -126,8 +127,13 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
   }
 
   private constructor(config: MELCloudHomeConfig = {}) {
-    const { baseURL, logger = console, password, settingManager, username } =
-      config
+    const {
+      baseURL,
+      logger = console,
+      password,
+      settingManager,
+      username,
+    } = config
     this.#logger = logger
     this.settingManager = settingManager
     if (username !== undefined) {
@@ -229,9 +235,9 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
       return response
     }
     const location = String(response.headers['location'] ?? '')
-    return location === '' ?
-        response
-      : this.#followRedirects<T>(resolveUrl(location, url), remaining - 1)
+    return location === '' ? response : (
+        this.#followRedirects<T>(resolveUrl(location, url), remaining - 1)
+      )
   }
 
   async #get<T = unknown>(url: string): Promise<AxiosResponse<T>> {

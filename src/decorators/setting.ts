@@ -6,9 +6,15 @@ import type { SettingManager } from '../services/interfaces.ts'
  * Validates the setting key once at decoration time rather than on every get/set.
  */
 const setting = (
-  target: ClassAccessorDecoratorTarget<{ settingManager?: SettingManager }, string>,
+  target: ClassAccessorDecoratorTarget<
+    { settingManager?: SettingManager },
+    string
+  >,
   context: ClassAccessorDecoratorContext,
-): ClassAccessorDecoratorResult<{ settingManager?: SettingManager }, string> => {
+): ClassAccessorDecoratorResult<
+  { settingManager?: SettingManager },
+  string
+> => {
   const key = String(context.name)
   return {
     get(this: { settingManager?: SettingManager }): string {

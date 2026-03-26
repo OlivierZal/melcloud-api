@@ -139,7 +139,6 @@ describe('mELCloudHomeAPI', () => {
       expect(api.isAuthenticated()).toBe(false)
       expect(api.user).toBeNull()
     })
-
   })
 
   describe('authenticate', () => {
