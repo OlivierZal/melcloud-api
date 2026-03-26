@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Logger, MELCloudHomeConfig } from '../../src/services/index.ts'
 import type { MELCloudHomeAPI } from '../../src/services/melcloud-home.ts'
-import type { MELCloudHomeClaim } from '../../src/types/melcloud-home.ts'
+import type { MELCloudHomeClaim } from '../../src/types/index.ts'
 import { cast } from '../helpers.ts'
 
 const BASE_URL = 'https://melcloudhome.com'
@@ -139,6 +139,7 @@ describe('mELCloudHomeAPI', () => {
       expect(api.isAuthenticated()).toBe(false)
       expect(api.user).toBeNull()
     })
+
   })
 
   describe('authenticate', () => {
@@ -147,6 +148,21 @@ describe('mELCloudHomeAPI', () => {
       const isAuthenticated = await api.authenticate()
 
       expect(isAuthenticated).toBe(false)
+    })
+
+    it('should clear user state on re-authentication', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      expect(api.isAuthenticated()).toBe(true)
+
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+
+      await expect(
+        api.authenticate({ password: 'wrong', username: 'u@t.com' }),
+      ).rejects.toThrow('network')
+
+      expect(api.user).toBeNull()
     })
 
     it('should log and return false on stored credential failure', async () => {
@@ -223,7 +239,7 @@ describe('mELCloudHomeAPI', () => {
       expect(api.isAuthenticated()).toBe(false)
     })
 
-    it('should stop on empty location in redirect chain', async () => {
+    it('should stop on missing location header in redirect chain', async () => {
       mockRequest
         .mockResolvedValueOnce({
           data: '',
@@ -232,7 +248,7 @@ describe('mELCloudHomeAPI', () => {
         })
         .mockResolvedValueOnce({
           data: '',
-          headers: { location: '' },
+          headers: {},
           status: 302,
         })
       const logger = createLogger()
@@ -247,6 +263,32 @@ describe('mELCloudHomeAPI', () => {
       expect(logger.error).toHaveBeenCalledWith(
         'Authentication failed:',
         expect.any(Error),
+      )
+    })
+
+    it('should throw on too many redirects', async () => {
+      Array.from({ length: 21 }, (_unused, index) =>
+        mockRequest.mockResolvedValueOnce({
+          data: '',
+          headers: { location: `${BASE_URL}/redirect-${String(index)}` },
+          status: 302,
+        }),
+      )
+      const logger = createLogger()
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        password: 'pass',
+        username: 'user@test.com',
+      })
+
+      expect(api.isAuthenticated()).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Authentication failed:',
+        expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
+          message: expect.stringContaining('Too many redirects'),
+        }),
       )
     })
 
@@ -422,6 +464,25 @@ describe('mELCloudHomeAPI', () => {
         expect.objectContaining({ url: absoluteAction }),
       )
     })
+
+    it('should handle missing location header from credential submission', async () => {
+      mockRequest
+        .mockResolvedValueOnce({
+          data: cognitoLoginPage(),
+          headers: {},
+          status: 200,
+        })
+        .mockResolvedValueOnce({
+          data: '',
+          headers: {},
+          status: 302,
+        })
+        .mockResolvedValueOnce({ data: '', headers: {}, status: 200 })
+        .mockResolvedValueOnce({ data: userClaims, headers: {}, status: 200 })
+      const api = await createApi()
+
+      expect(api.isAuthenticated()).toBe(true)
+    })
   })
 
   describe('cookie handling', () => {
@@ -474,6 +535,22 @@ describe('mELCloudHomeAPI', () => {
         .mockResolvedValueOnce({ data: userClaims, headers: {}, status: 200 })
 
       await expect(createApi()).resolves.toBeDefined()
+    })
+  })
+
+  describe('logging', () => {
+    it('should not log sensitive query parameters', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      await createApi({ logger })
+
+      const {
+        mock: { calls },
+      } = vi.mocked(logger.log)
+      for (const [message] of calls) {
+        expect(String(message)).not.toContain('code=')
+        expect(String(message)).not.toContain('state=')
+      }
     })
   })
 })

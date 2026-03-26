@@ -1,11 +1,11 @@
 import { CookieJar } from 'tough-cookie'
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 
-import type { LoginCredentials } from '../types/index.ts'
 import type {
+  LoginCredentials,
   MELCloudHomeClaim,
   MELCloudHomeUser,
-} from '../types/melcloud-home.ts'
+} from '../types/index.ts'
 import type {
   Logger,
   MELCloudHomeAuthService,
@@ -16,6 +16,7 @@ const COGNITO_AUTHORITY =
   'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 
 const LOGIN_PATH = '/bff/login'
+const MAX_REDIRECTS = 20
 const USER_PATH = '/bff/user'
 
 const HTTP_REDIRECT_MIN = 300
@@ -33,12 +34,6 @@ const extractFormAction = (html: string): string | null => {
   if (encoded === undefined) {
     return null
   }
-  /*
-   * The form action contains HTML-encoded ampersands (&amp;) as query
-   * parameter separators. Parse via a temporary textarea-like approach:
-   * split on &amp; and rejoin with &, which is safe because form action
-   * attributes only ever encode ampersands in this context.
-   */
   const action = encoded.split('&amp;').join('&')
   return action.startsWith('/') ? `${COGNITO_AUTHORITY}${action}` : action
 }
@@ -89,6 +84,12 @@ const storeCookies = async (
       }),
     )
   }
+}
+
+/* v8 ignore next -- `path` is always defined from split but TS requires the fallback */
+const stripQueryParams = (url: string): string => {
+  const [path] = url.startsWith('http') ? [new URL(url).pathname] : url.split('?')
+  return path ?? url
 }
 
 /**
@@ -160,6 +161,12 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
     }
   }
 
+  /**
+   * Fetch the current user's claims from the BFF.
+   * Returns `null` if the request fails (401, network error, etc.)
+   * and clears the stored user state.
+   * @returns The user or `null`.
+   */
   public async getUser(): Promise<MELCloudHomeUser | null> {
     try {
       const { data } = await this.#request<MELCloudHomeClaim[]>(
@@ -179,24 +186,22 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
     return this.#user !== null
   }
 
-  async #authenticate({
-    password,
-    username,
-  }: LoginCredentials): Promise<boolean> {
+  async #authenticate(credentials: LoginCredentials): Promise<boolean> {
+    this.#user = null
+    await this.#performOidcLogin(credentials)
+    ;({ username: this.#username } = credentials)
+    ;({ password: this.#password } = credentials)
+    return (await this.getUser()) !== null
+  }
+
+  async #performOidcLogin(credentials: LoginCredentials): Promise<void> {
     const { data: html } = await this.#followRedirects<string>(LOGIN_PATH)
     const action = extractFormAction(html)
     if (action === null) {
       throw new Error('Could not find login form action')
     }
-    const callbackUrl = await this.#submitCredentials(action, html, {
-      password,
-      username,
-    })
+    const callbackUrl = await this.#submitCredentials(action, html, credentials)
     await this.#followRedirects(callbackUrl)
-    this.#username = username
-    this.#password = password
-    await this.getUser()
-    return this.#user !== null
   }
 
   /*
@@ -204,16 +209,21 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
    * This is required because cross-domain redirect chains drop cookies
    * when using automatic redirect following.
    */
-  async #followRedirects<T = unknown>(url: string): Promise<AxiosResponse<T>> {
+  async #followRedirects<T = unknown>(
+    url: string,
+    remaining = MAX_REDIRECTS,
+  ): Promise<AxiosResponse<T>> {
+    if (remaining <= 0) {
+      throw new Error(`Too many redirects (max ${String(MAX_REDIRECTS)})`)
+    }
     const response = await this.#get<T>(url)
     if (!isRedirect(response.status)) {
       return response
     }
-    /* v8 ignore next -- location is always present on redirect responses */
     const location = String(response.headers['location'] ?? '')
-    return location === '' ? response : (
-        this.#followRedirects<T>(resolveUrl(location, url))
-      )
+    return location === '' ?
+        response
+      : this.#followRedirects<T>(resolveUrl(location, url), remaining - 1)
   }
 
   async #get<T = unknown>(url: string): Promise<AxiosResponse<T>> {
@@ -221,7 +231,7 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
       maxRedirects: 0,
       validateStatus: acceptAnyStatus,
     })
-    this.#logger.log(`${String(response.status)} ${url}`)
+    this.#logger.log(`${String(response.status)} ${stripQueryParams(url)}`)
     return response
   }
 
@@ -268,7 +278,6 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
       maxRedirects: 0,
       validateStatus: isRedirect,
     })
-    /* v8 ignore next -- location is always present on redirect responses */
     return String(response.headers['location'] ?? '')
   }
 }

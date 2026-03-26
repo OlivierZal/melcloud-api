@@ -20,6 +20,7 @@ import type {
   LoginCredentials,
   LoginData,
   LoginPostData,
+  MELCloudHomeUser,
   OperationModeLogData,
   ReportData,
   ReportPostData,
@@ -33,7 +34,6 @@ import type {
   TilesData,
   TilesPostData,
 } from '../types/index.ts'
-import type { MELCloudHomeUser } from '../types/melcloud-home.ts'
 
 /** Configuration options for creating a MELCloud API instance. */
 export interface APIConfig extends Partial<LoginCredentials> {
@@ -332,7 +332,7 @@ export interface MELCloudHomeAuthService {
   /** Authenticate with MELCloud Home using the provided or stored credentials. */
   readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
 
-  /** Fetch the current user's claims from the BFF. Returns `null` on 401. */
+  /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
   readonly getUser: () => Promise<MELCloudHomeUser | null>
 
   /** Whether a user is currently authenticated (session cookie valid). */
