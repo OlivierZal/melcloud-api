@@ -42,20 +42,18 @@ const extractFormAction = (html: string): string | null => {
   return decoded.startsWith('/') ? `${COGNITO_AUTHORITY}${decoded}` : decoded
 }
 
-const extractHiddenFields = (html: string): Record<string, string> => {
-  const fields: Record<string, string> = {}
-  const regex = /<input[^>]+type="hidden"[^>]*>/giu
-  for (let match = regex.exec(html); match !== null; match = regex.exec(html)) {
-    const [tag] = match
-    const nameMatch = /name="(?<name>[^"]+)"/u.exec(tag)
-    const valueMatch = /value="(?<value>[^"]*)"/u.exec(tag)
-    const name = nameMatch?.groups?.['name']
-    if (name !== undefined) {
-      fields[name] = valueMatch?.groups?.['value'] ?? ''
-    }
-  }
-  return fields
-}
+const extractHiddenFields = (html: string): Record<string, string> =>
+  Object.fromEntries(
+    [...html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu)]
+      .map((match) => {
+        const [tag] = match
+        const name = /name="(?<name>[^"]+)"/u.exec(tag)?.groups?.['name']
+        const value =
+          /value="(?<value>[^"]*)"/u.exec(tag)?.groups?.['value'] ?? ''
+        return name === undefined ? undefined : ([name, value] as const)
+      })
+      .filter((entry) => entry !== undefined),
+  )
 
 const parseClaims = (
   claims: readonly MELCloudHomeClaim[],
@@ -205,22 +203,16 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
    * This is required because cross-domain redirect chains drop cookies
    * when using automatic redirect following.
    */
-  async #followRedirects<T = unknown>(
-    startUrl: string,
-  ): Promise<AxiosResponse<T>> {
-    let url = startUrl
-    let response = await this.#get<T>(url)
-    while (isRedirect(response.status)) {
-      /* v8 ignore next -- location is always present on redirect responses */
-      const location = String(response.headers['location'] ?? '')
-      if (location === '') {
-        return response
-      }
-      url = resolveUrl(location, url)
-      // eslint-disable-next-line no-await-in-loop
-      response = await this.#get<T>(url)
+  async #followRedirects<T = unknown>(url: string): Promise<AxiosResponse<T>> {
+    const response = await this.#get<T>(url)
+    if (!isRedirect(response.status)) {
+      return response
     }
-    return response
+    /* v8 ignore next -- location is always present on redirect responses */
+    const location = String(response.headers['location'] ?? '')
+    return location === '' ? response : (
+        this.#followRedirects<T>(resolveUrl(location, url))
+      )
   }
 
   async #get<T = unknown>(url: string): Promise<AxiosResponse<T>> {
