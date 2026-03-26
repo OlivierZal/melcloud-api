@@ -322,6 +322,9 @@ export interface MELCloudHomeConfig extends Partial<LoginCredentials> {
 
   /** Custom logger. Defaults to `console`. */
   readonly logger?: Logger
+
+  /** External setting manager for persisting credentials. */
+  readonly settingManager?: SettingManager
 }
 
 /** MELCloud Home API contract. */

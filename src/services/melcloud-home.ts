@@ -6,10 +6,12 @@ import type {
   MELCloudHomeClaim,
   MELCloudHomeUser,
 } from '../types/index.ts'
+import { setting } from '../decorators/index.ts'
 import type {
   Logger,
   MELCloudHomeAuthService,
   MELCloudHomeConfig,
+  SettingManager,
 } from './interfaces.ts'
 
 const COGNITO_AUTHORITY =
@@ -109,24 +111,30 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
 
   readonly #logger: Logger
 
-  #password = ''
-
   #user: MELCloudHomeUser | null = null
 
-  #username = ''
+  public readonly settingManager?: SettingManager
+
+  @setting
+  private accessor password = ''
+
+  @setting
+  private accessor username = ''
 
   public get user(): MELCloudHomeUser | null {
     return this.#user
   }
 
   private constructor(config: MELCloudHomeConfig = {}) {
-    const { baseURL, logger = console, password, username } = config
+    const { baseURL, logger = console, password, settingManager, username } =
+      config
     this.#logger = logger
+    this.settingManager = settingManager
     if (username !== undefined) {
-      this.#username = username
+      this.username = username
     }
     if (password !== undefined) {
-      this.#password = password
+      this.password = password
     }
     this.#api = axios.create({ baseURL, headers: { 'x-csrf': '1' } })
   }
@@ -146,7 +154,7 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
   }
 
   public async authenticate(data?: LoginCredentials): Promise<boolean> {
-    const { password = this.#password, username = this.#username } = data ?? {}
+    const { password = this.password, username = this.username } = data ?? {}
     if (!username || !password) {
       return false
     }
@@ -189,8 +197,8 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
   async #authenticate(credentials: LoginCredentials): Promise<boolean> {
     this.#user = null
     await this.#performOidcLogin(credentials)
-    ;({ username: this.#username } = credentials)
-    ;({ password: this.#password } = credentials)
+    ;({ username: this.username } = credentials)
+    ;({ password: this.password } = credentials)
     return (await this.getUser()) !== null
   }
 

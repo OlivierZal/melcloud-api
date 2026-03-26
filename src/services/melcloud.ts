@@ -48,7 +48,7 @@ import type {
   TilesPostData,
 } from '../types/index.ts'
 import { DeviceType, Language } from '../constants.ts'
-import { syncDevices } from '../decorators/index.ts'
+import { setting, syncDevices } from '../decorators/index.ts'
 import {
   APICallRequestData,
   APICallResponseData,
@@ -93,30 +93,6 @@ const toISODate = (dateTime: DateTime): string => {
   }
 
   return result
-}
-
-/*
- * Accessor decorator that delegates storage to an external SettingManager
- * (e.g., persistent settings), falling back to the in-memory field when none is configured.
- * Validates the setting key once at decoration time rather than on every get/set.
- */
-const setting = (
-  target: ClassAccessorDecoratorTarget<MELCloudAPI, string>,
-  context: ClassAccessorDecoratorContext<MELCloudAPI, string>,
-): ClassAccessorDecoratorResult<MELCloudAPI, string> => {
-  const key = String(context.name)
-  return {
-    get(this: MELCloudAPI): string {
-      return this.settingManager?.get(key) ?? target.get.call(this)
-    },
-    set(this: MELCloudAPI, value: string): void {
-      if (this.settingManager) {
-        this.settingManager.set(key, value)
-        return
-      }
-      target.set.call(this, value)
-    },
-  }
 }
 
 const isLanguage = (value: string): value is keyof typeof Language =>
@@ -220,7 +196,7 @@ export class MELCloudAPI implements API, Disposable {
 
   public readonly onSync?: OnSyncFunction
 
-  protected readonly settingManager?: SettingManager
+  public readonly settingManager?: SettingManager
 
   @setting
   private accessor contextKey = ''
