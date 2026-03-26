@@ -29,17 +29,20 @@ const acceptAnyStatus = (): boolean => true
 const isRedirect = (status: number): boolean =>
   status >= HTTP_REDIRECT_MIN && status < HTTP_REDIRECT_MAX
 
-const decodeHtmlEntities = (text: string): string =>
-  text.replaceAll('&amp;', '&').replaceAll('&lt;', '<').replaceAll('&gt;', '>')
-
 const extractFormAction = (html: string): string | null => {
   const match = /<form[^>]+action="(?<action>[^"]+)"/iu.exec(html)
-  const action = match?.groups?.['action']
-  if (action === undefined) {
+  const encoded = match?.groups?.['action']
+  if (encoded === undefined) {
     return null
   }
-  const decoded = decodeHtmlEntities(action)
-  return decoded.startsWith('/') ? `${COGNITO_AUTHORITY}${decoded}` : decoded
+  /*
+   * The form action contains HTML-encoded ampersands (&amp;) as query
+   * parameter separators. Parse via a temporary textarea-like approach:
+   * split on &amp; and rejoin with &, which is safe because form action
+   * attributes only ever encode ampersands in this context.
+   */
+  const action = encoded.split('&amp;').join('&')
+  return action.startsWith('/') ? `${COGNITO_AUTHORITY}${action}` : action
 }
 
 const extractHiddenFields = (html: string): Record<string, string> =>
