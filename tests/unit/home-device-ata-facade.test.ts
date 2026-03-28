@@ -86,6 +86,21 @@ describe('home device ata facade', () => {
       expect(facade.power).toBe(false)
       expect(facade.roomTemperature).toBe(0)
     })
+
+    it('should read device name', () => {
+      const facade = new HomeDeviceAtaFacade(createApi(), createDevice())
+
+      expect(facade.name).toBe('Test Device')
+    })
+
+    it('should expose device capabilities', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        createDevice({}, { minTempHeat: 8 }),
+      )
+
+      expect(facade.capabilities.minTempHeat).toBe(8)
+    })
   })
 
   describe('temperature clamping', () => {
@@ -93,7 +108,10 @@ describe('home device ata facade', () => {
       const api = createApi()
       const facade = new HomeDeviceAtaFacade(
         api,
-        createDevice({ OperationMode: 'Heat' }, { maxTempHeat: 31, minTempHeat: 10 }),
+        createDevice(
+          { OperationMode: 'Heat' },
+          { maxTempHeat: 31, minTempHeat: 10 },
+        ),
       )
       await facade.setValues({ setTemperature: 5 })
 
@@ -115,6 +133,38 @@ describe('home device ata facade', () => {
 
       expect(api.setValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 31,
+      })
+    })
+
+    it('should clamp temperature to automatic range', async () => {
+      const api = createApi()
+      const facade = new HomeDeviceAtaFacade(
+        api,
+        createDevice(
+          { OperationMode: 'Automatic' },
+          { maxTempAutomatic: 31, minTempAutomatic: 16 },
+        ),
+      )
+      await facade.setValues({ setTemperature: 10 })
+
+      expect(api.setValues).toHaveBeenCalledWith('device-1', {
+        setTemperature: 16,
+      })
+    })
+
+    it('should clamp temperature to dry range', async () => {
+      const api = createApi()
+      const facade = new HomeDeviceAtaFacade(
+        api,
+        createDevice(
+          { OperationMode: 'Dry' },
+          { maxTempCoolDry: 31, minTempCoolDry: 16 },
+        ),
+      )
+      await facade.setValues({ setTemperature: 10 })
+
+      expect(api.setValues).toHaveBeenCalledWith('device-1', {
+        setTemperature: 16,
       })
     })
 
@@ -191,6 +241,24 @@ describe('home device ata facade', () => {
       await facade.getErrorLog()
 
       expect(api.getErrorLog).toHaveBeenCalledWith('device-1')
+    })
+
+    it('should delegate getSignal with device id', async () => {
+      const api = createApi()
+      const facade = new HomeDeviceAtaFacade(api, createDevice())
+      const params = { from: '2026-03-01', to: '2026-03-02' }
+      await facade.getSignal(params)
+
+      expect(api.getSignal).toHaveBeenCalledWith('device-1', params)
+    })
+
+    it('should delegate getTemperatures with device id', async () => {
+      const api = createApi()
+      const facade = new HomeDeviceAtaFacade(api, createDevice())
+      const params = { from: '2026-03-01', period: 'Hourly', to: '2026-03-02' }
+      await facade.getTemperatures(params)
+
+      expect(api.getTemperatures).toHaveBeenCalledWith('device-1', params)
     })
   })
 })

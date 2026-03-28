@@ -15,6 +15,9 @@ const BASE_URL = 'https://melcloudhome.com'
 const MILLISECONDS_IN_SECOND = 1000
 const COGNITO = 'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 
+const X_KEY = 'x'
+const Y_KEY = 'y'
+
 const cognitoLoginPage = (
   action = '/login?client_id=test&amp;state=abc',
   csrf = 'csrf-token',
@@ -64,8 +67,8 @@ const mockReportData: HomeReportData[] = [
     datasets: [
       {
         data: [
-          { x: '2026-03-01T00:00:00', y: 20.5 },
-          { x: '2026-03-01T01:00:00', y: 21 },
+          { [X_KEY]: '2026-03-01T00:00:00', [Y_KEY]: 20.5 },
+          { [X_KEY]: '2026-03-01T01:00:00', [Y_KEY]: 21 },
         ],
         id: 'room_temperature',
         label: 'Room Temperature',
