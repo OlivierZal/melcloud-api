@@ -1,4 +1,5 @@
 export { authenticate } from './authenticate.ts'
+export { ensureSession } from './ensure-session.ts'
 export { fetchDevices } from './fetch-devices.ts'
 export { setting } from './setting.ts'
 export { syncDevices } from './sync-devices.ts'

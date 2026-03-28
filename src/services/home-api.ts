@@ -11,7 +11,12 @@ import type {
   HomeUser,
   LoginCredentials,
 } from '../types/index.ts'
-import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import {
+  authenticate,
+  ensureSession,
+  setting,
+  syncDevices,
+} from '../decorators/index.ts'
 import {
   APICallResponseData,
   createAPICallErrorData,
@@ -222,11 +227,11 @@ export class MELCloudHomeAPI implements HomeAPI {
     return (await this.getUser()) !== null
   }
 
+  @ensureSession
   public async getEnergy(
     id: string,
     params: { from: string; interval: string; to: string },
   ): Promise<HomeEnergyData | null> {
-    await this.#ensureSession()
     try {
       const { data } = await this.#request<HomeEnergyData>(
         'get',
@@ -244,8 +249,8 @@ export class MELCloudHomeAPI implements HomeAPI {
     }
   }
 
+  @ensureSession
   public async getErrorLog(id: string): Promise<HomeErrorLogEntry[]> {
-    await this.#ensureSession()
     try {
       const { data } = await this.#request<HomeErrorLogEntry[]>(
         'get',
@@ -257,11 +262,11 @@ export class MELCloudHomeAPI implements HomeAPI {
     }
   }
 
+  @ensureSession
   public async getSignal(
     id: string,
     params: { from: string; to: string },
   ): Promise<HomeEnergyData | null> {
-    await this.#ensureSession()
     try {
       const { data } = await this.#request<HomeEnergyData>(
         'get',
@@ -274,11 +279,11 @@ export class MELCloudHomeAPI implements HomeAPI {
     }
   }
 
+  @ensureSession
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
   ): Promise<HomeReportData[] | null> {
-    await this.#ensureSession()
     try {
       const { data } = await this.#request<HomeReportData[]>(
         'get',
@@ -297,8 +302,8 @@ export class MELCloudHomeAPI implements HomeAPI {
    * and clears the stored user state.
    * @returns The user or `null`.
    */
+  @ensureSession
   public async getUser(): Promise<HomeUser | null> {
-    await this.#ensureSession()
     try {
       const { data } = await this.#request<HomeClaim[]>('get', USER_PATH, {
         params: { slide: false },
@@ -326,8 +331,8 @@ export class MELCloudHomeAPI implements HomeAPI {
    * @returns The context or `null` on failure.
    */
   @syncDevices()
+  @ensureSession
   public async list(): Promise<HomeContext | null> {
-    await this.#ensureSession()
     try {
       const { data } = await this.#request<HomeContext>('get', CONTEXT_PATH)
       return data
@@ -337,19 +342,13 @@ export class MELCloudHomeAPI implements HomeAPI {
   }
 
   @syncDevices()
+  @ensureSession
   public async setValues(id: string, values: HomeAtaValues): Promise<boolean> {
-    await this.#ensureSession()
     try {
       await this.#request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
       return true
     } catch {
       return false
-    }
-  }
-
-  async #ensureSession(): Promise<void> {
-    if (this.expiry && new Date(this.expiry) < new Date()) {
-      await this.authenticate()
     }
   }
 

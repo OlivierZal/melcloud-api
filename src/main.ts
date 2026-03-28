@@ -117,6 +117,7 @@ export {
 } from './constants.ts'
 export {
   authenticate,
+  ensureSession,
   fetchDevices,
   syncDevices,
   updateDevice,
