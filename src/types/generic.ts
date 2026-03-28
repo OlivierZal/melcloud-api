@@ -320,7 +320,8 @@ export type TilesPostData<T extends DeviceType | null> = {
   { readonly SelectedBuilding: number; readonly SelectedDevice: number }
 : { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })
 
-export type UpdateDeviceData<T extends DeviceType> = DeviceDataMapping[T]['update']
+export type UpdateDeviceData<T extends DeviceType> =
+  DeviceDataMapping[T]['update']
 
 export type Zone = AreaZone | BuildingZone | DeviceZone | FloorZone
 
