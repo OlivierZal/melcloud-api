@@ -11,7 +11,7 @@ export type {
   SettingManager,
 } from './interfaces.ts'
 export type {
-  MELCloudHomeAuthService,
+  HomeAPI,
   MELCloudHomeConfig,
 } from './melcloud-home.ts'
 

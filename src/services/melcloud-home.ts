@@ -13,8 +13,8 @@ import type {
   MELCloudHomeSignalData,
   MELCloudHomeUser,
 } from '../types/index.ts'
-import { setting } from '../decorators/index.ts'
-import type { Logger, SettingManager } from './interfaces.ts'
+import { setting, syncDevices } from '../decorators/index.ts'
+import type { Logger, OnSyncFunction, SettingManager } from './interfaces.ts'
 
 /** Configuration options for the MELCloud Home API. */
 export interface MELCloudHomeConfig extends Partial<LoginCredentials> {
@@ -25,14 +25,14 @@ export interface MELCloudHomeConfig extends Partial<LoginCredentials> {
   readonly logger?: Logger
 
   /** Callback invoked after sync operations (list, setValues). */
-  readonly onSync?: () => Promise<void>
+  readonly onSync?: OnSyncFunction
 
   /** External setting manager for persisting credentials. */
   readonly settingManager?: SettingManager
 }
 
 /** MELCloud Home API contract. */
-export interface MELCloudHomeAuthService {
+export interface HomeAPI {
   /** The currently authenticated user, or `null`. */
   readonly user: MELCloudHomeUser | null
 
@@ -167,16 +167,16 @@ const stripQueryParams = (url: string): string => {
  *
  * Uses a private constructor — create instances via {@link MELCloudHomeAPI.create}.
  */
-export class MELCloudHomeAPI implements MELCloudHomeAuthService {
+export class MELCloudHomeAPI implements HomeAPI {
   readonly #api: AxiosInstance
 
   readonly #jar = new CookieJar()
 
   readonly #logger: Logger
 
-  readonly #onSync?: () => Promise<void>
-
   #user: MELCloudHomeUser | null = null
+
+  public readonly onSync?: OnSyncFunction
 
   public readonly settingManager?: SettingManager
 
@@ -203,7 +203,7 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
       username,
     } = config
     this.#logger = logger
-    this.#onSync = onSync
+    this.onSync = onSync
     this.settingManager = settingManager
     if (username !== undefined) {
       this.username = username
@@ -349,6 +349,7 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
    * List all buildings and devices from the user context.
    * @returns The context or `null` on failure.
    */
+  @syncDevices()
   public async list(): Promise<MELCloudHomeContext | null> {
     await this.#ensureSession()
     try {
@@ -356,13 +357,13 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
         'get',
         CONTEXT_PATH,
       )
-      await this.#onSync?.()
       return data
     } catch {
       return null
     }
   }
 
+  @syncDevices()
   public async setValues(
     id: string,
     values: MELCloudHomeAtaValues,
@@ -374,7 +375,6 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
         `${ATA_UNIT_PATH}/${id}`,
         { data: values },
       )
-      await this.#onSync?.()
       return data
     } catch {
       return null

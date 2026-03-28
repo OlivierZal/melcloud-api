@@ -295,7 +295,7 @@ export class MELCloudAPI implements API, Disposable {
       if (data !== undefined) {
         throw error
       }
-      this.#logger.error('Stored credentials authentication failed:', error)
+      this.#logger.error('Authentication failed:', error)
       return false
     }
   }

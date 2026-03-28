@@ -358,14 +358,14 @@ describe('melcloud home API', () => {
       expect(onSync).toHaveBeenCalledTimes(1)
     })
 
-    it('should not call onSync on failure', async () => {
+    it('should call onSync even on failure for consistency with classic API', async () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
       mockRequest.mockRejectedValueOnce(new Error('network'))
       await api.list()
 
-      expect(onSync).not.toHaveBeenCalled()
+      expect(onSync).toHaveBeenCalledTimes(1)
     })
   })
 
