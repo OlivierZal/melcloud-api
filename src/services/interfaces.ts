@@ -34,22 +34,31 @@ import type {
   TilesPostData,
 } from '../types/index.ts'
 
+/** Common configuration shared by all API clients. */
+export interface BaseAPIConfig extends Partial<LoginCredentials> {
+  /** Custom logger. Defaults to `console`. */
+  readonly logger?: Logger
+
+  /** Callback invoked after sync operations. */
+  readonly onSync?: OnSyncFunction
+
+  /** External setting manager for persisting credentials and session data. */
+  readonly settingManager?: SettingManager
+}
+
+/** Configuration options for the MELCloud Home API. */
+export interface HomeAPIConfig extends BaseAPIConfig {
+  /** Base URL of the MELCloud Home BFF server. */
+  readonly baseURL?: string
+}
+
 /** Configuration options for creating a MELCloud API instance. */
-export interface APIConfig extends Partial<LoginCredentials> {
+export interface APIConfig extends BaseAPIConfig {
   /** Interval in minutes between automatic syncs. Set to `null` to disable. */
   readonly autoSyncInterval?: number | null
 
   /** Locale language code (e.g. `'en'`, `'fr'`). */
   readonly language?: string
-
-  /** Custom logger for API request/response/error logging. Defaults to `console`. */
-  readonly logger?: Logger
-
-  /** Callback invoked after each sync operation completes. */
-  readonly onSync?: OnSyncFunction
-
-  /** External setting manager for persisting credentials and session data. */
-  readonly settingManager?: SettingManager
 
   /** Whether to verify SSL certificates. Defaults to `true`. */
   readonly shouldVerifySSL?: boolean

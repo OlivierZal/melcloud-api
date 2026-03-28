@@ -1,15 +1,14 @@
-export type {
-  HomeAPI,
-  HomeAPIConfig,
-} from './home-api.ts'
+export type { HomeAPI } from './home-api.ts'
 export type {
   API,
   APIAdapter,
   APIConfig,
   APISettings,
+  BaseAPIConfig,
   ErrorDetails,
   ErrorLog,
   ErrorLogQuery,
+  HomeAPIConfig,
   Logger,
   OnSyncFunction,
   SettingManager,

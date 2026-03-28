@@ -156,6 +156,7 @@ export {
   type APIAdapter,
   type APIConfig,
   type APISettings,
+  type BaseAPIConfig,
   type ErrorDetails,
   type ErrorLog,
   type ErrorLogQuery,

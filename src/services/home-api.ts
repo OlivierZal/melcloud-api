@@ -18,22 +18,7 @@ import {
   APICallResponseData,
   createAPICallErrorData,
 } from '../logging/index.ts'
-import type { Logger, OnSyncFunction, SettingManager } from './interfaces.ts'
-
-/** Configuration options for the MELCloud Home API. */
-export interface HomeAPIConfig extends Partial<LoginCredentials> {
-  /** Base URL of the MELCloud Home BFF server. */
-  readonly baseURL?: string
-
-  /** Custom logger. Defaults to `console`. */
-  readonly logger?: Logger
-
-  /** Callback invoked after sync operations (list, setValues). */
-  readonly onSync?: OnSyncFunction
-
-  /** External setting manager for persisting credentials. */
-  readonly settingManager?: SettingManager
-}
+import type { HomeAPIConfig, Logger, OnSyncFunction, SettingManager } from './interfaces.ts'
 
 /** MELCloud Home API contract. */
 export interface HomeAPI {
