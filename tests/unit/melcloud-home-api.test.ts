@@ -2,10 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Logger, MELCloudHomeConfig } from '../../src/services/index.ts'
 import type { MELCloudHomeAPI } from '../../src/services/melcloud-home.ts'
-import type { MELCloudHomeClaim } from '../../src/types/index.ts'
+import type {
+  MELCloudHomeClaim,
+  MELCloudHomeContext,
+} from '../../src/types/index.ts'
 import { cast } from '../helpers.ts'
 
 const BASE_URL = 'https://melcloudhome.com'
+const MILLISECONDS_IN_SECOND = 1000
 const COGNITO = 'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 
 const cognitoLoginPage = (
@@ -22,7 +26,19 @@ const userClaims: MELCloudHomeClaim[] = [
   { type: 'given_name', value: 'John', valueType: 'null' },
   { type: 'family_name', value: 'Doe', valueType: 'null' },
   { type: 'email', value: 'john@example.com', valueType: 'null' },
+  { type: 'bff:session_expires_in', value: '28800', valueType: 'null' },
 ]
+
+const mockContext: MELCloudHomeContext = {
+  buildings: [],
+  country: 'FR',
+  email: 'john@example.com',
+  firstname: 'John',
+  guestBuildings: [],
+  id: 'user-123',
+  language: 'fr',
+  lastname: 'Doe',
+}
 
 const mockRequest = vi.fn()
 const mockAxiosInstance = {
@@ -213,6 +229,75 @@ describe('melcloud home API', () => {
 
       expect(user).toBeNull()
       expect(api.isAuthenticated()).toBe(false)
+    })
+  })
+
+  describe('context retrieval', () => {
+    it('should return context on success', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce({
+        data: mockContext,
+        headers: {},
+        status: 200,
+      })
+      const context = await api.list()
+
+      expect(context).toStrictEqual(mockContext)
+    })
+
+    it('should return null on failure', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      const context = await api.list()
+
+      expect(context).toBeNull()
+    })
+  })
+
+  describe('session expiry', () => {
+    it('should re-authenticate when session is expired', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi()
+
+        expect(api.isAuthenticated()).toBe(true)
+
+        // Advance past the 28800s session expiry
+        vi.advanceTimersByTime(28_801 * MILLISECONDS_IN_SECOND)
+
+        setupSuccessfulLogin()
+        mockRequest.mockResolvedValueOnce({
+          data: mockContext,
+          headers: {},
+          status: 200,
+        })
+        const context = await api.list()
+
+        expect(context).toStrictEqual(mockContext)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('should not re-authenticate when session is still valid', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      const {
+        mock: {
+          calls: { length: callCountAfterLogin },
+        },
+      } = mockRequest
+      mockRequest.mockResolvedValueOnce({
+        data: mockContext,
+        headers: {},
+        status: 200,
+      })
+      await api.list()
+
+      expect(mockRequest).toHaveBeenCalledTimes(callCountAfterLogin + 1)
     })
   })
 

@@ -74,4 +74,13 @@ export type {
   Zone,
   ZoneSettings,
 } from './generic.ts'
-export type { MELCloudHomeClaim, MELCloudHomeUser } from './melcloud-home.ts'
+export type {
+  MELCloudHomeBuilding,
+  MELCloudHomeClaim,
+  MELCloudHomeContext,
+  MELCloudHomeDevice,
+  MELCloudHomeDeviceCapabilities,
+  MELCloudHomeDeviceSetting,
+  MELCloudHomeFrostProtection,
+  MELCloudHomeUser,
+} from './melcloud-home.ts'

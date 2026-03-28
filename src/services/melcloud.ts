@@ -359,8 +359,7 @@ export class MELCloudAPI implements API, Disposable {
               dateTime.year === INVALID_YEAR ?
                 ''
               : dateTime.toLocaleString(DateTime.DATETIME_MED)
-            const device =
-              this.#registry.devices.getById(deviceId)?.name ?? ''
+            const device = this.#registry.devices.getById(deviceId)?.name ?? ''
             const error = errorMessage?.trim() ?? ''
             return date && error ? [{ date, device, error }] : []
           },

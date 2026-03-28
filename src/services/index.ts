@@ -7,11 +7,13 @@ export type {
   ErrorLog,
   ErrorLogQuery,
   Logger,
-  MELCloudHomeAuthService,
-  MELCloudHomeConfig,
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
+export type {
+  MELCloudHomeAuthService,
+  MELCloudHomeConfig,
+} from './melcloud-home.ts'
 
 export { MELCloudHomeAPI } from './melcloud-home.ts'
 export { MELCloudAPI } from './melcloud.ts'

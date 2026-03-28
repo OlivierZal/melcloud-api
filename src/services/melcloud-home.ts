@@ -4,19 +4,47 @@ import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 import type {
   LoginCredentials,
   MELCloudHomeClaim,
+  MELCloudHomeContext,
   MELCloudHomeUser,
 } from '../types/index.ts'
 import { setting } from '../decorators/index.ts'
-import type {
-  Logger,
-  MELCloudHomeAuthService,
-  MELCloudHomeConfig,
-  SettingManager,
-} from './interfaces.ts'
+import type { Logger, SettingManager } from './interfaces.ts'
+
+/** Configuration options for the MELCloud Home API. */
+export interface MELCloudHomeConfig extends Partial<LoginCredentials> {
+  /** Base URL of the MELCloud Home BFF server. */
+  readonly baseURL?: string
+
+  /** Custom logger. Defaults to `console`. */
+  readonly logger?: Logger
+
+  /** External setting manager for persisting credentials. */
+  readonly settingManager?: SettingManager
+}
+
+/** MELCloud Home API contract. */
+export interface MELCloudHomeAuthService {
+  /** The currently authenticated user, or `null`. */
+  readonly user: MELCloudHomeUser | null
+
+  /** Authenticate with MELCloud Home using the provided or stored credentials. */
+  readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
+
+  /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
+  readonly getUser: () => Promise<MELCloudHomeUser | null>
+
+  /** Whether a user is currently authenticated (session cookie valid). */
+  readonly isAuthenticated: () => boolean
+
+  /** List all buildings and devices from the user context. Returns `null` on failure. */
+  readonly list: () => Promise<MELCloudHomeContext | null>
+}
 
 const COGNITO_AUTHORITY =
   'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 
+const CONTEXT_PATH = '/api/user/context'
+const MILLISECONDS_IN_SECOND = 1000
 const LOGIN_PATH = '/bff/login'
 const MAX_REDIRECTS = 20
 const USER_PATH = '/bff/user'
@@ -42,24 +70,18 @@ const extractFormAction = (html: string): string | null => {
 
 const extractHiddenFields = (html: string): Record<string, string> =>
   Object.fromEntries(
-    [...html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu)].flatMap(
-      ([tag]) => {
-        const name = /name="(?<name>[^"]+)"/u.exec(tag)?.groups?.['name']
-        const value =
-          /value="(?<value>[^"]*)"/u.exec(tag)?.groups?.['value'] ?? ''
-        return name === undefined ? [] : [[name, value] as const]
-      },
-    ),
+    [...html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu)].flatMap(([tag]) => {
+      const name = /name="(?<name>[^"]+)"/u.exec(tag)?.groups?.['name']
+      const value =
+        /value="(?<value>[^"]*)"/u.exec(tag)?.groups?.['value'] ?? ''
+      return name === undefined ? [] : [[name, value] as const]
+    }),
   )
 
-const getClaimValue = (
-  claims: MELCloudHomeClaim[],
-  type: string,
-): string => claims.find((claim) => claim.type === type)?.value ?? ''
+const getClaimValue = (claims: MELCloudHomeClaim[], type: string): string =>
+  claims.find((claim) => claim.type === type)?.value ?? ''
 
-const parseClaims = (
-  claims: MELCloudHomeClaim[],
-): MELCloudHomeUser => ({
+const parseClaims = (claims: MELCloudHomeClaim[]): MELCloudHomeUser => ({
   email: getClaimValue(claims, 'email'),
   firstName: getClaimValue(claims, 'given_name'),
   lastName: getClaimValue(claims, 'family_name'),
@@ -115,6 +137,9 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
   #user: MELCloudHomeUser | null = null
 
   public readonly settingManager?: SettingManager
+
+  @setting
+  private accessor expiry = ''
 
   @setting
   private accessor password = ''
@@ -176,12 +201,30 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
   }
 
   /**
+   * List all buildings and devices from the user context.
+   * @returns The context or `null` on failure.
+   */
+  public async list(): Promise<MELCloudHomeContext | null> {
+    await this.#ensureSession()
+    try {
+      const { data } = await this.#request<MELCloudHomeContext>(
+        'get',
+        CONTEXT_PATH,
+      )
+      return data
+    } catch {
+      return null
+    }
+  }
+
+  /**
    * Fetch the current user's claims from the BFF.
    * Returns `null` if the request fails (401, network error, etc.)
    * and clears the stored user state.
    * @returns The user or `null`.
    */
   public async getUser(): Promise<MELCloudHomeUser | null> {
+    await this.#ensureSession()
     try {
       const { data } = await this.#request<MELCloudHomeClaim[]>(
         'get',
@@ -189,6 +232,12 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
         { params: { slide: false } },
       )
       this.#user = parseClaims(data)
+      const expiresIn = Number(getClaimValue(data, 'bff:session_expires_in'))
+      if (expiresIn > 0) {
+        this.expiry = new Date(
+          Date.now() + expiresIn * MILLISECONDS_IN_SECOND,
+        ).toISOString()
+      }
       return this.#user
     } catch {
       this.#user = null
@@ -202,9 +251,16 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
 
   async #authenticate(credentials: LoginCredentials): Promise<boolean> {
     this.#user = null
+    this.expiry = ''
     await this.#performOidcLogin(credentials)
     ;({ password: this.password, username: this.username } = credentials)
     return (await this.getUser()) !== null
+  }
+
+  async #ensureSession(): Promise<void> {
+    if (this.expiry && new Date(this.expiry) < new Date()) {
+      await this.authenticate()
+    }
   }
 
   async #performOidcLogin(credentials: LoginCredentials): Promise<void> {
@@ -251,7 +307,10 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
   async #request<T = unknown>(
     method: string,
     url: string,
-    { headers: configHeaders, ...config }: {
+    {
+      headers: configHeaders,
+      ...config
+    }: {
       [key: string]: unknown
       headers?: Record<string, string>
     } = {},
