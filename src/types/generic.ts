@@ -215,10 +215,7 @@ export type ListDeviceData<T extends DeviceType> =
   : T extends typeof DeviceType.Erv ? ListDeviceDataErv
   : never
 
-export type ListDeviceDataAny =
-  | ListDeviceData<typeof DeviceType.Ata>
-  | ListDeviceData<typeof DeviceType.Atw>
-  | ListDeviceData<typeof DeviceType.Erv>
+export type ListDeviceDataAny = ListDeviceData<DeviceType>
 
 export interface LoginCredentials {
   readonly password: string
