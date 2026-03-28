@@ -313,4 +313,3 @@ export type OnSyncFunction = (params?: {
   ids?: number[]
   type?: DeviceType
 }) => Promise<void>
-

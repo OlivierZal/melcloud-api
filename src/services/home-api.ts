@@ -2,22 +2,22 @@ import { CookieJar } from 'tough-cookie'
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 
 import type {
+  HomeAtaValues,
+  HomeClaim,
+  HomeContext,
+  HomeDevice,
+  HomeEnergyData,
+  HomeErrorLogEntry,
+  HomeReportData,
+  HomeSignalData,
+  HomeUser,
   LoginCredentials,
-  MELCloudHomeAtaValues,
-  MELCloudHomeClaim,
-  MELCloudHomeContext,
-  MELCloudHomeDevice,
-  MELCloudHomeEnergyData,
-  MELCloudHomeErrorLogEntry,
-  MELCloudHomeReportData,
-  MELCloudHomeSignalData,
-  MELCloudHomeUser,
 } from '../types/index.ts'
 import { setting, syncDevices } from '../decorators/index.ts'
 import type { Logger, OnSyncFunction, SettingManager } from './interfaces.ts'
 
 /** Configuration options for the MELCloud Home API. */
-export interface MELCloudHomeConfig extends Partial<LoginCredentials> {
+export interface HomeAPIConfig extends Partial<LoginCredentials> {
   /** Base URL of the MELCloud Home BFF server. */
   readonly baseURL?: string
 
@@ -34,7 +34,7 @@ export interface MELCloudHomeConfig extends Partial<LoginCredentials> {
 /** MELCloud Home API contract. */
 export interface HomeAPI {
   /** The currently authenticated user, or `null`. */
-  readonly user: MELCloudHomeUser | null
+  readonly user: HomeUser | null
 
   /** Authenticate with MELCloud Home using the provided or stored credentials. */
   readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
@@ -43,37 +43,37 @@ export interface HomeAPI {
   readonly getEnergy: (
     id: string,
     params: { from: string; interval: string; to: string },
-  ) => Promise<MELCloudHomeEnergyData | null>
+  ) => Promise<HomeEnergyData | null>
 
   /** Fetch the error log for a device. */
-  readonly getErrorLog: (id: string) => Promise<MELCloudHomeErrorLogEntry[]>
+  readonly getErrorLog: (id: string) => Promise<HomeErrorLogEntry[]>
 
   /** Fetch WiFi signal strength (RSSI) data for a device. */
   readonly getSignal: (
     id: string,
     params: { from: string; to: string },
-  ) => Promise<MELCloudHomeSignalData | null>
+  ) => Promise<HomeSignalData | null>
 
   /** Fetch temperature trend summary for a device. */
   readonly getTemperatures: (
     id: string,
     params: { from: string; period: string; to: string },
-  ) => Promise<MELCloudHomeReportData | null>
+  ) => Promise<HomeReportData | null>
 
   /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
-  readonly getUser: () => Promise<MELCloudHomeUser | null>
+  readonly getUser: () => Promise<HomeUser | null>
 
   /** Whether a user is currently authenticated (session cookie valid). */
   readonly isAuthenticated: () => boolean
 
   /** List all buildings and devices from the user context. Returns `null` on failure. */
-  readonly list: () => Promise<MELCloudHomeContext | null>
+  readonly list: () => Promise<HomeContext | null>
 
   /** Update device values. Fields set to `null` are left unchanged. */
   readonly setValues: (
     id: string,
-    values: MELCloudHomeAtaValues,
-  ) => Promise<MELCloudHomeDevice | null>
+    values: HomeAtaValues,
+  ) => Promise<HomeDevice | null>
 }
 
 const COGNITO_AUTHORITY =
@@ -118,10 +118,10 @@ const extractHiddenFields = (html: string): Record<string, string> =>
     }),
   )
 
-const getClaimValue = (claims: MELCloudHomeClaim[], type: string): string =>
+const getClaimValue = (claims: HomeClaim[], type: string): string =>
   claims.find((claim) => claim.type === type)?.value ?? ''
 
-const parseClaims = (claims: MELCloudHomeClaim[]): MELCloudHomeUser => ({
+const parseClaims = (claims: HomeClaim[]): HomeUser => ({
   email: getClaimValue(claims, 'email'),
   firstName: getClaimValue(claims, 'given_name'),
   lastName: getClaimValue(claims, 'family_name'),
@@ -174,7 +174,7 @@ export class MELCloudHomeAPI implements HomeAPI {
 
   readonly #logger: Logger
 
-  #user: MELCloudHomeUser | null = null
+  #user: HomeUser | null = null
 
   public readonly onSync?: OnSyncFunction
 
@@ -189,11 +189,11 @@ export class MELCloudHomeAPI implements HomeAPI {
   @setting
   private accessor username = ''
 
-  public get user(): MELCloudHomeUser | null {
+  public get user(): HomeUser | null {
     return this.#user
   }
 
-  private constructor(config: MELCloudHomeConfig = {}) {
+  private constructor(config: HomeAPIConfig = {}) {
     const {
       baseURL,
       logger = console,
@@ -221,7 +221,7 @@ export class MELCloudHomeAPI implements HomeAPI {
    * @returns The initialized API instance.
    */
   public static async create(
-    config?: MELCloudHomeConfig,
+    config?: HomeAPIConfig,
   ): Promise<MELCloudHomeAPI> {
     const api = new MELCloudHomeAPI(config)
     await api.authenticate()
@@ -247,10 +247,10 @@ export class MELCloudHomeAPI implements HomeAPI {
   public async getEnergy(
     id: string,
     params: { from: string; interval: string; to: string },
-  ): Promise<MELCloudHomeEnergyData | null> {
+  ): Promise<HomeEnergyData | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<MELCloudHomeEnergyData>(
+      const { data } = await this.#request<HomeEnergyData>(
         'get',
         `${ENERGY_PATH}/${id}`,
         {
@@ -266,10 +266,10 @@ export class MELCloudHomeAPI implements HomeAPI {
     }
   }
 
-  public async getErrorLog(id: string): Promise<MELCloudHomeErrorLogEntry[]> {
+  public async getErrorLog(id: string): Promise<HomeErrorLogEntry[]> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<MELCloudHomeErrorLogEntry[]>(
+      const { data } = await this.#request<HomeErrorLogEntry[]>(
         'get',
         `${ATA_UNIT_PATH}/${id}/errorlog`,
       )
@@ -282,10 +282,10 @@ export class MELCloudHomeAPI implements HomeAPI {
   public async getSignal(
     id: string,
     params: { from: string; to: string },
-  ): Promise<MELCloudHomeSignalData | null> {
+  ): Promise<HomeSignalData | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<MELCloudHomeSignalData>(
+      const { data } = await this.#request<HomeSignalData>(
         'get',
         `${SIGNAL_PATH}/${id}`,
         { params: { ...params, measure: 'rssi' } },
@@ -299,10 +299,10 @@ export class MELCloudHomeAPI implements HomeAPI {
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
-  ): Promise<MELCloudHomeReportData | null> {
+  ): Promise<HomeReportData | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<MELCloudHomeReportData>(
+      const { data } = await this.#request<HomeReportData>(
         'get',
         REPORT_PATH,
         { params: { ...params, unitId: id } },
@@ -319,10 +319,10 @@ export class MELCloudHomeAPI implements HomeAPI {
    * and clears the stored user state.
    * @returns The user or `null`.
    */
-  public async getUser(): Promise<MELCloudHomeUser | null> {
+  public async getUser(): Promise<HomeUser | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<MELCloudHomeClaim[]>(
+      const { data } = await this.#request<HomeClaim[]>(
         'get',
         USER_PATH,
         { params: { slide: false } },
@@ -350,10 +350,10 @@ export class MELCloudHomeAPI implements HomeAPI {
    * @returns The context or `null` on failure.
    */
   @syncDevices()
-  public async list(): Promise<MELCloudHomeContext | null> {
+  public async list(): Promise<HomeContext | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<MELCloudHomeContext>(
+      const { data } = await this.#request<HomeContext>(
         'get',
         CONTEXT_PATH,
       )
@@ -366,11 +366,11 @@ export class MELCloudHomeAPI implements HomeAPI {
   @syncDevices()
   public async setValues(
     id: string,
-    values: MELCloudHomeAtaValues,
-  ): Promise<MELCloudHomeDevice | null> {
+    values: HomeAtaValues,
+  ): Promise<HomeDevice | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<MELCloudHomeDevice>(
+      const { data } = await this.#request<HomeDevice>(
         'put',
         `${ATA_UNIT_PATH}/${id}`,
         { data: values },

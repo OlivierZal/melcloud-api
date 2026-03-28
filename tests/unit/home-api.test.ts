@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Logger, MELCloudHomeConfig } from '../../src/services/index.ts'
-import type { MELCloudHomeAPI } from '../../src/services/melcloud-home.ts'
+import type { MELCloudHomeAPI } from '../../src/services/home-api.ts'
+import type { HomeAPIConfig, Logger } from '../../src/services/index.ts'
 import type {
-  MELCloudHomeClaim,
-  MELCloudHomeContext,
-  MELCloudHomeDevice,
-  MELCloudHomeEnergyData,
-  MELCloudHomeErrorLogEntry,
-  MELCloudHomeReportData,
-  MELCloudHomeSignalData,
+  HomeClaim,
+  HomeContext,
+  HomeDevice,
+  HomeEnergyData,
+  HomeErrorLogEntry,
+  HomeReportData,
+  HomeSignalData,
 } from '../../src/types/index.ts'
 import { cast } from '../helpers.ts'
 
@@ -26,7 +26,7 @@ const cognitoLoginPage = (
   '<input type="hidden" name="cognitoAsfData" value=""/>' +
   '</form>'
 
-const userClaims: MELCloudHomeClaim[] = [
+const userClaims: HomeClaim[] = [
   { type: 'sub', value: 'user-123', valueType: 'null' },
   { type: 'given_name', value: 'John', valueType: 'null' },
   { type: 'family_name', value: 'Doe', valueType: 'null' },
@@ -34,7 +34,7 @@ const userClaims: MELCloudHomeClaim[] = [
   { type: 'bff:session_expires_in', value: '28800', valueType: 'null' },
 ]
 
-const mockContext: MELCloudHomeContext = {
+const mockContext: HomeContext = {
   buildings: [],
   country: 'FR',
   email: 'john@example.com',
@@ -45,7 +45,7 @@ const mockContext: MELCloudHomeContext = {
   lastname: 'Doe',
 }
 
-const mockDevice: MELCloudHomeDevice = {
+const mockDevice: HomeDevice = {
   capabilities: {
     hasAirDirection: true,
     hasAutomaticFanSpeed: true,
@@ -84,14 +84,14 @@ const mockDevice: MELCloudHomeDevice = {
   unitSettings: null,
 }
 
-const mockEnergyData: MELCloudHomeEnergyData = {
+const mockEnergyData: HomeEnergyData = {
   data: [
     { timestamp: '2026-03-01T00:00:00Z', value: 1.5 },
     { timestamp: '2026-03-01T01:00:00Z', value: 2.3 },
   ],
 }
 
-const mockErrorLog: MELCloudHomeErrorLogEntry[] = [
+const mockErrorLog: HomeErrorLogEntry[] = [
   {
     date: '2026-03-01T10:00:00Z',
     errorCode: 'E001',
@@ -99,14 +99,14 @@ const mockErrorLog: MELCloudHomeErrorLogEntry[] = [
   },
 ]
 
-const mockReportData: MELCloudHomeReportData = {
+const mockReportData: HomeReportData = {
   data: [{ data: [20.5, 21, null], name: 'Room Temperature', unit: '°C' }],
   from: '2026-03-01',
   labels: ['00:00', '01:00', '02:00'],
   to: '2026-03-02',
 }
 
-const mockSignalData: MELCloudHomeSignalData = {
+const mockSignalData: HomeSignalData = {
   data: [
     { timestamp: '2026-03-01T00:00:00Z', value: -55 },
     { timestamp: '2026-03-01T01:00:00Z', value: -60 },
@@ -195,11 +195,11 @@ describe('melcloud home API', () => {
     vi.clearAllMocks()
     mockAxiosInstance.defaults.baseURL = BASE_URL
     ;({ MELCloudHomeAPI: melCloudHomeApi } =
-      await import('../../src/services/melcloud-home.ts'))
+      await import('../../src/services/home-api.ts'))
   })
 
   const createApi = async (
-    config: MELCloudHomeConfig = {},
+    config: HomeAPIConfig = {},
   ): ReturnType<typeof melCloudHomeApi.create> =>
     melCloudHomeApi.create({
       baseURL: BASE_URL,
@@ -790,7 +790,7 @@ describe('melcloud home API', () => {
     })
 
     it('should handle missing claim types with empty string fallback', async () => {
-      const partialClaims: MELCloudHomeClaim[] = [
+      const partialClaims: HomeClaim[] = [
         { type: 'email', value: 'only@email.com', valueType: 'null' },
       ]
       mockRequest

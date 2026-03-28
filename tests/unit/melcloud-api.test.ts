@@ -174,7 +174,7 @@ describe('melcloud API', () => {
     mockAxiosInstance.get.mockResolvedValue({ data: [] })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
     ;({ MELCloudAPI: melCloudApi } =
-      await import('../../src/services/melcloud.ts'))
+      await import('../../src/services/api.ts'))
   })
 
   afterEach(() => {
