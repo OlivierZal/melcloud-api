@@ -14,6 +14,16 @@ interface TemperatureRange {
   min: number
 }
 
+const coolDryRange = ({
+  maxTempCoolDry: max,
+  minTempCoolDry: min,
+}: HomeDeviceCapabilities): TemperatureRange => ({ max, min })
+
+const heatFanRange = ({
+  maxTempHeat: max,
+  minTempHeat: min,
+}: HomeDeviceCapabilities): TemperatureRange => ({ max, min })
+
 const temperatureRanges = new Map<
   string,
   (capabilities: HomeDeviceCapabilities) => TemperatureRange
@@ -25,35 +35,16 @@ const temperatureRanges = new Map<
       min,
     }),
   ],
-  [
-    'Cool',
-    ({ maxTempCoolDry: max, minTempCoolDry: min }): TemperatureRange => ({
-      max,
-      min,
-    }),
-  ],
-  [
-    'Dry',
-    ({ maxTempCoolDry: max, minTempCoolDry: min }): TemperatureRange => ({
-      max,
-      min,
-    }),
-  ],
-  [
-    'Fan',
-    ({ maxTempHeat: max, minTempHeat: min }): TemperatureRange => ({
-      max,
-      min,
-    }),
-  ],
-  [
-    'Heat',
-    ({ maxTempHeat: max, minTempHeat: min }): TemperatureRange => ({
-      max,
-      min,
-    }),
-  ],
+  ['Cool', coolDryRange],
+  ['Dry', coolDryRange],
+  ['Fan', heatFanRange],
+  ['Heat', heatFanRange],
 ])
+
+const clampTemperature = (
+  value: number,
+  { max, min }: TemperatureRange,
+): number => Math.min(Math.max(value, min), max)
 
 const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
   settings.find((setting) => setting.name === name)?.value ?? ''
@@ -81,19 +72,19 @@ export class HomeDeviceAtaFacade {
   }
 
   public get operationMode(): string {
-    return getSetting(this.#device.settings, 'OperationMode')
+    return this.#setting('OperationMode')
   }
 
   public get power(): boolean {
-    return getSetting(this.#device.settings, 'Power') === 'True'
+    return this.#setting('Power') === 'True'
   }
 
   public get roomTemperature(): number {
-    return Number(getSetting(this.#device.settings, 'RoomTemperature'))
+    return Number(this.#setting('RoomTemperature'))
   }
 
   public get setTemperature(): number {
-    return Number(getSetting(this.#device.settings, 'SetTemperature'))
+    return Number(this.#setting('SetTemperature'))
   }
 
   public constructor(api: HomeAPI, device: HomeDevice) {
@@ -131,11 +122,11 @@ export class HomeDeviceAtaFacade {
   public async setValues(values: HomeAtaValues): Promise<boolean> {
     return this.#api.setValues(this.id, {
       ...values,
-      ...this.#clampTemperature(values),
+      ...this.#clampSetTemperature(values),
     })
   }
 
-  #clampTemperature({
+  #clampSetTemperature({
     operationMode,
     setTemperature: value,
   }: HomeAtaValues): { setTemperature?: number } {
@@ -144,10 +135,12 @@ export class HomeDeviceAtaFacade {
     }
     const mode = operationMode ?? this.operationMode
     const getRange = temperatureRanges.get(mode)
-    if (!getRange) {
-      return { setTemperature: value }
-    }
-    const { max, min } = getRange(this.capabilities)
-    return { setTemperature: Math.min(Math.max(value, min), max) }
+    return getRange ?
+        { setTemperature: clampTemperature(value, getRange(this.capabilities)) }
+      : { setTemperature: value }
+  }
+
+  #setting(name: string): string {
+    return getSetting(this.#device.settings, name)
   }
 }
