@@ -87,6 +87,16 @@ export type {
 } from './types/index.ts'
 
 export {
+  fanSpeedFromClassic,
+  fanSpeedToClassic,
+  horizontalFromClassic,
+  horizontalToClassic,
+  operationModeFromClassic,
+  operationModeToClassic,
+  verticalFromClassic,
+  verticalToClassic,
+} from './adapters/index.ts'
+export {
   coolModes,
   DeviceType,
   FanSpeed,
