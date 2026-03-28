@@ -75,11 +75,11 @@ export interface APISettings {
 
 /** A single error entry from the device error log. */
 export interface ErrorDetails {
-  /** Human-readable date of the error occurrence. */
+  /** ISO 8601 date of the error occurrence. */
   readonly date: string
 
-  /** Name of the device that reported the error. */
-  readonly device: string
+  /** Numeric ID of the device that reported the error. */
+  readonly deviceId: number
 
   /** Error message text. */
   readonly error: string
@@ -90,8 +90,8 @@ export interface ErrorLog {
   /** List of error entries, sorted in reverse chronological order. */
   readonly errors: readonly ErrorDetails[]
 
-  /** Human-readable start date of the queried period. */
-  readonly fromDateHuman: string
+  /** ISO date string for the queried period start. */
+  readonly fromDate: string
 
   /** ISO date string for the next page's start date. */
   readonly nextFromDate: string

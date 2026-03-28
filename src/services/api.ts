@@ -216,7 +216,6 @@ export class MELCloudAPI implements API, Disposable {
 
   private set language(value: string) {
     this.#language = value
-    LuxonSettings.defaultLocale = value
   }
 
   public get registry(): ModelRegistry {
@@ -351,17 +350,17 @@ export class MELCloudAPI implements API, Disposable {
             StartDate: startDate,
           }) => {
             const dateTime = DateTime.fromISO(startDate)
-            const date =
-              dateTime.year === INVALID_YEAR ?
-                ''
-              : dateTime.toLocaleString(DateTime.DATETIME_MED)
-            const device = this.#registry.devices.getById(deviceId)?.name ?? ''
+            if (dateTime.year === INVALID_YEAR) {
+              return []
+            }
             const error = errorMessage?.trim() ?? ''
-            return date && error ? [{ date, device, error }] : []
+            return error ?
+                [{ date: startDate, deviceId, error }]
+              : []
           },
         )
         .toReversed(),
-      fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
+      fromDate: toISODate(fromDate),
       nextFromDate: toISODate(nextToDate.minus({ days: period })),
       nextToDate: toISODate(nextToDate),
     }

@@ -636,7 +636,7 @@ describe('melcloud API', () => {
         [1],
       )
 
-      expect(result).toHaveProperty('fromDateHuman')
+      expect(result).toHaveProperty('fromDate')
       expect(result).toHaveProperty('nextFromDate')
     })
 
