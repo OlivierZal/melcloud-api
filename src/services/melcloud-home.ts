@@ -3,8 +3,14 @@ import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 
 import type {
   LoginCredentials,
+  MELCloudHomeAtaValues,
   MELCloudHomeClaim,
   MELCloudHomeContext,
+  MELCloudHomeDevice,
+  MELCloudHomeEnergyData,
+  MELCloudHomeErrorLogEntry,
+  MELCloudHomeReportData,
+  MELCloudHomeSignalData,
   MELCloudHomeUser,
 } from '../types/index.ts'
 import { setting } from '../decorators/index.ts'
@@ -30,6 +36,27 @@ export interface MELCloudHomeAuthService {
   /** Authenticate with MELCloud Home using the provided or stored credentials. */
   readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
 
+  /** Fetch energy consumption data for a device. */
+  readonly getEnergy: (
+    id: string,
+    params: { from: string; interval: string; to: string },
+  ) => Promise<MELCloudHomeEnergyData | null>
+
+  /** Fetch the error log for a device. */
+  readonly getErrorLog: (id: string) => Promise<MELCloudHomeErrorLogEntry[]>
+
+  /** Fetch WiFi signal strength (RSSI) data for a device. */
+  readonly getSignal: (
+    id: string,
+    params: { from: string; to: string },
+  ) => Promise<MELCloudHomeSignalData | null>
+
+  /** Fetch temperature trend summary for a device. */
+  readonly getTemperatures: (
+    id: string,
+    params: { from: string; period: string; to: string },
+  ) => Promise<MELCloudHomeReportData | null>
+
   /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
   readonly getUser: () => Promise<MELCloudHomeUser | null>
 
@@ -38,14 +65,24 @@ export interface MELCloudHomeAuthService {
 
   /** List all buildings and devices from the user context. Returns `null` on failure. */
   readonly list: () => Promise<MELCloudHomeContext | null>
+
+  /** Update device values. Fields set to `null` are left unchanged. */
+  readonly setValues: (
+    id: string,
+    values: MELCloudHomeAtaValues,
+  ) => Promise<MELCloudHomeDevice | null>
 }
 
 const COGNITO_AUTHORITY =
   'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 
+const ATA_UNIT_PATH = '/api/ataunit'
 const CONTEXT_PATH = '/api/user/context'
-const MILLISECONDS_IN_SECOND = 1000
+const ENERGY_PATH = '/api/telemetry/energy'
 const LOGIN_PATH = '/bff/login'
+const MILLISECONDS_IN_SECOND = 1000
+const REPORT_PATH = '/api/v1/report/trendsummary'
+const SIGNAL_PATH = '/api/telemetry/actual'
 const MAX_REDIRECTS = 20
 const USER_PATH = '/bff/user'
 
@@ -200,16 +237,68 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
     }
   }
 
-  /**
-   * List all buildings and devices from the user context.
-   * @returns The context or `null` on failure.
-   */
-  public async list(): Promise<MELCloudHomeContext | null> {
+  public async getEnergy(
+    id: string,
+    params: { from: string; interval: string; to: string },
+  ): Promise<MELCloudHomeEnergyData | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<MELCloudHomeContext>(
+      const { data } = await this.#request<MELCloudHomeEnergyData>(
         'get',
-        CONTEXT_PATH,
+        `${ENERGY_PATH}/${id}`,
+        {
+          params: {
+            ...params,
+            measure: 'cumulative_energy_consumed_since_last_upload',
+          },
+        },
+      )
+      return data
+    } catch {
+      return null
+    }
+  }
+
+  public async getErrorLog(id: string): Promise<MELCloudHomeErrorLogEntry[]> {
+    await this.#ensureSession()
+    try {
+      const { data } = await this.#request<MELCloudHomeErrorLogEntry[]>(
+        'get',
+        `${ATA_UNIT_PATH}/${id}/errorlog`,
+      )
+      return data
+    } catch {
+      return []
+    }
+  }
+
+  public async getSignal(
+    id: string,
+    params: { from: string; to: string },
+  ): Promise<MELCloudHomeSignalData | null> {
+    await this.#ensureSession()
+    try {
+      const { data } = await this.#request<MELCloudHomeSignalData>(
+        'get',
+        `${SIGNAL_PATH}/${id}`,
+        { params: { ...params, measure: 'rssi' } },
+      )
+      return data
+    } catch {
+      return null
+    }
+  }
+
+  public async getTemperatures(
+    id: string,
+    params: { from: string; period: string; to: string },
+  ): Promise<MELCloudHomeReportData | null> {
+    await this.#ensureSession()
+    try {
+      const { data } = await this.#request<MELCloudHomeReportData>(
+        'get',
+        REPORT_PATH,
+        { params: { ...params, unitId: id } },
       )
       return data
     } catch {
@@ -247,6 +336,40 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
 
   public isAuthenticated(): boolean {
     return this.#user !== null
+  }
+
+  /**
+   * List all buildings and devices from the user context.
+   * @returns The context or `null` on failure.
+   */
+  public async list(): Promise<MELCloudHomeContext | null> {
+    await this.#ensureSession()
+    try {
+      const { data } = await this.#request<MELCloudHomeContext>(
+        'get',
+        CONTEXT_PATH,
+      )
+      return data
+    } catch {
+      return null
+    }
+  }
+
+  public async setValues(
+    id: string,
+    values: MELCloudHomeAtaValues,
+  ): Promise<MELCloudHomeDevice | null> {
+    await this.#ensureSession()
+    try {
+      const { data } = await this.#request<MELCloudHomeDevice>(
+        'put',
+        `${ATA_UNIT_PATH}/${id}`,
+        { data: values },
+      )
+      return data
+    } catch {
+      return null
+    }
   }
 
   async #authenticate(credentials: LoginCredentials): Promise<boolean> {

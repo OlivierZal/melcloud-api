@@ -1,3 +1,14 @@
+export interface MELCloudHomeAtaValues {
+  readonly inStandbyMode?: boolean | null
+  readonly operationMode?: string | null
+  readonly power?: boolean | null
+  readonly setFanSpeed?: string | null
+  readonly setTemperature?: number | null
+  readonly temperatureIncrementOverride?: number | null
+  readonly vaneHorizontalDirection?: string | null
+  readonly vaneVerticalDirection?: string | null
+}
+
 export interface MELCloudHomeBuilding {
   readonly airToAirUnits: MELCloudHomeDevice[]
   readonly id: string
@@ -68,9 +79,46 @@ export interface MELCloudHomeDeviceSetting {
   readonly value: string
 }
 
+export interface MELCloudHomeEnergyData {
+  readonly data: MELCloudHomeEnergyPoint[]
+}
+
+export interface MELCloudHomeEnergyPoint {
+  readonly timestamp: string
+  readonly value: number
+}
+
+export interface MELCloudHomeErrorLogEntry {
+  readonly date: string
+  readonly errorCode: string
+  readonly errorMessage: string
+}
+
 export interface MELCloudHomeFrostProtection {
   readonly active: boolean
   readonly enabled: boolean
+}
+
+export interface MELCloudHomeReportData {
+  readonly data: MELCloudHomeReportSeries[]
+  readonly from: string
+  readonly labels: string[]
+  readonly to: string
+}
+
+export interface MELCloudHomeReportSeries {
+  readonly data: (number | null)[]
+  readonly name: string
+  readonly unit: string
+}
+
+export interface MELCloudHomeSignalData {
+  readonly data: MELCloudHomeSignalPoint[]
+}
+
+export interface MELCloudHomeSignalPoint {
+  readonly timestamp: string
+  readonly value: number
 }
 
 export interface MELCloudHomeUser {

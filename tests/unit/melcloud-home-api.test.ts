@@ -5,6 +5,11 @@ import type { MELCloudHomeAPI } from '../../src/services/melcloud-home.ts'
 import type {
   MELCloudHomeClaim,
   MELCloudHomeContext,
+  MELCloudHomeDevice,
+  MELCloudHomeEnergyData,
+  MELCloudHomeErrorLogEntry,
+  MELCloudHomeReportData,
+  MELCloudHomeSignalData,
 } from '../../src/types/index.ts'
 import { cast } from '../helpers.ts'
 
@@ -38,6 +43,70 @@ const mockContext: MELCloudHomeContext = {
   id: 'user-123',
   language: 'fr',
   lastname: 'Doe',
+}
+
+const mockDevice: MELCloudHomeDevice = {
+  capabilities: {
+    hasAirDirection: true,
+    hasAutomaticFanSpeed: true,
+    hasAutoOperationMode: true,
+    hasCoolOperationMode: true,
+    hasDemandSideControl: false,
+    hasDryOperationMode: true,
+    hasEnergyConsumedMeter: true,
+    hasExtendedTemperatureRange: false,
+    hasHalfDegreeIncrements: true,
+    hasHeatOperationMode: true,
+    hasStandby: true,
+    hasSwing: true,
+    isLegacyDevice: false,
+    isMultiSplitSystem: false,
+    maxTempAutomatic: 31,
+    maxTempCoolDry: 31,
+    maxTempHeat: 31,
+    minTempAutomatic: 16,
+    minTempCoolDry: 16,
+    minTempHeat: 10,
+    numberOfFanSpeeds: 5,
+    supportsWideVane: true,
+  },
+  connectedInterfaceIdentifier: 'iface-1',
+  displayIcon: 'ata',
+  frostProtection: { active: false, enabled: true },
+  givenDisplayName: 'Living Room',
+  id: 'device-1',
+  isInError: false,
+  rssi: -55,
+  schedule: [],
+  scheduleEnabled: false,
+  settings: [{ name: 'power', value: 'true' }],
+  timeZone: 'Europe/Paris',
+  unitSettings: null,
+}
+
+const mockEnergyData: MELCloudHomeEnergyData = {
+  data: [
+    { timestamp: '2026-03-01T00:00:00Z', value: 1.5 },
+    { timestamp: '2026-03-01T01:00:00Z', value: 2.3 },
+  ],
+}
+
+const mockErrorLog: MELCloudHomeErrorLogEntry[] = [
+  { date: '2026-03-01T10:00:00Z', errorCode: 'E001', errorMessage: 'Sensor failure' },
+]
+
+const mockReportData: MELCloudHomeReportData = {
+  data: [{ data: [20.5, 21, null], name: 'Room Temperature', unit: '°C' }],
+  from: '2026-03-01',
+  labels: ['00:00', '01:00', '02:00'],
+  to: '2026-03-02',
+}
+
+const mockSignalData: MELCloudHomeSignalData = {
+  data: [
+    { timestamp: '2026-03-01T00:00:00Z', value: -55 },
+    { timestamp: '2026-03-01T01:00:00Z', value: -60 },
+  ],
 }
 
 const mockRequest = vi.fn()
@@ -253,6 +322,192 @@ describe('melcloud home API', () => {
       const context = await api.list()
 
       expect(context).toBeNull()
+    })
+  })
+
+  describe('device control', () => {
+    it('should update device values', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce({
+        data: mockDevice,
+        headers: {},
+        status: 200,
+      })
+      const result = await api.setValues('device-1', {
+        operationMode: 'Heat',
+        power: true,
+      })
+
+      expect(result).toStrictEqual(mockDevice)
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: { operationMode: 'Heat', power: true },
+          method: 'put',
+          url: '/api/ataunit/device-1',
+        }),
+      )
+    })
+
+    it('should return null on setValues failure', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      const result = await api.setValues('device-1', { power: false })
+
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('error log', () => {
+    it('should fetch device error log', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce({
+        data: mockErrorLog,
+        headers: {},
+        status: 200,
+      })
+      const result = await api.getErrorLog('device-1')
+
+      expect(result).toStrictEqual(mockErrorLog)
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          url: '/api/ataunit/device-1/errorlog',
+        }),
+      )
+    })
+
+    it('should return empty array on failure', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      const result = await api.getErrorLog('device-1')
+
+      expect(result).toStrictEqual([])
+    })
+  })
+
+  describe('temperature report', () => {
+    it('should fetch temperature trend summary', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce({
+        data: mockReportData,
+        headers: {},
+        status: 200,
+      })
+      const result = await api.getTemperatures('device-1', {
+        from: '2026-03-01',
+        period: 'Hourly',
+        to: '2026-03-02',
+      })
+
+      expect(result).toStrictEqual(mockReportData)
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          params: {
+            from: '2026-03-01',
+            period: 'Hourly',
+            to: '2026-03-02',
+            unitId: 'device-1',
+          },
+        }),
+      )
+    })
+
+    it('should return null on failure', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      const result = await api.getTemperatures('device-1', {
+        from: '2026-03-01',
+        period: 'Daily',
+        to: '2026-03-02',
+      })
+
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('energy consumption', () => {
+    it('should fetch energy data with cumulative measure', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce({
+        data: mockEnergyData,
+        headers: {},
+        status: 200,
+      })
+      const result = await api.getEnergy('device-1', {
+        from: '2026-03-01',
+        interval: 'Hour',
+        to: '2026-03-02',
+      })
+
+      expect(result).toStrictEqual(mockEnergyData)
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          params: {
+            from: '2026-03-01',
+            interval: 'Hour',
+            measure: 'cumulative_energy_consumed_since_last_upload',
+            to: '2026-03-02',
+          },
+        }),
+      )
+    })
+
+    it('should return null on failure', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      const result = await api.getEnergy('device-1', {
+        from: '2026-03-01',
+        interval: 'Day',
+        to: '2026-03-02',
+      })
+
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('signal strength', () => {
+    it('should fetch RSSI signal data', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce({
+        data: mockSignalData,
+        headers: {},
+        status: 200,
+      })
+      const result = await api.getSignal('device-1', {
+        from: '2026-03-01',
+        to: '2026-03-02',
+      })
+
+      expect(result).toStrictEqual(mockSignalData)
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          params: {
+            from: '2026-03-01',
+            measure: 'rssi',
+            to: '2026-03-02',
+          },
+        }),
+      )
+    })
+
+    it('should return null on failure', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      const result = await api.getSignal('device-1', {
+        from: '2026-03-01',
+        to: '2026-03-02',
+      })
+
+      expect(result).toBeNull()
     })
   })
 
