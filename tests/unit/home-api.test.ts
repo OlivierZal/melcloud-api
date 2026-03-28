@@ -132,9 +132,9 @@ vi.mock(import('axios'), async (importOriginal) => {
 
 const mockResponse = (
   data: unknown,
-  headers: Record<string, string> = {},
+  headers: Record<string, string | string[]> = {},
   status = 200,
-): { config: object; data: unknown; headers: Record<string, string>; status: number } => ({
+): { config: object; data: unknown; headers: Record<string, string | string[]>; status: number } => ({
   config: {},
   data,
   headers,
