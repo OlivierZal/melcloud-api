@@ -32,20 +32,32 @@ export interface HomeContext {
   readonly id: string
   readonly language: string
   readonly lastname: string
+  readonly numberOfBuildingsAllowed: number
+  readonly numberOfDevicesAllowed: number
+  readonly numberOfGuestDevicesAllowed: number
+  readonly numberOfGuestUsersAllowedPerUnit: number
+  readonly scenes: unknown[]
 }
 
 export interface HomeDevice {
   readonly capabilities: HomeDeviceCapabilities
   readonly connectedInterfaceIdentifier: string
+  readonly connectedInterfaceType: number
   readonly displayIcon: string
-  readonly frostProtection: HomeFrostProtection
+  readonly energyProducedOptIn: unknown
+  readonly frostProtection: HomeProtectionSettings | null
   readonly givenDisplayName: string
+  readonly holidayMode: unknown
   readonly id: string
+  readonly isConnected: boolean
+  readonly isEnergyUsageCompatible: unknown
   readonly isInError: boolean
+  readonly overheatProtection: HomeProtectionSettings | null
   readonly rssi: number
   readonly schedule: unknown[]
   readonly scheduleEnabled: boolean
   readonly settings: HomeDeviceSetting[]
+  readonly systemId: string | null
   readonly timeZone: string
   readonly unitSettings: unknown
 }
@@ -81,12 +93,18 @@ export interface HomeDeviceSetting {
 }
 
 export interface HomeEnergyData {
-  readonly data: HomeEnergyPoint[]
+  readonly deviceId: string
+  readonly measureData: HomeEnergyMeasure[]
+}
+
+export interface HomeEnergyMeasure {
+  readonly type: string
+  readonly values: HomeEnergyPoint[]
 }
 
 export interface HomeEnergyPoint {
-  readonly timestamp: string
-  readonly value: number
+  readonly time: string
+  readonly value: string
 }
 
 export interface HomeErrorLogEntry {
@@ -95,31 +113,37 @@ export interface HomeErrorLogEntry {
   readonly errorMessage: string
 }
 
-export interface HomeFrostProtection {
+export interface HomeProtectionSettings {
   readonly active: boolean
   readonly enabled: boolean
+  readonly max: number
+  readonly min: number
 }
 
 export interface HomeReportData {
-  readonly data: HomeReportSeries[]
-  readonly from: string
-  readonly labels: string[]
-  readonly to: string
+  readonly datasets: HomeReportDataset[]
+  readonly reportPeriod: number
 }
 
-export interface HomeReportSeries {
-  readonly data: (number | null)[]
-  readonly name: string
-  readonly unit: string
+export interface HomeReportDataset {
+  readonly backgroundColor: string
+  readonly borderColor: string
+  readonly borderWidth: number
+  readonly data: HomeReportPoint[]
+  readonly hidden: boolean
+  readonly id: string
+  readonly isNonInteractive: boolean
+  readonly label: string
+  readonly lineTension: number
+  readonly pointRadius: number
+  readonly spanGaps: boolean
+  readonly stepped: boolean
+  readonly yAxisId: string
 }
 
-export interface HomeSignalData {
-  readonly data: HomeSignalPoint[]
-}
-
-export interface HomeSignalPoint {
-  readonly timestamp: string
-  readonly value: number
+export interface HomeReportPoint {
+  readonly x: string
+  readonly y: number
 }
 
 export interface HomeUser {

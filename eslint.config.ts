@@ -52,7 +52,7 @@ const typeLikeSortOptions = {
 
 const config = defineConfig([
   {
-    ignores: ['coverage/', 'dist/', 'docs/'],
+    ignores: ['coverage/', 'dist/', 'docs/', 'scripts/'],
   },
   {
     ...jsdoc({ config: 'flat/recommended-tsdoc-error' }),

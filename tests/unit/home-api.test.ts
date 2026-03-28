@@ -5,11 +5,9 @@ import type { HomeAPIConfig, Logger } from '../../src/services/index.ts'
 import type {
   HomeClaim,
   HomeContext,
-  HomeDevice,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
-  HomeSignalData,
 } from '../../src/types/index.ts'
 import { cast } from '../helpers.ts'
 
@@ -43,51 +41,23 @@ const mockContext: HomeContext = {
   id: 'user-123',
   language: 'fr',
   lastname: 'Doe',
-}
-
-const mockDevice: HomeDevice = {
-  capabilities: {
-    hasAirDirection: true,
-    hasAutomaticFanSpeed: true,
-    hasAutoOperationMode: true,
-    hasCoolOperationMode: true,
-    hasDemandSideControl: false,
-    hasDryOperationMode: true,
-    hasEnergyConsumedMeter: true,
-    hasExtendedTemperatureRange: false,
-    hasHalfDegreeIncrements: true,
-    hasHeatOperationMode: true,
-    hasStandby: true,
-    hasSwing: true,
-    isLegacyDevice: false,
-    isMultiSplitSystem: false,
-    maxTempAutomatic: 31,
-    maxTempCoolDry: 31,
-    maxTempHeat: 31,
-    minTempAutomatic: 16,
-    minTempCoolDry: 16,
-    minTempHeat: 10,
-    numberOfFanSpeeds: 5,
-    supportsWideVane: true,
-  },
-  connectedInterfaceIdentifier: 'iface-1',
-  displayIcon: 'ata',
-  frostProtection: { active: false, enabled: true },
-  givenDisplayName: 'Living Room',
-  id: 'device-1',
-  isInError: false,
-  rssi: -55,
-  schedule: [],
-  scheduleEnabled: false,
-  settings: [{ name: 'power', value: 'true' }],
-  timeZone: 'Europe/Paris',
-  unitSettings: null,
+  numberOfBuildingsAllowed: 2,
+  numberOfDevicesAllowed: 10,
+  numberOfGuestDevicesAllowed: 10,
+  numberOfGuestUsersAllowedPerUnit: 5,
+  scenes: [],
 }
 
 const mockEnergyData: HomeEnergyData = {
-  data: [
-    { timestamp: '2026-03-01T00:00:00Z', value: 1.5 },
-    { timestamp: '2026-03-01T01:00:00Z', value: 2.3 },
+  deviceId: 'device-1',
+  measureData: [
+    {
+      type: 'cumulativeEnergyConsumedSinceLastUpload',
+      values: [
+        { time: '2026-03-01 00:00:00.000000000', value: '1471.0' },
+        { time: '2026-03-02 00:00:00.000000000', value: '2871.0' },
+      ],
+    },
   ],
 }
 
@@ -99,17 +69,44 @@ const mockErrorLog: HomeErrorLogEntry[] = [
   },
 ]
 
-const mockReportData: HomeReportData = {
-  data: [{ data: [20.5, 21, null], name: 'Room Temperature', unit: '°C' }],
-  from: '2026-03-01',
-  labels: ['00:00', '01:00', '02:00'],
-  to: '2026-03-02',
-}
+const mockReportData: HomeReportData[] = [
+  {
+    datasets: [
+      {
+        backgroundColor: '#F1995D',
+        borderColor: '#F1995D',
+        borderWidth: 2,
+        /* eslint-disable id-length -- x/y are the real API field names */
+        data: [
+          { x: '2026-03-01T00:00:00', y: 20.5 },
+          { x: '2026-03-01T01:00:00', y: 21 },
+        ],
+        /* eslint-enable id-length */
+        hidden: false,
+        id: 'room_temperature',
+        isNonInteractive: false,
+        label: 'Room Temperature',
+        lineTension: 0,
+        pointRadius: 0,
+        spanGaps: false,
+        stepped: false,
+        yAxisId: 'yTemp',
+      },
+    ],
+    reportPeriod: 0,
+  },
+]
 
-const mockSignalData: HomeSignalData = {
-  data: [
-    { timestamp: '2026-03-01T00:00:00Z', value: -55 },
-    { timestamp: '2026-03-01T01:00:00Z', value: -60 },
+const mockSignalData: HomeEnergyData = {
+  deviceId: 'device-1',
+  measureData: [
+    {
+      type: 'rssi',
+      values: [
+        { time: '2026-03-01 00:00:00.000000000', value: '-55' },
+        { time: '2026-03-01 01:00:00.000000000', value: '-60' },
+      ],
+    },
   ],
 }
 
@@ -346,7 +343,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
-      mockRequest.mockResolvedValueOnce(mockResponse(mockDevice, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockResponse('', {}, 200))
       await api.setValues('device-1', { power: true })
 
       expect(onSync).toHaveBeenCalledTimes(1)
@@ -364,16 +361,16 @@ describe('melcloud home API', () => {
   })
 
   describe('device control', () => {
-    it('should update device values', async () => {
+    it('should return true on successful setValues', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockDevice, {}, 200))
-      const result = await api.setValues('device-1', {
+      mockRequest.mockResolvedValueOnce(mockResponse('', {}, 200))
+      const isSuccess = await api.setValues('device-1', {
         operationMode: 'Heat',
         power: true,
       })
 
-      expect(result).toStrictEqual(mockDevice)
+      expect(isSuccess).toBe(true)
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           data: { operationMode: 'Heat', power: true },
@@ -383,13 +380,13 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return null on setValues failure', async () => {
+    it('should return false on setValues failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const result = await api.setValues('device-1', { power: false })
+      const isSuccess = await api.setValues('device-1', { power: false })
 
-      expect(result).toBeNull()
+      expect(isSuccess).toBe(false)
     })
   })
 

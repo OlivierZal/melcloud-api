@@ -5,11 +5,9 @@ import type {
   HomeAtaValues,
   HomeClaim,
   HomeContext,
-  HomeDevice,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
-  HomeSignalData,
   HomeUser,
   LoginCredentials,
 } from '../types/index.ts'
@@ -42,17 +40,17 @@ export interface HomeAPI {
   /** Fetch the error log for a device. */
   readonly getErrorLog: (id: string) => Promise<HomeErrorLogEntry[]>
 
-  /** Fetch WiFi signal strength (RSSI) data for a device. */
+  /** Fetch WiFi signal strength (RSSI) telemetry for a device. */
   readonly getSignal: (
     id: string,
     params: { from: string; to: string },
-  ) => Promise<HomeSignalData | null>
+  ) => Promise<HomeEnergyData | null>
 
   /** Fetch temperature trend summary for a device. */
   readonly getTemperatures: (
     id: string,
     params: { from: string; period: string; to: string },
-  ) => Promise<HomeReportData | null>
+  ) => Promise<HomeReportData[] | null>
 
   /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
   readonly getUser: () => Promise<HomeUser | null>
@@ -63,11 +61,11 @@ export interface HomeAPI {
   /** List all buildings and devices from the user context. Returns `null` on failure. */
   readonly list: () => Promise<HomeContext | null>
 
-  /** Update device values. Fields set to `null` are left unchanged. */
+  /** Update device values. Fields set to `null` are left unchanged. Returns success. */
   readonly setValues: (
     id: string,
     values: HomeAtaValues,
-  ) => Promise<HomeDevice | null>
+  ) => Promise<boolean>
 }
 
 const COGNITO_AUTHORITY =
@@ -265,10 +263,10 @@ export class MELCloudHomeAPI implements HomeAPI {
   public async getSignal(
     id: string,
     params: { from: string; to: string },
-  ): Promise<HomeSignalData | null> {
+  ): Promise<HomeEnergyData | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<HomeSignalData>(
+      const { data } = await this.#request<HomeEnergyData>(
         'get',
         `${SIGNAL_PATH}/${id}`,
         { params: { ...params, measure: 'rssi' } },
@@ -282,12 +280,14 @@ export class MELCloudHomeAPI implements HomeAPI {
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
-  ): Promise<HomeReportData | null> {
+  ): Promise<HomeReportData[] | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<HomeReportData>('get', REPORT_PATH, {
-        params: { ...params, unitId: id },
-      })
+      const { data } = await this.#request<HomeReportData[]>(
+        'get',
+        REPORT_PATH,
+        { params: { ...params, unitId: id } },
+      )
       return data
     } catch {
       return null
@@ -343,17 +343,13 @@ export class MELCloudHomeAPI implements HomeAPI {
   public async setValues(
     id: string,
     values: HomeAtaValues,
-  ): Promise<HomeDevice | null> {
+  ): Promise<boolean> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<HomeDevice>(
-        'put',
-        `${ATA_UNIT_PATH}/${id}`,
-        { data: values },
-      )
-      return data
+      await this.#request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
+      return true
     } catch {
-      return null
+      return false
     }
   }
 
