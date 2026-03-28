@@ -62,10 +62,7 @@ export interface HomeAPI {
   readonly list: () => Promise<HomeContext | null>
 
   /** Update device values. Fields set to `null` are left unchanged. Returns success. */
-  readonly setValues: (
-    id: string,
-    values: HomeAtaValues,
-  ) => Promise<boolean>
+  readonly setValues: (id: string, values: HomeAtaValues) => Promise<boolean>
 }
 
 const COGNITO_AUTHORITY =
@@ -340,10 +337,7 @@ export class MELCloudHomeAPI implements HomeAPI {
   }
 
   @syncDevices()
-  public async setValues(
-    id: string,
-    values: HomeAtaValues,
-  ): Promise<boolean> {
+  public async setValues(id: string, values: HomeAtaValues): Promise<boolean> {
     await this.#ensureSession()
     try {
       await this.#request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
