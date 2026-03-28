@@ -92,7 +92,11 @@ const mockEnergyData: MELCloudHomeEnergyData = {
 }
 
 const mockErrorLog: MELCloudHomeErrorLogEntry[] = [
-  { date: '2026-03-01T10:00:00Z', errorCode: 'E001', errorMessage: 'Sensor failure' },
+  {
+    date: '2026-03-01T10:00:00Z',
+    errorCode: 'E001',
+    errorMessage: 'Sensor failure',
+  },
 ]
 
 const mockReportData: MELCloudHomeReportData = {
@@ -322,6 +326,46 @@ describe('melcloud home API', () => {
       const context = await api.list()
 
       expect(context).toBeNull()
+    })
+  })
+
+  describe('sync callback', () => {
+    it('should call onSync after list()', async () => {
+      setupSuccessfulLogin()
+      const onSync = vi.fn<() => Promise<void>>()
+      const api = await createApi({ onSync })
+      mockRequest.mockResolvedValueOnce({
+        data: mockContext,
+        headers: {},
+        status: 200,
+      })
+      await api.list()
+
+      expect(onSync).toHaveBeenCalledTimes(1)
+    })
+
+    it('should call onSync after setValues()', async () => {
+      setupSuccessfulLogin()
+      const onSync = vi.fn<() => Promise<void>>()
+      const api = await createApi({ onSync })
+      mockRequest.mockResolvedValueOnce({
+        data: mockDevice,
+        headers: {},
+        status: 200,
+      })
+      await api.setValues('device-1', { power: true })
+
+      expect(onSync).toHaveBeenCalledTimes(1)
+    })
+
+    it('should not call onSync on failure', async () => {
+      setupSuccessfulLogin()
+      const onSync = vi.fn<() => Promise<void>>()
+      const api = await createApi({ onSync })
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      await api.list()
+
+      expect(onSync).not.toHaveBeenCalled()
     })
   })
 

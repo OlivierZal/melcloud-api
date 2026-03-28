@@ -24,6 +24,9 @@ export interface MELCloudHomeConfig extends Partial<LoginCredentials> {
   /** Custom logger. Defaults to `console`. */
   readonly logger?: Logger
 
+  /** Callback invoked after sync operations (list, setValues). */
+  readonly onSync?: () => Promise<void>
+
   /** External setting manager for persisting credentials. */
   readonly settingManager?: SettingManager
 }
@@ -171,6 +174,8 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
 
   readonly #logger: Logger
 
+  readonly #onSync?: () => Promise<void>
+
   #user: MELCloudHomeUser | null = null
 
   public readonly settingManager?: SettingManager
@@ -192,11 +197,13 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
     const {
       baseURL,
       logger = console,
+      onSync,
       password,
       settingManager,
       username,
     } = config
     this.#logger = logger
+    this.#onSync = onSync
     this.settingManager = settingManager
     if (username !== undefined) {
       this.username = username
@@ -349,6 +356,7 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
         'get',
         CONTEXT_PATH,
       )
+      await this.#onSync?.()
       return data
     } catch {
       return null
@@ -366,6 +374,7 @@ export class MELCloudHomeAPI implements MELCloudHomeAuthService {
         `${ATA_UNIT_PATH}/${id}`,
         { data: values },
       )
+      await this.#onSync?.()
       return data
     } catch {
       return null
