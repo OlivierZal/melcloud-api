@@ -86,7 +86,6 @@ export type {
   HomeEnergyMeasure,
   HomeEnergyPoint,
   HomeErrorLogEntry,
-  HomeProtectionSettings,
   HomeReportData,
   HomeReportDataset,
   HomeReportPoint,

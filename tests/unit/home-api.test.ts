@@ -34,18 +34,8 @@ const userClaims: HomeClaim[] = [
 
 const mockContext: HomeContext = {
   buildings: [],
-  country: 'FR',
-  email: 'john@example.com',
-  firstname: 'John',
   guestBuildings: [],
-  id: 'user-123',
   language: 'fr',
-  lastname: 'Doe',
-  numberOfBuildingsAllowed: 2,
-  numberOfDevicesAllowed: 10,
-  numberOfGuestDevicesAllowed: 10,
-  numberOfGuestUsersAllowedPerUnit: 5,
-  scenes: [],
 }
 
 const mockEnergyData: HomeEnergyData = {
@@ -73,24 +63,14 @@ const mockReportData: HomeReportData[] = [
   {
     datasets: [
       {
-        backgroundColor: '#F1995D',
-        borderColor: '#F1995D',
-        borderWidth: 2,
         /* eslint-disable id-length -- x/y are the real API field names */
         data: [
           { x: '2026-03-01T00:00:00', y: 20.5 },
           { x: '2026-03-01T01:00:00', y: 21 },
         ],
         /* eslint-enable id-length */
-        hidden: false,
         id: 'room_temperature',
-        isNonInteractive: false,
         label: 'Room Temperature',
-        lineTension: 0,
-        pointRadius: 0,
-        spanGaps: false,
-        stepped: false,
-        yAxisId: 'yTemp',
       },
     ],
     reportPeriod: 0,
