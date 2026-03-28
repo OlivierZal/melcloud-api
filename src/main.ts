@@ -135,6 +135,7 @@ export {
   type ReportQuery,
   type ZoneFacade,
   FacadeManager,
+  HomeDeviceAtaFacade,
   hasZone2,
   isAtaFacade,
   isAtwFacade,

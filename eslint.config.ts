@@ -569,6 +569,7 @@ const config = defineConfig([
     files: ['tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
+      'id-length': ['error', { exceptions: ['x', 'y'] }],
       'import-x/max-dependencies': [
         'error',
         { ignoreTypeImports: true, max: 15 },

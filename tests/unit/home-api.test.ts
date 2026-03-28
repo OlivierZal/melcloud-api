@@ -63,12 +63,10 @@ const mockReportData: HomeReportData[] = [
   {
     datasets: [
       {
-        /* eslint-disable id-length -- x/y are the real API field names */
         data: [
           { x: '2026-03-01T00:00:00', y: 20.5 },
           { x: '2026-03-01T01:00:00', y: 21 },
         ],
-        /* eslint-enable id-length */
         id: 'room_temperature',
         label: 'Room Temperature',
       },
