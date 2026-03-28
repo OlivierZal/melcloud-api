@@ -173,8 +173,7 @@ describe('melcloud API', () => {
     vi.clearAllMocks()
     mockAxiosInstance.get.mockResolvedValue({ data: [] })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
-    ;({ MELCloudAPI: melCloudApi } =
-      await import('../../src/services/api.ts'))
+    ;({ MELCloudAPI: melCloudApi } = await import('../../src/services/api.ts'))
   })
 
   afterEach(() => {

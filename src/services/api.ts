@@ -257,6 +257,7 @@ export class MELCloudAPI implements API, Disposable {
 
   @authenticate
   public async authenticate(data?: LoginCredentials): Promise<boolean> {
+    /* v8 ignore next -- @authenticate guarantees data is always provided */
     const { password, username } = data ?? { password: '', username: '' }
     const {
       data: { LoginData: loginData },
@@ -354,9 +355,7 @@ export class MELCloudAPI implements API, Disposable {
               return []
             }
             const error = errorMessage?.trim() ?? ''
-            return error ?
-                [{ date: startDate, deviceId, error }]
-              : []
+            return error ? [{ date: startDate, deviceId, error }] : []
           },
         )
         .toReversed(),

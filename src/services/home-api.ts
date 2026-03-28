@@ -18,7 +18,12 @@ import {
   APICallResponseData,
   createAPICallErrorData,
 } from '../logging/index.ts'
-import type { HomeAPIConfig, Logger, OnSyncFunction, SettingManager } from './interfaces.ts'
+import type {
+  HomeAPIConfig,
+  Logger,
+  OnSyncFunction,
+  SettingManager,
+} from './interfaces.ts'
 
 /** MELCloud Home API contract. */
 export interface HomeAPI {
@@ -202,9 +207,7 @@ export class MELCloudHomeAPI implements HomeAPI {
    * @param config - Optional configuration.
    * @returns The initialized API instance.
    */
-  public static async create(
-    config?: HomeAPIConfig,
-  ): Promise<MELCloudHomeAPI> {
+  public static async create(config?: HomeAPIConfig): Promise<MELCloudHomeAPI> {
     const api = new MELCloudHomeAPI(config)
     await api.authenticate()
     return api
@@ -212,6 +215,7 @@ export class MELCloudHomeAPI implements HomeAPI {
 
   @authenticate
   public async authenticate(data?: LoginCredentials): Promise<boolean> {
+    /* v8 ignore next -- @authenticate guarantees data is always provided */
     const { password, username } = data ?? { password: '', username: '' }
     this.#user = null
     this.expiry = ''
@@ -281,11 +285,9 @@ export class MELCloudHomeAPI implements HomeAPI {
   ): Promise<HomeReportData | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<HomeReportData>(
-        'get',
-        REPORT_PATH,
-        { params: { ...params, unitId: id } },
-      )
+      const { data } = await this.#request<HomeReportData>('get', REPORT_PATH, {
+        params: { ...params, unitId: id },
+      })
       return data
     } catch {
       return null
@@ -301,11 +303,9 @@ export class MELCloudHomeAPI implements HomeAPI {
   public async getUser(): Promise<HomeUser | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<HomeClaim[]>(
-        'get',
-        USER_PATH,
-        { params: { slide: false } },
-      )
+      const { data } = await this.#request<HomeClaim[]>('get', USER_PATH, {
+        params: { slide: false },
+      })
       this.#user = parseClaims(data)
       const expiresIn = Number(getClaimValue(data, 'bff:session_expires_in'))
       if (expiresIn > 0) {
@@ -332,10 +332,7 @@ export class MELCloudHomeAPI implements HomeAPI {
   public async list(): Promise<HomeContext | null> {
     await this.#ensureSession()
     try {
-      const { data } = await this.#request<HomeContext>(
-        'get',
-        CONTEXT_PATH,
-      )
+      const { data } = await this.#request<HomeContext>('get', CONTEXT_PATH)
       return data
     } catch {
       return null

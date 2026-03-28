@@ -84,8 +84,7 @@ describe('api lifecycle', () => {
     vi.clearAllMocks()
     mockAxiosInstance.get.mockResolvedValue({ data: buildingResponse })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
-    ;({ MELCloudAPI: melCloudApi } =
-      await import('../../src/services/api.ts'))
+    ;({ MELCloudAPI: melCloudApi } = await import('../../src/services/api.ts'))
   })
 
   afterEach(() => {
