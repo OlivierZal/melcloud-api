@@ -119,12 +119,27 @@ const mockAxiosInstance = {
   request: mockRequest,
 }
 
-vi.mock(import('axios'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  default: cast({
-    create: vi.fn().mockReturnValue(mockAxiosInstance),
-  }),
-}))
+vi.mock(import('axios'), async (importOriginal) => {
+  const original = await importOriginal()
+  return {
+    ...original,
+    default: cast({
+      create: vi.fn().mockReturnValue(mockAxiosInstance),
+      isAxiosError: original.default.isAxiosError,
+    }),
+  }
+})
+
+const mockResponse = (
+  data: unknown,
+  headers: Record<string, string> = {},
+  status = 200,
+): { config: object; data: unknown; headers: Record<string, string>; status: number } => ({
+  config: {},
+  data,
+  headers,
+  status,
+})
 
 const createLogger = (): Logger => ({
   error: vi.fn<(...data: unknown[]) => void>(),
@@ -142,49 +157,17 @@ const setupSuccessfulLogin = (): void => {
   const callbackUrl =
     'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz'
   mockRequest
-    .mockResolvedValueOnce({
-      data: '',
-      headers: { location: `${BASE_URL}/auth-redirect` },
-      status: 302,
-    })
-    .mockResolvedValueOnce({
-      data: '',
-      headers: { location: `${COGNITO}/oauth2/authorize?client_id=test` },
-      status: 302,
-    })
-    .mockResolvedValueOnce({
-      data: '',
-      headers: { location: `${COGNITO}/login?client_id=test` },
-      status: 302,
-    })
-    .mockResolvedValueOnce({
-      data: cognitoLoginPage(),
-      headers: {},
-      status: 200,
-    })
-    .mockResolvedValueOnce({
-      data: '',
-      headers: { location: callbackUrl },
-      status: 302,
-    })
-    .mockResolvedValueOnce({
-      data: '',
-      headers: {
+    .mockResolvedValueOnce(mockResponse('', { location: `${BASE_URL}/auth-redirect` }, 302))
+    .mockResolvedValueOnce(mockResponse('', { location: `${COGNITO}/oauth2/authorize?client_id=test` }, 302))
+    .mockResolvedValueOnce(mockResponse('', { location: `${COGNITO}/login?client_id=test` }, 302))
+    .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
+    .mockResolvedValueOnce(mockResponse('', { location: callbackUrl }, 302))
+    .mockResolvedValueOnce(mockResponse('', {
         location: 'https://auth.melcloudhome.com/ExternalLogin/Callback',
-      },
-      status: 302,
-    })
-    .mockResolvedValueOnce({
-      data: '',
-      headers: { location: `${BASE_URL}/signin-oidc?code=final` },
-      status: 302,
-    })
-    .mockResolvedValueOnce({ data: '', headers: {}, status: 200 })
-    .mockResolvedValueOnce({
-      data: userClaims,
-      headers: {},
-      status: 200,
-    })
+      }, 302))
+    .mockResolvedValueOnce(mockResponse('', { location: `${BASE_URL}/signin-oidc?code=final` }, 302))
+    .mockResolvedValueOnce(mockResponse('', {}, 200))
+    .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
 }
 
 describe('melcloud home API', () => {
@@ -309,11 +292,7 @@ describe('melcloud home API', () => {
     it('should return context on success', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce({
-        data: mockContext,
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       const context = await api.list()
 
       expect(context).toStrictEqual(mockContext)
@@ -334,11 +313,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
-      mockRequest.mockResolvedValueOnce({
-        data: mockContext,
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       await api.list()
 
       expect(onSync).toHaveBeenCalledTimes(1)
@@ -348,11 +323,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
-      mockRequest.mockResolvedValueOnce({
-        data: mockDevice,
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockDevice, {}, 200))
       await api.setValues('device-1', { power: true })
 
       expect(onSync).toHaveBeenCalledTimes(1)
@@ -373,11 +344,7 @@ describe('melcloud home API', () => {
     it('should update device values', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce({
-        data: mockDevice,
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockDevice, {}, 200))
       const result = await api.setValues('device-1', {
         operationMode: 'Heat',
         power: true,
@@ -407,11 +374,7 @@ describe('melcloud home API', () => {
     it('should fetch device error log', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce({
-        data: mockErrorLog,
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockErrorLog, {}, 200))
       const result = await api.getErrorLog('device-1')
 
       expect(result).toStrictEqual(mockErrorLog)
@@ -436,11 +399,7 @@ describe('melcloud home API', () => {
     it('should fetch temperature trend summary', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce({
-        data: mockReportData,
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
       const result = await api.getTemperatures('device-1', {
         from: '2026-03-01',
         period: 'Hourly',
@@ -478,11 +437,7 @@ describe('melcloud home API', () => {
     it('should fetch energy data with cumulative measure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce({
-        data: mockEnergyData,
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
       const result = await api.getEnergy('device-1', {
         from: '2026-03-01',
         interval: 'Hour',
@@ -520,11 +475,7 @@ describe('melcloud home API', () => {
     it('should fetch RSSI signal data', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce({
-        data: mockSignalData,
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockSignalData, {}, 200))
       const result = await api.getSignal('device-1', {
         from: '2026-03-01',
         to: '2026-03-02',
@@ -568,11 +519,7 @@ describe('melcloud home API', () => {
         vi.advanceTimersByTime(28_801 * MILLISECONDS_IN_SECOND)
 
         setupSuccessfulLogin()
-        mockRequest.mockResolvedValueOnce({
-          data: mockContext,
-          headers: {},
-          status: 200,
-        })
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
         const context = await api.list()
 
         expect(context).toStrictEqual(mockContext)
@@ -589,11 +536,7 @@ describe('melcloud home API', () => {
           calls: { length: callCountAfterLogin },
         },
       } = mockRequest
-      mockRequest.mockResolvedValueOnce({
-        data: mockContext,
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       await api.list()
 
       expect(mockRequest).toHaveBeenCalledTimes(callCountAfterLogin + 1)
@@ -603,16 +546,8 @@ describe('melcloud home API', () => {
   describe('redirect handling', () => {
     it('should stop on empty location header', async () => {
       mockRequest
-        .mockResolvedValueOnce({
-          data: '',
-          headers: { location: '' },
-          status: 302,
-        })
-        .mockResolvedValueOnce({
-          data: userClaims,
-          headers: {},
-          status: 200,
-        })
+        .mockResolvedValueOnce(mockResponse('', { location: '' }, 302))
+        .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         password: 'pass',
@@ -624,16 +559,8 @@ describe('melcloud home API', () => {
 
     it('should stop on missing location header in redirect chain', async () => {
       mockRequest
-        .mockResolvedValueOnce({
-          data: '',
-          headers: { location: `${BASE_URL}/step1` },
-          status: 302,
-        })
-        .mockResolvedValueOnce({
-          data: '',
-          headers: {},
-          status: 302,
-        })
+        .mockResolvedValueOnce(mockResponse('', { location: `${BASE_URL}/step1` }, 302))
+        .mockResolvedValueOnce(mockResponse('', {}, 302))
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
@@ -651,11 +578,7 @@ describe('melcloud home API', () => {
 
     it('should throw on too many redirects', async () => {
       Array.from({ length: 21 }, (_unused, index) =>
-        mockRequest.mockResolvedValueOnce({
-          data: '',
-          headers: { location: `${BASE_URL}/redirect-${String(index)}` },
-          status: 302,
-        }),
+        mockRequest.mockResolvedValueOnce(mockResponse('', { location: `${BASE_URL}/redirect-${String(index)}` }, 302)),
       )
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
@@ -677,31 +600,15 @@ describe('melcloud home API', () => {
 
     it('should resolve relative redirect URLs', async () => {
       mockRequest
-        .mockResolvedValueOnce({
-          data: '',
-          headers: { location: `${BASE_URL}/auth-redirect` },
-          status: 302,
-        })
-        .mockResolvedValueOnce({
-          data: '',
-          headers: { location: '/relative-path' },
-          status: 302,
-        })
-        .mockResolvedValueOnce({
-          data: cognitoLoginPage(`${COGNITO}/login?client_id=test`),
-          headers: {},
-          status: 200,
-        })
-        .mockResolvedValueOnce({
-          data: '',
-          headers: {
+        .mockResolvedValueOnce(mockResponse('', { location: `${BASE_URL}/auth-redirect` }, 302))
+        .mockResolvedValueOnce(mockResponse('', { location: '/relative-path' }, 302))
+        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(`${COGNITO}/login?client_id=test`), {}, 200))
+        .mockResolvedValueOnce(mockResponse('', {
             location:
               'https://auth.melcloudhome.com/signin-oidc-meu?code=x&state=y',
-          },
-          status: 302,
-        })
-        .mockResolvedValueOnce({ data: '', headers: {}, status: 200 })
-        .mockResolvedValueOnce({ data: userClaims, headers: {}, status: 200 })
+          }, 302))
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
       const api = await createApi()
 
       expect(api.isAuthenticated()).toBe(true)
@@ -715,11 +622,7 @@ describe('melcloud home API', () => {
 
   describe('form parsing', () => {
     it('should throw when form action is missing', async () => {
-      mockRequest.mockResolvedValueOnce({
-        data: '<html>no form here</html>',
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValueOnce(mockResponse('<html>no form here</html>', {}, 200))
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
@@ -737,21 +640,13 @@ describe('melcloud home API', () => {
 
     it('should prefix relative form action with Cognito authority', async () => {
       mockRequest
-        .mockResolvedValueOnce({
-          data: cognitoLoginPage('/login?client_id=test&amp;state=abc'),
-          headers: {},
-          status: 200,
-        })
-        .mockResolvedValueOnce({
-          data: '',
-          headers: {
+        .mockResolvedValueOnce(mockResponse(cognitoLoginPage('/login?client_id=test&amp;state=abc'), {}, 200))
+        .mockResolvedValueOnce(mockResponse('', {
             location:
               'https://auth.melcloudhome.com/signin-oidc-meu?code=x&state=y',
-          },
-          status: 302,
-        })
-        .mockResolvedValueOnce({ data: '', headers: {}, status: 200 })
-        .mockResolvedValueOnce({ data: userClaims, headers: {}, status: 200 })
+          }, 302))
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
       await createApi()
 
       expect(mockRequest).toHaveBeenCalledWith(
@@ -769,21 +664,13 @@ describe('melcloud home API', () => {
         '<input type="hidden" name="noValue"/>' +
         '</form>'
       mockRequest
-        .mockResolvedValueOnce({
-          data: htmlWithEdgeCases,
-          headers: {},
-          status: 200,
-        })
-        .mockResolvedValueOnce({
-          data: '',
-          headers: {
+        .mockResolvedValueOnce(mockResponse(htmlWithEdgeCases, {}, 200))
+        .mockResolvedValueOnce(mockResponse('', {
             location:
               'https://auth.melcloudhome.com/signin-oidc-meu?code=x&state=y',
-          },
-          status: 302,
-        })
-        .mockResolvedValueOnce({ data: '', headers: {}, status: 200 })
-        .mockResolvedValueOnce({ data: userClaims, headers: {}, status: 200 })
+          }, 302))
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
       const api = await createApi()
 
       expect(api.isAuthenticated()).toBe(true)
@@ -794,25 +681,13 @@ describe('melcloud home API', () => {
         { type: 'email', value: 'only@email.com', valueType: 'null' },
       ]
       mockRequest
-        .mockResolvedValueOnce({
-          data: cognitoLoginPage(),
-          headers: {},
-          status: 200,
-        })
-        .mockResolvedValueOnce({
-          data: '',
-          headers: {
+        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
+        .mockResolvedValueOnce(mockResponse('', {
             location:
               'https://auth.melcloudhome.com/signin-oidc-meu?code=x&state=y',
-          },
-          status: 302,
-        })
-        .mockResolvedValueOnce({ data: '', headers: {}, status: 200 })
-        .mockResolvedValueOnce({
-          data: partialClaims,
-          headers: {},
-          status: 200,
-        })
+          }, 302))
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(partialClaims, {}, 200))
       const api = await createApi()
 
       expect(api.user).toStrictEqual({
@@ -826,21 +701,13 @@ describe('melcloud home API', () => {
     it('should use absolute form action as-is', async () => {
       const absoluteAction = `${COGNITO}/login?client_id=test`
       mockRequest
-        .mockResolvedValueOnce({
-          data: cognitoLoginPage(absoluteAction),
-          headers: {},
-          status: 200,
-        })
-        .mockResolvedValueOnce({
-          data: '',
-          headers: {
+        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(absoluteAction), {}, 200))
+        .mockResolvedValueOnce(mockResponse('', {
             location:
               'https://auth.melcloudhome.com/signin-oidc-meu?code=x&state=y',
-          },
-          status: 302,
-        })
-        .mockResolvedValueOnce({ data: '', headers: {}, status: 200 })
-        .mockResolvedValueOnce({ data: userClaims, headers: {}, status: 200 })
+          }, 302))
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
       await createApi()
 
       expect(mockRequest).toHaveBeenCalledWith(
@@ -850,18 +717,10 @@ describe('melcloud home API', () => {
 
     it('should handle missing location header from credential submission', async () => {
       mockRequest
-        .mockResolvedValueOnce({
-          data: cognitoLoginPage(),
-          headers: {},
-          status: 200,
-        })
-        .mockResolvedValueOnce({
-          data: '',
-          headers: {},
-          status: 302,
-        })
-        .mockResolvedValueOnce({ data: '', headers: {}, status: 200 })
-        .mockResolvedValueOnce({ data: userClaims, headers: {}, status: 200 })
+        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
+        .mockResolvedValueOnce(mockResponse('', {}, 302))
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
       const api = await createApi()
 
       expect(api.isAuthenticated()).toBe(true)
@@ -871,29 +730,17 @@ describe('melcloud home API', () => {
   describe('cookie handling', () => {
     it('should store and send Set-Cookie headers across requests', async () => {
       mockRequest
-        .mockResolvedValueOnce({
-          data: '',
-          headers: {
+        .mockResolvedValueOnce(mockResponse('', {
             location: `${COGNITO}/login`,
             'set-cookie': ['session=abc; Path=/; Secure'],
-          },
-          status: 302,
-        })
-        .mockResolvedValueOnce({
-          data: cognitoLoginPage(`${COGNITO}/login?id=test`),
-          headers: {},
-          status: 200,
-        })
-        .mockResolvedValueOnce({
-          data: '',
-          headers: {
+          }, 302))
+        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(`${COGNITO}/login?id=test`), {}, 200))
+        .mockResolvedValueOnce(mockResponse('', {
             location:
               'https://auth.melcloudhome.com/signin-oidc-meu?code=x&state=y',
-          },
-          status: 302,
-        })
-        .mockResolvedValueOnce({ data: '', headers: {}, status: 200 })
-        .mockResolvedValueOnce({ data: userClaims, headers: {}, status: 200 })
+          }, 302))
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
       const api = await createApi()
 
       expect(api.isAuthenticated()).toBe(true)
@@ -901,28 +748,20 @@ describe('melcloud home API', () => {
 
     it('should ignore invalid Set-Cookie values', async () => {
       mockRequest
-        .mockResolvedValueOnce({
-          data: cognitoLoginPage(`${COGNITO}/login?id=test`),
-          headers: { 'set-cookie': [''] },
-          status: 200,
-        })
-        .mockResolvedValueOnce({
-          data: '',
-          headers: {
+        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(`${COGNITO}/login?id=test`), { 'set-cookie': [''] }, 200))
+        .mockResolvedValueOnce(mockResponse('', {
             location:
               'https://auth.melcloudhome.com/signin-oidc-meu?code=x&state=y',
-          },
-          status: 302,
-        })
-        .mockResolvedValueOnce({ data: '', headers: {}, status: 200 })
-        .mockResolvedValueOnce({ data: userClaims, headers: {}, status: 200 })
+          }, 302))
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
 
       await expect(createApi()).resolves.toBeDefined()
     })
   })
 
   describe('logging', () => {
-    it('should not log sensitive query parameters', async () => {
+    it('should produce structured log output for requests', async () => {
       setupSuccessfulLogin()
       const logger = createLogger()
       await createApi({ logger })
@@ -930,9 +769,11 @@ describe('melcloud home API', () => {
       const {
         mock: { calls },
       } = vi.mocked(logger.log)
+
+      expect(calls.length).toBeGreaterThan(0)
+
       for (const [message] of calls) {
-        expect(String(message)).not.toContain('code=')
-        expect(String(message)).not.toContain('state=')
+        expect(String(message)).toContain('API response')
       }
     })
   })

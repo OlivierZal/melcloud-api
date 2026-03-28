@@ -14,6 +14,10 @@ import type {
   LoginCredentials,
 } from '../types/index.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import {
+  APICallResponseData,
+  createAPICallErrorData,
+} from '../logging/index.ts'
 import type { Logger, OnSyncFunction, SettingManager } from './interfaces.ts'
 
 /** Configuration options for the MELCloud Home API. */
@@ -148,13 +152,6 @@ const storeCookies = async (
       }),
     )
   }
-}
-
-/* v8 ignore next -- `path` is always defined from split but TS requires the fallback */
-const stripQueryParams = (url: string): string => {
-  const [path] =
-    url.startsWith('http') ? [new URL(url).pathname] : url.split('?')
-  return path ?? url
 }
 
 /**
@@ -417,12 +414,16 @@ export class MELCloudHomeAPI implements HomeAPI {
   }
 
   async #get<T = unknown>(url: string): Promise<AxiosResponse<T>> {
-    const response = await this.#request<T>('get', url, {
+    return this.#request<T>('get', url, {
       maxRedirects: 0,
       validateStatus: acceptAnyStatus,
     })
-    this.logger.log(`${String(response.status)} ${stripQueryParams(url)}`)
-    return response
+  }
+
+  #logError(error: unknown): void {
+    if (axios.isAxiosError(error)) {
+      this.logger.error(String(createAPICallErrorData(error)))
+    }
   }
 
   async #request<T = unknown>(
@@ -440,17 +441,23 @@ export class MELCloudHomeAPI implements HomeAPI {
     const baseURL = this.#api.defaults.baseURL ?? ''
     const absoluteUrl = url.startsWith('http') ? url : `${baseURL}${url}`
     const cookieHeader = await this.#jar.getCookieString(absoluteUrl)
-    const response = await this.#api.request<T>({
-      ...config,
-      headers: {
-        ...configHeaders,
-        ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
-      },
-      method,
-      url,
-    })
-    await storeCookies(this.#jar, response, absoluteUrl)
-    return response
+    try {
+      const response = await this.#api.request<T>({
+        ...config,
+        headers: {
+          ...configHeaders,
+          ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
+        },
+        method,
+        url,
+      })
+      await storeCookies(this.#jar, response, absoluteUrl)
+      this.logger.log(String(new APICallResponseData(response)))
+      return response
+    } catch (error) {
+      this.#logError(error)
+      throw error
+    }
   }
 
   async #submitCredentials(
