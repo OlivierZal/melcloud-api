@@ -241,12 +241,7 @@ export class MELCloudAPI implements API, Disposable {
     this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
-    this.#setOptionalProperties({
-      language,
-      password,
-      timezone,
-      username,
-    })
+    this.#applyOptionalConfig({ language, password, timezone, username })
     this.#api = this.#createAPI(shouldVerifySSL)
   }
 
@@ -504,8 +499,9 @@ export class MELCloudAPI implements API, Disposable {
    */
   public async setLanguage(language: string): Promise<void> {
     if (language !== this.language) {
-      const { data: hasLanguageChanged } = await this.#postLanguage(
-        this.#getLanguageCode(language),
+      const { data: hasLanguageChanged } = await this.#api.post<boolean>(
+        '/User/UpdateLanguage',
+        { language: this.#getLanguageCode(language) },
       )
       if (hasLanguageChanged) {
         this.language = language
@@ -544,6 +540,31 @@ export class MELCloudAPI implements API, Disposable {
   }
 
   // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
+  #applyOptionalConfig({
+    language,
+    password,
+    timezone,
+    username,
+  }: {
+    language?: string
+    password?: string
+    timezone?: string
+    username?: string
+  }): void {
+    if (timezone !== undefined) {
+      LuxonSettings.defaultZone = timezone
+    }
+    if (language !== undefined) {
+      this.language = language
+    }
+    if (username !== undefined) {
+      this.username = username
+    }
+    if (password !== undefined) {
+      this.password = password
+    }
+  }
+
   #canRetry(): boolean {
     if (!this.#retryTimeout.isActive) {
       this.#retryTimeout.schedule(noop, RETRY_DELAY)
@@ -652,46 +673,13 @@ export class MELCloudAPI implements API, Disposable {
     return response
   }
 
-  #handleSyncError(error: unknown): void {
-    this.logger.error('Auto-sync failed:', error)
-  }
-
   #planNextSync(): void {
     if (this.#autoSyncInterval) {
       this.#syncTimeout.schedule(() => {
         this.fetch().catch((error: unknown) => {
-          this.#handleSyncError(error)
+          this.logger.error('Auto-sync failed:', error)
         })
       }, this.#autoSyncInterval)
-    }
-  }
-
-  async #postLanguage(language: Language): Promise<{ data: boolean }> {
-    return this.#api.post('/User/UpdateLanguage', { language })
-  }
-
-  #setOptionalProperties({
-    language,
-    password,
-    timezone,
-    username,
-  }: {
-    language?: string
-    password?: string
-    timezone?: string
-    username?: string
-  }): void {
-    if (timezone !== undefined) {
-      LuxonSettings.defaultZone = timezone
-    }
-    if (language !== undefined) {
-      this.language = language
-    }
-    if (username !== undefined) {
-      this.username = username
-    }
-    if (password !== undefined) {
-      this.password = password
     }
   }
 
