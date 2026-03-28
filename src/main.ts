@@ -116,6 +116,7 @@ export {
   Vertical,
 } from './constants.ts'
 export {
+  authenticate,
   fetchDevices,
   syncDevices,
   updateDevice,

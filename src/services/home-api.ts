@@ -13,7 +13,7 @@ import type {
   HomeUser,
   LoginCredentials,
 } from '../types/index.ts'
-import { setting, syncDevices } from '../decorators/index.ts'
+import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import type { Logger, OnSyncFunction, SettingManager } from './interfaces.ts'
 
 /** Configuration options for the MELCloud Home API. */
@@ -172,9 +172,9 @@ export class MELCloudHomeAPI implements HomeAPI {
 
   readonly #jar = new CookieJar()
 
-  readonly #logger: Logger
-
   #user: HomeUser | null = null
+
+  public readonly logger: Logger
 
   public readonly onSync?: OnSyncFunction
 
@@ -202,7 +202,7 @@ export class MELCloudHomeAPI implements HomeAPI {
       settingManager,
       username,
     } = config
-    this.#logger = logger
+    this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
     if (username !== undefined) {
@@ -228,20 +228,17 @@ export class MELCloudHomeAPI implements HomeAPI {
     return api
   }
 
+  @authenticate
   public async authenticate(data?: LoginCredentials): Promise<boolean> {
-    const { password = this.password, username = this.username } = data ?? {}
-    if (!username || !password) {
-      return false
-    }
-    try {
-      return await this.#authenticate({ password, username })
-    } catch (error) {
-      if (data !== undefined) {
-        throw error
-      }
-      this.#logger.error('Authentication failed:', error)
-      return false
-    }
+    const { password, username } = data ?? { password: '', username: '' }
+    this.#user = null
+    this.expiry = ''
+    await this.#performOidcLogin({ password, username })
+    ;({ password: this.password, username: this.username } = {
+      password,
+      username,
+    })
+    return (await this.getUser()) !== null
   }
 
   public async getEnergy(
@@ -381,14 +378,6 @@ export class MELCloudHomeAPI implements HomeAPI {
     }
   }
 
-  async #authenticate(credentials: LoginCredentials): Promise<boolean> {
-    this.#user = null
-    this.expiry = ''
-    await this.#performOidcLogin(credentials)
-    ;({ password: this.password, username: this.username } = credentials)
-    return (await this.getUser()) !== null
-  }
-
   async #ensureSession(): Promise<void> {
     if (this.expiry && new Date(this.expiry) < new Date()) {
       await this.authenticate()
@@ -432,7 +421,7 @@ export class MELCloudHomeAPI implements HomeAPI {
       maxRedirects: 0,
       validateStatus: acceptAnyStatus,
     })
-    this.#logger.log(`${String(response.status)} ${stripQueryParams(url)}`)
+    this.logger.log(`${String(response.status)} ${stripQueryParams(url)}`)
     return response
   }
 

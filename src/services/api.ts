@@ -48,7 +48,7 @@ import type {
   TilesPostData,
 } from '../types/index.ts'
 import { DeviceType, Language } from '../constants.ts'
-import { setting, syncDevices } from '../decorators/index.ts'
+import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import {
   APICallRequestData,
   APICallResponseData,
@@ -184,8 +184,6 @@ export class MELCloudAPI implements API, Disposable {
 
   #language = 'en'
 
-  readonly #logger: Logger
-
   #pauseListUntil = DateTime.now()
 
   readonly #registry = new ModelRegistry()
@@ -193,6 +191,8 @@ export class MELCloudAPI implements API, Disposable {
   readonly #retryTimeout = new DisposableTimeout()
 
   readonly #syncTimeout = new DisposableTimeout()
+
+  public readonly logger: Logger
 
   public readonly onSync?: OnSyncFunction
 
@@ -238,7 +238,7 @@ export class MELCloudAPI implements API, Disposable {
     this.#autoSyncInterval = Duration.fromObject({
       minutes: autoSyncInterval ?? 0,
     }).as('milliseconds')
-    this.#logger = logger
+    this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
     this.#setOptionalProperties({
@@ -261,6 +261,29 @@ export class MELCloudAPI implements API, Disposable {
     return api
   }
 
+  @authenticate
+  public async authenticate(data?: LoginCredentials): Promise<boolean> {
+    const { password, username } = data ?? { password: '', username: '' }
+    const {
+      data: { LoginData: loginData },
+    } = await this.login({
+      postData: {
+        AppVersion: APP_VERSION,
+        Email: username,
+        Language: this.#getLanguageCode(),
+        Password: password,
+        Persist: true,
+      },
+    })
+    if (loginData) {
+      this.username = username
+      this.password = password
+      ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
+      await this.fetch()
+    }
+    return loginData !== null
+  }
+
   /**
    * Fetch all buildings, sync the model registry, and schedule the next auto-sync.
    * @returns The list of fetched buildings.
@@ -271,32 +294,10 @@ export class MELCloudAPI implements API, Disposable {
     try {
       return await this.#fetch()
     } catch (error) {
-      this.#logger.error('Failed to fetch devices:', error)
+      this.logger.error('Failed to fetch devices:', error)
       return []
     } finally {
       this.#planNextSync()
-    }
-  }
-
-  /**
-   * Authenticate with MELCloud. If credentials are provided explicitly, errors
-   * are thrown to the caller. If using stored credentials, errors are swallowed.
-   * @param data - Optional login credentials to use instead of stored ones.
-   * @returns Whether authentication was successful.
-   */
-  public async authenticate(data?: LoginCredentials): Promise<boolean> {
-    const { password = this.password, username = this.username } = data ?? {}
-    if (!username || !password) {
-      return false
-    }
-    try {
-      return await this.#authenticate({ password, username })
-    } catch (error) {
-      if (data !== undefined) {
-        throw error
-      }
-      this.#logger.error('Authentication failed:', error)
-      return false
     }
   }
 
@@ -542,30 +543,6 @@ export class MELCloudAPI implements API, Disposable {
     return this.#api.post(`/Device/Set${deviceTypeNames[type]}`, postData)
   }
 
-  async #authenticate({
-    password,
-    username,
-  }: LoginCredentials): Promise<boolean> {
-    const {
-      data: { LoginData: loginData },
-    } = await this.login({
-      postData: {
-        AppVersion: APP_VERSION,
-        Email: username,
-        Language: this.#getLanguageCode(),
-        Password: password,
-        Persist: true,
-      },
-    })
-    if (loginData) {
-      this.username = username
-      this.password = password
-      ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
-      await this.fetch()
-    }
-    return loginData !== null
-  }
-
   // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
   #canRetry(): boolean {
     if (!this.#retryTimeout.isActive) {
@@ -621,7 +598,7 @@ export class MELCloudAPI implements API, Disposable {
 
   async #handleError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
-    this.#logger.error(String(errorData))
+    this.logger.error(String(errorData))
 
     const { config, response: { headers, status } = {} } = error
     if (status === HttpStatusCode.TooManyRequests) {
@@ -631,7 +608,7 @@ export class MELCloudAPI implements API, Disposable {
           { seconds: retryAfterSeconds }
         : { hours: DEFAULT_RETRY_HOURS }
       this.#pauseListUntil = DateTime.now().plus(retryDuration)
-      this.#logger.error(
+      this.logger.error(
         `Rate limited (429): pausing list operations for ${this.#pauseListUntil.diffNow().shiftTo('minutes').toHuman()}`,
       )
     } else if (
@@ -666,17 +643,17 @@ export class MELCloudAPI implements API, Disposable {
       }
       newConfig.headers.set('X-MitsContextKey', contextKey)
     }
-    this.#logger.log(String(new APICallRequestData(newConfig)))
+    this.logger.log(String(new APICallRequestData(newConfig)))
     return newConfig
   }
 
   #handleResponse(response: AxiosResponse): AxiosResponse {
-    this.#logger.log(String(new APICallResponseData(response)))
+    this.logger.log(String(new APICallResponseData(response)))
     return response
   }
 
   #handleSyncError(error: unknown): void {
-    this.#logger.error('Auto-sync failed:', error)
+    this.logger.error('Auto-sync failed:', error)
   }
 
   #planNextSync(): void {
