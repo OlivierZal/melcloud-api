@@ -198,7 +198,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   }
 
   public async setFrostProtection({
-    isEnabled,
+    isEnabled = true,
     max,
     min,
   }: FrostProtectionQuery): Promise<FailureData | SuccessData> {
@@ -219,7 +219,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     }
     const { data } = await this.api.setFrostProtection({
       postData: {
-        Enabled: isEnabled ?? true,
+        Enabled: isEnabled,
         MaximumTemperature: newMax,
         MinimumTemperature: newMin,
         ...(await this.#getFrostProtectionLocation()),

@@ -23,6 +23,9 @@ export const FanSpeed = {
 } as const
 export type FanSpeed = (typeof FanSpeed)[keyof typeof FanSpeed]
 
+/** Fan speed values excluding `silent`, used in set/update commands. */
+export type NonSilentFanSpeed = Exclude<FanSpeed, typeof FanSpeed.silent>
+
 /** Effective flags value indicating no specific fields were changed; all data should be included. */
 export const FLAG_UNCHANGED = 0x0
 
@@ -98,12 +101,12 @@ export const OperationMode = {
 export type OperationMode = (typeof OperationMode)[keyof typeof OperationMode]
 
 /** Pre-built sets of ATA operation modes that support cooling or heating. */
-export const coolModes: ReadonlySet<number> = new Set([
+export const coolModes: ReadonlySet<OperationMode> = new Set([
   OperationMode.auto,
   OperationMode.cool,
   OperationMode.dry,
 ])
-export const heatModes: ReadonlySet<number> = new Set([
+export const heatModes: ReadonlySet<OperationMode> = new Set([
   OperationMode.auto,
   OperationMode.heat,
 ])

@@ -454,6 +454,7 @@ export class MELCloudHomeAPI implements HomeAPI {
       maxRedirects: 0,
       validateStatus: isRedirect,
     })
-    return String(response.headers['location'] ?? '')
+    const location = String(response.headers['location'] ?? '')
+    return location === '' ? '' : resolveUrl(location, action)
   }
 }

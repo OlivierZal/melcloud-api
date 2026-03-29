@@ -34,11 +34,11 @@ import { BaseFacade } from './base.ts'
 const DEFAULT_YEAR = '1970-01-01'
 
 const getReportPostDataDates = ({
+  from = DEFAULT_YEAR,
+  to = now(),
+}: ReportQuery): Required<ReportQuery> => ({
   from,
   to,
-}: ReportQuery): Required<ReportQuery> => ({
-  from: from ?? DEFAULT_YEAR,
-  to: to ?? now(),
 })
 
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
