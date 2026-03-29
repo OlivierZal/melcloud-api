@@ -2,6 +2,7 @@ import type {
   DeviceType,
   FanSpeed,
   Horizontal,
+  NonSilentFanSpeed,
   OperationMode,
   Vertical,
 } from '../constants.ts'
@@ -45,7 +46,7 @@ export interface GetGroupPostData {
 }
 
 export interface GroupState {
-  readonly FanSpeed?: Exclude<FanSpeed, typeof FanSpeed.silent> | null
+  readonly FanSpeed?: NonSilentFanSpeed | null
   readonly OperationMode?: OperationMode | null
   readonly Power?: boolean | null
   readonly SetTemperature?: number | null
@@ -95,7 +96,7 @@ export interface SetGroupPostData {
 
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly OperationMode?: OperationMode
-  readonly SetFanSpeed?: Exclude<FanSpeed, typeof FanSpeed.silent>
+  readonly SetFanSpeed?: NonSilentFanSpeed
   readonly SetTemperature?: number
   readonly VaneHorizontal?: Horizontal
   readonly VaneVertical?: Vertical

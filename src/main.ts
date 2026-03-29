@@ -96,6 +96,7 @@ export {
   verticalToClassic,
 } from './adapters/index.ts'
 export {
+  type NonSilentFanSpeed,
   coolModes,
   DeviceType,
   FanSpeed,

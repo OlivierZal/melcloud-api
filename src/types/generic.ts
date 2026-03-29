@@ -177,26 +177,12 @@ export interface GetDeviceDataParams {
 }
 
 export interface HolidayModeData {
-  readonly EndDate: {
-    readonly Day: number
-    readonly Hour: number
-    readonly Minute: number
-    readonly Month: number
-    readonly Second: number
-    readonly Year: number
-  }
+  readonly EndDate: NonNullable<DateTimeComponents>
   readonly HMDefined: boolean
   readonly HMEnabled: boolean
   readonly HMEndDate: string | null
   readonly HMStartDate: string | null
-  readonly StartDate: {
-    readonly Day: number
-    readonly Hour: number
-    readonly Minute: number
-    readonly Month: number
-    readonly Second: number
-    readonly Year: number
-  }
+  readonly StartDate: NonNullable<DateTimeComponents>
   readonly TimeZone: number
 }
 
