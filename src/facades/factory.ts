@@ -1,10 +1,7 @@
 import type { DeviceModelAny, Model, ModelRegistry } from '../models/index.ts'
 import type { APIAdapter } from '../services/index.ts'
-
 import { DeviceType } from '../constants.ts'
-
 import type { DeviceFacadeAny, Facade } from './interfaces.ts'
-
 import { AreaFacade } from './area.ts'
 import { BuildingFacade } from './building.ts'
 import { DeviceAtaFacade } from './device-ata.ts'

@@ -1,14 +1,18 @@
+export type { HomeAPI } from './home-api.ts'
 export type {
   API,
   APIAdapter,
   APIConfig,
   APISettings,
+  BaseAPIConfig,
   ErrorDetails,
   ErrorLog,
   ErrorLogQuery,
+  HomeAPIConfig,
   Logger,
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
 
-export { MELCloudAPI } from './melcloud.ts'
+export { MELCloudAPI } from './api.ts'
+export { MELCloudHomeAPI } from './home-api.ts'

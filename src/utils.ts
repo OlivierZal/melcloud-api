@@ -12,7 +12,6 @@ import type {
   SetDeviceDataAtaInList,
   UpdateDeviceData,
 } from './types/index.ts'
-
 import { type DeviceType, LabelType } from './constants.ts'
 
 // API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)

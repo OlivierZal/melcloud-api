@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ListDeviceDataAta } from '../../src/types/index.ts'
-
 import { DeviceType } from '../../src/constants.ts'
 import { DeviceModel } from '../../src/models/index.ts'
 import { ataDevice } from '../fixtures.ts'
@@ -18,7 +17,7 @@ const expectAtaData = (data: unknown): ListDeviceDataAta => {
   return data
 }
 
-describe('deviceModel', () => {
+describe('device model', () => {
   it('creates a device with correct properties', () => {
     const device = new DeviceModel(ataDevice())
 

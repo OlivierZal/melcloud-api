@@ -74,7 +74,7 @@ const createSyncedRegistry = (): ModelRegistry => {
   return registry
 }
 
-describe('getBuildings', () => {
+describe('building retrieval', () => {
   it('returns all buildings with their hierarchy', () => {
     const result = createSyncedRegistry().getBuildings()
 
@@ -164,7 +164,7 @@ describe('getBuildings', () => {
   })
 })
 
-describe('getZones', () => {
+describe('zone retrieval', () => {
   it('returns a flat, sorted list of all zones', () => {
     const names = createSyncedRegistry()
       .getZones()

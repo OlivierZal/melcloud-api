@@ -9,7 +9,6 @@ import type {
   TilesData,
   UpdateDeviceData,
 } from '../types/index.ts'
-
 import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { type DeviceModelAny, DeviceModel } from '../models/index.ts'
@@ -23,25 +22,23 @@ import {
   typedFromEntries,
   typedKeys,
 } from '../utils.ts'
-
 import type {
   DeviceFacade,
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
 } from './interfaces.ts'
-
 import { BaseFacade } from './base.ts'
 
 // Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
 
 const getReportPostDataDates = ({
+  from = DEFAULT_YEAR,
+  to = now(),
+}: ReportQuery): Required<ReportQuery> => ({
   from,
   to,
-}: ReportQuery): Required<ReportQuery> => ({
-  from: from ?? DEFAULT_YEAR,
-  to: to ?? now(),
 })
 
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
@@ -55,6 +52,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<DeviceModelAny>
   implements DeviceFacade<T>
 {
+  public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
+
   protected readonly frostProtectionLocation = 'DeviceIds'
 
   protected readonly holidayModeLocation = 'Devices'
@@ -63,15 +62,9 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
-
-  public abstract readonly type: T
-
   protected abstract readonly temperaturesLegend: (string | undefined)[]
 
-  public override get devices(): DeviceModelAny[] {
-    return [this.instance]
-  }
+  public abstract readonly type: T
 
   public get data(): ListDeviceData<T> {
     return this.device.data
@@ -86,6 +79,10 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified by type guard above
     return instance as DeviceModel<T>
+  }
+
+  public override get devices(): DeviceModelAny[] {
+    return [this.instance]
   }
 
   protected get model(): {
@@ -111,22 +108,6 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
           .filter(([key]) => key in this.flags)
       : dataEntries.filter(([key]) => key in this.flags)
     return typedFromEntries<Required<UpdateDeviceData<T>>>(entries)
-  }
-
-  public override async getTiles(device?: false): Promise<TilesData<null>>
-  public override async getTiles(
-    device: true | DeviceModelAny,
-  ): Promise<TilesData<T>>
-  public override async getTiles(
-    device: boolean | DeviceModelAny = false,
-  ): Promise<TilesData<T | null>> {
-    if (
-      device === false ||
-      (device instanceof DeviceModel && device.id !== this.id)
-    ) {
-      return super.getTiles()
-    }
-    return super.getTiles(this.device)
   }
 
   @fetchDevices
@@ -223,6 +204,22 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       },
     })
     return getChartLineOptions(data, this.temperaturesLegend, '°C')
+  }
+
+  public override async getTiles(device?: false): Promise<TilesData<null>>
+  public override async getTiles(
+    device: true | DeviceModelAny,
+  ): Promise<TilesData<T>>
+  public override async getTiles(
+    device: boolean | DeviceModelAny = false,
+  ): Promise<TilesData<T | null>> {
+    if (
+      device === false ||
+      (device instanceof DeviceModel && device.id !== this.id)
+    ) {
+      return super.getTiles()
+    }
+    return super.getTiles(this.device)
   }
 
   protected prepareUpdateData(

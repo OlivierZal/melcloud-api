@@ -42,7 +42,8 @@
   },
   "dependencies": {
     "axios": "^1.13.6",
-    "luxon": "^3.7.2"
+    "luxon": "^3.7.2",
+    "tough-cookie": "^6.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

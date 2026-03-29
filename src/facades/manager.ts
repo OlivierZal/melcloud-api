@@ -10,7 +10,6 @@ import type {
 } from '../models/index.ts'
 import type { APIAdapter } from '../services/index.ts'
 import type { BuildingZone, Zone } from '../types/index.ts'
-
 import type {
   BuildingFacade,
   DeviceFacade,
@@ -19,7 +18,6 @@ import type {
   FacadeManager as FacadeManagerContract,
   ZoneFacade,
 } from './interfaces.ts'
-
 import { createFacade } from './factory.ts'
 
 /**

@@ -7,7 +7,6 @@ import type {
   SetDeviceData,
   SuccessData,
 } from '../types/index.ts'
-
 import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import {
   fromSetToListAta,

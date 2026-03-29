@@ -4,7 +4,6 @@ import type {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from 'axios'
-
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -39,7 +38,7 @@ const createResponse = (
     ...overrides,
   })
 
-describe('aPICallRequestData', () => {
+describe('api call request data', () => {
   it('extracts request fields from config', () => {
     const data = new APICallRequestData(createConfig())
 
@@ -74,7 +73,7 @@ describe('aPICallRequestData', () => {
   })
 })
 
-describe('aPICallResponseData', () => {
+describe('api call response data', () => {
   it('extracts response fields', () => {
     const data = new APICallResponseData(createResponse())
 
@@ -106,6 +105,68 @@ describe('aPICallResponseData', () => {
     expect(parsed['status']).toBe(200)
     expect(parsed).toHaveProperty('requestData')
     expect(parsed).toHaveProperty('responseData')
+  })
+})
+
+const parseLog = (
+  value: string,
+): {
+  headers: Record<string, unknown>
+  requestData: Record<string, unknown>
+} => cast(JSON.parse(value))
+
+describe('sensitive data redaction', () => {
+  it('redacts credentials in request data', () => {
+    const config = createConfig({
+      data: { Email: 'user@example.com', Other: 'visible', Password: 's3cret' },
+    })
+    const { requestData } = parseLog(new APICallRequestData(config).toString())
+
+    expect(requestData['Email']).toBe('******')
+    expect(requestData['Password']).toBe('******')
+    expect(requestData['Other']).toBe('visible')
+  })
+
+  it('redacts auth headers in request data', () => {
+    const config = createConfig({
+      headers: mock<AxiosRequestHeaders>({
+        'Content-Type': 'application/json',
+        'X-MitsContextKey': 'abc123',
+      }),
+    })
+    const { headers } = parseLog(new APICallRequestData(config).toString())
+
+    expect(headers['X-MitsContextKey']).toBe('******')
+    expect(headers['Content-Type']).toBe('application/json')
+  })
+
+  it('redacts cookie headers in response data', () => {
+    const response = createResponse({
+      headers: { 'set-cookie': ['session=abc123'], 'x-custom': 'visible' },
+    })
+    const { headers } = parseLog(new APICallResponseData(response).toString())
+
+    expect(headers['set-cookie']).toBe('******')
+    expect(headers['x-custom']).toBe('visible')
+  })
+
+  it('redacts username and password in form data', () => {
+    const config = createConfig({
+      data: { password: 'p@ss', username: 'admin' },
+    })
+    const { requestData } = parseLog(new APICallRequestData(config).toString())
+
+    expect(requestData['password']).toBe('******')
+    expect(requestData['username']).toBe('******')
+  })
+
+  it('redacts Cookie header in request data', () => {
+    const config = createConfig({
+      headers: mock<AxiosRequestHeaders>({ Cookie: 'session=xyz' }),
+    })
+    const { headers } = parseLog(new APICallRequestData(config).toString())
+
+    expect(headers['Cookie']).toBe('******')
   })
 })
 

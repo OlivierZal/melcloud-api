@@ -1,7 +1,11 @@
 node_modules/
+.env
+.env.*
+!.env.example
 /.npmrc
 /.vscode/*
 !/.vscode/settings.json
 /coverage/
 /dist/
 /docs/
+/scripts/

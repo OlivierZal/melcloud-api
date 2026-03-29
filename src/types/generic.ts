@@ -1,7 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
 import type { DeviceType, LabelType } from '../constants.ts'
-
 import type {
   EnergyDataAta,
   ListDeviceDataAta,
@@ -24,6 +23,32 @@ import type {
   SetDeviceDataErv,
   UpdateDeviceDataErv,
 } from './erv.ts'
+
+/**
+ * Central mapping from device type to its associated data types.
+ * Adding a new device type requires a single entry here instead of
+ * updating multiple conditional type chains.
+ */
+interface DeviceDataMapping {
+  [DeviceType.Ata]: {
+    energy: EnergyDataAta
+    list: ListDeviceDataAta
+    set: SetDeviceDataAta
+    update: UpdateDeviceDataAta
+  }
+  [DeviceType.Atw]: {
+    energy: EnergyDataAtw
+    list: ListDeviceDataAtw
+    set: SetDeviceDataAtw
+    update: UpdateDeviceDataAtw
+  }
+  [DeviceType.Erv]: {
+    energy: never
+    list: ListDeviceDataErv
+    set: SetDeviceDataErv
+    update: UpdateDeviceDataErv
+  }
+}
 
 export interface AreaData<T extends number | null> extends FloorData {
   readonly FloorId: T
@@ -83,10 +108,7 @@ export interface DeviceZone extends BaseZone {
   readonly model: 'devices'
 }
 
-export type EnergyData<T extends DeviceType> =
-  T extends typeof DeviceType.Ata ? EnergyDataAta
-  : T extends typeof DeviceType.Atw ? EnergyDataAtw
-  : never
+export type EnergyData<T extends DeviceType> = DeviceDataMapping[T]['energy']
 
 export interface EnergyPostData {
   readonly DeviceID: number
@@ -155,26 +177,12 @@ export interface GetDeviceDataParams {
 }
 
 export interface HolidayModeData {
-  readonly EndDate: {
-    readonly Day: number
-    readonly Hour: number
-    readonly Minute: number
-    readonly Month: number
-    readonly Second: number
-    readonly Year: number
-  }
+  readonly EndDate: NonNullable<DateTimeComponents>
   readonly HMDefined: boolean
   readonly HMEnabled: boolean
   readonly HMEndDate: string | null
   readonly HMStartDate: string | null
-  readonly StartDate: {
-    readonly Day: number
-    readonly Hour: number
-    readonly Minute: number
-    readonly Month: number
-    readonly Second: number
-    readonly Year: number
-  }
+  readonly StartDate: NonNullable<DateTimeComponents>
   readonly TimeZone: number
 }
 
@@ -210,16 +218,9 @@ export type ListDeviceAny =
   | ListDevice<typeof DeviceType.Atw>
   | ListDevice<typeof DeviceType.Erv>
 
-export type ListDeviceData<T extends DeviceType> =
-  T extends typeof DeviceType.Ata ? ListDeviceDataAta
-  : T extends typeof DeviceType.Atw ? ListDeviceDataAtw
-  : T extends typeof DeviceType.Erv ? ListDeviceDataErv
-  : never
+export type ListDeviceData<T extends DeviceType> = DeviceDataMapping[T]['list']
 
-export type ListDeviceDataAny =
-  | ListDeviceData<typeof DeviceType.Ata>
-  | ListDeviceData<typeof DeviceType.Atw>
-  | ListDeviceData<typeof DeviceType.Erv>
+export type ListDeviceDataAny = ListDeviceData<DeviceType>
 
 export interface LoginCredentials {
   readonly password: string
@@ -263,11 +264,7 @@ export interface ReportPostData {
   readonly Duration?: number
 }
 
-export type SetDeviceData<T extends DeviceType> =
-  T extends typeof DeviceType.Ata ? SetDeviceDataAta
-  : T extends typeof DeviceType.Atw ? SetDeviceDataAtw
-  : T extends typeof DeviceType.Erv ? SetDeviceDataErv
-  : never
+export type SetDeviceData<T extends DeviceType> = DeviceDataMapping[T]['set']
 
 export type SetDevicePostData<T extends DeviceType> = BaseDevicePostData &
   Required<UpdateDeviceData<T>>
@@ -310,10 +307,7 @@ export type TilesPostData<T extends DeviceType | null> = {
 : { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })
 
 export type UpdateDeviceData<T extends DeviceType> =
-  T extends typeof DeviceType.Ata ? UpdateDeviceDataAta
-  : T extends typeof DeviceType.Atw ? UpdateDeviceDataAtw
-  : T extends typeof DeviceType.Erv ? UpdateDeviceDataErv
-  : never
+  DeviceDataMapping[T]['update']
 
 export type Zone = AreaZone | BuildingZone | DeviceZone | FloorZone
 

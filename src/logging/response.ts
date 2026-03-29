@@ -6,11 +6,11 @@ import { APICallLogData } from './context.ts'
 export class APICallResponseData extends APICallLogData {
   public override readonly dataType = 'API response'
 
+  public readonly headers?: AxiosResponse['headers']
+
   public readonly requestData: InternalAxiosRequestConfig['data']
 
   public readonly responseData: AxiosResponse['data']
-
-  public readonly headers?: AxiosResponse['headers']
 
   public readonly status?: AxiosResponse['status']
 

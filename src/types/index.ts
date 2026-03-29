@@ -74,3 +74,20 @@ export type {
   Zone,
   ZoneSettings,
 } from './generic.ts'
+export type {
+  HomeAtaValues,
+  HomeBuilding,
+  HomeClaim,
+  HomeContext,
+  HomeDevice,
+  HomeDeviceCapabilities,
+  HomeDeviceSetting,
+  HomeEnergyData,
+  HomeEnergyMeasure,
+  HomeEnergyPoint,
+  HomeErrorLogEntry,
+  HomeReportData,
+  HomeReportDataset,
+  HomeReportPoint,
+  HomeUser,
+} from './home.ts'

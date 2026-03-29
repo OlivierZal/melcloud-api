@@ -1,5 +1,8 @@
-import type { DeviceType, FanSpeed, VentilationMode } from '../constants.ts'
-
+import type {
+  DeviceType,
+  NonSilentFanSpeed,
+  VentilationMode,
+} from '../constants.ts'
 import type {
   BaseListDeviceData,
   BaseSetDeviceData,
@@ -28,6 +31,6 @@ export interface SetDeviceDataErv
 }
 
 export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
-  readonly SetFanSpeed?: Exclude<FanSpeed, typeof FanSpeed.silent>
+  readonly SetFanSpeed?: NonSilentFanSpeed
   readonly VentilationMode?: VentilationMode
 }

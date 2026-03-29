@@ -1,10 +1,3 @@
-import js from '@eslint/js'
-import stylistic from '@stylistic/eslint-plugin'
-import vitest from '@vitest/eslint-plugin'
-import prettier from 'eslint-config-prettier/flat'
-import perfectionist from 'eslint-plugin-perfectionist'
-import unicorn from 'eslint-plugin-unicorn'
-
 import { defineConfig } from 'eslint/config'
 import { flatConfigs as importXConfigs } from 'eslint-plugin-import-x'
 import { jsdoc } from 'eslint-plugin-jsdoc'
@@ -12,11 +5,15 @@ import { configs as packageJsonConfigs } from 'eslint-plugin-package-json'
 import { Alphabet } from 'eslint-plugin-perfectionist/alphabet'
 import { configs as ymlConfigs } from 'eslint-plugin-yml'
 import { configs as tsConfigs } from 'typescript-eslint'
-
-import { classGroups } from './eslint-utils/class-groups.ts'
+import js from '@eslint/js'
+import stylistic from '@stylistic/eslint-plugin'
+import vitest from '@vitest/eslint-plugin'
+import prettier from 'eslint-config-prettier/flat'
+import perfectionist from 'eslint-plugin-perfectionist'
+import unicorn from 'eslint-plugin-unicorn'
 
 const buildImportGroup = (selector: string): string[] =>
-  ['type', 'default', 'named', 'wildcard', 'require', 'ts-equals'].map(
+  ['type', 'named', 'default', 'wildcard', 'require', 'ts-equals'].map(
     (modifier) => `${modifier}-${selector}`,
   )
 
@@ -26,8 +23,8 @@ const arrayLikeSortOptions = {
 
 const typeSortOptions = {
   groups: [
-    'import',
     'keyword',
+    'import',
     'literal',
     'named',
     'function',
@@ -55,7 +52,7 @@ const typeLikeSortOptions = {
 
 const config = defineConfig([
   {
-    ignores: ['coverage/', 'dist/', 'docs/'],
+    ignores: ['coverage/', 'dist/', 'docs/', 'scripts/'],
   },
   {
     ...jsdoc({ config: 'flat/recommended-tsdoc-error' }),
@@ -329,7 +326,39 @@ const config = defineConfig([
       'perfectionist/sort-classes': [
         'error',
         {
-          ...classGroups,
+          customGroups: [
+            {
+              elementNamePattern: '^on.+',
+              groupName: 'event-handler',
+              selector: 'method',
+            },
+          ],
+          groups: [
+            // ── Static ────────────────────────────────────────────
+            'static-property',
+            'static-accessor-property',
+            'static-block',
+            'static-method',
+
+            // ── Instance: shape ───────────────────────────────────
+            'index-signature',
+            'property',
+            'accessor-property',
+            ['get-method', 'set-method'],
+            'constructor',
+
+            // ── Instance: public behavior ──────────────────────────
+            'event-handler',
+            'decorated-method',
+            'function-property',
+            'method',
+
+            // ── Instance: implementation ───────────────────────────
+            'protected-method',
+            'private-method',
+
+            'unknown',
+          ],
           newlinesBetween: 1,
           newlinesInside: 1,
         },
@@ -385,18 +414,29 @@ const config = defineConfig([
         {
           groups: [
             ...buildImportGroup('side-effect'),
+            {
+              newlinesBetween: 1,
+            },
             ...buildImportGroup('side-effect-style'),
             ...buildImportGroup('style'),
+            {
+              newlinesBetween: 1,
+            },
             ...buildImportGroup('builtin'),
+            {
+              newlinesBetween: 1,
+            },
             ...buildImportGroup('external'),
             ...buildImportGroup('tsconfig-path'),
             ...buildImportGroup('subpath'),
             ...buildImportGroup('internal'),
+            {
+              newlinesBetween: 1,
+            },
             ...buildImportGroup('parent'),
             ...buildImportGroup('sibling'),
             ...buildImportGroup('index'),
           ],
-          newlinesBetween: 1,
         },
       ],
       'perfectionist/sort-interfaces': ['error', typeLikeSortOptions],
@@ -413,20 +453,20 @@ const config = defineConfig([
           groups: [
             'declare-enum',
             ['declare-interface', 'declare-type'],
-            'declare-class',
             'declare-function',
+            'declare-class',
             'enum',
             ['interface', 'type'],
-            'class',
             'function',
+            'class',
             'export-enum',
             ['export-interface', 'export-type'],
-            'export-class',
             'export-function',
+            'export-class',
             'export-default-enum',
             ['export-default-interface', 'export-default-type'],
-            'export-default-class',
             'export-default-function',
+            'export-default-class',
           ],
           newlinesBetween: 1,
           newlinesInside: 1,
@@ -531,11 +571,19 @@ const config = defineConfig([
       '@typescript-eslint/no-magic-numbers': 'off',
       'import-x/max-dependencies': [
         'error',
-        { ignoreTypeImports: true, max: 15 },
+        {
+          ignoreTypeImports: true,
+          max: 15,
+        },
       ],
       'max-lines-per-function': 'off',
       'max-statements': 'off',
-      'vitest/max-expects': ['error', { max: 12 }],
+      'vitest/max-expects': [
+        'error',
+        {
+          max: 12,
+        },
+      ],
       'vitest/no-hooks': 'off',
       'vitest/prefer-expect-assertions': 'off',
       'vitest/require-hook': 'off',

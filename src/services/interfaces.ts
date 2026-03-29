@@ -34,22 +34,31 @@ import type {
   TilesPostData,
 } from '../types/index.ts'
 
+/** Common configuration shared by all API clients. */
+export interface BaseAPIConfig extends Partial<LoginCredentials> {
+  /** Custom logger. Defaults to `console`. */
+  readonly logger?: Logger
+
+  /** Callback invoked after sync operations. */
+  readonly onSync?: OnSyncFunction
+
+  /** External setting manager for persisting credentials and session data. */
+  readonly settingManager?: SettingManager
+}
+
+/** Configuration options for the MELCloud Home API. */
+export interface HomeAPIConfig extends BaseAPIConfig {
+  /** Base URL of the MELCloud Home BFF server. */
+  readonly baseURL?: string
+}
+
 /** Configuration options for creating a MELCloud API instance. */
-export interface APIConfig extends Partial<LoginCredentials> {
+export interface APIConfig extends BaseAPIConfig {
   /** Interval in minutes between automatic syncs. Set to `null` to disable. */
   readonly autoSyncInterval?: number | null
 
   /** Locale language code (e.g. `'en'`, `'fr'`). */
   readonly language?: string
-
-  /** Custom logger for API request/response/error logging. Defaults to `console`. */
-  readonly logger?: Logger
-
-  /** Callback invoked after each sync operation completes. */
-  readonly onSync?: OnSyncFunction
-
-  /** External setting manager for persisting credentials and session data. */
-  readonly settingManager?: SettingManager
 
   /** Whether to verify SSL certificates. Defaults to `true`. */
   readonly shouldVerifySSL?: boolean
@@ -75,11 +84,11 @@ export interface APISettings {
 
 /** A single error entry from the device error log. */
 export interface ErrorDetails {
-  /** Human-readable date of the error occurrence. */
+  /** ISO 8601 date of the error occurrence. */
   readonly date: string
 
-  /** Name of the device that reported the error. */
-  readonly device: string
+  /** Numeric ID of the device that reported the error. */
+  readonly deviceId: number
 
   /** Error message text. */
   readonly error: string
@@ -90,8 +99,8 @@ export interface ErrorLog {
   /** List of error entries, sorted in reverse chronological order. */
   readonly errors: readonly ErrorDetails[]
 
-  /** Human-readable start date of the queried period. */
-  readonly fromDateHuman: string
+  /** ISO date string for the queried period start. */
+  readonly fromDate: string
 
   /** ISO date string for the next page's start date. */
   readonly nextFromDate: string

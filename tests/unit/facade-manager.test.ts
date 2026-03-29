@@ -19,7 +19,7 @@ const createManagerWithRegistry = (): {
   return { manager, registry }
 }
 
-describe('facadeManager', () => {
+describe('facade manager', () => {
   it('returns null when no instance is provided', () => {
     const registry = new ModelRegistry()
     const manager = new FacadeManager(createMockApi(), registry)

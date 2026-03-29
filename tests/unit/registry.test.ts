@@ -5,7 +5,6 @@ import type {
   ListDeviceAny,
   ListDeviceDataAta,
 } from '../../src/types/index.ts'
-
 import { DeviceType } from '../../src/constants.ts'
 import { isDeviceOfType, ModelRegistry } from '../../src/models/index.ts'
 import {
@@ -60,7 +59,7 @@ const createPopulatedRegistry = (): ModelRegistry => {
   return registry
 }
 
-describe('modelRegistry', () => {
+describe('model registry', () => {
   describe('sync', () => {
     it('syncs buildings', () => {
       const registry = new ModelRegistry()

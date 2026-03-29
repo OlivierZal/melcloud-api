@@ -5,7 +5,6 @@ import type {
   SetDeviceDataAta,
   SetDevicePostData,
 } from '../../src/types/index.ts'
-
 import {
   DeviceType,
   OperationMode,
@@ -229,7 +228,7 @@ const createZone2Facade = (
   }
 }
 
-describe('buildingFacade', () => {
+describe('building facade', () => {
   it('returns building data', () => {
     const { facade } = createBuildingFacade()
 
@@ -298,7 +297,7 @@ describe('buildingFacade', () => {
   })
 })
 
-describe('buildingFacade frostProtection', () => {
+describe('building facade frost protection', () => {
   it('gets frost protection with defined settings', async () => {
     const { api, facade } = createBuildingFacade()
     const result = await facade.getFrostProtection()
@@ -355,7 +354,7 @@ describe('buildingFacade frostProtection', () => {
   })
 })
 
-describe('buildingFacade holidayMode', () => {
+describe('building facade holiday mode', () => {
   it('gets holiday mode', async () => {
     const { facade } = createBuildingFacade()
     const result = await facade.getHolidayMode()
@@ -386,7 +385,7 @@ describe('buildingFacade holidayMode', () => {
   })
 })
 
-describe('buildingFacade group', () => {
+describe('building facade group', () => {
   it('calls getGroup', async () => {
     const { facade } = createBuildingFacade()
     const result = await facade.getGroup()
@@ -422,7 +421,7 @@ describe('buildingFacade group', () => {
   })
 })
 
-describe('floorFacade', () => {
+describe('floor facade', () => {
   it('returns floor devices', () => {
     const { facade } = createFloorFacade()
 
@@ -437,7 +436,7 @@ describe('floorFacade', () => {
   })
 })
 
-describe('areaFacade', () => {
+describe('area facade', () => {
   it('returns area devices', () => {
     const { facade } = createAreaFacade()
 
@@ -452,7 +451,7 @@ describe('areaFacade', () => {
   })
 })
 
-describe('baseFacade frostProtection fallback', () => {
+describe('base facade frost protection fallback', () => {
   it('falls back to device frost protection when zone fails', async () => {
     const fpMock = vi
       .fn()
@@ -495,7 +494,7 @@ describe('baseFacade frostProtection fallback', () => {
   })
 })
 
-describe('baseFacade holidayMode fallback', () => {
+describe('base facade holiday mode fallback', () => {
   it('falls back to device holiday mode when zone fails', async () => {
     const hmMock = vi
       .fn()
@@ -538,7 +537,7 @@ describe('baseFacade holidayMode fallback', () => {
   })
 })
 
-describe('baseFacade setFrostProtection with device fallback', () => {
+describe('base facade frost protection with device fallback', () => {
   it('uses DeviceIds location when frost protection is not defined', async () => {
     const fpMock = vi
       .fn()
@@ -556,7 +555,7 @@ describe('baseFacade setFrostProtection with device fallback', () => {
   })
 })
 
-describe('baseFacade setHolidayMode with device fallback', () => {
+describe('base facade holiday mode with device fallback', () => {
   it('uses Devices location when holiday mode is not defined', async () => {
     const hmMock = vi
       .fn()
@@ -574,7 +573,7 @@ describe('baseFacade setHolidayMode with device fallback', () => {
   })
 })
 
-describe('baseDeviceFacade device type mismatch', () => {
+describe('base device facade type mismatch', () => {
   it('throws when device type does not match facade type', () => {
     const registry = createRegistry()
     const api = createMockApi()
@@ -586,7 +585,7 @@ describe('baseDeviceFacade device type mismatch', () => {
   })
 })
 
-describe('baseFacade instance error', () => {
+describe('base facade instance error', () => {
   it('throws when instance not found in registry', () => {
     const { facade, registry } = createAreaFacade()
     registry.syncAreas([])
@@ -610,7 +609,7 @@ describe('baseFacade instance error', () => {
   })
 })
 
-describe('deviceAtaFacade', () => {
+describe('ata device facade', () => {
   it('returns device data', () => {
     const { facade } = createAtaFacade()
 
@@ -749,7 +748,7 @@ describe('deviceAtaFacade', () => {
   })
 })
 
-describe('deviceAtwFacade', () => {
+describe('atw device facade', () => {
   it('returns device data', () => {
     const { facade } = createAtwFacade()
 
@@ -812,7 +811,7 @@ describe('deviceAtwFacade', () => {
   })
 })
 
-describe('deviceAtwHasZone2Facade', () => {
+describe('atw device facade with zone 2', () => {
   it('handles operation mode zone adjustments', async () => {
     const { api, facade } = createZone2Facade(
       {},
@@ -938,7 +937,7 @@ describe(hasZone2, () => {
   })
 })
 
-describe('baseDeviceFacade getTiles', () => {
+describe('base device facade tiles', () => {
   it('calls super.getTiles when passed a different device instance', async () => {
     const { facade, registry } = createAtaFacade()
     const otherDevice = defined(registry.devices.getById(1001))
@@ -951,7 +950,7 @@ describe('baseDeviceFacade getTiles', () => {
   })
 })
 
-describe('deviceAtwHasZone2Facade secondary curve to cool', () => {
+describe('atw zone 2 facade secondary curve to cool', () => {
   it('converts curve to room_cool when primary is cool', async () => {
     const { api, facade } = createZone2Facade(
       {
@@ -973,7 +972,7 @@ describe('deviceAtwHasZone2Facade secondary curve to cool', () => {
   })
 })
 
-describe('deviceAtwHasZone2Facade no operation mode change', () => {
+describe('atw zone 2 facade no operation mode change', () => {
   it('returns null when neither zone changes', async () => {
     const { api, facade } = createZone2Facade(
       {},
@@ -989,7 +988,7 @@ describe('deviceAtwHasZone2Facade no operation mode change', () => {
   })
 })
 
-describe('deviceAtwHasZone2Facade CanCool false', () => {
+describe('atw zone 2 facade CanCool false', () => {
   it('skips cool adjustment when CanCool is false', async () => {
     const { api, facade } = createZone2Facade(
       {
@@ -1019,7 +1018,7 @@ describe('deviceAtwHasZone2Facade CanCool false', () => {
   })
 })
 
-describe('deviceErvFacade', () => {
+describe('erv device facade', () => {
   it('returns device data', () => {
     const { facade } = createErvFacade()
 

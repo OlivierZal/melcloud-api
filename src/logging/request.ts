@@ -6,9 +6,9 @@ import { APICallLogData } from './context.ts'
 export class APICallRequestData extends APICallLogData {
   public override readonly dataType = 'API request'
 
-  public readonly requestData: InternalAxiosRequestConfig['data']
-
   public readonly headers?: InternalAxiosRequestConfig['headers']
+
+  public readonly requestData: InternalAxiosRequestConfig['data']
 
   public constructor(config?: InternalAxiosRequestConfig) {
     super(config)

@@ -7,16 +7,13 @@ import type {
   ZoneAtw,
   ZoneState,
 } from '../types/index.ts'
-
 import {
   DeviceType,
   OperationModeState,
   OperationModeStateHotWater,
   OperationModeStateZone,
 } from '../constants.ts'
-
 import type { ReportChartLineOptions, ReportQuery } from './interfaces.ts'
-
 import { BaseDeviceFacade } from './base-device.ts'
 
 const DEFAULT_TEMPERATURE = 0
@@ -84,16 +81,6 @@ const mergeSeries = (
 
 /** Facade for Air-to-Water (ATW) devices with per-zone temperature clamping and merged temperature reports. */
 export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
-  protected override readonly internalTemperaturesLegend = [
-    'FlowTemperature',
-    'FlowTemperatureBoiler',
-    'ReturnTemperature',
-    'ReturnTemperatureBoiler',
-    'SetTankWaterTemperature',
-    'TankWaterTemperature',
-    'MixingTankWaterTemperature',
-  ]
-
   public readonly flags = {
     ForcedHotWaterMode: 0x1_00_00,
     OperationModeZone1: 0x8,
@@ -108,7 +95,15 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
     SetTemperatureZone2: 0x8_00_00_02_00,
   } satisfies Record<keyof UpdateDeviceData<typeof DeviceType.Atw>, number>
 
-  public readonly type = DeviceType.Atw
+  protected override readonly internalTemperaturesLegend = [
+    'FlowTemperature',
+    'FlowTemperatureBoiler',
+    'ReturnTemperature',
+    'ReturnTemperatureBoiler',
+    'SetTankWaterTemperature',
+    'TankWaterTemperature',
+    'MixingTankWaterTemperature',
+  ]
 
   protected readonly temperaturesLegend = [
     'SetTemperatureZone1',
@@ -118,22 +113,7 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
     'TankWaterTemperature',
   ]
 
-  public get hotWater(): HotWaterState {
-    const { data } = this
-    return {
-      isEcoHotWater: data.EcoHotWater,
-      isForcedMode: data.ForcedHotWaterMode,
-      isProhibited: data.ProhibitHotWater,
-      maxTankTemperature: data.MaxTankTemperature,
-      operationalState: getHotWaterOperationalState(data),
-      setTankWaterTemperature: data.SetTankWaterTemperature,
-      tankWaterTemperature: data.TankWaterTemperature,
-    }
-  }
-
-  public get zone1(): ZoneState {
-    return this.getZoneState('Zone1')
-  }
+  public readonly type = DeviceType.Atw
 
   get #targetTemperatureRanges(): [
     keyof TemperatureDataAtw,
@@ -153,6 +133,23 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
     ]
   }
 
+  public get hotWater(): HotWaterState {
+    const { data } = this
+    return {
+      isEcoHotWater: data.EcoHotWater,
+      isForcedMode: data.ForcedHotWaterMode,
+      isProhibited: data.ProhibitHotWater,
+      maxTankTemperature: data.MaxTankTemperature,
+      operationalState: getHotWaterOperationalState(data),
+      setTankWaterTemperature: data.SetTankWaterTemperature,
+      tankWaterTemperature: data.TankWaterTemperature,
+    }
+  }
+
+  public get zone1(): ZoneState {
+    return this.getZoneState('Zone1')
+  }
+
   /*
    * ATW reports both external (building) and internal (tank/boiler)
    * temperatures — merge them into a single chart
@@ -170,15 +167,6 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
     }
   }
 
-  protected override prepareUpdateData(
-    data: Partial<UpdateDeviceDataAtw>,
-  ): Required<UpdateDeviceDataAtw> {
-    return super.prepareUpdateData({
-      ...data,
-      ...this.#handleTargetTemperatures(data),
-    })
-  }
-
   protected getZoneState(zone: ZoneAtw): ZoneState {
     const { data } = this
     return {
@@ -192,6 +180,15 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
       roomTemperature: data[`RoomTemperature${zone}`],
       setTemperature: data[`SetTemperature${zone}`],
     }
+  }
+
+  protected override prepareUpdateData(
+    data: Partial<UpdateDeviceDataAtw>,
+  ): Required<UpdateDeviceDataAtw> {
+    return super.prepareUpdateData({
+      ...data,
+      ...this.#handleTargetTemperatures(data),
+    })
   }
 
   #handleTargetTemperatures(

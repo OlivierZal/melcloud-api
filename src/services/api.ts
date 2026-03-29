@@ -1,5 +1,11 @@
 import https from 'node:https'
 
+import {
+  type HourNumbers,
+  DateTime,
+  Duration,
+  Settings as LuxonSettings,
+} from 'luxon'
 import axios, {
   type AxiosError,
   type AxiosInstance,
@@ -7,13 +13,6 @@ import axios, {
   type InternalAxiosRequestConfig,
   HttpStatusCode,
 } from 'axios'
-
-import {
-  type HourNumbers,
-  DateTime,
-  Duration,
-  Settings as LuxonSettings,
-} from 'luxon'
 
 import type {
   AreaDataAny,
@@ -48,16 +47,14 @@ import type {
   TilesData,
   TilesPostData,
 } from '../types/index.ts'
-
 import { DeviceType, Language } from '../constants.ts'
-import { syncDevices } from '../decorators/index.ts'
+import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
 } from '../logging/index.ts'
 import { ModelRegistry } from '../models/index.ts'
-
 import type {
   API,
   APIConfig,
@@ -67,7 +64,6 @@ import type {
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
-
 import { DisposableTimeout } from './disposable-timeout.ts'
 
 const deviceTypeNames = {
@@ -97,30 +93,6 @@ const toISODate = (dateTime: DateTime): string => {
   }
 
   return result
-}
-
-/*
- * Accessor decorator that delegates storage to an external SettingManager
- * (e.g., persistent settings), falling back to the in-memory field when none is configured.
- * Validates the setting key once at decoration time rather than on every get/set.
- */
-const setting = (
-  target: ClassAccessorDecoratorTarget<MELCloudAPI, string>,
-  context: ClassAccessorDecoratorContext<MELCloudAPI, string>,
-): ClassAccessorDecoratorResult<MELCloudAPI, string> => {
-  const key = String(context.name)
-  return {
-    get(this: MELCloudAPI): string {
-      return this.settingManager?.get(key) ?? target.get.call(this)
-    },
-    set(this: MELCloudAPI, value: string): void {
-      if (this.settingManager) {
-        this.settingManager.set(key, value)
-        return
-      }
-      target.set.call(this, value)
-    },
-  }
 }
 
 const isLanguage = (value: string): value is keyof typeof Language =>
@@ -206,13 +178,13 @@ const collectDevices = function* collectDevices(
  * API endpoint calls. Uses a private constructor — create instances via {@link MELCloudAPI.create}.
  */
 export class MELCloudAPI implements API, Disposable {
-  public readonly onSync?: OnSyncFunction
-
-  protected readonly settingManager?: SettingManager
-
   readonly #api: AxiosInstance
 
-  readonly #logger: Logger
+  #autoSyncInterval: number
+
+  #language = 'en'
+
+  #pauseListUntil = DateTime.now()
 
   readonly #registry = new ModelRegistry()
 
@@ -220,11 +192,35 @@ export class MELCloudAPI implements API, Disposable {
 
   readonly #syncTimeout = new DisposableTimeout()
 
-  #autoSyncInterval: number
+  public readonly logger: Logger
 
-  #language = 'en'
+  public readonly onSync?: OnSyncFunction
 
-  #pauseListUntil = DateTime.now()
+  public readonly settingManager?: SettingManager
+
+  @setting
+  private accessor contextKey = ''
+
+  @setting
+  private accessor expiry = ''
+
+  @setting
+  private accessor password = ''
+
+  @setting
+  private accessor username = ''
+
+  private get language(): string {
+    return this.#language
+  }
+
+  private set language(value: string) {
+    this.#language = value
+  }
+
+  public get registry(): ModelRegistry {
+    return this.#registry
+  }
 
   private constructor(config: APIConfig = {}) {
     const {
@@ -241,41 +237,11 @@ export class MELCloudAPI implements API, Disposable {
     this.#autoSyncInterval = Duration.fromObject({
       minutes: autoSyncInterval ?? 0,
     }).as('milliseconds')
-    this.#logger = logger
+    this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
-    this.#setOptionalProperties({
-      language,
-      password,
-      timezone,
-      username,
-    })
+    this.#applyOptionalConfig({ language, password, timezone, username })
     this.#api = this.#createAPI(shouldVerifySSL)
-  }
-
-  @setting
-  private accessor contextKey = ''
-
-  @setting
-  private accessor expiry = ''
-
-  @setting
-  private accessor password = ''
-
-  @setting
-  private accessor username = ''
-
-  public get registry(): ModelRegistry {
-    return this.#registry
-  }
-
-  private get language(): string {
-    return this.#language
-  }
-
-  private set language(value: string) {
-    this.#language = value
-    LuxonSettings.defaultLocale = value
   }
 
   /**
@@ -289,6 +255,30 @@ export class MELCloudAPI implements API, Disposable {
     return api
   }
 
+  @authenticate
+  public async authenticate(data?: LoginCredentials): Promise<boolean> {
+    /* v8 ignore next -- @authenticate guarantees data is always provided */
+    const { password, username } = data ?? { password: '', username: '' }
+    const {
+      data: { LoginData: loginData },
+    } = await this.login({
+      postData: {
+        AppVersion: APP_VERSION,
+        Email: username,
+        Language: this.#getLanguageCode(),
+        Password: password,
+        Persist: true,
+      },
+    })
+    if (loginData) {
+      this.username = username
+      this.password = password
+      ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
+      await this.fetch()
+    }
+    return loginData !== null
+  }
+
   /**
    * Fetch all buildings, sync the model registry, and schedule the next auto-sync.
    * @returns The list of fetched buildings.
@@ -299,32 +289,10 @@ export class MELCloudAPI implements API, Disposable {
     try {
       return await this.#fetch()
     } catch (error) {
-      this.#logger.error('Failed to fetch devices:', error)
+      this.logger.error('Failed to fetch devices:', error)
       return []
     } finally {
       this.#planNextSync()
-    }
-  }
-
-  /**
-   * Authenticate with MELCloud. If credentials are provided explicitly, errors
-   * are thrown to the caller. If using stored credentials, errors are swallowed.
-   * @param data - Optional login credentials to use instead of stored ones.
-   * @returns Whether authentication was successful.
-   */
-  public async authenticate(data?: LoginCredentials): Promise<boolean> {
-    const { password = this.password, username = this.username } = data ?? {}
-    if (!username || !password) {
-      return false
-    }
-    try {
-      return await this.#authenticate({ password, username })
-    } catch (error) {
-      if (data !== undefined) {
-        throw error
-      }
-      this.#logger.error('Stored credentials authentication failed:', error)
-      return false
     }
   }
 
@@ -376,26 +344,22 @@ export class MELCloudAPI implements API, Disposable {
 
     return {
       errors: errorLog
-        .map(
+        .flatMap(
           ({
             DeviceId: deviceId,
             ErrorMessage: errorMessage,
             StartDate: startDate,
           }) => {
             const dateTime = DateTime.fromISO(startDate)
-            return {
-              date:
-                dateTime.year === INVALID_YEAR ?
-                  ''
-                : dateTime.toLocaleString(DateTime.DATETIME_MED),
-              device: this.#registry.devices.getById(deviceId)?.name ?? '',
-              error: errorMessage?.trim() ?? '',
+            if (dateTime.year === INVALID_YEAR) {
+              return []
             }
+            const error = errorMessage?.trim() ?? ''
+            return error ? [{ date: startDate, deviceId, error }] : []
           },
         )
-        .filter(({ date, error }) => Boolean(date && error))
         .toReversed(),
-      fromDateHuman: fromDate.toLocaleString(DateTime.DATE_FULL),
+      fromDate: toISODate(fromDate),
       nextFromDate: toISODate(nextToDate.minus({ days: period })),
       nextToDate: toISODate(nextToDate),
     }
@@ -533,8 +497,9 @@ export class MELCloudAPI implements API, Disposable {
    */
   public async setLanguage(language: string): Promise<void> {
     if (language !== this.language) {
-      const { data: hasLanguageChanged } = await this.#postLanguage(
-        this.#getLanguageCode(language),
+      const { data: hasLanguageChanged } = await this.#api.post<boolean>(
+        '/User/UpdateLanguage',
+        { language: this.#getLanguageCode(language) },
       )
       if (hasLanguageChanged) {
         this.language = language
@@ -572,31 +537,32 @@ export class MELCloudAPI implements API, Disposable {
     return this.#api.post(`/Device/Set${deviceTypeNames[type]}`, postData)
   }
 
-  async #authenticate({
+  // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
+  #applyOptionalConfig({
+    language,
     password,
+    timezone,
     username,
-  }: LoginCredentials): Promise<boolean> {
-    const {
-      data: { LoginData: loginData },
-    } = await this.login({
-      postData: {
-        AppVersion: APP_VERSION,
-        Email: username,
-        Language: this.#getLanguageCode(),
-        Password: password,
-        Persist: true,
-      },
-    })
-    if (loginData) {
-      this.username = username
-      this.password = password
-      ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
-      await this.fetch()
+  }: {
+    language?: string
+    password?: string
+    timezone?: string
+    username?: string
+  }): void {
+    if (timezone !== undefined) {
+      LuxonSettings.defaultZone = timezone
     }
-    return loginData !== null
+    if (language !== undefined) {
+      this.language = language
+    }
+    if (username !== undefined) {
+      this.username = username
+    }
+    if (password !== undefined) {
+      this.password = password
+    }
   }
 
-  // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
   #canRetry(): boolean {
     if (!this.#retryTimeout.isActive) {
       this.#retryTimeout.schedule(noop, RETRY_DELAY)
@@ -651,7 +617,7 @@ export class MELCloudAPI implements API, Disposable {
 
   async #handleError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
-    this.#logger.error(String(errorData))
+    this.logger.error(String(errorData))
 
     const { config, response: { headers, status } = {} } = error
     if (status === HttpStatusCode.TooManyRequests) {
@@ -661,7 +627,7 @@ export class MELCloudAPI implements API, Disposable {
           { seconds: retryAfterSeconds }
         : { hours: DEFAULT_RETRY_HOURS }
       this.#pauseListUntil = DateTime.now().plus(retryDuration)
-      this.#logger.error(
+      this.logger.error(
         `Rate limited (429): pausing list operations for ${this.#pauseListUntil.diffNow().shiftTo('minutes').toHuman()}`,
       )
     } else if (
@@ -696,55 +662,22 @@ export class MELCloudAPI implements API, Disposable {
       }
       newConfig.headers.set('X-MitsContextKey', contextKey)
     }
-    this.#logger.log(String(new APICallRequestData(newConfig)))
+    this.logger.log(String(new APICallRequestData(newConfig)))
     return newConfig
   }
 
   #handleResponse(response: AxiosResponse): AxiosResponse {
-    this.#logger.log(String(new APICallResponseData(response)))
+    this.logger.log(String(new APICallResponseData(response)))
     return response
-  }
-
-  #handleSyncError(error: unknown): void {
-    this.#logger.error('Auto-sync failed:', error)
   }
 
   #planNextSync(): void {
     if (this.#autoSyncInterval) {
       this.#syncTimeout.schedule(() => {
         this.fetch().catch((error: unknown) => {
-          this.#handleSyncError(error)
+          this.logger.error('Auto-sync failed:', error)
         })
       }, this.#autoSyncInterval)
-    }
-  }
-
-  async #postLanguage(language: Language): Promise<{ data: boolean }> {
-    return this.#api.post('/User/UpdateLanguage', { language })
-  }
-
-  #setOptionalProperties({
-    language,
-    password,
-    timezone,
-    username,
-  }: {
-    language?: string
-    password?: string
-    timezone?: string
-    username?: string
-  }): void {
-    if (timezone !== undefined) {
-      LuxonSettings.defaultZone = timezone
-    }
-    if (language !== undefined) {
-      this.language = language
-    }
-    if (username !== undefined) {
-      this.username = username
-    }
-    if (password !== undefined) {
-      this.password = password
     }
   }
 

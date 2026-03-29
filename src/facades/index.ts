@@ -18,6 +18,7 @@ export { DeviceAtwFacade } from './device-atw.ts'
 export { DeviceErvFacade } from './device-erv.ts'
 export { createFacade } from './factory.ts'
 export { FloorFacade } from './floor.ts'
+export { HomeDeviceAtaFacade } from './home-device-ata.ts'
 export {
   hasZone2,
   isAtaFacade,

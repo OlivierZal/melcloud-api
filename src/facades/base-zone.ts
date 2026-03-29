@@ -5,12 +5,9 @@ import type {
   SetGroupPostData,
   SuccessData,
 } from '../types/index.ts'
-
 import { DeviceType } from '../constants.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
-
 import type { ZoneFacade } from './interfaces.ts'
-
 import { BaseFacade } from './base.ts'
 
 /** Abstract base for zone facades (building, floor, area) that support ATA group operations. */

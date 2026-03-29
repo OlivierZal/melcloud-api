@@ -1,7 +1,5 @@
 import type { UpdateDeviceData, UpdateDeviceDataAta } from '../types/index.ts'
-
 import { DeviceType, OperationMode } from '../constants.ts'
-
 import { BaseDeviceFacade } from './base-device.ts'
 
 /** Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping. */
@@ -15,13 +13,13 @@ export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
     VaneVertical: 0x10,
   } satisfies Record<keyof UpdateDeviceData<typeof DeviceType.Ata>, number>
 
-  public readonly type = DeviceType.Ata
-
   protected readonly temperaturesLegend = [
     'SetTemperature',
     'RoomTemperature',
     'OutdoorTemperature',
   ]
+
+  public readonly type = DeviceType.Ata
 
   /*
    * Clamp SetTemperature to the valid range for the current or requested

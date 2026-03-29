@@ -1,10 +1,8 @@
 import type { AxiosStatic, HttpStatusCode } from 'axios'
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { MELCloudAPI } from '../../src/services/melcloud.ts'
+import type { MELCloudAPI } from '../../src/services/api.ts'
 import type { BuildingWithStructure } from '../../src/types/index.ts'
-
 import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
@@ -86,8 +84,7 @@ describe('api lifecycle', () => {
     vi.clearAllMocks()
     mockAxiosInstance.get.mockResolvedValue({ data: buildingResponse })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
-    ;({ MELCloudAPI: melCloudApi } =
-      await import('../../src/services/melcloud.ts'))
+    ;({ MELCloudAPI: melCloudApi } = await import('../../src/services/api.ts'))
   })
 
   afterEach(() => {

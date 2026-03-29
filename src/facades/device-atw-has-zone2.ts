@@ -3,9 +3,7 @@ import type {
   UpdateDeviceDataAtw,
   ZoneState,
 } from '../types/index.ts'
-
 import { OperationModeZone } from '../constants.ts'
-
 import { DeviceAtwFacade } from './device-atw.ts'
 
 /*
