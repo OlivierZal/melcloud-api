@@ -569,19 +569,12 @@ const config = defineConfig([
     files: ['tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
-      'import-x/max-dependencies': [
-        'error',
-        {
-          ignoreTypeImports: true,
-          max: 15,
-        },
-      ],
       'max-lines-per-function': 'off',
       'max-statements': 'off',
       'vitest/max-expects': [
         'error',
         {
-          max: 12,
+          max: 11,
         },
       ],
       'vitest/no-hooks': 'off',
