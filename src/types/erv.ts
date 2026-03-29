@@ -1,4 +1,8 @@
-import type { DeviceType, NonSilentFanSpeed, VentilationMode } from '../constants.ts'
+import type {
+  DeviceType,
+  NonSilentFanSpeed,
+  VentilationMode,
+} from '../constants.ts'
 import type {
   BaseListDeviceData,
   BaseSetDeviceData,

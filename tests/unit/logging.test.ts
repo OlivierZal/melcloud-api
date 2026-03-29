@@ -108,13 +108,14 @@ describe('api call response data', () => {
   })
 })
 
-const parseLog = (value: string): {
+const parseLog = (
+  value: string,
+): {
   headers: Record<string, unknown>
   requestData: Record<string, unknown>
 } => cast(JSON.parse(value))
 
 describe('sensitive data redaction', () => {
-
   it('redacts credentials in request data', () => {
     const config = createConfig({
       data: { Email: 'user@example.com', Other: 'visible', Password: 's3cret' },
