@@ -40,7 +40,10 @@ export const createMockApi = (
     getInternalTemperatures: vi.fn(),
     getOperationModes: vi.fn(),
     getSignal: vi.fn().mockResolvedValue({
-      data: { Data: [[{ Data: [MOCK_RSSI], Name: 'Device' }]], Labels: ['12:00'] },
+      data: {
+        Data: [[{ Data: [MOCK_RSSI], Name: 'Device' }]],
+        Labels: ['12:00'],
+      },
     }),
     getTemperatures: vi.fn(),
     getTiles: vi.fn().mockResolvedValue({ data: {} }),
