@@ -571,12 +571,7 @@ const config = defineConfig([
       '@typescript-eslint/no-magic-numbers': 'off',
       'max-lines-per-function': 'off',
       'max-statements': 'off',
-      'vitest/max-expects': [
-        'error',
-        {
-          max: 11,
-        },
-      ],
+      'vitest/max-expects': 'off',
       'vitest/no-hooks': 'off',
       'vitest/prefer-expect-assertions': 'off',
       'vitest/require-hook': 'off',
