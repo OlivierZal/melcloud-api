@@ -4,6 +4,8 @@ import type { DeviceType } from '../src/constants.ts'
 import type { DeviceModelAny } from '../src/models/index.ts'
 import type { APIAdapter } from '../src/services/index.ts'
 
+const MOCK_RSSI = -60
+
 export function cast(value: unknown): never
 export function cast(value: unknown): unknown {
   return value
@@ -38,7 +40,7 @@ export const createMockApi = (
     getInternalTemperatures: vi.fn(),
     getOperationModes: vi.fn(),
     getSignal: vi.fn().mockResolvedValue({
-      data: { Data: [[{ Data: [-60], Name: 'Device' }]], Labels: ['12:00'] },
+      data: { Data: [[{ Data: [MOCK_RSSI], Name: 'Device' }]], Labels: ['12:00'] },
     }),
     getTemperatures: vi.fn(),
     getTiles: vi.fn().mockResolvedValue({ data: {} }),
