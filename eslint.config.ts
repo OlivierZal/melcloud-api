@@ -6,6 +6,7 @@ import { Alphabet } from 'eslint-plugin-perfectionist/alphabet'
 import { configs as ymlConfigs } from 'eslint-plugin-yml'
 import { configs as tsConfigs } from 'typescript-eslint'
 import js from '@eslint/js'
+import markdown from '@eslint/markdown'
 import stylistic from '@stylistic/eslint-plugin'
 import vitest from '@vitest/eslint-plugin'
 import prettier from 'eslint-config-prettier/flat'
@@ -562,6 +563,17 @@ const config = defineConfig([
     files: ['eslint-utils/**'],
     rules: {
       '@typescript-eslint/naming-convention': 'off',
+    },
+  },
+  {
+    extends: [markdown.configs.recommended],
+    files: ['**/*.md'],
+    language: 'markdown/gfm',
+    rules: {
+      'markdown/fenced-code-meta': 'error',
+      'markdown/no-bare-urls': 'error',
+      'markdown/no-duplicate-headings': 'error',
+      'markdown/no-html': 'error',
     },
   },
   {
