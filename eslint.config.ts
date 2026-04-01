@@ -604,15 +604,7 @@ const config = defineConfig([
           pathPattern: String.raw`^(?!jobs\.\w+\.steps\[\d+\]).*$`,
         },
         {
-          order: [
-            'id',
-            'name',
-            'if',
-            'uses',
-            'with',
-            'env',
-            'run',
-          ],
+          order: ['id', 'name', 'if', 'uses', 'with', 'env', 'run'],
           pathPattern: String.raw`^jobs\.\w+\.steps\[\d+\]$`,
         },
       ],
