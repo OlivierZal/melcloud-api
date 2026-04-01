@@ -18,12 +18,7 @@ jobs:
       - env:
           IS_PRERELEASE: ${{ github.event.release.prerelease }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ "$IS_PRERELEASE" = "true" ]; then
-            npm publish --tag next
-          else
-            npm publish
-          fi
+        run: npm publish ${{ github.event.release.prerelease && '--tag next' || '' }}
 name: Publish package to GitHub Packages
 on:
   release:
