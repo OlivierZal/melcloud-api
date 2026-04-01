@@ -55,7 +55,7 @@ const createRegistry = (): ModelRegistry => {
 }
 
 const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
-  mock<APIAdapter>({
+  mock({
     fetch: vi.fn().mockResolvedValue([]),
     getEnergy: vi.fn().mockResolvedValue({ data: {} }),
     getErrorEntries: vi.fn().mockResolvedValue({ data: [] }),

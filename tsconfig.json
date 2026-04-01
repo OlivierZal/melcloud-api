@@ -12,15 +12,14 @@
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
-    "noUncheckedSideEffectImports": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "dist",
     "rewriteRelativeImportExtensions": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "strict": true,
-    "target": "es2024",
+    "target": "es2025",
+    "types": ["node", "luxon"],
     "verbatimModuleSyntax": true
   }
 }

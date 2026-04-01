@@ -65,7 +65,7 @@ const mockAxiosInstance = {
 }
 
 vi.mock(import('axios'), () =>
-  mock<{ default: AxiosStatic; HttpStatusCode: typeof HttpStatusCode }>({
+  mock({
     default: mock<AxiosStatic>({
       create: vi.fn().mockReturnValue(mockAxiosInstance),
     }),

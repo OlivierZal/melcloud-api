@@ -68,9 +68,12 @@
     "prettier": "^3.8.1",
     "prettier-plugin-packagejson": "^3.0.2",
     "typedoc": "^0.28.18",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.1",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.0",
     "unplugin-swc": "^1.5.9",
     "vitest": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

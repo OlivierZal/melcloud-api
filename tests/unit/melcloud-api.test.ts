@@ -121,7 +121,7 @@ const createDevice = (overrides: Record<string, unknown> = {}): ListDeviceAny =>
 const createBuilding = (
   overrides: Partial<BuildingWithStructure> = {},
 ): BuildingWithStructure =>
-  mock<BuildingWithStructure>({
+  mock({
     FPDefined: false,
     FPEnabled: false,
     FPMaxTemperature: 16,

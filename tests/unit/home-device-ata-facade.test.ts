@@ -27,7 +27,7 @@ const createDevice = (
   settings: Record<string, string> = {},
   capabilities: Partial<HomeDevice['capabilities']> = {},
 ): HomeDevice =>
-  mock<HomeDevice>({
+  mock({
     capabilities: { ...defaultCapabilities, ...capabilities },
     givenDisplayName: 'Test Device',
     id: 'device-1',
