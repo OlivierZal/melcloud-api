@@ -53,7 +53,7 @@ const ervFlags = {
 const createAtaSetData = (
   overrides: Partial<SetDeviceDataAta> = {},
 ): SetDeviceDataAta =>
-  mock<SetDeviceDataAta>({
+  mock({
     DeviceType: DeviceType.Ata,
     EffectiveFlags: 0x1,
     LastCommunication: '',
