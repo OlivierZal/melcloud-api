@@ -2,13 +2,13 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) API, provid
 
 ## Installation
 
-```sh
+```sh title="install"
 npm install @olivierzal/melcloud-api
 ```
 
 ## Quick start
 
-```ts
+```ts title="example"
 import { FacadeManager, MELCloudAPI } from '@olivierzal/melcloud-api'
 
 const api = await MELCloudAPI.create({
