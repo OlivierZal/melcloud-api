@@ -36,6 +36,9 @@ import type {
 
 /** Common configuration shared by all API clients. */
 export interface BaseAPIConfig extends Partial<LoginCredentials> {
+  /** Interval in minutes between automatic syncs. Set to `null` to disable. */
+  readonly autoSyncInterval?: number | null
+
   /** Custom logger. Defaults to `console`. */
   readonly logger?: Logger
 
@@ -54,9 +57,6 @@ export interface HomeAPIConfig extends BaseAPIConfig {
 
 /** Configuration options for creating a MELCloud API instance. */
 export interface APIConfig extends BaseAPIConfig {
-  /** Interval in minutes between automatic syncs. Set to `null` to disable. */
-  readonly autoSyncInterval?: number | null
-
   /** Locale language code (e.g. `'en'`, `'fr'`). */
   readonly language?: string
 

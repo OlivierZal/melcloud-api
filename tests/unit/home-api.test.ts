@@ -507,6 +507,66 @@ describe('melcloud home API', () => {
     })
   })
 
+  describe('auto-sync', () => {
+    it('should not throw on clearSync', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      expect(() => {
+        api.clearSync()
+      }).not.toThrow()
+    })
+
+    it('should not throw on setSyncInterval', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      expect(() => {
+        api.setSyncInterval(5)
+        api.clearSync()
+      }).not.toThrow()
+    })
+
+    it('should not throw when disabling sync', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      expect(() => {
+        api.setSyncInterval(null)
+      }).not.toThrow()
+    })
+
+    it('should not throw on dispose', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      expect(() => {
+        api[Symbol.dispose]()
+      }).not.toThrow()
+    })
+
+    it('should auto-sync after list()', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi({ autoSyncInterval: 1 })
+
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        await api.list()
+
+        // Advance past the 1-minute auto-sync interval
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        await vi.advanceTimersByTimeAsync(60_001)
+
+        expect(mockRequest).toHaveBeenLastCalledWith(
+          expect.objectContaining({ url: '/api/user/context' }),
+        )
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+  })
+
   describe('session expiry', () => {
     it('should re-authenticate when session is expired', async () => {
       vi.useFakeTimers()

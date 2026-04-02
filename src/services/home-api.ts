@@ -22,6 +22,7 @@ import type {
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
+import { SyncManager } from './sync-manager.ts'
 
 /** MELCloud Home API contract. */
 export interface HomeAPI {
@@ -63,6 +64,12 @@ export interface HomeAPI {
 
   /** Update device values. Fields set to `null` are left unchanged. Returns success. */
   readonly setValues: (id: string, values: HomeAtaValues) => Promise<boolean>
+
+  /** Cancel any pending automatic sync. */
+  readonly clearSync: () => void
+
+  /** Update the automatic sync interval and reschedule. Set to `0` or `null` to disable. */
+  readonly setSyncInterval: (minutes: number | null) => void
 }
 
 const COGNITO_AUTHORITY =
@@ -150,10 +157,12 @@ const storeCookies = async (
  *
  * Uses a private constructor — create instances via {@link MELCloudHomeAPI.create}.
  */
-export class MELCloudHomeAPI implements HomeAPI {
+export class MELCloudHomeAPI implements Disposable, HomeAPI {
   readonly #api: AxiosInstance
 
   readonly #jar = new CookieJar()
+
+  readonly #syncManager: SyncManager
 
   #user: HomeUser | null = null
 
@@ -178,6 +187,7 @@ export class MELCloudHomeAPI implements HomeAPI {
 
   private constructor(config: HomeAPIConfig = {}) {
     const {
+      autoSyncInterval = 1,
       baseURL = API_BASE_URL,
       logger = console,
       onSync,
@@ -195,6 +205,11 @@ export class MELCloudHomeAPI implements HomeAPI {
       this.password = password
     }
     this.#api = axios.create({ baseURL, headers: { 'x-csrf': '1' } })
+    this.#syncManager = new SyncManager(
+      async () => this.list(),
+      logger,
+      autoSyncInterval,
+    )
   }
 
   /**
@@ -323,11 +338,14 @@ export class MELCloudHomeAPI implements HomeAPI {
    */
   @syncDevices()
   public async list(): Promise<HomeContext | null> {
+    this.#syncManager.clear()
     try {
       const { data } = await this.#request<HomeContext>('get', CONTEXT_PATH)
       return data
     } catch {
       return null
+    } finally {
+      this.#syncManager.planNext()
     }
   }
 
@@ -339,6 +357,18 @@ export class MELCloudHomeAPI implements HomeAPI {
     } catch {
       return false
     }
+  }
+
+  public clearSync(): void {
+    this.#syncManager.clear()
+  }
+
+  public [Symbol.dispose](): void {
+    this.#syncManager[Symbol.dispose]()
+  }
+
+  public setSyncInterval(minutes: number | null): void {
+    this.#syncManager.setInterval(minutes)
   }
 
   async #performOidcLogin(credentials: LoginCredentials): Promise<void> {

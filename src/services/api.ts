@@ -3,7 +3,6 @@ import https from 'node:https'
 import {
   type HourNumbers,
   DateTime,
-  Duration,
   Settings as LuxonSettings,
 } from 'luxon'
 import axios, {
@@ -65,6 +64,7 @@ import type {
   SettingManager,
 } from './interfaces.ts'
 import { DisposableTimeout } from './disposable-timeout.ts'
+import { SyncManager } from './sync-manager.ts'
 
 const deviceTypeNames = {
   [DeviceType.Ata]: 'Ata',
@@ -180,8 +180,6 @@ const collectDevices = function* collectDevices(
 export class MELCloudAPI implements API, Disposable {
   readonly #api: AxiosInstance
 
-  #autoSyncInterval: number
-
   #language = 'en'
 
   #pauseListUntil = DateTime.now()
@@ -190,7 +188,7 @@ export class MELCloudAPI implements API, Disposable {
 
   readonly #retryTimeout = new DisposableTimeout()
 
-  readonly #syncTimeout = new DisposableTimeout()
+  readonly #syncManager: SyncManager
 
   public readonly logger: Logger
 
@@ -234,14 +232,16 @@ export class MELCloudAPI implements API, Disposable {
       timezone,
       username,
     } = config
-    this.#autoSyncInterval = Duration.fromObject({
-      minutes: autoSyncInterval ?? 0,
-    }).as('milliseconds')
     this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
     this.#applyOptionalConfig({ language, password, timezone, username })
     this.#api = this.#createAPI(shouldVerifySSL)
+    this.#syncManager = new SyncManager(
+      async () => this.fetch(),
+      logger,
+      autoSyncInterval,
+    )
   }
 
   /**
@@ -285,20 +285,20 @@ export class MELCloudAPI implements API, Disposable {
    */
   @syncDevices()
   public async fetch(): Promise<BuildingWithStructure[]> {
-    this.clearSync()
+    this.#syncManager.clear()
     try {
       return await this.#fetch()
     } catch (error) {
       this.logger.error('Failed to fetch devices:', error)
       return []
     } finally {
-      this.#planNextSync()
+      this.#syncManager.planNext()
     }
   }
 
   /** Cancel any pending automatic sync timer. */
   public clearSync(): void {
-    this.#syncTimeout.clear()
+    this.#syncManager.clear()
   }
 
   public async getEnergy<T extends DeviceType>({
@@ -463,7 +463,7 @@ export class MELCloudAPI implements API, Disposable {
 
   /** Dispose both sync and retry timers. */
   public [Symbol.dispose](): void {
-    this.#syncTimeout[Symbol.dispose]()
+    this.#syncManager[Symbol.dispose]()
     this.#retryTimeout[Symbol.dispose]()
   }
 
@@ -520,11 +520,7 @@ export class MELCloudAPI implements API, Disposable {
    * @param minutes - Interval in minutes. Set to `0` or `null` to disable auto-sync.
    */
   public setSyncInterval(minutes: number | null): void {
-    this.#autoSyncInterval = Duration.fromObject({
-      minutes: minutes ?? 0,
-    }).as('milliseconds')
-    this.clearSync()
-    this.#planNextSync()
+    this.#syncManager.setInterval(minutes)
   }
 
   public async setValues<T extends DeviceType>({
@@ -669,16 +665,6 @@ export class MELCloudAPI implements API, Disposable {
   #handleResponse(response: AxiosResponse): AxiosResponse {
     this.logger.log(String(new APICallResponseData(response)))
     return response
-  }
-
-  #planNextSync(): void {
-    if (this.#autoSyncInterval) {
-      this.#syncTimeout.schedule(() => {
-        this.fetch().catch((error: unknown) => {
-          this.logger.error('Auto-sync failed:', error)
-        })
-      }, this.#autoSyncInterval)
-    }
   }
 
   #setupAxiosInterceptors(api: AxiosInstance): void {
