@@ -126,6 +126,14 @@ describe('home device ata facade', () => {
     })
   })
 
+  describe('setValues validation', () => {
+    it('should throw on empty values', async () => {
+      const facade = new HomeDeviceAtaFacade(createApi(), createModel())
+
+      await expect(facade.setValues({})).rejects.toThrow('No data to set')
+    })
+  })
+
   describe('temperature clamping', () => {
     it('should clamp temperature to heat range', async () => {
       const api = createApi()

@@ -138,6 +138,9 @@ export class HomeDeviceAtaFacade {
   }
 
   public async setValues(values: HomeAtaValues): Promise<boolean> {
+    if (Object.keys(values).length === 0) {
+      throw new Error('No data to set')
+    }
     return this.#api.setValues(this.id, {
       ...values,
       ...this.#clampSetTemperature(values),
