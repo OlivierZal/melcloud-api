@@ -1,7 +1,7 @@
 import type { HomeAPI } from '../services/home-api.ts'
+import type { HomeDeviceModel } from '../services/home-device-model.ts'
 import type {
   HomeAtaValues,
-  HomeDevice,
   HomeDeviceCapabilities,
   HomeDeviceSetting,
   HomeEnergyData,
@@ -57,18 +57,18 @@ const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
 export class HomeDeviceAtaFacade {
   readonly #api: HomeAPI
 
-  readonly #device: HomeDevice
+  readonly #model: HomeDeviceModel
 
   public get capabilities(): HomeDeviceCapabilities {
-    return this.#device.capabilities
+    return this.#model.data.capabilities
   }
 
   public get id(): string {
-    return this.#device.id
+    return this.#model.id
   }
 
   public get name(): string {
-    return this.#device.givenDisplayName
+    return this.#model.name
   }
 
   public get operationMode(): string {
@@ -99,9 +99,9 @@ export class HomeDeviceAtaFacade {
     return this.#setting('VaneVerticalDirection')
   }
 
-  public constructor(api: HomeAPI, device: HomeDevice) {
+  public constructor(api: HomeAPI, model: HomeDeviceModel) {
     this.#api = api
-    this.#device = device
+    this.#model = model
   }
 
   public async getEnergy(params: {
@@ -153,6 +153,6 @@ export class HomeDeviceAtaFacade {
   }
 
   #setting(name: string): string {
-    return getSetting(this.#device.settings, name)
+    return getSetting(this.#model.data.settings, name)
   }
 }

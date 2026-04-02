@@ -166,6 +166,8 @@ export {
   type Logger,
   type OnSyncFunction,
   type SettingManager,
+  HomeDeviceModel,
+  HomeDeviceRegistry,
   MELCloudAPI,
   MELCloudHomeAPI,
 } from './services/index.ts'

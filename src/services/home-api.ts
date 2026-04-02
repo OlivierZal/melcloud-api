@@ -3,6 +3,7 @@ import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 
 import type {
   HomeAtaValues,
+  HomeBuilding,
   HomeClaim,
   HomeContext,
   HomeEnergyData,
@@ -22,15 +23,22 @@ import type {
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
+import { HomeDeviceRegistry } from './home-device-registry.ts'
 import { SyncManager } from './sync-manager.ts'
 
 /** MELCloud Home API contract. */
 export interface HomeAPI {
+  /** Device registry with stable model references across syncs. */
+  readonly registry: HomeDeviceRegistry
+
   /** The currently authenticated user, or `null`. */
   readonly user: HomeUser | null
 
   /** Authenticate with MELCloud Home using the provided or stored credentials. */
   readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
+
+  /** Cancel any pending automatic sync. */
+  readonly clearSync: () => void
 
   /** Fetch energy consumption data for a device. */
   readonly getEnergy: (
@@ -59,17 +67,14 @@ export interface HomeAPI {
   /** Whether a user is currently authenticated (session cookie valid). */
   readonly isAuthenticated: () => boolean
 
-  /** List all buildings and devices from the user context. Returns `null` on failure. */
-  readonly list: () => Promise<HomeContext | null>
-
-  /** Update device values. Fields set to `null` are left unchanged. Returns success. */
-  readonly setValues: (id: string, values: HomeAtaValues) => Promise<boolean>
-
-  /** Cancel any pending automatic sync. */
-  readonly clearSync: () => void
+  /** Fetch all buildings and sync the device registry. */
+  readonly list: () => Promise<HomeBuilding[]>
 
   /** Update the automatic sync interval and reschedule. Set to `0` or `null` to disable. */
   readonly setSyncInterval: (minutes: number | null) => void
+
+  /** Update device values and refresh device data via list(). */
+  readonly setValues: (id: string, values: HomeAtaValues) => Promise<boolean>
 }
 
 const COGNITO_AUTHORITY =
@@ -160,7 +165,11 @@ const storeCookies = async (
 export class MELCloudHomeAPI implements Disposable, HomeAPI {
   readonly #api: AxiosInstance
 
+  #context: HomeContext | null = null
+
   readonly #jar = new CookieJar()
+
+  readonly #registry = new HomeDeviceRegistry()
 
   readonly #syncManager: SyncManager
 
@@ -180,6 +189,14 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
 
   @setting
   private accessor username = ''
+
+  public get context(): HomeContext | null {
+    return this.#context
+  }
+
+  public get registry(): HomeDeviceRegistry {
+    return this.#registry
+  }
 
   public get user(): HomeUser | null {
     return this.#user
@@ -333,29 +350,28 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   }
 
   /**
-   * List all buildings and devices from the user context.
-   * @returns The context or `null` on failure.
+   * Fetch all buildings (owned + guest), sync the device registry,
+   * and schedule the next auto-sync.
+   * @returns All buildings or an empty array on failure.
    */
   @syncDevices()
-  public async list(): Promise<HomeContext | null> {
+  public async list(): Promise<HomeBuilding[]> {
     this.#syncManager.clear()
     try {
       const { data } = await this.#request<HomeContext>('get', CONTEXT_PATH)
-      return data
+      this.#context = data
+      const buildings = [...data.buildings, ...data.guestBuildings]
+      this.#registry.sync(
+        buildings.flatMap(({ airToAirUnits, airToWaterUnits }) => [
+          ...airToAirUnits,
+          ...airToWaterUnits,
+        ]),
+      )
+      return buildings
     } catch {
-      return null
+      return []
     } finally {
       this.#syncManager.planNext()
-    }
-  }
-
-  @syncDevices()
-  public async setValues(id: string, values: HomeAtaValues): Promise<boolean> {
-    try {
-      await this.#request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
-      return true
-    } catch {
-      return false
     }
   }
 
@@ -369,6 +385,16 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
 
   public setSyncInterval(minutes: number | null): void {
     this.#syncManager.setInterval(minutes)
+  }
+
+  public async setValues(id: string, values: HomeAtaValues): Promise<boolean> {
+    try {
+      await this.#request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
+      await this.list()
+      return true
+    } catch {
+      return false
+    }
   }
 
   async #performOidcLogin(credentials: LoginCredentials): Promise<void> {

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { HomeAPI } from '../../src/services/home-api.ts'
 import type { HomeDevice } from '../../src/types/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
+import { HomeDeviceModel } from '../../src/services/home-device-model.ts'
 import { mock } from '../helpers.ts'
 
 const defaultCapabilities: HomeDevice['capabilities'] = {
@@ -23,19 +24,21 @@ const defaultCapabilities: HomeDevice['capabilities'] = {
   numberOfFanSpeeds: 5,
 }
 
-const createDevice = (
+const createModel = (
   settings: Record<string, string> = {},
   capabilities: Partial<HomeDevice['capabilities']> = {},
-): HomeDevice =>
-  mock({
-    capabilities: { ...defaultCapabilities, ...capabilities },
-    givenDisplayName: 'Test Device',
-    id: 'device-1',
-    settings: Object.entries(settings).map(([name, value]) => ({
-      name,
-      value,
-    })),
-  })
+): HomeDeviceModel =>
+  new HomeDeviceModel(
+    mock({
+      capabilities: { ...defaultCapabilities, ...capabilities },
+      givenDisplayName: 'Test Device',
+      id: 'device-1',
+      settings: Object.entries(settings).map(([name, value]) => ({
+        name,
+        value,
+      })),
+    }),
+  )
 
 const createApi = (): HomeAPI =>
   mock<HomeAPI>({
@@ -51,7 +54,7 @@ describe('home device ata facade', () => {
     it('should read operation mode from settings', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
-        createDevice({ OperationMode: 'Heat' }),
+        createModel({ OperationMode: 'Heat' }),
       )
 
       expect(facade.operationMode).toBe('Heat')
@@ -60,7 +63,7 @@ describe('home device ata facade', () => {
     it('should read power as boolean', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
-        createDevice({ Power: 'True' }),
+        createModel({ Power: 'True' }),
       )
 
       expect(facade.power).toBe(true)
@@ -69,7 +72,7 @@ describe('home device ata facade', () => {
     it('should read temperatures as numbers', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
-        createDevice({
+        createModel({
           RoomTemperature: '21.5',
           SetTemperature: '20',
         }),
@@ -82,7 +85,7 @@ describe('home device ata facade', () => {
     it('should read fan speed and vane directions from settings', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
-        createDevice({
+        createModel({
           SetFanSpeed: 'Auto',
           VaneHorizontalDirection: 'Centre',
           VaneVerticalDirection: 'Swing',
@@ -95,7 +98,7 @@ describe('home device ata facade', () => {
     })
 
     it('should return defaults for missing settings', () => {
-      const facade = new HomeDeviceAtaFacade(createApi(), createDevice())
+      const facade = new HomeDeviceAtaFacade(createApi(), createModel())
 
       expect(facade.operationMode).toBe('')
       expect(facade.power).toBe(false)
@@ -106,7 +109,7 @@ describe('home device ata facade', () => {
     })
 
     it('should read device name', () => {
-      const facade = new HomeDeviceAtaFacade(createApi(), createDevice())
+      const facade = new HomeDeviceAtaFacade(createApi(), createModel())
 
       expect(facade.name).toBe('Test Device')
     })
@@ -114,7 +117,7 @@ describe('home device ata facade', () => {
     it('should expose device capabilities', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
-        createDevice({}, { minTempHeat: 8 }),
+        createModel({}, { minTempHeat: 8 }),
       )
 
       expect(facade.capabilities.minTempHeat).toBe(8)
@@ -126,7 +129,7 @@ describe('home device ata facade', () => {
       const api = createApi()
       const facade = new HomeDeviceAtaFacade(
         api,
-        createDevice(
+        createModel(
           { OperationMode: 'Heat' },
           { maxTempHeat: 31, minTempHeat: 10 },
         ),
@@ -142,7 +145,7 @@ describe('home device ata facade', () => {
       const api = createApi()
       const facade = new HomeDeviceAtaFacade(
         api,
-        createDevice(
+        createModel(
           { OperationMode: 'Cool' },
           { maxTempCoolDry: 31, minTempCoolDry: 16 },
         ),
@@ -158,7 +161,7 @@ describe('home device ata facade', () => {
       const api = createApi()
       const facade = new HomeDeviceAtaFacade(
         api,
-        createDevice(
+        createModel(
           { OperationMode: 'Automatic' },
           { maxTempAutomatic: 31, minTempAutomatic: 16 },
         ),
@@ -174,7 +177,7 @@ describe('home device ata facade', () => {
       const api = createApi()
       const facade = new HomeDeviceAtaFacade(
         api,
-        createDevice(
+        createModel(
           { OperationMode: 'Dry' },
           { maxTempCoolDry: 31, minTempCoolDry: 16 },
         ),
@@ -190,7 +193,7 @@ describe('home device ata facade', () => {
       const api = createApi()
       const facade = new HomeDeviceAtaFacade(
         api,
-        createDevice(
+        createModel(
           { OperationMode: 'Heat' },
           { maxTempCoolDry: 31, minTempCoolDry: 16 },
         ),
@@ -207,7 +210,7 @@ describe('home device ata facade', () => {
       const api = createApi()
       const facade = new HomeDeviceAtaFacade(
         api,
-        createDevice({ OperationMode: 'Heat' }),
+        createModel({ OperationMode: 'Heat' }),
       )
       await facade.setValues({ setTemperature: 21 })
 
@@ -220,7 +223,7 @@ describe('home device ata facade', () => {
       const api = createApi()
       const facade = new HomeDeviceAtaFacade(
         api,
-        createDevice({ OperationMode: 'Heat' }),
+        createModel({ OperationMode: 'Heat' }),
       )
       await facade.setValues({ power: true })
 
@@ -233,7 +236,7 @@ describe('home device ata facade', () => {
       const api = createApi()
       const facade = new HomeDeviceAtaFacade(
         api,
-        createDevice({ OperationMode: '' }),
+        createModel({ OperationMode: '' }),
       )
       await facade.setValues({ setTemperature: 5 })
 
@@ -246,7 +249,7 @@ describe('home device ata facade', () => {
   describe('api delegation', () => {
     it('should delegate getEnergy with device id', async () => {
       const api = createApi()
-      const facade = new HomeDeviceAtaFacade(api, createDevice())
+      const facade = new HomeDeviceAtaFacade(api, createModel())
       const params = { from: '2026-03-01', interval: 'Day', to: '2026-03-02' }
       await facade.getEnergy(params)
 
@@ -255,7 +258,7 @@ describe('home device ata facade', () => {
 
     it('should delegate getErrorLog with device id', async () => {
       const api = createApi()
-      const facade = new HomeDeviceAtaFacade(api, createDevice())
+      const facade = new HomeDeviceAtaFacade(api, createModel())
       await facade.getErrorLog()
 
       expect(api.getErrorLog).toHaveBeenCalledWith('device-1')
@@ -263,7 +266,7 @@ describe('home device ata facade', () => {
 
     it('should delegate getSignal with device id', async () => {
       const api = createApi()
-      const facade = new HomeDeviceAtaFacade(api, createDevice())
+      const facade = new HomeDeviceAtaFacade(api, createModel())
       const params = { from: '2026-03-01', to: '2026-03-02' }
       await facade.getSignal(params)
 
@@ -272,7 +275,7 @@ describe('home device ata facade', () => {
 
     it('should delegate getTemperatures with device id', async () => {
       const api = createApi()
-      const facade = new HomeDeviceAtaFacade(api, createDevice())
+      const facade = new HomeDeviceAtaFacade(api, createModel())
       const params = { from: '2026-03-01', period: 'Hourly', to: '2026-03-02' }
       await facade.getTemperatures(params)
 

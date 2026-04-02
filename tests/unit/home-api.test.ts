@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { MELCloudHomeAPI } from '../../src/services/home-api.ts'
 import type { HomeAPIConfig, Logger } from '../../src/services/index.ts'
 import type {
+  HomeBuilding,
   HomeClaim,
   HomeContext,
   HomeEnergyData,
@@ -35,9 +36,23 @@ const userClaims: HomeClaim[] = [
   { type: 'bff:session_expires_in', value: '28800', valueType: 'null' },
 ]
 
+const mockBuilding: HomeBuilding = {
+  airToAirUnits: [
+    cast({
+      givenDisplayName: 'Test Device',
+      id: 'device-1',
+      settings: [{ name: 'Power', value: 'True' }],
+    }),
+  ],
+  airToWaterUnits: [],
+  id: 'building-1',
+  name: 'Home',
+  timezone: 'Europe/Paris',
+}
+
 const mockContext: HomeContext = {
   buildings: [],
-  guestBuildings: [],
+  guestBuildings: [mockBuilding],
   language: 'fr',
 }
 
@@ -290,22 +305,32 @@ describe('melcloud home API', () => {
   })
 
   describe('context retrieval', () => {
-    it('should return context on success', async () => {
+    it('should return merged buildings on success', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const context = await api.list()
+      const buildings = await api.list()
 
-      expect(context).toStrictEqual(mockContext)
+      expect(buildings).toStrictEqual([mockBuilding])
     })
 
-    it('should return null on failure', async () => {
+    it('should sync device registry and expose context on list', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.list()
+
+      expect(api.registry.getById('device-1')).toBeDefined()
+      expect(api.context?.language).toBe('fr')
+    })
+
+    it('should return empty array on failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const context = await api.list()
+      const buildings = await api.list()
 
-      expect(context).toBeNull()
+      expect(buildings).toStrictEqual([])
     })
   })
 
@@ -320,11 +345,13 @@ describe('melcloud home API', () => {
       expect(onSync).toHaveBeenCalledTimes(1)
     })
 
-    it('should call onSync after setValues()', async () => {
+    it('should call onSync after setValues() via list()', async () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
-      mockRequest.mockResolvedValueOnce(mockResponse('', {}, 200))
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       await api.setValues('device-1', { power: true })
 
       expect(onSync).toHaveBeenCalledTimes(1)
@@ -342,17 +369,19 @@ describe('melcloud home API', () => {
   })
 
   describe('device control', () => {
-    it('should return true on successful setValues', async () => {
+    it('should return true and refresh via list() on successful setValues', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse('', {}, 200))
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       const isSuccess = await api.setValues('device-1', {
         operationMode: 'Heat',
         power: true,
       })
 
       expect(isSuccess).toBe(true)
-      expect(mockRequest).toHaveBeenLastCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { operationMode: 'Heat', power: true },
           method: 'put',
@@ -581,9 +610,9 @@ describe('melcloud home API', () => {
 
         setupSuccessfulLogin()
         mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-        const context = await api.list()
+        const buildings = await api.list()
 
-        expect(context).toStrictEqual(mockContext)
+        expect(buildings).toStrictEqual([mockBuilding])
       } finally {
         vi.useRealTimers()
       }
