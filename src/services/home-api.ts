@@ -68,6 +68,7 @@ export interface HomeAPI {
 const COGNITO_AUTHORITY =
   'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 
+const API_BASE_URL = 'https://melcloudhome.com'
 const ATA_UNIT_PATH = '/api/ataunit'
 const CONTEXT_PATH = '/api/user/context'
 const ENERGY_PATH = '/api/telemetry/energy'
@@ -177,7 +178,7 @@ export class MELCloudHomeAPI implements HomeAPI {
 
   private constructor(config: HomeAPIConfig = {}) {
     const {
-      baseURL,
+      baseURL = API_BASE_URL,
       logger = console,
       onSync,
       password,
