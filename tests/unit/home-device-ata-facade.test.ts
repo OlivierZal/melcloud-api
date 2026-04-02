@@ -79,12 +79,30 @@ describe('home device ata facade', () => {
       expect(facade.setTemperature).toBe(20)
     })
 
+    it('should read fan speed and vane directions from settings', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        createDevice({
+          SetFanSpeed: 'Auto',
+          VaneHorizontalDirection: 'Centre',
+          VaneVerticalDirection: 'Swing',
+        }),
+      )
+
+      expect(facade.setFanSpeed).toBe('Auto')
+      expect(facade.vaneHorizontalDirection).toBe('Centre')
+      expect(facade.vaneVerticalDirection).toBe('Swing')
+    })
+
     it('should return defaults for missing settings', () => {
       const facade = new HomeDeviceAtaFacade(createApi(), createDevice())
 
       expect(facade.operationMode).toBe('')
       expect(facade.power).toBe(false)
       expect(facade.roomTemperature).toBe(0)
+      expect(facade.setFanSpeed).toBe('')
+      expect(facade.vaneHorizontalDirection).toBe('')
+      expect(facade.vaneVerticalDirection).toBe('')
     })
 
     it('should read device name', () => {
