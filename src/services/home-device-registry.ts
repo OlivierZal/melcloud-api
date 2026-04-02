@@ -1,5 +1,12 @@
+import type { DeviceType } from '../constants.ts'
 import type { HomeDevice } from '../types/index.ts'
 import { HomeDeviceModel } from './home-device-model.ts'
+
+/** Device with its type, as extracted from building units. */
+export interface TypedHomeDevice {
+  readonly device: HomeDevice
+  readonly type: DeviceType
+}
 
 /**
  * Lightweight device registry for the Home API.
@@ -16,15 +23,19 @@ export class HomeDeviceRegistry {
     return this.#devices.get(id)
   }
 
-  public sync(devices: HomeDevice[]): void {
+  public getByType(type: DeviceType): HomeDeviceModel[] {
+    return this.getAll().filter((model) => model.type === type)
+  }
+
+  public sync(devices: TypedHomeDevice[]): void {
     const activeIds = new Set<string>()
-    for (const device of devices) {
+    for (const { device, type } of devices) {
       activeIds.add(device.id)
       const existing = this.#devices.get(device.id)
       if (existing) {
         existing.sync(device)
       } else {
-        this.#devices.set(device.id, new HomeDeviceModel(device))
+        this.#devices.set(device.id, new HomeDeviceModel(device, type))
       }
     }
     for (const id of this.#devices.keys()) {

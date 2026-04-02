@@ -44,7 +44,13 @@ const mockBuilding: HomeBuilding = {
       settings: [{ name: 'Power', value: 'True' }],
     }),
   ],
-  airToWaterUnits: [],
+  airToWaterUnits: [
+    cast({
+      givenDisplayName: 'ATW Device',
+      id: 'device-2',
+      settings: [],
+    }),
+  ],
   id: 'building-1',
   name: 'Home',
   timezone: 'Europe/Paris',

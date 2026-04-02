@@ -12,6 +12,7 @@ import type {
   HomeUser,
   LoginCredentials,
 } from '../types/index.ts'
+import { DeviceType } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import {
   APICallResponseData,
@@ -363,8 +364,8 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
       const buildings = [...data.buildings, ...data.guestBuildings]
       this.#registry.sync(
         buildings.flatMap(({ airToAirUnits, airToWaterUnits }) => [
-          ...airToAirUnits,
-          ...airToWaterUnits,
+          ...airToAirUnits.map((device) => ({ device, type: DeviceType.Ata })),
+          ...airToWaterUnits.map((device) => ({ device, type: DeviceType.Atw })),
         ]),
       )
       return buildings
