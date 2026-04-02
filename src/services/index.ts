@@ -1,4 +1,3 @@
-export type { HomeAPI } from './home-api.ts'
 export type {
   API,
   APIAdapter,
@@ -8,6 +7,7 @@ export type {
   ErrorDetails,
   ErrorLog,
   ErrorLogQuery,
+  HomeAPI,
   HomeAPIConfig,
   Logger,
   OnSyncFunction,

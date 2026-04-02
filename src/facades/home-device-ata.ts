@@ -4,8 +4,8 @@ import type {
   HomeOperationMode,
   HomeVertical,
 } from '../adapters/index.ts'
-import type { HomeAPI } from '../services/home-api.ts'
 import type { HomeDeviceModel } from '../services/home-device-model.ts'
+import type { HomeAPI } from '../services/interfaces.ts'
 import type {
   HomeAtaValues,
   HomeDeviceCapabilities,

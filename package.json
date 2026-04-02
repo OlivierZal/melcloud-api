@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "23.0.0-rc.5",
+  "version": "23.0.0-rc.6",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",

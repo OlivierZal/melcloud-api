@@ -19,6 +19,7 @@ import {
   createAPICallErrorData,
 } from '../logging/index.ts'
 import type {
+  HomeAPI,
   HomeAPIConfig,
   Logger,
   OnSyncFunction,
@@ -26,57 +27,6 @@ import type {
 } from './interfaces.ts'
 import { HomeDeviceRegistry } from './home-device-registry.ts'
 import { SyncManager } from './sync-manager.ts'
-
-/** MELCloud Home API contract. */
-export interface HomeAPI {
-  /** Device registry with stable model references across syncs. */
-  readonly registry: HomeDeviceRegistry
-
-  /** The currently authenticated user, or `null`. */
-  readonly user: HomeUser | null
-
-  /** Authenticate with MELCloud Home using the provided or stored credentials. */
-  readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
-
-  /** Cancel any pending automatic sync. */
-  readonly clearSync: () => void
-
-  /** Fetch energy consumption data for a device. */
-  readonly getEnergy: (
-    id: string,
-    params: { from: string; interval: string; to: string },
-  ) => Promise<HomeEnergyData | null>
-
-  /** Fetch the error log for a device. */
-  readonly getErrorLog: (id: string) => Promise<HomeErrorLogEntry[]>
-
-  /** Fetch WiFi signal strength (RSSI) telemetry for a device. */
-  readonly getSignal: (
-    id: string,
-    params: { from: string; to: string },
-  ) => Promise<HomeEnergyData | null>
-
-  /** Fetch temperature trend summary for a device. */
-  readonly getTemperatures: (
-    id: string,
-    params: { from: string; period: string; to: string },
-  ) => Promise<HomeReportData[] | null>
-
-  /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
-  readonly getUser: () => Promise<HomeUser | null>
-
-  /** Whether a user is currently authenticated (session cookie valid). */
-  readonly isAuthenticated: () => boolean
-
-  /** Fetch all buildings and sync the device registry. */
-  readonly list: () => Promise<HomeBuilding[]>
-
-  /** Update the automatic sync interval and reschedule. Set to `0` or `null` to disable. */
-  readonly setSyncInterval: (minutes: number | null) => void
-
-  /** Update device values and refresh device data via list(). */
-  readonly setValues: (id: string, values: HomeAtaValues) => Promise<boolean>
-}
 
 const COGNITO_AUTHORITY =
   'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
@@ -365,7 +315,10 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
       this.#registry.sync(
         buildings.flatMap(({ airToAirUnits, airToWaterUnits }) => [
           ...airToAirUnits.map((device) => ({ device, type: DeviceType.Ata })),
-          ...airToWaterUnits.map((device) => ({ device, type: DeviceType.Atw })),
+          ...airToWaterUnits.map((device) => ({
+            device,
+            type: DeviceType.Atw,
+          })),
         ]),
       )
       return buildings

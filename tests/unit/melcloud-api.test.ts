@@ -221,6 +221,12 @@ describe('melcloud API', () => {
     expect(api.registry).toBeDefined()
   })
 
+  it('reports unauthenticated before login', async () => {
+    const api = await createApi()
+
+    expect(api.isAuthenticated()).toBe(false)
+  })
+
   it('accepts custom configuration', async () => {
     const onSync = vi.fn()
     const api = await createApi({
