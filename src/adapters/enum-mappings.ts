@@ -21,12 +21,7 @@ export type HomeHorizontal =
   | 'Swing'
   | 'Wide'
 
-export type HomeOperationMode =
-  | 'Automatic'
-  | 'Cool'
-  | 'Dry'
-  | 'Fan'
-  | 'Heat'
+export type HomeOperationMode = 'Automatic' | 'Cool' | 'Dry' | 'Fan' | 'Heat'
 
 export type HomeVertical =
   | 'Auto'
@@ -78,7 +73,10 @@ export const horizontalToClassic: Record<HomeHorizontal, Horizontal> = {
   Wide: Horizontal.wide,
 }
 
-export const operationModeFromClassic: Record<OperationMode, HomeOperationMode> = {
+export const operationModeFromClassic: Record<
+  OperationMode,
+  HomeOperationMode
+> = {
   [OperationMode.auto]: 'Automatic',
   [OperationMode.cool]: 'Cool',
   [OperationMode.dry]: 'Dry',
@@ -86,13 +84,14 @@ export const operationModeFromClassic: Record<OperationMode, HomeOperationMode> 
   [OperationMode.heat]: 'Heat',
 }
 
-export const operationModeToClassic: Record<HomeOperationMode, OperationMode> = {
-  Automatic: OperationMode.auto,
-  Cool: OperationMode.cool,
-  Dry: OperationMode.dry,
-  Fan: OperationMode.fan,
-  Heat: OperationMode.heat,
-}
+export const operationModeToClassic: Record<HomeOperationMode, OperationMode> =
+  {
+    Automatic: OperationMode.auto,
+    Cool: OperationMode.cool,
+    Dry: OperationMode.dry,
+    Fan: OperationMode.fan,
+    Heat: OperationMode.heat,
+  }
 
 export const verticalFromClassic: Record<Vertical, HomeVertical> = {
   [Vertical.auto]: 'Auto',

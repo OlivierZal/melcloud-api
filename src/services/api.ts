@@ -1,10 +1,6 @@
 import https from 'node:https'
 
-import {
-  type HourNumbers,
-  DateTime,
-  Settings as LuxonSettings,
-} from 'luxon'
+import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
 import axios, {
   type AxiosError,
   type AxiosInstance,
