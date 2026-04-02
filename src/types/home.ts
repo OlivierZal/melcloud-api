@@ -1,12 +1,19 @@
+import type {
+  HomeFanSpeed,
+  HomeHorizontal,
+  HomeOperationMode,
+  HomeVertical,
+} from '../adapters/index.ts'
+
 export interface HomeAtaValues {
   readonly inStandbyMode?: boolean | null
-  readonly operationMode?: string | null
+  readonly operationMode?: HomeOperationMode | null
   readonly power?: boolean | null
-  readonly setFanSpeed?: string | null
+  readonly setFanSpeed?: HomeFanSpeed | null
   readonly setTemperature?: number | null
   readonly temperatureIncrementOverride?: number | null
-  readonly vaneHorizontalDirection?: string | null
-  readonly vaneVerticalDirection?: string | null
+  readonly vaneHorizontalDirection?: HomeHorizontal | null
+  readonly vaneVerticalDirection?: HomeVertical | null
 }
 
 export interface HomeBuilding {

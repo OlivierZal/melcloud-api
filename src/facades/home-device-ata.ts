@@ -1,3 +1,9 @@
+import type {
+  HomeFanSpeed,
+  HomeHorizontal,
+  HomeOperationMode,
+  HomeVertical,
+} from '../adapters/index.ts'
 import type { HomeAPI } from '../services/home-api.ts'
 import type { HomeDeviceModel } from '../services/home-device-model.ts'
 import type {
@@ -25,7 +31,7 @@ const heatFanRange = ({
 }: HomeDeviceCapabilities): TemperatureRange => ({ max, min })
 
 const temperatureRanges = new Map<
-  string,
+  HomeOperationMode,
   (capabilities: HomeDeviceCapabilities) => TemperatureRange
 >([
   [
@@ -71,7 +77,7 @@ export class HomeDeviceAtaFacade {
     return this.#model.name
   }
 
-  public get operationMode(): string {
+  public get operationMode(): HomeOperationMode {
     return this.#setting('OperationMode')
   }
 
@@ -83,7 +89,7 @@ export class HomeDeviceAtaFacade {
     return Number(this.#setting('RoomTemperature'))
   }
 
-  public get setFanSpeed(): string {
+  public get setFanSpeed(): HomeFanSpeed {
     return this.#setting('SetFanSpeed')
   }
 
@@ -91,11 +97,11 @@ export class HomeDeviceAtaFacade {
     return Number(this.#setting('SetTemperature'))
   }
 
-  public get vaneHorizontalDirection(): string {
+  public get vaneHorizontalDirection(): HomeHorizontal {
     return this.#setting('VaneHorizontalDirection')
   }
 
-  public get vaneVerticalDirection(): string {
+  public get vaneVerticalDirection(): HomeVertical {
     return this.#setting('VaneVerticalDirection')
   }
 
@@ -151,6 +157,16 @@ export class HomeDeviceAtaFacade {
         { setTemperature: clampTemperature(value, getRange(this.capabilities)) }
       : { setTemperature: value }
   }
+
+  #setting(name: 'OperationMode'): HomeOperationMode
+
+  #setting(name: 'SetFanSpeed'): HomeFanSpeed
+
+  #setting(name: 'VaneHorizontalDirection'): HomeHorizontal
+
+  #setting(name: 'VaneVerticalDirection'): HomeVertical
+
+  #setting(name: string): string
 
   #setting(name: string): string {
     return getSetting(this.#model.data.settings, name)

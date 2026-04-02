@@ -86,6 +86,10 @@ export type {
 } from './types/index.ts'
 
 export {
+  type HomeFanSpeed,
+  type HomeHorizontal,
+  type HomeOperationMode,
+  type HomeVertical,
   fanSpeedFromClassic,
   fanSpeedToClassic,
   horizontalFromClassic,

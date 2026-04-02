@@ -28,11 +28,11 @@ describe('enum mappings between classic and home API', () => {
     })
 
     it('should map all home strings back to classic values', () => {
-      expect(operationModeToClassic['Heat']).toBe(OperationMode.heat)
-      expect(operationModeToClassic['Dry']).toBe(OperationMode.dry)
-      expect(operationModeToClassic['Cool']).toBe(OperationMode.cool)
-      expect(operationModeToClassic['Fan']).toBe(OperationMode.fan)
-      expect(operationModeToClassic['Automatic']).toBe(OperationMode.auto)
+      expect(operationModeToClassic.Heat).toBe(OperationMode.heat)
+      expect(operationModeToClassic.Dry).toBe(OperationMode.dry)
+      expect(operationModeToClassic.Cool).toBe(OperationMode.cool)
+      expect(operationModeToClassic.Fan).toBe(OperationMode.fan)
+      expect(operationModeToClassic.Automatic).toBe(OperationMode.auto)
     })
 
     it('should be bidirectional for all values', () => {

@@ -5,7 +5,7 @@ import { HomeDeviceRegistry } from '../../src/services/home-device-registry.ts'
 import { mock } from '../helpers.ts'
 
 const createDevice = (id: string, name = 'Device'): HomeDevice =>
-  mock({ givenDisplayName: name, id, settings: [] })
+  mock<HomeDevice>({ givenDisplayName: name, id, settings: [] })
 
 describe('home device registry', () => {
   it('should sync new devices', () => {

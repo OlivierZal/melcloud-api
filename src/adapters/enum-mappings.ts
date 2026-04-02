@@ -9,7 +9,35 @@ import { FanSpeed, Horizontal, OperationMode, Vertical } from '../constants.ts'
  * back to the classic API format.
  */
 
-export const fanSpeedFromClassic: Record<FanSpeed, string> = {
+export type HomeFanSpeed = 'Auto' | 'Five' | 'Four' | 'One' | 'Three' | 'Two'
+
+export type HomeHorizontal =
+  | 'Auto'
+  | 'Centre'
+  | 'Left'
+  | 'LeftCentre'
+  | 'Right'
+  | 'RightCentre'
+  | 'Swing'
+  | 'Wide'
+
+export type HomeOperationMode =
+  | 'Automatic'
+  | 'Cool'
+  | 'Dry'
+  | 'Fan'
+  | 'Heat'
+
+export type HomeVertical =
+  | 'Auto'
+  | 'Five'
+  | 'Four'
+  | 'One'
+  | 'Swing'
+  | 'Three'
+  | 'Two'
+
+export const fanSpeedFromClassic: Record<FanSpeed, HomeFanSpeed> = {
   [FanSpeed.auto]: 'Auto',
   [FanSpeed.fast]: 'Four',
   [FanSpeed.moderate]: 'Three',
@@ -19,7 +47,7 @@ export const fanSpeedFromClassic: Record<FanSpeed, string> = {
   [FanSpeed.very_slow]: 'One',
 }
 
-export const fanSpeedToClassic: Record<string, FanSpeed> = {
+export const fanSpeedToClassic: Record<HomeFanSpeed, FanSpeed> = {
   Auto: FanSpeed.auto,
   Five: FanSpeed.very_fast,
   Four: FanSpeed.fast,
@@ -28,7 +56,7 @@ export const fanSpeedToClassic: Record<string, FanSpeed> = {
   Two: FanSpeed.slow,
 }
 
-export const horizontalFromClassic: Record<Horizontal, string> = {
+export const horizontalFromClassic: Record<Horizontal, HomeHorizontal> = {
   [Horizontal.auto]: 'Auto',
   [Horizontal.center]: 'Centre',
   [Horizontal.center_left]: 'LeftCentre',
@@ -39,7 +67,7 @@ export const horizontalFromClassic: Record<Horizontal, string> = {
   [Horizontal.wide]: 'Wide',
 }
 
-export const horizontalToClassic: Record<string, Horizontal> = {
+export const horizontalToClassic: Record<HomeHorizontal, Horizontal> = {
   Auto: Horizontal.auto,
   Centre: Horizontal.center,
   Left: Horizontal.leftwards,
@@ -50,7 +78,7 @@ export const horizontalToClassic: Record<string, Horizontal> = {
   Wide: Horizontal.wide,
 }
 
-export const operationModeFromClassic: Record<OperationMode, string> = {
+export const operationModeFromClassic: Record<OperationMode, HomeOperationMode> = {
   [OperationMode.auto]: 'Automatic',
   [OperationMode.cool]: 'Cool',
   [OperationMode.dry]: 'Dry',
@@ -58,7 +86,7 @@ export const operationModeFromClassic: Record<OperationMode, string> = {
   [OperationMode.heat]: 'Heat',
 }
 
-export const operationModeToClassic: Record<string, OperationMode> = {
+export const operationModeToClassic: Record<HomeOperationMode, OperationMode> = {
   Automatic: OperationMode.auto,
   Cool: OperationMode.cool,
   Dry: OperationMode.dry,
@@ -66,7 +94,7 @@ export const operationModeToClassic: Record<string, OperationMode> = {
   Heat: OperationMode.heat,
 }
 
-export const verticalFromClassic: Record<Vertical, string> = {
+export const verticalFromClassic: Record<Vertical, HomeVertical> = {
   [Vertical.auto]: 'Auto',
   [Vertical.downwards]: 'Five',
   [Vertical.mid_high]: 'Two',
@@ -76,7 +104,7 @@ export const verticalFromClassic: Record<Vertical, string> = {
   [Vertical.upwards]: 'One',
 }
 
-export const verticalToClassic: Record<string, Vertical> = {
+export const verticalToClassic: Record<HomeVertical, Vertical> = {
   Auto: Vertical.auto,
   Five: Vertical.downwards,
   Four: Vertical.mid_low,
