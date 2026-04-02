@@ -83,8 +83,20 @@ export class HomeDeviceAtaFacade {
     return Number(this.#setting('RoomTemperature'))
   }
 
+  public get setFanSpeed(): string {
+    return this.#setting('SetFanSpeed')
+  }
+
   public get setTemperature(): number {
     return Number(this.#setting('SetTemperature'))
+  }
+
+  public get vaneHorizontalDirection(): string {
+    return this.#setting('VaneHorizontalDirection')
+  }
+
+  public get vaneVerticalDirection(): string {
+    return this.#setting('VaneVerticalDirection')
   }
 
   public constructor(api: HomeAPI, device: HomeDevice) {
