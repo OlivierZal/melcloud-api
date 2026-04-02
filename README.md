@@ -1,4 +1,4 @@
-A typed Node.js client for the [MELCloud](https://app.melcloud.com/) API, providing access to Mitsubishi Electric air-to-air (Ata), air-to-water (Atw) and energy recovery ventilation (Erv) devices.
+A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELCloud Home](https://melcloudhome.com/) APIs, providing access to Mitsubishi Electric air-to-air (Ata), air-to-water (Atw) and energy recovery ventilation (Erv) devices.
 
 ## Installation
 
@@ -8,7 +8,9 @@ npm install @olivierzal/melcloud-api
 
 ## Quick start
 
-```ts title="example"
+### MELCloud (classic)
+
+```ts title="classic"
 import { FacadeManager, MELCloudAPI } from '@olivierzal/melcloud-api'
 
 const api = await MELCloudAPI.create({
@@ -28,9 +30,33 @@ const facade = manager.get(device)
 await facade.setValues({ Power: true })
 ```
 
+### MELCloud Home
+
+```ts title="home"
+import { HomeDeviceAtaFacade, MELCloudHomeAPI } from '@olivierzal/melcloud-api'
+
+const api = await MELCloudHomeAPI.create({
+  username: 'user@example.com',
+  password: 'password',
+})
+
+const context = await api.list()
+const buildings = [...context.buildings, ...context.guestBuildings]
+const device = buildings.flatMap(({ airToAirUnits }) => airToAirUnits)[0]
+
+// Interact with a device through its facade
+const facade = new HomeDeviceAtaFacade(api, device)
+console.log(facade.name, facade.operationMode, facade.setTemperature)
+await facade.setValues({ setTemperature: 21 })
+```
+
 ## Documentation
 
 Full API reference at <https://olivierzal.github.io/melcloud-api/>.
+
+## Disclaimer
+
+This API is not endorsed, verified or approved by Mitsubishi Electric Corporation. Mitsubishi cannot be held liable for any claims or damages that may occur when using this app to control MELCloud devices.
 
 ## License
 

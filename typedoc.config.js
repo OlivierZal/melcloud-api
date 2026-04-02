@@ -7,7 +7,7 @@ const config = {
   hostedBaseUrl: 'https://olivierzal.github.io/melcloud-api/',
   includeVersion: true,
   markdownLinkExternal: true,
-  name: 'MELCloud API for Node.js',
+  name: 'MELCloud & MELCloud Home API for Node.js',
   navigationLinks: {
     GitHub: 'https://github.com/OlivierZal/melcloud-api',
     npm: 'https://www.npmjs.com/package/@olivierzal/melcloud-api',
