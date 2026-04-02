@@ -323,6 +323,10 @@ export class MELCloudAPI implements API, Disposable {
     })
   }
 
+  public isAuthenticated(): boolean {
+    return this.contextKey !== ''
+  }
+
   /**
    * Retrieve a parsed, paginated error log for the specified devices.
    * Filters out entries with invalid dates or empty messages.

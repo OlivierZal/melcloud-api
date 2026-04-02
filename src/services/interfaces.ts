@@ -135,6 +135,9 @@ export interface API extends APIAdapter {
   /** Cancel any pending automatic sync. */
   readonly clearSync: () => void
 
+  /** Whether a user is currently authenticated (context key valid). */
+  readonly isAuthenticated: () => boolean
+
   /** List all buildings and their device hierarchy. */
   readonly list: () => Promise<{ data: BuildingWithStructure[] }>
 
