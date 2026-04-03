@@ -11,6 +11,17 @@ export const DeviceType = {
 } as const
 export type DeviceType = (typeof DeviceType)[keyof typeof DeviceType]
 
+/** MELCloud Home API device type identifiers, matching context response keys. */
+export const HomeDeviceType = {
+  /** Air-to-Air (ATA) heat pump. */
+  Ata: 'airToAir',
+
+  /** Air-to-Water (ATW) heat pump. */
+  Atw: 'airToWater',
+} as const
+export type HomeDeviceType =
+  (typeof HomeDeviceType)[keyof typeof HomeDeviceType]
+
 /** Fan speed levels for ATA and ERV devices. */
 export const FanSpeed = {
   auto: 0,

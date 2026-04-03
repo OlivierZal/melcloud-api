@@ -1,4 +1,11 @@
-import { FanSpeed, Horizontal, OperationMode, Vertical } from '../constants.ts'
+import {
+  DeviceType,
+  FanSpeed,
+  HomeDeviceType,
+  Horizontal,
+  OperationMode,
+  Vertical,
+} from '../constants.ts'
 
 /*
  * Bidirectional mapping tables between classic API numeric enums
@@ -111,4 +118,20 @@ export const verticalToClassic: Record<HomeVertical, Vertical> = {
   Swing: Vertical.swing,
   Three: Vertical.middle,
   Two: Vertical.mid_high,
+}
+
+export const homeDeviceTypeFromClassic: Record<
+  typeof DeviceType.Ata | typeof DeviceType.Atw,
+  HomeDeviceType
+> = {
+  [DeviceType.Ata]: HomeDeviceType.Ata,
+  [DeviceType.Atw]: HomeDeviceType.Atw,
+}
+
+export const homeDeviceTypeToClassic: Record<
+  HomeDeviceType,
+  typeof DeviceType.Ata | typeof DeviceType.Atw
+> = {
+  [HomeDeviceType.Ata]: DeviceType.Ata,
+  [HomeDeviceType.Atw]: DeviceType.Atw,
 }

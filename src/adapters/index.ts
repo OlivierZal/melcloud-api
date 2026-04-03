@@ -8,6 +8,8 @@ export type {
 export {
   fanSpeedFromClassic,
   fanSpeedToClassic,
+  homeDeviceTypeFromClassic,
+  homeDeviceTypeToClassic,
   horizontalFromClassic,
   horizontalToClassic,
   operationModeFromClassic,

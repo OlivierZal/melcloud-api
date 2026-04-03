@@ -1,11 +1,11 @@
-import type { DeviceType } from '../constants.ts'
+import type { HomeDeviceType } from '../constants.ts'
 import type { HomeDevice } from '../types/index.ts'
 import { HomeDeviceModel } from './home-device-model.ts'
 
 /** Device with its type, as extracted from building units. */
 export interface TypedHomeDevice {
   readonly device: HomeDevice
-  readonly type: DeviceType
+  readonly type: HomeDeviceType
 }
 
 /**
@@ -23,7 +23,7 @@ export class HomeDeviceRegistry {
     return this.#devices.get(id)
   }
 
-  public getByType(type: DeviceType): HomeDeviceModel[] {
+  public getByType(type: HomeDeviceType): HomeDeviceModel[] {
     return this.getAll().filter((model) => model.type === type)
   }
 
