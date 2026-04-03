@@ -1,9 +1,3 @@
-import type {
-  HomeFanSpeed,
-  HomeHorizontal,
-  HomeOperationMode,
-  HomeVertical,
-} from '../adapters/index.ts'
 import type { HomeDeviceModel } from '../services/home-device-model.ts'
 import type { HomeAPI } from '../services/interfaces.ts'
 import type {
@@ -14,6 +8,13 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../types/index.ts'
+import {
+  type HomeFanSpeed,
+  type HomeHorizontal,
+  type HomeOperationMode,
+  type HomeVertical,
+  fanSpeedFromClassic,
+} from '../adapters/index.ts'
 
 interface TemperatureRange {
   max: number
@@ -90,7 +91,19 @@ export class HomeDeviceAtaFacade {
   }
 
   public get setFanSpeed(): HomeFanSpeed {
-    return this.#setting('SetFanSpeed')
+    /*
+     * MELCloud Home API inconsistency: SetFanSpeed returns a stringified
+     * number ("0") instead of the enum name ("Auto") like other settings.
+     * Normalize via fanSpeedFromClassic, falling back to raw if already a name.
+     */
+    const raw = this.#setting('SetFanSpeed')
+    const numeric = Number(raw)
+    if (raw !== '' && numeric in fanSpeedFromClassic) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- `in` guard ensures numeric is a valid FanSpeed key
+      return fanSpeedFromClassic[numeric as keyof typeof fanSpeedFromClassic]
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Fallback for when API returns the enum name directly (or empty string for missing setting)
+    return raw as HomeFanSpeed
   }
 
   public get setTemperature(): number {
@@ -162,8 +175,6 @@ export class HomeDeviceAtaFacade {
   }
 
   #setting(name: 'OperationMode'): HomeOperationMode
-
-  #setting(name: 'SetFanSpeed'): HomeFanSpeed
 
   #setting(name: 'VaneHorizontalDirection'): HomeHorizontal
 
