@@ -40,6 +40,7 @@ export interface HomeDevice {
   readonly capabilities: HomeDeviceCapabilities
   readonly givenDisplayName: string
   readonly id: string
+  readonly rssi: number
   readonly settings: HomeDeviceSetting[]
 }
 

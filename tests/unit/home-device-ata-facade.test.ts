@@ -28,12 +28,14 @@ const defaultCapabilities: HomeDevice['capabilities'] = {
 const createModel = (
   settings: Record<string, string> = {},
   capabilities: Partial<HomeDevice['capabilities']> = {},
+  rssi = -50,
 ): HomeDeviceModel =>
   new HomeDeviceModel(
     mock({
       capabilities: { ...defaultCapabilities, ...capabilities },
       givenDisplayName: 'Test Device',
       id: 'device-1',
+      rssi,
       settings: Object.entries(settings).map(([name, value]) => ({
         name,
         value,
@@ -106,6 +108,15 @@ describe('home device ata facade', () => {
       )
 
       expect(facade.setFanSpeed).toBe('Auto')
+    })
+
+    it('should read rssi from device data', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        createModel({}, {}, -42),
+      )
+
+      expect(facade.rssi).toBe(-42)
     })
 
     it('should return defaults for missing settings', () => {

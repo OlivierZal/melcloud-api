@@ -90,6 +90,10 @@ export class HomeDeviceAtaFacade {
     return Number(this.#setting('RoomTemperature'))
   }
 
+  public get rssi(): number {
+    return this.#model.data.rssi
+  }
+
   public get setFanSpeed(): HomeFanSpeed {
     /*
      * MELCloud Home API inconsistency: SetFanSpeed returns a stringified
