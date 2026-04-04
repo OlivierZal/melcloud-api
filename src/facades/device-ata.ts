@@ -4,6 +4,10 @@ import { BaseDeviceFacade } from './base-device.ts'
 
 /** Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping. */
 export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
+  /*
+   * MELCloud EffectiveFlags bitfield — each bit tells the API which
+   * fields in the update payload should actually be applied.
+   */
   public readonly flags = {
     OperationMode: 0x2,
     Power: 0x1,

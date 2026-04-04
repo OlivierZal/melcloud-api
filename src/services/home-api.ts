@@ -210,65 +210,38 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     id: string,
     params: { from: string; interval: string; to: string },
   ): Promise<HomeEnergyData | null> {
-    try {
-      const { data } = await this.#request<HomeEnergyData>(
-        'get',
-        `${ENERGY_PATH}/${id}`,
-        {
-          params: {
-            ...params,
-            measure: 'cumulative_energy_consumed_since_last_upload',
-          },
-        },
-      )
-      return data
-    } catch {
-      return null
-    }
+    return this.#safeRequest<HomeEnergyData>(`${ENERGY_PATH}/${id}`, {
+      params: {
+        ...params,
+        measure: 'cumulative_energy_consumed_since_last_upload',
+      },
+    })
   }
 
   public async getErrorLog(id: string): Promise<HomeErrorLogEntry[]> {
-    try {
-      const { data } = await this.#request<HomeErrorLogEntry[]>(
-        'get',
+    return (
+      (await this.#safeRequest<HomeErrorLogEntry[]>(
         `${ATA_UNIT_PATH}/${id}/errorlog`,
-      )
-      return data
-    } catch {
-      return []
-    }
+      )) ?? []
+    )
   }
 
   public async getSignal(
     id: string,
     params: { from: string; to: string },
   ): Promise<HomeEnergyData | null> {
-    try {
-      const { data } = await this.#request<HomeEnergyData>(
-        'get',
-        `${SIGNAL_PATH}/${id}`,
-        { params: { ...params, measure: 'rssi' } },
-      )
-      return data
-    } catch {
-      return null
-    }
+    return this.#safeRequest<HomeEnergyData>(`${SIGNAL_PATH}/${id}`, {
+      params: { ...params, measure: 'rssi' },
+    })
   }
 
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
   ): Promise<HomeReportData[] | null> {
-    try {
-      const { data } = await this.#request<HomeReportData[]>(
-        'get',
-        REPORT_PATH,
-        { params: { ...params, unitId: id } },
-      )
-      return data
-    } catch {
-      return null
-    }
+    return this.#safeRequest<HomeReportData[]>(REPORT_PATH, {
+      params: { ...params, unitId: id },
+    })
   }
 
   /**
@@ -450,6 +423,18 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     } catch (error) {
       this.#logError(error)
       throw error
+    }
+  }
+
+  async #safeRequest<T>(
+    url: string,
+    config?: Record<string, unknown>,
+  ): Promise<T | null> {
+    try {
+      const { data } = await this.#request<T>('get', url, config)
+      return data
+    } catch {
+      return null
     }
   }
 
