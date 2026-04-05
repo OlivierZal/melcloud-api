@@ -672,14 +672,11 @@ export class MELCloudAPI implements API, Disposable {
       async (
         config: InternalAxiosRequestConfig,
       ): Promise<InternalAxiosRequestConfig> => this.#onRequest(config),
-      async (error: AxiosError): Promise<AxiosError> =>
-        this.#onError(error),
+      async (error: AxiosError): Promise<AxiosError> => this.#onError(error),
     )
     api.interceptors.response.use(
-      (response: AxiosResponse): AxiosResponse =>
-        this.#onResponse(response),
-      async (error: AxiosError): Promise<AxiosError> =>
-        this.#onError(error),
+      (response: AxiosResponse): AxiosResponse => this.#onResponse(response),
+      async (error: AxiosError): Promise<AxiosError> => this.#onError(error),
     )
   }
 }
