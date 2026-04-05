@@ -41,7 +41,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@olivierzal/melcloud-api": "^23.2.1",
     "axios": "^1.14.0",
     "luxon": "^3.7.2",
     "tough-cookie": "^6.0.1"
