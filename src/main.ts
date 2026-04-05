@@ -144,6 +144,7 @@ export {
   type ZoneFacade,
   FacadeManager,
   HomeDeviceAtaFacade,
+  HomeFacadeManager,
   hasZone2,
   isAtaFacade,
   isAtwFacade,
