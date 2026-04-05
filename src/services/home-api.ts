@@ -366,15 +366,15 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     })
   }
 
-  async #handleResponse(response: AxiosResponse, url: string): Promise<void> {
-    await storeCookies(this.#jar, response, url)
-    this.logger.log(String(new APICallResponseData(response)))
-  }
-
   #logError(error: unknown): void {
     if (axios.isAxiosError(error)) {
       this.logger.error(String(createAPICallErrorData(error)))
     }
+  }
+
+  async #onResponse(response: AxiosResponse, url: string): Promise<void> {
+    await storeCookies(this.#jar, response, url)
+    this.logger.log(String(new APICallResponseData(response)))
   }
 
   /*
@@ -418,7 +418,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
         method,
         url,
       })
-      await this.#handleResponse(response, absoluteUrl)
+      await this.#onResponse(response, absoluteUrl)
       return response
     } catch (error) {
       this.#logError(error)

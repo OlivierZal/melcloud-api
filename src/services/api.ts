@@ -611,7 +611,7 @@ export class MELCloudAPI implements API, Disposable {
     return isLanguage(language) ? Language[language] : Language.en
   }
 
-  async #handleError(error: AxiosError): Promise<AxiosError> {
+  async #onError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
     this.logger.error(String(errorData))
 
@@ -638,7 +638,7 @@ export class MELCloudAPI implements API, Disposable {
     throw new Error(errorData.errorMessage, { cause: error })
   }
 
-  async #handleRequest(
+  async #onRequest(
     config: InternalAxiosRequestConfig,
   ): Promise<InternalAxiosRequestConfig> {
     const newConfig = { ...config }
@@ -662,7 +662,7 @@ export class MELCloudAPI implements API, Disposable {
     return newConfig
   }
 
-  #handleResponse(response: AxiosResponse): AxiosResponse {
+  #onResponse(response: AxiosResponse): AxiosResponse {
     this.logger.log(String(new APICallResponseData(response)))
     return response
   }
@@ -671,15 +671,15 @@ export class MELCloudAPI implements API, Disposable {
     api.interceptors.request.use(
       async (
         config: InternalAxiosRequestConfig,
-      ): Promise<InternalAxiosRequestConfig> => this.#handleRequest(config),
+      ): Promise<InternalAxiosRequestConfig> => this.#onRequest(config),
       async (error: AxiosError): Promise<AxiosError> =>
-        this.#handleError(error),
+        this.#onError(error),
     )
     api.interceptors.response.use(
       (response: AxiosResponse): AxiosResponse =>
-        this.#handleResponse(response),
+        this.#onResponse(response),
       async (error: AxiosError): Promise<AxiosError> =>
-        this.#handleError(error),
+        this.#onError(error),
     )
   }
 }

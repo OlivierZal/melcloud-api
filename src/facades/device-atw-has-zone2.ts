@@ -67,40 +67,11 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
   ): Required<UpdateDeviceDataAtw> {
     return super.prepareUpdateData({
       ...data,
-      ...this.#handleOperationModes(data),
+      ...this.#coupleOperationModes(data),
     })
   }
 
-  #getSecondaryOperationMode(
-    secondaryKey: keyof OperationModeZoneDataAtw,
-    primaryValue: OperationModeZone,
-    value?: OperationModeZone,
-  ): OperationModeZone {
-    /*
-     * Keep zone 2's cool/heat status in sync with zone 1, and prevent
-     * both zones from using the same room-based mode (must be room vs flow)
-     */
-    let secondaryValue: number = value ?? this.data[secondaryKey]
-    if (this.data.CanCool) {
-      if (primaryValue > OperationModeZone.curve) {
-        secondaryValue =
-          secondaryValue === OperationModeZone.curve ?
-            OperationModeZone.room_cool
-          : secondaryValue + HEAT_COOL_GAP
-      } else if (secondaryValue > OperationModeZone.curve) {
-        secondaryValue -= HEAT_COOL_GAP
-      }
-    }
-    if (
-      roomOperationModeZones.has(primaryValue) &&
-      primaryValue === secondaryValue
-    ) {
-      secondaryValue += ROOM_FLOW_GAP
-    }
-    return toOperationModeZone(secondaryValue)
-  }
-
-  #handleOperationModes(
+  #coupleOperationModes(
     data: Partial<UpdateDeviceDataAtw>,
   ): OperationModeZoneDataAtw | null {
     const [operationModeZone1, operationModeZone2]: {
@@ -131,5 +102,34 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
         secondaryOperationMode.value,
       ),
     }
+  }
+
+  #getSecondaryOperationMode(
+    secondaryKey: keyof OperationModeZoneDataAtw,
+    primaryValue: OperationModeZone,
+    value?: OperationModeZone,
+  ): OperationModeZone {
+    /*
+     * Keep zone 2's cool/heat status in sync with zone 1, and prevent
+     * both zones from using the same room-based mode (must be room vs flow)
+     */
+    let secondaryValue: number = value ?? this.data[secondaryKey]
+    if (this.data.CanCool) {
+      if (primaryValue > OperationModeZone.curve) {
+        secondaryValue =
+          secondaryValue === OperationModeZone.curve ?
+            OperationModeZone.room_cool
+          : secondaryValue + HEAT_COOL_GAP
+      } else if (secondaryValue > OperationModeZone.curve) {
+        secondaryValue -= HEAT_COOL_GAP
+      }
+    }
+    if (
+      roomOperationModeZones.has(primaryValue) &&
+      primaryValue === secondaryValue
+    ) {
+      secondaryValue += ROOM_FLOW_GAP
+    }
+    return toOperationModeZone(secondaryValue)
   }
 }

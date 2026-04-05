@@ -34,8 +34,19 @@ export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
   ): Required<UpdateDeviceDataAta> {
     return super.prepareUpdateData({
       ...data,
-      ...this.#handleTargetTemperature(data),
+      ...this.#clampTargetTemperature(data),
     })
+  }
+
+  #clampTargetTemperature(data: Partial<UpdateDeviceDataAta>): {
+    SetTemperature?: number
+  } {
+    const { OperationMode: operationMode, SetTemperature: value } = data
+    if (value !== undefined) {
+      const { max, min } = this.#getTargetTemperatureRange(operationMode)
+      return { SetTemperature: Math.min(Math.max(value, min), max) }
+    }
+    return {}
   }
 
   #getTargetTemperatureRange(operationMode = this.setData.OperationMode): {
@@ -74,16 +85,5 @@ export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
         min: minTemperatureHeatFan,
       },
     }[operationMode]
-  }
-
-  #handleTargetTemperature(data: Partial<UpdateDeviceDataAta>): {
-    SetTemperature?: number
-  } {
-    const { OperationMode: operationMode, SetTemperature: value } = data
-    if (value !== undefined) {
-      const { max, min } = this.#getTargetTemperatureRange(operationMode)
-      return { SetTemperature: Math.min(Math.max(value, min), max) }
-    }
-    return {}
   }
 }

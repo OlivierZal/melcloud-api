@@ -139,7 +139,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       ),
     )
 
-    const flags = this.#getFlags(
+    const flags = this.#computeFlags(
       typedKeys(newData) as (keyof UpdateDeviceData<T>)[],
     )
     if (!flags) {
@@ -158,7 +158,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public async getEnergy(query?: ReportQuery): Promise<EnergyData<T>> {
     const { data } = await this.api.getEnergy<T>({
-      postData: this.#getReportPostData(query),
+      postData: this.#buildReportPostData(query),
     })
     return data
   }
@@ -177,7 +177,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     shouldUseExactRange = true,
   ): Promise<ReportChartLineOptions> {
     const { data } = await this.api.getInternalTemperatures({
-      postData: this.#getReportPostData(query, shouldUseExactRange),
+      postData: this.#buildReportPostData(query, shouldUseExactRange),
     })
     return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
   }
@@ -186,7 +186,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     query?: ReportQuery,
     shouldUseExactRange = true,
   ): Promise<ReportChartPieOptions> {
-    const postData = this.#getReportPostData(query, shouldUseExactRange)
+    const postData = this.#buildReportPostData(query, shouldUseExactRange)
     const dateRange = { from: postData.FromDate, to: postData.ToDate }
     const { data } = await this.api.getOperationModes({ postData })
     return getChartPieOptions(data, dateRange)
@@ -198,7 +198,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   ): Promise<ReportChartLineOptions> {
     const { data } = await this.api.getTemperatures({
       postData: {
-        ...this.#getReportPostData(query, shouldUseExactRange),
+        ...this.#buildReportPostData(query, shouldUseExactRange),
         Location: this.registry.buildings.getById(this.device.buildingId)
           ?.location,
       },
@@ -228,20 +228,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return { ...this.setData, ...data }
   }
 
-  /*
-   * Combine individual field flags via bitwise OR to tell the API
-   * which device settings were actually changed
-   */
-  #getFlags(keys: (keyof UpdateDeviceData<T>)[]): number {
-    return Number(
-      keys.reduce(
-        (flag, key) => flag | BigInt(this.flags[key]),
-        BigInt(FLAG_UNCHANGED),
-      ),
-    )
-  }
-
-  #getReportPostData(
+  #buildReportPostData(
     { from, to }: ReportQuery = {},
     shouldUseExactRange = false,
   ): ReportPostData {
@@ -255,5 +242,18 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       FromDate: newFrom,
       ToDate: newTo,
     }
+  }
+
+  /*
+   * Combine individual field flags via bitwise OR to tell the API
+   * which device settings were actually changed
+   */
+  #computeFlags(keys: (keyof UpdateDeviceData<T>)[]): number {
+    return Number(
+      keys.reduce(
+        (flag, key) => flag | BigInt(this.flags[key]),
+        BigInt(FLAG_UNCHANGED),
+      ),
+    )
   }
 }

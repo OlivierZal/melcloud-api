@@ -187,11 +187,11 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
   ): Required<UpdateDeviceDataAtw> {
     return super.prepareUpdateData({
       ...data,
-      ...this.#handleTargetTemperatures(data),
+      ...this.#clampTargetTemperatures(data),
     })
   }
 
-  #handleTargetTemperatures(
+  #clampTargetTemperatures(
     data: Partial<UpdateDeviceDataAtw>,
   ): TemperatureDataAtw {
     return Object.fromEntries(
