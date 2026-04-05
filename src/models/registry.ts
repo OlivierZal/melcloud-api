@@ -174,12 +174,6 @@ export class ModelRegistry {
 
   #devicesByFloorId = new Map<number, DeviceModelAny[]>()
 
-  readonly #devicesByZone = {
-    area: (id: number): DeviceModelAny[] => this.getDevicesByAreaId(id),
-    building: (id: number): DeviceModelAny[] => this.getDevicesByBuildingId(id),
-    floor: (id: number): DeviceModelAny[] => this.getDevicesByFloorId(id),
-  }
-
   readonly #floors = new Map<number, FloorModel>()
 
   #floorsByBuildingId = new Map<number, FloorModel[]>()
@@ -390,12 +384,25 @@ export class ModelRegistry {
       .toSorted(compareNames)
   }
 
+  #getDevicesByZone(
+    id: number,
+    zone: 'area' | 'building' | 'floor',
+  ): DeviceModelAny[] {
+    if (zone === 'area') {
+      return this.getDevicesByAreaId(id)
+    }
+    if (zone === 'building') {
+      return this.getDevicesByBuildingId(id)
+    }
+    return this.getDevicesByFloorId(id)
+  }
+
   #hasDevices(
     id: number,
     zone: 'area' | 'building' | 'floor',
     type?: DeviceType,
   ): boolean {
-    const devices = this.#devicesByZone[zone](id)
+    const devices = this.#getDevicesByZone(id, zone)
     return type === undefined ?
         devices.length > 0
       : devices.some(({ type: deviceType }) => deviceType === type)
