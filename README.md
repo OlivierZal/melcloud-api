@@ -33,19 +33,19 @@ await facade.setValues({ Power: true })
 ### MELCloud Home
 
 ```ts title="home"
-import { HomeDeviceAtaFacade, MELCloudHomeAPI } from '@olivierzal/melcloud-api'
+import { HomeFacadeManager, MELCloudHomeAPI } from '@olivierzal/melcloud-api'
 
 const api = await MELCloudHomeAPI.create({
   username: 'user@example.com',
   password: 'password',
 })
 
-const context = await api.list()
-const buildings = [...context.buildings, ...context.guestBuildings]
-const device = buildings.flatMap(({ airToAirUnits }) => airToAirUnits)[0]
+await api.list()
+const manager = new HomeFacadeManager(api)
 
 // Interact with a device through its facade
-const facade = new HomeDeviceAtaFacade(api, device)
+const [device] = api.registry.getAll()
+const facade = manager.get(device)
 console.log(facade.name, facade.operationMode, facade.setTemperature)
 await facade.setValues({ setTemperature: 21 })
 ```
