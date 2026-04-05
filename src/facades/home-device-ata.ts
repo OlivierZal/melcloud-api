@@ -62,10 +62,6 @@ const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
  * values to the API.
  */
 export class HomeDeviceAtaFacade {
-  readonly #api: HomeAPI
-
-  readonly #model: HomeDeviceModel
-
   public get capabilities(): HomeDeviceCapabilities {
     return this.#model.data.capabilities
   }
@@ -121,6 +117,10 @@ export class HomeDeviceAtaFacade {
   public get vaneVerticalDirection(): HomeVertical {
     return this.#setting('VaneVerticalDirection')
   }
+
+  readonly #api: HomeAPI
+
+  readonly #model: HomeDeviceModel
 
   public constructor(api: HomeAPI, model: HomeDeviceModel) {
     this.#api = api

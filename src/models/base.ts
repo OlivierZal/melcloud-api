@@ -2,9 +2,9 @@ import type { ModelKind } from './interfaces.ts'
 
 /** Abstract base model providing common `id` and `name` properties. */
 export abstract class BaseModel {
-  public readonly id: number
-
   public abstract readonly modelKind: ModelKind
+
+  public readonly id: number
 
   public name: string
 

@@ -17,13 +17,13 @@ export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
     VaneVertical: 0x10,
   } satisfies Record<keyof UpdateDeviceData<typeof DeviceType.Ata>, number>
 
+  public readonly type = DeviceType.Ata
+
   protected readonly temperaturesLegend = [
     'SetTemperature',
     'RoomTemperature',
     'OutdoorTemperature',
   ]
-
-  public readonly type = DeviceType.Ata
 
   /*
    * Clamp SetTemperature to the valid range for the current or requested

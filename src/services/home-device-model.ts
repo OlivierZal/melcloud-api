@@ -3,8 +3,6 @@ import type { HomeDevice } from '../types/index.ts'
 
 /** Mutable wrapper around a HomeDevice, preserving object identity across syncs. */
 export class HomeDeviceModel {
-  #data: HomeDevice
-
   public readonly type: HomeDeviceType
 
   public get data(): HomeDevice {
@@ -18,6 +16,8 @@ export class HomeDeviceModel {
   public get name(): string {
     return this.#data.givenDisplayName
   }
+
+  #data: HomeDevice
 
   public constructor(device: HomeDevice, type: HomeDeviceType) {
     this.#data = device

@@ -11,14 +11,6 @@ import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
 export class BuildingFacade extends BaseZoneFacade<BuildingModel> {
-  protected readonly frostProtectionLocation = 'BuildingIds'
-
-  protected readonly groupSpecificationKey = 'BuildingID'
-
-  protected readonly holidayModeLocation = 'Buildings'
-
-  protected readonly tableName = 'Building'
-
   public get data(): ZoneSettings {
     return this.instance.data
   }
@@ -26,6 +18,14 @@ export class BuildingFacade extends BaseZoneFacade<BuildingModel> {
   public override get devices(): DeviceModelAny[] {
     return this.registry.getDevicesByBuildingId(this.id)
   }
+
+  protected readonly frostProtectionLocation = 'BuildingIds'
+
+  protected readonly groupSpecificationKey = 'BuildingID'
+
+  protected readonly holidayModeLocation = 'Buildings'
+
+  protected readonly tableName = 'Building'
 
   protected get model(): {
     getById: (id: number) => BuildingModel | undefined

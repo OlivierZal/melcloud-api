@@ -34,6 +34,10 @@ const toOperationModeZone = (value: number): OperationModeZone => {
  * modes so that cooling and room/flow modes stay consistent between zones.
  */
 export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
+  public get zone2(): ZoneState {
+    return this.getZoneState('Zone2')
+  }
+
   protected override readonly internalTemperaturesLegend = [
     'FlowTemperature',
     'FlowTemperatureBoiler',
@@ -57,10 +61,6 @@ export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
     'TankWaterTemperature',
     'SetTankWaterTemperature',
   ]
-
-  public get zone2(): ZoneState {
-    return this.getZoneState('Zone2')
-  }
 
   protected override prepareUpdateData(
     data: Partial<UpdateDeviceDataAtw>,

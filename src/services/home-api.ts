@@ -114,32 +114,11 @@ const storeCookies = async (
  * Uses a private constructor — create instances via {@link MELCloudHomeAPI.create}.
  */
 export class MELCloudHomeAPI implements Disposable, HomeAPI {
-  readonly #api: AxiosInstance
-
-  #context: HomeContext | null = null
-
-  readonly #jar = new CookieJar()
-
-  readonly #registry = new HomeDeviceRegistry()
-
-  readonly #syncManager: SyncManager
-
-  #user: HomeUser | null = null
-
   public readonly logger: Logger
 
   public readonly onSync?: OnSyncFunction
 
   public readonly settingManager?: SettingManager
-
-  @setting
-  private accessor expiry = ''
-
-  @setting
-  private accessor password = ''
-
-  @setting
-  private accessor username = ''
 
   public get context(): HomeContext | null {
     return this.#context
@@ -152,6 +131,27 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   public get user(): HomeUser | null {
     return this.#user
   }
+
+  readonly #api: AxiosInstance
+
+  #context: HomeContext | null = null
+
+  readonly #jar = new CookieJar()
+
+  readonly #registry = new HomeDeviceRegistry()
+
+  readonly #syncManager: SyncManager
+
+  #user: HomeUser | null = null
+
+  @setting
+  private accessor expiry = ''
+
+  @setting
+  private accessor password = ''
+
+  @setting
+  private accessor username = ''
 
   private constructor(config: HomeAPIConfig = {}) {
     const {

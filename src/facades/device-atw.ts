@@ -95,6 +95,25 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
     SetTemperatureZone2: 0x8_00_00_02_00,
   } satisfies Record<keyof UpdateDeviceData<typeof DeviceType.Atw>, number>
 
+  public readonly type = DeviceType.Atw
+
+  public get hotWater(): HotWaterState {
+    const { data } = this
+    return {
+      isEcoHotWater: data.EcoHotWater,
+      isForcedMode: data.ForcedHotWaterMode,
+      isProhibited: data.ProhibitHotWater,
+      maxTankTemperature: data.MaxTankTemperature,
+      operationalState: getHotWaterOperationalState(data),
+      setTankWaterTemperature: data.SetTankWaterTemperature,
+      tankWaterTemperature: data.TankWaterTemperature,
+    }
+  }
+
+  public get zone1(): ZoneState {
+    return this.getZoneState('Zone1')
+  }
+
   protected override readonly internalTemperaturesLegend = [
     'FlowTemperature',
     'FlowTemperatureBoiler',
@@ -113,8 +132,6 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
     'TankWaterTemperature',
   ]
 
-  public readonly type = DeviceType.Atw
-
   get #targetTemperatureRanges(): [
     keyof TemperatureDataAtw,
     { max: number; min: number },
@@ -131,23 +148,6 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
       ['SetTemperatureZone1', roomTemperatureRange],
       ['SetTemperatureZone2', roomTemperatureRange],
     ]
-  }
-
-  public get hotWater(): HotWaterState {
-    const { data } = this
-    return {
-      isEcoHotWater: data.EcoHotWater,
-      isForcedMode: data.ForcedHotWaterMode,
-      isProhibited: data.ProhibitHotWater,
-      maxTankTemperature: data.MaxTankTemperature,
-      operationalState: getHotWaterOperationalState(data),
-      setTankWaterTemperature: data.SetTankWaterTemperature,
-      tankWaterTemperature: data.TankWaterTemperature,
-    }
-  }
-
-  public get zone1(): ZoneState {
-    return this.getZoneState('Zone1')
   }
 
   /*

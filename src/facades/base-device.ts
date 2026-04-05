@@ -54,14 +54,6 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 {
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
-  protected readonly frostProtectionLocation = 'DeviceIds'
-
-  protected readonly holidayModeLocation = 'Devices'
-
-  protected readonly internalTemperaturesLegend: (string | undefined)[] = []
-
-  protected readonly tableName = 'DeviceLocation'
-
   protected abstract readonly temperaturesLegend: (string | undefined)[]
 
   public abstract readonly type: T
@@ -69,6 +61,18 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   public get data(): ListDeviceData<T> {
     return this.device.data
   }
+
+  public override get devices(): DeviceModelAny[] {
+    return [this.instance]
+  }
+
+  protected readonly frostProtectionLocation = 'DeviceIds'
+
+  protected readonly holidayModeLocation = 'Devices'
+
+  protected readonly internalTemperaturesLegend: (string | undefined)[] = []
+
+  protected readonly tableName = 'DeviceLocation'
 
   protected get device(): DeviceModel<T> {
     const { instance } = this
@@ -79,10 +83,6 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified by type guard above
     return instance as DeviceModel<T>
-  }
-
-  public override get devices(): DeviceModelAny[] {
-    return [this.instance]
   }
 
   protected get model(): {

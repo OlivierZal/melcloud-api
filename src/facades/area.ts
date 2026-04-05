@@ -3,6 +3,10 @@ import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for an area, grouping devices within a floor or building. */
 export class AreaFacade extends BaseZoneFacade<AreaModel> {
+  public override get devices(): DeviceModelAny[] {
+    return this.registry.getDevicesByAreaId(this.id)
+  }
+
   protected readonly frostProtectionLocation = 'AreaIds'
 
   protected readonly groupSpecificationKey = 'AreaID'
@@ -10,10 +14,6 @@ export class AreaFacade extends BaseZoneFacade<AreaModel> {
   protected readonly holidayModeLocation = 'Areas'
 
   protected readonly tableName = 'Area'
-
-  public override get devices(): DeviceModelAny[] {
-    return this.registry.getDevicesByAreaId(this.id)
-  }
 
   protected get model(): {
     getById: (id: number) => AreaModel | undefined

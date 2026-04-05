@@ -174,6 +174,16 @@ const collectDevices = function* collectDevices(
  * API endpoint calls. Uses a private constructor — create instances via {@link MELCloudAPI.create}.
  */
 export class MELCloudAPI implements API, Disposable {
+  public readonly logger: Logger
+
+  public readonly onSync?: OnSyncFunction
+
+  public readonly settingManager?: SettingManager
+
+  public get registry(): ModelRegistry {
+    return this.#registry
+  }
+
   readonly #api: AxiosInstance
 
   #language = 'en'
@@ -185,12 +195,6 @@ export class MELCloudAPI implements API, Disposable {
   readonly #retryTimeout = new DisposableTimeout()
 
   readonly #syncManager: SyncManager
-
-  public readonly logger: Logger
-
-  public readonly onSync?: OnSyncFunction
-
-  public readonly settingManager?: SettingManager
 
   @setting
   private accessor contextKey = ''
@@ -210,10 +214,6 @@ export class MELCloudAPI implements API, Disposable {
 
   private set language(value: string) {
     this.#language = value
-  }
-
-  public get registry(): ModelRegistry {
-    return this.#registry
   }
 
   private constructor(config: APIConfig = {}) {

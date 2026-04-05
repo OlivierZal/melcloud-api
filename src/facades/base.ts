@@ -71,25 +71,39 @@ const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
  * Settings resolution falls back from zone level to device level when needed.
  */
 export abstract class BaseFacade<T extends Model> implements Facade {
-  protected readonly api: APIAdapter
-
   protected abstract readonly frostProtectionLocation: keyof FrostProtectionLocation
 
   protected abstract readonly holidayModeLocation: keyof HolidayModeLocation
-
-  public readonly id: number
-
-  protected isFrostProtectionAtZoneLevel: boolean | null = null
-
-  protected isHolidayModeAtZoneLevel: boolean | null = null
 
   protected abstract readonly model: {
     getById: (id: number) => T | undefined
   }
 
+  protected abstract readonly tableName: SettingsParams['tableName']
+
+  public abstract get devices(): DeviceModelAny[]
+
+  public readonly id: number
+
+  public get name(): string {
+    return this.instance.name
+  }
+
+  protected readonly api: APIAdapter
+
+  protected isFrostProtectionAtZoneLevel: boolean | null = null
+
+  protected isHolidayModeAtZoneLevel: boolean | null = null
+
   protected readonly registry: ModelRegistry
 
-  protected abstract readonly tableName: SettingsParams['tableName']
+  protected get instance(): T {
+    const instance = this.model.getById(this.id)
+    if (!instance) {
+      throw new Error(`${this.tableName} with id ${String(this.id)} not found`)
+    }
+    return instance
+  }
 
   get #deviceId(): number {
     const [id] = this.#deviceIds
@@ -107,20 +121,6 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   get #deviceNames(): string[] {
     return this.devices.map(({ name }) => name)
-  }
-
-  public abstract get devices(): DeviceModelAny[]
-
-  protected get instance(): T {
-    const instance = this.model.getById(this.id)
-    if (!instance) {
-      throw new Error(`${this.tableName} with id ${String(this.id)} not found`)
-    }
-    return instance
-  }
-
-  public get name(): string {
-    return this.instance.name
   }
 
   public constructor(
