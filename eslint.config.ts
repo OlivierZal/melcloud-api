@@ -365,8 +365,11 @@ const config = defineConfig([
             'constructor',
 
             // ── Static methods ────────────────────────────────────
+            'static-function-property',
             'static-method',
+            'protected-static-function-property',
             'protected-static-method',
+            'private-static-function-property',
             'private-static-method',
 
             // ── Instance methods ──────────────────────────────────
