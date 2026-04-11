@@ -171,6 +171,7 @@ export {
   type ErrorLogQuery,
   type HomeAPI,
   type HomeAPIConfig,
+  type HomeAPISettings,
   type Logger,
   type OnSyncFunction,
   type SettingManager,

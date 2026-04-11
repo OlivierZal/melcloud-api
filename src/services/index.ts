@@ -9,6 +9,7 @@ export type {
   ErrorLogQuery,
   HomeAPI,
   HomeAPIConfig,
+  HomeAPISettings,
   Logger,
   OnSyncFunction,
   SettingManager,
