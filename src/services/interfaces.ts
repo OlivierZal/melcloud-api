@@ -89,6 +89,21 @@ export interface APISettings {
   readonly username?: string | null
 }
 
+/** Persistent settings managed by the Home API for session authentication. */
+export interface HomeAPISettings {
+  /** Serialized tough-cookie CookieJar (JSON). */
+  readonly cookies?: string | null
+
+  /** Session expiry timestamp in ISO 8601 format. */
+  readonly expiry?: string | null
+
+  /** MELCloud Home account password. */
+  readonly password?: string | null
+
+  /** MELCloud Home account username (email). */
+  readonly username?: string | null
+}
+
 /** A single error entry from the device error log. */
 export interface ErrorDetails {
   /** ISO 8601 date of the error occurrence. */

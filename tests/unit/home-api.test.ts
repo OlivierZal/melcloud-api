@@ -1,7 +1,12 @@
+import { CookieJar } from 'tough-cookie'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { MELCloudHomeAPI } from '../../src/services/home-api.ts'
-import type { HomeAPIConfig, Logger } from '../../src/services/index.ts'
+import type {
+  HomeAPIConfig,
+  Logger,
+  SettingManager,
+} from '../../src/services/index.ts'
 import type {
   HomeBuilding,
   HomeClaim,
@@ -190,6 +195,33 @@ const setupSuccessfulLogin = (): void => {
     )
     .mockResolvedValueOnce(mockResponse('', {}, 200))
     .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
+}
+
+const HOUR_MS = 60 * 60 * 1000
+
+const buildSerializedJar = async (): Promise<string> => {
+  const jar = new CookieJar()
+  await jar.setCookie('session=persisted; Path=/; Secure', BASE_URL)
+  return JSON.stringify(jar.serializeSync())
+}
+
+const createStore = (
+  initial: Record<string, string> = {},
+): {
+  setSpy: ReturnType<typeof vi.fn<(key: string, value: string) => void>>
+  settingManager: SettingManager
+} => {
+  const store = new Map(Object.entries(initial))
+  const setSpy = vi.fn((key: string, value: string) => {
+    store.set(key, value)
+  })
+  return {
+    setSpy,
+    settingManager: {
+      set: setSpy,
+      get: (key: string) => store.get(key) ?? null,
+    },
+  }
 }
 
 describe('melcloud home API', () => {
@@ -878,6 +910,175 @@ describe('melcloud home API', () => {
       const api = await createApi()
 
       expect(api.isAuthenticated()).toBe(true)
+    })
+  })
+
+  describe('session persistence', () => {
+    it('should reuse persisted session and skip OIDC re-login', async () => {
+      const cookies = await buildSerializedJar()
+      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
+      const { settingManager } = createStore({
+        cookies,
+        expiry: futureExpiry,
+        password: 'pass',
+        username: 'user@test.com',
+      })
+      mockRequest.mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        settingManager,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+      expect(mockRequest).toHaveBeenCalledTimes(1)
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ url: '/bff/user' }),
+      )
+    })
+
+    it('should fall back to OIDC when persisted session is rejected', async () => {
+      const cookies = await buildSerializedJar()
+      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
+      const { settingManager } = createStore({
+        cookies,
+        expiry: futureExpiry,
+        password: 'pass',
+        username: 'user@test.com',
+      })
+      // First getUser() call fails → triggers fallback to full authenticate()
+      mockRequest.mockRejectedValueOnce(new Error('401 Unauthorized'))
+      setupSuccessfulLogin()
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        settingManager,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+    })
+
+    it('should fall back to OIDC when expiry is in the past', async () => {
+      const cookies = await buildSerializedJar()
+      const pastExpiry = new Date(Date.now() - HOUR_MS).toISOString()
+      const { settingManager } = createStore({
+        cookies,
+        expiry: pastExpiry,
+        password: 'pass',
+        username: 'user@test.com',
+      })
+      setupSuccessfulLogin()
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        settingManager,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+    })
+
+    it('should recover from corrupted cookies and fall back to OIDC', async () => {
+      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
+      const { settingManager } = createStore({
+        cookies: 'not-valid-json',
+        expiry: futureExpiry,
+        password: 'pass',
+        username: 'user@test.com',
+      })
+      setupSuccessfulLogin()
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        settingManager,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+    })
+
+    it('should persist cookies via settingManager after login', async () => {
+      /*
+       * Inject a Set-Cookie header on the Cognito login page response so that
+       * #onResponse triggers #persistJar(). The rest of the OIDC chain is
+       * identical to setupSuccessfulLogin().
+       */
+      const callbackUrl =
+        'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz'
+      mockRequest
+        .mockResolvedValueOnce(
+          mockResponse('', { location: `${BASE_URL}/auth-redirect` }, 302),
+        )
+        .mockResolvedValueOnce(
+          mockResponse(
+            '',
+            { location: `${COGNITO}/oauth2/authorize?client_id=test` },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockResponse(
+            '',
+            { location: `${COGNITO}/login?client_id=test` },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockResponse(
+            cognitoLoginPage(),
+            { 'set-cookie': ['session=abc; Path=/; Secure'] },
+            200,
+          ),
+        )
+        .mockResolvedValueOnce(mockResponse('', { location: callbackUrl }, 302))
+        .mockResolvedValueOnce(
+          mockResponse(
+            '',
+            {
+              location: 'https://auth.melcloudhome.com/ExternalLogin/Callback',
+            },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockResponse(
+            '',
+            { location: `${BASE_URL}/signin-oidc?code=final` },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
+      const { setSpy, settingManager } = createStore()
+
+      await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        password: 'pass',
+        settingManager,
+        username: 'user@test.com',
+      })
+
+      const cookiesCalls = setSpy.mock.calls.filter(
+        ([key]) => key === 'cookies',
+      )
+      const lastCookies = cookiesCalls.at(-1)?.[1] ?? ''
+
+      expect(lastCookies).not.toBe('')
+      expect(() => CookieJar.deserializeSync(lastCookies)).not.toThrow()
+    })
+
+    it('should clear persisted cookies at the start of authenticate()', async () => {
+      const { setSpy, settingManager } = createStore({
+        cookies: await buildSerializedJar(),
+      })
+      setupSuccessfulLogin()
+
+      await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        password: 'pass',
+        settingManager,
+        username: 'user@test.com',
+      })
+
+      expect(setSpy).toHaveBeenCalledWith('cookies', '')
     })
   })
 

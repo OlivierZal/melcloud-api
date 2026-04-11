@@ -88,19 +88,23 @@ const storeCookies = async (
   jar: CookieJar,
   { headers }: AxiosResponse,
   url: string,
-): Promise<void> => {
+): Promise<boolean> => {
   const { 'set-cookie': setCookies } = headers as { 'set-cookie'?: string[] }
-  if (Array.isArray(setCookies)) {
-    await Promise.all(
-      setCookies.map(async (raw: string) => {
-        try {
-          await jar.setCookie(raw, url)
-        } catch {
-          // Ignore invalid Set-Cookie values
-        }
-      }),
-    )
+  if (!Array.isArray(setCookies)) {
+    return false
   }
+  let hasStored = false
+  await Promise.all(
+    setCookies.map(async (raw: string) => {
+      try {
+        await jar.setCookie(raw, url)
+        hasStored = true
+      } catch {
+        // Ignore invalid Set-Cookie values
+      }
+    }),
+  )
+  return hasStored
 }
 
 /**
@@ -136,13 +140,16 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
 
   #context: HomeContext | null = null
 
-  readonly #jar = new CookieJar()
+  readonly #jar: CookieJar
 
   readonly #registry = new HomeDeviceRegistry()
 
   readonly #syncManager: SyncManager
 
   #user: HomeUser | null = null
+
+  @setting
+  private accessor cookies = ''
 
   @setting
   private accessor expiry = ''
@@ -166,12 +173,8 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
-    if (username !== undefined) {
-      this.username = username
-    }
-    if (password !== undefined) {
-      this.password = password
-    }
+    this.#jar = this.#loadJar()
+    this.#applyCredentials(username, password)
     this.#api = axios.create({ baseURL, headers: { 'x-csrf': '1' } })
     this.#syncManager = new SyncManager(
       async () => this.list(),
@@ -182,12 +185,19 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
 
   /**
    * Create and initialize a MELCloud Home API instance.
-   * Authenticates and fetches the current user if credentials are provided.
+   *
+   * If the SettingManager holds a persisted session (cookies + unexpired
+   * expiry), the instance reuses it via `getUser()` and skips the OIDC
+   * re-login entirely. Otherwise, or if the persisted session is rejected
+   * by the server, falls back to a full `authenticate()` flow.
    * @param config - Optional configuration.
    * @returns The initialized API instance.
    */
   public static async create(config?: HomeAPIConfig): Promise<MELCloudHomeAPI> {
     const api = new MELCloudHomeAPI(config)
+    if (api.#hasPersistedSession() && (await api.getUser()) !== null) {
+      return api
+    }
     await api.authenticate()
     return api
   }
@@ -198,6 +208,8 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     const { password, username } = data ?? { password: '', username: '' }
     this.#user = null
     this.expiry = ''
+    this.#jar.removeAllCookiesSync()
+    this.cookies = ''
     await this.#performOidcLogin({ password, username })
     ;({ password: this.password, username: this.username } = {
       password,
@@ -327,6 +339,15 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     }
   }
 
+  #applyCredentials(username?: string, password?: string): void {
+    if (username !== undefined) {
+      this.username = username
+    }
+    if (password !== undefined) {
+      this.password = password
+    }
+  }
+
   async #performOidcLogin(credentials: LoginCredentials): Promise<void> {
     const { data: html } = await this.#followRedirects<string>(LOGIN_PATH)
     const action = extractFormAction(html)
@@ -366,6 +387,21 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     })
   }
 
+  #hasPersistedSession(): boolean {
+    return this.expiry !== '' && new Date(this.expiry) > new Date()
+  }
+
+  #loadJar(): CookieJar {
+    if (!this.cookies) {
+      return new CookieJar()
+    }
+    try {
+      return CookieJar.deserializeSync(this.cookies)
+    } catch {
+      return new CookieJar()
+    }
+  }
+
   #logError(error: unknown): void {
     if (axios.isAxiosError(error)) {
       this.logger.error(String(createAPICallErrorData(error)))
@@ -373,8 +409,16 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   }
 
   async #onResponse(response: AxiosResponse, url: string): Promise<void> {
-    await storeCookies(this.#jar, response, url)
+    if (await storeCookies(this.#jar, response, url)) {
+      this.#persistJar()
+    }
     this.logger.log(String(new APICallResponseData(response)))
+  }
+
+  #persistJar(): void {
+    const serialized = this.#jar.serializeSync()
+    /* v8 ignore next -- default MemoryCookieStore always returns a value */
+    this.cookies = serialized ? JSON.stringify(serialized) : ''
   }
 
   /*
