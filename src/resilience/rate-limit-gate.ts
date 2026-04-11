@@ -6,7 +6,7 @@ const SECONDS_PER_MINUTE = 60
  * Tracks an upstream rate-limit window and lets callers check whether
  * the gate is currently closed.
  *
- * Used by both ClassicAPI clients to honor HTTP 429 responses: record the
+ * Used by both API clients to honor HTTP 429 responses: record the
  * rate-limit on the error path (respecting `Retry-After` when present)
  * and consult `isPaused` / `remaining` on the request path to fail fast
  * without hammering the upstream server.

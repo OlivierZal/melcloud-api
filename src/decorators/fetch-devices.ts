@@ -3,7 +3,7 @@ import type { DeviceType } from '../constants.ts'
 import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 
 /**
- * Method decorator that triggers an ClassicAPI fetch before executing the decorated method.
+ * Method decorator that triggers a API fetch before executing the decorated method.
  * @param target - The original method to wrap.
  * @param _context - Decorator context provided by the runtime.
  * @returns A wrapper that fetches devices before calling the original method.

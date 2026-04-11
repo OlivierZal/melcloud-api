@@ -236,7 +236,7 @@ const axiosServerError = (
     },
   })
 
-describe('melcloud home ClassicAPI', () => {
+describe('melcloud home API', () => {
   let melCloudHomeApi: { create: typeof HomeAPI.create } = cast(null)
 
   beforeEach(async () => {
@@ -406,7 +406,7 @@ describe('melcloud home ClassicAPI', () => {
       expect(onSync).toHaveBeenCalledTimes(1)
     })
 
-    it('should call onSync even on failure for consistency with classic ClassicAPI', async () => {
+    it('should call onSync even on failure for consistency with classic API', async () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
@@ -1563,14 +1563,14 @@ describe('melcloud home ClassicAPI', () => {
       expect(messages.length).toBeGreaterThan(0)
       /*
        * Symmetric request/response logging — every dispatched call emits
-       * one "ClassicAPI request" line and one "ClassicAPI response" line.
+       * one "API request" line and one "API response" line.
        */
-      expect(
-        messages.some((message) => message.includes('ClassicAPI request')),
-      ).toBe(true)
-      expect(
-        messages.some((message) => message.includes('ClassicAPI response')),
-      ).toBe(true)
+      expect(messages.some((message) => message.includes('API request'))).toBe(
+        true,
+      )
+      expect(messages.some((message) => message.includes('API response'))).toBe(
+        true,
+      )
     })
 
     it('should log structured error data for axios errors', async () => {

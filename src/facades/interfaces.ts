@@ -97,7 +97,7 @@ export interface DeviceFacade<T extends DeviceType>
   readonly getTiles: ((device: true | DeviceAny) => Promise<TilesData<T>>) &
     ((device?: false) => Promise<TilesData<null>>)
 
-  /** Fetch current device values from the ClassicAPI. */
+  /** Fetch current device values from the Classic API. */
   readonly getValues: () => Promise<GetDeviceData<T>>
 
   /** Fetch energy consumption report. ATA and ATW only. */

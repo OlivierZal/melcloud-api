@@ -1,5 +1,5 @@
 /**
- * Minimal structural shape required by the ClassicAPI call loggers.
+ * Minimal structural shape required by the Classic API call loggers.
  *
  * Both `InternalAxiosRequestConfig` (Classic, via the axios interceptors)
  * and Home's literal request config (built inside `#dispatch`) satisfy
@@ -86,7 +86,7 @@ const redactValue = (value: unknown): unknown => {
   )
 }
 
-/** Abstract base for ClassicAPI call logging data, serializable to JSON with a fixed set of log keys. */
+/** Abstract base for API call logging data, serializable to JSON with a fixed set of log keys. */
 export abstract class APICallLogData {
   declare public readonly dataType: string
 

@@ -5,7 +5,7 @@ import { DisposableTimeout } from './disposable-timeout.ts'
  *
  * Allows at most one retry per configured window. `tryConsume()` returns
  * `true` when the budget is available (and schedules a refill timer),
- * `false` otherwise. Used by ClassicAPI clients to cap reactive re-authentication
+ * `false` otherwise. Used by API clients to cap reactive re-authentication
  * attempts on 401 responses and prevent tight retry loops.
  */
 export class RetryGuard implements Disposable {

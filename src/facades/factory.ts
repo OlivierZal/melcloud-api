@@ -46,7 +46,7 @@ const createDeviceFacade = (
 
 /**
  * Create the appropriate facade for a model instance based on its `modelKind` discriminant.
- * @param api - The ClassicAPI adapter for making requests.
+ * @param api - The API adapter for making requests.
  * @param registry - The model registry containing all synced models.
  * @param instance - The model instance to create a facade for.
  * @returns The facade matching the model's kind.

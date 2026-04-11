@@ -201,7 +201,7 @@ const collectDevices = function* collectDevices(
 }
 
 /**
- * Main MELCloud ClassicAPI client. Handles authentication, device syncing, and all
+ * Main MELCloud Classic API client. Handles authentication, device syncing, and all
  * ClassicAPI endpoint calls. Uses a private constructor — create instances via {@link ClassicAPI.create}.
  */
 export class ClassicAPI implements ClassicAPIContract, Disposable {
@@ -278,7 +278,7 @@ export class ClassicAPI implements ClassicAPIContract, Disposable {
 
   /**
    * Create and initialize a new ClassicAPI instance, performing an initial device sync.
-   * @param config - Optional configuration for the ClassicAPI client.
+   * @param config - Optional configuration for the Classic API client.
    * @returns The initialized ClassicAPI instance.
    */
   public static async create(config?: ClassicAPIConfig): Promise<ClassicAPI> {
@@ -740,7 +740,7 @@ export class ClassicAPI implements ClassicAPIContract, Disposable {
     const newConfig = { ...config }
     if (newConfig.url === LIST_PATH && this.#rateLimitGate.isPaused) {
       throw new RateLimitError(
-        `ClassicAPI requests to ${LIST_PATH} are on hold for ${this.#rateLimitGate.formatRemaining()}`,
+        `API requests to ${LIST_PATH} are on hold for ${this.#rateLimitGate.formatRemaining()}`,
         { retryAfter: this.#rateLimitGate.remaining },
       )
     }

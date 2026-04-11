@@ -101,7 +101,7 @@ describe('home device ata facade', () => {
       expect(facade.vaneVerticalDirection).toBe('Swing')
     })
 
-    it('should normalize numeric fan speed string from Home ClassicAPI', () => {
+    it('should normalize numeric fan speed string from Home API', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
         createModel({ SetFanSpeed: '0' }),

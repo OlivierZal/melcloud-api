@@ -9,7 +9,7 @@ interface HasOnSync {
 
 /**
  * Method decorator factory that invokes the sync callback after the decorated method completes.
- * Works with any class that exposes `notifySync` (facades) or `onSync` (ClassicAPI services).
+ * Works with any class that exposes `notifySync` (facades) or `onSync` (API services).
  * @param root0 - Options object.
  * @param root0.type - Optional device type to pass to the sync callback.
  * @returns A method decorator that triggers sync after execution.

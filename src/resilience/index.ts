@@ -1,5 +1,5 @@
 /**
- * Resilience primitives shared by both ClassicAPI clients. Re-exports the
+ * Resilience primitives shared by both API clients. Re-exports the
  * low-level helpers used to build auth, retry, rate-limit, and session
  * expiry handling so consumers (`api.ts`, `home-api.ts`) only need one
  * import rather than four.

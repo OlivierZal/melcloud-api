@@ -245,7 +245,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   /*
-   * Combine individual field flags via bitwise OR to tell the ClassicAPI
+   * Combine individual field flags via bitwise OR to tell the Classic API
    * which device settings were actually changed
    */
   #computeFlags(keys: (keyof UpdateDeviceData<T>)[]): number {

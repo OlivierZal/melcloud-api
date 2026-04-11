@@ -426,7 +426,7 @@ describe('building facade group', () => {
     expect(result).toHaveProperty('Success')
   })
 
-  it('throws when group ClassicAPI fails', async () => {
+  it('throws when group API fails', async () => {
     const { facade } = createBuildingFacade({
       getGroup: vi.fn().mockRejectedValue(new Error('fail')),
     })
@@ -436,7 +436,7 @@ describe('building facade group', () => {
     )
   })
 
-  it('throws when setGroup ClassicAPI fails', async () => {
+  it('throws when setGroup API fails', async () => {
     const { facade } = createBuildingFacade({
       setGroup: vi.fn().mockRejectedValue(new Error('fail')),
     })

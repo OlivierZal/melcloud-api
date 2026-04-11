@@ -59,7 +59,7 @@ const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
 /**
  * Facade for a MELCloud Home ATA device. Provides typed access to device
  * settings and temperature clamping per operation mode before sending
- * values to the ClassicAPI.
+ * values to the Classic API.
  */
 export class HomeDeviceAtaFacade {
   public get capabilities(): HomeDeviceCapabilities {
@@ -92,7 +92,7 @@ export class HomeDeviceAtaFacade {
 
   public get setFanSpeed(): HomeFanSpeed {
     /*
-     * MELCloud Home ClassicAPI inconsistency: SetFanSpeed returns a stringified
+     * MELCloud Home API inconsistency: SetFanSpeed returns a stringified
      * number ("0") instead of the enum name ("Auto") like other settings.
      * Normalize via fanSpeedFromClassic, falling back to raw if already a name.
      */
@@ -102,7 +102,7 @@ export class HomeDeviceAtaFacade {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- `in` guard ensures numeric is a valid FanSpeed key
       return fanSpeedFromClassic[numeric as keyof typeof fanSpeedFromClassic]
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Fallback for when ClassicAPI returns the enum name directly (or empty string for missing setting)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Fallback for when the API returns the enum name directly (or empty string for missing setting)
     return raw as HomeFanSpeed
   }
 

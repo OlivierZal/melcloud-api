@@ -41,7 +41,7 @@ import type {
   TilesPostData,
 } from '../types/index.ts'
 
-/** Common configuration shared by all ClassicAPI clients. */
+/** Common configuration shared by all API clients. */
 export interface BaseAPIConfig extends Partial<LoginCredentials> {
   /** Interval in minutes between automatic syncs. Set to `null` to disable. */
   readonly autoSyncInterval?: number | null
@@ -140,13 +140,13 @@ export interface RequestLifecycleEvents {
   readonly onRequestRetry?: (event: RequestRetryEvent) => void
 }
 
-/** Configuration options for the MELCloud Home ClassicAPI. */
+/** Configuration options for the MELCloud Home API. */
 export interface HomeAPIConfig extends BaseAPIConfig {
   /** Base URL of the MELCloud Home BFF server. */
   readonly baseURL?: string
 }
 
-/** Configuration options for creating a MELCloud ClassicAPI instance. */
+/** Configuration options for creating a MELCloud Classic API instance. */
 export interface ClassicAPIConfig extends BaseAPIConfig {
   /** Locale language code (e.g. `'en'`, `'fr'`). */
   readonly language?: string
@@ -158,7 +158,7 @@ export interface ClassicAPIConfig extends BaseAPIConfig {
   readonly timezone?: string
 }
 
-/** Persistent settings managed by the ClassicAPI for session authentication. */
+/** Persistent settings managed by the Classic API for session authentication. */
 export interface ClassicAPISettings {
   /** MELCloud session context key. */
   readonly contextKey?: string | null
@@ -173,7 +173,7 @@ export interface ClassicAPISettings {
   readonly username?: string | null
 }
 
-/** Persistent settings managed by the Home ClassicAPI for session authentication. */
+/** Persistent settings managed by the Home API for session authentication. */
 export interface HomeAPISettings {
   /** Serialized tough-cookie CookieJar (JSON). */
   readonly cookies?: string | null
@@ -230,7 +230,7 @@ export interface ErrorLogQuery {
   readonly to?: string
 }
 
-/** MELCloud Home ClassicAPI contract. */
+/** MELCloud Home API contract. */
 export interface HomeAPI {
   /**
    * Whether the upstream rate-limit gate is currently holding a pause
@@ -288,7 +288,7 @@ export interface HomeAPI {
   readonly setValues: (id: string, values: HomeAtaValues) => Promise<boolean>
 }
 
-/** Full MELCloud ClassicAPI contract including authentication and device listing. */
+/** Full MELCloud Classic API contract including authentication and device listing. */
 export interface ClassicAPI extends ClassicAPIAdapter {
   /**
    * Whether the upstream rate-limit gate is currently holding a pause
@@ -312,7 +312,7 @@ export interface ClassicAPI extends ClassicAPIAdapter {
   /** List all buildings and their device hierarchy. */
   readonly list: () => Promise<{ data: BuildingWithStructure[] }>
 
-  /** Perform a login request against the MELCloud ClassicAPI. */
+  /** Perform a login request against the MELCloud Classic API. */
   readonly login: ({
     postData,
   }: {
@@ -327,7 +327,7 @@ export interface ClassicAPI extends ClassicAPIAdapter {
 }
 
 /**
- * Low-level ClassicAPI adapter exposing all MELCloud HTTP endpoints.
+ * Low-level API adapter exposing all MELCloud HTTP endpoints.
  * Methods are grouped by supported device types.
  */
 export interface ClassicAPIAdapter {
@@ -343,7 +343,7 @@ export interface ClassicAPIAdapter {
     deviceIds: number[],
   ) => Promise<ErrorLog>
 
-  /** Fetch raw error log entries from the ClassicAPI. */
+  /** Fetch raw error log entries from the Classic API. */
   readonly getErrorEntries: ({
     postData,
   }: {
@@ -395,7 +395,7 @@ export interface ClassicAPIAdapter {
     postData: SetPowerPostData
   }) => Promise<{ data: boolean }>
 
-  /** Send updated device values to the ClassicAPI. */
+  /** Send updated device values to the Classic API. */
   readonly setValues: <T extends DeviceType>({
     postData,
     type,
@@ -473,7 +473,7 @@ export interface ClassicAPIAdapter {
   }) => Promise<{ data: ReportData }>
 }
 
-/** Logger interface for ClassicAPI call tracing. */
+/** Logger interface for API call tracing. */
 export interface Logger {
   /** Log error messages. */
   readonly error: Console['error']
@@ -482,7 +482,7 @@ export interface Logger {
   readonly log: Console['log']
 }
 
-/** External storage adapter for persisting ClassicAPI session settings. */
+/** External storage adapter for persisting API session settings. */
 export interface SettingManager {
   /** Retrieve a setting value by key. Returns the stored value, or `null`/`undefined` if absent. */
   readonly get: (key: string) => string | null | undefined

@@ -11,7 +11,7 @@ export const DeviceType = {
 } as const
 export type DeviceType = (typeof DeviceType)[keyof typeof DeviceType]
 
-/** MELCloud Home ClassicAPI device type identifiers, matching context response keys. */
+/** MELCloud Home API device type identifiers, matching context response keys. */
 export const HomeDeviceType = {
   /** Air-to-Air (ATA) heat pump. */
   Ata: 'airToAir',
@@ -42,7 +42,7 @@ export const FLAG_UNCHANGED = 0x0
 
 /**
  * Synthetic operation mode for buildings with devices in different modes.
- * Not a real ClassicAPI value — used at the application layer for mixed-state display.
+ * Not a real API value — used at the application layer for mixed-state display.
  */
 export const OPERATION_MODE_MIXED = 0
 

@@ -8,12 +8,12 @@ import {
 } from './constants.ts'
 
 /*
- * Bidirectional mapping tables between classic ClassicAPI numeric enums
- * and Home ClassicAPI string values.
+ * Bidirectional mapping tables between classic API numeric enums
+ * and Home API string values.
  *
  * Classic → Home: used by ClassicAtaAdapter to normalize output.
  * Home → Classic: used by ClassicAtaAdapter to convert normalized input
- * back to the classic ClassicAPI format.
+ * back to the classic API format.
  */
 
 export type HomeFanSpeed = 'Auto' | 'Five' | 'Four' | 'One' | 'Three' | 'Two'
