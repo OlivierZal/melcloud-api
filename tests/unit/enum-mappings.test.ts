@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  FanSpeed,
+  Horizontal,
+  OperationMode,
+  Vertical,
+} from '../../src/constants.ts'
+import {
   fanSpeedFromClassic,
   fanSpeedToClassic,
   horizontalFromClassic,
@@ -9,13 +15,7 @@ import {
   operationModeToClassic,
   verticalFromClassic,
   verticalToClassic,
-} from '../../src/adapters/index.ts'
-import {
-  FanSpeed,
-  Horizontal,
-  OperationMode,
-  Vertical,
-} from '../../src/constants.ts'
+} from '../../src/enum-mappings.ts'
 
 describe('enum mappings between classic and home API', () => {
   describe('operation mode', () => {

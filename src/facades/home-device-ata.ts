@@ -14,7 +14,7 @@ import {
   type HomeOperationMode,
   type HomeVertical,
   fanSpeedFromClassic,
-} from '../adapters/index.ts'
+} from '../enum-mappings.ts'
 
 interface TemperatureRange {
   max: number

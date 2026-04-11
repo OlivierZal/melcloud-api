@@ -3,7 +3,7 @@ import type {
   HomeHorizontal,
   HomeOperationMode,
   HomeVertical,
-} from '../adapters/index.ts'
+} from '../enum-mappings.ts'
 
 export interface HomeAtaValues {
   readonly inStandbyMode?: boolean | null

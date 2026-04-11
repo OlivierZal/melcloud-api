@@ -86,22 +86,6 @@ export type {
 } from './types/index.ts'
 
 export {
-  type HomeFanSpeed,
-  type HomeHorizontal,
-  type HomeOperationMode,
-  type HomeVertical,
-  fanSpeedFromClassic,
-  fanSpeedToClassic,
-  homeDeviceTypeFromClassic,
-  homeDeviceTypeToClassic,
-  horizontalFromClassic,
-  horizontalToClassic,
-  operationModeFromClassic,
-  operationModeToClassic,
-  verticalFromClassic,
-  verticalToClassic,
-} from './adapters/index.ts'
-export {
   type API,
   type APIAdapter,
   type APIConfig,
@@ -153,6 +137,22 @@ export {
   updateDevice,
   updateDevices,
 } from './decorators/index.ts'
+export {
+  type HomeFanSpeed,
+  type HomeHorizontal,
+  type HomeOperationMode,
+  type HomeVertical,
+  fanSpeedFromClassic,
+  fanSpeedToClassic,
+  homeDeviceTypeFromClassic,
+  homeDeviceTypeToClassic,
+  horizontalFromClassic,
+  horizontalToClassic,
+  operationModeFromClassic,
+  operationModeToClassic,
+  verticalFromClassic,
+  verticalToClassic,
+} from './enum-mappings.ts'
 export {
   AuthenticationError,
   MelCloudError,
