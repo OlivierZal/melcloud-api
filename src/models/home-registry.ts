@@ -1,6 +1,6 @@
 import type { HomeDeviceType } from '../constants.ts'
 import type { HomeDevice } from '../types/index.ts'
-import { HomeDeviceModel } from './home-device-model.ts'
+import { HomeDeviceModel } from './home-device.ts'
 
 /** Device with its type, as extracted from building units. */
 export interface TypedHomeDevice {

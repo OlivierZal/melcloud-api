@@ -164,6 +164,8 @@ export {
   BuildingModel,
   DeviceModel,
   FloorModel,
+  HomeDeviceModel,
+  HomeDeviceRegistry,
   isDeviceOfType,
   ModelRegistry,
 } from './models/index.ts'
@@ -188,8 +190,6 @@ export {
   type RequestRetryEvent,
   type RequestStartEvent,
   type SettingManager,
-  HomeDeviceModel,
-  HomeDeviceRegistry,
   MELCloudAPI,
   MELCloudHomeAPI,
 } from './services/index.ts'

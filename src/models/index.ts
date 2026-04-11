@@ -2,6 +2,8 @@ export { AreaModel } from './area.ts'
 export { BuildingModel } from './building.ts'
 export { DeviceModel } from './device.ts'
 export { FloorModel } from './floor.ts'
+export { HomeDeviceModel } from './home-device.ts'
+export { HomeDeviceRegistry } from './home-registry.ts'
 export {
   type BaseBuildingModel,
   type BaseDeviceModel,

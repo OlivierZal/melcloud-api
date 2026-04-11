@@ -5,7 +5,7 @@ import type { HomeDevice } from '../../src/types/index.ts'
 import { HomeDeviceType } from '../../src/constants.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
-import { HomeDeviceModel } from '../../src/services/home-device-model.ts'
+import { HomeDeviceModel } from '../../src/models/home-device.ts'
 import { mock } from '../helpers.ts'
 
 const createModel = (): HomeDeviceModel =>

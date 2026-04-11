@@ -25,6 +25,7 @@ import {
   APICallResponseData,
   createAPICallErrorData,
 } from '../logging/index.ts'
+import { HomeDeviceRegistry } from '../models/home-registry.ts'
 import type {
   HomeAPI,
   HomeAPIConfig,
@@ -32,7 +33,6 @@ import type {
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
-import { HomeDeviceRegistry } from './home-device-registry.ts'
 import {
   isSessionExpired,
   isTransientServerError,

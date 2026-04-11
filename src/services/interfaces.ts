@@ -1,6 +1,7 @@
 import type { HourNumbers } from 'luxon'
 
 import type { DeviceType } from '../constants.ts'
+import type { HomeDeviceRegistry } from '../models/home-registry.ts'
 import type { ModelRegistry } from '../models/index.ts'
 import type {
   BuildingWithStructure,
@@ -39,7 +40,6 @@ import type {
   TilesData,
   TilesPostData,
 } from '../types/index.ts'
-import type { HomeDeviceRegistry } from './home-device-registry.ts'
 
 /** Common configuration shared by all API clients. */
 export interface BaseAPIConfig extends Partial<LoginCredentials> {
