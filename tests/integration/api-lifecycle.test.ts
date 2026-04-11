@@ -1,4 +1,3 @@
-import type { AxiosStatic, HttpStatusCode } from 'axios'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPI } from '../../src/api/classic.ts'
@@ -7,6 +6,13 @@ import { DeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
 import { cast, defined, mock } from '../helpers.ts'
+
+const transientError = (status: number): Error =>
+  Object.assign(new Error(`Status ${String(status)}`), {
+    config: { url: '/User/ListDevices' },
+    isAxiosError: true,
+    response: { data: undefined, headers: {}, status },
+  })
 
 const buildingResponse: BuildingWithStructure[] = [
   mock<BuildingWithStructure>({
@@ -64,17 +70,16 @@ const mockAxiosInstance = {
   request: vi.fn(),
 }
 
-vi.mock(import('axios'), () =>
-  mock({
-    default: mock<AxiosStatic>({
+vi.mock(import('axios'), async (importOriginal) => {
+  const original = await importOriginal()
+  return {
+    ...original,
+    default: cast({
       create: vi.fn().mockReturnValue(mockAxiosInstance),
+      isAxiosError: original.default.isAxiosError,
     }),
-    HttpStatusCode: mock<typeof HttpStatusCode>({
-      TooManyRequests: 429,
-      Unauthorized: 401,
-    }),
-  }),
-)
+  }
+})
 
 describe('api lifecycle', () => {
   let melCloudApi: typeof ClassicAPI = cast(null)
@@ -192,5 +197,56 @@ describe('api lifecycle', () => {
     await melCloudApi.create({ autoSyncInterval: 0, onSync })
 
     expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+  })
+
+  /*
+   * End-to-end resilience: exercises the `withRetryBackoff` wrapper
+   * around `list()` (the classic heartbeat) to confirm a transient
+   * 5xx is recovered without the consumer seeing it. Gate-closure
+   * and reactive 401 re-auth interactions are covered by unit tests
+   * that can drive the interceptor chain directly; the mocked axios
+   * instance here bypasses interceptors, so only scenarios that
+   * retry at the `list()` level can be asserted end-to-end.
+   */
+  describe('resilience end-to-end', () => {
+    it('recovers from a transient 503 on fetch via exponential backoff', async () => {
+      const api = await melCloudApi.create({ autoSyncInterval: 0 })
+      mockAxiosInstance.get.mockClear()
+      mockAxiosInstance.get
+        .mockRejectedValueOnce(transientError(503))
+        .mockResolvedValueOnce({ data: buildingResponse })
+
+      const fetchPromise = api.fetch()
+      await vi.advanceTimersByTimeAsync(2000)
+      const buildings = await fetchPromise
+
+      expect(buildings).toHaveLength(1)
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2)
+      expect(api.registry.getDevices()).toHaveLength(1)
+    })
+
+    it('gives up after exhausting the 5xx retry budget and returns empty data', async () => {
+      const api = await melCloudApi.create({ autoSyncInterval: 0 })
+      mockAxiosInstance.get.mockClear()
+      mockAxiosInstance.get
+        .mockRejectedValueOnce(transientError(502))
+        .mockRejectedValueOnce(transientError(503))
+        .mockRejectedValueOnce(transientError(504))
+        .mockRejectedValueOnce(transientError(502))
+        .mockRejectedValueOnce(transientError(503))
+
+      const fetchPromise = api.fetch()
+      await vi.advanceTimersByTimeAsync(60_000)
+      const buildings = await fetchPromise
+
+      /*
+       * `fetch()` catches the final rejection and returns `[]` so the
+       * Homey app's sync loop keeps running through an outage — the
+       * registry just reflects what was last known.
+       */
+      expect(buildings).toStrictEqual([])
+      // 1 initial attempt + 4 retries = 5 total.
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(5)
+    })
   })
 })
