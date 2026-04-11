@@ -2,11 +2,7 @@ import { CookieJar } from 'tough-cookie'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { MELCloudHomeAPI } from '../../src/services/home-api.ts'
-import type {
-  HomeAPIConfig,
-  Logger,
-  SettingManager,
-} from '../../src/services/index.ts'
+import type { HomeAPIConfig, Logger } from '../../src/services/index.ts'
 import type {
   HomeBuilding,
   HomeClaim,
@@ -15,7 +11,7 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../../src/types/index.ts'
-import { cast } from '../helpers.ts'
+import { cast, createSettingStore } from '../helpers.ts'
 
 const BASE_URL = 'https://melcloudhome.com'
 const MILLISECONDS_IN_SECOND = 1000
@@ -203,25 +199,6 @@ const buildSerializedJar = async (): Promise<string> => {
   const jar = new CookieJar()
   await jar.setCookie('session=persisted; Path=/; Secure', BASE_URL)
   return JSON.stringify(jar.serializeSync())
-}
-
-const createStore = (
-  initial: Record<string, string> = {},
-): {
-  setSpy: ReturnType<typeof vi.fn<(key: string, value: string) => void>>
-  settingManager: SettingManager
-} => {
-  const store = new Map(Object.entries(initial))
-  const setSpy = vi.fn((key: string, value: string) => {
-    store.set(key, value)
-  })
-  return {
-    setSpy,
-    settingManager: {
-      set: setSpy,
-      get: (key: string) => store.get(key) ?? null,
-    },
-  }
 }
 
 const axiosUnauthorized = (url = '/api/user/context'): Error =>
@@ -681,6 +658,30 @@ describe('melcloud home API', () => {
 
       expect(mockRequest).toHaveBeenCalledTimes(callCountAfterLogin + 1)
     })
+
+    it('should treat a malformed persisted expiry as expired and reauthenticate', async () => {
+      /*
+       * A malformed `expiry` value (e.g. settings migration) must be
+       * treated as expired so the session is re-established via OIDC.
+       * Before the isSessionExpired() helper, `new Date('not-a-date')`
+       * silently produced an Invalid Date that compared as `false` against
+       * `new Date()`, leaving Home stuck on the dead session.
+       */
+      const cookies = await buildSerializedJar()
+      const { settingManager } = createSettingStore({
+        cookies,
+        expiry: 'not-a-valid-iso-date',
+        password: 'pass',
+        username: 'user@test.com',
+      })
+      setupSuccessfulLogin()
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        settingManager,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+    })
   })
 
   describe('reactive auth retry on 401', () => {
@@ -1024,7 +1025,7 @@ describe('melcloud home API', () => {
     it('should reuse persisted session and skip OIDC re-login', async () => {
       const cookies = await buildSerializedJar()
       const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { settingManager } = createStore({
+      const { settingManager } = createSettingStore({
         cookies,
         expiry: futureExpiry,
         password: 'pass',
@@ -1047,7 +1048,7 @@ describe('melcloud home API', () => {
     it('should fall back to OIDC when persisted session is rejected', async () => {
       const cookies = await buildSerializedJar()
       const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { settingManager } = createStore({
+      const { settingManager } = createSettingStore({
         cookies,
         expiry: futureExpiry,
         password: 'pass',
@@ -1073,7 +1074,7 @@ describe('melcloud home API', () => {
        */
       const cookies = await buildSerializedJar()
       const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { setSpy, settingManager } = createStore({
+      const { setSpy, settingManager } = createSettingStore({
         cookies,
         expiry: futureExpiry,
       })
@@ -1096,7 +1097,7 @@ describe('melcloud home API', () => {
        * getUser() attempt with an empty cookie jar.
        */
       const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { settingManager } = createStore({
+      const { settingManager } = createSettingStore({
         expiry: futureExpiry,
         password: 'pass',
         username: 'user@test.com',
@@ -1118,7 +1119,7 @@ describe('melcloud home API', () => {
     it('should fall back to OIDC when expiry is in the past', async () => {
       const cookies = await buildSerializedJar()
       const pastExpiry = new Date(Date.now() - HOUR_MS).toISOString()
-      const { settingManager } = createStore({
+      const { settingManager } = createSettingStore({
         cookies,
         expiry: pastExpiry,
         password: 'pass',
@@ -1136,7 +1137,7 @@ describe('melcloud home API', () => {
 
     it('should recover from corrupted cookies and fall back to OIDC', async () => {
       const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { setSpy, settingManager } = createStore({
+      const { setSpy, settingManager } = createSettingStore({
         cookies: 'not-valid-json',
         expiry: futureExpiry,
         password: 'pass',
@@ -1210,7 +1211,7 @@ describe('melcloud home API', () => {
         )
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(userClaims, {}, 200))
-      const { setSpy, settingManager } = createStore()
+      const { setSpy, settingManager } = createSettingStore()
 
       await melCloudHomeApi.create({
         baseURL: BASE_URL,
@@ -1229,7 +1230,7 @@ describe('melcloud home API', () => {
     })
 
     it('should clear persisted cookies at the start of authenticate()', async () => {
-      const { setSpy, settingManager } = createStore({
+      const { setSpy, settingManager } = createSettingStore({
         cookies: await buildSerializedJar(),
       })
       setupSuccessfulLogin()

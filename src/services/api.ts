@@ -60,6 +60,7 @@ import type {
   SettingManager,
 } from './interfaces.ts'
 import { RetryGuard } from './retry-guard.ts'
+import { isSessionExpired } from './session-expiry.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const deviceTypeNames = {
@@ -608,15 +609,6 @@ export class MELCloudAPI implements API, Disposable {
     return isLanguage(language) ? Language[language] : Language.en
   }
 
-  #isSessionExpired(): boolean {
-    if (this.expiry === '') {
-      return false
-    }
-    const parsed = DateTime.fromISO(this.expiry)
-    // Malformed values (Invalid DateTime) are treated as expired on purpose.
-    return !parsed.isValid || parsed < DateTime.now()
-  }
-
   async #onError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
     this.logger.error(String(errorData))
@@ -662,7 +654,7 @@ export class MELCloudAPI implements API, Disposable {
        * session token is expired/invalid. A malformed `expiry` (e.g. from
        * a settings migration) is treated as expired, not silently ignored.
        */
-      if (this.contextKey === '' || this.#isSessionExpired()) {
+      if (this.contextKey === '' || isSessionExpired(this.expiry)) {
         await this.authenticate()
       }
       newConfig.headers.set('X-MitsContextKey', this.contextKey)

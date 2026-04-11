@@ -31,6 +31,7 @@ import type {
 } from './interfaces.ts'
 import { HomeDeviceRegistry } from './home-device-registry.ts'
 import { RetryGuard } from './retry-guard.ts'
+import { isSessionExpired } from './session-expiry.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const COGNITO_AUTHORITY =
@@ -89,6 +90,18 @@ const parseClaims = (claims: HomeClaim[]): HomeUser => ({
 
 const resolveUrl = (location: string, base: string): string =>
   location.startsWith('http') ? location : new URL(location, base).href
+
+/*
+ * Auth-related endpoints that must bypass both proactive reauth
+ * (#ensureSession) and reactive 401 retry (#shouldRetryAuth):
+ *  - LOGIN_PATH and USER_PATH are the entry points of the OIDC flow
+ *    themselves and what refreshes `expiry` — triggering reauth on
+ *    them would recurse infinitely.
+ *  - Absolute URLs belong to the cross-domain redirect chain and
+ *    are only reachable from within `#performOidcLogin`.
+ */
+const isAuthExempt = (url: string): boolean =>
+  url.startsWith('http') || url === LOGIN_PATH || url === USER_PATH
 
 const storeCookies = async (
   jar: CookieJar,
@@ -413,7 +426,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     return (
       this.cookies !== '' &&
       this.expiry !== '' &&
-      new Date(this.expiry) > new Date()
+      !isSessionExpired(this.expiry)
     )
   }
 
@@ -489,16 +502,13 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   }
 
   /*
-   * Re-authenticate if session expired. Skips absolute URLs (used in
-   * the OIDC redirect chain) to avoid infinite re-auth loops, analogous
-   * to the classic API skipping LOGIN_PATH in its request interceptor.
+   * Re-authenticate if the session is expired or the persisted expiry
+   * value is malformed. Skips auth-exempt URLs (OIDC chain, LOGIN_PATH,
+   * USER_PATH) to avoid infinite re-auth loops, analogous to the classic
+   * API skipping LOGIN_PATH in its request interceptor.
    */
   async #ensureSession(url: string): Promise<void> {
-    if (
-      !url.startsWith('http') &&
-      this.expiry &&
-      new Date(this.expiry) < new Date()
-    ) {
+    if (!isAuthExempt(url) && isSessionExpired(this.expiry)) {
       await this.authenticate()
     }
   }
@@ -545,8 +555,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     if (error.response?.status !== HttpStatusCode.Unauthorized) {
       return false
     }
-    // Auth-related endpoints must not trigger a reauth retry (infinite loop).
-    if (url.startsWith('http') || url === LOGIN_PATH || url === USER_PATH) {
+    if (isAuthExempt(url)) {
       return false
     }
     return this.#retryGuard.tryConsume()
