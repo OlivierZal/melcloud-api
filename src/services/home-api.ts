@@ -2,7 +2,6 @@ import { CookieJar } from 'tough-cookie'
 import axios, {
   type AxiosInstance,
   type AxiosResponse,
-  type InternalAxiosRequestConfig,
   HttpStatusCode,
 } from 'axios'
 
@@ -501,15 +500,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
       method,
       url,
     }
-    /*
-     * APICallRequestData only reads `method`, `url`, `params`, `headers`,
-     * and `data` via optional chaining, so the structural shape is satisfied
-     * even though the literal lacks the rest of the InternalAxiosRequestConfig
-     * fields that axios populates internally. The cast is safe at runtime.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- structural shape is sufficient for logging
-    const loggable = requestConfig as unknown as InternalAxiosRequestConfig
-    this.logger.log(String(new APICallRequestData(loggable)))
+    this.logger.log(String(new APICallRequestData(requestConfig)))
     const response = await this.#api.request<T>(requestConfig)
     await this.#onResponse(response, absoluteUrl)
     return response

@@ -187,6 +187,46 @@ describe('sensitive data redaction', () => {
 
     expect(headers['Cookie']).toBe('******')
   })
+
+  it('redacts sensitive keys inside form-encoded string bodies', () => {
+    /*
+     * Home's `#submitCredentials()` posts credentials as a form-encoded
+     * string (URLSearchParams.toString()). Without explicit string
+     * handling in `redactValue()`, the entire body — including
+     * `password=...` and `username=...` — would leak verbatim into the
+     * request log lines.
+     */
+    const config = createConfig({
+      data: 'csrf=tok&password=s3cret&username=user%40example.com&extra=visible',
+    })
+    const parsed: { requestData: string } = cast(
+      JSON.parse(new APICallRequestData(config).toString()),
+    )
+    const params = new URLSearchParams(parsed.requestData)
+
+    expect(params.get('password')).toBe('******')
+    expect(params.get('username')).toBe('******')
+    expect(params.get('csrf')).toBe('tok')
+    expect(params.get('extra')).toBe('visible')
+  })
+
+  it('passes through non-sensitive form-encoded strings unchanged', () => {
+    const config = createConfig({ data: 'page=2&limit=50' })
+    const parsed: { requestData: string } = cast(
+      JSON.parse(new APICallRequestData(config).toString()),
+    )
+
+    expect(parsed.requestData).toBe('page=2&limit=50')
+  })
+
+  it('does not mutate plain strings that happen to lack `=`', () => {
+    const config = createConfig({ data: 'just a sentence' })
+    const parsed: { requestData: string } = cast(
+      JSON.parse(new APICallRequestData(config).toString()),
+    )
+
+    expect(parsed.requestData).toBe('just a sentence')
+  })
 })
 
 describe(createAPICallErrorData, () => {

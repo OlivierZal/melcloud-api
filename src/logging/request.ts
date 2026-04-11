@@ -1,18 +1,16 @@
-import type { InternalAxiosRequestConfig } from 'axios'
-
-import { APICallLogData } from './context.ts'
+import { type LoggableRequestConfig, APICallLogData } from './context.ts'
 
 /** Structured log data for an outgoing API request. */
 export class APICallRequestData extends APICallLogData {
   public override readonly dataType = 'API request'
 
-  public readonly headers?: InternalAxiosRequestConfig['headers']
+  public readonly headers: unknown
 
-  public readonly requestData: InternalAxiosRequestConfig['data']
+  public readonly requestData: unknown
 
-  public constructor(config?: InternalAxiosRequestConfig) {
+  public constructor(config?: LoggableRequestConfig) {
     super(config)
     this.headers = config?.headers
-    this.requestData = config?.data as unknown
+    this.requestData = config?.data
   }
 }
