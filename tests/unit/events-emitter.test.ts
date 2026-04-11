@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { Logger } from '../../src/services/index.ts'
-import { RequestLifecycleEmitter } from '../../src/services/events-emitter.ts'
+import { RequestLifecycleEmitter } from '../../src/observability/events-emitter.ts'
 
 const createLogger = (): Logger => ({
   error: vi.fn<(...data: unknown[]) => void>(),

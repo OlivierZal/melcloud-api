@@ -20,18 +20,18 @@ import type {
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import { HomeDeviceRegistry } from '../models/home-registry.ts'
 import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-} from '../logging/index.ts'
-import { HomeDeviceRegistry } from '../models/home-registry.ts'
+  RequestLifecycleEmitter,
+} from '../observability/index.ts'
 import {
   isSessionExpired,
   isTransientServerError,
   RateLimitError,
   RateLimitGate,
-  RequestLifecycleEmitter,
   RetryGuard,
   withRetryBackoff,
 } from '../resilience/index.ts'

@@ -10,7 +10,7 @@ import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-} from '../../src/logging/index.ts'
+} from '../../src/observability/index.ts'
 import { cast, mock } from '../helpers.ts'
 
 const createConfig = (

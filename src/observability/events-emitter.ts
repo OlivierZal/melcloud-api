@@ -5,7 +5,7 @@ import type {
   RequestLifecycleEvents,
   RequestRetryEvent,
   RequestStartEvent,
-} from './interfaces.ts'
+} from '../services/interfaces.ts'
 
 /**
  * Thin wrapper around a {@link RequestLifecycleEvents} bundle that

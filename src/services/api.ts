@@ -45,18 +45,18 @@ import type {
 } from '../types/index.ts'
 import { DeviceType, Language } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import { ModelRegistry } from '../models/index.ts'
 import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-} from '../logging/index.ts'
-import { ModelRegistry } from '../models/index.ts'
+  RequestLifecycleEmitter,
+} from '../observability/index.ts'
 import {
   isSessionExpired,
   isTransientServerError,
   RateLimitError,
   RateLimitGate,
-  RequestLifecycleEmitter,
   RetryGuard,
   withRetryBackoff,
 } from '../resilience/index.ts'
