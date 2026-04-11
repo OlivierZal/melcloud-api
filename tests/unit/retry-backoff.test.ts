@@ -8,8 +8,6 @@ import { mock } from '../helpers.ts'
 
 const ALWAYS_RETRYABLE = (): boolean => true
 const NEVER_RETRYABLE = (): boolean => false
-// Upper bound of the jitter interval, used by the jitter band test.
-const UPPER_BOUND_JITTER = (): number => 1
 
 const axiosError = (status?: number): unknown =>
   mock<{ isAxiosError: boolean; response?: { status?: number } }>({
@@ -197,55 +195,33 @@ describe(withRetryBackoff, () => {
 
   it('samples jitter within the configured ratio band', async () => {
     const delays: number[] = []
-    const op = vi
-      .fn<() => Promise<string>>()
-      .mockRejectedValueOnce(new Error('1'))
-      .mockResolvedValue('ok')
+    // Upper bound of the jitter interval.
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(1)
+    try {
+      const op = vi
+        .fn<() => Promise<string>>()
+        .mockRejectedValueOnce(new Error('1'))
+        .mockResolvedValue('ok')
 
-    const promise = withRetryBackoff(op, {
-      initialDelayMs: 1000,
-      isRetryable: ALWAYS_RETRYABLE,
-      jitterRatio: 0.25,
-      jitterSource: UPPER_BOUND_JITTER,
-      maxDelayMs: 10_000,
-      maxRetries: 1,
-      onRetry: (_attempt, _error, delayMs) => {
-        delays.push(delayMs)
-      },
-    })
+      const promise = withRetryBackoff(op, {
+        initialDelayMs: 1000,
+        isRetryable: ALWAYS_RETRYABLE,
+        jitterRatio: 0.25,
+        maxDelayMs: 10_000,
+        maxRetries: 1,
+        onRetry: (_attempt, _error, delayMs) => {
+          delays.push(delayMs)
+        },
+      })
 
-    await vi.runAllTimersAsync()
-    await promise
+      await vi.runAllTimersAsync()
+      await promise
 
-    // Source returning 1 → jitter multiplier = +0.25 → 1000 + 250 = 1250
-    expect(delays).toStrictEqual([1250])
-  })
-
-  it('defaults jitter to a crypto-backed source within the ratio band', async () => {
-    const delays: number[] = []
-    const op = vi
-      .fn<() => Promise<string>>()
-      .mockRejectedValueOnce(new Error('1'))
-      .mockResolvedValue('ok')
-
-    const promise = withRetryBackoff(op, {
-      initialDelayMs: 1000,
-      isRetryable: ALWAYS_RETRYABLE,
-      jitterRatio: 0.25,
-      maxDelayMs: 10_000,
-      maxRetries: 1,
-      onRetry: (_attempt, _error, delayMs) => {
-        delays.push(delayMs)
-      },
-    })
-
-    await vi.runAllTimersAsync()
-    await promise
-
-    // Base 1000, ratio 0.25 → delay ∈ [750, 1250]
-    expect(delays).toHaveLength(1)
-    expect(delays[0]).toBeGreaterThanOrEqual(750)
-    expect(delays[0]).toBeLessThanOrEqual(1250)
+      // Math.random()=1 → jitter multiplier = +0.25 → 1000 + 250 = 1250
+      expect(delays).toStrictEqual([1250])
+    } finally {
+      randomSpy.mockRestore()
+    }
   })
 
   it('passes the error and attempt number to onRetry', async () => {
