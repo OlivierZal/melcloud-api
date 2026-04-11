@@ -19,6 +19,7 @@ import type {
 import { HomeDeviceType } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import {
+  APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
 } from '../logging/index.ts'
@@ -471,7 +472,9 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   /*
    * Send a single request through the shared axios instance, injecting any
    * cookies applicable to the target URL and passing the response through
-   * `#onResponse()` for cookie capture and logging.
+   * `#onResponse()` for cookie capture and logging. Each request is logged
+   * symmetrically with `#onResponse` so a full request → response trace
+   * is available in the logger output, matching Classic's interceptor pattern.
    */
   async #dispatch<T = unknown>(
     method: string,
@@ -488,7 +491,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     const baseURL = this.#api.defaults.baseURL ?? ''
     const absoluteUrl = url.startsWith('http') ? url : `${baseURL}${url}`
     const cookieHeader = await this.#jar.getCookieString(absoluteUrl)
-    const response = await this.#api.request<T>({
+    const requestConfig = {
       ...config,
       headers: {
         ...configHeaders,
@@ -496,7 +499,9 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
       },
       method,
       url,
-    })
+    }
+    this.logger.log(String(new APICallRequestData(requestConfig)))
+    const response = await this.#api.request<T>(requestConfig)
     await this.#onResponse(response, absoluteUrl)
     return response
   }

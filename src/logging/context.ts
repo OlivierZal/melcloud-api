@@ -1,4 +1,18 @@
-import type { InternalAxiosRequestConfig } from 'axios'
+/**
+ * Minimal structural shape required by the API call loggers.
+ *
+ * Both `InternalAxiosRequestConfig` (Classic, via the axios interceptors)
+ * and Home's literal request config (built inside `#dispatch`) satisfy
+ * this contract structurally — no double type assertion is needed at the
+ * call site, and changes to axios's internal config type can't break us.
+ */
+export interface LoggableRequestConfig {
+  readonly data?: unknown
+  readonly headers?: unknown
+  readonly method?: string
+  readonly params?: unknown
+  readonly url?: string
+}
 
 // Fixed key order for consistent, readable JSON log output
 const logKeys = [
@@ -29,7 +43,35 @@ const sensitiveKeys = new Set([
 const isSensitive = (key: string): boolean =>
   sensitiveKeys.has(key.toLowerCase())
 
+/*
+ * Detect a string that looks like an `application/x-www-form-urlencoded`
+ * body and contains at least one sensitive key (e.g. `password=...`).
+ * Returns the redacted form, or `undefined` when nothing was redacted so
+ * the caller can keep the original value untouched.
+ *
+ * Required because Home's `#submitCredentials()` posts credentials as a
+ * URLSearchParams string, and the object-key redaction below otherwise
+ * passes the entire body through verbatim.
+ */
+const redactFormEncoded = (value: string): string | undefined => {
+  if (!value.includes('=')) {
+    return undefined
+  }
+  const params = new URLSearchParams(value)
+  let hasRedacted = false
+  for (const key of params.keys()) {
+    if (isSensitive(key)) {
+      params.set(key, REDACTED)
+      hasRedacted = true
+    }
+  }
+  return hasRedacted ? params.toString() : undefined
+}
+
 const redactValue = (value: unknown): unknown => {
+  if (typeof value === 'string') {
+    return redactFormEncoded(value) ?? value
+  }
   if (typeof value !== 'object' || value === null) {
     return value
   }
@@ -48,16 +90,16 @@ const redactValue = (value: unknown): unknown => {
 export abstract class APICallLogData {
   declare public readonly dataType: string
 
-  public readonly method: InternalAxiosRequestConfig['method']
+  public readonly method: string | undefined
 
-  public readonly params: InternalAxiosRequestConfig['params']
+  public readonly params: unknown
 
-  public readonly url: InternalAxiosRequestConfig['url']
+  public readonly url: string | undefined
 
-  protected constructor(config?: InternalAxiosRequestConfig) {
+  protected constructor(config?: LoggableRequestConfig) {
     this.method = config?.method?.toUpperCase()
     this.url = config?.url
-    this.params = config?.params as unknown
+    this.params = config?.params
   }
 
   public toString(): string {
