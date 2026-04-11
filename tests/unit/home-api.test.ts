@@ -681,6 +681,30 @@ describe('melcloud home API', () => {
 
       expect(mockRequest).toHaveBeenCalledTimes(callCountAfterLogin + 1)
     })
+
+    it('should treat a malformed persisted expiry as expired and reauthenticate', async () => {
+      /*
+       * A malformed `expiry` value (e.g. settings migration) must be
+       * treated as expired so the session is re-established via OIDC.
+       * Before the isSessionExpired() helper, `new Date('not-a-date')`
+       * silently produced an Invalid Date that compared as `false` against
+       * `new Date()`, leaving Home stuck on the dead session.
+       */
+      const cookies = await buildSerializedJar()
+      const { settingManager } = createStore({
+        cookies,
+        expiry: 'not-a-valid-iso-date',
+        password: 'pass',
+        username: 'user@test.com',
+      })
+      setupSuccessfulLogin()
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        settingManager,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+    })
   })
 
   describe('reactive auth retry on 401', () => {

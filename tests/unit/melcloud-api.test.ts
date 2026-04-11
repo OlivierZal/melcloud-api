@@ -19,6 +19,7 @@ import type {
   APIConfig,
   Logger,
   MELCloudAPI,
+  SettingManager,
 } from '../../src/services/index.ts'
 import type {
   BuildingWithStructure,
@@ -42,6 +43,25 @@ const createLogger = (): Logger => ({
   error: vi.fn<(...data: unknown[]) => void>(),
   log: vi.fn<(...data: unknown[]) => void>(),
 })
+
+const createStore = (
+  initial: Record<string, string> = {},
+): {
+  setSpy: ReturnType<typeof vi.fn<(key: string, value: string) => void>>
+  settingManager: SettingManager
+} => {
+  const store = new Map(Object.entries(initial))
+  const setSpy = vi.fn((key: string, value: string) => {
+    store.set(key, value)
+  })
+  return {
+    setSpy,
+    settingManager: {
+      set: setSpy,
+      get: (key: string) => store.get(key) ?? null,
+    },
+  }
+}
 
 const loginResponse = (
   contextKey = 'ctx',
@@ -247,20 +267,14 @@ describe('melcloud API', () => {
   })
 
   it('uses settingManager when provided', async () => {
-    const settingManager = {
-      get: vi.fn().mockReturnValue(null),
-      set: vi.fn(),
-    }
+    const { setSpy, settingManager } = createStore()
     await createApi({
       password: 'test-pass',
       settingManager,
       username: 'test-user',
     })
 
-    expect(settingManager.set).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.any(String),
-    )
+    expect(setSpy).toHaveBeenCalledWith(expect.any(String), expect.any(String))
   })
 
   it('fetches building list and syncs registry', async () => {
@@ -715,56 +729,36 @@ describe('melcloud API', () => {
     })
 
     it('request handler re-authenticates when expired', async () => {
-      const settingManager = {
-        get: vi.fn().mockImplementation((key: string) => {
-          if (key === 'expiry') {
-            return '2020-01-01T00:00:00'
-          }
-          if (key === 'contextKey') {
-            return 'old-ctx'
-          }
-          if (key === 'username') {
-            return 'user'
-          }
-          if (key === 'password') {
-            return 'pass'
-          }
-          return null
-        }),
-        set: vi.fn(),
-      }
+      const { settingManager } = createStore({
+        contextKey: 'old-ctx',
+        expiry: '2020-01-01T00:00:00',
+        password: 'pass',
+        username: 'user',
+      })
       mockLoginAndList('newer', '2030-01-01T00:00:00')
       await createApi({ settingManager })
       mockLoginAndList('newest', '2030-01-01T00:00:00')
-      const { headers } = createHeaders()
+      const { headers, setSpy } = createHeaders()
       const config = mock<InternalAxiosRequestConfig>({
         headers,
         url: '/Device/Get',
       })
 
-      await expect(requestHandler(config)).resolves.toMatchObject({
-        url: '/Device/Get',
-      })
+      await requestHandler(config)
+
+      expect(setSpy).toHaveBeenCalledWith('X-MitsContextKey', 'newest')
     })
 
     it('request handler re-authenticates when contextKey is empty', async () => {
-      const settingManager = {
-        get: vi.fn().mockImplementation((key: string) => {
-          if (key === 'username') {
-            return 'user'
-          }
-          if (key === 'password') {
-            return 'pass'
-          }
-          return null
-        }),
-        set: vi.fn(),
-      }
+      const { settingManager } = createStore({
+        password: 'pass',
+        username: 'user',
+      })
       mockLoginAndList()
       await createApi({ settingManager })
       mockAxiosInstance.post.mockClear()
       mockLoginAndList('fresh', '2030-12-31T00:00:00')
-      const { headers } = createHeaders()
+      const { headers, setSpy } = createHeaders()
       const config = mock<InternalAxiosRequestConfig>({
         headers,
         url: '/Device/Get',
@@ -776,33 +770,21 @@ describe('melcloud API', () => {
         '/Login/ClientLogin3',
         expect.objectContaining({ Email: 'user', Password: 'pass' }),
       )
-      expect(settingManager.set).toHaveBeenCalledWith('contextKey', 'fresh')
+      expect(setSpy).toHaveBeenCalledWith('X-MitsContextKey', 'fresh')
     })
 
     it('request handler treats malformed expiry as expired', async () => {
-      const settingManager = {
-        get: vi.fn().mockImplementation((key: string) => {
-          if (key === 'expiry') {
-            return 'not-a-valid-iso-date'
-          }
-          if (key === 'contextKey') {
-            return 'stale'
-          }
-          if (key === 'username') {
-            return 'user'
-          }
-          if (key === 'password') {
-            return 'pass'
-          }
-          return null
-        }),
-        set: vi.fn(),
-      }
+      const { settingManager } = createStore({
+        contextKey: 'stale',
+        expiry: 'not-a-valid-iso-date',
+        password: 'pass',
+        username: 'user',
+      })
       mockLoginAndList()
       await createApi({ settingManager })
       mockAxiosInstance.post.mockClear()
       mockLoginAndList('fresh', '2030-12-31T00:00:00')
-      const { headers } = createHeaders()
+      const { headers, setSpy } = createHeaders()
       const config = mock<InternalAxiosRequestConfig>({
         headers,
         url: '/Device/Get',
@@ -814,19 +796,11 @@ describe('melcloud API', () => {
         '/Login/ClientLogin3',
         expect.any(Object),
       )
-      expect(settingManager.set).toHaveBeenCalledWith('contextKey', 'fresh')
+      expect(setSpy).toHaveBeenCalledWith('X-MitsContextKey', 'fresh')
     })
 
     it('request handler skips reauth when expiry is empty', async () => {
-      const settingManager = {
-        get: vi.fn().mockImplementation((key: string) => {
-          if (key === 'contextKey') {
-            return 'valid'
-          }
-          return null
-        }),
-        set: vi.fn(),
-      }
+      const { settingManager } = createStore({ contextKey: 'valid' })
       mockLoginAndList()
       await createApi({ settingManager })
       mockAxiosInstance.post.mockClear()
@@ -843,21 +817,13 @@ describe('melcloud API', () => {
     })
 
     it('authenticate clears persisted session when server rejects login', async () => {
-      const settingManager = {
-        get: vi.fn().mockImplementation((key: string) => {
-          if (key === 'contextKey') {
-            return 'old-ctx'
-          }
-          if (key === 'expiry') {
-            return '2030-12-31T00:00:00'
-          }
-          return null
-        }),
-        set: vi.fn(),
-      }
+      const { setSpy, settingManager } = createStore({
+        contextKey: 'old-ctx',
+        expiry: '2030-12-31T00:00:00',
+      })
       mockLoginAndList()
       const api = await createApi({ settingManager })
-      settingManager.set.mockClear()
+      setSpy.mockClear()
       mockAxiosInstance.post.mockResolvedValueOnce({
         data: { LoginData: null },
       })
@@ -868,8 +834,8 @@ describe('melcloud API', () => {
       })
 
       expect(isAuthenticated).toBe(false)
-      expect(settingManager.set).toHaveBeenCalledWith('contextKey', '')
-      expect(settingManager.set).toHaveBeenCalledWith('expiry', '')
+      expect(setSpy).toHaveBeenCalledWith('contextKey', '')
+      expect(setSpy).toHaveBeenCalledWith('expiry', '')
     })
 
     it('response handler returns response', async () => {
