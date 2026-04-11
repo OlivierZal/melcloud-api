@@ -63,7 +63,6 @@ import type {
 import {
   isSessionExpired,
   isTransientServerError,
-  MelCloudError,
   RateLimitError,
   RateLimitGate,
   RequestLifecycleEmitter,
@@ -97,7 +96,9 @@ const LIFECYCLE_KEY = Symbol('melcloud.requestLifecycle')
 
 interface LifecycleMeta {
   readonly correlationId: string
+  readonly method: string
   readonly startedAt: number
+  readonly url: string
 }
 
 type LifecycleTagged<T> = T & { [LIFECYCLE_KEY]?: LifecycleMeta }
@@ -635,19 +636,19 @@ export class MELCloudAPI implements API, Disposable {
     config: InternalAxiosRequestConfig | undefined,
   ): void {
     /*
-     * Early returns are defensive against axios internals: a partial
-     * AxiosError may carry no config at all, and an error thrown from
-     * the request interceptor itself reaches #onError before
-     * #tagLifecycleAndEmit has had a chance to stash the metadata.
+     * A partial AxiosError may carry no config at all (network or TLS
+     * failure before the request was even dispatched), and an error
+     * thrown from the request interceptor itself reaches #onError
+     * before #tagLifecycleAndEmit has had a chance to stash the metadata.
      * In both cases we skip the event rather than emit a partially
      * populated one.
      */
-    /* v8 ignore next 6 -- defensive against missing config / lifecycle */
     if (config === undefined) {
       return
     }
     const { [LIFECYCLE_KEY]: meta } =
       config as LifecycleTagged<InternalAxiosRequestConfig>
+    /* v8 ignore next 3 -- #tagLifecycleAndEmit always runs before #onError in the happy path */
     if (meta === undefined) {
       return
     }
@@ -655,10 +656,8 @@ export class MELCloudAPI implements API, Disposable {
       correlationId: meta.correlationId,
       durationMs: Date.now() - meta.startedAt,
       error,
-      /* v8 ignore next -- defensive fallback for undefined method */
-      method: (config.method ?? 'get').toUpperCase(),
-      /* v8 ignore next -- defensive fallback for undefined url */
-      url: config.url ?? '',
+      method: meta.method,
+      url: meta.url,
     })
   }
 
@@ -769,11 +768,9 @@ export class MELCloudAPI implements API, Disposable {
       this.#events.emitComplete({
         correlationId: meta.correlationId,
         durationMs: Date.now() - meta.startedAt,
-        /* v8 ignore next -- defensive fallback for undefined method */
-        method: (response.config.method ?? 'get').toUpperCase(),
+        method: meta.method,
         status: response.status,
-        /* v8 ignore next -- defensive fallback for undefined url */
-        url: response.config.url ?? '',
+        url: meta.url,
       })
     }
     return response
@@ -783,18 +780,16 @@ export class MELCloudAPI implements API, Disposable {
     /*
      * `#onRequest` can synchronously throw typed domain errors
      * (e.g. `RateLimitError` when the gate is closed). Axios routes those
-     * through the response error handler — if we blindly wrapped them into
-     * a generic `Error` inside `#onError`, consumers would lose the ability
-     * to catch by type (`instanceof RateLimitError`). Rethrow
-     * `MelCloudError` subclasses unchanged and only delegate to `#onError`
-     * for true axios failures.
+     * through the response error handler — if we delegated blindly to
+     * `#onError` it would wrap them into a generic `Error`, defeating
+     * `instanceof RateLimitError`. Narrow to real axios errors first,
+     * rethrow everything else unchanged.
      */
     const rethrowOrHandle = async (error: unknown): Promise<AxiosError> => {
-      if (error instanceof MelCloudError) {
-        throw error
+      if (axios.isAxiosError(error)) {
+        return this.#onError(error)
       }
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- wrapper filtered MelCloudError; axios only forwards AxiosError here
-      return this.#onError(error as AxiosError)
+      throw error
     }
     api.interceptors.request.use(
       async (
@@ -809,17 +804,26 @@ export class MELCloudAPI implements API, Disposable {
   }
 
   #tagLifecycleAndEmit(config: InternalAxiosRequestConfig): void {
-    const tagged = config as LifecycleTagged<InternalAxiosRequestConfig>
-    tagged[LIFECYCLE_KEY] = {
+    /*
+     * Extract method/url once here with the only defensive fallbacks
+     * needed in the whole lifecycle path. Downstream consumers
+     * (#onResponse, #emitErrorEvent) read from `meta.method/url`
+     * directly — single source of truth, no more scattered `??` branches.
+     */
+    const meta: LifecycleMeta = {
       correlationId: randomUUID(),
-      startedAt: Date.now(),
-    }
-    this.#events.emitStart({
-      correlationId: tagged[LIFECYCLE_KEY].correlationId,
-      /* v8 ignore next -- defensive fallback for undefined method */
+      /* v8 ignore next -- axios always populates method */
       method: (config.method ?? 'get').toUpperCase(),
-      /* v8 ignore next -- defensive fallback for undefined url */
+      startedAt: Date.now(),
+      /* v8 ignore next -- axios always populates url */
       url: config.url ?? '',
+    }
+    const tagged = config as LifecycleTagged<InternalAxiosRequestConfig>
+    tagged[LIFECYCLE_KEY] = meta
+    this.#events.emitStart({
+      correlationId: meta.correlationId,
+      method: meta.method,
+      url: meta.url,
     })
   }
 }

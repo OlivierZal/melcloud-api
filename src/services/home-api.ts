@@ -70,9 +70,6 @@ const TRANSIENT_RETRY_JITTER_RATIO = 0.25
 const HTTP_REDIRECT_MIN = 300
 const HTTP_REDIRECT_MAX = 400
 
-/* v8 ignore next -- callback executed inside axios, not directly traceable by v8 */
-const acceptAnyStatus = (): boolean => true
-
 const isRedirect = (status: number): boolean =>
   status >= HTTP_REDIRECT_MIN && status < HTTP_REDIRECT_MAX
 
@@ -175,6 +172,8 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
 
   readonly #api: AxiosInstance
 
+  readonly #baseURL: string
+
   #context: HomeContext | null = null
 
   readonly #events: RequestLifecycleEmitter
@@ -223,6 +222,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     this.#events = new RequestLifecycleEmitter(events, logger)
     this.#jar = this.#loadJar()
     this.#applyCredentials(username, password)
+    this.#baseURL = baseURL
     this.#api = axios.create({
       baseURL,
       headers: { 'x-csrf': '1' },
@@ -463,7 +463,8 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   async #get<T = unknown>(url: string): Promise<AxiosResponse<T>> {
     return this.#request<T>('get', url, {
       maxRedirects: 0,
-      validateStatus: acceptAnyStatus,
+      /* v8 ignore next -- callback executed inside axios, not traceable */
+      validateStatus: () => true,
     })
   }
 
@@ -531,9 +532,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
       headers?: Record<string, string>
     },
   ): Promise<AxiosResponse<T>> {
-    /* v8 ignore next -- baseURL is always set via constructor config */
-    const baseURL = this.#api.defaults.baseURL ?? ''
-    const absoluteUrl = url.startsWith('http') ? url : `${baseURL}${url}`
+    const absoluteUrl = url.startsWith('http') ? url : `${this.#baseURL}${url}`
     const cookieHeader = await this.#jar.getCookieString(absoluteUrl)
     const requestConfig = {
       ...config,

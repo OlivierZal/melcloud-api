@@ -83,6 +83,7 @@ const createAxiosError = ({
 }): AxiosError =>
   mock<AxiosError>({
     config: mock<InternalAxiosRequestConfig>({ method, url }),
+    isAxiosError: true,
     message,
     response: mock<AxiosResponse>({
       config: mock<InternalAxiosRequestConfig>({ data: null, method, url }),
@@ -1064,6 +1065,7 @@ describe('melcloud API', () => {
         responseErrorHandler(
           mock<AxiosError>({
             config: tagged,
+            isAxiosError: true,
             message: 'server fault',
             response: mock<AxiosResponse>({
               config: tagged,
@@ -1076,6 +1078,30 @@ describe('melcloud API', () => {
       ).rejects.toThrow('server fault')
 
       expect(onRequestError).toHaveBeenCalledTimes(1)
+    })
+
+    it('skips onRequestError when the axios error has no config', async () => {
+      /*
+       * Axios can surface errors that originated before the request
+       * was even dispatched (e.g. a network/TLS failure on connect).
+       * These reach the error interceptor with `config === undefined`.
+       * The emitter must silently skip rather than publish a partial
+       * event.
+       */
+      const onRequestError = vi.fn<(event: unknown) => void>()
+      await createApi({ events: { onRequestError } })
+
+      await expect(
+        responseErrorHandler(
+          mock<AxiosError>({
+            config: undefined,
+            isAxiosError: true,
+            message: 'connect ECONNREFUSED',
+          }),
+        ),
+      ).rejects.toThrow('connect ECONNREFUSED')
+
+      expect(onRequestError).not.toHaveBeenCalled()
     })
   })
 
