@@ -108,4 +108,24 @@ describe(RateLimitGate, () => {
     expect(formatted).not.toBe('')
     expect(formatted).toMatch(/minute/iu)
   })
+
+  it('formatRemaining reports seconds for sub-minute windows', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    gate.recordRateLimit(20)
+
+    const formatted = gate.formatRemaining()
+
+    expect(formatted).toMatch(/second/iu)
+    expect(formatted).not.toMatch(/minute/iu)
+  })
+
+  it('formatRemaining reports minutes and seconds for multi-minute windows', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    gate.recordRateLimit(135)
+
+    const formatted = gate.formatRemaining()
+
+    expect(formatted).toMatch(/minute/iu)
+    expect(formatted).toMatch(/second/iu)
+  })
 })

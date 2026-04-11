@@ -63,6 +63,7 @@ import type {
 import {
   isSessionExpired,
   isTransientServerError,
+  MelCloudError,
   RateLimitError,
   RateLimitGate,
   RequestLifecycleEmitter,
@@ -779,15 +780,31 @@ export class MELCloudAPI implements API, Disposable {
   }
 
   #setupAxiosInterceptors(api: AxiosInstance): void {
+    /*
+     * `#onRequest` can synchronously throw typed domain errors
+     * (e.g. `RateLimitError` when the gate is closed). Axios routes those
+     * through the response error handler — if we blindly wrapped them into
+     * a generic `Error` inside `#onError`, consumers would lose the ability
+     * to catch by type (`instanceof RateLimitError`). Rethrow
+     * `MelCloudError` subclasses unchanged and only delegate to `#onError`
+     * for true axios failures.
+     */
+    const rethrowOrHandle = async (error: unknown): Promise<AxiosError> => {
+      if (error instanceof MelCloudError) {
+        throw error
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- wrapper filtered MelCloudError; axios only forwards AxiosError here
+      return this.#onError(error as AxiosError)
+    }
     api.interceptors.request.use(
       async (
         config: InternalAxiosRequestConfig,
       ): Promise<InternalAxiosRequestConfig> => this.#onRequest(config),
-      async (error: AxiosError): Promise<AxiosError> => this.#onError(error),
+      rethrowOrHandle,
     )
     api.interceptors.response.use(
       (response: AxiosResponse): AxiosResponse => this.#onResponse(response),
-      async (error: AxiosError): Promise<AxiosError> => this.#onError(error),
+      rethrowOrHandle,
     )
   }
 

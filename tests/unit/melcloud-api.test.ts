@@ -182,8 +182,7 @@ describe('melcloud API', () => {
   let requestErrorHandler: (error: AxiosError) => Promise<AxiosError> =
     cast(null)
   let responseHandler: (response: AxiosResponse) => AxiosResponse = cast(null)
-  let responseErrorHandler: (error: AxiosError) => Promise<AxiosError> =
-    cast(null)
+  let responseErrorHandler: (error: unknown) => Promise<AxiosError> = cast(null)
 
   beforeEach(async () => {
     vi.useFakeTimers()
@@ -983,6 +982,23 @@ describe('melcloud API', () => {
 
       await expect(requestHandler(config)).rejects.toBeInstanceOf(
         RateLimitError,
+      )
+    })
+
+    it('response error handler preserves MelCloudError subclass types', async () => {
+      /*
+       * When #onRequest throws a RateLimitError, axios routes it through
+       * the response error interceptor. The interceptor must not wrap it
+       * into a generic Error — consumers rely on `instanceof RateLimitError`
+       * to handle the rate-limit window specifically.
+       */
+      await createApi({ logger: createLogger() })
+      const rateLimitError = new RateLimitError('paused', {
+        retryAfter: null,
+      })
+
+      await expect(responseErrorHandler(rateLimitError)).rejects.toBe(
+        rateLimitError,
       )
     })
 

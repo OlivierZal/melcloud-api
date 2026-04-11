@@ -1,5 +1,7 @@
 import { type DurationLike, DateTime, Duration } from 'luxon'
 
+const SECONDS_PER_MINUTE = 60
+
 /**
  * Tracks an upstream rate-limit window and lets callers check whether
  * the gate is currently closed.
@@ -39,14 +41,22 @@ export class RateLimitGate {
   }
 
   /**
-   * Human-readable remaining time (e.g. "2 minutes"). Returns an empty
-   * string when the gate is open — callers can interpolate directly into
-   * log lines without having to check `isPaused` first.
+   * Human-readable remaining time with adaptive units. For short windows
+   * (< 1 minute) the output is in seconds (e.g. "20 seconds") so a short
+   * Retry-After doesn't get rounded into a misleading "0 minutes".
+   * Longer windows use minutes + seconds (e.g. "2 minutes, 15 seconds").
+   * Returns an empty string when the gate is open — callers can
+   * interpolate directly into log lines without checking `isPaused` first.
    * @returns Formatted remaining duration, or `''` if the gate is open.
    */
   public formatRemaining(): string {
     const { remaining } = this
-    return remaining === null ? '' : remaining.shiftTo('minutes').toHuman()
+    if (remaining === null) {
+      return ''
+    }
+    return remaining.as('seconds') < SECONDS_PER_MINUTE ?
+        remaining.shiftTo('seconds').toHuman()
+      : remaining.shiftTo('minutes', 'seconds').rescale().toHuman()
   }
 
   /**

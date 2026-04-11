@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto'
+
 import axios, { type AxiosError } from 'axios'
 
 const HTTP_BAD_GATEWAY = 502
@@ -73,6 +75,13 @@ export interface RetryBackoffOptions {
 
   /** Optional hook invoked before the next attempt. */
   readonly onRetry?: (attempt: number, error: unknown, delayMs: number) => void
+
+  /**
+   * Optional jitter source returning a value in `[-1, 1)`. Defaults to a
+   * crypto-backed bipolar sampler. Exposed so tests can inject a
+   * deterministic source; production callers should leave it unset.
+   */
+  readonly jitterSource?: () => number
 }
 
 const sleep = async (ms: number): Promise<void> =>
@@ -80,18 +89,35 @@ const sleep = async (ms: number): Promise<void> =>
     setTimeout(resolve, ms)
   })
 
+const JITTER_RESOLUTION = 1_000_000
+const BIPOLAR_RANGE = JITTER_RESOLUTION * 2
+
 /*
- * Deterministic exponential backoff with full jitter.
- * The jitter is sampled uniformly in [delay * (1 - ratio), delay * (1 + ratio)],
- * clamped to maxDelayMs. Using Math.random here is acceptable: retry timing
- * isn't security-sensitive, it's just desynchronization.
+ * Default jitter source: uniformly sampled in [-1, 1) via crypto. Retry
+ * timing is NOT security-sensitive — this is just desynchronization —
+ * but using crypto randomness keeps SonarCloud's S2245 rule happy
+ * without having to argue each hotspot through its UI. The discrete
+ * resolution (1e6 steps) is fine-grained enough for backoff jitter.
+ */
+const defaultJitterSource = (): number =>
+  (randomInt(BIPOLAR_RANGE) - JITTER_RESOLUTION) / JITTER_RESOLUTION
+
+/*
+ * Exponential backoff with symmetric uniform jitter around the base delay.
+ * The jittered delay is sampled uniformly in
+ * [base * (1 - ratio), base * (1 + ratio)] and clamped to [0, maxDelayMs].
  */
 const computeDelay = (
   attempt: number,
-  { initialDelayMs, jitterRatio, maxDelayMs }: RetryBackoffOptions,
+  {
+    initialDelayMs,
+    jitterRatio,
+    jitterSource = defaultJitterSource,
+    maxDelayMs,
+  }: RetryBackoffOptions,
 ): number => {
   const base = Math.min(initialDelayMs * 2 ** attempt, maxDelayMs)
-  const jitter = base * jitterRatio * (Math.random() * 2 - 1)
+  const jitter = base * jitterRatio * jitterSource()
   return Math.max(0, Math.min(base + jitter, maxDelayMs))
 }
 
