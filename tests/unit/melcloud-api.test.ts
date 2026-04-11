@@ -25,6 +25,7 @@ import type {
   ListDeviceAny,
   SetDevicePostData,
 } from '../../src/types/index.ts'
+import { RateLimitError } from '../../src/errors.ts'
 import { cast, createSettingStore, mock } from '../helpers.ts'
 
 const mockInterceptors = {
@@ -82,6 +83,7 @@ const createAxiosError = ({
 }): AxiosError =>
   mock<AxiosError>({
     config: mock<InternalAxiosRequestConfig>({ method, url }),
+    isAxiosError: true,
     message,
     response: mock<AxiosResponse>({
       config: mock<InternalAxiosRequestConfig>({ data: null, method, url }),
@@ -89,6 +91,18 @@ const createAxiosError = ({
       headers: responseHeaders,
       status,
     }),
+  })
+
+const transientServerError = (status: number): Error =>
+  Object.assign(new Error(`Status ${String(status)}`), {
+    config: { url: '/User/ListDevices' },
+    isAxiosError: true,
+    response: {
+      config: { url: '/User/ListDevices' },
+      data: undefined,
+      headers: {},
+      status,
+    },
   })
 
 const errorEntry = (
@@ -150,12 +164,16 @@ const isInterceptorTuple = (
   return typeof value[0] === 'function' && typeof value[1] === 'function'
 }
 
-vi.mock(import('axios'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  default: cast({
-    create: vi.fn().mockReturnValue(mockAxiosInstance),
-  }),
-}))
+vi.mock(import('axios'), async (importOriginal) => {
+  const original = await importOriginal()
+  return {
+    ...original,
+    default: cast({
+      create: vi.fn().mockReturnValue(mockAxiosInstance),
+      isAxiosError: original.default.isAxiosError,
+    }),
+  }
+})
 
 describe('melcloud API', () => {
   let melCloudApi: typeof MELCloudAPI = cast(null)
@@ -165,8 +183,7 @@ describe('melcloud API', () => {
   let requestErrorHandler: (error: AxiosError) => Promise<AxiosError> =
     cast(null)
   let responseHandler: (response: AxiosResponse) => AxiosResponse = cast(null)
-  let responseErrorHandler: (error: AxiosError) => Promise<AxiosError> =
-    cast(null)
+  let responseErrorHandler: (error: unknown) => Promise<AxiosError> = cast(null)
 
   beforeEach(async () => {
     vi.useFakeTimers()
@@ -949,7 +966,7 @@ describe('melcloud API', () => {
       expect(result).toStrictEqual({ data: 'retried again' })
     })
 
-    it('request handler blocks list path when paused', async () => {
+    it('request handler blocks list path with a RateLimitError when paused', async () => {
       await createApi({ logger: createLogger() })
 
       await expect(
@@ -964,7 +981,178 @@ describe('melcloud API', () => {
         url: '/User/ListDevices',
       })
 
-      await expect(requestHandler(config)).rejects.toThrow('on hold')
+      await expect(requestHandler(config)).rejects.toBeInstanceOf(
+        RateLimitError,
+      )
+    })
+
+    it('response error handler preserves MelCloudError subclass types', async () => {
+      /*
+       * When #onRequest throws a RateLimitError, axios routes it through
+       * the response error interceptor. The interceptor must not wrap it
+       * into a generic Error — consumers rely on `instanceof RateLimitError`
+       * to handle the rate-limit window specifically.
+       */
+      await createApi({ logger: createLogger() })
+      const rateLimitError = new RateLimitError('paused', {
+        retryAfter: null,
+      })
+
+      await expect(responseErrorHandler(rateLimitError)).rejects.toBe(
+        rateLimitError,
+      )
+    })
+
+    it('exposes isRateLimited once the gate has closed', async () => {
+      const api = await createApi({ logger: createLogger() })
+
+      expect(api.isRateLimited).toBe(false)
+
+      await expect(
+        responseErrorHandler(
+          createAxiosError({
+            message: 'too many',
+            responseHeaders: { 'retry-after': '60' },
+            status: 429,
+            url: '/api',
+          }),
+        ),
+      ).rejects.toThrow('too many')
+
+      expect(api.isRateLimited).toBe(true)
+    })
+
+    it('emits onRequestStart / onRequestComplete for a tagged config', async () => {
+      const onRequestStart = vi.fn<(event: unknown) => void>()
+      const onRequestComplete = vi.fn<(event: unknown) => void>()
+      await createApi({ events: { onRequestComplete, onRequestStart } })
+      const { headers } = createHeaders()
+      const config = mock<InternalAxiosRequestConfig>({
+        headers,
+        method: 'get',
+        url: '/User/ListDevices',
+      })
+
+      const tagged = await requestHandler(config)
+      responseHandler(
+        mock<AxiosResponse>({
+          config: tagged,
+          data: {},
+          headers: {},
+          status: 200,
+        }),
+      )
+
+      expect(onRequestStart).toHaveBeenCalledTimes(1)
+      expect(onRequestComplete).toHaveBeenCalledTimes(1)
+    })
+
+    it('emits onRequestError when the response error carries a tagged config', async () => {
+      const onRequestError = vi.fn<(event: unknown) => void>()
+      await createApi({ events: { onRequestError } })
+      const { headers } = createHeaders()
+      const config = mock<InternalAxiosRequestConfig>({
+        headers,
+        method: 'get',
+        url: '/Device/Get',
+      })
+
+      // First tag via #onRequest.
+      const tagged = await requestHandler(config)
+
+      // Then feed a matching error through #onError.
+      await expect(
+        responseErrorHandler(
+          mock<AxiosError>({
+            config: tagged,
+            isAxiosError: true,
+            message: 'server fault',
+            response: mock<AxiosResponse>({
+              config: tagged,
+              data: {},
+              headers: {},
+              status: 500,
+            }),
+          }),
+        ),
+      ).rejects.toThrow('server fault')
+
+      expect(onRequestError).toHaveBeenCalledTimes(1)
+    })
+
+    it('skips onRequestError when the axios error has no config', async () => {
+      /*
+       * Axios can surface errors that originated before the request
+       * was even dispatched (e.g. a network/TLS failure on connect).
+       * These reach the error interceptor with `config === undefined`.
+       * The emitter must silently skip rather than publish a partial
+       * event.
+       */
+      const onRequestError = vi.fn<(event: unknown) => void>()
+      await createApi({ events: { onRequestError } })
+
+      await expect(
+        responseErrorHandler(
+          mock<AxiosError>({
+            config: undefined,
+            isAxiosError: true,
+            message: 'connect ECONNREFUSED',
+          }),
+        ),
+      ).rejects.toThrow('connect ECONNREFUSED')
+
+      expect(onRequestError).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('transient 5xx retry on fetch', () => {
+    it('retries list() on 503 and succeeds on the next attempt', async () => {
+      mockLoginAndList()
+      const api = await createApi()
+      mockAxiosInstance.get.mockClear()
+      mockAxiosInstance.get
+        .mockRejectedValueOnce(transientServerError(503))
+        .mockResolvedValueOnce({ data: [] })
+
+      const promise = api.fetch()
+      await vi.advanceTimersByTimeAsync(2000)
+      const buildings = await promise
+
+      expect(buildings).toStrictEqual([])
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2)
+    })
+
+    it('gives up after exhausting the 5xx retry budget', async () => {
+      mockLoginAndList()
+      const api = await createApi()
+      mockAxiosInstance.get.mockClear()
+      mockAxiosInstance.get
+        .mockRejectedValueOnce(transientServerError(502))
+        .mockRejectedValueOnce(transientServerError(503))
+        .mockRejectedValueOnce(transientServerError(504))
+        .mockRejectedValueOnce(transientServerError(502))
+        .mockRejectedValueOnce(transientServerError(503))
+
+      const promise = api.fetch()
+      await vi.advanceTimersByTimeAsync(30_000)
+      const buildings = await promise
+
+      // Classic's public fetch() swallows errors and returns [].
+      expect(buildings).toStrictEqual([])
+      // 1 initial attempt + 4 retries
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(5)
+    })
+
+    it('does not retry on non-transient 500', async () => {
+      mockLoginAndList()
+      const api = await createApi()
+      mockAxiosInstance.get.mockClear()
+      mockAxiosInstance.get.mockRejectedValueOnce(transientServerError(500))
+
+      const buildings = await api.fetch()
+
+      expect(buildings).toStrictEqual([])
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(1)
     })
   })
 

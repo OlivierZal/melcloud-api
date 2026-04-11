@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import https from 'node:https'
 
 import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
@@ -59,8 +60,15 @@ import type {
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
-import { RetryGuard } from './retry-guard.ts'
-import { isSessionExpired } from './session-expiry.ts'
+import {
+  isSessionExpired,
+  isTransientServerError,
+  RateLimitError,
+  RateLimitGate,
+  RequestLifecycleEmitter,
+  RetryGuard,
+  withRetryBackoff,
+} from './resilience.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const deviceTypeNames = {
@@ -76,7 +84,30 @@ const LOGIN_PATH = '/Login/ClientLogin3'
 
 const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL = 5
+const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_DELAY = 1000
+
+/*
+ * Symbol used to stash per-request lifecycle metadata (correlation id,
+ * start timestamp) on axios config objects without colliding with any
+ * existing or future axios-internal fields.
+ */
+const LIFECYCLE_KEY = Symbol('melcloud.requestLifecycle')
+
+interface LifecycleMeta {
+  readonly correlationId: string
+  readonly method: string
+  readonly startedAt: number
+  readonly url: string
+}
+
+type LifecycleTagged<T> = T & { [LIFECYCLE_KEY]?: LifecycleMeta }
+
+// Transient 5xx retry budget for the list() heartbeat
+const TRANSIENT_RETRY_INITIAL_DELAY_MS = 1000
+const TRANSIENT_RETRY_MAX_DELAY_MS = 16_000
+const TRANSIENT_RETRY_MAX_ATTEMPTS = 4
+const TRANSIENT_RETRY_JITTER_RATIO = 0.25
 
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
@@ -186,9 +217,11 @@ export class MELCloudAPI implements API, Disposable {
 
   readonly #api: AxiosInstance
 
+  readonly #events: RequestLifecycleEmitter
+
   #language = 'en'
 
-  #pauseListUntil = DateTime.now()
+  readonly #rateLimitGate = new RateLimitGate({ hours: DEFAULT_RETRY_HOURS })
 
   readonly #registry = new ModelRegistry()
 
@@ -219,10 +252,12 @@ export class MELCloudAPI implements API, Disposable {
   private constructor(config: APIConfig = {}) {
     const {
       autoSyncInterval = DEFAULT_SYNC_INTERVAL,
+      events,
       language,
       logger = console,
       onSync,
       password,
+      requestTimeout = DEFAULT_TIMEOUT_MS,
       settingManager,
       shouldVerifySSL = true,
       timezone,
@@ -231,8 +266,9 @@ export class MELCloudAPI implements API, Disposable {
     this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
+    this.#events = new RequestLifecycleEmitter(events, logger)
     this.#applyOptionalConfig({ language, password, timezone, username })
-    this.#api = this.#createAPI(shouldVerifySSL)
+    this.#api = this.#createAPI(shouldVerifySSL, requestTimeout)
     this.#syncManager = new SyncManager(
       async () => this.fetch(),
       logger,
@@ -326,6 +362,21 @@ export class MELCloudAPI implements API, Disposable {
 
   public isAuthenticated(): boolean {
     return this.contextKey !== ''
+  }
+
+  /**
+   * Whether the upstream rate-limit gate is currently closed.
+   *
+   * A `true` value means the SDK recently observed a 429 Too Many
+   * Requests response on `LIST_PATH` and is intentionally failing
+   * subsequent list operations fast to honor the upstream
+   * `Retry-After` window. Consumers can poll this to display a
+   * "throttled, please wait" indicator without catching
+   * {@link RateLimitError} through the full call stack.
+   * @returns `true` while the gate is holding a pause window.
+   */
+  public get isRateLimited(): boolean {
+    return this.#rateLimitGate.isPaused
   }
 
   /**
@@ -565,15 +616,49 @@ export class MELCloudAPI implements API, Disposable {
     this.expiry = ''
   }
 
-  #createAPI(shouldRejectUnauthorized: boolean): AxiosInstance {
+  #createAPI(
+    shouldRejectUnauthorized: boolean,
+    timeout: number,
+  ): AxiosInstance {
     const api = axios.create({
       baseURL: API_BASE_URL,
       httpsAgent: new https.Agent({
         rejectUnauthorized: shouldRejectUnauthorized,
       }),
+      timeout,
     })
     this.#setupAxiosInterceptors(api)
     return api
+  }
+
+  #emitErrorEvent(
+    error: unknown,
+    config: InternalAxiosRequestConfig | undefined,
+  ): void {
+    /*
+     * A partial AxiosError may carry no config at all (network or TLS
+     * failure before the request was even dispatched), and an error
+     * thrown from the request interceptor itself reaches #onError
+     * before #tagLifecycleAndEmit has had a chance to stash the metadata.
+     * In both cases we skip the event rather than emit a partially
+     * populated one.
+     */
+    if (config === undefined) {
+      return
+    }
+    const { [LIFECYCLE_KEY]: meta } =
+      config as LifecycleTagged<InternalAxiosRequestConfig>
+    /* v8 ignore next 3 -- #tagLifecycleAndEmit always runs before #onError in the happy path */
+    if (meta === undefined) {
+      return
+    }
+    this.#events.emitError({
+      correlationId: meta.correlationId,
+      durationMs: Date.now() - meta.startedAt,
+      error,
+      method: meta.method,
+      url: meta.url,
+    })
   }
 
   async #errorLog(
@@ -595,7 +680,24 @@ export class MELCloudAPI implements API, Disposable {
   }
 
   async #fetch(): Promise<BuildingWithStructure[]> {
-    const { data } = await this.list()
+    /*
+     * Wrap `list()` with an exponential-backoff retry on transient 5xx.
+     * This is the heartbeat endpoint that keeps the registry in sync —
+     * a momentary 503 from MELCloud's upstream should not cascade to an
+     * empty building list in the consumer app.
+     */
+    const { data } = await withRetryBackoff(async () => this.list(), {
+      initialDelayMs: TRANSIENT_RETRY_INITIAL_DELAY_MS,
+      isRetryable: isTransientServerError,
+      jitterRatio: TRANSIENT_RETRY_JITTER_RATIO,
+      maxDelayMs: TRANSIENT_RETRY_MAX_DELAY_MS,
+      maxRetries: TRANSIENT_RETRY_MAX_ATTEMPTS,
+      onRetry: (attempt, _error, delayMs) => {
+        this.logger.log(
+          `Transient server error on ${LIST_PATH}: retry ${String(attempt)} in ${String(delayMs)} ms`,
+        )
+      },
+    })
     this.#registry.syncBuildings(data)
     this.#registry.syncFloors(
       data.flatMap(({ Structure: { Floors: floors } }) => floors),
@@ -615,14 +717,9 @@ export class MELCloudAPI implements API, Disposable {
 
     const { config, response: { headers, status } = {} } = error
     if (status === HttpStatusCode.TooManyRequests) {
-      const retryAfterSeconds = Number(headers?.['retry-after'])
-      const retryDuration =
-        Number.isFinite(retryAfterSeconds) ?
-          { seconds: retryAfterSeconds }
-        : { hours: DEFAULT_RETRY_HOURS }
-      this.#pauseListUntil = DateTime.now().plus(retryDuration)
+      this.#rateLimitGate.recordRateLimit(headers?.['retry-after'])
       this.logger.error(
-        `Rate limited (429): pausing list operations for ${this.#pauseListUntil.diffNow().shiftTo('minutes').toHuman()}`,
+        `Rate limited (429): pausing list operations for ${this.#rateLimitGate.formatRemaining()}`,
       )
     } else if (
       status === HttpStatusCode.Unauthorized &&
@@ -633,6 +730,7 @@ export class MELCloudAPI implements API, Disposable {
     ) {
       return this.#api.request(config)
     }
+    this.#emitErrorEvent(error, config)
     throw new Error(errorData.errorMessage, { cause: error })
   }
 
@@ -640,12 +738,10 @@ export class MELCloudAPI implements API, Disposable {
     config: InternalAxiosRequestConfig,
   ): Promise<InternalAxiosRequestConfig> {
     const newConfig = { ...config }
-    if (newConfig.url === LIST_PATH && this.#pauseListUntil > DateTime.now()) {
-      throw new Error(
-        `API requests to ${LIST_PATH} are on hold for ${this.#pauseListUntil
-          .diffNow()
-          .shiftTo('minutes')
-          .toHuman()}`,
+    if (newConfig.url === LIST_PATH && this.#rateLimitGate.isPaused) {
+      throw new RateLimitError(
+        `API requests to ${LIST_PATH} are on hold for ${this.#rateLimitGate.formatRemaining()}`,
+        { retryAfter: this.#rateLimitGate.remaining },
       )
     }
     if (newConfig.url !== LOGIN_PATH) {
@@ -659,25 +755,75 @@ export class MELCloudAPI implements API, Disposable {
       }
       newConfig.headers.set('X-MitsContextKey', this.contextKey)
     }
+    this.#tagLifecycleAndEmit(newConfig)
     this.logger.log(String(new APICallRequestData(newConfig)))
     return newConfig
   }
 
   #onResponse(response: AxiosResponse): AxiosResponse {
     this.logger.log(String(new APICallResponseData(response)))
+    const { [LIFECYCLE_KEY]: meta } =
+      response.config as LifecycleTagged<InternalAxiosRequestConfig>
+    if (meta !== undefined) {
+      this.#events.emitComplete({
+        correlationId: meta.correlationId,
+        durationMs: Date.now() - meta.startedAt,
+        method: meta.method,
+        status: response.status,
+        url: meta.url,
+      })
+    }
     return response
   }
 
   #setupAxiosInterceptors(api: AxiosInstance): void {
+    /*
+     * `#onRequest` can synchronously throw typed domain errors
+     * (e.g. `RateLimitError` when the gate is closed). Axios routes those
+     * through the response error handler — if we delegated blindly to
+     * `#onError` it would wrap them into a generic `Error`, defeating
+     * `instanceof RateLimitError`. Narrow to real axios errors first,
+     * rethrow everything else unchanged.
+     */
+    const rethrowOrHandle = async (error: unknown): Promise<AxiosError> => {
+      if (axios.isAxiosError(error)) {
+        return this.#onError(error)
+      }
+      throw error
+    }
     api.interceptors.request.use(
       async (
         config: InternalAxiosRequestConfig,
       ): Promise<InternalAxiosRequestConfig> => this.#onRequest(config),
-      async (error: AxiosError): Promise<AxiosError> => this.#onError(error),
+      rethrowOrHandle,
     )
     api.interceptors.response.use(
       (response: AxiosResponse): AxiosResponse => this.#onResponse(response),
-      async (error: AxiosError): Promise<AxiosError> => this.#onError(error),
+      rethrowOrHandle,
     )
+  }
+
+  #tagLifecycleAndEmit(config: InternalAxiosRequestConfig): void {
+    /*
+     * Extract method/url once here with the only defensive fallbacks
+     * needed in the whole lifecycle path. Downstream consumers
+     * (#onResponse, #emitErrorEvent) read from `meta.method/url`
+     * directly — single source of truth, no more scattered `??` branches.
+     */
+    const meta: LifecycleMeta = {
+      correlationId: randomUUID(),
+      /* v8 ignore next -- axios always populates method */
+      method: (config.method ?? 'get').toUpperCase(),
+      startedAt: Date.now(),
+      /* v8 ignore next -- axios always populates url */
+      url: config.url ?? '',
+    }
+    const tagged = config as LifecycleTagged<InternalAxiosRequestConfig>
+    tagged[LIFECYCLE_KEY] = meta
+    this.#events.emitStart({
+      correlationId: meta.correlationId,
+      method: meta.method,
+      url: meta.url,
+    })
   }
 }

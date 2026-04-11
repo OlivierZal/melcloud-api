@@ -130,6 +130,13 @@ export {
   updateDevices,
 } from './decorators/index.ts'
 export {
+  AuthenticationError,
+  MelCloudError,
+  NetworkError,
+  RateLimitError,
+  TransientServerError,
+} from './errors.ts'
+export {
   type BuildingFacade,
   type DeviceAtwFacade,
   type DeviceAtwHasZone2Facade,
@@ -174,6 +181,12 @@ export {
   type HomeAPISettings,
   type Logger,
   type OnSyncFunction,
+  type RequestCompleteEvent,
+  type RequestErrorEvent,
+  type RequestLifecycleContext,
+  type RequestLifecycleEvents,
+  type RequestRetryEvent,
+  type RequestStartEvent,
   type SettingManager,
   HomeDeviceModel,
   HomeDeviceRegistry,

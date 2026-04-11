@@ -12,6 +12,12 @@ export type {
   HomeAPISettings,
   Logger,
   OnSyncFunction,
+  RequestCompleteEvent,
+  RequestErrorEvent,
+  RequestLifecycleContext,
+  RequestLifecycleEvents,
+  RequestRetryEvent,
+  RequestStartEvent,
   SettingManager,
 } from './interfaces.ts'
 

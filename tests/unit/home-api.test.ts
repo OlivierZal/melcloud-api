@@ -2,7 +2,15 @@ import { CookieJar } from 'tough-cookie'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { MELCloudHomeAPI } from '../../src/services/home-api.ts'
-import type { HomeAPIConfig, Logger } from '../../src/services/index.ts'
+import type {
+  HomeAPIConfig,
+  Logger,
+  RequestCompleteEvent,
+  RequestErrorEvent,
+  RequestLifecycleEvents,
+  RequestRetryEvent,
+  RequestStartEvent,
+} from '../../src/services/index.ts'
 import type {
   HomeBuilding,
   HomeClaim,
@@ -210,6 +218,21 @@ const axiosUnauthorized = (url = '/api/user/context'): Error =>
       data: undefined,
       headers: {},
       status: 401,
+    },
+  })
+
+const axiosServerError = (
+  status: number,
+  headers: Record<string, string> = {},
+): Error =>
+  Object.assign(new Error(`Status ${String(status)}`), {
+    config: { url: '/api/user/context' },
+    isAxiosError: true,
+    response: {
+      config: { url: '/api/user/context' },
+      data: undefined,
+      headers,
+      status,
     },
   })
 
@@ -776,6 +799,227 @@ describe('melcloud home API', () => {
       const buildings = await api.list()
 
       expect(buildings).toStrictEqual([])
+    })
+  })
+
+  describe('transient 5xx retry + rate limiting', () => {
+    it('should retry a transient 503 on list() and succeed', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi({ autoSyncInterval: null })
+
+        mockRequest.mockRejectedValueOnce(axiosServerError(503))
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+        const listPromise = api.list()
+        /*
+         * Backoff sequence: 1s, 2s, 4s, 8s (max 16s). First retry succeeds
+         * after the first 1s slot.
+         */
+        await vi.advanceTimersByTimeAsync(2000)
+        const buildings = await listPromise
+
+        expect(buildings).toStrictEqual([mockBuilding])
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('should give up on list() after exhausting the 5xx retry budget', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi({ autoSyncInterval: null })
+        const {
+          mock: {
+            calls: { length: callCountBefore },
+          },
+        } = mockRequest
+        // 1 initial attempt + 4 retries = 5 total
+        mockRequest
+          .mockRejectedValueOnce(axiosServerError(502))
+          .mockRejectedValueOnce(axiosServerError(503))
+          .mockRejectedValueOnce(axiosServerError(504))
+          .mockRejectedValueOnce(axiosServerError(502))
+          .mockRejectedValueOnce(axiosServerError(503))
+
+        const listPromise = api.list()
+        // Exhaust all backoff slots: 1 + 2 + 4 + 8 = 15s, pad to 30s.
+        await vi.advanceTimersByTimeAsync(30_000)
+        const buildings = await listPromise
+
+        expect(buildings).toStrictEqual([])
+        expect(mockRequest).toHaveBeenCalledTimes(callCountBefore + 5)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('should not retry POST/PUT on 5xx (non-idempotent)', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi({ autoSyncInterval: null })
+      /*
+       * SetValues() calls list() internally on success, which would consume
+       * mocks; the first PUT failure triggers list() to be skipped via
+       * setValues's catch → only one request made.
+       */
+      const {
+        mock: {
+          calls: { length: callCountBefore },
+        },
+      } = mockRequest
+
+      mockRequest.mockRejectedValueOnce(axiosServerError(503))
+      const isOk = await api.setValues('device-1', cast({ Power: 'True' }))
+
+      expect(isOk).toBe(false)
+      expect(mockRequest).toHaveBeenCalledTimes(callCountBefore + 1)
+    })
+
+    it('should pause non-auth requests after a 429 and reset after the window', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi({ autoSyncInterval: null })
+        const {
+          mock: {
+            calls: { length: callCountAfterLogin },
+          },
+        } = mockRequest
+
+        /*
+         * 429 is NOT transient-5xx, so the retry wrapper gives up immediately.
+         * A single failure is enough to close the gate.
+         */
+        const rateLimited = axiosServerError(429, { 'retry-after': '2' })
+        mockRequest.mockRejectedValueOnce(rateLimited)
+
+        const first = await api.list()
+
+        expect(first).toStrictEqual([])
+        expect(mockRequest).toHaveBeenCalledTimes(callCountAfterLogin + 1)
+
+        // Second call: blocked by the gate without hitting the mock.
+        const second = await api.list()
+
+        expect(second).toStrictEqual([])
+        expect(mockRequest).toHaveBeenCalledTimes(callCountAfterLogin + 1)
+
+        // Advance past the Retry-After window — the gate reopens.
+        vi.advanceTimersByTime(3000)
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        const third = await api.list()
+
+        expect(third).toStrictEqual([mockBuilding])
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('should emit a correlated onRequestStart / onRequestComplete pair for list()', async () => {
+      setupSuccessfulLogin()
+      const onRequestStart = vi.fn<(event: RequestStartEvent) => void>()
+      const onRequestComplete = vi.fn<(event: RequestCompleteEvent) => void>()
+      const onRequestError = vi.fn<(event: RequestErrorEvent) => void>()
+      const events: RequestLifecycleEvents = {
+        onRequestComplete,
+        onRequestError,
+        onRequestStart,
+      }
+      const api = await createApi({ autoSyncInterval: null, events })
+      onRequestStart.mockClear()
+      onRequestComplete.mockClear()
+
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.list()
+
+      expect(onRequestStart).toHaveBeenCalledTimes(1)
+      expect(onRequestComplete).toHaveBeenCalledTimes(1)
+
+      const startEvent = onRequestStart.mock.calls[0]?.[0]
+      const completeEvent = onRequestComplete.mock.calls[0]?.[0]
+
+      // eslint-disable-next-line vitest/prefer-expect-type-of -- runtime check, not a type-level assertion
+      expect(typeof startEvent?.correlationId).toBe('string')
+
+      expect(startEvent?.method).toBe('GET')
+      expect(startEvent?.url).toBe('/api/user/context')
+      expect(completeEvent?.correlationId).toBe(startEvent?.correlationId)
+      expect(completeEvent?.method).toBe('GET')
+      expect(completeEvent?.status).toBe(200)
+      expect(completeEvent?.url).toBe('/api/user/context')
+
+      // eslint-disable-next-line vitest/prefer-expect-type-of -- runtime check
+      expect(typeof completeEvent?.durationMs).toBe('number')
+
+      expect(onRequestError).not.toHaveBeenCalled()
+    })
+
+    it('should emit onRequestRetry sharing correlationId with the start event', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const onRequestStart = vi.fn<(event: RequestStartEvent) => void>()
+        const onRequestComplete = vi.fn<(event: RequestCompleteEvent) => void>()
+        const onRequestRetry = vi.fn<(event: RequestRetryEvent) => void>()
+        const events: RequestLifecycleEvents = {
+          onRequestComplete,
+          onRequestRetry,
+          onRequestStart,
+        }
+        const api = await createApi({ autoSyncInterval: null, events })
+        onRequestStart.mockClear()
+        onRequestComplete.mockClear()
+        onRequestRetry.mockClear()
+
+        mockRequest.mockRejectedValueOnce(axiosServerError(503))
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+        const listPromise = api.list()
+        await vi.advanceTimersByTimeAsync(2000)
+        await listPromise
+
+        expect(onRequestStart).toHaveBeenCalledTimes(1)
+        expect(onRequestRetry).toHaveBeenCalledTimes(1)
+        expect(onRequestComplete).toHaveBeenCalledTimes(1)
+
+        const startEvent = onRequestStart.mock.calls[0]?.[0]
+        const retryEvent = onRequestRetry.mock.calls[0]?.[0]
+        const completeEvent = onRequestComplete.mock.calls[0]?.[0]
+
+        expect(retryEvent?.correlationId).toBe(startEvent?.correlationId)
+        expect(completeEvent?.correlationId).toBe(startEvent?.correlationId)
+        expect(retryEvent?.attempt).toBe(1)
+
+        // eslint-disable-next-line vitest/prefer-expect-type-of -- runtime check
+        expect(typeof retryEvent?.delayMs).toBe('number')
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('should expose isRateLimited once the gate has been closed', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi({ autoSyncInterval: null })
+
+        expect(api.isRateLimited).toBe(false)
+
+        const rateLimited = axiosServerError(429, { 'retry-after': '120' })
+        mockRequest.mockRejectedValueOnce(rateLimited)
+        await api.list()
+
+        expect(api.isRateLimited).toBe(true)
+
+        // Advance past the window — the flag resets automatically.
+        vi.advanceTimersByTime(130 * 1000)
+
+        expect(api.isRateLimited).toBe(false)
+      } finally {
+        vi.useRealTimers()
+      }
     })
   })
 
