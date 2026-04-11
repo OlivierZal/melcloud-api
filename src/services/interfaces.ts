@@ -155,6 +155,13 @@ export interface ErrorLogQuery {
 
 /** MELCloud Home API contract. */
 export interface HomeAPI {
+  /**
+   * Whether the upstream rate-limit gate is currently holding a pause
+   * window. `true` means the SDK is intentionally failing fast to
+   * honor an upstream 429 `Retry-After`.
+   */
+  readonly isRateLimited: boolean
+
   /** Device registry with stable model references across syncs. */
   readonly registry: HomeDeviceRegistry
 
@@ -206,6 +213,13 @@ export interface HomeAPI {
 
 /** Full MELCloud API contract including authentication and device listing. */
 export interface API extends APIAdapter {
+  /**
+   * Whether the upstream rate-limit gate is currently holding a pause
+   * window. `true` means the SDK is intentionally failing list
+   * operations fast to honor an upstream 429 `Retry-After`.
+   */
+  readonly isRateLimited: boolean
+
   /** Central model registry containing all synced buildings, floors, areas, and devices. */
   readonly registry: ModelRegistry
 

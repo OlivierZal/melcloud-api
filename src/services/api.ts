@@ -44,6 +44,7 @@ import type {
 } from '../types/index.ts'
 import { DeviceType, Language } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import { RateLimitError } from '../errors.ts'
 import {
   APICallRequestData,
   APICallResponseData,
@@ -339,6 +340,21 @@ export class MELCloudAPI implements API, Disposable {
 
   public isAuthenticated(): boolean {
     return this.contextKey !== ''
+  }
+
+  /**
+   * Whether the upstream rate-limit gate is currently closed.
+   *
+   * A `true` value means the SDK recently observed a 429 Too Many
+   * Requests response on `LIST_PATH` and is intentionally failing
+   * subsequent list operations fast to honor the upstream
+   * `Retry-After` window. Consumers can poll this to display a
+   * "throttled, please wait" indicator without catching
+   * {@link RateLimitError} through the full call stack.
+   * @returns `true` while the gate is holding a pause window.
+   */
+  public get isRateLimited(): boolean {
+    return this.#rateLimitGate.isPaused
   }
 
   /**
@@ -670,8 +686,9 @@ export class MELCloudAPI implements API, Disposable {
   ): Promise<InternalAxiosRequestConfig> {
     const newConfig = { ...config }
     if (newConfig.url === LIST_PATH && this.#rateLimitGate.isPaused) {
-      throw new Error(
+      throw new RateLimitError(
         `API requests to ${LIST_PATH} are on hold for ${this.#rateLimitGate.formatRemaining()}`,
+        { retryAfter: this.#rateLimitGate.remaining },
       )
     }
     if (newConfig.url !== LOGIN_PATH) {

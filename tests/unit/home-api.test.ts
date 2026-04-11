@@ -908,6 +908,29 @@ describe('melcloud home API', () => {
         vi.useRealTimers()
       }
     })
+
+    it('should expose isRateLimited once the gate has been closed', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi({ autoSyncInterval: null })
+
+        expect(api.isRateLimited).toBe(false)
+
+        const rateLimited = axiosServerError(429, { 'retry-after': '120' })
+        mockRequest.mockRejectedValueOnce(rateLimited)
+        await api.list()
+
+        expect(api.isRateLimited).toBe(true)
+
+        // Advance past the window — the flag resets automatically.
+        vi.advanceTimersByTime(130 * 1000)
+
+        expect(api.isRateLimited).toBe(false)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
   })
 
   describe('redirect handling', () => {

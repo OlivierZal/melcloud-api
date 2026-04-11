@@ -130,6 +130,13 @@ export {
   updateDevices,
 } from './decorators/index.ts'
 export {
+  AuthenticationError,
+  MelCloudError,
+  NetworkError,
+  RateLimitError,
+  TransientServerError,
+} from './errors.ts'
+export {
   type BuildingFacade,
   type DeviceAtwFacade,
   type DeviceAtwHasZone2Facade,

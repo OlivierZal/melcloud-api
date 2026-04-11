@@ -18,6 +18,7 @@ import type {
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import { RateLimitError } from '../errors.ts'
 import {
   APICallRequestData,
   APICallResponseData,
@@ -333,6 +334,20 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
 
   public isAuthenticated(): boolean {
     return this.#user !== null
+  }
+
+  /**
+   * Whether the upstream rate-limit gate is currently closed.
+   *
+   * A `true` value means the SDK recently observed a 429 Too Many
+   * Requests response and is intentionally failing subsequent requests
+   * fast to honor the upstream `Retry-After` window. Consumers can
+   * poll this to display a "throttled, please wait" indicator without
+   * catching {@link RateLimitError} through the full call stack.
+   * @returns `true` while the gate is holding a pause window.
+   */
+  public get isRateLimited(): boolean {
+    return this.#rateLimitGate.isPaused
   }
 
   /**
@@ -653,8 +668,9 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     if (isAuthExempt(url) || !this.#rateLimitGate.isPaused) {
       return
     }
-    throw new Error(
+    throw new RateLimitError(
       `API requests are on hold for ${this.#rateLimitGate.formatRemaining()} (upstream rate-limited)`,
+      { retryAfter: this.#rateLimitGate.remaining },
     )
   }
 }

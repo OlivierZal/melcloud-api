@@ -25,6 +25,7 @@ import type {
   ListDeviceAny,
   SetDevicePostData,
 } from '../../src/types/index.ts'
+import { RateLimitError } from '../../src/errors.ts'
 import { cast, createSettingStore, mock } from '../helpers.ts'
 
 const mockInterceptors = {
@@ -965,7 +966,7 @@ describe('melcloud API', () => {
       expect(result).toStrictEqual({ data: 'retried again' })
     })
 
-    it('request handler blocks list path when paused', async () => {
+    it('request handler blocks list path with a RateLimitError when paused', async () => {
       await createApi({ logger: createLogger() })
 
       await expect(
@@ -980,7 +981,28 @@ describe('melcloud API', () => {
         url: '/User/ListDevices',
       })
 
-      await expect(requestHandler(config)).rejects.toThrow('on hold')
+      await expect(requestHandler(config)).rejects.toBeInstanceOf(
+        RateLimitError,
+      )
+    })
+
+    it('exposes isRateLimited once the gate has closed', async () => {
+      const api = await createApi({ logger: createLogger() })
+
+      expect(api.isRateLimited).toBe(false)
+
+      await expect(
+        responseErrorHandler(
+          createAxiosError({
+            message: 'too many',
+            responseHeaders: { 'retry-after': '60' },
+            status: 429,
+            url: '/api',
+          }),
+        ),
+      ).rejects.toThrow('too many')
+
+      expect(api.isRateLimited).toBe(true)
     })
   })
 
