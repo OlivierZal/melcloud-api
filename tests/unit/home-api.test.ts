@@ -1306,7 +1306,7 @@ describe('melcloud home API', () => {
   })
 
   describe('logging', () => {
-    it('should produce structured log output for requests', async () => {
+    it('should produce structured log output for both requests and responses', async () => {
       setupSuccessfulLogin()
       const logger = createLogger()
       await createApi({ logger })
@@ -1315,11 +1315,19 @@ describe('melcloud home API', () => {
         mock: { calls },
       } = vi.mocked(logger.log)
 
-      expect(calls.length).toBeGreaterThan(0)
+      const messages = calls.map(([message]) => String(message))
 
-      for (const [message] of calls) {
-        expect(String(message)).toContain('API response')
-      }
+      expect(messages.length).toBeGreaterThan(0)
+      /*
+       * Symmetric request/response logging — every dispatched call emits
+       * one "API request" line and one "API response" line.
+       */
+      expect(messages.some((message) => message.includes('API request'))).toBe(
+        true,
+      )
+      expect(messages.some((message) => message.includes('API response'))).toBe(
+        true,
+      )
     })
 
     it('should log structured error data for axios errors', async () => {

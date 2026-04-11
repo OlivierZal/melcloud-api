@@ -2,6 +2,7 @@ import { CookieJar } from 'tough-cookie'
 import axios, {
   type AxiosInstance,
   type AxiosResponse,
+  type InternalAxiosRequestConfig,
   HttpStatusCode,
 } from 'axios'
 
@@ -19,6 +20,7 @@ import type {
 import { HomeDeviceType } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import {
+  APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
 } from '../logging/index.ts'
@@ -471,7 +473,9 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   /*
    * Send a single request through the shared axios instance, injecting any
    * cookies applicable to the target URL and passing the response through
-   * `#onResponse()` for cookie capture and logging.
+   * `#onResponse()` for cookie capture and logging. Each request is logged
+   * symmetrically with `#onResponse` so a full request → response trace
+   * is available in the logger output, matching Classic's interceptor pattern.
    */
   async #dispatch<T = unknown>(
     method: string,
@@ -488,7 +492,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     const baseURL = this.#api.defaults.baseURL ?? ''
     const absoluteUrl = url.startsWith('http') ? url : `${baseURL}${url}`
     const cookieHeader = await this.#jar.getCookieString(absoluteUrl)
-    const response = await this.#api.request<T>({
+    const requestConfig = {
       ...config,
       headers: {
         ...configHeaders,
@@ -496,7 +500,17 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
       },
       method,
       url,
-    })
+    }
+    /*
+     * APICallRequestData only reads `method`, `url`, `params`, `headers`,
+     * and `data` via optional chaining, so the structural shape is satisfied
+     * even though the literal lacks the rest of the InternalAxiosRequestConfig
+     * fields that axios populates internally. The cast is safe at runtime.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- structural shape is sufficient for logging
+    const loggable = requestConfig as unknown as InternalAxiosRequestConfig
+    this.logger.log(String(new APICallRequestData(loggable)))
+    const response = await this.#api.request<T>(requestConfig)
     await this.#onResponse(response, absoluteUrl)
     return response
   }

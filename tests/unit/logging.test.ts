@@ -95,6 +95,25 @@ describe('api call response data', () => {
     expect(data.requestData).toBeUndefined()
   })
 
+  it('handles response without config (partial AxiosError shape)', () => {
+    /*
+     * An AxiosError captured before the request fully materialized may carry
+     * a `response` object whose `config` field is undefined. The logger must
+     * not throw — turning a recoverable failure into a silent crash would
+     * be a much worse outcome than missing requestData on the log line.
+     */
+    const partial = mock<AxiosResponse>({
+      data: { error: 'oops' },
+      headers: {},
+      status: 503,
+    })
+    const data = new APICallResponseData(partial)
+
+    expect(data.status).toBe(503)
+    expect(data.responseData).toStrictEqual({ error: 'oops' })
+    expect(data.requestData).toBeUndefined()
+  })
+
   it('serializes to JSON with logKeys', () => {
     const data = new APICallResponseData(createResponse())
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
