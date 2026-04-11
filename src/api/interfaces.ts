@@ -1,7 +1,7 @@
 import type { HourNumbers } from 'luxon'
 
 import type { DeviceType } from '../constants.ts'
-import type { ModelRegistry } from '../models/index.ts'
+import type { HomeRegistry } from '../models/home-registry.ts'
 import type {
   BuildingWithStructure,
   EnergyData,
@@ -24,8 +24,6 @@ import type {
   HomeReportData,
   HomeUser,
   LoginCredentials,
-  LoginData,
-  LoginPostData,
   OperationModeLogData,
   ReportData,
   ReportPostData,
@@ -39,7 +37,6 @@ import type {
   TilesData,
   TilesPostData,
 } from '../types/index.ts'
-import type { HomeDeviceRegistry } from './home-device-registry.ts'
 
 /** Common configuration shared by all API clients. */
 export interface BaseAPIConfig extends Partial<LoginCredentials> {
@@ -146,8 +143,8 @@ export interface HomeAPIConfig extends BaseAPIConfig {
   readonly baseURL?: string
 }
 
-/** Configuration options for creating a MELCloud API instance. */
-export interface APIConfig extends BaseAPIConfig {
+/** Configuration options for creating a MELCloud Classic API instance. */
+export interface ClassicAPIConfig extends BaseAPIConfig {
   /** Locale language code (e.g. `'en'`, `'fr'`). */
   readonly language?: string
 
@@ -158,8 +155,8 @@ export interface APIConfig extends BaseAPIConfig {
   readonly timezone?: string
 }
 
-/** Persistent settings managed by the API for session authentication. */
-export interface APISettings {
+/** Persistent settings managed by the Classic API for session authentication. */
+export interface ClassicAPISettings {
   /** MELCloud session context key. */
   readonly contextKey?: string | null
 
@@ -230,7 +227,16 @@ export interface ErrorLogQuery {
   readonly to?: string
 }
 
-/** MELCloud Home API contract. */
+/**
+ * Injectable contract for the MELCloud Home API client.
+ *
+ * Exists alongside the `HomeAPI` class with the same name (declaration
+ * merging). This interface uses property-with-arrow syntax so facades,
+ * mocks, and tests can reference methods safely (`expect(api.setValues)`,
+ * `mock<HomeAPI>({...})`) without triggering `unbound-method` lint —
+ * the class has real methods that carry `this`, whereas the interface
+ * shape declares them as plain functions with no implicit binding.
+ */
 export interface HomeAPI {
   /**
    * Whether the upstream rate-limit gate is currently holding a pause
@@ -240,7 +246,7 @@ export interface HomeAPI {
   readonly isRateLimited: boolean
 
   /** Device registry with stable model references across syncs. */
-  readonly registry: HomeDeviceRegistry
+  readonly registry: HomeRegistry
 
   /** The currently authenticated user, or `null`. */
   readonly user: HomeUser | null
@@ -288,49 +294,11 @@ export interface HomeAPI {
   readonly setValues: (id: string, values: HomeAtaValues) => Promise<boolean>
 }
 
-/** Full MELCloud API contract including authentication and device listing. */
-export interface API extends APIAdapter {
-  /**
-   * Whether the upstream rate-limit gate is currently holding a pause
-   * window. `true` means the SDK is intentionally failing list
-   * operations fast to honor an upstream 429 `Retry-After`.
-   */
-  readonly isRateLimited: boolean
-
-  /** Central model registry containing all synced buildings, floors, areas, and devices. */
-  readonly registry: ModelRegistry
-
-  /** Authenticate with MELCloud using the provided or stored credentials. */
-  readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
-
-  /** Cancel any pending automatic sync. */
-  readonly clearSync: () => void
-
-  /** Whether a user is currently authenticated (context key valid). */
-  readonly isAuthenticated: () => boolean
-
-  /** List all buildings and their device hierarchy. */
-  readonly list: () => Promise<{ data: BuildingWithStructure[] }>
-
-  /** Perform a login request against the MELCloud API. */
-  readonly login: ({
-    postData,
-  }: {
-    postData: LoginPostData
-  }) => Promise<{ data: LoginData }>
-
-  /** Update the user's language on the server if it differs from the current locale. */
-  readonly setLanguage: (language: string) => Promise<void>
-
-  /** Update the automatic sync interval and reschedule. Set to `0` or `null` to disable. */
-  readonly setSyncInterval: (minutes: number | null) => void
-}
-
 /**
  * Low-level API adapter exposing all MELCloud HTTP endpoints.
  * Methods are grouped by supported device types.
  */
-export interface APIAdapter {
+export interface ClassicAPIAdapter {
   /** Callback invoked after sync operations. */
   readonly onSync?: OnSyncFunction
 
@@ -343,7 +311,7 @@ export interface APIAdapter {
     deviceIds: number[],
   ) => Promise<ErrorLog>
 
-  /** Fetch raw error log entries from the API. */
+  /** Fetch raw error log entries from the Classic API. */
   readonly getErrorEntries: ({
     postData,
   }: {
@@ -395,7 +363,7 @@ export interface APIAdapter {
     postData: SetPowerPostData
   }) => Promise<{ data: boolean }>
 
-  /** Send updated device values to the API. */
+  /** Send updated device values to the Classic API. */
   readonly setValues: <T extends DeviceType>({
     postData,
     type,

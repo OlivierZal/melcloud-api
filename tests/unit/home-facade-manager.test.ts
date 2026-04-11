@@ -1,17 +1,17 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { HomeAPI } from '../../src/services/interfaces.ts'
-import type { HomeDevice } from '../../src/types/index.ts'
+import type { HomeAPI } from '../../src/api/interfaces.ts'
+import type { HomeDeviceData } from '../../src/types/index.ts'
 import { HomeDeviceType } from '../../src/constants.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
-import { HomeDeviceModel } from '../../src/services/home-device-model.ts'
+import { HomeDevice } from '../../src/models/home-device.ts'
 import { mock } from '../helpers.ts'
 
-const createModel = (): HomeDeviceModel =>
-  new HomeDeviceModel(
-    mock<HomeDevice>({
-      capabilities: mock<HomeDevice['capabilities']>(),
+const createModel = (): HomeDevice =>
+  new HomeDevice(
+    mock<HomeDeviceData>({
+      capabilities: mock<HomeDeviceData['capabilities']>(),
       givenDisplayName: 'Test Device',
       id: 'device-1',
       rssi: -50,
@@ -53,9 +53,9 @@ describe('home facade manager', () => {
   it('returns different facades for different instances', () => {
     const manager = new HomeFacadeManager(createApi())
     const model1 = createModel()
-    const model2 = new HomeDeviceModel(
-      mock<HomeDevice>({
-        capabilities: mock<HomeDevice['capabilities']>(),
+    const model2 = new HomeDevice(
+      mock<HomeDeviceData>({
+        capabilities: mock<HomeDeviceData['capabilities']>(),
         givenDisplayName: 'Other Device',
         id: 'device-2',
         rssi: -60,

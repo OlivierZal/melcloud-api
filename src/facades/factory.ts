@@ -1,19 +1,19 @@
-import type { DeviceModelAny, Model, ModelRegistry } from '../models/index.ts'
-import type { APIAdapter } from '../services/index.ts'
+import type { ClassicAPIAdapter } from '../api/index.ts'
+import type { ClassicRegistry, DeviceAny, Model } from '../models/index.ts'
 import { DeviceType } from '../constants.ts'
 import type { DeviceFacadeAny, Facade } from './interfaces.ts'
 import { AreaFacade } from './area.ts'
 import { BuildingFacade } from './building.ts'
-import { DeviceAtaFacade } from './device-ata.ts'
+import { DeviceAtaFacade } from './classic-device-ata.ts'
 import { DeviceAtwHasZone2Facade } from './device-atw-has-zone2.ts'
 import { DeviceAtwFacade } from './device-atw.ts'
 import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
 const getDeviceFromRegistry = (
-  registry: ModelRegistry,
+  registry: ClassicRegistry,
   id: number,
-): DeviceModelAny => {
+): DeviceAny => {
   const device = registry.devices.getById(id)
   if (!device) {
     throw new Error('Device not found in registry')
@@ -22,8 +22,8 @@ const getDeviceFromRegistry = (
 }
 
 const createDeviceFacade = (
-  api: APIAdapter,
-  registry: ModelRegistry,
+  api: ClassicAPIAdapter,
+  registry: ClassicRegistry,
   instance: Model,
 ): DeviceFacadeAny => {
   const device = getDeviceFromRegistry(registry, instance.id)
@@ -52,8 +52,8 @@ const createDeviceFacade = (
  * @returns The facade matching the model's kind.
  */
 export const createFacade = (
-  api: APIAdapter,
-  registry: ModelRegistry,
+  api: ClassicAPIAdapter,
+  registry: ClassicRegistry,
   instance: Model,
 ): Facade => {
   switch (instance.modelKind) {

@@ -1,13 +1,17 @@
 import { DateTime } from 'luxon'
 
+import type {
+  ClassicAPIAdapter,
+  ErrorLog,
+  ErrorLogQuery,
+} from '../api/index.ts'
 import type { DeviceType } from '../constants.ts'
 import type {
-  DeviceModel,
-  DeviceModelAny,
+  ClassicRegistry,
+  Device,
+  DeviceAny,
   Model,
-  ModelRegistry,
 } from '../models/index.ts'
-import type { APIAdapter, ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type {
   DateTimeComponents,
   FailureData,
@@ -81,7 +85,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public abstract get devices(): DeviceModelAny[]
+  public abstract get devices(): DeviceAny[]
 
   public readonly id: number
 
@@ -89,13 +93,13 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     return this.instance.name
   }
 
-  protected readonly api: APIAdapter
+  protected readonly api: ClassicAPIAdapter
 
   protected isFrostProtectionAtZoneLevel: boolean | null = null
 
   protected isHolidayModeAtZoneLevel: boolean | null = null
 
-  protected readonly registry: ModelRegistry
+  protected readonly registry: ClassicRegistry
 
   protected get instance(): T {
     const instance = this.model.getById(this.id)
@@ -124,8 +128,8 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   }
 
   public constructor(
-    api: APIAdapter,
-    registry: ModelRegistry,
+    api: ClassicAPIAdapter,
+    registry: ClassicRegistry,
     instance: Model,
   ) {
     this.api = api
@@ -173,10 +177,10 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   public async getTiles(device?: false): Promise<TilesData<null>>
   public async getTiles<TDeviceType extends DeviceType>(
-    device: DeviceModel<TDeviceType>,
+    device: Device<TDeviceType>,
   ): Promise<TilesData<TDeviceType>>
   public async getTiles<TDeviceType extends DeviceType>(
-    device: false | DeviceModel<TDeviceType> = false,
+    device: false | Device<TDeviceType> = false,
   ): Promise<TilesData<TDeviceType | null>> {
     const postData = { DeviceIDs: this.#deviceIds }
     if (device === false || !this.#deviceIds.includes(device.id)) {

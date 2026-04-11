@@ -1,4 +1,4 @@
-import type { AreaModel, BuildingModel, FloorModel } from '../models/index.ts'
+import type { Area, Building, Floor } from '../models/index.ts'
 import type {
   FailureData,
   GroupState,
@@ -11,9 +11,7 @@ import type { ZoneFacade } from './interfaces.ts'
 import { BaseFacade } from './base.ts'
 
 /** Abstract base for zone facades (building, floor, area) that support ATA group operations. */
-export abstract class BaseZoneFacade<
-  T extends AreaModel | BuildingModel | FloorModel,
->
+export abstract class BaseZoneFacade<T extends Area | Building | Floor>
   extends BaseFacade<T>
   implements ZoneFacade
 {

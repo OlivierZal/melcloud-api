@@ -20,28 +20,28 @@ import type {
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import { HomeRegistry } from '../models/home-registry.ts'
 import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-} from '../logging/index.ts'
-import type {
-  HomeAPI,
-  HomeAPIConfig,
-  Logger,
-  OnSyncFunction,
-  SettingManager,
-} from './interfaces.ts'
-import { HomeDeviceRegistry } from './home-device-registry.ts'
+  RequestLifecycleEmitter,
+} from '../observability/index.ts'
 import {
   isSessionExpired,
   isTransientServerError,
   RateLimitError,
   RateLimitGate,
-  RequestLifecycleEmitter,
   RetryGuard,
   withRetryBackoff,
-} from './resilience.ts'
+} from '../resilience/index.ts'
+import type {
+  HomeAPIConfig,
+  HomeAPI as HomeAPIContract,
+  Logger,
+  OnSyncFunction,
+  SettingManager,
+} from './interfaces.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const COGNITO_AUTHORITY =
@@ -149,9 +149,9 @@ const storeCookies = async (
  * cross-domain redirect chain requires Set-Cookie headers to be captured at
  * each intermediate 302 response.
  *
- * Uses a private constructor — create instances via {@link MELCloudHomeAPI.create}.
+ * Uses a private constructor — create instances via {@link HomeAPI.create}.
  */
-export class MELCloudHomeAPI implements Disposable, HomeAPI {
+export class HomeAPI implements Disposable, HomeAPIContract {
   public readonly logger: Logger
 
   public readonly onSync?: OnSyncFunction
@@ -162,7 +162,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     return this.#context
   }
 
-  public get registry(): HomeDeviceRegistry {
+  public get registry(): HomeRegistry {
     return this.#registry
   }
 
@@ -184,7 +184,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     hours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
   })
 
-  readonly #registry = new HomeDeviceRegistry()
+  readonly #registry = new HomeRegistry()
 
   readonly #retryGuard = new RetryGuard(RETRY_DELAY)
 
@@ -243,10 +243,10 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
    * re-login entirely. Otherwise, or if the persisted session is rejected
    * by the server, falls back to a full `authenticate()` flow.
    * @param config - Optional configuration.
-   * @returns The initialized API instance.
+   * @returns The initialized HomeAPI instance.
    */
-  public static async create(config?: HomeAPIConfig): Promise<MELCloudHomeAPI> {
-    const api = new MELCloudHomeAPI(config)
+  public static async create(config?: HomeAPIConfig): Promise<HomeAPI> {
+    const api = new HomeAPI(config)
     if (api.#hasPersistedSession()) {
       if ((await api.getUser()) !== null) {
         return api
@@ -552,7 +552,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   /*
    * Re-authenticate if the session is expired or the persisted expiry
    * value is malformed. Skips auth-exempt URLs (OIDC chain, LOGIN_PATH,
-   * USER_PATH) to avoid infinite re-auth loops, analogous to the classic
+   * USER_PATH) to avoid infinite re-auth loops, analogous to the Classic
    * API skipping LOGIN_PATH in its request interceptor.
    */
   async #ensureSession(url: string): Promise<void> {

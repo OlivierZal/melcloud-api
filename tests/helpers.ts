@@ -1,8 +1,8 @@
 import { vi } from 'vitest'
 
+import type { ClassicAPIAdapter, SettingManager } from '../src/api/index.ts'
 import type { DeviceType } from '../src/constants.ts'
-import type { DeviceModelAny } from '../src/models/index.ts'
-import type { APIAdapter, SettingManager } from '../src/services/index.ts'
+import type { DeviceAny } from '../src/models/index.ts'
 
 const MOCK_RSSI = -60
 
@@ -24,9 +24,9 @@ export function mock(value: unknown = {}): unknown {
 }
 
 export const createMockApi = (
-  overrides: Partial<APIAdapter> = {},
-): APIAdapter =>
-  mock<APIAdapter>({
+  overrides: Partial<ClassicAPIAdapter> = {},
+): ClassicAPIAdapter =>
+  mock<ClassicAPIAdapter>({
     fetch: vi.fn().mockResolvedValue([]),
     getEnergy: vi.fn(),
     getErrorEntries: vi.fn(),
@@ -77,11 +77,11 @@ export const createSettingStore = (
 }
 
 export function assertDeviceType<T extends DeviceType>(
-  device: DeviceModelAny | undefined,
+  device: DeviceAny | undefined,
   type: T,
-): asserts device is Extract<DeviceModelAny, { type: T }>
+): asserts device is Extract<DeviceAny, { type: T }>
 export function assertDeviceType(
-  device: DeviceModelAny | undefined,
+  device: DeviceAny | undefined,
   type: DeviceType,
 ): void {
   if (device?.type !== type) {

@@ -1,9 +1,9 @@
-import type { DeviceModelAny, FloorModel } from '../models/index.ts'
+import type { DeviceAny, Floor } from '../models/index.ts'
 import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a floor, grouping devices on that floor within a building. */
-export class FloorFacade extends BaseZoneFacade<FloorModel> {
-  public override get devices(): DeviceModelAny[] {
+export class FloorFacade extends BaseZoneFacade<Floor> {
+  public override get devices(): DeviceAny[] {
     return this.registry.getDevicesByFloorId(this.id)
   }
 
@@ -16,7 +16,7 @@ export class FloorFacade extends BaseZoneFacade<FloorModel> {
   protected readonly tableName = 'Floor'
 
   protected get model(): {
-    getById: (id: number) => FloorModel | undefined
+    getById: (id: number) => Floor | undefined
   } {
     return this.registry.floors
   }

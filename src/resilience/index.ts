@@ -4,7 +4,7 @@
  * expiry handling so consumers (`api.ts`, `home-api.ts`) only need one
  * import rather than four.
  */
-export { RequestLifecycleEmitter } from './events-emitter.ts'
+export { DisposableTimeout } from './disposable-timeout.ts'
 export { RateLimitGate } from './rate-limit-gate.ts'
 export {
   type RetryBackoffOptions,

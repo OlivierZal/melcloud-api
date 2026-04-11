@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DeviceType } from '../../src/constants.ts'
-import { ModelRegistry } from '../../src/models/index.ts'
+import { ClassicRegistry } from '../../src/models/index.ts'
 import {
   areaData,
   ataDevice,
@@ -65,8 +65,8 @@ const devices = [
   }),
 ]
 
-const createSyncedRegistry = (): ModelRegistry => {
-  const registry = new ModelRegistry()
+const createSyncedRegistry = (): ClassicRegistry => {
+  const registry = new ClassicRegistry()
   registry.syncBuildings(buildings)
   registry.syncFloors(floors)
   registry.syncAreas(areas)

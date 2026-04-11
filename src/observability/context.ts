@@ -1,5 +1,5 @@
 /**
- * Minimal structural shape required by the API call loggers.
+ * Minimal structural shape required by the Classic API call loggers.
  *
  * Both `InternalAxiosRequestConfig` (Classic, via the axios interceptors)
  * and Home's literal request config (built inside `#dispatch`) satisfy

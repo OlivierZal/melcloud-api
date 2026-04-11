@@ -68,7 +68,7 @@ export const updateDevices =
     }
 
 /*
- * EffectiveFlags from the API response indicates which fields were actually
+ * EffectiveFlags from the Classic API response indicates which fields were actually
  * changed by the device. Use this to update only those fields, converting
  * ATA set-command keys back to list-data keys (e.g., SetFanSpeed → FanSpeed).
  */

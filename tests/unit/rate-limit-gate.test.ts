@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { RateLimitGate } from '../../src/services/rate-limit-gate.ts'
+import { RateLimitGate } from '../../src/resilience/rate-limit-gate.ts'
 
 describe(RateLimitGate, () => {
   beforeEach(() => {

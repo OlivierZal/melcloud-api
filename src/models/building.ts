@@ -3,7 +3,7 @@ import { BaseModel } from './base.ts'
 import { syncModel } from './symbols.ts'
 
 /** Building model holding zone settings and geographic location. */
-export class BuildingModel extends BaseModel {
+export class Building extends BaseModel {
   public data: ZoneSettings
 
   public location: number

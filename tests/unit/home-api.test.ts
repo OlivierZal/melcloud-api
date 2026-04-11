@@ -1,7 +1,7 @@
 import { CookieJar } from 'tough-cookie'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { MELCloudHomeAPI } from '../../src/services/home-api.ts'
+import type { HomeAPI } from '../../src/api/home.ts'
 import type {
   HomeAPIConfig,
   Logger,
@@ -10,7 +10,7 @@ import type {
   RequestLifecycleEvents,
   RequestRetryEvent,
   RequestStartEvent,
-} from '../../src/services/index.ts'
+} from '../../src/api/index.ts'
 import type {
   HomeBuilding,
   HomeClaim,
@@ -237,14 +237,13 @@ const axiosServerError = (
   })
 
 describe('melcloud home API', () => {
-  let melCloudHomeApi: { create: typeof MELCloudHomeAPI.create } = cast(null)
+  let melCloudHomeApi: { create: typeof HomeAPI.create } = cast(null)
 
   beforeEach(async () => {
     mockRequest.mockReset()
     vi.clearAllMocks()
     mockAxiosInstance.defaults.baseURL = BASE_URL
-    ;({ MELCloudHomeAPI: melCloudHomeApi } =
-      await import('../../src/services/home-api.ts'))
+    ;({ HomeAPI: melCloudHomeApi } = await import('../../src/api/home.ts'))
   })
 
   const createApi = async (

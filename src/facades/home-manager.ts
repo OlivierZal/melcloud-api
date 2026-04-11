@@ -1,24 +1,24 @@
-import type { HomeDeviceModel } from '../services/home-device-model.ts'
-import type { HomeAPI } from '../services/interfaces.ts'
+import type { HomeAPI } from '../api/interfaces.ts'
+import type { HomeDevice } from '../models/home-device.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 
 /**
  * Lazily creates and caches Home device facade instances using a WeakMap
- * keyed by model reference. Mirrors the classic FacadeManager pattern.
+ * keyed by model reference. Mirrors the classic ClassicFacadeManager pattern.
  */
 export class HomeFacadeManager {
   readonly #api: HomeAPI
 
-  readonly #facades = new WeakMap<HomeDeviceModel, HomeDeviceAtaFacade>()
+  readonly #facades = new WeakMap<HomeDevice, HomeDeviceAtaFacade>()
 
   public constructor(api: HomeAPI) {
     this.#api = api
   }
 
-  public get(instance: HomeDeviceModel): HomeDeviceAtaFacade
+  public get(instance: HomeDevice): HomeDeviceAtaFacade
   public get(): null
-  public get(instance?: HomeDeviceModel): HomeDeviceAtaFacade | null
-  public get(instance?: HomeDeviceModel): HomeDeviceAtaFacade | null {
+  public get(instance?: HomeDevice): HomeDeviceAtaFacade | null
+  public get(instance?: HomeDevice): HomeDeviceAtaFacade | null {
     if (!instance) {
       return null
     }

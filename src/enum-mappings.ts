@@ -5,7 +5,7 @@ import {
   Horizontal,
   OperationMode,
   Vertical,
-} from '../constants.ts'
+} from './constants.ts'
 
 /*
  * Bidirectional mapping tables between classic API numeric enums

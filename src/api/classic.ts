@@ -45,30 +45,30 @@ import type {
 } from '../types/index.ts'
 import { DeviceType, Language } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import { ClassicRegistry } from '../models/index.ts'
 import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-} from '../logging/index.ts'
-import { ModelRegistry } from '../models/index.ts'
+  RequestLifecycleEmitter,
+} from '../observability/index.ts'
+import {
+  isSessionExpired,
+  isTransientServerError,
+  RateLimitError,
+  RateLimitGate,
+  RetryGuard,
+  withRetryBackoff,
+} from '../resilience/index.ts'
 import type {
-  API,
-  APIConfig,
+  ClassicAPIAdapter,
+  ClassicAPIConfig,
   ErrorLog,
   ErrorLogQuery,
   Logger,
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
-import {
-  isSessionExpired,
-  isTransientServerError,
-  RateLimitError,
-  RateLimitGate,
-  RequestLifecycleEmitter,
-  RetryGuard,
-  withRetryBackoff,
-} from './resilience.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const deviceTypeNames = {
@@ -201,17 +201,17 @@ const collectDevices = function* collectDevices(
 }
 
 /**
- * Main MELCloud API client. Handles authentication, device syncing, and all
- * API endpoint calls. Uses a private constructor — create instances via {@link MELCloudAPI.create}.
+ * Main MELCloud Classic API client. Handles authentication, device syncing, and all
+ * ClassicAPI endpoint calls. Uses a private constructor — create instances via {@link ClassicAPI.create}.
  */
-export class MELCloudAPI implements API, Disposable {
+export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   public readonly logger: Logger
 
   public readonly onSync?: OnSyncFunction
 
   public readonly settingManager?: SettingManager
 
-  public get registry(): ModelRegistry {
+  public get registry(): ClassicRegistry {
     return this.#registry
   }
 
@@ -223,7 +223,7 @@ export class MELCloudAPI implements API, Disposable {
 
   readonly #rateLimitGate = new RateLimitGate({ hours: DEFAULT_RETRY_HOURS })
 
-  readonly #registry = new ModelRegistry()
+  readonly #registry = new ClassicRegistry()
 
   readonly #retryGuard = new RetryGuard(RETRY_DELAY)
 
@@ -249,7 +249,7 @@ export class MELCloudAPI implements API, Disposable {
     this.#language = value
   }
 
-  private constructor(config: APIConfig = {}) {
+  private constructor(config: ClassicAPIConfig = {}) {
     const {
       autoSyncInterval = DEFAULT_SYNC_INTERVAL,
       events,
@@ -277,12 +277,12 @@ export class MELCloudAPI implements API, Disposable {
   }
 
   /**
-   * Create and initialize a new API instance, performing an initial device sync.
-   * @param config - Optional configuration for the API client.
-   * @returns The initialized API instance.
+   * Create and initialize a new ClassicAPI instance, performing an initial device sync.
+   * @param config - Optional configuration for the Classic API client.
+   * @returns The initialized ClassicAPI instance.
    */
-  public static async create(config?: APIConfig): Promise<MELCloudAPI> {
-    const api = new MELCloudAPI(config)
+  public static async create(config?: ClassicAPIConfig): Promise<ClassicAPI> {
+    const api = new ClassicAPI(config)
     await api.fetch()
     return api
   }

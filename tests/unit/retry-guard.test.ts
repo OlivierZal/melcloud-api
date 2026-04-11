@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { RetryGuard } from '../../src/services/retry-guard.ts'
+import { RetryGuard } from '../../src/resilience/retry-guard.ts'
 
 describe('retry guard', () => {
   beforeEach(() => {

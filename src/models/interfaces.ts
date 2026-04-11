@@ -1,44 +1,41 @@
 import type { DeviceType } from '../constants.ts'
 import type { ListDeviceData } from '../types/index.ts'
 import type { BaseModel } from './base.ts'
-import type { BuildingModel } from './building.ts'
-import type { DeviceModel } from './device.ts'
+import type { Building } from './building.ts'
+import type { Device } from './classic-device.ts'
 
 /** Base building model providing zone settings (frost protection, holiday mode). */
-export type BaseBuildingModel = Pick<BuildingModel, 'data'>
+export type BaseBuilding = Pick<Building, 'data'>
 
 /** Base type for all model classes. */
 export type Model = BaseModel
 
 /** Base device model with type-discriminated device data. */
-export interface BaseDeviceModel<T extends DeviceType> {
+export interface BaseDevice<T extends DeviceType> {
   readonly data: ListDeviceData<T>
   readonly type: T
 }
 
 /**
- * Type guard that narrows a `DeviceModelAny` to a specific `DeviceModel` variant.
+ * Type guard that narrows a `DeviceAny` to a specific `Device` variant.
  * Overloads ensure the predicate type is always assignable to the union member.
  * @param device - The device model to narrow.
  * @param type - The expected device type literal.
  * @returns Whether the device matches the given type.
  */
 export function isDeviceOfType(
-  device: DeviceModelAny,
+  device: DeviceAny,
   type: typeof DeviceType.Ata,
-): device is DeviceModel<typeof DeviceType.Ata>
+): device is Device<typeof DeviceType.Ata>
 export function isDeviceOfType(
-  device: DeviceModelAny,
+  device: DeviceAny,
   type: typeof DeviceType.Atw,
-): device is DeviceModel<typeof DeviceType.Atw>
+): device is Device<typeof DeviceType.Atw>
 export function isDeviceOfType(
-  device: DeviceModelAny,
+  device: DeviceAny,
   type: typeof DeviceType.Erv,
-): device is DeviceModel<typeof DeviceType.Erv>
-export function isDeviceOfType(
-  device: DeviceModelAny,
-  type: DeviceType,
-): boolean {
+): device is Device<typeof DeviceType.Erv>
+export function isDeviceOfType(device: DeviceAny, type: DeviceType): boolean {
   return device.type === type
 }
 
@@ -52,7 +49,7 @@ export interface Identifiable {
 }
 
 /** Union of all device model types. */
-export type DeviceModelAny =
-  | DeviceModel<typeof DeviceType.Ata>
-  | DeviceModel<typeof DeviceType.Atw>
-  | DeviceModel<typeof DeviceType.Erv>
+export type DeviceAny =
+  | Device<typeof DeviceType.Ata>
+  | Device<typeof DeviceType.Atw>
+  | Device<typeof DeviceType.Erv>

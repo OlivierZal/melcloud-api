@@ -1,13 +1,11 @@
 export type {
-  API,
-  APIAdapter,
-  APIConfig,
-  APISettings,
   BaseAPIConfig,
+  ClassicAPIAdapter,
+  ClassicAPIConfig,
+  ClassicAPISettings,
   ErrorDetails,
   ErrorLog,
   ErrorLogQuery,
-  HomeAPI,
   HomeAPIConfig,
   HomeAPISettings,
   Logger,
@@ -21,7 +19,5 @@ export type {
   SettingManager,
 } from './interfaces.ts'
 
-export { MELCloudAPI } from './api.ts'
-export { MELCloudHomeAPI } from './home-api.ts'
-export { HomeDeviceModel } from './home-device-model.ts'
-export { HomeDeviceRegistry } from './home-device-registry.ts'
+export { ClassicAPI } from './classic.ts'
+export { HomeAPI } from './home.ts'

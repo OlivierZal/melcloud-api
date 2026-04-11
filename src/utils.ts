@@ -134,10 +134,10 @@ const getChartLineSeries = ({
 
 /**
  * Transform raw API report data into structured line chart options with formatted labels.
- * @param root0 - The raw report data from the API.
+ * @param root0 - The raw report data from the Classic API.
  * @param root0.Data - The data series arrays.
  * @param root0.FromDate - The start date of the report period.
- * @param root0.Labels - The raw label strings from the API.
+ * @param root0.Labels - The raw label strings from the Classic API.
  * @param root0.LabelType - The label format type determining how labels are parsed.
  * @param root0.ToDate - The end date of the report period.
  * @param legend - Legend entries for each data series.

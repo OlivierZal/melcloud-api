@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import type { APIAdapter } from '../../src/services/index.ts'
+import type { ClassicAPIAdapter } from '../../src/api/index.ts'
 import { createFacade } from '../../src/facades/index.ts'
-import { ModelRegistry } from '../../src/models/index.ts'
+import { ClassicRegistry } from '../../src/models/index.ts'
 import {
   areaData,
   ataDevice,
@@ -14,7 +14,7 @@ import {
 } from '../fixtures.ts'
 import { defined, mock } from '../helpers.ts'
 
-const mockApi = mock<APIAdapter>()
+const mockApi = mock<ClassicAPIAdapter>()
 
 const deviceListData = ataDevice({
   AreaID: null,
@@ -23,8 +23,8 @@ const deviceListData = ataDevice({
 })
 
 describe(createFacade, () => {
-  it('creates a BuildingFacade for BuildingModel instances', () => {
-    const registry = new ModelRegistry()
+  it('creates a BuildingFacade for Building instances', () => {
+    const registry = new ClassicRegistry()
     registry.syncBuildings([buildingData()])
     const instance = defined(registry.buildings.getById(1))
     const facade = createFacade(mockApi, registry, instance)
@@ -33,8 +33,8 @@ describe(createFacade, () => {
     expect(facade.name).toBe('Building')
   })
 
-  it('creates a FloorFacade for FloorModel instances', () => {
-    const registry = new ModelRegistry()
+  it('creates a FloorFacade for Floor instances', () => {
+    const registry = new ClassicRegistry()
     registry.syncFloors([floorData()])
     const instance = defined(registry.floors.getById(10))
     const facade = createFacade(mockApi, registry, instance)
@@ -43,8 +43,8 @@ describe(createFacade, () => {
     expect(facade.name).toBe('Floor')
   })
 
-  it('creates an AreaFacade for AreaModel instances', () => {
-    const registry = new ModelRegistry()
+  it('creates an AreaFacade for Area instances', () => {
+    const registry = new ClassicRegistry()
     registry.syncAreas([areaData()])
     const instance = defined(registry.areas.getById(100))
     const facade = createFacade(mockApi, registry, instance)
@@ -53,8 +53,8 @@ describe(createFacade, () => {
     expect(facade.name).toBe('Area')
   })
 
-  it('creates a device facade for DeviceModel instances', () => {
-    const registry = new ModelRegistry()
+  it('creates a device facade for Device instances', () => {
+    const registry = new ClassicRegistry()
     registry.syncDevices([deviceListData])
     const instance = defined(registry.devices.getById(1000))
     const facade = createFacade(mockApi, registry, instance)
@@ -63,7 +63,7 @@ describe(createFacade, () => {
   })
 
   it('creates a DeviceAtwFacade for ATW devices without zone2', () => {
-    const registry = new ModelRegistry()
+    const registry = new ClassicRegistry()
     registry.syncDevices([
       atwDevice({ Device: atwDeviceData({ HasZone2: false }) }),
     ])
@@ -74,7 +74,7 @@ describe(createFacade, () => {
   })
 
   it('creates a DeviceAtwHasZone2Facade for ATW devices with zone2', () => {
-    const registry = new ModelRegistry()
+    const registry = new ClassicRegistry()
     registry.syncDevices([
       atwDevice({ Device: atwDeviceData({ HasZone2: true }) }),
     ])
@@ -85,7 +85,7 @@ describe(createFacade, () => {
   })
 
   it('creates a DeviceErvFacade for ERV devices', () => {
-    const registry = new ModelRegistry()
+    const registry = new ClassicRegistry()
     registry.syncDevices([ervDevice()])
     const instance = defined(registry.devices.getById(1002))
     const facade = createFacade(mockApi, registry, instance)
@@ -94,7 +94,7 @@ describe(createFacade, () => {
   })
 
   it('throws when device not found in registry', () => {
-    const registry = new ModelRegistry()
+    const registry = new ClassicRegistry()
     registry.syncDevices([deviceListData])
     const instance = defined(registry.devices.getById(1000))
     registry.syncDevices([])

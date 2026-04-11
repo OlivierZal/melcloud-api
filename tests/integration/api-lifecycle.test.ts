@@ -1,10 +1,10 @@
 import type { AxiosStatic, HttpStatusCode } from 'axios'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { MELCloudAPI } from '../../src/services/api.ts'
+import type { ClassicAPI } from '../../src/api/classic.ts'
 import type { BuildingWithStructure } from '../../src/types/index.ts'
 import { DeviceType } from '../../src/constants.ts'
-import { FacadeManager } from '../../src/facades/manager.ts'
+import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
 import { cast, defined, mock } from '../helpers.ts'
 
@@ -77,21 +77,21 @@ vi.mock(import('axios'), () =>
 )
 
 describe('api lifecycle', () => {
-  let melCloudApi: typeof MELCloudAPI = cast(null)
+  let melCloudApi: typeof ClassicAPI = cast(null)
 
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
     mockAxiosInstance.get.mockResolvedValue({ data: buildingResponse })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
-    ;({ MELCloudAPI: melCloudApi } = await import('../../src/services/api.ts'))
+    ;({ ClassicAPI: melCloudApi } = await import('../../src/api/classic.ts'))
   })
 
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  it('creates API, syncs buildings, and populates the registry', async () => {
+  it('creates ClassicAPI, syncs buildings, and populates the registry', async () => {
     const api = await melCloudApi.create({ autoSyncInterval: 0 })
 
     expect(api.registry.getDevices()).toHaveLength(1)
@@ -107,9 +107,9 @@ describe('api lifecycle', () => {
     expect(defined(device).type).toBe(DeviceType.Ata)
   })
 
-  it('facadeManager works with registry populated by API', async () => {
+  it('facadeManager works with registry populated by ClassicAPI', async () => {
     const api = await melCloudApi.create({ autoSyncInterval: 0 })
-    const manager = new FacadeManager(api, api.registry)
+    const manager = new ClassicFacadeManager(api, api.registry)
 
     const building = defined(api.registry.buildings.getById(1))
     const facade = manager.get(building)
@@ -141,7 +141,7 @@ describe('api lifecycle', () => {
     expect(defined(api.registry.buildings.getById(1)).name).toBe('Home')
   })
 
-  it('settingManager persists credentials across API operations', async () => {
+  it('settingManager persists credentials across ClassicAPI operations', async () => {
     const store = new Map<string, string | null | undefined>()
     const settingManager = {
       get: vi.fn((key: string) => store.get(key)),

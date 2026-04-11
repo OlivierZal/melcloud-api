@@ -1,16 +1,14 @@
 import type { HourNumbers } from 'luxon'
 
+import type { ErrorLog, ErrorLogQuery } from '../api/index.ts'
 import type {
-  BaseBuildingModel,
-  BaseDeviceModel,
-  DeviceModel,
-  DeviceModelAny,
+  BaseBuilding,
+  BaseDevice,
+  Device,
+  DeviceAny,
   Identifiable,
-  Model,
 } from '../models/index.ts'
-import type { ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type {
-  BuildingZone,
   EnergyData,
   FailureData,
   FrostProtectionData,
@@ -23,7 +21,6 @@ import type {
   SuccessData,
   TilesData,
   UpdateDeviceData,
-  Zone,
   ZoneSettings,
   ZoneState,
 } from '../types/index.ts'
@@ -51,7 +48,7 @@ export interface HolidayModeQuery {
 }
 
 /** Facade for a MELCloud building, combining zone settings with super device operations. */
-export interface BuildingFacade extends BaseBuildingModel, ZoneFacade {
+export interface BuildingFacade extends BaseBuilding, ZoneFacade {
   /** Fetch the latest building zone settings after syncing devices. */
   readonly fetch: () => Promise<ZoneSettings>
 }
@@ -73,7 +70,7 @@ export interface DeviceAtwHasZone2Facade extends DeviceAtwFacade {
 
 /** Facade for an individual MELCloud device with type-safe data access and control. */
 export interface DeviceFacade<T extends DeviceType>
-  extends BaseDeviceModel<T>, Facade {
+  extends BaseDevice<T>, Facade {
   /** Bitfield flags mapping each updatable property to its effective flag value. */
   readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
@@ -94,12 +91,10 @@ export interface DeviceFacade<T extends DeviceType>
   ) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
-  readonly getTiles: ((
-    device: true | DeviceModelAny,
-  ) => Promise<TilesData<T>>) &
+  readonly getTiles: ((device: true | DeviceAny) => Promise<TilesData<T>>) &
     ((device?: false) => Promise<TilesData<null>>)
 
-  /** Fetch current device values from the API. */
+  /** Fetch current device values from the Classic API. */
   readonly getValues: () => Promise<GetDeviceData<T>>
 
   /** Fetch energy consumption report. ATA and ATW only. */
@@ -119,7 +114,7 @@ export interface DeviceFacade<T extends DeviceType>
 /** Base facade contract shared by all facade types (building, floor, area, device). */
 export interface Facade extends Identifiable {
   /** All devices managed by this facade. */
-  readonly devices: readonly DeviceModelAny[]
+  readonly devices: readonly DeviceAny[]
 
   /** Retrieve the error log for all devices in this facade. */
   readonly getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
@@ -153,19 +148,7 @@ export interface Facade extends Identifiable {
 
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((device?: false) => Promise<TilesData<null>>) &
-    (<T extends DeviceType>(device: DeviceModel<T>) => Promise<TilesData<T>>)
-}
-
-/** Manager for lazily creating and caching facade instances. */
-export interface FacadeManager {
-  /** Get or create a facade for the given model instance. Returns `null` if no instance is provided. */
-  readonly get: (instance?: Model) => Facade | null
-
-  /** Build a hierarchical zone structure, optionally filtered by device type. */
-  readonly getBuildings: (params?: { type?: DeviceType }) => BuildingZone[]
-
-  /** Flatten the building hierarchy into a sorted list of all zones. */
-  readonly getZones: (params?: { type?: DeviceType }) => Zone[]
+    (<T extends DeviceType>(device: Device<T>) => Promise<TilesData<T>>)
 }
 
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */

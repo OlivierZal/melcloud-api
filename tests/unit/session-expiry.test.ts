@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { isSessionExpired } from '../../src/services/session-expiry.ts'
+import { isSessionExpired } from '../../src/resilience/session-expiry.ts'
 
 describe(isSessionExpired, () => {
   beforeEach(() => {
@@ -42,7 +42,7 @@ describe(isSessionExpired, () => {
      * `LoginData.Expiry` (no `Z`, no offset). Native `Date.parse` would
      * interpret these in the host runtime timezone, shifting comparisons
      * by hours when host TZ ≠ configured TZ. Luxon `DateTime.fromISO`
-     * uses `LuxonSettings.defaultZone` (set by Classic from APIConfig.timezone).
+     * uses `LuxonSettings.defaultZone` (set by Classic from ClassicAPIConfig.timezone).
      */
     expect(isSessionExpired('2030-12-31T00:00:00')).toBe(false)
     expect(isSessionExpired('2020-01-01T00:00:00')).toBe(true)

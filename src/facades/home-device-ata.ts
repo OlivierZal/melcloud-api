@@ -1,5 +1,5 @@
-import type { HomeDeviceModel } from '../services/home-device-model.ts'
-import type { HomeAPI } from '../services/interfaces.ts'
+import type { HomeAPI } from '../api/interfaces.ts'
+import type { HomeDevice } from '../models/home-device.ts'
 import type {
   HomeAtaValues,
   HomeDeviceCapabilities,
@@ -14,7 +14,7 @@ import {
   type HomeOperationMode,
   type HomeVertical,
   fanSpeedFromClassic,
-} from '../adapters/index.ts'
+} from '../enum-mappings.ts'
 
 interface TemperatureRange {
   max: number
@@ -59,7 +59,7 @@ const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
 /**
  * Facade for a MELCloud Home ATA device. Provides typed access to device
  * settings and temperature clamping per operation mode before sending
- * values to the API.
+ * values to the Classic API.
  */
 export class HomeDeviceAtaFacade {
   public get capabilities(): HomeDeviceCapabilities {
@@ -102,7 +102,7 @@ export class HomeDeviceAtaFacade {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- `in` guard ensures numeric is a valid FanSpeed key
       return fanSpeedFromClassic[numeric as keyof typeof fanSpeedFromClassic]
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Fallback for when API returns the enum name directly (or empty string for missing setting)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Fallback for when the API returns the enum name directly (or empty string for missing setting)
     return raw as HomeFanSpeed
   }
 
@@ -120,9 +120,9 @@ export class HomeDeviceAtaFacade {
 
   readonly #api: HomeAPI
 
-  readonly #model: HomeDeviceModel
+  readonly #model: HomeDevice
 
-  public constructor(api: HomeAPI, model: HomeDeviceModel) {
+  public constructor(api: HomeAPI, model: HomeDevice) {
     this.#api = api
     this.#model = model
   }

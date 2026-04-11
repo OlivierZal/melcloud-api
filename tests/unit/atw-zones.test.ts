@@ -12,7 +12,7 @@ import {
   DeviceAtwFacade,
   DeviceAtwHasZone2Facade,
 } from '../../src/facades/index.ts'
-import { ModelRegistry } from '../../src/models/index.ts'
+import { ClassicRegistry } from '../../src/models/index.ts'
 import { atwDevice, atwDeviceData, buildingData } from '../fixtures.ts'
 import { assertDeviceType, createMockApi } from '../helpers.ts'
 
@@ -23,8 +23,8 @@ const createAtwData = (
 
 const mockApi = createMockApi()
 
-const createAtwRegistry = (data: ListDeviceDataAtw): ModelRegistry => {
-  const registry = new ModelRegistry()
+const createAtwRegistry = (data: ListDeviceDataAtw): ClassicRegistry => {
+  const registry = new ClassicRegistry()
   registry.syncBuildings([
     buildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
   ])

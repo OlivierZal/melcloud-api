@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { APIAdapter } from '../../src/services/index.ts'
+import type { ClassicAPIAdapter } from '../../src/api/index.ts'
 import type {
   SetDeviceDataAta,
   SetDevicePostData,
@@ -23,7 +23,7 @@ import {
   isAtwFacade,
   isErvFacade,
 } from '../../src/facades/index.ts'
-import { type DeviceModel, ModelRegistry } from '../../src/models/index.ts'
+import { type Device, ClassicRegistry } from '../../src/models/index.ts'
 import {
   areaData,
   ataDevice,
@@ -39,10 +39,10 @@ import {
 } from '../fixtures.ts'
 import { assertDeviceType, cast, defined, mock } from '../helpers.ts'
 
-type DeviceModelAta = DeviceModel<typeof DeviceType.Ata>
+type DeviceModelAta = Device<typeof DeviceType.Ata>
 
-const createRegistry = (): ModelRegistry => {
-  const registry = new ModelRegistry()
+const createRegistry = (): ClassicRegistry => {
+  const registry = new ClassicRegistry()
   registry.syncBuildings([buildingData({ HMDefined: true })])
   registry.syncFloors([floorData()])
   registry.syncAreas([areaData()])
@@ -54,7 +54,9 @@ const createRegistry = (): ModelRegistry => {
   return registry
 }
 
-const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
+const createMockApi = (
+  overrides: Partial<ClassicAPIAdapter> = {},
+): ClassicAPIAdapter =>
   mock({
     fetch: vi.fn().mockResolvedValue([]),
     getEnergy: vi.fn().mockResolvedValue({ data: {} }),
@@ -119,8 +121,12 @@ const createMockApi = (overrides: Partial<APIAdapter> = {}): APIAdapter =>
   })
 
 const createBuildingFacade = (
-  apiOverrides?: Partial<APIAdapter>,
-): { api: APIAdapter; facade: BuildingFacade; registry: ModelRegistry } => {
+  apiOverrides?: Partial<ClassicAPIAdapter>,
+): {
+  api: ClassicAPIAdapter
+  facade: BuildingFacade
+  registry: ClassicRegistry
+} => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.buildings.getById(1))
@@ -128,8 +134,12 @@ const createBuildingFacade = (
 }
 
 const createFloorFacade = (
-  apiOverrides?: Partial<APIAdapter>,
-): { api: APIAdapter; facade: FloorFacade; registry: ModelRegistry } => {
+  apiOverrides?: Partial<ClassicAPIAdapter>,
+): {
+  api: ClassicAPIAdapter
+  facade: FloorFacade
+  registry: ClassicRegistry
+} => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.floors.getById(10))
@@ -137,8 +147,12 @@ const createFloorFacade = (
 }
 
 const createAreaFacade = (
-  apiOverrides?: Partial<APIAdapter>,
-): { api: APIAdapter; facade: AreaFacade; registry: ModelRegistry } => {
+  apiOverrides?: Partial<ClassicAPIAdapter>,
+): {
+  api: ClassicAPIAdapter
+  facade: AreaFacade
+  registry: ClassicRegistry
+} => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.areas.getById(100))
@@ -146,8 +160,12 @@ const createAreaFacade = (
 }
 
 const createAtaFacade = (
-  apiOverrides?: Partial<APIAdapter>,
-): { api: APIAdapter; facade: DeviceAtaFacade; registry: ModelRegistry } => {
+  apiOverrides?: Partial<ClassicAPIAdapter>,
+): {
+  api: ClassicAPIAdapter
+  facade: DeviceAtaFacade
+  registry: ClassicRegistry
+} => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.devices.getById(1000))
@@ -156,8 +174,12 @@ const createAtaFacade = (
 }
 
 const createAtwFacade = (
-  apiOverrides?: Partial<APIAdapter>,
-): { api: APIAdapter; facade: DeviceAtwFacade; registry: ModelRegistry } => {
+  apiOverrides?: Partial<ClassicAPIAdapter>,
+): {
+  api: ClassicAPIAdapter
+  facade: DeviceAtwFacade
+  registry: ClassicRegistry
+} => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.devices.getById(1001))
@@ -166,8 +188,12 @@ const createAtwFacade = (
 }
 
 const createErvFacade = (
-  apiOverrides?: Partial<APIAdapter>,
-): { api: APIAdapter; facade: DeviceErvFacade; registry: ModelRegistry } => {
+  apiOverrides?: Partial<ClassicAPIAdapter>,
+): {
+  api: ClassicAPIAdapter
+  facade: DeviceErvFacade
+  registry: ClassicRegistry
+} => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.devices.getById(1002))
@@ -177,7 +203,7 @@ const createErvFacade = (
 
 const atwSetValuesResponse = (
   overrides: Record<string, unknown> = {},
-): Partial<APIAdapter> => ({
+): Partial<ClassicAPIAdapter> => ({
   setValues: vi.fn().mockResolvedValue({
     data: {
       DeviceType: DeviceType.Atw,
@@ -203,13 +229,13 @@ const atwSetValuesResponse = (
 
 const createZone2Facade = (
   deviceOverrides: Record<string, unknown> = {},
-  apiOverrides?: Partial<APIAdapter>,
+  apiOverrides?: Partial<ClassicAPIAdapter>,
 ): {
-  api: APIAdapter
+  api: ClassicAPIAdapter
   facade: DeviceAtwHasZone2Facade
-  registry: ModelRegistry
+  registry: ClassicRegistry
 } => {
-  const registry = new ModelRegistry()
+  const registry = new ClassicRegistry()
   registry.syncBuildings([buildingData({ HMDefined: true })])
   registry.syncFloors([floorData()])
   registry.syncAreas([areaData()])

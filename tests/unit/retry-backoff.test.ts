@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   isTransientServerError,
   withRetryBackoff,
-} from '../../src/services/retry-backoff.ts'
+} from '../../src/resilience/retry-backoff.ts'
 import { mock } from '../helpers.ts'
 
 const ALWAYS_RETRYABLE = (): boolean => true
