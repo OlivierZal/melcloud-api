@@ -1,4 +1,4 @@
-import type { APIAdapter } from '../api/index.ts'
+import type { ClassicAPIAdapter } from '../api/index.ts'
 import type {
   Building,
   ClassicRegistry,
@@ -34,7 +34,7 @@ export class BuildingFacade extends BaseZoneFacade<Building> {
   }
 
   public constructor(
-    api: APIAdapter,
+    api: ClassicAPIAdapter,
     registry: ClassicRegistry,
     instance: Model,
   ) {

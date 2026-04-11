@@ -68,7 +68,7 @@ export const updateDevices =
     }
 
 /*
- * EffectiveFlags from the API response indicates which fields were actually
+ * EffectiveFlags from the ClassicAPI response indicates which fields were actually
  * changed by the device. Use this to update only those fields, converting
  * ATA set-command keys back to list-data keys (e.g., SetFanSpeed → FanSpeed).
  */
@@ -100,7 +100,7 @@ const convertToListDeviceData = <T extends DeviceType>(
 }
 
 /**
- * Method decorator that converts API response data back to list format
+ * Method decorator that converts ClassicAPI response data back to list format
  * and updates the device model, using effective flags to determine which fields changed.
  * @param target - The original method to wrap.
  * @param _context - Decorator context provided by the runtime.

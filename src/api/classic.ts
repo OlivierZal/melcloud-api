@@ -61,8 +61,8 @@ import {
   withRetryBackoff,
 } from '../resilience/index.ts'
 import type {
-  API,
-  APIConfig,
+  ClassicAPIConfig,
+  ClassicAPI as ClassicAPIContract,
   ErrorLog,
   ErrorLogQuery,
   Logger,
@@ -201,10 +201,10 @@ const collectDevices = function* collectDevices(
 }
 
 /**
- * Main MELCloud API client. Handles authentication, device syncing, and all
- * API endpoint calls. Uses a private constructor — create instances via {@link MELCloudAPI.create}.
+ * Main MELCloud ClassicAPI client. Handles authentication, device syncing, and all
+ * ClassicAPI endpoint calls. Uses a private constructor — create instances via {@link ClassicAPI.create}.
  */
-export class MELCloudAPI implements API, Disposable {
+export class ClassicAPI implements ClassicAPIContract, Disposable {
   public readonly logger: Logger
 
   public readonly onSync?: OnSyncFunction
@@ -249,7 +249,7 @@ export class MELCloudAPI implements API, Disposable {
     this.#language = value
   }
 
-  private constructor(config: APIConfig = {}) {
+  private constructor(config: ClassicAPIConfig = {}) {
     const {
       autoSyncInterval = DEFAULT_SYNC_INTERVAL,
       events,
@@ -277,12 +277,12 @@ export class MELCloudAPI implements API, Disposable {
   }
 
   /**
-   * Create and initialize a new API instance, performing an initial device sync.
-   * @param config - Optional configuration for the API client.
-   * @returns The initialized API instance.
+   * Create and initialize a new ClassicAPI instance, performing an initial device sync.
+   * @param config - Optional configuration for the ClassicAPI client.
+   * @returns The initialized ClassicAPI instance.
    */
-  public static async create(config?: APIConfig): Promise<MELCloudAPI> {
-    const api = new MELCloudAPI(config)
+  public static async create(config?: ClassicAPIConfig): Promise<ClassicAPI> {
+    const api = new ClassicAPI(config)
     await api.fetch()
     return api
   }
@@ -740,7 +740,7 @@ export class MELCloudAPI implements API, Disposable {
     const newConfig = { ...config }
     if (newConfig.url === LIST_PATH && this.#rateLimitGate.isPaused) {
       throw new RateLimitError(
-        `API requests to ${LIST_PATH} are on hold for ${this.#rateLimitGate.formatRemaining()}`,
+        `ClassicAPI requests to ${LIST_PATH} are on hold for ${this.#rateLimitGate.formatRemaining()}`,
         { retryAfter: this.#rateLimitGate.remaining },
       )
     }

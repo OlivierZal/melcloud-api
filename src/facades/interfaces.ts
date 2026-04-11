@@ -97,7 +97,7 @@ export interface DeviceFacade<T extends DeviceType>
   readonly getTiles: ((device: true | DeviceAny) => Promise<TilesData<T>>) &
     ((device?: false) => Promise<TilesData<null>>)
 
-  /** Fetch current device values from the API. */
+  /** Fetch current device values from the ClassicAPI. */
   readonly getValues: () => Promise<GetDeviceData<T>>
 
   /** Fetch energy consumption report. ATA and ATW only. */
@@ -155,7 +155,7 @@ export interface Facade extends Identifiable {
 }
 
 /** Manager for lazily creating and caching facade instances. */
-export interface FacadeManager {
+export interface ClassicFacadeManager {
   /** Get or create a facade for the given model instance. Returns `null` if no instance is provided. */
   readonly get: (instance?: Model) => Facade | null
 

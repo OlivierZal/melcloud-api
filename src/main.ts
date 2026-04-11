@@ -86,15 +86,13 @@ export type {
 } from './types/index.ts'
 
 export {
-  type API,
-  type APIAdapter,
-  type APIConfig,
-  type APISettings,
   type BaseAPIConfig,
+  type ClassicAPIAdapter,
+  type ClassicAPIConfig,
+  type ClassicAPISettings,
   type ErrorDetails,
   type ErrorLog,
   type ErrorLogQuery,
-  type HomeAPI,
   type HomeAPIConfig,
   type HomeAPISettings,
   type Logger,
@@ -106,8 +104,8 @@ export {
   type RequestRetryEvent,
   type RequestStartEvent,
   type SettingManager,
-  MELCloudAPI,
-  MELCloudHomeAPI,
+  ClassicAPI,
+  HomeAPI,
 } from './api/index.ts'
 export {
   type NonSilentFanSpeed,
@@ -173,7 +171,7 @@ export {
   type ReportChartPieOptions,
   type ReportQuery,
   type ZoneFacade,
-  FacadeManager,
+  ClassicFacadeManager,
   HomeDeviceAtaFacade,
   HomeFacadeManager,
   hasZone2,

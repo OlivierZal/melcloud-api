@@ -14,7 +14,11 @@ import {
   vi,
 } from 'vitest'
 
-import type { APIConfig, Logger, MELCloudAPI } from '../../src/api/index.ts'
+import type {
+  ClassicAPI,
+  ClassicAPIConfig,
+  Logger,
+} from '../../src/api/index.ts'
 import type { DeviceType } from '../../src/constants.ts'
 import type {
   BuildingWithStructure,
@@ -171,8 +175,8 @@ vi.mock(import('axios'), async (importOriginal) => {
   }
 })
 
-describe('melcloud API', () => {
-  let melCloudApi: typeof MELCloudAPI = cast(null)
+describe('melcloud ClassicAPI', () => {
+  let melCloudApi: typeof ClassicAPI = cast(null)
   let requestHandler: (
     config: InternalAxiosRequestConfig,
   ) => Promise<InternalAxiosRequestConfig> = cast(null)
@@ -186,7 +190,7 @@ describe('melcloud API', () => {
     vi.clearAllMocks()
     mockAxiosInstance.get.mockResolvedValue({ data: [] })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
-    ;({ MELCloudAPI: melCloudApi } = await import('../../src/api/classic.ts'))
+    ;({ ClassicAPI: melCloudApi } = await import('../../src/api/classic.ts'))
   })
 
   afterEach(() => {
@@ -194,7 +198,7 @@ describe('melcloud API', () => {
   })
 
   const createApi = async (
-    config: APIConfig = {},
+    config: ClassicAPIConfig = {},
   ): Promise<Awaited<ReturnType<typeof melCloudApi.create>>> => {
     const api = await melCloudApi.create({ autoSyncInterval: 0, ...config })
     const {
@@ -227,7 +231,7 @@ describe('melcloud API', () => {
     return api
   }
 
-  it('creates an API instance via static create()', async () => {
+  it('creates an ClassicAPI instance via static create()', async () => {
     const api = await createApi()
 
     expect(api).toBeDefined()
@@ -575,7 +579,7 @@ describe('melcloud API', () => {
       )
     })
 
-    it('does not change internal language when API returns false', async () => {
+    it('does not change internal language when ClassicAPI returns false', async () => {
       const api = await createApi({ language: 'en' })
       mockAxiosInstance.post.mockResolvedValue({ data: false })
       await api.setLanguage('fr')
@@ -631,7 +635,7 @@ describe('melcloud API', () => {
       expect(result.errors).toHaveLength(0)
     })
 
-    it('throws when API returns failure data', async () => {
+    it('throws when ClassicAPI returns failure data', async () => {
       const api = await createApi()
       mockAxiosInstance.post.mockResolvedValue({
         data: { AttributeErrors: { field: ['error'] }, Success: false },

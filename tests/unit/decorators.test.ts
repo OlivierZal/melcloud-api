@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { APIAdapter } from '../../src/api/index.ts'
+import type { ClassicAPIAdapter } from '../../src/api/index.ts'
 import type {
   FailureData,
   GroupState,
@@ -133,7 +133,7 @@ describe(fetchDevices, () => {
     const fetchMock = vi.fn()
     const target = vi.fn().mockResolvedValue('result')
     const decorated = fetchDevices(target, mock<ClassMethodDecoratorContext>())
-    const context = { api: mock<APIAdapter>({ fetch: fetchMock }) }
+    const context = { api: mock<ClassicAPIAdapter>({ fetch: fetchMock }) }
     await decorated.call(context)
 
     expect(fetchMock).toHaveBeenCalledTimes(1)

@@ -26,4 +26,4 @@ export {
   isAtwFacade,
   isErvFacade,
 } from './interfaces.ts'
-export { FacadeManager } from './manager.ts'
+export { ClassicFacadeManager } from './manager.ts'

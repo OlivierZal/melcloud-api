@@ -1,4 +1,4 @@
-import type { APIAdapter } from '../api/index.ts'
+import type { ClassicAPIAdapter } from '../api/index.ts'
 import type { DeviceType } from '../constants.ts'
 import type {
   Area,
@@ -12,10 +12,10 @@ import type {
 import type { BuildingZone, Zone } from '../types/index.ts'
 import type {
   BuildingFacade,
+  ClassicFacadeManager as ClassicFacadeManagerContract,
   DeviceFacade,
   DeviceFacadeAny,
   Facade,
-  FacadeManager as FacadeManagerContract,
   ZoneFacade,
 } from './interfaces.ts'
 import { createFacade } from './factory.ts'
@@ -24,14 +24,14 @@ import { createFacade } from './factory.ts'
  * Lazily creates and caches facade instances using a WeakMap keyed by model reference.
  * Ensures each model instance maps to exactly one facade throughout its lifetime.
  */
-export class FacadeManager implements FacadeManagerContract {
-  readonly #api: APIAdapter
+export class ClassicFacadeManager implements ClassicFacadeManagerContract {
+  readonly #api: ClassicAPIAdapter
 
   readonly #facades = new WeakMap<Model, Facade>()
 
   readonly #registry: ClassicRegistry
 
-  public constructor(api: APIAdapter, registry: ClassicRegistry) {
+  public constructor(api: ClassicAPIAdapter, registry: ClassicRegistry) {
     this.#api = api
     this.#registry = registry
   }

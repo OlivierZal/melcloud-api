@@ -14,7 +14,7 @@ import { DateTime } from 'luxon'
  * strings without an explicit timezone offset — the format the MELCloud
  * Classic server actually returns in `LoginData.Expiry` — are interpreted
  * in `LuxonSettings.defaultZone`, which Classic configures from
- * `APIConfig.timezone`. Native parsing would anchor on the host runtime
+ * `ClassicAPIConfig.timezone`. Native parsing would anchor on the host runtime
  * timezone, shifting the comparison by hours when the deployment timezone
  * differs from the host (e.g. UTC CI runner, Docker container).
  * @param expiry - ISO 8601 expiry timestamp (or empty string).

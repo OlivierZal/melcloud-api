@@ -42,7 +42,7 @@ describe('api call request data', () => {
   it('extracts request fields from config', () => {
     const data = new APICallRequestData(createConfig())
 
-    expect(data.dataType).toBe('API request')
+    expect(data.dataType).toBe('ClassicAPI request')
     expect(data.method).toBe('POST')
     expect(data.url).toBe('/test/endpoint')
     expect(data.params).toStrictEqual({ id: 1 })
@@ -64,7 +64,7 @@ describe('api call request data', () => {
     const data = new APICallRequestData(createConfig())
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 
-    expect(parsed['dataType']).toBe('API request')
+    expect(parsed['dataType']).toBe('ClassicAPI request')
     expect(parsed['method']).toBe('POST')
     expect(parsed['url']).toBe('/test/endpoint')
     expect(parsed).toHaveProperty('headers')
@@ -77,7 +77,7 @@ describe('api call response data', () => {
   it('extracts response fields', () => {
     const data = new APICallResponseData(createResponse())
 
-    expect(data.dataType).toBe('API response')
+    expect(data.dataType).toBe('ClassicAPI response')
     expect(data.method).toBe('POST')
     expect(data.url).toBe('/test/endpoint')
     expect(data.status).toBe(200)
@@ -118,7 +118,7 @@ describe('api call response data', () => {
     const data = new APICallResponseData(createResponse())
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 
-    expect(parsed['dataType']).toBe('API response')
+    expect(parsed['dataType']).toBe('ClassicAPI response')
     expect(parsed['method']).toBe('POST')
     expect(parsed['url']).toBe('/test/endpoint')
     expect(parsed['status']).toBe(200)
@@ -239,7 +239,7 @@ describe(createAPICallErrorData, () => {
     const data = createAPICallErrorData(error)
 
     expect(data.errorMessage).toBe('Request failed')
-    expect(data.dataType).toBe('API response')
+    expect(data.dataType).toBe('ClassicAPI response')
   })
 
   it('creates error data from request error (no response)', () => {
@@ -250,7 +250,7 @@ describe(createAPICallErrorData, () => {
     const data = createAPICallErrorData(error)
 
     expect(data.errorMessage).toBe('Network Error')
-    expect(data.dataType).toBe('API request')
+    expect(data.dataType).toBe('ClassicAPI request')
   })
 
   it('serializes error data with errorMessage included', () => {

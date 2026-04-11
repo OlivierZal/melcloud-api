@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DeviceType } from '../../src/constants.ts'
-import { FacadeManager } from '../../src/facades/manager.ts'
+import { ClassicFacadeManager } from '../../src/facades/manager.ts'
 import { ClassicRegistry } from '../../src/models/index.ts'
 import {
   areaData,
@@ -101,7 +101,7 @@ const devices = [
 
 const createContext = (): {
   api: ReturnType<typeof createMockApi>
-  manager: FacadeManager
+  manager: ClassicFacadeManager
   registry: ClassicRegistry
 } => {
   const registry = new ClassicRegistry()
@@ -110,7 +110,7 @@ const createContext = (): {
   registry.syncAreas(areas)
   registry.syncDevices(devices)
   const api = createMockApi()
-  const manager = new FacadeManager(api, registry)
+  const manager = new ClassicFacadeManager(api, registry)
   return { api, manager, registry }
 }
 
@@ -143,7 +143,7 @@ describe('registry + facade manager integration', () => {
     expect(ervDevices).toHaveLength(1)
   })
 
-  it('creates facades for every model type via FacadeManager', () => {
+  it('creates facades for every model type via ClassicFacadeManager', () => {
     const { manager, registry } = createContext()
 
     expect(manager.get(defined(registry.buildings.getById(1)))).toBeDefined()
@@ -171,7 +171,7 @@ describe('registry + facade manager integration', () => {
     expect(facade2.name).toBe('Guest house')
   })
 
-  it('building facade delegates setPower to API with correct device IDs', async () => {
+  it('building facade delegates setPower to ClassicAPI with correct device IDs', async () => {
     const { api, manager, registry } = createContext()
 
     const facade = manager.get(defined(registry.buildings.getById(1)))
@@ -236,7 +236,7 @@ describe('registry + facade manager integration', () => {
     ])
     registry.syncDevices([defined(devices[3])])
 
-    const manager = new FacadeManager(createMockApi(), registry)
+    const manager = new ClassicFacadeManager(createMockApi(), registry)
     const facade = manager.get(defined(registry.buildings.getById(2)))
 
     expect(facade.devices).toHaveLength(1)

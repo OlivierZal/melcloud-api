@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import { DeviceType } from '../../src/constants.ts'
-import { FacadeManager } from '../../src/facades/index.ts'
+import { ClassicFacadeManager } from '../../src/facades/index.ts'
 import { ClassicRegistry } from '../../src/models/index.ts'
 import { areaData, ataDevice, buildingData, floorData } from '../fixtures.ts'
 import { createMockApi, defined } from '../helpers.ts'
 
 const createManagerWithRegistry = (): {
-  manager: FacadeManager
+  manager: ClassicFacadeManager
   registry: ClassicRegistry
 } => {
   const registry = new ClassicRegistry()
@@ -15,14 +15,14 @@ const createManagerWithRegistry = (): {
   registry.syncFloors([floorData()])
   registry.syncAreas([areaData()])
   registry.syncDevices([ataDevice()])
-  const manager = new FacadeManager(createMockApi(), registry)
+  const manager = new ClassicFacadeManager(createMockApi(), registry)
   return { manager, registry }
 }
 
 describe('facade manager', () => {
   it('returns null when no instance is provided', () => {
     const registry = new ClassicRegistry()
-    const manager = new FacadeManager(createMockApi(), registry)
+    const manager = new ClassicFacadeManager(createMockApi(), registry)
 
     expect(manager.get()).toBeNull()
   })

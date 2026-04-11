@@ -92,7 +92,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   /*
-   * For ATA devices, API list responses use different property names than set
+   * For ATA devices, ClassicAPI list responses use different property names than set
    * requests (e.g., "FanSpeed" in list vs "SetFanSpeed" in set). Convert keys
    * to set format, then keep only the fields tracked by flags.
    */
@@ -245,7 +245,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   }
 
   /*
-   * Combine individual field flags via bitwise OR to tell the API
+   * Combine individual field flags via bitwise OR to tell the ClassicAPI
    * which device settings were actually changed
    */
   #computeFlags(keys: (keyof UpdateDeviceData<T>)[]): number {

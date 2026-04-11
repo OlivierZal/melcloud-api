@@ -1,4 +1,4 @@
-import type { APIAdapter } from '../api/index.ts'
+import type { ClassicAPIAdapter } from '../api/index.ts'
 import type { ClassicRegistry, DeviceAny, Model } from '../models/index.ts'
 import { DeviceType } from '../constants.ts'
 import type { DeviceFacadeAny, Facade } from './interfaces.ts'
@@ -22,7 +22,7 @@ const getDeviceFromRegistry = (
 }
 
 const createDeviceFacade = (
-  api: APIAdapter,
+  api: ClassicAPIAdapter,
   registry: ClassicRegistry,
   instance: Model,
 ): DeviceFacadeAny => {
@@ -46,13 +46,13 @@ const createDeviceFacade = (
 
 /**
  * Create the appropriate facade for a model instance based on its `modelKind` discriminant.
- * @param api - The API adapter for making requests.
+ * @param api - The ClassicAPI adapter for making requests.
  * @param registry - The model registry containing all synced models.
  * @param instance - The model instance to create a facade for.
  * @returns The facade matching the model's kind.
  */
 export const createFacade = (
-  api: APIAdapter,
+  api: ClassicAPIAdapter,
   registry: ClassicRegistry,
   instance: Model,
 ): Facade => {

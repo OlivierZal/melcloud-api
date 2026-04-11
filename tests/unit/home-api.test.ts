@@ -1,7 +1,7 @@
 import { CookieJar } from 'tough-cookie'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { MELCloudHomeAPI } from '../../src/api/home.ts'
+import type { HomeAPI } from '../../src/api/home.ts'
 import type {
   HomeAPIConfig,
   Logger,
@@ -236,15 +236,14 @@ const axiosServerError = (
     },
   })
 
-describe('melcloud home API', () => {
-  let melCloudHomeApi: { create: typeof MELCloudHomeAPI.create } = cast(null)
+describe('melcloud home ClassicAPI', () => {
+  let melCloudHomeApi: { create: typeof HomeAPI.create } = cast(null)
 
   beforeEach(async () => {
     mockRequest.mockReset()
     vi.clearAllMocks()
     mockAxiosInstance.defaults.baseURL = BASE_URL
-    ;({ MELCloudHomeAPI: melCloudHomeApi } =
-      await import('../../src/api/home.ts'))
+    ;({ HomeAPI: melCloudHomeApi } = await import('../../src/api/home.ts'))
   })
 
   const createApi = async (
@@ -407,7 +406,7 @@ describe('melcloud home API', () => {
       expect(onSync).toHaveBeenCalledTimes(1)
     })
 
-    it('should call onSync even on failure for consistency with classic API', async () => {
+    it('should call onSync even on failure for consistency with classic ClassicAPI', async () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
@@ -1564,14 +1563,14 @@ describe('melcloud home API', () => {
       expect(messages.length).toBeGreaterThan(0)
       /*
        * Symmetric request/response logging — every dispatched call emits
-       * one "API request" line and one "API response" line.
+       * one "ClassicAPI request" line and one "ClassicAPI response" line.
        */
-      expect(messages.some((message) => message.includes('API request'))).toBe(
-        true,
-      )
-      expect(messages.some((message) => message.includes('API response'))).toBe(
-        true,
-      )
+      expect(
+        messages.some((message) => message.includes('ClassicAPI request')),
+      ).toBe(true)
+      expect(
+        messages.some((message) => message.includes('ClassicAPI response')),
+      ).toBe(true)
     })
 
     it('should log structured error data for axios errors', async () => {

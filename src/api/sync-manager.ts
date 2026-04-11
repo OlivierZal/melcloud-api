@@ -5,7 +5,7 @@ const MILLISECONDS_PER_MINUTE = 60_000
 
 /**
  * Manages periodic auto-sync with a configurable interval.
- * Shared between MELCloudAPI and MELCloudHomeAPI.
+ * Shared between ClassicAPI and HomeAPI.
  */
 export class SyncManager implements Disposable {
   #interval: number

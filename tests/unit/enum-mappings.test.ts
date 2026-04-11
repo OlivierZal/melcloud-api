@@ -17,7 +17,7 @@ import {
   verticalToClassic,
 } from '../../src/enum-mappings.ts'
 
-describe('enum mappings between classic and home API', () => {
+describe('enum mappings between classic and home ClassicAPI', () => {
   describe('operation mode', () => {
     it('should map all classic values to home strings', () => {
       expect(operationModeFromClassic[OperationMode.heat]).toBe('Heat')

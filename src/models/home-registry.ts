@@ -9,7 +9,7 @@ export interface TypedHomeDeviceData {
 }
 
 /**
- * Lightweight device registry for the Home API.
+ * Lightweight device registry for the Home ClassicAPI.
  * Maintains stable model references across syncs using upsert + prune.
  */
 export class HomeRegistry {

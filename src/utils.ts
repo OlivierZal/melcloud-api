@@ -14,7 +14,7 @@ import type {
 } from './types/index.ts'
 import { type DeviceType, LabelType } from './constants.ts'
 
-// API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
+// ClassicAPI encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
 const YEAR_MONTH_DIVISOR = 100
 
 /**
@@ -62,7 +62,7 @@ export const isSetDeviceDataAtaInList = (
 ): value is keyof SetDeviceDataAtaInList => value in fromListToSetAta
 
 /*
- * Strategy map: transform raw API label formats into human-readable strings
+ * Strategy map: transform raw ClassicAPI label formats into human-readable strings
  * based on report granularity (day of week, month name, year-month, etc.)
  */
 const labelFormatters: Record<LabelType, (label: string) => string> = {
@@ -133,11 +133,11 @@ const getChartLineSeries = ({
     )
 
 /**
- * Transform raw API report data into structured line chart options with formatted labels.
- * @param root0 - The raw report data from the API.
+ * Transform raw ClassicAPI report data into structured line chart options with formatted labels.
+ * @param root0 - The raw report data from the ClassicAPI.
  * @param root0.Data - The data series arrays.
  * @param root0.FromDate - The start date of the report period.
- * @param root0.Labels - The raw label strings from the API.
+ * @param root0.Labels - The raw label strings from the ClassicAPI.
  * @param root0.LabelType - The label format type determining how labels are parsed.
  * @param root0.ToDate - The end date of the report period.
  * @param legend - Legend entries for each data series.

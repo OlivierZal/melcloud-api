@@ -2,9 +2,9 @@ import type { AxiosResponse } from 'axios'
 
 import { type LoggableRequestConfig, APICallLogData } from './context.ts'
 
-/** Structured log data for an API response. */
+/** Structured log data for an ClassicAPI response. */
 export class APICallResponseData extends APICallLogData {
-  public override readonly dataType = 'API response'
+  public override readonly dataType = 'ClassicAPI response'
 
   public readonly headers: unknown
 

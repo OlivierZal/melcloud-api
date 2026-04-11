@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { APIAdapter } from '../../src/api/index.ts'
+import type { ClassicAPIAdapter } from '../../src/api/index.ts'
 import { createFacade } from '../../src/facades/index.ts'
 import { ClassicRegistry } from '../../src/models/index.ts'
 import {
@@ -14,7 +14,7 @@ import {
 } from '../fixtures.ts'
 import { defined, mock } from '../helpers.ts'
 
-const mockApi = mock<APIAdapter>()
+const mockApi = mock<ClassicAPIAdapter>()
 
 const deviceListData = ataDevice({
   AreaID: null,

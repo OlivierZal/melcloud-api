@@ -1,6 +1,6 @@
 import { vi } from 'vitest'
 
-import type { APIAdapter, SettingManager } from '../src/api/index.ts'
+import type { ClassicAPIAdapter, SettingManager } from '../src/api/index.ts'
 import type { DeviceType } from '../src/constants.ts'
 import type { DeviceAny } from '../src/models/index.ts'
 
@@ -24,9 +24,9 @@ export function mock(value: unknown = {}): unknown {
 }
 
 export const createMockApi = (
-  overrides: Partial<APIAdapter> = {},
-): APIAdapter =>
-  mock<APIAdapter>({
+  overrides: Partial<ClassicAPIAdapter> = {},
+): ClassicAPIAdapter =>
+  mock<ClassicAPIAdapter>({
     fetch: vi.fn().mockResolvedValue([]),
     getEnergy: vi.fn(),
     getErrorEntries: vi.fn(),

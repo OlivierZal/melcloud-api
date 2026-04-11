@@ -36,8 +36,8 @@ import {
   withRetryBackoff,
 } from '../resilience/index.ts'
 import type {
-  HomeAPI,
   HomeAPIConfig,
+  HomeAPI as HomeAPIContract,
   Logger,
   OnSyncFunction,
   SettingManager,
@@ -142,16 +142,16 @@ const storeCookies = async (
 }
 
 /**
- * MELCloud Home API client. Authenticates via headless OIDC login through
+ * MELCloud Home ClassicAPI client. Authenticates via headless OIDC login through
  * a double-federated flow: BFF → IdentityServer → AWS Cognito.
  *
  * Cookies are managed manually (not via axios-cookiejar-support) because the
  * cross-domain redirect chain requires Set-Cookie headers to be captured at
  * each intermediate 302 response.
  *
- * Uses a private constructor — create instances via {@link MELCloudHomeAPI.create}.
+ * Uses a private constructor — create instances via {@link HomeAPI.create}.
  */
-export class MELCloudHomeAPI implements Disposable, HomeAPI {
+export class HomeAPI implements Disposable, HomeAPIContract {
   public readonly logger: Logger
 
   public readonly onSync?: OnSyncFunction
@@ -236,17 +236,17 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   }
 
   /**
-   * Create and initialize a MELCloud Home API instance.
+   * Create and initialize a MELCloud Home ClassicAPI instance.
    *
    * If the SettingManager holds a persisted session (cookies + unexpired
    * expiry), the instance reuses it via `getUser()` and skips the OIDC
    * re-login entirely. Otherwise, or if the persisted session is rejected
    * by the server, falls back to a full `authenticate()` flow.
    * @param config - Optional configuration.
-   * @returns The initialized API instance.
+   * @returns The initialized ClassicAPI instance.
    */
-  public static async create(config?: HomeAPIConfig): Promise<MELCloudHomeAPI> {
-    const api = new MELCloudHomeAPI(config)
+  public static async create(config?: HomeAPIConfig): Promise<HomeAPI> {
+    const api = new HomeAPI(config)
     if (api.#hasPersistedSession()) {
       if ((await api.getUser()) !== null) {
         return api
@@ -553,7 +553,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
    * Re-authenticate if the session is expired or the persisted expiry
    * value is malformed. Skips auth-exempt URLs (OIDC chain, LOGIN_PATH,
    * USER_PATH) to avoid infinite re-auth loops, analogous to the classic
-   * API skipping LOGIN_PATH in its request interceptor.
+   * ClassicAPI skipping LOGIN_PATH in its request interceptor.
    */
   async #ensureSession(url: string): Promise<void> {
     if (!isAuthExempt(url) && isSessionExpired(this.expiry)) {
@@ -719,7 +719,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
       return
     }
     throw new RateLimitError(
-      `API requests are on hold for ${this.#rateLimitGate.formatRemaining()} (upstream rate-limited)`,
+      `ClassicAPI requests are on hold for ${this.#rateLimitGate.formatRemaining()} (upstream rate-limited)`,
       { retryAfter: this.#rateLimitGate.remaining },
     )
   }

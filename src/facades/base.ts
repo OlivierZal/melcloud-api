@@ -1,6 +1,10 @@
 import { DateTime } from 'luxon'
 
-import type { APIAdapter, ErrorLog, ErrorLogQuery } from '../api/index.ts'
+import type {
+  ClassicAPIAdapter,
+  ErrorLog,
+  ErrorLogQuery,
+} from '../api/index.ts'
 import type { DeviceType } from '../constants.ts'
 import type {
   ClassicRegistry,
@@ -89,7 +93,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     return this.instance.name
   }
 
-  protected readonly api: APIAdapter
+  protected readonly api: ClassicAPIAdapter
 
   protected isFrostProtectionAtZoneLevel: boolean | null = null
 
@@ -124,7 +128,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   }
 
   public constructor(
-    api: APIAdapter,
+    api: ClassicAPIAdapter,
     registry: ClassicRegistry,
     instance: Model,
   ) {

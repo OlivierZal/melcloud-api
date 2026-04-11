@@ -4,7 +4,7 @@ import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 
 /**
  * Lazily creates and caches Home device facade instances using a WeakMap
- * keyed by model reference. Mirrors the classic FacadeManager pattern.
+ * keyed by model reference. Mirrors the classic ClassicFacadeManager pattern.
  */
 export class HomeFacadeManager {
   readonly #api: HomeAPI
