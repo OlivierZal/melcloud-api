@@ -10,7 +10,7 @@ import {
   TransientServerError,
 } from '../../src/errors.ts'
 
-describe('melCloudError hierarchy', () => {
+describe.concurrent('melCloudError hierarchy', () => {
   it('authenticationError is an instance of MelCloudError and Error', () => {
     const error = new AuthenticationError('bad creds')
 
@@ -72,7 +72,7 @@ describe('melCloudError hierarchy', () => {
   })
 })
 
-describe(isMelCloudError, () => {
+describe.concurrent(isMelCloudError, () => {
   it.each([
     ['AuthenticationError', new AuthenticationError('x')],
     ['RateLimitError', new RateLimitError('x', { retryAfter: null })],

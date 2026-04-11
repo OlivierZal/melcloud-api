@@ -9,7 +9,7 @@ import {
   typedFromEntries,
 } from '../../src/utils.ts'
 
-describe('ata set-to-list conversion', () => {
+describe.concurrent('ata set-to-list conversion', () => {
   it('maps set keys to list keys', () => {
     expect(fromSetToListAta.SetFanSpeed).toBe('FanSpeed')
     expect(fromSetToListAta.VaneHorizontal).toBe('VaneHorizontalDirection')
@@ -17,7 +17,7 @@ describe('ata set-to-list conversion', () => {
   })
 })
 
-describe('ata list-to-set conversion', () => {
+describe.concurrent('ata list-to-set conversion', () => {
   it('maps list keys to set keys', () => {
     expect(fromListToSetAta.FanSpeed).toBe('SetFanSpeed')
     expect(fromListToSetAta.VaneHorizontalDirection).toBe('VaneHorizontal')
@@ -31,7 +31,7 @@ describe('ata list-to-set conversion', () => {
   })
 })
 
-describe(isSetDeviceDataAtaNotInList, () => {
+describe.concurrent(isSetDeviceDataAtaNotInList, () => {
   it('returns true for keys in fromSetToListAta', () => {
     expect(isSetDeviceDataAtaNotInList('SetFanSpeed')).toBe(true)
     expect(isSetDeviceDataAtaNotInList('VaneHorizontal')).toBe(true)
@@ -44,7 +44,7 @@ describe(isSetDeviceDataAtaNotInList, () => {
   })
 })
 
-describe(isSetDeviceDataAtaInList, () => {
+describe.concurrent(isSetDeviceDataAtaInList, () => {
   it('returns true for keys in fromListToSetAta', () => {
     expect(isSetDeviceDataAtaInList('FanSpeed')).toBe(true)
     expect(isSetDeviceDataAtaInList('VaneHorizontalDirection')).toBe(true)
@@ -57,7 +57,7 @@ describe(isSetDeviceDataAtaInList, () => {
   })
 })
 
-describe(typedFromEntries, () => {
+describe.concurrent(typedFromEntries, () => {
   it('converts entries to an object', () => {
     const entries: [string, number][] = [
       ['key1', 1],
@@ -68,7 +68,7 @@ describe(typedFromEntries, () => {
   })
 })
 
-describe(isUpdateDeviceData, () => {
+describe.concurrent(isUpdateDeviceData, () => {
   const data = { Power: 0, SetTemperature: 0 }
 
   it('returns true for keys in the data record', () => {

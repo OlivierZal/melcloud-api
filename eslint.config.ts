@@ -617,7 +617,18 @@ const config = defineConfig([
       'max-statements': 'off',
       'vitest/max-expects': 'off',
       'vitest/no-hooks': 'off',
+      /*
+       * `fakeTimersTest` is a `test.extend()` fixture exported from
+       * `tests/fixtures/fake-timers.ts`. Without these overrides, the
+       * vitest plugin treats assertions inside it as "standalone expect"
+       * calls and flags the custom name as non-idiomatic.
+       */
+      'vitest/no-standalone-expect': [
+        'error',
+        { additionalTestBlockFunctions: ['fakeTimersTest'] },
+      ],
       'vitest/prefer-expect-assertions': 'off',
+      'vitest/prefer-importing-vitest-globals': 'off',
       'vitest/require-hook': 'off',
       'vitest/require-mock-type-parameters': 'off',
     },

@@ -15,7 +15,7 @@ import {
   ervDevice,
   floorData,
 } from '../fixtures.ts'
-import { cast, defined, mock } from '../helpers.ts'
+import { cast, createPopulatedRegistry, defined, mock } from '../helpers.ts'
 
 const allBuildings = [
   buildingData({ Name: 'Building 1' }),
@@ -50,13 +50,11 @@ const allDevices: ListDeviceAny[] = [
   ervDevice({ AreaID: null, DeviceName: 'Device ERV' }),
 ]
 
-const createPopulatedRegistry = (): ClassicRegistry => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings(allBuildings)
-  registry.syncFloors(allFloors)
-  registry.syncAreas(allAreas)
-  registry.syncDevices(allDevices)
-  return registry
+const allFixtures = {
+  areas: allAreas,
+  buildings: allBuildings,
+  devices: allDevices,
+  floors: allFloors,
 }
 
 describe('model registry', () => {
@@ -152,7 +150,7 @@ describe('model registry', () => {
     })
 
     it('updates devices in-place on re-sync for all device types', () => {
-      const registry = createPopulatedRegistry()
+      const registry = createPopulatedRegistry(allFixtures)
       const ataBefore = registry.devices.getById(1000)
       const atwBefore = registry.devices.getById(1001)
       const ervBefore = registry.devices.getById(1002)
@@ -207,13 +205,13 @@ describe('model registry', () => {
 
   describe('queries', () => {
     it('getDevices returns all devices', () => {
-      const registry = createPopulatedRegistry()
+      const registry = createPopulatedRegistry(allFixtures)
 
       expect(registry.getDevices()).toHaveLength(3)
     })
 
     it('getDevicesByType filters by device type', () => {
-      const registry = createPopulatedRegistry()
+      const registry = createPopulatedRegistry(allFixtures)
       const ataDevices = registry.getDevicesByType(DeviceType.Ata)
 
       expect(ataDevices).toHaveLength(1)
@@ -230,7 +228,7 @@ describe('model registry', () => {
 
   describe('cross-references', () => {
     it('getFloorsByBuildingId returns floors belonging to a building', () => {
-      const registry = createPopulatedRegistry()
+      const registry = createPopulatedRegistry(allFixtures)
       const floors = registry.getFloorsByBuildingId(1)
 
       expect(floors).toHaveLength(2)
@@ -241,42 +239,42 @@ describe('model registry', () => {
     })
 
     it('getAreasByBuildingId returns areas belonging to a building', () => {
-      const registry = createPopulatedRegistry()
+      const registry = createPopulatedRegistry(allFixtures)
       const areas = registry.getAreasByBuildingId(1)
 
       expect(areas).toHaveLength(2)
     })
 
     it('getAreasByFloorId returns areas belonging to a floor', () => {
-      const registry = createPopulatedRegistry()
+      const registry = createPopulatedRegistry(allFixtures)
 
       expect(registry.getAreasByFloorId(10)).toHaveLength(1)
       expect(registry.getAreasByFloorId(11)).toHaveLength(0)
     })
 
     it('getDevicesByBuildingId returns devices belonging to a building', () => {
-      const registry = createPopulatedRegistry()
+      const registry = createPopulatedRegistry(allFixtures)
 
       expect(registry.getDevicesByBuildingId(1)).toHaveLength(2)
       expect(registry.getDevicesByBuildingId(2)).toHaveLength(1)
     })
 
     it('getDevicesByFloorId returns devices belonging to a floor', () => {
-      const registry = createPopulatedRegistry()
+      const registry = createPopulatedRegistry(allFixtures)
 
       expect(registry.getDevicesByFloorId(10)).toHaveLength(1)
       expect(registry.getDevicesByFloorId(11)).toHaveLength(0)
     })
 
     it('getDevicesByAreaId returns devices belonging to an area', () => {
-      const registry = createPopulatedRegistry()
+      const registry = createPopulatedRegistry(allFixtures)
 
       expect(registry.getDevicesByAreaId(100)).toHaveLength(1)
       expect(registry.getDevicesByAreaId(101)).toHaveLength(0)
     })
 
     it('returns empty arrays for unknown building id', () => {
-      const registry = createPopulatedRegistry()
+      const registry = createPopulatedRegistry(allFixtures)
 
       expect(registry.getFloorsByBuildingId(999)).toHaveLength(0)
       expect(registry.getAreasByBuildingId(999)).toHaveLength(0)
@@ -287,7 +285,7 @@ describe('model registry', () => {
 
 describe(isDeviceOfType, () => {
   it('narrows device to specific type', () => {
-    const registry = createPopulatedRegistry()
+    const registry = createPopulatedRegistry(allFixtures)
     const device = defined(registry.devices.getById(1000))
 
     expect(isDeviceOfType(device, DeviceType.Ata)).toBe(true)

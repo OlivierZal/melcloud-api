@@ -14,7 +14,7 @@ import {
   ervDeviceData,
   floorData,
 } from '../fixtures.ts'
-import { createMockApi, defined } from '../helpers.ts'
+import { createMockApi, createPopulatedRegistry, defined } from '../helpers.ts'
 
 const ataData = ataDeviceData({
   NumberOfFanSpeeds: 5,
@@ -104,11 +104,12 @@ const createContext = (): {
   manager: ClassicFacadeManager
   registry: ClassicRegistry
 } => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings(buildings)
-  registry.syncFloors(floors)
-  registry.syncAreas(areas)
-  registry.syncDevices(devices)
+  const registry = createPopulatedRegistry({
+    areas,
+    buildings,
+    devices,
+    floors,
+  })
   const api = createMockApi()
   const manager = new ClassicFacadeManager(api, registry)
   return { api, manager, registry }

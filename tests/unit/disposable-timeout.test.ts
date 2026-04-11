@@ -1,30 +1,23 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, vi } from 'vitest'
 
 import { DisposableTimeout } from '../../src/resilience/disposable-timeout.ts'
+import { fakeTimersTest } from '../fixtures/fake-timers.ts'
 
 describe('disposable timeout', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
-  it('starts inactive', () => {
+  fakeTimersTest('starts inactive', () => {
     const timeout = new DisposableTimeout()
 
     expect(timeout.isActive).toBe(false)
   })
 
-  it('becomes active after schedule', () => {
+  fakeTimersTest('becomes active after schedule', () => {
     const timeout = new DisposableTimeout()
     timeout.schedule(vi.fn<() => void>(), 1000)
 
     expect(timeout.isActive).toBe(true)
   })
 
-  it('executes callback after delay', () => {
+  fakeTimersTest('executes callback after delay', () => {
     const timeout = new DisposableTimeout()
     const callback = vi.fn<() => void>()
     timeout.schedule(callback, 1000)
@@ -33,7 +26,7 @@ describe('disposable timeout', () => {
     expect(callback).toHaveBeenCalledTimes(1)
   })
 
-  it('becomes inactive after clear', () => {
+  fakeTimersTest('becomes inactive after clear', () => {
     const timeout = new DisposableTimeout()
     timeout.schedule(vi.fn<() => void>(), 1000)
     timeout.clear()
@@ -41,7 +34,7 @@ describe('disposable timeout', () => {
     expect(timeout.isActive).toBe(false)
   })
 
-  it('does not execute callback after clear', () => {
+  fakeTimersTest('does not execute callback after clear', () => {
     const timeout = new DisposableTimeout()
     const callback = vi.fn<() => void>()
     timeout.schedule(callback, 1000)
@@ -51,7 +44,7 @@ describe('disposable timeout', () => {
     expect(callback).not.toHaveBeenCalled()
   })
 
-  it('clears previous timeout on re-schedule', () => {
+  fakeTimersTest('clears previous timeout on re-schedule', () => {
     const timeout = new DisposableTimeout()
     const callback1 = vi.fn<() => void>()
     const callback2 = vi.fn<() => void>()
@@ -63,7 +56,7 @@ describe('disposable timeout', () => {
     expect(callback2).toHaveBeenCalledTimes(1)
   })
 
-  it('clear is idempotent when inactive', () => {
+  fakeTimersTest('clear is idempotent when inactive', () => {
     const timeout = new DisposableTimeout()
 
     expect(() => {
@@ -72,7 +65,7 @@ describe('disposable timeout', () => {
     expect(timeout.isActive).toBe(false)
   })
 
-  it('symbol.dispose clears the timeout', () => {
+  fakeTimersTest('symbol.dispose clears the timeout', () => {
     const timeout = new DisposableTimeout()
     const callback = vi.fn<() => void>()
     timeout.schedule(callback, 1000)

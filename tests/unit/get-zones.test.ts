@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import type { ClassicRegistry } from '../../src/models/index.ts'
 import { DeviceType } from '../../src/constants.ts'
-import { ClassicRegistry } from '../../src/models/index.ts'
 import {
   areaData,
   ataDevice,
@@ -11,7 +11,7 @@ import {
   buildingData,
   floorData,
 } from '../fixtures.ts'
-import { defined } from '../helpers.ts'
+import { createPopulatedRegistry, defined } from '../helpers.ts'
 
 const buildings = [
   buildingData({
@@ -65,14 +65,8 @@ const devices = [
   }),
 ]
 
-const createSyncedRegistry = (): ClassicRegistry => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings(buildings)
-  registry.syncFloors(floors)
-  registry.syncAreas(areas)
-  registry.syncDevices(devices)
-  return registry
-}
+const createSyncedRegistry = (): ClassicRegistry =>
+  createPopulatedRegistry({ areas, buildings, devices, floors })
 
 describe('building retrieval', () => {
   it('returns all buildings with their hierarchy', () => {
