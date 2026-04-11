@@ -165,6 +165,8 @@ export class HomeAPI implements Disposable, HomeAPIContract {
     return this.#user
   }
 
+  readonly #abortSignal: AbortSignal | undefined
+
   readonly #api: AxiosInstance
 
   readonly #baseURL: string
@@ -199,8 +201,10 @@ export class HomeAPI implements Disposable, HomeAPIContract {
   @setting
   private accessor username = ''
 
+  // eslint-disable-next-line max-statements -- wiring a constructor, 1-to-1 config → instance field
   private constructor(config: HomeAPIConfig = {}) {
     const {
+      abortSignal,
       autoSyncInterval = 1,
       baseURL = API_BASE_URL,
       events,
@@ -211,6 +215,7 @@ export class HomeAPI implements Disposable, HomeAPIContract {
       settingManager,
       username,
     } = config
+    this.#abortSignal = abortSignal
     this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
@@ -536,6 +541,12 @@ export class HomeAPI implements Disposable, HomeAPIContract {
         ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
       },
       method,
+      /*
+       * Wire the consumer-provided AbortSignal (if any) into every
+       * outgoing request. Axios honors `config.signal` natively and
+       * aborts in-flight requests with `ERR_CANCELED` when it fires.
+       */
+      ...(this.#abortSignal === undefined ? {} : { signal: this.#abortSignal }),
       url,
     }
     this.logger.log(String(new APICallRequestData(requestConfig)))

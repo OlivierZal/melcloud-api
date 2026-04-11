@@ -263,6 +263,35 @@ describe('mELCloud Classic API', () => {
     expect(api).toBeDefined()
   })
 
+  it('wires a consumer AbortSignal into outgoing requests', async () => {
+    const controller = new AbortController()
+    await createApi({ abortSignal: controller.signal })
+    const { headers } = createHeaders()
+    const config = mock<InternalAxiosRequestConfig>({
+      headers,
+      method: 'get',
+      url: '/Device/Get',
+    })
+
+    const tagged = await requestHandler(config)
+
+    expect(tagged.signal).toBe(controller.signal)
+  })
+
+  it('does not set a signal when no abortSignal is provided', async () => {
+    await createApi()
+    const { headers } = createHeaders()
+    const config = mock<InternalAxiosRequestConfig>({
+      headers,
+      method: 'get',
+      url: '/Device/Get',
+    })
+
+    const tagged = await requestHandler(config)
+
+    expect(tagged.signal).toBeUndefined()
+  })
+
   it('uses settingManager when provided', async () => {
     const { setSpy, settingManager } = createSettingStore()
     await createApi({

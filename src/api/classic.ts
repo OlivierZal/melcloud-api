@@ -210,6 +210,8 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
     return this.#registry
   }
 
+  readonly #abortSignal: AbortSignal | undefined
+
   readonly #api: AxiosInstance
 
   readonly #events: RequestLifecycleEmitter
@@ -246,6 +248,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
 
   private constructor(config: ClassicAPIConfig = {}) {
     const {
+      abortSignal,
       autoSyncInterval = DEFAULT_SYNC_INTERVAL,
       events,
       language,
@@ -261,6 +264,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
     this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
+    this.#abortSignal = abortSignal
     this.#events = new RequestLifecycleEmitter(events, logger)
     this.#applyOptionalConfig({ language, password, timezone, username })
     this.#api = this.#createAPI(shouldVerifySSL, requestTimeout)
@@ -730,7 +734,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   async #onRequest(
     config: InternalAxiosRequestConfig,
   ): Promise<InternalAxiosRequestConfig> {
-    const newConfig = { ...config }
+    const newConfig = { ...config, signal: this.#abortSignal ?? config.signal }
     if (newConfig.url === LIST_PATH && this.#rateLimitGate.isPaused) {
       throw new RateLimitError(
         `API requests to ${LIST_PATH} are on hold for ${this.#rateLimitGate.formatRemaining()}`,
