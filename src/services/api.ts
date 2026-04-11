@@ -59,7 +59,7 @@ import type {
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
-import { DisposableTimeout } from './disposable-timeout.ts'
+import { RetryGuard } from './retry-guard.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const deviceTypeNames = {
@@ -72,7 +72,6 @@ const API_BASE_URL = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
 const APP_VERSION = '1.37.2.0'
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
-const noop = (): void => undefined
 
 const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL = 5
@@ -192,7 +191,7 @@ export class MELCloudAPI implements API, Disposable {
 
   readonly #registry = new ModelRegistry()
 
-  readonly #retryTimeout = new DisposableTimeout()
+  readonly #retryGuard = new RetryGuard(RETRY_DELAY)
 
   readonly #syncManager: SyncManager
 
@@ -255,6 +254,7 @@ export class MELCloudAPI implements API, Disposable {
   public async authenticate(data?: LoginCredentials): Promise<boolean> {
     /* v8 ignore next -- @authenticate guarantees data is always provided */
     const { password, username } = data ?? { password: '', username: '' }
+    this.#clearPersistedSession()
     const {
       data: { LoginData: loginData },
     } = await this.login({
@@ -464,7 +464,7 @@ export class MELCloudAPI implements API, Disposable {
   /** Dispose both sync and retry timers. */
   public [Symbol.dispose](): void {
     this.#syncManager[Symbol.dispose]()
-    this.#retryTimeout[Symbol.dispose]()
+    this.#retryGuard[Symbol.dispose]()
   }
 
   public async setFrostProtection({
@@ -559,12 +559,9 @@ export class MELCloudAPI implements API, Disposable {
     }
   }
 
-  #canRetry(): boolean {
-    if (!this.#retryTimeout.isActive) {
-      this.#retryTimeout.schedule(noop, RETRY_DELAY)
-      return true
-    }
-    return false
+  #clearPersistedSession(): void {
+    this.contextKey = ''
+    this.expiry = ''
   }
 
   #createAPI(shouldRejectUnauthorized: boolean): AxiosInstance {
@@ -611,6 +608,15 @@ export class MELCloudAPI implements API, Disposable {
     return isLanguage(language) ? Language[language] : Language.en
   }
 
+  #isSessionExpired(): boolean {
+    if (this.expiry === '') {
+      return false
+    }
+    const parsed = DateTime.fromISO(this.expiry)
+    // Malformed values (Invalid DateTime) are treated as expired on purpose.
+    return !parsed.isValid || parsed < DateTime.now()
+  }
+
   async #onError(error: AxiosError): Promise<AxiosError> {
     const errorData = createAPICallErrorData(error)
     this.logger.error(String(errorData))
@@ -628,7 +634,7 @@ export class MELCloudAPI implements API, Disposable {
       )
     } else if (
       status === HttpStatusCode.Unauthorized &&
-      this.#canRetry() &&
+      this.#retryGuard.tryConsume() &&
       config &&
       config.url !== LOGIN_PATH &&
       (await this.authenticate())
@@ -651,12 +657,15 @@ export class MELCloudAPI implements API, Disposable {
       )
     }
     if (newConfig.url !== LOGIN_PATH) {
-      // Re-authenticate proactively if session token has expired
-      const { contextKey, expiry } = this
-      if (expiry && DateTime.fromISO(expiry) < DateTime.now()) {
+      /*
+       * Re-authenticate proactively if the context key is missing or the
+       * session token is expired/invalid. A malformed `expiry` (e.g. from
+       * a settings migration) is treated as expired, not silently ignored.
+       */
+      if (this.contextKey === '' || this.#isSessionExpired()) {
         await this.authenticate()
       }
-      newConfig.headers.set('X-MitsContextKey', contextKey)
+      newConfig.headers.set('X-MitsContextKey', this.contextKey)
     }
     this.logger.log(String(new APICallRequestData(newConfig)))
     return newConfig
