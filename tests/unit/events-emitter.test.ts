@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { Logger } from '../../src/services/index.ts'
+import type { Logger } from '../../src/api/index.ts'
 import { RequestLifecycleEmitter } from '../../src/observability/events-emitter.ts'
 
 const createLogger = (): Logger => ({

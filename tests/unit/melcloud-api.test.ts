@@ -14,12 +14,8 @@ import {
   vi,
 } from 'vitest'
 
+import type { APIConfig, Logger, MELCloudAPI } from '../../src/api/index.ts'
 import type { DeviceType } from '../../src/constants.ts'
-import type {
-  APIConfig,
-  Logger,
-  MELCloudAPI,
-} from '../../src/services/index.ts'
 import type {
   BuildingWithStructure,
   ListDeviceAny,
@@ -190,7 +186,7 @@ describe('melcloud API', () => {
     vi.clearAllMocks()
     mockAxiosInstance.get.mockResolvedValue({ data: [] })
     mockAxiosInstance.post.mockResolvedValue({ data: [] })
-    ;({ MELCloudAPI: melCloudApi } = await import('../../src/services/api.ts'))
+    ;({ MELCloudAPI: melCloudApi } = await import('../../src/api/classic.ts'))
   })
 
   afterEach(() => {

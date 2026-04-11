@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { APIAdapter } from '../../src/services/index.ts'
+import type { APIAdapter } from '../../src/api/index.ts'
 import type {
   FailureData,
   GroupState,

@@ -1,4 +1,4 @@
-import type { Logger } from '../services/interfaces.ts'
+import type { Logger } from '../api/interfaces.ts'
 import type { LoginCredentials } from '../types/index.ts'
 
 /*

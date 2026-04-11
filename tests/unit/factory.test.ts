@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { APIAdapter } from '../../src/services/index.ts'
+import type { APIAdapter } from '../../src/api/index.ts'
 import { createFacade } from '../../src/facades/index.ts'
 import { ModelRegistry } from '../../src/models/index.ts'
 import {

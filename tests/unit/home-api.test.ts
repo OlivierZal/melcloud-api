@@ -1,7 +1,7 @@
 import { CookieJar } from 'tough-cookie'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { MELCloudHomeAPI } from '../../src/services/home-api.ts'
+import type { MELCloudHomeAPI } from '../../src/api/home.ts'
 import type {
   HomeAPIConfig,
   Logger,
@@ -10,7 +10,7 @@ import type {
   RequestLifecycleEvents,
   RequestRetryEvent,
   RequestStartEvent,
-} from '../../src/services/index.ts'
+} from '../../src/api/index.ts'
 import type {
   HomeBuilding,
   HomeClaim,
@@ -244,7 +244,7 @@ describe('melcloud home API', () => {
     vi.clearAllMocks()
     mockAxiosInstance.defaults.baseURL = BASE_URL
     ;({ MELCloudHomeAPI: melCloudHomeApi } =
-      await import('../../src/services/home-api.ts'))
+      await import('../../src/api/home.ts'))
   })
 
   const createApi = async (

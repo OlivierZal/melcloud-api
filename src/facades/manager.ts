@@ -1,3 +1,4 @@
+import type { APIAdapter } from '../api/index.ts'
 import type { DeviceType } from '../constants.ts'
 import type {
   AreaModel,
@@ -8,7 +9,6 @@ import type {
   Model,
   ModelRegistry,
 } from '../models/index.ts'
-import type { APIAdapter } from '../services/index.ts'
 import type { BuildingZone, Zone } from '../types/index.ts'
 import type {
   BuildingFacade,

@@ -1,5 +1,5 @@
+import type { APIAdapter } from '../api/index.ts'
 import type { DeviceType } from '../constants.ts'
-import type { APIAdapter } from '../services/index.ts'
 import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 
 /**

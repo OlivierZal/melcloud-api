@@ -21,5 +21,5 @@ export type {
   SettingManager,
 } from './interfaces.ts'
 
-export { MELCloudAPI } from './api.ts'
-export { MELCloudHomeAPI } from './home-api.ts'
+export { MELCloudAPI } from './classic.ts'
+export { MELCloudHomeAPI } from './home.ts'

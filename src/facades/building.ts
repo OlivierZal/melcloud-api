@@ -1,10 +1,10 @@
+import type { APIAdapter } from '../api/index.ts'
 import type {
   BuildingModel,
   DeviceModelAny,
   Model,
   ModelRegistry,
 } from '../models/index.ts'
-import type { APIAdapter } from '../services/index.ts'
 import type { ZoneSettings } from '../types/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
 import { BaseZoneFacade } from './base-zone.ts'

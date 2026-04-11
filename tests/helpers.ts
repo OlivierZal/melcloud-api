@@ -1,8 +1,8 @@
 import { vi } from 'vitest'
 
+import type { APIAdapter, SettingManager } from '../src/api/index.ts'
 import type { DeviceType } from '../src/constants.ts'
 import type { DeviceModelAny } from '../src/models/index.ts'
-import type { APIAdapter, SettingManager } from '../src/services/index.ts'
 
 const MOCK_RSSI = -60
 

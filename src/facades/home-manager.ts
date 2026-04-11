@@ -1,5 +1,5 @@
+import type { HomeAPI } from '../api/interfaces.ts'
 import type { HomeDeviceModel } from '../models/home-device.ts'
-import type { HomeAPI } from '../services/interfaces.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 
 /**

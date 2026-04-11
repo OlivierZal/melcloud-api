@@ -1,5 +1,5 @@
+import type { OnSyncFunction } from '../api/index.ts'
 import type { DeviceType } from '../constants.ts'
-import type { OnSyncFunction } from '../services/index.ts'
 
 /** Object that supports sync notification via `notifySync` or `onSync`. */
 interface HasOnSync {

@@ -1,5 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
+import type { ErrorLog, ErrorLogQuery } from '../api/index.ts'
 import type {
   BaseBuildingModel,
   BaseDeviceModel,
@@ -8,7 +9,6 @@ import type {
   Identifiable,
   Model,
 } from '../models/index.ts'
-import type { ErrorLog, ErrorLogQuery } from '../services/index.ts'
 import type {
   BuildingZone,
   EnergyData,
