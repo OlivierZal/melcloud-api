@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClassicAPI } from '../../src/api/classic.ts'
 import type { BuildingWithStructure } from '../../src/types/index.ts'
 import { DeviceType } from '../../src/constants.ts'
-import { ClassicFacadeManager } from '../../src/facades/manager.ts'
+import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
 import { cast, defined, mock } from '../helpers.ts'
 

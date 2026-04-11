@@ -2,7 +2,7 @@ import type { DeviceType } from '../constants.ts'
 import type { ListDeviceData } from '../types/index.ts'
 import type { BaseModel } from './base.ts'
 import type { Building } from './building.ts'
-import type { Device } from './device.ts'
+import type { Device } from './classic-device.ts'
 
 /** Base building model providing zone settings (frost protection, holiday mode). */
 export type BaseBuilding = Pick<Building, 'data'>

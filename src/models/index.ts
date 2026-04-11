@@ -1,6 +1,7 @@
 export { Area } from './area.ts'
 export { Building } from './building.ts'
-export { Device } from './device.ts'
+export { Device } from './classic-device.ts'
+export { ClassicRegistry } from './classic-registry.ts'
 export { Floor } from './floor.ts'
 export { HomeDevice } from './home-device.ts'
 export { HomeRegistry } from './home-registry.ts'
@@ -13,4 +14,3 @@ export {
   type ModelKind,
   isDeviceOfType,
 } from './interfaces.ts'
-export { ClassicRegistry } from './registry.ts'

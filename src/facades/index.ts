@@ -12,7 +12,8 @@ export type {
 
 export { AreaFacade } from './area.ts'
 export { BuildingFacade } from './building.ts'
-export { DeviceAtaFacade } from './device-ata.ts'
+export { DeviceAtaFacade } from './classic-device-ata.ts'
+export { ClassicFacadeManager } from './classic-manager.ts'
 export { DeviceAtwHasZone2Facade } from './device-atw-has-zone2.ts'
 export { DeviceAtwFacade } from './device-atw.ts'
 export { DeviceErvFacade } from './device-erv.ts'
@@ -26,4 +27,3 @@ export {
   isAtwFacade,
   isErvFacade,
 } from './interfaces.ts'
-export { ClassicFacadeManager } from './manager.ts'

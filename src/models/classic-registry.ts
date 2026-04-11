@@ -13,7 +13,7 @@ import { DeviceType } from '../constants.ts'
 import type { DeviceAny } from './interfaces.ts'
 import { Area } from './area.ts'
 import { Building } from './building.ts'
-import { Device } from './device.ts'
+import { Device } from './classic-device.ts'
 import { Floor } from './floor.ts'
 import { syncModel } from './symbols.ts'
 

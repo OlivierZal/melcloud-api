@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { DeviceType } from '../../src/constants.ts'
-import { ClassicFacadeManager } from '../../src/facades/manager.ts'
+import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { ClassicRegistry } from '../../src/models/index.ts'
 import {
   areaData,
