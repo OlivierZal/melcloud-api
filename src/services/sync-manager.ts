@@ -1,5 +1,5 @@
+import { DisposableTimeout } from '../resilience/index.ts'
 import type { Logger } from './interfaces.ts'
-import { DisposableTimeout } from './disposable-timeout.ts'
 
 const MILLISECONDS_PER_MINUTE = 60_000
 

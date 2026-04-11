@@ -26,13 +26,6 @@ import {
   createAPICallErrorData,
 } from '../logging/index.ts'
 import { HomeDeviceRegistry } from '../models/home-registry.ts'
-import type {
-  HomeAPI,
-  HomeAPIConfig,
-  Logger,
-  OnSyncFunction,
-  SettingManager,
-} from './interfaces.ts'
 import {
   isSessionExpired,
   isTransientServerError,
@@ -41,7 +34,14 @@ import {
   RequestLifecycleEmitter,
   RetryGuard,
   withRetryBackoff,
-} from './resilience.ts'
+} from '../resilience/index.ts'
+import type {
+  HomeAPI,
+  HomeAPIConfig,
+  Logger,
+  OnSyncFunction,
+  SettingManager,
+} from './interfaces.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const COGNITO_AUTHORITY =

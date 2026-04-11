@@ -4,7 +4,7 @@
  * expiry handling so consumers (`api.ts`, `home-api.ts`) only need one
  * import rather than four.
  */
-export { RequestLifecycleEmitter } from './events-emitter.ts'
+export { DisposableTimeout } from './disposable-timeout.ts'
 export { RateLimitGate } from './rate-limit-gate.ts'
 export {
   type RetryBackoffOptions,
@@ -20,3 +20,9 @@ export {
   RateLimitError,
   TransientServerError,
 } from '../errors.ts'
+/*
+ * Temporary bridge: `RequestLifecycleEmitter` still lives in services/
+ * until commit 3 moves it to observability/. Re-exported here for a
+ * single commit to keep `api.ts`/`home-api.ts` imports stable.
+ */
+export { RequestLifecycleEmitter } from '../services/events-emitter.ts'

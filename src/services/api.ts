@@ -51,6 +51,15 @@ import {
   createAPICallErrorData,
 } from '../logging/index.ts'
 import { ModelRegistry } from '../models/index.ts'
+import {
+  isSessionExpired,
+  isTransientServerError,
+  RateLimitError,
+  RateLimitGate,
+  RequestLifecycleEmitter,
+  RetryGuard,
+  withRetryBackoff,
+} from '../resilience/index.ts'
 import type {
   API,
   APIConfig,
@@ -60,15 +69,6 @@ import type {
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
-import {
-  isSessionExpired,
-  isTransientServerError,
-  RateLimitError,
-  RateLimitGate,
-  RequestLifecycleEmitter,
-  RetryGuard,
-  withRetryBackoff,
-} from './resilience.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const deviceTypeNames = {

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { DisposableTimeout } from '../../src/services/disposable-timeout.ts'
+import { DisposableTimeout } from '../../src/resilience/disposable-timeout.ts'
 
 describe('disposable timeout', () => {
   beforeEach(() => {

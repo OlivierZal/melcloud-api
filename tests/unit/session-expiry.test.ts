@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { isSessionExpired } from '../../src/services/session-expiry.ts'
+import { isSessionExpired } from '../../src/resilience/session-expiry.ts'
 
 describe(isSessionExpired, () => {
   beforeEach(() => {
