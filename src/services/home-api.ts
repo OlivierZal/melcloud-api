@@ -31,8 +31,13 @@ import type {
   SettingManager,
 } from './interfaces.ts'
 import { HomeDeviceRegistry } from './home-device-registry.ts'
-import { RetryGuard } from './retry-guard.ts'
-import { isSessionExpired } from './session-expiry.ts'
+import {
+  isSessionExpired,
+  isTransientServerError,
+  RateLimitGate,
+  RetryGuard,
+  withRetryBackoff,
+} from './resilience.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const COGNITO_AUTHORITY =
@@ -41,6 +46,8 @@ const COGNITO_AUTHORITY =
 const API_BASE_URL = 'https://melcloudhome.com'
 const ATA_UNIT_PATH = '/api/ataunit'
 const CONTEXT_PATH = '/api/user/context'
+const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
+const DEFAULT_TIMEOUT_MS = 30_000
 const ENERGY_PATH = '/api/telemetry/energy'
 const LOGIN_PATH = '/bff/login'
 const MILLISECONDS_IN_SECOND = 1000
@@ -49,6 +56,12 @@ const RETRY_DELAY = 1000
 const SIGNAL_PATH = '/api/telemetry/actual'
 const MAX_REDIRECTS = 20
 const USER_PATH = '/bff/user'
+
+// Transient 5xx retry budget (GET-only, applied per request in #request)
+const TRANSIENT_RETRY_INITIAL_DELAY_MS = 1000
+const TRANSIENT_RETRY_MAX_DELAY_MS = 16_000
+const TRANSIENT_RETRY_MAX_ATTEMPTS = 4
+const TRANSIENT_RETRY_JITTER_RATIO = 0.25
 
 const HTTP_REDIRECT_MIN = 300
 const HTTP_REDIRECT_MAX = 400
@@ -162,6 +175,10 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
 
   readonly #jar: CookieJar
 
+  readonly #rateLimitGate = new RateLimitGate({
+    hours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
+  })
+
   readonly #registry = new HomeDeviceRegistry()
 
   readonly #retryGuard = new RetryGuard(RETRY_DELAY)
@@ -189,6 +206,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
       logger = console,
       onSync,
       password,
+      requestTimeout = DEFAULT_TIMEOUT_MS,
       settingManager,
       username,
     } = config
@@ -197,7 +215,11 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     this.settingManager = settingManager
     this.#jar = this.#loadJar()
     this.#applyCredentials(username, password)
-    this.#api = axios.create({ baseURL, headers: { 'x-csrf': '1' } })
+    this.#api = axios.create({
+      baseURL,
+      headers: { 'x-csrf': '1' },
+      timeout: requestTimeout,
+    })
     this.#syncManager = new SyncManager(
       async () => this.list(),
       logger,
@@ -518,6 +540,21 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     }
   }
 
+  #recordRateLimitIfApplicable(error: unknown): void {
+    if (!axios.isAxiosError(error)) {
+      return
+    }
+    if (error.response?.status !== HttpStatusCode.TooManyRequests) {
+      return
+    }
+    this.#rateLimitGate.recordRateLimit(
+      (error.response.headers as Record<string, unknown>)['retry-after'],
+    )
+    this.logger.error(
+      `Rate limited (429): pausing for ${this.#rateLimitGate.formatRemaining()}`,
+    )
+  }
+
   async #request<T = unknown>(
     method: string,
     url: string,
@@ -527,18 +564,45 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     } = {},
   ): Promise<AxiosResponse<T>> {
     await this.#ensureSession(url)
-    try {
-      return await this.#dispatch<T>(method, url, config)
-    } catch (error) {
-      this.#logError(error)
-      if (this.#shouldRetryAuth(error, url)) {
-        this.#clearPersistedSession()
-        if (await this.authenticate()) {
-          return this.#dispatch<T>(method, url, config)
+    this.#throwIfRateLimited(url)
+    const attempt = async (): Promise<AxiosResponse<T>> => {
+      try {
+        return await this.#dispatch<T>(method, url, config)
+      } catch (error) {
+        this.#logError(error)
+        this.#recordRateLimitIfApplicable(error)
+        if (this.#shouldRetryAuth(error, url)) {
+          this.#clearPersistedSession()
+          if (await this.authenticate()) {
+            return this.#dispatch<T>(method, url, config)
+          }
         }
+        throw error
       }
-      throw error
     }
+    /*
+     * 5xx retry with exponential backoff, applied only to idempotent
+     * GET requests. POST is intentionally excluded: replaying a failed
+     * credential submit or state mutation is not safe. OIDC GET steps
+     * (cross-domain, LOGIN_PATH, USER_PATH) ARE retried — the original
+     * user-reported outage was a 503 on /bff/login, so skipping those
+     * would defeat the whole point.
+     */
+    if (method.toUpperCase() !== 'GET') {
+      return attempt()
+    }
+    return withRetryBackoff(attempt, {
+      initialDelayMs: TRANSIENT_RETRY_INITIAL_DELAY_MS,
+      isRetryable: isTransientServerError,
+      jitterRatio: TRANSIENT_RETRY_JITTER_RATIO,
+      maxDelayMs: TRANSIENT_RETRY_MAX_DELAY_MS,
+      maxRetries: TRANSIENT_RETRY_MAX_ATTEMPTS,
+      onRetry: (retryAttempt, _error, delayMs) => {
+        this.logger.log(
+          `Transient server error on ${url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,
+        )
+      },
+    })
   }
 
   async #safeRequest<T>(
@@ -583,5 +647,14 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     })
     const location = String(response.headers['location'] ?? '')
     return location === '' ? '' : resolveUrl(location, action)
+  }
+
+  #throwIfRateLimited(url: string): void {
+    if (isAuthExempt(url) || !this.#rateLimitGate.isPaused) {
+      return
+    }
+    throw new Error(
+      `API requests are on hold for ${this.#rateLimitGate.formatRemaining()} (upstream rate-limited)`,
+    )
   }
 }

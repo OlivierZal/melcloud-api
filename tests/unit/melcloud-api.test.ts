@@ -91,6 +91,18 @@ const createAxiosError = ({
     }),
   })
 
+const transientServerError = (status: number): Error =>
+  Object.assign(new Error(`Status ${String(status)}`), {
+    config: { url: '/User/ListDevices' },
+    isAxiosError: true,
+    response: {
+      config: { url: '/User/ListDevices' },
+      data: undefined,
+      headers: {},
+      status,
+    },
+  })
+
 const errorEntry = (
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
@@ -150,12 +162,16 @@ const isInterceptorTuple = (
   return typeof value[0] === 'function' && typeof value[1] === 'function'
 }
 
-vi.mock(import('axios'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  default: cast({
-    create: vi.fn().mockReturnValue(mockAxiosInstance),
-  }),
-}))
+vi.mock(import('axios'), async (importOriginal) => {
+  const original = await importOriginal()
+  return {
+    ...original,
+    default: cast({
+      create: vi.fn().mockReturnValue(mockAxiosInstance),
+      isAxiosError: original.default.isAxiosError,
+    }),
+  }
+})
 
 describe('melcloud API', () => {
   let melCloudApi: typeof MELCloudAPI = cast(null)
@@ -965,6 +981,57 @@ describe('melcloud API', () => {
       })
 
       await expect(requestHandler(config)).rejects.toThrow('on hold')
+    })
+  })
+
+  describe('transient 5xx retry on fetch', () => {
+    it('retries list() on 503 and succeeds on the next attempt', async () => {
+      mockLoginAndList()
+      const api = await createApi()
+      mockAxiosInstance.get.mockClear()
+      mockAxiosInstance.get
+        .mockRejectedValueOnce(transientServerError(503))
+        .mockResolvedValueOnce({ data: [] })
+
+      const promise = api.fetch()
+      await vi.advanceTimersByTimeAsync(2000)
+      const buildings = await promise
+
+      expect(buildings).toStrictEqual([])
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2)
+    })
+
+    it('gives up after exhausting the 5xx retry budget', async () => {
+      mockLoginAndList()
+      const api = await createApi()
+      mockAxiosInstance.get.mockClear()
+      mockAxiosInstance.get
+        .mockRejectedValueOnce(transientServerError(502))
+        .mockRejectedValueOnce(transientServerError(503))
+        .mockRejectedValueOnce(transientServerError(504))
+        .mockRejectedValueOnce(transientServerError(502))
+        .mockRejectedValueOnce(transientServerError(503))
+
+      const promise = api.fetch()
+      await vi.advanceTimersByTimeAsync(30_000)
+      const buildings = await promise
+
+      // Classic's public fetch() swallows errors and returns [].
+      expect(buildings).toStrictEqual([])
+      // 1 initial attempt + 4 retries
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(5)
+    })
+
+    it('does not retry on non-transient 500', async () => {
+      mockLoginAndList()
+      const api = await createApi()
+      mockAxiosInstance.get.mockClear()
+      mockAxiosInstance.get.mockRejectedValueOnce(transientServerError(500))
+
+      const buildings = await api.fetch()
+
+      expect(buildings).toStrictEqual([])
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(1)
     })
   })
 

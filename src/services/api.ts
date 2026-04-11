@@ -59,8 +59,13 @@ import type {
   OnSyncFunction,
   SettingManager,
 } from './interfaces.ts'
-import { RetryGuard } from './retry-guard.ts'
-import { isSessionExpired } from './session-expiry.ts'
+import {
+  isSessionExpired,
+  isTransientServerError,
+  RateLimitGate,
+  RetryGuard,
+  withRetryBackoff,
+} from './resilience.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const deviceTypeNames = {
@@ -76,7 +81,14 @@ const LOGIN_PATH = '/Login/ClientLogin3'
 
 const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL = 5
+const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_DELAY = 1000
+
+// Transient 5xx retry budget for the list() heartbeat
+const TRANSIENT_RETRY_INITIAL_DELAY_MS = 1000
+const TRANSIENT_RETRY_MAX_DELAY_MS = 16_000
+const TRANSIENT_RETRY_MAX_ATTEMPTS = 4
+const TRANSIENT_RETRY_JITTER_RATIO = 0.25
 
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
@@ -188,7 +200,7 @@ export class MELCloudAPI implements API, Disposable {
 
   #language = 'en'
 
-  #pauseListUntil = DateTime.now()
+  readonly #rateLimitGate = new RateLimitGate({ hours: DEFAULT_RETRY_HOURS })
 
   readonly #registry = new ModelRegistry()
 
@@ -223,6 +235,7 @@ export class MELCloudAPI implements API, Disposable {
       logger = console,
       onSync,
       password,
+      requestTimeout = DEFAULT_TIMEOUT_MS,
       settingManager,
       shouldVerifySSL = true,
       timezone,
@@ -232,7 +245,7 @@ export class MELCloudAPI implements API, Disposable {
     this.onSync = onSync
     this.settingManager = settingManager
     this.#applyOptionalConfig({ language, password, timezone, username })
-    this.#api = this.#createAPI(shouldVerifySSL)
+    this.#api = this.#createAPI(shouldVerifySSL, requestTimeout)
     this.#syncManager = new SyncManager(
       async () => this.fetch(),
       logger,
@@ -565,12 +578,16 @@ export class MELCloudAPI implements API, Disposable {
     this.expiry = ''
   }
 
-  #createAPI(shouldRejectUnauthorized: boolean): AxiosInstance {
+  #createAPI(
+    shouldRejectUnauthorized: boolean,
+    timeout: number,
+  ): AxiosInstance {
     const api = axios.create({
       baseURL: API_BASE_URL,
       httpsAgent: new https.Agent({
         rejectUnauthorized: shouldRejectUnauthorized,
       }),
+      timeout,
     })
     this.#setupAxiosInterceptors(api)
     return api
@@ -595,7 +612,24 @@ export class MELCloudAPI implements API, Disposable {
   }
 
   async #fetch(): Promise<BuildingWithStructure[]> {
-    const { data } = await this.list()
+    /*
+     * Wrap `list()` with an exponential-backoff retry on transient 5xx.
+     * This is the heartbeat endpoint that keeps the registry in sync —
+     * a momentary 503 from MELCloud's upstream should not cascade to an
+     * empty building list in the consumer app.
+     */
+    const { data } = await withRetryBackoff(async () => this.list(), {
+      initialDelayMs: TRANSIENT_RETRY_INITIAL_DELAY_MS,
+      isRetryable: isTransientServerError,
+      jitterRatio: TRANSIENT_RETRY_JITTER_RATIO,
+      maxDelayMs: TRANSIENT_RETRY_MAX_DELAY_MS,
+      maxRetries: TRANSIENT_RETRY_MAX_ATTEMPTS,
+      onRetry: (attempt, _error, delayMs) => {
+        this.logger.log(
+          `Transient server error on ${LIST_PATH}: retry ${String(attempt)} in ${String(delayMs)} ms`,
+        )
+      },
+    })
     this.#registry.syncBuildings(data)
     this.#registry.syncFloors(
       data.flatMap(({ Structure: { Floors: floors } }) => floors),
@@ -615,14 +649,9 @@ export class MELCloudAPI implements API, Disposable {
 
     const { config, response: { headers, status } = {} } = error
     if (status === HttpStatusCode.TooManyRequests) {
-      const retryAfterSeconds = Number(headers?.['retry-after'])
-      const retryDuration =
-        Number.isFinite(retryAfterSeconds) ?
-          { seconds: retryAfterSeconds }
-        : { hours: DEFAULT_RETRY_HOURS }
-      this.#pauseListUntil = DateTime.now().plus(retryDuration)
+      this.#rateLimitGate.recordRateLimit(headers?.['retry-after'])
       this.logger.error(
-        `Rate limited (429): pausing list operations for ${this.#pauseListUntil.diffNow().shiftTo('minutes').toHuman()}`,
+        `Rate limited (429): pausing list operations for ${this.#rateLimitGate.formatRemaining()}`,
       )
     } else if (
       status === HttpStatusCode.Unauthorized &&
@@ -640,12 +669,9 @@ export class MELCloudAPI implements API, Disposable {
     config: InternalAxiosRequestConfig,
   ): Promise<InternalAxiosRequestConfig> {
     const newConfig = { ...config }
-    if (newConfig.url === LIST_PATH && this.#pauseListUntil > DateTime.now()) {
+    if (newConfig.url === LIST_PATH && this.#rateLimitGate.isPaused) {
       throw new Error(
-        `API requests to ${LIST_PATH} are on hold for ${this.#pauseListUntil
-          .diffNow()
-          .shiftTo('minutes')
-          .toHuman()}`,
+        `API requests to ${LIST_PATH} are on hold for ${this.#rateLimitGate.formatRemaining()}`,
       )
     }
     if (newConfig.url !== LOGIN_PATH) {

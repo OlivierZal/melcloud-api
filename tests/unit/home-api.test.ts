@@ -213,6 +213,21 @@ const axiosUnauthorized = (url = '/api/user/context'): Error =>
     },
   })
 
+const axiosServerError = (
+  status: number,
+  headers: Record<string, string> = {},
+): Error =>
+  Object.assign(new Error(`Status ${String(status)}`), {
+    config: { url: '/api/user/context' },
+    isAxiosError: true,
+    response: {
+      config: { url: '/api/user/context' },
+      data: undefined,
+      headers,
+      status,
+    },
+  })
+
 describe('melcloud home API', () => {
   let melCloudHomeApi: { create: typeof MELCloudHomeAPI.create } = cast(null)
 
@@ -776,6 +791,122 @@ describe('melcloud home API', () => {
       const buildings = await api.list()
 
       expect(buildings).toStrictEqual([])
+    })
+  })
+
+  describe('transient 5xx retry + rate limiting', () => {
+    it('should retry a transient 503 on list() and succeed', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi({ autoSyncInterval: null })
+
+        mockRequest.mockRejectedValueOnce(axiosServerError(503))
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+        const listPromise = api.list()
+        /*
+         * Backoff sequence: 1s, 2s, 4s, 8s (max 16s). First retry succeeds
+         * after the first 1s slot.
+         */
+        await vi.advanceTimersByTimeAsync(2000)
+        const buildings = await listPromise
+
+        expect(buildings).toStrictEqual([mockBuilding])
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('should give up on list() after exhausting the 5xx retry budget', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi({ autoSyncInterval: null })
+        const {
+          mock: {
+            calls: { length: callCountBefore },
+          },
+        } = mockRequest
+        // 1 initial attempt + 4 retries = 5 total
+        mockRequest
+          .mockRejectedValueOnce(axiosServerError(502))
+          .mockRejectedValueOnce(axiosServerError(503))
+          .mockRejectedValueOnce(axiosServerError(504))
+          .mockRejectedValueOnce(axiosServerError(502))
+          .mockRejectedValueOnce(axiosServerError(503))
+
+        const listPromise = api.list()
+        // Exhaust all backoff slots: 1 + 2 + 4 + 8 = 15s, pad to 30s.
+        await vi.advanceTimersByTimeAsync(30_000)
+        const buildings = await listPromise
+
+        expect(buildings).toStrictEqual([])
+        expect(mockRequest).toHaveBeenCalledTimes(callCountBefore + 5)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('should not retry POST/PUT on 5xx (non-idempotent)', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi({ autoSyncInterval: null })
+      /*
+       * SetValues() calls list() internally on success, which would consume
+       * mocks; the first PUT failure triggers list() to be skipped via
+       * setValues's catch → only one request made.
+       */
+      const {
+        mock: {
+          calls: { length: callCountBefore },
+        },
+      } = mockRequest
+
+      mockRequest.mockRejectedValueOnce(axiosServerError(503))
+      const isOk = await api.setValues('device-1', cast({ Power: 'True' }))
+
+      expect(isOk).toBe(false)
+      expect(mockRequest).toHaveBeenCalledTimes(callCountBefore + 1)
+    })
+
+    it('should pause non-auth requests after a 429 and reset after the window', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi({ autoSyncInterval: null })
+        const {
+          mock: {
+            calls: { length: callCountAfterLogin },
+          },
+        } = mockRequest
+
+        /*
+         * 429 is NOT transient-5xx, so the retry wrapper gives up immediately.
+         * A single failure is enough to close the gate.
+         */
+        const rateLimited = axiosServerError(429, { 'retry-after': '2' })
+        mockRequest.mockRejectedValueOnce(rateLimited)
+
+        const first = await api.list()
+
+        expect(first).toStrictEqual([])
+        expect(mockRequest).toHaveBeenCalledTimes(callCountAfterLogin + 1)
+
+        // Second call: blocked by the gate without hitting the mock.
+        const second = await api.list()
+
+        expect(second).toStrictEqual([])
+        expect(mockRequest).toHaveBeenCalledTimes(callCountAfterLogin + 1)
+
+        // Advance past the Retry-After window — the gate reopens.
+        vi.advanceTimersByTime(3000)
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        const third = await api.list()
+
+        expect(third).toStrictEqual([mockBuilding])
+      } finally {
+        vi.useRealTimers()
+      }
     })
   })
 

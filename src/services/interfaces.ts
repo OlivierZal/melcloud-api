@@ -52,6 +52,13 @@ export interface BaseAPIConfig extends Partial<LoginCredentials> {
   /** Callback invoked after sync operations. */
   readonly onSync?: OnSyncFunction
 
+  /**
+   * Maximum time in milliseconds for a single HTTP request before
+   * axios aborts it. Defaults to 30 000 ms (30 s). Set to `0` to
+   * disable the timeout (not recommended).
+   */
+  readonly requestTimeout?: number
+
   /** External setting manager for persisting credentials and session data. */
   readonly settingManager?: SettingManager
 }
