@@ -75,7 +75,7 @@ const createDeviceModel = (device: ListDeviceAny): DeviceAny => {
     }
     default: {
       throw new Error(
-        `Unsupported device type: ${String((device as { Type: unknown }).Type)}`,
+        `Unsupported device type: ${JSON.stringify((device as { Type: unknown }).Type)}`,
       )
     }
   }

@@ -109,7 +109,29 @@ describe('model registry', () => {
 
       expect(() => {
         registry.syncDevices([invalidDevice])
-      }).toThrow(/Unsupported device type/u)
+      }).toThrow('Unsupported device type: 999')
+    })
+
+    it('serializes object-typed device type without losing information', () => {
+      /*
+       * Defensive: if a corrupted response produces a non-primitive Type
+       * field, the error message must still convey what was received
+       * rather than collapse to `[object Object]`.
+       */
+      const registry = new ClassicRegistry()
+      const invalidDevice = mock<ListDevice<0>>({
+        AreaID: null,
+        BuildingID: 1,
+        Device: mock<ListDeviceDataAta>(),
+        DeviceID: 9999,
+        DeviceName: 'Invalid',
+        FloorID: null,
+        Type: cast({ nested: 'value' }),
+      }) as ListDeviceAny
+
+      expect(() => {
+        registry.syncDevices([invalidDevice])
+      }).toThrow('Unsupported device type: {"nested":"value"}')
     })
 
     it('updates data in-place on re-sync, preserving identity', () => {
