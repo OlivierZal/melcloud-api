@@ -54,6 +54,22 @@ export const isTransientServerError = (error: unknown): boolean => {
   return typeof status === 'number' && TRANSIENT_STATUSES.has(status)
 }
 
+/**
+ * Default transient-retry budget used by both Classic (`list()`
+ * heartbeat) and Home (GET-only requests) clients. Keeping these in
+ * one place prevents drift: if we decide to tune the upper bound or
+ * jitter ratio, we update a single constant instead of two.
+ */
+export const DEFAULT_TRANSIENT_RETRY_OPTIONS = {
+  initialDelayMs: 1000,
+  jitterRatio: 0.25,
+  maxDelayMs: 16_000,
+  maxRetries: 4,
+} as const satisfies Pick<
+  RetryBackoffOptions,
+  'initialDelayMs' | 'jitterRatio' | 'maxDelayMs' | 'maxRetries'
+>
+
 /** Options for {@link withRetryBackoff}. */
 export interface RetryBackoffOptions {
   /** Maximum retry attempts after the initial try (0 disables retries). */

@@ -90,3 +90,16 @@ export class TransientServerError extends MelCloudError {
 export class NetworkError extends MelCloudError {
   public override readonly name = 'NetworkError'
 }
+
+/**
+ * User-defined type guard for {@link MelCloudError} and its subclasses.
+ *
+ * Idiomatic alternative to `instanceof MelCloudError` — mirrors the
+ * convention used by other modern SDKs (`axios.isAxiosError`,
+ * `ZodError.is`). Consumers can filter by the base class, then branch
+ * on the concrete subclass without additional type assertions.
+ * @param error - The value to test.
+ * @returns `true` if `error` is a {@link MelCloudError} instance.
+ */
+export const isMelCloudError = (error: unknown): error is MelCloudError =>
+  error instanceof MelCloudError

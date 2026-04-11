@@ -15,6 +15,7 @@ import {
   type HomeVertical,
   fanSpeedFromClassic,
 } from '../enum-mappings.ts'
+import { clampToRange } from './base-device.ts'
 
 interface TemperatureRange {
   max: number
@@ -47,11 +48,6 @@ const temperatureRanges = new Map<
   ['Fan', heatFanRange],
   ['Heat', heatFanRange],
 ])
-
-const clampTemperature = (
-  value: number,
-  { max, min }: TemperatureRange,
-): number => Math.min(Math.max(value, min), max)
 
 const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
   settings.find((setting) => setting.name === name)?.value ?? ''
@@ -174,7 +170,7 @@ export class HomeDeviceAtaFacade {
     const mode = operationMode ?? this.operationMode
     const getRange = temperatureRanges.get(mode)
     return getRange ?
-        { setTemperature: clampTemperature(value, getRange(this.capabilities)) }
+        { setTemperature: clampToRange(value, getRange(this.capabilities)) }
       : { setTemperature: value }
   }
 

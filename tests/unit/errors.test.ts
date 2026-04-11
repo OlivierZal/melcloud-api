@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   AuthenticationError,
+  isMelCloudError,
   MelCloudError,
   NetworkError,
   RateLimitError,
@@ -68,5 +69,35 @@ describe('melCloudError hierarchy', () => {
     })
 
     expect(error.cause).toBe(cause)
+  })
+})
+
+describe(isMelCloudError, () => {
+  it.each([
+    ['AuthenticationError', new AuthenticationError('x')],
+    ['RateLimitError', new RateLimitError('x', { retryAfter: null })],
+    ['TransientServerError', new TransientServerError('x')],
+    ['NetworkError', new NetworkError('x')],
+  ])('returns true for %s', (_name, error) => {
+    expect(isMelCloudError(error)).toBe(true)
+  })
+
+  it.each([
+    ['plain Error', new Error('boom')],
+    ['TypeError', new TypeError('bad')],
+    ['string', 'boom'],
+    ['null', null],
+    ['undefined', undefined],
+    ['plain object', { message: 'boom' }],
+  ])('returns false for %s', (_name, value) => {
+    expect(isMelCloudError(value)).toBe(false)
+  })
+
+  it('narrows the type so the subclass surface is accessible', () => {
+    const value: unknown = new RateLimitError('x', { retryAfter: null })
+    // Compile-time proof: `isMelCloudError` narrows `unknown` → `MelCloudError`.
+    const narrowed = isMelCloudError(value) ? value : null
+
+    expect(narrowed?.name).toBe('RateLimitError')
   })
 })

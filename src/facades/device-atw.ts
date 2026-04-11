@@ -14,7 +14,7 @@ import {
   OperationModeStateZone,
 } from '../constants.ts'
 import type { ReportChartLineOptions, ReportQuery } from './interfaces.ts'
-import { BaseDeviceFacade } from './base-device.ts'
+import { BaseDeviceFacade, clampToRange } from './base-device.ts'
 
 const DEFAULT_TEMPERATURE = 0
 
@@ -93,7 +93,10 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
     SetTankWaterTemperature: 0x1_00_00_00_00_00_20,
     SetTemperatureZone1: 0x2_00_00_00_80,
     SetTemperatureZone2: 0x8_00_00_02_00,
-  } satisfies Record<keyof UpdateDeviceData<typeof DeviceType.Atw>, number>
+  } as const satisfies Record<
+    keyof UpdateDeviceData<typeof DeviceType.Atw>,
+    number
+  >
 
   public readonly type = DeviceType.Atw
 
@@ -197,9 +200,9 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
     return Object.fromEntries(
       this.#targetTemperatureRanges
         .filter(([key]) => key in data)
-        .map(([key, { max, min }]) => [
+        .map(([key, range]) => [
           key,
-          Math.min(Math.max(data[key] ?? DEFAULT_TEMPERATURE, min), max),
+          clampToRange(data[key] ?? DEFAULT_TEMPERATURE, range),
         ]),
     )
   }

@@ -153,6 +153,7 @@ export {
 } from './enum-mappings.ts'
 export {
   AuthenticationError,
+  isMelCloudError,
   MelCloudError,
   NetworkError,
   RateLimitError,

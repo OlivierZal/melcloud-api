@@ -53,6 +53,7 @@ import {
   RequestLifecycleEmitter,
 } from '../observability/index.ts'
 import {
+  DEFAULT_TRANSIENT_RETRY_OPTIONS,
   isSessionExpired,
   isTransientServerError,
   RateLimitError,
@@ -102,12 +103,6 @@ interface LifecycleMeta {
 }
 
 type LifecycleTagged<T> = T & { [LIFECYCLE_KEY]?: LifecycleMeta }
-
-// Transient 5xx retry budget for the list() heartbeat
-const TRANSIENT_RETRY_INITIAL_DELAY_MS = 1000
-const TRANSIENT_RETRY_MAX_DELAY_MS = 16_000
-const TRANSIENT_RETRY_MAX_ATTEMPTS = 4
-const TRANSIENT_RETRY_JITTER_RATIO = 0.25
 
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
@@ -687,11 +682,8 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
      * empty building list in the consumer app.
      */
     const { data } = await withRetryBackoff(async () => this.list(), {
-      initialDelayMs: TRANSIENT_RETRY_INITIAL_DELAY_MS,
+      ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
       isRetryable: isTransientServerError,
-      jitterRatio: TRANSIENT_RETRY_JITTER_RATIO,
-      maxDelayMs: TRANSIENT_RETRY_MAX_DELAY_MS,
-      maxRetries: TRANSIENT_RETRY_MAX_ATTEMPTS,
       onRetry: (attempt, _error, delayMs) => {
         this.logger.log(
           `Transient server error on ${LIST_PATH}: retry ${String(attempt)} in ${String(delayMs)} ms`,
@@ -717,9 +709,10 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
 
     const { config, response: { headers, status } = {} } = error
     if (status === HttpStatusCode.TooManyRequests) {
-      this.#rateLimitGate.recordRateLimit(headers?.['retry-after'])
-      this.logger.error(
-        `Rate limited (429): pausing list operations for ${this.#rateLimitGate.formatRemaining()}`,
+      this.#rateLimitGate.recordAndLog(
+        this.logger,
+        headers?.['retry-after'],
+        'list operations',
       )
     } else if (
       status === HttpStatusCode.Unauthorized &&
