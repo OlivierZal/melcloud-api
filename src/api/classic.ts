@@ -61,8 +61,8 @@ import {
   withRetryBackoff,
 } from '../resilience/index.ts'
 import type {
+  ClassicAPIAdapter,
   ClassicAPIConfig,
-  ClassicAPI as ClassicAPIContract,
   ErrorLog,
   ErrorLogQuery,
   Logger,
@@ -204,7 +204,7 @@ const collectDevices = function* collectDevices(
  * Main MELCloud Classic API client. Handles authentication, device syncing, and all
  * ClassicAPI endpoint calls. Uses a private constructor — create instances via {@link ClassicAPI.create}.
  */
-export class ClassicAPI implements ClassicAPIContract, Disposable {
+export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   public readonly logger: Logger
 
   public readonly onSync?: OnSyncFunction

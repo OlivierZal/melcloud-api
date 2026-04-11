@@ -7,10 +7,8 @@ import type {
   Device,
   DeviceAny,
   Identifiable,
-  Model,
 } from '../models/index.ts'
 import type {
-  BuildingZone,
   EnergyData,
   FailureData,
   FrostProtectionData,
@@ -23,7 +21,6 @@ import type {
   SuccessData,
   TilesData,
   UpdateDeviceData,
-  Zone,
   ZoneSettings,
   ZoneState,
 } from '../types/index.ts'
@@ -152,18 +149,6 @@ export interface Facade extends Identifiable {
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((device?: false) => Promise<TilesData<null>>) &
     (<T extends DeviceType>(device: Device<T>) => Promise<TilesData<T>>)
-}
-
-/** Manager for lazily creating and caching facade instances. */
-export interface ClassicFacadeManager {
-  /** Get or create a facade for the given model instance. Returns `null` if no instance is provided. */
-  readonly get: (instance?: Model) => Facade | null
-
-  /** Build a hierarchical zone structure, optionally filtered by device type. */
-  readonly getBuildings: (params?: { type?: DeviceType }) => BuildingZone[]
-
-  /** Flatten the building hierarchy into a sorted list of all zones. */
-  readonly getZones: (params?: { type?: DeviceType }) => Zone[]
 }
 
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */

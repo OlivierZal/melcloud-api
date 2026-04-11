@@ -12,7 +12,6 @@ import type {
 import type { BuildingZone, Zone } from '../types/index.ts'
 import type {
   BuildingFacade,
-  ClassicFacadeManager as ClassicFacadeManagerContract,
   DeviceFacade,
   DeviceFacadeAny,
   Facade,
@@ -24,7 +23,7 @@ import { createFacade } from './factory.ts'
  * Lazily creates and caches facade instances using a WeakMap keyed by model reference.
  * Ensures each model instance maps to exactly one facade throughout its lifetime.
  */
-export class ClassicFacadeManager implements ClassicFacadeManagerContract {
+export class ClassicFacadeManager {
   readonly #api: ClassicAPIAdapter
 
   readonly #facades = new WeakMap<Model, Facade>()

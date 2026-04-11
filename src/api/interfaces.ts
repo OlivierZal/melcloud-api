@@ -2,7 +2,6 @@ import type { HourNumbers } from 'luxon'
 
 import type { DeviceType } from '../constants.ts'
 import type { HomeRegistry } from '../models/home-registry.ts'
-import type { ClassicRegistry } from '../models/index.ts'
 import type {
   BuildingWithStructure,
   EnergyData,
@@ -25,8 +24,6 @@ import type {
   HomeReportData,
   HomeUser,
   LoginCredentials,
-  LoginData,
-  LoginPostData,
   OperationModeLogData,
   ReportData,
   ReportPostData,
@@ -230,7 +227,16 @@ export interface ErrorLogQuery {
   readonly to?: string
 }
 
-/** MELCloud Home API contract. */
+/**
+ * Injectable contract for the MELCloud Home API client.
+ *
+ * Exists alongside the `HomeAPI` class with the same name (declaration
+ * merging). This interface uses property-with-arrow syntax so facades,
+ * mocks, and tests can reference methods safely (`expect(api.setValues)`,
+ * `mock<HomeAPI>({...})`) without triggering `unbound-method` lint —
+ * the class has real methods that carry `this`, whereas the interface
+ * shape declares them as plain functions with no implicit binding.
+ */
 export interface HomeAPI {
   /**
    * Whether the upstream rate-limit gate is currently holding a pause
@@ -286,44 +292,6 @@ export interface HomeAPI {
 
   /** Update device values and refresh device data via list(). */
   readonly setValues: (id: string, values: HomeAtaValues) => Promise<boolean>
-}
-
-/** Full MELCloud Classic API contract including authentication and device listing. */
-export interface ClassicAPI extends ClassicAPIAdapter {
-  /**
-   * Whether the upstream rate-limit gate is currently holding a pause
-   * window. `true` means the SDK is intentionally failing list
-   * operations fast to honor an upstream 429 `Retry-After`.
-   */
-  readonly isRateLimited: boolean
-
-  /** Central model registry containing all synced buildings, floors, areas, and devices. */
-  readonly registry: ClassicRegistry
-
-  /** Authenticate with MELCloud using the provided or stored credentials. */
-  readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
-
-  /** Cancel any pending automatic sync. */
-  readonly clearSync: () => void
-
-  /** Whether a user is currently authenticated (context key valid). */
-  readonly isAuthenticated: () => boolean
-
-  /** List all buildings and their device hierarchy. */
-  readonly list: () => Promise<{ data: BuildingWithStructure[] }>
-
-  /** Perform a login request against the MELCloud Classic API. */
-  readonly login: ({
-    postData,
-  }: {
-    postData: LoginPostData
-  }) => Promise<{ data: LoginData }>
-
-  /** Update the user's language on the server if it differs from the current locale. */
-  readonly setLanguage: (language: string) => Promise<void>
-
-  /** Update the automatic sync interval and reschedule. Set to `0` or `null` to disable. */
-  readonly setSyncInterval: (minutes: number | null) => void
 }
 
 /**
