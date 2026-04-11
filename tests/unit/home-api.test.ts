@@ -958,6 +958,56 @@ describe('melcloud home API', () => {
       expect(api.isAuthenticated()).toBe(true)
     })
 
+    it('should wipe persisted state when rejected session has no credentials', async () => {
+      /*
+       * Without credentials, @authenticate short-circuits to false. The
+       * dead cookies/expiry must be cleared before the fallback so a
+       * subsequent boot doesn't loop forever retrying the same bad session.
+       */
+      const cookies = await buildSerializedJar()
+      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
+      const { setSpy, settingManager } = createStore({
+        cookies,
+        expiry: futureExpiry,
+      })
+      mockRequest.mockRejectedValueOnce(new Error('401 Unauthorized'))
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        settingManager,
+      })
+
+      expect(api.isAuthenticated()).toBe(false)
+      expect(setSpy).toHaveBeenCalledWith('cookies', '')
+      expect(setSpy).toHaveBeenCalledWith('expiry', '')
+    })
+
+    it('should skip getUser when expiry is set but cookies are empty', async () => {
+      /*
+       * Edge case (e.g. after a settings migration where `cookies` didn't
+       * exist previously): an unexpired `expiry` alone must not trigger a
+       * getUser() attempt with an empty cookie jar.
+       */
+      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
+      const { settingManager } = createStore({
+        expiry: futureExpiry,
+        password: 'pass',
+        username: 'user@test.com',
+      })
+      setupSuccessfulLogin()
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        settingManager,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+      // First call must be the OIDC entry (/bff/login), not /bff/user.
+      expect(mockRequest.mock.calls[0]?.[0]).toStrictEqual(
+        expect.objectContaining({ url: '/bff/login' }),
+      )
+    })
+
     it('should fall back to OIDC when expiry is in the past', async () => {
       const cookies = await buildSerializedJar()
       const pastExpiry = new Date(Date.now() - HOUR_MS).toISOString()
@@ -979,7 +1029,7 @@ describe('melcloud home API', () => {
 
     it('should recover from corrupted cookies and fall back to OIDC', async () => {
       const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { settingManager } = createStore({
+      const { setSpy, settingManager } = createStore({
         cookies: 'not-valid-json',
         expiry: futureExpiry,
         password: 'pass',
@@ -993,6 +1043,12 @@ describe('melcloud home API', () => {
       })
 
       expect(api.isAuthenticated()).toBe(true)
+      /*
+       * Self-heal: corrupted cookies + paired expiry must be wiped so the
+       * bad value is not retried on subsequent boots.
+       */
+      expect(setSpy).toHaveBeenCalledWith('cookies', '')
+      expect(setSpy).toHaveBeenCalledWith('expiry', '')
     })
 
     it('should persist cookies via settingManager after login', async () => {

@@ -195,8 +195,17 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
    */
   public static async create(config?: HomeAPIConfig): Promise<MELCloudHomeAPI> {
     const api = new MELCloudHomeAPI(config)
-    if (api.#hasPersistedSession() && (await api.getUser()) !== null) {
-      return api
+    if (api.#hasPersistedSession()) {
+      if ((await api.getUser()) !== null) {
+        return api
+      }
+      /*
+       * Persisted session was rejected (401, network error, stale cookies):
+       * wipe it before falling back to a full OIDC login so a subsequent
+       * authenticate() short-circuit (missing credentials) doesn't leave
+       * the dead session in the SettingManager and loop forever on reboots.
+       */
+      api.#clearPersistedSession()
     }
     await api.authenticate()
     return api
@@ -206,10 +215,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   public async authenticate(data?: LoginCredentials): Promise<boolean> {
     /* v8 ignore next -- @authenticate guarantees data is always provided */
     const { password, username } = data ?? { password: '', username: '' }
-    this.#user = null
-    this.expiry = ''
-    this.#jar.removeAllCookiesSync()
-    this.cookies = ''
+    this.#clearPersistedSession()
     await this.#performOidcLogin({ password, username })
     ;({ password: this.password, username: this.username } = {
       password,
@@ -348,6 +354,13 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     }
   }
 
+  #clearPersistedSession(): void {
+    this.#user = null
+    this.expiry = ''
+    this.cookies = ''
+    this.#jar.removeAllCookiesSync()
+  }
+
   async #performOidcLogin(credentials: LoginCredentials): Promise<void> {
     const { data: html } = await this.#followRedirects<string>(LOGIN_PATH)
     const action = extractFormAction(html)
@@ -388,7 +401,11 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   }
 
   #hasPersistedSession(): boolean {
-    return this.expiry !== '' && new Date(this.expiry) > new Date()
+    return (
+      this.cookies !== '' &&
+      this.expiry !== '' &&
+      new Date(this.expiry) > new Date()
+    )
   }
 
   #loadJar(): CookieJar {
@@ -398,6 +415,14 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     try {
       return CookieJar.deserializeSync(this.cookies)
     } catch {
+      /*
+       * Self-heal: drop the corrupted value so we don't retry parsing it on
+       * every subsequent boot. The jar is currently being constructed, so
+       * clearing via the @setting accessors (not #clearPersistedSession())
+       * is required — we must not touch this.#jar from here.
+       */
+      this.cookies = ''
+      this.expiry = ''
       return new CookieJar()
     }
   }
