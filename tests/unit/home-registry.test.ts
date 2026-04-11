@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import type { HomeDevice } from '../../src/types/index.ts'
+import type { HomeDeviceData } from '../../src/types/index.ts'
 import { HomeDeviceType } from '../../src/constants.ts'
 import {
-  type TypedHomeDevice,
-  HomeDeviceRegistry,
+  type TypedHomeDeviceData,
+  HomeRegistry,
 } from '../../src/models/home-registry.ts'
 import { mock } from '../helpers.ts'
 
@@ -12,14 +12,14 @@ const createDevice = (
   id: string,
   name = 'Device',
   type: HomeDeviceType = HomeDeviceType.Ata,
-): TypedHomeDevice => ({
-  device: mock<HomeDevice>({ givenDisplayName: name, id, settings: [] }),
+): TypedHomeDeviceData => ({
+  device: mock<HomeDeviceData>({ givenDisplayName: name, id, settings: [] }),
   type,
 })
 
 describe('home device registry', () => {
   it('should sync new devices', () => {
-    const registry = new HomeDeviceRegistry()
+    const registry = new HomeRegistry()
     registry.sync([createDevice('a'), createDevice('b')])
 
     expect(registry.getAll()).toHaveLength(2)
@@ -27,7 +27,7 @@ describe('home device registry', () => {
   })
 
   it('should update existing devices in place', () => {
-    const registry = new HomeDeviceRegistry()
+    const registry = new HomeRegistry()
     registry.sync([createDevice('a', 'Old')])
     const model = registry.getById('a')
     registry.sync([createDevice('a', 'New')])
@@ -37,7 +37,7 @@ describe('home device registry', () => {
   })
 
   it('should prune stale devices', () => {
-    const registry = new HomeDeviceRegistry()
+    const registry = new HomeRegistry()
     registry.sync([createDevice('a'), createDevice('b')])
     registry.sync([createDevice('a')])
 
@@ -46,7 +46,7 @@ describe('home device registry', () => {
   })
 
   it('should filter by device type', () => {
-    const registry = new HomeDeviceRegistry()
+    const registry = new HomeRegistry()
     registry.sync([
       createDevice('ata-1', 'ATA', HomeDeviceType.Ata),
       createDevice('atw-1', 'ATW', HomeDeviceType.Atw),

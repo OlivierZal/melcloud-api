@@ -3,9 +3,7 @@ import { BaseModel } from './base.ts'
 import { syncModel } from './symbols.ts'
 
 /** Area model representing a zone within a building or floor. */
-export class AreaModel<
-  T extends number | null = number | null,
-> extends BaseModel {
+export class Area<T extends number | null = number | null> extends BaseModel {
   public buildingId: number
 
   public floorId: number | null

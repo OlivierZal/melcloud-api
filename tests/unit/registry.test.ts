@@ -6,7 +6,7 @@ import type {
   ListDeviceDataAta,
 } from '../../src/types/index.ts'
 import { DeviceType } from '../../src/constants.ts'
-import { isDeviceOfType, ModelRegistry } from '../../src/models/index.ts'
+import { ClassicRegistry, isDeviceOfType } from '../../src/models/index.ts'
 import {
   areaData,
   ataDevice,
@@ -50,8 +50,8 @@ const allDevices: ListDeviceAny[] = [
   ervDevice({ AreaID: null, DeviceName: 'Device ERV' }),
 ]
 
-const createPopulatedRegistry = (): ModelRegistry => {
-  const registry = new ModelRegistry()
+const createPopulatedRegistry = (): ClassicRegistry => {
+  const registry = new ClassicRegistry()
   registry.syncBuildings(allBuildings)
   registry.syncFloors(allFloors)
   registry.syncAreas(allAreas)
@@ -62,7 +62,7 @@ const createPopulatedRegistry = (): ModelRegistry => {
 describe('model registry', () => {
   describe('sync', () => {
     it('syncs buildings', () => {
-      const registry = new ModelRegistry()
+      const registry = new ClassicRegistry()
       registry.syncBuildings(allBuildings)
 
       expect(registry.buildings.getById(1)?.name).toBe('Building 1')
@@ -71,7 +71,7 @@ describe('model registry', () => {
     })
 
     it('syncs floors', () => {
-      const registry = new ModelRegistry()
+      const registry = new ClassicRegistry()
       registry.syncFloors(allFloors)
 
       expect(registry.floors.getById(10)?.name).toBe('Floor 1')
@@ -79,7 +79,7 @@ describe('model registry', () => {
     })
 
     it('syncs areas', () => {
-      const registry = new ModelRegistry()
+      const registry = new ClassicRegistry()
       registry.syncAreas(allAreas)
 
       expect(registry.areas.getById(100)?.name).toBe('Area 1')
@@ -88,7 +88,7 @@ describe('model registry', () => {
     })
 
     it('syncs devices', () => {
-      const registry = new ModelRegistry()
+      const registry = new ClassicRegistry()
       registry.syncDevices(allDevices)
 
       expect(registry.devices.getById(1000)?.name).toBe('Device ATA')
@@ -96,7 +96,7 @@ describe('model registry', () => {
     })
 
     it('throws for unsupported device type', () => {
-      const registry = new ModelRegistry()
+      const registry = new ClassicRegistry()
       const invalidDevice = mock<ListDevice<0>>({
         AreaID: null,
         BuildingID: 1,
@@ -113,7 +113,7 @@ describe('model registry', () => {
     })
 
     it('updates data in-place on re-sync, preserving identity', () => {
-      const registry = new ModelRegistry()
+      const registry = new ClassicRegistry()
       registry.syncBuildings(allBuildings)
       const buildingBefore = registry.buildings.getById(1)
 
@@ -155,7 +155,7 @@ describe('model registry', () => {
     })
 
     it('skips sync when device type changes between syncs', () => {
-      const registry = new ModelRegistry()
+      const registry = new ClassicRegistry()
       registry.syncDevices(allDevices)
 
       // Re-sync each device ID with a mismatched Type to cover all false branches
@@ -199,7 +199,7 @@ describe('model registry', () => {
     })
 
     it('getDevicesByType returns empty for absent type', () => {
-      const registry = new ModelRegistry()
+      const registry = new ClassicRegistry()
       registry.syncDevices([defined(allDevices[0])])
 
       expect(registry.getDevicesByType(DeviceType.Atw)).toHaveLength(0)

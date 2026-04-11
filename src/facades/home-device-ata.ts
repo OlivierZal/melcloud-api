@@ -1,5 +1,5 @@
 import type { HomeAPI } from '../api/interfaces.ts'
-import type { HomeDeviceModel } from '../models/home-device.ts'
+import type { HomeDevice } from '../models/home-device.ts'
 import type {
   HomeAtaValues,
   HomeDeviceCapabilities,
@@ -120,9 +120,9 @@ export class HomeDeviceAtaFacade {
 
   readonly #api: HomeAPI
 
-  readonly #model: HomeDeviceModel
+  readonly #model: HomeDevice
 
-  public constructor(api: HomeAPI, model: HomeDeviceModel) {
+  public constructor(api: HomeAPI, model: HomeDevice) {
     this.#api = api
     this.#model = model
   }

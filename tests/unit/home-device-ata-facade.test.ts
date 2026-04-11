@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPI } from '../../src/api/interfaces.ts'
-import type { HomeDevice } from '../../src/types/index.ts'
+import type { HomeDeviceData } from '../../src/types/index.ts'
 import { HomeDeviceType } from '../../src/constants.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
-import { HomeDeviceModel } from '../../src/models/home-device.ts'
+import { HomeDevice } from '../../src/models/home-device.ts'
 import { mock } from '../helpers.ts'
 
-const defaultCapabilities: HomeDevice['capabilities'] = {
+const defaultCapabilities: HomeDeviceData['capabilities'] = {
   hasAirDirection: true,
   hasAutomaticFanSpeed: true,
   hasAutoOperationMode: true,
@@ -27,10 +27,10 @@ const defaultCapabilities: HomeDevice['capabilities'] = {
 
 const createModel = (
   settings: Record<string, string> = {},
-  capabilities: Partial<HomeDevice['capabilities']> = {},
+  capabilities: Partial<HomeDeviceData['capabilities']> = {},
   rssi = -50,
-): HomeDeviceModel =>
-  new HomeDeviceModel(
+): HomeDevice =>
+  new HomeDevice(
     mock({
       capabilities: { ...defaultCapabilities, ...capabilities },
       givenDisplayName: 'Test Device',

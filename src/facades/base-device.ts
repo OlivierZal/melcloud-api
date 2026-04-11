@@ -11,7 +11,7 @@ import type {
 } from '../types/index.ts'
 import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
-import { type DeviceModelAny, DeviceModel } from '../models/index.ts'
+import { type DeviceAny, Device } from '../models/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -49,7 +49,7 @@ const getDuration = ({ from, to }: Required<ReportQuery>): number =>
  * value updates with effective flags, and ATA key conversion between set/list formats.
  */
 export abstract class BaseDeviceFacade<T extends DeviceType>
-  extends BaseFacade<DeviceModelAny>
+  extends BaseFacade<DeviceAny>
   implements DeviceFacade<T>
 {
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
@@ -62,7 +62,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     return this.device.data
   }
 
-  public override get devices(): DeviceModelAny[] {
+  public override get devices(): DeviceAny[] {
     return [this.instance]
   }
 
@@ -74,7 +74,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  protected get device(): DeviceModel<T> {
+  protected get device(): Device<T> {
     const { instance } = this
     if (instance.type !== this.type) {
       throw new Error(
@@ -82,11 +82,11 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       )
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified by type guard above
-    return instance as DeviceModel<T>
+    return instance as Device<T>
   }
 
   protected get model(): {
-    getById: (id: number) => DeviceModelAny | undefined
+    getById: (id: number) => DeviceAny | undefined
   } {
     return this.registry.devices
   }
@@ -208,14 +208,14 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   public override async getTiles(device?: false): Promise<TilesData<null>>
   public override async getTiles(
-    device: true | DeviceModelAny,
+    device: true | DeviceAny,
   ): Promise<TilesData<T>>
   public override async getTiles(
-    device: boolean | DeviceModelAny = false,
+    device: boolean | DeviceAny = false,
   ): Promise<TilesData<T | null>> {
     if (
       device === false ||
-      (device instanceof DeviceModel && device.id !== this.id)
+      (device instanceof Device && device.id !== this.id)
     ) {
       return super.getTiles()
     }

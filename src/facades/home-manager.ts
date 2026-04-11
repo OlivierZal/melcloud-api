@@ -1,5 +1,5 @@
 import type { HomeAPI } from '../api/interfaces.ts'
-import type { HomeDeviceModel } from '../models/home-device.ts'
+import type { HomeDevice } from '../models/home-device.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 
 /**
@@ -9,16 +9,16 @@ import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 export class HomeFacadeManager {
   readonly #api: HomeAPI
 
-  readonly #facades = new WeakMap<HomeDeviceModel, HomeDeviceAtaFacade>()
+  readonly #facades = new WeakMap<HomeDevice, HomeDeviceAtaFacade>()
 
   public constructor(api: HomeAPI) {
     this.#api = api
   }
 
-  public get(instance: HomeDeviceModel): HomeDeviceAtaFacade
+  public get(instance: HomeDevice): HomeDeviceAtaFacade
   public get(): null
-  public get(instance?: HomeDeviceModel): HomeDeviceAtaFacade | null
-  public get(instance?: HomeDeviceModel): HomeDeviceAtaFacade | null {
+  public get(instance?: HomeDevice): HomeDeviceAtaFacade | null
+  public get(instance?: HomeDevice): HomeDeviceAtaFacade | null {
     if (!instance) {
       return null
     }

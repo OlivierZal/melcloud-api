@@ -1,8 +1,8 @@
 import type { HourNumbers } from 'luxon'
 
 import type { DeviceType } from '../constants.ts'
-import type { HomeDeviceRegistry } from '../models/home-registry.ts'
-import type { ModelRegistry } from '../models/index.ts'
+import type { HomeRegistry } from '../models/home-registry.ts'
+import type { ClassicRegistry } from '../models/index.ts'
 import type {
   BuildingWithStructure,
   EnergyData,
@@ -240,7 +240,7 @@ export interface HomeAPI {
   readonly isRateLimited: boolean
 
   /** Device registry with stable model references across syncs. */
-  readonly registry: HomeDeviceRegistry
+  readonly registry: HomeRegistry
 
   /** The currently authenticated user, or `null`. */
   readonly user: HomeUser | null
@@ -298,7 +298,7 @@ export interface API extends APIAdapter {
   readonly isRateLimited: boolean
 
   /** Central model registry containing all synced buildings, floors, areas, and devices. */
-  readonly registry: ModelRegistry
+  readonly registry: ClassicRegistry
 
   /** Authenticate with MELCloud using the provided or stored credentials. */
   readonly authenticate: (data?: LoginCredentials) => Promise<boolean>

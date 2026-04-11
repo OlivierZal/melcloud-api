@@ -45,7 +45,7 @@ import type {
 } from '../types/index.ts'
 import { DeviceType, Language } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
-import { ModelRegistry } from '../models/index.ts'
+import { ClassicRegistry } from '../models/index.ts'
 import {
   APICallRequestData,
   APICallResponseData,
@@ -211,7 +211,7 @@ export class MELCloudAPI implements API, Disposable {
 
   public readonly settingManager?: SettingManager
 
-  public get registry(): ModelRegistry {
+  public get registry(): ClassicRegistry {
     return this.#registry
   }
 
@@ -223,7 +223,7 @@ export class MELCloudAPI implements API, Disposable {
 
   readonly #rateLimitGate = new RateLimitGate({ hours: DEFAULT_RETRY_HOURS })
 
-  readonly #registry = new ModelRegistry()
+  readonly #registry = new ClassicRegistry()
 
   readonly #retryGuard = new RetryGuard(RETRY_DELAY)
 

@@ -2,7 +2,7 @@ import { vi } from 'vitest'
 
 import type { APIAdapter, SettingManager } from '../src/api/index.ts'
 import type { DeviceType } from '../src/constants.ts'
-import type { DeviceModelAny } from '../src/models/index.ts'
+import type { DeviceAny } from '../src/models/index.ts'
 
 const MOCK_RSSI = -60
 
@@ -77,11 +77,11 @@ export const createSettingStore = (
 }
 
 export function assertDeviceType<T extends DeviceType>(
-  device: DeviceModelAny | undefined,
+  device: DeviceAny | undefined,
   type: T,
-): asserts device is Extract<DeviceModelAny, { type: T }>
+): asserts device is Extract<DeviceAny, { type: T }>
 export function assertDeviceType(
-  device: DeviceModelAny | undefined,
+  device: DeviceAny | undefined,
   type: DeviceType,
 ): void {
   if (device?.type !== type) {

@@ -10,11 +10,11 @@ import type {
   Zone,
 } from '../types/index.ts'
 import { DeviceType } from '../constants.ts'
-import type { DeviceModelAny } from './interfaces.ts'
-import { AreaModel } from './area.ts'
-import { BuildingModel } from './building.ts'
-import { DeviceModel } from './device.ts'
-import { FloorModel } from './floor.ts'
+import type { DeviceAny } from './interfaces.ts'
+import { Area } from './area.ts'
+import { Building } from './building.ts'
+import { Device } from './device.ts'
+import { Floor } from './floor.ts'
 import { syncModel } from './symbols.ts'
 
 /*
@@ -56,25 +56,22 @@ const syncMap = <TModel, TData>(
   return models
 }
 
-const syncDeviceModel = (
-  model: DeviceModelAny,
-  device: ListDeviceAny,
-): void => {
+const syncDeviceModel = (model: DeviceAny, device: ListDeviceAny): void => {
   if (model.type === device.Type) {
     model[syncModel](device)
   }
 }
 
-const createDeviceModel = (device: ListDeviceAny): DeviceModelAny => {
+const createDeviceModel = (device: ListDeviceAny): DeviceAny => {
   switch (device.Type) {
     case DeviceType.Ata: {
-      return new DeviceModel(device)
+      return new Device(device)
     }
     case DeviceType.Atw: {
-      return new DeviceModel(device)
+      return new Device(device)
     }
     case DeviceType.Erv: {
-      return new DeviceModel(device)
+      return new Device(device)
     }
     default: {
       throw new Error(
@@ -131,7 +128,7 @@ const getDeviceLevel = (
 }
 
 const buildDeviceZones = (
-  devices: DeviceModelAny[],
+  devices: DeviceAny[],
   type?: DeviceType,
 ): DeviceZone[] => {
   const filtered =
@@ -152,47 +149,47 @@ const buildDeviceZones = (
  * Central in-memory registry of all MELCloud models (buildings, floors, areas, devices).
  * Synced from the API response and queryable by ID or parent relationship.
  */
-export class ModelRegistry {
+export class ClassicRegistry {
   /*
    * Pre-computed indexes for O(1) lookups by parent relationship.
    * Public accessors expose readonly query interfaces over private maps,
    * preventing callers from clearing or replacing entire collections.
    */
-  readonly #areas = new Map<number, AreaModel>()
+  readonly #areas = new Map<number, Area>()
 
   public readonly areas = {
-    getById: (id: number): AreaModel | undefined => this.#areas.get(id),
+    getById: (id: number): Area | undefined => this.#areas.get(id),
   }
 
-  readonly #buildings = new Map<number, BuildingModel>()
+  readonly #buildings = new Map<number, Building>()
 
   public readonly buildings = {
-    getById: (id: number): BuildingModel | undefined => this.#buildings.get(id),
+    getById: (id: number): Building | undefined => this.#buildings.get(id),
   }
 
-  readonly #devices = new Map<number, DeviceModelAny>()
+  readonly #devices = new Map<number, DeviceAny>()
 
   public readonly devices = {
-    getById: (id: number): DeviceModelAny | undefined => this.#devices.get(id),
+    getById: (id: number): DeviceAny | undefined => this.#devices.get(id),
   }
 
-  readonly #floors = new Map<number, FloorModel>()
+  readonly #floors = new Map<number, Floor>()
 
   public readonly floors = {
-    getById: (id: number): FloorModel | undefined => this.#floors.get(id),
+    getById: (id: number): Floor | undefined => this.#floors.get(id),
   }
 
-  #areasByBuildingId = new Map<number, AreaModel[]>()
+  #areasByBuildingId = new Map<number, Area[]>()
 
-  #areasByFloorId = new Map<number, AreaModel[]>()
+  #areasByFloorId = new Map<number, Area[]>()
 
-  #devicesByAreaId = new Map<number, DeviceModelAny[]>()
+  #devicesByAreaId = new Map<number, DeviceAny[]>()
 
-  #devicesByBuildingId = new Map<number, DeviceModelAny[]>()
+  #devicesByBuildingId = new Map<number, DeviceAny[]>()
 
-  #devicesByFloorId = new Map<number, DeviceModelAny[]>()
+  #devicesByFloorId = new Map<number, DeviceAny[]>()
 
-  #floorsByBuildingId = new Map<number, FloorModel[]>()
+  #floorsByBuildingId = new Map<number, Floor[]>()
 
   /**
    * Build a hierarchical zone structure from the registry, optionally filtered by device type.
@@ -234,36 +231,36 @@ export class ModelRegistry {
    * @param id - The building ID to look up areas for.
    * @returns The areas belonging to the specified building.
    */
-  public getAreasByBuildingId(id: number): AreaModel[] {
+  public getAreasByBuildingId(id: number): Area[] {
     return this.#areasByBuildingId.get(id) ?? []
   }
 
-  public getAreasByFloorId(id: number): AreaModel[] {
+  public getAreasByFloorId(id: number): Area[] {
     return this.#areasByFloorId.get(id) ?? []
   }
 
-  public getDevices(): DeviceModelAny[] {
+  public getDevices(): DeviceAny[] {
     return [...this.#devices.values()]
   }
 
-  public getDevicesByAreaId(id: number): DeviceModelAny[] {
+  public getDevicesByAreaId(id: number): DeviceAny[] {
     return this.#devicesByAreaId.get(id) ?? []
   }
 
-  public getDevicesByBuildingId(id: number): DeviceModelAny[] {
+  public getDevicesByBuildingId(id: number): DeviceAny[] {
     return this.#devicesByBuildingId.get(id) ?? []
   }
 
-  public getDevicesByFloorId(id: number): DeviceModelAny[] {
+  public getDevicesByFloorId(id: number): DeviceAny[] {
     return this.#devicesByFloorId.get(id) ?? []
   }
 
-  public getDevicesByType<T extends DeviceType>(type: T): DeviceModel<T>[]
-  public getDevicesByType(type: DeviceType): DeviceModelAny[] {
+  public getDevicesByType<T extends DeviceType>(type: T): Device<T>[]
+  public getDevicesByType(type: DeviceType): DeviceAny[] {
     return this.getDevices().filter((instance) => instance.type === type)
   }
 
-  public getFloorsByBuildingId(id: number): FloorModel[] {
+  public getFloorsByBuildingId(id: number): Floor[] {
     return this.#floorsByBuildingId.get(id) ?? []
   }
 
@@ -275,7 +272,7 @@ export class ModelRegistry {
 
   public syncAreas(areas: AreaDataAny[]): void {
     const models = syncMap(this.#areas, areas, {
-      create: (area) => new AreaModel(area),
+      create: (area) => new Area(area),
       getId: (area) => area.ID,
       update: (model, area) => {
         model[syncModel](area)
@@ -287,8 +284,7 @@ export class ModelRegistry {
     )
     this.#areasByFloorId = Map.groupBy(
       models.filter(
-        (model): model is AreaModel & { floorId: number } =>
-          model.floorId !== null,
+        (model): model is Area & { floorId: number } => model.floorId !== null,
       ),
       ({ floorId }) => floorId,
     )
@@ -296,7 +292,7 @@ export class ModelRegistry {
 
   public syncBuildings(buildings: BuildingData[]): void {
     syncMap(this.#buildings, buildings, {
-      create: (building) => new BuildingModel(building),
+      create: (building) => new Building(building),
       getId: (building) => building.ID,
       update: (model, building) => {
         model[syncModel](building)
@@ -316,14 +312,14 @@ export class ModelRegistry {
     )
     this.#devicesByFloorId = Map.groupBy(
       models.filter(
-        (model): model is DeviceModelAny & { floorId: number } =>
+        (model): model is DeviceAny & { floorId: number } =>
           model.floorId !== null,
       ),
       ({ floorId }) => floorId,
     )
     this.#devicesByAreaId = Map.groupBy(
       models.filter(
-        (model): model is DeviceModelAny & { areaId: number } =>
+        (model): model is DeviceAny & { areaId: number } =>
           model.areaId !== null,
       ),
       ({ areaId }) => areaId,
@@ -332,7 +328,7 @@ export class ModelRegistry {
 
   public syncFloors(floors: FloorData[]): void {
     const models = syncMap(this.#floors, floors, {
-      create: (floor) => new FloorModel(floor),
+      create: (floor) => new Floor(floor),
       getId: (floor) => floor.ID,
       update: (model, floor) => {
         model[syncModel](floor)
@@ -345,7 +341,7 @@ export class ModelRegistry {
   }
 
   #buildAreaZones(
-    areas: AreaModel[],
+    areas: Area[],
     areaLevel: number,
     type?: DeviceType,
   ): AreaZone[] {
@@ -361,7 +357,7 @@ export class ModelRegistry {
       .toSorted(compareNames)
   }
 
-  #buildFloorZones(floors: FloorModel[], type?: DeviceType): FloorZone[] {
+  #buildFloorZones(floors: Floor[], type?: DeviceType): FloorZone[] {
     return floors
       .filter((floor) => this.#hasDevices(floor.id, 'floor', type))
       .map((floor) => ({
@@ -387,7 +383,7 @@ export class ModelRegistry {
   #getDevicesByZone(
     id: number,
     zone: 'area' | 'building' | 'floor',
-  ): DeviceModelAny[] {
+  ): DeviceAny[] {
     if (zone === 'area') {
       return this.getDevicesByAreaId(id)
     }

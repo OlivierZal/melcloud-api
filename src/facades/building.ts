@@ -1,21 +1,21 @@
 import type { APIAdapter } from '../api/index.ts'
 import type {
-  BuildingModel,
-  DeviceModelAny,
+  Building,
+  ClassicRegistry,
+  DeviceAny,
   Model,
-  ModelRegistry,
 } from '../models/index.ts'
 import type { ZoneSettings } from '../types/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
 import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
-export class BuildingFacade extends BaseZoneFacade<BuildingModel> {
+export class BuildingFacade extends BaseZoneFacade<Building> {
   public get data(): ZoneSettings {
     return this.instance.data
   }
 
-  public override get devices(): DeviceModelAny[] {
+  public override get devices(): DeviceAny[] {
     return this.registry.getDevicesByBuildingId(this.id)
   }
 
@@ -28,14 +28,14 @@ export class BuildingFacade extends BaseZoneFacade<BuildingModel> {
   protected readonly tableName = 'Building'
 
   protected get model(): {
-    getById: (id: number) => BuildingModel | undefined
+    getById: (id: number) => Building | undefined
   } {
     return this.registry.buildings
   }
 
   public constructor(
     api: APIAdapter,
-    registry: ModelRegistry,
+    registry: ClassicRegistry,
     instance: Model,
   ) {
     super(api, registry, instance)

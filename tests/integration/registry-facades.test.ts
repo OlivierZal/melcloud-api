@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { DeviceType } from '../../src/constants.ts'
 import { FacadeManager } from '../../src/facades/manager.ts'
-import { ModelRegistry } from '../../src/models/index.ts'
+import { ClassicRegistry } from '../../src/models/index.ts'
 import {
   areaData,
   ataDevice,
@@ -102,9 +102,9 @@ const devices = [
 const createContext = (): {
   api: ReturnType<typeof createMockApi>
   manager: FacadeManager
-  registry: ModelRegistry
+  registry: ClassicRegistry
 } => {
-  const registry = new ModelRegistry()
+  const registry = new ClassicRegistry()
   registry.syncBuildings(buildings)
   registry.syncFloors(floors)
   registry.syncAreas(areas)
@@ -228,7 +228,7 @@ describe('registry + facade manager integration', () => {
   })
 
   it('handles buildings with no floors or areas', () => {
-    const registry = new ModelRegistry()
+    const registry = new ClassicRegistry()
     registry.syncBuildings([defined(buildings[1])])
     registry.syncFloors([])
     registry.syncAreas([

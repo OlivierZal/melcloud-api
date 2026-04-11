@@ -1,11 +1,11 @@
 import type { HomeDeviceType } from '../constants.ts'
-import type { HomeDevice } from '../types/index.ts'
+import type { HomeDeviceData } from '../types/index.ts'
 
-/** Mutable wrapper around a HomeDevice, preserving object identity across syncs. */
-export class HomeDeviceModel {
+/** Mutable wrapper around a HomeDeviceData, preserving object identity across syncs. */
+export class HomeDevice {
   public readonly type: HomeDeviceType
 
-  public get data(): HomeDevice {
+  public get data(): HomeDeviceData {
     return this.#data
   }
 
@@ -17,14 +17,14 @@ export class HomeDeviceModel {
     return this.#data.givenDisplayName
   }
 
-  #data: HomeDevice
+  #data: HomeDeviceData
 
-  public constructor(device: HomeDevice, type: HomeDeviceType) {
+  public constructor(device: HomeDeviceData, type: HomeDeviceType) {
     this.#data = device
     this.type = type
   }
 
-  public sync(device: HomeDevice): void {
+  public sync(device: HomeDeviceData): void {
     this.#data = device
   }
 }

@@ -1,5 +1,5 @@
 import type { APIAdapter } from '../api/index.ts'
-import type { DeviceModelAny, Model, ModelRegistry } from '../models/index.ts'
+import type { ClassicRegistry, DeviceAny, Model } from '../models/index.ts'
 import { DeviceType } from '../constants.ts'
 import type { DeviceFacadeAny, Facade } from './interfaces.ts'
 import { AreaFacade } from './area.ts'
@@ -11,9 +11,9 @@ import { DeviceErvFacade } from './device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
 const getDeviceFromRegistry = (
-  registry: ModelRegistry,
+  registry: ClassicRegistry,
   id: number,
-): DeviceModelAny => {
+): DeviceAny => {
   const device = registry.devices.getById(id)
   if (!device) {
     throw new Error('Device not found in registry')
@@ -23,7 +23,7 @@ const getDeviceFromRegistry = (
 
 const createDeviceFacade = (
   api: APIAdapter,
-  registry: ModelRegistry,
+  registry: ClassicRegistry,
   instance: Model,
 ): DeviceFacadeAny => {
   const device = getDeviceFromRegistry(registry, instance.id)
@@ -53,7 +53,7 @@ const createDeviceFacade = (
  */
 export const createFacade = (
   api: APIAdapter,
-  registry: ModelRegistry,
+  registry: ClassicRegistry,
   instance: Model,
 ): Facade => {
   switch (instance.modelKind) {

@@ -17,8 +17,8 @@ export interface HomeAtaValues {
 }
 
 export interface HomeBuilding {
-  readonly airToAirUnits: HomeDevice[]
-  readonly airToWaterUnits: HomeDevice[]
+  readonly airToAirUnits: HomeDeviceData[]
+  readonly airToWaterUnits: HomeDeviceData[]
   readonly id: string
   readonly name: string
   readonly timezone: string
@@ -34,14 +34,6 @@ export interface HomeContext {
   readonly buildings: HomeBuilding[]
   readonly guestBuildings: HomeBuilding[]
   readonly language: string
-}
-
-export interface HomeDevice {
-  readonly capabilities: HomeDeviceCapabilities
-  readonly givenDisplayName: string
-  readonly id: string
-  readonly rssi: number
-  readonly settings: HomeDeviceSetting[]
 }
 
 export interface HomeDeviceCapabilities {
@@ -60,6 +52,14 @@ export interface HomeDeviceCapabilities {
   readonly minTempCoolDry: number
   readonly minTempHeat: number
   readonly numberOfFanSpeeds: number
+}
+
+export interface HomeDeviceData {
+  readonly capabilities: HomeDeviceCapabilities
+  readonly givenDisplayName: string
+  readonly id: string
+  readonly rssi: number
+  readonly settings: HomeDeviceSetting[]
 }
 
 export interface HomeDeviceSetting {

@@ -20,7 +20,7 @@ import type {
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
-import { HomeDeviceRegistry } from '../models/home-registry.ts'
+import { HomeRegistry } from '../models/home-registry.ts'
 import {
   APICallRequestData,
   APICallResponseData,
@@ -162,7 +162,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     return this.#context
   }
 
-  public get registry(): HomeDeviceRegistry {
+  public get registry(): HomeRegistry {
     return this.#registry
   }
 
@@ -184,7 +184,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     hours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
   })
 
-  readonly #registry = new HomeDeviceRegistry()
+  readonly #registry = new HomeRegistry()
 
   readonly #retryGuard = new RetryGuard(RETRY_DELAY)
 
