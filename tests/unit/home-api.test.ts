@@ -224,6 +224,18 @@ const createStore = (
   }
 }
 
+const axiosUnauthorized = (url = '/api/user/context'): Error =>
+  Object.assign(new Error('Unauthorized'), {
+    config: { url },
+    isAxiosError: true,
+    response: {
+      config: { url },
+      data: undefined,
+      headers: {},
+      status: 401,
+    },
+  })
+
 describe('melcloud home API', () => {
   let melCloudHomeApi: { create: typeof MELCloudHomeAPI.create } = cast(null)
 
@@ -668,6 +680,101 @@ describe('melcloud home API', () => {
       await api.list()
 
       expect(mockRequest).toHaveBeenCalledTimes(callCountAfterLogin + 1)
+    })
+  })
+
+  describe('reactive auth retry on 401', () => {
+    it('should retry the request once after a reactive re-auth on 401', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      /*
+       * First attempt rejects with 401, reauth succeeds, retry succeeds
+       * with the mockContext payload.
+       */
+      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      setupSuccessfulLogin()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const buildings = await api.list()
+
+      expect(buildings).toStrictEqual([mockBuilding])
+    })
+
+    it('should not retry when the retry budget is already consumed', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      /*
+       * First 401: retry budget consumed, reauth succeeds, retry succeeds.
+       * Second 401 in the same retry window: no reauth, list() returns [].
+       */
+      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      setupSuccessfulLogin()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.list()
+
+      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      const second = await api.list()
+
+      expect(second).toStrictEqual([])
+    })
+
+    it('should not trigger reactive retry during the OIDC flow (LOGIN_PATH)', async () => {
+      /*
+       * First attempt at /bff/login rejects with 401. `#shouldRetryAuth`
+       * must return false (LOGIN_PATH is exempt), so the failure surfaces
+       * via the @authenticate decorator's error path.
+       */
+      const logger = createLogger()
+      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        password: 'pass',
+        username: 'user@test.com',
+      })
+
+      expect(api.isAuthenticated()).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Authentication failed:',
+        expect.any(Error),
+      )
+    })
+
+    it('should surface the original 401 when reactive reauth fails', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      /*
+       * 401 on list → reactive retry → reauth itself fails (OIDC rejects
+       * the login form). `authenticate()` returns false, so the original
+       * 401 is re-thrown and list()'s own catch swallows it to return [].
+       */
+      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      mockRequest.mockResolvedValueOnce(
+        mockResponse('<html>no form here</html>', {}, 200),
+      )
+      const buildings = await api.list()
+
+      expect(buildings).toStrictEqual([])
+    })
+
+    it('should not retry on non-401 errors', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      mockRequest.mockRejectedValueOnce(
+        Object.assign(new Error('Server Error'), {
+          config: { url: '/api/user/context' },
+          isAxiosError: true,
+          response: {
+            config: { url: '/api/user/context' },
+            data: undefined,
+            headers: {},
+            status: 500,
+          },
+        }),
+      )
+      const buildings = await api.list()
+
+      expect(buildings).toStrictEqual([])
     })
   })
 

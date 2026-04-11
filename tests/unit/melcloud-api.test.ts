@@ -747,6 +747,131 @@ describe('melcloud API', () => {
       })
     })
 
+    it('request handler re-authenticates when contextKey is empty', async () => {
+      const settingManager = {
+        get: vi.fn().mockImplementation((key: string) => {
+          if (key === 'username') {
+            return 'user'
+          }
+          if (key === 'password') {
+            return 'pass'
+          }
+          return null
+        }),
+        set: vi.fn(),
+      }
+      mockLoginAndList()
+      await createApi({ settingManager })
+      mockAxiosInstance.post.mockClear()
+      mockLoginAndList('fresh', '2030-12-31T00:00:00')
+      const { headers } = createHeaders()
+      const config = mock<InternalAxiosRequestConfig>({
+        headers,
+        url: '/Device/Get',
+      })
+
+      await requestHandler(config)
+
+      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+        '/Login/ClientLogin3',
+        expect.objectContaining({ Email: 'user', Password: 'pass' }),
+      )
+      expect(settingManager.set).toHaveBeenCalledWith('contextKey', 'fresh')
+    })
+
+    it('request handler treats malformed expiry as expired', async () => {
+      const settingManager = {
+        get: vi.fn().mockImplementation((key: string) => {
+          if (key === 'expiry') {
+            return 'not-a-valid-iso-date'
+          }
+          if (key === 'contextKey') {
+            return 'stale'
+          }
+          if (key === 'username') {
+            return 'user'
+          }
+          if (key === 'password') {
+            return 'pass'
+          }
+          return null
+        }),
+        set: vi.fn(),
+      }
+      mockLoginAndList()
+      await createApi({ settingManager })
+      mockAxiosInstance.post.mockClear()
+      mockLoginAndList('fresh', '2030-12-31T00:00:00')
+      const { headers } = createHeaders()
+      const config = mock<InternalAxiosRequestConfig>({
+        headers,
+        url: '/Device/Get',
+      })
+
+      await requestHandler(config)
+
+      expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+        '/Login/ClientLogin3',
+        expect.any(Object),
+      )
+      expect(settingManager.set).toHaveBeenCalledWith('contextKey', 'fresh')
+    })
+
+    it('request handler skips reauth when expiry is empty', async () => {
+      const settingManager = {
+        get: vi.fn().mockImplementation((key: string) => {
+          if (key === 'contextKey') {
+            return 'valid'
+          }
+          return null
+        }),
+        set: vi.fn(),
+      }
+      mockLoginAndList()
+      await createApi({ settingManager })
+      mockAxiosInstance.post.mockClear()
+      const { headers, setSpy } = createHeaders()
+      const config = mock<InternalAxiosRequestConfig>({
+        headers,
+        url: '/Device/Get',
+      })
+
+      await requestHandler(config)
+
+      expect(mockAxiosInstance.post).not.toHaveBeenCalled()
+      expect(setSpy).toHaveBeenCalledWith('X-MitsContextKey', 'valid')
+    })
+
+    it('authenticate clears persisted session when server rejects login', async () => {
+      const settingManager = {
+        get: vi.fn().mockImplementation((key: string) => {
+          if (key === 'contextKey') {
+            return 'old-ctx'
+          }
+          if (key === 'expiry') {
+            return '2030-12-31T00:00:00'
+          }
+          return null
+        }),
+        set: vi.fn(),
+      }
+      mockLoginAndList()
+      const api = await createApi({ settingManager })
+      settingManager.set.mockClear()
+      mockAxiosInstance.post.mockResolvedValueOnce({
+        data: { LoginData: null },
+      })
+
+      const isAuthenticated = await api.authenticate({
+        password: 'wrong',
+        username: 'user',
+      })
+
+      expect(isAuthenticated).toBe(false)
+      expect(settingManager.set).toHaveBeenCalledWith('contextKey', '')
+      expect(settingManager.set).toHaveBeenCalledWith('expiry', '')
+    })
+
     it('response handler returns response', async () => {
       await createApi({ logger: createLogger() })
       const response = mock<AxiosResponse>({

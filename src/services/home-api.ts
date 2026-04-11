@@ -1,5 +1,9 @@
 import { CookieJar } from 'tough-cookie'
-import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
+import axios, {
+  type AxiosInstance,
+  type AxiosResponse,
+  HttpStatusCode,
+} from 'axios'
 
 import type {
   HomeAtaValues,
@@ -26,6 +30,7 @@ import type {
   SettingManager,
 } from './interfaces.ts'
 import { HomeDeviceRegistry } from './home-device-registry.ts'
+import { RetryGuard } from './retry-guard.ts'
 import { SyncManager } from './sync-manager.ts'
 
 const COGNITO_AUTHORITY =
@@ -38,6 +43,7 @@ const ENERGY_PATH = '/api/telemetry/energy'
 const LOGIN_PATH = '/bff/login'
 const MILLISECONDS_IN_SECOND = 1000
 const REPORT_PATH = '/api/v1/report/trendsummary'
+const RETRY_DELAY = 1000
 const SIGNAL_PATH = '/api/telemetry/actual'
 const MAX_REDIRECTS = 20
 const USER_PATH = '/bff/user'
@@ -143,6 +149,8 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   readonly #jar: CookieJar
 
   readonly #registry = new HomeDeviceRegistry()
+
+  readonly #retryGuard = new RetryGuard(RETRY_DELAY)
 
   readonly #syncManager: SyncManager
 
@@ -329,6 +337,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
 
   public [Symbol.dispose](): void {
     this.#syncManager[Symbol.dispose]()
+    this.#retryGuard[Symbol.dispose]()
   }
 
   public setSyncInterval(minutes: number | null): void {
@@ -447,6 +456,39 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   }
 
   /*
+   * Send a single request through the shared axios instance, injecting any
+   * cookies applicable to the target URL and passing the response through
+   * `#onResponse()` for cookie capture and logging.
+   */
+  async #dispatch<T = unknown>(
+    method: string,
+    url: string,
+    {
+      headers: configHeaders,
+      ...config
+    }: {
+      [key: string]: unknown
+      headers?: Record<string, string>
+    },
+  ): Promise<AxiosResponse<T>> {
+    /* v8 ignore next -- baseURL is always set via constructor config */
+    const baseURL = this.#api.defaults.baseURL ?? ''
+    const absoluteUrl = url.startsWith('http') ? url : `${baseURL}${url}`
+    const cookieHeader = await this.#jar.getCookieString(absoluteUrl)
+    const response = await this.#api.request<T>({
+      ...config,
+      headers: {
+        ...configHeaders,
+        ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
+      },
+      method,
+      url,
+    })
+    await this.#onResponse(response, absoluteUrl)
+    return response
+  }
+
+  /*
    * Re-authenticate if session expired. Skips absolute URLs (used in
    * the OIDC redirect chain) to avoid infinite re-auth loops, analogous
    * to the classic API skipping LOGIN_PATH in its request interceptor.
@@ -464,33 +506,22 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   async #request<T = unknown>(
     method: string,
     url: string,
-    {
-      headers: configHeaders,
-      ...config
-    }: {
+    config: {
       [key: string]: unknown
       headers?: Record<string, string>
     } = {},
   ): Promise<AxiosResponse<T>> {
     await this.#ensureSession(url)
-    /* v8 ignore next -- baseURL is always set via constructor config */
-    const baseURL = this.#api.defaults.baseURL ?? ''
-    const absoluteUrl = url.startsWith('http') ? url : `${baseURL}${url}`
-    const cookieHeader = await this.#jar.getCookieString(absoluteUrl)
     try {
-      const response = await this.#api.request<T>({
-        ...config,
-        headers: {
-          ...configHeaders,
-          ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
-        },
-        method,
-        url,
-      })
-      await this.#onResponse(response, absoluteUrl)
-      return response
+      return await this.#dispatch<T>(method, url, config)
     } catch (error) {
       this.#logError(error)
+      if (this.#shouldRetryAuth(error, url)) {
+        this.#clearPersistedSession()
+        if (await this.authenticate()) {
+          return this.#dispatch<T>(method, url, config)
+        }
+      }
       throw error
     }
   }
@@ -505,6 +536,20 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     } catch {
       return null
     }
+  }
+
+  #shouldRetryAuth(error: unknown, url: string): boolean {
+    if (!axios.isAxiosError(error)) {
+      return false
+    }
+    if (error.response?.status !== HttpStatusCode.Unauthorized) {
+      return false
+    }
+    // Auth-related endpoints must not trigger a reauth retry (infinite loop).
+    if (url.startsWith('http') || url === LOGIN_PATH || url === USER_PATH) {
+      return false
+    }
+    return this.#retryGuard.tryConsume()
   }
 
   async #submitCredentials(
