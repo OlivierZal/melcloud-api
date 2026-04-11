@@ -2,7 +2,7 @@ import { vi } from 'vitest'
 
 import type { DeviceType } from '../src/constants.ts'
 import type { DeviceModelAny } from '../src/models/index.ts'
-import type { APIAdapter } from '../src/services/index.ts'
+import type { APIAdapter, SettingManager } from '../src/services/index.ts'
 
 const MOCK_RSSI = -60
 
@@ -56,6 +56,25 @@ export const createMockApi = (
     setValues: vi.fn(),
     ...overrides,
   })
+
+export const createSettingStore = (
+  initial: Record<string, string> = {},
+): {
+  setSpy: ReturnType<typeof vi.fn<(key: string, value: string) => void>>
+  settingManager: SettingManager
+} => {
+  const store = new Map(Object.entries(initial))
+  const setSpy = vi.fn((key: string, value: string) => {
+    store.set(key, value)
+  })
+  return {
+    setSpy,
+    settingManager: {
+      set: setSpy,
+      get: (key: string) => store.get(key) ?? null,
+    },
+  }
+}
 
 export function assertDeviceType<T extends DeviceType>(
   device: DeviceModelAny | undefined,

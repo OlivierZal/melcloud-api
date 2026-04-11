@@ -19,14 +19,13 @@ import type {
   APIConfig,
   Logger,
   MELCloudAPI,
-  SettingManager,
 } from '../../src/services/index.ts'
 import type {
   BuildingWithStructure,
   ListDeviceAny,
   SetDevicePostData,
 } from '../../src/types/index.ts'
-import { cast, mock } from '../helpers.ts'
+import { cast, createSettingStore, mock } from '../helpers.ts'
 
 const mockInterceptors = {
   request: { use: vi.fn() },
@@ -43,25 +42,6 @@ const createLogger = (): Logger => ({
   error: vi.fn<(...data: unknown[]) => void>(),
   log: vi.fn<(...data: unknown[]) => void>(),
 })
-
-const createStore = (
-  initial: Record<string, string> = {},
-): {
-  setSpy: ReturnType<typeof vi.fn<(key: string, value: string) => void>>
-  settingManager: SettingManager
-} => {
-  const store = new Map(Object.entries(initial))
-  const setSpy = vi.fn((key: string, value: string) => {
-    store.set(key, value)
-  })
-  return {
-    setSpy,
-    settingManager: {
-      set: setSpy,
-      get: (key: string) => store.get(key) ?? null,
-    },
-  }
-}
 
 const loginResponse = (
   contextKey = 'ctx',
@@ -267,7 +247,7 @@ describe('melcloud API', () => {
   })
 
   it('uses settingManager when provided', async () => {
-    const { setSpy, settingManager } = createStore()
+    const { setSpy, settingManager } = createSettingStore()
     await createApi({
       password: 'test-pass',
       settingManager,
@@ -729,7 +709,7 @@ describe('melcloud API', () => {
     })
 
     it('request handler re-authenticates when expired', async () => {
-      const { settingManager } = createStore({
+      const { settingManager } = createSettingStore({
         contextKey: 'old-ctx',
         expiry: '2020-01-01T00:00:00',
         password: 'pass',
@@ -750,7 +730,7 @@ describe('melcloud API', () => {
     })
 
     it('request handler re-authenticates when contextKey is empty', async () => {
-      const { settingManager } = createStore({
+      const { settingManager } = createSettingStore({
         password: 'pass',
         username: 'user',
       })
@@ -774,7 +754,7 @@ describe('melcloud API', () => {
     })
 
     it('request handler treats malformed expiry as expired', async () => {
-      const { settingManager } = createStore({
+      const { settingManager } = createSettingStore({
         contextKey: 'stale',
         expiry: 'not-a-valid-iso-date',
         password: 'pass',
@@ -800,7 +780,7 @@ describe('melcloud API', () => {
     })
 
     it('request handler skips reauth when expiry is empty', async () => {
-      const { settingManager } = createStore({ contextKey: 'valid' })
+      const { settingManager } = createSettingStore({ contextKey: 'valid' })
       mockLoginAndList()
       await createApi({ settingManager })
       mockAxiosInstance.post.mockClear()
@@ -817,7 +797,7 @@ describe('melcloud API', () => {
     })
 
     it('authenticate clears persisted session when server rejects login', async () => {
-      const { setSpy, settingManager } = createStore({
+      const { setSpy, settingManager } = createSettingStore({
         contextKey: 'old-ctx',
         expiry: '2030-12-31T00:00:00',
       })
