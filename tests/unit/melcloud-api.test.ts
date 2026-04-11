@@ -1004,6 +1004,63 @@ describe('melcloud API', () => {
 
       expect(api.isRateLimited).toBe(true)
     })
+
+    it('emits onRequestStart / onRequestComplete for a tagged config', async () => {
+      const onRequestStart = vi.fn<(event: unknown) => void>()
+      const onRequestComplete = vi.fn<(event: unknown) => void>()
+      await createApi({ events: { onRequestComplete, onRequestStart } })
+      const { headers } = createHeaders()
+      const config = mock<InternalAxiosRequestConfig>({
+        headers,
+        method: 'get',
+        url: '/User/ListDevices',
+      })
+
+      const tagged = await requestHandler(config)
+      responseHandler(
+        mock<AxiosResponse>({
+          config: tagged,
+          data: {},
+          headers: {},
+          status: 200,
+        }),
+      )
+
+      expect(onRequestStart).toHaveBeenCalledTimes(1)
+      expect(onRequestComplete).toHaveBeenCalledTimes(1)
+    })
+
+    it('emits onRequestError when the response error carries a tagged config', async () => {
+      const onRequestError = vi.fn<(event: unknown) => void>()
+      await createApi({ events: { onRequestError } })
+      const { headers } = createHeaders()
+      const config = mock<InternalAxiosRequestConfig>({
+        headers,
+        method: 'get',
+        url: '/Device/Get',
+      })
+
+      // First tag via #onRequest.
+      const tagged = await requestHandler(config)
+
+      // Then feed a matching error through #onError.
+      await expect(
+        responseErrorHandler(
+          mock<AxiosError>({
+            config: tagged,
+            message: 'server fault',
+            response: mock<AxiosResponse>({
+              config: tagged,
+              data: {},
+              headers: {},
+              status: 500,
+            }),
+          }),
+        ),
+      ).rejects.toThrow('server fault')
+
+      expect(onRequestError).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('transient 5xx retry on fetch', () => {

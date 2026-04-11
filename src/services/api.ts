@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import https from 'node:https'
 
 import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
@@ -44,7 +45,6 @@ import type {
 } from '../types/index.ts'
 import { DeviceType, Language } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
-import { RateLimitError } from '../errors.ts'
 import {
   APICallRequestData,
   APICallResponseData,
@@ -63,7 +63,9 @@ import type {
 import {
   isSessionExpired,
   isTransientServerError,
+  RateLimitError,
   RateLimitGate,
+  RequestLifecycleEmitter,
   RetryGuard,
   withRetryBackoff,
 } from './resilience.ts'
@@ -84,6 +86,20 @@ const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL = 5
 const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_DELAY = 1000
+
+/*
+ * Symbol used to stash per-request lifecycle metadata (correlation id,
+ * start timestamp) on axios config objects without colliding with any
+ * existing or future axios-internal fields.
+ */
+const LIFECYCLE_KEY = Symbol('melcloud.requestLifecycle')
+
+interface LifecycleMeta {
+  readonly correlationId: string
+  readonly startedAt: number
+}
+
+type LifecycleTagged<T> = T & { [LIFECYCLE_KEY]?: LifecycleMeta }
 
 // Transient 5xx retry budget for the list() heartbeat
 const TRANSIENT_RETRY_INITIAL_DELAY_MS = 1000
@@ -199,6 +215,8 @@ export class MELCloudAPI implements API, Disposable {
 
   readonly #api: AxiosInstance
 
+  readonly #events: RequestLifecycleEmitter
+
   #language = 'en'
 
   readonly #rateLimitGate = new RateLimitGate({ hours: DEFAULT_RETRY_HOURS })
@@ -232,6 +250,7 @@ export class MELCloudAPI implements API, Disposable {
   private constructor(config: APIConfig = {}) {
     const {
       autoSyncInterval = DEFAULT_SYNC_INTERVAL,
+      events,
       language,
       logger = console,
       onSync,
@@ -245,6 +264,7 @@ export class MELCloudAPI implements API, Disposable {
     this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
+    this.#events = new RequestLifecycleEmitter(events, logger)
     this.#applyOptionalConfig({ language, password, timezone, username })
     this.#api = this.#createAPI(shouldVerifySSL, requestTimeout)
     this.#syncManager = new SyncManager(
@@ -609,6 +629,38 @@ export class MELCloudAPI implements API, Disposable {
     return api
   }
 
+  #emitErrorEvent(
+    error: unknown,
+    config: InternalAxiosRequestConfig | undefined,
+  ): void {
+    /*
+     * Early returns are defensive against axios internals: a partial
+     * AxiosError may carry no config at all, and an error thrown from
+     * the request interceptor itself reaches #onError before
+     * #tagLifecycleAndEmit has had a chance to stash the metadata.
+     * In both cases we skip the event rather than emit a partially
+     * populated one.
+     */
+    /* v8 ignore next 6 -- defensive against missing config / lifecycle */
+    if (config === undefined) {
+      return
+    }
+    const { [LIFECYCLE_KEY]: meta } =
+      config as LifecycleTagged<InternalAxiosRequestConfig>
+    if (meta === undefined) {
+      return
+    }
+    this.#events.emitError({
+      correlationId: meta.correlationId,
+      durationMs: Date.now() - meta.startedAt,
+      error,
+      /* v8 ignore next -- defensive fallback for undefined method */
+      method: (config.method ?? 'get').toUpperCase(),
+      /* v8 ignore next -- defensive fallback for undefined url */
+      url: config.url ?? '',
+    })
+  }
+
   async #errorLog(
     deviceIds: number[],
     fromDate: DateTime,
@@ -678,6 +730,7 @@ export class MELCloudAPI implements API, Disposable {
     ) {
       return this.#api.request(config)
     }
+    this.#emitErrorEvent(error, config)
     throw new Error(errorData.errorMessage, { cause: error })
   }
 
@@ -702,12 +755,26 @@ export class MELCloudAPI implements API, Disposable {
       }
       newConfig.headers.set('X-MitsContextKey', this.contextKey)
     }
+    this.#tagLifecycleAndEmit(newConfig)
     this.logger.log(String(new APICallRequestData(newConfig)))
     return newConfig
   }
 
   #onResponse(response: AxiosResponse): AxiosResponse {
     this.logger.log(String(new APICallResponseData(response)))
+    const { [LIFECYCLE_KEY]: meta } =
+      response.config as LifecycleTagged<InternalAxiosRequestConfig>
+    if (meta !== undefined) {
+      this.#events.emitComplete({
+        correlationId: meta.correlationId,
+        durationMs: Date.now() - meta.startedAt,
+        /* v8 ignore next -- defensive fallback for undefined method */
+        method: (response.config.method ?? 'get').toUpperCase(),
+        status: response.status,
+        /* v8 ignore next -- defensive fallback for undefined url */
+        url: response.config.url ?? '',
+      })
+    }
     return response
   }
 
@@ -722,5 +789,20 @@ export class MELCloudAPI implements API, Disposable {
       (response: AxiosResponse): AxiosResponse => this.#onResponse(response),
       async (error: AxiosError): Promise<AxiosError> => this.#onError(error),
     )
+  }
+
+  #tagLifecycleAndEmit(config: InternalAxiosRequestConfig): void {
+    const tagged = config as LifecycleTagged<InternalAxiosRequestConfig>
+    tagged[LIFECYCLE_KEY] = {
+      correlationId: randomUUID(),
+      startedAt: Date.now(),
+    }
+    this.#events.emitStart({
+      correlationId: tagged[LIFECYCLE_KEY].correlationId,
+      /* v8 ignore next -- defensive fallback for undefined method */
+      method: (config.method ?? 'get').toUpperCase(),
+      /* v8 ignore next -- defensive fallback for undefined url */
+      url: config.url ?? '',
+    })
   }
 }

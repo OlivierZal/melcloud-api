@@ -4,6 +4,7 @@
  * expiry handling so consumers (`api.ts`, `home-api.ts`) only need one
  * import rather than four.
  */
+export { RequestLifecycleEmitter } from './events-emitter.ts'
 export { RateLimitGate } from './rate-limit-gate.ts'
 export {
   type RetryBackoffOptions,
@@ -12,3 +13,10 @@ export {
 } from './retry-backoff.ts'
 export { RetryGuard } from './retry-guard.ts'
 export { isSessionExpired } from './session-expiry.ts'
+export {
+  AuthenticationError,
+  MelCloudError,
+  NetworkError,
+  RateLimitError,
+  TransientServerError,
+} from '../errors.ts'

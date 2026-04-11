@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import { CookieJar } from 'tough-cookie'
 import axios, {
   type AxiosInstance,
@@ -18,7 +20,6 @@ import type {
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
-import { RateLimitError } from '../errors.ts'
 import {
   APICallRequestData,
   APICallResponseData,
@@ -35,7 +36,9 @@ import { HomeDeviceRegistry } from './home-device-registry.ts'
 import {
   isSessionExpired,
   isTransientServerError,
+  RateLimitError,
   RateLimitGate,
+  RequestLifecycleEmitter,
   RetryGuard,
   withRetryBackoff,
 } from './resilience.ts'
@@ -174,6 +177,8 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
 
   #context: HomeContext | null = null
 
+  readonly #events: RequestLifecycleEmitter
+
   readonly #jar: CookieJar
 
   readonly #rateLimitGate = new RateLimitGate({
@@ -204,6 +209,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     const {
       autoSyncInterval = 1,
       baseURL = API_BASE_URL,
+      events,
       logger = console,
       onSync,
       password,
@@ -214,6 +220,7 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
+    this.#events = new RequestLifecycleEmitter(events, logger)
     this.#jar = this.#loadJar()
     this.#applyCredentials(username, password)
     this.#api = axios.create({
@@ -555,6 +562,28 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
     }
   }
 
+  #makeRequestAttempt<T>(
+    method: string,
+    url: string,
+    config: { [key: string]: unknown; headers?: Record<string, string> },
+  ): () => Promise<AxiosResponse<T>> {
+    return async () => {
+      try {
+        return await this.#dispatch<T>(method, url, config)
+      } catch (error) {
+        this.#logError(error)
+        this.#recordRateLimitIfApplicable(error)
+        if (this.#shouldRetryAuth(error, url)) {
+          this.#clearPersistedSession()
+          if (await this.authenticate()) {
+            return this.#dispatch<T>(method, url, config)
+          }
+        }
+        throw error
+      }
+    }
+  }
+
   #recordRateLimitIfApplicable(error: unknown): void {
     if (!axios.isAxiosError(error)) {
       return
@@ -580,44 +609,66 @@ export class MELCloudHomeAPI implements Disposable, HomeAPI {
   ): Promise<AxiosResponse<T>> {
     await this.#ensureSession(url)
     this.#throwIfRateLimited(url)
-    const attempt = async (): Promise<AxiosResponse<T>> => {
-      try {
-        return await this.#dispatch<T>(method, url, config)
-      } catch (error) {
-        this.#logError(error)
-        this.#recordRateLimitIfApplicable(error)
-        if (this.#shouldRetryAuth(error, url)) {
-          this.#clearPersistedSession()
-          if (await this.authenticate()) {
-            return this.#dispatch<T>(method, url, config)
-          }
-        }
-        throw error
-      }
+    const context = {
+      correlationId: randomUUID(),
+      method: method.toUpperCase(),
+      url,
     }
+    const attempt = this.#makeRequestAttempt<T>(method, url, config)
     /*
      * 5xx retry with exponential backoff, applied only to idempotent
      * GET requests. POST is intentionally excluded: replaying a failed
      * credential submit or state mutation is not safe. OIDC GET steps
      * (cross-domain, LOGIN_PATH, USER_PATH) ARE retried — the original
-     * user-reported outage was a 503 on /bff/login, so skipping those
-     * would defeat the whole point.
+     * user-reported outage was a 503 on /bff/login.
      */
-    if (method.toUpperCase() !== 'GET') {
-      return attempt()
+    const runner =
+      method.toUpperCase() === 'GET' ?
+        async (): Promise<AxiosResponse<T>> =>
+          withRetryBackoff(attempt, {
+            initialDelayMs: TRANSIENT_RETRY_INITIAL_DELAY_MS,
+            isRetryable: isTransientServerError,
+            jitterRatio: TRANSIENT_RETRY_JITTER_RATIO,
+            maxDelayMs: TRANSIENT_RETRY_MAX_DELAY_MS,
+            maxRetries: TRANSIENT_RETRY_MAX_ATTEMPTS,
+            onRetry: (retryAttempt, error, delayMs) => {
+              this.logger.log(
+                `Transient server error on ${url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,
+              )
+              this.#events.emitRetry({
+                ...context,
+                attempt: retryAttempt,
+                delayMs,
+                error,
+              })
+            },
+          })
+      : attempt
+    return this.#runWithEvents(context, runner)
+  }
+
+  async #runWithEvents<T>(
+    context: { correlationId: string; method: string; url: string },
+    runner: () => Promise<AxiosResponse<T>>,
+  ): Promise<AxiosResponse<T>> {
+    const startedAt = Date.now()
+    this.#events.emitStart(context)
+    try {
+      const response = await runner()
+      this.#events.emitComplete({
+        ...context,
+        durationMs: Date.now() - startedAt,
+        status: response.status,
+      })
+      return response
+    } catch (error) {
+      this.#events.emitError({
+        ...context,
+        durationMs: Date.now() - startedAt,
+        error,
+      })
+      throw error
     }
-    return withRetryBackoff(attempt, {
-      initialDelayMs: TRANSIENT_RETRY_INITIAL_DELAY_MS,
-      isRetryable: isTransientServerError,
-      jitterRatio: TRANSIENT_RETRY_JITTER_RATIO,
-      maxDelayMs: TRANSIENT_RETRY_MAX_DELAY_MS,
-      maxRetries: TRANSIENT_RETRY_MAX_ATTEMPTS,
-      onRetry: (retryAttempt, _error, delayMs) => {
-        this.logger.log(
-          `Transient server error on ${url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,
-        )
-      },
-    })
   }
 
   async #safeRequest<T>(

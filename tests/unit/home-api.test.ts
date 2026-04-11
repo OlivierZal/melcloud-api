@@ -2,7 +2,15 @@ import { CookieJar } from 'tough-cookie'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { MELCloudHomeAPI } from '../../src/services/home-api.ts'
-import type { HomeAPIConfig, Logger } from '../../src/services/index.ts'
+import type {
+  HomeAPIConfig,
+  Logger,
+  RequestCompleteEvent,
+  RequestErrorEvent,
+  RequestLifecycleEvents,
+  RequestRetryEvent,
+  RequestStartEvent,
+} from '../../src/services/index.ts'
 import type {
   HomeBuilding,
   HomeClaim,
@@ -904,6 +912,88 @@ describe('melcloud home API', () => {
         const third = await api.list()
 
         expect(third).toStrictEqual([mockBuilding])
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('should emit a correlated onRequestStart / onRequestComplete pair for list()', async () => {
+      setupSuccessfulLogin()
+      const onRequestStart = vi.fn<(event: RequestStartEvent) => void>()
+      const onRequestComplete = vi.fn<(event: RequestCompleteEvent) => void>()
+      const onRequestError = vi.fn<(event: RequestErrorEvent) => void>()
+      const events: RequestLifecycleEvents = {
+        onRequestComplete,
+        onRequestError,
+        onRequestStart,
+      }
+      const api = await createApi({ autoSyncInterval: null, events })
+      onRequestStart.mockClear()
+      onRequestComplete.mockClear()
+
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.list()
+
+      expect(onRequestStart).toHaveBeenCalledTimes(1)
+      expect(onRequestComplete).toHaveBeenCalledTimes(1)
+
+      const startEvent = onRequestStart.mock.calls[0]?.[0]
+      const completeEvent = onRequestComplete.mock.calls[0]?.[0]
+
+      // eslint-disable-next-line vitest/prefer-expect-type-of -- runtime check, not a type-level assertion
+      expect(typeof startEvent?.correlationId).toBe('string')
+
+      expect(startEvent?.method).toBe('GET')
+      expect(startEvent?.url).toBe('/api/user/context')
+      expect(completeEvent?.correlationId).toBe(startEvent?.correlationId)
+      expect(completeEvent?.method).toBe('GET')
+      expect(completeEvent?.status).toBe(200)
+      expect(completeEvent?.url).toBe('/api/user/context')
+
+      // eslint-disable-next-line vitest/prefer-expect-type-of -- runtime check
+      expect(typeof completeEvent?.durationMs).toBe('number')
+
+      expect(onRequestError).not.toHaveBeenCalled()
+    })
+
+    it('should emit onRequestRetry sharing correlationId with the start event', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const onRequestStart = vi.fn<(event: RequestStartEvent) => void>()
+        const onRequestComplete = vi.fn<(event: RequestCompleteEvent) => void>()
+        const onRequestRetry = vi.fn<(event: RequestRetryEvent) => void>()
+        const events: RequestLifecycleEvents = {
+          onRequestComplete,
+          onRequestRetry,
+          onRequestStart,
+        }
+        const api = await createApi({ autoSyncInterval: null, events })
+        onRequestStart.mockClear()
+        onRequestComplete.mockClear()
+        onRequestRetry.mockClear()
+
+        mockRequest.mockRejectedValueOnce(axiosServerError(503))
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+        const listPromise = api.list()
+        await vi.advanceTimersByTimeAsync(2000)
+        await listPromise
+
+        expect(onRequestStart).toHaveBeenCalledTimes(1)
+        expect(onRequestRetry).toHaveBeenCalledTimes(1)
+        expect(onRequestComplete).toHaveBeenCalledTimes(1)
+
+        const startEvent = onRequestStart.mock.calls[0]?.[0]
+        const retryEvent = onRequestRetry.mock.calls[0]?.[0]
+        const completeEvent = onRequestComplete.mock.calls[0]?.[0]
+
+        expect(retryEvent?.correlationId).toBe(startEvent?.correlationId)
+        expect(completeEvent?.correlationId).toBe(startEvent?.correlationId)
+        expect(retryEvent?.attempt).toBe(1)
+
+        // eslint-disable-next-line vitest/prefer-expect-type-of -- runtime check
+        expect(typeof retryEvent?.delayMs).toBe('number')
       } finally {
         vi.useRealTimers()
       }
