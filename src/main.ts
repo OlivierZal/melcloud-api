@@ -162,7 +162,7 @@ export {
   NetworkError,
   RateLimitError,
   TransientServerError,
-} from './errors.ts'
+} from './errors/index.ts'
 export {
   type BuildingFacade,
   type DeviceAtwFacade,

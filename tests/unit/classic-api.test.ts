@@ -20,7 +20,7 @@ import type {
   Logger,
 } from '../../src/api/index.ts'
 import type { DeviceType } from '../../src/constants.ts'
-import { RateLimitError } from '../../src/errors.ts'
+import { RateLimitError } from '../../src/errors/index.ts'
 import {
   type BuildingWithStructure,
   type ListDeviceAny,

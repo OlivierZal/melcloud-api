@@ -8,7 +8,7 @@ import {
   NetworkError,
   RateLimitError,
   TransientServerError,
-} from '../../src/errors.ts'
+} from '../../src/errors/index.ts'
 
 describe.concurrent('melCloudError hierarchy', () => {
   it('authenticationError is an instance of MelCloudError and Error', () => {
