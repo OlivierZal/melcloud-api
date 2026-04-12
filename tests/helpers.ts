@@ -29,6 +29,8 @@ export const defined = <T>(value: T | null | undefined): T => {
   return value
 }
 
+const HTTP_OK = 200
+
 export function mock<T extends object>(value?: Partial<T>): T
 export function mock(value: unknown = {}): unknown {
   return value
@@ -141,7 +143,7 @@ export const createLogger = (): Logger => ({
 export const mockResponse = (
   data: unknown,
   headers: Record<string, string | string[]> = {},
-  status = 200,
+  status = HTTP_OK,
 ): {
   config: object
   data: unknown

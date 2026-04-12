@@ -205,7 +205,7 @@ const setupSuccessfulLogin = (): void => {
     )
     .mockResolvedValueOnce(
       mockResponse(
-        `<script>window.location='melcloudhome://?code=auth-code&amp;state=xyz'</script>`,
+        '<script>window.location=\'melcloudhome://?code=auth-code&amp;state=xyz\'</script>',
         {},
         200,
       ),
@@ -670,15 +670,17 @@ describe('melcloud home API', () => {
         // Advance past the 3600s token expiry
         vi.advanceTimersByTime(3601 * MILLISECONDS_IN_SECOND)
 
-        // #ensureSession detects expired token, tries refresh first.
-        // Refresh token call succeeds via axios.post to token endpoint.
+        /*
+         * #ensureSession detects expired token, tries refresh first.
+         * Refresh token call succeeds via axios.post to token endpoint.
+         */
         mockAxiosPost.mockResolvedValueOnce(
           mockResponse({
             ...mockTokenResponse,
             access_token: 'refreshed-token',
           }),
         )
-        // list() -> #fetchContext() -> GET /context
+        /* List → #fetchContext → GET /context */
         mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
         const buildings = await api.list()
 
@@ -1508,8 +1510,10 @@ describe('melcloud home API', () => {
         refreshToken: 'old-refresh',
         username: 'user@test.com',
       })
-      // Refresh token attempt — simulated via #hasPersistedSession returning true
-      // since refreshToken is set, getUser is tried
+      /*
+       * Refresh token attempt — #hasPersistedSession returns true
+       * since refreshToken is set, getUser is tried.
+       */
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
       const api = await melCloudHomeApi.create({
@@ -1561,7 +1565,7 @@ describe('melcloud home API', () => {
         refreshToken: 'old-refresh',
         username: 'user@test.com',
       })
-      // getUser() succeeds with existing token — no OIDC needed for create()
+      /* GetUser succeeds with existing token — no OIDC needed for create */
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
@@ -1579,7 +1583,8 @@ describe('melcloud home API', () => {
       const tokenCalls = setSpy.mock.calls.filter(
         ([key]) => key === 'accessToken',
       )
-      // First call sets '' (clear), subsequent call sets the new token
+
+      /* First call sets '' (clear), subsequent call sets the new token */
       expect(tokenCalls[0]?.[1]).toBe('')
       expect(tokenCalls.at(-1)?.[1]).toBe('test-access-token')
     })
@@ -1606,11 +1611,13 @@ describe('melcloud home API', () => {
         const buildings = await api.list()
 
         expect(buildings).toStrictEqual([mockBuilding])
-        // Should have used refresh, not full OIDC (no axios.request calls for redirects)
-        const postCalls = mockAxiosPost.mock.calls
-        const lastPostUrl = postCalls.at(-1)?.[0] as string
 
-        expect(lastPostUrl).toContain('/connect/token')
+        /* Should have used refresh, not full OIDC (no axios.request calls for redirects) */
+        expect(mockAxiosPost).toHaveBeenLastCalledWith(
+          expect.stringContaining('/connect/token'),
+          expect.any(String),
+          expect.any(Object),
+        )
       } finally {
         vi.useRealTimers()
       }
@@ -1688,7 +1695,7 @@ describe('melcloud home API', () => {
     })
   })
 
-  describe('PAR and token exchange failures', () => {
+  describe('par and token exchange failures', () => {
     it('should handle PAR failure gracefully', async () => {
       const logger = createLogger()
       mockAxiosPost.mockRejectedValueOnce(new Error('PAR endpoint down'))
