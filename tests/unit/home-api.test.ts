@@ -1322,6 +1322,37 @@ describe('melcloud home API', () => {
         expect.any(Error),
       )
     })
+
+    it('should handle callback URL without authorization code', async () => {
+      // PAR
+      mockAxiosPost.mockResolvedValueOnce(
+        mockResponse({ request_uri: 'urn:test' }),
+      )
+      mockAxiosRequest
+        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
+        // Credential POST -> callback without code param
+        .mockResolvedValueOnce(
+          mockResponse(
+            '',
+            { location: 'melcloudhome://?state=abc' },
+            302,
+          ),
+        )
+
+      const logger = createLogger()
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        password: 'pass',
+        username: 'user@test.com',
+      })
+
+      expect(api.isAuthenticated()).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Authentication failed:',
+        expect.any(Error),
+      )
+    })
   })
 
   describe('session persistence', () => {
