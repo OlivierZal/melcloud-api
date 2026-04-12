@@ -131,8 +131,7 @@ export const withRetryBackoff = async <T>(
   operation: () => Promise<T>,
   options: RetryBackoffOptions,
 ): Promise<T> => {
-  let attempt = 0
-  for (;;) {
+  for (let attempt = 0; attempt <= options.maxRetries; attempt += 1) {
     try {
       /*
        * Sequential awaits inside this loop are intentional (each retry
@@ -150,7 +149,8 @@ export const withRetryBackoff = async <T>(
       options.onRetry?.(attempt + 1, error, delayMs)
       // eslint-disable-next-line no-await-in-loop -- sequential retry
       await sleep(delayMs)
-      attempt += 1
     }
   }
+  /* v8 ignore next -- unreachable: loop always exits via return or throw */
+  throw new Error('withRetryBackoff: unreachable')
 }
