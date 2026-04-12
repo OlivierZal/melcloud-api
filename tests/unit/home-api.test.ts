@@ -1627,6 +1627,40 @@ describe('melcloud home API', () => {
       }
     })
 
+    it('should pass AbortSignal to refresh token request', async () => {
+      vi.useFakeTimers()
+      try {
+        const controller = new AbortController()
+        setupSuccessfulLogin()
+        const api = await createApi({
+          abortSignal: controller.signal,
+          autoSyncInterval: null,
+        })
+
+        vi.advanceTimersByTime(3601 * MILLISECONDS_IN_SECOND)
+
+        mockAxiosPost.mockResolvedValueOnce(
+          mockResponse({
+            ...mockTokenResponse,
+            access_token: 'refreshed-token',
+          }),
+        )
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        await api.list()
+
+        /* Refresh token POST should include the signal */
+        const refreshCall = mockAxiosPost.mock.calls.find(([url]) =>
+          String(url).includes('/connect/token'),
+        )
+
+        expect(refreshCall?.[2]).toStrictEqual(
+          expect.objectContaining({ signal: controller.signal }),
+        )
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
     it('should fall back to full OIDC when token refresh fails', async () => {
       vi.useFakeTimers()
       try {

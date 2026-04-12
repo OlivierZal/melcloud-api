@@ -145,10 +145,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     /* v8 ignore next -- @authenticate guarantees data is always provided */
     const { password, username } = data ?? { password: '', username: '' }
     this.#clearPersistedSession()
-    const tokens = await performTokenAuth(
-      { password, username },
-      this.abortSignal,
-    )
+    const tokens = await performTokenAuth({
+      credentials: { password, username },
+      ...(this.abortSignal === undefined ?
+        {}
+      : { abortSignal: this.abortSignal }),
+    })
     this.#storeTokens(tokens)
     await this.#fetchContext()
     ;({ password: this.password, username: this.username } = {
@@ -313,7 +315,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns Whether the refresh succeeded.
    */
   async #refreshAccessToken(): Promise<boolean> {
-    const tokens = await refreshAccessToken(this.refreshToken, this.abortSignal)
+    const tokens = await refreshAccessToken({
+      refreshToken: this.refreshToken,
+      ...(this.abortSignal === undefined ?
+        {}
+      : { abortSignal: this.abortSignal }),
+    })
     if (tokens === null) {
       return false
     }

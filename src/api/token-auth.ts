@@ -102,11 +102,18 @@ export const generatePKCE = (): { challenge: string; verifier: string } => {
 
 /**
  * Resolve a potentially relative URL against a base URL.
- * @param location - The URL or relative path to resolve.
- * @param base - The base URL for resolution.
+ * @param options - The resolution options.
+ * @param options.base - The base URL for resolution.
+ * @param options.location - The URL or relative path to resolve.
  * @returns The fully qualified URL.
  */
-export const resolveUrl = (location: string, base: string): string =>
+export const resolveUrl = ({
+  base,
+  location,
+}: {
+  base: string
+  location: string
+}): string =>
   location.startsWith('http') ? location : new URL(location, base).href
 
 /**
@@ -142,14 +149,18 @@ export const storeCookies = async (
 
 /**
  * Push Authorization Request -- returns the opaque `request_uri`.
- * @param challenge - The PKCE code challenge.
- * @param abortSignal - Optional signal to abort the request.
+ * @param options - The PAR options.
+ * @param options.challenge - The PKCE code challenge.
+ * @param options.abortSignal - Optional signal to abort the request.
  * @returns The opaque PAR request URI.
  */
-export const par = async (
-  challenge: string,
-  abortSignal?: AbortSignal,
-): Promise<string> => {
+export const par = async ({
+  abortSignal,
+  challenge,
+}: {
+  challenge: string
+  abortSignal?: AbortSignal
+}): Promise<string> => {
   const { data } = await axios.post<{ request_uri: string }>(
     `${AUTH_BASE_URL}${PAR_PATH}`,
     new URLSearchParams({
@@ -238,10 +249,12 @@ const extractRedirectTarget = (
     response.status < REDIRECT_STATUS_MAX
   ) {
     const location = String(response.headers['location'] ?? '')
-    return resolveUrl(location, currentUrl)
+    return resolveUrl({ base: currentUrl, location })
   }
   const jsRedirect = extractJsRedirect(response.data)
-  return jsRedirect === null ? null : resolveUrl(jsRedirect, currentUrl)
+  return jsRedirect === null ? null : (
+      resolveUrl({ base: currentUrl, location: jsRedirect })
+    )
 }
 
 /**
@@ -288,14 +301,18 @@ export const authFollowRedirects = async ({
 
 /**
  * POST to the IdentityServer token endpoint.
- * @param params - URL-encoded form parameters for the token request.
- * @param abortSignal - Optional signal to abort the request.
+ * @param options - The token request options.
+ * @param options.params - URL-encoded form parameters for the token request.
+ * @param options.abortSignal - Optional signal to abort the request.
  * @returns The token response.
  */
-export const tokenRequest = async (
-  params: Record<string, string>,
-  abortSignal?: AbortSignal,
-): Promise<TokenResponse> => {
+export const tokenRequest = async ({
+  abortSignal,
+  params,
+}: {
+  params: Record<string, string>
+  abortSignal?: AbortSignal
+}): Promise<TokenResponse> => {
   const { data } = await axios.post<TokenResponse>(
     `${AUTH_BASE_URL}${TOKEN_PATH}`,
     new URLSearchParams(params).toString(),
@@ -361,7 +378,7 @@ const submitCredentials = async ({
   if (callbackLocation === '') {
     throw new Error('No redirect after credential submission')
   }
-  return resolveUrl(callbackLocation, action)
+  return resolveUrl({ base: action, location: callbackLocation })
 }
 
 /**
@@ -391,20 +408,27 @@ const extractAuthorizationCode = async (
 /**
  * Full headless OIDC login: PAR -> Cognito -> token exchange.
  * Returns the token response on success.
- * @param credentials - The user's login credentials.
- * @param credentials.password - The user's password.
- * @param credentials.username - The user's username.
- * @param abortSignal - Optional signal to abort the auth flow.
+ * @param options - The auth options.
+ * @param options.credentials - The user's login credentials.
+ * @param options.credentials.password - The user's password.
+ * @param options.credentials.username - The user's username.
+ * @param options.abortSignal - Optional signal to abort the auth flow.
  * @returns The token response containing access and refresh tokens.
  */
-export const performTokenAuth = async (
-  credentials: { password: string; username: string },
-  abortSignal?: AbortSignal,
-): Promise<TokenResponse> => {
+export const performTokenAuth = async ({
+  abortSignal,
+  credentials,
+}: {
+  credentials: { password: string; username: string }
+  abortSignal?: AbortSignal
+}): Promise<TokenResponse> => {
   const { challenge, verifier } = generatePKCE()
   const jar = new CookieJar()
 
-  const requestUri = await par(challenge, abortSignal)
+  const requestUri = await par({
+    challenge,
+    ...(abortSignal === undefined ? {} : { abortSignal }),
+  })
   const authorizeUrl = `${AUTH_BASE_URL}/connect/authorize?client_id=${CLIENT_ID}&request_uri=${encodeURIComponent(requestUri)}`
 
   const callbackUrl = await submitCredentials({
@@ -415,37 +439,41 @@ export const performTokenAuth = async (
   })
   const code = await extractAuthorizationCode(callbackUrl, jar, abortSignal)
 
-  return tokenRequest(
-    {
+  return tokenRequest({
+    params: {
       client_id: CLIENT_ID,
       code,
       code_verifier: verifier,
       grant_type: 'authorization_code',
       redirect_uri: REDIRECT_URI,
     },
-    abortSignal,
-  )
+    ...(abortSignal === undefined ? {} : { abortSignal }),
+  })
 }
 
 /**
  * Use the refresh token to obtain a fresh access token. Returns null on failure.
- * @param refreshToken - The refresh token to exchange.
- * @param abortSignal - Optional signal to abort the request.
+ * @param options - The refresh options.
+ * @param options.refreshToken - The refresh token to exchange.
+ * @param options.abortSignal - Optional signal to abort the request.
  * @returns The token response, or `null` if the refresh failed.
  */
-export const refreshAccessToken = async (
-  refreshToken: string,
-  abortSignal?: AbortSignal,
-): Promise<TokenResponse | null> => {
+export const refreshAccessToken = async ({
+  abortSignal,
+  refreshToken,
+}: {
+  refreshToken: string
+  abortSignal?: AbortSignal
+}): Promise<TokenResponse | null> => {
   try {
-    return await tokenRequest(
-      {
+    return await tokenRequest({
+      params: {
         client_id: CLIENT_ID,
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
       },
-      abortSignal,
-    )
+      ...(abortSignal === undefined ? {} : { abortSignal }),
+    })
   } catch {
     return null
   }
