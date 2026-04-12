@@ -173,14 +173,12 @@ export const ervDeviceData = (
  * ---------------------------------------------------------------------------
  */
 
-/* eslint-disable @typescript-eslint/no-magic-numbers -- fixture IDs are inherently arbitrary test values */
 const DEFAULT_AREA_ID = toAreaId(100)
 const DEFAULT_BUILDING_ID = toBuildingId(1)
 const DEFAULT_FLOOR_ID = toFloorId(10)
 const DEFAULT_ATA_DEVICE_ID = toDeviceId(1000)
 const DEFAULT_ATW_DEVICE_ID = toDeviceId(1001)
 const DEFAULT_ERV_DEVICE_ID = toDeviceId(1002)
-/* eslint-enable @typescript-eslint/no-magic-numbers */
 
 /*
  * ---------------------------------------------------------------------------

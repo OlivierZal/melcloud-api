@@ -58,6 +58,12 @@ export const fanSpeedToClassic: Record<HomeFanSpeed, FanSpeed> = {
   Two: FanSpeed.slow,
 }
 
+export const isClassicFanSpeed = (value: number): value is FanSpeed =>
+  value in fanSpeedFromClassic
+
+export const isHomeFanSpeed = (value: string): value is HomeFanSpeed =>
+  value in fanSpeedToClassic
+
 export const horizontalFromClassic: Record<Horizontal, HomeHorizontal> = {
   [Horizontal.auto]: 'Auto',
   [Horizontal.center]: 'Centre',

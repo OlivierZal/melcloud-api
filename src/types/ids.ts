@@ -6,7 +6,6 @@
  * `BuildingID` where a `FloorID` is expected is a type error.
  */
 
-// eslint-disable-next-line @typescript-eslint/naming-convention -- branded type sentinel
 type Brand<T extends string> = number & { readonly __brand: T }
 
 /** Unique identifier for a MELCloud area. */

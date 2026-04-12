@@ -8,12 +8,15 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../types/index.ts'
+import { FanSpeed } from '../constants.ts'
 import {
   type HomeFanSpeed,
   type HomeHorizontal,
   type HomeOperationMode,
   type HomeVertical,
   fanSpeedFromClassic,
+  isClassicFanSpeed,
+  isHomeFanSpeed,
 } from '../enum-mappings.ts'
 import { clampToRange } from './base-device.ts'
 
@@ -94,12 +97,10 @@ export class HomeDeviceAtaFacade {
      */
     const raw = this.#setting('SetFanSpeed')
     const numeric = Number(raw)
-    if (raw !== '' && numeric in fanSpeedFromClassic) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- `in` guard ensures numeric is a valid FanSpeed key
-      return fanSpeedFromClassic[numeric as keyof typeof fanSpeedFromClassic]
+    if (raw !== '' && isClassicFanSpeed(numeric)) {
+      return fanSpeedFromClassic[numeric]
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Fallback for when the API returns the enum name directly (or empty string for missing setting)
-    return raw as HomeFanSpeed
+    return isHomeFanSpeed(raw) ? raw : fanSpeedFromClassic[FanSpeed.auto]
   }
 
   public get setTemperature(): number {

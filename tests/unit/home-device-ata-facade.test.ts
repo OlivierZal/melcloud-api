@@ -125,7 +125,7 @@ describe('home device ata facade', () => {
       expect(facade.operationMode).toBe('')
       expect(facade.power).toBe(false)
       expect(facade.roomTemperature).toBe(0)
-      expect(facade.setFanSpeed).toBe('')
+      expect(facade.setFanSpeed).toBe('Auto')
       expect(facade.vaneHorizontalDirection).toBe('')
       expect(facade.vaneVerticalDirection).toBe('')
     })

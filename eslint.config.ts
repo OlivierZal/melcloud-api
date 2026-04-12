@@ -180,6 +180,12 @@ const config = defineConfig([
           format: ['camelCase', 'PascalCase', 'snake_case', 'UPPER_CASE'],
           selector: ['objectLiteralProperty', 'typeProperty'],
         },
+        // Branded types use __brand as a phantom sentinel — universal TS convention.
+        {
+          filter: { match: true, regex: '^__brand$' },
+          format: null,
+          selector: 'typeProperty',
+        },
         // Quoted keys ('Content-Type', 'x-api-key', '@scope/pkg') — skip entirely.
         {
           format: null,
@@ -610,7 +616,7 @@ const config = defineConfig([
   },
   {
     extends: [vitest.configs.all],
-    files: ['tests/**/*.test.ts'],
+    files: ['tests/**/*.test.ts', 'tests/fixtures.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
       'max-lines-per-function': 'off',
