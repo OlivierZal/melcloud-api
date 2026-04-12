@@ -19,5 +19,6 @@ export type {
   SettingManager,
 } from './interfaces.ts'
 
+export { BaseAPI } from './base.ts'
 export { ClassicAPI } from './classic.ts'
 export { HomeAPI } from './home.ts'

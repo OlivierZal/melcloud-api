@@ -17,7 +17,6 @@ import {
 import type {
   ClassicAPI,
   ClassicAPIConfig,
-  Logger,
 } from '../../src/api/index.ts'
 import type { DeviceType } from '../../src/constants.ts'
 import { RateLimitError } from '../../src/errors/index.ts'
@@ -28,7 +27,7 @@ import {
   toBuildingId,
   toDeviceId,
 } from '../../src/types/index.ts'
-import { cast, createSettingStore, mock } from '../helpers.ts'
+import { cast, createAxiosError, createLogger, createSettingStore, mock } from '../helpers.ts'
 
 const mockInterceptors = {
   request: { use: vi.fn() },
@@ -40,11 +39,6 @@ const mockAxiosInstance = {
   post: vi.fn(),
   request: vi.fn(),
 }
-
-const createLogger = (): Logger => ({
-  error: vi.fn<(...data: unknown[]) => void>(),
-  log: vi.fn<(...data: unknown[]) => void>(),
-})
 
 const loginResponse = (
   contextKey = 'ctx',
@@ -69,31 +63,6 @@ const createHeaders = (): {
   const setSpy = vi.spyOn(headers, 'set')
   return { headers, setSpy }
 }
-
-const createAxiosError = ({
-  message,
-  method = 'get',
-  responseHeaders = {},
-  status,
-  url,
-}: {
-  message: string
-  status: number
-  url: string
-  method?: string
-  responseHeaders?: Record<string, string>
-}): AxiosError =>
-  mock<AxiosError>({
-    config: mock<InternalAxiosRequestConfig>({ method, url }),
-    isAxiosError: true,
-    message,
-    response: mock<AxiosResponse>({
-      config: mock<InternalAxiosRequestConfig>({ data: null, method, url }),
-      data: {},
-      headers: responseHeaders,
-      status,
-    }),
-  })
 
 const transientServerError = (status: number): Error =>
   Object.assign(new Error(`Status ${String(status)}`), {

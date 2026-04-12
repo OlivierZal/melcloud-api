@@ -50,15 +50,12 @@ import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-  RequestLifecycleEmitter,
 } from '../observability/index.ts'
 import {
   DEFAULT_TRANSIENT_RETRY_OPTIONS,
   isSessionExpired,
   isTransientServerError,
   RateLimitError,
-  RateLimitGate,
-  RetryGuard,
   toDeviceId,
   withRetryBackoff,
 } from '../resilience/index.ts'
@@ -67,11 +64,8 @@ import type {
   ClassicAPIConfig,
   ErrorLog,
   ErrorLogQuery,
-  Logger,
-  OnSyncFunction,
-  SettingManager,
 } from './interfaces.ts'
-import { SyncManager } from './sync-manager.ts'
+import { BaseAPI } from './base.ts'
 
 const deviceTypeNames = {
   [DeviceType.Ata]: 'Ata',
@@ -200,44 +194,17 @@ const collectDevices = function* collectDevices(
  * Main MELCloud Classic API client. Handles authentication, device syncing, and all
  * ClassicAPI endpoint calls. Uses a private constructor — create instances via {@link ClassicAPI.create}.
  */
-export class ClassicAPI implements ClassicAPIAdapter, Disposable {
-  public readonly logger: Logger
-
-  public readonly onSync?: OnSyncFunction
-
-  public readonly settingManager?: SettingManager
-
+export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public get registry(): ClassicRegistry {
     return this.#registry
   }
 
-  readonly #abortSignal?: AbortSignal
-
-  readonly #api: AxiosInstance
-
-  readonly #events: RequestLifecycleEmitter
-
   #language = 'en'
-
-  readonly #rateLimitGate = new RateLimitGate({ hours: DEFAULT_RETRY_HOURS })
 
   readonly #registry = new ClassicRegistry()
 
-  readonly #retryGuard = new RetryGuard(RETRY_DELAY)
-
-  readonly #syncManager: SyncManager
-
   @setting
   private accessor contextKey = ''
-
-  @setting
-  private accessor expiry = ''
-
-  @setting
-  private accessor password = ''
-
-  @setting
-  private accessor username = ''
 
   private get language(): string {
     return this.#language
@@ -249,31 +216,41 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
 
   private constructor(config: ClassicAPIConfig = {}) {
     const {
-      abortSignal,
       autoSyncInterval = DEFAULT_SYNC_INTERVAL,
-      events,
       language,
-      logger = console,
-      onSync,
       password,
       requestTimeout = DEFAULT_TIMEOUT_MS,
-      settingManager,
       shouldVerifySSL = true,
       timezone,
       username,
     } = config
-    this.logger = logger
-    this.onSync = onSync
-    this.settingManager = settingManager
-    this.#abortSignal = abortSignal
-    this.#events = new RequestLifecycleEmitter(events, logger)
-    this.#applyOptionalConfig({ language, password, timezone, username })
-    this.#api = this.#createAPI(shouldVerifySSL, requestTimeout)
-    this.#syncManager = new SyncManager(
-      async () => this.fetch(),
-      logger,
-      autoSyncInterval,
+    const axiosInstance = ClassicAPI.#createAxiosInstance(
+      shouldVerifySSL,
+      requestTimeout,
     )
+    super(
+      { ...config, autoSyncInterval },
+      { baseURL: API_BASE_URL, timeout: requestTimeout },
+      async () => this.fetch(),
+      DEFAULT_RETRY_HOURS,
+      RETRY_DELAY,
+      axiosInstance,
+    )
+    this.#applyOptionalConfig({ language, password, timezone, username })
+    this.#setupAxiosInterceptors(this.api)
+  }
+
+  static #createAxiosInstance(
+    shouldRejectUnauthorized: boolean,
+    timeout: number,
+  ): AxiosInstance {
+    return axios.create({
+      baseURL: API_BASE_URL,
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: shouldRejectUnauthorized,
+      }),
+      timeout,
+    })
   }
 
   /**
@@ -318,20 +295,15 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
    */
   @syncDevices()
   public async fetch(): Promise<BuildingWithStructure[]> {
-    this.#syncManager.clear()
+    this.clearSync()
     try {
       return await this.#fetch()
     } catch (error) {
       this.logger.error('Failed to fetch devices:', error)
       return []
     } finally {
-      this.#syncManager.planNext()
+      this.syncManager.planNext()
     }
-  }
-
-  /** Cancel any pending automatic sync timer. */
-  public clearSync(): void {
-    this.#syncManager.clear()
   }
 
   public async getEnergy<T extends DeviceType>({
@@ -339,7 +311,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: EnergyPostData
   }): Promise<{ data: EnergyData<T> }> {
-    return this.#api.post('/EnergyCost/Report', postData)
+    return this.api.post('/EnergyCost/Report', postData)
   }
 
   public async getErrorEntries({
@@ -347,7 +319,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: ErrorLogPostData
   }): Promise<{ data: ErrorLogData[] | FailureData }> {
-    return this.#api.post('/Report/GetUnitErrorLog2', postData)
+    return this.api.post('/Report/GetUnitErrorLog2', postData)
   }
 
   public async getFrostProtection({
@@ -355,28 +327,13 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     params: SettingsParams
   }): Promise<{ data: FrostProtectionData }> {
-    return this.#api.get('/FrostProtection/GetSettings', {
+    return this.api.get('/FrostProtection/GetSettings', {
       params,
     })
   }
 
   public isAuthenticated(): boolean {
     return this.contextKey !== ''
-  }
-
-  /**
-   * Whether the upstream rate-limit gate is currently closed.
-   *
-   * A `true` value means the SDK recently observed a 429 Too Many
-   * Requests response on `LIST_PATH` and is intentionally failing
-   * subsequent list operations fast to honor the upstream
-   * `Retry-After` window. Consumers can poll this to display a
-   * "throttled, please wait" indicator without catching
-   * {@link RateLimitError} through the full call stack.
-   * @returns `true` while the gate is holding a pause window.
-   */
-  public get isRateLimited(): boolean {
-    return this.#rateLimitGate.isPaused
   }
 
   /**
@@ -424,7 +381,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: GetGroupPostData
   }): Promise<{ data: GetGroupData }> {
-    return this.#api.post('/Group/Get', postData)
+    return this.api.post('/Group/Get', postData)
   }
 
   public async getHolidayMode({
@@ -432,7 +389,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     params: SettingsParams
   }): Promise<{ data: HolidayModeData }> {
-    return this.#api.get('/HolidayMode/GetSettings', {
+    return this.api.get('/HolidayMode/GetSettings', {
       params,
     })
   }
@@ -442,7 +399,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: { device: number; hour: HourNumbers }
   }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetHourlyTemperature', postData)
+    return this.api.post('/Report/GetHourlyTemperature', postData)
   }
 
   public async getInternalTemperatures({
@@ -450,7 +407,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: ReportPostData
   }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetInternalTemperatures2', postData)
+    return this.api.post('/Report/GetInternalTemperatures2', postData)
   }
 
   public async getOperationModes({
@@ -458,7 +415,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: ReportPostData
   }): Promise<{ data: OperationModeLogData }> {
-    return this.#api.post('/Report/GetOperationModeLog2', postData)
+    return this.api.post('/Report/GetOperationModeLog2', postData)
   }
 
   public async getSignal({
@@ -466,7 +423,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: { devices: number | number[]; hour: HourNumbers }
   }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetSignalStrength', postData)
+    return this.api.post('/Report/GetSignalStrength', postData)
   }
 
   public async getTemperatures({
@@ -474,7 +431,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: TemperatureLogPostData
   }): Promise<{ data: ReportData }> {
-    return this.#api.post('/Report/GetTemperatureLog2', postData)
+    return this.api.post('/Report/GetTemperatureLog2', postData)
   }
 
   public async getTiles({
@@ -492,7 +449,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: TilesPostData<T>
   }): Promise<{ data: TilesData<T> }> {
-    return this.#api.post('/Tile/Get2', postData)
+    return this.api.post('/Tile/Get2', postData)
   }
 
   public async getValues<T extends DeviceType>({
@@ -500,11 +457,11 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     params: GetDeviceDataParams
   }): Promise<{ data: GetDeviceData<T> }> {
-    return this.#api.get('/Device/Get', { params })
+    return this.api.get('/Device/Get', { params })
   }
 
   public async list(): Promise<{ data: BuildingWithStructure[] }> {
-    return this.#api.get(LIST_PATH)
+    return this.api.get(LIST_PATH)
   }
 
   public async login({
@@ -512,13 +469,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: LoginPostData
   }): Promise<{ data: LoginData }> {
-    return this.#api.post(LOGIN_PATH, postData)
-  }
-
-  /** Dispose both sync and retry timers. */
-  public [Symbol.dispose](): void {
-    this.#syncManager[Symbol.dispose]()
-    this.#retryGuard[Symbol.dispose]()
+    return this.api.post(LOGIN_PATH, postData)
   }
 
   public async setFrostProtection({
@@ -526,7 +477,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: FrostProtectionPostData
   }): Promise<{ data: FailureData | SuccessData }> {
-    return this.#api.post('/FrostProtection/Update', postData)
+    return this.api.post('/FrostProtection/Update', postData)
   }
 
   public async setGroup({
@@ -534,7 +485,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: SetGroupPostData
   }): Promise<{ data: FailureData | SuccessData }> {
-    return this.#api.post('/Group/SetAta', postData)
+    return this.api.post('/Group/SetAta', postData)
   }
 
   public async setHolidayMode({
@@ -542,7 +493,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: HolidayModePostData
   }): Promise<{ data: FailureData | SuccessData }> {
-    return this.#api.post('/HolidayMode/Update', postData)
+    return this.api.post('/HolidayMode/Update', postData)
   }
 
   /**
@@ -551,7 +502,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
    */
   public async setLanguage(language: string): Promise<void> {
     if (language !== this.language) {
-      const { data: hasLanguageChanged } = await this.#api.post<boolean>(
+      const { data: hasLanguageChanged } = await this.api.post<boolean>(
         '/User/UpdateLanguage',
         { language: this.#getLanguageCode(language) },
       )
@@ -566,15 +517,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   }: {
     postData: SetPowerPostData
   }): Promise<{ data: boolean }> {
-    return this.#api.post('/Device/Power', postData)
-  }
-
-  /**
-   * Update the automatic sync interval and reschedule.
-   * @param minutes - Interval in minutes. Set to `0` or `null` to disable auto-sync.
-   */
-  public setSyncInterval(minutes: number | null): void {
-    this.#syncManager.setInterval(minutes)
+    return this.api.post('/Device/Power', postData)
   }
 
   public async setValues<T extends DeviceType>({
@@ -584,7 +527,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
     postData: SetDevicePostData<T>
     type: T
   }): Promise<{ data: SetDeviceData<T> }> {
-    return this.#api.post(`/Device/Set${deviceTypeNames[type]}`, postData)
+    return this.api.post(`/Device/Set${deviceTypeNames[type]}`, postData)
   }
 
   // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
@@ -605,32 +548,12 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
     if (language !== undefined) {
       this.language = language
     }
-    if (username !== undefined) {
-      this.username = username
-    }
-    if (password !== undefined) {
-      this.password = password
-    }
+    this.applyCredentials(username, password)
   }
 
   #clearPersistedSession(): void {
     this.contextKey = ''
     this.expiry = ''
-  }
-
-  #createAPI(
-    shouldRejectUnauthorized: boolean,
-    timeout: number,
-  ): AxiosInstance {
-    const api = axios.create({
-      baseURL: API_BASE_URL,
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: shouldRejectUnauthorized,
-      }),
-      timeout,
-    })
-    this.#setupAxiosInterceptors(api)
-    return api
   }
 
   #emitErrorEvent(
@@ -654,7 +577,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
     if (meta === undefined) {
       return
     }
-    this.#events.emitError({
+    this.events.emitError({
       correlationId: meta.correlationId,
       durationMs: Date.now() - meta.startedAt,
       error,
@@ -716,19 +639,19 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
 
     const { config, response: { headers, status } = {} } = error
     if (status === HttpStatusCode.TooManyRequests) {
-      this.#rateLimitGate.recordAndLog(
+      this.rateLimitGate.recordAndLog(
         this.logger,
         headers?.['retry-after'],
         'list operations',
       )
     } else if (
       status === HttpStatusCode.Unauthorized &&
-      this.#retryGuard.tryConsume() &&
+      this.retryGuard.tryConsume() &&
       config &&
       config.url !== LOGIN_PATH &&
       (await this.authenticate())
     ) {
-      return this.#api.request(config)
+      return this.api.request(config)
     }
     this.#emitErrorEvent(error, config)
     throw new Error(errorData.errorMessage, { cause: error })
@@ -737,11 +660,11 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   async #onRequest(
     config: InternalAxiosRequestConfig,
   ): Promise<InternalAxiosRequestConfig> {
-    const newConfig = { ...config, signal: this.#abortSignal ?? config.signal }
-    if (newConfig.url === LIST_PATH && this.#rateLimitGate.isPaused) {
+    const newConfig = { ...config, signal: this.abortSignal ?? config.signal }
+    if (newConfig.url === LIST_PATH && this.rateLimitGate.isPaused) {
       throw new RateLimitError(
-        `API requests to ${LIST_PATH} are on hold for ${this.#rateLimitGate.formatRemaining()}`,
-        { retryAfter: this.#rateLimitGate.remaining },
+        `API requests to ${LIST_PATH} are on hold for ${this.rateLimitGate.formatRemaining()}`,
+        { retryAfter: this.rateLimitGate.remaining },
       )
     }
     if (newConfig.url !== LOGIN_PATH) {
@@ -765,7 +688,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
     const { [LIFECYCLE_KEY]: meta } =
       response.config as LifecycleTagged<InternalAxiosRequestConfig>
     if (meta !== undefined) {
-      this.#events.emitComplete({
+      this.events.emitComplete({
         correlationId: meta.correlationId,
         durationMs: Date.now() - meta.startedAt,
         method: meta.method,
@@ -820,7 +743,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
     }
     const tagged = config as LifecycleTagged<InternalAxiosRequestConfig>
     tagged[LIFECYCLE_KEY] = meta
-    this.#events.emitStart({
+    this.events.emitStart({
       correlationId: meta.correlationId,
       method: meta.method,
       url: meta.url,
