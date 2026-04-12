@@ -280,7 +280,6 @@ const config = defineConfig([
         'error',
         {
           ignoreTypeImports: true,
-          max: 11,
         },
       ],
       'import-x/newline-after-import': 'error',
@@ -315,7 +314,6 @@ const config = defineConfig([
       'max-lines': 'off',
       'no-bitwise': 'off',
       'no-continue': 'off',
-      'no-duplicate-imports': 'off',
       'no-else-return': [
         'error',
         {
