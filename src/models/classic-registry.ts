@@ -12,9 +12,9 @@ import {
   type FloorZone,
   type ListDeviceAny,
   type Zone,
-  areaId as toAreaId,
-  buildingId as toBuildingId,
-  floorId as toFloorId,
+  toAreaId,
+  toBuildingId,
+  toFloorId,
 } from '../types/index.ts'
 import type { DeviceAny } from './interfaces.ts'
 import { Area } from './area.ts'

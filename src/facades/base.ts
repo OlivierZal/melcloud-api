@@ -24,7 +24,7 @@ import {
   type SettingsParams,
   type SuccessData,
   type TilesData,
-  deviceId,
+  toDeviceId,
 } from '../types/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'
 import type {
@@ -143,7 +143,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   public async setPower(isOn = true): Promise<boolean> {
     const { data: isPowered } = await this.api.setPower({
       postData: {
-        DeviceIds: this.#deviceIds.map((id) => deviceId(id)),
+        DeviceIds: this.#deviceIds.map((id) => toDeviceId(id)),
         Power: isOn,
       },
     })
@@ -186,7 +186,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   public async getTiles<TDeviceType extends DeviceType>(
     device: false | Device<TDeviceType> = false,
   ): Promise<TilesData<TDeviceType | null>> {
-    const postData = { DeviceIDs: this.#deviceIds.map((id) => deviceId(id)) }
+    const postData = { DeviceIDs: this.#deviceIds.map((id) => toDeviceId(id)) }
     if (device === false || !this.#deviceIds.includes(device.id)) {
       const { data } = await this.api.getTiles({ postData })
       return data

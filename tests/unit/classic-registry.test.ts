@@ -6,10 +6,10 @@ import {
   type ListDevice,
   type ListDeviceAny,
   type ListDeviceDataAta,
-  areaId,
-  buildingId,
-  deviceId,
-  floorId,
+  toAreaId,
+  toBuildingId,
+  toDeviceId,
+  toFloorId,
 } from '../../src/types/index.ts'
 import {
   areaData,
@@ -25,7 +25,7 @@ const allBuildings = [
   buildingData({ Name: 'Building 1' }),
   buildingData({
     FPDefined: false,
-    ID: buildingId(2),
+    ID: toBuildingId(2),
     Location: 20,
     Name: 'Building 2',
   }),
@@ -34,14 +34,14 @@ const allBuildings = [
 const allFloors = [
   floorData({ Name: 'Floor 1' }),
   floorData({ ID: 11, Name: 'Floor 2' }),
-  floorData({ BuildingId: buildingId(2), ID: 12, Name: 'Floor 3' }),
+  floorData({ BuildingId: toBuildingId(2), ID: 12, Name: 'Floor 3' }),
 ]
 
 const allAreas = [
   areaData({ Name: 'Area 1' }),
   areaData({ FloorId: null, ID: 101, Name: 'Area 2' }),
   areaData({
-    BuildingId: buildingId(2),
+    BuildingId: toBuildingId(2),
     FloorId: 12,
     ID: 102,
     Name: 'Area 3',
@@ -51,10 +51,10 @@ const allAreas = [
 const allDevices: ListDeviceAny[] = [
   ataDevice({ DeviceName: 'Device ATA' }),
   atwDevice({
-    AreaID: areaId(102),
-    BuildingID: buildingId(2),
+    AreaID: toAreaId(102),
+    BuildingID: toBuildingId(2),
     DeviceName: 'Device ATW',
-    FloorID: floorId(12),
+    FloorID: toFloorId(12),
   }),
   ervDevice({ AreaID: null, DeviceName: 'Device ERV' }),
 ]
@@ -106,9 +106,9 @@ describe('model registry', () => {
       const registry = new ClassicRegistry()
       const invalidDevice = mock<ListDevice<0>>({
         AreaID: null,
-        BuildingID: buildingId(1),
+        BuildingID: toBuildingId(1),
         Device: mock<ListDeviceDataAta>(),
-        DeviceID: deviceId(9999),
+        DeviceID: toDeviceId(9999),
         DeviceName: 'Invalid',
         FloorID: null,
         Type: cast(999),
@@ -128,9 +128,9 @@ describe('model registry', () => {
       const registry = new ClassicRegistry()
       const invalidDevice = mock<ListDevice<0>>({
         AreaID: null,
-        BuildingID: buildingId(1),
+        BuildingID: toBuildingId(1),
         Device: mock<ListDeviceDataAta>(),
-        DeviceID: deviceId(9999),
+        DeviceID: toDeviceId(9999),
         DeviceName: 'Invalid',
         FloorID: null,
         Type: cast({ nested: 'value' }),
@@ -167,10 +167,10 @@ describe('model registry', () => {
       registry.syncDevices([
         ataDevice({ DeviceName: 'Updated ATA' }),
         atwDevice({
-          AreaID: areaId(102),
-          BuildingID: buildingId(2),
+          AreaID: toAreaId(102),
+          BuildingID: toBuildingId(2),
           DeviceName: 'Updated ATW',
-          FloorID: floorId(12),
+          FloorID: toFloorId(12),
         }),
         ervDevice({ AreaID: null, DeviceName: 'Updated ERV' }),
       ])
@@ -238,7 +238,7 @@ describe('model registry', () => {
   describe('cross-references', () => {
     it('getFloorsByBuildingId returns floors belonging to a building', () => {
       const registry = createPopulatedRegistry(allFixtures)
-      const floors = registry.getFloorsByBuildingId(buildingId(1))
+      const floors = registry.getFloorsByBuildingId(toBuildingId(1))
 
       expect(floors).toHaveLength(2)
       expect(floors.map(({ name }) => name)).toStrictEqual([
@@ -249,7 +249,7 @@ describe('model registry', () => {
 
     it('getAreasByBuildingId returns areas belonging to a building', () => {
       const registry = createPopulatedRegistry(allFixtures)
-      const areas = registry.getAreasByBuildingId(buildingId(1))
+      const areas = registry.getAreasByBuildingId(toBuildingId(1))
 
       expect(areas).toHaveLength(2)
     })
@@ -257,37 +257,37 @@ describe('model registry', () => {
     it('getAreasByFloorId returns areas belonging to a floor', () => {
       const registry = createPopulatedRegistry(allFixtures)
 
-      expect(registry.getAreasByFloorId(floorId(10))).toHaveLength(1)
-      expect(registry.getAreasByFloorId(floorId(11))).toHaveLength(0)
+      expect(registry.getAreasByFloorId(toFloorId(10))).toHaveLength(1)
+      expect(registry.getAreasByFloorId(toFloorId(11))).toHaveLength(0)
     })
 
     it('getDevicesByBuildingId returns devices belonging to a building', () => {
       const registry = createPopulatedRegistry(allFixtures)
 
-      expect(registry.getDevicesByBuildingId(buildingId(1))).toHaveLength(2)
-      expect(registry.getDevicesByBuildingId(buildingId(2))).toHaveLength(1)
+      expect(registry.getDevicesByBuildingId(toBuildingId(1))).toHaveLength(2)
+      expect(registry.getDevicesByBuildingId(toBuildingId(2))).toHaveLength(1)
     })
 
     it('getDevicesByFloorId returns devices belonging to a floor', () => {
       const registry = createPopulatedRegistry(allFixtures)
 
-      expect(registry.getDevicesByFloorId(floorId(10))).toHaveLength(1)
-      expect(registry.getDevicesByFloorId(floorId(11))).toHaveLength(0)
+      expect(registry.getDevicesByFloorId(toFloorId(10))).toHaveLength(1)
+      expect(registry.getDevicesByFloorId(toFloorId(11))).toHaveLength(0)
     })
 
     it('getDevicesByAreaId returns devices belonging to an area', () => {
       const registry = createPopulatedRegistry(allFixtures)
 
-      expect(registry.getDevicesByAreaId(areaId(100))).toHaveLength(1)
-      expect(registry.getDevicesByAreaId(areaId(101))).toHaveLength(0)
+      expect(registry.getDevicesByAreaId(toAreaId(100))).toHaveLength(1)
+      expect(registry.getDevicesByAreaId(toAreaId(101))).toHaveLength(0)
     })
 
     it('returns empty arrays for unknown building id', () => {
       const registry = createPopulatedRegistry(allFixtures)
 
-      expect(registry.getFloorsByBuildingId(buildingId(999))).toHaveLength(0)
-      expect(registry.getAreasByBuildingId(buildingId(999))).toHaveLength(0)
-      expect(registry.getDevicesByBuildingId(buildingId(999))).toHaveLength(0)
+      expect(registry.getFloorsByBuildingId(toBuildingId(999))).toHaveLength(0)
+      expect(registry.getAreasByBuildingId(toBuildingId(999))).toHaveLength(0)
+      expect(registry.getDevicesByBuildingId(toBuildingId(999))).toHaveLength(0)
     })
   })
 })

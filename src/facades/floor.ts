@@ -1,11 +1,11 @@
 import type { DeviceAny, Floor } from '../models/index.ts'
-import { floorId } from '../types/index.ts'
+import { toFloorId } from '../types/index.ts'
 import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a floor, grouping devices on that floor within a building. */
 export class FloorFacade extends BaseZoneFacade<Floor> {
   public override get devices(): DeviceAny[] {
-    return this.registry.getDevicesByFloorId(floorId(this.id))
+    return this.registry.getDevicesByFloorId(toFloorId(this.id))
   }
 
   protected readonly frostProtectionLocation = 'FloorIds'

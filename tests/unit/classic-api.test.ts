@@ -25,8 +25,8 @@ import {
   type BuildingWithStructure,
   type ListDeviceAny,
   type SetDevicePostData,
-  buildingId,
-  deviceId,
+  toBuildingId,
+  toDeviceId,
 } from '../../src/types/index.ts'
 import { cast, createSettingStore, mock } from '../helpers.ts'
 
@@ -146,7 +146,7 @@ const createBuilding = (
     HMEnabled: false,
     HMEndDate: null,
     HMStartDate: null,
-    ID: buildingId(1),
+    ID: toBuildingId(1),
     Location: 10,
     Name: 'Test',
     Structure: { Areas: [], Devices: [], Floors: [] },
@@ -514,7 +514,7 @@ describe('mELCloud Classic API', () => {
       mockAxiosInstance.post.mockResolvedValue({ data: {} })
       await api.setValues({
         postData: mock<SetDevicePostData<typeof DeviceType.Ata>>({
-          DeviceID: deviceId(1),
+          DeviceID: toDeviceId(1),
           EffectiveFlags: 1,
         }),
         type,
@@ -1194,7 +1194,7 @@ describe('mELCloud Classic API', () => {
         Structure: {
           Areas: [
             {
-              BuildingId: buildingId(1),
+              BuildingId: toBuildingId(1),
               Devices: [
                 createDevice({
                   AreaID: 100,
@@ -1214,7 +1214,7 @@ describe('mELCloud Classic API', () => {
             {
               Areas: [
                 {
-                  BuildingId: buildingId(1),
+                  BuildingId: toBuildingId(1),
                   Devices: [
                     createDevice({
                       AreaID: 200,
@@ -1228,7 +1228,7 @@ describe('mELCloud Classic API', () => {
                   Name: 'FA1',
                 },
               ],
-              BuildingId: buildingId(1),
+              BuildingId: toBuildingId(1),
               Devices: [
                 createDevice({
                   DeviceID: 4000,

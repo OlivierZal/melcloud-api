@@ -11,7 +11,7 @@ import {
   type SetDeviceData,
   type TilesData,
   type UpdateDeviceData,
-  deviceId,
+  toDeviceId,
 } from '../types/index.ts'
 import {
   fromListToSetAta,
@@ -167,7 +167,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     const { data: finalData } = await api.setValues({
       postData: {
         ...this.prepareUpdateData(newData),
-        DeviceID: deviceId(id),
+        DeviceID: toDeviceId(id),
         EffectiveFlags: flags,
       },
       type,
@@ -253,7 +253,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   ): ReportPostData {
     const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
-      DeviceID: deviceId(this.id),
+      DeviceID: toDeviceId(this.id),
       Duration:
         shouldUseExactRange ?
           getDuration({ from: newFrom, to: newTo })
