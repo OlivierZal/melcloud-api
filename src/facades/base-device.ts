@@ -10,8 +10,8 @@ import {
   type ReportPostData,
   type SetDeviceData,
   type TilesData,
+  type DeviceID,
   type UpdateDeviceData,
-  toDeviceId,
 } from '../types/index.ts'
 import {
   fromListToSetAta,
@@ -71,6 +71,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<DeviceAny>
   implements DeviceFacade<T>
 {
+  public declare readonly id: DeviceID
+
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
   protected abstract readonly temperaturesLegend: (string | undefined)[]
@@ -167,7 +169,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     const { data: finalData } = await api.setValues({
       postData: {
         ...this.prepareUpdateData(newData),
-        DeviceID: toDeviceId(id),
+        DeviceID: id,
         EffectiveFlags: flags,
       },
       type,
@@ -253,7 +255,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   ): ReportPostData {
     const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
-      DeviceID: toDeviceId(this.id),
+      DeviceID: this.id,
       Duration:
         shouldUseExactRange ?
           getDuration({ from: newFrom, to: newTo })

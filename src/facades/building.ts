@@ -6,17 +6,19 @@ import type {
   Model,
 } from '../models/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
-import { type ZoneSettings, toBuildingId } from '../types/index.ts'
+import { type ZoneSettings, type BuildingID } from '../types/index.ts'
 import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
 export class BuildingFacade extends BaseZoneFacade<Building> {
+  public declare readonly id: BuildingID
+
   public get data(): ZoneSettings {
     return this.instance.data
   }
 
   public override get devices(): DeviceAny[] {
-    return this.registry.getDevicesByBuildingId(toBuildingId(this.id))
+    return this.registry.getDevicesByBuildingId(this.id)
   }
 
   protected readonly frostProtectionLocation = 'BuildingIds'
