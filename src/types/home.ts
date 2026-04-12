@@ -32,8 +32,13 @@ export interface HomeClaim {
 
 export interface HomeContext {
   readonly buildings: HomeBuilding[]
+  readonly country: string
+  readonly email: string
+  readonly firstname: string
   readonly guestBuildings: HomeBuilding[]
+  readonly id: string
   readonly language: string
+  readonly lastname: string
 }
 
 export interface HomeDeviceCapabilities {

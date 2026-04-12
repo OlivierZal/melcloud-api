@@ -184,14 +184,17 @@ export interface ClassicAPISettings {
 
 /** Persistent settings managed by the Home API for session authentication. */
 export interface HomeAPISettings {
-  /** Serialized tough-cookie CookieJar (JSON). */
-  readonly cookies?: string | null
+  /** IdentityServer access token (Bearer). */
+  readonly accessToken?: string | null
 
   /** Session expiry timestamp in ISO 8601 format. */
   readonly expiry?: string | null
 
   /** MELCloud Home account password. */
   readonly password?: string | null
+
+  /** IdentityServer refresh token. */
+  readonly refreshToken?: string | null
 
   /** MELCloud Home account username (email). */
   readonly username?: string | null

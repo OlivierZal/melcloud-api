@@ -1,6 +1,15 @@
+import type {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios'
 import { vi } from 'vitest'
 
-import type { ClassicAPIAdapter, SettingManager } from '../src/api/index.ts'
+import type {
+  ClassicAPIAdapter,
+  Logger,
+  SettingManager,
+} from '../src/api/index.ts'
 import type { DeviceType } from '../src/constants.ts'
 import type {
   AreaDataAny,
@@ -23,6 +32,8 @@ export const defined = <T>(value: T | null | undefined): T => {
   }
   return value
 }
+
+const HTTP_OK = 200
 
 export function mock<T extends object>(value?: Partial<T>): T
 export function mock(value: unknown = {}): unknown {
@@ -127,3 +138,49 @@ export const createPopulatedRegistry = ({
   registry.syncDevices(devices)
   return registry
 }
+
+export const createLogger = (): Logger => ({
+  error: vi.fn<(...data: unknown[]) => void>(),
+  log: vi.fn<(...data: unknown[]) => void>(),
+})
+
+export const mockResponse = (
+  data: unknown,
+  headers: Record<string, string | string[]> = {},
+  status = HTTP_OK,
+): {
+  config: object
+  data: unknown
+  headers: Record<string, string | string[]>
+  status: number
+} => ({
+  config: {},
+  data,
+  headers,
+  status,
+})
+
+export const createAxiosError = ({
+  message,
+  method = 'get',
+  responseHeaders = {},
+  status,
+  url,
+}: {
+  message: string
+  status: number
+  url: string
+  method?: string
+  responseHeaders?: Record<string, string>
+}): AxiosError =>
+  mock<AxiosError>({
+    config: mock<InternalAxiosRequestConfig>({ method, url }),
+    isAxiosError: true,
+    message,
+    response: mock<AxiosResponse>({
+      config: mock<InternalAxiosRequestConfig>({ data: null, method, url }),
+      data: {},
+      headers: responseHeaders,
+      status,
+    }),
+  })
