@@ -9,10 +9,10 @@ import {
   type ListDeviceDataAtw,
   type ListDeviceDataErv,
   type ReportData,
-  areaId,
-  buildingId,
-  deviceId,
-  floorId,
+  toAreaId,
+  toBuildingId,
+  toDeviceId,
+  toFloorId,
 } from '../src/types/index.ts'
 import { mock } from './helpers.ts'
 
@@ -33,7 +33,7 @@ export const buildingData = (
   HMEnabled: false,
   HMEndDate: null,
   HMStartDate: null,
-  ID: buildingId(1),
+  ID: toBuildingId(1),
   Location: 10,
   Name: 'Building',
   TimeZone: 0,
@@ -41,7 +41,7 @@ export const buildingData = (
 })
 
 export const floorData = (overrides: Partial<FloorData> = {}): FloorData => ({
-  BuildingId: buildingId(1),
+  BuildingId: toBuildingId(1),
   ID: 10,
   Name: 'Floor',
   ...overrides,
@@ -50,7 +50,7 @@ export const floorData = (overrides: Partial<FloorData> = {}): FloorData => ({
 export const areaData = (
   overrides: Partial<AreaDataAny> = {},
 ): AreaDataAny => ({
-  BuildingId: buildingId(1),
+  BuildingId: toBuildingId(1),
   FloorId: 10,
   ID: 100,
   Name: 'Area',
@@ -174,12 +174,12 @@ export const ervDeviceData = (
  */
 
 /* eslint-disable @typescript-eslint/no-magic-numbers -- fixture IDs are inherently arbitrary test values */
-const DEFAULT_AREA_ID = areaId(100)
-const DEFAULT_BUILDING_ID = buildingId(1)
-const DEFAULT_FLOOR_ID = floorId(10)
-const DEFAULT_ATA_DEVICE_ID = deviceId(1000)
-const DEFAULT_ATW_DEVICE_ID = deviceId(1001)
-const DEFAULT_ERV_DEVICE_ID = deviceId(1002)
+const DEFAULT_AREA_ID = toAreaId(100)
+const DEFAULT_BUILDING_ID = toBuildingId(1)
+const DEFAULT_FLOOR_ID = toFloorId(10)
+const DEFAULT_ATA_DEVICE_ID = toDeviceId(1000)
+const DEFAULT_ATW_DEVICE_ID = toDeviceId(1001)
+const DEFAULT_ERV_DEVICE_ID = toDeviceId(1002)
 /* eslint-enable @typescript-eslint/no-magic-numbers */
 
 /*

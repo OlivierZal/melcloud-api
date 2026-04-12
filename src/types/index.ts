@@ -93,4 +93,4 @@ export type {
 } from './home.ts'
 export type { AreaID, BuildingID, DeviceID, FloorID } from './ids.ts'
 
-export { areaId, buildingId, deviceId, floorId } from './ids.ts'
+export { toAreaId, toBuildingId, toDeviceId, toFloorId } from './ids.ts'

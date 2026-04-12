@@ -1,11 +1,13 @@
 import type { Area, DeviceAny } from '../models/index.ts'
-import { areaId } from '../types/index.ts'
+import type { AreaID } from '../types/index.ts'
 import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for an area, grouping devices within a floor or building. */
 export class AreaFacade extends BaseZoneFacade<Area> {
+  declare public readonly id: AreaID
+
   public override get devices(): DeviceAny[] {
-    return this.registry.getDevicesByAreaId(areaId(this.id))
+    return this.registry.getDevicesByAreaId(this.id)
   }
 
   protected readonly frostProtectionLocation = 'AreaIds'

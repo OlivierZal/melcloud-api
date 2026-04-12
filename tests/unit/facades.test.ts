@@ -23,7 +23,7 @@ import { type Device, ClassicRegistry } from '../../src/models/index.ts'
 import {
   type SetDeviceDataAta,
   type SetDevicePostData,
-  buildingId,
+  toBuildingId,
 } from '../../src/types/index.ts'
 import {
   areaData,
@@ -626,7 +626,7 @@ describe('base facade instance error', () => {
     const registry = createRegistry()
     registry.syncAreas([
       {
-        BuildingId: buildingId(1),
+        BuildingId: toBuildingId(1),
         FloorId: null,
         ID: 200,
         Name: 'Empty Area',

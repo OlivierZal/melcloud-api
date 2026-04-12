@@ -54,12 +54,12 @@ import {
 } from '../observability/index.ts'
 import {
   DEFAULT_TRANSIENT_RETRY_OPTIONS,
-  deviceId,
   isSessionExpired,
   isTransientServerError,
   RateLimitError,
   RateLimitGate,
   RetryGuard,
+  toDeviceId,
   withRetryBackoff,
 } from '../resilience/index.ts'
 import type {
@@ -670,7 +670,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   ): Promise<ErrorLogData[]> {
     const { data } = await this.getErrorEntries({
       postData: {
-        DeviceIDs: deviceIds.map((id) => deviceId(id)),
+        DeviceIDs: deviceIds.map((id) => toDeviceId(id)),
         FromDate: toISODate(fromDate),
         ToDate: toISODate(toDate),
       },

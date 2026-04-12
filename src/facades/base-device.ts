@@ -1,18 +1,18 @@
 import { DateTime } from 'luxon'
 
+import type {
+  DeviceID,
+  EnergyData,
+  GetDeviceData,
+  ListDeviceData,
+  ReportPostData,
+  SetDeviceData,
+  TilesData,
+  UpdateDeviceData,
+} from '../types/index.ts'
 import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { type DeviceAny, Device } from '../models/index.ts'
-import {
-  type EnergyData,
-  type GetDeviceData,
-  type ListDeviceData,
-  type ReportPostData,
-  type SetDeviceData,
-  type TilesData,
-  type UpdateDeviceData,
-  deviceId,
-} from '../types/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -71,6 +71,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<DeviceAny>
   implements DeviceFacade<T>
 {
+  declare public readonly id: DeviceID
+
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
   protected abstract readonly temperaturesLegend: (string | undefined)[]
@@ -167,7 +169,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     const { data: finalData } = await api.setValues({
       postData: {
         ...this.prepareUpdateData(newData),
-        DeviceID: deviceId(id),
+        DeviceID: id,
         EffectiveFlags: flags,
       },
       type,
@@ -253,7 +255,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   ): ReportPostData {
     const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
-      DeviceID: deviceId(this.id),
+      DeviceID: this.id,
       Duration:
         shouldUseExactRange ?
           getDuration({ from: newFrom, to: newTo })
