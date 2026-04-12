@@ -1200,6 +1200,54 @@ describe('melcloud home API', () => {
         }),
       )
     })
+
+    it('should follow meta http-equiv refresh redirects', async () => {
+      /* PAR succeeds */
+      mockAxiosPost.mockResolvedValueOnce(
+        mockResponse({ request_uri: 'urn:test' }),
+      )
+      mockAxiosRequest
+        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
+        /* Credential POST */
+        .mockResolvedValueOnce(
+          mockResponse(
+            '',
+            { location: 'https://auth.melcloudhome.com/callback?code=x' },
+            302,
+          ),
+        )
+        /* IS callback → /Redirect page with meta refresh */
+        .mockResolvedValueOnce(
+          mockResponse(
+            '',
+            { location: '/Redirect?RedirectUri=%2Fconnect%2Fauthorize' },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockResponse(
+            '<meta http-equiv="refresh" content="0;url=/connect/authorize/callback?client_id=homemobile&amp;request_uri=urn:test">',
+            {},
+            200,
+          ),
+        )
+        /* Following the meta refresh URL → final redirect to melcloudhome:// */
+        .mockResolvedValueOnce(
+          mockResponse(
+            '',
+            { location: 'melcloudhome://?code=auth-code&state=y' },
+            302,
+          ),
+        )
+      /* Token exchange */
+      mockAxiosPost.mockResolvedValueOnce(mockResponse(mockTokenResponse))
+      /* GET /context */
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+      const api = await createApi()
+
+      expect(api.isAuthenticated()).toBe(true)
+    })
   })
 
   describe('form parsing', () => {

@@ -226,12 +226,19 @@ export const authRequest = async <T = unknown>({
  * @param html - The HTML string to search for a JS redirect.
  * @returns The redirect URL if found, or `null`.
  */
-const extractJsRedirect = (html: string): string | null => {
+const extractPageRedirect = (html: string): string | null => {
   const jsMatch = /window\.location\s*=\s*['"](?<url>[^'"]+)/u.exec(html)
-  if (jsMatch?.groups?.['url'] === undefined) {
-    return null
+  if (jsMatch?.groups?.['url'] !== undefined) {
+    return jsMatch.groups['url'].split('&amp;').join('&')
   }
-  return jsMatch.groups['url'].split('&amp;').join('&')
+  const metaMatch =
+    /<meta[^>]+http-equiv="refresh"[^>]+content="[^"]*url=(?<url>[^"&]+)/iu.exec(
+      html,
+    )
+  if (metaMatch?.groups?.['url'] !== undefined) {
+    return metaMatch.groups['url'].split('&amp;').join('&')
+  }
+  return null
 }
 
 /**
@@ -251,7 +258,7 @@ const extractRedirectTarget = (
     const location = String(response.headers['location'] ?? '')
     return resolveUrl({ base: currentUrl, location })
   }
-  const jsRedirect = extractJsRedirect(response.data)
+  const jsRedirect = extractPageRedirect(response.data)
   return jsRedirect === null ? null : (
       resolveUrl({ base: currentUrl, location: jsRedirect })
     )
