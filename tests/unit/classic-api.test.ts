@@ -20,14 +20,14 @@ import type {
   Logger,
 } from '../../src/api/index.ts'
 import type { DeviceType } from '../../src/constants.ts'
-import type {
-  BuildingID,
-  BuildingWithStructure,
-  DeviceID,
-  ListDeviceAny,
-  SetDevicePostData,
-} from '../../src/types/index.ts'
 import { RateLimitError } from '../../src/errors.ts'
+import {
+  type BuildingWithStructure,
+  type ListDeviceAny,
+  type SetDevicePostData,
+  buildingId,
+  deviceId,
+} from '../../src/types/index.ts'
 import { cast, createSettingStore, mock } from '../helpers.ts'
 
 const mockInterceptors = {
@@ -146,7 +146,7 @@ const createBuilding = (
     HMEnabled: false,
     HMEndDate: null,
     HMStartDate: null,
-    ID: 1 as BuildingID,
+    ID: buildingId(1),
     Location: 10,
     Name: 'Test',
     Structure: { Areas: [], Devices: [], Floors: [] },
@@ -514,7 +514,7 @@ describe('mELCloud Classic API', () => {
       mockAxiosInstance.post.mockResolvedValue({ data: {} })
       await api.setValues({
         postData: mock<SetDevicePostData<typeof DeviceType.Ata>>({
-          DeviceID: 1 as DeviceID,
+          DeviceID: deviceId(1),
           EffectiveFlags: 1,
         }),
         type,
@@ -1194,7 +1194,7 @@ describe('mELCloud Classic API', () => {
         Structure: {
           Areas: [
             {
-              BuildingId: 1 as BuildingID,
+              BuildingId: buildingId(1),
               Devices: [
                 createDevice({
                   AreaID: 100,
@@ -1214,7 +1214,7 @@ describe('mELCloud Classic API', () => {
             {
               Areas: [
                 {
-                  BuildingId: 1 as BuildingID,
+                  BuildingId: buildingId(1),
                   Devices: [
                     createDevice({
                       AreaID: 200,
@@ -1228,7 +1228,7 @@ describe('mELCloud Classic API', () => {
                   Name: 'FA1',
                 },
               ],
-              BuildingId: 1 as BuildingID,
+              BuildingId: buildingId(1),
               Devices: [
                 createDevice({
                   DeviceID: 4000,

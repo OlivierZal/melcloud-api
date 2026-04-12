@@ -1,19 +1,19 @@
-import type {
-  AreaDataAny,
-  AreaID,
-  BuildingData,
-  BuildingID,
-  DeviceID,
-  FloorData,
-  FloorID,
-  ListDevice,
-  ListDeviceAny,
-  ListDeviceDataAta,
-  ListDeviceDataAtw,
-  ListDeviceDataErv,
-  ReportData,
-} from '../src/types/index.ts'
 import { DeviceType, LabelType, OperationModeZone } from '../src/constants.ts'
+import {
+  type AreaDataAny,
+  type BuildingData,
+  type FloorData,
+  type ListDevice,
+  type ListDeviceAny,
+  type ListDeviceDataAta,
+  type ListDeviceDataAtw,
+  type ListDeviceDataErv,
+  type ReportData,
+  areaId,
+  buildingId,
+  deviceId,
+  floorId,
+} from '../src/types/index.ts'
 import { mock } from './helpers.ts'
 
 /*
@@ -33,7 +33,7 @@ export const buildingData = (
   HMEnabled: false,
   HMEndDate: null,
   HMStartDate: null,
-  ID: 1 as BuildingID,
+  ID: buildingId(1),
   Location: 10,
   Name: 'Building',
   TimeZone: 0,
@@ -41,7 +41,7 @@ export const buildingData = (
 })
 
 export const floorData = (overrides: Partial<FloorData> = {}): FloorData => ({
-  BuildingId: 1 as BuildingID,
+  BuildingId: buildingId(1),
   ID: 10,
   Name: 'Floor',
   ...overrides,
@@ -50,7 +50,7 @@ export const floorData = (overrides: Partial<FloorData> = {}): FloorData => ({
 export const areaData = (
   overrides: Partial<AreaDataAny> = {},
 ): AreaDataAny => ({
-  BuildingId: 1 as BuildingID,
+  BuildingId: buildingId(1),
   FloorId: 10,
   ID: 100,
   Name: 'Area',
@@ -174,12 +174,12 @@ export const ervDeviceData = (
 export const ataDevice = (
   overrides: Partial<ListDevice<typeof DeviceType.Ata>> = {},
 ): ListDeviceAny => ({
-  AreaID: 100 as AreaID,
-  BuildingID: 1 as BuildingID,
+  AreaID: areaId(100),
+  BuildingID: buildingId(1),
   Device: ataDeviceData(),
-  DeviceID: 1000 as DeviceID,
+  DeviceID: deviceId(1000),
   DeviceName: 'ATA Device',
-  FloorID: 10 as FloorID,
+  FloorID: floorId(10),
   Type: DeviceType.Ata,
   ...overrides,
 })
@@ -187,12 +187,12 @@ export const ataDevice = (
 export const atwDevice = (
   overrides: Partial<ListDevice<typeof DeviceType.Atw>> = {},
 ): ListDeviceAny => ({
-  AreaID: 100 as AreaID,
-  BuildingID: 1 as BuildingID,
+  AreaID: areaId(100),
+  BuildingID: buildingId(1),
   Device: atwDeviceData(),
-  DeviceID: 1001 as DeviceID,
+  DeviceID: deviceId(1001),
   DeviceName: 'ATW Device',
-  FloorID: 10 as FloorID,
+  FloorID: floorId(10),
   Type: DeviceType.Atw,
   ...overrides,
 })
@@ -200,10 +200,10 @@ export const atwDevice = (
 export const ervDevice = (
   overrides: Partial<ListDevice<typeof DeviceType.Erv>> = {},
 ): ListDeviceAny => ({
-  AreaID: 100 as AreaID,
-  BuildingID: 1 as BuildingID,
+  AreaID: areaId(100),
+  BuildingID: buildingId(1),
   Device: ervDeviceData(),
-  DeviceID: 1002 as DeviceID,
+  DeviceID: deviceId(1002),
   DeviceName: 'ERV Device',
   FloorID: null,
   Type: DeviceType.Erv,

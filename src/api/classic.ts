@@ -13,7 +13,6 @@ import axios, {
 import type {
   AreaDataAny,
   BuildingWithStructure,
-  DeviceID,
   EnergyData,
   EnergyPostData,
   ErrorLogData,
@@ -55,6 +54,7 @@ import {
 } from '../observability/index.ts'
 import {
   DEFAULT_TRANSIENT_RETRY_OPTIONS,
+  deviceId,
   isSessionExpired,
   isTransientServerError,
   RateLimitError,
@@ -398,7 +398,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
       errors: errorLog
         .flatMap(
           ({
-            DeviceId: deviceId,
+            DeviceId: errorDeviceId,
             ErrorMessage: errorMessage,
             StartDate: startDate,
           }) => {
@@ -407,7 +407,9 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
               return []
             }
             const error = errorMessage?.trim() ?? ''
-            return error ? [{ date: startDate, deviceId, error }] : []
+            return error ?
+                [{ date: startDate, deviceId: errorDeviceId, error }]
+              : []
           },
         )
         .toReversed(),
@@ -668,8 +670,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   ): Promise<ErrorLogData[]> {
     const { data } = await this.getErrorEntries({
       postData: {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        DeviceIDs: deviceIds as DeviceID[],
+        DeviceIDs: deviceIds.map((id) => deviceId(id)),
         FromDate: toISODate(fromDate),
         ToDate: toISODate(toDate),
       },

@@ -22,3 +22,4 @@ export {
   RateLimitError,
   TransientServerError,
 } from '../errors.ts'
+export { areaId, buildingId, deviceId, floorId } from '../types/ids.ts'

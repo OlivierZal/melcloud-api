@@ -12,20 +12,20 @@ import type {
   DeviceAny,
   Model,
 } from '../models/index.ts'
-import type {
-  DateTimeComponents,
-  DeviceID,
-  FailureData,
-  FrostProtectionData,
-  FrostProtectionLocation,
-  HolidayModeData,
-  HolidayModeLocation,
-  HolidayModeTimeZone,
-  SettingsParams,
-  SuccessData,
-  TilesData,
-} from '../types/index.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
+import {
+  type DateTimeComponents,
+  type FailureData,
+  type FrostProtectionData,
+  type FrostProtectionLocation,
+  type HolidayModeData,
+  type HolidayModeLocation,
+  type HolidayModeTimeZone,
+  type SettingsParams,
+  type SuccessData,
+  type TilesData,
+  deviceId,
+} from '../types/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'
 import type {
   Facade,
@@ -142,8 +142,10 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   @updateDevices()
   public async setPower(isOn = true): Promise<boolean> {
     const { data: isPowered } = await this.api.setPower({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-      postData: { DeviceIds: this.#deviceIds as DeviceID[], Power: isOn },
+      postData: {
+        DeviceIds: this.#deviceIds.map((id) => deviceId(id)),
+        Power: isOn,
+      },
     })
     return isPowered
   }
@@ -184,8 +186,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   public async getTiles<TDeviceType extends DeviceType>(
     device: false | Device<TDeviceType> = false,
   ): Promise<TilesData<TDeviceType | null>> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    const postData = { DeviceIDs: this.#deviceIds as DeviceID[] }
+    const postData = { DeviceIDs: this.#deviceIds.map((id) => deviceId(id)) }
     if (device === false || !this.#deviceIds.includes(device.id)) {
       const { data } = await this.api.getTiles({ postData })
       return data

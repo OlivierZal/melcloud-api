@@ -92,3 +92,5 @@ export type {
   HomeUser,
 } from './home.ts'
 export type { AreaID, BuildingID, DeviceID, FloorID } from './ids.ts'
+
+export { areaId, buildingId, deviceId, floorId } from './ids.ts'

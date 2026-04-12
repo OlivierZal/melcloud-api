@@ -1,14 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import type {
-  AreaID,
-  BuildingID,
-  DeviceID,
-  FloorID,
-} from '../../src/types/index.ts'
 import { DeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { ClassicRegistry } from '../../src/models/index.ts'
+import { areaId, buildingId, deviceId, floorId } from '../../src/types/index.ts'
 import {
   areaData,
   ataDevice,
@@ -56,7 +51,7 @@ const buildings = [
   buildingData({
     FPDefined: false,
     HMDefined: false,
-    ID: 2 as BuildingID,
+    ID: buildingId(2),
     Location: 0,
     Name: 'Guest house',
     TimeZone: 1,
@@ -73,7 +68,7 @@ const areas = [
   areaData({ ID: 101, Name: 'Kitchen' }),
   areaData({ FloorId: 11, ID: 102, Name: 'Bedroom' }),
   areaData({
-    BuildingId: 2 as BuildingID,
+    BuildingId: buildingId(2),
     FloorId: null,
     ID: 200,
     Name: 'Studio',
@@ -83,28 +78,28 @@ const areas = [
 const devices = [
   ataDevice({
     Device: ataData,
-    DeviceID: 1001 as DeviceID,
+    DeviceID: deviceId(1001),
     DeviceName: 'Living room AC',
   }),
   atwDevice({
-    AreaID: 101 as AreaID,
+    AreaID: areaId(101),
     Device: atwData,
-    DeviceID: 1002 as DeviceID,
+    DeviceID: deviceId(1002),
     DeviceName: 'Kitchen heat pump',
   }),
   ervDevice({
-    AreaID: 102 as AreaID,
-    BuildingID: 1 as BuildingID,
+    AreaID: areaId(102),
+    BuildingID: buildingId(1),
     Device: ervData,
-    DeviceID: 1003 as DeviceID,
+    DeviceID: deviceId(1003),
     DeviceName: 'Bedroom ERV',
-    FloorID: 11 as FloorID,
+    FloorID: floorId(11),
   }),
   ataDevice({
-    AreaID: 200 as AreaID,
-    BuildingID: 2 as BuildingID,
+    AreaID: areaId(200),
+    BuildingID: buildingId(2),
     Device: ataDeviceData({ ...ataData, Power: false }),
-    DeviceID: 2001 as DeviceID,
+    DeviceID: deviceId(2001),
     DeviceName: 'Studio AC',
     FloorID: null,
   }),
@@ -130,17 +125,17 @@ describe('registry + facade manager integration', () => {
   it('syncs a full building hierarchy and resolves cross-references', () => {
     const { registry } = createContext()
 
-    expect(registry.getDevicesByBuildingId(1 as BuildingID)).toHaveLength(3)
-    expect(registry.getDevicesByBuildingId(2 as BuildingID)).toHaveLength(1)
-    expect(registry.getFloorsByBuildingId(1 as BuildingID)).toHaveLength(2)
-    expect(registry.getFloorsByBuildingId(2 as BuildingID)).toHaveLength(0)
-    expect(registry.getAreasByFloorId(10 as FloorID)).toHaveLength(2)
-    expect(registry.getAreasByFloorId(11 as FloorID)).toHaveLength(1)
-    expect(registry.getAreasByBuildingId(2 as BuildingID)).toHaveLength(1)
-    expect(registry.getDevicesByFloorId(10 as FloorID)).toHaveLength(2)
-    expect(registry.getDevicesByFloorId(11 as FloorID)).toHaveLength(1)
-    expect(registry.getDevicesByAreaId(100 as AreaID)).toHaveLength(1)
-    expect(registry.getDevicesByAreaId(200 as AreaID)).toHaveLength(1)
+    expect(registry.getDevicesByBuildingId(buildingId(1))).toHaveLength(3)
+    expect(registry.getDevicesByBuildingId(buildingId(2))).toHaveLength(1)
+    expect(registry.getFloorsByBuildingId(buildingId(1))).toHaveLength(2)
+    expect(registry.getFloorsByBuildingId(buildingId(2))).toHaveLength(0)
+    expect(registry.getAreasByFloorId(floorId(10))).toHaveLength(2)
+    expect(registry.getAreasByFloorId(floorId(11))).toHaveLength(1)
+    expect(registry.getAreasByBuildingId(buildingId(2))).toHaveLength(1)
+    expect(registry.getDevicesByFloorId(floorId(10))).toHaveLength(2)
+    expect(registry.getDevicesByFloorId(floorId(11))).toHaveLength(1)
+    expect(registry.getDevicesByAreaId(areaId(100))).toHaveLength(1)
+    expect(registry.getDevicesByAreaId(areaId(200))).toHaveLength(1)
   })
 
   /*
@@ -298,10 +293,10 @@ describe('registry + facade manager integration', () => {
     registry.syncDevices([
       ...devices,
       ataDevice({
-        AreaID: 200 as AreaID,
-        BuildingID: 2 as BuildingID,
+        AreaID: areaId(200),
+        BuildingID: buildingId(2),
         Device: ataData,
-        DeviceID: 2002 as DeviceID,
+        DeviceID: deviceId(2002),
         DeviceName: 'Studio AC 2',
         FloorID: null,
       }),
@@ -336,7 +331,7 @@ describe('registry + facade manager integration', () => {
     registry.syncFloors([])
     registry.syncAreas([
       areaData({
-        BuildingId: 2 as BuildingID,
+        BuildingId: buildingId(2),
         FloorId: null,
         ID: 200,
         Name: 'Studio',
@@ -348,7 +343,7 @@ describe('registry + facade manager integration', () => {
     const facade = manager.get(defined(registry.buildings.getById(2)))
 
     expect(facade.devices).toHaveLength(1)
-    expect(registry.getFloorsByBuildingId(2 as BuildingID)).toHaveLength(0)
-    expect(registry.getAreasByBuildingId(2 as BuildingID)).toHaveLength(1)
+    expect(registry.getFloorsByBuildingId(buildingId(2))).toHaveLength(0)
+    expect(registry.getAreasByBuildingId(buildingId(2))).toHaveLength(1)
   })
 })

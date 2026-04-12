@@ -5,8 +5,8 @@ import type {
   DeviceAny,
   Model,
 } from '../models/index.ts'
-import type { BuildingID, ZoneSettings } from '../types/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
+import { type ZoneSettings, buildingId } from '../types/index.ts'
 import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
@@ -16,8 +16,7 @@ export class BuildingFacade extends BaseZoneFacade<Building> {
   }
 
   public override get devices(): DeviceAny[] {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return this.registry.getDevicesByBuildingId(this.id as BuildingID)
+    return this.registry.getDevicesByBuildingId(buildingId(this.id))
   }
 
   protected readonly frostProtectionLocation = 'BuildingIds'

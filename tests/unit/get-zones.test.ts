@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ClassicRegistry } from '../../src/models/index.ts'
-import type {
-  AreaID,
-  BuildingID,
-  DeviceID,
-  FloorID,
-} from '../../src/types/index.ts'
 import { DeviceType } from '../../src/constants.ts'
+import { areaId, buildingId, deviceId, floorId } from '../../src/types/index.ts'
 import {
   areaData,
   ataDevice,
@@ -22,7 +17,7 @@ import { createPopulatedRegistry, defined } from '../helpers.ts'
 const buildings = [
   buildingData({
     HMDefined: false,
-    ID: 1 as BuildingID,
+    ID: buildingId(1),
     Location: 0,
     Name: 'Bravo',
     TimeZone: 1,
@@ -30,7 +25,7 @@ const buildings = [
   buildingData({
     FPDefined: false,
     HMDefined: false,
-    ID: 2 as BuildingID,
+    ID: buildingId(2),
     Location: 0,
     Name: 'Alpha',
     TimeZone: 1,
@@ -38,18 +33,18 @@ const buildings = [
 ]
 
 const floors = [
-  floorData({ BuildingId: 1 as BuildingID, ID: 10, Name: 'Ground floor' }),
+  floorData({ BuildingId: buildingId(1), ID: 10, Name: 'Ground floor' }),
 ]
 
 const areas = [
   areaData({
-    BuildingId: 1 as BuildingID,
+    BuildingId: buildingId(1),
     FloorId: 10,
     ID: 100,
     Name: 'Salon',
   }),
   areaData({
-    BuildingId: 2 as BuildingID,
+    BuildingId: buildingId(2),
     FloorId: null,
     ID: 200,
     Name: 'Studio',
@@ -58,26 +53,26 @@ const areas = [
 
 const devices = [
   ataDevice({
-    AreaID: 100 as AreaID,
-    BuildingID: 1 as BuildingID,
+    AreaID: areaId(100),
+    BuildingID: buildingId(1),
     Device: ataDeviceData(),
-    DeviceID: 1001 as DeviceID,
+    DeviceID: deviceId(1001),
     DeviceName: 'AC unit',
-    FloorID: 10 as FloorID,
+    FloorID: floorId(10),
   }),
   atwDevice({
     AreaID: null,
-    BuildingID: 1 as BuildingID,
+    BuildingID: buildingId(1),
     Device: atwDeviceData({ HasZone2: false }),
-    DeviceID: 1002 as DeviceID,
+    DeviceID: deviceId(1002),
     DeviceName: 'Heat pump',
     FloorID: null,
   }),
   ataDevice({
-    AreaID: 200 as AreaID,
-    BuildingID: 2 as BuildingID,
+    AreaID: areaId(200),
+    BuildingID: buildingId(2),
     Device: ataDeviceData(),
-    DeviceID: 2001 as DeviceID,
+    DeviceID: deviceId(2001),
     DeviceName: 'Studio AC',
     FloorID: null,
   }),
