@@ -116,6 +116,43 @@ describe('api lifecycle', () => {
     expect(device).toBeDefined()
     expect(defined(device).name).toBe('AC unit')
     expect(defined(device).type).toBe(DeviceType.Ata)
+
+    /*
+     * Inline snapshot on the registry summary after initial sync.
+     * Captures building → floor → area → device hierarchy shape
+     * without being brittle on device-data fields.
+     */
+    expect(
+      api.registry.getBuildings().map(({ floors, name }) => ({
+        floors: floors.map(({ areas, name: floorName }) => ({
+          areas: areas.map(({ devices, name: areaName }) => ({
+            devices: devices.map(({ name: deviceName }) => deviceName),
+            name: areaName,
+          })),
+          name: floorName,
+        })),
+        name,
+      })),
+    ).toMatchInlineSnapshot(`
+      [
+        {
+          "floors": [
+            {
+              "areas": [
+                {
+                  "devices": [
+                    "AC unit",
+                  ],
+                  "name": "Living room",
+                },
+              ],
+              "name": "Ground floor",
+            },
+          ],
+          "name": "Home",
+        },
+      ]
+    `)
   })
 
   it('facadeManager works with registry populated by ClassicAPI', async () => {

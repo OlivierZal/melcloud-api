@@ -143,6 +143,97 @@ describe('registry + facade manager integration', () => {
     expect(registry.getDevicesByAreaId(200 as AreaID)).toHaveLength(1)
   })
 
+  /*
+   * Inline snapshot capturing the zone tree shape returned by
+   * getBuildings(). Guards against regressions in the hierarchy
+   * flattening logic without being brittle on device-data fields
+   * that may change with upstream API bumps.
+   */
+  it('zone tree shape matches the expected hierarchy', () => {
+    const { registry } = createContext()
+
+    const tree = registry
+      .getBuildings()
+      .map(
+        ({
+          areas: buildingAreas,
+          floors: buildingFloors,
+          name: buildingName,
+        }) => ({
+          areas: buildingAreas.map(({ devices: areaDevs, name: areaName }) => ({
+            devices: areaDevs.map(({ name: deviceName }) => deviceName),
+            name: areaName,
+          })),
+          floors: buildingFloors.map(
+            ({ areas: floorAreas, devices: floorDevs, name: floorName }) => ({
+              areas: floorAreas.map(
+                ({ devices: areaDevs, name: areaName }) => ({
+                  devices: areaDevs.map(({ name: deviceName }) => deviceName),
+                  name: areaName,
+                }),
+              ),
+              devices: floorDevs.map(({ name: deviceName }) => deviceName),
+              name: floorName,
+            }),
+          ),
+          name: buildingName,
+        }),
+      )
+
+    expect(tree).toMatchInlineSnapshot(`
+      [
+        {
+          "areas": [
+            {
+              "devices": [
+                "Studio AC",
+              ],
+              "name": "Studio",
+            },
+          ],
+          "floors": [],
+          "name": "Guest house",
+        },
+        {
+          "areas": [],
+          "floors": [
+            {
+              "areas": [
+                {
+                  "devices": [
+                    "Bedroom ERV",
+                  ],
+                  "name": "Bedroom",
+                },
+              ],
+              "devices": [],
+              "name": "First floor",
+            },
+            {
+              "areas": [
+                {
+                  "devices": [
+                    "Kitchen heat pump",
+                  ],
+                  "name": "Kitchen",
+                },
+                {
+                  "devices": [
+                    "Living room AC",
+                  ],
+                  "name": "Living room",
+                },
+              ],
+              "devices": [],
+              "name": "Ground floor",
+            },
+          ],
+          "name": "Main house",
+        },
+      ]
+    `)
+  })
+
   it('filters devices by type across the entire registry', () => {
     const { registry } = createContext()
 
