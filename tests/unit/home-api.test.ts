@@ -1359,6 +1359,16 @@ describe('melcloud home API', () => {
       )
     })
 
+    it('wires a consumer AbortSignal into outgoing requests', async () => {
+      setupSuccessfulLogin()
+      const controller = new AbortController()
+      await createApi({ abortSignal: controller.signal })
+
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+      )
+    })
+
     it('should fall back to OIDC when expiry is in the past', async () => {
       const cookies = await buildSerializedJar()
       const pastExpiry = new Date(Date.now() - HOUR_MS).toISOString()

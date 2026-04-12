@@ -1,13 +1,16 @@
 export type {
   AreaData,
   AreaDataAny,
+  AreaID,
   AreaZone,
   BaseDevicePostData,
   BaseGetDeviceData,
   BuildingData,
+  BuildingID,
   BuildingWithStructure,
   BuildingZone,
   DateTimeComponents,
+  DeviceID,
   DeviceZone,
   EnergyData,
   EnergyDataAta,
@@ -17,6 +20,7 @@ export type {
   ErrorLogPostData,
   FailureData,
   FloorData,
+  FloorID,
   FloorZone,
   FrostProtectionData,
   FrostProtectionLocation,
@@ -152,12 +156,13 @@ export {
   verticalToClassic,
 } from './enum-mappings.ts'
 export {
+  APIError,
   AuthenticationError,
-  MelCloudError,
+  isAPIError,
   NetworkError,
   RateLimitError,
   TransientServerError,
-} from './errors.ts'
+} from './errors/index.ts'
 export {
   type BuildingFacade,
   type DeviceAtwFacade,

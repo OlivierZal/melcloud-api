@@ -40,6 +40,18 @@ import type {
 
 /** Common configuration shared by all API clients. */
 export interface BaseAPIConfig extends Partial<LoginCredentials> {
+  /**
+   * Optional shutdown signal applied to every outgoing request.
+   *
+   * When the signal fires, all in-flight HTTP requests are aborted
+   * (axios rejects with `ERR_CANCELED`). Subsequent calls from the
+   * same client instance will also abort immediately. Use this to
+   * tie the SDK lifetime to a host process lifetime — e.g. pass the
+   * Homey app's shutdown signal so outstanding requests don't dangle
+   * across a reload.
+   */
+  readonly abortSignal?: AbortSignal
+
   /** Interval in minutes between automatic syncs. Set to `null` to disable. */
   readonly autoSyncInterval?: number | null
 

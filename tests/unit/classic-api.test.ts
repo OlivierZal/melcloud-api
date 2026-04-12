@@ -20,12 +20,14 @@ import type {
   Logger,
 } from '../../src/api/index.ts'
 import type { DeviceType } from '../../src/constants.ts'
-import type {
-  BuildingWithStructure,
-  ListDeviceAny,
-  SetDevicePostData,
+import { RateLimitError } from '../../src/errors/index.ts'
+import {
+  type BuildingWithStructure,
+  type ListDeviceAny,
+  type SetDevicePostData,
+  buildingId,
+  deviceId,
 } from '../../src/types/index.ts'
-import { RateLimitError } from '../../src/errors.ts'
 import { cast, createSettingStore, mock } from '../helpers.ts'
 
 const mockInterceptors = {
@@ -144,7 +146,7 @@ const createBuilding = (
     HMEnabled: false,
     HMEndDate: null,
     HMStartDate: null,
-    ID: 1,
+    ID: buildingId(1),
     Location: 10,
     Name: 'Test',
     Structure: { Areas: [], Devices: [], Floors: [] },
@@ -261,6 +263,35 @@ describe('mELCloud Classic API', () => {
     const api = await melCloudApi.create({ autoSyncInterval: null })
 
     expect(api).toBeDefined()
+  })
+
+  it('wires a consumer AbortSignal into outgoing requests', async () => {
+    const controller = new AbortController()
+    await createApi({ abortSignal: controller.signal })
+    const { headers } = createHeaders()
+    const config = mock<InternalAxiosRequestConfig>({
+      headers,
+      method: 'get',
+      url: '/Device/Get',
+    })
+
+    const tagged = await requestHandler(config)
+
+    expect(tagged.signal).toBe(controller.signal)
+  })
+
+  it('does not set a signal when no abortSignal is provided', async () => {
+    await createApi()
+    const { headers } = createHeaders()
+    const config = mock<InternalAxiosRequestConfig>({
+      headers,
+      method: 'get',
+      url: '/Device/Get',
+    })
+
+    const tagged = await requestHandler(config)
+
+    expect(tagged.signal).toBeUndefined()
   })
 
   it('uses settingManager when provided', async () => {
@@ -483,7 +514,7 @@ describe('mELCloud Classic API', () => {
       mockAxiosInstance.post.mockResolvedValue({ data: {} })
       await api.setValues({
         postData: mock<SetDevicePostData<typeof DeviceType.Ata>>({
-          DeviceID: 1,
+          DeviceID: deviceId(1),
           EffectiveFlags: 1,
         }),
         type,
@@ -986,7 +1017,7 @@ describe('mELCloud Classic API', () => {
       )
     })
 
-    it('response error handler preserves MelCloudError subclass types', async () => {
+    it('response error handler preserves APIError subclass types', async () => {
       /*
        * When #onRequest throws a RateLimitError, axios routes it through
        * the response error interceptor. The interceptor must not wrap it
@@ -1163,7 +1194,7 @@ describe('mELCloud Classic API', () => {
         Structure: {
           Areas: [
             {
-              BuildingId: 1,
+              BuildingId: buildingId(1),
               Devices: [
                 createDevice({
                   AreaID: 100,
@@ -1183,7 +1214,7 @@ describe('mELCloud Classic API', () => {
             {
               Areas: [
                 {
-                  BuildingId: 1,
+                  BuildingId: buildingId(1),
                   Devices: [
                     createDevice({
                       AreaID: 200,
@@ -1197,7 +1228,7 @@ describe('mELCloud Classic API', () => {
                   Name: 'FA1',
                 },
               ],
-              BuildingId: 1,
+              BuildingId: buildingId(1),
               Devices: [
                 createDevice({
                   DeviceID: 4000,

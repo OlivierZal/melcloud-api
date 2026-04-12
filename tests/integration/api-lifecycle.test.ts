@@ -1,12 +1,24 @@
-import type { AxiosStatic, HttpStatusCode } from 'axios'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPI } from '../../src/api/classic.ts'
-import type { BuildingWithStructure } from '../../src/types/index.ts'
 import { DeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
+import {
+  type BuildingWithStructure,
+  areaId,
+  buildingId,
+  deviceId,
+  floorId,
+} from '../../src/types/index.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
 import { cast, defined, mock } from '../helpers.ts'
+
+const transientError = (status: number): Error =>
+  Object.assign(new Error(`Status ${String(status)}`), {
+    config: { url: '/User/ListDevices' },
+    isAxiosError: true,
+    response: { data: undefined, headers: {}, status },
+  })
 
 const buildingResponse: BuildingWithStructure[] = [
   mock<BuildingWithStructure>({
@@ -23,18 +35,18 @@ const buildingResponse: BuildingWithStructure[] = [
         {
           Areas: [
             {
-              BuildingId: 1,
+              BuildingId: buildingId(1),
               Devices: [
                 {
-                  AreaID: 100,
-                  BuildingID: 1,
+                  AreaID: areaId(100),
+                  BuildingID: buildingId(1),
                   Device: ataDeviceData({
                     NumberOfFanSpeeds: 5,
                     SetTemperature: 23,
                   }),
-                  DeviceID: 1001,
+                  DeviceID: deviceId(1001),
                   DeviceName: 'AC unit',
-                  FloorID: 10,
+                  FloorID: floorId(10),
                   Type: DeviceType.Ata,
                 },
               ],
@@ -43,7 +55,7 @@ const buildingResponse: BuildingWithStructure[] = [
               Name: 'Living room',
             },
           ],
-          BuildingId: 1,
+          BuildingId: buildingId(1),
           Devices: [],
           ID: 10,
           Name: 'Ground floor',
@@ -64,17 +76,16 @@ const mockAxiosInstance = {
   request: vi.fn(),
 }
 
-vi.mock(import('axios'), () =>
-  mock({
-    default: mock<AxiosStatic>({
+vi.mock(import('axios'), async (importOriginal) => {
+  const original = await importOriginal()
+  return {
+    ...original,
+    default: cast({
       create: vi.fn().mockReturnValue(mockAxiosInstance),
+      isAxiosError: original.default.isAxiosError,
     }),
-    HttpStatusCode: mock<typeof HttpStatusCode>({
-      TooManyRequests: 429,
-      Unauthorized: 401,
-    }),
-  }),
-)
+  }
+})
 
 describe('api lifecycle', () => {
   let melCloudApi: typeof ClassicAPI = cast(null)
@@ -95,16 +106,53 @@ describe('api lifecycle', () => {
     const api = await melCloudApi.create({ autoSyncInterval: 0 })
 
     expect(api.registry.getDevices()).toHaveLength(1)
-    expect(api.registry.getDevicesByBuildingId(1)).toHaveLength(1)
-    expect(api.registry.getFloorsByBuildingId(1)).toHaveLength(1)
-    expect(api.registry.getAreasByFloorId(10)).toHaveLength(1)
-    expect(api.registry.getDevicesByAreaId(100)).toHaveLength(1)
+    expect(api.registry.getDevicesByBuildingId(buildingId(1))).toHaveLength(1)
+    expect(api.registry.getFloorsByBuildingId(buildingId(1))).toHaveLength(1)
+    expect(api.registry.getAreasByFloorId(floorId(10))).toHaveLength(1)
+    expect(api.registry.getDevicesByAreaId(areaId(100))).toHaveLength(1)
 
     const device = api.registry.devices.getById(1001)
 
     expect(device).toBeDefined()
     expect(defined(device).name).toBe('AC unit')
     expect(defined(device).type).toBe(DeviceType.Ata)
+
+    /*
+     * Inline snapshot on the registry summary after initial sync.
+     * Captures building → floor → area → device hierarchy shape
+     * without being brittle on device-data fields.
+     */
+    expect(
+      api.registry.getBuildings().map(({ floors, name }) => ({
+        floors: floors.map(({ areas, name: floorName }) => ({
+          areas: areas.map(({ devices, name: areaName }) => ({
+            devices: devices.map(({ name: deviceName }) => deviceName),
+            name: areaName,
+          })),
+          name: floorName,
+        })),
+        name,
+      })),
+    ).toMatchInlineSnapshot(`
+      [
+        {
+          "floors": [
+            {
+              "areas": [
+                {
+                  "devices": [
+                    "AC unit",
+                  ],
+                  "name": "Living room",
+                },
+              ],
+              "name": "Ground floor",
+            },
+          ],
+          "name": "Home",
+        },
+      ]
+    `)
   })
 
   it('facadeManager works with registry populated by ClassicAPI', async () => {
@@ -184,7 +232,7 @@ describe('api lifecycle', () => {
     await api.fetch()
 
     expect(api.registry.getDevices()).toHaveLength(0)
-    expect(api.registry.getFloorsByBuildingId(1)).toHaveLength(0)
+    expect(api.registry.getFloorsByBuildingId(buildingId(1))).toHaveLength(0)
   })
 
   it('onSync callback is invoked after fetch', async () => {
@@ -192,5 +240,56 @@ describe('api lifecycle', () => {
     await melCloudApi.create({ autoSyncInterval: 0, onSync })
 
     expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+  })
+
+  /*
+   * End-to-end resilience: exercises the `withRetryBackoff` wrapper
+   * around `list()` (the classic heartbeat) to confirm a transient
+   * 5xx is recovered without the consumer seeing it. Gate-closure
+   * and reactive 401 re-auth interactions are covered by unit tests
+   * that can drive the interceptor chain directly; the mocked axios
+   * instance here bypasses interceptors, so only scenarios that
+   * retry at the `list()` level can be asserted end-to-end.
+   */
+  describe('resilience end-to-end', () => {
+    it('recovers from a transient 503 on fetch via exponential backoff', async () => {
+      const api = await melCloudApi.create({ autoSyncInterval: 0 })
+      mockAxiosInstance.get.mockClear()
+      mockAxiosInstance.get
+        .mockRejectedValueOnce(transientError(503))
+        .mockResolvedValueOnce({ data: buildingResponse })
+
+      const fetchPromise = api.fetch()
+      await vi.advanceTimersByTimeAsync(2000)
+      const buildings = await fetchPromise
+
+      expect(buildings).toHaveLength(1)
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2)
+      expect(api.registry.getDevices()).toHaveLength(1)
+    })
+
+    it('gives up after exhausting the 5xx retry budget and returns empty data', async () => {
+      const api = await melCloudApi.create({ autoSyncInterval: 0 })
+      mockAxiosInstance.get.mockClear()
+      mockAxiosInstance.get
+        .mockRejectedValueOnce(transientError(502))
+        .mockRejectedValueOnce(transientError(503))
+        .mockRejectedValueOnce(transientError(504))
+        .mockRejectedValueOnce(transientError(502))
+        .mockRejectedValueOnce(transientError(503))
+
+      const fetchPromise = api.fetch()
+      await vi.advanceTimersByTimeAsync(60_000)
+      const buildings = await fetchPromise
+
+      /*
+       * `fetch()` catches the final rejection and returns `[]` so the
+       * Homey app's sync loop keeps running through an outage — the
+       * registry just reflects what was last known.
+       */
+      expect(buildings).toStrictEqual([])
+      // 1 initial attempt + 4 retries = 5 total.
+      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(5)
+    })
   })
 })

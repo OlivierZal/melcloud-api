@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { DeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { ClassicRegistry } from '../../src/models/index.ts'
+import { areaId, buildingId, deviceId, floorId } from '../../src/types/index.ts'
 import {
   areaData,
   ataDevice,
@@ -14,7 +15,7 @@ import {
   ervDeviceData,
   floorData,
 } from '../fixtures.ts'
-import { createMockApi, defined } from '../helpers.ts'
+import { createMockApi, createPopulatedRegistry, defined } from '../helpers.ts'
 
 const ataData = ataDeviceData({
   NumberOfFanSpeeds: 5,
@@ -50,7 +51,7 @@ const buildings = [
   buildingData({
     FPDefined: false,
     HMDefined: false,
-    ID: 2,
+    ID: buildingId(2),
     Location: 0,
     Name: 'Guest house',
     TimeZone: 1,
@@ -66,34 +67,39 @@ const areas = [
   areaData({ Name: 'Living room' }),
   areaData({ ID: 101, Name: 'Kitchen' }),
   areaData({ FloorId: 11, ID: 102, Name: 'Bedroom' }),
-  areaData({ BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' }),
+  areaData({
+    BuildingId: buildingId(2),
+    FloorId: null,
+    ID: 200,
+    Name: 'Studio',
+  }),
 ]
 
 const devices = [
   ataDevice({
     Device: ataData,
-    DeviceID: 1001,
+    DeviceID: deviceId(1001),
     DeviceName: 'Living room AC',
   }),
   atwDevice({
-    AreaID: 101,
+    AreaID: areaId(101),
     Device: atwData,
-    DeviceID: 1002,
+    DeviceID: deviceId(1002),
     DeviceName: 'Kitchen heat pump',
   }),
   ervDevice({
-    AreaID: 102,
-    BuildingID: 1,
+    AreaID: areaId(102),
+    BuildingID: buildingId(1),
     Device: ervData,
-    DeviceID: 1003,
+    DeviceID: deviceId(1003),
     DeviceName: 'Bedroom ERV',
-    FloorID: 11,
+    FloorID: floorId(11),
   }),
   ataDevice({
-    AreaID: 200,
-    BuildingID: 2,
+    AreaID: areaId(200),
+    BuildingID: buildingId(2),
     Device: ataDeviceData({ ...ataData, Power: false }),
-    DeviceID: 2001,
+    DeviceID: deviceId(2001),
     DeviceName: 'Studio AC',
     FloorID: null,
   }),
@@ -104,11 +110,12 @@ const createContext = (): {
   manager: ClassicFacadeManager
   registry: ClassicRegistry
 } => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings(buildings)
-  registry.syncFloors(floors)
-  registry.syncAreas(areas)
-  registry.syncDevices(devices)
+  const registry = createPopulatedRegistry({
+    areas,
+    buildings,
+    devices,
+    floors,
+  })
   const api = createMockApi()
   const manager = new ClassicFacadeManager(api, registry)
   return { api, manager, registry }
@@ -118,17 +125,108 @@ describe('registry + facade manager integration', () => {
   it('syncs a full building hierarchy and resolves cross-references', () => {
     const { registry } = createContext()
 
-    expect(registry.getDevicesByBuildingId(1)).toHaveLength(3)
-    expect(registry.getDevicesByBuildingId(2)).toHaveLength(1)
-    expect(registry.getFloorsByBuildingId(1)).toHaveLength(2)
-    expect(registry.getFloorsByBuildingId(2)).toHaveLength(0)
-    expect(registry.getAreasByFloorId(10)).toHaveLength(2)
-    expect(registry.getAreasByFloorId(11)).toHaveLength(1)
-    expect(registry.getAreasByBuildingId(2)).toHaveLength(1)
-    expect(registry.getDevicesByFloorId(10)).toHaveLength(2)
-    expect(registry.getDevicesByFloorId(11)).toHaveLength(1)
-    expect(registry.getDevicesByAreaId(100)).toHaveLength(1)
-    expect(registry.getDevicesByAreaId(200)).toHaveLength(1)
+    expect(registry.getDevicesByBuildingId(buildingId(1))).toHaveLength(3)
+    expect(registry.getDevicesByBuildingId(buildingId(2))).toHaveLength(1)
+    expect(registry.getFloorsByBuildingId(buildingId(1))).toHaveLength(2)
+    expect(registry.getFloorsByBuildingId(buildingId(2))).toHaveLength(0)
+    expect(registry.getAreasByFloorId(floorId(10))).toHaveLength(2)
+    expect(registry.getAreasByFloorId(floorId(11))).toHaveLength(1)
+    expect(registry.getAreasByBuildingId(buildingId(2))).toHaveLength(1)
+    expect(registry.getDevicesByFloorId(floorId(10))).toHaveLength(2)
+    expect(registry.getDevicesByFloorId(floorId(11))).toHaveLength(1)
+    expect(registry.getDevicesByAreaId(areaId(100))).toHaveLength(1)
+    expect(registry.getDevicesByAreaId(areaId(200))).toHaveLength(1)
+  })
+
+  /*
+   * Inline snapshot capturing the zone tree shape returned by
+   * getBuildings(). Guards against regressions in the hierarchy
+   * flattening logic without being brittle on device-data fields
+   * that may change with upstream API bumps.
+   */
+  it('zone tree shape matches the expected hierarchy', () => {
+    const { registry } = createContext()
+
+    const tree = registry
+      .getBuildings()
+      .map(
+        ({
+          areas: buildingAreas,
+          floors: buildingFloors,
+          name: buildingName,
+        }) => ({
+          areas: buildingAreas.map(({ devices: areaDevs, name: areaName }) => ({
+            devices: areaDevs.map(({ name: deviceName }) => deviceName),
+            name: areaName,
+          })),
+          floors: buildingFloors.map(
+            ({ areas: floorAreas, devices: floorDevs, name: floorName }) => ({
+              areas: floorAreas.map(
+                ({ devices: areaDevs, name: areaName }) => ({
+                  devices: areaDevs.map(({ name: deviceName }) => deviceName),
+                  name: areaName,
+                }),
+              ),
+              devices: floorDevs.map(({ name: deviceName }) => deviceName),
+              name: floorName,
+            }),
+          ),
+          name: buildingName,
+        }),
+      )
+
+    expect(tree).toMatchInlineSnapshot(`
+      [
+        {
+          "areas": [
+            {
+              "devices": [
+                "Studio AC",
+              ],
+              "name": "Studio",
+            },
+          ],
+          "floors": [],
+          "name": "Guest house",
+        },
+        {
+          "areas": [],
+          "floors": [
+            {
+              "areas": [
+                {
+                  "devices": [
+                    "Bedroom ERV",
+                  ],
+                  "name": "Bedroom",
+                },
+              ],
+              "devices": [],
+              "name": "First floor",
+            },
+            {
+              "areas": [
+                {
+                  "devices": [
+                    "Kitchen heat pump",
+                  ],
+                  "name": "Kitchen",
+                },
+                {
+                  "devices": [
+                    "Living room AC",
+                  ],
+                  "name": "Living room",
+                },
+              ],
+              "devices": [],
+              "name": "Ground floor",
+            },
+          ],
+          "name": "Main house",
+        },
+      ]
+    `)
   })
 
   it('filters devices by type across the entire registry', () => {
@@ -195,10 +293,10 @@ describe('registry + facade manager integration', () => {
     registry.syncDevices([
       ...devices,
       ataDevice({
-        AreaID: 200,
-        BuildingID: 2,
+        AreaID: areaId(200),
+        BuildingID: buildingId(2),
         Device: ataData,
-        DeviceID: 2002,
+        DeviceID: deviceId(2002),
         DeviceName: 'Studio AC 2',
         FloorID: null,
       }),
@@ -232,7 +330,12 @@ describe('registry + facade manager integration', () => {
     registry.syncBuildings([defined(buildings[1])])
     registry.syncFloors([])
     registry.syncAreas([
-      areaData({ BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' }),
+      areaData({
+        BuildingId: buildingId(2),
+        FloorId: null,
+        ID: 200,
+        Name: 'Studio',
+      }),
     ])
     registry.syncDevices([defined(devices[3])])
 
@@ -240,7 +343,7 @@ describe('registry + facade manager integration', () => {
     const facade = manager.get(defined(registry.buildings.getById(2)))
 
     expect(facade.devices).toHaveLength(1)
-    expect(registry.getFloorsByBuildingId(2)).toHaveLength(0)
-    expect(registry.getAreasByBuildingId(2)).toHaveLength(1)
+    expect(registry.getFloorsByBuildingId(buildingId(2))).toHaveLength(0)
+    expect(registry.getAreasByBuildingId(buildingId(2))).toHaveLength(1)
   })
 })

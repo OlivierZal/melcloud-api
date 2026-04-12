@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
+import type { ClassicRegistry } from '../../src/models/index.ts'
 import { DeviceType } from '../../src/constants.ts'
-import { ClassicRegistry } from '../../src/models/index.ts'
+import { areaId, buildingId, deviceId, floorId } from '../../src/types/index.ts'
 import {
   areaData,
   ataDevice,
@@ -11,12 +12,12 @@ import {
   buildingData,
   floorData,
 } from '../fixtures.ts'
-import { defined } from '../helpers.ts'
+import { createPopulatedRegistry, defined } from '../helpers.ts'
 
 const buildings = [
   buildingData({
     HMDefined: false,
-    ID: 1,
+    ID: buildingId(1),
     Location: 0,
     Name: 'Bravo',
     TimeZone: 1,
@@ -24,55 +25,61 @@ const buildings = [
   buildingData({
     FPDefined: false,
     HMDefined: false,
-    ID: 2,
+    ID: buildingId(2),
     Location: 0,
     Name: 'Alpha',
     TimeZone: 1,
   }),
 ]
 
-const floors = [floorData({ BuildingId: 1, ID: 10, Name: 'Ground floor' })]
+const floors = [
+  floorData({ BuildingId: buildingId(1), ID: 10, Name: 'Ground floor' }),
+]
 
 const areas = [
-  areaData({ BuildingId: 1, FloorId: 10, ID: 100, Name: 'Salon' }),
-  areaData({ BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' }),
+  areaData({
+    BuildingId: buildingId(1),
+    FloorId: 10,
+    ID: 100,
+    Name: 'Salon',
+  }),
+  areaData({
+    BuildingId: buildingId(2),
+    FloorId: null,
+    ID: 200,
+    Name: 'Studio',
+  }),
 ]
 
 const devices = [
   ataDevice({
-    AreaID: 100,
-    BuildingID: 1,
+    AreaID: areaId(100),
+    BuildingID: buildingId(1),
     Device: ataDeviceData(),
-    DeviceID: 1001,
+    DeviceID: deviceId(1001),
     DeviceName: 'AC unit',
-    FloorID: 10,
+    FloorID: floorId(10),
   }),
   atwDevice({
     AreaID: null,
-    BuildingID: 1,
+    BuildingID: buildingId(1),
     Device: atwDeviceData({ HasZone2: false }),
-    DeviceID: 1002,
+    DeviceID: deviceId(1002),
     DeviceName: 'Heat pump',
     FloorID: null,
   }),
   ataDevice({
-    AreaID: 200,
-    BuildingID: 2,
+    AreaID: areaId(200),
+    BuildingID: buildingId(2),
     Device: ataDeviceData(),
-    DeviceID: 2001,
+    DeviceID: deviceId(2001),
     DeviceName: 'Studio AC',
     FloorID: null,
   }),
 ]
 
-const createSyncedRegistry = (): ClassicRegistry => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings(buildings)
-  registry.syncFloors(floors)
-  registry.syncAreas(areas)
-  registry.syncDevices(devices)
-  return registry
-}
+const createSyncedRegistry = (): ClassicRegistry =>
+  createPopulatedRegistry({ areas, buildings, devices, floors })
 
 describe('building retrieval', () => {
   it('returns all buildings with their hierarchy', () => {

@@ -9,7 +9,7 @@ import {
   now,
 } from '../../src/utils.ts'
 
-describe(now, () => {
+describe.concurrent(now, () => {
   it('returns an ISO string without offset', () => {
     const result = now()
 
@@ -19,7 +19,7 @@ describe(now, () => {
   })
 })
 
-describe('formatLabels (via getChartLineOptions)', () => {
+describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   const baseReportData: ReportData = {
     Data: [[1, 2]],
     FromDate: '2024-01-01',
@@ -89,7 +89,7 @@ describe('formatLabels (via getChartLineOptions)', () => {
   })
 })
 
-describe(getChartLineOptions, () => {
+describe.concurrent(getChartLineOptions, () => {
   const reportData: ReportData = {
     Data: [
       [1, 2, 3],
@@ -136,7 +136,7 @@ describe(getChartLineOptions, () => {
   })
 })
 
-describe(getChartPieOptions, () => {
+describe.concurrent(getChartPieOptions, () => {
   it('maps operation mode log data', () => {
     const data: OperationModeLogData = [
       { Key: 'Heating', Value: 60 },

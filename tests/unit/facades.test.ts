@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/index.ts'
-import type {
-  SetDeviceDataAta,
-  SetDevicePostData,
-} from '../../src/types/index.ts'
 import {
   DeviceType,
   OperationMode,
@@ -24,6 +20,11 @@ import {
   isErvFacade,
 } from '../../src/facades/index.ts'
 import { type Device, ClassicRegistry } from '../../src/models/index.ts'
+import {
+  type SetDeviceDataAta,
+  type SetDevicePostData,
+  buildingId,
+} from '../../src/types/index.ts'
 import {
   areaData,
   ataDevice,
@@ -624,7 +625,12 @@ describe('base facade instance error', () => {
     const api = createMockApi({ getFrostProtection: fpMock })
     const registry = createRegistry()
     registry.syncAreas([
-      { BuildingId: 1, FloorId: null, ID: 200, Name: 'Empty Area' },
+      {
+        BuildingId: buildingId(1),
+        FloorId: null,
+        ID: 200,
+        Name: 'Empty Area',
+      },
     ])
     const instance = defined(registry.areas.getById(200))
     const facade = new AreaFacade(api, registry, instance)

@@ -23,6 +23,7 @@ import type {
   SetDeviceDataErv,
   UpdateDeviceDataErv,
 } from './erv.ts'
+import type { BuildingID, DeviceID } from './ids.ts'
 
 /**
  * Central mapping from device type to its associated data types.
@@ -68,7 +69,7 @@ export interface BaseZone {
 }
 
 export interface BuildingData extends ZoneSettings {
-  readonly ID: number
+  readonly ID: BuildingID
   readonly Location: number
   readonly Name: string
 }
@@ -111,20 +112,20 @@ export interface DeviceZone extends BaseZone {
 export type EnergyData<T extends DeviceType> = DeviceDataMapping[T]['energy']
 
 export interface EnergyPostData {
-  readonly DeviceID: number
+  readonly DeviceID: DeviceID
   readonly FromDate: string
   readonly ToDate: string
 }
 
 export interface ErrorLogData {
-  readonly DeviceId: number
+  readonly DeviceId: DeviceID
   readonly EndDate: string
   readonly ErrorMessage: string | null
   readonly StartDate: string
 }
 
 export interface ErrorLogPostData {
-  readonly DeviceIDs: number | readonly number[]
+  readonly DeviceIDs: DeviceID | readonly DeviceID[]
   readonly FromDate?: string
   readonly ToDate?: string
   // Number of days up to now, replaces `FromDate` and `ToDate` if strictly positive
@@ -137,7 +138,7 @@ export interface FailureData {
 }
 
 export interface FloorData {
-  readonly BuildingId: number
+  readonly BuildingId: BuildingID
   readonly ID: number
   readonly Name: string
 }
@@ -258,7 +259,7 @@ export interface ReportData {
 }
 
 export interface ReportPostData {
-  readonly DeviceID: number
+  readonly DeviceID: DeviceID
   readonly FromDate: string
   readonly ToDate: string
   readonly Duration?: number
@@ -270,7 +271,7 @@ export type SetDevicePostData<T extends DeviceType> = BaseDevicePostData &
   Required<UpdateDeviceData<T>>
 
 export interface SetPowerPostData {
-  readonly DeviceIds: number | readonly number[]
+  readonly DeviceIds: DeviceID | readonly DeviceID[]
   readonly Power: boolean
 }
 

@@ -13,6 +13,7 @@ import type {
   TransientDeviceData,
 } from './bases.ts'
 import type { GetDeviceData } from './generic.ts'
+import type { AreaID, BuildingID, FloorID } from './ids.ts'
 
 export interface EnergyDataAta {
   readonly Auto: readonly number[]
@@ -40,9 +41,9 @@ export interface GetGroupData {
 }
 
 export interface GetGroupPostData {
-  readonly AreaID?: number | null
-  readonly BuildingID?: number | null
-  readonly FloorID?: number | null
+  readonly AreaID?: AreaID | null
+  readonly BuildingID?: BuildingID | null
+  readonly FloorID?: FloorID | null
 }
 
 export interface GroupState {

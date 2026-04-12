@@ -14,7 +14,10 @@ export class DeviceErvFacade extends BaseDeviceFacade<typeof DeviceType.Erv> {
     Power: 0x1,
     SetFanSpeed: 0x8,
     VentilationMode: 0x4,
-  } satisfies Record<keyof UpdateDeviceData<typeof DeviceType.Erv>, number>
+  } as const satisfies Record<
+    keyof UpdateDeviceData<typeof DeviceType.Erv>,
+    number
+  >
 
   public readonly type = DeviceType.Erv
 

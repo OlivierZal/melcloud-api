@@ -128,4 +128,29 @@ describe(RateLimitGate, () => {
     expect(formatted).toMatch(/minute/iu)
     expect(formatted).toMatch(/second/iu)
   })
+
+  it('recordAndLog records the rate-limit and emits a formatted error', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    const error = vi.fn<(...data: unknown[]) => void>()
+
+    gate.recordAndLog({ error }, 60, 'list operations')
+
+    expect(gate.isPaused).toBe(true)
+    expect(error).toHaveBeenCalledTimes(1)
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining('pausing list operations for'),
+    )
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('429'))
+  })
+
+  it('recordAndLog omits the label suffix when none is provided', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    const error = vi.fn<(...data: unknown[]) => void>()
+
+    gate.recordAndLog({ error }, 60)
+
+    expect(error).toHaveBeenCalledWith(
+      expect.stringMatching(/pausing for \d+/u),
+    )
+  })
 })

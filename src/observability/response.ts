@@ -12,7 +12,7 @@ export class APICallResponseData extends APICallLogData {
 
   public readonly responseData: unknown
 
-  public readonly status: number | undefined
+  public readonly status?: number
 
   public constructor(response?: AxiosResponse) {
     /*

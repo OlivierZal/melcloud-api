@@ -54,6 +54,22 @@ export const isTransientServerError = (error: unknown): boolean => {
   return typeof status === 'number' && TRANSIENT_STATUSES.has(status)
 }
 
+/**
+ * Default transient-retry budget used by both Classic (`list()`
+ * heartbeat) and Home (GET-only requests) clients. Keeping these in
+ * one place prevents drift: if we decide to tune the upper bound or
+ * jitter ratio, we update a single constant instead of two.
+ */
+export const DEFAULT_TRANSIENT_RETRY_OPTIONS = {
+  initialDelayMs: 1000,
+  jitterRatio: 0.25,
+  maxDelayMs: 16_000,
+  maxRetries: 4,
+} as const satisfies Pick<
+  RetryBackoffOptions,
+  'initialDelayMs' | 'jitterRatio' | 'maxDelayMs' | 'maxRetries'
+>
+
 /** Options for {@link withRetryBackoff}. */
 export interface RetryBackoffOptions {
   /** Maximum retry attempts after the initial try (0 disables retries). */
@@ -115,8 +131,7 @@ export const withRetryBackoff = async <T>(
   operation: () => Promise<T>,
   options: RetryBackoffOptions,
 ): Promise<T> => {
-  let attempt = 0
-  for (;;) {
+  for (let attempt = 0; attempt <= options.maxRetries; attempt += 1) {
     try {
       /*
        * Sequential awaits inside this loop are intentional (each retry
@@ -134,7 +149,8 @@ export const withRetryBackoff = async <T>(
       options.onRetry?.(attempt + 1, error, delayMs)
       // eslint-disable-next-line no-await-in-loop -- sequential retry
       await sleep(delayMs)
-      attempt += 1
     }
   }
+  /* v8 ignore next -- unreachable: loop always exits via return or throw */
+  throw new Error('withRetryBackoff: unreachable')
 }

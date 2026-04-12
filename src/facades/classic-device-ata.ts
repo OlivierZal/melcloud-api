@@ -1,6 +1,6 @@
 import type { UpdateDeviceData, UpdateDeviceDataAta } from '../types/index.ts'
 import { DeviceType, OperationMode } from '../constants.ts'
-import { BaseDeviceFacade } from './base-device.ts'
+import { BaseDeviceFacade, clampToRange } from './base-device.ts'
 
 /** Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping. */
 export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
@@ -15,7 +15,10 @@ export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
     SetTemperature: 0x4,
     VaneHorizontal: 0x1_00,
     VaneVertical: 0x10,
-  } satisfies Record<keyof UpdateDeviceData<typeof DeviceType.Ata>, number>
+  } as const satisfies Record<
+    keyof UpdateDeviceData<typeof DeviceType.Ata>,
+    number
+  >
 
   public readonly type = DeviceType.Ata
 
@@ -43,8 +46,8 @@ export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
   } {
     const { OperationMode: operationMode, SetTemperature: value } = data
     if (value !== undefined) {
-      const { max, min } = this.#getTargetTemperatureRange(operationMode)
-      return { SetTemperature: Math.min(Math.max(value, min), max) }
+      const range = this.#getTargetTemperatureRange(operationMode)
+      return { SetTemperature: clampToRange(value, range) }
     }
     return {}
   }

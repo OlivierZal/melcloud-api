@@ -28,6 +28,7 @@ import {
   RequestLifecycleEmitter,
 } from '../observability/index.ts'
 import {
+  DEFAULT_TRANSIENT_RETRY_OPTIONS,
   isSessionExpired,
   isTransientServerError,
   RateLimitError,
@@ -60,12 +61,6 @@ const RETRY_DELAY = 1000
 const SIGNAL_PATH = '/api/telemetry/actual'
 const MAX_REDIRECTS = 20
 const USER_PATH = '/bff/user'
-
-// Transient 5xx retry budget (GET-only, applied per request in #request)
-const TRANSIENT_RETRY_INITIAL_DELAY_MS = 1000
-const TRANSIENT_RETRY_MAX_DELAY_MS = 16_000
-const TRANSIENT_RETRY_MAX_ATTEMPTS = 4
-const TRANSIENT_RETRY_JITTER_RATIO = 0.25
 
 const HTTP_REDIRECT_MIN = 300
 const HTTP_REDIRECT_MAX = 400
@@ -170,6 +165,8 @@ export class HomeAPI implements Disposable, HomeAPIContract {
     return this.#user
   }
 
+  readonly #abortSignal?: AbortSignal
+
   readonly #api: AxiosInstance
 
   readonly #baseURL: string
@@ -204,8 +201,10 @@ export class HomeAPI implements Disposable, HomeAPIContract {
   @setting
   private accessor username = ''
 
+  // eslint-disable-next-line max-statements -- wiring a constructor, 1-to-1 config → instance field
   private constructor(config: HomeAPIConfig = {}) {
     const {
+      abortSignal,
       autoSyncInterval = 1,
       baseURL = API_BASE_URL,
       events,
@@ -216,6 +215,7 @@ export class HomeAPI implements Disposable, HomeAPIContract {
       settingManager,
       username,
     } = config
+    this.#abortSignal = abortSignal
     this.logger = logger
     this.onSync = onSync
     this.settingManager = settingManager
@@ -541,6 +541,12 @@ export class HomeAPI implements Disposable, HomeAPIContract {
         ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
       },
       method,
+      /*
+       * Wire the consumer-provided AbortSignal (if any) into every
+       * outgoing request. Axios honors `config.signal` natively and
+       * aborts in-flight requests with `ERR_CANCELED` when it fires.
+       */
+      ...(this.#abortSignal === undefined ? {} : { signal: this.#abortSignal }),
       url,
     }
     this.logger.log(String(new APICallRequestData(requestConfig)))
@@ -590,11 +596,9 @@ export class HomeAPI implements Disposable, HomeAPIContract {
     if (error.response?.status !== HttpStatusCode.TooManyRequests) {
       return
     }
-    this.#rateLimitGate.recordRateLimit(
+    this.#rateLimitGate.recordAndLog(
+      this.logger,
       (error.response.headers as Record<string, unknown>)['retry-after'],
-    )
-    this.logger.error(
-      `Rate limited (429): pausing for ${this.#rateLimitGate.formatRemaining()}`,
     )
   }
 
@@ -625,11 +629,8 @@ export class HomeAPI implements Disposable, HomeAPIContract {
       method.toUpperCase() === 'GET' ?
         async (): Promise<AxiosResponse<T>> =>
           withRetryBackoff(attempt, {
-            initialDelayMs: TRANSIENT_RETRY_INITIAL_DELAY_MS,
+            ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
             isRetryable: isTransientServerError,
-            jitterRatio: TRANSIENT_RETRY_JITTER_RATIO,
-            maxDelayMs: TRANSIENT_RETRY_MAX_DELAY_MS,
-            maxRetries: TRANSIENT_RETRY_MAX_ATTEMPTS,
             onRetry: (retryAttempt, error, delayMs) => {
               this.logger.log(
                 `Transient server error on ${url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,

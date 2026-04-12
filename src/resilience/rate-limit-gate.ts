@@ -73,6 +73,29 @@ export class RateLimitGate {
     this.#pausedUntil = DateTime.now().plus(duration)
   }
 
+  /**
+   * Convenience: record the rate-limit and emit a formatted error log
+   * in one call. Centralizes the log message format so both API clients
+   * stay consistent, and avoids repeating the `recordRateLimit(...)`
+   * + `logger.error(...)` pair at each 429 call site.
+   * @param logger - Logger used to emit the error line.
+   * @param logger.error - Error-level log sink.
+   * @param retryAfterSeconds - Header value from the 429 response.
+   * @param label - Short noun describing what was rate-limited
+   *   (e.g. `'list operations'`, `''` for a generic "pausing for ..." line).
+   */
+  public recordAndLog(
+    logger: { error: (...data: unknown[]) => void },
+    retryAfterSeconds: unknown,
+    label = '',
+  ): void {
+    this.recordRateLimit(retryAfterSeconds)
+    const suffix = label === '' ? '' : ` ${label}`
+    logger.error(
+      `Rate limited (429): pausing${suffix} for ${this.formatRemaining()}`,
+    )
+  }
+
   /** Reset the gate immediately (testing or manual unblock). */
   public reset(): void {
     this.#pausedUntil = DateTime.now()

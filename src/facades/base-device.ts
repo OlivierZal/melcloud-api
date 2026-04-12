@@ -1,17 +1,18 @@
 import { DateTime } from 'luxon'
 
-import type {
-  EnergyData,
-  GetDeviceData,
-  ListDeviceData,
-  ReportPostData,
-  SetDeviceData,
-  TilesData,
-  UpdateDeviceData,
-} from '../types/index.ts'
 import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { type DeviceAny, Device } from '../models/index.ts'
+import {
+  type EnergyData,
+  type GetDeviceData,
+  type ListDeviceData,
+  type ReportPostData,
+  type SetDeviceData,
+  type TilesData,
+  type UpdateDeviceData,
+  deviceId,
+} from '../types/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -32,6 +33,24 @@ import { BaseFacade } from './base.ts'
 
 // Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
+
+/**
+ * Clamp a numeric value into the inclusive `[min, max]` range.
+ *
+ * Shared by the three device facades (Classic ATA, Classic ATW, Home
+ * ATA) that enforce target-temperature limits before sending updates
+ * to their respective upstream APIs. Kept here rather than in
+ * `utils.ts` so the import graph stays within the facades folder.
+ * @param value - The value to clamp.
+ * @param range - Inclusive bounds.
+ * @param range.max - Upper bound (inclusive).
+ * @param range.min - Lower bound (inclusive).
+ * @returns `value`, clamped to `[range.min, range.max]`.
+ */
+export const clampToRange = (
+  value: number,
+  range: { max: number; min: number },
+): number => Math.min(Math.max(value, range.min), range.max)
 
 const getReportPostDataDates = ({
   from = DEFAULT_YEAR,
@@ -148,7 +167,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     const { data: finalData } = await api.setValues({
       postData: {
         ...this.prepareUpdateData(newData),
-        DeviceID: id,
+        DeviceID: deviceId(id),
         EffectiveFlags: flags,
       },
       type,
@@ -234,7 +253,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   ): ReportPostData {
     const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
-      DeviceID: this.id,
+      DeviceID: deviceId(this.id),
       Duration:
         shouldUseExactRange ?
           getDuration({ from: newFrom, to: newTo })

@@ -2,7 +2,13 @@ import { vi } from 'vitest'
 
 import type { ClassicAPIAdapter, SettingManager } from '../src/api/index.ts'
 import type { DeviceType } from '../src/constants.ts'
-import type { DeviceAny } from '../src/models/index.ts'
+import type {
+  AreaDataAny,
+  BuildingData,
+  FloorData,
+  ListDeviceAny,
+} from '../src/types/index.ts'
+import { type DeviceAny, ClassicRegistry } from '../src/models/index.ts'
 
 const MOCK_RSSI = -60
 
@@ -89,4 +95,35 @@ export function assertDeviceType(
       `Expected device of type ${String(type)}, got ${device ? String(device.type) : 'undefined'}`,
     )
   }
+}
+
+/**
+ * Build a `ClassicRegistry` populated with the provided hierarchy in a
+ * single call. Replaces the repeated 5-line
+ * `new ClassicRegistry() + syncBuildings + syncFloors + syncAreas + syncDevices`
+ * pattern found in multiple test files.
+ * @param data - Flat arrays of buildings, floors, areas, and devices.
+ * @param data.areas - Area rows to sync.
+ * @param data.buildings - Building rows to sync.
+ * @param data.devices - Device rows to sync.
+ * @param data.floors - Floor rows to sync.
+ * @returns A fully synced `ClassicRegistry` instance.
+ */
+export const createPopulatedRegistry = ({
+  areas,
+  buildings,
+  devices,
+  floors,
+}: {
+  areas: AreaDataAny[]
+  buildings: BuildingData[]
+  devices: ListDeviceAny[]
+  floors: FloorData[]
+}): ClassicRegistry => {
+  const registry = new ClassicRegistry()
+  registry.syncBuildings(buildings)
+  registry.syncFloors(floors)
+  registry.syncAreas(areas)
+  registry.syncDevices(devices)
+  return registry
 }

@@ -17,25 +17,20 @@ import {
   verticalToClassic,
 } from '../../src/enum-mappings.ts'
 
-describe('enum mappings between Classic and Home APIs', () => {
+describe.concurrent('enum mappings between Classic and Home APIs', () => {
   describe('operation mode', () => {
-    it('should map all classic values to home strings', () => {
-      expect(operationModeFromClassic[OperationMode.heat]).toBe('Heat')
-      expect(operationModeFromClassic[OperationMode.dry]).toBe('Dry')
-      expect(operationModeFromClassic[OperationMode.cool]).toBe('Cool')
-      expect(operationModeFromClassic[OperationMode.fan]).toBe('Fan')
-      expect(operationModeFromClassic[OperationMode.auto]).toBe('Automatic')
+    it.each([
+      [OperationMode.heat, 'Heat'],
+      [OperationMode.dry, 'Dry'],
+      [OperationMode.cool, 'Cool'],
+      [OperationMode.fan, 'Fan'],
+      [OperationMode.auto, 'Automatic'],
+    ] as const)('maps Classic %i → Home %s', (classic, home) => {
+      expect(operationModeFromClassic[classic]).toBe(home)
+      expect(operationModeToClassic[home]).toBe(classic)
     })
 
-    it('should map all home strings back to classic values', () => {
-      expect(operationModeToClassic.Heat).toBe(OperationMode.heat)
-      expect(operationModeToClassic.Dry).toBe(OperationMode.dry)
-      expect(operationModeToClassic.Cool).toBe(OperationMode.cool)
-      expect(operationModeToClassic.Fan).toBe(OperationMode.fan)
-      expect(operationModeToClassic.Automatic).toBe(OperationMode.auto)
-    })
-
-    it('should be bidirectional for all values', () => {
+    it('is bidirectional for all home values', () => {
       for (const [home, classic] of Object.entries(operationModeToClassic)) {
         expect(operationModeFromClassic[classic]).toBe(home)
       }
@@ -43,20 +38,22 @@ describe('enum mappings between Classic and Home APIs', () => {
   })
 
   describe('fan speed', () => {
-    it('should map classic values to home strings', () => {
-      expect(fanSpeedFromClassic[FanSpeed.auto]).toBe('Auto')
-      expect(fanSpeedFromClassic[FanSpeed.very_slow]).toBe('One')
-      expect(fanSpeedFromClassic[FanSpeed.slow]).toBe('Two')
-      expect(fanSpeedFromClassic[FanSpeed.moderate]).toBe('Three')
-      expect(fanSpeedFromClassic[FanSpeed.fast]).toBe('Four')
-      expect(fanSpeedFromClassic[FanSpeed.very_fast]).toBe('Five')
+    it.each([
+      [FanSpeed.auto, 'Auto'],
+      [FanSpeed.very_slow, 'One'],
+      [FanSpeed.slow, 'Two'],
+      [FanSpeed.moderate, 'Three'],
+      [FanSpeed.fast, 'Four'],
+      [FanSpeed.very_fast, 'Five'],
+    ] as const)('maps Classic %i → Home %s', (classic, home) => {
+      expect(fanSpeedFromClassic[classic]).toBe(home)
     })
 
-    it('should map silent to Auto (no home equivalent)', () => {
+    it('maps silent to Auto (no home equivalent)', () => {
       expect(fanSpeedFromClassic[FanSpeed.silent]).toBe('Auto')
     })
 
-    it('should map home strings back to classic values', () => {
+    it('maps home strings back to classic values', () => {
       for (const [home, classic] of Object.entries(fanSpeedToClassic)) {
         expect(fanSpeedFromClassic[classic]).toBe(home)
       }
@@ -64,18 +61,20 @@ describe('enum mappings between Classic and Home APIs', () => {
   })
 
   describe('horizontal vane', () => {
-    it('should map all classic values to home strings', () => {
-      expect(horizontalFromClassic[Horizontal.auto]).toBe('Auto')
-      expect(horizontalFromClassic[Horizontal.leftwards]).toBe('Left')
-      expect(horizontalFromClassic[Horizontal.center_left]).toBe('LeftCentre')
-      expect(horizontalFromClassic[Horizontal.center]).toBe('Centre')
-      expect(horizontalFromClassic[Horizontal.center_right]).toBe('RightCentre')
-      expect(horizontalFromClassic[Horizontal.rightwards]).toBe('Right')
-      expect(horizontalFromClassic[Horizontal.swing]).toBe('Swing')
-      expect(horizontalFromClassic[Horizontal.wide]).toBe('Wide')
+    it.each([
+      [Horizontal.auto, 'Auto'],
+      [Horizontal.leftwards, 'Left'],
+      [Horizontal.center_left, 'LeftCentre'],
+      [Horizontal.center, 'Centre'],
+      [Horizontal.center_right, 'RightCentre'],
+      [Horizontal.rightwards, 'Right'],
+      [Horizontal.swing, 'Swing'],
+      [Horizontal.wide, 'Wide'],
+    ] as const)('maps Classic %i → Home %s', (classic, home) => {
+      expect(horizontalFromClassic[classic]).toBe(home)
     })
 
-    it('should be bidirectional for all mappable values', () => {
+    it('is bidirectional for all mappable values', () => {
       for (const [home, classic] of Object.entries(horizontalToClassic)) {
         expect(horizontalFromClassic[classic]).toBe(home)
       }
@@ -83,17 +82,19 @@ describe('enum mappings between Classic and Home APIs', () => {
   })
 
   describe('vertical vane', () => {
-    it('should map all classic values to home strings', () => {
-      expect(verticalFromClassic[Vertical.auto]).toBe('Auto')
-      expect(verticalFromClassic[Vertical.upwards]).toBe('One')
-      expect(verticalFromClassic[Vertical.mid_high]).toBe('Two')
-      expect(verticalFromClassic[Vertical.middle]).toBe('Three')
-      expect(verticalFromClassic[Vertical.mid_low]).toBe('Four')
-      expect(verticalFromClassic[Vertical.downwards]).toBe('Five')
-      expect(verticalFromClassic[Vertical.swing]).toBe('Swing')
+    it.each([
+      [Vertical.auto, 'Auto'],
+      [Vertical.upwards, 'One'],
+      [Vertical.mid_high, 'Two'],
+      [Vertical.middle, 'Three'],
+      [Vertical.mid_low, 'Four'],
+      [Vertical.downwards, 'Five'],
+      [Vertical.swing, 'Swing'],
+    ] as const)('maps Classic %i → Home %s', (classic, home) => {
+      expect(verticalFromClassic[classic]).toBe(home)
     })
 
-    it('should be bidirectional for all values', () => {
+    it('is bidirectional for all values', () => {
       for (const [home, classic] of Object.entries(verticalToClassic)) {
         expect(verticalFromClassic[classic]).toBe(home)
       }

@@ -1,15 +1,19 @@
-import type {
-  AreaDataAny,
-  BuildingData,
-  FloorData,
-  ListDevice,
-  ListDeviceAny,
-  ListDeviceDataAta,
-  ListDeviceDataAtw,
-  ListDeviceDataErv,
-  ReportData,
-} from '../src/types/index.ts'
 import { DeviceType, LabelType, OperationModeZone } from '../src/constants.ts'
+import {
+  type AreaDataAny,
+  type BuildingData,
+  type FloorData,
+  type ListDevice,
+  type ListDeviceAny,
+  type ListDeviceDataAta,
+  type ListDeviceDataAtw,
+  type ListDeviceDataErv,
+  type ReportData,
+  areaId,
+  buildingId,
+  deviceId,
+  floorId,
+} from '../src/types/index.ts'
 import { mock } from './helpers.ts'
 
 /*
@@ -29,7 +33,7 @@ export const buildingData = (
   HMEnabled: false,
   HMEndDate: null,
   HMStartDate: null,
-  ID: 1,
+  ID: buildingId(1),
   Location: 10,
   Name: 'Building',
   TimeZone: 0,
@@ -37,7 +41,7 @@ export const buildingData = (
 })
 
 export const floorData = (overrides: Partial<FloorData> = {}): FloorData => ({
-  BuildingId: 1,
+  BuildingId: buildingId(1),
   ID: 10,
   Name: 'Floor',
   ...overrides,
@@ -46,7 +50,7 @@ export const floorData = (overrides: Partial<FloorData> = {}): FloorData => ({
 export const areaData = (
   overrides: Partial<AreaDataAny> = {},
 ): AreaDataAny => ({
-  BuildingId: 1,
+  BuildingId: buildingId(1),
   FloorId: 10,
   ID: 100,
   Name: 'Area',
@@ -163,6 +167,23 @@ export const ervDeviceData = (
 
 /*
  * ---------------------------------------------------------------------------
+ * Default fixture IDs — named constants so the numeric literals don't
+ * trigger `@typescript-eslint/no-magic-numbers` outside the vitest
+ * override (this file is a helper, not a `.test.ts`).
+ * ---------------------------------------------------------------------------
+ */
+
+/* eslint-disable @typescript-eslint/no-magic-numbers -- fixture IDs are inherently arbitrary test values */
+const DEFAULT_AREA_ID = areaId(100)
+const DEFAULT_BUILDING_ID = buildingId(1)
+const DEFAULT_FLOOR_ID = floorId(10)
+const DEFAULT_ATA_DEVICE_ID = deviceId(1000)
+const DEFAULT_ATW_DEVICE_ID = deviceId(1001)
+const DEFAULT_ERV_DEVICE_ID = deviceId(1002)
+/* eslint-enable @typescript-eslint/no-magic-numbers */
+
+/*
+ * ---------------------------------------------------------------------------
  * Full list-device wrappers (envelope around device data)
  * ---------------------------------------------------------------------------
  */
@@ -170,12 +191,12 @@ export const ervDeviceData = (
 export const ataDevice = (
   overrides: Partial<ListDevice<typeof DeviceType.Ata>> = {},
 ): ListDeviceAny => ({
-  AreaID: 100,
-  BuildingID: 1,
+  AreaID: DEFAULT_AREA_ID,
+  BuildingID: DEFAULT_BUILDING_ID,
   Device: ataDeviceData(),
-  DeviceID: 1000,
+  DeviceID: DEFAULT_ATA_DEVICE_ID,
   DeviceName: 'ATA Device',
-  FloorID: 10,
+  FloorID: DEFAULT_FLOOR_ID,
   Type: DeviceType.Ata,
   ...overrides,
 })
@@ -183,12 +204,12 @@ export const ataDevice = (
 export const atwDevice = (
   overrides: Partial<ListDevice<typeof DeviceType.Atw>> = {},
 ): ListDeviceAny => ({
-  AreaID: 100,
-  BuildingID: 1,
+  AreaID: DEFAULT_AREA_ID,
+  BuildingID: DEFAULT_BUILDING_ID,
   Device: atwDeviceData(),
-  DeviceID: 1001,
+  DeviceID: DEFAULT_ATW_DEVICE_ID,
   DeviceName: 'ATW Device',
-  FloorID: 10,
+  FloorID: DEFAULT_FLOOR_ID,
   Type: DeviceType.Atw,
   ...overrides,
 })
@@ -196,10 +217,10 @@ export const atwDevice = (
 export const ervDevice = (
   overrides: Partial<ListDevice<typeof DeviceType.Erv>> = {},
 ): ListDeviceAny => ({
-  AreaID: 100,
-  BuildingID: 1,
+  AreaID: DEFAULT_AREA_ID,
+  BuildingID: DEFAULT_BUILDING_ID,
   Device: ervDeviceData(),
-  DeviceID: 1002,
+  DeviceID: DEFAULT_ERV_DEVICE_ID,
   DeviceName: 'ERV Device',
   FloorID: null,
   Type: DeviceType.Erv,

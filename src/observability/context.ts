@@ -90,11 +90,11 @@ const redactValue = (value: unknown): unknown => {
 export abstract class APICallLogData {
   declare public readonly dataType: string
 
-  public readonly method: string | undefined
+  public readonly method?: string
 
   public readonly params: unknown
 
-  public readonly url: string | undefined
+  public readonly url?: string
 
   protected constructor(config?: LoggableRequestConfig) {
     this.method = config?.method?.toUpperCase()
