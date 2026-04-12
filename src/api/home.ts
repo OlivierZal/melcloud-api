@@ -165,7 +165,7 @@ export class HomeAPI implements Disposable, HomeAPIContract {
     return this.#user
   }
 
-  readonly #abortSignal: AbortSignal | undefined
+  readonly #abortSignal?: AbortSignal
 
   readonly #api: AxiosInstance
 

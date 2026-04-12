@@ -211,7 +211,7 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
     return this.#registry
   }
 
-  readonly #abortSignal: AbortSignal | undefined
+  readonly #abortSignal?: AbortSignal
 
   readonly #api: AxiosInstance
 

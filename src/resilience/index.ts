@@ -15,9 +15,9 @@ export {
 export { RetryGuard } from './retry-guard.ts'
 export { isSessionExpired } from './session-expiry.ts'
 export {
+  APIError,
   AuthenticationError,
-  isMelCloudError,
-  MelCloudError,
+  isAPIError,
   NetworkError,
   RateLimitError,
   TransientServerError,

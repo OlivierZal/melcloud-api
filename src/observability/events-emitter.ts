@@ -14,7 +14,7 @@ import type {
  * the request flow — observability is a side concern, never a blocker.
  */
 export class RequestLifecycleEmitter {
-  readonly #events: RequestLifecycleEvents | undefined
+  readonly #events?: RequestLifecycleEvents
 
   readonly #logger: Logger
 

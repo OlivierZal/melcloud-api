@@ -156,9 +156,9 @@ export {
   verticalToClassic,
 } from './enum-mappings.ts'
 export {
+  APIError,
   AuthenticationError,
-  isMelCloudError,
-  MelCloudError,
+  isAPIError,
   NetworkError,
   RateLimitError,
   TransientServerError,

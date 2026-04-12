@@ -1,6 +1,6 @@
 /** A disposable wrapper around `setTimeout` that automatically clears the previous timeout when rescheduled. */
 export class DisposableTimeout implements Disposable {
-  #timeout: ReturnType<typeof setTimeout> | undefined
+  #timeout?: ReturnType<typeof setTimeout>
 
   /**
    * Whether a timeout is currently scheduled and has not yet fired or been cleared.

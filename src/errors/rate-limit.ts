@@ -1,12 +1,12 @@
 import type { Duration } from 'luxon'
 
-import { MelCloudError } from './base.ts'
+import { APIError } from './base.ts'
 
 /**
  * Upstream returned HTTP 429 (Too Many Requests), or the local
  * rate-limit gate is still holding a pause window from a previous 429.
  */
-export class RateLimitError extends MelCloudError {
+export class RateLimitError extends APIError {
   public override readonly name = 'RateLimitError'
 
   public readonly retryAfter: Duration | null

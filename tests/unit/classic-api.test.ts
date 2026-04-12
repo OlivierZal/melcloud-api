@@ -1017,7 +1017,7 @@ describe('mELCloud Classic API', () => {
       )
     })
 
-    it('response error handler preserves MelCloudError subclass types', async () => {
+    it('response error handler preserves APIError subclass types', async () => {
       /*
        * When #onRequest throws a RateLimitError, axios routes it through
        * the response error interceptor. The interceptor must not wrap it
