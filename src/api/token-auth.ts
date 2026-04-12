@@ -232,7 +232,7 @@ const extractPageRedirect = (html: string): string | null => {
     return jsMatch.groups['url'].split('&amp;').join('&')
   }
   const metaMatch =
-    /<meta[^>]+http-equiv="refresh"[^>]+content="[^"]*url=(?<url>[^"&]+)/iu.exec(
+    /<meta[^>]+http-equiv="refresh"[^>]+content="[^"]*url=(?<url>[^"]+)/iu.exec(
       html,
     )
   if (metaMatch?.groups?.['url'] !== undefined) {
