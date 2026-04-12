@@ -1,10 +1,17 @@
-import { describe, expect, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RetryGuard } from '../../src/resilience/retry-guard.ts'
-import { fakeTimersTest } from '../fixtures/fake-timers.ts'
 
 describe('retry guard', () => {
-  fakeTimersTest('starts inactive and allows the first consume', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('starts inactive and allows the first consume', () => {
     const guard = new RetryGuard(1000)
 
     expect(guard.isActive).toBe(false)
@@ -12,7 +19,7 @@ describe('retry guard', () => {
     expect(guard.isActive).toBe(true)
   })
 
-  fakeTimersTest('rejects consecutive consumes within the window', () => {
+  it('rejects consecutive consumes within the window', () => {
     const guard = new RetryGuard(1000)
 
     guard.tryConsume()
@@ -21,7 +28,7 @@ describe('retry guard', () => {
     expect(guard.tryConsume()).toBe(false)
   })
 
-  fakeTimersTest('refills the budget after the delay elapses', () => {
+  it('refills the budget after the delay elapses', () => {
     const guard = new RetryGuard(1000)
 
     guard.tryConsume()
@@ -31,7 +38,7 @@ describe('retry guard', () => {
     expect(guard.tryConsume()).toBe(true)
   })
 
-  fakeTimersTest('symbol.dispose clears the pending window', () => {
+  it('symbol.dispose clears the pending window', () => {
     const guard = new RetryGuard(1000)
 
     guard.tryConsume()

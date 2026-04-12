@@ -1,10 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   isTransientServerError,
   withRetryBackoff,
 } from '../../src/resilience/retry-backoff.ts'
-import { fakeTimersTest } from '../fixtures/fake-timers.ts'
 import { mock } from '../helpers.ts'
 
 const ALWAYS_RETRYABLE = (): boolean => true
@@ -53,50 +52,52 @@ describe(isTransientServerError, () => {
 })
 
 describe(withRetryBackoff, () => {
-  fakeTimersTest(
-    'returns the first successful result without sleeping',
-    async () => {
-      const op = vi.fn<() => Promise<string>>().mockResolvedValue('ok')
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
 
-      const result = await withRetryBackoff(op, {
-        initialDelayMs: 100,
-        isRetryable: ALWAYS_RETRYABLE,
-        jitterRatio: 0,
-        maxDelayMs: 10_000,
-        maxRetries: 3,
-      })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
 
-      expect(result).toBe('ok')
-      expect(op).toHaveBeenCalledTimes(1)
-    },
-  )
+  it('returns the first successful result without sleeping', async () => {
+    const op = vi.fn<() => Promise<string>>().mockResolvedValue('ok')
 
-  fakeTimersTest(
-    'retries up to maxRetries on retryable errors and then succeeds',
-    async () => {
-      const op = vi
-        .fn<() => Promise<string>>()
-        .mockRejectedValueOnce(new Error('boom 1'))
-        .mockRejectedValueOnce(new Error('boom 2'))
-        .mockResolvedValue('finally')
+    const result = await withRetryBackoff(op, {
+      initialDelayMs: 100,
+      isRetryable: ALWAYS_RETRYABLE,
+      jitterRatio: 0,
+      maxDelayMs: 10_000,
+      maxRetries: 3,
+    })
 
-      const promise = withRetryBackoff(op, {
-        initialDelayMs: 100,
-        isRetryable: ALWAYS_RETRYABLE,
-        jitterRatio: 0,
-        maxDelayMs: 10_000,
-        maxRetries: 3,
-      })
+    expect(result).toBe('ok')
+    expect(op).toHaveBeenCalledTimes(1)
+  })
 
-      await vi.runAllTimersAsync()
-      const result = await promise
+  it('retries up to maxRetries on retryable errors and then succeeds', async () => {
+    const op = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(new Error('boom 1'))
+      .mockRejectedValueOnce(new Error('boom 2'))
+      .mockResolvedValue('finally')
 
-      expect(result).toBe('finally')
-      expect(op).toHaveBeenCalledTimes(3)
-    },
-  )
+    const promise = withRetryBackoff(op, {
+      initialDelayMs: 100,
+      isRetryable: ALWAYS_RETRYABLE,
+      jitterRatio: 0,
+      maxDelayMs: 10_000,
+      maxRetries: 3,
+    })
 
-  fakeTimersTest('rethrows immediately on a non-retryable error', async () => {
+    await vi.runAllTimersAsync()
+    const result = await promise
+
+    expect(result).toBe('finally')
+    expect(op).toHaveBeenCalledTimes(3)
+  })
+
+  it('rethrows immediately on a non-retryable error', async () => {
     const op = vi
       .fn<() => Promise<unknown>>()
       .mockRejectedValue(new Error('fatal'))
@@ -113,64 +114,58 @@ describe(withRetryBackoff, () => {
     expect(op).toHaveBeenCalledTimes(1)
   })
 
-  fakeTimersTest(
-    'throws the last error after exhausting maxRetries',
-    async () => {
-      const op = vi
-        .fn<() => Promise<unknown>>()
-        .mockRejectedValueOnce(new Error('boom 1'))
-        .mockRejectedValueOnce(new Error('boom 2'))
-        .mockRejectedValue(new Error('boom final'))
+  it('throws the last error after exhausting maxRetries', async () => {
+    const op = vi
+      .fn<() => Promise<unknown>>()
+      .mockRejectedValueOnce(new Error('boom 1'))
+      .mockRejectedValueOnce(new Error('boom 2'))
+      .mockRejectedValue(new Error('boom final'))
 
-      const promise = withRetryBackoff(op, {
-        initialDelayMs: 100,
-        isRetryable: ALWAYS_RETRYABLE,
-        jitterRatio: 0,
-        maxDelayMs: 10_000,
-        maxRetries: 2,
-      })
+    const promise = withRetryBackoff(op, {
+      initialDelayMs: 100,
+      isRetryable: ALWAYS_RETRYABLE,
+      jitterRatio: 0,
+      maxDelayMs: 10_000,
+      maxRetries: 2,
+    })
 
-      await Promise.all([
-        expect(promise).rejects.toThrow('boom final'),
-        vi.runAllTimersAsync(),
-      ])
+    await Promise.all([
+      expect(promise).rejects.toThrow('boom final'),
+      vi.runAllTimersAsync(),
+    ])
 
-      // 1 initial attempt + 2 retries
-      expect(op).toHaveBeenCalledTimes(3)
-    },
-  )
+    // 1 initial attempt + 2 retries
+    expect(op).toHaveBeenCalledTimes(3)
+  })
 
-  fakeTimersTest(
-    'applies exponential backoff without jitter (deterministic)',
-    async () => {
-      const delays: number[] = []
-      const op = vi
-        .fn<() => Promise<string>>()
-        .mockRejectedValueOnce(new Error('1'))
-        .mockRejectedValueOnce(new Error('2'))
-        .mockRejectedValueOnce(new Error('3'))
-        .mockResolvedValue('ok')
+  it('applies exponential backoff without jitter (deterministic)', async () => {
+    const delays: number[] = []
+    const op = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(new Error('1'))
+      .mockRejectedValueOnce(new Error('2'))
+      .mockRejectedValueOnce(new Error('3'))
+      .mockResolvedValue('ok')
 
-      const promise = withRetryBackoff(op, {
-        initialDelayMs: 100,
-        isRetryable: ALWAYS_RETRYABLE,
-        jitterRatio: 0,
-        maxDelayMs: 10_000,
-        maxRetries: 3,
-        onRetry: (_attempt, _error, delayMs) => {
-          delays.push(delayMs)
-        },
-      })
+    const promise = withRetryBackoff(op, {
+      initialDelayMs: 100,
+      isRetryable: ALWAYS_RETRYABLE,
+      jitterRatio: 0,
+      maxDelayMs: 10_000,
+      maxRetries: 3,
+      onRetry: (_attempt, _error, delayMs) => {
+        delays.push(delayMs)
+      },
+    })
 
-      await vi.runAllTimersAsync()
-      await promise
+    await vi.runAllTimersAsync()
+    await promise
 
-      // 100, 200, 400 (2^0, 2^1, 2^2 * initialDelayMs)
-      expect(delays).toStrictEqual([100, 200, 400])
-    },
-  )
+    // 100, 200, 400 (2^0, 2^1, 2^2 * initialDelayMs)
+    expect(delays).toStrictEqual([100, 200, 400])
+  })
 
-  fakeTimersTest('clamps the computed delay to maxDelayMs', async () => {
+  it('clamps the computed delay to maxDelayMs', async () => {
     const delays: number[] = []
     const op = vi
       .fn<() => Promise<string>>()
@@ -198,41 +193,38 @@ describe(withRetryBackoff, () => {
     expect(delays).toStrictEqual([1000, 2000, 2500, 2500])
   })
 
-  fakeTimersTest(
-    'samples jitter within the configured ratio band',
-    async () => {
-      const delays: number[] = []
-      // Upper bound of the jitter interval.
-      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(1)
-      try {
-        const op = vi
-          .fn<() => Promise<string>>()
-          .mockRejectedValueOnce(new Error('1'))
-          .mockResolvedValue('ok')
+  it('samples jitter within the configured ratio band', async () => {
+    const delays: number[] = []
+    // Upper bound of the jitter interval.
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(1)
+    try {
+      const op = vi
+        .fn<() => Promise<string>>()
+        .mockRejectedValueOnce(new Error('1'))
+        .mockResolvedValue('ok')
 
-        const promise = withRetryBackoff(op, {
-          initialDelayMs: 1000,
-          isRetryable: ALWAYS_RETRYABLE,
-          jitterRatio: 0.25,
-          maxDelayMs: 10_000,
-          maxRetries: 1,
-          onRetry: (_attempt, _error, delayMs) => {
-            delays.push(delayMs)
-          },
-        })
+      const promise = withRetryBackoff(op, {
+        initialDelayMs: 1000,
+        isRetryable: ALWAYS_RETRYABLE,
+        jitterRatio: 0.25,
+        maxDelayMs: 10_000,
+        maxRetries: 1,
+        onRetry: (_attempt, _error, delayMs) => {
+          delays.push(delayMs)
+        },
+      })
 
-        await vi.runAllTimersAsync()
-        await promise
+      await vi.runAllTimersAsync()
+      await promise
 
-        // Math.random()=1 → jitter multiplier = +0.25 → 1000 + 250 = 1250
-        expect(delays).toStrictEqual([1250])
-      } finally {
-        randomSpy.mockRestore()
-      }
-    },
-  )
+      // Math.random()=1 → jitter multiplier = +0.25 → 1000 + 250 = 1250
+      expect(delays).toStrictEqual([1250])
+    } finally {
+      randomSpy.mockRestore()
+    }
+  })
 
-  fakeTimersTest('passes the error and attempt number to onRetry', async () => {
+  it('passes the error and attempt number to onRetry', async () => {
     const onRetry =
       vi.fn<(attempt: number, error: unknown, delayMs: number) => void>()
     const errors = [new Error('1'), new Error('2')]

@@ -1,35 +1,36 @@
-import { beforeEach, describe, expect, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { RateLimitGate } from '../../src/resilience/rate-limit-gate.ts'
-import { fakeTimersTest } from '../fixtures/fake-timers.ts'
 
 describe(RateLimitGate, () => {
   beforeEach(() => {
+    vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-04-11T12:00:00Z'))
   })
 
-  fakeTimersTest('starts open with no remaining time', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('starts open with no remaining time', () => {
     const gate = new RateLimitGate({ hours: 1 })
 
     expect(gate.isPaused).toBe(false)
     expect(gate.remaining).toBeNull()
   })
 
-  fakeTimersTest(
-    'closes for the full fallback duration when no Retry-After is provided',
-    () => {
-      const gate = new RateLimitGate({ hours: 2 })
+  it('closes for the full fallback duration when no Retry-After is provided', () => {
+    const gate = new RateLimitGate({ hours: 2 })
 
-      gate.recordRateLimit()
+    gate.recordRateLimit()
 
-      expect(gate.isPaused).toBe(true)
-      // Use Luxon's millisecond conversion, accounting for slight drift.
-      expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
-      expect(gate.remaining?.as('hours')).toBeLessThanOrEqual(2)
-    },
-  )
+    expect(gate.isPaused).toBe(true)
+    // Use Luxon's millisecond conversion, accounting for slight drift.
+    expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
+    expect(gate.remaining?.as('hours')).toBeLessThanOrEqual(2)
+  })
 
-  fakeTimersTest('honors a numeric Retry-After header (seconds)', () => {
+  it('honors a numeric Retry-After header (seconds)', () => {
     const gate = new RateLimitGate({ hours: 2 })
 
     gate.recordRateLimit(30)
@@ -39,7 +40,7 @@ describe(RateLimitGate, () => {
     expect(gate.remaining?.as('seconds')).toBeLessThanOrEqual(30)
   })
 
-  fakeTimersTest('honors a string Retry-After header (seconds)', () => {
+  it('honors a string Retry-After header (seconds)', () => {
     const gate = new RateLimitGate({ hours: 2 })
 
     gate.recordRateLimit('45')
@@ -48,7 +49,7 @@ describe(RateLimitGate, () => {
     expect(gate.remaining?.as('seconds')).toBeGreaterThan(44)
   })
 
-  fakeTimersTest('falls back when Retry-After is non-numeric', () => {
+  it('falls back when Retry-After is non-numeric', () => {
     const gate = new RateLimitGate({ hours: 2 })
 
     gate.recordRateLimit('not-a-number')
@@ -57,7 +58,7 @@ describe(RateLimitGate, () => {
     expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
   })
 
-  fakeTimersTest('falls back when Retry-After is zero or negative', () => {
+  it('falls back when Retry-After is zero or negative', () => {
     const gate = new RateLimitGate({ hours: 2 })
 
     gate.recordRateLimit(0)
@@ -69,7 +70,7 @@ describe(RateLimitGate, () => {
     expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
   })
 
-  fakeTimersTest('re-opens automatically after the window elapses', () => {
+  it('re-opens automatically after the window elapses', () => {
     const gate = new RateLimitGate({ seconds: 10 })
     gate.recordRateLimit(10)
 
@@ -81,7 +82,7 @@ describe(RateLimitGate, () => {
     expect(gate.remaining).toBeNull()
   })
 
-  fakeTimersTest('reset() immediately re-opens the gate', () => {
+  it('reset() immediately re-opens the gate', () => {
     const gate = new RateLimitGate({ hours: 2 })
     gate.recordRateLimit(3600)
 
@@ -92,79 +93,64 @@ describe(RateLimitGate, () => {
     expect(gate.isPaused).toBe(false)
   })
 
-  fakeTimersTest('formatRemaining returns empty string when open', () => {
+  it('formatRemaining returns empty string when open', () => {
     const gate = new RateLimitGate({ hours: 2 })
 
     expect(gate.formatRemaining()).toBe('')
   })
 
-  fakeTimersTest(
-    'formatRemaining returns a human-readable duration when paused',
-    () => {
-      const gate = new RateLimitGate({ hours: 2 })
-      gate.recordRateLimit(120)
+  it('formatRemaining returns a human-readable duration when paused', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    gate.recordRateLimit(120)
 
-      const formatted = gate.formatRemaining()
+    const formatted = gate.formatRemaining()
 
-      expect(formatted).not.toBe('')
-      expect(formatted).toMatch(/minute/iu)
-    },
-  )
+    expect(formatted).not.toBe('')
+    expect(formatted).toMatch(/minute/iu)
+  })
 
-  fakeTimersTest(
-    'formatRemaining reports seconds for sub-minute windows',
-    () => {
-      const gate = new RateLimitGate({ hours: 2 })
-      gate.recordRateLimit(20)
+  it('formatRemaining reports seconds for sub-minute windows', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    gate.recordRateLimit(20)
 
-      const formatted = gate.formatRemaining()
+    const formatted = gate.formatRemaining()
 
-      expect(formatted).toMatch(/second/iu)
-      expect(formatted).not.toMatch(/minute/iu)
-    },
-  )
+    expect(formatted).toMatch(/second/iu)
+    expect(formatted).not.toMatch(/minute/iu)
+  })
 
-  fakeTimersTest(
-    'formatRemaining reports minutes and seconds for multi-minute windows',
-    () => {
-      const gate = new RateLimitGate({ hours: 2 })
-      gate.recordRateLimit(135)
+  it('formatRemaining reports minutes and seconds for multi-minute windows', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    gate.recordRateLimit(135)
 
-      const formatted = gate.formatRemaining()
+    const formatted = gate.formatRemaining()
 
-      expect(formatted).toMatch(/minute/iu)
-      expect(formatted).toMatch(/second/iu)
-    },
-  )
+    expect(formatted).toMatch(/minute/iu)
+    expect(formatted).toMatch(/second/iu)
+  })
 
-  fakeTimersTest(
-    'recordAndLog records the rate-limit and emits a formatted error',
-    () => {
-      const gate = new RateLimitGate({ hours: 2 })
-      const error = vi.fn<(...data: unknown[]) => void>()
+  it('recordAndLog records the rate-limit and emits a formatted error', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    const error = vi.fn<(...data: unknown[]) => void>()
 
-      gate.recordAndLog({ error }, 60, 'list operations')
+    gate.recordAndLog({ error }, 60, 'list operations')
 
-      expect(gate.isPaused).toBe(true)
-      expect(error).toHaveBeenCalledTimes(1)
-      expect(error).toHaveBeenCalledWith(
-        expect.stringContaining('pausing list operations for'),
-      )
-      expect(error).toHaveBeenCalledWith(expect.stringContaining('429'))
-    },
-  )
+    expect(gate.isPaused).toBe(true)
+    expect(error).toHaveBeenCalledTimes(1)
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining('pausing list operations for'),
+    )
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('429'))
+  })
 
-  fakeTimersTest(
-    'recordAndLog omits the label suffix when none is provided',
-    () => {
-      const gate = new RateLimitGate({ hours: 2 })
-      const error = vi.fn<(...data: unknown[]) => void>()
+  it('recordAndLog omits the label suffix when none is provided', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    const error = vi.fn<(...data: unknown[]) => void>()
 
-      gate.recordAndLog({ error }, 60)
+    gate.recordAndLog({ error }, 60)
 
-      expect(error).toHaveBeenCalledWith(
-        expect.stringMatching(/pausing for \d+/u),
-      )
-    },
-  )
+    expect(error).toHaveBeenCalledWith(
+      expect.stringMatching(/pausing for \d+/u),
+    )
+  })
 })
