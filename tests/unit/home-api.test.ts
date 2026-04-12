@@ -939,8 +939,7 @@ describe('melcloud home API', () => {
       const startEvent = onRequestStart.mock.calls[0]?.[0]
       const completeEvent = onRequestComplete.mock.calls[0]?.[0]
 
-      // eslint-disable-next-line vitest/prefer-expect-type-of -- runtime check, not a type-level assertion
-      expect(typeof startEvent?.correlationId).toBe('string')
+      expect(startEvent?.correlationId).toBeTypeOf('string')
 
       expect(startEvent?.method).toBe('GET')
       expect(startEvent?.url).toBe('/api/user/context')
@@ -949,8 +948,7 @@ describe('melcloud home API', () => {
       expect(completeEvent?.status).toBe(200)
       expect(completeEvent?.url).toBe('/api/user/context')
 
-      // eslint-disable-next-line vitest/prefer-expect-type-of -- runtime check
-      expect(typeof completeEvent?.durationMs).toBe('number')
+      expect(completeEvent?.durationMs).toBeTypeOf('number')
 
       expect(onRequestError).not.toHaveBeenCalled()
     })
@@ -991,8 +989,7 @@ describe('melcloud home API', () => {
         expect(completeEvent?.correlationId).toBe(startEvent?.correlationId)
         expect(retryEvent?.attempt).toBe(1)
 
-        // eslint-disable-next-line vitest/prefer-expect-type-of -- runtime check
-        expect(typeof retryEvent?.delayMs).toBe('number')
+        expect(retryEvent?.delayMs).toBeTypeOf('number')
       } finally {
         vi.useRealTimers()
       }
