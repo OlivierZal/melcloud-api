@@ -1,18 +1,18 @@
 import { DateTime } from 'luxon'
 
+import type {
+  DeviceID,
+  EnergyData,
+  GetDeviceData,
+  ListDeviceData,
+  ReportPostData,
+  SetDeviceData,
+  TilesData,
+  UpdateDeviceData,
+} from '../types/index.ts'
 import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { type DeviceAny, Device } from '../models/index.ts'
-import {
-  type EnergyData,
-  type GetDeviceData,
-  type ListDeviceData,
-  type ReportPostData,
-  type SetDeviceData,
-  type TilesData,
-  type DeviceID,
-  type UpdateDeviceData,
-} from '../types/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,

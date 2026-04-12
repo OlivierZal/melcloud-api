@@ -175,58 +175,32 @@ describe('registry + facade manager integration', () => {
         }),
       )
 
-    expect(tree).toMatchInlineSnapshot(`
-      [
-        {
-          "areas": [
-            {
-              "devices": [
-                "Studio AC",
-              ],
-              "name": "Studio",
-            },
-          ],
-          "floors": [],
-          "name": "Guest house",
-        },
-        {
-          "areas": [],
-          "floors": [
-            {
-              "areas": [
-                {
-                  "devices": [
-                    "Bedroom ERV",
-                  ],
-                  "name": "Bedroom",
-                },
-              ],
-              "devices": [],
-              "name": "First floor",
-            },
-            {
-              "areas": [
-                {
-                  "devices": [
-                    "Kitchen heat pump",
-                  ],
-                  "name": "Kitchen",
-                },
-                {
-                  "devices": [
-                    "Living room AC",
-                  ],
-                  "name": "Living room",
-                },
-              ],
-              "devices": [],
-              "name": "Ground floor",
-            },
-          ],
-          "name": "Main house",
-        },
-      ]
-    `)
+    expect(tree).toStrictEqual([
+      {
+        areas: [{ devices: ['Studio AC'], name: 'Studio' }],
+        floors: [],
+        name: 'Guest house',
+      },
+      {
+        areas: [],
+        floors: [
+          {
+            areas: [{ devices: ['Bedroom ERV'], name: 'Bedroom' }],
+            devices: [],
+            name: 'First floor',
+          },
+          {
+            areas: [
+              { devices: ['Kitchen heat pump'], name: 'Kitchen' },
+              { devices: ['Living room AC'], name: 'Living room' },
+            ],
+            devices: [],
+            name: 'Ground floor',
+          },
+        ],
+        name: 'Main house',
+      },
+    ])
   })
 
   it('filters devices by type across the entire registry', () => {

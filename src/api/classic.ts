@@ -54,12 +54,12 @@ import {
 } from '../observability/index.ts'
 import {
   DEFAULT_TRANSIENT_RETRY_OPTIONS,
-  toDeviceId,
   isSessionExpired,
   isTransientServerError,
   RateLimitError,
   RateLimitGate,
   RetryGuard,
+  toDeviceId,
   withRetryBackoff,
 } from '../resilience/index.ts'
 import type {
