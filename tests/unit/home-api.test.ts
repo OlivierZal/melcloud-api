@@ -760,6 +760,26 @@ describe('melcloud home API', () => {
       expect(buildings).toStrictEqual([mockBuilding])
     })
 
+    it('should fall back to full re-auth when refresh fails on 401', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      /*
+       * 401 triggers reactive retry. Refresh token fails, so the handler
+       * clears the session and attempts full re-authentication, which
+       * succeeds. The retried dispatch then returns mockContext.
+       */
+      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      // Refresh fails
+      mockAxiosPost.mockRejectedValueOnce(new Error('refresh failed'))
+      // Full re-auth succeeds
+      setupSuccessfulLogin()
+      // Retry dispatch after re-auth
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const buildings = await api.list()
+
+      expect(buildings).toStrictEqual([mockBuilding])
+    })
+
     it('should not retry when the retry budget is already consumed', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
@@ -1084,6 +1104,35 @@ describe('melcloud home API', () => {
           message: expect.stringContaining('Too many redirects'),
         }),
       )
+    })
+
+    it('should treat a 302 with no location header as an empty redirect', async () => {
+      // PAR succeeds
+      mockAxiosPost.mockResolvedValueOnce(
+        mockResponse({ request_uri: 'urn:test' }),
+      )
+      // First redirect has a location, second 302 has no location header
+      mockAxiosRequest
+        .mockResolvedValueOnce(
+          mockResponse('', { location: `${AUTH_BASE}/step1` }, 302),
+        )
+        .mockResolvedValueOnce(mockResponse('', {}, 302))
+        /*
+         * The empty location resolves relative to current URL, producing an
+         * invalid redirect that eventually loops back to a page with no form.
+         */
+        .mockResolvedValueOnce(
+          mockResponse('<html>no form here</html>', {}, 200),
+        )
+      const logger = createLogger()
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        password: 'pass',
+        username: 'user@test.com',
+      })
+
+      expect(api.isAuthenticated()).toBe(false)
     })
 
     it('should resolve relative redirect URLs', async () => {
@@ -1607,6 +1656,35 @@ describe('melcloud home API', () => {
       const buildings = await api.list()
 
       expect(buildings).toStrictEqual([mockBuilding])
+    })
+  })
+
+  describe('token response without refresh_token', () => {
+    it('should not overwrite refresh token when response omits it', async () => {
+      vi.useFakeTimers()
+      try {
+        setupSuccessfulLogin()
+        const api = await createApi({ autoSyncInterval: null })
+
+        // Advance past token expiry
+        vi.advanceTimersByTime(3601 * MILLISECONDS_IN_SECOND)
+
+        // Refresh succeeds but response has no refresh_token
+        mockAxiosPost.mockResolvedValueOnce(
+          mockResponse({
+            access_token: 'refreshed-no-rt',
+            expires_in: 3600,
+            scope: mockTokenResponse.scope,
+            token_type: 'Bearer',
+          }),
+        )
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        const buildings = await api.list()
+
+        expect(buildings).toStrictEqual([mockBuilding])
+      } finally {
+        vi.useRealTimers()
+      }
     })
   })
 

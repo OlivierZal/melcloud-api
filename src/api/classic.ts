@@ -228,14 +228,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       shouldVerifySSL,
       requestTimeout,
     )
-    super(
-      { ...config, autoSyncInterval },
-      { baseURL: API_BASE_URL, timeout: requestTimeout },
-      async () => this.fetch(),
-      DEFAULT_RETRY_HOURS,
-      RETRY_DELAY,
+    super({ ...config, autoSyncInterval }, {
+      axiosConfig: { baseURL: API_BASE_URL, timeout: requestTimeout },
       axiosInstance,
-    )
+      rateLimitHours: DEFAULT_RETRY_HOURS,
+      retryDelay: RETRY_DELAY,
+      syncCallback: async () => this.fetch(),
+    })
     this.#applyOptionalConfig({ language, password, timezone, username })
     this.#setupAxiosInterceptors(this.api)
   }

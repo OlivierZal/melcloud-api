@@ -103,22 +103,20 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   @setting
   private accessor refreshToken = ''
 
-  // eslint-disable-next-line max-statements -- wiring a constructor, 1-to-1 config → instance field
   private constructor(config: HomeAPIConfig = {}) {
     const {
+      autoSyncInterval = 1,
       baseURL = API_BASE_URL,
       password,
       requestTimeout = DEFAULT_TIMEOUT_MS,
       username,
-      autoSyncInterval = 1,
     } = config
-    super(
-      { ...config, autoSyncInterval },
-      { baseURL, timeout: requestTimeout },
-      async () => this.list(),
-      DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
-      RETRY_DELAY,
-    )
+    super({ ...config, autoSyncInterval }, {
+      axiosConfig: { baseURL, timeout: requestTimeout },
+      rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
+      retryDelay: RETRY_DELAY,
+      syncCallback: async () => this.list(),
+    })
     this.applyCredentials(username, password)
   }
 
@@ -290,6 +288,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /**
    * Fetch the user context from the BFF and update local state.
    * Shared by `getUser()` and `list()`.
+   * @returns The fetched home context.
    */
   async #fetchContext(): Promise<HomeContext> {
     const { data } = await this.#request<HomeContext>('get', CONTEXT_PATH)
@@ -302,16 +301,20 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /* ---------------------------------------------------------------- */
 
   #storeTokens(data: TokenResponse): void {
-    this.accessToken = data.access_token
-    if (data.refresh_token) {
-      this.refreshToken = data.refresh_token
+    const { access_token, expires_in, refresh_token } = data
+    this.accessToken = access_token
+    if (refresh_token !== undefined && refresh_token !== '') {
+      this.refreshToken = refresh_token
     }
     this.expiry = new Date(
-      Date.now() + data.expires_in * MILLISECONDS_IN_SECOND,
+      Date.now() + expires_in * MILLISECONDS_IN_SECOND,
     ).toISOString()
   }
 
-  /** Use the refresh token to obtain a fresh access token. */
+  /**
+   * Use the refresh token to obtain a fresh access token.
+   * @returns Whether the refresh succeeded.
+   */
   async #refreshAccessToken(): Promise<boolean> {
     const tokens = await refreshAccessToken(
       this.refreshToken,
@@ -332,6 +335,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * Send a request through the API axios instance, injecting the
    * Bearer token. Symmetric logging mirrors the Classic API's
    * interceptor pattern.
+   * @param method - HTTP method (GET, POST, etc.).
+   * @param url - Request URL path.
+   * @param root0 - Request configuration.
+   * @param root0.headers - Optional extra headers.
+   * @returns The Axios response.
    */
   async #dispatch<T = unknown>(
     method: string,
@@ -388,16 +396,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
         this.logError(error)
         this.#recordRateLimitIfApplicable(error)
         if (this.#shouldRetryAuth(error)) {
-          // Try token refresh first, then full re-auth
-          if (
-            this.refreshToken !== '' &&
-            (await this.#refreshAccessToken())
-          ) {
-            return this.#dispatch<T>(method, url, config)
-          }
-          this.#clearPersistedSession()
-          if (await this.authenticate()) {
-            return this.#dispatch<T>(method, url, config)
+          const retried = await this.#retryWithReauth<T>(method, url, config)
+          if (retried !== null) {
+            return retried
           }
         }
         throw error
@@ -454,6 +455,21 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
           })
       : attempt
     return this.#runWithEvents(context, runner)
+  }
+
+  async #retryWithReauth<T>(
+    method: string,
+    url: string,
+    config: { [key: string]: unknown; headers?: Record<string, string> },
+  ): Promise<AxiosResponse<T> | null> {
+    if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
+      return this.#dispatch<T>(method, url, config)
+    }
+    this.#clearPersistedSession()
+    if (await this.authenticate()) {
+      return this.#dispatch<T>(method, url, config)
+    }
+    return null
   }
 
   async #runWithEvents<T>(

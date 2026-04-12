@@ -2,9 +2,11 @@ import axios, { type AxiosInstance } from 'axios'
 
 import type { LoginCredentials } from '../types/index.ts'
 import { setting } from '../decorators/index.ts'
-import { createAPICallErrorData } from '../observability/index.ts'
+import {
+  createAPICallErrorData,
+  RequestLifecycleEmitter,
+} from '../observability/index.ts'
 import { RateLimitGate, RetryGuard } from '../resilience/index.ts'
-import { RequestLifecycleEmitter } from '../observability/index.ts'
 import type {
   BaseAPIConfig,
   Logger,
@@ -12,6 +14,19 @@ import type {
   SettingManager,
 } from './interfaces.ts'
 import { SyncManager } from './sync-manager.ts'
+
+/** Options for the {@link BaseAPI} constructor beyond the base config. */
+interface BaseAPIConstructorOptions {
+  axiosConfig: {
+    baseURL: string
+    timeout: number
+    headers?: Record<string, string>
+  }
+  rateLimitHours: number
+  retryDelay: number
+  axiosInstance?: AxiosInstance
+  syncCallback: () => Promise<unknown>
+}
 
 /**
  * Shared infrastructure for MELCloud API clients.
@@ -27,6 +42,10 @@ export abstract class BaseAPI implements Disposable {
 
   public readonly settingManager?: SettingManager
 
+  public get isRateLimited(): boolean {
+    return this.rateLimitGate.isPaused
+  }
+
   protected readonly abortSignal?: AbortSignal
 
   protected readonly api: AxiosInstance
@@ -37,8 +56,6 @@ export abstract class BaseAPI implements Disposable {
 
   protected readonly retryGuard: RetryGuard
 
-  readonly #syncManager: SyncManager
-
   @setting
   protected accessor expiry = ''
 
@@ -48,26 +65,29 @@ export abstract class BaseAPI implements Disposable {
   @setting
   protected accessor username = ''
 
+  protected get syncManager(): SyncManager {
+    return this.#syncManager
+  }
+
+  readonly #syncManager: SyncManager
+
   protected constructor(
-    config: BaseAPIConfig,
-    axiosConfig: {
-      baseURL: string
-      headers?: Record<string, string>
-      timeout: number
-    },
-    syncCallback: () => Promise<unknown>,
-    rateLimitHours: number,
-    retryDelay: number,
-    axiosInstance?: AxiosInstance,
-  ) {
-    const {
+    {
       abortSignal,
       autoSyncInterval,
       events,
       logger = console,
       onSync,
       settingManager,
-    } = config
+    }: BaseAPIConfig,
+    {
+      axiosConfig,
+      axiosInstance,
+      rateLimitHours,
+      retryDelay,
+      syncCallback,
+    }: BaseAPIConstructorOptions,
+  ) {
     this.abortSignal = abortSignal
     this.logger = logger
     this.onSync = onSync
@@ -79,16 +99,10 @@ export abstract class BaseAPI implements Disposable {
     this.#syncManager = new SyncManager(syncCallback, logger, autoSyncInterval)
   }
 
-  public get isRateLimited(): boolean {
-    return this.rateLimitGate.isPaused
-  }
+  public abstract authenticate(data?: LoginCredentials): Promise<boolean>
 
   public clearSync(): void {
     this.#syncManager.clear()
-  }
-
-  public setSyncInterval(minutes: number | null): void {
-    this.#syncManager.setInterval(minutes)
   }
 
   public [Symbol.dispose](): void {
@@ -96,7 +110,9 @@ export abstract class BaseAPI implements Disposable {
     this.retryGuard[Symbol.dispose]()
   }
 
-  public abstract authenticate(data?: LoginCredentials): Promise<boolean>
+  public setSyncInterval(minutes: number | null): void {
+    this.#syncManager.setInterval(minutes)
+  }
 
   protected applyCredentials(username?: string, password?: string): void {
     if (username !== undefined) {
@@ -111,9 +127,5 @@ export abstract class BaseAPI implements Disposable {
     if (axios.isAxiosError(error)) {
       this.logger.error(String(createAPICallErrorData(error)))
     }
-  }
-
-  protected get syncManager(): SyncManager {
-    return this.#syncManager
   }
 }
