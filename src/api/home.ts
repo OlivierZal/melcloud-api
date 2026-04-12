@@ -1,9 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import axios, {
-  type AxiosResponse,
-  HttpStatusCode,
-} from 'axios'
+import axios, { type AxiosResponse, HttpStatusCode } from 'axios'
 
 import type {
   HomeAtaValues,
@@ -29,10 +26,7 @@ import {
   RateLimitError,
   withRetryBackoff,
 } from '../resilience/index.ts'
-import type {
-  HomeAPIConfig,
-  HomeAPI as HomeAPIContract,
-} from './interfaces.ts'
+import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './interfaces.ts'
 import { BaseAPI } from './base.ts'
 import {
   type TokenResponse,
@@ -111,12 +105,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       requestTimeout = DEFAULT_TIMEOUT_MS,
       username,
     } = config
-    super({ ...config, autoSyncInterval }, {
-      axiosConfig: { baseURL, timeout: requestTimeout },
-      rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
-      retryDelay: RETRY_DELAY,
-      syncCallback: async () => this.list(),
-    })
+    super(
+      { ...config, autoSyncInterval },
+      {
+        axiosConfig: { baseURL, timeout: requestTimeout },
+        rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
+        retryDelay: RETRY_DELAY,
+        syncCallback: async () => this.list(),
+      },
+    )
     this.applyCredentials(username, password)
   }
 
@@ -316,10 +313,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns Whether the refresh succeeded.
    */
   async #refreshAccessToken(): Promise<boolean> {
-    const tokens = await refreshAccessToken(
-      this.refreshToken,
-      this.abortSignal,
-    )
+    const tokens = await refreshAccessToken(this.refreshToken, this.abortSignal)
     if (tokens === null) {
       return false
     }
@@ -356,9 +350,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       ...config,
       headers: {
         ...configHeaders,
-        ...(this.accessToken === ''
-          ? {}
-          : { Authorization: `Bearer ${this.accessToken}` }),
+        ...(this.accessToken === '' ?
+          {}
+        : { Authorization: `Bearer ${this.accessToken}` }),
       },
       method,
       ...(this.abortSignal === undefined ? {} : { signal: this.abortSignal }),

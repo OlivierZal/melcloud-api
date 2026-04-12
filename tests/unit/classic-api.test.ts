@@ -14,10 +14,7 @@ import {
   vi,
 } from 'vitest'
 
-import type {
-  ClassicAPI,
-  ClassicAPIConfig,
-} from '../../src/api/index.ts'
+import type { ClassicAPI, ClassicAPIConfig } from '../../src/api/index.ts'
 import type { DeviceType } from '../../src/constants.ts'
 import { RateLimitError } from '../../src/errors/index.ts'
 import {
@@ -27,7 +24,13 @@ import {
   toBuildingId,
   toDeviceId,
 } from '../../src/types/index.ts'
-import { cast, createAxiosError, createLogger, createSettingStore, mock } from '../helpers.ts'
+import {
+  cast,
+  createAxiosError,
+  createLogger,
+  createSettingStore,
+  mock,
+} from '../helpers.ts'
 
 const mockInterceptors = {
   request: { use: vi.fn() },

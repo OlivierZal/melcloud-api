@@ -16,7 +16,12 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../../src/types/index.ts'
-import { cast, createLogger, createSettingStore, mockResponse } from '../helpers.ts'
+import {
+  cast,
+  createLogger,
+  createSettingStore,
+  mockResponse,
+} from '../helpers.ts'
 
 const BASE_URL = 'https://melcloudhome.com'
 const MILLISECONDS_IN_SECOND = 1000
@@ -151,7 +156,6 @@ vi.mock(import('axios'), async (importOriginal) => {
   }
 })
 
-
 /*
  * Simulate the OIDC token-based auth flow:
  *   1. axios.post to PAR endpoint → { request_uri }
@@ -205,7 +209,7 @@ const setupSuccessfulLogin = (): void => {
     )
     .mockResolvedValueOnce(
       mockResponse(
-        '<script>window.location=\'melcloudhome://?code=auth-code&amp;state=xyz\'</script>',
+        "<script>window.location='melcloudhome://?code=auth-code&amp;state=xyz'</script>",
         {},
         200,
       ),
@@ -1150,7 +1154,11 @@ describe('melcloud home API', () => {
           mockResponse('', { location: '/relative-path' }, 302),
         )
         .mockResolvedValueOnce(
-          mockResponse('', { location: `${COGNITO}/login?client_id=test` }, 302),
+          mockResponse(
+            '',
+            { location: `${COGNITO}/login?client_id=test` },
+            302,
+          ),
         )
         .mockResolvedValueOnce(
           mockResponse(
@@ -1383,11 +1391,7 @@ describe('melcloud home API', () => {
         .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
         // Credential POST -> callback without code param
         .mockResolvedValueOnce(
-          mockResponse(
-            '',
-            { location: 'melcloudhome://?state=abc' },
-            302,
-          ),
+          mockResponse('', { location: 'melcloudhome://?state=abc' }, 302),
         )
 
       const logger = createLogger()

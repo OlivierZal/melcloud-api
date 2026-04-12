@@ -5,7 +5,11 @@ import type {
 } from 'axios'
 import { vi } from 'vitest'
 
-import type { ClassicAPIAdapter, Logger, SettingManager } from '../src/api/index.ts'
+import type {
+  ClassicAPIAdapter,
+  Logger,
+  SettingManager,
+} from '../src/api/index.ts'
 import type { DeviceType } from '../src/constants.ts'
 import type {
   AreaDataAny,
