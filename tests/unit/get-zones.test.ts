@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ClassicRegistry } from '../../src/models/index.ts'
+import type {
+  AreaID,
+  BuildingID,
+  DeviceID,
+  FloorID,
+} from '../../src/types/index.ts'
 import { DeviceType } from '../../src/constants.ts'
 import {
   areaData,
@@ -16,7 +22,7 @@ import { createPopulatedRegistry, defined } from '../helpers.ts'
 const buildings = [
   buildingData({
     HMDefined: false,
-    ID: 1,
+    ID: 1 as BuildingID,
     Location: 0,
     Name: 'Bravo',
     TimeZone: 1,
@@ -24,42 +30,54 @@ const buildings = [
   buildingData({
     FPDefined: false,
     HMDefined: false,
-    ID: 2,
+    ID: 2 as BuildingID,
     Location: 0,
     Name: 'Alpha',
     TimeZone: 1,
   }),
 ]
 
-const floors = [floorData({ BuildingId: 1, ID: 10, Name: 'Ground floor' })]
+const floors = [
+  floorData({ BuildingId: 1 as BuildingID, ID: 10, Name: 'Ground floor' }),
+]
 
 const areas = [
-  areaData({ BuildingId: 1, FloorId: 10, ID: 100, Name: 'Salon' }),
-  areaData({ BuildingId: 2, FloorId: null, ID: 200, Name: 'Studio' }),
+  areaData({
+    BuildingId: 1 as BuildingID,
+    FloorId: 10,
+    ID: 100,
+    Name: 'Salon',
+  }),
+  areaData({
+    BuildingId: 2 as BuildingID,
+    FloorId: null,
+    ID: 200,
+    Name: 'Studio',
+  }),
 ]
 
 const devices = [
   ataDevice({
-    AreaID: 100,
-    BuildingID: 1,
+    AreaID: 100 as AreaID,
+    BuildingID: 1 as BuildingID,
     Device: ataDeviceData(),
-    DeviceID: 1001,
+    DeviceID: 1001 as DeviceID,
     DeviceName: 'AC unit',
-    FloorID: 10,
+    FloorID: 10 as FloorID,
   }),
   atwDevice({
     AreaID: null,
-    BuildingID: 1,
+    BuildingID: 1 as BuildingID,
     Device: atwDeviceData({ HasZone2: false }),
-    DeviceID: 1002,
+    DeviceID: 1002 as DeviceID,
     DeviceName: 'Heat pump',
     FloorID: null,
   }),
   ataDevice({
-    AreaID: 200,
-    BuildingID: 2,
+    AreaID: 200 as AreaID,
+    BuildingID: 2 as BuildingID,
     Device: ataDeviceData(),
-    DeviceID: 2001,
+    DeviceID: 2001 as DeviceID,
     DeviceName: 'Studio AC',
     FloorID: null,
   }),

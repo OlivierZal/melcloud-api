@@ -1,7 +1,11 @@
 import type {
   AreaDataAny,
+  AreaID,
   BuildingData,
+  BuildingID,
+  DeviceID,
   FloorData,
+  FloorID,
   ListDevice,
   ListDeviceAny,
   ListDeviceDataAta,
@@ -29,7 +33,7 @@ export const buildingData = (
   HMEnabled: false,
   HMEndDate: null,
   HMStartDate: null,
-  ID: 1,
+  ID: 1 as BuildingID,
   Location: 10,
   Name: 'Building',
   TimeZone: 0,
@@ -37,7 +41,7 @@ export const buildingData = (
 })
 
 export const floorData = (overrides: Partial<FloorData> = {}): FloorData => ({
-  BuildingId: 1,
+  BuildingId: 1 as BuildingID,
   ID: 10,
   Name: 'Floor',
   ...overrides,
@@ -46,7 +50,7 @@ export const floorData = (overrides: Partial<FloorData> = {}): FloorData => ({
 export const areaData = (
   overrides: Partial<AreaDataAny> = {},
 ): AreaDataAny => ({
-  BuildingId: 1,
+  BuildingId: 1 as BuildingID,
   FloorId: 10,
   ID: 100,
   Name: 'Area',
@@ -170,12 +174,12 @@ export const ervDeviceData = (
 export const ataDevice = (
   overrides: Partial<ListDevice<typeof DeviceType.Ata>> = {},
 ): ListDeviceAny => ({
-  AreaID: 100,
-  BuildingID: 1,
+  AreaID: 100 as AreaID,
+  BuildingID: 1 as BuildingID,
   Device: ataDeviceData(),
-  DeviceID: 1000,
+  DeviceID: 1000 as DeviceID,
   DeviceName: 'ATA Device',
-  FloorID: 10,
+  FloorID: 10 as FloorID,
   Type: DeviceType.Ata,
   ...overrides,
 })
@@ -183,12 +187,12 @@ export const ataDevice = (
 export const atwDevice = (
   overrides: Partial<ListDevice<typeof DeviceType.Atw>> = {},
 ): ListDeviceAny => ({
-  AreaID: 100,
-  BuildingID: 1,
+  AreaID: 100 as AreaID,
+  BuildingID: 1 as BuildingID,
   Device: atwDeviceData(),
-  DeviceID: 1001,
+  DeviceID: 1001 as DeviceID,
   DeviceName: 'ATW Device',
-  FloorID: 10,
+  FloorID: 10 as FloorID,
   Type: DeviceType.Atw,
   ...overrides,
 })
@@ -196,10 +200,10 @@ export const atwDevice = (
 export const ervDevice = (
   overrides: Partial<ListDevice<typeof DeviceType.Erv>> = {},
 ): ListDeviceAny => ({
-  AreaID: 100,
-  BuildingID: 1,
+  AreaID: 100 as AreaID,
+  BuildingID: 1 as BuildingID,
   Device: ervDeviceData(),
-  DeviceID: 1002,
+  DeviceID: 1002 as DeviceID,
   DeviceName: 'ERV Device',
   FloorID: null,
   Type: DeviceType.Erv,

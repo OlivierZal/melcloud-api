@@ -1,7 +1,8 @@
 import type { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
+import type { AreaID, BuildingID, DeviceID, FloorID } from './ids.ts'
 
 export interface BaseDevicePostData {
-  readonly DeviceID: number
+  readonly DeviceID: DeviceID
   readonly EffectiveFlags: number
 }
 
@@ -10,11 +11,11 @@ export interface BaseGetDeviceData extends BaseSetDeviceData {
 }
 
 export interface BaseListDevice<T extends DeviceType = DeviceType> {
-  readonly AreaID: number | null
-  readonly BuildingID: number
-  readonly DeviceID: number
+  readonly AreaID: AreaID | null
+  readonly BuildingID: BuildingID
+  readonly DeviceID: DeviceID
   readonly DeviceName: string
-  readonly FloorID: number | null
+  readonly FloorID: FloorID | null
   readonly Type: T
 }
 

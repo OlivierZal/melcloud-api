@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import type {
+  AreaID,
+  BuildingID,
+  DeviceID,
+  FloorID,
   ListDevice,
   ListDeviceAny,
   ListDeviceDataAta,
@@ -21,7 +25,7 @@ const allBuildings = [
   buildingData({ Name: 'Building 1' }),
   buildingData({
     FPDefined: false,
-    ID: 2,
+    ID: 2 as BuildingID,
     Location: 20,
     Name: 'Building 2',
   }),
@@ -30,22 +34,27 @@ const allBuildings = [
 const allFloors = [
   floorData({ Name: 'Floor 1' }),
   floorData({ ID: 11, Name: 'Floor 2' }),
-  floorData({ BuildingId: 2, ID: 12, Name: 'Floor 3' }),
+  floorData({ BuildingId: 2 as BuildingID, ID: 12, Name: 'Floor 3' }),
 ]
 
 const allAreas = [
   areaData({ Name: 'Area 1' }),
   areaData({ FloorId: null, ID: 101, Name: 'Area 2' }),
-  areaData({ BuildingId: 2, FloorId: 12, ID: 102, Name: 'Area 3' }),
+  areaData({
+    BuildingId: 2 as BuildingID,
+    FloorId: 12,
+    ID: 102,
+    Name: 'Area 3',
+  }),
 ]
 
 const allDevices: ListDeviceAny[] = [
   ataDevice({ DeviceName: 'Device ATA' }),
   atwDevice({
-    AreaID: 102,
-    BuildingID: 2,
+    AreaID: 102 as AreaID,
+    BuildingID: 2 as BuildingID,
     DeviceName: 'Device ATW',
-    FloorID: 12,
+    FloorID: 12 as FloorID,
   }),
   ervDevice({ AreaID: null, DeviceName: 'Device ERV' }),
 ]
@@ -97,9 +106,9 @@ describe('model registry', () => {
       const registry = new ClassicRegistry()
       const invalidDevice = mock<ListDevice<0>>({
         AreaID: null,
-        BuildingID: 1,
+        BuildingID: 1 as BuildingID,
         Device: mock<ListDeviceDataAta>(),
-        DeviceID: 9999,
+        DeviceID: 9999 as DeviceID,
         DeviceName: 'Invalid',
         FloorID: null,
         Type: cast(999),
@@ -119,9 +128,9 @@ describe('model registry', () => {
       const registry = new ClassicRegistry()
       const invalidDevice = mock<ListDevice<0>>({
         AreaID: null,
-        BuildingID: 1,
+        BuildingID: 1 as BuildingID,
         Device: mock<ListDeviceDataAta>(),
-        DeviceID: 9999,
+        DeviceID: 9999 as DeviceID,
         DeviceName: 'Invalid',
         FloorID: null,
         Type: cast({ nested: 'value' }),
@@ -158,10 +167,10 @@ describe('model registry', () => {
       registry.syncDevices([
         ataDevice({ DeviceName: 'Updated ATA' }),
         atwDevice({
-          AreaID: 102,
-          BuildingID: 2,
+          AreaID: 102 as AreaID,
+          BuildingID: 2 as BuildingID,
           DeviceName: 'Updated ATW',
-          FloorID: 12,
+          FloorID: 12 as FloorID,
         }),
         ervDevice({ AreaID: null, DeviceName: 'Updated ERV' }),
       ])
@@ -229,7 +238,7 @@ describe('model registry', () => {
   describe('cross-references', () => {
     it('getFloorsByBuildingId returns floors belonging to a building', () => {
       const registry = createPopulatedRegistry(allFixtures)
-      const floors = registry.getFloorsByBuildingId(1)
+      const floors = registry.getFloorsByBuildingId(1 as BuildingID)
 
       expect(floors).toHaveLength(2)
       expect(floors.map(({ name }) => name)).toStrictEqual([
@@ -240,7 +249,7 @@ describe('model registry', () => {
 
     it('getAreasByBuildingId returns areas belonging to a building', () => {
       const registry = createPopulatedRegistry(allFixtures)
-      const areas = registry.getAreasByBuildingId(1)
+      const areas = registry.getAreasByBuildingId(1 as BuildingID)
 
       expect(areas).toHaveLength(2)
     })
@@ -248,37 +257,37 @@ describe('model registry', () => {
     it('getAreasByFloorId returns areas belonging to a floor', () => {
       const registry = createPopulatedRegistry(allFixtures)
 
-      expect(registry.getAreasByFloorId(10)).toHaveLength(1)
-      expect(registry.getAreasByFloorId(11)).toHaveLength(0)
+      expect(registry.getAreasByFloorId(10 as FloorID)).toHaveLength(1)
+      expect(registry.getAreasByFloorId(11 as FloorID)).toHaveLength(0)
     })
 
     it('getDevicesByBuildingId returns devices belonging to a building', () => {
       const registry = createPopulatedRegistry(allFixtures)
 
-      expect(registry.getDevicesByBuildingId(1)).toHaveLength(2)
-      expect(registry.getDevicesByBuildingId(2)).toHaveLength(1)
+      expect(registry.getDevicesByBuildingId(1 as BuildingID)).toHaveLength(2)
+      expect(registry.getDevicesByBuildingId(2 as BuildingID)).toHaveLength(1)
     })
 
     it('getDevicesByFloorId returns devices belonging to a floor', () => {
       const registry = createPopulatedRegistry(allFixtures)
 
-      expect(registry.getDevicesByFloorId(10)).toHaveLength(1)
-      expect(registry.getDevicesByFloorId(11)).toHaveLength(0)
+      expect(registry.getDevicesByFloorId(10 as FloorID)).toHaveLength(1)
+      expect(registry.getDevicesByFloorId(11 as FloorID)).toHaveLength(0)
     })
 
     it('getDevicesByAreaId returns devices belonging to an area', () => {
       const registry = createPopulatedRegistry(allFixtures)
 
-      expect(registry.getDevicesByAreaId(100)).toHaveLength(1)
-      expect(registry.getDevicesByAreaId(101)).toHaveLength(0)
+      expect(registry.getDevicesByAreaId(100 as AreaID)).toHaveLength(1)
+      expect(registry.getDevicesByAreaId(101 as AreaID)).toHaveLength(0)
     })
 
     it('returns empty arrays for unknown building id', () => {
       const registry = createPopulatedRegistry(allFixtures)
 
-      expect(registry.getFloorsByBuildingId(999)).toHaveLength(0)
-      expect(registry.getAreasByBuildingId(999)).toHaveLength(0)
-      expect(registry.getDevicesByBuildingId(999)).toHaveLength(0)
+      expect(registry.getFloorsByBuildingId(999 as BuildingID)).toHaveLength(0)
+      expect(registry.getAreasByBuildingId(999 as BuildingID)).toHaveLength(0)
+      expect(registry.getDevicesByBuildingId(999 as BuildingID)).toHaveLength(0)
     })
   })
 })

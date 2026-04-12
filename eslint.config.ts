@@ -610,9 +610,10 @@ const config = defineConfig([
   },
   {
     extends: [vitest.configs.all],
-    files: ['tests/**/*.test.ts'],
+    files: ['tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
+      '@typescript-eslint/no-unsafe-type-assertion': 'off',
       'max-lines-per-function': 'off',
       'max-statements': 'off',
       'vitest/max-expects': 'off',

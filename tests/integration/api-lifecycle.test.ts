@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPI } from '../../src/api/classic.ts'
-import type { BuildingWithStructure } from '../../src/types/index.ts'
+import type {
+  AreaID,
+  BuildingID,
+  BuildingWithStructure,
+  DeviceID,
+  FloorID,
+} from '../../src/types/index.ts'
 import { DeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
@@ -29,18 +35,18 @@ const buildingResponse: BuildingWithStructure[] = [
         {
           Areas: [
             {
-              BuildingId: 1,
+              BuildingId: 1 as BuildingID,
               Devices: [
                 {
-                  AreaID: 100,
-                  BuildingID: 1,
+                  AreaID: 100 as AreaID,
+                  BuildingID: 1 as BuildingID,
                   Device: ataDeviceData({
                     NumberOfFanSpeeds: 5,
                     SetTemperature: 23,
                   }),
-                  DeviceID: 1001,
+                  DeviceID: 1001 as DeviceID,
                   DeviceName: 'AC unit',
-                  FloorID: 10,
+                  FloorID: 10 as FloorID,
                   Type: DeviceType.Ata,
                 },
               ],
@@ -49,7 +55,7 @@ const buildingResponse: BuildingWithStructure[] = [
               Name: 'Living room',
             },
           ],
-          BuildingId: 1,
+          BuildingId: 1 as BuildingID,
           Devices: [],
           ID: 10,
           Name: 'Ground floor',
@@ -100,10 +106,10 @@ describe('api lifecycle', () => {
     const api = await melCloudApi.create({ autoSyncInterval: 0 })
 
     expect(api.registry.getDevices()).toHaveLength(1)
-    expect(api.registry.getDevicesByBuildingId(1)).toHaveLength(1)
-    expect(api.registry.getFloorsByBuildingId(1)).toHaveLength(1)
-    expect(api.registry.getAreasByFloorId(10)).toHaveLength(1)
-    expect(api.registry.getDevicesByAreaId(100)).toHaveLength(1)
+    expect(api.registry.getDevicesByBuildingId(1 as BuildingID)).toHaveLength(1)
+    expect(api.registry.getFloorsByBuildingId(1 as BuildingID)).toHaveLength(1)
+    expect(api.registry.getAreasByFloorId(10 as FloorID)).toHaveLength(1)
+    expect(api.registry.getDevicesByAreaId(100 as AreaID)).toHaveLength(1)
 
     const device = api.registry.devices.getById(1001)
 
@@ -189,7 +195,7 @@ describe('api lifecycle', () => {
     await api.fetch()
 
     expect(api.registry.getDevices()).toHaveLength(0)
-    expect(api.registry.getFloorsByBuildingId(1)).toHaveLength(0)
+    expect(api.registry.getFloorsByBuildingId(1 as BuildingID)).toHaveLength(0)
   })
 
   it('onSync callback is invoked after fetch', async () => {

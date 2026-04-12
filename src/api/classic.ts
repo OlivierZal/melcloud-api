@@ -13,6 +13,7 @@ import axios, {
 import type {
   AreaDataAny,
   BuildingWithStructure,
+  DeviceID,
   EnergyData,
   EnergyPostData,
   ErrorLogData,
@@ -667,7 +668,8 @@ export class ClassicAPI implements ClassicAPIAdapter, Disposable {
   ): Promise<ErrorLogData[]> {
     const { data } = await this.getErrorEntries({
       postData: {
-        DeviceIDs: deviceIds,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        DeviceIDs: deviceIds as DeviceID[],
         FromDate: toISODate(fromDate),
         ToDate: toISODate(toDate),
       },

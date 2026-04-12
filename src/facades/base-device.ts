@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 
 import type {
+  DeviceID,
   EnergyData,
   GetDeviceData,
   ListDeviceData,
@@ -166,7 +167,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     const { data: finalData } = await api.setValues({
       postData: {
         ...this.prepareUpdateData(newData),
-        DeviceID: id,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        DeviceID: id as DeviceID,
         EffectiveFlags: flags,
       },
       type,
@@ -252,7 +254,8 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   ): ReportPostData {
     const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
-      DeviceID: this.id,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      DeviceID: this.id as DeviceID,
       Duration:
         shouldUseExactRange ?
           getDuration({ from: newFrom, to: newTo })

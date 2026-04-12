@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/index.ts'
 import type {
+  BuildingID,
   SetDeviceDataAta,
   SetDevicePostData,
 } from '../../src/types/index.ts'
@@ -624,7 +625,12 @@ describe('base facade instance error', () => {
     const api = createMockApi({ getFrostProtection: fpMock })
     const registry = createRegistry()
     registry.syncAreas([
-      { BuildingId: 1, FloorId: null, ID: 200, Name: 'Empty Area' },
+      {
+        BuildingId: 1 as BuildingID,
+        FloorId: null,
+        ID: 200,
+        Name: 'Empty Area',
+      },
     ])
     const instance = defined(registry.areas.getById(200))
     const facade = new AreaFacade(api, registry, instance)

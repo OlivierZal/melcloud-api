@@ -1,10 +1,13 @@
 import type {
   AreaDataAny,
+  AreaID,
   AreaZone,
   BuildingData,
+  BuildingID,
   BuildingZone,
   DeviceZone,
   FloorData,
+  FloorID,
   FloorZone,
   ListDeviceAny,
   Zone,
@@ -202,20 +205,23 @@ export class ClassicRegistry {
       .filter((building) => this.#hasDevices(building.id, 'building', type))
       .map((building) => ({
         areas: this.#buildAreaZones(
-          this.getAreasByBuildingId(building.id).filter(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          this.getAreasByBuildingId(building.id as BuildingID).filter(
             ({ floorId }) => floorId === null,
           ),
           level.child,
           type,
         ),
         devices: buildDeviceZones(
-          this.getDevicesByBuildingId(building.id).filter(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          this.getDevicesByBuildingId(building.id as BuildingID).filter(
             ({ areaId, floorId }) => areaId === null && floorId === null,
           ),
           type,
         ),
         floors: this.#buildFloorZones(
-          this.getFloorsByBuildingId(building.id),
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          this.getFloorsByBuildingId(building.id as BuildingID),
           type,
         ),
         id: building.id,
@@ -231,11 +237,11 @@ export class ClassicRegistry {
    * @param id - The building ID to look up areas for.
    * @returns The areas belonging to the specified building.
    */
-  public getAreasByBuildingId(id: number): Area[] {
+  public getAreasByBuildingId(id: BuildingID): Area[] {
     return this.#areasByBuildingId.get(id) ?? []
   }
 
-  public getAreasByFloorId(id: number): Area[] {
+  public getAreasByFloorId(id: FloorID): Area[] {
     return this.#areasByFloorId.get(id) ?? []
   }
 
@@ -243,15 +249,15 @@ export class ClassicRegistry {
     return [...this.#devices.values()]
   }
 
-  public getDevicesByAreaId(id: number): DeviceAny[] {
+  public getDevicesByAreaId(id: AreaID): DeviceAny[] {
     return this.#devicesByAreaId.get(id) ?? []
   }
 
-  public getDevicesByBuildingId(id: number): DeviceAny[] {
+  public getDevicesByBuildingId(id: BuildingID): DeviceAny[] {
     return this.#devicesByBuildingId.get(id) ?? []
   }
 
-  public getDevicesByFloorId(id: number): DeviceAny[] {
+  public getDevicesByFloorId(id: FloorID): DeviceAny[] {
     return this.#devicesByFloorId.get(id) ?? []
   }
 
@@ -260,7 +266,7 @@ export class ClassicRegistry {
     return this.getDevices().filter((instance) => instance.type === type)
   }
 
-  public getFloorsByBuildingId(id: number): Floor[] {
+  public getFloorsByBuildingId(id: BuildingID): Floor[] {
     return this.#floorsByBuildingId.get(id) ?? []
   }
 
@@ -348,7 +354,11 @@ export class ClassicRegistry {
     return areas
       .filter((area) => this.#hasDevices(area.id, 'area', type))
       .map((area) => ({
-        devices: buildDeviceZones(this.getDevicesByAreaId(area.id), type),
+        devices: buildDeviceZones(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          this.getDevicesByAreaId(area.id as AreaID),
+          type,
+        ),
         id: area.id,
         level: areaLevel,
         model: 'areas' as const,
@@ -362,12 +372,14 @@ export class ClassicRegistry {
       .filter((floor) => this.#hasDevices(floor.id, 'floor', type))
       .map((floor) => ({
         areas: this.#buildAreaZones(
-          this.getAreasByFloorId(floor.id),
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          this.getAreasByFloorId(floor.id as FloorID),
           level.grandchild,
           type,
         ),
         devices: buildDeviceZones(
-          this.getDevicesByFloorId(floor.id).filter(
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+          this.getDevicesByFloorId(floor.id as FloorID).filter(
             ({ areaId }) => areaId === null,
           ),
           type,
@@ -385,12 +397,15 @@ export class ClassicRegistry {
     zone: 'area' | 'building' | 'floor',
   ): DeviceAny[] {
     if (zone === 'area') {
-      return this.getDevicesByAreaId(id)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      return this.getDevicesByAreaId(id as AreaID)
     }
     if (zone === 'building') {
-      return this.getDevicesByBuildingId(id)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      return this.getDevicesByBuildingId(id as BuildingID)
     }
-    return this.getDevicesByFloorId(id)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    return this.getDevicesByFloorId(id as FloorID)
   }
 
   #hasDevices(

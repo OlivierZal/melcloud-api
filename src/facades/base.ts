@@ -14,6 +14,7 @@ import type {
 } from '../models/index.ts'
 import type {
   DateTimeComponents,
+  DeviceID,
   FailureData,
   FrostProtectionData,
   FrostProtectionLocation,
@@ -141,7 +142,8 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   @updateDevices()
   public async setPower(isOn = true): Promise<boolean> {
     const { data: isPowered } = await this.api.setPower({
-      postData: { DeviceIds: this.#deviceIds, Power: isOn },
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+      postData: { DeviceIds: this.#deviceIds as DeviceID[], Power: isOn },
     })
     return isPowered
   }
@@ -182,7 +184,8 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   public async getTiles<TDeviceType extends DeviceType>(
     device: false | Device<TDeviceType> = false,
   ): Promise<TilesData<TDeviceType | null>> {
-    const postData = { DeviceIDs: this.#deviceIds }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    const postData = { DeviceIDs: this.#deviceIds as DeviceID[] }
     if (device === false || !this.#deviceIds.includes(device.id)) {
       const { data } = await this.api.getTiles({ postData })
       return data
