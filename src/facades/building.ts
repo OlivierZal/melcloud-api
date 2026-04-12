@@ -11,7 +11,7 @@ import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
 export class BuildingFacade extends BaseZoneFacade<Building> {
-  public declare readonly id: BuildingID
+  declare public readonly id: BuildingID
 
   public get data(): ZoneSettings {
     return this.instance.data

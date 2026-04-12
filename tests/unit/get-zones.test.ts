@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import type { ClassicRegistry } from '../../src/models/index.ts'
 import { DeviceType } from '../../src/constants.ts'
-import { toAreaId, toBuildingId, toDeviceId, toFloorId } from '../../src/types/index.ts'
+import {
+  toAreaId,
+  toBuildingId,
+  toDeviceId,
+  toFloorId,
+} from '../../src/types/index.ts'
 import {
   areaData,
   ataDevice,

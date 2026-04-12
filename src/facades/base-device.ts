@@ -71,7 +71,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   extends BaseFacade<DeviceAny>
   implements DeviceFacade<T>
 {
-  public declare readonly id: DeviceID
+  declare public readonly id: DeviceID
 
   public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
 

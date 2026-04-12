@@ -3,7 +3,12 @@ import { describe, expect, it } from 'vitest'
 import { DeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { ClassicRegistry } from '../../src/models/index.ts'
-import { toAreaId, toBuildingId, toDeviceId, toFloorId } from '../../src/types/index.ts'
+import {
+  toAreaId,
+  toBuildingId,
+  toDeviceId,
+  toFloorId,
+} from '../../src/types/index.ts'
 import {
   areaData,
   ataDevice,

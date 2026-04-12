@@ -4,7 +4,7 @@ import { BaseZoneFacade } from './base-zone.ts'
 
 /** Facade for a floor, grouping devices on that floor within a building. */
 export class FloorFacade extends BaseZoneFacade<Floor> {
-  public declare readonly id: FloorID
+  declare public readonly id: FloorID
 
   public override get devices(): DeviceAny[] {
     return this.registry.getDevicesByFloorId(this.id)
