@@ -132,14 +132,8 @@ export const storeCookies = async (
   if (!Array.isArray(setCookies)) {
     return
   }
-  await Promise.all(
-    setCookies.map(async (raw: string) => {
-      try {
-        await jar.setCookie(raw, url)
-      } catch {
-        // Ignore invalid Set-Cookie values
-      }
-    }),
+  await Promise.allSettled(
+    setCookies.map(async (raw: string) => jar.setCookie(raw, url)),
   )
 }
 
