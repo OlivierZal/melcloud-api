@@ -615,7 +615,7 @@ const config = defineConfig([
     },
   },
   {
-    extends: [vitest.configs.all],
+    extends: [vitest.configs.all, vitest.configs.recommended],
     files: ['tests/**/*.test.ts', 'tests/fixtures.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
