@@ -45,10 +45,9 @@ const getHotWaterOperationalState = (
   if (data.ForcedHotWaterMode) {
     return OperationModeStateHotWater.dhw
   }
-  if (data.ProhibitHotWater) {
-    return OperationModeStateHotWater.prohibited
-  }
-  return hotWaterStateMap[data.OperationMode] ?? OperationModeStateHotWater.idle
+  return data.ProhibitHotWater ?
+      OperationModeStateHotWater.prohibited
+    : (hotWaterStateMap[data.OperationMode] ?? OperationModeStateHotWater.idle)
 }
 
 const getZoneOperationalState = (
@@ -61,10 +60,9 @@ const getZoneOperationalState = (
   ) {
     return OperationModeStateZone.prohibited
   }
-  if (data[`Idle${zone}`]) {
-    return OperationModeStateZone.idle
-  }
-  return zoneStateMap[data.OperationMode] ?? OperationModeStateZone.idle
+  return data[`Idle${zone}`] ?
+      OperationModeStateZone.idle
+    : (zoneStateMap[data.OperationMode] ?? OperationModeStateZone.idle)
 }
 
 /*

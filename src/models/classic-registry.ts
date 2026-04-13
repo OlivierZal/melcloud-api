@@ -396,10 +396,9 @@ export class ClassicRegistry {
     if (zone === 'area') {
       return this.getDevicesByAreaId(toAreaId(id))
     }
-    if (zone === 'building') {
-      return this.getDevicesByBuildingId(toBuildingId(id))
-    }
-    return this.getDevicesByFloorId(toFloorId(id))
+    return zone === 'building' ?
+        this.getDevicesByBuildingId(toBuildingId(id))
+      : this.getDevicesByFloorId(toFloorId(id))
   }
 
   #hasDevices(

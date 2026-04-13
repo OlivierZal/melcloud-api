@@ -32,10 +32,9 @@ const createDeviceFacade = (
       return new DeviceAtaFacade(api, registry, device)
     }
     case DeviceType.Atw: {
-      if (device.data.HasZone2) {
-        return new DeviceAtwHasZone2Facade(api, registry, device)
-      }
-      return new DeviceAtwFacade(api, registry, device)
+      return device.data.HasZone2 ?
+          new DeviceAtwHasZone2Facade(api, registry, device)
+        : new DeviceAtwFacade(api, registry, device)
     }
     case DeviceType.Erv: {
       return new DeviceErvFacade(api, registry, device)
