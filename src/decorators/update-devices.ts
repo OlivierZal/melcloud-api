@@ -79,15 +79,16 @@ const convertToListDeviceData = <T extends DeviceType>(
   const { flags, type } = facade
   const { EffectiveFlags: effectiveFlags, ...newData } = data
   const allEntries = Object.entries(newData)
-  let entries = allEntries
-  if (effectiveFlags !== FLAG_UNCHANGED) {
-    const effectiveFlagsBigInt = BigInt(effectiveFlags)
-    entries = allEntries.filter(
-      ([key]) =>
-        isUpdateDeviceData(flags, key) &&
-        Boolean(BigInt(flags[key]) & effectiveFlagsBigInt),
+  const effectiveFlagsBigInt =
+    effectiveFlags === FLAG_UNCHANGED ? null : BigInt(effectiveFlags)
+  const entries =
+    effectiveFlagsBigInt === null ? allEntries : (
+      allEntries.filter(
+        ([key]) =>
+          isUpdateDeviceData(flags, key) &&
+          Boolean(BigInt(flags[key]) & effectiveFlagsBigInt),
+      )
     )
-  }
   return typedFromEntries<Partial<ListDeviceData<T>>>(
     type === DeviceType.Ata ?
       entries.map(([key, value]) =>
