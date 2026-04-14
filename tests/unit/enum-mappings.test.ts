@@ -67,8 +67,8 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
       [FanSpeed.very_fast, true],
       [999, false],
       [-1, false],
-    ] as const)('isClassicFanSpeed(%i) → %s', (value, expected) => {
-      expect(isClassicFanSpeed(value)).toBe(expected)
+    ] as const)('isClassicFanSpeed(%i) → %s', (value, isValid) => {
+      expect(isClassicFanSpeed(value)).toBe(isValid)
     })
 
     it.each([
@@ -77,8 +77,8 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
       ['Five', true],
       ['Invalid', false],
       ['', false],
-    ] as const)('isHomeFanSpeed(%s) → %s', (value, expected) => {
-      expect(isHomeFanSpeed(value)).toBe(expected)
+    ] as const)('isHomeFanSpeed(%s) → %s', (value, isValid) => {
+      expect(isHomeFanSpeed(value)).toBe(isValid)
     })
   })
 
