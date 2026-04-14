@@ -155,7 +155,9 @@ const par = async ({
   challenge: string
   abortSignal?: AbortSignal
 }): Promise<string> => {
-  const { data } = await axios.post<{ request_uri: string }>(
+  const {
+    data: { request_uri: requestUri },
+  } = await axios.post<{ request_uri: string }>(
     `${AUTH_BASE_URL}${PAR_PATH}`,
     new URLSearchParams({
       client_id: CLIENT_ID,
@@ -174,7 +176,7 @@ const par = async ({
       ...(abortSignal === undefined ? {} : { signal: abortSignal }),
     },
   )
-  return data.request_uri
+  return requestUri
 }
 
 /**
@@ -314,7 +316,7 @@ const tokenRequest = async ({
   params: Record<string, string>
   abortSignal?: AbortSignal
 }): Promise<TokenResponse> => {
-  const { data } = await axios.post<TokenResponse>(
+  const { data: tokens } = await axios.post<TokenResponse>(
     `${AUTH_BASE_URL}${TOKEN_PATH}`,
     new URLSearchParams(params).toString(),
     {
@@ -325,7 +327,7 @@ const tokenRequest = async ({
       ...(abortSignal === undefined ? {} : { signal: abortSignal }),
     },
   )
-  return data
+  return tokens
 }
 
 /** Options for {@link submitCredentials}. */
