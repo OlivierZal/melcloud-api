@@ -1,6 +1,4 @@
-import { randomUUID } from 'node:crypto'
-
-import axios, { type AxiosResponse, HttpStatusCode } from 'axios'
+import type { AxiosResponse } from 'axios'
 
 import type {
   HomeAtaValues,
@@ -15,17 +13,7 @@ import type {
 import { HomeDeviceType } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import { HomeRegistry } from '../models/home-registry.ts'
-import {
-  APICallRequestData,
-  APICallResponseData,
-} from '../observability/index.ts'
-import {
-  DEFAULT_TRANSIENT_RETRY_OPTIONS,
-  isSessionExpired,
-  isTransientServerError,
-  RateLimitError,
-  withRetryBackoff,
-} from '../resilience/index.ts'
+import { isSessionExpired } from '../resilience/index.ts'
 import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './interfaces.ts'
 import { BaseAPI } from './base.ts'
 import {
@@ -251,7 +239,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
 
   public async setValues(id: string, values: HomeAtaValues): Promise<boolean> {
     try {
-      await this.#request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
+      await this.request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
       await this.list()
       return true
     } catch {
@@ -290,7 +278,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns The fetched home context.
    */
   async #fetchContext(): Promise<HomeContext> {
-    const { data } = await this.#request<HomeContext>('get', CONTEXT_PATH)
+    const { data } = await this.request<HomeContext>('get', CONTEXT_PATH)
     this.#syncContext(data)
     return data
   }
@@ -332,50 +320,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /*  Private — API request pipeline                                  */
   /* ---------------------------------------------------------------- */
 
-  /**
-   * Send a request through the API axios instance, injecting the
-   * Bearer token. Symmetric logging mirrors the Classic API's
-   * interceptor pattern.
-   * @param method - HTTP method (GET, POST, etc.).
-   * @param url - Request URL path.
-   * @param root0 - Request configuration.
-   * @param root0.headers - Optional extra headers.
-   * @returns The Axios response.
-   */
-  async #dispatch<T = unknown>(
-    method: string,
-    url: string,
-    {
-      headers: configHeaders,
-      ...config
-    }: {
-      [key: string]: unknown
-      headers?: Record<string, string>
-    },
-  ): Promise<AxiosResponse<T>> {
-    const requestConfig = {
-      ...config,
-      headers: {
-        ...configHeaders,
-        ...(this.accessToken === '' ?
-          {}
-        : { Authorization: `Bearer ${this.accessToken}` }),
-      },
-      method,
-      ...(this.abortSignal === undefined ? {} : { signal: this.abortSignal }),
-      url,
-    }
-    this.logger.log(String(new APICallRequestData(requestConfig)))
-    const response = await this.api.request<T>(requestConfig)
-    this.logger.log(String(new APICallResponseData(response)))
-    return response
-  }
-
-  /**
-   * Proactive session check: refresh the access token if expired,
-   * falling back to a full re-authentication when refresh fails.
-   */
-  async #ensureSession(): Promise<void> {
+  protected async ensureSession(): Promise<void> {
     if (!isSessionExpired(this.expiry)) {
       return
     }
@@ -385,116 +330,25 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     await this.authenticate()
   }
 
-  #makeRequestAttempt<T>(
-    method: string,
-    url: string,
-    config: { [key: string]: unknown; headers?: Record<string, string> },
-  ): () => Promise<AxiosResponse<T>> {
-    return async () => {
-      try {
-        return await this.#dispatch<T>(method, url, config)
-      } catch (error) {
-        this.logError(error)
-        this.#recordRateLimitIfApplicable(error)
-        if (this.#shouldRetryAuth(error)) {
-          const retried = await this.#retryWithReauth<T>(method, url, config)
-          if (retried !== null) {
-            return retried
-          }
-        }
-        throw error
-      }
-    }
+  protected getAuthHeaders(): Record<string, string> {
+    return this.accessToken === '' ?
+        {}
+      : { Authorization: `Bearer ${this.accessToken}` }
   }
 
-  #recordRateLimitIfApplicable(error: unknown): void {
-    if (!axios.isAxiosError(error)) {
-      return
-    }
-    if (error.response?.status !== HttpStatusCode.TooManyRequests) {
-      return
-    }
-    this.rateLimitGate.recordAndLog(
-      this.logger,
-      (error.response.headers as Record<string, unknown>)['retry-after'],
-    )
-  }
-
-  async #request<T = unknown>(
+  protected async retryAuth(
     method: string,
     url: string,
-    config: {
-      [key: string]: unknown
-      headers?: Record<string, string>
-    } = {},
-  ): Promise<AxiosResponse<T>> {
-    await this.#ensureSession()
-    this.#throwIfRateLimited()
-    const context = {
-      correlationId: randomUUID(),
-      method: method.toUpperCase(),
-      url,
-    }
-    const attempt = this.#makeRequestAttempt<T>(method, url, config)
-    const runner =
-      method.toUpperCase() === 'GET' ?
-        async (): Promise<AxiosResponse<T>> =>
-          withRetryBackoff(attempt, {
-            ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
-            isRetryable: isTransientServerError,
-            onRetry: (retryAttempt, error, delayMs) => {
-              this.logger.log(
-                `Transient server error on ${url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,
-              )
-              this.events.emitRetry({
-                ...context,
-                attempt: retryAttempt,
-                delayMs,
-                error,
-              })
-            },
-          })
-      : attempt
-    return this.#runWithEvents(context, runner)
-  }
-
-  async #retryWithReauth<T>(
-    method: string,
-    url: string,
-    config: { [key: string]: unknown; headers?: Record<string, string> },
-  ): Promise<AxiosResponse<T> | null> {
+    config: Record<string, unknown>,
+  ): Promise<AxiosResponse | null> {
     if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
-      return this.#dispatch<T>(method, url, config)
+      return this.dispatch(method, url, config)
     }
     this.#clearPersistedSession()
     if (await this.authenticate()) {
-      return this.#dispatch<T>(method, url, config)
+      return this.dispatch(method, url, config)
     }
     return null
-  }
-
-  async #runWithEvents<T>(
-    context: { correlationId: string; method: string; url: string },
-    runner: () => Promise<AxiosResponse<T>>,
-  ): Promise<AxiosResponse<T>> {
-    const startedAt = Date.now()
-    this.events.emitStart(context)
-    try {
-      const response = await runner()
-      this.events.emitComplete({
-        ...context,
-        durationMs: Date.now() - startedAt,
-        status: response.status,
-      })
-      return response
-    } catch (error) {
-      this.events.emitError({
-        ...context,
-        durationMs: Date.now() - startedAt,
-        error,
-      })
-      throw error
-    }
   }
 
   async #safeRequest<T>(
@@ -502,30 +356,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     config?: Record<string, unknown>,
   ): Promise<T | null> {
     try {
-      const { data } = await this.#request<T>('get', url, config)
+      const { data } = await this.request<T>('get', url, config)
       return data
     } catch {
       return null
     }
-  }
-
-  #shouldRetryAuth(error: unknown): boolean {
-    if (!axios.isAxiosError(error)) {
-      return false
-    }
-    if (error.response?.status !== HttpStatusCode.Unauthorized) {
-      return false
-    }
-    return this.retryGuard.tryConsume()
-  }
-
-  #throwIfRateLimited(): void {
-    if (!this.rateLimitGate.isPaused) {
-      return
-    }
-    throw new RateLimitError(
-      `API requests are on hold for ${this.rateLimitGate.formatRemaining()} (upstream rate-limited)`,
-      { retryAfter: this.rateLimitGate.remaining },
-    )
   }
 }

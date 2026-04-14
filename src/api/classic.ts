@@ -1,12 +1,7 @@
-import { randomUUID } from 'node:crypto'
 import https from 'node:https'
 
 import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
-import axios, {
-  type AxiosInstance,
-  type AxiosResponse,
-  HttpStatusCode,
-} from 'axios'
+import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 
 import type {
   AreaDataAny,
@@ -44,18 +39,7 @@ import type {
 import { DeviceType, Language } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../models/index.ts'
-import {
-  APICallRequestData,
-  APICallResponseData,
-} from '../observability/index.ts'
-import {
-  DEFAULT_TRANSIENT_RETRY_OPTIONS,
-  isSessionExpired,
-  isTransientServerError,
-  RateLimitError,
-  toDeviceId,
-  withRetryBackoff,
-} from '../resilience/index.ts'
+import { isSessionExpired, toDeviceId } from '../resilience/index.ts'
 import type {
   ClassicAPIAdapter,
   ClassicAPIConfig,
@@ -293,7 +277,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: EnergyPostData
   }): Promise<{ data: EnergyData<T> }> {
-    return this.#request('post', '/EnergyCost/Report', { data: postData })
+    return this.request('post', '/EnergyCost/Report', { data: postData })
   }
 
   public async getErrorEntries({
@@ -301,7 +285,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ErrorLogPostData
   }): Promise<{ data: ErrorLogData[] | FailureData }> {
-    return this.#request('post', '/Report/GetUnitErrorLog2', { data: postData })
+    return this.request('post', '/Report/GetUnitErrorLog2', { data: postData })
   }
 
   public async getFrostProtection({
@@ -309,7 +293,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     params: SettingsParams
   }): Promise<{ data: FrostProtectionData }> {
-    return this.#request('get', '/FrostProtection/GetSettings', { params })
+    return this.request('get', '/FrostProtection/GetSettings', { params })
   }
 
   public isAuthenticated(): boolean {
@@ -361,7 +345,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: GetGroupPostData
   }): Promise<{ data: GetGroupData }> {
-    return this.#request('post', '/Group/Get', { data: postData })
+    return this.request('post', '/Group/Get', { data: postData })
   }
 
   public async getHolidayMode({
@@ -369,7 +353,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     params: SettingsParams
   }): Promise<{ data: HolidayModeData }> {
-    return this.#request('get', '/HolidayMode/GetSettings', { params })
+    return this.request('get', '/HolidayMode/GetSettings', { params })
   }
 
   public async getHourlyTemperatures({
@@ -377,7 +361,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: { device: number; hour: HourNumbers }
   }): Promise<{ data: ReportData }> {
-    return this.#request('post', '/Report/GetHourlyTemperature', {
+    return this.request('post', '/Report/GetHourlyTemperature', {
       data: postData,
     })
   }
@@ -387,7 +371,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ReportPostData
   }): Promise<{ data: ReportData }> {
-    return this.#request('post', '/Report/GetInternalTemperatures2', {
+    return this.request('post', '/Report/GetInternalTemperatures2', {
       data: postData,
     })
   }
@@ -397,7 +381,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ReportPostData
   }): Promise<{ data: OperationModeLogData }> {
-    return this.#request('post', '/Report/GetOperationModeLog2', {
+    return this.request('post', '/Report/GetOperationModeLog2', {
       data: postData,
     })
   }
@@ -407,7 +391,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: { devices: number | number[]; hour: HourNumbers }
   }): Promise<{ data: ReportData }> {
-    return this.#request('post', '/Report/GetSignalStrength', {
+    return this.request('post', '/Report/GetSignalStrength', {
       data: postData,
     })
   }
@@ -417,7 +401,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: TemperatureLogPostData
   }): Promise<{ data: ReportData }> {
-    return this.#request('post', '/Report/GetTemperatureLog2', {
+    return this.request('post', '/Report/GetTemperatureLog2', {
       data: postData,
     })
   }
@@ -437,7 +421,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: TilesPostData<T>
   }): Promise<{ data: TilesData<T> }> {
-    return this.#request('post', '/Tile/Get2', { data: postData })
+    return this.request('post', '/Tile/Get2', { data: postData })
   }
 
   public async getValues<T extends DeviceType>({
@@ -445,11 +429,11 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     params: GetDeviceDataParams
   }): Promise<{ data: GetDeviceData<T> }> {
-    return this.#request('get', '/Device/Get', { params })
+    return this.request('get', '/Device/Get', { params })
   }
 
   public async list(): Promise<{ data: BuildingWithStructure[] }> {
-    return this.#request('get', LIST_PATH)
+    return this.request('get', LIST_PATH)
   }
 
   public async login({
@@ -457,7 +441,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: LoginPostData
   }): Promise<{ data: LoginData }> {
-    return this.#dispatch('post', LOGIN_PATH, { data: postData })
+    return this.dispatch('post', LOGIN_PATH, { data: postData })
   }
 
   public async setFrostProtection({
@@ -465,7 +449,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: FrostProtectionPostData
   }): Promise<{ data: FailureData | SuccessData }> {
-    return this.#request('post', '/FrostProtection/Update', { data: postData })
+    return this.request('post', '/FrostProtection/Update', { data: postData })
   }
 
   public async setGroup({
@@ -473,7 +457,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: SetGroupPostData
   }): Promise<{ data: FailureData | SuccessData }> {
-    return this.#request('post', '/Group/SetAta', { data: postData })
+    return this.request('post', '/Group/SetAta', { data: postData })
   }
 
   public async setHolidayMode({
@@ -481,7 +465,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: HolidayModePostData
   }): Promise<{ data: FailureData | SuccessData }> {
-    return this.#request('post', '/HolidayMode/Update', { data: postData })
+    return this.request('post', '/HolidayMode/Update', { data: postData })
   }
 
   /**
@@ -490,7 +474,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    */
   public async setLanguage(language: string): Promise<void> {
     if (language !== this.language) {
-      const { data: hasLanguageChanged } = await this.#request<boolean>(
+      const { data: hasLanguageChanged } = await this.request<boolean>(
         'post',
         '/User/UpdateLanguage',
         { data: { language: this.#getLanguageCode(language) } },
@@ -506,7 +490,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: SetPowerPostData
   }): Promise<{ data: boolean }> {
-    return this.#request('post', '/Device/Power', { data: postData })
+    return this.request('post', '/Device/Power', { data: postData })
   }
 
   public async setValues<T extends DeviceType>({
@@ -516,12 +500,38 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData: SetDevicePostData<T>
     type: T
   }): Promise<{ data: SetDeviceData<T> }> {
-    return this.#request('post', `/Device/Set${deviceTypeNames[type]}`, {
+    return this.request('post', `/Device/Set${deviceTypeNames[type]}`, {
       data: postData,
     })
   }
 
   // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
+  protected async ensureSession(): Promise<void> {
+    /*
+     * Re-authenticate proactively if the context key is missing or the
+     * session token is expired/invalid. A malformed `expiry` (e.g. from
+     * a settings migration) is treated as expired, not silently ignored.
+     */
+    if (this.contextKey === '' || isSessionExpired(this.expiry)) {
+      await this.authenticate()
+    }
+  }
+
+  protected getAuthHeaders(): Record<string, string> {
+    return this.contextKey === '' ? {} : { 'X-MitsContextKey': this.contextKey }
+  }
+
+  protected async retryAuth(
+    method: string,
+    url: string,
+    config: Record<string, unknown>,
+  ): Promise<AxiosResponse | null> {
+    if (await this.authenticate()) {
+      return this.dispatch(method, url, config)
+    }
+    return null
+  }
+
   #applyOptionalConfig({
     language,
     password,
@@ -545,39 +555,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   #clearPersistedSession(): void {
     this.contextKey = ''
     this.expiry = ''
-  }
-
-  async #dispatch<T = unknown>(
-    method: string,
-    url: string,
-    config: Record<string, unknown> = {},
-  ): Promise<AxiosResponse<T>> {
-    const requestConfig = {
-      ...config,
-      headers: {
-        ...(this.contextKey === '' ?
-          {}
-        : { 'X-MitsContextKey': this.contextKey }),
-      },
-      method,
-      ...(this.abortSignal === undefined ? {} : { signal: this.abortSignal }),
-      url,
-    }
-    this.logger.log(String(new APICallRequestData(requestConfig)))
-    const response = await this.api.request<T>(requestConfig)
-    this.logger.log(String(new APICallResponseData(response)))
-    return response
-  }
-
-  async #ensureSession(): Promise<void> {
-    /*
-     * Re-authenticate proactively if the context key is missing or the
-     * session token is expired/invalid. A malformed `expiry` (e.g. from
-     * a settings migration) is treated as expired, not silently ignored.
-     */
-    if (this.contextKey === '' || isSessionExpired(this.expiry)) {
-      await this.authenticate()
-    }
   }
 
   async #errorLog(
@@ -611,117 +588,5 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   #getLanguageCode(language: string = this.language): Language {
     return isLanguage(language) ? Language[language] : Language.en
-  }
-
-  #makeRequestAttempt<T>(
-    method: string,
-    url: string,
-    config: Record<string, unknown>,
-  ): () => Promise<AxiosResponse<T>> {
-    return async () => {
-      try {
-        return await this.#dispatch<T>(method, url, config)
-      } catch (error) {
-        this.logError(error)
-        this.#recordRateLimitIfApplicable(error)
-        if (this.#shouldRetryAuth(error) && (await this.authenticate())) {
-          return this.#dispatch<T>(method, url, config)
-        }
-        throw error
-      }
-    }
-  }
-
-  #recordRateLimitIfApplicable(error: unknown): void {
-    if (!axios.isAxiosError(error)) {
-      return
-    }
-    if (error.response?.status !== HttpStatusCode.TooManyRequests) {
-      return
-    }
-    this.rateLimitGate.recordAndLog(
-      this.logger,
-      error.response.headers['retry-after'],
-      'list operations',
-    )
-  }
-
-  async #request<T = unknown>(
-    method: string,
-    url: string,
-    config: Record<string, unknown> = {},
-  ): Promise<AxiosResponse<T>> {
-    await this.#ensureSession()
-    this.#throwIfRateLimited()
-    const context = {
-      correlationId: randomUUID(),
-      method: method.toUpperCase(),
-      url,
-    }
-    const attempt = this.#makeRequestAttempt<T>(method, url, config)
-    const runner =
-      method.toUpperCase() === 'GET' ?
-        async (): Promise<AxiosResponse<T>> =>
-          withRetryBackoff(attempt, {
-            ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
-            isRetryable: isTransientServerError,
-            onRetry: (retryAttempt, error, delayMs) => {
-              this.logger.log(
-                `Transient server error on ${url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,
-              )
-              this.events.emitRetry({
-                ...context,
-                attempt: retryAttempt,
-                delayMs,
-                error,
-              })
-            },
-          })
-      : attempt
-    return this.#runWithEvents(context, runner)
-  }
-
-  async #runWithEvents<T>(
-    context: { correlationId: string; method: string; url: string },
-    runner: () => Promise<AxiosResponse<T>>,
-  ): Promise<AxiosResponse<T>> {
-    const startedAt = Date.now()
-    this.events.emitStart(context)
-    try {
-      const response = await runner()
-      this.events.emitComplete({
-        ...context,
-        durationMs: Date.now() - startedAt,
-        status: response.status,
-      })
-      return response
-    } catch (error) {
-      this.events.emitError({
-        ...context,
-        durationMs: Date.now() - startedAt,
-        error,
-      })
-      throw error
-    }
-  }
-
-  #shouldRetryAuth(error: unknown): boolean {
-    if (!axios.isAxiosError(error)) {
-      return false
-    }
-    if (error.response?.status !== HttpStatusCode.Unauthorized) {
-      return false
-    }
-    return this.retryGuard.tryConsume()
-  }
-
-  #throwIfRateLimited(): void {
-    if (!this.rateLimitGate.isPaused) {
-      return
-    }
-    throw new RateLimitError(
-      `API requests to ${LIST_PATH} are on hold for ${this.rateLimitGate.formatRemaining()}`,
-      { retryAfter: this.rateLimitGate.remaining },
-    )
   }
 }
