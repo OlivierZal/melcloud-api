@@ -1,8 +1,4 @@
-import axios, { type AxiosError } from 'axios'
-
-const HTTP_BAD_GATEWAY = 502
-const HTTP_SERVICE_UNAVAILABLE = 503
-const HTTP_GATEWAY_TIMEOUT = 504
+import axios, { type AxiosError, HttpStatusCode } from 'axios'
 
 /*
  * HTTP 5xx status codes considered transient (server-side glitches that
@@ -11,9 +7,9 @@ const HTTP_GATEWAY_TIMEOUT = 504
  * server, not a recoverable condition.
  */
 const TRANSIENT_STATUSES: ReadonlySet<number> = new Set([
-  HTTP_BAD_GATEWAY,
-  HTTP_GATEWAY_TIMEOUT,
-  HTTP_SERVICE_UNAVAILABLE,
+  HttpStatusCode.BadGateway,
+  HttpStatusCode.GatewayTimeout,
+  HttpStatusCode.ServiceUnavailable,
 ])
 
 /*

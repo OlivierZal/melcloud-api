@@ -3,10 +3,8 @@ import https from 'node:https'
 
 import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
 import axios, {
-  type AxiosError,
   type AxiosInstance,
   type AxiosResponse,
-  type InternalAxiosRequestConfig,
   HttpStatusCode,
 } from 'axios'
 
@@ -49,7 +47,6 @@ import { ClassicRegistry } from '../models/index.ts'
 import {
   APICallRequestData,
   APICallResponseData,
-  createAPICallErrorData,
 } from '../observability/index.ts'
 import {
   DEFAULT_TRANSIENT_RETRY_OPTIONS,
@@ -82,22 +79,6 @@ const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL = 5
 const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_DELAY = 1000
-
-/*
- * Symbol used to stash per-request lifecycle metadata (correlation id,
- * start timestamp) on axios config objects without colliding with any
- * existing or future axios-internal fields.
- */
-const LIFECYCLE_KEY = Symbol('melcloud.requestLifecycle')
-
-interface LifecycleMeta {
-  readonly correlationId: string
-  readonly method: string
-  readonly startedAt: number
-  readonly url: string
-}
-
-type LifecycleTagged<T> = T & { [LIFECYCLE_KEY]?: LifecycleMeta }
 
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
@@ -239,7 +220,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       },
     )
     this.#applyOptionalConfig({ language, password, timezone, username })
-    this.#setupAxiosInterceptors(this.api)
   }
 
   static #createAxiosInstance(
@@ -313,7 +293,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: EnergyPostData
   }): Promise<{ data: EnergyData<T> }> {
-    return this.api.post('/EnergyCost/Report', postData)
+    return this.#request('post', '/EnergyCost/Report', { data: postData })
   }
 
   public async getErrorEntries({
@@ -321,7 +301,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ErrorLogPostData
   }): Promise<{ data: ErrorLogData[] | FailureData }> {
-    return this.api.post('/Report/GetUnitErrorLog2', postData)
+    return this.#request('post', '/Report/GetUnitErrorLog2', { data: postData })
   }
 
   public async getFrostProtection({
@@ -329,9 +309,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     params: SettingsParams
   }): Promise<{ data: FrostProtectionData }> {
-    return this.api.get('/FrostProtection/GetSettings', {
-      params,
-    })
+    return this.#request('get', '/FrostProtection/GetSettings', { params })
   }
 
   public isAuthenticated(): boolean {
@@ -383,7 +361,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: GetGroupPostData
   }): Promise<{ data: GetGroupData }> {
-    return this.api.post('/Group/Get', postData)
+    return this.#request('post', '/Group/Get', { data: postData })
   }
 
   public async getHolidayMode({
@@ -391,9 +369,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     params: SettingsParams
   }): Promise<{ data: HolidayModeData }> {
-    return this.api.get('/HolidayMode/GetSettings', {
-      params,
-    })
+    return this.#request('get', '/HolidayMode/GetSettings', { params })
   }
 
   public async getHourlyTemperatures({
@@ -401,7 +377,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: { device: number; hour: HourNumbers }
   }): Promise<{ data: ReportData }> {
-    return this.api.post('/Report/GetHourlyTemperature', postData)
+    return this.#request('post', '/Report/GetHourlyTemperature', {
+      data: postData,
+    })
   }
 
   public async getInternalTemperatures({
@@ -409,7 +387,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ReportPostData
   }): Promise<{ data: ReportData }> {
-    return this.api.post('/Report/GetInternalTemperatures2', postData)
+    return this.#request('post', '/Report/GetInternalTemperatures2', {
+      data: postData,
+    })
   }
 
   public async getOperationModes({
@@ -417,7 +397,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ReportPostData
   }): Promise<{ data: OperationModeLogData }> {
-    return this.api.post('/Report/GetOperationModeLog2', postData)
+    return this.#request('post', '/Report/GetOperationModeLog2', {
+      data: postData,
+    })
   }
 
   public async getSignal({
@@ -425,7 +407,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: { devices: number | number[]; hour: HourNumbers }
   }): Promise<{ data: ReportData }> {
-    return this.api.post('/Report/GetSignalStrength', postData)
+    return this.#request('post', '/Report/GetSignalStrength', {
+      data: postData,
+    })
   }
 
   public async getTemperatures({
@@ -433,7 +417,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: TemperatureLogPostData
   }): Promise<{ data: ReportData }> {
-    return this.api.post('/Report/GetTemperatureLog2', postData)
+    return this.#request('post', '/Report/GetTemperatureLog2', {
+      data: postData,
+    })
   }
 
   public async getTiles({
@@ -451,7 +437,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: TilesPostData<T>
   }): Promise<{ data: TilesData<T> }> {
-    return this.api.post('/Tile/Get2', postData)
+    return this.#request('post', '/Tile/Get2', { data: postData })
   }
 
   public async getValues<T extends DeviceType>({
@@ -459,11 +445,11 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     params: GetDeviceDataParams
   }): Promise<{ data: GetDeviceData<T> }> {
-    return this.api.get('/Device/Get', { params })
+    return this.#request('get', '/Device/Get', { params })
   }
 
   public async list(): Promise<{ data: BuildingWithStructure[] }> {
-    return this.api.get(LIST_PATH)
+    return this.#request('get', LIST_PATH)
   }
 
   public async login({
@@ -471,7 +457,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: LoginPostData
   }): Promise<{ data: LoginData }> {
-    return this.api.post(LOGIN_PATH, postData)
+    return this.#dispatch('post', LOGIN_PATH, { data: postData })
   }
 
   public async setFrostProtection({
@@ -479,7 +465,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: FrostProtectionPostData
   }): Promise<{ data: FailureData | SuccessData }> {
-    return this.api.post('/FrostProtection/Update', postData)
+    return this.#request('post', '/FrostProtection/Update', { data: postData })
   }
 
   public async setGroup({
@@ -487,7 +473,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: SetGroupPostData
   }): Promise<{ data: FailureData | SuccessData }> {
-    return this.api.post('/Group/SetAta', postData)
+    return this.#request('post', '/Group/SetAta', { data: postData })
   }
 
   public async setHolidayMode({
@@ -495,7 +481,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: HolidayModePostData
   }): Promise<{ data: FailureData | SuccessData }> {
-    return this.api.post('/HolidayMode/Update', postData)
+    return this.#request('post', '/HolidayMode/Update', { data: postData })
   }
 
   /**
@@ -504,9 +490,10 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    */
   public async setLanguage(language: string): Promise<void> {
     if (language !== this.language) {
-      const { data: hasLanguageChanged } = await this.api.post<boolean>(
+      const { data: hasLanguageChanged } = await this.#request<boolean>(
+        'post',
         '/User/UpdateLanguage',
-        { language: this.#getLanguageCode(language) },
+        { data: { language: this.#getLanguageCode(language) } },
       )
       if (hasLanguageChanged) {
         this.language = language
@@ -519,7 +506,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: SetPowerPostData
   }): Promise<{ data: boolean }> {
-    return this.api.post('/Device/Power', postData)
+    return this.#request('post', '/Device/Power', { data: postData })
   }
 
   public async setValues<T extends DeviceType>({
@@ -529,7 +516,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData: SetDevicePostData<T>
     type: T
   }): Promise<{ data: SetDeviceData<T> }> {
-    return this.api.post(`/Device/Set${deviceTypeNames[type]}`, postData)
+    return this.#request('post', `/Device/Set${deviceTypeNames[type]}`, {
+      data: postData,
+    })
   }
 
   // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
@@ -558,34 +547,37 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     this.expiry = ''
   }
 
-  #emitErrorEvent(
-    error: unknown,
-    config: InternalAxiosRequestConfig | undefined,
-  ): void {
+  async #dispatch<T = unknown>(
+    method: string,
+    url: string,
+    config: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<T>> {
+    const requestConfig = {
+      ...config,
+      headers: {
+        ...(this.contextKey === '' ?
+          {}
+        : { 'X-MitsContextKey': this.contextKey }),
+      },
+      method,
+      ...(this.abortSignal === undefined ? {} : { signal: this.abortSignal }),
+      url,
+    }
+    this.logger.log(String(new APICallRequestData(requestConfig)))
+    const response = await this.api.request<T>(requestConfig)
+    this.logger.log(String(new APICallResponseData(response)))
+    return response
+  }
+
+  async #ensureSession(): Promise<void> {
     /*
-     * A partial AxiosError may carry no config at all (network or TLS
-     * failure before the request was even dispatched), and an error
-     * thrown from the request interceptor itself reaches #onError
-     * before #tagLifecycleAndEmit has had a chance to stash the metadata.
-     * In both cases we skip the event rather than emit a partially
-     * populated one.
+     * Re-authenticate proactively if the context key is missing or the
+     * session token is expired/invalid. A malformed `expiry` (e.g. from
+     * a settings migration) is treated as expired, not silently ignored.
      */
-    if (config === undefined) {
-      return
+    if (this.contextKey === '' || isSessionExpired(this.expiry)) {
+      await this.authenticate()
     }
-    const { [LIFECYCLE_KEY]: meta } =
-      config as LifecycleTagged<InternalAxiosRequestConfig>
-    /* v8 ignore next 3 -- #tagLifecycleAndEmit always runs before #onError in the happy path */
-    if (meta === undefined) {
-      return
-    }
-    this.events.emitError({
-      correlationId: meta.correlationId,
-      durationMs: Date.now() - meta.startedAt,
-      error,
-      method: meta.method,
-      url: meta.url,
-    })
   }
 
   async #errorLog(
@@ -607,21 +599,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   async #fetch(): Promise<BuildingWithStructure[]> {
-    /*
-     * Wrap `list()` with an exponential-backoff retry on transient 5xx.
-     * This is the heartbeat endpoint that keeps the registry in sync —
-     * a momentary 503 from MELCloud's upstream should not cascade to an
-     * empty building list in the consumer app.
-     */
-    const { data } = await withRetryBackoff(async () => this.list(), {
-      ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
-      isRetryable: isTransientServerError,
-      onRetry: (attempt, _error, delayMs) => {
-        this.logger.log(
-          `Transient server error on ${LIST_PATH}: retry ${String(attempt)} in ${String(delayMs)} ms`,
-        )
-      },
-    })
+    const { data } = await this.list()
     this.#registry.syncBuildings(data)
     this.#registry.syncFloors(
       data.flatMap(({ Structure: { Floors: floors } }) => floors),
@@ -635,120 +613,115 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return isLanguage(language) ? Language[language] : Language.en
   }
 
-  async #onError(error: AxiosError): Promise<AxiosError> {
-    const errorData = createAPICallErrorData(error)
-    this.logger.error(String(errorData))
-
-    const { config, response: { headers, status } = {} } = error
-    if (status === HttpStatusCode.TooManyRequests) {
-      this.rateLimitGate.recordAndLog(
-        this.logger,
-        headers?.['retry-after'],
-        'list operations',
-      )
-    } else if (
-      status === HttpStatusCode.Unauthorized &&
-      this.retryGuard.tryConsume() &&
-      config &&
-      config.url !== LOGIN_PATH &&
-      (await this.authenticate())
-    ) {
-      return this.api.request(config)
-    }
-    this.#emitErrorEvent(error, config)
-    throw new Error(errorData.errorMessage, { cause: error })
-  }
-
-  async #onRequest(
-    config: InternalAxiosRequestConfig,
-  ): Promise<InternalAxiosRequestConfig> {
-    const newConfig = { ...config, signal: this.abortSignal ?? config.signal }
-    if (newConfig.url === LIST_PATH && this.rateLimitGate.isPaused) {
-      throw new RateLimitError(
-        `API requests to ${LIST_PATH} are on hold for ${this.rateLimitGate.formatRemaining()}`,
-        { retryAfter: this.rateLimitGate.remaining },
-      )
-    }
-    if (newConfig.url !== LOGIN_PATH) {
-      /*
-       * Re-authenticate proactively if the context key is missing or the
-       * session token is expired/invalid. A malformed `expiry` (e.g. from
-       * a settings migration) is treated as expired, not silently ignored.
-       */
-      if (this.contextKey === '' || isSessionExpired(this.expiry)) {
-        await this.authenticate()
+  #makeRequestAttempt<T>(
+    method: string,
+    url: string,
+    config: Record<string, unknown>,
+  ): () => Promise<AxiosResponse<T>> {
+    return async () => {
+      try {
+        return await this.#dispatch<T>(method, url, config)
+      } catch (error) {
+        this.logError(error)
+        this.#recordRateLimitIfApplicable(error)
+        if (this.#shouldRetryAuth(error) && (await this.authenticate())) {
+          return this.#dispatch<T>(method, url, config)
+        }
+        throw error
       }
-      newConfig.headers.set('X-MitsContextKey', this.contextKey)
     }
-    this.#tagLifecycleAndEmit(newConfig)
-    this.logger.log(String(new APICallRequestData(newConfig)))
-    return newConfig
   }
 
-  #onResponse(response: AxiosResponse): AxiosResponse {
-    this.logger.log(String(new APICallResponseData(response)))
-    const { [LIFECYCLE_KEY]: meta } =
-      response.config as LifecycleTagged<InternalAxiosRequestConfig>
-    if (meta !== undefined) {
+  #recordRateLimitIfApplicable(error: unknown): void {
+    if (!axios.isAxiosError(error)) {
+      return
+    }
+    if (error.response?.status !== HttpStatusCode.TooManyRequests) {
+      return
+    }
+    this.rateLimitGate.recordAndLog(
+      this.logger,
+      error.response.headers['retry-after'],
+      'list operations',
+    )
+  }
+
+  async #request<T = unknown>(
+    method: string,
+    url: string,
+    config: Record<string, unknown> = {},
+  ): Promise<AxiosResponse<T>> {
+    await this.#ensureSession()
+    this.#throwIfRateLimited()
+    const context = {
+      correlationId: randomUUID(),
+      method: method.toUpperCase(),
+      url,
+    }
+    const attempt = this.#makeRequestAttempt<T>(method, url, config)
+    const runner =
+      method.toUpperCase() === 'GET' ?
+        async (): Promise<AxiosResponse<T>> =>
+          withRetryBackoff(attempt, {
+            ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
+            isRetryable: isTransientServerError,
+            onRetry: (retryAttempt, error, delayMs) => {
+              this.logger.log(
+                `Transient server error on ${url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,
+              )
+              this.events.emitRetry({
+                ...context,
+                attempt: retryAttempt,
+                delayMs,
+                error,
+              })
+            },
+          })
+      : attempt
+    return this.#runWithEvents(context, runner)
+  }
+
+  async #runWithEvents<T>(
+    context: { correlationId: string; method: string; url: string },
+    runner: () => Promise<AxiosResponse<T>>,
+  ): Promise<AxiosResponse<T>> {
+    const startedAt = Date.now()
+    this.events.emitStart(context)
+    try {
+      const response = await runner()
       this.events.emitComplete({
-        correlationId: meta.correlationId,
-        durationMs: Date.now() - meta.startedAt,
-        method: meta.method,
+        ...context,
+        durationMs: Date.now() - startedAt,
         status: response.status,
-        url: meta.url,
       })
-    }
-    return response
-  }
-
-  #setupAxiosInterceptors(api: AxiosInstance): void {
-    /*
-     * `#onRequest` can synchronously throw typed domain errors
-     * (e.g. `RateLimitError` when the gate is closed). Axios routes those
-     * through the response error handler — if we delegated blindly to
-     * `#onError` it would wrap them into a generic `Error`, defeating
-     * `instanceof RateLimitError`. Narrow to real axios errors first,
-     * rethrow everything else unchanged.
-     */
-    const rethrowOrHandle = async (error: unknown): Promise<AxiosError> => {
-      if (axios.isAxiosError(error)) {
-        return this.#onError(error)
-      }
+      return response
+    } catch (error) {
+      this.events.emitError({
+        ...context,
+        durationMs: Date.now() - startedAt,
+        error,
+      })
       throw error
     }
-    api.interceptors.request.use(
-      async (
-        config: InternalAxiosRequestConfig,
-      ): Promise<InternalAxiosRequestConfig> => this.#onRequest(config),
-      rethrowOrHandle,
-    )
-    api.interceptors.response.use(
-      (response: AxiosResponse): AxiosResponse => this.#onResponse(response),
-      rethrowOrHandle,
-    )
   }
 
-  #tagLifecycleAndEmit(config: InternalAxiosRequestConfig): void {
-    /*
-     * Extract method/url once here with the only defensive fallbacks
-     * needed in the whole lifecycle path. Downstream consumers
-     * (#onResponse, #emitErrorEvent) read from `meta.method/url`
-     * directly — single source of truth, no more scattered `??` branches.
-     */
-    const meta: LifecycleMeta = {
-      correlationId: randomUUID(),
-      /* v8 ignore next -- axios always populates method */
-      method: (config.method ?? 'get').toUpperCase(),
-      startedAt: Date.now(),
-      /* v8 ignore next -- axios always populates url */
-      url: config.url ?? '',
+  #shouldRetryAuth(error: unknown): boolean {
+    if (!axios.isAxiosError(error)) {
+      return false
     }
-    const tagged = config as LifecycleTagged<InternalAxiosRequestConfig>
-    tagged[LIFECYCLE_KEY] = meta
-    this.events.emitStart({
-      correlationId: meta.correlationId,
-      method: meta.method,
-      url: meta.url,
-    })
+    if (error.response?.status !== HttpStatusCode.Unauthorized) {
+      return false
+    }
+    return this.retryGuard.tryConsume()
+  }
+
+  #throwIfRateLimited(): void {
+    if (!this.rateLimitGate.isPaused) {
+      return
+    }
+    throw new RateLimitError(
+      `API requests to ${LIST_PATH} are on hold for ${this.rateLimitGate.formatRemaining()}`,
+      { retryAfter: this.rateLimitGate.remaining },
+    )
   }
 }

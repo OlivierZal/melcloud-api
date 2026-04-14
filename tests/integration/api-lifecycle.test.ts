@@ -65,13 +65,8 @@ const buildingResponse: BuildingWithStructure[] = [
   }),
 ]
 
-const mockInterceptors = {
-  request: { use: vi.fn() },
-  response: { use: vi.fn() },
-}
 const mockAxiosInstance = {
   get: vi.fn(),
-  interceptors: mockInterceptors,
   post: vi.fn(),
   request: vi.fn(),
 }
@@ -93,8 +88,7 @@ describe('api lifecycle', () => {
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
-    mockAxiosInstance.get.mockResolvedValue({ data: buildingResponse })
-    mockAxiosInstance.post.mockResolvedValue({ data: [] })
+    mockAxiosInstance.request.mockResolvedValue({ data: buildingResponse })
     ;({ ClassicAPI: melCloudApi } = await import('../../src/api/classic.ts'))
   })
 
@@ -168,19 +162,27 @@ describe('api lifecycle', () => {
   })
 
   it('authenticate → fetch → registry reflects updated data', async () => {
-    mockAxiosInstance.get.mockResolvedValue({ data: [] })
+    mockAxiosInstance.request.mockResolvedValue({ data: [] })
     const api = await melCloudApi.create({ autoSyncInterval: 0 })
 
     expect(api.registry.getDevices()).toHaveLength(0)
 
-    // Simulate authentication returning login data
-    mockAxiosInstance.post.mockResolvedValue({
-      data: {
-        LoginData: { ContextKey: 'ctx-123', Expiry: '2099-12-31T00:00:00' },
+    // Simulate authentication returning login data, then fetch returns buildings
+    mockAxiosInstance.request.mockImplementation(
+      (config: { url?: string } = {}) => {
+        if (config.url === '/Login/ClientLogin3') {
+          return {
+            data: {
+              LoginData: {
+                ContextKey: 'ctx-123',
+                Expiry: '2099-12-31T00:00:00',
+              },
+            },
+          }
+        }
+        return { data: buildingResponse }
       },
-    })
-    // After auth, fetch returns buildings
-    mockAxiosInstance.get.mockResolvedValue({ data: buildingResponse })
+    )
 
     await api.authenticate({ password: 'pass', username: 'user@test.com' })
 
@@ -198,12 +200,21 @@ describe('api lifecycle', () => {
       }),
     }
 
-    mockAxiosInstance.post.mockResolvedValue({
-      data: {
-        LoginData: { ContextKey: 'ctx-abc', Expiry: '2099-12-31T00:00:00' },
+    mockAxiosInstance.request.mockImplementation(
+      (config: { url?: string } = {}) => {
+        if (config.url === '/Login/ClientLogin3') {
+          return {
+            data: {
+              LoginData: {
+                ContextKey: 'ctx-abc',
+                Expiry: '2099-12-31T00:00:00',
+              },
+            },
+          }
+        }
+        return { data: buildingResponse }
       },
-    })
-    mockAxiosInstance.get.mockResolvedValue({ data: buildingResponse })
+    )
 
     const api = await melCloudApi.create({
       autoSyncInterval: 0,
@@ -228,7 +239,7 @@ describe('api lifecycle', () => {
     expect(api.registry.getDevices()).toHaveLength(1)
 
     // Next fetch returns empty buildings
-    mockAxiosInstance.get.mockResolvedValue({ data: [] })
+    mockAxiosInstance.request.mockResolvedValue({ data: [] })
     await api.fetch()
 
     expect(api.registry.getDevices()).toHaveLength(0)
@@ -245,17 +256,13 @@ describe('api lifecycle', () => {
   /*
    * End-to-end resilience: exercises the `withRetryBackoff` wrapper
    * around `list()` (the classic heartbeat) to confirm a transient
-   * 5xx is recovered without the consumer seeing it. Gate-closure
-   * and reactive 401 re-auth interactions are covered by unit tests
-   * that can drive the interceptor chain directly; the mocked axios
-   * instance here bypasses interceptors, so only scenarios that
-   * retry at the `list()` level can be asserted end-to-end.
+   * 5xx is recovered without the consumer seeing it.
    */
   describe('resilience end-to-end', () => {
     it('recovers from a transient 503 on fetch via exponential backoff', async () => {
       const api = await melCloudApi.create({ autoSyncInterval: 0 })
-      mockAxiosInstance.get.mockClear()
-      mockAxiosInstance.get
+      mockAxiosInstance.request.mockClear()
+      mockAxiosInstance.request
         .mockRejectedValueOnce(transientError(503))
         .mockResolvedValueOnce({ data: buildingResponse })
 
@@ -264,14 +271,14 @@ describe('api lifecycle', () => {
       const buildings = await fetchPromise
 
       expect(buildings).toHaveLength(1)
-      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(2)
+      expect(mockAxiosInstance.request).toHaveBeenCalledTimes(2)
       expect(api.registry.getDevices()).toHaveLength(1)
     })
 
     it('gives up after exhausting the 5xx retry budget and returns empty data', async () => {
       const api = await melCloudApi.create({ autoSyncInterval: 0 })
-      mockAxiosInstance.get.mockClear()
-      mockAxiosInstance.get
+      mockAxiosInstance.request.mockClear()
+      mockAxiosInstance.request
         .mockRejectedValueOnce(transientError(502))
         .mockRejectedValueOnce(transientError(503))
         .mockRejectedValueOnce(transientError(504))
@@ -289,7 +296,7 @@ describe('api lifecycle', () => {
        */
       expect(buildings).toStrictEqual([])
       // 1 initial attempt + 4 retries = 5 total.
-      expect(mockAxiosInstance.get).toHaveBeenCalledTimes(5)
+      expect(mockAxiosInstance.request).toHaveBeenCalledTimes(5)
     })
   })
 })
