@@ -396,12 +396,12 @@ const extractAuthorizationCode = async (
   jar: CookieJar,
   abortSignal?: AbortSignal,
 ): Promise<string> => {
-  const { url: finalUrl } = await authFollowRedirects({
+  const { url } = await authFollowRedirects({
     jar,
     url: callbackUrl,
     ...(abortSignal === undefined ? {} : { abortSignal }),
   })
-  const code = new URL(finalUrl).searchParams.get('code')
+  const code = new URL(url).searchParams.get('code')
   if (code === null) {
     throw new Error('No authorization code in callback')
   }
