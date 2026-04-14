@@ -148,7 +148,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   @syncDevices()
   @updateDevice
-  public async setValues(
+  public async updateValues(
     data: Partial<UpdateDeviceData<T>>,
   ): Promise<SetDeviceData<T>> {
     const { api, id, setData: currentSetData, type } = this
@@ -166,7 +166,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
     if (!flags) {
       throw new Error(`No data to set for device ${String(id)}`)
     }
-    const { data: finalData } = await api.setValues({
+    const { data: finalData } = await api.updateValues({
       postData: {
         ...this.prepareUpdateData(newData),
         DeviceID: id,

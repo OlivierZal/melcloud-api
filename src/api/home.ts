@@ -237,7 +237,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     }
   }
 
-  public async setValues(id: string, values: HomeAtaValues): Promise<boolean> {
+  public async updateValues(
+    id: string,
+    values: HomeAtaValues,
+  ): Promise<boolean> {
     try {
       await this.request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
       await this.list()

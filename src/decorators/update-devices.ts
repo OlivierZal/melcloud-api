@@ -49,7 +49,7 @@ export const updateDevices =
        * filter out null/undefined values to avoid clearing fields unintentionally.
        */
       const newData =
-        String(context.name) === 'setPower' ?
+        String(context.name) === 'updatePower' ?
           { Power: arg }
         : Object.fromEntries(
             Object.entries(arg ?? data).filter(

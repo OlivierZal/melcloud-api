@@ -389,14 +389,14 @@ describe('melcloud home API', () => {
       expect(onSync).toHaveBeenCalledTimes(1)
     })
 
-    it('should call onSync after setValues() via list()', async () => {
+    it('should call onSync after updateValues() via list()', async () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      await api.setValues('device-1', { power: true })
+      await api.updateValues('device-1', { power: true })
 
       expect(onSync).toHaveBeenCalledTimes(1)
     })
@@ -413,13 +413,13 @@ describe('melcloud home API', () => {
   })
 
   describe('device control', () => {
-    it('should return true and refresh via list() on successful setValues', async () => {
+    it('should return true and refresh via list() on successful updateValues', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const isSuccess = await api.setValues('device-1', {
+      const isSuccess = await api.updateValues('device-1', {
         operationMode: 'Heat',
         power: true,
       })
@@ -434,11 +434,11 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return false on setValues failure', async () => {
+    it('should return false on updateValues failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const isSuccess = await api.setValues('device-1', { power: false })
+      const isSuccess = await api.updateValues('device-1', { power: false })
 
       expect(isSuccess).toBe(false)
     })

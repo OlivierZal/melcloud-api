@@ -248,13 +248,13 @@ describe('registry + facade manager integration', () => {
     expect(facade2.name).toBe('Guest house')
   })
 
-  it('building facade delegates setPower to ClassicAPI with correct device IDs', async () => {
+  it('building facade delegates updatePower to ClassicAPI with correct device IDs', async () => {
     const { api, manager, registry } = createContext()
 
     const facade = manager.get(defined(registry.buildings.getById(1)))
-    await facade.setPower(false)
+    await facade.updatePower(false)
 
-    expect(api.setPower).toHaveBeenCalledWith({
+    expect(api.updatePower).toHaveBeenCalledWith({
       postData: {
         DeviceIds: [1001, 1002, 1003],
         Power: false,

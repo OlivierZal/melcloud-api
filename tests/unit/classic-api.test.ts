@@ -290,7 +290,7 @@ describe('mELCloud Classic API', () => {
             MinimumTemperature: 4,
           },
         },
-        method: 'setFrostProtection' as const,
+        method: 'updateFrostProtection' as const,
         path: '/FrostProtection/Update',
       },
       {
@@ -300,7 +300,7 @@ describe('mELCloud Classic API', () => {
             State: { Power: true },
           },
         },
-        method: 'setGroup' as const,
+        method: 'updateGroupState' as const,
         path: '/Group/SetAta',
       },
       {
@@ -312,12 +312,12 @@ describe('mELCloud Classic API', () => {
             StartDate: null,
           },
         },
-        method: 'setHolidayMode' as const,
+        method: 'updateHolidayMode' as const,
         path: '/HolidayMode/Update',
       },
       {
         args: { postData: { DeviceIds: [1], Power: true } },
-        method: 'setPower' as const,
+        method: 'updatePower' as const,
         path: '/Device/Power',
       },
     ])('calls $method via POST', async ({ args, method, path }) => {
@@ -373,22 +373,25 @@ describe('mELCloud Classic API', () => {
       { path: '/Device/SetAta', type: 0 as const },
       { path: '/Device/SetAtw', type: 1 as const },
       { path: '/Device/SetErv', type: 3 as const },
-    ])('calls setValues for type $type via $path', async ({ path, type }) => {
-      mockLoginAndList()
-      const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({ data: {} })
-      await api.setValues({
-        postData: mock<SetDevicePostData<typeof DeviceType.Ata>>({
-          DeviceID: toDeviceId(1),
-          EffectiveFlags: 1,
-        }),
-        type,
-      })
+    ])(
+      'calls updateValues for type $type via $path',
+      async ({ path, type }) => {
+        mockLoginAndList()
+        const api = await createApi({ password: 'pass', username: 'user' })
+        mockAxiosInstance.request.mockResolvedValue({ data: {} })
+        await api.updateValues({
+          postData: mock<SetDevicePostData<typeof DeviceType.Ata>>({
+            DeviceID: toDeviceId(1),
+            EffectiveFlags: 1,
+          }),
+          type,
+        })
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
-        expect.objectContaining({ method: 'post', url: path }),
-      )
-    })
+        expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+          expect.objectContaining({ method: 'post', url: path }),
+        )
+      },
+    )
   })
 
   describe('authentication', () => {
@@ -452,7 +455,7 @@ describe('mELCloud Classic API', () => {
         username: 'user',
       })
       mockAxiosInstance.request.mockResolvedValue({ data: true })
-      await api.setLanguage('fr')
+      await api.updateLanguage('fr')
 
       expect(mockAxiosInstance.request).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -470,7 +473,7 @@ describe('mELCloud Classic API', () => {
         username: 'user',
       })
       mockAxiosInstance.request.mockClear()
-      await api.setLanguage('en')
+      await api.updateLanguage('en')
 
       expect(mockAxiosInstance.request).not.toHaveBeenCalled()
     })
@@ -483,7 +486,7 @@ describe('mELCloud Classic API', () => {
         username: 'user',
       })
       mockAxiosInstance.request.mockResolvedValue({ data: true })
-      await api.setLanguage('invalid')
+      await api.updateLanguage('invalid')
 
       expect(mockAxiosInstance.request).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -502,9 +505,9 @@ describe('mELCloud Classic API', () => {
         username: 'user',
       })
       mockAxiosInstance.request.mockResolvedValue({ data: false })
-      await api.setLanguage('fr')
+      await api.updateLanguage('fr')
       mockAxiosInstance.request.mockClear()
-      await api.setLanguage('en')
+      await api.updateLanguage('en')
 
       expect(mockAxiosInstance.request).not.toHaveBeenCalled()
     })

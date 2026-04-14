@@ -83,7 +83,9 @@ export interface DeviceFacade<T extends DeviceType>
   ) => Promise<ReportChartPieOptions>
 
   /** Send updated device values, clamping temperatures to valid ranges. */
-  readonly setValues: (data: UpdateDeviceData<T>) => Promise<SetDeviceData<T>>
+  readonly updateValues: (
+    data: UpdateDeviceData<T>,
+  ) => Promise<SetDeviceData<T>>
 
   /** Fetch temperature history as line chart data. */
   readonly getTemperatures: (
@@ -131,17 +133,17 @@ export interface Facade extends Identifiable {
   readonly notifySync: (params?: { type?: DeviceType }) => Promise<void>
 
   /** Update frost protection settings with temperature clamping. */
-  readonly setFrostProtection: (
+  readonly updateFrostProtection: (
     query: FrostProtectionQuery,
   ) => Promise<FailureData | SuccessData>
 
   /** Enable or disable holiday mode. */
-  readonly setHolidayMode: (
+  readonly updateHolidayMode: (
     query: HolidayModeQuery,
   ) => Promise<FailureData | SuccessData>
 
   /** Turn all devices in this facade on or off. */
-  readonly setPower: (value?: boolean) => Promise<boolean>
+  readonly updatePower: (value?: boolean) => Promise<boolean>
 
   /** Fetch WiFi signal strength report as line chart data. */
   readonly getSignalStrength: (
@@ -159,7 +161,9 @@ export interface ZoneFacade extends Facade {
   readonly getGroup: () => Promise<GroupState>
 
   /** Update the group state for all ATA devices. */
-  readonly setGroup: (state: GroupState) => Promise<FailureData | SuccessData>
+  readonly updateGroupState: (
+    state: GroupState,
+  ) => Promise<FailureData | SuccessData>
 }
 
 /** Line chart data with named series and a measurement unit. */

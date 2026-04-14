@@ -26,7 +26,7 @@ const createApi = (): HomeAPI =>
     getErrorLog: vi.fn(),
     getSignal: vi.fn(),
     getTemperatures: vi.fn(),
-    setValues: vi.fn(),
+    updateValues: vi.fn(),
   })
 
 describe('home facade manager', () => {

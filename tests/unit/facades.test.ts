@@ -91,17 +91,17 @@ const createMockApi = (
       data: { SelectedDevice: null, Tiles: [] },
     }),
     getValues: vi.fn().mockResolvedValue({ data: { EffectiveFlags: 0 } }),
-    setFrostProtection: vi.fn().mockResolvedValue({
+    updateFrostProtection: vi.fn().mockResolvedValue({
       data: { AttributeErrors: null, Success: true },
     }),
-    setGroup: vi.fn().mockResolvedValue({
+    updateGroupState: vi.fn().mockResolvedValue({
       data: { AttributeErrors: null, Success: true },
     }),
-    setHolidayMode: vi.fn().mockResolvedValue({
+    updateHolidayMode: vi.fn().mockResolvedValue({
       data: { AttributeErrors: null, Success: true },
     }),
-    setPower: vi.fn().mockResolvedValue({ data: true }),
-    setValues: vi.fn().mockResolvedValue({
+    updatePower: vi.fn().mockResolvedValue({ data: true }),
+    updateValues: vi.fn().mockResolvedValue({
       data: mock<SetDeviceDataAta>({
         DeviceType: DeviceType.Ata,
         EffectiveFlags: 0x1,
@@ -205,7 +205,7 @@ const createErvFacade = (
 const atwSetValuesResponse = (
   overrides: Record<string, unknown> = {},
 ): Partial<ClassicAPIAdapter> => ({
-  setValues: vi.fn().mockResolvedValue({
+  updateValues: vi.fn().mockResolvedValue({
     data: {
       DeviceType: DeviceType.Atw,
       EffectiveFlags: 0x1,
@@ -276,12 +276,12 @@ describe('building facade', () => {
     expect(api.fetch).toHaveBeenCalledWith()
   })
 
-  it('calls setPower', async () => {
+  it('calls updatePower', async () => {
     const { api, facade } = createBuildingFacade()
-    const isPowered = await facade.setPower(true)
+    const isPowered = await facade.updatePower(true)
 
     expect(isPowered).toBe(true)
-    expect(api.setPower).toHaveBeenCalledWith(expect.any(Object))
+    expect(api.updatePower).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls getErrorLog', async () => {
@@ -336,24 +336,24 @@ describe('building facade frost protection', () => {
   it('sets frost protection', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
-    const result = await facade.setFrostProtection({
+    const result = await facade.updateFrostProtection({
       isEnabled: true,
       max: 14,
       min: 6,
     })
 
     expect(result).toHaveProperty('Success')
-    expect(api.setFrostProtection).toHaveBeenCalledWith(expect.any(Object))
+    expect(api.updateFrostProtection).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('clamps frost protection temperatures', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
-    await facade.setFrostProtection({
+    await facade.updateFrostProtection({
       max: 2,
       min: 1,
     })
-    const call = vi.mocked(api.setFrostProtection).mock.lastCall?.[0]
+    const call = vi.mocked(api.updateFrostProtection).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
@@ -366,11 +366,11 @@ describe('building facade frost protection', () => {
   it('enforces minimum gap between min and max temperatures', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
-    await facade.setFrostProtection({
+    await facade.updateFrostProtection({
       max: 15,
       min: 14,
     })
-    const call = vi.mocked(api.setFrostProtection).mock.lastCall?.[0]
+    const call = vi.mocked(api.updateFrostProtection).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
@@ -392,7 +392,7 @@ describe('building facade holiday mode', () => {
   it('sets holiday mode with dates', async () => {
     const { facade } = createBuildingFacade()
     await facade.getHolidayMode()
-    const result = await facade.setHolidayMode({
+    const result = await facade.updateHolidayMode({
       from: '2024-06-01',
       to: '2024-06-15',
     })
@@ -403,8 +403,8 @@ describe('building facade holiday mode', () => {
   it('disables holiday mode when no to date', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getHolidayMode()
-    await facade.setHolidayMode({})
-    const call = vi.mocked(api.setHolidayMode).mock.lastCall?.[0]
+    await facade.updateHolidayMode({})
+    const call = vi.mocked(api.updateHolidayMode).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
@@ -420,9 +420,9 @@ describe('building facade group', () => {
     expect(result).toHaveProperty('Power')
   })
 
-  it('calls setGroup', async () => {
+  it('calls updateGroupState', async () => {
     const { facade } = createBuildingFacade()
-    const result = await facade.setGroup({ Power: true })
+    const result = await facade.updateGroupState({ Power: true })
 
     expect(result).toHaveProperty('Success')
   })
@@ -437,12 +437,12 @@ describe('building facade group', () => {
     )
   })
 
-  it('throws when setGroup API fails', async () => {
+  it('throws when updateGroupState API fails', async () => {
     const { facade } = createBuildingFacade({
-      setGroup: vi.fn().mockRejectedValue(new Error('fail')),
+      updateGroupState: vi.fn().mockRejectedValue(new Error('fail')),
     })
 
-    await expect(facade.setGroup({ Power: true })).rejects.toThrow(
+    await expect(facade.updateGroupState({ Power: true })).rejects.toThrow(
       'No air-to-air device found',
     )
   })
@@ -573,8 +573,8 @@ describe('base facade frost protection with device fallback', () => {
         data: frostProtectionResponse(),
       })
     const { api, facade } = createAreaFacade({ getFrostProtection: fpMock })
-    await facade.setFrostProtection({ max: 14, min: 6 })
-    const call = vi.mocked(api.setFrostProtection).mock.lastCall?.[0]
+    await facade.updateFrostProtection({ max: 14, min: 6 })
+    const call = vi.mocked(api.updateFrostProtection).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
@@ -591,8 +591,8 @@ describe('base facade holiday mode with device fallback', () => {
         data: holidayModeResponse(),
       })
     const { api, facade } = createAreaFacade({ getHolidayMode: hmMock })
-    await facade.setHolidayMode({ to: '2024-12-31' })
-    const call = vi.mocked(api.setHolidayMode).mock.lastCall?.[0]
+    await facade.updateHolidayMode({ to: '2024-12-31' })
+    const call = vi.mocked(api.updateHolidayMode).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
@@ -731,18 +731,18 @@ describe('ata device facade', () => {
     expect(result).toHaveProperty('Tiles')
   })
 
-  it('setValues calls api.setValues', async () => {
+  it('updateValues calls api.updateValues', async () => {
     const { api, facade } = createAtaFacade()
-    await facade.setValues({ Power: false })
+    await facade.updateValues({ Power: false })
 
-    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
+    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
   })
 
-  it('setValues throws when no data differs', async () => {
+  it('updateValues throws when no data differs', async () => {
     const { facade } = createAtaFacade()
 
     await expect(
-      facade.setValues({
+      facade.updateValues({
         OperationMode: OperationMode.heat,
         Power: true,
         SetTemperature: 24,
@@ -752,8 +752,8 @@ describe('ata device facade', () => {
 
   it('clamps target temperature to operation mode range', async () => {
     const { api, facade } = createAtaFacade()
-    await facade.setValues({ SetTemperature: 0 })
-    const call = vi.mocked(api.setValues).mock.lastCall?.[0]
+    await facade.updateValues({ SetTemperature: 0 })
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
@@ -765,11 +765,11 @@ describe('ata device facade', () => {
 
   it('handles temperature clamping with operation mode change', async () => {
     const { api, facade } = createAtaFacade()
-    await facade.setValues({
+    await facade.updateValues({
       OperationMode: OperationMode.cool,
       SetTemperature: 50,
     })
-    const call = vi.mocked(api.setValues).mock.lastCall?.[0]
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
@@ -799,8 +799,8 @@ describe('atw device facade', () => {
         SetTemperatureZone2: 10,
       }),
     )
-    await facade.setValues({ SetTemperatureZone1: 0 })
-    const call = vi.mocked(api.setValues).mock.lastCall?.[0]
+    await facade.updateValues({ SetTemperatureZone1: 0 })
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
@@ -822,10 +822,10 @@ describe('atw device facade', () => {
         SetTemperatureZone2: 10,
       }),
     )
-    await facade.setValues({
+    await facade.updateValues({
       SetTemperatureZone1: mock<{ value: number }>().value,
     })
-    const call = vi.mocked(api.setValues).mock.lastCall?.[0]
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
@@ -853,11 +853,11 @@ describe('atw device facade with zone 2', () => {
         OperationModeZone2: OperationModeZone.flow,
       }),
     )
-    await facade.setValues({
+    await facade.updateValues({
       OperationModeZone1: OperationModeZone.flow,
     })
 
-    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
+    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('adjusts secondary zone when primary changes to cool mode', async () => {
@@ -869,11 +869,11 @@ describe('atw device facade with zone 2', () => {
         OperationModeZone2: OperationModeZone.room_cool,
       }),
     )
-    await facade.setValues({
+    await facade.updateValues({
       OperationModeZone1: OperationModeZone.room_cool,
     })
 
-    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
+    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('adjusts secondary zone down from cool when primary is not cool', async () => {
@@ -889,11 +889,11 @@ describe('atw device facade with zone 2', () => {
         OperationModeZone2: OperationModeZone.room,
       }),
     )
-    await facade.setValues({
+    await facade.updateValues({
       OperationModeZone1: OperationModeZone.room,
     })
 
-    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
+    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('adjusts secondary when both zones change', async () => {
@@ -905,11 +905,11 @@ describe('atw device facade with zone 2', () => {
         OperationModeZone2: OperationModeZone.room,
       }),
     )
-    await facade.setValues({
+    await facade.updateValues({
       OperationModeZone2: OperationModeZone.flow,
     })
 
-    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
+    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('throws on invalid secondary operation mode zone value', async () => {
@@ -919,7 +919,7 @@ describe('atw device facade with zone 2', () => {
     })
 
     await expect(
-      facade.setValues({
+      facade.updateValues({
         OperationModeZone1: OperationModeZone.room_cool,
       }),
     ).rejects.toThrow('Invalid OperationModeZone')
@@ -996,11 +996,11 @@ describe('atw zone 2 facade secondary curve to cool', () => {
         OperationModeZone2: OperationModeZone.room_cool,
       }),
     )
-    await facade.setValues({
+    await facade.updateValues({
       OperationModeZone1: OperationModeZone.room_cool,
     })
 
-    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
+    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
   })
 })
 
@@ -1014,9 +1014,9 @@ describe('atw zone 2 facade no operation mode change', () => {
         Power: false,
       }),
     )
-    await facade.setValues({ Power: false })
+    await facade.updateValues({ Power: false })
 
-    expect(api.setValues).toHaveBeenCalledWith(expect.any(Object))
+    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
   })
 })
 
@@ -1034,11 +1034,11 @@ describe('atw zone 2 facade CanCool false', () => {
         OperationModeZone2: OperationModeZone.flow,
       }),
     )
-    await facade.setValues({
+    await facade.updateValues({
       OperationModeZone1: OperationModeZone.flow,
     })
 
-    const call = vi.mocked(api.setValues).mock.lastCall?.[0]
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 

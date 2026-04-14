@@ -444,7 +444,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.dispatch('post', LOGIN_PATH, { data: postData })
   }
 
-  public async setFrostProtection({
+  public async updateFrostProtection({
     postData,
   }: {
     postData: FrostProtectionPostData
@@ -452,7 +452,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/FrostProtection/Update', { data: postData })
   }
 
-  public async setGroup({
+  public async updateGroupState({
     postData,
   }: {
     postData: SetGroupPostData
@@ -460,7 +460,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Group/SetAta', { data: postData })
   }
 
-  public async setHolidayMode({
+  public async updateHolidayMode({
     postData,
   }: {
     postData: HolidayModePostData
@@ -472,7 +472,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Update the user's language on the server if it differs from the current locale.
    * @param language - The language code to set.
    */
-  public async setLanguage(language: string): Promise<void> {
+  public async updateLanguage(language: string): Promise<void> {
     if (language !== this.language) {
       const { data: hasLanguageChanged } = await this.request<boolean>(
         'post',
@@ -485,7 +485,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     }
   }
 
-  public async setPower({
+  public async updatePower({
     postData,
   }: {
     postData: SetPowerPostData
@@ -493,7 +493,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Device/Power', { data: postData })
   }
 
-  public async setValues<T extends DeviceType>({
+  public async updateValues<T extends DeviceType>({
     postData,
     type,
   }: {

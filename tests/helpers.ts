@@ -66,11 +66,13 @@ export const createMockApi = (
     getTiles: vi.fn().mockResolvedValue({ data: {} }),
     getValues: vi.fn(),
     onSync: vi.fn(),
-    setFrostProtection: vi.fn().mockResolvedValue({ data: { Success: true } }),
-    setGroup: vi.fn(),
-    setHolidayMode: vi.fn().mockResolvedValue({ data: { Success: true } }),
-    setPower: vi.fn().mockResolvedValue({ data: true }),
-    setValues: vi.fn(),
+    updateFrostProtection: vi
+      .fn()
+      .mockResolvedValue({ data: { Success: true } }),
+    updateGroupState: vi.fn(),
+    updateHolidayMode: vi.fn().mockResolvedValue({ data: { Success: true } }),
+    updatePower: vi.fn().mockResolvedValue({ data: true }),
+    updateValues: vi.fn(),
     ...overrides,
   })
 

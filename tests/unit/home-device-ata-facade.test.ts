@@ -50,7 +50,7 @@ const createApi = (): HomeAPI =>
     getErrorLog: vi.fn(),
     getSignal: vi.fn(),
     getTemperatures: vi.fn(),
-    setValues: vi.fn().mockResolvedValue(true),
+    updateValues: vi.fn().mockResolvedValue(true),
   })
 
 describe('home device ata facade', () => {
@@ -146,11 +146,11 @@ describe('home device ata facade', () => {
     })
   })
 
-  describe('setValues validation', () => {
+  describe('updateValues validation', () => {
     it('should throw on empty values', async () => {
       const facade = new HomeDeviceAtaFacade(createApi(), createModel())
 
-      await expect(facade.setValues({})).rejects.toThrow('No data to set')
+      await expect(facade.updateValues({})).rejects.toThrow('No data to set')
     })
   })
 
@@ -164,9 +164,9 @@ describe('home device ata facade', () => {
           { maxTempHeat: 31, minTempHeat: 10 },
         ),
       )
-      await facade.setValues({ setTemperature: 5 })
+      await facade.updateValues({ setTemperature: 5 })
 
-      expect(api.setValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 10,
       })
     })
@@ -180,9 +180,9 @@ describe('home device ata facade', () => {
           { maxTempCoolDry: 31, minTempCoolDry: 16 },
         ),
       )
-      await facade.setValues({ setTemperature: 35 })
+      await facade.updateValues({ setTemperature: 35 })
 
-      expect(api.setValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 31,
       })
     })
@@ -196,9 +196,9 @@ describe('home device ata facade', () => {
           { maxTempAutomatic: 31, minTempAutomatic: 16 },
         ),
       )
-      await facade.setValues({ setTemperature: 10 })
+      await facade.updateValues({ setTemperature: 10 })
 
-      expect(api.setValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 16,
       })
     })
@@ -212,9 +212,9 @@ describe('home device ata facade', () => {
           { maxTempCoolDry: 31, minTempCoolDry: 16 },
         ),
       )
-      await facade.setValues({ setTemperature: 10 })
+      await facade.updateValues({ setTemperature: 10 })
 
-      expect(api.setValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 16,
       })
     })
@@ -228,9 +228,9 @@ describe('home device ata facade', () => {
           { maxTempCoolDry: 31, minTempCoolDry: 16 },
         ),
       )
-      await facade.setValues({ operationMode: 'Cool', setTemperature: 10 })
+      await facade.updateValues({ operationMode: 'Cool', setTemperature: 10 })
 
-      expect(api.setValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         operationMode: 'Cool',
         setTemperature: 16,
       })
@@ -242,9 +242,9 @@ describe('home device ata facade', () => {
         api,
         createModel({ OperationMode: 'Heat' }),
       )
-      await facade.setValues({ setTemperature: 21 })
+      await facade.updateValues({ setTemperature: 21 })
 
-      expect(api.setValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 21,
       })
     })
@@ -255,9 +255,9 @@ describe('home device ata facade', () => {
         api,
         createModel({ OperationMode: 'Heat' }),
       )
-      await facade.setValues({ power: true })
+      await facade.updateValues({ power: true })
 
-      expect(api.setValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         power: true,
       })
     })
@@ -268,9 +268,9 @@ describe('home device ata facade', () => {
         api,
         createModel({ OperationMode: '' }),
       )
-      await facade.setValues({ setTemperature: 5 })
+      await facade.updateValues({ setTemperature: 5 })
 
-      expect(api.setValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 5,
       })
     })

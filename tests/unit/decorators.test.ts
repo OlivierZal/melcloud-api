@@ -180,7 +180,7 @@ describe(updateDevices, () => {
   it('updates all devices with the arg data', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: DeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices('setGroup', resolveTrue)
+    const decorated = decorateUpdateDevices('updateGroupState', resolveTrue)
     await decorated.call(facade, { Power: true })
 
     expect(update).toHaveBeenCalledWith({ Power: true })
@@ -188,7 +188,7 @@ describe(updateDevices, () => {
 
   it('throws when arg is empty object', async () => {
     const facade = createMockFacade([])
-    const decorated = decorateUpdateDevices('setGroup', resolveTrue)
+    const decorated = decorateUpdateDevices('updateGroupState', resolveTrue)
 
     await expect(decorated.call(facade, {})).rejects.toThrow('No data to set')
   })
@@ -200,7 +200,7 @@ describe(updateDevices, () => {
       { type: DeviceType.Ata, update: updateAta },
       { type: DeviceType.Atw, update: updateAtw },
     ])
-    const decorated = decorateUpdateDevices('setGroup', resolveTrue, {
+    const decorated = decorateUpdateDevices('updateGroupState', resolveTrue, {
       type: DeviceType.Ata,
     })
     await decorated.call(facade, { Power: true })
@@ -209,19 +209,22 @@ describe(updateDevices, () => {
     expect(updateAtw).not.toHaveBeenCalled()
   })
 
-  it('uses setPower logic when method name is setPower', async () => {
+  it('uses updatePower logic when method name is updatePower', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: DeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices('setPower', resolveTrue)
+    const decorated = decorateUpdateDevices('updatePower', resolveTrue)
     await decorated.call(facade, true)
 
     expect(update).toHaveBeenCalledWith({ Power: true })
   })
 
-  it('filters null/undefined values from data when not setPower', async () => {
+  it('filters null/undefined values from data when not updatePower', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: DeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices('setGroup', resolvePowerData)
+    const decorated = decorateUpdateDevices(
+      'updateGroupState',
+      resolvePowerData,
+    )
     await decorated.call(facade, null)
 
     expect(update).toHaveBeenCalledWith({ Power: true })

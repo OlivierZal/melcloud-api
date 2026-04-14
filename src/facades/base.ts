@@ -140,8 +140,8 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   @syncDevices()
   @updateDevices()
-  public async setPower(isOn = true): Promise<boolean> {
-    const { data: isPowered } = await this.api.setPower({
+  public async updatePower(isOn = true): Promise<boolean> {
+    const { data: isPowered } = await this.api.updatePower({
       postData: {
         DeviceIds: this.#deviceIds.map((id) => toDeviceId(id)),
         Power: isOn,
@@ -205,7 +205,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     await this.api.onSync?.({ ids: this.#deviceIds, type })
   }
 
-  public async setFrostProtection({
+  public async updateFrostProtection({
     isEnabled = true,
     max,
     min,
@@ -225,7 +225,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     if (newMax - newMin < TEMPERATURE_GAP) {
       newMax = newMin + TEMPERATURE_GAP
     }
-    const { data } = await this.api.setFrostProtection({
+    const { data } = await this.api.updateFrostProtection({
       postData: {
         Enabled: isEnabled,
         MaximumTemperature: newMax,
@@ -236,13 +236,13 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     return data
   }
 
-  public async setHolidayMode({ from, to }: HolidayModeQuery = {}): Promise<
+  public async updateHolidayMode({ from, to }: HolidayModeQuery = {}): Promise<
     FailureData | SuccessData
   > {
     const isEnabled = to !== undefined
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
     const endDate = isEnabled ? DateTime.fromISO(to) : null
-    const { data } = await this.api.setHolidayMode({
+    const { data } = await this.api.updateHolidayMode({
       postData: {
         Enabled: isEnabled,
         EndDate: getDateTimeComponents(endDate),

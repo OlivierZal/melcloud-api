@@ -247,7 +247,7 @@ export interface ErrorLogQuery {
  *
  * Exists alongside the `HomeAPI` class with the same name (declaration
  * merging). This interface uses property-with-arrow syntax so facades,
- * mocks, and tests can reference methods safely (`expect(api.setValues)`,
+ * mocks, and tests can reference methods safely (`expect(api.updateValues)`,
  * `mock<HomeAPI>({...})`) without triggering `unbound-method` lint —
  * the class has real methods that carry `this`, whereas the interface
  * shape declares them as plain functions with no implicit binding.
@@ -306,7 +306,7 @@ export interface HomeAPI {
   readonly setSyncInterval: (minutes: number | null) => void
 
   /** Update device values and refresh device data via list(). */
-  readonly setValues: (id: string, values: HomeAtaValues) => Promise<boolean>
+  readonly updateValues: (id: string, values: HomeAtaValues) => Promise<boolean>
 }
 
 /**
@@ -358,28 +358,28 @@ export interface ClassicAPIAdapter {
   }) => Promise<{ data: OperationModeLogData }>
 
   /** Update frost protection settings. */
-  readonly setFrostProtection: ({
+  readonly updateFrostProtection: ({
     postData,
   }: {
     postData: FrostProtectionPostData
   }) => Promise<{ data: FailureData | SuccessData }>
 
   /** Update holiday mode settings. */
-  readonly setHolidayMode: ({
+  readonly updateHolidayMode: ({
     postData,
   }: {
     postData: HolidayModePostData
   }) => Promise<{ data: FailureData | SuccessData }>
 
   /** Turn devices on or off. */
-  readonly setPower: ({
+  readonly updatePower: ({
     postData,
   }: {
     postData: SetPowerPostData
   }) => Promise<{ data: boolean }>
 
   /** Send updated device values to the Classic API. */
-  readonly setValues: <T extends DeviceType>({
+  readonly updateValues: <T extends DeviceType>({
     postData,
     type,
   }: {
@@ -435,7 +435,7 @@ export interface ClassicAPIAdapter {
   }) => Promise<{ data: GetGroupData }>
 
   /** Update ATA device group state. ATA only. */
-  readonly setGroup: ({
+  readonly updateGroupState: ({
     postData,
   }: {
     postData: SetGroupPostData

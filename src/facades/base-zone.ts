@@ -37,9 +37,11 @@ export abstract class BaseZoneFacade<T extends Area | Building | Floor>
 
   @syncDevices({ type: DeviceType.Ata })
   @updateDevices({ type: DeviceType.Ata })
-  public async setGroup(state: GroupState): Promise<FailureData | SuccessData> {
+  public async updateGroupState(
+    state: GroupState,
+  ): Promise<FailureData | SuccessData> {
     try {
-      const { data } = await this.api.setGroup({
+      const { data } = await this.api.updateGroupState({
         postData: {
           Specification: { [this.groupSpecificationKey]: this.id },
           State: state,
