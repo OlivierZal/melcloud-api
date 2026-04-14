@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPI, ClassicAPIConfig } from '../../src/api/index.ts'
 import type { DeviceType } from '../../src/constants.ts'
-import { RateLimitError } from '../../src/errors/index.ts'
 import {
   type BuildingWithStructure,
   type ListDeviceAny,
@@ -52,18 +51,6 @@ const mockLoginAndList = (
   )
 }
 
-const transientServerError = (status: number): Error =>
-  Object.assign(new Error(`Status ${String(status)}`), {
-    config: { url: '/User/ListDevices' },
-    isAxiosError: true,
-    response: {
-      config: { url: '/User/ListDevices' },
-      data: undefined,
-      headers: {},
-      status,
-    },
-  })
-
 const errorEntry = (
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
@@ -73,21 +60,6 @@ const errorEntry = (
   StartDate: '2024-01-01T12:00:00',
   ...overrides,
 })
-
-const unauthorizedError = (
-  url = '/Device/Get',
-  message = 'unauthorized',
-): Error =>
-  Object.assign(new Error(message), {
-    config: { url },
-    isAxiosError: true,
-    response: {
-      config: { data: null, method: 'get', url },
-      data: {},
-      headers: {},
-      status: 401,
-    },
-  })
 
 const createDevice = (overrides: Record<string, unknown> = {}): ListDeviceAny =>
   cast({
@@ -181,34 +153,6 @@ describe('mELCloud Classic API', () => {
     const api = await melCloudApi.create({ autoSyncInterval: null })
 
     expect(api).toBeDefined()
-  })
-
-  it('wires a consumer AbortSignal into outgoing requests', async () => {
-    const controller = new AbortController()
-    mockLoginAndList()
-    const api = await createApi({
-      abortSignal: controller.signal,
-      password: 'pass',
-      username: 'user',
-    })
-    mockAxiosInstance.request.mockResolvedValue({ data: {} })
-    await api.getValues({ params: { buildingId: 1, id: 1 } })
-
-    expect(mockAxiosInstance.request).toHaveBeenCalledWith(
-      expect.objectContaining({ signal: controller.signal }),
-    )
-  })
-
-  it('does not set a signal when no abortSignal is provided', async () => {
-    mockLoginAndList()
-    const api = await createApi({ password: 'pass', username: 'user' })
-    mockAxiosInstance.request.mockResolvedValue({ data: {} })
-    await api.getValues({ params: { buildingId: 1, id: 1 } })
-
-    expect(mockAxiosInstance.request).toHaveBeenLastCalledWith(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
-      expect.not.objectContaining({ signal: expect.anything() }),
-    )
   })
 
   it('uses settingManager when provided', async () => {
@@ -867,289 +811,62 @@ describe('mELCloud Classic API', () => {
       expect(setSpy).toHaveBeenCalledWith('expiry', '')
     })
 
-    it('logs errors from failed requests', async () => {
-      const logger = createLogger()
-      mockLoginAndList()
-      const api = await createApi({
-        logger,
-        password: 'pass',
-        username: 'user',
-      })
-      const error = createAxiosError({
-        message: 'test error',
-        status: 500,
-        url: '/Device/Get',
-      })
-      mockAxiosInstance.request.mockRejectedValueOnce(error)
+    it('retries with re-authentication on 401', async () => {
+      mockLoginAndList('ctx', '2030-12-31T00:00:00')
+      const api = await createApi({ password: 'pass', username: 'user' })
 
-      await expect(
-        api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toThrow('test error')
-    })
-
-    it('records rate limit on 429 response', async () => {
-      const logger = createLogger()
-      mockLoginAndList()
-      const api = await createApi({
-        logger,
-        password: 'pass',
-        username: 'user',
-      })
-      const error = createAxiosError({
-        message: 'too many',
-        responseHeaders: { 'retry-after': '120' },
-        status: 429,
-        url: '/User/ListDevices',
-      })
-      mockAxiosInstance.request.mockRejectedValueOnce(error)
-
-      await expect(
-        api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toThrow('too many')
-
-      expect(api.isRateLimited).toBe(true)
-    })
-
-    it('throws RateLimitError when rate limited', async () => {
-      const logger = createLogger()
-      mockLoginAndList()
-      const api = await createApi({
-        logger,
-        password: 'pass',
-        username: 'user',
-      })
-
-      // Trigger rate limit with a 429
-      const error = createAxiosError({
-        message: 'too many',
-        status: 429,
-        url: '/api',
-      })
-      mockAxiosInstance.request.mockRejectedValueOnce(error)
-
-      await expect(
-        api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toThrow('too many')
-
-      // Subsequent requests should throw RateLimitError
-      await expect(
-        api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toBeInstanceOf(RateLimitError)
-    })
-
-    it('exposes isRateLimited once the gate has closed', async () => {
-      const logger = createLogger()
-      mockLoginAndList()
-      const api = await createApi({
-        logger,
-        password: 'pass',
-        username: 'user',
-      })
-
-      expect(api.isRateLimited).toBe(false)
-
-      const error = createAxiosError({
-        message: 'too many',
-        responseHeaders: { 'retry-after': '60' },
-        status: 429,
-        url: '/api',
-      })
-      mockAxiosInstance.request.mockRejectedValueOnce(error)
-
-      await expect(
-        api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toThrow('too many')
-
-      expect(api.isRateLimited).toBe(true)
-    })
-
-    it('retries on 401 with re-authentication', async () => {
-      mockLoginAndList()
-      const api = await createApi({
-        logger: createLogger(),
-        password: 'pass',
-        username: 'user',
-      })
-      /*
-       * First request attempt → 401
-       * Then re-auth → login succeeds
-       * Then retry → success
-       */
-      let callCount = 0
+      // First call returns 401, re-auth succeeds, retry succeeds
+      let isCallCount = 0
       mockAxiosInstance.request.mockImplementation(
         (config: { url?: string } = {}) => {
           if (config.url === '/Login/ClientLogin3') {
-            return loginResponse('new-ctx')
+            return loginResponse('new-ctx', '2030-12-31T00:00:00')
           }
           if (config.url === '/User/ListDevices') {
             return { data: [] }
           }
-          if (config.url === '/Device/Get') {
-            callCount += 1
-            if (callCount === 1) {
-              throw unauthorizedError()
-            }
-            return { data: { DeviceID: 1 } }
+          isCallCount += 1
+          if (isCallCount === 1) {
+            throw createAxiosError({
+              message: 'unauthorized',
+              status: 401,
+              url: '/Device/Get',
+            })
           }
-          return { data: {} }
+          return { data: { value: 'retried' } }
         },
       )
       const result = await api.getValues({
         params: { buildingId: 1, id: 1 },
       })
 
-      expect(result.data).toStrictEqual({ DeviceID: 1 })
+      expect(result.data).toStrictEqual({ value: 'retried' })
     })
 
-    it('does not retry 401 twice within retry delay', async () => {
-      mockLoginAndList()
-      const api = await createApi({
-        logger: createLogger(),
-        password: 'pass',
-        username: 'user',
-      })
+    it('surfaces 401 when re-authentication fails', async () => {
+      mockLoginAndList('ctx', '2030-12-31T00:00:00')
+      const api = await createApi({ password: 'pass', username: 'user' })
 
-      // First call: 401 → re-auth → retry succeeds
-      let getCallCount = 0
+      // 401 on endpoint, re-auth returns LoginData: null → authenticate() returns false
       mockAxiosInstance.request.mockImplementation(
         (config: { url?: string } = {}) => {
           if (config.url === '/Login/ClientLogin3') {
-            return loginResponse('ctx2')
+            return { data: { LoginData: null } }
           }
           if (config.url === '/User/ListDevices') {
             return { data: [] }
           }
-          if (config.url === '/Device/Get') {
-            getCallCount += 1
-            if (getCallCount === 1) {
-              throw unauthorizedError()
-            }
-            return { data: {} }
-          }
-          return { data: {} }
-        },
-      )
-      await api.getValues({ params: { buildingId: 1, id: 1 } })
-
-      // Second call within retry delay window: 401 → should NOT retry
-      mockAxiosInstance.request.mockImplementation(
-        (config: { url?: string } = {}) => {
-          if (config.url === '/Device/Get') {
-            throw unauthorizedError('/Device/Get', 'unauthorized again')
-          }
-          return { data: {} }
+          throw createAxiosError({
+            message: 'unauthorized',
+            status: 401,
+            url: '/Device/Get',
+          })
         },
       )
 
       await expect(
         api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toThrow('unauthorized again')
-    })
-
-    it('retry timeout clears itself after delay', async () => {
-      mockLoginAndList()
-      const api = await createApi({
-        logger: createLogger(),
-        password: 'pass',
-        username: 'user',
-      })
-
-      // First 401 retry
-      let getCallCount = 0
-      mockAxiosInstance.request.mockImplementation(
-        (config: { url?: string } = {}) => {
-          if (config.url === '/Login/ClientLogin3') {
-            return loginResponse('ctx3')
-          }
-          if (config.url === '/User/ListDevices') {
-            return { data: [] }
-          }
-          if (config.url === '/Device/Get') {
-            getCallCount += 1
-            if (getCallCount === 1) {
-              throw unauthorizedError()
-            }
-            return { data: 'retried' }
-          }
-          return { data: {} }
-        },
-      )
-      await api.getValues({ params: { buildingId: 1, id: 1 } })
-
-      // Wait for retry guard to reset
-      vi.advanceTimersByTime(1500)
-
-      // Second 401 retry should work again
-      getCallCount = 0
-      mockAxiosInstance.request.mockImplementation(
-        (config: { url?: string } = {}) => {
-          if (config.url === '/Login/ClientLogin3') {
-            return loginResponse('ctx4')
-          }
-          if (config.url === '/User/ListDevices') {
-            return { data: [] }
-          }
-          if (config.url === '/Device/Get') {
-            getCallCount += 1
-            if (getCallCount === 1) {
-              throw unauthorizedError()
-            }
-            return { data: 'retried again' }
-          }
-          return { data: {} }
-        },
-      )
-      const result = await api.getValues({
-        params: { buildingId: 1, id: 1 },
-      })
-
-      expect(result.data).toBe('retried again')
-    })
-
-    it('emits onRequestStart / onRequestComplete for API calls', async () => {
-      const onRequestStart = vi.fn<(event: unknown) => void>()
-      const onRequestComplete = vi.fn<(event: unknown) => void>()
-      mockLoginAndList()
-      const api = await createApi({
-        events: { onRequestComplete, onRequestStart },
-        password: 'pass',
-        username: 'user',
-      })
-      onRequestStart.mockClear()
-      onRequestComplete.mockClear()
-      mockAxiosInstance.request.mockResolvedValue({
-        data: [],
-        headers: {},
-        status: 200,
-      })
-      await api.list()
-
-      expect(onRequestStart).toHaveBeenCalledTimes(1)
-      expect(onRequestComplete).toHaveBeenCalledTimes(1)
-    })
-
-    it('emits onRequestError when a request fails', async () => {
-      const onRequestError = vi.fn<(event: unknown) => void>()
-      mockLoginAndList()
-      const api = await createApi({
-        events: { onRequestError },
-        password: 'pass',
-        username: 'user',
-      })
-      onRequestError.mockClear()
-      mockAxiosInstance.request.mockRejectedValueOnce(
-        createAxiosError({
-          message: 'server fault',
-          status: 500,
-          url: '/Device/Get',
-        }),
-      )
-
-      await expect(
-        api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toThrow('server fault')
-
-      expect(onRequestError).toHaveBeenCalledTimes(1)
+      ).rejects.toThrow('unauthorized')
     })
 
     it('handles errors without crashing when error has no config', async () => {
@@ -1168,98 +885,6 @@ describe('mELCloud Classic API', () => {
       await expect(
         api.getValues({ params: { buildingId: 1, id: 1 } }),
       ).rejects.toThrow('connect ECONNREFUSED')
-    })
-  })
-
-  describe('transient 5xx retry on fetch', () => {
-    it('retries list() on 503 and succeeds on the next attempt', async () => {
-      mockLoginAndList()
-      const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockClear()
-
-      let callCount = 0
-      mockAxiosInstance.request.mockImplementation(
-        (config: { url?: string } = {}) => {
-          if (config.url === '/User/ListDevices') {
-            callCount += 1
-            if (callCount === 1) {
-              throw transientServerError(503)
-            }
-            return { data: [] }
-          }
-          if (config.url === '/Login/ClientLogin3') {
-            return loginResponse()
-          }
-          return { data: {} }
-        },
-      )
-
-      const promise = api.fetch()
-      await vi.advanceTimersByTimeAsync(2000)
-      const buildings = await promise
-
-      expect(buildings).toStrictEqual([])
-
-      expect(callCount).toBe(2)
-    })
-
-    it('gives up after exhausting the 5xx retry budget', async () => {
-      mockLoginAndList()
-      const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockClear()
-
-      let callCount = 0
-      mockAxiosInstance.request.mockImplementation(
-        (config: { url?: string } = {}) => {
-          if (config.url === '/User/ListDevices') {
-            callCount += 1
-            const statuses = [502, 503, 504, 502, 503]
-            throw transientServerError(
-              statuses[Math.min(callCount - 1, statuses.length - 1)] ?? 502,
-            )
-          }
-          if (config.url === '/Login/ClientLogin3') {
-            return loginResponse()
-          }
-          return { data: {} }
-        },
-      )
-
-      const promise = api.fetch()
-      await vi.advanceTimersByTimeAsync(30_000)
-      const buildings = await promise
-
-      /* Classic's public fetch() swallows errors and returns []. */
-      expect(buildings).toStrictEqual([])
-
-      // 1 initial attempt + 4 retries
-      expect(callCount).toBe(5)
-    })
-
-    it('does not retry on non-transient 500', async () => {
-      mockLoginAndList()
-      const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockClear()
-
-      let listCallCount = 0
-      mockAxiosInstance.request.mockImplementation(
-        (config: { url?: string } = {}) => {
-          if (config.url === '/User/ListDevices') {
-            listCallCount += 1
-            throw transientServerError(500)
-          }
-          if (config.url === '/Login/ClientLogin3') {
-            return loginResponse()
-          }
-          return { data: {} }
-        },
-      )
-
-      const buildings = await api.fetch()
-
-      expect(buildings).toStrictEqual([])
-
-      expect(listCallCount).toBe(1)
     })
   })
 

@@ -184,3 +184,9 @@ export const createAxiosError = ({
       status,
     }),
   })
+
+export const createServerError = (status: number, url = '/test'): AxiosError =>
+  createAxiosError({ message: `Status ${String(status)}`, status, url })
+
+export const createUnauthorizedError = (url = '/test'): AxiosError =>
+  createAxiosError({ message: 'Unauthorized', status: 401, url })
