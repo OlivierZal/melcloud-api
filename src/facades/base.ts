@@ -150,7 +150,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     return isPowered
   }
 
-  public async getErrors(query: ErrorLogQuery): Promise<ErrorLog> {
+  public async getErrorLog(query: ErrorLogQuery): Promise<ErrorLog> {
     return this.api.getErrorLog(query, this.#deviceIds)
   }
 

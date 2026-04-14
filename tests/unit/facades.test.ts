@@ -284,9 +284,9 @@ describe('building facade', () => {
     expect(api.setPower).toHaveBeenCalledWith(expect.any(Object))
   })
 
-  it('calls getErrors', async () => {
+  it('calls getErrorLog', async () => {
     const { facade } = createBuildingFacade()
-    const result = await facade.getErrors({})
+    const result = await facade.getErrorLog({})
 
     expect(result).toStrictEqual({ errors: [] })
   })

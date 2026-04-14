@@ -7,15 +7,15 @@ import axios, { type AxiosResponse } from 'axios'
 /*  Constants                                                         */
 /* ------------------------------------------------------------------ */
 
-export const CLIENT_ID = 'homemobile'
-export const REDIRECT_URI = 'melcloudhome://'
-export const SCOPES = 'openid profile email offline_access IdentityServerApi'
-export const AUTH_BASIC = 'Basic aG9tZW1vYmlsZTo='
-export const AUTH_BASE_URL = 'https://auth.melcloudhome.com'
-export const COGNITO_AUTHORITY =
+const CLIENT_ID = 'homemobile'
+const REDIRECT_URI = 'melcloudhome://'
+const SCOPES = 'openid profile email offline_access IdentityServerApi'
+const AUTH_BASIC = 'Basic aG9tZW1vYmlsZTo='
+const AUTH_BASE_URL = 'https://auth.melcloudhome.com'
+const COGNITO_AUTHORITY =
   'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
-export const PAR_PATH = '/connect/par'
-export const TOKEN_PATH = '/connect/token'
+const PAR_PATH = '/connect/par'
+const TOKEN_PATH = '/connect/token'
 
 const MAX_REDIRECTS = 20
 const PKCE_RANDOM_BYTES = 32
@@ -65,7 +65,7 @@ interface FollowRedirectsOptions {
  * @param html - Raw HTML string from the login page.
  * @returns The resolved form action URL, or `null` if not found.
  */
-export const extractFormAction = (html: string): string | null => {
+const extractFormAction = (html: string): string | null => {
   const match = /<form[^>]+action="(?<action>[^"]+)"/iu.exec(html)
   const encoded = match?.groups?.['action']
   if (encoded === undefined) {
@@ -80,7 +80,7 @@ export const extractFormAction = (html: string): string | null => {
  * @param html - Raw HTML string containing hidden `<input>` fields.
  * @returns A record of name-value pairs for each hidden field.
  */
-export const extractHiddenFields = (html: string): Record<string, string> =>
+const extractHiddenFields = (html: string): Record<string, string> =>
   Object.fromEntries(
     [...html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu)].flatMap(([tag]) => {
       const name = /name="(?<name>[^"]+)"/u.exec(tag)?.groups?.['name']
@@ -94,7 +94,7 @@ export const extractHiddenFields = (html: string): Record<string, string> =>
  * Generate a PKCE challenge and verifier pair.
  * @returns An object containing the `challenge` and `verifier` strings.
  */
-export const generatePKCE = (): { challenge: string; verifier: string } => {
+const generatePKCE = (): { challenge: string; verifier: string } => {
   const verifier = randomBytes(PKCE_RANDOM_BYTES).toString('base64url')
   const challenge = createHash('sha256').update(verifier).digest('base64url')
   return { challenge, verifier }
@@ -107,7 +107,7 @@ export const generatePKCE = (): { challenge: string; verifier: string } => {
  * @param options.location - The URL or relative path to resolve.
  * @returns The fully qualified URL.
  */
-export const resolveUrl = ({
+const resolveUrl = ({
   base,
   location,
 }: {
@@ -123,7 +123,7 @@ export const resolveUrl = ({
  * @param response.headers - The response headers.
  * @param url - The URL context for cookie storage.
  */
-export const storeCookies = async (
+const storeCookies = async (
   jar: CookieJar,
   { headers }: AxiosResponse,
   url: string,
@@ -148,7 +148,7 @@ export const storeCookies = async (
  * @param options.abortSignal - Optional signal to abort the request.
  * @returns The opaque PAR request URI.
  */
-export const par = async ({
+const par = async ({
   abortSignal,
   challenge,
 }: {
@@ -189,7 +189,7 @@ export const par = async ({
  * @param options.abortSignal - Optional abort signal.
  * @returns The Axios response.
  */
-export const authRequest = async <T = unknown>({
+const authRequest = async <T = unknown>({
   abortSignal,
   config,
   jar,
@@ -269,7 +269,7 @@ const extractRedirectTarget = (
  * @param options.remaining - Number of remaining redirects allowed.
  * @returns The final response data and URL.
  */
-export const authFollowRedirects = async ({
+const authFollowRedirects = async ({
   abortSignal,
   jar,
   remaining = MAX_REDIRECTS,
@@ -307,7 +307,7 @@ export const authFollowRedirects = async ({
  * @param options.abortSignal - Optional signal to abort the request.
  * @returns The token response.
  */
-export const tokenRequest = async ({
+const tokenRequest = async ({
   abortSignal,
   params,
 }: {

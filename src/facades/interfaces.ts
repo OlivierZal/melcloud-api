@@ -117,7 +117,9 @@ export interface Facade extends Identifiable {
   readonly devices: readonly DeviceAny[]
 
   /** Retrieve the error log for all devices in this facade. */
-  readonly getErrors: (query: ErrorLogQuery) => Promise<ErrorLog | FailureData>
+  readonly getErrorLog: (
+    query: ErrorLogQuery,
+  ) => Promise<ErrorLog | FailureData>
 
   /** Get the current frost protection settings. */
   readonly getFrostProtection: () => Promise<FrostProtectionData>
