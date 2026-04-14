@@ -11,6 +11,8 @@ import {
   fanSpeedToClassic,
   horizontalFromClassic,
   horizontalToClassic,
+  isClassicFanSpeed,
+  isHomeFanSpeed,
   operationModeFromClassic,
   operationModeToClassic,
   verticalFromClassic,
@@ -57,6 +59,26 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
       for (const [home, classic] of Object.entries(fanSpeedToClassic)) {
         expect(fanSpeedFromClassic[classic]).toBe(home)
       }
+    })
+
+    it.each([
+      [FanSpeed.auto, true],
+      [FanSpeed.very_slow, true],
+      [FanSpeed.very_fast, true],
+      [999, false],
+      [-1, false],
+    ] as const)('isClassicFanSpeed(%i) → %s', (value, expected) => {
+      expect(isClassicFanSpeed(value)).toBe(expected)
+    })
+
+    it.each([
+      ['Auto', true],
+      ['One', true],
+      ['Five', true],
+      ['Invalid', false],
+      ['', false],
+    ] as const)('isHomeFanSpeed(%s) → %s', (value, expected) => {
+      expect(isHomeFanSpeed(value)).toBe(expected)
     })
   })
 
