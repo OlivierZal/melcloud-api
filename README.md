@@ -11,14 +11,14 @@ npm install @olivierzal/melcloud-api
 ### MELCloud (classic)
 
 ```ts title="classic"
-import { FacadeManager, MELCloudAPI } from '@olivierzal/melcloud-api'
+import { ClassicAPI, ClassicFacadeManager } from '@olivierzal/melcloud-api'
 
-const api = await MELCloudAPI.create({
+const api = await ClassicAPI.create({
   username: 'user@example.com',
   password: 'password',
 })
 
-const manager = new FacadeManager(api, api.registry)
+const manager = new ClassicFacadeManager(api, api.registry)
 
 // Browse the device hierarchy
 for (const zone of manager.getZones()) {
@@ -26,16 +26,17 @@ for (const zone of manager.getZones()) {
 }
 
 // Interact with a device through its facade
+const [device] = api.registry.getDevices()
 const facade = manager.get(device)
-await facade.setValues({ Power: true })
+await facade.updateValues({ Power: true })
 ```
 
 ### MELCloud Home
 
 ```ts title="home"
-import { HomeFacadeManager, MELCloudHomeAPI } from '@olivierzal/melcloud-api'
+import { HomeAPI, HomeFacadeManager } from '@olivierzal/melcloud-api'
 
-const api = await MELCloudHomeAPI.create({
+const api = await HomeAPI.create({
   username: 'user@example.com',
   password: 'password',
 })
@@ -47,7 +48,7 @@ const manager = new HomeFacadeManager(api)
 const [device] = api.registry.getAll()
 const facade = manager.get(device)
 console.log(facade.name, facade.operationMode, facade.setTemperature)
-await facade.setValues({ setTemperature: 21 })
+await facade.updateValues({ setTemperature: 21 })
 ```
 
 ## Documentation
