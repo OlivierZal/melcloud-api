@@ -19,8 +19,50 @@
   "sideEffects": false,
   "type": "module",
   "exports": {
-    ".": "./dist/main.js",
-    "./constants": "./dist/constants.js"
+    ".": {
+      "types": "./dist/main.d.ts",
+      "default": "./dist/main.js"
+    },
+    "./api": {
+      "types": "./dist/api/index.d.ts",
+      "default": "./dist/api/index.js"
+    },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "default": "./dist/constants.js"
+    },
+    "./decorators": {
+      "types": "./dist/decorators/index.d.ts",
+      "default": "./dist/decorators/index.js"
+    },
+    "./enum-mappings": {
+      "types": "./dist/enum-mappings.d.ts",
+      "default": "./dist/enum-mappings.js"
+    },
+    "./errors": {
+      "types": "./dist/errors/index.d.ts",
+      "default": "./dist/errors/index.js"
+    },
+    "./facades": {
+      "types": "./dist/facades/index.d.ts",
+      "default": "./dist/facades/index.js"
+    },
+    "./models": {
+      "types": "./dist/models/index.d.ts",
+      "default": "./dist/models/index.js"
+    },
+    "./observability": {
+      "types": "./dist/observability/index.d.ts",
+      "default": "./dist/observability/index.js"
+    },
+    "./resilience": {
+      "types": "./dist/resilience/index.d.ts",
+      "default": "./dist/resilience/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
+    }
   },
   "types": "dist/main.d.ts",
   "files": [
