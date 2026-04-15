@@ -1,5 +1,7 @@
 export { AuthenticationError } from './authentication.ts'
 export { APIError, isAPIError } from './base.ts'
+export { EntityNotFoundError } from './entity-not-found.ts'
 export { NetworkError } from './network.ts'
+export { NoChangesError } from './no-changes.ts'
 export { RateLimitError } from './rate-limit.ts'
 export { TransientServerError } from './transient-server.ts'

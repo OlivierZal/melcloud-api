@@ -8,6 +8,7 @@ import type {
   SuccessData,
 } from '../types/index.ts'
 import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
+import { NoChangesError } from '../errors/index.ts'
 import {
   fromSetToListAta,
   isSetDeviceDataAtaNotInList,
@@ -40,7 +41,7 @@ export const updateDevices =
         typeof arg === 'object' &&
         Object.keys(arg).length === 0
       ) {
-        throw new Error('No data to set')
+        throw new NoChangesError(this.id)
       }
       const data = await target.call(this, arg)
 

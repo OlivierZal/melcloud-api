@@ -13,6 +13,7 @@ import type {
   Model,
 } from '../models/index.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
+import { EntityNotFoundError } from '../errors/index.ts'
 import {
   type DateTimeComponents,
   type FailureData,
@@ -94,6 +95,18 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     return this.instance.name
   }
 
+  /**
+   * Whether the underlying entity still exists in the registry.
+   * Non-throwing introspection: returns `false` instead of throwing
+   * {@link EntityNotFoundError} when the registry no longer holds the id.
+   * Useful for consumers that maintain a cached facade reference and
+   * want to detect staleness without a `try/catch`.
+   * @returns `true` when the entity is still resolvable, `false` otherwise.
+   */
+  public get exists(): boolean {
+    return this.model.getById(this.id) !== undefined
+  }
+
   protected readonly api: ClassicAPIAdapter
 
   protected isFrostProtectionAtZoneLevel: boolean | null = null
@@ -105,7 +118,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   protected get instance(): T {
     const instance = this.model.getById(this.id)
     if (!instance) {
-      throw new Error(`${this.tableName} with id ${String(this.id)} not found`)
+      throw new EntityNotFoundError(this.tableName, this.id)
     }
     return instance
   }

@@ -118,6 +118,13 @@ export interface Facade extends Identifiable {
   /** All devices managed by this facade. */
   readonly devices: readonly DeviceAny[]
 
+  /**
+   * Whether the underlying entity still exists in the registry.
+   * Non-throwing staleness check — see {@link EntityNotFoundError} for the
+   * throwing counterpart surfaced by other accessors.
+   */
+  readonly exists: boolean
+
   /** Retrieve the error log for all devices in this facade. */
   readonly getErrorLog: (
     query: ErrorLogQuery,

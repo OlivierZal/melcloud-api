@@ -18,12 +18,18 @@ import {
   updateDevice,
   updateDevices,
 } from '../../src/decorators/index.ts'
+import { NoChangesError } from '../../src/errors/index.ts'
 import { mock } from '../helpers.ts'
 
 const createMockFacade = (
   devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[] = [],
-): { devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[] } => ({
+  id = 1,
+): {
+  devices: { type: DeviceType; update: ReturnType<typeof vi.fn> }[]
+  id: number
+} => ({
   devices,
+  id,
 })
 
 const decorateUpdateDevices = (
@@ -187,10 +193,12 @@ describe(updateDevices, () => {
   })
 
   it('throws when arg is empty object', async () => {
-    const facade = createMockFacade([])
+    const facade = createMockFacade([], 42)
     const decorated = decorateUpdateDevices('updateGroupState', resolveTrue)
 
-    await expect(decorated.call(facade, {})).rejects.toThrow('No data to set')
+    await expect(decorated.call(facade, {})).rejects.toThrow(
+      new NoChangesError(42),
+    )
   })
 
   it('filters devices by type when specified', async () => {
