@@ -158,6 +158,7 @@ export {
 export {
   APIError,
   AuthenticationError,
+  EntityNotFoundError,
   isAPIError,
   NetworkError,
   RateLimitError,

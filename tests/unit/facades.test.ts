@@ -6,6 +6,7 @@ import {
   OperationMode,
   OperationModeZone,
 } from '../../src/constants.ts'
+import { EntityNotFoundError } from '../../src/errors/index.ts'
 import {
   AreaFacade,
   BuildingFacade,
@@ -618,6 +619,24 @@ describe('base facade instance error', () => {
     registry.syncAreas([])
 
     expect(() => facade.name).toThrow('not found')
+  })
+
+  it('throws EntityNotFoundError after the entity is evicted from the registry', () => {
+    const { facade, registry } = createAreaFacade()
+    registry.syncAreas([])
+
+    expect(() => facade.name).toThrow(EntityNotFoundError)
+    expect(() => facade.name).toThrow('Area with id 100 not found')
+  })
+
+  it('exists returns true before eviction and false afterwards', () => {
+    const { facade, registry } = createAreaFacade()
+
+    expect(facade.exists).toBe(true)
+
+    registry.syncAreas([])
+
+    expect(facade.exists).toBe(false)
   })
 
   it('throws when no device id for device-level frost protection fallback', async () => {
