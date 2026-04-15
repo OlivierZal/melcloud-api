@@ -13,7 +13,7 @@ import type {
 import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { NoChangesError } from '../errors/index.ts'
-import { type DeviceAny, Device } from '../models/index.ts'
+import { type DeviceAny, Device, isDeviceOfType } from '../models/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -98,13 +98,12 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
 
   protected get device(): Device<T> {
     const { instance } = this
-    if (instance.type !== this.type) {
+    if (!isDeviceOfType(instance, this.type)) {
       throw new Error(
         `Device type mismatch: expected ${String(this.type)}, got ${String(instance.type)}`,
       )
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- runtime-verified by type guard above
-    return instance as Device<T>
+    return instance
   }
 
   protected get model(): {

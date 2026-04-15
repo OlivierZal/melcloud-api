@@ -18,26 +18,14 @@ export interface BaseDevice<T extends DeviceType> {
 
 /**
  * Type guard that narrows a `DeviceAny` to a specific `Device` variant.
- * Overloads ensure the predicate type is always assignable to the union member.
  * @param device - The device model to narrow.
  * @param type - The expected device type literal.
  * @returns Whether the device matches the given type.
  */
-export function isDeviceOfType(
-  device: DeviceAny,
-  type: typeof DeviceType.Ata,
-): device is Device<typeof DeviceType.Ata>
-export function isDeviceOfType(
-  device: DeviceAny,
-  type: typeof DeviceType.Atw,
-): device is Device<typeof DeviceType.Atw>
-export function isDeviceOfType(
-  device: DeviceAny,
-  type: typeof DeviceType.Erv,
-): device is Device<typeof DeviceType.Erv>
-export function isDeviceOfType(device: DeviceAny, type: DeviceType): boolean {
-  return device.type === type
-}
+export const isDeviceOfType = <T extends DeviceType>(
+  device: Device<DeviceType>,
+  type: T,
+): device is Device<T> => device.type === type
 
 /** Model kind discriminants for polymorphic dispatch without instanceof. */
 export type ModelKind = 'area' | 'building' | 'device' | 'floor'
