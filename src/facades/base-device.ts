@@ -12,7 +12,7 @@ import type {
 } from '../types/index.ts'
 import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
-import { NoDataToUpdateError } from '../errors/index.ts'
+import { NoChangesError } from '../errors/index.ts'
 import { type DeviceAny, Device } from '../models/index.ts'
 import {
   fromListToSetAta,
@@ -165,7 +165,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
       typedKeys(newData) as (keyof UpdateDeviceData<T>)[],
     )
     if (!flags) {
-      throw new NoDataToUpdateError(id)
+      throw new NoChangesError(id)
     }
     const { data: finalData } = await api.updateValues({
       postData: {

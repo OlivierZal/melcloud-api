@@ -150,9 +150,7 @@ describe('home device ata facade', () => {
     it('should throw on empty values', async () => {
       const facade = new HomeDeviceAtaFacade(createApi(), createModel())
 
-      await expect(facade.updateValues({})).rejects.toThrow(
-        'No data to update',
-      )
+      await expect(facade.updateValues({})).rejects.toThrow('No changes')
     })
   })
 

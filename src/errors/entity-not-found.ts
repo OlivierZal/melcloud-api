@@ -1,3 +1,4 @@
+import type { SettingsParams } from '../types/index.ts'
 import { APIError } from './base.ts'
 
 /**
@@ -25,13 +26,13 @@ export class EntityNotFoundError extends APIError {
   public override readonly name = 'EntityNotFoundError'
 
   /** Registry table the lookup was performed against (e.g. `'DeviceLocation'`). */
-  public readonly tableName: string
+  public readonly tableName: SettingsParams['tableName']
 
   /** Id that could not be resolved in the registry. */
   public readonly entityId: number
 
   public constructor(
-    tableName: string,
+    tableName: SettingsParams['tableName'],
     entityId: number,
     options?: { cause?: unknown },
   ) {

@@ -11,24 +11,21 @@ import { APIError } from './base.ts'
  * try {
  *   await facade.updateValues({ setTemperature: 21 })
  * } catch (error) {
- *   if (error instanceof NoDataToUpdateError) {
+ *   if (error instanceof NoChangesError) {
  *     return
  *   }
  *   throw error
  * }
  * ```
  */
-export class NoDataToUpdateError extends APIError {
-  public override readonly name = 'NoDataToUpdateError'
+export class NoChangesError extends APIError {
+  public override readonly name = 'NoChangesError'
 
   /** Id of the entity the update targeted (device, zone, building, etc.). */
   public readonly entityId: number | string
 
-  public constructor(
-    entityId: number | string,
-    options?: { cause?: unknown },
-  ) {
-    super(`No data to update for entity with id ${String(entityId)}`, options)
+  public constructor(entityId: number | string, options?: { cause?: unknown }) {
+    super(`No changes for entity with id ${String(entityId)}`, options)
     this.entityId = entityId
   }
 }
