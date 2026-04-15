@@ -473,15 +473,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * @param language - The language code to set.
    */
   public async updateLanguage(language: string): Promise<void> {
-    if (language !== this.language) {
-      const { data: hasLanguageChanged } = await this.request<boolean>(
-        'post',
-        '/User/UpdateLanguage',
-        { data: { language: this.#getLanguageCode(language) } },
-      )
-      if (hasLanguageChanged) {
-        this.language = language
-      }
+    if (language === this.language) {
+      return
+    }
+    const { data: hasLanguageChanged } = await this.request<boolean>(
+      'post',
+      '/User/UpdateLanguage',
+      { data: { language: this.#getLanguageCode(language) } },
+    )
+    if (hasLanguageChanged) {
+      this.language = language
     }
   }
 

@@ -45,11 +45,11 @@ export class DeviceAtaFacade extends BaseDeviceFacade<typeof DeviceType.Ata> {
     SetTemperature?: number
   } {
     const { OperationMode: operationMode, SetTemperature: value } = data
-    if (value !== undefined) {
-      const range = this.#getTargetTemperatureRange(operationMode)
-      return { SetTemperature: clampToRange(value, range) }
+    if (value === undefined) {
+      return {}
     }
-    return {}
+    const range = this.#getTargetTemperatureRange(operationMode)
+    return { SetTemperature: clampToRange(value, range) }
   }
 
   #getTargetTemperatureRange(operationMode = this.setData.OperationMode): {

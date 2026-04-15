@@ -281,12 +281,11 @@ export abstract class BaseAPI implements Disposable {
   }
 
   private throwIfRateLimited(): void {
-    if (!this.rateLimitGate.isPaused) {
-      return
+    if (this.rateLimitGate.isPaused) {
+      throw new RateLimitError(
+        `API requests are on hold for ${this.rateLimitGate.formatRemaining()}`,
+        { retryAfter: this.rateLimitGate.remaining },
+      )
     }
-    throw new RateLimitError(
-      `API requests are on hold for ${this.rateLimitGate.formatRemaining()}`,
-      { retryAfter: this.rateLimitGate.remaining },
-    )
   }
 }
