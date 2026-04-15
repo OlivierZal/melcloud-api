@@ -6,7 +6,7 @@ import {
   OperationMode,
   OperationModeZone,
 } from '../../src/constants.ts'
-import { EntityNotFoundError } from '../../src/errors/index.ts'
+import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import {
   AreaFacade,
   BuildingFacade,
@@ -766,7 +766,7 @@ describe('ata device facade', () => {
         Power: true,
         SetTemperature: 24,
       }),
-    ).rejects.toThrow('No changes')
+    ).rejects.toThrow(new NoChangesError(1000))
   })
 
   it('clamps target temperature to operation mode range', async () => {

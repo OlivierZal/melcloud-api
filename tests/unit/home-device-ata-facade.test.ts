@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { HomeAPI } from '../../src/api/interfaces.ts'
 import type { HomeDeviceData } from '../../src/types/index.ts'
 import { HomeDeviceType } from '../../src/constants.ts'
+import { NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeDevice } from '../../src/models/home-device.ts'
 import { mock } from '../helpers.ts'
@@ -150,7 +151,9 @@ describe('home device ata facade', () => {
     it('should throw on empty values', async () => {
       const facade = new HomeDeviceAtaFacade(createApi(), createModel())
 
-      await expect(facade.updateValues({})).rejects.toThrow('No changes')
+      await expect(facade.updateValues({})).rejects.toThrow(
+        new NoChangesError('device-1'),
+      )
     })
   })
 
