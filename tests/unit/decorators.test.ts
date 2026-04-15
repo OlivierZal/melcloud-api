@@ -190,7 +190,9 @@ describe(updateDevices, () => {
     const facade = createMockFacade([])
     const decorated = decorateUpdateDevices('updateGroupState', resolveTrue)
 
-    await expect(decorated.call(facade, {})).rejects.toThrow('No data to set')
+    await expect(decorated.call(facade, {})).rejects.toThrow(
+      'No data to update',
+    )
   })
 
   it('filters devices by type when specified', async () => {

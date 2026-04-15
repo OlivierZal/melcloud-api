@@ -766,7 +766,7 @@ describe('ata device facade', () => {
         Power: true,
         SetTemperature: 24,
       }),
-    ).rejects.toThrow('No data to set')
+    ).rejects.toThrow('No data to update')
   })
 
   it('clamps target temperature to operation mode range', async () => {

@@ -18,6 +18,7 @@ import {
   isClassicFanSpeed,
   isHomeFanSpeed,
 } from '../enum-mappings.ts'
+import { NoDataToUpdateError } from '../errors/index.ts'
 import { clampToRange } from './base-device.ts'
 
 interface TemperatureRange {
@@ -153,7 +154,7 @@ export class HomeDeviceAtaFacade {
 
   public async updateValues(values: HomeAtaValues): Promise<boolean> {
     if (Object.keys(values).length === 0) {
-      throw new Error('No data to set')
+      throw new NoDataToUpdateError(this.id)
     }
     return this.#api.updateValues(this.id, {
       ...values,
