@@ -55,7 +55,7 @@ const deviceTypeNames = {
 } satisfies Record<DeviceType, string>
 
 const API_BASE_URL = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
-const APP_VERSION = '1.37.2.0'
+const APP_VERSION = '1.38.4.0'
 const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
 
