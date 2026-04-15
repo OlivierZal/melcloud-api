@@ -161,6 +161,7 @@ export {
   EntityNotFoundError,
   isAPIError,
   NetworkError,
+  NoChangesError,
   RateLimitError,
   TransientServerError,
 } from './errors/index.ts'
