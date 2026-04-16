@@ -1,9 +1,9 @@
 import type { ClassicDeviceType } from '../constants.ts'
 import type {
+  ClassicListDevice,
   ClassicListDeviceAny,
+  ClassicListDeviceData,
   ClassicListDeviceDataAny,
-  ListDevice,
-  ListDeviceData,
 } from '../types/index.ts'
 import { BaseModel } from './base.ts'
 import { syncModel } from './symbols.ts'
@@ -20,11 +20,11 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
 
   public readonly type: T
 
-  public get data(): ListDeviceData<T> {
+  public get data(): ClassicListDeviceData<T> {
     return this.#data
   }
 
-  readonly #data: ListDeviceData<T>
+  readonly #data: ClassicListDeviceData<T>
 
   public constructor({
     AreaID: areaId,
@@ -34,7 +34,7 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
     DeviceName: name,
     FloorID: floorId,
     Type: type,
-  }: ListDevice<T>) {
+  }: ClassicListDevice<T>) {
     super({ id, name })
     this.type = type
     this.areaId = areaId

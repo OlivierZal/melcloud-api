@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ListDeviceDataAta } from '../../src/types/index.ts'
+import type { ClassicListDeviceDataAta } from '../../src/types/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicDevice } from '../../src/entities/index.ts'
 import { ataDevice } from '../fixtures.ts'
 
-const isAtaData = (data: unknown): data is ListDeviceDataAta =>
+const isAtaData = (data: unknown): data is ClassicListDeviceDataAta =>
   data !== null && typeof data === 'object' && 'SetTemperature' in data
 
-const expectAtaData = (data: unknown): ListDeviceDataAta => {
+const expectAtaData = (data: unknown): ClassicListDeviceDataAta => {
   expect(isAtaData(data)).toBe(true)
 
   if (!isAtaData(data)) {

@@ -4,11 +4,11 @@ import type { ClassicAPI } from '../../src/api/classic.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import {
-  type BuildingWithStructure,
-  toAreaId,
-  toBuildingId,
-  toDeviceId,
-  toFloorId,
+  type ClassicBuildingWithStructure,
+  toClassicAreaId,
+  toClassicBuildingId,
+  toClassicDeviceId,
+  toClassicFloorId,
 } from '../../src/types/index.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
 import { cast, defined, mock } from '../helpers.ts'
@@ -20,8 +20,8 @@ const transientError = (status: number): Error =>
     response: { data: undefined, headers: {}, status },
   })
 
-const buildingResponse: BuildingWithStructure[] = [
-  mock<BuildingWithStructure>({
+const buildingResponse: ClassicBuildingWithStructure[] = [
+  mock<ClassicBuildingWithStructure>({
     ...buildingData({
       HMDefined: true,
       Location: 0,
@@ -35,18 +35,18 @@ const buildingResponse: BuildingWithStructure[] = [
         {
           Areas: [
             {
-              BuildingId: toBuildingId(1),
+              BuildingId: toClassicBuildingId(1),
               Devices: [
                 {
-                  AreaID: toAreaId(100),
-                  BuildingID: toBuildingId(1),
+                  AreaID: toClassicAreaId(100),
+                  BuildingID: toClassicBuildingId(1),
                   ClassicDevice: ataDeviceData({
                     NumberOfFanSpeeds: 5,
                     SetTemperature: 23,
                   }),
-                  DeviceID: toDeviceId(1001),
+                  DeviceID: toClassicDeviceId(1001),
                   DeviceName: 'AC unit',
-                  FloorID: toFloorId(10),
+                  FloorID: toClassicFloorId(10),
                   Type: ClassicDeviceType.Ata,
                 },
               ],
@@ -55,7 +55,7 @@ const buildingResponse: BuildingWithStructure[] = [
               Name: 'Living room',
             },
           ],
-          BuildingId: toBuildingId(1),
+          BuildingId: toClassicBuildingId(1),
           Devices: [],
           ID: 10,
           Name: 'Ground floor',
@@ -100,10 +100,16 @@ describe('api lifecycle', () => {
     const api = await melCloudApi.create({ autoSyncInterval: 0 })
 
     expect(api.registry.getDevices()).toHaveLength(1)
-    expect(api.registry.getDevicesByBuildingId(toBuildingId(1))).toHaveLength(1)
-    expect(api.registry.getFloorsByBuildingId(toBuildingId(1))).toHaveLength(1)
-    expect(api.registry.getAreasByFloorId(toFloorId(10))).toHaveLength(1)
-    expect(api.registry.getDevicesByAreaId(toAreaId(100))).toHaveLength(1)
+    expect(
+      api.registry.getDevicesByBuildingId(toClassicBuildingId(1)),
+    ).toHaveLength(1)
+    expect(
+      api.registry.getFloorsByBuildingId(toClassicBuildingId(1)),
+    ).toHaveLength(1)
+    expect(api.registry.getAreasByFloorId(toClassicFloorId(10))).toHaveLength(1)
+    expect(api.registry.getDevicesByAreaId(toClassicAreaId(100))).toHaveLength(
+      1,
+    )
 
     const device = api.registry.devices.getById(1001)
 
@@ -173,7 +179,7 @@ describe('api lifecycle', () => {
         if (config.url === '/Login/ClientLogin3') {
           return {
             data: {
-              LoginData: {
+              ClassicLoginData: {
                 ContextKey: 'ctx-123',
                 Expiry: '2099-12-31T00:00:00',
               },
@@ -205,7 +211,7 @@ describe('api lifecycle', () => {
         if (config.url === '/Login/ClientLogin3') {
           return {
             data: {
-              LoginData: {
+              ClassicLoginData: {
                 ContextKey: 'ctx-abc',
                 Expiry: '2099-12-31T00:00:00',
               },
@@ -243,7 +249,9 @@ describe('api lifecycle', () => {
     await api.fetch()
 
     expect(api.registry.getDevices()).toHaveLength(0)
-    expect(api.registry.getFloorsByBuildingId(toBuildingId(1))).toHaveLength(0)
+    expect(
+      api.registry.getFloorsByBuildingId(toClassicBuildingId(1)),
+    ).toHaveLength(0)
   })
 
   it('onSync callback is invoked after fetch', async () => {

@@ -2,21 +2,21 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/index.ts'
 import type {
-  FailureData,
-  GroupState,
-  SetDeviceDataAta,
-  SuccessData,
+  ClassicFailureData,
+  ClassicGroupState,
+  ClassicSetDeviceDataAta,
+  ClassicSuccessData,
 } from '../../src/types/index.ts'
 import {
+  CLASSIC_FLAG_UNCHANGED,
   ClassicDeviceType,
   ClassicOperationMode,
-  FLAG_UNCHANGED,
 } from '../../src/constants.ts'
 import {
-  fetchDevices,
-  syncDevices,
-  updateDevice,
-  updateDevices,
+  classicFetchDevices,
+  classicSyncDevices,
+  classicUpdateDevice,
+  classicUpdateDevices,
 } from '../../src/decorators/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { mock } from '../helpers.ts'
@@ -36,10 +36,15 @@ const decorateUpdateDevices = (
   name: string,
   target: (
     ...args: unknown[]
-  ) => Promise<boolean | FailureData | GroupState | SuccessData>,
+  ) => Promise<
+    boolean | ClassicFailureData | ClassicGroupState | ClassicSuccessData
+  >,
   options?: { type?: ClassicDeviceType },
-): ReturnType<ReturnType<typeof updateDevices>> =>
-  updateDevices(options)(target, mock<ClassMethodDecoratorContext>({ name }))
+): ReturnType<ReturnType<typeof classicUpdateDevices>> =>
+  classicUpdateDevices(options)(
+    target,
+    mock<ClassMethodDecoratorContext>({ name }),
+  )
 
 const ataFlags = {
   OperationMode: 0x2,
@@ -51,14 +56,14 @@ const ataFlags = {
 }
 
 const ervFlags = {
+  ClassicVentilationMode: 0x4,
   Power: 0x1,
   SetFanSpeed: 0x8,
-  VentilationMode: 0x4,
 }
 
 const createAtaSetData = (
-  overrides: Partial<SetDeviceDataAta> = {},
-): SetDeviceDataAta =>
+  overrides: Partial<ClassicSetDeviceDataAta> = {},
+): ClassicSetDeviceDataAta =>
   mock({
     DeviceType: ClassicDeviceType.Ata,
     EffectiveFlags: 0x1,
@@ -79,6 +84,7 @@ const createAtaSetData = (
 const createErvSetData = (
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
+  ClassicVentilationMode: 0,
   DeviceType: ClassicDeviceType.Erv,
   EffectiveFlags: 0x1,
   LastCommunication: '',
@@ -87,7 +93,6 @@ const createErvSetData = (
   Offline: false,
   Power: true,
   SetFanSpeed: 3,
-  VentilationMode: 0,
   ...overrides,
 })
 
@@ -120,7 +125,10 @@ const callUpdateDevice = async (
   setData: unknown,
 ): Promise<unknown> => {
   const target = vi.fn().mockResolvedValue(setData)
-  const decorated = updateDevice(target, mock<ClassMethodDecoratorContext>())
+  const decorated = classicUpdateDevice(
+    target,
+    mock<ClassMethodDecoratorContext>(),
+  )
   return decorated.call(facade)
 }
 
@@ -134,11 +142,14 @@ const resolvePowerData = async (): Promise<{ Alpha: null; Power: true }> => {
   return result
 }
 
-describe(fetchDevices, () => {
+describe(classicFetchDevices, () => {
   it('calls api.fetch before the target method', async () => {
     const fetchMock = vi.fn()
     const target = vi.fn().mockResolvedValue('result')
-    const decorated = fetchDevices(target, mock<ClassMethodDecoratorContext>())
+    const decorated = classicFetchDevices(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
     const context = { api: mock<ClassicAPIAdapter>({ fetch: fetchMock }) }
     await decorated.call(context)
 
@@ -147,11 +158,14 @@ describe(fetchDevices, () => {
   })
 })
 
-describe(syncDevices, () => {
+describe(classicSyncDevices, () => {
   it('calls onSync after the target method', async () => {
     const onSyncMock = vi.fn()
     const target = vi.fn().mockResolvedValue('result')
-    const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
+    const decorated = classicSyncDevices()(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
     const context = { onSync: onSyncMock }
     const result = await decorated.call(context)
 
@@ -162,7 +176,7 @@ describe(syncDevices, () => {
   it('passes type to onSync', async () => {
     const onSyncMock = vi.fn()
     const target = vi.fn().mockResolvedValue('result')
-    const decorated = syncDevices({ type: ClassicDeviceType.Ata })(
+    const decorated = classicSyncDevices({ type: ClassicDeviceType.Ata })(
       target,
       mock<ClassMethodDecoratorContext>(),
     )
@@ -174,7 +188,10 @@ describe(syncDevices, () => {
 
   it('works when onSync is undefined', async () => {
     const target = vi.fn().mockResolvedValue('result')
-    const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
+    const decorated = classicSyncDevices()(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
     const context = {}
     const result = await decorated.call(context)
 
@@ -182,7 +199,7 @@ describe(syncDevices, () => {
   })
 })
 
-describe(updateDevices, () => {
+describe(classicUpdateDevices, () => {
   it('updates all devices with the arg data', async () => {
     const update = vi.fn()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
@@ -239,7 +256,7 @@ describe(updateDevices, () => {
   })
 })
 
-describe(updateDevice, () => {
+describe(classicUpdateDevice, () => {
   it('updates the device model with converted data', async () => {
     const update = vi.fn()
     await callUpdateDevice(createAtaFacade(update), createAtaSetData())
@@ -273,15 +290,15 @@ describe(updateDevice, () => {
     expect(result).toBe(setData)
   })
 
-  it('handles FLAG_UNCHANGED by including all data', async () => {
+  it('handles CLASSIC_FLAG_UNCHANGED by including all data', async () => {
     const update = vi.fn()
     await callUpdateDevice(
       createErvFacade(update),
       createErvSetData({
-        EffectiveFlags: FLAG_UNCHANGED,
+        ClassicVentilationMode: 1,
+        EffectiveFlags: CLASSIC_FLAG_UNCHANGED,
         Power: false,
         SetFanSpeed: 2,
-        VentilationMode: 1,
       }),
     )
 

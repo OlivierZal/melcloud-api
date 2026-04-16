@@ -1,4 +1,4 @@
-import type { UpdateDeviceData } from '../types/index.ts'
+import type { ClassicUpdateDeviceData } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import type { ReportChartPieOptions, ReportQuery } from './interfaces.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
@@ -13,11 +13,11 @@ export class ClassicDeviceErvFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Erv
 > {
   public readonly flags = {
+    ClassicVentilationMode: 0x4,
     Power: 0x1,
     SetFanSpeed: 0x8,
-    VentilationMode: 0x4,
   } as const satisfies Record<
-    keyof UpdateDeviceData<typeof ClassicDeviceType.Erv>,
+    keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Erv>,
     number
   >
 

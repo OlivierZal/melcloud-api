@@ -1,19 +1,19 @@
 import type {
   ClassicDeviceType,
-  OperationModeState,
-  OperationModeStateHotWater,
-  OperationModeStateZone,
-  OperationModeZone,
+  ClassicOperationModeState,
+  ClassicOperationModeStateHotWater,
+  ClassicOperationModeStateZone,
+  ClassicOperationModeZone,
 } from '../constants.ts'
 import type {
-  BaseListDeviceData,
-  BaseSetDeviceData,
-  BaseUpdateDeviceData,
-  TransientDeviceData,
+  ClassicBaseListDeviceData,
+  ClassicBaseSetDeviceData,
+  ClassicBaseUpdateDeviceData,
+  ClassicTransientDeviceData,
 } from './classic-bases.ts'
-import type { GetDeviceData } from './classic-generic.ts'
+import type { ClassicGetDeviceData } from './classic-generic.ts'
 
-export interface EnergyDataAtw {
+export interface ClassicEnergyDataAtw {
   readonly CoP: readonly number[]
   readonly TotalCoolingConsumed: number
   readonly TotalCoolingProduced: number
@@ -23,12 +23,12 @@ export interface EnergyDataAtw {
   readonly TotalHotWaterProduced: number
 }
 
-export interface ListDeviceDataAtw
+export interface ClassicListDeviceDataAtw
   extends
-    BaseListDeviceData,
+    ClassicBaseListDeviceData,
     Omit<
-      GetDeviceData<typeof ClassicDeviceType.Atw>,
-      keyof TransientDeviceData
+      ClassicGetDeviceData<typeof ClassicDeviceType.Atw>,
+      keyof ClassicTransientDeviceData
     > {
   readonly BoosterHeater1Status: boolean
   readonly BoosterHeater2PlusStatus: boolean
@@ -59,17 +59,17 @@ export interface ListDeviceDataAtw
   readonly Zone2InHeatMode: boolean
 }
 
-export interface OperationModeZoneDataAtw {
-  readonly OperationModeZone1?: OperationModeZone
-  readonly OperationModeZone2?: OperationModeZone
+export interface ClassicOperationModeZoneDataAtw {
+  readonly OperationModeZone1?: ClassicOperationModeZone
+  readonly OperationModeZone2?: ClassicOperationModeZone
 }
 
-export interface SetDeviceDataAtw
-  extends BaseSetDeviceData, Required<UpdateDeviceDataAtw> {
+export interface ClassicSetDeviceDataAtw
+  extends ClassicBaseSetDeviceData, Required<ClassicUpdateDeviceDataAtw> {
   readonly DeviceType: typeof ClassicDeviceType.Atw
   readonly IdleZone1: boolean
   readonly IdleZone2: boolean
-  readonly OperationMode: OperationModeState
+  readonly OperationMode: ClassicOperationModeState
   readonly OutdoorTemperature: number
   readonly ProhibitCoolingZone1: boolean
   readonly ProhibitCoolingZone2: boolean
@@ -81,7 +81,7 @@ export interface SetDeviceDataAtw
   readonly TankWaterTemperature: number
 }
 
-export interface TemperatureDataAtw {
+export interface ClassicTemperatureDataAtw {
   readonly SetCoolFlowTemperatureZone1?: number
   readonly SetCoolFlowTemperatureZone2?: number
   readonly SetHeatFlowTemperatureZone1?: number
@@ -91,33 +91,36 @@ export interface TemperatureDataAtw {
   readonly SetTemperatureZone2?: number
 }
 
-export interface UpdateDeviceDataAtw
-  extends BaseUpdateDeviceData, OperationModeZoneDataAtw, TemperatureDataAtw {
+export interface ClassicUpdateDeviceDataAtw
+  extends
+    ClassicBaseUpdateDeviceData,
+    ClassicOperationModeZoneDataAtw,
+    ClassicTemperatureDataAtw {
   readonly ForcedHotWaterMode?: boolean
 }
 
 /** ATW hot water state derived from device data. */
-export interface HotWaterState {
+export interface ClassicHotWaterState {
   readonly isEcoHotWater: boolean
   readonly isForcedMode: boolean
   readonly isProhibited: boolean
   readonly maxTankTemperature: number
-  readonly operationalState: OperationModeStateHotWater
+  readonly operationalState: ClassicOperationModeStateHotWater
   readonly setTankWaterTemperature: number
   readonly tankWaterTemperature: number
 }
 
 /** ATW zone state derived from device data. */
-export type ZoneAtw = 'Zone1' | 'Zone2'
+export type ClassicZoneAtw = 'Zone1' | 'Zone2'
 
-export interface ZoneState {
+export interface ClassicZoneState {
   readonly isCoolingProhibited: boolean
   readonly isHeatingProhibited: boolean
   readonly isIdle: boolean
   readonly isInCoolMode: boolean
   readonly isInHeatMode: boolean
-  readonly operationalState: OperationModeStateZone
-  readonly operationMode: OperationModeZone
+  readonly operationalState: ClassicOperationModeStateZone
+  readonly operationMode: ClassicOperationModeZone
   readonly roomTemperature: number
   readonly setTemperature: number
 }

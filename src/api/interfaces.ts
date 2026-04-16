@@ -3,43 +3,43 @@ import type { HourNumbers } from 'luxon'
 import type { ClassicDeviceType, DeviceType } from '../constants.ts'
 import type { HomeRegistry } from '../entities/home-registry.ts'
 import type {
-  BuildingWithStructure,
-  EnergyData,
-  EnergyPostData,
-  ErrorLogData,
-  ErrorLogPostData,
-  FailureData,
-  FrostProtectionData,
-  FrostProtectionPostData,
-  GetDeviceData,
-  GetDeviceDataParams,
-  GetGroupData,
-  GetGroupPostData,
-  HolidayModeData,
-  HolidayModePostData,
+  ClassicBuildingWithStructure,
+  ClassicEnergyData,
+  ClassicEnergyPostData,
+  ClassicErrorLogData,
+  ClassicErrorLogPostData,
+  ClassicFailureData,
+  ClassicFrostProtectionData,
+  ClassicFrostProtectionPostData,
+  ClassicGetDeviceData,
+  ClassicGetDeviceDataParams,
+  ClassicGetGroupData,
+  ClassicGetGroupPostData,
+  ClassicHolidayModeData,
+  ClassicHolidayModePostData,
+  ClassicLoginCredentials,
+  ClassicOperationModeLogData,
+  ClassicReportData,
+  ClassicReportPostData,
+  ClassicSetDeviceData,
+  ClassicSetDevicePostData,
+  ClassicSetGroupPostData,
+  ClassicSetPowerPostData,
+  ClassicSettingsParams,
+  ClassicSuccessData,
+  ClassicTemperatureLogPostData,
+  ClassicTilesData,
+  ClassicTilesPostData,
   HomeAtaValues,
   HomeBuilding,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
   HomeUser,
-  LoginCredentials,
-  OperationModeLogData,
-  ReportData,
-  ReportPostData,
-  SetDeviceData,
-  SetDevicePostData,
-  SetGroupPostData,
-  SetPowerPostData,
-  SettingsParams,
-  SuccessData,
-  TemperatureLogPostData,
-  TilesData,
-  TilesPostData,
 } from '../types/index.ts'
 
 /** Common configuration shared by all API clients. */
-export interface BaseAPIConfig extends Partial<LoginCredentials> {
+export interface BaseAPIConfig extends Partial<ClassicLoginCredentials> {
   /**
    * Optional shutdown signal applied to every outgoing request.
    *
@@ -201,7 +201,7 @@ export interface HomeAPISettings {
 }
 
 /** A single error entry from the device error log. */
-export interface ErrorDetails {
+export interface ClassicErrorDetails {
   /** ISO 8601 date of the error occurrence. */
   readonly date: string
 
@@ -213,9 +213,9 @@ export interface ErrorDetails {
 }
 
 /** Parsed error log with pagination support. */
-export interface ErrorLog {
+export interface ClassicErrorLog {
   /** List of error entries, sorted in reverse chronological order. */
-  readonly errors: readonly ErrorDetails[]
+  readonly errors: readonly ClassicErrorDetails[]
 
   /** ISO date string for the queried period start. */
   readonly fromDate: string
@@ -228,7 +228,7 @@ export interface ErrorLog {
 }
 
 /** Query parameters for paginating the error log. */
-export interface ErrorLogQuery {
+export interface ClassicErrorLogQuery {
   /** Start date in ISO 8601 format. */
   readonly from?: string
 
@@ -267,7 +267,7 @@ export interface HomeAPI {
   readonly user: HomeUser | null
 
   /** Authenticate with MELCloud Home using the provided or stored credentials. */
-  readonly authenticate: (data?: LoginCredentials) => Promise<boolean>
+  readonly authenticate: (data?: ClassicLoginCredentials) => Promise<boolean>
 
   /** Cancel any pending automatic sync. */
   readonly clearSync: () => void
@@ -322,60 +322,60 @@ export interface ClassicAPIAdapter {
    * Supported by all device types.
    */
   readonly getErrorLog: (
-    query: ErrorLogQuery,
+    query: ClassicErrorLogQuery,
     deviceIds: number[],
-  ) => Promise<ErrorLog>
+  ) => Promise<ClassicErrorLog>
 
   /** Fetch raw error log entries from the Classic API. */
   readonly getErrorEntries: ({
     postData,
   }: {
-    postData: ErrorLogPostData
-  }) => Promise<{ data: ErrorLogData[] | FailureData }>
+    postData: ClassicErrorLogPostData
+  }) => Promise<{ data: ClassicErrorLogData[] | ClassicFailureData }>
 
   /** Fetch all buildings and sync the model registry. */
-  readonly fetch: () => Promise<BuildingWithStructure[]>
+  readonly fetch: () => Promise<ClassicBuildingWithStructure[]>
 
   /** Get frost protection settings for a building, floor, area, or device. */
   readonly getFrostProtection: ({
     params,
   }: {
-    params: SettingsParams
-  }) => Promise<{ data: FrostProtectionData }>
+    params: ClassicSettingsParams
+  }) => Promise<{ data: ClassicFrostProtectionData }>
 
   /** Get holiday mode settings for a building, floor, area, or device. */
   readonly getHolidayMode: ({
     params,
   }: {
-    params: SettingsParams
-  }) => Promise<{ data: HolidayModeData }>
+    params: ClassicSettingsParams
+  }) => Promise<{ data: ClassicHolidayModeData }>
 
   /** Fetch operation mode log data for charting. */
   readonly getOperationModes: ({
     postData,
   }: {
-    postData: ReportPostData
-  }) => Promise<{ data: OperationModeLogData }>
+    postData: ClassicReportPostData
+  }) => Promise<{ data: ClassicOperationModeLogData }>
 
   /** Update frost protection settings. */
   readonly updateFrostProtection: ({
     postData,
   }: {
-    postData: FrostProtectionPostData
-  }) => Promise<{ data: FailureData | SuccessData }>
+    postData: ClassicFrostProtectionPostData
+  }) => Promise<{ data: ClassicFailureData | ClassicSuccessData }>
 
   /** Update holiday mode settings. */
   readonly updateHolidayMode: ({
     postData,
   }: {
-    postData: HolidayModePostData
-  }) => Promise<{ data: FailureData | SuccessData }>
+    postData: ClassicHolidayModePostData
+  }) => Promise<{ data: ClassicFailureData | ClassicSuccessData }>
 
   /** Turn devices on or off. */
   readonly updatePower: ({
     postData,
   }: {
-    postData: SetPowerPostData
+    postData: ClassicSetPowerPostData
   }) => Promise<{ data: boolean }>
 
   /** Send updated device values to the Classic API. */
@@ -383,77 +383,77 @@ export interface ClassicAPIAdapter {
     postData,
     type,
   }: {
-    postData: SetDevicePostData<T>
+    postData: ClassicSetDevicePostData<T>
     type: T
-  }) => Promise<{ data: SetDeviceData<T> }>
+  }) => Promise<{ data: ClassicSetDeviceData<T> }>
 
   /** Fetch WiFi signal strength report. */
   readonly getSignal: ({
     postData,
   }: {
     postData: { devices: number | number[]; hour: HourNumbers }
-  }) => Promise<{ data: ReportData }>
+  }) => Promise<{ data: ClassicReportData }>
 
   /** Fetch temperature log data. */
   readonly getTemperatures: ({
     postData,
   }: {
-    postData: TemperatureLogPostData
-  }) => Promise<{ data: ReportData }>
+    postData: ClassicTemperatureLogPostData
+  }) => Promise<{ data: ClassicReportData }>
 
   /** Fetch tile data for device overview. */
   readonly getTiles: (({
     postData,
   }: {
-    postData: TilesPostData<null>
-  }) => Promise<{ data: TilesData<null> }>) &
+    postData: ClassicTilesPostData<null>
+  }) => Promise<{ data: ClassicTilesData<null> }>) &
     (<T extends ClassicDeviceType>({
       postData,
     }: {
-      postData: TilesPostData<T>
-    }) => Promise<{ data: TilesData<T> }>)
+      postData: ClassicTilesPostData<T>
+    }) => Promise<{ data: ClassicTilesData<T> }>)
 
   /** Fetch current device data by device and building ID. */
   readonly getValues: <T extends ClassicDeviceType>({
     params,
   }: {
-    params: GetDeviceDataParams
-  }) => Promise<{ data: GetDeviceData<T> }>
+    params: ClassicGetDeviceDataParams
+  }) => Promise<{ data: ClassicGetDeviceData<T> }>
 
   /** Fetch energy consumption report. Supported by ATA and ATW devices. */
   readonly getEnergy: <T extends ClassicDeviceType>({
     postData,
   }: {
-    postData: EnergyPostData
-  }) => Promise<{ data: EnergyData<T> }>
+    postData: ClassicEnergyPostData
+  }) => Promise<{ data: ClassicEnergyData<T> }>
 
   /** Fetch ATA device group state. ATA only. */
   readonly getGroup: ({
     postData,
   }: {
-    postData: GetGroupPostData
-  }) => Promise<{ data: GetGroupData }>
+    postData: ClassicGetGroupPostData
+  }) => Promise<{ data: ClassicGetGroupData }>
 
   /** Update ATA device group state. ATA only. */
   readonly updateGroupState: ({
     postData,
   }: {
-    postData: SetGroupPostData
-  }) => Promise<{ data: FailureData | SuccessData }>
+    postData: ClassicSetGroupPostData
+  }) => Promise<{ data: ClassicFailureData | ClassicSuccessData }>
 
   /** Fetch hourly temperature report. ATW only. */
   readonly getHourlyTemperatures: ({
     postData,
   }: {
     postData: { device: number; hour: HourNumbers }
-  }) => Promise<{ data: ReportData }>
+  }) => Promise<{ data: ClassicReportData }>
 
   /** Fetch internal temperature report. ATW only. */
   readonly getInternalTemperatures: ({
     postData,
   }: {
-    postData: ReportPostData
-  }) => Promise<{ data: ReportData }>
+    postData: ClassicReportPostData
+  }) => Promise<{ data: ClassicReportData }>
 }
 
 /** Logger interface for API call tracing. */

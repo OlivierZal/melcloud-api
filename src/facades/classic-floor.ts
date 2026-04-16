@@ -1,10 +1,10 @@
-import type { ClassicDeviceAny, Floor } from '../entities/index.ts'
-import type { FloorID } from '../types/index.ts'
+import type { ClassicDeviceAny, ClassicFloor } from '../entities/index.ts'
+import type { ClassicFloorID } from '../types/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 
 /** Facade for a floor, grouping devices on that floor within a building. */
-export class FloorFacade extends BaseZoneFacade<Floor> {
-  declare public readonly id: FloorID
+export class ClassicFloorFacade extends BaseZoneFacade<ClassicFloor> {
+  declare public readonly id: ClassicFloorID
 
   public override get devices(): ClassicDeviceAny[] {
     return this.registry.getDevicesByFloorId(this.id)
@@ -16,10 +16,10 @@ export class FloorFacade extends BaseZoneFacade<Floor> {
 
   protected readonly holidayModeLocation = 'Floors'
 
-  protected readonly tableName = 'Floor'
+  protected readonly tableName = 'ClassicFloor'
 
   protected get model(): {
-    getById: (id: number) => Floor | undefined
+    getById: (id: number) => ClassicFloor | undefined
   } {
     return this.registry.floors
   }

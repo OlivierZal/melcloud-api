@@ -1,19 +1,19 @@
 import type { ClassicAPIAdapter } from '../api/index.ts'
 import type {
-  Building,
+  ClassicBuilding,
   ClassicDeviceAny,
   ClassicModel,
   ClassicRegistry,
 } from '../entities/index.ts'
-import type { BuildingID, ZoneSettings } from '../types/index.ts'
-import { fetchDevices } from '../decorators/index.ts'
+import type { ClassicBuildingID, ClassicZoneSettings } from '../types/index.ts'
+import { classicFetchDevices } from '../decorators/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
-export class BuildingFacade extends BaseZoneFacade<Building> {
-  declare public readonly id: BuildingID
+export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
+  declare public readonly id: ClassicBuildingID
 
-  public get data(): ZoneSettings {
+  public get data(): ClassicZoneSettings {
     return this.instance.data
   }
 
@@ -27,10 +27,10 @@ export class BuildingFacade extends BaseZoneFacade<Building> {
 
   protected readonly holidayModeLocation = 'Buildings'
 
-  protected readonly tableName = 'Building'
+  protected readonly tableName = 'ClassicBuilding'
 
   protected get model(): {
-    getById: (id: number) => Building | undefined
+    getById: (id: number) => ClassicBuilding | undefined
   } {
     return this.registry.buildings
   }
@@ -49,8 +49,8 @@ export class BuildingFacade extends BaseZoneFacade<Building> {
     } = this)
   }
 
-  @fetchDevices
-  public async fetch(): Promise<ZoneSettings> {
+  @classicFetchDevices
+  public async fetch(): Promise<ClassicZoneSettings> {
     const data = await Promise.resolve(this.data)
     return data
   }

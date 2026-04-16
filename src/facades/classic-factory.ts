@@ -1,14 +1,18 @@
 import type { ClassicAPIAdapter } from '../api/index.ts'
-import type { ClassicDeviceAny, ClassicModel, ClassicRegistry } from '../entities/index.ts'
+import type {
+  ClassicDeviceAny,
+  ClassicModel,
+  ClassicRegistry,
+} from '../entities/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
-import type { DeviceFacadeAny, Facade } from './interfaces.ts'
-import { AreaFacade } from './classic-area.ts'
-import { BuildingFacade } from './classic-building.ts'
+import type { ClassicDeviceFacadeAny, ClassicFacade } from './interfaces.ts'
+import { ClassicAreaFacade } from './classic-area.ts'
+import { ClassicBuildingFacade } from './classic-building.ts'
 import { ClassicDeviceAtaFacade } from './classic-device-ata.ts'
 import { ClassicDeviceAtwHasZone2Facade } from './classic-device-atw-has-zone2.ts'
 import { ClassicDeviceAtwFacade } from './classic-device-atw.ts'
 import { ClassicDeviceErvFacade } from './classic-device-erv.ts'
-import { FloorFacade } from './classic-floor.ts'
+import { ClassicFloorFacade } from './classic-floor.ts'
 
 const getDeviceFromRegistry = (
   registry: ClassicRegistry,
@@ -25,7 +29,7 @@ const createDeviceFacade = (
   api: ClassicAPIAdapter,
   registry: ClassicRegistry,
   instance: ClassicModel,
-): DeviceFacadeAny => {
+): ClassicDeviceFacadeAny => {
   const device = getDeviceFromRegistry(registry, instance.id)
   switch (device.type) {
     case ClassicDeviceType.Ata: {
@@ -54,19 +58,19 @@ export const createFacade = (
   api: ClassicAPIAdapter,
   registry: ClassicRegistry,
   instance: ClassicModel,
-): Facade => {
+): ClassicFacade => {
   switch (instance.modelKind) {
     case 'area': {
-      return new AreaFacade(api, registry, instance)
+      return new ClassicAreaFacade(api, registry, instance)
     }
     case 'building': {
-      return new BuildingFacade(api, registry, instance)
+      return new ClassicBuildingFacade(api, registry, instance)
     }
     case 'device': {
       return createDeviceFacade(api, registry, instance)
     }
     case 'floor': {
-      return new FloorFacade(api, registry, instance)
+      return new ClassicFloorFacade(api, registry, instance)
     }
     // No default
   }

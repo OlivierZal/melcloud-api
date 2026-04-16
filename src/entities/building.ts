@@ -1,10 +1,13 @@
-import type { BuildingData, ZoneSettings } from '../types/index.ts'
+import type {
+  ClassicBuildingData,
+  ClassicZoneSettings,
+} from '../types/index.ts'
 import { BaseModel } from './base.ts'
 import { syncModel } from './symbols.ts'
 
-/** Building model holding zone settings and geographic location. */
-export class Building extends BaseModel {
-  public data: ZoneSettings
+/** ClassicBuilding model holding zone settings and geographic location. */
+export class ClassicBuilding extends BaseModel {
+  public data: ClassicZoneSettings
 
   public location: number
 
@@ -15,7 +18,7 @@ export class Building extends BaseModel {
     Location: location,
     Name: name,
     ...data
-  }: BuildingData) {
+  }: ClassicBuildingData) {
     super({ id, name })
     this.location = location
     this.data = data
@@ -25,7 +28,7 @@ export class Building extends BaseModel {
     Location: location,
     Name: name,
     ...data
-  }: BuildingData): void {
+  }: ClassicBuildingData): void {
     this.name = name
     this.location = location
     this.data = data

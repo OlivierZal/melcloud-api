@@ -1,21 +1,21 @@
 import type { ClassicAPIAdapter } from '../api/index.ts'
 import type { ClassicDeviceType } from '../constants.ts'
 import type {
-  Area,
-  Building,
+  ClassicArea,
+  ClassicBuilding,
   ClassicDevice,
   ClassicDeviceAny,
+  ClassicFloor,
   ClassicModel,
   ClassicRegistry,
-  Floor,
 } from '../entities/index.ts'
-import type { BuildingZone, Zone } from '../types/index.ts'
+import type { ClassicBuildingZone, ClassicZone } from '../types/index.ts'
 import type {
-  BuildingFacade,
-  DeviceFacade,
-  DeviceFacadeAny,
-  Facade,
-  ZoneFacade,
+  ClassicBuildingFacade,
+  ClassicDeviceFacade,
+  ClassicDeviceFacadeAny,
+  ClassicFacade,
+  ClassicZoneFacade,
 } from './interfaces.ts'
 import { createFacade } from './classic-factory.ts'
 
@@ -26,7 +26,7 @@ import { createFacade } from './classic-factory.ts'
 export class ClassicFacadeManager {
   readonly #api: ClassicAPIAdapter
 
-  readonly #facades = new WeakMap<ClassicModel, Facade>()
+  readonly #facades = new WeakMap<ClassicModel, ClassicFacade>()
 
   readonly #registry: ClassicRegistry
 
@@ -37,19 +37,19 @@ export class ClassicFacadeManager {
 
   public get<T extends ClassicDeviceType>(
     instance: ClassicDevice<T>,
-  ): DeviceFacade<T>
-  public get(instance: Area | Floor): ZoneFacade
-  public get(instance: Building): BuildingFacade
-  public get(instance: ClassicDeviceAny): DeviceFacadeAny
-  public get(instance: ClassicModel): Facade
+  ): ClassicDeviceFacade<T>
+  public get(instance: ClassicArea | ClassicFloor): ClassicZoneFacade
+  public get(instance: ClassicBuilding): ClassicBuildingFacade
+  public get(instance: ClassicDeviceAny): ClassicDeviceFacadeAny
+  public get(instance: ClassicModel): ClassicFacade
   public get(): null
   public get<T extends ClassicDeviceType>(
     instance?: ClassicDevice<T>,
-  ): DeviceFacade<T> | null
-  public get(instance?: Area | Floor): ZoneFacade | null
-  public get(instance?: Building): BuildingFacade | null
-  public get(instance?: ClassicDeviceAny): DeviceFacadeAny | null
-  public get(instance?: ClassicModel): Facade | null {
+  ): ClassicDeviceFacade<T> | null
+  public get(instance?: ClassicArea | ClassicFloor): ClassicZoneFacade | null
+  public get(instance?: ClassicBuilding): ClassicBuildingFacade | null
+  public get(instance?: ClassicDeviceAny): ClassicDeviceFacadeAny | null
+  public get(instance?: ClassicModel): ClassicFacade | null {
     if (!instance) {
       return null
     }
@@ -61,11 +61,13 @@ export class ClassicFacadeManager {
     return facade
   }
 
-  public getBuildings(params?: { type?: ClassicDeviceType }): BuildingZone[] {
+  public getBuildings(params?: {
+    type?: ClassicDeviceType
+  }): ClassicBuildingZone[] {
     return this.#registry.getBuildings(params)
   }
 
-  public getZones(params?: { type?: ClassicDeviceType }): Zone[] {
+  public getZones(params?: { type?: ClassicDeviceType }): ClassicZone[] {
     return this.#registry.getZones(params)
   }
 }

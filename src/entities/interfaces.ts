@@ -1,18 +1,18 @@
 import type { ClassicDeviceType } from '../constants.ts'
-import type { ListDeviceData } from '../types/index.ts'
+import type { ClassicListDeviceData } from '../types/index.ts'
 import type { BaseModel } from './base.ts'
-import type { Building } from './building.ts'
+import type { ClassicBuilding } from './building.ts'
 import type { ClassicDevice } from './classic-device.ts'
 
 /** Base building model providing zone settings (frost protection, holiday mode). */
-export type ClassicBaseBuilding = Pick<Building, 'data'>
+export type ClassicBaseBuilding = Pick<ClassicBuilding, 'data'>
 
 /** Base type for all model classes. */
 export type ClassicModel = BaseModel
 
 /** Base device model with type-discriminated device data. */
 export interface ClassicBaseDevice<T extends ClassicDeviceType> {
-  readonly data: ListDeviceData<T>
+  readonly data: ClassicListDeviceData<T>
   readonly type: T
 }
 
@@ -22,7 +22,7 @@ export interface ClassicBaseDevice<T extends ClassicDeviceType> {
  * @param type - The expected device type literal.
  * @returns Whether the device matches the given type.
  */
-export const isDeviceOfType = <T extends ClassicDeviceType>(
+export const isClassicDeviceOfType = <T extends ClassicDeviceType>(
   device: ClassicDevice<ClassicDeviceType>,
   type: T,
 ): device is ClassicDevice<T> => device.type === type

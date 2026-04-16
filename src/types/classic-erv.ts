@@ -1,22 +1,22 @@
 import type {
   ClassicDeviceType,
   ClassicNonSilentFanSpeed,
-  VentilationMode,
+  ClassicVentilationMode,
 } from '../constants.ts'
 import type {
-  BaseListDeviceData,
-  BaseSetDeviceData,
-  BaseUpdateDeviceData,
-  TransientDeviceData,
+  ClassicBaseListDeviceData,
+  ClassicBaseSetDeviceData,
+  ClassicBaseUpdateDeviceData,
+  ClassicTransientDeviceData,
 } from './classic-bases.ts'
-import type { GetDeviceData } from './classic-generic.ts'
+import type { ClassicGetDeviceData } from './classic-generic.ts'
 
-export interface ListDeviceDataErv
+export interface ClassicListDeviceDataErv
   extends
-    BaseListDeviceData,
+    ClassicBaseListDeviceData,
     Omit<
-      GetDeviceData<typeof ClassicDeviceType.Erv>,
-      keyof TransientDeviceData
+      ClassicGetDeviceData<typeof ClassicDeviceType.Erv>,
+      keyof ClassicTransientDeviceData
     > {
   readonly HasAutomaticFanSpeed: boolean
   readonly HasCO2Sensor: boolean
@@ -24,8 +24,8 @@ export interface ListDeviceDataErv
   readonly PM25Level: number
 }
 
-export interface SetDeviceDataErv
-  extends BaseSetDeviceData, Required<UpdateDeviceDataErv> {
+export interface ClassicSetDeviceDataErv
+  extends ClassicBaseSetDeviceData, Required<ClassicUpdateDeviceDataErv> {
   readonly DeviceType: typeof ClassicDeviceType.Erv
   readonly NumberOfFanSpeeds: number
   readonly OutdoorTemperature: number
@@ -33,7 +33,7 @@ export interface SetDeviceDataErv
   readonly RoomTemperature: number
 }
 
-export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
+export interface ClassicUpdateDeviceDataErv extends ClassicBaseUpdateDeviceData {
+  readonly ClassicVentilationMode?: ClassicVentilationMode
   readonly SetFanSpeed?: ClassicNonSilentFanSpeed
-  readonly VentilationMode?: VentilationMode
 }

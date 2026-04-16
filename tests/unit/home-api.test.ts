@@ -94,7 +94,7 @@ const mockReportData: HomeReportData[] = [
           { [X_KEY]: '2026-03-01T01:00:00', [Y_KEY]: 21 },
         ],
         id: 'room_temperature',
-        label: 'Room Temperature',
+        label: 'Room ClassicTemperature',
       },
     ],
     reportPeriod: 0,

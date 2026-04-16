@@ -46,13 +46,13 @@ export type ClassicNonSilentFanSpeed = Exclude<
 >
 
 /** Effective flags value indicating no specific fields were changed; all data should be included. */
-export const FLAG_UNCHANGED = 0x0
+export const CLASSIC_FLAG_UNCHANGED = 0x0
 
 /**
  * Synthetic operation mode for buildings with devices in different modes.
  * Not a real API value — used at the application layer for mixed-state display.
  */
-export const OPERATION_MODE_MIXED = 0
+export const CLASSIC_OPERATION_MODE_MIXED = 0
 
 /** ClassicHorizontal vane positions for ATA devices. */
 export const ClassicHorizontal = {
@@ -69,17 +69,18 @@ export type ClassicHorizontal =
   (typeof ClassicHorizontal)[keyof typeof ClassicHorizontal]
 
 /** Report axis label formatting types. */
-export const LabelType = {
+export const ClassicLabelType = {
   day_of_week: 4,
   month: 2,
   month_of_year: 3,
   raw: 1,
   time: 0,
 } as const
-export type LabelType = (typeof LabelType)[keyof typeof LabelType]
+export type ClassicLabelType =
+  (typeof ClassicLabelType)[keyof typeof ClassicLabelType]
 
 /** MELCloud supported language codes. */
-export const Language = {
+export const ClassicLanguage = {
   bg: 1,
   cs: 2,
   da: 3,
@@ -108,7 +109,8 @@ export const Language = {
   tr: 21,
   uk: 20,
 } as const
-export type Language = (typeof Language)[keyof typeof Language]
+export type ClassicLanguage =
+  (typeof ClassicLanguage)[keyof typeof ClassicLanguage]
 
 /** ATA device operation modes. */
 export const ClassicOperationMode = {
@@ -122,18 +124,18 @@ export type ClassicOperationMode =
   (typeof ClassicOperationMode)[keyof typeof ClassicOperationMode]
 
 /** Pre-built sets of ATA operation modes that support cooling or heating. */
-export const coolModes: ReadonlySet<ClassicOperationMode> = new Set([
+export const classicCoolModes: ReadonlySet<ClassicOperationMode> = new Set([
   ClassicOperationMode.auto,
   ClassicOperationMode.cool,
   ClassicOperationMode.dry,
 ])
-export const heatModes: ReadonlySet<ClassicOperationMode> = new Set([
+export const classicHeatModes: ReadonlySet<ClassicOperationMode> = new Set([
   ClassicOperationMode.auto,
   ClassicOperationMode.heat,
 ])
 
 /** ATW device real-time operation state. */
-export const OperationModeState = {
+export const ClassicOperationModeState = {
   cooling: 3,
   defrost: 5,
   dhw: 1,
@@ -141,33 +143,33 @@ export const OperationModeState = {
   idle: 0,
   legionella: 6,
 } as const
-export type OperationModeState =
-  (typeof OperationModeState)[keyof typeof OperationModeState]
+export type ClassicOperationModeState =
+  (typeof ClassicOperationModeState)[keyof typeof ClassicOperationModeState]
 
 /** ATW hot water derived operational state. */
-export const OperationModeStateHotWater = {
+export const ClassicOperationModeStateHotWater = {
   dhw: 'dhw',
   idle: 'idle',
   legionella: 'legionella',
   prohibited: 'prohibited',
 } as const
-export type OperationModeStateHotWater =
-  (typeof OperationModeStateHotWater)[keyof typeof OperationModeStateHotWater]
+export type ClassicOperationModeStateHotWater =
+  (typeof ClassicOperationModeStateHotWater)[keyof typeof ClassicOperationModeStateHotWater]
 
 /** ATW zone derived operational state. */
-export const OperationModeStateZone = {
+export const ClassicOperationModeStateZone = {
   cooling: 'cooling',
   defrost: 'defrost',
   heating: 'heating',
   idle: 'idle',
   prohibited: 'prohibited',
 } as const
-export type OperationModeStateZone =
-  (typeof OperationModeStateZone)[keyof typeof OperationModeStateZone]
+export type ClassicOperationModeStateZone =
+  (typeof ClassicOperationModeStateZone)[keyof typeof ClassicOperationModeStateZone]
 
 /** ATW zone operation modes controlling temperature regulation strategy. */
-export const OperationModeZone = {
-  /** Temperature curve-based regulation. */
+export const ClassicOperationModeZone = {
+  /** ClassicTemperature curve-based regulation. */
   curve: 2,
 
   /** Fixed flow temperature. */
@@ -182,25 +184,26 @@ export const OperationModeZone = {
   /** Room thermostat regulation with cooling. */
   room_cool: 3,
 } as const
-export type OperationModeZone =
-  (typeof OperationModeZone)[keyof typeof OperationModeZone]
+export type ClassicOperationModeZone =
+  (typeof ClassicOperationModeZone)[keyof typeof ClassicOperationModeZone]
 
 /** ATA set-temperature limits (universal across all ATA models). */
-export const Temperature = {
+export const ClassicTemperature = {
   cooling_min: 16,
   max: 31,
   min: 10,
 } as const
-export type Temperature = (typeof Temperature)[keyof typeof Temperature]
+export type ClassicTemperature =
+  (typeof ClassicTemperature)[keyof typeof ClassicTemperature]
 
 /** ERV ventilation modes. */
-export const VentilationMode = {
+export const ClassicVentilationMode = {
   auto: 2,
   bypass: 1,
   recovery: 0,
 } as const
-export type VentilationMode =
-  (typeof VentilationMode)[keyof typeof VentilationMode]
+export type ClassicVentilationMode =
+  (typeof ClassicVentilationMode)[keyof typeof ClassicVentilationMode]
 
 /** ClassicVertical vane positions for ATA devices. */
 export const ClassicVertical = {

@@ -1,22 +1,22 @@
 import {
   ClassicDeviceType,
-  LabelType,
-  OperationModeZone,
+  ClassicLabelType,
+  ClassicOperationModeZone,
 } from '../src/constants.ts'
 import {
-  type BuildingData,
   type ClassicAreaDataAny,
+  type ClassicBuildingData,
+  type ClassicFloorData,
+  type ClassicListDevice,
   type ClassicListDeviceAny,
-  type FloorData,
-  type ListDevice,
-  type ListDeviceDataAta,
-  type ListDeviceDataAtw,
-  type ListDeviceDataErv,
-  type ReportData,
-  toAreaId,
-  toBuildingId,
-  toDeviceId,
-  toFloorId,
+  type ClassicListDeviceDataAta,
+  type ClassicListDeviceDataAtw,
+  type ClassicListDeviceDataErv,
+  type ClassicReportData,
+  toClassicAreaId,
+  toClassicBuildingId,
+  toClassicDeviceId,
+  toClassicFloorId,
 } from '../src/types/index.ts'
 import { mock } from './helpers.ts'
 
@@ -27,8 +27,8 @@ import { mock } from './helpers.ts'
  */
 
 export const buildingData = (
-  overrides: Partial<BuildingData> = {},
-): BuildingData => ({
+  overrides: Partial<ClassicBuildingData> = {},
+): ClassicBuildingData => ({
   FPDefined: true,
   FPEnabled: false,
   FPMaxTemperature: 16,
@@ -37,27 +37,29 @@ export const buildingData = (
   HMEnabled: false,
   HMEndDate: null,
   HMStartDate: null,
-  ID: toBuildingId(1),
+  ID: toClassicBuildingId(1),
   Location: 10,
-  Name: 'Building',
+  Name: 'ClassicBuilding',
   TimeZone: 0,
   ...overrides,
 })
 
-export const floorData = (overrides: Partial<FloorData> = {}): FloorData => ({
-  BuildingId: toBuildingId(1),
+export const floorData = (
+  overrides: Partial<ClassicFloorData> = {},
+): ClassicFloorData => ({
+  BuildingId: toClassicBuildingId(1),
   ID: 10,
-  Name: 'Floor',
+  Name: 'ClassicFloor',
   ...overrides,
 })
 
 export const areaData = (
   overrides: Partial<ClassicAreaDataAny> = {},
 ): ClassicAreaDataAny => ({
-  BuildingId: toBuildingId(1),
+  BuildingId: toClassicBuildingId(1),
   FloorId: 10,
   ID: 100,
-  Name: 'Area',
+  Name: 'ClassicArea',
   ...overrides,
 })
 
@@ -68,9 +70,9 @@ export const areaData = (
  */
 
 export const ataDeviceData = (
-  overrides: Partial<ListDeviceDataAta> = {},
-): ListDeviceDataAta =>
-  mock<ListDeviceDataAta>({
+  overrides: Partial<ClassicListDeviceDataAta> = {},
+): ClassicListDeviceDataAta =>
+  mock<ClassicListDeviceDataAta>({
     ActualFanSpeed: 3,
     EffectiveFlags: 0,
     FanSpeed: 3,
@@ -93,7 +95,7 @@ export const ataDeviceData = (
     ...overrides,
   })
 
-const atwDefaults: Partial<ListDeviceDataAtw> = {
+const atwDefaults: Partial<ClassicListDeviceDataAtw> = {
   BoosterHeater1Status: false,
   BoosterHeater2PlusStatus: false,
   BoosterHeater2Status: false,
@@ -117,8 +119,8 @@ const atwDefaults: Partial<ListDeviceDataAtw> = {
   MaxTankTemperature: 60,
   MixingTankWaterTemperature: 0,
   Offline: false,
-  OperationModeZone1: OperationModeZone.room,
-  OperationModeZone2: OperationModeZone.room,
+  OperationModeZone1: ClassicOperationModeZone.room,
+  OperationModeZone2: ClassicOperationModeZone.room,
   Power: true,
   ProhibitCoolingZone1: false,
   ProhibitCoolingZone2: false,
@@ -148,14 +150,15 @@ const atwDefaults: Partial<ListDeviceDataAtw> = {
 }
 
 export const atwDeviceData = (
-  overrides: Partial<ListDeviceDataAtw> = {},
-): ListDeviceDataAtw =>
-  mock<ListDeviceDataAtw>({ ...atwDefaults, ...overrides })
+  overrides: Partial<ClassicListDeviceDataAtw> = {},
+): ClassicListDeviceDataAtw =>
+  mock<ClassicListDeviceDataAtw>({ ...atwDefaults, ...overrides })
 
 export const ervDeviceData = (
-  overrides: Partial<ListDeviceDataErv> = {},
-): ListDeviceDataErv =>
-  mock<ListDeviceDataErv>({
+  overrides: Partial<ClassicListDeviceDataErv> = {},
+): ClassicListDeviceDataErv =>
+  mock<ClassicListDeviceDataErv>({
+    ClassicVentilationMode: 0,
     EffectiveFlags: 0,
     HasAutomaticFanSpeed: true,
     HasCO2Sensor: false,
@@ -164,7 +167,6 @@ export const ervDeviceData = (
     PM25Level: 0,
     Power: true,
     SetFanSpeed: 3,
-    VentilationMode: 0,
     WifiSignalStrength: -50,
     ...overrides,
   })
@@ -177,12 +179,12 @@ export const ervDeviceData = (
  * ---------------------------------------------------------------------------
  */
 
-const DEFAULT_AREA_ID = toAreaId(100)
-const DEFAULT_BUILDING_ID = toBuildingId(1)
-const DEFAULT_FLOOR_ID = toFloorId(10)
-const DEFAULT_ATA_DEVICE_ID = toDeviceId(1000)
-const DEFAULT_ATW_DEVICE_ID = toDeviceId(1001)
-const DEFAULT_ERV_DEVICE_ID = toDeviceId(1002)
+const DEFAULT_AREA_ID = toClassicAreaId(100)
+const DEFAULT_BUILDING_ID = toClassicBuildingId(1)
+const DEFAULT_FLOOR_ID = toClassicFloorId(10)
+const DEFAULT_ATA_DEVICE_ID = toClassicDeviceId(1000)
+const DEFAULT_ATW_DEVICE_ID = toClassicDeviceId(1001)
+const DEFAULT_ERV_DEVICE_ID = toClassicDeviceId(1002)
 
 /*
  * ---------------------------------------------------------------------------
@@ -191,7 +193,7 @@ const DEFAULT_ERV_DEVICE_ID = toDeviceId(1002)
  */
 
 export const ataDevice = (
-  overrides: Partial<ListDevice<typeof ClassicDeviceType.Ata>> = {},
+  overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Ata>> = {},
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
@@ -204,7 +206,7 @@ export const ataDevice = (
 })
 
 export const atwDevice = (
-  overrides: Partial<ListDevice<typeof ClassicDeviceType.Atw>> = {},
+  overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Atw>> = {},
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
@@ -217,7 +219,7 @@ export const atwDevice = (
 })
 
 export const ervDevice = (
-  overrides: Partial<ListDevice<typeof ClassicDeviceType.Erv>> = {},
+  overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Erv>> = {},
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
@@ -236,12 +238,12 @@ export const ervDevice = (
  */
 
 export const reportData = (
-  overrides: Partial<ReportData> = {},
-): ReportData => ({
+  overrides: Partial<ClassicReportData> = {},
+): ClassicReportData => ({
+  ClassicLabelType: ClassicLabelType.raw,
   Data: [[1]],
   FromDate: '2024-01-01',
   Labels: ['a'],
-  LabelType: LabelType.raw,
   Points: 1,
   Series: 1,
   ToDate: '2024-01-01',

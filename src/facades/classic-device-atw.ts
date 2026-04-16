@@ -1,17 +1,17 @@
 import type {
-  HotWaterState,
-  ListDeviceDataAtw,
-  TemperatureDataAtw,
-  UpdateDeviceData,
-  UpdateDeviceDataAtw,
-  ZoneAtw,
-  ZoneState,
+  ClassicHotWaterState,
+  ClassicListDeviceDataAtw,
+  ClassicTemperatureDataAtw,
+  ClassicUpdateDeviceData,
+  ClassicUpdateDeviceDataAtw,
+  ClassicZoneAtw,
+  ClassicZoneState,
 } from '../types/index.ts'
 import {
   ClassicDeviceType,
-  OperationModeState,
-  OperationModeStateHotWater,
-  OperationModeStateZone,
+  ClassicOperationModeState,
+  ClassicOperationModeStateHotWater,
+  ClassicOperationModeStateZone,
 } from '../constants.ts'
 import type { ReportChartLineOptions, ReportQuery } from './interfaces.ts'
 import { BaseDeviceFacade, clampToRange } from './classic-base-device.ts'
@@ -25,44 +25,46 @@ const heatFlowTemperatureRange = { max: 60, min: 25 }
 const roomTemperatureRange = { max: 30, min: 10 }
 
 const hotWaterStateMap: Partial<
-  Record<OperationModeState, OperationModeStateHotWater>
+  Record<ClassicOperationModeState, ClassicOperationModeStateHotWater>
 > = {
-  [OperationModeState.dhw]: OperationModeStateHotWater.dhw,
-  [OperationModeState.legionella]: OperationModeStateHotWater.legionella,
+  [ClassicOperationModeState.dhw]: ClassicOperationModeStateHotWater.dhw,
+  [ClassicOperationModeState.legionella]:
+    ClassicOperationModeStateHotWater.legionella,
 }
 
 const zoneStateMap: Partial<
-  Record<OperationModeState, OperationModeStateZone>
+  Record<ClassicOperationModeState, ClassicOperationModeStateZone>
 > = {
-  [OperationModeState.cooling]: OperationModeStateZone.cooling,
-  [OperationModeState.defrost]: OperationModeStateZone.defrost,
-  [OperationModeState.heating]: OperationModeStateZone.heating,
+  [ClassicOperationModeState.cooling]: ClassicOperationModeStateZone.cooling,
+  [ClassicOperationModeState.defrost]: ClassicOperationModeStateZone.defrost,
+  [ClassicOperationModeState.heating]: ClassicOperationModeStateZone.heating,
 }
 
 const getHotWaterOperationalState = (
-  data: ListDeviceDataAtw,
-): OperationModeStateHotWater => {
+  data: ClassicListDeviceDataAtw,
+): ClassicOperationModeStateHotWater => {
   if (data.ForcedHotWaterMode) {
-    return OperationModeStateHotWater.dhw
+    return ClassicOperationModeStateHotWater.dhw
   }
   return data.ProhibitHotWater ?
-      OperationModeStateHotWater.prohibited
-    : (hotWaterStateMap[data.OperationMode] ?? OperationModeStateHotWater.idle)
+      ClassicOperationModeStateHotWater.prohibited
+    : (hotWaterStateMap[data.OperationMode] ??
+        ClassicOperationModeStateHotWater.idle)
 }
 
 const getZoneOperationalState = (
-  data: ListDeviceDataAtw,
-  zone: ZoneAtw,
-): OperationModeStateZone => {
+  data: ClassicListDeviceDataAtw,
+  zone: ClassicZoneAtw,
+): ClassicOperationModeStateZone => {
   if (
     (data[`${zone}InCoolMode`] && data[`ProhibitCooling${zone}`]) ||
     (data[`${zone}InHeatMode`] && data[`ProhibitHeating${zone}`])
   ) {
-    return OperationModeStateZone.prohibited
+    return ClassicOperationModeStateZone.prohibited
   }
   return data[`Idle${zone}`] ?
-      OperationModeStateZone.idle
-    : (zoneStateMap[data.OperationMode] ?? OperationModeStateZone.idle)
+      ClassicOperationModeStateZone.idle
+    : (zoneStateMap[data.OperationMode] ?? ClassicOperationModeStateZone.idle)
 }
 
 /*
@@ -94,13 +96,13 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     SetTemperatureZone1: 0x2_00_00_00_80,
     SetTemperatureZone2: 0x8_00_00_02_00,
   } as const satisfies Record<
-    keyof UpdateDeviceData<typeof ClassicDeviceType.Atw>,
+    keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Atw>,
     number
   >
 
   public readonly type = ClassicDeviceType.Atw
 
-  public get hotWater(): HotWaterState {
+  public get hotWater(): ClassicHotWaterState {
     const { data } = this
     return {
       isEcoHotWater: data.EcoHotWater,
@@ -113,7 +115,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     }
   }
 
-  public get zone1(): ZoneState {
+  public get zone1(): ClassicZoneState {
     return this.getZoneState('Zone1')
   }
 
@@ -136,7 +138,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   ]
 
   get #targetTemperatureRanges(): [
-    keyof TemperatureDataAtw,
+    keyof ClassicTemperatureDataAtw,
     { max: number; min: number },
   ][] {
     return [
@@ -170,7 +172,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     }
   }
 
-  protected getZoneState(zone: ZoneAtw): ZoneState {
+  protected getZoneState(zone: ClassicZoneAtw): ClassicZoneState {
     const { data } = this
     return {
       isCoolingProhibited: data[`ProhibitCooling${zone}`],
@@ -186,8 +188,8 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   }
 
   protected override prepareUpdateData(
-    data: Partial<UpdateDeviceDataAtw>,
-  ): Required<UpdateDeviceDataAtw> {
+    data: Partial<ClassicUpdateDeviceDataAtw>,
+  ): Required<ClassicUpdateDeviceDataAtw> {
     return super.prepareUpdateData({
       ...data,
       ...this.#clampTargetTemperatures(data),
@@ -195,8 +197,8 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   }
 
   #clampTargetTemperatures(
-    data: Partial<UpdateDeviceDataAtw>,
-  ): TemperatureDataAtw {
+    data: Partial<ClassicUpdateDeviceDataAtw>,
+  ): ClassicTemperatureDataAtw {
     return Object.fromEntries(
       this.#targetTemperatureRanges
         .filter(([key]) => key in data)

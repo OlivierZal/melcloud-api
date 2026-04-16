@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ListDeviceDataAtw } from '../../src/types/index.ts'
+import type { ClassicListDeviceDataAtw } from '../../src/types/index.ts'
 import {
   ClassicDeviceType,
-  OperationModeState,
-  OperationModeStateHotWater,
-  OperationModeStateZone,
-  OperationModeZone,
+  ClassicOperationModeState,
+  ClassicOperationModeStateHotWater,
+  ClassicOperationModeStateZone,
+  ClassicOperationModeZone,
 } from '../../src/constants.ts'
 import { ClassicRegistry } from '../../src/entities/index.ts'
 import {
@@ -17,25 +17,29 @@ import { atwDevice, atwDeviceData, buildingData } from '../fixtures.ts'
 import { assertDeviceType, createMockApi } from '../helpers.ts'
 
 const createAtwData = (
-  overrides: Partial<ListDeviceDataAtw> = {},
-): ListDeviceDataAtw =>
-  atwDeviceData({ OperationMode: OperationModeState.idle, ...overrides })
+  overrides: Partial<ClassicListDeviceDataAtw> = {},
+): ClassicListDeviceDataAtw =>
+  atwDeviceData({ OperationMode: ClassicOperationModeState.idle, ...overrides })
 
 const mockApi = createMockApi()
 
-const createAtwRegistry = (data: ListDeviceDataAtw): ClassicRegistry => {
+const createAtwRegistry = (data: ClassicListDeviceDataAtw): ClassicRegistry => {
   const registry = new ClassicRegistry()
   registry.syncBuildings([
     buildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
   ])
   registry.syncDevices([
-    atwDevice({ AreaID: null, ClassicDevice: data, FloorID: null }),
+    atwDevice({
+      AreaID: null,
+      ClassicDevice: data,
+      FloorID: null,
+    }),
   ])
   return registry
 }
 
 const createFacade = (
-  data: ListDeviceDataAtw = createAtwData(),
+  data: ClassicListDeviceDataAtw = createAtwData(),
 ): ClassicDeviceAtwFacade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
@@ -44,7 +48,7 @@ const createFacade = (
 }
 
 const createZone2Facade = (
-  data: ListDeviceDataAtw = createAtwData({ HasZone2: true }),
+  data: ClassicListDeviceDataAtw = createAtwData({ HasZone2: true }),
 ): ClassicDeviceAtwHasZone2Facade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
@@ -57,7 +61,7 @@ describe('atw device facade zone 1', () => {
     const facade = createFacade()
     const { zone1 } = facade
 
-    expect(zone1.operationMode).toBe(OperationModeZone.room)
+    expect(zone1.operationMode).toBe(ClassicOperationModeZone.room)
     expect(zone1.roomTemperature).toBe(21)
     expect(zone1.setTemperature).toBe(22)
     expect(zone1.isIdle).toBe(false)
@@ -71,75 +75,85 @@ describe('atw device facade zone 1', () => {
     const facade = createFacade(
       createAtwData({
         IdleZone1: true,
-        OperationMode: OperationModeState.heating,
+        OperationMode: ClassicOperationModeState.heating,
       }),
     )
 
-    expect(facade.zone1.operationalState).toBe(OperationModeStateZone.idle)
+    expect(facade.zone1.operationalState).toBe(
+      ClassicOperationModeStateZone.idle,
+    )
   })
 
   it('returns heating when device is heating and zone is not idle', () => {
     const facade = createFacade(
-      createAtwData({ OperationMode: OperationModeState.heating }),
+      createAtwData({ OperationMode: ClassicOperationModeState.heating }),
     )
 
-    expect(facade.zone1.operationalState).toBe(OperationModeStateZone.heating)
+    expect(facade.zone1.operationalState).toBe(
+      ClassicOperationModeStateZone.heating,
+    )
   })
 
   it('returns cooling when device is cooling and zone is not idle', () => {
     const facade = createFacade(
       createAtwData({
-        OperationMode: OperationModeState.cooling,
+        OperationMode: ClassicOperationModeState.cooling,
         Zone1InCoolMode: true,
         Zone1InHeatMode: false,
       }),
     )
 
-    expect(facade.zone1.operationalState).toBe(OperationModeStateZone.cooling)
+    expect(facade.zone1.operationalState).toBe(
+      ClassicOperationModeStateZone.cooling,
+    )
   })
 
   it('returns defrost when device is defrosting and zone is not idle', () => {
     const facade = createFacade(
-      createAtwData({ OperationMode: OperationModeState.defrost }),
+      createAtwData({ OperationMode: ClassicOperationModeState.defrost }),
     )
 
-    expect(facade.zone1.operationalState).toBe(OperationModeStateZone.defrost)
+    expect(facade.zone1.operationalState).toBe(
+      ClassicOperationModeStateZone.defrost,
+    )
   })
 
   it('returns prohibited when zone is in heat mode and heating is prohibited', () => {
     const facade = createFacade(
       createAtwData({
-        OperationMode: OperationModeState.heating,
+        OperationMode: ClassicOperationModeState.heating,
         ProhibitHeatingZone1: true,
         Zone1InHeatMode: true,
       }),
     )
 
     expect(facade.zone1.operationalState).toBe(
-      OperationModeStateZone.prohibited,
+      ClassicOperationModeStateZone.prohibited,
     )
   })
 
   it('returns prohibited when zone is in cool mode and cooling is prohibited', () => {
     const facade = createFacade(
       createAtwData({
-        OperationMode: OperationModeState.cooling,
+        OperationMode: ClassicOperationModeState.cooling,
         ProhibitCoolingZone1: true,
         Zone1InCoolMode: true,
       }),
     )
 
     expect(facade.zone1.operationalState).toBe(
-      OperationModeStateZone.prohibited,
+      ClassicOperationModeStateZone.prohibited,
     )
   })
 
   it('returns idle when device is in DHW mode', () => {
     const facade = createFacade(
-      createAtwData({ OperationMode: OperationModeState.dhw }),
+      createAtwData({ OperationMode: ClassicOperationModeState.dhw }),
     )
 
-    expect(facade.zone1.operationalState).toBe(OperationModeStateZone.idle)
+    expect(facade.zone1.operationalState).toBe(
+      ClassicOperationModeStateZone.idle,
+    )
   })
 })
 
@@ -160,17 +174,17 @@ describe('atw device facade hot water', () => {
     const facade = createFacade()
 
     expect(facade.hotWater.operationalState).toBe(
-      OperationModeStateHotWater.idle,
+      ClassicOperationModeStateHotWater.idle,
     )
   })
 
   it('returns dhw when device is heating water', () => {
     const facade = createFacade(
-      createAtwData({ OperationMode: OperationModeState.dhw }),
+      createAtwData({ OperationMode: ClassicOperationModeState.dhw }),
     )
 
     expect(facade.hotWater.operationalState).toBe(
-      OperationModeStateHotWater.dhw,
+      ClassicOperationModeStateHotWater.dhw,
     )
   })
 
@@ -178,7 +192,7 @@ describe('atw device facade hot water', () => {
     const facade = createFacade(createAtwData({ ForcedHotWaterMode: true }))
 
     expect(facade.hotWater.operationalState).toBe(
-      OperationModeStateHotWater.dhw,
+      ClassicOperationModeStateHotWater.dhw,
     )
   })
 
@@ -186,12 +200,12 @@ describe('atw device facade hot water', () => {
     const facade = createFacade(
       createAtwData({
         ForcedHotWaterMode: true,
-        OperationMode: OperationModeState.heating,
+        OperationMode: ClassicOperationModeState.heating,
       }),
     )
 
     expect(facade.hotWater.operationalState).toBe(
-      OperationModeStateHotWater.dhw,
+      ClassicOperationModeStateHotWater.dhw,
     )
   })
 
@@ -199,27 +213,27 @@ describe('atw device facade hot water', () => {
     const facade = createFacade(createAtwData({ ProhibitHotWater: true }))
 
     expect(facade.hotWater.operationalState).toBe(
-      OperationModeStateHotWater.prohibited,
+      ClassicOperationModeStateHotWater.prohibited,
     )
   })
 
   it('returns legionella during legionella cycle', () => {
     const facade = createFacade(
-      createAtwData({ OperationMode: OperationModeState.legionella }),
+      createAtwData({ OperationMode: ClassicOperationModeState.legionella }),
     )
 
     expect(facade.hotWater.operationalState).toBe(
-      OperationModeStateHotWater.legionella,
+      ClassicOperationModeStateHotWater.legionella,
     )
   })
 
   it('returns idle when device is heating zones', () => {
     const facade = createFacade(
-      createAtwData({ OperationMode: OperationModeState.heating }),
+      createAtwData({ OperationMode: ClassicOperationModeState.heating }),
     )
 
     expect(facade.hotWater.operationalState).toBe(
-      OperationModeStateHotWater.idle,
+      ClassicOperationModeStateHotWater.idle,
     )
   })
 })
@@ -229,7 +243,7 @@ describe('atw device facade zone 2', () => {
     const facade = createZone2Facade()
     const { zone2 } = facade
 
-    expect(zone2.operationMode).toBe(OperationModeZone.room)
+    expect(zone2.operationMode).toBe(ClassicOperationModeZone.room)
     expect(zone2.roomTemperature).toBe(19)
     expect(zone2.setTemperature).toBe(20)
   })
@@ -238,26 +252,28 @@ describe('atw device facade zone 2', () => {
     const facade = createZone2Facade(
       createAtwData({
         HasZone2: true,
-        OperationMode: OperationModeState.heating,
+        OperationMode: ClassicOperationModeState.heating,
         Zone2InHeatMode: true,
       }),
     )
 
-    expect(facade.zone2.operationalState).toBe(OperationModeStateZone.heating)
+    expect(facade.zone2.operationalState).toBe(
+      ClassicOperationModeStateZone.heating,
+    )
   })
 
   it('returns prohibited when zone2 heating is prohibited', () => {
     const facade = createZone2Facade(
       createAtwData({
         HasZone2: true,
-        OperationMode: OperationModeState.heating,
+        OperationMode: ClassicOperationModeState.heating,
         ProhibitHeatingZone2: true,
         Zone2InHeatMode: true,
       }),
     )
 
     expect(facade.zone2.operationalState).toBe(
-      OperationModeStateZone.prohibited,
+      ClassicOperationModeStateZone.prohibited,
     )
   })
 

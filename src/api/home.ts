@@ -1,6 +1,7 @@
 import type { AxiosResponse } from 'axios'
 
 import type {
+  ClassicLoginCredentials,
   HomeAtaValues,
   HomeBuilding,
   HomeContext,
@@ -8,10 +9,13 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
   HomeUser,
-  LoginCredentials,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
-import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import {
+  authenticate,
+  classicSyncDevices,
+  setting,
+} from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './interfaces.ts'
@@ -129,7 +133,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   }
 
   @authenticate
-  public async authenticate(data?: LoginCredentials): Promise<boolean> {
+  public async authenticate(data?: ClassicLoginCredentials): Promise<boolean> {
     /* v8 ignore next -- @authenticate guarantees data is always provided */
     const { password, username } = data ?? { password: '', username: '' }
     this.#clearPersistedSession()
@@ -211,7 +215,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * and schedule the next auto-sync.
    * @returns All buildings or an empty array on failure.
    */
-  @syncDevices()
+  @classicSyncDevices()
   public async list(): Promise<HomeBuilding[]> {
     this.clearSync()
     try {

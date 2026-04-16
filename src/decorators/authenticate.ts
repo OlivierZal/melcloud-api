@@ -1,5 +1,5 @@
 import type { Logger } from '../api/interfaces.ts'
-import type { LoginCredentials } from '../types/index.ts'
+import type { ClassicLoginCredentials } from '../types/index.ts'
 
 /*
  * Method decorator that wraps the implementation-specific login logic with
@@ -17,10 +17,10 @@ import type { LoginCredentials } from '../types/index.ts'
 export const authenticate = (
   target: (...args: any[]) => Promise<boolean>,
   _context: ClassMethodDecoratorContext,
-): ((data?: LoginCredentials) => Promise<boolean>) =>
+): ((data?: ClassicLoginCredentials) => Promise<boolean>) =>
   async function newTarget(
     this: { logger: Logger; password: string; username: string },
-    data?: LoginCredentials,
+    data?: ClassicLoginCredentials,
   ): Promise<boolean> {
     const { password = this.password, username = this.username } = data ?? {}
     if (!username || !password) {

@@ -1,4 +1,7 @@
-import type { UpdateDeviceData, UpdateDeviceDataAta } from '../types/index.ts'
+import type {
+  ClassicUpdateDeviceData,
+  ClassicUpdateDeviceDataAta,
+} from '../types/index.ts'
 import { ClassicDeviceType, ClassicOperationMode } from '../constants.ts'
 import { BaseDeviceFacade, clampToRange } from './classic-base-device.ts'
 
@@ -18,7 +21,7 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
     VaneHorizontal: 0x1_00,
     VaneVertical: 0x10,
   } as const satisfies Record<
-    keyof UpdateDeviceData<typeof ClassicDeviceType.Ata>,
+    keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Ata>,
     number
   >
 
@@ -35,15 +38,15 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
    * operation mode before sending to the Classic API
    */
   protected override prepareUpdateData(
-    data: Partial<UpdateDeviceDataAta>,
-  ): Required<UpdateDeviceDataAta> {
+    data: Partial<ClassicUpdateDeviceDataAta>,
+  ): Required<ClassicUpdateDeviceDataAta> {
     return super.prepareUpdateData({
       ...data,
       ...this.#clampTargetTemperature(data),
     })
   }
 
-  #clampTargetTemperature(data: Partial<UpdateDeviceDataAta>): {
+  #clampTargetTemperature(data: Partial<ClassicUpdateDeviceDataAta>): {
     SetTemperature?: number
   } {
     const { OperationMode: operationMode, SetTemperature: value } = data

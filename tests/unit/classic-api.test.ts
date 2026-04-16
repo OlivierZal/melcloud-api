@@ -3,11 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClassicAPI, ClassicAPIConfig } from '../../src/api/index.ts'
 import type { ClassicDeviceType } from '../../src/constants.ts'
 import {
-  type BuildingWithStructure,
+  type ClassicBuildingWithStructure,
   type ClassicListDeviceAny,
-  type SetDevicePostData,
-  toBuildingId,
-  toDeviceId,
+  type ClassicSetDevicePostData,
+  toClassicBuildingId,
+  toClassicDeviceId,
 } from '../../src/types/index.ts'
 import {
   cast,
@@ -26,8 +26,8 @@ const mockAxiosInstance = {
 const loginResponse = (
   contextKey = 'ctx',
   expiry = '2030-12-31T00:00:00',
-): { data: { LoginData: { ContextKey: string; Expiry: string } } } => ({
-  data: { LoginData: { ContextKey: contextKey, Expiry: expiry } },
+): { data: { ClassicLoginData: { ContextKey: string; Expiry: string } } } => ({
+  data: { ClassicLoginData: { ContextKey: contextKey, Expiry: expiry } },
 })
 
 /**
@@ -61,7 +61,9 @@ const errorEntry = (
   ...overrides,
 })
 
-const createDevice = (overrides: Record<string, unknown> = {}): ClassicListDeviceAny =>
+const createDevice = (
+  overrides: Record<string, unknown> = {},
+): ClassicListDeviceAny =>
   cast({
     AreaID: null,
     BuildingID: 1,
@@ -74,8 +76,8 @@ const createDevice = (overrides: Record<string, unknown> = {}): ClassicListDevic
   })
 
 const createBuilding = (
-  overrides: Partial<BuildingWithStructure> = {},
-): BuildingWithStructure =>
+  overrides: Partial<ClassicBuildingWithStructure> = {},
+): ClassicBuildingWithStructure =>
   mock({
     FPDefined: false,
     FPEnabled: false,
@@ -85,7 +87,7 @@ const createBuilding = (
     HMEnabled: false,
     HMEndDate: null,
     HMStartDate: null,
-    ID: toBuildingId(1),
+    ID: toClassicBuildingId(1),
     Location: 10,
     Name: 'Test',
     Structure: { Areas: [], Devices: [], Floors: [] },
@@ -333,12 +335,12 @@ describe('mELCloud Classic API', () => {
 
     it.each([
       {
-        args: { params: { id: 1, tableName: 'Building' } },
+        args: { params: { id: 1, tableName: 'ClassicBuilding' } },
         method: 'getFrostProtection' as const,
         path: '/FrostProtection/GetSettings',
       },
       {
-        args: { params: { id: 1, tableName: 'Building' } },
+        args: { params: { id: 1, tableName: 'ClassicBuilding' } },
         method: 'getHolidayMode' as const,
         path: '/HolidayMode/GetSettings',
       },
@@ -380,8 +382,10 @@ describe('mELCloud Classic API', () => {
         const api = await createApi({ password: 'pass', username: 'user' })
         mockAxiosInstance.request.mockResolvedValue({ data: {} })
         await api.updateValues({
-          postData: mock<SetDevicePostData<typeof ClassicDeviceType.Ata>>({
-            DeviceID: toDeviceId(1),
+          postData: mock<
+            ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>
+          >({
+            DeviceID: toClassicDeviceId(1),
             EffectiveFlags: 1,
           }),
           type,
@@ -410,7 +414,7 @@ describe('mELCloud Classic API', () => {
     it('returns false when login data is null', async () => {
       const api = await createApi()
       mockAxiosInstance.request.mockResolvedValue({
-        data: { LoginData: null },
+        data: { ClassicLoginData: null },
       })
       const isAuthenticated = await api.authenticate({
         password: 'pass',
@@ -662,13 +666,13 @@ describe('mELCloud Classic API', () => {
     it('does not set context key header for login path', async () => {
       const api = await createApi()
       mockAxiosInstance.request.mockResolvedValue({
-        data: { LoginData: null },
+        data: { ClassicLoginData: null },
       })
       await api.login({
         postData: {
           AppVersion: '1.0',
+          ClassicLanguage: 0,
           Email: 'u',
-          Language: 0,
           Password: 'p',
           Persist: true,
         },
@@ -801,7 +805,7 @@ describe('mELCloud Classic API', () => {
       const api = await createApi({ settingManager })
       setSpy.mockClear()
       mockAxiosInstance.request.mockResolvedValueOnce({
-        data: { LoginData: null },
+        data: { ClassicLoginData: null },
       })
 
       const isAuthenticated = await api.authenticate({
@@ -850,11 +854,11 @@ describe('mELCloud Classic API', () => {
       mockLoginAndList('ctx', '2030-12-31T00:00:00')
       const api = await createApi({ password: 'pass', username: 'user' })
 
-      // 401 on endpoint, re-auth returns LoginData: null → authenticate() returns false
+      // 401 on endpoint, re-auth returns ClassicLoginData: null → authenticate() returns false
       mockAxiosInstance.request.mockImplementation(
         (config: { url?: string } = {}) => {
           if (config.url === '/Login/ClientLogin3') {
-            return { data: { LoginData: null } }
+            return { data: { ClassicLoginData: null } }
           }
           if (config.url === '/User/ListDevices') {
             return { data: [] }
@@ -898,12 +902,12 @@ describe('mELCloud Classic API', () => {
         Structure: {
           Areas: [
             {
-              BuildingId: toBuildingId(1),
+              BuildingId: toClassicBuildingId(1),
               Devices: [
                 createDevice({
                   AreaID: 100,
                   DeviceID: 2000,
-                  DeviceName: 'Area ClassicDevice',
+                  DeviceName: 'ClassicArea ClassicDevice',
                 }),
               ],
               FloorId: null,
@@ -914,19 +918,19 @@ describe('mELCloud Classic API', () => {
           Devices: [
             createDevice({
               DeviceID: 1000,
-              DeviceName: 'Building ClassicDevice',
+              DeviceName: 'ClassicBuilding ClassicDevice',
             }),
           ],
           Floors: [
             {
               Areas: [
                 {
-                  BuildingId: toBuildingId(1),
+                  BuildingId: toClassicBuildingId(1),
                   Devices: [
                     createDevice({
                       AreaID: 200,
                       DeviceID: 3000,
-                      DeviceName: 'Floor Area ClassicDevice',
+                      DeviceName: 'ClassicFloor ClassicArea ClassicDevice',
                       FloorID: 10,
                     }),
                   ],
@@ -935,11 +939,11 @@ describe('mELCloud Classic API', () => {
                   Name: 'FA1',
                 },
               ],
-              BuildingId: toBuildingId(1),
+              BuildingId: toClassicBuildingId(1),
               Devices: [
                 createDevice({
                   DeviceID: 4000,
-                  DeviceName: 'Floor ClassicDevice',
+                  DeviceName: 'ClassicFloor ClassicDevice',
                   FloorID: 10,
                 }),
               ],
@@ -959,16 +963,16 @@ describe('mELCloud Classic API', () => {
       expect(api.registry.areas.getById(100)?.name).toBe('A1')
       expect(api.registry.areas.getById(200)?.name).toBe('FA1')
       expect(api.registry.devices.getById(1000)?.name).toBe(
-        'Building ClassicDevice',
+        'ClassicBuilding ClassicDevice',
       )
       expect(api.registry.devices.getById(2000)?.name).toBe(
-        'Area ClassicDevice',
+        'ClassicArea ClassicDevice',
       )
       expect(api.registry.devices.getById(3000)?.name).toBe(
-        'Floor Area ClassicDevice',
+        'ClassicFloor ClassicArea ClassicDevice',
       )
       expect(api.registry.devices.getById(4000)?.name).toBe(
-        'Floor ClassicDevice',
+        'ClassicFloor ClassicDevice',
       )
     })
   })

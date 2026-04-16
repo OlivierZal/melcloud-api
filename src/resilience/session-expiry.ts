@@ -12,7 +12,7 @@ import { DateTime } from 'luxon'
  *
  * Uses Luxon `DateTime.fromISO` (not native `Date.parse`) so that ISO
  * strings without an explicit timezone offset — the format the MELCloud
- * Classic server actually returns in `LoginData.Expiry` — are interpreted
+ * Classic server actually returns in `ClassicLoginData.Expiry` — are interpreted
  * in `LuxonSettings.defaultZone`, which Classic configures from
  * `ClassicAPIConfig.timezone`. Native parsing would anchor on the host runtime
  * timezone, shifting the comparison by hours when the deployment timezone

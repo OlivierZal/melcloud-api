@@ -2,8 +2,8 @@ import { DateTime } from 'luxon'
 
 import type {
   ClassicAPIAdapter,
-  ErrorLog,
-  ErrorLogQuery,
+  ClassicErrorLog,
+  ClassicErrorLogQuery,
 } from '../api/index.ts'
 import type { ClassicDeviceType } from '../constants.ts'
 import type {
@@ -12,26 +12,29 @@ import type {
   ClassicModel,
   ClassicRegistry,
 } from '../entities/index.ts'
-import { syncDevices, updateDevices } from '../decorators/index.ts'
+import {
+  classicSyncDevices,
+  classicUpdateDevices,
+} from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
 import {
-  type DateTimeComponents,
-  type FailureData,
-  type FrostProtectionData,
-  type FrostProtectionLocation,
-  type HolidayModeData,
-  type HolidayModeLocation,
-  type HolidayModeTimeZone,
-  type SettingsParams,
-  type SuccessData,
-  type TilesData,
-  toDeviceId,
+  type ClassicDateTimeComponents,
+  type ClassicFailureData,
+  type ClassicFrostProtectionData,
+  type ClassicFrostProtectionLocation,
+  type ClassicHolidayModeData,
+  type ClassicHolidayModeLocation,
+  type ClassicHolidayModeTimeZone,
+  type ClassicSettingsParams,
+  type ClassicSuccessData,
+  type ClassicTilesData,
+  toClassicDeviceId,
 } from '../types/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'
 import type {
-  Facade,
-  FrostProtectionQuery,
-  HolidayModeQuery,
+  ClassicFacade,
+  ClassicFrostProtectionQuery,
+  ClassicHolidayModeQuery,
   ReportChartLineOptions,
 } from './interfaces.ts'
 
@@ -59,7 +62,9 @@ const TEMPERATURE_GAP = 2
 
 const temperatureRange = { max: 16, min: 4 }
 
-const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
+const getDateTimeComponents = (
+  date: DateTime | null,
+): ClassicDateTimeComponents =>
   date ?
     {
       Day: date.day,
@@ -76,16 +81,18 @@ const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
  * holiday mode, power control, signal strength, tiles, and error log retrieval.
  * Settings resolution falls back from zone level to device level when needed.
  */
-export abstract class BaseFacade<T extends ClassicModel> implements Facade {
-  protected abstract readonly frostProtectionLocation: keyof FrostProtectionLocation
+export abstract class BaseFacade<
+  T extends ClassicModel,
+> implements ClassicFacade {
+  protected abstract readonly frostProtectionLocation: keyof ClassicFrostProtectionLocation
 
-  protected abstract readonly holidayModeLocation: keyof HolidayModeLocation
+  protected abstract readonly holidayModeLocation: keyof ClassicHolidayModeLocation
 
   protected abstract readonly model: {
     getById: (id: number) => T | undefined
   }
 
-  protected abstract readonly tableName: SettingsParams['tableName']
+  protected abstract readonly tableName: ClassicSettingsParams['tableName']
 
   public abstract get devices(): ClassicDeviceAny[]
 
@@ -151,23 +158,25 @@ export abstract class BaseFacade<T extends ClassicModel> implements Facade {
     ;({ id: this.id } = instance)
   }
 
-  @syncDevices()
-  @updateDevices()
+  @classicSyncDevices()
+  @classicUpdateDevices()
   public async updatePower(isOn = true): Promise<boolean> {
     const { data: isPowered } = await this.api.updatePower({
       postData: {
-        DeviceIds: this.#deviceIds.map((id) => toDeviceId(id)),
+        DeviceIds: this.#deviceIds.map((id) => toClassicDeviceId(id)),
         Power: isOn,
       },
     })
     return isPowered
   }
 
-  public async getErrorLog(query: ErrorLogQuery): Promise<ErrorLog> {
+  public async getErrorLog(
+    query: ClassicErrorLogQuery,
+  ): Promise<ClassicErrorLog> {
     return this.api.getErrorLog(query, this.#deviceIds)
   }
 
-  public async getFrostProtection(): Promise<FrostProtectionData> {
+  public async getFrostProtection(): Promise<ClassicFrostProtectionData> {
     return getWithZoneFallback(
       this.isFrostProtectionAtZoneLevel,
       async () => this.#getZoneFrostProtection(),
@@ -175,7 +184,7 @@ export abstract class BaseFacade<T extends ClassicModel> implements Facade {
     )
   }
 
-  public async getHolidayMode(): Promise<HolidayModeData> {
+  public async getHolidayMode(): Promise<ClassicHolidayModeData> {
     return getWithZoneFallback(
       this.isHolidayModeAtZoneLevel,
       async () => this.#getZoneHolidayMode(),
@@ -192,14 +201,16 @@ export abstract class BaseFacade<T extends ClassicModel> implements Facade {
     return getChartLineOptions(data, this.#deviceNames, 'dBm')
   }
 
-  public async getTiles(device?: false): Promise<TilesData<null>>
+  public async getTiles(device?: false): Promise<ClassicTilesData<null>>
   public async getTiles<TDeviceType extends ClassicDeviceType>(
     device: ClassicDevice<TDeviceType>,
-  ): Promise<TilesData<TDeviceType>>
+  ): Promise<ClassicTilesData<TDeviceType>>
   public async getTiles<TDeviceType extends ClassicDeviceType>(
     device: false | ClassicDevice<TDeviceType> = false,
-  ): Promise<TilesData<TDeviceType | null>> {
-    const postData = { DeviceIDs: this.#deviceIds.map((id) => toDeviceId(id)) }
+  ): Promise<ClassicTilesData<TDeviceType | null>> {
+    const postData = {
+      DeviceIDs: this.#deviceIds.map((id) => toClassicDeviceId(id)),
+    }
     if (device === false || !this.#deviceIds.includes(device.id)) {
       const { data } = await this.api.getTiles({ postData })
       return data
@@ -211,7 +222,7 @@ export abstract class BaseFacade<T extends ClassicModel> implements Facade {
         SelectedDevice: device.id,
       },
     })
-    return data as TilesData<TDeviceType>
+    return data as ClassicTilesData<TDeviceType>
   }
 
   public async notifySync({
@@ -224,7 +235,9 @@ export abstract class BaseFacade<T extends ClassicModel> implements Facade {
     isEnabled = true,
     max,
     min,
-  }: FrostProtectionQuery): Promise<FailureData | SuccessData> {
+  }: ClassicFrostProtectionQuery): Promise<
+    ClassicFailureData | ClassicSuccessData
+  > {
     /*
      * Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
      * in case the adjustment pushed max out of bounds
@@ -251,8 +264,11 @@ export abstract class BaseFacade<T extends ClassicModel> implements Facade {
     return data
   }
 
-  public async updateHolidayMode({ from, to }: HolidayModeQuery = {}): Promise<
-    FailureData | SuccessData
+  public async updateHolidayMode({
+    from,
+    to,
+  }: ClassicHolidayModeQuery = {}): Promise<
+    ClassicFailureData | ClassicSuccessData
   > {
     const isEnabled = to !== undefined
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
@@ -269,38 +285,38 @@ export abstract class BaseFacade<T extends ClassicModel> implements Facade {
   }
 
   async #getBaseFrostProtection(
-    params: SettingsParams,
+    params: ClassicSettingsParams,
     isDefined = true,
-  ): Promise<FrostProtectionData> {
+  ): Promise<ClassicFrostProtectionData> {
     const { data } = await this.api.getFrostProtection({ params })
     this.isFrostProtectionAtZoneLevel = isDefined
     return data
   }
 
   async #getBaseHolidayMode(
-    params: SettingsParams,
+    params: ClassicSettingsParams,
     isDefined = true,
-  ): Promise<HolidayModeData> {
+  ): Promise<ClassicHolidayModeData> {
     const { data } = await this.api.getHolidayMode({ params })
     this.isHolidayModeAtZoneLevel = isDefined
     return data
   }
 
-  async #getDevicesFrostProtection(): Promise<FrostProtectionData> {
+  async #getDevicesFrostProtection(): Promise<ClassicFrostProtectionData> {
     return this.#getBaseFrostProtection(
       { id: this.#deviceId, tableName: 'DeviceLocation' },
       false,
     )
   }
 
-  async #getDevicesHolidayMode(): Promise<HolidayModeData> {
+  async #getDevicesHolidayMode(): Promise<ClassicHolidayModeData> {
     return this.#getBaseHolidayMode(
       { id: this.#deviceId, tableName: 'DeviceLocation' },
       false,
     )
   }
 
-  async #getFrostProtectionLocation(): Promise<FrostProtectionLocation> {
+  async #getFrostProtectionLocation(): Promise<ClassicFrostProtectionLocation> {
     if (this.isFrostProtectionAtZoneLevel === null) {
       await this.getFrostProtection()
     }
@@ -309,7 +325,7 @@ export abstract class BaseFacade<T extends ClassicModel> implements Facade {
       : { DeviceIds: this.#deviceIds }
   }
 
-  async #getHolidayModeLocation(): Promise<HolidayModeTimeZone[]> {
+  async #getHolidayModeLocation(): Promise<ClassicHolidayModeTimeZone[]> {
     if (this.isHolidayModeAtZoneLevel === null) {
       await this.getHolidayMode()
     }
@@ -318,14 +334,14 @@ export abstract class BaseFacade<T extends ClassicModel> implements Facade {
       : [{ Devices: this.#deviceIds }]
   }
 
-  async #getZoneFrostProtection(): Promise<FrostProtectionData> {
+  async #getZoneFrostProtection(): Promise<ClassicFrostProtectionData> {
     return this.#getBaseFrostProtection({
       id: this.id,
       tableName: this.tableName,
     })
   }
 
-  async #getZoneHolidayMode(): Promise<HolidayModeData> {
+  async #getZoneHolidayMode(): Promise<ClassicHolidayModeData> {
     return this.#getBaseHolidayMode({
       id: this.id,
       tableName: this.tableName,

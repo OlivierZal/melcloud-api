@@ -6,13 +6,13 @@ import type {
   ReportQuery,
 } from './facades/index.ts'
 import type {
-  KeyOfSetDeviceDataAtaNotInList,
-  OperationModeLogData,
-  ReportData,
-  SetDeviceDataAtaInList,
-  UpdateDeviceData,
+  ClassicOperationModeLogData,
+  ClassicReportData,
+  ClassicSetDeviceDataAtaInList,
+  ClassicUpdateDeviceData,
+  KeyOfClassicSetDeviceDataAtaNotInList,
 } from './types/index.ts'
-import { type ClassicDeviceType, LabelType } from './constants.ts'
+import { type ClassicDeviceType, ClassicLabelType } from './constants.ts'
 
 // API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
 const YEAR_MONTH_DIVISOR = 100
@@ -25,8 +25,8 @@ export const now = (): string => DateTime.now().toISO({ includeOffset: false })
 
 /** Maps ATA set-command keys to their corresponding list-data keys. */
 export const fromSetToListAta: Record<
-  KeyOfSetDeviceDataAtaNotInList,
-  keyof SetDeviceDataAtaInList
+  KeyOfClassicSetDeviceDataAtaNotInList,
+  keyof ClassicSetDeviceDataAtaInList
 > = {
   SetFanSpeed: 'FanSpeed',
   VaneHorizontal: 'VaneHorizontalDirection',
@@ -40,12 +40,12 @@ export const fromSetToListAta: Record<
  */
 export const isSetDeviceDataAtaNotInList = (
   value: string,
-): value is KeyOfSetDeviceDataAtaNotInList => value in fromSetToListAta
+): value is KeyOfClassicSetDeviceDataAtaNotInList => value in fromSetToListAta
 
 /** Maps ATA list-data keys to their corresponding set-command keys. */
 export const fromListToSetAta: Record<
-  keyof SetDeviceDataAtaInList,
-  KeyOfSetDeviceDataAtaNotInList
+  keyof ClassicSetDeviceDataAtaInList,
+  KeyOfClassicSetDeviceDataAtaNotInList
 > = {
   FanSpeed: 'SetFanSpeed',
   VaneHorizontalDirection: 'VaneHorizontal',
@@ -59,29 +59,29 @@ export const fromListToSetAta: Record<
  */
 export const isSetDeviceDataAtaInList = (
   value: string,
-): value is keyof SetDeviceDataAtaInList => value in fromListToSetAta
+): value is keyof ClassicSetDeviceDataAtaInList => value in fromListToSetAta
 
 /*
  * Strategy map: transform raw API label formats into human-readable strings
  * based on report granularity (day of week, month name, year-month, etc.)
  */
-const labelFormatters: Record<LabelType, (label: string) => string> = {
-  [LabelType.day_of_week]: (label) =>
+const labelFormatters: Record<ClassicLabelType, (label: string) => string> = {
+  [ClassicLabelType.day_of_week]: (label) =>
     DateTime.fromFormat(label, 'c').toFormat('ccc'),
-  [LabelType.month]: (label) =>
+  [ClassicLabelType.month]: (label) =>
     DateTime.fromObject({ month: Number(label) }).toFormat('MMM'),
-  [LabelType.month_of_year]: (label) =>
+  [ClassicLabelType.month_of_year]: (label) =>
     DateTime.local(
       Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
       Number(label) % YEAR_MONTH_DIVISOR,
     ).toFormat('MMM yyyy'),
-  [LabelType.raw]: (label) => label,
-  [LabelType.time]: (label) => label,
+  [ClassicLabelType.raw]: (label) => label,
+  [ClassicLabelType.time]: (label) => label,
 }
 
 const formatLabels = (
   labels: readonly string[],
-  labelType: LabelType,
+  labelType: ClassicLabelType,
 ): string[] => labels.map((label) => labelFormatters[labelType](label))
 
 /**
@@ -114,9 +114,9 @@ export function typedFromEntries(
  * @returns Whether the key is a valid updatable field.
  */
 export const isUpdateDeviceData = <T extends ClassicDeviceType>(
-  data: Record<keyof UpdateDeviceData<T>, unknown>,
+  data: Record<keyof ClassicUpdateDeviceData<T>, unknown>,
   key: string,
-): key is string & keyof UpdateDeviceData<T> => key in data
+): key is string & keyof ClassicUpdateDeviceData<T> => key in data
 
 const getChartLineSeries = ({
   data,
@@ -138,7 +138,7 @@ const getChartLineSeries = ({
  * @param root0.Data - The data series arrays.
  * @param root0.FromDate - The start date of the report period.
  * @param root0.Labels - The raw label strings from the Classic API.
- * @param root0.LabelType - The label format type determining how labels are parsed.
+ * @param root0.ClassicLabelType - The label format type determining how labels are parsed.
  * @param root0.ToDate - The end date of the report period.
  * @param legend - Legend entries for each data series.
  * @param unit - The unit of measurement for the data.
@@ -146,12 +146,12 @@ const getChartLineSeries = ({
  */
 export const getChartLineOptions = (
   {
+    ClassicLabelType: labelType,
     Data: data,
     FromDate: from,
     Labels: labels,
-    LabelType: labelType,
     ToDate: to,
-  }: ReportData,
+  }: ClassicReportData,
   legend: (string | undefined)[],
   unit: string,
 ): ReportChartLineOptions => ({
@@ -171,7 +171,7 @@ export const getChartLineOptions = (
  * @returns Structured pie chart options.
  */
 export const getChartPieOptions = (
-  data: OperationModeLogData,
+  data: ClassicOperationModeLogData,
   { from, to }: Required<ReportQuery>,
 ): ReportChartPieOptions => ({
   from,

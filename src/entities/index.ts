@@ -1,8 +1,8 @@
-export { Area } from './area.ts'
-export { Building } from './building.ts'
+export { ClassicArea } from './area.ts'
+export { ClassicBuilding } from './building.ts'
 export { ClassicDevice } from './classic-device.ts'
 export { ClassicRegistry } from './classic-registry.ts'
-export { Floor } from './floor.ts'
+export { ClassicFloor } from './floor.ts'
 export { HomeDevice } from './home-device.ts'
 export { HomeRegistry } from './home-registry.ts'
 export {
@@ -12,5 +12,5 @@ export {
   type ClassicModel,
   type ClassicModelKind,
   type Identifiable,
-  isDeviceOfType,
+  isClassicDeviceOfType,
 } from './interfaces.ts'

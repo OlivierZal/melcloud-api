@@ -1,29 +1,33 @@
 import type {
-  OperationModeZoneDataAtw,
-  UpdateDeviceDataAtw,
-  ZoneState,
+  ClassicOperationModeZoneDataAtw,
+  ClassicUpdateDeviceDataAtw,
+  ClassicZoneState,
 } from '../types/index.ts'
-import { OperationModeZone } from '../constants.ts'
+import { ClassicOperationModeZone } from '../constants.ts'
 import { ClassicDeviceAtwFacade } from './classic-device-atw.ts'
 
 /*
  * Operation modes follow a pattern: room (0) vs flow (1), with cool variants
  * offset by 3. These gaps let us auto-adjust zone 2 when zone 1 changes.
  */
-const HEAT_COOL_GAP = OperationModeZone.room_cool - OperationModeZone.room
-const ROOM_FLOW_GAP = OperationModeZone.flow - OperationModeZone.room
-const roomOperationModeZones: ReadonlySet<OperationModeZone> = new Set([
-  OperationModeZone.room,
-  OperationModeZone.room_cool,
+const HEAT_COOL_GAP =
+  ClassicOperationModeZone.room_cool - ClassicOperationModeZone.room
+const ROOM_FLOW_GAP =
+  ClassicOperationModeZone.flow - ClassicOperationModeZone.room
+const roomOperationModeZones: ReadonlySet<ClassicOperationModeZone> = new Set([
+  ClassicOperationModeZone.room,
+  ClassicOperationModeZone.room_cool,
 ])
-const operationModeZoneByValue: ReadonlyMap<number, OperationModeZone> =
-  new Map(Object.values(OperationModeZone).map((value) => [value, value]))
+const operationModeZoneByValue: ReadonlyMap<number, ClassicOperationModeZone> =
+  new Map(
+    Object.values(ClassicOperationModeZone).map((value) => [value, value]),
+  )
 
-const toOperationModeZone = (value: number): OperationModeZone => {
+const toOperationModeZone = (value: number): ClassicOperationModeZone => {
   const mode = operationModeZoneByValue.get(value)
 
   if (mode === undefined) {
-    throw new Error(`Invalid OperationModeZone: ${String(value)}`)
+    throw new Error(`Invalid ClassicOperationModeZone: ${String(value)}`)
   }
 
   return mode
@@ -34,7 +38,7 @@ const toOperationModeZone = (value: number): OperationModeZone => {
  * modes so that cooling and room/flow modes stay consistent between zones.
  */
 export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
-  public get zone2(): ZoneState {
+  public get zone2(): ClassicZoneState {
     return this.getZoneState('Zone2')
   }
 
@@ -63,8 +67,8 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
   ]
 
   protected override prepareUpdateData(
-    data: Partial<UpdateDeviceDataAtw>,
-  ): Required<UpdateDeviceDataAtw> {
+    data: Partial<ClassicUpdateDeviceDataAtw>,
+  ): Required<ClassicUpdateDeviceDataAtw> {
     return super.prepareUpdateData({
       ...data,
       ...this.#coupleOperationModes(data),
@@ -72,11 +76,11 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
   }
 
   #coupleOperationModes(
-    data: Partial<UpdateDeviceDataAtw>,
-  ): OperationModeZoneDataAtw | null {
+    data: Partial<ClassicUpdateDeviceDataAtw>,
+  ): ClassicOperationModeZoneDataAtw | null {
     const [operationModeZone1, operationModeZone2]: {
-      key: keyof OperationModeZoneDataAtw
-      value?: OperationModeZone
+      key: keyof ClassicOperationModeZoneDataAtw
+      value?: ClassicOperationModeZone
     }[] = [
       { key: 'OperationModeZone1', value: data.OperationModeZone1 },
       { key: 'OperationModeZone2', value: data.OperationModeZone2 },
@@ -105,22 +109,22 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
   }
 
   #getSecondaryOperationMode(
-    secondaryKey: keyof OperationModeZoneDataAtw,
-    primaryValue: OperationModeZone,
-    value?: OperationModeZone,
-  ): OperationModeZone {
+    secondaryKey: keyof ClassicOperationModeZoneDataAtw,
+    primaryValue: ClassicOperationModeZone,
+    value?: ClassicOperationModeZone,
+  ): ClassicOperationModeZone {
     /*
      * Keep zone 2's cool/heat status in sync with zone 1, and prevent
      * both zones from using the same room-based mode (must be room vs flow)
      */
     let secondaryValue: number = value ?? this.data[secondaryKey]
     if (this.data.CanCool) {
-      if (primaryValue > OperationModeZone.curve) {
+      if (primaryValue > ClassicOperationModeZone.curve) {
         secondaryValue =
-          secondaryValue === OperationModeZone.curve ?
-            OperationModeZone.room_cool
+          secondaryValue === ClassicOperationModeZone.curve ?
+            ClassicOperationModeZone.room_cool
           : secondaryValue + HEAT_COOL_GAP
-      } else if (secondaryValue > OperationModeZone.curve) {
+      } else if (secondaryValue > ClassicOperationModeZone.curve) {
         secondaryValue -= HEAT_COOL_GAP
       }
     }

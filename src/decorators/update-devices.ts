@@ -1,13 +1,16 @@
-import type { DeviceFacade, ZoneFacade } from '../facades/index.ts'
 import type {
-  FailureData,
-  GetDeviceData,
-  GroupState,
-  ListDeviceData,
-  SetDeviceData,
-  SuccessData,
+  ClassicDeviceFacade,
+  ClassicZoneFacade,
+} from '../facades/index.ts'
+import type {
+  ClassicFailureData,
+  ClassicGetDeviceData,
+  ClassicGroupState,
+  ClassicListDeviceData,
+  ClassicSetDeviceData,
+  ClassicSuccessData,
 } from '../types/index.ts'
-import { ClassicDeviceType, FLAG_UNCHANGED } from '../constants.ts'
+import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import { NoChangesError } from '../errors/index.ts'
 import {
   fromSetToListAta,
@@ -24,8 +27,14 @@ import {
  * @param root0.type - Optional device type to filter which devices are updated.
  * @returns A method decorator that updates device models after execution.
  */
-export const updateDevices =
-  <T extends boolean | FailureData | GroupState | SuccessData>({
+export const classicUpdateDevices =
+  <
+    T extends
+      | boolean
+      | ClassicFailureData
+      | ClassicGroupState
+      | ClassicSuccessData,
+  >({
     type,
   }: {
     type?: ClassicDeviceType
@@ -34,7 +43,7 @@ export const updateDevices =
     target: (...args: any[]) => Promise<T>,
     context: ClassMethodDecoratorContext,
   ): ((...args: unknown[]) => Promise<T>) =>
-    async function newTarget(this: ZoneFacade, ...args: unknown[]) {
+    async function newTarget(this: ClassicZoneFacade, ...args: unknown[]) {
       const [arg] = args
       if (
         arg !== null &&
@@ -74,14 +83,14 @@ export const updateDevices =
  * ATA set-command keys back to list-data keys (e.g., SetFanSpeed → ClassicFanSpeed).
  */
 const convertToListDeviceData = <T extends ClassicDeviceType>(
-  facade: DeviceFacade<T>,
-  data: SetDeviceData<T>,
-): Partial<ListDeviceData<T>> => {
+  facade: ClassicDeviceFacade<T>,
+  data: ClassicSetDeviceData<T>,
+): Partial<ClassicListDeviceData<T>> => {
   const { flags, type } = facade
   const { EffectiveFlags: effectiveFlags, ...newData } = data
   const allEntries = Object.entries(newData)
   const effectiveFlagsBigInt =
-    effectiveFlags === FLAG_UNCHANGED ? null : BigInt(effectiveFlags)
+    effectiveFlags === CLASSIC_FLAG_UNCHANGED ? null : BigInt(effectiveFlags)
   const entries =
     effectiveFlagsBigInt === null ? allEntries : (
       allEntries.filter(
@@ -90,7 +99,7 @@ const convertToListDeviceData = <T extends ClassicDeviceType>(
           Boolean(BigInt(flags[key]) & effectiveFlagsBigInt),
       )
     )
-  return typedFromEntries<Partial<ListDeviceData<T>>>(
+  return typedFromEntries<Partial<ClassicListDeviceData<T>>>(
     type === ClassicDeviceType.Ata ?
       entries.map(([key, value]) =>
         isSetDeviceDataAtaNotInList(key) ?
@@ -108,14 +117,14 @@ const convertToListDeviceData = <T extends ClassicDeviceType>(
  * @param _context - Decorator context provided by the runtime.
  * @returns A wrapper that updates the device model after calling the original method.
  */
-export const updateDevice = <
+export const classicUpdateDevice = <
   T extends ClassicDeviceType,
-  TData extends GetDeviceData<T> | SetDeviceData<T>,
+  TData extends ClassicGetDeviceData<T> | ClassicSetDeviceData<T>,
 >(
   target: (...args: any[]) => Promise<TData>,
   _context: ClassMethodDecoratorContext,
 ): ((...args: unknown[]) => Promise<TData>) =>
-  async function newTarget(this: DeviceFacade<T>, ...args: unknown[]) {
+  async function newTarget(this: ClassicDeviceFacade<T>, ...args: unknown[]) {
     const data = await target.call(this, ...args)
     const {
       devices: [device],

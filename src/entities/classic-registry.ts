@@ -1,26 +1,26 @@
 import { ClassicDeviceType } from '../constants.ts'
 import {
-  type AreaID,
-  type AreaZone,
-  type BuildingData,
-  type BuildingID,
-  type BuildingZone,
   type ClassicAreaDataAny,
+  type ClassicAreaID,
+  type ClassicAreaZone,
+  type ClassicBuildingData,
+  type ClassicBuildingID,
+  type ClassicBuildingZone,
+  type ClassicDeviceZone,
+  type ClassicFloorData,
+  type ClassicFloorID,
+  type ClassicFloorZone,
   type ClassicListDeviceAny,
-  type DeviceZone,
-  type FloorData,
-  type FloorID,
-  type FloorZone,
-  type Zone,
-  toAreaId,
-  toBuildingId,
-  toFloorId,
+  type ClassicZone,
+  toClassicAreaId,
+  toClassicBuildingId,
+  toClassicFloorId,
 } from '../types/index.ts'
 import type { ClassicDeviceAny } from './interfaces.ts'
-import { Area } from './area.ts'
-import { Building } from './building.ts'
+import { ClassicArea } from './area.ts'
+import { ClassicBuilding } from './building.ts'
 import { ClassicDevice } from './classic-device.ts'
-import { Floor } from './floor.ts'
+import { ClassicFloor } from './floor.ts'
 import { syncModel } from './symbols.ts'
 
 /*
@@ -62,7 +62,10 @@ const syncMap = <TModel, TData>(
   return models
 }
 
-const syncDeviceModel = (model: ClassicDeviceAny, device: ClassicListDeviceAny): void => {
+const syncDeviceModel = (
+  model: ClassicDeviceAny,
+  device: ClassicListDeviceAny,
+): void => {
   if (model.type === device.Type) {
     model[syncModel](device)
   }
@@ -95,8 +98,8 @@ const level = {
 }
 
 const flattenAreas = function* flattenAreas(
-  areas: readonly AreaZone[],
-): Generator<Zone> {
+  areas: readonly ClassicAreaZone[],
+): Generator<ClassicZone> {
   for (const area of areas) {
     yield area
     yield* area.devices
@@ -104,8 +107,8 @@ const flattenAreas = function* flattenAreas(
 }
 
 const flattenBuildings = function* flattenBuildings(
-  buildings: readonly BuildingZone[],
-): Generator<Zone> {
+  buildings: readonly ClassicBuildingZone[],
+): Generator<ClassicZone> {
   for (const building of buildings) {
     yield building
     yield* building.devices
@@ -136,7 +139,7 @@ const getDeviceLevel = (
 const buildDeviceZones = (
   devices: ClassicDeviceAny[],
   type?: ClassicDeviceType,
-): DeviceZone[] => {
+): ClassicDeviceZone[] => {
   const filtered =
     type === undefined ? devices : (
       devices.filter(({ type: deviceType }) => deviceType === type)
@@ -161,33 +164,35 @@ export class ClassicRegistry {
    * Public accessors expose readonly query interfaces over private maps,
    * preventing callers from clearing or replacing entire collections.
    */
-  readonly #areas = new Map<number, Area>()
+  readonly #areas = new Map<number, ClassicArea>()
 
   public readonly areas = {
-    getById: (id: number): Area | undefined => this.#areas.get(id),
+    getById: (id: number): ClassicArea | undefined => this.#areas.get(id),
   }
 
-  readonly #buildings = new Map<number, Building>()
+  readonly #buildings = new Map<number, ClassicBuilding>()
 
   public readonly buildings = {
-    getById: (id: number): Building | undefined => this.#buildings.get(id),
+    getById: (id: number): ClassicBuilding | undefined =>
+      this.#buildings.get(id),
   }
 
   readonly #devices = new Map<number, ClassicDeviceAny>()
 
   public readonly devices = {
-    getById: (id: number): ClassicDeviceAny | undefined => this.#devices.get(id),
+    getById: (id: number): ClassicDeviceAny | undefined =>
+      this.#devices.get(id),
   }
 
-  readonly #floors = new Map<number, Floor>()
+  readonly #floors = new Map<number, ClassicFloor>()
 
   public readonly floors = {
-    getById: (id: number): Floor | undefined => this.#floors.get(id),
+    getById: (id: number): ClassicFloor | undefined => this.#floors.get(id),
   }
 
-  #areasByBuildingId = new Map<number, Area[]>()
+  #areasByBuildingId = new Map<number, ClassicArea[]>()
 
-  #areasByFloorId = new Map<number, Area[]>()
+  #areasByFloorId = new Map<number, ClassicArea[]>()
 
   #devicesByAreaId = new Map<number, ClassicDeviceAny[]>()
 
@@ -195,7 +200,7 @@ export class ClassicRegistry {
 
   #devicesByFloorId = new Map<number, ClassicDeviceAny[]>()
 
-  #floorsByBuildingId = new Map<number, Floor[]>()
+  #floorsByBuildingId = new Map<number, ClassicFloor[]>()
 
   /**
    * Build a hierarchical zone structure from the registry, optionally filtered by device type.
@@ -205,25 +210,25 @@ export class ClassicRegistry {
    */
   public getBuildings({
     type,
-  }: { type?: ClassicDeviceType } = {}): BuildingZone[] {
+  }: { type?: ClassicDeviceType } = {}): ClassicBuildingZone[] {
     return [...this.#buildings.values()]
       .filter((building) => this.#hasDevices(building.id, 'building', type))
       .map((building) => ({
         areas: this.#buildAreaZones(
-          this.getAreasByBuildingId(toBuildingId(building.id)).filter(
+          this.getAreasByBuildingId(toClassicBuildingId(building.id)).filter(
             ({ floorId }) => floorId === null,
           ),
           level.child,
           type,
         ),
         devices: buildDeviceZones(
-          this.getDevicesByBuildingId(toBuildingId(building.id)).filter(
+          this.getDevicesByBuildingId(toClassicBuildingId(building.id)).filter(
             ({ areaId, floorId }) => areaId === null && floorId === null,
           ),
           type,
         ),
         floors: this.#buildFloorZones(
-          this.getFloorsByBuildingId(toBuildingId(building.id)),
+          this.getFloorsByBuildingId(toClassicBuildingId(building.id)),
           type,
         ),
         id: building.id,
@@ -235,15 +240,15 @@ export class ClassicRegistry {
   }
 
   /**
-   * Flatten the building hierarchy into a sorted list of all zones.
+   * Get all areas within a specific building.
    * @param id - The building ID to look up areas for.
    * @returns The areas belonging to the specified building.
    */
-  public getAreasByBuildingId(id: BuildingID): Area[] {
+  public getAreasByBuildingId(id: ClassicBuildingID): ClassicArea[] {
     return this.#areasByBuildingId.get(id) ?? []
   }
 
-  public getAreasByFloorId(id: FloorID): Area[] {
+  public getAreasByFloorId(id: ClassicFloorID): ClassicArea[] {
     return this.#areasByFloorId.get(id) ?? []
   }
 
@@ -251,15 +256,15 @@ export class ClassicRegistry {
     return [...this.#devices.values()]
   }
 
-  public getDevicesByAreaId(id: AreaID): ClassicDeviceAny[] {
+  public getDevicesByAreaId(id: ClassicAreaID): ClassicDeviceAny[] {
     return this.#devicesByAreaId.get(id) ?? []
   }
 
-  public getDevicesByBuildingId(id: BuildingID): ClassicDeviceAny[] {
+  public getDevicesByBuildingId(id: ClassicBuildingID): ClassicDeviceAny[] {
     return this.#devicesByBuildingId.get(id) ?? []
   }
 
-  public getDevicesByFloorId(id: FloorID): ClassicDeviceAny[] {
+  public getDevicesByFloorId(id: ClassicFloorID): ClassicDeviceAny[] {
     return this.#devicesByFloorId.get(id) ?? []
   }
 
@@ -270,11 +275,11 @@ export class ClassicRegistry {
     return this.getDevices().filter((instance) => instance.type === type)
   }
 
-  public getFloorsByBuildingId(id: BuildingID): Floor[] {
+  public getFloorsByBuildingId(id: ClassicBuildingID): ClassicFloor[] {
     return this.#floorsByBuildingId.get(id) ?? []
   }
 
-  public getZones({ type }: { type?: ClassicDeviceType } = {}): Zone[] {
+  public getZones({ type }: { type?: ClassicDeviceType } = {}): ClassicZone[] {
     return [...flattenBuildings(this.getBuildings({ type }))].toSorted(
       compareNames,
     )
@@ -282,7 +287,7 @@ export class ClassicRegistry {
 
   public syncAreas(areas: ClassicAreaDataAny[]): void {
     const models = syncMap(this.#areas, areas, {
-      create: (area) => new Area(area),
+      create: (area) => new ClassicArea(area),
       getId: (area) => area.ID,
       update: (model, area) => {
         model[syncModel](area)
@@ -294,15 +299,16 @@ export class ClassicRegistry {
     )
     this.#areasByFloorId = Map.groupBy(
       models.filter(
-        (model): model is Area & { floorId: number } => model.floorId !== null,
+        (model): model is ClassicArea & { floorId: number } =>
+          model.floorId !== null,
       ),
       ({ floorId }) => floorId,
     )
   }
 
-  public syncBuildings(buildings: BuildingData[]): void {
+  public syncBuildings(buildings: ClassicBuildingData[]): void {
     syncMap(this.#buildings, buildings, {
-      create: (building) => new Building(building),
+      create: (building) => new ClassicBuilding(building),
       getId: (building) => building.ID,
       update: (model, building) => {
         model[syncModel](building)
@@ -336,9 +342,9 @@ export class ClassicRegistry {
     )
   }
 
-  public syncFloors(floors: FloorData[]): void {
+  public syncFloors(floors: ClassicFloorData[]): void {
     const models = syncMap(this.#floors, floors, {
-      create: (floor) => new Floor(floor),
+      create: (floor) => new ClassicFloor(floor),
       getId: (floor) => floor.ID,
       update: (model, floor) => {
         model[syncModel](floor)
@@ -351,15 +357,15 @@ export class ClassicRegistry {
   }
 
   #buildAreaZones(
-    areas: Area[],
+    areas: ClassicArea[],
     areaLevel: number,
     type?: ClassicDeviceType,
-  ): AreaZone[] {
+  ): ClassicAreaZone[] {
     return areas
       .filter((area) => this.#hasDevices(area.id, 'area', type))
       .map((area) => ({
         devices: buildDeviceZones(
-          this.getDevicesByAreaId(toAreaId(area.id)),
+          this.getDevicesByAreaId(toClassicAreaId(area.id)),
           type,
         ),
         id: area.id,
@@ -370,17 +376,20 @@ export class ClassicRegistry {
       .toSorted(compareNames)
   }
 
-  #buildFloorZones(floors: Floor[], type?: ClassicDeviceType): FloorZone[] {
+  #buildFloorZones(
+    floors: ClassicFloor[],
+    type?: ClassicDeviceType,
+  ): ClassicFloorZone[] {
     return floors
       .filter((floor) => this.#hasDevices(floor.id, 'floor', type))
       .map((floor) => ({
         areas: this.#buildAreaZones(
-          this.getAreasByFloorId(toFloorId(floor.id)),
+          this.getAreasByFloorId(toClassicFloorId(floor.id)),
           level.grandchild,
           type,
         ),
         devices: buildDeviceZones(
-          this.getDevicesByFloorId(toFloorId(floor.id)).filter(
+          this.getDevicesByFloorId(toClassicFloorId(floor.id)).filter(
             ({ areaId }) => areaId === null,
           ),
           type,
@@ -398,11 +407,11 @@ export class ClassicRegistry {
     zone: 'area' | 'building' | 'floor',
   ): ClassicDeviceAny[] {
     if (zone === 'area') {
-      return this.getDevicesByAreaId(toAreaId(id))
+      return this.getDevicesByAreaId(toClassicAreaId(id))
     }
     return zone === 'building' ?
-        this.getDevicesByBuildingId(toBuildingId(id))
-      : this.getDevicesByFloorId(toFloorId(id))
+        this.getDevicesByBuildingId(toClassicBuildingId(id))
+      : this.getDevicesByFloorId(toClassicFloorId(id))
   }
 
   #hasDevices(

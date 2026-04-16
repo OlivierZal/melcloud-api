@@ -33,7 +33,7 @@ describe('facade manager', () => {
 
     expect(manager.get(building)).not.toBeNull()
     expect(manager.get(building).id).toBe(1)
-    expect(manager.get(building).name).toBe('Building')
+    expect(manager.get(building).name).toBe('ClassicBuilding')
   })
 
   it('returns a facade for a floor instance', () => {
@@ -72,7 +72,7 @@ describe('facade manager', () => {
     const buildings = manager.getBuildings()
 
     expect(buildings).toHaveLength(1)
-    expect(defined(buildings[0]).name).toBe('Building')
+    expect(defined(buildings[0]).name).toBe('ClassicBuilding')
   })
 
   it('filters buildings by device type via getBuildings', () => {

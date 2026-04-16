@@ -14,7 +14,7 @@ interface HasOnSync {
  * @param root0.type - Optional device type to pass to the sync callback.
  * @returns A method decorator that triggers sync after execution.
  */
-export const syncDevices =
+export const classicSyncDevices =
   ({
     type,
   }: {

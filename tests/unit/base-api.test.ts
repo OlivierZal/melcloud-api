@@ -9,7 +9,7 @@ import type {
   RequestRetryEvent,
   RequestStartEvent,
 } from '../../src/api/interfaces.ts'
-import type { LoginCredentials } from '../../src/types/index.ts'
+import type { ClassicLoginCredentials } from '../../src/types/index.ts'
 import { RateLimitError } from '../../src/errors/index.ts'
 import {
   cast,
@@ -72,7 +72,7 @@ const createTestAPIClass = async () => {
 
     // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/require-await -- Abstract stub
     public override async authenticate(
-      _context?: LoginCredentials,
+      _context?: ClassicLoginCredentials,
     ): Promise<boolean> {
       return true
     }

@@ -1,6 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
-import type { ErrorLog, ErrorLogQuery } from '../api/index.ts'
+import type { ClassicErrorLog, ClassicErrorLogQuery } from '../api/index.ts'
 import type {
   ClassicBaseBuilding,
   ClassicBaseDevice,
@@ -9,25 +9,25 @@ import type {
   Identifiable,
 } from '../entities/index.ts'
 import type {
-  EnergyData,
-  FailureData,
-  FrostProtectionData,
-  GetDeviceData,
-  GroupState,
-  HolidayModeData,
-  HotWaterState,
-  ListDeviceData,
-  SetDeviceData,
-  SuccessData,
-  TilesData,
-  UpdateDeviceData,
-  ZoneSettings,
-  ZoneState,
+  ClassicEnergyData,
+  ClassicFailureData,
+  ClassicFrostProtectionData,
+  ClassicGetDeviceData,
+  ClassicGroupState,
+  ClassicHolidayModeData,
+  ClassicHotWaterState,
+  ClassicListDeviceData,
+  ClassicSetDeviceData,
+  ClassicSuccessData,
+  ClassicTilesData,
+  ClassicUpdateDeviceData,
+  ClassicZoneSettings,
+  ClassicZoneState,
 } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 
 /** Parameters for configuring frost protection temperature bounds. */
-export interface FrostProtectionQuery {
+export interface ClassicFrostProtectionQuery {
   /** Maximum temperature threshold (clamped to 4–16 °C range). */
   readonly max: number
 
@@ -39,7 +39,7 @@ export interface FrostProtectionQuery {
 }
 
 /** Parameters for enabling or disabling holiday mode. */
-export interface HolidayModeQuery {
+export interface ClassicHolidayModeQuery {
   /** Start date in ISO 8601 format. Defaults to now when `to` is provided. */
   readonly from?: string
 
@@ -48,36 +48,37 @@ export interface HolidayModeQuery {
 }
 
 /** Facade for a MELCloud building, combining zone settings with super device operations. */
-export interface BuildingFacade extends ClassicBaseBuilding, ZoneFacade {
+export interface ClassicBuildingFacade
+  extends ClassicBaseBuilding, ClassicZoneFacade {
   /** Fetch the latest building zone settings after syncing devices. */
-  readonly fetch: () => Promise<ZoneSettings>
+  readonly fetch: () => Promise<ClassicZoneSettings>
 }
 
 /** Facade for Air-to-Water (ATW) devices with hot water and zone state access. */
-export interface ClassicDeviceAtwFacade extends DeviceFacade<
+export interface ClassicDeviceAtwFacade extends ClassicDeviceFacade<
   typeof ClassicDeviceType.Atw
 > {
   /** Current hot water state. */
-  readonly hotWater: HotWaterState
+  readonly hotWater: ClassicHotWaterState
 
   /** Current zone 1 state. */
-  readonly zone1: ZoneState
+  readonly zone1: ClassicZoneState
 }
 
 /** Facade for ATW devices with two heating/cooling zones. */
 export interface ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
   /** Current zone 2 state. */
-  readonly zone2: ZoneState
+  readonly zone2: ClassicZoneState
 }
 
 /** Facade for an individual MELCloud device with type-safe data access and control. */
-export interface DeviceFacade<T extends ClassicDeviceType>
-  extends ClassicBaseDevice<T>, Facade {
+export interface ClassicDeviceFacade<T extends ClassicDeviceType>
+  extends ClassicBaseDevice<T>, ClassicFacade {
   /** Bitfield flags mapping each updatable property to its effective flag value. */
-  readonly flags: Record<keyof UpdateDeviceData<T>, number>
+  readonly flags: Record<keyof ClassicUpdateDeviceData<T>, number>
 
   /** Fetch the latest device data after syncing. */
-  readonly fetch: () => Promise<ListDeviceData<T>>
+  readonly fetch: () => Promise<ClassicListDeviceData<T>>
 
   /** Fetch operation mode usage as pie chart data. */
   readonly getOperationModes: (
@@ -86,8 +87,8 @@ export interface DeviceFacade<T extends ClassicDeviceType>
 
   /** Send updated device values, clamping temperatures to valid ranges. */
   readonly updateValues: (
-    data: UpdateDeviceData<T>,
-  ) => Promise<SetDeviceData<T>>
+    data: ClassicUpdateDeviceData<T>,
+  ) => Promise<ClassicSetDeviceData<T>>
 
   /** Fetch temperature history as line chart data. */
   readonly getTemperatures: (
@@ -95,14 +96,16 @@ export interface DeviceFacade<T extends ClassicDeviceType>
   ) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
-  readonly getTiles: ((device: true | ClassicDeviceAny) => Promise<TilesData<T>>) &
-    ((device?: false) => Promise<TilesData<null>>)
+  readonly getTiles: ((
+    device: true | ClassicDeviceAny,
+  ) => Promise<ClassicTilesData<T>>) &
+    ((device?: false) => Promise<ClassicTilesData<null>>)
 
   /** Fetch current device values from the Classic API. */
-  readonly getValues: () => Promise<GetDeviceData<T>>
+  readonly getValues: () => Promise<ClassicGetDeviceData<T>>
 
   /** Fetch energy consumption report. ATA and ATW only. */
-  readonly getEnergy: (query: ReportQuery) => Promise<EnergyData<T>>
+  readonly getEnergy: (query: ReportQuery) => Promise<ClassicEnergyData<T>>
 
   /** Fetch hourly temperature report. ATW only. */
   readonly getHourlyTemperatures: (
@@ -116,7 +119,7 @@ export interface DeviceFacade<T extends ClassicDeviceType>
 }
 
 /** Base facade contract shared by all facade types (building, floor, area, device). */
-export interface Facade extends Identifiable {
+export interface ClassicFacade extends Identifiable {
   /** All devices managed by this facade. */
   readonly devices: readonly ClassicDeviceAny[]
 
@@ -129,27 +132,27 @@ export interface Facade extends Identifiable {
 
   /** Retrieve the error log for all devices in this facade. */
   readonly getErrorLog: (
-    query: ErrorLogQuery,
-  ) => Promise<ErrorLog | FailureData>
+    query: ClassicErrorLogQuery,
+  ) => Promise<ClassicErrorLog | ClassicFailureData>
 
   /** Get the current frost protection settings. */
-  readonly getFrostProtection: () => Promise<FrostProtectionData>
+  readonly getFrostProtection: () => Promise<ClassicFrostProtectionData>
 
   /** Get the current holiday mode settings. */
-  readonly getHolidayMode: () => Promise<HolidayModeData>
+  readonly getHolidayMode: () => Promise<ClassicHolidayModeData>
 
   /** Trigger a sync callback for downstream consumers. */
   readonly notifySync: (params?: { type?: ClassicDeviceType }) => Promise<void>
 
   /** Update frost protection settings with temperature clamping. */
   readonly updateFrostProtection: (
-    query: FrostProtectionQuery,
-  ) => Promise<FailureData | SuccessData>
+    query: ClassicFrostProtectionQuery,
+  ) => Promise<ClassicFailureData | ClassicSuccessData>
 
   /** Enable or disable holiday mode. */
   readonly updateHolidayMode: (
-    query: HolidayModeQuery,
-  ) => Promise<FailureData | SuccessData>
+    query: ClassicHolidayModeQuery,
+  ) => Promise<ClassicFailureData | ClassicSuccessData>
 
   /** Turn all devices in this facade on or off. */
   readonly updatePower: (value?: boolean) => Promise<boolean>
@@ -160,21 +163,21 @@ export interface Facade extends Identifiable {
   ) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
-  readonly getTiles: ((device?: false) => Promise<TilesData<null>>) &
+  readonly getTiles: ((device?: false) => Promise<ClassicTilesData<null>>) &
     (<T extends ClassicDeviceType>(
       device: ClassicDevice<T>,
-    ) => Promise<TilesData<T>>)
+    ) => Promise<ClassicTilesData<T>>)
 }
 
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
-export interface ZoneFacade extends Facade {
+export interface ClassicZoneFacade extends ClassicFacade {
   /** Get the current group state for all ATA devices. */
-  readonly getGroup: () => Promise<GroupState>
+  readonly getGroup: () => Promise<ClassicGroupState>
 
   /** Update the group state for all ATA devices. */
   readonly updateGroupState: (
-    state: GroupState,
-  ) => Promise<FailureData | SuccessData>
+    state: ClassicGroupState,
+  ) => Promise<ClassicFailureData | ClassicSuccessData>
 }
 
 /** Line chart data with named series and a measurement unit. */
@@ -216,20 +219,20 @@ export interface ReportQuery {
 }
 
 /** Union of all device facade types. */
-export type DeviceFacadeAny =
+export type ClassicDeviceFacadeAny =
   | ClassicDeviceAtwFacade
   | ClassicDeviceAtwHasZone2Facade
-  | DeviceFacade<typeof ClassicDeviceType.Ata>
-  | DeviceFacade<typeof ClassicDeviceType.Erv>
+  | ClassicDeviceFacade<typeof ClassicDeviceType.Ata>
+  | ClassicDeviceFacade<typeof ClassicDeviceType.Erv>
 
 /**
  * Type guard that narrows a device facade to the ATA variant.
  * @param facade - The device facade to check.
  * @returns Whether the facade is an ATA facade.
  */
-export const isAtaFacade = (
-  facade: DeviceFacade<ClassicDeviceType>,
-): facade is DeviceFacade<typeof ClassicDeviceType.Ata> =>
+export const isClassicAtaFacade = (
+  facade: ClassicDeviceFacade<ClassicDeviceType>,
+): facade is ClassicDeviceFacade<typeof ClassicDeviceType.Ata> =>
   facade.type === ClassicDeviceType.Ata
 
 /**
@@ -238,8 +241,8 @@ export const isAtaFacade = (
  * @param facade - The device facade to check.
  * @returns Whether the facade is an ATW facade.
  */
-export const isAtwFacade = (
-  facade: DeviceFacade<ClassicDeviceType>,
+export const isClassicAtwFacade = (
+  facade: ClassicDeviceFacade<ClassicDeviceType>,
 ): facade is ClassicDeviceAtwFacade => facade.type === ClassicDeviceType.Atw
 
 /**
@@ -247,9 +250,9 @@ export const isAtwFacade = (
  * @param facade - The device facade to check.
  * @returns Whether the facade is an ERV facade.
  */
-export const isErvFacade = (
-  facade: DeviceFacade<ClassicDeviceType>,
-): facade is DeviceFacade<typeof ClassicDeviceType.Erv> =>
+export const isClassicErvFacade = (
+  facade: ClassicDeviceFacade<ClassicDeviceType>,
+): facade is ClassicDeviceFacade<typeof ClassicDeviceType.Erv> =>
   facade.type === ClassicDeviceType.Erv
 
 /**
@@ -258,6 +261,6 @@ export const isErvFacade = (
  * @param facade - The ATW device facade to check.
  * @returns Whether the facade supports zone 2.
  */
-export const hasZone2 = (
+export const hasClassicZone2 = (
   facade: ClassicDeviceAtwFacade,
 ): facade is ClassicDeviceAtwHasZone2Facade => 'zone2' in facade

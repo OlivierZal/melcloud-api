@@ -12,12 +12,15 @@ import type {
 } from '../src/api/index.ts'
 import type { ClassicDeviceType } from '../src/constants.ts'
 import type {
-  BuildingData,
   ClassicAreaDataAny,
+  ClassicBuildingData,
+  ClassicFloorData,
   ClassicListDeviceAny,
-  FloorData,
 } from '../src/types/index.ts'
-import { type ClassicDeviceAny, ClassicRegistry } from '../src/entities/index.ts'
+import {
+  type ClassicDeviceAny,
+  ClassicRegistry,
+} from '../src/entities/index.ts'
 
 const MOCK_RSSI = -60
 
@@ -113,13 +116,13 @@ export function assertDeviceType(
 /**
  * Build a `ClassicRegistry` populated with the provided hierarchy in a
  * single call. Replaces the repeated 5-line
- * `new ClassicRegistry() + syncBuildings + syncFloors + syncAreas + syncDevices`
+ * `new ClassicRegistry() + syncBuildings + syncFloors + syncAreas + classicSyncDevices`
  * pattern found in multiple test files.
  * @param data - Flat arrays of buildings, floors, areas, and devices.
- * @param data.areas - Area rows to sync.
- * @param data.buildings - Building rows to sync.
+ * @param data.areas - ClassicArea rows to sync.
+ * @param data.buildings - ClassicBuilding rows to sync.
  * @param data.devices - ClassicDevice rows to sync.
- * @param data.floors - Floor rows to sync.
+ * @param data.floors - ClassicFloor rows to sync.
  * @returns A fully synced `ClassicRegistry` instance.
  */
 export const createPopulatedRegistry = ({
@@ -129,9 +132,9 @@ export const createPopulatedRegistry = ({
   floors,
 }: {
   areas: ClassicAreaDataAny[]
-  buildings: BuildingData[]
+  buildings: ClassicBuildingData[]
   devices: ClassicListDeviceAny[]
-  floors: FloorData[]
+  floors: ClassicFloorData[]
 }): ClassicRegistry => {
   const registry = new ClassicRegistry()
   registry.syncBuildings(buildings)

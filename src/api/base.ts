@@ -6,7 +6,7 @@ import axios, {
   HttpStatusCode,
 } from 'axios'
 
-import type { LoginCredentials } from '../types/index.ts'
+import type { ClassicLoginCredentials } from '../types/index.ts'
 import { setting } from '../decorators/index.ts'
 import {
   APICallRequestData,
@@ -114,7 +114,7 @@ export abstract class BaseAPI implements Disposable {
     this.#syncManager = new SyncManager(syncCallback, logger, autoSyncInterval)
   }
 
-  public abstract authenticate(data?: LoginCredentials): Promise<boolean>
+  public abstract authenticate(data?: ClassicLoginCredentials): Promise<boolean>
 
   protected abstract ensureSession(): Promise<void>
 

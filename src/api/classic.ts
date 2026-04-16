@@ -4,47 +4,51 @@ import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 
 import type {
-  BuildingWithStructure,
   ClassicAreaDataAny,
+  ClassicBuildingWithStructure,
+  ClassicEnergyData,
+  ClassicEnergyPostData,
+  ClassicErrorLogData,
+  ClassicErrorLogPostData,
+  ClassicFailureData,
+  ClassicFrostProtectionData,
+  ClassicFrostProtectionPostData,
+  ClassicGetDeviceData,
+  ClassicGetDeviceDataParams,
+  ClassicGetGroupData,
+  ClassicGetGroupPostData,
+  ClassicHolidayModeData,
+  ClassicHolidayModePostData,
   ClassicListDeviceAny,
-  EnergyData,
-  EnergyPostData,
-  ErrorLogData,
-  ErrorLogPostData,
-  FailureData,
-  FrostProtectionData,
-  FrostProtectionPostData,
-  GetDeviceData,
-  GetDeviceDataParams,
-  GetGroupData,
-  GetGroupPostData,
-  HolidayModeData,
-  HolidayModePostData,
-  LoginCredentials,
-  LoginData,
-  LoginPostData,
-  OperationModeLogData,
-  ReportData,
-  ReportPostData,
-  SetDeviceData,
-  SetDevicePostData,
-  SetGroupPostData,
-  SetPowerPostData,
-  SettingsParams,
-  SuccessData,
-  TemperatureLogPostData,
-  TilesData,
-  TilesPostData,
+  ClassicLoginCredentials,
+  ClassicLoginData,
+  ClassicLoginPostData,
+  ClassicOperationModeLogData,
+  ClassicReportData,
+  ClassicReportPostData,
+  ClassicSetDeviceData,
+  ClassicSetDevicePostData,
+  ClassicSetGroupPostData,
+  ClassicSetPowerPostData,
+  ClassicSettingsParams,
+  ClassicSuccessData,
+  ClassicTemperatureLogPostData,
+  ClassicTilesData,
+  ClassicTilesPostData,
 } from '../types/index.ts'
-import { ClassicDeviceType, Language } from '../constants.ts'
-import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
+import {
+  authenticate,
+  classicSyncDevices,
+  setting,
+} from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
-import { isSessionExpired, toDeviceId } from '../resilience/index.ts'
+import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
 import type {
   ClassicAPIAdapter,
   ClassicAPIConfig,
-  ErrorLog,
-  ErrorLogQuery,
+  ClassicErrorLog,
+  ClassicErrorLogQuery,
 } from './interfaces.ts'
 import { BaseAPI } from './base.ts'
 
@@ -77,8 +81,8 @@ const toISODate = (dateTime: DateTime): string => {
   return result
 }
 
-const isLanguage = (value: string): value is keyof typeof Language =>
-  value in Language
+const isLanguage = (value: string): value is keyof typeof ClassicLanguage =>
+  value in ClassicLanguage
 
 const formatErrors = (errors: Record<string, readonly string[]>): string =>
   Object.entries(errors)
@@ -90,7 +94,7 @@ const parseErrorLogQuery = ({
   limit,
   offset,
   to,
-}: ErrorLogQuery): {
+}: ClassicErrorLogQuery): {
   fromDate: DateTime
   period: number
   toDate: DateTime
@@ -123,7 +127,7 @@ const parseErrorLogQuery = ({
 
 // Collect all areas from both building-level and floor-level
 const collectAreas = function* collectAreas(
-  buildings: BuildingWithStructure[],
+  buildings: ClassicBuildingWithStructure[],
 ): Generator<ClassicAreaDataAny> {
   for (const {
     Structure: { Areas: areas, Floors: floors },
@@ -137,7 +141,7 @@ const collectAreas = function* collectAreas(
 
 // Collect all devices from every level of the hierarchy
 const collectDevices = function* collectDevices(
-  buildings: BuildingWithStructure[],
+  buildings: ClassicBuildingWithStructure[],
 ): Generator<ClassicListDeviceAny> {
   for (const {
     Structure: { Areas: areas, Devices: devices, Floors: floors },
@@ -231,17 +235,17 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   @authenticate
-  public async authenticate(data?: LoginCredentials): Promise<boolean> {
+  public async authenticate(data?: ClassicLoginCredentials): Promise<boolean> {
     /* v8 ignore next -- @authenticate guarantees data is always provided */
     const { password, username } = data ?? { password: '', username: '' }
     this.#clearPersistedSession()
     const {
-      data: { LoginData: loginData },
+      data: { ClassicLoginData: loginData },
     } = await this.login({
       postData: {
         AppVersion: APP_VERSION,
+        ClassicLanguage: this.#getLanguageCode(),
         Email: username,
-        Language: this.#getLanguageCode(),
         Password: password,
         Persist: true,
       },
@@ -259,8 +263,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Fetch all buildings, sync the model registry, and schedule the next auto-sync.
    * @returns The list of fetched buildings.
    */
-  @syncDevices()
-  public async fetch(): Promise<BuildingWithStructure[]> {
+  @classicSyncDevices()
+  public async fetch(): Promise<ClassicBuildingWithStructure[]> {
     this.clearSync()
     try {
       return await this.#fetch()
@@ -275,24 +279,24 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getEnergy<T extends ClassicDeviceType>({
     postData,
   }: {
-    postData: EnergyPostData
-  }): Promise<{ data: EnergyData<T> }> {
+    postData: ClassicEnergyPostData
+  }): Promise<{ data: ClassicEnergyData<T> }> {
     return this.request('post', '/EnergyCost/Report', { data: postData })
   }
 
   public async getErrorEntries({
     postData,
   }: {
-    postData: ErrorLogPostData
-  }): Promise<{ data: ErrorLogData[] | FailureData }> {
+    postData: ClassicErrorLogPostData
+  }): Promise<{ data: ClassicErrorLogData[] | ClassicFailureData }> {
     return this.request('post', '/Report/GetUnitErrorLog2', { data: postData })
   }
 
   public async getFrostProtection({
     params,
   }: {
-    params: SettingsParams
-  }): Promise<{ data: FrostProtectionData }> {
+    params: ClassicSettingsParams
+  }): Promise<{ data: ClassicFrostProtectionData }> {
     return this.request('get', '/FrostProtection/GetSettings', { params })
   }
 
@@ -308,9 +312,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * @returns Parsed error log with pagination metadata.
    */
   public async getErrorLog(
-    query: ErrorLogQuery,
+    query: ClassicErrorLogQuery,
     deviceIds = this.#registry.getDevices().map(({ id }) => id),
-  ): Promise<ErrorLog> {
+  ): Promise<ClassicErrorLog> {
     const { fromDate, period, toDate } = parseErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
     const errorLog = await this.#errorLog(deviceIds, fromDate, toDate)
@@ -343,16 +347,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getGroup({
     postData,
   }: {
-    postData: GetGroupPostData
-  }): Promise<{ data: GetGroupData }> {
+    postData: ClassicGetGroupPostData
+  }): Promise<{ data: ClassicGetGroupData }> {
     return this.request('post', '/Group/Get', { data: postData })
   }
 
   public async getHolidayMode({
     params,
   }: {
-    params: SettingsParams
-  }): Promise<{ data: HolidayModeData }> {
+    params: ClassicSettingsParams
+  }): Promise<{ data: ClassicHolidayModeData }> {
     return this.request('get', '/HolidayMode/GetSettings', { params })
   }
 
@@ -360,7 +364,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: { device: number; hour: HourNumbers }
-  }): Promise<{ data: ReportData }> {
+  }): Promise<{ data: ClassicReportData }> {
     return this.request('post', '/Report/GetHourlyTemperature', {
       data: postData,
     })
@@ -369,8 +373,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getInternalTemperatures({
     postData,
   }: {
-    postData: ReportPostData
-  }): Promise<{ data: ReportData }> {
+    postData: ClassicReportPostData
+  }): Promise<{ data: ClassicReportData }> {
     return this.request('post', '/Report/GetInternalTemperatures2', {
       data: postData,
     })
@@ -379,8 +383,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getOperationModes({
     postData,
   }: {
-    postData: ReportPostData
-  }): Promise<{ data: OperationModeLogData }> {
+    postData: ClassicReportPostData
+  }): Promise<{ data: ClassicOperationModeLogData }> {
     return this.request('post', '/Report/GetOperationModeLog2', {
       data: postData,
     })
@@ -390,7 +394,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: { devices: number | number[]; hour: HourNumbers }
-  }): Promise<{ data: ReportData }> {
+  }): Promise<{ data: ClassicReportData }> {
     return this.request('post', '/Report/GetSignalStrength', {
       data: postData,
     })
@@ -399,8 +403,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getTemperatures({
     postData,
   }: {
-    postData: TemperatureLogPostData
-  }): Promise<{ data: ReportData }> {
+    postData: ClassicTemperatureLogPostData
+  }): Promise<{ data: ClassicReportData }> {
     return this.request('post', '/Report/GetTemperatureLog2', {
       data: postData,
     })
@@ -409,62 +413,62 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getTiles({
     postData,
   }: {
-    postData: TilesPostData<null>
-  }): Promise<{ data: TilesData<null> }>
+    postData: ClassicTilesPostData<null>
+  }): Promise<{ data: ClassicTilesData<null> }>
   public async getTiles<T extends ClassicDeviceType>({
     postData,
   }: {
-    postData: TilesPostData<T>
-  }): Promise<{ data: TilesData<T> }>
+    postData: ClassicTilesPostData<T>
+  }): Promise<{ data: ClassicTilesData<T> }>
   public async getTiles<T extends ClassicDeviceType | null>({
     postData,
   }: {
-    postData: TilesPostData<T>
-  }): Promise<{ data: TilesData<T> }> {
+    postData: ClassicTilesPostData<T>
+  }): Promise<{ data: ClassicTilesData<T> }> {
     return this.request('post', '/Tile/Get2', { data: postData })
   }
 
   public async getValues<T extends ClassicDeviceType>({
     params,
   }: {
-    params: GetDeviceDataParams
-  }): Promise<{ data: GetDeviceData<T> }> {
+    params: ClassicGetDeviceDataParams
+  }): Promise<{ data: ClassicGetDeviceData<T> }> {
     return this.request('get', '/ClassicDevice/Get', { params })
   }
 
-  public async list(): Promise<{ data: BuildingWithStructure[] }> {
+  public async list(): Promise<{ data: ClassicBuildingWithStructure[] }> {
     return this.request('get', LIST_PATH)
   }
 
   public async login({
     postData,
   }: {
-    postData: LoginPostData
-  }): Promise<{ data: LoginData }> {
+    postData: ClassicLoginPostData
+  }): Promise<{ data: ClassicLoginData }> {
     return this.dispatch('post', LOGIN_PATH, { data: postData })
   }
 
   public async updateFrostProtection({
     postData,
   }: {
-    postData: FrostProtectionPostData
-  }): Promise<{ data: FailureData | SuccessData }> {
+    postData: ClassicFrostProtectionPostData
+  }): Promise<{ data: ClassicFailureData | ClassicSuccessData }> {
     return this.request('post', '/FrostProtection/Update', { data: postData })
   }
 
   public async updateGroupState({
     postData,
   }: {
-    postData: SetGroupPostData
-  }): Promise<{ data: FailureData | SuccessData }> {
+    postData: ClassicSetGroupPostData
+  }): Promise<{ data: ClassicFailureData | ClassicSuccessData }> {
     return this.request('post', '/Group/SetAta', { data: postData })
   }
 
   public async updateHolidayMode({
     postData,
   }: {
-    postData: HolidayModePostData
-  }): Promise<{ data: FailureData | SuccessData }> {
+    postData: ClassicHolidayModePostData
+  }): Promise<{ data: ClassicFailureData | ClassicSuccessData }> {
     return this.request('post', '/HolidayMode/Update', { data: postData })
   }
 
@@ -489,7 +493,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async updatePower({
     postData,
   }: {
-    postData: SetPowerPostData
+    postData: ClassicSetPowerPostData
   }): Promise<{ data: boolean }> {
     return this.request('post', '/ClassicDevice/Power', { data: postData })
   }
@@ -498,9 +502,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
     type,
   }: {
-    postData: SetDevicePostData<T>
+    postData: ClassicSetDevicePostData<T>
     type: T
-  }): Promise<{ data: SetDeviceData<T> }> {
+  }): Promise<{ data: ClassicSetDeviceData<T> }> {
     return this.request('post', `/ClassicDevice/Set${deviceTypeNames[type]}`, {
       data: postData,
     })
@@ -562,10 +566,10 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     deviceIds: number[],
     fromDate: DateTime,
     toDate: DateTime,
-  ): Promise<ErrorLogData[]> {
+  ): Promise<ClassicErrorLogData[]> {
     const { data } = await this.getErrorEntries({
       postData: {
-        DeviceIDs: deviceIds.map((id) => toDeviceId(id)),
+        DeviceIDs: deviceIds.map((id) => toClassicDeviceId(id)),
         FromDate: toISODate(fromDate),
         ToDate: toISODate(toDate),
       },
@@ -576,7 +580,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return data
   }
 
-  async #fetch(): Promise<BuildingWithStructure[]> {
+  async #fetch(): Promise<ClassicBuildingWithStructure[]> {
     const { data } = await this.list()
     this.#registry.syncBuildings(data)
     this.#registry.syncFloors(
@@ -587,7 +591,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return data
   }
 
-  #getLanguageCode(language: string = this.language): Language {
-    return isLanguage(language) ? Language[language] : Language.en
+  #getLanguageCode(language: string = this.language): ClassicLanguage {
+    return isLanguage(language) ? ClassicLanguage[language] : ClassicLanguage.en
   }
 }

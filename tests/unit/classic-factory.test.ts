@@ -23,34 +23,34 @@ const deviceListData = ataDevice({
 })
 
 describe(createFacade, () => {
-  it('creates a BuildingFacade for Building instances', () => {
+  it('creates a ClassicBuildingFacade for ClassicBuilding instances', () => {
     const registry = new ClassicRegistry()
     registry.syncBuildings([buildingData()])
     const instance = defined(registry.buildings.getById(1))
     const facade = createFacade(mockApi, registry, instance)
 
     expect(facade.id).toBe(1)
-    expect(facade.name).toBe('Building')
+    expect(facade.name).toBe('ClassicBuilding')
   })
 
-  it('creates a FloorFacade for Floor instances', () => {
+  it('creates a ClassicFloorFacade for ClassicFloor instances', () => {
     const registry = new ClassicRegistry()
     registry.syncFloors([floorData()])
     const instance = defined(registry.floors.getById(10))
     const facade = createFacade(mockApi, registry, instance)
 
     expect(facade.id).toBe(10)
-    expect(facade.name).toBe('Floor')
+    expect(facade.name).toBe('ClassicFloor')
   })
 
-  it('creates an AreaFacade for Area instances', () => {
+  it('creates an ClassicAreaFacade for ClassicArea instances', () => {
     const registry = new ClassicRegistry()
     registry.syncAreas([areaData()])
     const instance = defined(registry.areas.getById(100))
     const facade = createFacade(mockApi, registry, instance)
 
     expect(facade.id).toBe(100)
-    expect(facade.name).toBe('Area')
+    expect(facade.name).toBe('ClassicArea')
   })
 
   it('creates a device facade for ClassicDevice instances', () => {

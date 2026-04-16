@@ -1,9 +1,11 @@
-import type { AreaData, ClassicAreaDataAny } from '../types/index.ts'
+import type { ClassicAreaData, ClassicAreaDataAny } from '../types/index.ts'
 import { BaseModel } from './base.ts'
 import { syncModel } from './symbols.ts'
 
-/** Area model representing a zone within a building or floor. */
-export class Area<T extends number | null = number | null> extends BaseModel {
+/** ClassicArea model representing a zone within a building or floor. */
+export class ClassicArea<
+  T extends number | null = number | null,
+> extends BaseModel {
   public buildingId: number
 
   public floorId: number | null
@@ -15,7 +17,7 @@ export class Area<T extends number | null = number | null> extends BaseModel {
     FloorId: floorId,
     ID: id,
     Name: name,
-  }: AreaData<T> | ClassicAreaDataAny) {
+  }: ClassicAreaData<T> | ClassicAreaDataAny) {
     super({ id, name })
     this.buildingId = buildingId
     this.floorId = floorId
@@ -25,7 +27,7 @@ export class Area<T extends number | null = number | null> extends BaseModel {
     BuildingId: buildingId,
     FloorId: floorId,
     Name: name,
-  }: AreaData<T> | ClassicAreaDataAny): void {
+  }: ClassicAreaData<T> | ClassicAreaDataAny): void {
     this.name = name
     this.buildingId = buildingId
     this.floorId = floorId

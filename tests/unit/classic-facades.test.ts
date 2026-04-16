@@ -4,7 +4,7 @@ import type { ClassicAPIAdapter } from '../../src/api/index.ts'
 import {
   ClassicDeviceType,
   ClassicOperationMode,
-  OperationModeZone,
+  ClassicOperationModeZone,
 } from '../../src/constants.ts'
 import {
   type ClassicDevice,
@@ -12,22 +12,22 @@ import {
 } from '../../src/entities/index.ts'
 import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import {
-  AreaFacade,
-  BuildingFacade,
+  ClassicAreaFacade,
+  ClassicBuildingFacade,
   ClassicDeviceAtaFacade,
   ClassicDeviceAtwFacade,
   ClassicDeviceAtwHasZone2Facade,
   ClassicDeviceErvFacade,
-  FloorFacade,
-  hasZone2,
-  isAtaFacade,
-  isAtwFacade,
-  isErvFacade,
+  ClassicFloorFacade,
+  hasClassicZone2,
+  isClassicAtaFacade,
+  isClassicAtwFacade,
+  isClassicErvFacade,
 } from '../../src/facades/index.ts'
 import {
-  type SetDeviceDataAta,
-  type SetDevicePostData,
-  toBuildingId,
+  type ClassicSetDeviceDataAta,
+  type ClassicSetDevicePostData,
+  toClassicBuildingId,
 } from '../../src/types/index.ts'
 import {
   areaData,
@@ -110,7 +110,7 @@ const createMockApi = (
     }),
     updatePower: vi.fn().mockResolvedValue({ data: true }),
     updateValues: vi.fn().mockResolvedValue({
-      data: mock<SetDeviceDataAta>({
+      data: mock<ClassicSetDeviceDataAta>({
         DeviceType: ClassicDeviceType.Ata,
         EffectiveFlags: 0x1,
         LastCommunication: '',
@@ -133,39 +133,51 @@ const createBuildingFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
 ): {
   api: ClassicAPIAdapter
-  facade: BuildingFacade
+  facade: ClassicBuildingFacade
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.buildings.getById(1))
-  return { api, facade: new BuildingFacade(api, registry, instance), registry }
+  return {
+    api,
+    facade: new ClassicBuildingFacade(api, registry, instance),
+    registry,
+  }
 }
 
 const createFloorFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
 ): {
   api: ClassicAPIAdapter
-  facade: FloorFacade
+  facade: ClassicFloorFacade
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.floors.getById(10))
-  return { api, facade: new FloorFacade(api, registry, instance), registry }
+  return {
+    api,
+    facade: new ClassicFloorFacade(api, registry, instance),
+    registry,
+  }
 }
 
 const createAreaFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
 ): {
   api: ClassicAPIAdapter
-  facade: AreaFacade
+  facade: ClassicAreaFacade
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.areas.getById(100))
-  return { api, facade: new AreaFacade(api, registry, instance), registry }
+  return {
+    api,
+    facade: new ClassicAreaFacade(api, registry, instance),
+    registry,
+  }
 }
 
 const createAtaFacade = (
@@ -479,7 +491,7 @@ describe('floor facade', () => {
     const { facade } = createFloorFacade()
 
     expect(facade.id).toBe(10)
-    expect(facade.name).toBe('Floor')
+    expect(facade.name).toBe('ClassicFloor')
   })
 })
 
@@ -494,7 +506,7 @@ describe('area facade', () => {
     const { facade } = createAreaFacade()
 
     expect(facade.id).toBe(100)
-    expect(facade.name).toBe('Area')
+    expect(facade.name).toBe('ClassicArea')
   })
 })
 
@@ -645,7 +657,7 @@ describe('base facade instance error', () => {
     registry.syncAreas([])
 
     expect(() => facade.name).toThrow(EntityNotFoundError)
-    expect(() => facade.name).toThrow('Area with id 100 not found')
+    expect(() => facade.name).toThrow('ClassicArea with id 100 not found')
   })
 
   it('exists returns true before eviction and false afterwards', () => {
@@ -664,14 +676,14 @@ describe('base facade instance error', () => {
     const registry = createRegistry()
     registry.syncAreas([
       {
-        BuildingId: toBuildingId(1),
+        BuildingId: toClassicBuildingId(1),
         FloorId: null,
         ID: 200,
-        Name: 'Empty Area',
+        Name: 'Empty ClassicArea',
       },
     ])
     const instance = defined(registry.areas.getById(200))
-    const facade = new AreaFacade(api, registry, instance)
+    const facade = new ClassicAreaFacade(api, registry, instance)
 
     await expect(facade.getFrostProtection()).rejects.toThrow(
       'No device found for',
@@ -796,7 +808,7 @@ describe('ata device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof ClassicDeviceType.Ata>>(
+      mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>>(
         defined(call).postData,
       ).SetTemperature,
     ).toBeGreaterThanOrEqual(10)
@@ -813,7 +825,7 @@ describe('ata device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof ClassicDeviceType.Ata>>(
+      mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>>(
         defined(call).postData,
       ).SetTemperature,
     ).toBeLessThanOrEqual(31)
@@ -845,7 +857,7 @@ describe('atw device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof ClassicDeviceType.Atw>>(
+      mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Atw>>(
         defined(call).postData,
       ).SetTemperatureZone1,
     ).toBeGreaterThanOrEqual(10)
@@ -871,7 +883,7 @@ describe('atw device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof ClassicDeviceType.Atw>>(
+      mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Atw>>(
         defined(call).postData,
       ).SetTemperatureZone1,
     ).toBe(10)
@@ -891,12 +903,12 @@ describe('atw device facade with zone 2', () => {
       {},
       atwSetValuesResponse({
         EffectiveFlags: 0x8,
-        OperationModeZone1: OperationModeZone.flow,
-        OperationModeZone2: OperationModeZone.flow,
+        OperationModeZone1: ClassicOperationModeZone.flow,
+        OperationModeZone2: ClassicOperationModeZone.flow,
       }),
     )
     await facade.updateValues({
-      OperationModeZone1: OperationModeZone.flow,
+      OperationModeZone1: ClassicOperationModeZone.flow,
     })
 
     expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
@@ -907,12 +919,12 @@ describe('atw device facade with zone 2', () => {
       { CanCool: true },
       atwSetValuesResponse({
         EffectiveFlags: 0x8,
-        OperationModeZone1: OperationModeZone.room_cool,
-        OperationModeZone2: OperationModeZone.room_cool,
+        OperationModeZone1: ClassicOperationModeZone.room_cool,
+        OperationModeZone2: ClassicOperationModeZone.room_cool,
       }),
     )
     await facade.updateValues({
-      OperationModeZone1: OperationModeZone.room_cool,
+      OperationModeZone1: ClassicOperationModeZone.room_cool,
     })
 
     expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
@@ -922,17 +934,17 @@ describe('atw device facade with zone 2', () => {
     const { api, facade } = createZone2Facade(
       {
         CanCool: true,
-        OperationModeZone1: OperationModeZone.room_cool,
-        OperationModeZone2: OperationModeZone.room_cool,
+        OperationModeZone1: ClassicOperationModeZone.room_cool,
+        OperationModeZone2: ClassicOperationModeZone.room_cool,
       },
       atwSetValuesResponse({
         EffectiveFlags: 0x8,
-        OperationModeZone1: OperationModeZone.room,
-        OperationModeZone2: OperationModeZone.room,
+        OperationModeZone1: ClassicOperationModeZone.room,
+        OperationModeZone2: ClassicOperationModeZone.room,
       }),
     )
     await facade.updateValues({
-      OperationModeZone1: OperationModeZone.room,
+      OperationModeZone1: ClassicOperationModeZone.room,
     })
 
     expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
@@ -943,12 +955,12 @@ describe('atw device facade with zone 2', () => {
       {},
       atwSetValuesResponse({
         EffectiveFlags: 0x18,
-        OperationModeZone1: OperationModeZone.flow,
-        OperationModeZone2: OperationModeZone.room,
+        OperationModeZone1: ClassicOperationModeZone.flow,
+        OperationModeZone2: ClassicOperationModeZone.room,
       }),
     )
     await facade.updateValues({
-      OperationModeZone2: OperationModeZone.flow,
+      OperationModeZone2: ClassicOperationModeZone.flow,
     })
 
     expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
@@ -957,35 +969,35 @@ describe('atw device facade with zone 2', () => {
   it('throws on invalid secondary operation mode zone value', async () => {
     const { facade } = createZone2Facade({
       CanCool: true,
-      OperationModeZone2: OperationModeZone.flow_cool,
+      OperationModeZone2: ClassicOperationModeZone.flow_cool,
     })
 
     await expect(
       facade.updateValues({
-        OperationModeZone1: OperationModeZone.room_cool,
+        OperationModeZone1: ClassicOperationModeZone.room_cool,
       }),
-    ).rejects.toThrow('Invalid OperationModeZone')
+    ).rejects.toThrow('Invalid ClassicOperationModeZone')
   })
 })
 
 describe('device type guards', () => {
   it.each([
     {
-      guard: isAtaFacade,
+      guard: isClassicAtaFacade,
       match: createAtaFacade,
-      name: 'isAtaFacade',
+      name: 'isClassicAtaFacade',
       noMatch: createAtwFacade,
     },
     {
-      guard: isAtwFacade,
+      guard: isClassicAtwFacade,
       match: createAtwFacade,
-      name: 'isAtwFacade',
+      name: 'isClassicAtwFacade',
       noMatch: createAtaFacade,
     },
     {
-      guard: isErvFacade,
+      guard: isClassicErvFacade,
       match: createErvFacade,
-      name: 'isErvFacade',
+      name: 'isClassicErvFacade',
       noMatch: createAtaFacade,
     },
   ])(
@@ -997,17 +1009,17 @@ describe('device type guards', () => {
   )
 })
 
-describe(hasZone2, () => {
+describe(hasClassicZone2, () => {
   it('returns true for zone2 facade', () => {
     const { facade } = createZone2Facade()
 
-    expect(hasZone2(facade)).toBe(true)
+    expect(hasClassicZone2(facade)).toBe(true)
   })
 
   it('returns false for non-zone2 facade', () => {
     const { facade } = createAtwFacade()
 
-    expect(hasZone2(facade)).toBe(false)
+    expect(hasClassicZone2(facade)).toBe(false)
   })
 })
 
@@ -1029,17 +1041,17 @@ describe('atw zone 2 facade secondary curve to cool', () => {
     const { api, facade } = createZone2Facade(
       {
         CanCool: true,
-        OperationModeZone1: OperationModeZone.room,
-        OperationModeZone2: OperationModeZone.curve,
+        OperationModeZone1: ClassicOperationModeZone.room,
+        OperationModeZone2: ClassicOperationModeZone.curve,
       },
       atwSetValuesResponse({
         EffectiveFlags: 0x8,
-        OperationModeZone1: OperationModeZone.room_cool,
-        OperationModeZone2: OperationModeZone.room_cool,
+        OperationModeZone1: ClassicOperationModeZone.room_cool,
+        OperationModeZone2: ClassicOperationModeZone.room_cool,
       }),
     )
     await facade.updateValues({
-      OperationModeZone1: OperationModeZone.room_cool,
+      OperationModeZone1: ClassicOperationModeZone.room_cool,
     })
 
     expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
@@ -1051,8 +1063,8 @@ describe('atw zone 2 facade no operation mode change', () => {
     const { api, facade } = createZone2Facade(
       {},
       atwSetValuesResponse({
-        OperationModeZone1: OperationModeZone.room,
-        OperationModeZone2: OperationModeZone.room,
+        OperationModeZone1: ClassicOperationModeZone.room,
+        OperationModeZone2: ClassicOperationModeZone.room,
         Power: false,
       }),
     )
@@ -1067,28 +1079,28 @@ describe('atw zone 2 facade CanCool false', () => {
     const { api, facade } = createZone2Facade(
       {
         CanCool: false,
-        OperationModeZone1: OperationModeZone.room,
-        OperationModeZone2: OperationModeZone.flow,
+        OperationModeZone1: ClassicOperationModeZone.room,
+        OperationModeZone2: ClassicOperationModeZone.flow,
       },
       atwSetValuesResponse({
         EffectiveFlags: 0x8,
-        OperationModeZone1: OperationModeZone.flow,
-        OperationModeZone2: OperationModeZone.flow,
+        OperationModeZone1: ClassicOperationModeZone.flow,
+        OperationModeZone2: ClassicOperationModeZone.flow,
       }),
     )
     await facade.updateValues({
-      OperationModeZone1: OperationModeZone.flow,
+      OperationModeZone1: ClassicOperationModeZone.flow,
     })
 
     const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
-    const postData = mock<SetDevicePostData<typeof ClassicDeviceType.Atw>>(
-      defined(call).postData,
-    )
+    const postData = mock<
+      ClassicSetDevicePostData<typeof ClassicDeviceType.Atw>
+    >(defined(call).postData)
 
-    expect(postData.OperationModeZone2).toBe(OperationModeZone.flow)
+    expect(postData.OperationModeZone2).toBe(ClassicOperationModeZone.flow)
   })
 })
 

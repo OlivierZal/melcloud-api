@@ -1,29 +1,29 @@
 import type { HourNumbers } from 'luxon'
 
-import type { ClassicDeviceType, LabelType } from '../constants.ts'
+import type { ClassicDeviceType, ClassicLabelType } from '../constants.ts'
 import type {
-  EnergyDataAta,
-  ListDeviceDataAta,
-  SetDeviceDataAta,
-  UpdateDeviceDataAta,
+  ClassicEnergyDataAta,
+  ClassicListDeviceDataAta,
+  ClassicSetDeviceDataAta,
+  ClassicUpdateDeviceDataAta,
 } from './classic-ata.ts'
 import type {
-  EnergyDataAtw,
-  ListDeviceDataAtw,
-  SetDeviceDataAtw,
-  UpdateDeviceDataAtw,
+  ClassicEnergyDataAtw,
+  ClassicListDeviceDataAtw,
+  ClassicSetDeviceDataAtw,
+  ClassicUpdateDeviceDataAtw,
 } from './classic-atw.ts'
 import type {
-  BaseDevicePostData,
-  BaseGetDeviceData,
-  BaseListDevice,
+  ClassicBaseDevicePostData,
+  ClassicBaseGetDeviceData,
+  ClassicBaseListDevice,
 } from './classic-bases.ts'
 import type {
-  ListDeviceDataErv,
-  SetDeviceDataErv,
-  UpdateDeviceDataErv,
+  ClassicListDeviceDataErv,
+  ClassicSetDeviceDataErv,
+  ClassicUpdateDeviceDataErv,
 } from './classic-erv.ts'
-import type { BuildingID, DeviceID } from './ids.ts'
+import type { ClassicBuildingID, ClassicDeviceID } from './ids.ts'
 
 /**
  * Central mapping from device type to its associated data types.
@@ -32,32 +32,23 @@ import type { BuildingID, DeviceID } from './ids.ts'
  */
 interface DeviceDataMapping {
   [ClassicDeviceType.Ata]: {
-    energy: EnergyDataAta
-    list: ListDeviceDataAta
-    set: SetDeviceDataAta
-    update: UpdateDeviceDataAta
+    energy: ClassicEnergyDataAta
+    list: ClassicListDeviceDataAta
+    set: ClassicSetDeviceDataAta
+    update: ClassicUpdateDeviceDataAta
   }
   [ClassicDeviceType.Atw]: {
-    energy: EnergyDataAtw
-    list: ListDeviceDataAtw
-    set: SetDeviceDataAtw
-    update: UpdateDeviceDataAtw
+    energy: ClassicEnergyDataAtw
+    list: ClassicListDeviceDataAtw
+    set: ClassicSetDeviceDataAtw
+    update: ClassicUpdateDeviceDataAtw
   }
   [ClassicDeviceType.Erv]: {
     energy: never
-    list: ListDeviceDataErv
-    set: SetDeviceDataErv
-    update: UpdateDeviceDataErv
+    list: ClassicListDeviceDataErv
+    set: ClassicSetDeviceDataErv
+    update: ClassicUpdateDeviceDataErv
   }
-}
-
-export interface AreaData<T extends number | null> extends FloorData {
-  readonly FloorId: T
-}
-
-export interface AreaZone extends BaseZone {
-  readonly devices: readonly DeviceZone[]
-  readonly model: 'areas'
 }
 
 export interface BaseZone {
@@ -66,20 +57,33 @@ export interface BaseZone {
   readonly name: string
 }
 
-export interface BuildingData extends ZoneSettings {
-  readonly ID: BuildingID
+export interface ClassicAreaData<
+  T extends number | null,
+> extends ClassicFloorData {
+  readonly FloorId: T
+}
+
+export type ClassicAreaDataAny = ClassicAreaData<null> | ClassicAreaData<number>
+
+export interface ClassicAreaZone extends BaseZone {
+  readonly devices: readonly ClassicDeviceZone[]
+  readonly model: 'areas'
+}
+
+export interface ClassicBuildingData extends ClassicZoneSettings {
+  readonly ID: ClassicBuildingID
   readonly Location: number
   readonly Name: string
 }
 
-export interface BuildingWithStructure extends BuildingData {
+export interface ClassicBuildingWithStructure extends ClassicBuildingData {
   readonly Structure: {
-    readonly Areas: readonly (AreaData<null> & {
+    readonly Areas: readonly (ClassicAreaData<null> & {
       readonly Devices: readonly ClassicListDeviceAny[]
     })[]
     readonly Devices: readonly ClassicListDeviceAny[]
-    readonly Floors: readonly (FloorData & {
-      readonly Areas: readonly (AreaData<number> & {
+    readonly Floors: readonly (ClassicFloorData & {
+      readonly Areas: readonly (ClassicAreaData<number> & {
         readonly Devices: readonly ClassicListDeviceAny[]
       })[]
       readonly Devices: readonly ClassicListDeviceAny[]
@@ -87,23 +91,14 @@ export interface BuildingWithStructure extends BuildingData {
   }
 }
 
-export interface BuildingZone extends BaseZone {
-  readonly areas: readonly AreaZone[]
-  readonly devices: readonly DeviceZone[]
-  readonly floors: readonly FloorZone[]
+export interface ClassicBuildingZone extends BaseZone {
+  readonly areas: readonly ClassicAreaZone[]
+  readonly devices: readonly ClassicDeviceZone[]
+  readonly floors: readonly ClassicFloorZone[]
   readonly model: 'buildings'
 }
 
-export type ClassicAreaDataAny = AreaData<null> | AreaData<number>
-
-export type ClassicListDeviceAny =
-  | ListDevice<typeof ClassicDeviceType.Ata>
-  | ListDevice<typeof ClassicDeviceType.Atw>
-  | ListDevice<typeof ClassicDeviceType.Erv>
-
-export type ClassicListDeviceDataAny = ListDeviceData<ClassicDeviceType>
-
-export type DateTimeComponents = {
+export type ClassicDateTimeComponents = {
   readonly Day: number
   readonly Hour: number
   readonly Minute: number
@@ -112,190 +107,197 @@ export type DateTimeComponents = {
   readonly Year: number
 } | null
 
-export interface DeviceZone extends BaseZone {
+export interface ClassicDeviceZone extends BaseZone {
   readonly model: 'devices'
 }
 
-export type EnergyData<T extends ClassicDeviceType> =
+export type ClassicEnergyData<T extends ClassicDeviceType> =
   DeviceDataMapping[T]['energy']
 
-export interface EnergyPostData {
-  readonly DeviceID: DeviceID
+export interface ClassicEnergyPostData {
+  readonly DeviceID: ClassicDeviceID
   readonly FromDate: string
   readonly ToDate: string
 }
 
-export interface ErrorLogData {
-  readonly DeviceId: DeviceID
+export interface ClassicErrorLogData {
+  readonly DeviceId: ClassicDeviceID
   readonly EndDate: string
   readonly ErrorMessage: string | null
   readonly StartDate: string
 }
 
-export interface ErrorLogPostData {
-  readonly DeviceIDs: DeviceID | readonly DeviceID[]
+export interface ClassicErrorLogPostData {
+  readonly DeviceIDs: ClassicDeviceID | readonly ClassicDeviceID[]
   readonly FromDate?: string
   readonly ToDate?: string
   // Number of days up to now, replaces `FromDate` and `ToDate` if strictly positive
   readonly Duration?: number
 }
 
-export interface FailureData {
+export interface ClassicFailureData {
   readonly AttributeErrors: Record<string, readonly string[]>
   readonly Success: false
 }
 
-export interface FloorData {
-  readonly BuildingId: BuildingID
+export interface ClassicFloorData {
+  readonly BuildingId: ClassicBuildingID
   readonly ID: number
   readonly Name: string
 }
 
-export interface FloorZone extends BaseZone {
-  readonly areas: readonly AreaZone[]
-  readonly devices: readonly DeviceZone[]
+export interface ClassicFloorZone extends BaseZone {
+  readonly areas: readonly ClassicAreaZone[]
+  readonly devices: readonly ClassicDeviceZone[]
   readonly model: 'floors'
 }
 
-export interface FrostProtectionData {
+export interface ClassicFrostProtectionData {
   readonly FPDefined: boolean
   readonly FPEnabled: boolean
   readonly FPMaxTemperature: number
   readonly FPMinTemperature: number
 }
 
-export interface FrostProtectionLocation {
+export interface ClassicFrostProtectionLocation {
   readonly AreaIds?: number | readonly number[]
   readonly BuildingIds?: number | readonly number[]
   readonly DeviceIds?: number | readonly number[]
   readonly FloorIds?: number | readonly number[]
 }
 
-export interface FrostProtectionPostData extends FrostProtectionLocation {
+export interface ClassicFrostProtectionPostData extends ClassicFrostProtectionLocation {
   readonly Enabled: boolean
   readonly MaximumTemperature: number
   readonly MinimumTemperature: number
 }
 
-export type GetDeviceData<T extends ClassicDeviceType> = BaseGetDeviceData &
-  SetDeviceData<T>
+export type ClassicGetDeviceData<T extends ClassicDeviceType> =
+  ClassicBaseGetDeviceData & ClassicSetDeviceData<T>
 
-export interface GetDeviceDataParams {
+export interface ClassicGetDeviceDataParams {
   readonly buildingId: number
   readonly id: number
 }
 
-export interface HolidayModeData {
-  readonly EndDate: NonNullable<DateTimeComponents>
+export interface ClassicHolidayModeData {
+  readonly EndDate: NonNullable<ClassicDateTimeComponents>
   readonly HMDefined: boolean
   readonly HMEnabled: boolean
   readonly HMEndDate: string | null
   readonly HMStartDate: string | null
-  readonly StartDate: NonNullable<DateTimeComponents>
+  readonly StartDate: NonNullable<ClassicDateTimeComponents>
   readonly TimeZone: number
 }
 
-export interface HolidayModeLocation {
+export interface ClassicHolidayModeLocation {
   readonly Areas?: number | readonly number[]
   readonly Buildings?: number | readonly number[]
   readonly Devices?: number | readonly number[]
   readonly Floors?: number | readonly number[]
 }
 
-export interface HolidayModePostData {
+export interface ClassicHolidayModePostData {
   readonly Enabled: boolean
-  readonly EndDate: DateTimeComponents
-  readonly HMTimeZones: readonly HolidayModeTimeZone[]
-  readonly StartDate: DateTimeComponents
+  readonly EndDate: ClassicDateTimeComponents
+  readonly HMTimeZones: readonly ClassicHolidayModeTimeZone[]
+  readonly StartDate: ClassicDateTimeComponents
 }
 
-export interface HolidayModeTimeZone extends HolidayModeLocation {
+export interface ClassicHolidayModeTimeZone extends ClassicHolidayModeLocation {
   readonly TimeZone?: number
 }
 
-export interface HourlyReportPostData {
-  readonly devices: number[]
-  readonly hour: HourNumbers
-}
-
-export interface ListDevice<
+export interface ClassicListDevice<
   T extends ClassicDeviceType,
-> extends BaseListDevice<T> {
-  readonly ClassicDevice: ListDeviceData<T>
+> extends ClassicBaseListDevice<T> {
+  readonly ClassicDevice: ClassicListDeviceData<T>
 }
 
-export type ListDeviceData<T extends ClassicDeviceType> =
+export type ClassicListDeviceAny =
+  | ClassicListDevice<typeof ClassicDeviceType.Ata>
+  | ClassicListDevice<typeof ClassicDeviceType.Atw>
+  | ClassicListDevice<typeof ClassicDeviceType.Erv>
+
+export type ClassicListDeviceData<T extends ClassicDeviceType> =
   DeviceDataMapping[T]['list']
 
-export interface LoginCredentials {
+export type ClassicListDeviceDataAny = ClassicListDeviceData<ClassicDeviceType>
+
+export interface ClassicLoginCredentials {
   readonly password: string
   readonly username: string
 }
 
-export interface LoginData {
-  readonly LoginData: {
+export interface ClassicLoginData {
+  readonly ClassicLoginData: {
     readonly ContextKey: string
     readonly Expiry: string
   } | null
 }
 
-export interface LoginPostData {
+export interface ClassicLoginPostData {
   readonly AppVersion: string
   readonly Email: string
   readonly Password: string
-  readonly Language?: number
+  readonly ClassicLanguage?: number
   readonly Persist?: boolean
 }
 
-export type OperationModeLogData = {
+export type ClassicOperationModeLogData = {
   Key: string
   Value: number
 }[]
 
-export interface ReportData {
+export interface ClassicReportData {
+  readonly ClassicLabelType: ClassicLabelType
   readonly Data: readonly (readonly (number | null)[])[]
   readonly FromDate: string
   readonly Labels: readonly string[]
-  readonly LabelType: LabelType
   readonly Points: number
   readonly Series: number
   readonly ToDate: string
 }
 
-export interface ReportPostData {
-  readonly DeviceID: DeviceID
+export interface ClassicReportPostData {
+  readonly DeviceID: ClassicDeviceID
   readonly FromDate: string
   readonly ToDate: string
   readonly Duration?: number
 }
 
-export type SetDeviceData<T extends ClassicDeviceType> =
+export type ClassicSetDeviceData<T extends ClassicDeviceType> =
   DeviceDataMapping[T]['set']
 
-export type SetDevicePostData<T extends ClassicDeviceType> =
-  BaseDevicePostData & Required<UpdateDeviceData<T>>
+export type ClassicSetDevicePostData<T extends ClassicDeviceType> =
+  ClassicBaseDevicePostData & Required<ClassicUpdateDeviceData<T>>
 
-export interface SetPowerPostData {
-  readonly DeviceIds: DeviceID | readonly DeviceID[]
+export interface ClassicSetPowerPostData {
+  readonly DeviceIds: ClassicDeviceID | readonly ClassicDeviceID[]
   readonly Power: boolean
 }
 
-export interface SettingsParams {
+export interface ClassicSettingsParams {
   readonly id: number
-  readonly tableName: 'Area' | 'Building' | 'DeviceLocation' | 'Floor'
+  readonly tableName:
+    | 'ClassicArea'
+    | 'ClassicBuilding'
+    | 'ClassicFloor'
+    | 'DeviceLocation'
 }
 
-export interface SuccessData {
+export interface ClassicSuccessData {
   readonly AttributeErrors: null
   readonly Success: true
 }
 
-export interface TemperatureLogPostData extends ReportPostData {
+export interface ClassicTemperatureLogPostData extends ClassicReportPostData {
   readonly Location?: number
 }
 
-export interface TilesData<T extends ClassicDeviceType | null> {
-  readonly SelectedDevice: T extends ClassicDeviceType ? GetDeviceData<T> : null
+export interface ClassicTilesData<T extends ClassicDeviceType | null> {
+  readonly SelectedDevice: T extends ClassicDeviceType ? ClassicGetDeviceData<T>
+  : null
   readonly Tiles: readonly {
     readonly ClassicDevice: number
     readonly Offline: boolean
@@ -306,16 +308,27 @@ export interface TilesData<T extends ClassicDeviceType | null> {
   }[]
 }
 
-export type TilesPostData<T extends ClassicDeviceType | null> = {
+export type ClassicTilesPostData<T extends ClassicDeviceType | null> = {
   readonly DeviceIDs: number | readonly number[]
 } & (T extends ClassicDeviceType ?
   { readonly SelectedBuilding: number; readonly SelectedDevice: number }
 : { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })
 
-export type UpdateDeviceData<T extends ClassicDeviceType> =
+export type ClassicUpdateDeviceData<T extends ClassicDeviceType> =
   DeviceDataMapping[T]['update']
 
-export type Zone = AreaZone | BuildingZone | DeviceZone | FloorZone
+export type ClassicZone =
+  | ClassicAreaZone
+  | ClassicBuildingZone
+  | ClassicDeviceZone
+  | ClassicFloorZone
 
-export interface ZoneSettings
-  extends FrostProtectionData, Omit<HolidayModeData, 'EndDate' | 'StartDate'> {}
+export interface ClassicZoneSettings
+  extends
+    ClassicFrostProtectionData,
+    Omit<ClassicHolidayModeData, 'EndDate' | 'StartDate'> {}
+
+export interface HourlyReportPostData {
+  readonly devices: number[]
+  readonly hour: HourNumbers
+}

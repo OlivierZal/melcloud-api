@@ -1,21 +1,25 @@
 import { DateTime } from 'luxon'
 
 import type {
-  DeviceID,
-  EnergyData,
-  GetDeviceData,
-  ListDeviceData,
-  ReportPostData,
-  SetDeviceData,
-  TilesData,
-  UpdateDeviceData,
+  ClassicDeviceID,
+  ClassicEnergyData,
+  ClassicGetDeviceData,
+  ClassicListDeviceData,
+  ClassicReportPostData,
+  ClassicSetDeviceData,
+  ClassicTilesData,
+  ClassicUpdateDeviceData,
 } from '../types/index.ts'
-import { ClassicDeviceType, FLAG_UNCHANGED } from '../constants.ts'
-import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
+import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
+import {
+  classicFetchDevices,
+  classicSyncDevices,
+  classicUpdateDevice,
+} from '../decorators/index.ts'
 import {
   type ClassicDeviceAny,
   ClassicDevice,
-  isDeviceOfType,
+  isClassicDeviceOfType,
 } from '../entities/index.ts'
 import { NoChangesError } from '../errors/index.ts'
 import {
@@ -29,7 +33,7 @@ import {
   typedKeys,
 } from '../utils.ts'
 import type {
-  DeviceFacade,
+  ClassicDeviceFacade,
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
@@ -74,17 +78,20 @@ const getDuration = ({ from, to }: Required<ReportQuery>): number =>
  */
 export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   extends BaseFacade<ClassicDeviceAny>
-  implements DeviceFacade<T>
+  implements ClassicDeviceFacade<T>
 {
-  declare public readonly id: DeviceID
+  declare public readonly id: ClassicDeviceID
 
-  public abstract readonly flags: Record<keyof UpdateDeviceData<T>, number>
+  public abstract readonly flags: Record<
+    keyof ClassicUpdateDeviceData<T>,
+    number
+  >
 
   protected abstract readonly temperaturesLegend: (string | undefined)[]
 
   public abstract readonly type: T
 
-  public get data(): ListDeviceData<T> {
+  public get data(): ClassicListDeviceData<T> {
     return this.device.data
   }
 
@@ -102,7 +109,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   protected get device(): ClassicDevice<T> {
     const { instance } = this
-    if (!isDeviceOfType(instance, this.type)) {
+    if (!isClassicDeviceOfType(instance, this.type)) {
       throw new Error(
         `ClassicDevice type mismatch: expected ${String(this.type)}, got ${String(instance.type)}`,
       )
@@ -121,7 +128,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
    * requests (e.g., "FanSpeed" in list vs "SetFanSpeed" in set). Convert keys
    * to set format, then keep only the fields tracked by flags.
    */
-  protected get setData(): Required<UpdateDeviceData<T>> {
+  protected get setData(): Required<ClassicUpdateDeviceData<T>> {
     const dataEntries = Object.entries(this.data)
     const entries =
       this.type === ClassicDeviceType.Ata ?
@@ -132,31 +139,31 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
           ])
           .filter(([key]) => key in this.flags)
       : dataEntries.filter(([key]) => key in this.flags)
-    return typedFromEntries<Required<UpdateDeviceData<T>>>(entries)
+    return typedFromEntries<Required<ClassicUpdateDeviceData<T>>>(entries)
   }
 
-  @fetchDevices
-  public async fetch(): Promise<ListDeviceData<T>> {
+  @classicFetchDevices
+  public async fetch(): Promise<ClassicListDeviceData<T>> {
     const data = await Promise.resolve(this.data)
     return data
   }
 
-  @syncDevices()
-  @updateDevice
-  public async getValues(): Promise<GetDeviceData<T>> {
+  @classicSyncDevices()
+  @classicUpdateDevice
+  public async getValues(): Promise<ClassicGetDeviceData<T>> {
     const { data } = await this.api.getValues<T>({
       params: { buildingId: this.device.buildingId, id: this.id },
     })
     return data
   }
 
-  @syncDevices()
-  @updateDevice
+  @classicSyncDevices()
+  @classicUpdateDevice
   public async updateValues(
-    data: Partial<UpdateDeviceData<T>>,
-  ): Promise<SetDeviceData<T>> {
+    data: Partial<ClassicUpdateDeviceData<T>>,
+  ): Promise<ClassicSetDeviceData<T>> {
     const { api, id, setData: currentSetData, type } = this
-    const newData = typedFromEntries<Partial<UpdateDeviceData<T>>>(
+    const newData = typedFromEntries<Partial<ClassicUpdateDeviceData<T>>>(
       Object.entries(data).filter(
         ([key, value]) =>
           isUpdateDeviceData(currentSetData, key) &&
@@ -165,7 +172,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     )
 
     const flags = this.#computeFlags(
-      typedKeys(newData) as (keyof UpdateDeviceData<T>)[],
+      typedKeys(newData) as (keyof ClassicUpdateDeviceData<T>)[],
     )
     if (!flags) {
       throw new NoChangesError(id)
@@ -181,7 +188,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return finalData
   }
 
-  public async getEnergy(query?: ReportQuery): Promise<EnergyData<T>> {
+  public async getEnergy(query?: ReportQuery): Promise<ClassicEnergyData<T>> {
     const { data } = await this.api.getEnergy<T>({
       postData: this.#buildReportPostData(query),
     })
@@ -231,13 +238,15 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return getChartLineOptions(data, this.temperaturesLegend, '°C')
   }
 
-  public override async getTiles(device?: false): Promise<TilesData<null>>
+  public override async getTiles(
+    device?: false,
+  ): Promise<ClassicTilesData<null>>
   public override async getTiles(
     device: true | ClassicDeviceAny,
-  ): Promise<TilesData<T>>
+  ): Promise<ClassicTilesData<T>>
   public override async getTiles(
     device: boolean | ClassicDeviceAny = false,
-  ): Promise<TilesData<T | null>> {
+  ): Promise<ClassicTilesData<T | null>> {
     if (
       device === false ||
       (device instanceof ClassicDevice && device.id !== this.id)
@@ -248,15 +257,15 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   protected prepareUpdateData(
-    data: Partial<UpdateDeviceData<T>>,
-  ): Required<UpdateDeviceData<T>> {
+    data: Partial<ClassicUpdateDeviceData<T>>,
+  ): Required<ClassicUpdateDeviceData<T>> {
     return { ...this.setData, ...data }
   }
 
   #buildReportPostData(
     { from, to }: ReportQuery = {},
     shouldUseExactRange = false,
-  ): ReportPostData {
+  ): ClassicReportPostData {
     const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
       DeviceID: this.id,
@@ -273,11 +282,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
    * Combine individual field flags via bitwise OR to tell the Classic API
    * which device settings were actually changed
    */
-  #computeFlags(keys: (keyof UpdateDeviceData<T>)[]): number {
+  #computeFlags(keys: (keyof ClassicUpdateDeviceData<T>)[]): number {
     return Number(
       keys.reduce(
         (flag, key) => flag | BigInt(this.flags[key]),
-        BigInt(FLAG_UNCHANGED),
+        BigInt(CLASSIC_FLAG_UNCHANGED),
       ),
     )
   }

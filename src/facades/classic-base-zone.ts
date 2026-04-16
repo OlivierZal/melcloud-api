@@ -1,24 +1,33 @@
-import type { Area, Building, Floor } from '../entities/index.ts'
 import type {
-  FailureData,
-  GroupState,
-  SetGroupPostData,
-  SuccessData,
+  ClassicArea,
+  ClassicBuilding,
+  ClassicFloor,
+} from '../entities/index.ts'
+import type {
+  ClassicFailureData,
+  ClassicGroupState,
+  ClassicSetGroupPostData,
+  ClassicSuccessData,
 } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
-import { syncDevices, updateDevices } from '../decorators/index.ts'
-import type { ZoneFacade } from './interfaces.ts'
+import {
+  classicSyncDevices,
+  classicUpdateDevices,
+} from '../decorators/index.ts'
+import type { ClassicZoneFacade } from './interfaces.ts'
 import { BaseFacade } from './classic-base.ts'
 
 /** Abstract base for zone facades (building, floor, area) that support ATA group operations. */
-export abstract class BaseZoneFacade<T extends Area | Building | Floor>
+export abstract class BaseZoneFacade<
+  T extends ClassicArea | ClassicBuilding | ClassicFloor,
+>
   extends BaseFacade<T>
-  implements ZoneFacade
+  implements ClassicZoneFacade
 {
-  protected abstract readonly groupSpecificationKey: keyof SetGroupPostData['Specification']
+  protected abstract readonly groupSpecificationKey: keyof ClassicSetGroupPostData['Specification']
 
-  @updateDevices({ type: ClassicDeviceType.Ata })
-  public async getGroup(): Promise<GroupState> {
+  @classicUpdateDevices({ type: ClassicDeviceType.Ata })
+  public async getGroup(): Promise<ClassicGroupState> {
     try {
       const {
         data: {
@@ -35,11 +44,11 @@ export abstract class BaseZoneFacade<T extends Area | Building | Floor>
     }
   }
 
-  @syncDevices({ type: ClassicDeviceType.Ata })
-  @updateDevices({ type: ClassicDeviceType.Ata })
+  @classicSyncDevices({ type: ClassicDeviceType.Ata })
+  @classicUpdateDevices({ type: ClassicDeviceType.Ata })
   public async updateGroupState(
-    state: GroupState,
-  ): Promise<FailureData | SuccessData> {
+    state: ClassicGroupState,
+  ): Promise<ClassicFailureData | ClassicSuccessData> {
     try {
       const { data } = await this.api.updateGroupState({
         postData: {

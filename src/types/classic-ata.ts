@@ -7,15 +7,15 @@ import type {
   ClassicVertical,
 } from '../constants.ts'
 import type {
-  BaseListDeviceData,
-  BaseSetDeviceData,
-  BaseUpdateDeviceData,
-  TransientDeviceData,
+  ClassicBaseListDeviceData,
+  ClassicBaseSetDeviceData,
+  ClassicBaseUpdateDeviceData,
+  ClassicTransientDeviceData,
 } from './classic-bases.ts'
-import type { GetDeviceData } from './classic-generic.ts'
-import type { AreaID, BuildingID, FloorID } from './ids.ts'
+import type { ClassicGetDeviceData } from './classic-generic.ts'
+import type { ClassicAreaID, ClassicBuildingID, ClassicFloorID } from './ids.ts'
 
-export interface EnergyDataAta {
+export interface ClassicEnergyDataAta {
   readonly Auto: readonly number[]
   readonly Cooling: readonly number[]
   readonly Dry: readonly number[]
@@ -31,22 +31,22 @@ export interface EnergyDataAta {
   readonly UsageDisclaimerPercentages: string
 }
 
-export interface GetGroupData {
+export interface ClassicGetGroupData {
   readonly Data: {
     readonly Group: {
-      readonly Specification: Required<SetGroupPostData['Specification']>
-      readonly State: Required<SetGroupPostData['State']>
+      readonly Specification: Required<ClassicSetGroupPostData['Specification']>
+      readonly State: Required<ClassicSetGroupPostData['State']>
     }
   }
 }
 
-export interface GetGroupPostData {
-  readonly AreaID?: AreaID | null
-  readonly BuildingID?: BuildingID | null
-  readonly FloorID?: FloorID | null
+export interface ClassicGetGroupPostData {
+  readonly AreaID?: ClassicAreaID | null
+  readonly BuildingID?: ClassicBuildingID | null
+  readonly FloorID?: ClassicFloorID | null
 }
 
-export interface GroupState {
+export interface ClassicGroupState {
   readonly FanSpeed?: ClassicNonSilentFanSpeed | null
   readonly OperationMode?: ClassicOperationMode | null
   readonly Power?: boolean | null
@@ -57,14 +57,14 @@ export interface GroupState {
   readonly VaneVerticalSwing?: boolean | null
 }
 
-export interface ListDeviceDataAta
+export interface ClassicListDeviceDataAta
   extends
-    BaseListDeviceData,
+    ClassicBaseListDeviceData,
+    ClassicSetDeviceDataAtaInList,
     Omit<
-      GetDeviceData<typeof ClassicDeviceType.Ata>,
-      KeyOfSetDeviceDataAtaNotInList | keyof TransientDeviceData
-    >,
-    SetDeviceDataAtaInList {
+      ClassicGetDeviceData<typeof ClassicDeviceType.Ata>,
+      KeyOfClassicSetDeviceDataAtaNotInList | keyof ClassicTransientDeviceData
+    > {
   readonly ActualFanSpeed: number
   readonly HasAutomaticFanSpeed: boolean
   readonly MaxTempAutomatic: number
@@ -76,26 +76,26 @@ export interface ListDeviceDataAta
   readonly OutdoorTemperature: number
 }
 
-export interface SetDeviceDataAta
-  extends BaseSetDeviceData, Required<UpdateDeviceDataAta> {
+export interface ClassicSetDeviceDataAta
+  extends ClassicBaseSetDeviceData, Required<ClassicUpdateDeviceDataAta> {
   readonly DeviceType: typeof ClassicDeviceType.Ata
   readonly NumberOfFanSpeeds: number
   readonly RoomTemperature: number
 }
 
 /** ATA properties that use different names in list responses vs set requests (e.g., `ClassicFanSpeed` in list, `SetFanSpeed` in set). */
-export interface SetDeviceDataAtaInList {
+export interface ClassicSetDeviceDataAtaInList {
   readonly VaneHorizontalDirection: ClassicHorizontal
   readonly VaneVerticalDirection: ClassicVertical
   readonly FanSpeed?: ClassicFanSpeed
 }
 
-export interface SetGroupPostData {
-  readonly Specification: GetGroupPostData
-  readonly State: GroupState
+export interface ClassicSetGroupPostData {
+  readonly Specification: ClassicGetGroupPostData
+  readonly State: ClassicGroupState
 }
 
-export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
+export interface ClassicUpdateDeviceDataAta extends ClassicBaseUpdateDeviceData {
   readonly OperationMode?: ClassicOperationMode
   readonly SetFanSpeed?: ClassicNonSilentFanSpeed
   readonly SetTemperature?: number
@@ -103,8 +103,8 @@ export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
   readonly VaneVertical?: ClassicVertical
 }
 
-/** Set-request property names that have no direct counterpart in list responses (they map to `SetDeviceDataAtaInList` names instead). */
-export type KeyOfSetDeviceDataAtaNotInList =
+/** Set-request property names that have no direct counterpart in list responses (they map to `ClassicSetDeviceDataAtaInList` names instead). */
+export type KeyOfClassicSetDeviceDataAtaNotInList =
   | 'SetFanSpeed'
   | 'VaneHorizontal'
   | 'VaneVertical'

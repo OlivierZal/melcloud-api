@@ -1,8 +1,11 @@
 import { DateTime, Settings as LuxonSettings } from 'luxon'
 import { describe, expect, it } from 'vitest'
 
-import type { OperationModeLogData, ReportData } from '../../src/types/index.ts'
-import { LabelType } from '../../src/constants.ts'
+import type {
+  ClassicOperationModeLogData,
+  ClassicReportData,
+} from '../../src/types/index.ts'
+import { ClassicLabelType } from '../../src/constants.ts'
 import {
   getChartLineOptions,
   getChartPieOptions,
@@ -20,11 +23,11 @@ describe.concurrent(now, () => {
 })
 
 describe.concurrent('formatLabels (via getChartLineOptions)', () => {
-  const baseReportData: ReportData = {
+  const baseReportData: ClassicReportData = {
+    ClassicLabelType: ClassicLabelType.raw,
     Data: [[1, 2]],
     FromDate: '2024-01-01',
     Labels: [],
-    LabelType: LabelType.raw,
     Points: 2,
     Series: 1,
     ToDate: '2024-01-02',
@@ -40,8 +43,8 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   it('passes time labels unchanged', () => {
     const data = {
       ...baseReportData,
+      ClassicLabelType: ClassicLabelType.time,
       Labels: ['12:00', '13:00'],
-      LabelType: LabelType.time,
     }
     const result = getChartLineOptions(data, ['Series 1'], 'unit')
 
@@ -52,8 +55,8 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
     LuxonSettings.defaultLocale = 'en'
     const data = {
       ...baseReportData,
+      ClassicLabelType: ClassicLabelType.day_of_week,
       Labels: ['1', '2', '3'],
-      LabelType: LabelType.day_of_week,
     }
     const result = getChartLineOptions(data, ['Series 1'], 'unit')
 
@@ -65,8 +68,8 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
     LuxonSettings.defaultLocale = 'en'
     const data = {
       ...baseReportData,
+      ClassicLabelType: ClassicLabelType.month,
       Labels: ['1', '6', '12'],
-      LabelType: LabelType.month,
     }
     const result = getChartLineOptions(data, ['Series 1'], 'unit')
 
@@ -79,8 +82,8 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
     LuxonSettings.defaultLocale = 'en'
     const data = {
       ...baseReportData,
+      ClassicLabelType: ClassicLabelType.month_of_year,
       Labels: ['202401', '202412'],
-      LabelType: LabelType.month_of_year,
     }
     const result = getChartLineOptions(data, ['Series 1'], 'unit')
 
@@ -90,14 +93,14 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
 })
 
 describe.concurrent(getChartLineOptions, () => {
-  const reportData: ReportData = {
+  const reportData: ClassicReportData = {
+    ClassicLabelType: ClassicLabelType.raw,
     Data: [
       [1, 2, 3],
       [4, 5, 6],
     ],
     FromDate: '2024-01-01',
     Labels: ['a', 'b', 'c'],
-    LabelType: LabelType.raw,
     Points: 3,
     Series: 2,
     ToDate: '2024-01-03',
@@ -106,12 +109,12 @@ describe.concurrent(getChartLineOptions, () => {
   it('maps data series with legend names', () => {
     const result = getChartLineOptions(
       reportData,
-      ['Temperature', 'Humidity'],
+      ['ClassicTemperature', 'Humidity'],
       '°C',
     )
 
     expect(result.series).toHaveLength(2)
-    expect(result.series[0]?.name).toBe('Temperature')
+    expect(result.series[0]?.name).toBe('ClassicTemperature')
     expect(result.series[1]?.name).toBe('Humidity')
     expect(result.unit).toBe('°C')
     expect(result.from).toBe('2024-01-01')
@@ -121,12 +124,12 @@ describe.concurrent(getChartLineOptions, () => {
   it('filters out series with undefined legend entries', () => {
     const result = getChartLineOptions(
       reportData,
-      ['Temperature', undefined],
+      ['ClassicTemperature', undefined],
       '°C',
     )
 
     expect(result.series).toHaveLength(1)
-    expect(result.series[0]?.name).toBe('Temperature')
+    expect(result.series[0]?.name).toBe('ClassicTemperature')
   })
 
   it('returns empty series when all legends are undefined', () => {
@@ -138,7 +141,7 @@ describe.concurrent(getChartLineOptions, () => {
 
 describe.concurrent(getChartPieOptions, () => {
   it('maps operation mode log data', () => {
-    const data: OperationModeLogData = [
+    const data: ClassicOperationModeLogData = [
       { Key: 'Heating', Value: 60 },
       { Key: 'Cooling', Value: 30 },
       { Key: 'Idle', Value: 10 },
