@@ -1,4 +1,4 @@
-import type { ClassicModelKind } from './interfaces.ts'
+import type { ClassicModelKind } from './classic-interfaces.ts'
 
 /** Abstract base model providing common `id` and `name` properties. */
 export abstract class BaseModel {

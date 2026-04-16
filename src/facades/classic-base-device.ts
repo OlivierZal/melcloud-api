@@ -32,8 +32,8 @@ import {
   typedFromEntries,
   typedKeys,
 } from '../utils.ts'
+import type { ClassicDeviceFacade } from './classic-interfaces.ts'
 import type {
-  ClassicDeviceFacade,
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,

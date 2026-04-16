@@ -35,8 +35,8 @@ import type {
   ClassicFacade,
   ClassicFrostProtectionQuery,
   ClassicHolidayModeQuery,
-  ReportChartLineOptions,
-} from './interfaces.ts'
+} from './classic-interfaces.ts'
+import type { ReportChartLineOptions } from './interfaces.ts'
 
 /*
  * Settings can be defined at zone or device level. Try zone first;

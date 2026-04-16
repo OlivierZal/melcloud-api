@@ -5,7 +5,10 @@ import type {
   ClassicRegistry,
 } from '../entities/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
-import type { ClassicDeviceFacadeAny, ClassicFacade } from './interfaces.ts'
+import type {
+  ClassicDeviceFacadeAny,
+  ClassicFacade,
+} from './classic-interfaces.ts'
 import { ClassicAreaFacade } from './classic-area.ts'
 import { ClassicBuildingFacade } from './classic-building.ts'
 import { ClassicDeviceAtaFacade } from './classic-device-ata.ts'

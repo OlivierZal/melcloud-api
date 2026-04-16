@@ -1,13 +1,14 @@
 export type {
-  BaseAPIConfig,
   ClassicAPIAdapter,
   ClassicAPIConfig,
   ClassicAPISettings,
   ClassicErrorDetails,
   ClassicErrorLog,
   ClassicErrorLogQuery,
-  HomeAPIConfig,
-  HomeAPISettings,
+} from './classic-interfaces.ts'
+export type { HomeAPIConfig, HomeAPISettings } from './home-interfaces.ts'
+export type {
+  BaseAPIConfig,
   Logger,
   RequestCompleteEvent,
   RequestErrorEvent,

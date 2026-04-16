@@ -18,7 +18,10 @@ import {
 } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
-import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './interfaces.ts'
+import type {
+  HomeAPIConfig,
+  HomeAPI as HomeAPIContract,
+} from './home-interfaces.ts'
 import { BaseAPI } from './base.ts'
 import {
   type TokenResponse,

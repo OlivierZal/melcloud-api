@@ -14,7 +14,7 @@ import {
   classicSyncDevices,
   classicUpdateDevices,
 } from '../decorators/index.ts'
-import type { ClassicZoneFacade } from './interfaces.ts'
+import type { ClassicZoneFacade } from './classic-interfaces.ts'
 import { BaseFacade } from './classic-base.ts'
 
 /** Abstract base for zone facades (building, floor, area) that support ATA group operations. */
