@@ -94,14 +94,11 @@ export type {
   HomeReportPoint,
   HomeUser,
 } from './home.ts'
-export type {
-  ClassicAreaID,
-  ClassicBuildingID,
-  ClassicDeviceID,
-  ClassicFloorID,
-} from './ids.ts'
-
 export {
+  type ClassicAreaID,
+  type ClassicBuildingID,
+  type ClassicDeviceID,
+  type ClassicFloorID,
   toClassicAreaId,
   toClassicBuildingId,
   toClassicDeviceId,

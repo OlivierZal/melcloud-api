@@ -1,12 +1,4 @@
 export type {
-  ClassicDeviceFacade,
-  ClassicDeviceFacadeAny,
-  ClassicFacade,
-  ClassicFrostProtectionQuery,
-  ClassicHolidayModeQuery,
-  ClassicZoneFacade,
-} from './classic-interfaces.ts'
-export type {
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
@@ -21,6 +13,12 @@ export { ClassicDeviceErvFacade } from './classic-device-erv.ts'
 export { createFacade } from './classic-factory.ts'
 export { ClassicFloorFacade } from './classic-floor.ts'
 export {
+  type ClassicDeviceFacade,
+  type ClassicDeviceFacadeAny,
+  type ClassicFacade,
+  type ClassicFrostProtectionQuery,
+  type ClassicHolidayModeQuery,
+  type ClassicZoneFacade,
   hasClassicZone2,
   isClassicAtaFacade,
   isClassicAtwFacade,
