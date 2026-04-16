@@ -158,7 +158,6 @@ export const ervDeviceData = (
   overrides: Partial<ClassicListDeviceDataErv> = {},
 ): ClassicListDeviceDataErv =>
   mock<ClassicListDeviceDataErv>({
-    ClassicVentilationMode: 0,
     EffectiveFlags: 0,
     HasAutomaticFanSpeed: true,
     HasCO2Sensor: false,
@@ -167,6 +166,7 @@ export const ervDeviceData = (
     PM25Level: 0,
     Power: true,
     SetFanSpeed: 3,
+    VentilationMode: 0,
     WifiSignalStrength: -50,
     ...overrides,
   })
@@ -240,10 +240,10 @@ export const ervDevice = (
 export const reportData = (
   overrides: Partial<ClassicReportData> = {},
 ): ClassicReportData => ({
-  ClassicLabelType: ClassicLabelType.raw,
   Data: [[1]],
   FromDate: '2024-01-01',
   Labels: ['a'],
+  LabelType: ClassicLabelType.raw,
   Points: 1,
   Series: 1,
   ToDate: '2024-01-01',

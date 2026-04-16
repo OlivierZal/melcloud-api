@@ -179,7 +179,7 @@ describe('api lifecycle', () => {
         if (config.url === '/Login/ClientLogin3') {
           return {
             data: {
-              ClassicLoginData: {
+              LoginData: {
                 ContextKey: 'ctx-123',
                 Expiry: '2099-12-31T00:00:00',
               },
@@ -211,7 +211,7 @@ describe('api lifecycle', () => {
         if (config.url === '/Login/ClientLogin3') {
           return {
             data: {
-              ClassicLoginData: {
+              LoginData: {
                 ContextKey: 'ctx-abc',
                 Expiry: '2099-12-31T00:00:00',
               },

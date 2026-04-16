@@ -230,7 +230,7 @@ export interface ClassicLoginCredentials {
 }
 
 export interface ClassicLoginData {
-  readonly ClassicLoginData: {
+  readonly LoginData: {
     readonly ContextKey: string
     readonly Expiry: string
   } | null
@@ -240,7 +240,7 @@ export interface ClassicLoginPostData {
   readonly AppVersion: string
   readonly Email: string
   readonly Password: string
-  readonly ClassicLanguage?: number
+  readonly Language?: number
   readonly Persist?: boolean
 }
 
@@ -250,10 +250,10 @@ export type ClassicOperationModeLogData = {
 }[]
 
 export interface ClassicReportData {
-  readonly ClassicLabelType: ClassicLabelType
   readonly Data: readonly (readonly (number | null)[])[]
   readonly FromDate: string
   readonly Labels: readonly string[]
+  readonly LabelType: ClassicLabelType
   readonly Points: number
   readonly Series: number
   readonly ToDate: string

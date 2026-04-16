@@ -13,9 +13,9 @@ export class ClassicDeviceErvFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Erv
 > {
   public readonly flags = {
-    ClassicVentilationMode: 0x4,
     Power: 0x1,
     SetFanSpeed: 0x8,
+    VentilationMode: 0x4,
   } as const satisfies Record<
     keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Erv>,
     number

@@ -24,10 +24,10 @@ describe.concurrent(now, () => {
 
 describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   const baseReportData: ClassicReportData = {
-    ClassicLabelType: ClassicLabelType.raw,
     Data: [[1, 2]],
     FromDate: '2024-01-01',
     Labels: [],
+    LabelType: ClassicLabelType.raw,
     Points: 2,
     Series: 1,
     ToDate: '2024-01-02',
@@ -43,8 +43,8 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   it('passes time labels unchanged', () => {
     const data = {
       ...baseReportData,
-      ClassicLabelType: ClassicLabelType.time,
       Labels: ['12:00', '13:00'],
+      LabelType: ClassicLabelType.time,
     }
     const result = getChartLineOptions(data, ['Series 1'], 'unit')
 
@@ -55,8 +55,8 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
     LuxonSettings.defaultLocale = 'en'
     const data = {
       ...baseReportData,
-      ClassicLabelType: ClassicLabelType.day_of_week,
       Labels: ['1', '2', '3'],
+      LabelType: ClassicLabelType.day_of_week,
     }
     const result = getChartLineOptions(data, ['Series 1'], 'unit')
 
@@ -68,8 +68,8 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
     LuxonSettings.defaultLocale = 'en'
     const data = {
       ...baseReportData,
-      ClassicLabelType: ClassicLabelType.month,
       Labels: ['1', '6', '12'],
+      LabelType: ClassicLabelType.month,
     }
     const result = getChartLineOptions(data, ['Series 1'], 'unit')
 
@@ -82,8 +82,8 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
     LuxonSettings.defaultLocale = 'en'
     const data = {
       ...baseReportData,
-      ClassicLabelType: ClassicLabelType.month_of_year,
       Labels: ['202401', '202412'],
+      LabelType: ClassicLabelType.month_of_year,
     }
     const result = getChartLineOptions(data, ['Series 1'], 'unit')
 
@@ -94,13 +94,13 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
 
 describe.concurrent(getChartLineOptions, () => {
   const reportData: ClassicReportData = {
-    ClassicLabelType: ClassicLabelType.raw,
     Data: [
       [1, 2, 3],
       [4, 5, 6],
     ],
     FromDate: '2024-01-01',
     Labels: ['a', 'b', 'c'],
+    LabelType: ClassicLabelType.raw,
     Points: 3,
     Series: 2,
     ToDate: '2024-01-03',

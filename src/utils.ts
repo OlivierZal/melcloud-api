@@ -137,8 +137,8 @@ const getChartLineSeries = ({
  * @param root0 - The raw report data from the Classic API.
  * @param root0.Data - The data series arrays.
  * @param root0.FromDate - The start date of the report period.
+ * @param root0.LabelType - The label format type determining how labels are parsed.
  * @param root0.Labels - The raw label strings from the Classic API.
- * @param root0.ClassicLabelType - The label format type determining how labels are parsed.
  * @param root0.ToDate - The end date of the report period.
  * @param legend - Legend entries for each data series.
  * @param unit - The unit of measurement for the data.
@@ -146,10 +146,10 @@ const getChartLineSeries = ({
  */
 export const getChartLineOptions = (
   {
-    ClassicLabelType: labelType,
     Data: data,
     FromDate: from,
     Labels: labels,
+    LabelType: labelType,
     ToDate: to,
   }: ClassicReportData,
   legend: (string | undefined)[],

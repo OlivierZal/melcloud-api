@@ -56,9 +56,9 @@ const ataFlags = {
 }
 
 const ervFlags = {
-  ClassicVentilationMode: 0x4,
   Power: 0x1,
   SetFanSpeed: 0x8,
+  VentilationMode: 0x4,
 }
 
 const createAtaSetData = (
@@ -84,7 +84,6 @@ const createAtaSetData = (
 const createErvSetData = (
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
-  ClassicVentilationMode: 0,
   DeviceType: ClassicDeviceType.Erv,
   EffectiveFlags: 0x1,
   LastCommunication: '',
@@ -93,6 +92,7 @@ const createErvSetData = (
   Offline: false,
   Power: true,
   SetFanSpeed: 3,
+  VentilationMode: 0,
   ...overrides,
 })
 
@@ -295,10 +295,10 @@ describe(classicUpdateDevice, () => {
     await callUpdateDevice(
       createErvFacade(update),
       createErvSetData({
-        ClassicVentilationMode: 1,
         EffectiveFlags: CLASSIC_FLAG_UNCHANGED,
         Power: false,
         SetFanSpeed: 2,
+        VentilationMode: 1,
       }),
     )
 

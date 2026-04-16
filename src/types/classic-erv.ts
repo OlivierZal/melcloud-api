@@ -34,6 +34,6 @@ export interface ClassicSetDeviceDataErv
 }
 
 export interface ClassicUpdateDeviceDataErv extends ClassicBaseUpdateDeviceData {
-  readonly ClassicVentilationMode?: ClassicVentilationMode
   readonly SetFanSpeed?: ClassicNonSilentFanSpeed
+  readonly VentilationMode?: ClassicVentilationMode
 }

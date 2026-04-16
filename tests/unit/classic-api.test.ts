@@ -26,8 +26,8 @@ const mockAxiosInstance = {
 const loginResponse = (
   contextKey = 'ctx',
   expiry = '2030-12-31T00:00:00',
-): { data: { ClassicLoginData: { ContextKey: string; Expiry: string } } } => ({
-  data: { ClassicLoginData: { ContextKey: contextKey, Expiry: expiry } },
+): { data: { LoginData: { ContextKey: string; Expiry: string } } } => ({
+  data: { LoginData: { ContextKey: contextKey, Expiry: expiry } },
 })
 
 /**
@@ -414,7 +414,7 @@ describe('mELCloud Classic API', () => {
     it('returns false when login data is null', async () => {
       const api = await createApi()
       mockAxiosInstance.request.mockResolvedValue({
-        data: { ClassicLoginData: null },
+        data: { LoginData: null },
       })
       const isAuthenticated = await api.authenticate({
         password: 'pass',
@@ -666,13 +666,13 @@ describe('mELCloud Classic API', () => {
     it('does not set context key header for login path', async () => {
       const api = await createApi()
       mockAxiosInstance.request.mockResolvedValue({
-        data: { ClassicLoginData: null },
+        data: { LoginData: null },
       })
       await api.login({
         postData: {
           AppVersion: '1.0',
-          ClassicLanguage: 0,
           Email: 'u',
+          Language: 0,
           Password: 'p',
           Persist: true,
         },
@@ -805,7 +805,7 @@ describe('mELCloud Classic API', () => {
       const api = await createApi({ settingManager })
       setSpy.mockClear()
       mockAxiosInstance.request.mockResolvedValueOnce({
-        data: { ClassicLoginData: null },
+        data: { LoginData: null },
       })
 
       const isAuthenticated = await api.authenticate({
@@ -854,11 +854,11 @@ describe('mELCloud Classic API', () => {
       mockLoginAndList('ctx', '2030-12-31T00:00:00')
       const api = await createApi({ password: 'pass', username: 'user' })
 
-      // 401 on endpoint, re-auth returns ClassicLoginData: null → authenticate() returns false
+      // 401 on endpoint, re-auth returns LoginData: null → authenticate() returns false
       mockAxiosInstance.request.mockImplementation(
         (config: { url?: string } = {}) => {
           if (config.url === '/Login/ClientLogin3') {
-            return { data: { ClassicLoginData: null } }
+            return { data: { LoginData: null } }
           }
           if (config.url === '/User/ListDevices') {
             return { data: [] }

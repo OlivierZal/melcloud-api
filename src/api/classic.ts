@@ -240,12 +240,12 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     const { password, username } = data ?? { password: '', username: '' }
     this.#clearPersistedSession()
     const {
-      data: { ClassicLoginData: loginData },
+      data: { LoginData: loginData },
     } = await this.login({
       postData: {
         AppVersion: APP_VERSION,
-        ClassicLanguage: this.#getLanguageCode(),
         Email: username,
+        Language: this.#getLanguageCode(),
         Password: password,
         Persist: true,
       },
