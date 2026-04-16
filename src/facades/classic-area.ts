@@ -1,4 +1,4 @@
-import type { Area, DeviceAny } from '../entities/index.ts'
+import type { Area, ClassicDeviceAny } from '../entities/index.ts'
 import type { AreaID } from '../types/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 
@@ -6,7 +6,7 @@ import { BaseZoneFacade } from './classic-base-zone.ts'
 export class AreaFacade extends BaseZoneFacade<Area> {
   declare public readonly id: AreaID
 
-  public override get devices(): DeviceAny[] {
+  public override get devices(): ClassicDeviceAny[] {
     return this.registry.getDevicesByAreaId(this.id)
   }
 

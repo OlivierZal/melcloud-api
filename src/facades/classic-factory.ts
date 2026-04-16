@@ -1,5 +1,5 @@
 import type { ClassicAPIAdapter } from '../api/index.ts'
-import type { ClassicRegistry, DeviceAny, Model } from '../entities/index.ts'
+import type { ClassicDeviceAny, ClassicModel, ClassicRegistry } from '../entities/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import type { DeviceFacadeAny, Facade } from './interfaces.ts'
 import { AreaFacade } from './classic-area.ts'
@@ -13,7 +13,7 @@ import { FloorFacade } from './classic-floor.ts'
 const getDeviceFromRegistry = (
   registry: ClassicRegistry,
   id: number,
-): DeviceAny => {
+): ClassicDeviceAny => {
   const device = registry.devices.getById(id)
   if (!device) {
     throw new Error('ClassicDevice not found in registry')
@@ -24,7 +24,7 @@ const getDeviceFromRegistry = (
 const createDeviceFacade = (
   api: ClassicAPIAdapter,
   registry: ClassicRegistry,
-  instance: Model,
+  instance: ClassicModel,
 ): DeviceFacadeAny => {
   const device = getDeviceFromRegistry(registry, instance.id)
   switch (device.type) {
@@ -53,7 +53,7 @@ const createDeviceFacade = (
 export const createFacade = (
   api: ClassicAPIAdapter,
   registry: ClassicRegistry,
-  instance: Model,
+  instance: ClassicModel,
 ): Facade => {
   switch (instance.modelKind) {
     case 'area': {

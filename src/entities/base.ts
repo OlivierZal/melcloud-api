@@ -1,8 +1,8 @@
-import type { ModelKind } from './interfaces.ts'
+import type { ClassicModelKind } from './interfaces.ts'
 
 /** Abstract base model providing common `id` and `name` properties. */
 export abstract class BaseModel {
-  public abstract readonly modelKind: ModelKind
+  public abstract readonly modelKind: ClassicModelKind
 
   public readonly id: number
 

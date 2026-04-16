@@ -4,11 +4,11 @@ import {
   OperationModeZone,
 } from '../src/constants.ts'
 import {
-  type AreaDataAny,
   type BuildingData,
+  type ClassicAreaDataAny,
+  type ClassicListDeviceAny,
   type FloorData,
   type ListDevice,
-  type ListDeviceAny,
   type ListDeviceDataAta,
   type ListDeviceDataAtw,
   type ListDeviceDataErv,
@@ -52,8 +52,8 @@ export const floorData = (overrides: Partial<FloorData> = {}): FloorData => ({
 })
 
 export const areaData = (
-  overrides: Partial<AreaDataAny> = {},
-): AreaDataAny => ({
+  overrides: Partial<ClassicAreaDataAny> = {},
+): ClassicAreaDataAny => ({
   BuildingId: toBuildingId(1),
   FloorId: 10,
   ID: 100,
@@ -192,7 +192,7 @@ const DEFAULT_ERV_DEVICE_ID = toDeviceId(1002)
 
 export const ataDevice = (
   overrides: Partial<ListDevice<typeof ClassicDeviceType.Ata>> = {},
-): ListDeviceAny => ({
+): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
   ClassicDevice: ataDeviceData(),
@@ -205,7 +205,7 @@ export const ataDevice = (
 
 export const atwDevice = (
   overrides: Partial<ListDevice<typeof ClassicDeviceType.Atw>> = {},
-): ListDeviceAny => ({
+): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
   ClassicDevice: atwDeviceData(),
@@ -218,7 +218,7 @@ export const atwDevice = (
 
 export const ervDevice = (
   overrides: Partial<ListDevice<typeof ClassicDeviceType.Erv>> = {},
-): ListDeviceAny => ({
+): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
   ClassicDevice: ervDeviceData(),

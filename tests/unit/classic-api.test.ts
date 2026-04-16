@@ -4,7 +4,7 @@ import type { ClassicAPI, ClassicAPIConfig } from '../../src/api/index.ts'
 import type { ClassicDeviceType } from '../../src/constants.ts'
 import {
   type BuildingWithStructure,
-  type ListDeviceAny,
+  type ClassicListDeviceAny,
   type SetDevicePostData,
   toBuildingId,
   toDeviceId,
@@ -61,7 +61,7 @@ const errorEntry = (
   ...overrides,
 })
 
-const createDevice = (overrides: Record<string, unknown> = {}): ListDeviceAny =>
+const createDevice = (overrides: Record<string, unknown> = {}): ClassicListDeviceAny =>
   cast({
     AreaID: null,
     BuildingID: 1,

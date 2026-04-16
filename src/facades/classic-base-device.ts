@@ -13,7 +13,7 @@ import type {
 import { ClassicDeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import {
-  type DeviceAny,
+  type ClassicDeviceAny,
   ClassicDevice,
   isDeviceOfType,
 } from '../entities/index.ts'
@@ -73,7 +73,7 @@ const getDuration = ({ from, to }: Required<ReportQuery>): number =>
  * value updates with effective flags, and ATA key conversion between set/list formats.
  */
 export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
-  extends BaseFacade<DeviceAny>
+  extends BaseFacade<ClassicDeviceAny>
   implements DeviceFacade<T>
 {
   declare public readonly id: DeviceID
@@ -88,7 +88,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return this.device.data
   }
 
-  public override get devices(): DeviceAny[] {
+  public override get devices(): ClassicDeviceAny[] {
     return [this.instance]
   }
 
@@ -111,7 +111,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   protected get model(): {
-    getById: (id: number) => DeviceAny | undefined
+    getById: (id: number) => ClassicDeviceAny | undefined
   } {
     return this.registry.devices
   }
@@ -233,10 +233,10 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   public override async getTiles(device?: false): Promise<TilesData<null>>
   public override async getTiles(
-    device: true | DeviceAny,
+    device: true | ClassicDeviceAny,
   ): Promise<TilesData<T>>
   public override async getTiles(
-    device: boolean | DeviceAny = false,
+    device: boolean | ClassicDeviceAny = false,
   ): Promise<TilesData<T | null>> {
     if (
       device === false ||

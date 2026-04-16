@@ -1,4 +1,4 @@
-import type { AreaData, AreaDataAny } from '../types/index.ts'
+import type { AreaData, ClassicAreaDataAny } from '../types/index.ts'
 import { BaseModel } from './base.ts'
 import { syncModel } from './symbols.ts'
 
@@ -15,7 +15,7 @@ export class Area<T extends number | null = number | null> extends BaseModel {
     FloorId: floorId,
     ID: id,
     Name: name,
-  }: AreaData<T> | AreaDataAny) {
+  }: AreaData<T> | ClassicAreaDataAny) {
     super({ id, name })
     this.buildingId = buildingId
     this.floorId = floorId
@@ -25,7 +25,7 @@ export class Area<T extends number | null = number | null> extends BaseModel {
     BuildingId: buildingId,
     FloorId: floorId,
     Name: name,
-  }: AreaData<T> | AreaDataAny): void {
+  }: AreaData<T> | ClassicAreaDataAny): void {
     this.name = name
     this.buildingId = buildingId
     this.floorId = floorId

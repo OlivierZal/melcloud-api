@@ -35,6 +35,10 @@
       "types": "./dist/decorators/index.d.ts",
       "default": "./dist/decorators/index.js"
     },
+    "./entities": {
+      "types": "./dist/entities/index.d.ts",
+      "default": "./dist/entities/index.js"
+    },
     "./enum-mappings": {
       "types": "./dist/enum-mappings.d.ts",
       "default": "./dist/enum-mappings.js"
@@ -46,10 +50,6 @@
     "./facades": {
       "types": "./dist/facades/index.d.ts",
       "default": "./dist/facades/index.js"
-    },
-    "./models": {
-      "types": "./dist/models/index.d.ts",
-      "default": "./dist/models/index.js"
     },
     "./observability": {
       "types": "./dist/observability/index.d.ts",

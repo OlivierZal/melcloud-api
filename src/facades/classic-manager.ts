@@ -4,10 +4,10 @@ import type {
   Area,
   Building,
   ClassicDevice,
+  ClassicDeviceAny,
+  ClassicModel,
   ClassicRegistry,
-  DeviceAny,
   Floor,
-  Model,
 } from '../entities/index.ts'
 import type { BuildingZone, Zone } from '../types/index.ts'
 import type {
@@ -26,7 +26,7 @@ import { createFacade } from './classic-factory.ts'
 export class ClassicFacadeManager {
   readonly #api: ClassicAPIAdapter
 
-  readonly #facades = new WeakMap<Model, Facade>()
+  readonly #facades = new WeakMap<ClassicModel, Facade>()
 
   readonly #registry: ClassicRegistry
 
@@ -40,16 +40,16 @@ export class ClassicFacadeManager {
   ): DeviceFacade<T>
   public get(instance: Area | Floor): ZoneFacade
   public get(instance: Building): BuildingFacade
-  public get(instance: DeviceAny): DeviceFacadeAny
-  public get(instance: Model): Facade
+  public get(instance: ClassicDeviceAny): DeviceFacadeAny
+  public get(instance: ClassicModel): Facade
   public get(): null
   public get<T extends ClassicDeviceType>(
     instance?: ClassicDevice<T>,
   ): DeviceFacade<T> | null
   public get(instance?: Area | Floor): ZoneFacade | null
   public get(instance?: Building): BuildingFacade | null
-  public get(instance?: DeviceAny): DeviceFacadeAny | null
-  public get(instance?: Model): Facade | null {
+  public get(instance?: ClassicDeviceAny): DeviceFacadeAny | null
+  public get(instance?: ClassicModel): Facade | null {
     if (!instance) {
       return null
     }

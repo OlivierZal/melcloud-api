@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicRegistry, isDeviceOfType } from '../../src/entities/index.ts'
 import {
+  type ClassicListDeviceAny,
   type ListDevice,
-  type ListDeviceAny,
   type ListDeviceDataAta,
   toAreaId,
   toBuildingId,
@@ -48,7 +48,7 @@ const allAreas = [
   }),
 ]
 
-const allDevices: ListDeviceAny[] = [
+const allDevices: ClassicListDeviceAny[] = [
   ataDevice({ DeviceName: 'ClassicDevice ATA' }),
   atwDevice({
     AreaID: toAreaId(102),
@@ -112,7 +112,7 @@ describe('model registry', () => {
         DeviceName: 'Invalid',
         FloorID: null,
         Type: cast(999),
-      }) as ListDeviceAny
+      }) as ClassicListDeviceAny
 
       expect(() => {
         registry.syncDevices([invalidDevice])
@@ -134,7 +134,7 @@ describe('model registry', () => {
         DeviceName: 'Invalid',
         FloorID: null,
         Type: cast({ nested: 'value' }),
-      }) as ListDeviceAny
+      }) as ClassicListDeviceAny
 
       expect(() => {
         registry.syncDevices([invalidDevice])

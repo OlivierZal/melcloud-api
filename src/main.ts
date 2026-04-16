@@ -1,6 +1,5 @@
 export type {
   AreaData,
-  AreaDataAny,
   AreaID,
   AreaZone,
   BaseDevicePostData,
@@ -9,6 +8,9 @@ export type {
   BuildingID,
   BuildingWithStructure,
   BuildingZone,
+  ClassicAreaDataAny,
+  ClassicListDeviceAny,
+  ClassicListDeviceDataAny,
   DateTimeComponents,
   DeviceID,
   DeviceZone,
@@ -52,9 +54,7 @@ export type {
   HotWaterState,
   KeyOfSetDeviceDataAtaNotInList,
   ListDevice,
-  ListDeviceAny,
   ListDeviceData,
-  ListDeviceDataAny,
   ListDeviceDataAta,
   ListDeviceDataAtw,
   ListDeviceDataErv,
@@ -141,8 +141,8 @@ export {
   updateDevices,
 } from './decorators/index.ts'
 export {
-  type DeviceAny,
-  type Model,
+  type ClassicDeviceAny,
+  type ClassicModel,
   Area,
   Building,
   ClassicDevice,

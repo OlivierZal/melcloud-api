@@ -8,9 +8,9 @@ import type {
 import type { ClassicDeviceType } from '../constants.ts'
 import type {
   ClassicDevice,
+  ClassicDeviceAny,
+  ClassicModel,
   ClassicRegistry,
-  DeviceAny,
-  Model,
 } from '../entities/index.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
@@ -76,7 +76,7 @@ const getDateTimeComponents = (date: DateTime | null): DateTimeComponents =>
  * holiday mode, power control, signal strength, tiles, and error log retrieval.
  * Settings resolution falls back from zone level to device level when needed.
  */
-export abstract class BaseFacade<T extends Model> implements Facade {
+export abstract class BaseFacade<T extends ClassicModel> implements Facade {
   protected abstract readonly frostProtectionLocation: keyof FrostProtectionLocation
 
   protected abstract readonly holidayModeLocation: keyof HolidayModeLocation
@@ -87,7 +87,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   protected abstract readonly tableName: SettingsParams['tableName']
 
-  public abstract get devices(): DeviceAny[]
+  public abstract get devices(): ClassicDeviceAny[]
 
   public readonly id: number
 
@@ -144,7 +144,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   public constructor(
     api: ClassicAPIAdapter,
     registry: ClassicRegistry,
-    instance: Model,
+    instance: ClassicModel,
   ) {
     this.api = api
     this.registry = registry

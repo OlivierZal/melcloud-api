@@ -55,8 +55,6 @@ export interface AreaData<T extends number | null> extends FloorData {
   readonly FloorId: T
 }
 
-export type AreaDataAny = AreaData<null> | AreaData<number>
-
 export interface AreaZone extends BaseZone {
   readonly devices: readonly DeviceZone[]
   readonly model: 'areas'
@@ -77,14 +75,14 @@ export interface BuildingData extends ZoneSettings {
 export interface BuildingWithStructure extends BuildingData {
   readonly Structure: {
     readonly Areas: readonly (AreaData<null> & {
-      readonly Devices: readonly ListDeviceAny[]
+      readonly Devices: readonly ClassicListDeviceAny[]
     })[]
-    readonly Devices: readonly ListDeviceAny[]
+    readonly Devices: readonly ClassicListDeviceAny[]
     readonly Floors: readonly (FloorData & {
       readonly Areas: readonly (AreaData<number> & {
-        readonly Devices: readonly ListDeviceAny[]
+        readonly Devices: readonly ClassicListDeviceAny[]
       })[]
-      readonly Devices: readonly ListDeviceAny[]
+      readonly Devices: readonly ClassicListDeviceAny[]
     })[]
   }
 }
@@ -95,6 +93,15 @@ export interface BuildingZone extends BaseZone {
   readonly floors: readonly FloorZone[]
   readonly model: 'buildings'
 }
+
+export type ClassicAreaDataAny = AreaData<null> | AreaData<number>
+
+export type ClassicListDeviceAny =
+  | ListDevice<typeof ClassicDeviceType.Ata>
+  | ListDevice<typeof ClassicDeviceType.Atw>
+  | ListDevice<typeof ClassicDeviceType.Erv>
+
+export type ClassicListDeviceDataAny = ListDeviceData<ClassicDeviceType>
 
 export type DateTimeComponents = {
   readonly Day: number
@@ -217,15 +224,8 @@ export interface ListDevice<
   readonly ClassicDevice: ListDeviceData<T>
 }
 
-export type ListDeviceAny =
-  | ListDevice<typeof ClassicDeviceType.Ata>
-  | ListDevice<typeof ClassicDeviceType.Atw>
-  | ListDevice<typeof ClassicDeviceType.Erv>
-
 export type ListDeviceData<T extends ClassicDeviceType> =
   DeviceDataMapping[T]['list']
-
-export type ListDeviceDataAny = ListDeviceData<ClassicDeviceType>
 
 export interface LoginCredentials {
   readonly password: string

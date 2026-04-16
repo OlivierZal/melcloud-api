@@ -1,9 +1,9 @@
 import type { ClassicDeviceType } from '../constants.ts'
 import type {
+  ClassicListDeviceAny,
+  ClassicListDeviceDataAny,
   ListDevice,
-  ListDeviceAny,
   ListDeviceData,
-  ListDeviceDataAny,
 } from '../types/index.ts'
 import { BaseModel } from './base.ts'
 import { syncModel } from './symbols.ts'
@@ -49,7 +49,7 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
     ClassicDevice: data,
     DeviceName: name,
     FloorID: floorId,
-  }: ListDeviceAny): void {
+  }: ClassicListDeviceAny): void {
     this.name = name
     this.areaId = areaId
     this.buildingId = buildingId
@@ -57,7 +57,7 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
     Object.assign(this.#data, data)
   }
 
-  public update(data: Partial<ListDeviceDataAny>): void {
+  public update(data: Partial<ClassicListDeviceDataAny>): void {
     Object.assign(this.#data, data)
   }
 }

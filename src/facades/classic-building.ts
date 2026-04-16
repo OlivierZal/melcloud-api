@@ -1,9 +1,9 @@
 import type { ClassicAPIAdapter } from '../api/index.ts'
 import type {
   Building,
+  ClassicDeviceAny,
+  ClassicModel,
   ClassicRegistry,
-  DeviceAny,
-  Model,
 } from '../entities/index.ts'
 import type { BuildingID, ZoneSettings } from '../types/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
@@ -17,7 +17,7 @@ export class BuildingFacade extends BaseZoneFacade<Building> {
     return this.instance.data
   }
 
-  public override get devices(): DeviceAny[] {
+  public override get devices(): ClassicDeviceAny[] {
     return this.registry.getDevicesByBuildingId(this.id)
   }
 
@@ -38,7 +38,7 @@ export class BuildingFacade extends BaseZoneFacade<Building> {
   public constructor(
     api: ClassicAPIAdapter,
     registry: ClassicRegistry,
-    instance: Model,
+    instance: ClassicModel,
   ) {
     super(api, registry, instance)
     ;({

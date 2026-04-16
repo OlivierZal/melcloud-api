@@ -12,12 +12,12 @@ import type {
 } from '../src/api/index.ts'
 import type { ClassicDeviceType } from '../src/constants.ts'
 import type {
-  AreaDataAny,
   BuildingData,
+  ClassicAreaDataAny,
+  ClassicListDeviceAny,
   FloorData,
-  ListDeviceAny,
 } from '../src/types/index.ts'
-import { type DeviceAny, ClassicRegistry } from '../src/entities/index.ts'
+import { type ClassicDeviceAny, ClassicRegistry } from '../src/entities/index.ts'
 
 const MOCK_RSSI = -60
 
@@ -96,11 +96,11 @@ export const createSettingStore = (
 }
 
 export function assertDeviceType<T extends ClassicDeviceType>(
-  device: DeviceAny | undefined,
+  device: ClassicDeviceAny | undefined,
   type: T,
-): asserts device is Extract<DeviceAny, { type: T }>
+): asserts device is Extract<ClassicDeviceAny, { type: T }>
 export function assertDeviceType(
-  device: DeviceAny | undefined,
+  device: ClassicDeviceAny | undefined,
   type: ClassicDeviceType,
 ): void {
   if (device?.type !== type) {
@@ -128,9 +128,9 @@ export const createPopulatedRegistry = ({
   devices,
   floors,
 }: {
-  areas: AreaDataAny[]
+  areas: ClassicAreaDataAny[]
   buildings: BuildingData[]
-  devices: ListDeviceAny[]
+  devices: ClassicListDeviceAny[]
   floors: FloorData[]
 }): ClassicRegistry => {
   const registry = new ClassicRegistry()

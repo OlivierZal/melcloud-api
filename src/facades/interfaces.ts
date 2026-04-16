@@ -2,10 +2,10 @@ import type { HourNumbers } from 'luxon'
 
 import type { ErrorLog, ErrorLogQuery } from '../api/index.ts'
 import type {
-  BaseBuilding,
-  BaseDevice,
+  ClassicBaseBuilding,
+  ClassicBaseDevice,
   ClassicDevice,
-  DeviceAny,
+  ClassicDeviceAny,
   Identifiable,
 } from '../entities/index.ts'
 import type {
@@ -48,7 +48,7 @@ export interface HolidayModeQuery {
 }
 
 /** Facade for a MELCloud building, combining zone settings with super device operations. */
-export interface BuildingFacade extends BaseBuilding, ZoneFacade {
+export interface BuildingFacade extends ClassicBaseBuilding, ZoneFacade {
   /** Fetch the latest building zone settings after syncing devices. */
   readonly fetch: () => Promise<ZoneSettings>
 }
@@ -72,7 +72,7 @@ export interface ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
 
 /** Facade for an individual MELCloud device with type-safe data access and control. */
 export interface DeviceFacade<T extends ClassicDeviceType>
-  extends BaseDevice<T>, Facade {
+  extends ClassicBaseDevice<T>, Facade {
   /** Bitfield flags mapping each updatable property to its effective flag value. */
   readonly flags: Record<keyof UpdateDeviceData<T>, number>
 
@@ -95,7 +95,7 @@ export interface DeviceFacade<T extends ClassicDeviceType>
   ) => Promise<ReportChartLineOptions>
 
   /** Fetch tile overview data, optionally selecting a specific device. */
-  readonly getTiles: ((device: true | DeviceAny) => Promise<TilesData<T>>) &
+  readonly getTiles: ((device: true | ClassicDeviceAny) => Promise<TilesData<T>>) &
     ((device?: false) => Promise<TilesData<null>>)
 
   /** Fetch current device values from the Classic API. */
@@ -118,7 +118,7 @@ export interface DeviceFacade<T extends ClassicDeviceType>
 /** Base facade contract shared by all facade types (building, floor, area, device). */
 export interface Facade extends Identifiable {
   /** All devices managed by this facade. */
-  readonly devices: readonly DeviceAny[]
+  readonly devices: readonly ClassicDeviceAny[]
 
   /**
    * Whether the underlying entity still exists in the registry.

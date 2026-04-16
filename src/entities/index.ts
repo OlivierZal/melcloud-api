@@ -6,11 +6,11 @@ export { Floor } from './floor.ts'
 export { HomeDevice } from './home-device.ts'
 export { HomeRegistry } from './home-registry.ts'
 export {
-  type BaseBuilding,
-  type BaseDevice,
-  type DeviceAny,
+  type ClassicBaseBuilding,
+  type ClassicBaseDevice,
+  type ClassicDeviceAny,
+  type ClassicModel,
+  type ClassicModelKind,
   type Identifiable,
-  type Model,
-  type ModelKind,
   isDeviceOfType,
 } from './interfaces.ts'

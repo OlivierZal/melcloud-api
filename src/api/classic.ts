@@ -4,8 +4,9 @@ import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 
 import type {
-  AreaDataAny,
   BuildingWithStructure,
+  ClassicAreaDataAny,
+  ClassicListDeviceAny,
   EnergyData,
   EnergyPostData,
   ErrorLogData,
@@ -19,7 +20,6 @@ import type {
   GetGroupPostData,
   HolidayModeData,
   HolidayModePostData,
-  ListDeviceAny,
   LoginCredentials,
   LoginData,
   LoginPostData,
@@ -124,7 +124,7 @@ const parseErrorLogQuery = ({
 // Collect all areas from both building-level and floor-level
 const collectAreas = function* collectAreas(
   buildings: BuildingWithStructure[],
-): Generator<AreaDataAny> {
+): Generator<ClassicAreaDataAny> {
   for (const {
     Structure: { Areas: areas, Floors: floors },
   } of buildings) {
@@ -138,7 +138,7 @@ const collectAreas = function* collectAreas(
 // Collect all devices from every level of the hierarchy
 const collectDevices = function* collectDevices(
   buildings: BuildingWithStructure[],
-): Generator<ListDeviceAny> {
+): Generator<ClassicListDeviceAny> {
   for (const {
     Structure: { Areas: areas, Devices: devices, Floors: floors },
   } of buildings) {
