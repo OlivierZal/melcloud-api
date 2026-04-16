@@ -9,7 +9,6 @@ export type {
   HomeAPIConfig,
   HomeAPISettings,
   Logger,
-  OnSyncFunction,
   RequestCompleteEvent,
   RequestErrorEvent,
   RequestLifecycleContext,
@@ -17,6 +16,7 @@ export type {
   RequestRetryEvent,
   RequestStartEvent,
   SettingManager,
+  SyncCallback,
 } from './interfaces.ts'
 
 export { BaseAPI } from './base.ts'

@@ -66,7 +66,7 @@ export interface BaseAPIConfig extends Partial<LoginCredentials> {
   readonly logger?: Logger
 
   /** Callback invoked after sync operations. */
-  readonly onSync?: OnSyncFunction
+  readonly onSync?: SyncCallback
 
   /**
    * Maximum time in milliseconds for a single HTTP request before
@@ -315,7 +315,7 @@ export interface HomeAPI {
  */
 export interface ClassicAPIAdapter {
   /** Callback invoked after sync operations. */
-  readonly onSync?: OnSyncFunction
+  readonly onSync?: SyncCallback
 
   /**
    * Retrieve a parsed and paginated error log for the given devices.
@@ -475,7 +475,7 @@ export interface SettingManager {
 }
 
 /** Callback invoked after sync operations, with optional device IDs and type filter. */
-export type OnSyncFunction = (params?: {
+export type SyncCallback = (params?: {
   ids?: (number | string)[]
   type?: DeviceType
 }) => Promise<void>

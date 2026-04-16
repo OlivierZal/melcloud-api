@@ -25,8 +25,8 @@ import {
 import type {
   BaseAPIConfig,
   Logger,
-  OnSyncFunction,
   SettingManager,
+  SyncCallback,
 } from './interfaces.ts'
 import { SyncManager } from './sync-manager.ts'
 
@@ -53,7 +53,7 @@ interface BaseAPIConstructorOptions {
 export abstract class BaseAPI implements Disposable {
   public readonly logger: Logger
 
-  public readonly onSync?: OnSyncFunction
+  public readonly onSync?: SyncCallback
 
   public readonly settingManager?: SettingManager
 

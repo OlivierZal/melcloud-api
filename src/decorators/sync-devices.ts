@@ -1,9 +1,9 @@
-import type { OnSyncFunction } from '../api/index.ts'
+import type { SyncCallback } from '../api/index.ts'
 import type { ClassicDeviceType } from '../constants.ts'
 
 /** Object that supports sync notification via `notifySync` or `onSync`. */
 interface HasOnSync {
-  readonly onSync?: OnSyncFunction
+  readonly onSync?: SyncCallback
   readonly notifySync?: (params?: { type?: ClassicDeviceType }) => Promise<void>
 }
 

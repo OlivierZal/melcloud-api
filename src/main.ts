@@ -100,7 +100,6 @@ export {
   type HomeAPIConfig,
   type HomeAPISettings,
   type Logger,
-  type OnSyncFunction,
   type RequestCompleteEvent,
   type RequestErrorEvent,
   type RequestLifecycleContext,
@@ -108,6 +107,7 @@ export {
   type RequestRetryEvent,
   type RequestStartEvent,
   type SettingManager,
+  type SyncCallback,
   ClassicAPI,
   HomeAPI,
 } from './api/index.ts'
