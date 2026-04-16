@@ -320,7 +320,7 @@ describe('mELCloud Classic API', () => {
       {
         args: { postData: { DeviceIds: [1], Power: true } },
         method: 'updatePower' as const,
-        path: '/ClassicDevice/Power',
+        path: '/Device/Power',
       },
     ])('calls $method via POST', async ({ args, method, path }) => {
       mockLoginAndList()
@@ -347,7 +347,7 @@ describe('mELCloud Classic API', () => {
       {
         args: { params: { buildingId: 1, id: 1 } },
         method: 'getValues' as const,
-        path: '/ClassicDevice/Get',
+        path: '/Device/Get',
       },
     ])('calls $method via GET', async ({ args, method, path }) => {
       mockLoginAndList()
@@ -372,9 +372,9 @@ describe('mELCloud Classic API', () => {
     })
 
     it.each([
-      { path: '/ClassicDevice/SetAta', type: 0 as const },
-      { path: '/ClassicDevice/SetAtw', type: 1 as const },
-      { path: '/ClassicDevice/SetErv', type: 3 as const },
+      { path: '/Device/SetAta', type: 0 as const },
+      { path: '/Device/SetAtw', type: 1 as const },
+      { path: '/Device/SetErv', type: 3 as const },
     ])(
       'calls updateValues for type $type via $path',
       async ({ path, type }) => {
@@ -707,7 +707,7 @@ describe('mELCloud Classic API', () => {
           headers: expect.objectContaining({
             'X-MitsContextKey': 'newest',
           }),
-          url: '/ClassicDevice/Get',
+          url: '/Device/Get',
         }),
       )
     })
@@ -741,7 +741,7 @@ describe('mELCloud Classic API', () => {
           headers: expect.objectContaining({
             'X-MitsContextKey': 'fresh',
           }),
-          url: '/ClassicDevice/Get',
+          url: '/Device/Get',
         }),
       )
     })
@@ -837,7 +837,7 @@ describe('mELCloud Classic API', () => {
             throw createAxiosError({
               message: 'unauthorized',
               status: 401,
-              url: '/ClassicDevice/Get',
+              url: '/Device/Get',
             })
           }
           return { data: { value: 'retried' } }
@@ -866,7 +866,7 @@ describe('mELCloud Classic API', () => {
           throw createAxiosError({
             message: 'unauthorized',
             status: 401,
-            url: '/ClassicDevice/Get',
+            url: '/Device/Get',
           })
         },
       )

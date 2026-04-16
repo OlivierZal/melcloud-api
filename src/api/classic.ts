@@ -433,7 +433,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     params: ClassicGetDeviceDataParams
   }): Promise<{ data: ClassicGetDeviceData<T> }> {
-    return this.request('get', '/ClassicDevice/Get', { params })
+    return this.request('get', '/Device/Get', { params })
   }
 
   public async list(): Promise<{ data: ClassicBuildingWithStructure[] }> {
@@ -495,7 +495,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ClassicSetPowerPostData
   }): Promise<{ data: boolean }> {
-    return this.request('post', '/ClassicDevice/Power', { data: postData })
+    return this.request('post', '/Device/Power', { data: postData })
   }
 
   public async updateValues<T extends ClassicDeviceType>({
@@ -505,7 +505,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData: ClassicSetDevicePostData<T>
     type: T
   }): Promise<{ data: ClassicSetDeviceData<T> }> {
-    return this.request('post', `/ClassicDevice/Set${deviceTypeNames[type]}`, {
+    return this.request('post', `/Device/Set${deviceTypeNames[type]}`, {
       data: postData,
     })
   }
