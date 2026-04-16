@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ClassicRegistry } from '../../src/models/index.ts'
+import type { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import {
   toAreaId,

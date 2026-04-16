@@ -1,7 +1,7 @@
 import type { HourNumbers } from 'luxon'
 
 import type { ClassicDeviceType, DeviceType } from '../constants.ts'
-import type { HomeRegistry } from '../models/home-registry.ts'
+import type { HomeRegistry } from '../entities/home-registry.ts'
 import type {
   BuildingWithStructure,
   EnergyData,

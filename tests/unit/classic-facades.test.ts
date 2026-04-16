@@ -6,6 +6,10 @@ import {
   ClassicOperationMode,
   OperationModeZone,
 } from '../../src/constants.ts'
+import {
+  type ClassicDevice,
+  ClassicRegistry,
+} from '../../src/entities/index.ts'
 import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import {
   AreaFacade,
@@ -20,7 +24,6 @@ import {
   isAtwFacade,
   isErvFacade,
 } from '../../src/facades/index.ts'
-import { type ClassicDevice, ClassicRegistry } from '../../src/models/index.ts'
 import {
   type SetDeviceDataAta,
   type SetDevicePostData,

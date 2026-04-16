@@ -12,12 +12,12 @@ import type {
 } from '../types/index.ts'
 import { ClassicDeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
-import { NoChangesError } from '../errors/index.ts'
 import {
   type DeviceAny,
   ClassicDevice,
   isDeviceOfType,
-} from '../models/index.ts'
+} from '../entities/index.ts'
+import { NoChangesError } from '../errors/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,

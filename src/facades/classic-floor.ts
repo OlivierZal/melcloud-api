@@ -1,4 +1,4 @@
-import type { DeviceAny, Floor } from '../models/index.ts'
+import type { DeviceAny, Floor } from '../entities/index.ts'
 import type { FloorID } from '../types/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 

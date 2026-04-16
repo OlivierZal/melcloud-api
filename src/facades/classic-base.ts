@@ -11,7 +11,7 @@ import type {
   ClassicRegistry,
   DeviceAny,
   Model,
-} from '../models/index.ts'
+} from '../entities/index.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
 import {

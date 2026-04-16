@@ -1,4 +1,4 @@
-import type { Area, Building, Floor } from '../models/index.ts'
+import type { Area, Building, Floor } from '../entities/index.ts'
 import type {
   FailureData,
   GroupState,

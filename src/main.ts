@@ -141,6 +141,18 @@ export {
   updateDevices,
 } from './decorators/index.ts'
 export {
+  type DeviceAny,
+  type Model,
+  Area,
+  Building,
+  ClassicDevice,
+  ClassicRegistry,
+  Floor,
+  HomeDevice,
+  HomeRegistry,
+  isDeviceOfType,
+} from './entities/index.ts'
+export {
   type HomeFanSpeed,
   type HomeHorizontal,
   type HomeOperationMode,
@@ -187,15 +199,3 @@ export {
   isAtwFacade,
   isErvFacade,
 } from './facades/index.ts'
-export {
-  type DeviceAny,
-  type Model,
-  Area,
-  Building,
-  ClassicDevice,
-  ClassicRegistry,
-  Floor,
-  HomeDevice,
-  HomeRegistry,
-  isDeviceOfType,
-} from './models/index.ts'

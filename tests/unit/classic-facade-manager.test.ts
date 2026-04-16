@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { ClassicDeviceType } from '../../src/constants.ts'
+import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicFacadeManager } from '../../src/facades/index.ts'
-import { ClassicRegistry } from '../../src/models/index.ts'
 import { areaData, ataDevice, buildingData, floorData } from '../fixtures.ts'
 import { createMockApi, defined } from '../helpers.ts'
 

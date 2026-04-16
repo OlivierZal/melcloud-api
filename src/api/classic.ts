@@ -38,7 +38,7 @@ import type {
 } from '../types/index.ts'
 import { ClassicDeviceType, Language } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
-import { ClassicRegistry } from '../models/index.ts'
+import { ClassicRegistry } from '../entities/index.ts'
 import { isSessionExpired, toDeviceId } from '../resilience/index.ts'
 import type {
   ClassicAPIAdapter,

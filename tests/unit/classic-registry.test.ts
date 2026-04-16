@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { ClassicDeviceType } from '../../src/constants.ts'
-import { ClassicRegistry, isDeviceOfType } from '../../src/models/index.ts'
+import { ClassicRegistry, isDeviceOfType } from '../../src/entities/index.ts'
 import {
   type ListDevice,
   type ListDeviceAny,

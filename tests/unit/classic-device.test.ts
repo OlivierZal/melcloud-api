@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { ListDeviceDataAta } from '../../src/types/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
-import { ClassicDevice } from '../../src/models/index.ts'
+import { ClassicDevice } from '../../src/entities/index.ts'
 import { ataDevice } from '../fixtures.ts'
 
 const isAtaData = (data: unknown): data is ListDeviceDataAta =>

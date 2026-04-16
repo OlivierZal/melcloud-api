@@ -1,5 +1,5 @@
 import type { ClassicAPIAdapter } from '../api/index.ts'
-import type { ClassicRegistry, DeviceAny, Model } from '../models/index.ts'
+import type { ClassicRegistry, DeviceAny, Model } from '../entities/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import type { DeviceFacadeAny, Facade } from './interfaces.ts'
 import { AreaFacade } from './classic-area.ts'

@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from 'vitest'
 import type { HomeAPI } from '../../src/api/interfaces.ts'
 import type { HomeDeviceData } from '../../src/types/index.ts'
 import { HomeDeviceType } from '../../src/constants.ts'
+import { HomeDevice } from '../../src/entities/home-device.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
-import { HomeDevice } from '../../src/models/home-device.ts'
 import { mock } from '../helpers.ts'
 
 const createModel = (): HomeDevice =>

@@ -5,7 +5,7 @@ import { HomeDeviceType } from '../../src/constants.ts'
 import {
   type TypedHomeDeviceData,
   HomeRegistry,
-} from '../../src/models/home-registry.ts'
+} from '../../src/entities/home-registry.ts'
 import { mock } from '../helpers.ts'
 
 const createDevice = (

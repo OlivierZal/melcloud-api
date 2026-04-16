@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { ClassicDeviceType } from '../../src/constants.ts'
+import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
-import { ClassicRegistry } from '../../src/models/index.ts'
 import {
   toAreaId,
   toBuildingId,

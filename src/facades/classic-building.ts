@@ -4,7 +4,7 @@ import type {
   ClassicRegistry,
   DeviceAny,
   Model,
-} from '../models/index.ts'
+} from '../entities/index.ts'
 import type { BuildingID, ZoneSettings } from '../types/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'

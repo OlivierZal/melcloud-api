@@ -8,11 +8,11 @@ import {
   OperationModeStateZone,
   OperationModeZone,
 } from '../../src/constants.ts'
+import { ClassicRegistry } from '../../src/entities/index.ts'
 import {
   ClassicDeviceAtwFacade,
   ClassicDeviceAtwHasZone2Facade,
 } from '../../src/facades/index.ts'
-import { ClassicRegistry } from '../../src/models/index.ts'
 import { atwDevice, atwDeviceData, buildingData } from '../fixtures.ts'
 import { assertDeviceType, createMockApi } from '../helpers.ts'
 

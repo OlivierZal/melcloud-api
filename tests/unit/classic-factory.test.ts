@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/index.ts'
+import { ClassicRegistry } from '../../src/entities/index.ts'
 import { createFacade } from '../../src/facades/index.ts'
-import { ClassicRegistry } from '../../src/models/index.ts'
 import {
   areaData,
   ataDevice,

@@ -17,7 +17,7 @@ import type {
   FloorData,
   ListDeviceAny,
 } from '../src/types/index.ts'
-import { type DeviceAny, ClassicRegistry } from '../src/models/index.ts'
+import { type DeviceAny, ClassicRegistry } from '../src/entities/index.ts'
 
 const MOCK_RSSI = -60
 

@@ -1,4 +1,4 @@
-import type { Area, DeviceAny } from '../models/index.ts'
+import type { Area, DeviceAny } from '../entities/index.ts'
 import type { AreaID } from '../types/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 

@@ -12,7 +12,7 @@ import type {
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
-import { HomeRegistry } from '../models/home-registry.ts'
+import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './interfaces.ts'
 import { BaseAPI } from './base.ts'

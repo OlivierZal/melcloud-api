@@ -8,7 +8,7 @@ import type {
   DeviceAny,
   Floor,
   Model,
-} from '../models/index.ts'
+} from '../entities/index.ts'
 import type { BuildingZone, Zone } from '../types/index.ts'
 import type {
   BuildingFacade,

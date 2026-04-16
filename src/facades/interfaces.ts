@@ -7,7 +7,7 @@ import type {
   ClassicDevice,
   DeviceAny,
   Identifiable,
-} from '../models/index.ts'
+} from '../entities/index.ts'
 import type {
   EnergyData,
   FailureData,
