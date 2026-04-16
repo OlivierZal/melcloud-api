@@ -12,7 +12,7 @@ const createModel = (): HomeDevice =>
   new HomeDevice(
     mock<HomeDeviceData>({
       capabilities: mock<HomeDeviceData['capabilities']>(),
-      givenDisplayName: 'Test Device',
+      givenDisplayName: 'Test ClassicDevice',
       id: 'device-1',
       rssi: -50,
       settings: [],
@@ -56,7 +56,7 @@ describe('home facade manager', () => {
     const model2 = new HomeDevice(
       mock<HomeDeviceData>({
         capabilities: mock<HomeDeviceData['capabilities']>(),
-        givenDisplayName: 'Other Device',
+        givenDisplayName: 'Other ClassicDevice',
         id: 'device-2',
         rssi: -60,
         settings: [],

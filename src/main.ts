@@ -168,8 +168,8 @@ export {
 } from './errors/index.ts'
 export {
   type BuildingFacade,
-  type DeviceAtwFacade,
-  type DeviceAtwHasZone2Facade,
+  type ClassicDeviceAtwFacade,
+  type ClassicDeviceAtwHasZone2Facade,
   type DeviceFacade,
   type DeviceFacadeAny,
   type Facade,
@@ -192,8 +192,8 @@ export {
   type Model,
   Area,
   Building,
+  ClassicDevice,
   ClassicRegistry,
-  Device,
   Floor,
   HomeDevice,
   HomeRegistry,

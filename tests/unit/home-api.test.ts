@@ -36,14 +36,14 @@ const cognitoLoginPage = (
 const mockBuilding: HomeBuilding = {
   airToAirUnits: [
     cast({
-      givenDisplayName: 'Test Device',
+      givenDisplayName: 'Test ClassicDevice',
       id: 'device-1',
       settings: [{ name: 'Power', value: 'True' }],
     }),
   ],
   airToWaterUnits: [
     cast({
-      givenDisplayName: 'ATW Device',
+      givenDisplayName: 'ATW ClassicDevice',
       id: 'device-2',
       settings: [],
     }),

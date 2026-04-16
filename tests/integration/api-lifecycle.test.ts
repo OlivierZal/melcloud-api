@@ -40,7 +40,7 @@ const buildingResponse: BuildingWithStructure[] = [
                 {
                   AreaID: toAreaId(100),
                   BuildingID: toBuildingId(1),
-                  Device: ataDeviceData({
+                  ClassicDevice: ataDeviceData({
                     NumberOfFanSpeeds: 5,
                     SetTemperature: 23,
                   }),

@@ -49,14 +49,14 @@ const allAreas = [
 ]
 
 const allDevices: ListDeviceAny[] = [
-  ataDevice({ DeviceName: 'Device ATA' }),
+  ataDevice({ DeviceName: 'ClassicDevice ATA' }),
   atwDevice({
     AreaID: toAreaId(102),
     BuildingID: toBuildingId(2),
-    DeviceName: 'Device ATW',
+    DeviceName: 'ClassicDevice ATW',
     FloorID: toFloorId(12),
   }),
-  ervDevice({ AreaID: null, DeviceName: 'Device ERV' }),
+  ervDevice({ AreaID: null, DeviceName: 'ClassicDevice ERV' }),
 ]
 
 const allFixtures = {
@@ -98,7 +98,7 @@ describe('model registry', () => {
       const registry = new ClassicRegistry()
       registry.syncDevices(allDevices)
 
-      expect(registry.devices.getById(1000)?.name).toBe('Device ATA')
+      expect(registry.devices.getById(1000)?.name).toBe('ClassicDevice ATA')
       expect(registry.devices.getById(1000)?.type).toBe(ClassicDeviceType.Ata)
     })
 
@@ -107,7 +107,7 @@ describe('model registry', () => {
       const invalidDevice = mock<ListDevice<0>>({
         AreaID: null,
         BuildingID: toBuildingId(1),
-        Device: mock<ListDeviceDataAta>(),
+        ClassicDevice: mock<ListDeviceDataAta>(),
         DeviceID: toDeviceId(9999),
         DeviceName: 'Invalid',
         FloorID: null,
@@ -129,7 +129,7 @@ describe('model registry', () => {
       const invalidDevice = mock<ListDevice<0>>({
         AreaID: null,
         BuildingID: toBuildingId(1),
-        Device: mock<ListDeviceDataAta>(),
+        ClassicDevice: mock<ListDeviceDataAta>(),
         DeviceID: toDeviceId(9999),
         DeviceName: 'Invalid',
         FloorID: null,
@@ -206,9 +206,9 @@ describe('model registry', () => {
         }),
       ])
 
-      expect(registry.devices.getById(1000)?.name).toBe('Device ATA')
-      expect(registry.devices.getById(1001)?.name).toBe('Device ATW')
-      expect(registry.devices.getById(1002)?.name).toBe('Device ERV')
+      expect(registry.devices.getById(1000)?.name).toBe('ClassicDevice ATA')
+      expect(registry.devices.getById(1001)?.name).toBe('ClassicDevice ATW')
+      expect(registry.devices.getById(1002)?.name).toBe('ClassicDevice ERV')
     })
   })
 

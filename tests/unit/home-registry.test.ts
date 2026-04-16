@@ -10,7 +10,7 @@ import { mock } from '../helpers.ts'
 
 const createDevice = (
   id: string,
-  name = 'Device',
+  name = 'ClassicDevice',
   type: HomeDeviceType = HomeDeviceType.Ata,
 ): TypedHomeDeviceData => ({
   device: mock<HomeDeviceData>({ givenDisplayName: name, id, settings: [] }),
@@ -23,7 +23,7 @@ describe('home device registry', () => {
     registry.sync([createDevice('a'), createDevice('b')])
 
     expect(registry.getAll()).toHaveLength(2)
-    expect(registry.getById('a')?.name).toBe('Device')
+    expect(registry.getById('a')?.name).toBe('ClassicDevice')
   })
 
   it('should update existing devices in place', () => {

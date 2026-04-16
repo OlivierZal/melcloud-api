@@ -53,7 +53,7 @@ describe(createFacade, () => {
     expect(facade.name).toBe('Area')
   })
 
-  it('creates a device facade for Device instances', () => {
+  it('creates a device facade for ClassicDevice instances', () => {
     const registry = new ClassicRegistry()
     registry.syncDevices([deviceListData])
     const instance = defined(registry.devices.getById(1000))
@@ -62,10 +62,10 @@ describe(createFacade, () => {
     expect(facade.id).toBe(1000)
   })
 
-  it('creates a DeviceAtwFacade for ATW devices without zone2', () => {
+  it('creates a ClassicDeviceAtwFacade for ATW devices without zone2', () => {
     const registry = new ClassicRegistry()
     registry.syncDevices([
-      atwDevice({ Device: atwDeviceData({ HasZone2: false }) }),
+      atwDevice({ ClassicDevice: atwDeviceData({ HasZone2: false }) }),
     ])
     const instance = defined(registry.devices.getById(1001))
     const facade = createFacade(mockApi, registry, instance)
@@ -73,10 +73,10 @@ describe(createFacade, () => {
     expect(facade.id).toBe(1001)
   })
 
-  it('creates a DeviceAtwHasZone2Facade for ATW devices with zone2', () => {
+  it('creates a ClassicDeviceAtwHasZone2Facade for ATW devices with zone2', () => {
     const registry = new ClassicRegistry()
     registry.syncDevices([
-      atwDevice({ Device: atwDeviceData({ HasZone2: true }) }),
+      atwDevice({ ClassicDevice: atwDeviceData({ HasZone2: true }) }),
     ])
     const instance = defined(registry.devices.getById(1001))
     const facade = createFacade(mockApi, registry, instance)
@@ -84,7 +84,7 @@ describe(createFacade, () => {
     expect(facade.id).toBe(1001)
   })
 
-  it('creates a DeviceErvFacade for ERV devices', () => {
+  it('creates a ClassicDeviceErvFacade for ERV devices', () => {
     const registry = new ClassicRegistry()
     registry.syncDevices([ervDevice()])
     const instance = defined(registry.devices.getById(1002))
@@ -100,7 +100,7 @@ describe(createFacade, () => {
     registry.syncDevices([])
 
     expect(() => createFacade(mockApi, registry, instance)).toThrow(
-      'Device not found in registry',
+      'ClassicDevice not found in registry',
     )
   })
 

@@ -4,7 +4,7 @@ import type { ErrorLog, ErrorLogQuery } from '../api/index.ts'
 import type {
   BaseBuilding,
   BaseDevice,
-  Device,
+  ClassicDevice,
   DeviceAny,
   Identifiable,
 } from '../models/index.ts'
@@ -54,7 +54,7 @@ export interface BuildingFacade extends BaseBuilding, ZoneFacade {
 }
 
 /** Facade for Air-to-Water (ATW) devices with hot water and zone state access. */
-export interface DeviceAtwFacade extends DeviceFacade<
+export interface ClassicDeviceAtwFacade extends DeviceFacade<
   typeof ClassicDeviceType.Atw
 > {
   /** Current hot water state. */
@@ -65,7 +65,7 @@ export interface DeviceAtwFacade extends DeviceFacade<
 }
 
 /** Facade for ATW devices with two heating/cooling zones. */
-export interface DeviceAtwHasZone2Facade extends DeviceAtwFacade {
+export interface ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
   /** Current zone 2 state. */
   readonly zone2: ZoneState
 }
@@ -161,7 +161,9 @@ export interface Facade extends Identifiable {
 
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((device?: false) => Promise<TilesData<null>>) &
-    (<T extends ClassicDeviceType>(device: Device<T>) => Promise<TilesData<T>>)
+    (<T extends ClassicDeviceType>(
+      device: ClassicDevice<T>,
+    ) => Promise<TilesData<T>>)
 }
 
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
@@ -215,8 +217,8 @@ export interface ReportQuery {
 
 /** Union of all device facade types. */
 export type DeviceFacadeAny =
-  | DeviceAtwFacade
-  | DeviceAtwHasZone2Facade
+  | ClassicDeviceAtwFacade
+  | ClassicDeviceAtwHasZone2Facade
   | DeviceFacade<typeof ClassicDeviceType.Ata>
   | DeviceFacade<typeof ClassicDeviceType.Erv>
 
@@ -238,7 +240,7 @@ export const isAtaFacade = (
  */
 export const isAtwFacade = (
   facade: DeviceFacade<ClassicDeviceType>,
-): facade is DeviceAtwFacade => facade.type === ClassicDeviceType.Atw
+): facade is ClassicDeviceAtwFacade => facade.type === ClassicDeviceType.Atw
 
 /**
  * Type guard that narrows a device facade to the ERV variant.
@@ -257,5 +259,5 @@ export const isErvFacade = (
  * @returns Whether the facade supports zone 2.
  */
 export const hasZone2 = (
-  facade: DeviceAtwFacade,
-): facade is DeviceAtwHasZone2Facade => 'zone2' in facade
+  facade: ClassicDeviceAtwFacade,
+): facade is ClassicDeviceAtwHasZone2Facade => 'zone2' in facade

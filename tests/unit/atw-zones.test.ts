@@ -9,8 +9,8 @@ import {
   OperationModeZone,
 } from '../../src/constants.ts'
 import {
-  DeviceAtwFacade,
-  DeviceAtwHasZone2Facade,
+  ClassicDeviceAtwFacade,
+  ClassicDeviceAtwHasZone2Facade,
 } from '../../src/facades/index.ts'
 import { ClassicRegistry } from '../../src/models/index.ts'
 import { atwDevice, atwDeviceData, buildingData } from '../fixtures.ts'
@@ -29,27 +29,27 @@ const createAtwRegistry = (data: ListDeviceDataAtw): ClassicRegistry => {
     buildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
   ])
   registry.syncDevices([
-    atwDevice({ AreaID: null, Device: data, FloorID: null }),
+    atwDevice({ AreaID: null, ClassicDevice: data, FloorID: null }),
   ])
   return registry
 }
 
 const createFacade = (
   data: ListDeviceDataAtw = createAtwData(),
-): DeviceAtwFacade => {
+): ClassicDeviceAtwFacade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
   assertDeviceType(device, ClassicDeviceType.Atw)
-  return new DeviceAtwFacade(mockApi, registry, device)
+  return new ClassicDeviceAtwFacade(mockApi, registry, device)
 }
 
 const createZone2Facade = (
   data: ListDeviceDataAtw = createAtwData({ HasZone2: true }),
-): DeviceAtwHasZone2Facade => {
+): ClassicDeviceAtwHasZone2Facade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
   assertDeviceType(device, ClassicDeviceType.Atw)
-  return new DeviceAtwHasZone2Facade(mockApi, registry, device)
+  return new ClassicDeviceAtwHasZone2Facade(mockApi, registry, device)
 }
 
 describe('atw device facade zone 1', () => {

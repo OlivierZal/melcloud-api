@@ -78,7 +78,7 @@ const mergeSeries = (
 }
 
 /** Facade for Air-to-Water (ATW) devices with per-zone temperature clamping and merged temperature reports. */
-export class DeviceAtwFacade extends BaseDeviceFacade<
+export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Atw
 > {
   public readonly flags = {

@@ -2,7 +2,7 @@ import type { HomeDeviceType } from '../constants.ts'
 import type { HomeDeviceData } from '../types/index.ts'
 import { HomeDevice } from './home-device.ts'
 
-/** Device with its type, as extracted from building units. */
+/** ClassicDevice with its type, as extracted from building units. */
 export interface TypedHomeDeviceData {
   readonly device: HomeDeviceData
   readonly type: HomeDeviceType

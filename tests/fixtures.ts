@@ -63,7 +63,7 @@ export const areaData = (
 
 /*
  * ---------------------------------------------------------------------------
- * Device data factories (inner `Device` payloads)
+ * ClassicDevice data factories (inner `ClassicDevice` payloads)
  * ---------------------------------------------------------------------------
  */
 
@@ -195,9 +195,9 @@ export const ataDevice = (
 ): ListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  Device: ataDeviceData(),
+  ClassicDevice: ataDeviceData(),
   DeviceID: DEFAULT_ATA_DEVICE_ID,
-  DeviceName: 'ATA Device',
+  DeviceName: 'ATA ClassicDevice',
   FloorID: DEFAULT_FLOOR_ID,
   Type: ClassicDeviceType.Ata,
   ...overrides,
@@ -208,9 +208,9 @@ export const atwDevice = (
 ): ListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  Device: atwDeviceData(),
+  ClassicDevice: atwDeviceData(),
   DeviceID: DEFAULT_ATW_DEVICE_ID,
-  DeviceName: 'ATW Device',
+  DeviceName: 'ATW ClassicDevice',
   FloorID: DEFAULT_FLOOR_ID,
   Type: ClassicDeviceType.Atw,
   ...overrides,
@@ -221,9 +221,9 @@ export const ervDevice = (
 ): ListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  Device: ervDeviceData(),
+  ClassicDevice: ervDeviceData(),
   DeviceID: DEFAULT_ERV_DEVICE_ID,
-  DeviceName: 'ERV Device',
+  DeviceName: 'ERV ClassicDevice',
   FloorID: null,
   Type: ClassicDeviceType.Erv,
   ...overrides,

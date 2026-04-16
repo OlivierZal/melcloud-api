@@ -4,10 +4,10 @@ import { ClassicDeviceType } from '../constants.ts'
 import type { DeviceFacadeAny, Facade } from './interfaces.ts'
 import { AreaFacade } from './area.ts'
 import { BuildingFacade } from './building.ts'
-import { DeviceAtaFacade } from './classic-device-ata.ts'
-import { DeviceAtwHasZone2Facade } from './device-atw-has-zone2.ts'
-import { DeviceAtwFacade } from './device-atw.ts'
-import { DeviceErvFacade } from './device-erv.ts'
+import { ClassicDeviceAtaFacade } from './classic-device-ata.ts'
+import { ClassicDeviceAtwHasZone2Facade } from './classic-device-atw-has-zone2.ts'
+import { ClassicDeviceAtwFacade } from './classic-device-atw.ts'
+import { ClassicDeviceErvFacade } from './classic-device-erv.ts'
 import { FloorFacade } from './floor.ts'
 
 const getDeviceFromRegistry = (
@@ -16,7 +16,7 @@ const getDeviceFromRegistry = (
 ): DeviceAny => {
   const device = registry.devices.getById(id)
   if (!device) {
-    throw new Error('Device not found in registry')
+    throw new Error('ClassicDevice not found in registry')
   }
   return device
 }
@@ -29,15 +29,15 @@ const createDeviceFacade = (
   const device = getDeviceFromRegistry(registry, instance.id)
   switch (device.type) {
     case ClassicDeviceType.Ata: {
-      return new DeviceAtaFacade(api, registry, device)
+      return new ClassicDeviceAtaFacade(api, registry, device)
     }
     case ClassicDeviceType.Atw: {
       return device.data.HasZone2 ?
-          new DeviceAtwHasZone2Facade(api, registry, device)
-        : new DeviceAtwFacade(api, registry, device)
+          new ClassicDeviceAtwHasZone2Facade(api, registry, device)
+        : new ClassicDeviceAtwFacade(api, registry, device)
     }
     case ClassicDeviceType.Erv: {
-      return new DeviceErvFacade(api, registry, device)
+      return new ClassicDeviceErvFacade(api, registry, device)
     }
     // No default
   }

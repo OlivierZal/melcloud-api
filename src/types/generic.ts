@@ -214,7 +214,7 @@ export interface HourlyReportPostData {
 export interface ListDevice<
   T extends ClassicDeviceType,
 > extends BaseListDevice<T> {
-  readonly Device: ListDeviceData<T>
+  readonly ClassicDevice: ListDeviceData<T>
 }
 
 export type ListDeviceAny =
@@ -297,7 +297,7 @@ export interface TemperatureLogPostData extends ReportPostData {
 export interface TilesData<T extends ClassicDeviceType | null> {
   readonly SelectedDevice: T extends ClassicDeviceType ? GetDeviceData<T> : null
   readonly Tiles: readonly {
-    readonly Device: number
+    readonly ClassicDevice: number
     readonly Offline: boolean
     readonly Power: boolean
     readonly RoomTemperature: number

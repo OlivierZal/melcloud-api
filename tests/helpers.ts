@@ -58,7 +58,7 @@ export const createMockApi = (
     getOperationModes: vi.fn(),
     getSignal: vi.fn().mockResolvedValue({
       data: {
-        Data: [[{ Data: [MOCK_RSSI], Name: 'Device' }]],
+        Data: [[{ Data: [MOCK_RSSI], Name: 'ClassicDevice' }]],
         Labels: ['12:00'],
       },
     }),
@@ -118,7 +118,7 @@ export function assertDeviceType(
  * @param data - Flat arrays of buildings, floors, areas, and devices.
  * @param data.areas - Area rows to sync.
  * @param data.buildings - Building rows to sync.
- * @param data.devices - Device rows to sync.
+ * @param data.devices - ClassicDevice rows to sync.
  * @param data.floors - Floor rows to sync.
  * @returns A fully synced `ClassicRegistry` instance.
  */

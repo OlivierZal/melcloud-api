@@ -3,8 +3,8 @@ import type { ClassicDeviceType } from '../constants.ts'
 import type {
   Area,
   Building,
+  ClassicDevice,
   ClassicRegistry,
-  Device,
   DeviceAny,
   Floor,
   Model,
@@ -35,14 +35,16 @@ export class ClassicFacadeManager {
     this.#registry = registry
   }
 
-  public get<T extends ClassicDeviceType>(instance: Device<T>): DeviceFacade<T>
+  public get<T extends ClassicDeviceType>(
+    instance: ClassicDevice<T>,
+  ): DeviceFacade<T>
   public get(instance: Area | Floor): ZoneFacade
   public get(instance: Building): BuildingFacade
   public get(instance: DeviceAny): DeviceFacadeAny
   public get(instance: Model): Facade
   public get(): null
   public get<T extends ClassicDeviceType>(
-    instance?: Device<T>,
+    instance?: ClassicDevice<T>,
   ): DeviceFacade<T> | null
   public get(instance?: Area | Floor): ZoneFacade | null
   public get(instance?: Building): BuildingFacade | null

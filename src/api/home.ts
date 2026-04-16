@@ -290,14 +290,17 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /*  Private — token management                                      */
   /* ---------------------------------------------------------------- */
 
-  #storeTokens(data: TokenResponse): void {
-    const { access_token, expires_in, refresh_token } = data
-    this.accessToken = access_token
-    if (refresh_token !== undefined && refresh_token !== '') {
-      this.refreshToken = refresh_token
+  #storeTokens({
+    access_token: accessToken,
+    expires_in: expiresIn,
+    refresh_token: refreshToken,
+  }: TokenResponse): void {
+    this.accessToken = accessToken
+    if (refreshToken !== undefined && refreshToken !== '') {
+      this.refreshToken = refreshToken
     }
     this.expiry = new Date(
-      Date.now() + expires_in * MILLISECONDS_IN_SECOND,
+      Date.now() + expiresIn * MILLISECONDS_IN_SECOND,
     ).toISOString()
   }
 

@@ -260,7 +260,7 @@ export interface HomeAPI {
    */
   readonly isRateLimited: boolean
 
-  /** Device registry with stable model references across syncs. */
+  /** ClassicDevice registry with stable model references across syncs. */
   readonly registry: HomeRegistry
 
   /** The currently authenticated user, or `null`. */

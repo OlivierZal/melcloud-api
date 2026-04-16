@@ -304,7 +304,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Retrieve a parsed, paginated error log for the specified devices.
    * Filters out entries with invalid dates or empty messages.
    * @param query - The error log query parameters (date range, pagination).
-   * @param deviceIds - Device IDs to fetch errors for; defaults to all devices.
+   * @param deviceIds - ClassicDevice IDs to fetch errors for; defaults to all devices.
    * @returns Parsed error log with pagination metadata.
    */
   public async getErrorLog(
@@ -429,7 +429,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     params: GetDeviceDataParams
   }): Promise<{ data: GetDeviceData<T> }> {
-    return this.request('get', '/Device/Get', { params })
+    return this.request('get', '/ClassicDevice/Get', { params })
   }
 
   public async list(): Promise<{ data: BuildingWithStructure[] }> {
@@ -491,7 +491,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: SetPowerPostData
   }): Promise<{ data: boolean }> {
-    return this.request('post', '/Device/Power', { data: postData })
+    return this.request('post', '/ClassicDevice/Power', { data: postData })
   }
 
   public async updateValues<T extends ClassicDeviceType>({
@@ -501,7 +501,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData: SetDevicePostData<T>
     type: T
   }): Promise<{ data: SetDeviceData<T> }> {
-    return this.request('post', `/Device/Set${deviceTypeNames[type]}`, {
+    return this.request('post', `/ClassicDevice/Set${deviceTypeNames[type]}`, {
       data: postData,
     })
   }

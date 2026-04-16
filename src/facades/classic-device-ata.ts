@@ -3,7 +3,7 @@ import { ClassicDeviceType, OperationMode } from '../constants.ts'
 import { BaseDeviceFacade, clampToRange } from './base-device.ts'
 
 /** Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping. */
-export class DeviceAtaFacade extends BaseDeviceFacade<
+export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Ata
 > {
   /*

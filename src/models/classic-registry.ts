@@ -19,7 +19,7 @@ import {
 import type { DeviceAny } from './interfaces.ts'
 import { Area } from './area.ts'
 import { Building } from './building.ts'
-import { Device } from './classic-device.ts'
+import { ClassicDevice } from './classic-device.ts'
 import { Floor } from './floor.ts'
 import { syncModel } from './symbols.ts'
 
@@ -71,13 +71,13 @@ const syncDeviceModel = (model: DeviceAny, device: ListDeviceAny): void => {
 const createDeviceModel = (device: ListDeviceAny): DeviceAny => {
   switch (device.Type) {
     case ClassicDeviceType.Ata: {
-      return new Device(device)
+      return new ClassicDevice(device)
     }
     case ClassicDeviceType.Atw: {
-      return new Device(device)
+      return new ClassicDevice(device)
     }
     case ClassicDeviceType.Erv: {
-      return new Device(device)
+      return new ClassicDevice(device)
     }
     default: {
       throw new Error(
@@ -263,7 +263,9 @@ export class ClassicRegistry {
     return this.#devicesByFloorId.get(id) ?? []
   }
 
-  public getDevicesByType<T extends ClassicDeviceType>(type: T): Device<T>[]
+  public getDevicesByType<T extends ClassicDeviceType>(
+    type: T,
+  ): ClassicDevice<T>[]
   public getDevicesByType(type: ClassicDeviceType): DeviceAny[] {
     return this.getDevices().filter((instance) => instance.type === type)
   }

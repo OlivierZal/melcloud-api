@@ -4,7 +4,7 @@ import type {
   ZoneState,
 } from '../types/index.ts'
 import { OperationModeZone } from '../constants.ts'
-import { DeviceAtwFacade } from './device-atw.ts'
+import { ClassicDeviceAtwFacade } from './classic-device-atw.ts'
 
 /*
  * Operation modes follow a pattern: room (0) vs flow (1), with cool variants
@@ -33,7 +33,7 @@ const toOperationModeZone = (value: number): OperationModeZone => {
  * Extended ATW facade for units with two zones. Automatically couples zone operation
  * modes so that cooling and room/flow modes stay consistent between zones.
  */
-export class DeviceAtwHasZone2Facade extends DeviceAtwFacade {
+export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
   public get zone2(): ZoneState {
     return this.getZoneState('Zone2')
   }

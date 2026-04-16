@@ -13,7 +13,11 @@ import type {
 import { ClassicDeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { NoChangesError } from '../errors/index.ts'
-import { type DeviceAny, Device, isDeviceOfType } from '../models/index.ts'
+import {
+  type DeviceAny,
+  ClassicDevice,
+  isDeviceOfType,
+} from '../models/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -96,11 +100,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   protected readonly tableName = 'DeviceLocation'
 
-  protected get device(): Device<T> {
+  protected get device(): ClassicDevice<T> {
     const { instance } = this
     if (!isDeviceOfType(instance, this.type)) {
       throw new Error(
-        `Device type mismatch: expected ${String(this.type)}, got ${String(instance.type)}`,
+        `ClassicDevice type mismatch: expected ${String(this.type)}, got ${String(instance.type)}`,
       )
     }
     return instance
@@ -236,7 +240,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   ): Promise<TilesData<T | null>> {
     if (
       device === false ||
-      (device instanceof Device && device.id !== this.id)
+      (device instanceof ClassicDevice && device.id !== this.id)
     ) {
       return super.getTiles()
     }

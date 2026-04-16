@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { ListDeviceDataAta } from '../../src/types/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
-import { Device } from '../../src/models/index.ts'
+import { ClassicDevice } from '../../src/models/index.ts'
 import { ataDevice } from '../fixtures.ts'
 
 const isAtaData = (data: unknown): data is ListDeviceDataAta =>
@@ -19,10 +19,10 @@ const expectAtaData = (data: unknown): ListDeviceDataAta => {
 
 describe('device model', () => {
   it('creates a device with correct properties', () => {
-    const device = new Device(ataDevice())
+    const device = new ClassicDevice(ataDevice())
 
     expect(device.id).toBe(1000)
-    expect(device.name).toBe('ATA Device')
+    expect(device.name).toBe('ATA ClassicDevice')
     expect(device.type).toBe(ClassicDeviceType.Ata)
     expect(device.buildingId).toBe(1)
     expect(device.floorId).toBe(10)
@@ -30,14 +30,14 @@ describe('device model', () => {
   })
 
   it('handles null floor and area ids', () => {
-    const device = new Device(ataDevice({ AreaID: null, FloorID: null }))
+    const device = new ClassicDevice(ataDevice({ AreaID: null, FloorID: null }))
 
     expect(device.floorId).toBeNull()
     expect(device.areaId).toBeNull()
   })
 
   it('returns device data', () => {
-    const device = new Device(ataDevice())
+    const device = new ClassicDevice(ataDevice())
     const data = expectAtaData(device.data)
 
     expect(data.Power).toBe(true)
@@ -45,7 +45,7 @@ describe('device model', () => {
   })
 
   it('updates device data partially', () => {
-    const device = new Device(ataDevice())
+    const device = new ClassicDevice(ataDevice())
     device.update({ Power: false })
     const data = expectAtaData(device.data)
 
@@ -54,7 +54,7 @@ describe('device model', () => {
   })
 
   it('updates device data with multiple fields', () => {
-    const device = new Device(ataDevice())
+    const device = new ClassicDevice(ataDevice())
     device.update({ Power: false, SetTemperature: 20 })
     const data = expectAtaData(device.data)
 

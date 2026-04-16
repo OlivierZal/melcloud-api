@@ -1,6 +1,6 @@
 export { Area } from './area.ts'
 export { Building } from './building.ts'
-export { Device } from './classic-device.ts'
+export { ClassicDevice } from './classic-device.ts'
 export { ClassicRegistry } from './classic-registry.ts'
 export { Floor } from './floor.ts'
 export { HomeDevice } from './home-device.ts'

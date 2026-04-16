@@ -10,17 +10,17 @@ import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import {
   AreaFacade,
   BuildingFacade,
-  DeviceAtaFacade,
-  DeviceAtwFacade,
-  DeviceAtwHasZone2Facade,
-  DeviceErvFacade,
+  ClassicDeviceAtaFacade,
+  ClassicDeviceAtwFacade,
+  ClassicDeviceAtwHasZone2Facade,
+  ClassicDeviceErvFacade,
   FloorFacade,
   hasZone2,
   isAtaFacade,
   isAtwFacade,
   isErvFacade,
 } from '../../src/facades/index.ts'
-import { type Device, ClassicRegistry } from '../../src/models/index.ts'
+import { type ClassicDevice, ClassicRegistry } from '../../src/models/index.ts'
 import {
   type SetDeviceDataAta,
   type SetDevicePostData,
@@ -41,7 +41,7 @@ import {
 } from '../fixtures.ts'
 import { assertDeviceType, cast, defined, mock } from '../helpers.ts'
 
-type DeviceModelAta = Device<typeof ClassicDeviceType.Ata>
+type DeviceModelAta = ClassicDevice<typeof ClassicDeviceType.Ata>
 
 const createRegistry = (): ClassicRegistry => {
   const registry = new ClassicRegistry()
@@ -49,8 +49,10 @@ const createRegistry = (): ClassicRegistry => {
   registry.syncFloors([floorData()])
   registry.syncAreas([areaData()])
   registry.syncDevices([
-    ataDevice({ Device: ataDeviceData({ OperationMode: OperationMode.heat }) }),
-    atwDevice({ Device: atwDeviceData({ SetTemperatureZone2: 22 }) }),
+    ataDevice({
+      ClassicDevice: ataDeviceData({ OperationMode: OperationMode.heat }),
+    }),
+    atwDevice({ ClassicDevice: atwDeviceData({ SetTemperatureZone2: 22 }) }),
     ervDevice(),
   ])
   return registry
@@ -165,42 +167,54 @@ const createAtaFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
 ): {
   api: ClassicAPIAdapter
-  facade: DeviceAtaFacade
+  facade: ClassicDeviceAtaFacade
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.devices.getById(1000))
   assertDeviceType(instance, ClassicDeviceType.Ata)
-  return { api, facade: new DeviceAtaFacade(api, registry, instance), registry }
+  return {
+    api,
+    facade: new ClassicDeviceAtaFacade(api, registry, instance),
+    registry,
+  }
 }
 
 const createAtwFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
 ): {
   api: ClassicAPIAdapter
-  facade: DeviceAtwFacade
+  facade: ClassicDeviceAtwFacade
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.devices.getById(1001))
   assertDeviceType(instance, ClassicDeviceType.Atw)
-  return { api, facade: new DeviceAtwFacade(api, registry, instance), registry }
+  return {
+    api,
+    facade: new ClassicDeviceAtwFacade(api, registry, instance),
+    registry,
+  }
 }
 
 const createErvFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
 ): {
   api: ClassicAPIAdapter
-  facade: DeviceErvFacade
+  facade: ClassicDeviceErvFacade
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.devices.getById(1002))
   assertDeviceType(instance, ClassicDeviceType.Erv)
-  return { api, facade: new DeviceErvFacade(api, registry, instance), registry }
+  return {
+    api,
+    facade: new ClassicDeviceErvFacade(api, registry, instance),
+    registry,
+  }
 }
 
 const atwSetValuesResponse = (
@@ -234,7 +248,7 @@ const createZone2Facade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
 ): {
   api: ClassicAPIAdapter
-  facade: DeviceAtwHasZone2Facade
+  facade: ClassicDeviceAtwHasZone2Facade
   registry: ClassicRegistry
 } => {
   const registry = new ClassicRegistry()
@@ -243,7 +257,7 @@ const createZone2Facade = (
   registry.syncAreas([areaData()])
   registry.syncDevices([
     atwDevice({
-      Device: atwDeviceData({ HasZone2: true, ...deviceOverrides }),
+      ClassicDevice: atwDeviceData({ HasZone2: true, ...deviceOverrides }),
     }),
   ])
   const api = createMockApi(apiOverrides)
@@ -251,7 +265,7 @@ const createZone2Facade = (
   assertDeviceType(instance, ClassicDeviceType.Atw)
   return {
     api,
-    facade: new DeviceAtwHasZone2Facade(api, registry, instance),
+    facade: new ClassicDeviceAtwHasZone2Facade(api, registry, instance),
     registry,
   }
 }
@@ -607,9 +621,9 @@ describe('base device facade type mismatch', () => {
     const api = createMockApi()
     const instance = defined(registry.devices.getById(1001))
     assertDeviceType(instance, ClassicDeviceType.Atw)
-    const facade = new DeviceAtaFacade(api, registry, cast(instance))
+    const facade = new ClassicDeviceAtaFacade(api, registry, cast(instance))
 
-    expect(() => facade.data).toThrow('Device type mismatch')
+    expect(() => facade.data).toThrow('ClassicDevice type mismatch')
   })
 })
 

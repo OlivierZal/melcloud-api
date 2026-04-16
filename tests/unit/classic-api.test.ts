@@ -65,9 +65,9 @@ const createDevice = (overrides: Record<string, unknown> = {}): ListDeviceAny =>
   cast({
     AreaID: null,
     BuildingID: 1,
-    Device: {},
+    ClassicDevice: {},
     DeviceID: 1,
-    DeviceName: 'Device',
+    DeviceName: 'ClassicDevice',
     FloorID: null,
     Type: 0,
     ...overrides,
@@ -318,7 +318,7 @@ describe('mELCloud Classic API', () => {
       {
         args: { postData: { DeviceIds: [1], Power: true } },
         method: 'updatePower' as const,
-        path: '/Device/Power',
+        path: '/ClassicDevice/Power',
       },
     ])('calls $method via POST', async ({ args, method, path }) => {
       mockLoginAndList()
@@ -345,7 +345,7 @@ describe('mELCloud Classic API', () => {
       {
         args: { params: { buildingId: 1, id: 1 } },
         method: 'getValues' as const,
-        path: '/Device/Get',
+        path: '/ClassicDevice/Get',
       },
     ])('calls $method via GET', async ({ args, method, path }) => {
       mockLoginAndList()
@@ -370,9 +370,9 @@ describe('mELCloud Classic API', () => {
     })
 
     it.each([
-      { path: '/Device/SetAta', type: 0 as const },
-      { path: '/Device/SetAtw', type: 1 as const },
-      { path: '/Device/SetErv', type: 3 as const },
+      { path: '/ClassicDevice/SetAta', type: 0 as const },
+      { path: '/ClassicDevice/SetAtw', type: 1 as const },
+      { path: '/ClassicDevice/SetErv', type: 3 as const },
     ])(
       'calls updateValues for type $type via $path',
       async ({ path, type }) => {
@@ -703,7 +703,7 @@ describe('mELCloud Classic API', () => {
           headers: expect.objectContaining({
             'X-MitsContextKey': 'newest',
           }),
-          url: '/Device/Get',
+          url: '/ClassicDevice/Get',
         }),
       )
     })
@@ -737,7 +737,7 @@ describe('mELCloud Classic API', () => {
           headers: expect.objectContaining({
             'X-MitsContextKey': 'fresh',
           }),
-          url: '/Device/Get',
+          url: '/ClassicDevice/Get',
         }),
       )
     })
@@ -833,7 +833,7 @@ describe('mELCloud Classic API', () => {
             throw createAxiosError({
               message: 'unauthorized',
               status: 401,
-              url: '/Device/Get',
+              url: '/ClassicDevice/Get',
             })
           }
           return { data: { value: 'retried' } }
@@ -862,7 +862,7 @@ describe('mELCloud Classic API', () => {
           throw createAxiosError({
             message: 'unauthorized',
             status: 401,
-            url: '/Device/Get',
+            url: '/ClassicDevice/Get',
           })
         },
       )
@@ -903,7 +903,7 @@ describe('mELCloud Classic API', () => {
                 createDevice({
                   AreaID: 100,
                   DeviceID: 2000,
-                  DeviceName: 'Area Device',
+                  DeviceName: 'Area ClassicDevice',
                 }),
               ],
               FloorId: null,
@@ -912,7 +912,10 @@ describe('mELCloud Classic API', () => {
             },
           ],
           Devices: [
-            createDevice({ DeviceID: 1000, DeviceName: 'Building Device' }),
+            createDevice({
+              DeviceID: 1000,
+              DeviceName: 'Building ClassicDevice',
+            }),
           ],
           Floors: [
             {
@@ -923,7 +926,7 @@ describe('mELCloud Classic API', () => {
                     createDevice({
                       AreaID: 200,
                       DeviceID: 3000,
-                      DeviceName: 'Floor Area Device',
+                      DeviceName: 'Floor Area ClassicDevice',
                       FloorID: 10,
                     }),
                   ],
@@ -936,7 +939,7 @@ describe('mELCloud Classic API', () => {
               Devices: [
                 createDevice({
                   DeviceID: 4000,
-                  DeviceName: 'Floor Device',
+                  DeviceName: 'Floor ClassicDevice',
                   FloorID: 10,
                 }),
               ],
@@ -955,10 +958,18 @@ describe('mELCloud Classic API', () => {
       expect(api.registry.floors.getById(10)?.name).toBe('F1')
       expect(api.registry.areas.getById(100)?.name).toBe('A1')
       expect(api.registry.areas.getById(200)?.name).toBe('FA1')
-      expect(api.registry.devices.getById(1000)?.name).toBe('Building Device')
-      expect(api.registry.devices.getById(2000)?.name).toBe('Area Device')
-      expect(api.registry.devices.getById(3000)?.name).toBe('Floor Area Device')
-      expect(api.registry.devices.getById(4000)?.name).toBe('Floor Device')
+      expect(api.registry.devices.getById(1000)?.name).toBe(
+        'Building ClassicDevice',
+      )
+      expect(api.registry.devices.getById(2000)?.name).toBe(
+        'Area ClassicDevice',
+      )
+      expect(api.registry.devices.getById(3000)?.name).toBe(
+        'Floor Area ClassicDevice',
+      )
+      expect(api.registry.devices.getById(4000)?.name).toBe(
+        'Floor ClassicDevice',
+      )
     })
   })
 })

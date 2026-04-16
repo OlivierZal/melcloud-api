@@ -34,7 +34,7 @@ const createModel = (
   new HomeDevice(
     mock({
       capabilities: { ...defaultCapabilities, ...capabilities },
-      givenDisplayName: 'Test Device',
+      givenDisplayName: 'Test ClassicDevice',
       id: 'device-1',
       rssi,
       settings: Object.entries(settings).map(([name, value]) => ({
@@ -134,7 +134,7 @@ describe('home device ata facade', () => {
     it('should read device name', () => {
       const facade = new HomeDeviceAtaFacade(createApi(), createModel())
 
-      expect(facade.name).toBe('Test Device')
+      expect(facade.name).toBe('Test ClassicDevice')
     })
 
     it('should expose device capabilities', () => {

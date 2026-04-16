@@ -7,8 +7,8 @@ import type {
 } from '../api/index.ts'
 import type { ClassicDeviceType } from '../constants.ts'
 import type {
+  ClassicDevice,
   ClassicRegistry,
-  Device,
   DeviceAny,
   Model,
 } from '../models/index.ts'
@@ -194,10 +194,10 @@ export abstract class BaseFacade<T extends Model> implements Facade {
 
   public async getTiles(device?: false): Promise<TilesData<null>>
   public async getTiles<TDeviceType extends ClassicDeviceType>(
-    device: Device<TDeviceType>,
+    device: ClassicDevice<TDeviceType>,
   ): Promise<TilesData<TDeviceType>>
   public async getTiles<TDeviceType extends ClassicDeviceType>(
-    device: false | Device<TDeviceType> = false,
+    device: false | ClassicDevice<TDeviceType> = false,
   ): Promise<TilesData<TDeviceType | null>> {
     const postData = { DeviceIDs: this.#deviceIds.map((id) => toDeviceId(id)) }
     if (device === false || !this.#deviceIds.includes(device.id)) {

@@ -2,7 +2,7 @@ import type { ClassicDeviceType } from '../constants.ts'
 import type { ListDeviceData } from '../types/index.ts'
 import type { BaseModel } from './base.ts'
 import type { Building } from './building.ts'
-import type { Device } from './classic-device.ts'
+import type { ClassicDevice } from './classic-device.ts'
 
 /** Base building model providing zone settings (frost protection, holiday mode). */
 export type BaseBuilding = Pick<Building, 'data'>
@@ -17,15 +17,15 @@ export interface BaseDevice<T extends ClassicDeviceType> {
 }
 
 /**
- * Type guard that narrows a `DeviceAny` to a specific `Device` variant.
+ * Type guard that narrows a `DeviceAny` to a specific `ClassicDevice` variant.
  * @param device - The device model to narrow.
  * @param type - The expected device type literal.
  * @returns Whether the device matches the given type.
  */
 export const isDeviceOfType = <T extends ClassicDeviceType>(
-  device: Device<ClassicDeviceType>,
+  device: ClassicDevice<ClassicDeviceType>,
   type: T,
-): device is Device<T> => device.type === type
+): device is ClassicDevice<T> => device.type === type
 
 /** Model kind discriminants for polymorphic dispatch without instanceof. */
 export type ModelKind = 'area' | 'building' | 'device' | 'floor'
@@ -38,6 +38,6 @@ export interface Identifiable {
 
 /** Union of all device model types. */
 export type DeviceAny =
-  | Device<typeof ClassicDeviceType.Ata>
-  | Device<typeof ClassicDeviceType.Atw>
-  | Device<typeof ClassicDeviceType.Erv>
+  | ClassicDevice<typeof ClassicDeviceType.Ata>
+  | ClassicDevice<typeof ClassicDeviceType.Atw>
+  | ClassicDevice<typeof ClassicDeviceType.Erv>
