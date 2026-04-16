@@ -10,8 +10,8 @@ import type {
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   TransientDeviceData,
-} from './bases.ts'
-import type { GetDeviceData } from './generic.ts'
+} from './classic-bases.ts'
+import type { GetDeviceData } from './classic-generic.ts'
 
 export interface EnergyDataAtw {
   readonly CoP: readonly number[]

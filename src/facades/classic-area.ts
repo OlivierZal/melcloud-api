@@ -1,6 +1,6 @@
 import type { Area, DeviceAny } from '../models/index.ts'
 import type { AreaID } from '../types/index.ts'
-import { BaseZoneFacade } from './base-zone.ts'
+import { BaseZoneFacade } from './classic-base-zone.ts'
 
 /** Facade for an area, grouping devices within a floor or building. */
 export class AreaFacade extends BaseZoneFacade<Area> {

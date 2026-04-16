@@ -1,6 +1,6 @@
 import type {
   ClassicDeviceType,
-  NonSilentFanSpeed,
+  ClassicNonSilentFanSpeed,
   VentilationMode,
 } from '../constants.ts'
 import type {
@@ -8,8 +8,8 @@ import type {
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   TransientDeviceData,
-} from './bases.ts'
-import type { GetDeviceData } from './generic.ts'
+} from './classic-bases.ts'
+import type { GetDeviceData } from './classic-generic.ts'
 
 export interface ListDeviceDataErv
   extends
@@ -34,6 +34,6 @@ export interface SetDeviceDataErv
 }
 
 export interface UpdateDeviceDataErv extends BaseUpdateDeviceData {
-  readonly SetFanSpeed?: NonSilentFanSpeed
+  readonly SetFanSpeed?: ClassicNonSilentFanSpeed
   readonly VentilationMode?: VentilationMode
 }

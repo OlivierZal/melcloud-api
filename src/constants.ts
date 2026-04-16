@@ -27,7 +27,7 @@ export type HomeDeviceType =
 export type DeviceType = ClassicDeviceType | HomeDeviceType
 
 /** Fan speed levels for ATA and ERV devices. */
-export const FanSpeed = {
+export const ClassicFanSpeed = {
   auto: 0,
   fast: 4,
   moderate: 3,
@@ -36,10 +36,14 @@ export const FanSpeed = {
   very_fast: 5,
   very_slow: 1,
 } as const
-export type FanSpeed = (typeof FanSpeed)[keyof typeof FanSpeed]
+export type ClassicFanSpeed =
+  (typeof ClassicFanSpeed)[keyof typeof ClassicFanSpeed]
 
 /** Fan speed values excluding `silent`, used in set/update commands. */
-export type NonSilentFanSpeed = Exclude<FanSpeed, typeof FanSpeed.silent>
+export type ClassicNonSilentFanSpeed = Exclude<
+  ClassicFanSpeed,
+  typeof ClassicFanSpeed.silent
+>
 
 /** Effective flags value indicating no specific fields were changed; all data should be included. */
 export const FLAG_UNCHANGED = 0x0
@@ -50,8 +54,8 @@ export const FLAG_UNCHANGED = 0x0
  */
 export const OPERATION_MODE_MIXED = 0
 
-/** Horizontal vane positions for ATA devices. */
-export const Horizontal = {
+/** ClassicHorizontal vane positions for ATA devices. */
+export const ClassicHorizontal = {
   auto: 0,
   center: 3,
   center_left: 2,
@@ -61,7 +65,8 @@ export const Horizontal = {
   swing: 12,
   wide: 8,
 } as const
-export type Horizontal = (typeof Horizontal)[keyof typeof Horizontal]
+export type ClassicHorizontal =
+  (typeof ClassicHorizontal)[keyof typeof ClassicHorizontal]
 
 /** Report axis label formatting types. */
 export const LabelType = {
@@ -106,24 +111,25 @@ export const Language = {
 export type Language = (typeof Language)[keyof typeof Language]
 
 /** ATA device operation modes. */
-export const OperationMode = {
+export const ClassicOperationMode = {
   auto: 8,
   cool: 3,
   dry: 2,
   fan: 7,
   heat: 1,
 } as const
-export type OperationMode = (typeof OperationMode)[keyof typeof OperationMode]
+export type ClassicOperationMode =
+  (typeof ClassicOperationMode)[keyof typeof ClassicOperationMode]
 
 /** Pre-built sets of ATA operation modes that support cooling or heating. */
-export const coolModes: ReadonlySet<OperationMode> = new Set([
-  OperationMode.auto,
-  OperationMode.cool,
-  OperationMode.dry,
+export const coolModes: ReadonlySet<ClassicOperationMode> = new Set([
+  ClassicOperationMode.auto,
+  ClassicOperationMode.cool,
+  ClassicOperationMode.dry,
 ])
-export const heatModes: ReadonlySet<OperationMode> = new Set([
-  OperationMode.auto,
-  OperationMode.heat,
+export const heatModes: ReadonlySet<ClassicOperationMode> = new Set([
+  ClassicOperationMode.auto,
+  ClassicOperationMode.heat,
 ])
 
 /** ATW device real-time operation state. */
@@ -196,8 +202,8 @@ export const VentilationMode = {
 export type VentilationMode =
   (typeof VentilationMode)[keyof typeof VentilationMode]
 
-/** Vertical vane positions for ATA devices. */
-export const Vertical = {
+/** ClassicVertical vane positions for ATA devices. */
+export const ClassicVertical = {
   auto: 0,
   downwards: 5,
   mid_high: 2,
@@ -206,4 +212,5 @@ export const Vertical = {
   swing: 7,
   upwards: 1,
 } as const
-export type Vertical = (typeof Vertical)[keyof typeof Vertical]
+export type ClassicVertical =
+  (typeof ClassicVertical)[keyof typeof ClassicVertical]

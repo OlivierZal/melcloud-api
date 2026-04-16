@@ -14,7 +14,7 @@ import {
   OperationModeStateZone,
 } from '../constants.ts'
 import type { ReportChartLineOptions, ReportQuery } from './interfaces.ts'
-import { BaseDeviceFacade, clampToRange } from './base-device.ts'
+import { BaseDeviceFacade, clampToRange } from './classic-base-device.ts'
 
 const DEFAULT_TEMPERATURE = 0
 

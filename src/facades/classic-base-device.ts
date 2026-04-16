@@ -34,7 +34,7 @@ import type {
   ReportChartPieOptions,
   ReportQuery,
 } from './interfaces.ts'
-import { BaseFacade } from './base.ts'
+import { BaseFacade } from './classic-base.ts'
 
 // Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'

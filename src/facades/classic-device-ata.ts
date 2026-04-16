@@ -1,6 +1,6 @@
 import type { UpdateDeviceData, UpdateDeviceDataAta } from '../types/index.ts'
-import { ClassicDeviceType, OperationMode } from '../constants.ts'
-import { BaseDeviceFacade, clampToRange } from './base-device.ts'
+import { ClassicDeviceType, ClassicOperationMode } from '../constants.ts'
+import { BaseDeviceFacade, clampToRange } from './classic-base-device.ts'
 
 /** Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping. */
 export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
@@ -69,23 +69,23 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
       },
     } = this
     return {
-      [OperationMode.auto]: {
+      [ClassicOperationMode.auto]: {
         max: maxTemperatureAutomatic,
         min: minTemperatureAutomatic,
       },
-      [OperationMode.cool]: {
+      [ClassicOperationMode.cool]: {
         max: maxTemperatureCoolDry,
         min: minTemperatureCoolDry,
       },
-      [OperationMode.dry]: {
+      [ClassicOperationMode.dry]: {
         max: maxTemperatureCoolDry,
         min: minTemperatureCoolDry,
       },
-      [OperationMode.fan]: {
+      [ClassicOperationMode.fan]: {
         max: maxTemperatureHeatFan,
         min: minTemperatureHeatFan,
       },
-      [OperationMode.heat]: {
+      [ClassicOperationMode.heat]: {
         max: maxTemperatureHeatFan,
         min: minTemperatureHeatFan,
       },

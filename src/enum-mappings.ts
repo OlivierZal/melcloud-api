@@ -1,10 +1,10 @@
 import {
   ClassicDeviceType,
-  FanSpeed,
+  ClassicFanSpeed,
+  ClassicHorizontal,
+  ClassicOperationMode,
+  ClassicVertical,
   HomeDeviceType,
-  Horizontal,
-  OperationMode,
-  Vertical,
 } from './constants.ts'
 
 /*
@@ -39,91 +39,94 @@ export type HomeVertical =
   | 'Three'
   | 'Two'
 
-export const fanSpeedFromClassic: Record<FanSpeed, HomeFanSpeed> = {
-  [FanSpeed.auto]: 'Auto',
-  [FanSpeed.fast]: 'Four',
-  [FanSpeed.moderate]: 'Three',
-  [FanSpeed.silent]: 'Auto',
-  [FanSpeed.slow]: 'Two',
-  [FanSpeed.very_fast]: 'Five',
-  [FanSpeed.very_slow]: 'One',
+export const fanSpeedFromClassic: Record<ClassicFanSpeed, HomeFanSpeed> = {
+  [ClassicFanSpeed.auto]: 'Auto',
+  [ClassicFanSpeed.fast]: 'Four',
+  [ClassicFanSpeed.moderate]: 'Three',
+  [ClassicFanSpeed.silent]: 'Auto',
+  [ClassicFanSpeed.slow]: 'Two',
+  [ClassicFanSpeed.very_fast]: 'Five',
+  [ClassicFanSpeed.very_slow]: 'One',
 }
 
-export const fanSpeedToClassic: Record<HomeFanSpeed, FanSpeed> = {
-  Auto: FanSpeed.auto,
-  Five: FanSpeed.very_fast,
-  Four: FanSpeed.fast,
-  One: FanSpeed.very_slow,
-  Three: FanSpeed.moderate,
-  Two: FanSpeed.slow,
+export const fanSpeedToClassic: Record<HomeFanSpeed, ClassicFanSpeed> = {
+  Auto: ClassicFanSpeed.auto,
+  Five: ClassicFanSpeed.very_fast,
+  Four: ClassicFanSpeed.fast,
+  One: ClassicFanSpeed.very_slow,
+  Three: ClassicFanSpeed.moderate,
+  Two: ClassicFanSpeed.slow,
 }
 
-export const isClassicFanSpeed = (value: number): value is FanSpeed =>
+export const isClassicFanSpeed = (value: number): value is ClassicFanSpeed =>
   value in fanSpeedFromClassic
 
 export const isHomeFanSpeed = (value: string): value is HomeFanSpeed =>
   value in fanSpeedToClassic
 
-export const horizontalFromClassic: Record<Horizontal, HomeHorizontal> = {
-  [Horizontal.auto]: 'Auto',
-  [Horizontal.center]: 'Centre',
-  [Horizontal.center_left]: 'LeftCentre',
-  [Horizontal.center_right]: 'RightCentre',
-  [Horizontal.leftwards]: 'Left',
-  [Horizontal.rightwards]: 'Right',
-  [Horizontal.swing]: 'Swing',
-  [Horizontal.wide]: 'Wide',
-}
+export const horizontalFromClassic: Record<ClassicHorizontal, HomeHorizontal> =
+  {
+    [ClassicHorizontal.auto]: 'Auto',
+    [ClassicHorizontal.center]: 'Centre',
+    [ClassicHorizontal.center_left]: 'LeftCentre',
+    [ClassicHorizontal.center_right]: 'RightCentre',
+    [ClassicHorizontal.leftwards]: 'Left',
+    [ClassicHorizontal.rightwards]: 'Right',
+    [ClassicHorizontal.swing]: 'Swing',
+    [ClassicHorizontal.wide]: 'Wide',
+  }
 
-export const horizontalToClassic: Record<HomeHorizontal, Horizontal> = {
-  Auto: Horizontal.auto,
-  Centre: Horizontal.center,
-  Left: Horizontal.leftwards,
-  LeftCentre: Horizontal.center_left,
-  Right: Horizontal.rightwards,
-  RightCentre: Horizontal.center_right,
-  Swing: Horizontal.swing,
-  Wide: Horizontal.wide,
+export const horizontalToClassic: Record<HomeHorizontal, ClassicHorizontal> = {
+  Auto: ClassicHorizontal.auto,
+  Centre: ClassicHorizontal.center,
+  Left: ClassicHorizontal.leftwards,
+  LeftCentre: ClassicHorizontal.center_left,
+  Right: ClassicHorizontal.rightwards,
+  RightCentre: ClassicHorizontal.center_right,
+  Swing: ClassicHorizontal.swing,
+  Wide: ClassicHorizontal.wide,
 }
 
 export const operationModeFromClassic: Record<
-  OperationMode,
+  ClassicOperationMode,
   HomeOperationMode
 > = {
-  [OperationMode.auto]: 'Automatic',
-  [OperationMode.cool]: 'Cool',
-  [OperationMode.dry]: 'Dry',
-  [OperationMode.fan]: 'Fan',
-  [OperationMode.heat]: 'Heat',
+  [ClassicOperationMode.auto]: 'Automatic',
+  [ClassicOperationMode.cool]: 'Cool',
+  [ClassicOperationMode.dry]: 'Dry',
+  [ClassicOperationMode.fan]: 'Fan',
+  [ClassicOperationMode.heat]: 'Heat',
 }
 
-export const operationModeToClassic: Record<HomeOperationMode, OperationMode> =
-  {
-    Automatic: OperationMode.auto,
-    Cool: OperationMode.cool,
-    Dry: OperationMode.dry,
-    Fan: OperationMode.fan,
-    Heat: OperationMode.heat,
-  }
-
-export const verticalFromClassic: Record<Vertical, HomeVertical> = {
-  [Vertical.auto]: 'Auto',
-  [Vertical.downwards]: 'Five',
-  [Vertical.mid_high]: 'Two',
-  [Vertical.mid_low]: 'Four',
-  [Vertical.middle]: 'Three',
-  [Vertical.swing]: 'Swing',
-  [Vertical.upwards]: 'One',
+export const operationModeToClassic: Record<
+  HomeOperationMode,
+  ClassicOperationMode
+> = {
+  Automatic: ClassicOperationMode.auto,
+  Cool: ClassicOperationMode.cool,
+  Dry: ClassicOperationMode.dry,
+  Fan: ClassicOperationMode.fan,
+  Heat: ClassicOperationMode.heat,
 }
 
-export const verticalToClassic: Record<HomeVertical, Vertical> = {
-  Auto: Vertical.auto,
-  Five: Vertical.downwards,
-  Four: Vertical.mid_low,
-  One: Vertical.upwards,
-  Swing: Vertical.swing,
-  Three: Vertical.middle,
-  Two: Vertical.mid_high,
+export const verticalFromClassic: Record<ClassicVertical, HomeVertical> = {
+  [ClassicVertical.auto]: 'Auto',
+  [ClassicVertical.downwards]: 'Five',
+  [ClassicVertical.mid_high]: 'Two',
+  [ClassicVertical.mid_low]: 'Four',
+  [ClassicVertical.middle]: 'Three',
+  [ClassicVertical.swing]: 'Swing',
+  [ClassicVertical.upwards]: 'One',
+}
+
+export const verticalToClassic: Record<HomeVertical, ClassicVertical> = {
+  Auto: ClassicVertical.auto,
+  Five: ClassicVertical.downwards,
+  Four: ClassicVertical.mid_low,
+  One: ClassicVertical.upwards,
+  Swing: ClassicVertical.swing,
+  Three: ClassicVertical.middle,
+  Two: ClassicVertical.mid_high,
 }
 
 export const homeDeviceTypeFromClassic: Record<

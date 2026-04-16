@@ -71,7 +71,7 @@ export const updateDevices =
 /*
  * EffectiveFlags from the Classic API response indicates which fields were actually
  * changed by the device. Use this to update only those fields, converting
- * ATA set-command keys back to list-data keys (e.g., SetFanSpeed → FanSpeed).
+ * ATA set-command keys back to list-data keys (e.g., SetFanSpeed → ClassicFanSpeed).
  */
 const convertToListDeviceData = <T extends ClassicDeviceType>(
   facade: DeviceFacade<T>,

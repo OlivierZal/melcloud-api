@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  FanSpeed,
-  Horizontal,
-  OperationMode,
-  Vertical,
+  ClassicFanSpeed,
+  ClassicHorizontal,
+  ClassicOperationMode,
+  ClassicVertical,
 } from '../../src/constants.ts'
 import {
   fanSpeedFromClassic,
@@ -22,11 +22,11 @@ import {
 describe.concurrent('enum mappings between Classic and Home APIs', () => {
   describe('operation mode', () => {
     it.each([
-      [OperationMode.heat, 'Heat'],
-      [OperationMode.dry, 'Dry'],
-      [OperationMode.cool, 'Cool'],
-      [OperationMode.fan, 'Fan'],
-      [OperationMode.auto, 'Automatic'],
+      [ClassicOperationMode.heat, 'Heat'],
+      [ClassicOperationMode.dry, 'Dry'],
+      [ClassicOperationMode.cool, 'Cool'],
+      [ClassicOperationMode.fan, 'Fan'],
+      [ClassicOperationMode.auto, 'Automatic'],
     ] as const)('maps Classic %i → Home %s', (classic, home) => {
       expect(operationModeFromClassic[classic]).toBe(home)
       expect(operationModeToClassic[home]).toBe(classic)
@@ -41,18 +41,18 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
 
   describe('fan speed', () => {
     it.each([
-      [FanSpeed.auto, 'Auto'],
-      [FanSpeed.very_slow, 'One'],
-      [FanSpeed.slow, 'Two'],
-      [FanSpeed.moderate, 'Three'],
-      [FanSpeed.fast, 'Four'],
-      [FanSpeed.very_fast, 'Five'],
+      [ClassicFanSpeed.auto, 'Auto'],
+      [ClassicFanSpeed.very_slow, 'One'],
+      [ClassicFanSpeed.slow, 'Two'],
+      [ClassicFanSpeed.moderate, 'Three'],
+      [ClassicFanSpeed.fast, 'Four'],
+      [ClassicFanSpeed.very_fast, 'Five'],
     ] as const)('maps Classic %i → Home %s', (classic, home) => {
       expect(fanSpeedFromClassic[classic]).toBe(home)
     })
 
     it('maps silent to Auto (no home equivalent)', () => {
-      expect(fanSpeedFromClassic[FanSpeed.silent]).toBe('Auto')
+      expect(fanSpeedFromClassic[ClassicFanSpeed.silent]).toBe('Auto')
     })
 
     it('maps home strings back to classic values', () => {
@@ -62,9 +62,9 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
     })
 
     it.each([
-      [FanSpeed.auto, true],
-      [FanSpeed.very_slow, true],
-      [FanSpeed.very_fast, true],
+      [ClassicFanSpeed.auto, true],
+      [ClassicFanSpeed.very_slow, true],
+      [ClassicFanSpeed.very_fast, true],
       [999, false],
       [-1, false],
     ] as const)('isClassicFanSpeed(%i) → %s', (value, isValid) => {
@@ -84,14 +84,14 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
 
   describe('horizontal vane', () => {
     it.each([
-      [Horizontal.auto, 'Auto'],
-      [Horizontal.leftwards, 'Left'],
-      [Horizontal.center_left, 'LeftCentre'],
-      [Horizontal.center, 'Centre'],
-      [Horizontal.center_right, 'RightCentre'],
-      [Horizontal.rightwards, 'Right'],
-      [Horizontal.swing, 'Swing'],
-      [Horizontal.wide, 'Wide'],
+      [ClassicHorizontal.auto, 'Auto'],
+      [ClassicHorizontal.leftwards, 'Left'],
+      [ClassicHorizontal.center_left, 'LeftCentre'],
+      [ClassicHorizontal.center, 'Centre'],
+      [ClassicHorizontal.center_right, 'RightCentre'],
+      [ClassicHorizontal.rightwards, 'Right'],
+      [ClassicHorizontal.swing, 'Swing'],
+      [ClassicHorizontal.wide, 'Wide'],
     ] as const)('maps Classic %i → Home %s', (classic, home) => {
       expect(horizontalFromClassic[classic]).toBe(home)
     })
@@ -105,13 +105,13 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
 
   describe('vertical vane', () => {
     it.each([
-      [Vertical.auto, 'Auto'],
-      [Vertical.upwards, 'One'],
-      [Vertical.mid_high, 'Two'],
-      [Vertical.middle, 'Three'],
-      [Vertical.mid_low, 'Four'],
-      [Vertical.downwards, 'Five'],
-      [Vertical.swing, 'Swing'],
+      [ClassicVertical.auto, 'Auto'],
+      [ClassicVertical.upwards, 'One'],
+      [ClassicVertical.mid_high, 'Two'],
+      [ClassicVertical.middle, 'Three'],
+      [ClassicVertical.mid_low, 'Four'],
+      [ClassicVertical.downwards, 'Five'],
+      [ClassicVertical.swing, 'Swing'],
     ] as const)('maps Classic %i → Home %s', (classic, home) => {
       expect(verticalFromClassic[classic]).toBe(home)
     })

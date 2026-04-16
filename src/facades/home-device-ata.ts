@@ -8,7 +8,7 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../types/index.ts'
-import { FanSpeed } from '../constants.ts'
+import { ClassicFanSpeed } from '../constants.ts'
 import {
   type HomeFanSpeed,
   type HomeHorizontal,
@@ -19,7 +19,7 @@ import {
   isHomeFanSpeed,
 } from '../enum-mappings.ts'
 import { NoChangesError } from '../errors/index.ts'
-import { clampToRange } from './base-device.ts'
+import { clampToRange } from './classic-base-device.ts'
 
 interface TemperatureRange {
   max: number
@@ -101,7 +101,7 @@ export class HomeDeviceAtaFacade {
     if (raw !== '' && isClassicFanSpeed(numeric)) {
       return fanSpeedFromClassic[numeric]
     }
-    return isHomeFanSpeed(raw) ? raw : fanSpeedFromClassic[FanSpeed.auto]
+    return isHomeFanSpeed(raw) ? raw : fanSpeedFromClassic[ClassicFanSpeed.auto]
   }
 
   public get setTemperature(): number {

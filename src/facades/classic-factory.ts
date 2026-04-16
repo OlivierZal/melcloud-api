@@ -2,13 +2,13 @@ import type { ClassicAPIAdapter } from '../api/index.ts'
 import type { ClassicRegistry, DeviceAny, Model } from '../models/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import type { DeviceFacadeAny, Facade } from './interfaces.ts'
-import { AreaFacade } from './area.ts'
-import { BuildingFacade } from './building.ts'
+import { AreaFacade } from './classic-area.ts'
+import { BuildingFacade } from './classic-building.ts'
 import { ClassicDeviceAtaFacade } from './classic-device-ata.ts'
 import { ClassicDeviceAtwHasZone2Facade } from './classic-device-atw-has-zone2.ts'
 import { ClassicDeviceAtwFacade } from './classic-device-atw.ts'
 import { ClassicDeviceErvFacade } from './classic-device-erv.ts'
-import { FloorFacade } from './floor.ts'
+import { FloorFacade } from './classic-floor.ts'
 
 const getDeviceFromRegistry = (
   registry: ClassicRegistry,

@@ -17,7 +17,7 @@ import type {
   Facade,
   ZoneFacade,
 } from './interfaces.ts'
-import { createFacade } from './factory.ts'
+import { createFacade } from './classic-factory.ts'
 
 /**
  * Lazily creates and caches facade instances using a WeakMap keyed by model reference.

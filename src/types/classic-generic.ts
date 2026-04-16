@@ -6,23 +6,23 @@ import type {
   ListDeviceDataAta,
   SetDeviceDataAta,
   UpdateDeviceDataAta,
-} from './ata.ts'
+} from './classic-ata.ts'
 import type {
   EnergyDataAtw,
   ListDeviceDataAtw,
   SetDeviceDataAtw,
   UpdateDeviceDataAtw,
-} from './atw.ts'
+} from './classic-atw.ts'
 import type {
   BaseDevicePostData,
   BaseGetDeviceData,
   BaseListDevice,
-} from './bases.ts'
+} from './classic-bases.ts'
 import type {
   ListDeviceDataErv,
   SetDeviceDataErv,
   UpdateDeviceDataErv,
-} from './erv.ts'
+} from './classic-erv.ts'
 import type { BuildingID, DeviceID } from './ids.ts'
 
 /**

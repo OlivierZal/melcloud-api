@@ -1,6 +1,6 @@
 import type { DeviceAny, Floor } from '../models/index.ts'
 import type { FloorID } from '../types/index.ts'
-import { BaseZoneFacade } from './base-zone.ts'
+import { BaseZoneFacade } from './classic-base-zone.ts'
 
 /** Facade for a floor, grouping devices on that floor within a building. */
 export class FloorFacade extends BaseZoneFacade<Floor> {

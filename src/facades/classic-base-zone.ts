@@ -8,7 +8,7 @@ import type {
 import { ClassicDeviceType } from '../constants.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
 import type { ZoneFacade } from './interfaces.ts'
-import { BaseFacade } from './base.ts'
+import { BaseFacade } from './classic-base.ts'
 
 /** Abstract base for zone facades (building, floor, area) that support ATA group operations. */
 export abstract class BaseZoneFacade<T extends Area | Building | Floor>

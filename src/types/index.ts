@@ -9,7 +9,7 @@ export type {
   SetDeviceDataAtaInList,
   SetGroupPostData,
   UpdateDeviceDataAta,
-} from './ata.ts'
+} from './classic-ata.ts'
 export type {
   EnergyDataAtw,
   HotWaterState,
@@ -20,13 +20,13 @@ export type {
   UpdateDeviceDataAtw,
   ZoneAtw,
   ZoneState,
-} from './atw.ts'
-export type { BaseDevicePostData, BaseGetDeviceData } from './bases.ts'
+} from './classic-atw.ts'
+export type { BaseDevicePostData, BaseGetDeviceData } from './classic-bases.ts'
 export type {
   ListDeviceDataErv,
   SetDeviceDataErv,
   UpdateDeviceDataErv,
-} from './erv.ts'
+} from './classic-erv.ts'
 export type {
   AreaData,
   AreaDataAny,
@@ -73,7 +73,7 @@ export type {
   UpdateDeviceData,
   Zone,
   ZoneSettings,
-} from './generic.ts'
+} from './classic-generic.ts'
 export type {
   HomeAtaValues,
   HomeBuilding,

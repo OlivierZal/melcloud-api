@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ClassicAPIAdapter } from '../../src/api/index.ts'
 import {
   ClassicDeviceType,
-  OperationMode,
+  ClassicOperationMode,
   OperationModeZone,
 } from '../../src/constants.ts'
 import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
@@ -50,7 +50,9 @@ const createRegistry = (): ClassicRegistry => {
   registry.syncAreas([areaData()])
   registry.syncDevices([
     ataDevice({
-      ClassicDevice: ataDeviceData({ OperationMode: OperationMode.heat }),
+      ClassicDevice: ataDeviceData({
+        OperationMode: ClassicOperationMode.heat,
+      }),
     }),
     atwDevice({ ClassicDevice: atwDeviceData({ SetTemperatureZone2: 22 }) }),
     ervDevice(),
@@ -112,7 +114,7 @@ const createMockApi = (
         NextCommunication: '',
         NumberOfFanSpeeds: 5,
         Offline: false,
-        OperationMode: OperationMode.heat,
+        OperationMode: ClassicOperationMode.heat,
         Power: true,
         RoomTemperature: 22,
         SetFanSpeed: 3,
@@ -776,7 +778,7 @@ describe('ata device facade', () => {
 
     await expect(
       facade.updateValues({
-        OperationMode: OperationMode.heat,
+        OperationMode: ClassicOperationMode.heat,
         Power: true,
         SetTemperature: 24,
       }),
@@ -800,7 +802,7 @@ describe('ata device facade', () => {
   it('handles temperature clamping with operation mode change', async () => {
     const { api, facade } = createAtaFacade()
     await facade.updateValues({
-      OperationMode: OperationMode.cool,
+      OperationMode: ClassicOperationMode.cool,
       SetTemperature: 50,
     })
     const call = vi.mocked(api.updateValues).mock.lastCall?.[0]

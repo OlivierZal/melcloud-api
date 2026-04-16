@@ -9,8 +9,8 @@ import type {
 } from '../../src/types/index.ts'
 import {
   ClassicDeviceType,
+  ClassicOperationMode,
   FLAG_UNCHANGED,
-  OperationMode,
 } from '../../src/constants.ts'
 import {
   fetchDevices,
@@ -66,7 +66,7 @@ const createAtaSetData = (
     NextCommunication: '',
     NumberOfFanSpeeds: 5,
     Offline: false,
-    OperationMode: OperationMode.heat,
+    OperationMode: ClassicOperationMode.heat,
     Power: true,
     RoomTemperature: 22,
     SetFanSpeed: 3,

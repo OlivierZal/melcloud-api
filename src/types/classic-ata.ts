@@ -1,18 +1,18 @@
 import type {
   ClassicDeviceType,
-  FanSpeed,
-  Horizontal,
-  NonSilentFanSpeed,
-  OperationMode,
-  Vertical,
+  ClassicFanSpeed,
+  ClassicHorizontal,
+  ClassicNonSilentFanSpeed,
+  ClassicOperationMode,
+  ClassicVertical,
 } from '../constants.ts'
 import type {
   BaseListDeviceData,
   BaseSetDeviceData,
   BaseUpdateDeviceData,
   TransientDeviceData,
-} from './bases.ts'
-import type { GetDeviceData } from './generic.ts'
+} from './classic-bases.ts'
+import type { GetDeviceData } from './classic-generic.ts'
 import type { AreaID, BuildingID, FloorID } from './ids.ts'
 
 export interface EnergyDataAta {
@@ -47,13 +47,13 @@ export interface GetGroupPostData {
 }
 
 export interface GroupState {
-  readonly FanSpeed?: NonSilentFanSpeed | null
-  readonly OperationMode?: OperationMode | null
+  readonly FanSpeed?: ClassicNonSilentFanSpeed | null
+  readonly OperationMode?: ClassicOperationMode | null
   readonly Power?: boolean | null
   readonly SetTemperature?: number | null
-  readonly VaneHorizontalDirection?: Horizontal | null
+  readonly VaneHorizontalDirection?: ClassicHorizontal | null
   readonly VaneHorizontalSwing?: boolean | null
-  readonly VaneVerticalDirection?: Vertical | null
+  readonly VaneVerticalDirection?: ClassicVertical | null
   readonly VaneVerticalSwing?: boolean | null
 }
 
@@ -83,11 +83,11 @@ export interface SetDeviceDataAta
   readonly RoomTemperature: number
 }
 
-/** ATA properties that use different names in list responses vs set requests (e.g., `FanSpeed` in list, `SetFanSpeed` in set). */
+/** ATA properties that use different names in list responses vs set requests (e.g., `ClassicFanSpeed` in list, `SetFanSpeed` in set). */
 export interface SetDeviceDataAtaInList {
-  readonly FanSpeed: FanSpeed
-  readonly VaneHorizontalDirection: Horizontal
-  readonly VaneVerticalDirection: Vertical
+  readonly VaneHorizontalDirection: ClassicHorizontal
+  readonly VaneVerticalDirection: ClassicVertical
+  readonly FanSpeed?: ClassicFanSpeed
 }
 
 export interface SetGroupPostData {
@@ -96,11 +96,11 @@ export interface SetGroupPostData {
 }
 
 export interface UpdateDeviceDataAta extends BaseUpdateDeviceData {
-  readonly OperationMode?: OperationMode
-  readonly SetFanSpeed?: NonSilentFanSpeed
+  readonly OperationMode?: ClassicOperationMode
+  readonly SetFanSpeed?: ClassicNonSilentFanSpeed
   readonly SetTemperature?: number
-  readonly VaneHorizontal?: Horizontal
-  readonly VaneVertical?: Vertical
+  readonly VaneHorizontal?: ClassicHorizontal
+  readonly VaneVertical?: ClassicVertical
 }
 
 /** Set-request property names that have no direct counterpart in list responses (they map to `SetDeviceDataAtaInList` names instead). */
