@@ -203,7 +203,9 @@ export class ClassicRegistry {
    * @param root0.type - Optional device type to filter the zone structure.
    * @returns The hierarchical building zone structure.
    */
-  public getBuildings({ type }: { type?: ClassicDeviceType } = {}): BuildingZone[] {
+  public getBuildings({
+    type,
+  }: { type?: ClassicDeviceType } = {}): BuildingZone[] {
     return [...this.#buildings.values()]
       .filter((building) => this.#hasDevices(building.id, 'building', type))
       .map((building) => ({

@@ -109,7 +109,8 @@ export interface DeviceZone extends BaseZone {
   readonly model: 'devices'
 }
 
-export type EnergyData<T extends ClassicDeviceType> = DeviceDataMapping[T]['energy']
+export type EnergyData<T extends ClassicDeviceType> =
+  DeviceDataMapping[T]['energy']
 
 export interface EnergyPostData {
   readonly DeviceID: DeviceID
@@ -210,7 +211,9 @@ export interface HourlyReportPostData {
   readonly hour: HourNumbers
 }
 
-export interface ListDevice<T extends ClassicDeviceType> extends BaseListDevice<T> {
+export interface ListDevice<
+  T extends ClassicDeviceType,
+> extends BaseListDevice<T> {
   readonly Device: ListDeviceData<T>
 }
 
@@ -219,7 +222,8 @@ export type ListDeviceAny =
   | ListDevice<typeof ClassicDeviceType.Atw>
   | ListDevice<typeof ClassicDeviceType.Erv>
 
-export type ListDeviceData<T extends ClassicDeviceType> = DeviceDataMapping[T]['list']
+export type ListDeviceData<T extends ClassicDeviceType> =
+  DeviceDataMapping[T]['list']
 
 export type ListDeviceDataAny = ListDeviceData<ClassicDeviceType>
 
@@ -265,10 +269,11 @@ export interface ReportPostData {
   readonly Duration?: number
 }
 
-export type SetDeviceData<T extends ClassicDeviceType> = DeviceDataMapping[T]['set']
+export type SetDeviceData<T extends ClassicDeviceType> =
+  DeviceDataMapping[T]['set']
 
-export type SetDevicePostData<T extends ClassicDeviceType> = BaseDevicePostData &
-  Required<UpdateDeviceData<T>>
+export type SetDevicePostData<T extends ClassicDeviceType> =
+  BaseDevicePostData & Required<UpdateDeviceData<T>>
 
 export interface SetPowerPostData {
   readonly DeviceIds: DeviceID | readonly DeviceID[]

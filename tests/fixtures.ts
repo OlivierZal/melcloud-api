@@ -1,4 +1,8 @@
-import { ClassicDeviceType, LabelType, OperationModeZone } from '../src/constants.ts'
+import {
+  ClassicDeviceType,
+  LabelType,
+  OperationModeZone,
+} from '../src/constants.ts'
 import {
   type AreaDataAny,
   type BuildingData,

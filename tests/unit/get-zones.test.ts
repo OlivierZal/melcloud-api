@@ -195,7 +195,9 @@ describe('zone retrieval', () => {
   })
 
   it('filters zones by device type', () => {
-    const atwZones = createSyncedRegistry().getZones({ type: ClassicDeviceType.Atw })
+    const atwZones = createSyncedRegistry().getZones({
+      type: ClassicDeviceType.Atw,
+    })
 
     expect(atwZones.map(({ name }) => name)).toStrictEqual([
       'Bravo',

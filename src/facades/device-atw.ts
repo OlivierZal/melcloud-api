@@ -78,7 +78,9 @@ const mergeSeries = (
 }
 
 /** Facade for Air-to-Water (ATW) devices with per-zone temperature clamping and merged temperature reports. */
-export class DeviceAtwFacade extends BaseDeviceFacade<typeof ClassicDeviceType.Atw> {
+export class DeviceAtwFacade extends BaseDeviceFacade<
+  typeof ClassicDeviceType.Atw
+> {
   public readonly flags = {
     ForcedHotWaterMode: 0x1_00_00,
     OperationModeZone1: 0x8,

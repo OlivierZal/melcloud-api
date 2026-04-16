@@ -54,7 +54,9 @@ export interface BuildingFacade extends BaseBuilding, ZoneFacade {
 }
 
 /** Facade for Air-to-Water (ATW) devices with hot water and zone state access. */
-export interface DeviceAtwFacade extends DeviceFacade<typeof ClassicDeviceType.Atw> {
+export interface DeviceAtwFacade extends DeviceFacade<
+  typeof ClassicDeviceType.Atw
+> {
   /** Current hot water state. */
   readonly hotWater: HotWaterState
 

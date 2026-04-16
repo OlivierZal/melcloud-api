@@ -777,8 +777,9 @@ describe('ata device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof ClassicDeviceType.Ata>>(defined(call).postData)
-        .SetTemperature,
+      mock<SetDevicePostData<typeof ClassicDeviceType.Ata>>(
+        defined(call).postData,
+      ).SetTemperature,
     ).toBeGreaterThanOrEqual(10)
   })
 
@@ -793,8 +794,9 @@ describe('ata device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof ClassicDeviceType.Ata>>(defined(call).postData)
-        .SetTemperature,
+      mock<SetDevicePostData<typeof ClassicDeviceType.Ata>>(
+        defined(call).postData,
+      ).SetTemperature,
     ).toBeLessThanOrEqual(31)
   })
 })
@@ -824,8 +826,9 @@ describe('atw device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof ClassicDeviceType.Atw>>(defined(call).postData)
-        .SetTemperatureZone1,
+      mock<SetDevicePostData<typeof ClassicDeviceType.Atw>>(
+        defined(call).postData,
+      ).SetTemperatureZone1,
     ).toBeGreaterThanOrEqual(10)
   })
 
@@ -849,8 +852,9 @@ describe('atw device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof ClassicDeviceType.Atw>>(defined(call).postData)
-        .SetTemperatureZone1,
+      mock<SetDevicePostData<typeof ClassicDeviceType.Atw>>(
+        defined(call).postData,
+      ).SetTemperatureZone1,
     ).toBe(10)
   })
 

@@ -3,7 +3,9 @@ import { ClassicDeviceType, OperationMode } from '../constants.ts'
 import { BaseDeviceFacade, clampToRange } from './base-device.ts'
 
 /** Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping. */
-export class DeviceAtaFacade extends BaseDeviceFacade<typeof ClassicDeviceType.Ata> {
+export class DeviceAtaFacade extends BaseDeviceFacade<
+  typeof ClassicDeviceType.Ata
+> {
   /*
    * MELCloud EffectiveFlags bitfield — each bit tells the Classic API which
    * fields in the update payload should actually be applied.

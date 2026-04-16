@@ -10,7 +10,9 @@ export interface BaseGetDeviceData extends BaseSetDeviceData {
   readonly EffectiveFlags: typeof FLAG_UNCHANGED
 }
 
-export interface BaseListDevice<T extends ClassicDeviceType = ClassicDeviceType> {
+export interface BaseListDevice<
+  T extends ClassicDeviceType = ClassicDeviceType,
+> {
   readonly AreaID: AreaID | null
   readonly BuildingID: BuildingID
   readonly DeviceID: DeviceID

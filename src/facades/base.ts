@@ -214,7 +214,9 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     return data as TilesData<TDeviceType>
   }
 
-  public async notifySync({ type }: { type?: ClassicDeviceType } = {}): Promise<void> {
+  public async notifySync({
+    type,
+  }: { type?: ClassicDeviceType } = {}): Promise<void> {
     await this.api.onSync?.({ ids: this.#deviceIds, type })
   }
 
