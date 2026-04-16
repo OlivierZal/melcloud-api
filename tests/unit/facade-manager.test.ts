@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DeviceType } from '../../src/constants.ts'
+import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/index.ts'
 import { ClassicRegistry } from '../../src/models/index.ts'
 import { areaData, ataDevice, buildingData, floorData } from '../fixtures.ts'
@@ -78,8 +78,8 @@ describe('facade manager', () => {
   it('filters buildings by device type via getBuildings', () => {
     const { manager } = createManagerWithRegistry()
 
-    expect(manager.getBuildings({ type: DeviceType.Ata })).toHaveLength(1)
-    expect(manager.getBuildings({ type: DeviceType.Atw })).toHaveLength(0)
+    expect(manager.getBuildings({ type: ClassicDeviceType.Ata })).toHaveLength(1)
+    expect(manager.getBuildings({ type: ClassicDeviceType.Atw })).toHaveLength(0)
   })
 
   it('returns zones via getZones', () => {
@@ -91,7 +91,7 @@ describe('facade manager', () => {
   it('filters zones by device type via getZones', () => {
     const { manager } = createManagerWithRegistry()
 
-    expect(manager.getZones({ type: DeviceType.Ata }).length).toBeGreaterThan(0)
-    expect(manager.getZones({ type: DeviceType.Atw })).toHaveLength(0)
+    expect(manager.getZones({ type: ClassicDeviceType.Ata }).length).toBeGreaterThan(0)
+    expect(manager.getZones({ type: ClassicDeviceType.Atw })).toHaveLength(0)
   })
 })

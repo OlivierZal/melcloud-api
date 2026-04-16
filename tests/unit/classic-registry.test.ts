@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DeviceType } from '../../src/constants.ts'
+import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicRegistry, isDeviceOfType } from '../../src/models/index.ts'
 import {
   type ListDevice,
@@ -99,7 +99,7 @@ describe('model registry', () => {
       registry.syncDevices(allDevices)
 
       expect(registry.devices.getById(1000)?.name).toBe('Device ATA')
-      expect(registry.devices.getById(1000)?.type).toBe(DeviceType.Ata)
+      expect(registry.devices.getById(1000)?.type).toBe(ClassicDeviceType.Ata)
     })
 
     it('throws for unsupported device type', () => {
@@ -192,17 +192,17 @@ describe('model registry', () => {
         cast({
           ...ataDevice(),
           DeviceName: 'Mismatched',
-          Type: DeviceType.Atw,
+          Type: ClassicDeviceType.Atw,
         }),
         cast({
           ...atwDevice(),
           DeviceName: 'Mismatched',
-          Type: DeviceType.Erv,
+          Type: ClassicDeviceType.Erv,
         }),
         cast({
           ...ervDevice(),
           DeviceName: 'Mismatched',
-          Type: DeviceType.Ata,
+          Type: ClassicDeviceType.Ata,
         }),
       ])
 
@@ -221,17 +221,17 @@ describe('model registry', () => {
 
     it('getDevicesByType filters by device type', () => {
       const registry = createPopulatedRegistry(allFixtures)
-      const ataDevices = registry.getDevicesByType(DeviceType.Ata)
+      const ataDevices = registry.getDevicesByType(ClassicDeviceType.Ata)
 
       expect(ataDevices).toHaveLength(1)
-      expect(ataDevices[0]?.type).toBe(DeviceType.Ata)
+      expect(ataDevices[0]?.type).toBe(ClassicDeviceType.Ata)
     })
 
     it('getDevicesByType returns empty for absent type', () => {
       const registry = new ClassicRegistry()
       registry.syncDevices([defined(allDevices[0])])
 
-      expect(registry.getDevicesByType(DeviceType.Atw)).toHaveLength(0)
+      expect(registry.getDevicesByType(ClassicDeviceType.Atw)).toHaveLength(0)
     })
   })
 
@@ -297,7 +297,7 @@ describe(isDeviceOfType, () => {
     const registry = createPopulatedRegistry(allFixtures)
     const device = defined(registry.devices.getById(1000))
 
-    expect(isDeviceOfType(device, DeviceType.Ata)).toBe(true)
-    expect(isDeviceOfType(device, DeviceType.Atw)).toBe(false)
+    expect(isDeviceOfType(device, ClassicDeviceType.Ata)).toBe(true)
+    expect(isDeviceOfType(device, ClassicDeviceType.Atw)).toBe(false)
   })
 })

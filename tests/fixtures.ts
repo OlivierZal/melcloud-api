@@ -1,4 +1,4 @@
-import { DeviceType, LabelType, OperationModeZone } from '../src/constants.ts'
+import { ClassicDeviceType, LabelType, OperationModeZone } from '../src/constants.ts'
 import {
   type AreaDataAny,
   type BuildingData,
@@ -187,7 +187,7 @@ const DEFAULT_ERV_DEVICE_ID = toDeviceId(1002)
  */
 
 export const ataDevice = (
-  overrides: Partial<ListDevice<typeof DeviceType.Ata>> = {},
+  overrides: Partial<ListDevice<typeof ClassicDeviceType.Ata>> = {},
 ): ListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
@@ -195,12 +195,12 @@ export const ataDevice = (
   DeviceID: DEFAULT_ATA_DEVICE_ID,
   DeviceName: 'ATA Device',
   FloorID: DEFAULT_FLOOR_ID,
-  Type: DeviceType.Ata,
+  Type: ClassicDeviceType.Ata,
   ...overrides,
 })
 
 export const atwDevice = (
-  overrides: Partial<ListDevice<typeof DeviceType.Atw>> = {},
+  overrides: Partial<ListDevice<typeof ClassicDeviceType.Atw>> = {},
 ): ListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
@@ -208,12 +208,12 @@ export const atwDevice = (
   DeviceID: DEFAULT_ATW_DEVICE_ID,
   DeviceName: 'ATW Device',
   FloorID: DEFAULT_FLOOR_ID,
-  Type: DeviceType.Atw,
+  Type: ClassicDeviceType.Atw,
   ...overrides,
 })
 
 export const ervDevice = (
-  overrides: Partial<ListDevice<typeof DeviceType.Erv>> = {},
+  overrides: Partial<ListDevice<typeof ClassicDeviceType.Erv>> = {},
 ): ListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
@@ -221,7 +221,7 @@ export const ervDevice = (
   DeviceID: DEFAULT_ERV_DEVICE_ID,
   DeviceName: 'ERV Device',
   FloorID: null,
-  Type: DeviceType.Erv,
+  Type: ClassicDeviceType.Erv,
   ...overrides,
 })
 

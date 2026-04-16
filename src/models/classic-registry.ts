@@ -1,4 +1,4 @@
-import { DeviceType } from '../constants.ts'
+import { ClassicDeviceType } from '../constants.ts'
 import {
   type AreaDataAny,
   type AreaID,
@@ -70,13 +70,13 @@ const syncDeviceModel = (model: DeviceAny, device: ListDeviceAny): void => {
 
 const createDeviceModel = (device: ListDeviceAny): DeviceAny => {
   switch (device.Type) {
-    case DeviceType.Ata: {
+    case ClassicDeviceType.Ata: {
       return new Device(device)
     }
-    case DeviceType.Atw: {
+    case ClassicDeviceType.Atw: {
       return new Device(device)
     }
-    case DeviceType.Erv: {
+    case ClassicDeviceType.Erv: {
       return new Device(device)
     }
     default: {
@@ -135,7 +135,7 @@ const getDeviceLevel = (
 
 const buildDeviceZones = (
   devices: DeviceAny[],
-  type?: DeviceType,
+  type?: ClassicDeviceType,
 ): DeviceZone[] => {
   const filtered =
     type === undefined ? devices : (
@@ -203,7 +203,7 @@ export class ClassicRegistry {
    * @param root0.type - Optional device type to filter the zone structure.
    * @returns The hierarchical building zone structure.
    */
-  public getBuildings({ type }: { type?: DeviceType } = {}): BuildingZone[] {
+  public getBuildings({ type }: { type?: ClassicDeviceType } = {}): BuildingZone[] {
     return [...this.#buildings.values()]
       .filter((building) => this.#hasDevices(building.id, 'building', type))
       .map((building) => ({
@@ -261,8 +261,8 @@ export class ClassicRegistry {
     return this.#devicesByFloorId.get(id) ?? []
   }
 
-  public getDevicesByType<T extends DeviceType>(type: T): Device<T>[]
-  public getDevicesByType(type: DeviceType): DeviceAny[] {
+  public getDevicesByType<T extends ClassicDeviceType>(type: T): Device<T>[]
+  public getDevicesByType(type: ClassicDeviceType): DeviceAny[] {
     return this.getDevices().filter((instance) => instance.type === type)
   }
 
@@ -270,7 +270,7 @@ export class ClassicRegistry {
     return this.#floorsByBuildingId.get(id) ?? []
   }
 
-  public getZones({ type }: { type?: DeviceType } = {}): Zone[] {
+  public getZones({ type }: { type?: ClassicDeviceType } = {}): Zone[] {
     return [...flattenBuildings(this.getBuildings({ type }))].toSorted(
       compareNames,
     )
@@ -349,7 +349,7 @@ export class ClassicRegistry {
   #buildAreaZones(
     areas: Area[],
     areaLevel: number,
-    type?: DeviceType,
+    type?: ClassicDeviceType,
   ): AreaZone[] {
     return areas
       .filter((area) => this.#hasDevices(area.id, 'area', type))
@@ -366,7 +366,7 @@ export class ClassicRegistry {
       .toSorted(compareNames)
   }
 
-  #buildFloorZones(floors: Floor[], type?: DeviceType): FloorZone[] {
+  #buildFloorZones(floors: Floor[], type?: ClassicDeviceType): FloorZone[] {
     return floors
       .filter((floor) => this.#hasDevices(floor.id, 'floor', type))
       .map((floor) => ({
@@ -404,7 +404,7 @@ export class ClassicRegistry {
   #hasDevices(
     id: number,
     zone: 'area' | 'building' | 'floor',
-    type?: DeviceType,
+    type?: ClassicDeviceType,
   ): boolean {
     const devices = this.#getDevicesByZone(id, zone)
     return type === undefined ?

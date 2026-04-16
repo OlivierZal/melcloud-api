@@ -24,7 +24,7 @@ import type {
   ZoneSettings,
   ZoneState,
 } from '../types/index.ts'
-import { DeviceType } from '../constants.ts'
+import { ClassicDeviceType } from '../constants.ts'
 
 /** Parameters for configuring frost protection temperature bounds. */
 export interface FrostProtectionQuery {
@@ -54,7 +54,7 @@ export interface BuildingFacade extends BaseBuilding, ZoneFacade {
 }
 
 /** Facade for Air-to-Water (ATW) devices with hot water and zone state access. */
-export interface DeviceAtwFacade extends DeviceFacade<typeof DeviceType.Atw> {
+export interface DeviceAtwFacade extends DeviceFacade<typeof ClassicDeviceType.Atw> {
   /** Current hot water state. */
   readonly hotWater: HotWaterState
 
@@ -69,7 +69,7 @@ export interface DeviceAtwHasZone2Facade extends DeviceAtwFacade {
 }
 
 /** Facade for an individual MELCloud device with type-safe data access and control. */
-export interface DeviceFacade<T extends DeviceType>
+export interface DeviceFacade<T extends ClassicDeviceType>
   extends BaseDevice<T>, Facade {
   /** Bitfield flags mapping each updatable property to its effective flag value. */
   readonly flags: Record<keyof UpdateDeviceData<T>, number>
@@ -137,7 +137,7 @@ export interface Facade extends Identifiable {
   readonly getHolidayMode: () => Promise<HolidayModeData>
 
   /** Trigger a sync callback for downstream consumers. */
-  readonly notifySync: (params?: { type?: DeviceType }) => Promise<void>
+  readonly notifySync: (params?: { type?: ClassicDeviceType }) => Promise<void>
 
   /** Update frost protection settings with temperature clamping. */
   readonly updateFrostProtection: (
@@ -159,7 +159,7 @@ export interface Facade extends Identifiable {
 
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((device?: false) => Promise<TilesData<null>>) &
-    (<T extends DeviceType>(device: Device<T>) => Promise<TilesData<T>>)
+    (<T extends ClassicDeviceType>(device: Device<T>) => Promise<TilesData<T>>)
 }
 
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
@@ -215,8 +215,8 @@ export interface ReportQuery {
 export type DeviceFacadeAny =
   | DeviceAtwFacade
   | DeviceAtwHasZone2Facade
-  | DeviceFacade<typeof DeviceType.Ata>
-  | DeviceFacade<typeof DeviceType.Erv>
+  | DeviceFacade<typeof ClassicDeviceType.Ata>
+  | DeviceFacade<typeof ClassicDeviceType.Erv>
 
 /**
  * Type guard that narrows a device facade to the ATA variant.
@@ -224,9 +224,9 @@ export type DeviceFacadeAny =
  * @returns Whether the facade is an ATA facade.
  */
 export const isAtaFacade = (
-  facade: DeviceFacade<DeviceType>,
-): facade is DeviceFacade<typeof DeviceType.Ata> =>
-  facade.type === DeviceType.Ata
+  facade: DeviceFacade<ClassicDeviceType>,
+): facade is DeviceFacade<typeof ClassicDeviceType.Ata> =>
+  facade.type === ClassicDeviceType.Ata
 
 /**
  * Type guard that narrows a device facade to the ATW variant.
@@ -235,8 +235,8 @@ export const isAtaFacade = (
  * @returns Whether the facade is an ATW facade.
  */
 export const isAtwFacade = (
-  facade: DeviceFacade<DeviceType>,
-): facade is DeviceAtwFacade => facade.type === DeviceType.Atw
+  facade: DeviceFacade<ClassicDeviceType>,
+): facade is DeviceAtwFacade => facade.type === ClassicDeviceType.Atw
 
 /**
  * Type guard that narrows a device facade to the ERV variant.
@@ -244,9 +244,9 @@ export const isAtwFacade = (
  * @returns Whether the facade is an ERV facade.
  */
 export const isErvFacade = (
-  facade: DeviceFacade<DeviceType>,
-): facade is DeviceFacade<typeof DeviceType.Erv> =>
-  facade.type === DeviceType.Erv
+  facade: DeviceFacade<ClassicDeviceType>,
+): facade is DeviceFacade<typeof ClassicDeviceType.Erv> =>
+  facade.type === ClassicDeviceType.Erv
 
 /**
  * Type guard that narrows an ATW facade to the zone 2 variant.

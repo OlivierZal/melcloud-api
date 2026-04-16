@@ -5,7 +5,7 @@ import type {
   ErrorLog,
   ErrorLogQuery,
 } from '../api/index.ts'
-import type { DeviceType } from '../constants.ts'
+import type { ClassicDeviceType } from '../constants.ts'
 import type {
   ClassicRegistry,
   Device,
@@ -193,10 +193,10 @@ export abstract class BaseFacade<T extends Model> implements Facade {
   }
 
   public async getTiles(device?: false): Promise<TilesData<null>>
-  public async getTiles<TDeviceType extends DeviceType>(
+  public async getTiles<TDeviceType extends ClassicDeviceType>(
     device: Device<TDeviceType>,
   ): Promise<TilesData<TDeviceType>>
-  public async getTiles<TDeviceType extends DeviceType>(
+  public async getTiles<TDeviceType extends ClassicDeviceType>(
     device: false | Device<TDeviceType> = false,
   ): Promise<TilesData<TDeviceType | null>> {
     const postData = { DeviceIDs: this.#deviceIds.map((id) => toDeviceId(id)) }
@@ -214,7 +214,7 @@ export abstract class BaseFacade<T extends Model> implements Facade {
     return data as TilesData<TDeviceType>
   }
 
-  public async notifySync({ type }: { type?: DeviceType } = {}): Promise<void> {
+  public async notifySync({ type }: { type?: ClassicDeviceType } = {}): Promise<void> {
     await this.api.onSync?.({ ids: this.#deviceIds, type })
   }
 

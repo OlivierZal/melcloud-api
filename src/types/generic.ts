@@ -1,6 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType, LabelType } from '../constants.ts'
+import type { ClassicDeviceType, LabelType } from '../constants.ts'
 import type {
   EnergyDataAta,
   ListDeviceDataAta,
@@ -31,19 +31,19 @@ import type { BuildingID, DeviceID } from './ids.ts'
  * updating multiple conditional type chains.
  */
 interface DeviceDataMapping {
-  [DeviceType.Ata]: {
+  [ClassicDeviceType.Ata]: {
     energy: EnergyDataAta
     list: ListDeviceDataAta
     set: SetDeviceDataAta
     update: UpdateDeviceDataAta
   }
-  [DeviceType.Atw]: {
+  [ClassicDeviceType.Atw]: {
     energy: EnergyDataAtw
     list: ListDeviceDataAtw
     set: SetDeviceDataAtw
     update: UpdateDeviceDataAtw
   }
-  [DeviceType.Erv]: {
+  [ClassicDeviceType.Erv]: {
     energy: never
     list: ListDeviceDataErv
     set: SetDeviceDataErv
@@ -109,7 +109,7 @@ export interface DeviceZone extends BaseZone {
   readonly model: 'devices'
 }
 
-export type EnergyData<T extends DeviceType> = DeviceDataMapping[T]['energy']
+export type EnergyData<T extends ClassicDeviceType> = DeviceDataMapping[T]['energy']
 
 export interface EnergyPostData {
   readonly DeviceID: DeviceID
@@ -169,7 +169,7 @@ export interface FrostProtectionPostData extends FrostProtectionLocation {
   readonly MinimumTemperature: number
 }
 
-export type GetDeviceData<T extends DeviceType> = BaseGetDeviceData &
+export type GetDeviceData<T extends ClassicDeviceType> = BaseGetDeviceData &
   SetDeviceData<T>
 
 export interface GetDeviceDataParams {
@@ -210,18 +210,18 @@ export interface HourlyReportPostData {
   readonly hour: HourNumbers
 }
 
-export interface ListDevice<T extends DeviceType> extends BaseListDevice<T> {
+export interface ListDevice<T extends ClassicDeviceType> extends BaseListDevice<T> {
   readonly Device: ListDeviceData<T>
 }
 
 export type ListDeviceAny =
-  | ListDevice<typeof DeviceType.Ata>
-  | ListDevice<typeof DeviceType.Atw>
-  | ListDevice<typeof DeviceType.Erv>
+  | ListDevice<typeof ClassicDeviceType.Ata>
+  | ListDevice<typeof ClassicDeviceType.Atw>
+  | ListDevice<typeof ClassicDeviceType.Erv>
 
-export type ListDeviceData<T extends DeviceType> = DeviceDataMapping[T]['list']
+export type ListDeviceData<T extends ClassicDeviceType> = DeviceDataMapping[T]['list']
 
-export type ListDeviceDataAny = ListDeviceData<DeviceType>
+export type ListDeviceDataAny = ListDeviceData<ClassicDeviceType>
 
 export interface LoginCredentials {
   readonly password: string
@@ -265,9 +265,9 @@ export interface ReportPostData {
   readonly Duration?: number
 }
 
-export type SetDeviceData<T extends DeviceType> = DeviceDataMapping[T]['set']
+export type SetDeviceData<T extends ClassicDeviceType> = DeviceDataMapping[T]['set']
 
-export type SetDevicePostData<T extends DeviceType> = BaseDevicePostData &
+export type SetDevicePostData<T extends ClassicDeviceType> = BaseDevicePostData &
   Required<UpdateDeviceData<T>>
 
 export interface SetPowerPostData {
@@ -289,8 +289,8 @@ export interface TemperatureLogPostData extends ReportPostData {
   readonly Location?: number
 }
 
-export interface TilesData<T extends DeviceType | null> {
-  readonly SelectedDevice: T extends DeviceType ? GetDeviceData<T> : null
+export interface TilesData<T extends ClassicDeviceType | null> {
+  readonly SelectedDevice: T extends ClassicDeviceType ? GetDeviceData<T> : null
   readonly Tiles: readonly {
     readonly Device: number
     readonly Offline: boolean
@@ -301,13 +301,13 @@ export interface TilesData<T extends DeviceType | null> {
   }[]
 }
 
-export type TilesPostData<T extends DeviceType | null> = {
+export type TilesPostData<T extends ClassicDeviceType | null> = {
   readonly DeviceIDs: number | readonly number[]
-} & (T extends DeviceType ?
+} & (T extends ClassicDeviceType ?
   { readonly SelectedBuilding: number; readonly SelectedDevice: number }
 : { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })
 
-export type UpdateDeviceData<T extends DeviceType> =
+export type UpdateDeviceData<T extends ClassicDeviceType> =
   DeviceDataMapping[T]['update']
 
 export type Zone = AreaZone | BuildingZone | DeviceZone | FloorZone

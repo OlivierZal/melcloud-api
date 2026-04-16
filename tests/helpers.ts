@@ -10,7 +10,7 @@ import type {
   Logger,
   SettingManager,
 } from '../src/api/index.ts'
-import type { DeviceType } from '../src/constants.ts'
+import type { ClassicDeviceType } from '../src/constants.ts'
 import type {
   AreaDataAny,
   BuildingData,
@@ -95,13 +95,13 @@ export const createSettingStore = (
   }
 }
 
-export function assertDeviceType<T extends DeviceType>(
+export function assertDeviceType<T extends ClassicDeviceType>(
   device: DeviceAny | undefined,
   type: T,
 ): asserts device is Extract<DeviceAny, { type: T }>
 export function assertDeviceType(
   device: DeviceAny | undefined,
-  type: DeviceType,
+  type: ClassicDeviceType,
 ): void {
   if (device?.type !== type) {
     throw new Error(

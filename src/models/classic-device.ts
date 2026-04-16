@@ -1,4 +1,4 @@
-import type { DeviceType } from '../constants.ts'
+import type { ClassicDeviceType } from '../constants.ts'
 import type {
   ListDevice,
   ListDeviceAny,
@@ -9,7 +9,7 @@ import { BaseModel } from './base.ts'
 import { syncModel } from './symbols.ts'
 
 /** Concrete device model holding mutable device data that can be partially updated after API calls. */
-export class Device<T extends DeviceType> extends BaseModel {
+export class Device<T extends ClassicDeviceType> extends BaseModel {
   public areaId: number | null = null
 
   public buildingId: number

@@ -5,7 +5,7 @@ import type {
   SetGroupPostData,
   SuccessData,
 } from '../types/index.ts'
-import { DeviceType } from '../constants.ts'
+import { ClassicDeviceType } from '../constants.ts'
 import { syncDevices, updateDevices } from '../decorators/index.ts'
 import type { ZoneFacade } from './interfaces.ts'
 import { BaseFacade } from './base.ts'
@@ -17,7 +17,7 @@ export abstract class BaseZoneFacade<T extends Area | Building | Floor>
 {
   protected abstract readonly groupSpecificationKey: keyof SetGroupPostData['Specification']
 
-  @updateDevices({ type: DeviceType.Ata })
+  @updateDevices({ type: ClassicDeviceType.Ata })
   public async getGroup(): Promise<GroupState> {
     try {
       const {
@@ -35,8 +35,8 @@ export abstract class BaseZoneFacade<T extends Area | Building | Floor>
     }
   }
 
-  @syncDevices({ type: DeviceType.Ata })
-  @updateDevices({ type: DeviceType.Ata })
+  @syncDevices({ type: ClassicDeviceType.Ata })
+  @updateDevices({ type: ClassicDeviceType.Ata })
   public async updateGroupState(
     state: GroupState,
   ): Promise<FailureData | SuccessData> {

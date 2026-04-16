@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { ListDeviceDataAtw } from '../../src/types/index.ts'
 import {
-  DeviceType,
+  ClassicDeviceType,
   OperationModeState,
   OperationModeStateHotWater,
   OperationModeStateZone,
@@ -39,7 +39,7 @@ const createFacade = (
 ): DeviceAtwFacade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
-  assertDeviceType(device, DeviceType.Atw)
+  assertDeviceType(device, ClassicDeviceType.Atw)
   return new DeviceAtwFacade(mockApi, registry, device)
 }
 
@@ -48,7 +48,7 @@ const createZone2Facade = (
 ): DeviceAtwHasZone2Facade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
-  assertDeviceType(device, DeviceType.Atw)
+  assertDeviceType(device, ClassicDeviceType.Atw)
   return new DeviceAtwHasZone2Facade(mockApi, registry, device)
 }
 

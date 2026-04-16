@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ClassicRegistry } from '../../src/models/index.ts'
-import { DeviceType } from '../../src/constants.ts'
+import { ClassicDeviceType } from '../../src/constants.ts'
 import {
   toAreaId,
   toBuildingId,
@@ -136,8 +136,8 @@ describe('building retrieval', () => {
   it('filters by device type', () => {
     const registry = createSyncedRegistry()
 
-    const ataBuildings = registry.getBuildings({ type: DeviceType.Ata })
-    const atwBuildings = registry.getBuildings({ type: DeviceType.Atw })
+    const ataBuildings = registry.getBuildings({ type: ClassicDeviceType.Ata })
+    const atwBuildings = registry.getBuildings({ type: ClassicDeviceType.Atw })
 
     expect(ataBuildings).toHaveLength(2)
     expect(atwBuildings).toHaveLength(1)
@@ -146,7 +146,7 @@ describe('building retrieval', () => {
 
   it('excludes buildings with no matching devices', () => {
     expect(
-      createSyncedRegistry().getBuildings({ type: DeviceType.Erv }),
+      createSyncedRegistry().getBuildings({ type: ClassicDeviceType.Erv }),
     ).toHaveLength(0)
   })
 
@@ -195,7 +195,7 @@ describe('zone retrieval', () => {
   })
 
   it('filters zones by device type', () => {
-    const atwZones = createSyncedRegistry().getZones({ type: DeviceType.Atw })
+    const atwZones = createSyncedRegistry().getZones({ type: ClassicDeviceType.Atw })
 
     expect(atwZones.map(({ name }) => name)).toStrictEqual([
       'Bravo',
@@ -216,7 +216,7 @@ describe('zone retrieval', () => {
 
   it('returns empty list when no devices match', () => {
     expect(
-      createSyncedRegistry().getZones({ type: DeviceType.Erv }),
+      createSyncedRegistry().getZones({ type: ClassicDeviceType.Erv }),
     ).toHaveLength(0)
   })
 })

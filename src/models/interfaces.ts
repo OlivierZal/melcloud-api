@@ -1,4 +1,4 @@
-import type { DeviceType } from '../constants.ts'
+import type { ClassicDeviceType } from '../constants.ts'
 import type { ListDeviceData } from '../types/index.ts'
 import type { BaseModel } from './base.ts'
 import type { Building } from './building.ts'
@@ -11,7 +11,7 @@ export type BaseBuilding = Pick<Building, 'data'>
 export type Model = BaseModel
 
 /** Base device model with type-discriminated device data. */
-export interface BaseDevice<T extends DeviceType> {
+export interface BaseDevice<T extends ClassicDeviceType> {
   readonly data: ListDeviceData<T>
   readonly type: T
 }
@@ -22,8 +22,8 @@ export interface BaseDevice<T extends DeviceType> {
  * @param type - The expected device type literal.
  * @returns Whether the device matches the given type.
  */
-export const isDeviceOfType = <T extends DeviceType>(
-  device: Device<DeviceType>,
+export const isDeviceOfType = <T extends ClassicDeviceType>(
+  device: Device<ClassicDeviceType>,
   type: T,
 ): device is Device<T> => device.type === type
 
@@ -38,6 +38,6 @@ export interface Identifiable {
 
 /** Union of all device model types. */
 export type DeviceAny =
-  | Device<typeof DeviceType.Ata>
-  | Device<typeof DeviceType.Atw>
-  | Device<typeof DeviceType.Erv>
+  | Device<typeof ClassicDeviceType.Ata>
+  | Device<typeof ClassicDeviceType.Atw>
+  | Device<typeof ClassicDeviceType.Erv>

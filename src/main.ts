@@ -112,9 +112,10 @@ export {
   HomeAPI,
 } from './api/index.ts'
 export {
+  type DeviceType,
   type NonSilentFanSpeed,
+  ClassicDeviceType,
   coolModes,
-  DeviceType,
   FanSpeed,
   FLAG_UNCHANGED,
   HomeDeviceType,

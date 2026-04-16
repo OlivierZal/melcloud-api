@@ -1,5 +1,5 @@
 import type {
-  DeviceType,
+  ClassicDeviceType,
   OperationModeState,
   OperationModeStateHotWater,
   OperationModeStateZone,
@@ -26,7 +26,7 @@ export interface EnergyDataAtw {
 export interface ListDeviceDataAtw
   extends
     BaseListDeviceData,
-    Omit<GetDeviceData<typeof DeviceType.Atw>, keyof TransientDeviceData> {
+    Omit<GetDeviceData<typeof ClassicDeviceType.Atw>, keyof TransientDeviceData> {
   readonly BoosterHeater1Status: boolean
   readonly BoosterHeater2PlusStatus: boolean
   readonly BoosterHeater2Status: boolean
@@ -63,7 +63,7 @@ export interface OperationModeZoneDataAtw {
 
 export interface SetDeviceDataAtw
   extends BaseSetDeviceData, Required<UpdateDeviceDataAtw> {
-  readonly DeviceType: typeof DeviceType.Atw
+  readonly DeviceType: typeof ClassicDeviceType.Atw
   readonly IdleZone1: boolean
   readonly IdleZone2: boolean
   readonly OperationMode: OperationModeState

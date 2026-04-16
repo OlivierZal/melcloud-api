@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPI } from '../../src/api/classic.ts'
-import { DeviceType } from '../../src/constants.ts'
+import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import {
   type BuildingWithStructure,
@@ -47,7 +47,7 @@ const buildingResponse: BuildingWithStructure[] = [
                   DeviceID: toDeviceId(1001),
                   DeviceName: 'AC unit',
                   FloorID: toFloorId(10),
-                  Type: DeviceType.Ata,
+                  Type: ClassicDeviceType.Ata,
                 },
               ],
               FloorId: 10,
@@ -109,7 +109,7 @@ describe('api lifecycle', () => {
 
     expect(device).toBeDefined()
     expect(defined(device).name).toBe('AC unit')
-    expect(defined(device).type).toBe(DeviceType.Ata)
+    expect(defined(device).type).toBe(ClassicDeviceType.Ata)
 
     /*
      * Inline snapshot on the registry summary after initial sync.

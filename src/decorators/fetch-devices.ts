@@ -1,5 +1,5 @@
 import type { ClassicAPIAdapter } from '../api/index.ts'
-import type { DeviceType } from '../constants.ts'
+import type { ClassicDeviceType } from '../constants.ts'
 import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
 
 /**
@@ -9,7 +9,7 @@ import type { ListDeviceData, ZoneSettings } from '../types/index.ts'
  * @returns A wrapper that fetches devices before calling the original method.
  */
 export const fetchDevices = <
-  T extends ListDeviceData<DeviceType> | ZoneSettings,
+  T extends ListDeviceData<ClassicDeviceType> | ZoneSettings,
 >(
   target: (...args: unknown[]) => Promise<T>,
   _context: ClassMethodDecoratorContext,

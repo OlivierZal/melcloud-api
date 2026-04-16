@@ -1,5 +1,5 @@
 import type { ClassicAPIAdapter } from '../api/index.ts'
-import type { DeviceType } from '../constants.ts'
+import type { ClassicDeviceType } from '../constants.ts'
 import type {
   Area,
   Building,
@@ -35,13 +35,13 @@ export class ClassicFacadeManager {
     this.#registry = registry
   }
 
-  public get<T extends DeviceType>(instance: Device<T>): DeviceFacade<T>
+  public get<T extends ClassicDeviceType>(instance: Device<T>): DeviceFacade<T>
   public get(instance: Area | Floor): ZoneFacade
   public get(instance: Building): BuildingFacade
   public get(instance: DeviceAny): DeviceFacadeAny
   public get(instance: Model): Facade
   public get(): null
-  public get<T extends DeviceType>(instance?: Device<T>): DeviceFacade<T> | null
+  public get<T extends ClassicDeviceType>(instance?: Device<T>): DeviceFacade<T> | null
   public get(instance?: Area | Floor): ZoneFacade | null
   public get(instance?: Building): BuildingFacade | null
   public get(instance?: DeviceAny): DeviceFacadeAny | null
@@ -57,11 +57,11 @@ export class ClassicFacadeManager {
     return facade
   }
 
-  public getBuildings(params?: { type?: DeviceType }): BuildingZone[] {
+  public getBuildings(params?: { type?: ClassicDeviceType }): BuildingZone[] {
     return this.#registry.getBuildings(params)
   }
 
-  public getZones(params?: { type?: DeviceType }): Zone[] {
+  public getZones(params?: { type?: ClassicDeviceType }): Zone[] {
     return this.#registry.getZones(params)
   }
 }

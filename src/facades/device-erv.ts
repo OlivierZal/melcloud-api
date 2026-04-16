@@ -1,5 +1,5 @@
 import type { UpdateDeviceData } from '../types/index.ts'
-import { DeviceType } from '../constants.ts'
+import { ClassicDeviceType } from '../constants.ts'
 import type { ReportChartPieOptions, ReportQuery } from './interfaces.ts'
 import { BaseDeviceFacade } from './base-device.ts'
 
@@ -9,17 +9,17 @@ const isRelevantVentilationMode = (label?: string): boolean =>
     (label.startsWith('Actual') && !label.endsWith('OperationMode')))
 
 /** Facade for Energy Recovery Ventilation (ERV) devices with filtered ventilation mode reporting. */
-export class DeviceErvFacade extends BaseDeviceFacade<typeof DeviceType.Erv> {
+export class DeviceErvFacade extends BaseDeviceFacade<typeof ClassicDeviceType.Erv> {
   public readonly flags = {
     Power: 0x1,
     SetFanSpeed: 0x8,
     VentilationMode: 0x4,
   } as const satisfies Record<
-    keyof UpdateDeviceData<typeof DeviceType.Erv>,
+    keyof UpdateDeviceData<typeof ClassicDeviceType.Erv>,
     number
   >
 
-  public readonly type = DeviceType.Erv
+  public readonly type = ClassicDeviceType.Erv
 
   protected readonly temperaturesLegend = [
     undefined,

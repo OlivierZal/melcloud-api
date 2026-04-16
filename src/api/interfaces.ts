@@ -1,6 +1,6 @@
 import type { HourNumbers } from 'luxon'
 
-import type { DeviceType } from '../constants.ts'
+import type { ClassicDeviceType, DeviceType } from '../constants.ts'
 import type { HomeRegistry } from '../models/home-registry.ts'
 import type {
   BuildingWithStructure,
@@ -379,7 +379,7 @@ export interface ClassicAPIAdapter {
   }) => Promise<{ data: boolean }>
 
   /** Send updated device values to the Classic API. */
-  readonly updateValues: <T extends DeviceType>({
+  readonly updateValues: <T extends ClassicDeviceType>({
     postData,
     type,
   }: {
@@ -407,21 +407,21 @@ export interface ClassicAPIAdapter {
   }: {
     postData: TilesPostData<null>
   }) => Promise<{ data: TilesData<null> }>) &
-    (<T extends DeviceType>({
+    (<T extends ClassicDeviceType>({
       postData,
     }: {
       postData: TilesPostData<T>
     }) => Promise<{ data: TilesData<T> }>)
 
   /** Fetch current device data by device and building ID. */
-  readonly getValues: <T extends DeviceType>({
+  readonly getValues: <T extends ClassicDeviceType>({
     params,
   }: {
     params: GetDeviceDataParams
   }) => Promise<{ data: GetDeviceData<T> }>
 
   /** Fetch energy consumption report. Supported by ATA and ATW devices. */
-  readonly getEnergy: <T extends DeviceType>({
+  readonly getEnergy: <T extends ClassicDeviceType>({
     postData,
   }: {
     postData: EnergyPostData
@@ -476,6 +476,6 @@ export interface SettingManager {
 
 /** Callback invoked after sync operations, with optional device IDs and type filter. */
 export type OnSyncFunction = (params?: {
-  ids?: number[]
+  ids?: (number | string)[]
   type?: DeviceType
 }) => Promise<void>

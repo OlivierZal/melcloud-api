@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPI, ClassicAPIConfig } from '../../src/api/index.ts'
-import type { DeviceType } from '../../src/constants.ts'
+import type { ClassicDeviceType } from '../../src/constants.ts'
 import {
   type BuildingWithStructure,
   type ListDeviceAny,
@@ -380,7 +380,7 @@ describe('mELCloud Classic API', () => {
         const api = await createApi({ password: 'pass', username: 'user' })
         mockAxiosInstance.request.mockResolvedValue({ data: {} })
         await api.updateValues({
-          postData: mock<SetDevicePostData<typeof DeviceType.Ata>>({
+          postData: mock<SetDevicePostData<typeof ClassicDeviceType.Ata>>({
             DeviceID: toDeviceId(1),
             EffectiveFlags: 1,
           }),

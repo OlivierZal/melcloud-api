@@ -1,5 +1,5 @@
-/** MELCloud device type identifiers. */
-export const DeviceType = {
+/** MELCloud Classic API device type identifiers. */
+export const ClassicDeviceType = {
   /** Air-to-Air (ATA) heat pump. */
   Ata: 0,
 
@@ -9,7 +9,8 @@ export const DeviceType = {
   /** Energy Recovery Ventilation (ERV) unit. */
   Erv: 3,
 } as const
-export type DeviceType = (typeof DeviceType)[keyof typeof DeviceType]
+export type ClassicDeviceType =
+  (typeof ClassicDeviceType)[keyof typeof ClassicDeviceType]
 
 /** MELCloud Home API device type identifiers, matching context response keys. */
 export const HomeDeviceType = {
@@ -21,6 +22,9 @@ export const HomeDeviceType = {
 } as const
 export type HomeDeviceType =
   (typeof HomeDeviceType)[keyof typeof HomeDeviceType]
+
+/** Unified MELCloud device type: union of Classic and Home API device types. */
+export type DeviceType = ClassicDeviceType | HomeDeviceType
 
 /** Fan speed levels for ATA and ERV devices. */
 export const FanSpeed = {

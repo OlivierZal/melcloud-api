@@ -8,7 +8,7 @@ import type {
   ZoneState,
 } from '../types/index.ts'
 import {
-  DeviceType,
+  ClassicDeviceType,
   OperationModeState,
   OperationModeStateHotWater,
   OperationModeStateZone,
@@ -78,7 +78,7 @@ const mergeSeries = (
 }
 
 /** Facade for Air-to-Water (ATW) devices with per-zone temperature clamping and merged temperature reports. */
-export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
+export class DeviceAtwFacade extends BaseDeviceFacade<typeof ClassicDeviceType.Atw> {
   public readonly flags = {
     ForcedHotWaterMode: 0x1_00_00,
     OperationModeZone1: 0x8,
@@ -92,11 +92,11 @@ export class DeviceAtwFacade extends BaseDeviceFacade<typeof DeviceType.Atw> {
     SetTemperatureZone1: 0x2_00_00_00_80,
     SetTemperatureZone2: 0x8_00_00_02_00,
   } as const satisfies Record<
-    keyof UpdateDeviceData<typeof DeviceType.Atw>,
+    keyof UpdateDeviceData<typeof ClassicDeviceType.Atw>,
     number
   >
 
-  public readonly type = DeviceType.Atw
+  public readonly type = ClassicDeviceType.Atw
 
   public get hotWater(): HotWaterState {
     const { data } = this

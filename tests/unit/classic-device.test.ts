@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ListDeviceDataAta } from '../../src/types/index.ts'
-import { DeviceType } from '../../src/constants.ts'
+import { ClassicDeviceType } from '../../src/constants.ts'
 import { Device } from '../../src/models/index.ts'
 import { ataDevice } from '../fixtures.ts'
 
@@ -23,7 +23,7 @@ describe('device model', () => {
 
     expect(device.id).toBe(1000)
     expect(device.name).toBe('ATA Device')
-    expect(device.type).toBe(DeviceType.Ata)
+    expect(device.type).toBe(ClassicDeviceType.Ata)
     expect(device.buildingId).toBe(1)
     expect(device.floorId).toBe(10)
     expect(device.areaId).toBe(100)

@@ -12,7 +12,7 @@ import type {
   SetDeviceDataAtaInList,
   UpdateDeviceData,
 } from './types/index.ts'
-import { type DeviceType, LabelType } from './constants.ts'
+import { type ClassicDeviceType, LabelType } from './constants.ts'
 
 // API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
 const YEAR_MONTH_DIVISOR = 100
@@ -113,7 +113,7 @@ export function typedFromEntries(
  * @param key - The key to verify.
  * @returns Whether the key is a valid updatable field.
  */
-export const isUpdateDeviceData = <T extends DeviceType>(
+export const isUpdateDeviceData = <T extends ClassicDeviceType>(
   data: Record<keyof UpdateDeviceData<T>, unknown>,
   key: string,
 ): key is string & keyof UpdateDeviceData<T> => key in data

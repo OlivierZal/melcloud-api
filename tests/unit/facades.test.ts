@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/index.ts'
 import {
-  DeviceType,
+  ClassicDeviceType,
   OperationMode,
   OperationModeZone,
 } from '../../src/constants.ts'
@@ -41,7 +41,7 @@ import {
 } from '../fixtures.ts'
 import { assertDeviceType, cast, defined, mock } from '../helpers.ts'
 
-type DeviceModelAta = Device<typeof DeviceType.Ata>
+type DeviceModelAta = Device<typeof ClassicDeviceType.Ata>
 
 const createRegistry = (): ClassicRegistry => {
   const registry = new ClassicRegistry()
@@ -104,7 +104,7 @@ const createMockApi = (
     updatePower: vi.fn().mockResolvedValue({ data: true }),
     updateValues: vi.fn().mockResolvedValue({
       data: mock<SetDeviceDataAta>({
-        DeviceType: DeviceType.Ata,
+        DeviceType: ClassicDeviceType.Ata,
         EffectiveFlags: 0x1,
         LastCommunication: '',
         NextCommunication: '',
@@ -171,7 +171,7 @@ const createAtaFacade = (
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.devices.getById(1000))
-  assertDeviceType(instance, DeviceType.Ata)
+  assertDeviceType(instance, ClassicDeviceType.Ata)
   return { api, facade: new DeviceAtaFacade(api, registry, instance), registry }
 }
 
@@ -185,7 +185,7 @@ const createAtwFacade = (
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.devices.getById(1001))
-  assertDeviceType(instance, DeviceType.Atw)
+  assertDeviceType(instance, ClassicDeviceType.Atw)
   return { api, facade: new DeviceAtwFacade(api, registry, instance), registry }
 }
 
@@ -199,7 +199,7 @@ const createErvFacade = (
   const registry = createRegistry()
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.devices.getById(1002))
-  assertDeviceType(instance, DeviceType.Erv)
+  assertDeviceType(instance, ClassicDeviceType.Erv)
   return { api, facade: new DeviceErvFacade(api, registry, instance), registry }
 }
 
@@ -208,7 +208,7 @@ const atwSetValuesResponse = (
 ): Partial<ClassicAPIAdapter> => ({
   updateValues: vi.fn().mockResolvedValue({
     data: {
-      DeviceType: DeviceType.Atw,
+      DeviceType: ClassicDeviceType.Atw,
       EffectiveFlags: 0x1,
       ForcedHotWaterMode: false,
       LastCommunication: '',
@@ -248,7 +248,7 @@ const createZone2Facade = (
   ])
   const api = createMockApi(apiOverrides)
   const instance = defined(registry.devices.getById(1001))
-  assertDeviceType(instance, DeviceType.Atw)
+  assertDeviceType(instance, ClassicDeviceType.Atw)
   return {
     api,
     facade: new DeviceAtwHasZone2Facade(api, registry, instance),
@@ -310,7 +310,7 @@ describe('building facade', () => {
   it('calls getTiles with device selection', async () => {
     const { facade, registry } = createBuildingFacade()
     const device = defined(registry.devices.getById(1000))
-    assertDeviceType(device, DeviceType.Ata)
+    assertDeviceType(device, ClassicDeviceType.Ata)
     const result = await facade.getTiles(device)
 
     expect(result).toHaveProperty('Tiles')
@@ -606,7 +606,7 @@ describe('base device facade type mismatch', () => {
     const registry = createRegistry()
     const api = createMockApi()
     const instance = defined(registry.devices.getById(1001))
-    assertDeviceType(instance, DeviceType.Atw)
+    assertDeviceType(instance, ClassicDeviceType.Atw)
     const facade = new DeviceAtaFacade(api, registry, cast(instance))
 
     expect(() => facade.data).toThrow('Device type mismatch')
@@ -665,7 +665,7 @@ describe('ata device facade', () => {
     const { facade } = createAtaFacade()
 
     expect(facade.data.Power).toBe(true)
-    expect(facade.type).toBe(DeviceType.Ata)
+    expect(facade.type).toBe(ClassicDeviceType.Ata)
   })
 
   it('returns self as devices array', () => {
@@ -777,7 +777,7 @@ describe('ata device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Ata>>(defined(call).postData)
+      mock<SetDevicePostData<typeof ClassicDeviceType.Ata>>(defined(call).postData)
         .SetTemperature,
     ).toBeGreaterThanOrEqual(10)
   })
@@ -793,7 +793,7 @@ describe('ata device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Ata>>(defined(call).postData)
+      mock<SetDevicePostData<typeof ClassicDeviceType.Ata>>(defined(call).postData)
         .SetTemperature,
     ).toBeLessThanOrEqual(31)
   })
@@ -803,7 +803,7 @@ describe('atw device facade', () => {
   it('returns device data', () => {
     const { facade } = createAtwFacade()
 
-    expect(facade.type).toBe(DeviceType.Atw)
+    expect(facade.type).toBe(ClassicDeviceType.Atw)
   })
 
   it('clamps target temperatures', async () => {
@@ -824,7 +824,7 @@ describe('atw device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Atw>>(defined(call).postData)
+      mock<SetDevicePostData<typeof ClassicDeviceType.Atw>>(defined(call).postData)
         .SetTemperatureZone1,
     ).toBeGreaterThanOrEqual(10)
   })
@@ -849,7 +849,7 @@ describe('atw device facade', () => {
     expect(call).toBeDefined()
 
     expect(
-      mock<SetDevicePostData<typeof DeviceType.Atw>>(defined(call).postData)
+      mock<SetDevicePostData<typeof ClassicDeviceType.Atw>>(defined(call).postData)
         .SetTemperatureZone1,
     ).toBe(10)
   })
@@ -992,7 +992,7 @@ describe('base device facade tiles', () => {
   it('calls super.getTiles when passed a different device instance', async () => {
     const { facade, registry } = createAtaFacade()
     const otherDevice = defined(registry.devices.getById(1001))
-    assertDeviceType(otherDevice, DeviceType.Atw)
+    assertDeviceType(otherDevice, ClassicDeviceType.Atw)
     const result = await facade.getTiles(
       mock<DeviceModelAta>(cast(otherDevice)),
     )
@@ -1061,7 +1061,7 @@ describe('atw zone 2 facade CanCool false', () => {
 
     expect(call).toBeDefined()
 
-    const postData = mock<SetDevicePostData<typeof DeviceType.Atw>>(
+    const postData = mock<SetDevicePostData<typeof ClassicDeviceType.Atw>>(
       defined(call).postData,
     )
 
@@ -1073,7 +1073,7 @@ describe('erv device facade', () => {
   it('returns device data', () => {
     const { facade } = createErvFacade()
 
-    expect(facade.type).toBe(DeviceType.Erv)
+    expect(facade.type).toBe(ClassicDeviceType.Erv)
   })
 
   it('filters operation modes for ERV-specific labels', async () => {

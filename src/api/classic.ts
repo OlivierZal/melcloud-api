@@ -36,7 +36,7 @@ import type {
   TilesData,
   TilesPostData,
 } from '../types/index.ts'
-import { DeviceType, Language } from '../constants.ts'
+import { ClassicDeviceType, Language } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../models/index.ts'
 import { isSessionExpired, toDeviceId } from '../resilience/index.ts'
@@ -49,10 +49,10 @@ import type {
 import { BaseAPI } from './base.ts'
 
 const deviceTypeNames = {
-  [DeviceType.Ata]: 'Ata',
-  [DeviceType.Atw]: 'Atw',
-  [DeviceType.Erv]: 'Erv',
-} satisfies Record<DeviceType, string>
+  [ClassicDeviceType.Ata]: 'Ata',
+  [ClassicDeviceType.Atw]: 'Atw',
+  [ClassicDeviceType.Erv]: 'Erv',
+} satisfies Record<ClassicDeviceType, string>
 
 const API_BASE_URL = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
 const APP_VERSION = '1.38.4.0'
@@ -272,7 +272,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     }
   }
 
-  public async getEnergy<T extends DeviceType>({
+  public async getEnergy<T extends ClassicDeviceType>({
     postData,
   }: {
     postData: EnergyPostData
@@ -411,12 +411,12 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: TilesPostData<null>
   }): Promise<{ data: TilesData<null> }>
-  public async getTiles<T extends DeviceType>({
+  public async getTiles<T extends ClassicDeviceType>({
     postData,
   }: {
     postData: TilesPostData<T>
   }): Promise<{ data: TilesData<T> }>
-  public async getTiles<T extends DeviceType | null>({
+  public async getTiles<T extends ClassicDeviceType | null>({
     postData,
   }: {
     postData: TilesPostData<T>
@@ -424,7 +424,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Tile/Get2', { data: postData })
   }
 
-  public async getValues<T extends DeviceType>({
+  public async getValues<T extends ClassicDeviceType>({
     params,
   }: {
     params: GetDeviceDataParams
@@ -494,7 +494,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Device/Power', { data: postData })
   }
 
-  public async updateValues<T extends DeviceType>({
+  public async updateValues<T extends ClassicDeviceType>({
     postData,
     type,
   }: {

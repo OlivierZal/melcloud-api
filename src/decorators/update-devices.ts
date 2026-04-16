@@ -7,7 +7,7 @@ import type {
   SetDeviceData,
   SuccessData,
 } from '../types/index.ts'
-import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
+import { ClassicDeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { NoChangesError } from '../errors/index.ts'
 import {
   fromSetToListAta,
@@ -28,7 +28,7 @@ export const updateDevices =
   <T extends boolean | FailureData | GroupState | SuccessData>({
     type,
   }: {
-    type?: DeviceType
+    type?: ClassicDeviceType
   } = {}) =>
   (
     target: (...args: any[]) => Promise<T>,
@@ -73,7 +73,7 @@ export const updateDevices =
  * changed by the device. Use this to update only those fields, converting
  * ATA set-command keys back to list-data keys (e.g., SetFanSpeed → FanSpeed).
  */
-const convertToListDeviceData = <T extends DeviceType>(
+const convertToListDeviceData = <T extends ClassicDeviceType>(
   facade: DeviceFacade<T>,
   data: SetDeviceData<T>,
 ): Partial<ListDeviceData<T>> => {
@@ -91,7 +91,7 @@ const convertToListDeviceData = <T extends DeviceType>(
       )
     )
   return typedFromEntries<Partial<ListDeviceData<T>>>(
-    type === DeviceType.Ata ?
+    type === ClassicDeviceType.Ata ?
       entries.map(([key, value]) =>
         isSetDeviceDataAtaNotInList(key) ?
           [fromSetToListAta[key], value]
@@ -109,7 +109,7 @@ const convertToListDeviceData = <T extends DeviceType>(
  * @returns A wrapper that updates the device model after calling the original method.
  */
 export const updateDevice = <
-  T extends DeviceType,
+  T extends ClassicDeviceType,
   TData extends GetDeviceData<T> | SetDeviceData<T>,
 >(
   target: (...args: any[]) => Promise<TData>,

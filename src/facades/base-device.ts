@@ -10,7 +10,7 @@ import type {
   TilesData,
   UpdateDeviceData,
 } from '../types/index.ts'
-import { DeviceType, FLAG_UNCHANGED } from '../constants.ts'
+import { ClassicDeviceType, FLAG_UNCHANGED } from '../constants.ts'
 import { fetchDevices, syncDevices, updateDevice } from '../decorators/index.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { type DeviceAny, Device, isDeviceOfType } from '../models/index.ts'
@@ -68,7 +68,7 @@ const getDuration = ({ from, to }: Required<ReportQuery>): number =>
  * Abstract base for device-specific facades. Handles device data access, report generation,
  * value updates with effective flags, and ATA key conversion between set/list formats.
  */
-export abstract class BaseDeviceFacade<T extends DeviceType>
+export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   extends BaseFacade<DeviceAny>
   implements DeviceFacade<T>
 {
@@ -120,7 +120,7 @@ export abstract class BaseDeviceFacade<T extends DeviceType>
   protected get setData(): Required<UpdateDeviceData<T>> {
     const dataEntries = Object.entries(this.data)
     const entries =
-      this.type === DeviceType.Ata ?
+      this.type === ClassicDeviceType.Ata ?
         dataEntries
           .map(([key, value]): [string, unknown] => [
             isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,

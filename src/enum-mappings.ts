@@ -1,5 +1,5 @@
 import {
-  DeviceType,
+  ClassicDeviceType,
   FanSpeed,
   HomeDeviceType,
   Horizontal,
@@ -127,17 +127,17 @@ export const verticalToClassic: Record<HomeVertical, Vertical> = {
 }
 
 export const homeDeviceTypeFromClassic: Record<
-  typeof DeviceType.Ata | typeof DeviceType.Atw,
+  typeof ClassicDeviceType.Ata | typeof ClassicDeviceType.Atw,
   HomeDeviceType
 > = {
-  [DeviceType.Ata]: HomeDeviceType.Ata,
-  [DeviceType.Atw]: HomeDeviceType.Atw,
+  [ClassicDeviceType.Ata]: HomeDeviceType.Ata,
+  [ClassicDeviceType.Atw]: HomeDeviceType.Atw,
 }
 
 export const homeDeviceTypeToClassic: Record<
   HomeDeviceType,
-  typeof DeviceType.Ata | typeof DeviceType.Atw
+  typeof ClassicDeviceType.Ata | typeof ClassicDeviceType.Atw
 > = {
-  [HomeDeviceType.Ata]: DeviceType.Ata,
-  [HomeDeviceType.Atw]: DeviceType.Atw,
+  [HomeDeviceType.Ata]: ClassicDeviceType.Ata,
+  [HomeDeviceType.Atw]: ClassicDeviceType.Atw,
 }

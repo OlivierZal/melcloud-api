@@ -1,5 +1,5 @@
 import type {
-  DeviceType,
+  ClassicDeviceType,
   FanSpeed,
   Horizontal,
   NonSilentFanSpeed,
@@ -61,7 +61,7 @@ export interface ListDeviceDataAta
   extends
     BaseListDeviceData,
     Omit<
-      GetDeviceData<typeof DeviceType.Ata>,
+      GetDeviceData<typeof ClassicDeviceType.Ata>,
       KeyOfSetDeviceDataAtaNotInList | keyof TransientDeviceData
     >,
     SetDeviceDataAtaInList {
@@ -78,7 +78,7 @@ export interface ListDeviceDataAta
 
 export interface SetDeviceDataAta
   extends BaseSetDeviceData, Required<UpdateDeviceDataAta> {
-  readonly DeviceType: typeof DeviceType.Ata
+  readonly DeviceType: typeof ClassicDeviceType.Ata
   readonly NumberOfFanSpeeds: number
   readonly RoomTemperature: number
 }

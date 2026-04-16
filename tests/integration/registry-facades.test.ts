@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DeviceType } from '../../src/constants.ts'
+import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { ClassicRegistry } from '../../src/models/index.ts'
 import {
@@ -211,9 +211,9 @@ describe('registry + facade manager integration', () => {
   it('filters devices by type across the entire registry', () => {
     const { registry } = createContext()
 
-    const ataDevices = registry.getDevicesByType(DeviceType.Ata)
-    const atwDevices = registry.getDevicesByType(DeviceType.Atw)
-    const ervDevices = registry.getDevicesByType(DeviceType.Erv)
+    const ataDevices = registry.getDevicesByType(ClassicDeviceType.Ata)
+    const atwDevices = registry.getDevicesByType(ClassicDeviceType.Atw)
+    const ervDevices = registry.getDevicesByType(ClassicDeviceType.Erv)
 
     expect(ataDevices).toHaveLength(2)
     expect(atwDevices).toHaveLength(1)
