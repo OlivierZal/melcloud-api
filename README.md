@@ -51,6 +51,28 @@ console.log(facade.name, facade.operationMode, facade.setTemperature)
 await facade.updateValues({ setTemperature: 21 })
 ```
 
+## Imports
+
+Exports follow a `Classic*` / `Home*` prefix convention so the target API is obvious at the call site. Consumers can import in four ways:
+
+```ts title="imports"
+// From the root (recommended for most use cases)
+import { ClassicAPI, ClassicGetDeviceData } from '@olivierzal/melcloud-api'
+
+// Alias at import for shorter names
+import type { ClassicGetDeviceData as GetDeviceData } from '@olivierzal/melcloud-api'
+
+// From a subpath (tree-shaking hints for bundlers)
+import { NoChangesError } from '@olivierzal/melcloud-api/errors'
+import type { ClassicGetDeviceData } from '@olivierzal/melcloud-api/types'
+
+// Namespace import
+import type * as MELCloud from '@olivierzal/melcloud-api'
+const data: MELCloud.ClassicGetDeviceData<0> = ...
+```
+
+Available subpaths: `/api`, `/constants`, `/decorators`, `/entities`, `/enum-mappings`, `/errors`, `/facades`, `/observability`, `/resilience`, `/types`.
+
 ## Documentation
 
 Full API reference at <https://olivierzal.github.io/melcloud-api/>.
