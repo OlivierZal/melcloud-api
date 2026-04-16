@@ -211,7 +211,7 @@ export interface ClassicHolidayModeTimeZone extends ClassicHolidayModeLocation {
 export interface ClassicListDevice<
   T extends ClassicDeviceType,
 > extends ClassicBaseListDevice<T> {
-  readonly ClassicDevice: ClassicListDeviceData<T>
+  readonly Device: ClassicListDeviceData<T>
 }
 
 export type ClassicListDeviceAny =
@@ -299,7 +299,7 @@ export interface ClassicTilesData<T extends ClassicDeviceType | null> {
   readonly SelectedDevice: T extends ClassicDeviceType ? ClassicGetDeviceData<T>
   : null
   readonly Tiles: readonly {
-    readonly ClassicDevice: number
+    readonly Device: number
     readonly Offline: boolean
     readonly Power: boolean
     readonly RoomTemperature: number

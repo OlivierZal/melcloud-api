@@ -197,7 +197,7 @@ export const ataDevice = (
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  ClassicDevice: ataDeviceData(),
+  Device: ataDeviceData(),
   DeviceID: DEFAULT_ATA_DEVICE_ID,
   DeviceName: 'ATA ClassicDevice',
   FloorID: DEFAULT_FLOOR_ID,
@@ -210,7 +210,7 @@ export const atwDevice = (
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  ClassicDevice: atwDeviceData(),
+  Device: atwDeviceData(),
   DeviceID: DEFAULT_ATW_DEVICE_ID,
   DeviceName: 'ATW ClassicDevice',
   FloorID: DEFAULT_FLOOR_ID,
@@ -223,7 +223,7 @@ export const ervDevice = (
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  ClassicDevice: ervDeviceData(),
+  Device: ervDeviceData(),
   DeviceID: DEFAULT_ERV_DEVICE_ID,
   DeviceName: 'ERV ClassicDevice',
   FloorID: null,

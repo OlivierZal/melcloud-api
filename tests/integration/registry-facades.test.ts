@@ -82,20 +82,20 @@ const areas = [
 
 const devices = [
   ataDevice({
-    ClassicDevice: ataData,
+    Device: ataData,
     DeviceID: toClassicDeviceId(1001),
     DeviceName: 'Living room AC',
   }),
   atwDevice({
     AreaID: toClassicAreaId(101),
-    ClassicDevice: atwData,
+    Device: atwData,
     DeviceID: toClassicDeviceId(1002),
     DeviceName: 'Kitchen heat pump',
   }),
   ervDevice({
     AreaID: toClassicAreaId(102),
     BuildingID: toClassicBuildingId(1),
-    ClassicDevice: ervData,
+    Device: ervData,
     DeviceID: toClassicDeviceId(1003),
     DeviceName: 'Bedroom ERV',
     FloorID: toClassicFloorId(11),
@@ -103,7 +103,7 @@ const devices = [
   ataDevice({
     AreaID: toClassicAreaId(200),
     BuildingID: toClassicBuildingId(2),
-    ClassicDevice: ataDeviceData({ ...ataData, Power: false }),
+    Device: ataDeviceData({ ...ataData, Power: false }),
     DeviceID: toClassicDeviceId(2001),
     DeviceName: 'Studio AC',
     FloorID: null,
@@ -284,7 +284,7 @@ describe('registry + facade manager integration', () => {
       ataDevice({
         AreaID: toClassicAreaId(200),
         BuildingID: toClassicBuildingId(2),
-        ClassicDevice: ataData,
+        Device: ataData,
         DeviceID: toClassicDeviceId(2002),
         DeviceName: 'Studio AC 2',
         FloorID: null,

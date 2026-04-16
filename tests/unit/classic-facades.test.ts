@@ -53,11 +53,11 @@ const createRegistry = (): ClassicRegistry => {
   registry.syncAreas([areaData()])
   registry.syncDevices([
     ataDevice({
-      ClassicDevice: ataDeviceData({
+      Device: ataDeviceData({
         OperationMode: ClassicOperationMode.heat,
       }),
     }),
-    atwDevice({ ClassicDevice: atwDeviceData({ SetTemperatureZone2: 22 }) }),
+    atwDevice({ Device: atwDeviceData({ SetTemperatureZone2: 22 }) }),
     ervDevice(),
   ])
   return registry
@@ -274,7 +274,7 @@ const createZone2Facade = (
   registry.syncAreas([areaData()])
   registry.syncDevices([
     atwDevice({
-      ClassicDevice: atwDeviceData({ HasZone2: true, ...deviceOverrides }),
+      Device: atwDeviceData({ HasZone2: true, ...deviceOverrides }),
     }),
   ])
   const api = createMockApi(apiOverrides)

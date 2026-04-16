@@ -67,7 +67,7 @@ const createDevice = (
   cast({
     AreaID: null,
     BuildingID: 1,
-    ClassicDevice: {},
+    Device: {},
     DeviceID: 1,
     DeviceName: 'ClassicDevice',
     FloorID: null,

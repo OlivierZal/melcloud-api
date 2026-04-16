@@ -65,7 +65,7 @@ describe(createFacade, () => {
   it('creates a ClassicDeviceAtwFacade for ATW devices without zone2', () => {
     const registry = new ClassicRegistry()
     registry.syncDevices([
-      atwDevice({ ClassicDevice: atwDeviceData({ HasZone2: false }) }),
+      atwDevice({ Device: atwDeviceData({ HasZone2: false }) }),
     ])
     const instance = defined(registry.devices.getById(1001))
     const facade = createFacade(mockApi, registry, instance)
@@ -76,7 +76,7 @@ describe(createFacade, () => {
   it('creates a ClassicDeviceAtwHasZone2Facade for ATW devices with zone2', () => {
     const registry = new ClassicRegistry()
     registry.syncDevices([
-      atwDevice({ ClassicDevice: atwDeviceData({ HasZone2: true }) }),
+      atwDevice({ Device: atwDeviceData({ HasZone2: true }) }),
     ])
     const instance = defined(registry.devices.getById(1001))
     const facade = createFacade(mockApi, registry, instance)

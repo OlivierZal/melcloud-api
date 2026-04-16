@@ -29,7 +29,7 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
   public constructor({
     AreaID: areaId,
     BuildingID: buildingId,
-    ClassicDevice: data,
+    Device: data,
     DeviceID: id,
     DeviceName: name,
     FloorID: floorId,
@@ -46,7 +46,7 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
   public [syncModel]({
     AreaID: areaId,
     BuildingID: buildingId,
-    ClassicDevice: data,
+    Device: data,
     DeviceName: name,
     FloorID: floorId,
   }: ClassicListDeviceAny): void {

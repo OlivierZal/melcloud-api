@@ -114,7 +114,7 @@ describe('model registry', () => {
       const invalidDevice = mock<ClassicListDevice<0>>({
         AreaID: null,
         BuildingID: toClassicBuildingId(1),
-        ClassicDevice: mock<ClassicListDeviceDataAta>(),
+        Device: mock<ClassicListDeviceDataAta>(),
         DeviceID: toClassicDeviceId(9999),
         DeviceName: 'Invalid',
         FloorID: null,
@@ -136,7 +136,7 @@ describe('model registry', () => {
       const invalidDevice = mock<ClassicListDevice<0>>({
         AreaID: null,
         BuildingID: toClassicBuildingId(1),
-        ClassicDevice: mock<ClassicListDeviceDataAta>(),
+        Device: mock<ClassicListDeviceDataAta>(),
         DeviceID: toClassicDeviceId(9999),
         DeviceName: 'Invalid',
         FloorID: null,

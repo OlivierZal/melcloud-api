@@ -31,7 +31,7 @@ const createAtwRegistry = (data: ClassicListDeviceDataAtw): ClassicRegistry => {
   registry.syncDevices([
     atwDevice({
       AreaID: null,
-      ClassicDevice: data,
+      Device: data,
       FloorID: null,
     }),
   ])

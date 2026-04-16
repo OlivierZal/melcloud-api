@@ -64,7 +64,7 @@ const devices = [
   ataDevice({
     AreaID: toClassicAreaId(100),
     BuildingID: toClassicBuildingId(1),
-    ClassicDevice: ataDeviceData(),
+    Device: ataDeviceData(),
     DeviceID: toClassicDeviceId(1001),
     DeviceName: 'AC unit',
     FloorID: toClassicFloorId(10),
@@ -72,7 +72,7 @@ const devices = [
   atwDevice({
     AreaID: null,
     BuildingID: toClassicBuildingId(1),
-    ClassicDevice: atwDeviceData({ HasZone2: false }),
+    Device: atwDeviceData({ HasZone2: false }),
     DeviceID: toClassicDeviceId(1002),
     DeviceName: 'Heat pump',
     FloorID: null,
@@ -80,7 +80,7 @@ const devices = [
   ataDevice({
     AreaID: toClassicAreaId(200),
     BuildingID: toClassicBuildingId(2),
-    ClassicDevice: ataDeviceData(),
+    Device: ataDeviceData(),
     DeviceID: toClassicDeviceId(2001),
     DeviceName: 'Studio AC',
     FloorID: null,
