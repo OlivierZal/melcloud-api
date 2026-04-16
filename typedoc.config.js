@@ -1,7 +1,7 @@
 const config = {
   cacheBust: true,
   cleanOutputDir: true,
-  entryPoints: ['src/main.ts'],
+  entryPoints: ['src/index.ts'],
   excludePrivate: true,
   hideGenerator: true,
   hostedBaseUrl: 'https://olivierzal.github.io/melcloud-api/',

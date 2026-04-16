@@ -53,25 +53,30 @@ await facade.updateValues({ setTemperature: 21 })
 
 ## Imports
 
-Exports follow a `Classic*` / `Home*` prefix convention so the target API is obvious at the call site. Consumers can import in four ways:
+Exports follow a `Classic*` / `Home*` prefix convention so the target API is obvious at the call site. The `./classic` and `./home` subpaths re-export everything with the prefix stripped — a modern alternative to TypeScript's deprecated `namespace` keyword.
 
 ```ts title="imports"
-// From the root (recommended for most use cases)
-import { ClassicAPI, ClassicGetDeviceData } from '@olivierzal/melcloud-api'
+// From the root — prefixed names, works in mixed Classic/Home contexts
+import { ClassicAPI, ClassicGetDeviceData, HomeAPI } from '@olivierzal/melcloud-api'
 
-// Alias at import for shorter names
-import type { ClassicGetDeviceData as GetDeviceData } from '@olivierzal/melcloud-api'
+// From the Classic-scoped subpath — short names, no ambiguity
+import { API, GetDeviceData, FanSpeed } from '@olivierzal/melcloud-api/classic'
 
-// From a subpath (tree-shaking hints for bundlers)
+// From the Home-scoped subpath — short names
+import { API, AtaValues, DeviceCapabilities } from '@olivierzal/melcloud-api/home'
+
+// Namespace-like usage (recommended for mixed Classic + Home code)
+import type * as Classic from '@olivierzal/melcloud-api/classic'
+import type * as Home from '@olivierzal/melcloud-api/home'
+const a: Classic.GetDeviceData<0> = ...
+const b: Home.AtaValues = ...
+
+// Module-scoped subpaths for fine-grained imports (tree-shaking hints)
 import { NoChangesError } from '@olivierzal/melcloud-api/errors'
 import type { ClassicGetDeviceData } from '@olivierzal/melcloud-api/types'
-
-// Namespace import
-import type * as MELCloud from '@olivierzal/melcloud-api'
-const data: MELCloud.ClassicGetDeviceData<0> = ...
 ```
 
-Available subpaths: `/api`, `/constants`, `/decorators`, `/entities`, `/enum-mappings`, `/errors`, `/facades`, `/observability`, `/resilience`, `/types`.
+Available subpaths: `/classic`, `/home`, `/api`, `/constants`, `/decorators`, `/entities`, `/enum-mappings`, `/errors`, `/facades`, `/observability`, `/resilience`, `/types`.
 
 ## Documentation
 
