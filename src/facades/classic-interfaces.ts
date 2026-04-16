@@ -86,7 +86,7 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   readonly flags: Record<keyof ClassicUpdateDeviceData<T>, number>
 
   /** Fetch the latest device data after syncing. */
-  readonly fetch: () => Promise<ClassicListDeviceData<T>>
+  readonly fetch: () => Promise<Readonly<ClassicListDeviceData<T>>>
 
   /** Fetch operation mode usage as pie chart data. */
   readonly getOperationModes: (

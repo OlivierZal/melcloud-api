@@ -6,6 +6,7 @@ import {
   ClassicVertical,
   HomeDeviceType,
 } from './constants.ts'
+import { isKeyOf } from './utils.ts'
 
 /*
  * Bidirectional mapping tables between classic API numeric enums
@@ -58,11 +59,9 @@ export const fanSpeedToClassic: Record<HomeFanSpeed, ClassicFanSpeed> = {
   Two: ClassicFanSpeed.slow,
 }
 
-export const isClassicFanSpeed = (value: number): value is ClassicFanSpeed =>
-  value in fanSpeedFromClassic
+export const isClassicFanSpeed = isKeyOf(fanSpeedFromClassic)
 
-export const isHomeFanSpeed = (value: string): value is HomeFanSpeed =>
-  value in fanSpeedToClassic
+export const isHomeFanSpeed = isKeyOf(fanSpeedToClassic)
 
 export const horizontalFromClassic: Record<ClassicHorizontal, HomeHorizontal> =
   {

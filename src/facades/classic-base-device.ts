@@ -91,7 +91,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   public abstract readonly type: T
 
-  public get data(): ClassicListDeviceData<T> {
+  public get data(): Readonly<ClassicListDeviceData<T>> {
     return this.device.data
   }
 
@@ -143,7 +143,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   @classicFetchDevices
-  public async fetch(): Promise<ClassicListDeviceData<T>> {
+  public async fetch(): Promise<Readonly<ClassicListDeviceData<T>>> {
     const data = await Promise.resolve(this.data)
     return data
   }

@@ -12,7 +12,7 @@ export type ClassicModel = BaseModel
 
 /** Base device model with type-discriminated device data. */
 export interface ClassicBaseDevice<T extends ClassicDeviceType> {
-  readonly data: ClassicListDeviceData<T>
+  readonly data: Readonly<ClassicListDeviceData<T>>
   readonly type: T
 }
 

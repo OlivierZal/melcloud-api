@@ -14,9 +14,9 @@ import type {
 export const classicFetchDevices = <
   T extends ClassicListDeviceData<ClassicDeviceType> | ClassicZoneSettings,
 >(
-  target: (...args: unknown[]) => Promise<T>,
+  target: (...args: unknown[]) => Promise<Readonly<T>>,
   _context: ClassMethodDecoratorContext,
-): ((...args: unknown[]) => Promise<T>) =>
+): ((...args: unknown[]) => Promise<Readonly<T>>) =>
   async function newTarget(
     this: { api: ClassicAPIAdapter },
     ...args: unknown[]

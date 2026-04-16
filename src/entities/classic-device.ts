@@ -20,7 +20,7 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
 
   public readonly type: T
 
-  public get data(): ClassicListDeviceData<T> {
+  public get data(): Readonly<ClassicListDeviceData<T>> {
     return this.#data
   }
 

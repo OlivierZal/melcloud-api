@@ -44,6 +44,7 @@ import {
 } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
+import { isKeyOf } from '../utils.ts'
 import type {
   ClassicAPIAdapter,
   ClassicAPIConfig,
@@ -81,8 +82,7 @@ const toISODate = (dateTime: DateTime): string => {
   return result
 }
 
-const isLanguage = (value: string): value is keyof typeof ClassicLanguage =>
-  value in ClassicLanguage
+const isLanguage = isKeyOf(ClassicLanguage)
 
 const formatErrors = (errors: Record<string, readonly string[]>): string =>
   Object.entries(errors)
