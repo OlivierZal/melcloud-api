@@ -10,6 +10,7 @@ import type {
 } from '../../src/api/interfaces.ts'
 import type { HttpResponse } from '../../src/http/index.ts'
 import type { ClassicLoginCredentials } from '../../src/types/index.ts'
+import { BaseAPI } from '../../src/api/base.ts'
 import { RateLimitError } from '../../src/errors/index.ts'
 import { HttpClient } from '../../src/http/client.ts'
 import {
@@ -27,99 +28,92 @@ const mockHttpClient = new HttpClient({
 })
 const mockRequest = vi.spyOn(mockHttpClient, 'request')
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- Inferred return type of dynamic import class
-const createTestAPIClass = async () => {
-  const { BaseAPI } = await import('../../src/api/base.ts')
+/**
+ * Minimal concrete subclass of BaseAPI used to test the shared
+ * request pipeline without any Classic/Home-specific logic.
+ */
+class TestAPI extends BaseAPI {
+  public readonly ensureSessionMock = vi.fn<() => Promise<void>>()
 
-  /**
-   * Minimal concrete subclass of BaseAPI used to test the shared
-   * request pipeline without any Classic/Home-specific logic.
-   */
-  return class extends BaseAPI {
-    public readonly ensureSessionMock = vi.fn<() => Promise<void>>()
+  public readonly getAuthHeadersMock = vi.fn<() => Record<string, string>>()
 
-    public readonly getAuthHeadersMock = vi.fn<() => Record<string, string>>()
+  public readonly retryAuthMock =
+    vi.fn<
+      (
+        method: string,
+        url: string,
+        config: Record<string, unknown>,
+      ) => Promise<HttpResponse | null>
+    >()
 
-    public readonly retryAuthMock =
-      vi.fn<
-        (
-          method: string,
-          url: string,
-          config: Record<string, unknown>,
-        ) => Promise<HttpResponse | null>
-      >()
+  public constructor(
+    config: BaseAPIConfig = {},
+    {
+      shouldUseDefaultTransport = false,
+    }: { shouldUseDefaultTransport?: boolean } = {},
+  ) {
+    super(config, {
+      ...(shouldUseDefaultTransport ? {} : { httpClient: mockHttpClient }),
+      httpConfig: { baseURL: 'https://test.api', timeout: 30_000 },
+      rateLimitHours: 2,
+      retryDelay: 1000,
+      syncCallback: async () => {
+        // stub: sync is exercised by tests that drive it explicitly
+      },
+    })
+    this.getAuthHeadersMock.mockReturnValue({})
+    this.ensureSessionMock.mockResolvedValue()
+    this.retryAuthMock.mockResolvedValue(null)
+  }
 
-    public constructor(
-      config: BaseAPIConfig = {},
-      {
-        shouldUseDefaultTransport = false,
-      }: { shouldUseDefaultTransport?: boolean } = {},
-    ) {
-      super(config, {
-        ...(shouldUseDefaultTransport ? {} : { httpClient: mockHttpClient }),
-        httpConfig: { baseURL: 'https://test.api', timeout: 30_000 },
-        rateLimitHours: 2,
-        retryDelay: 1000,
-        syncCallback: async () => {
-          // stub: sync is exercised by tests that drive it explicitly
-        },
-      })
-      this.getAuthHeadersMock.mockReturnValue({})
-      this.ensureSessionMock.mockResolvedValue()
-      this.retryAuthMock.mockResolvedValue(null)
-    }
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
+  public override async authenticate(
+    _context?: ClassicLoginCredentials,
+  ): Promise<boolean> {
+    // eslint-disable-next-line unicorn/no-useless-promise-resolve-reject -- Satisfy abstract return type
+    return Promise.resolve(true)
+  }
 
-    // eslint-disable-next-line @typescript-eslint/class-methods-use-this, @typescript-eslint/require-await -- Abstract stub
-    public override async authenticate(
-      _context?: ClassicLoginCredentials,
-    ): Promise<boolean> {
-      return true
-    }
+  /** Expose the protected dispatch for direct testing. */
+  public async callDispatch<T = unknown>(
+    method: string,
+    url: string,
+    config: Record<string, unknown> = {},
+  ): Promise<HttpResponse<T>> {
+    return this.dispatch<T>(method, url, config)
+  }
 
-    /** Expose the protected dispatch for direct testing. */
-    public async callDispatch<T = unknown>(
-      method: string,
-      url: string,
-      config: Record<string, unknown> = {},
-    ): Promise<HttpResponse<T>> {
-      return this.dispatch<T>(method, url, config)
-    }
+  /** Expose the protected request for testing. */
+  public async callRequest<T = unknown>(
+    method: string,
+    url: string,
+    config: Record<string, unknown> = {},
+  ): Promise<HttpResponse<T>> {
+    return this.request<T>(method, url, config)
+  }
 
-    /** Expose the protected request for testing. */
-    public async callRequest<T = unknown>(
-      method: string,
-      url: string,
-      config: Record<string, unknown> = {},
-    ): Promise<HttpResponse<T>> {
-      return this.request<T>(method, url, config)
-    }
+  protected override async ensureSession(): Promise<void> {
+    return this.ensureSessionMock()
+  }
 
-    protected override async ensureSession(): Promise<void> {
-      return this.ensureSessionMock()
-    }
+  protected override getAuthHeaders(): Record<string, string> {
+    return this.getAuthHeadersMock()
+  }
 
-    protected override getAuthHeaders(): Record<string, string> {
-      return this.getAuthHeadersMock()
-    }
-
-    protected override async retryAuth<T>(
-      method: string,
-      url: string,
-      config: Record<string, unknown>,
-    ): Promise<HttpResponse<T> | null> {
-      return cast(await this.retryAuthMock(method, url, config))
-    }
+  protected override async retryAuth<T>(
+    method: string,
+    url: string,
+    config: Record<string, unknown>,
+  ): Promise<HttpResponse<T> | null> {
+    return cast(await this.retryAuthMock(method, url, config))
   }
 }
 
 describe('baseAPI shared request pipeline', () => {
   // eslint-disable-next-line @typescript-eslint/init-declarations -- Assigned in beforeEach
-  let TestAPI: Awaited<ReturnType<typeof createTestAPIClass>>
+  let api: TestAPI
 
-  // eslint-disable-next-line @typescript-eslint/init-declarations -- Assigned in beforeEach
-  let api: InstanceType<typeof TestAPI>
-
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
     mockRequest.mockResolvedValue({
@@ -127,7 +121,6 @@ describe('baseAPI shared request pipeline', () => {
       headers: {},
       status: 200,
     })
-    TestAPI = await createTestAPIClass()
     api = new TestAPI()
   })
 

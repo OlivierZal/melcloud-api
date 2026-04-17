@@ -644,7 +644,7 @@ describe('mELCloud Classic API', () => {
       expect(result).toHaveProperty('errors')
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           data: expect.objectContaining({ DeviceIDs: [42] }),
           url: '/Report/GetUnitErrorLog2',
         }),
@@ -680,7 +680,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           headers: expect.objectContaining({
             'X-MitsContextKey': 'my-ctx',
           }),
@@ -726,7 +726,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           headers: expect.objectContaining({
             'X-MitsContextKey': 'newest',
           }),
@@ -750,7 +750,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           data: expect.objectContaining({
             Email: 'user',
             Password: 'pass',
@@ -760,7 +760,7 @@ describe('mELCloud Classic API', () => {
       )
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           headers: expect.objectContaining({
             'X-MitsContextKey': 'fresh',
           }),
@@ -788,7 +788,7 @@ describe('mELCloud Classic API', () => {
       )
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           headers: expect.objectContaining({
             'X-MitsContextKey': 'fresh',
           }),
@@ -811,7 +811,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           headers: expect.objectContaining({
             'X-MitsContextKey': 'valid',
           }),
