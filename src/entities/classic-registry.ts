@@ -71,7 +71,9 @@ const syncDeviceModel = (
   }
 }
 
-const KNOWN_DEVICE_TYPES = new Set<number>(Object.values(ClassicDeviceType))
+const KNOWN_DEVICE_TYPES: ReadonlySet<unknown> = new Set(
+  Object.values(ClassicDeviceType),
+)
 
 const createDeviceModel = (device: ClassicListDeviceAny): ClassicDeviceAny => {
   /*
@@ -79,10 +81,8 @@ const createDeviceModel = (device: ClassicListDeviceAny): ClassicDeviceAny => {
    * Keeps the switch below exhaustive on the union so no `default` arm
    * is needed (per the strict `switch-exhaustiveness-check` setting).
    */
-  if (!KNOWN_DEVICE_TYPES.has(device.Type as number)) {
-    throw new Error(
-      `Unsupported device type: ${JSON.stringify((device as { Type: unknown }).Type)}`,
-    )
+  if (!KNOWN_DEVICE_TYPES.has(device.Type)) {
+    throw new Error(`Unsupported device type: ${JSON.stringify(device.Type)}`)
   }
   switch (device.Type) {
     case ClassicDeviceType.Ata: {
