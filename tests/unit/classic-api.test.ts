@@ -181,25 +181,6 @@ describe('mELCloud Classic API', () => {
     expect(buildings).toHaveLength(1)
   })
 
-  it('devices() async iterator yields every synced device', async () => {
-    const building = createBuilding({
-      Structure: {
-        Areas: [],
-        Devices: [createDevice(), createDevice({ DeviceID: 2 })],
-        Floors: [],
-      },
-    })
-    mockHttpClient.request.mockResolvedValue({ data: [building] })
-    const api = await createApi()
-
-    const ids: number[] = []
-    for await (const device of api.devices()) {
-      ids.push(device.id)
-    }
-
-    expect(ids).toStrictEqual([1, 2])
-  })
-
   it('returns empty array when fetch fails', async () => {
     const api = await createApi()
     mockHttpClient.request.mockRejectedValueOnce(new Error('Network'))

@@ -1,4 +1,3 @@
-import type { HomeDevice } from '../entities/home-device.ts'
 import type { HttpResponse } from '../http/index.ts'
 import type {
   ClassicLoginCredentials,
@@ -242,20 +241,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       return []
     } finally {
       this.syncManager.planNext()
-    }
-  }
-
-  /**
-   * Async iterator over every synced Home device. Triggers a fresh
-   * `list()` on first consumption, then yields directly from the
-   * registry so consumers can process devices before the full
-   * building hierarchy is available.
-   * @yields Each device model currently tracked by the registry.
-   */
-  public async *devices(): AsyncGenerator<HomeDevice> {
-    await this.list()
-    for (const device of this.#registry.getAll()) {
-      yield device
     }
   }
 
