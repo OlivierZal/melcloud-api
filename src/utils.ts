@@ -122,7 +122,7 @@ export function typedFromEntries(
  */
 export const isUpdateDeviceData = <T extends ClassicDeviceType>(
   data: Record<keyof ClassicUpdateDeviceData<T>, unknown>,
-  key: PropertyKey,
+  key: string,
 ): key is string & keyof ClassicUpdateDeviceData<T> => Object.hasOwn(data, key)
 
 const getChartLineSeries = ({

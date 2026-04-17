@@ -53,18 +53,30 @@ await facade.updateValues({ setTemperature: 21 })
 
 ## Imports
 
-Exports follow a `Classic*` / `Home*` prefix convention so the target API is obvious at the call site.
+Exports follow a `Classic*` / `Home*` prefix convention so the target API is obvious at the call site. The `./classic` and `./home` subpaths re-export everything with the prefix stripped — a modern alternative to TypeScript's deprecated `namespace` keyword.
 
 ```ts title="imports"
-// Root entry — everything in one place
-import { ClassicAPI, ClassicGetDeviceData, HomeAPI } from '@olivierzal/melcloud-api'
+// From the root — prefixed names, works in mixed Classic/Home contexts
+import { ClassicAPI, HomeAPI, type ClassicGetDeviceData } from '@olivierzal/melcloud-api'
+
+// From the Classic-scoped subpath — short names, no ambiguity
+import { API, FanSpeed, type GetDeviceData } from '@olivierzal/melcloud-api/classic'
+
+// From the Home-scoped subpath — short names
+import { API, type AtaValues, type DeviceCapabilities } from '@olivierzal/melcloud-api/home'
+
+// Namespace-like usage (recommended for mixed Classic + Home code)
+import type * as Classic from '@olivierzal/melcloud-api/classic'
+import type * as Home from '@olivierzal/melcloud-api/home'
+const a: Classic.GetDeviceData<0> = ...
+const b: Home.AtaValues = ...
 
 // Module-scoped subpaths for fine-grained imports (tree-shaking hints)
 import { NoChangesError } from '@olivierzal/melcloud-api/errors'
 import type { ClassicGetDeviceData } from '@olivierzal/melcloud-api/types'
 ```
 
-Available subpaths: `/api`, `/constants`, `/decorators`, `/entities`, `/enum-mappings`, `/errors`, `/facades`, `/observability`, `/resilience`, `/types`.
+Available subpaths: `/classic`, `/home`, `/api`, `/constants`, `/decorators`, `/entities`, `/enum-mappings`, `/errors`, `/facades`, `/observability`, `/resilience`, `/types`.
 
 ## Documentation
 
