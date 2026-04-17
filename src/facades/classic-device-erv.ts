@@ -1,7 +1,7 @@
-import type { ClassicUpdateDeviceData } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import type { ReportChartPieOptions, ReportQuery } from './interfaces.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
+import { classicErvFlags } from './classic-flags.ts'
 
 const isRelevantVentilationMode = (label?: string): boolean =>
   label !== undefined &&
@@ -12,14 +12,7 @@ const isRelevantVentilationMode = (label?: string): boolean =>
 export class ClassicDeviceErvFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Erv
 > {
-  public readonly flags = {
-    Power: 0x1,
-    SetFanSpeed: 0x8,
-    VentilationMode: 0x4,
-  } as const satisfies Record<
-    keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Erv>,
-    number
-  >
+  public readonly flags = classicErvFlags
 
   public readonly type = ClassicDeviceType.Erv
 
