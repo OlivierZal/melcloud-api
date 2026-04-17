@@ -293,18 +293,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Report/GetUnitErrorLog2', { data: postData })
   }
 
-  public async getFrostProtection({
-    params,
-  }: {
-    params: ClassicSettingsParams
-  }): Promise<{ data: ClassicFrostProtectionData }> {
-    return this.request('get', '/FrostProtection/GetSettings', { params })
-  }
-
-  public isAuthenticated(): boolean {
-    return this.contextKey !== ''
-  }
-
   /**
    * Retrieve a parsed, paginated error log for the specified devices.
    * Filters out entries with invalid dates or empty messages.
@@ -343,6 +331,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       nextFromDate: toISODate(nextToDate.minus({ days: period })),
       nextToDate: toISODate(nextToDate),
     }
+  }
+
+  public async getFrostProtection({
+    params,
+  }: {
+    params: ClassicSettingsParams
+  }): Promise<{ data: ClassicFrostProtectionData }> {
+    return this.request('get', '/FrostProtection/GetSettings', { params })
   }
 
   public async getGroup({
@@ -435,6 +431,10 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     params: ClassicGetDeviceDataParams
   }): Promise<{ data: ClassicGetDeviceData<T> }> {
     return this.request('get', '/Device/Get', { params })
+  }
+
+  public isAuthenticated(): boolean {
+    return this.contextKey !== ''
   }
 
   public async list(): Promise<{ data: ClassicBuildingWithStructure[] }> {

@@ -129,10 +129,10 @@ export interface ClassicErrorLogData {
 
 export interface ClassicErrorLogPostData {
   readonly DeviceIDs: ClassicDeviceID | readonly ClassicDeviceID[]
-  readonly FromDate?: string
-  readonly ToDate?: string
   // Number of days up to now, replaces `FromDate` and `ToDate` if strictly positive
   readonly Duration?: number
+  readonly FromDate?: string
+  readonly ToDate?: string
 }
 
 export interface ClassicFailureData {

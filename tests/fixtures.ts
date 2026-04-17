@@ -7,6 +7,8 @@ import {
   type ClassicAreaDataAny,
   type ClassicBuildingData,
   type ClassicFloorData,
+  type ClassicFrostProtectionData,
+  type ClassicHolidayModeData,
   type ClassicListDevice,
   type ClassicListDeviceAny,
   type ClassicListDeviceDataAta,
@@ -251,8 +253,8 @@ export const reportData = (
 })
 
 export const holidayModeResponse = (
-  overrides: Record<string, unknown> = {},
-): Record<string, unknown> => ({
+  overrides: Partial<ClassicHolidayModeData> = {},
+): ClassicHolidayModeData => ({
   EndDate: { Day: 1, Hour: 0, Minute: 0, Month: 1, Second: 0, Year: 2024 },
   HMDefined: false,
   HMEnabled: false,
@@ -264,8 +266,8 @@ export const holidayModeResponse = (
 })
 
 export const frostProtectionResponse = (
-  overrides: Record<string, unknown> = {},
-): Record<string, unknown> => ({
+  overrides: Partial<ClassicFrostProtectionData> = {},
+): ClassicFrostProtectionData => ({
   FPDefined: false,
   FPEnabled: false,
   FPMaxTemperature: 16,

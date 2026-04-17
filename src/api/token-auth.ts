@@ -32,23 +32,6 @@ const REDIRECT_STATUS_MAX = 400
 /*  Types                                                             */
 /* ------------------------------------------------------------------ */
 
-/** Token response surfaced by the IdentityServer token endpoint. */
-export interface TokenResponse {
-  access_token: string
-  expires_in: number
-  scope: string
-  token_type: string
-  id_token?: string
-  refresh_token?: string
-}
-
-/** Minimal response shape surfaced internally by the OIDC flow. */
-interface OidcResponse<T = unknown> {
-  readonly data: T
-  readonly headers: Record<string, string | string[]>
-  readonly status: number
-}
-
 /** Options for {@link authRequest}. */
 interface AuthRequestOptions {
   config: {
@@ -61,14 +44,6 @@ interface AuthRequestOptions {
   abortSignal?: AbortSignal
 }
 
-/** Inputs for {@link fetchPostForm}. */
-interface PostFormOptions {
-  body: string
-  headers: Record<string, string>
-  url: string
-  abortSignal?: AbortSignal
-}
-
 /** Options for {@link authFollowRedirects}. */
 interface FollowRedirectsOptions {
   jar: CookieJar
@@ -77,12 +52,37 @@ interface FollowRedirectsOptions {
   remaining?: number
 }
 
+/** Minimal response shape surfaced internally by the OIDC flow. */
+interface OidcResponse<T = unknown> {
+  readonly data: T
+  readonly headers: Record<string, string | string[]>
+  readonly status: number
+}
+
+/** Inputs for {@link fetchPostForm}. */
+interface PostFormOptions {
+  body: string
+  headers: Record<string, string>
+  url: string
+  abortSignal?: AbortSignal
+}
+
 /** Options for {@link submitCredentials}. */
 interface SubmitCredentialsOptions {
   authorizeUrl: string
   credentials: { password: string; username: string }
   jar: CookieJar
   abortSignal?: AbortSignal
+}
+
+/** Token response surfaced by the IdentityServer token endpoint. */
+export interface TokenResponse {
+  access_token: string
+  expires_in: number
+  scope: string
+  token_type: string
+  id_token?: string
+  refresh_token?: string
 }
 
 /* ------------------------------------------------------------------ */

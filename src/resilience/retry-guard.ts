@@ -9,20 +9,20 @@ import { DisposableTimeout } from './disposable-timeout.ts'
  * attempts on 401 responses and prevent tight retry loops.
  */
 export class RetryGuard implements Disposable {
-  readonly #delay: number
-
-  readonly #timeout = new DisposableTimeout()
-
-  public constructor(delayMs: number) {
-    this.#delay = delayMs
-  }
-
   /**
    * Whether a retry window is currently open (a previous attempt is in flight).
    * @returns `true` if the guard is holding a pending retry window, `false` otherwise.
    */
   public get isActive(): boolean {
     return this.#timeout.isActive
+  }
+
+  readonly #delay: number
+
+  readonly #timeout = new DisposableTimeout()
+
+  public constructor(delayMs: number) {
+    this.#delay = delayMs
   }
 
   /** Cancel the current retry window on disposal, preventing leaked timers. */

@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { ClassicAPI, ClassicAPIConfig } from '../../src/api/index.ts'
+import type {
+  ClassicAPI,
+  ClassicAPIConfig,
+  SyncCallback,
+} from '../../src/api/index.ts'
 import type { ClassicDeviceType } from '../../src/constants.ts'
 import { HttpClient } from '../../src/http/client.ts'
 import {
@@ -142,7 +146,7 @@ describe('mELCloud Classic API', () => {
   })
 
   it('accepts custom configuration', async () => {
-    const onSync = vi.fn()
+    const onSync = vi.fn<SyncCallback>()
     const api = await createApi({
       language: 'fr',
       logger: createLogger(),
@@ -224,7 +228,7 @@ describe('mELCloud Classic API', () => {
 
   it('logs error when auto-sync onSync callback throws', async () => {
     const logger = createLogger()
-    const onSync = vi.fn().mockImplementationOnce(() => {
+    const onSync = vi.fn<SyncCallback>().mockImplementationOnce(async () => {
       // First call (initial create) succeeds, subsequent calls can throw
     })
     await melCloudApi.create({

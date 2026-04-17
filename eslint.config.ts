@@ -290,6 +290,14 @@ const config = defineConfig([
       camelcase: 'off',
       'capitalized-comments': 'off',
       curly: 'error',
+      /*
+       * `@typescript-eslint/switch-exhaustiveness-check` is the TS-aware
+       * equivalent and, with `requireDefaultForNonUnion: true`, already
+       * mandates a default on non-union switches. The core `default-case`
+       * rule conflicts on exhaustive-union switches where a default is
+       * forbidden.
+       */
+      'default-case': 'off',
       'import-x/first': 'error',
       'import-x/newline-after-import': 'error',
       'import-x/no-absolute-path': 'error',

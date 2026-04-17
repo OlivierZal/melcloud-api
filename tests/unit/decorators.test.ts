@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { ClassicAPIAdapter } from '../../src/api/index.ts'
+import type { ClassicAPIAdapter, SyncCallback } from '../../src/api/index.ts'
 import type {
   ClassicFailureData,
   ClassicGroupState,
@@ -19,7 +19,7 @@ import {
   classicUpdateDevices,
 } from '../../src/decorators/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
-import { mock } from '../helpers.ts'
+import { cast, mock } from '../helpers.ts'
 
 const createMockFacade = (
   devices: { type: ClassicDeviceType; update: ReturnType<typeof vi.fn> }[] = [],
@@ -124,7 +124,9 @@ const callUpdateDevice = async (
   facade: unknown,
   setData: unknown,
 ): Promise<unknown> => {
-  const target = vi.fn().mockResolvedValue(setData)
+  const target = vi
+    .fn<(...args: unknown[]) => Promise<never>>()
+    .mockResolvedValue(cast(setData))
   const decorated = classicUpdateDevice(
     target,
     mock<ClassMethodDecoratorContext>(),
@@ -144,8 +146,10 @@ const resolvePowerData = async (): Promise<{ Alpha: null; Power: true }> => {
 
 describe(classicFetchDevices, () => {
   it('calls api.fetch before the target method', async () => {
-    const fetchMock = vi.fn()
-    const target = vi.fn().mockResolvedValue('result')
+    const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>()
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      .mockResolvedValue(cast('result'))
     const decorated = classicFetchDevices(
       target,
       mock<ClassMethodDecoratorContext>(),
@@ -160,8 +164,10 @@ describe(classicFetchDevices, () => {
 
 describe(classicSyncDevices, () => {
   it('calls onSync after the target method', async () => {
-    const onSyncMock = vi.fn()
-    const target = vi.fn().mockResolvedValue('result')
+    const onSyncMock = vi.fn<SyncCallback>()
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      .mockResolvedValue(cast('result'))
     const decorated = classicSyncDevices()(
       target,
       mock<ClassMethodDecoratorContext>(),
@@ -174,8 +180,10 @@ describe(classicSyncDevices, () => {
   })
 
   it('passes type to onSync', async () => {
-    const onSyncMock = vi.fn()
-    const target = vi.fn().mockResolvedValue('result')
+    const onSyncMock = vi.fn<SyncCallback>()
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      .mockResolvedValue(cast('result'))
     const decorated = classicSyncDevices({ type: ClassicDeviceType.Ata })(
       target,
       mock<ClassMethodDecoratorContext>(),
@@ -187,7 +195,9 @@ describe(classicSyncDevices, () => {
   })
 
   it('works when onSync is undefined', async () => {
-    const target = vi.fn().mockResolvedValue('result')
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      .mockResolvedValue(cast('result'))
     const decorated = classicSyncDevices()(
       target,
       mock<ClassMethodDecoratorContext>(),
@@ -201,7 +211,7 @@ describe(classicSyncDevices, () => {
 
 describe(classicUpdateDevices, () => {
   it('updates all devices with the arg data', async () => {
-    const update = vi.fn()
+    const update = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
     const decorated = decorateUpdateDevices('updateGroupState', resolveTrue)
     await decorated.call(facade, { Power: true })
@@ -219,8 +229,8 @@ describe(classicUpdateDevices, () => {
   })
 
   it('filters devices by type when specified', async () => {
-    const updateAta = vi.fn()
-    const updateAtw = vi.fn()
+    const updateAta = vi.fn<(data: unknown) => void>()
+    const updateAtw = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([
       { type: ClassicDeviceType.Ata, update: updateAta },
       { type: ClassicDeviceType.Atw, update: updateAtw },
@@ -235,7 +245,7 @@ describe(classicUpdateDevices, () => {
   })
 
   it('uses updatePower logic when method name is updatePower', async () => {
-    const update = vi.fn()
+    const update = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
     const decorated = decorateUpdateDevices('updatePower', resolveTrue)
     await decorated.call(facade, true)
@@ -244,7 +254,7 @@ describe(classicUpdateDevices, () => {
   })
 
   it('filters null/undefined values from data when not updatePower', async () => {
-    const update = vi.fn()
+    const update = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
     const decorated = decorateUpdateDevices(
       'updateGroupState',
@@ -258,7 +268,7 @@ describe(classicUpdateDevices, () => {
 
 describe(classicUpdateDevice, () => {
   it('updates the device model with converted data', async () => {
-    const update = vi.fn()
+    const update = vi.fn<(data: unknown) => void>()
     await callUpdateDevice(createAtaFacade(update), createAtaSetData())
 
     expect(update).toHaveBeenCalledTimes(1)
@@ -266,7 +276,7 @@ describe(classicUpdateDevice, () => {
   })
 
   it('converts ATA set keys to list keys', async () => {
-    const update = vi.fn()
+    const update = vi.fn<(data: unknown) => void>()
     await callUpdateDevice(
       createAtaFacade(update),
       createAtaSetData({ EffectiveFlags: 0x8, SetFanSpeed: 4 }),
@@ -276,7 +286,7 @@ describe(classicUpdateDevice, () => {
   })
 
   it('passes through non-ATA data without key conversion', async () => {
-    const update = vi.fn()
+    const update = vi.fn<(data: unknown) => void>()
     await callUpdateDevice(createErvFacade(update), createErvSetData())
 
     expect(update.mock.lastCall?.[0]).toHaveProperty('Power', true)
@@ -291,7 +301,7 @@ describe(classicUpdateDevice, () => {
   })
 
   it('handles CLASSIC_FLAG_UNCHANGED by including all data', async () => {
-    const update = vi.fn()
+    const update = vi.fn<(data: unknown) => void>()
     await callUpdateDevice(
       createErvFacade(update),
       createErvSetData({

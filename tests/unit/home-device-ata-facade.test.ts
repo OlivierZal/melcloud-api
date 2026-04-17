@@ -47,11 +47,11 @@ const createModel = (
 
 const createApi = (): HomeAPI =>
   mock<HomeAPI>({
-    getEnergy: vi.fn(),
-    getErrorLog: vi.fn(),
-    getSignal: vi.fn(),
-    getTemperatures: vi.fn(),
-    updateValues: vi.fn().mockResolvedValue(true),
+    getEnergy: vi.fn<HomeAPI['getEnergy']>(),
+    getErrorLog: vi.fn<HomeAPI['getErrorLog']>(),
+    getSignal: vi.fn<HomeAPI['getSignal']>(),
+    getTemperatures: vi.fn<HomeAPI['getTemperatures']>(),
+    updateValues: vi.fn<HomeAPI['updateValues']>().mockResolvedValue(true),
   })
 
 describe('home device ata facade', () => {

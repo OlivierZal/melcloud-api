@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPI } from '../../src/api/classic.ts'
+import type { SyncCallback } from '../../src/api/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { HttpClient } from '../../src/http/client.ts'
@@ -205,10 +206,14 @@ describe('api lifecycle', () => {
   it('settingManager persists credentials across ClassicAPI operations', async () => {
     const store = new Map<string, string | null | undefined>()
     const settingManager = {
-      get: vi.fn((key: string) => store.get(key)),
-      set: vi.fn((key: string, value: string | null | undefined) => {
-        store.set(key, value)
-      }),
+      get: vi.fn<(key: string) => string | null | undefined>((key) =>
+        store.get(key),
+      ),
+      set: vi.fn<(key: string, value: string | null | undefined) => void>(
+        (key, value) => {
+          store.set(key, value)
+        },
+      ),
     }
 
     mockRequest.mockImplementation(async (config) => {
@@ -265,7 +270,7 @@ describe('api lifecycle', () => {
   })
 
   it('onSync callback is invoked after fetch', async () => {
-    const onSync = vi.fn()
+    const onSync = vi.fn<SyncCallback>()
     await melCloudApi.create({
       autoSyncInterval: 0,
       httpClient: mockHttpClient,

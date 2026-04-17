@@ -9,8 +9,6 @@ import { HttpError } from './errors.ts'
  */
 type FetchBody = NonNullable<FetchInit['body']>
 
-type FetchInit = NonNullable<Parameters<typeof fetch>[1]>
-
 /*
  * `Dispatcher` is defined both in the `undici` npm package and in
  * `undici-types` (the copy bundled with `@types/node` that fetch's
@@ -23,9 +21,34 @@ type FetchInit = NonNullable<Parameters<typeof fetch>[1]>
  */
 type FetchDispatcher = object
 
+type FetchInit = NonNullable<Parameters<typeof fetch>[1]>
+
 const NULL_BODY_STATUS = 204
 
 const JSON_CONTENT_TYPE = 'application/json'
+
+/** Construction options for {@link HttpClient}. */
+export interface HttpClientConfig {
+  readonly baseURL: string
+  readonly timeout: number
+  readonly dispatcher?: FetchDispatcher
+  readonly headers?: Record<string, string>
+}
+
+/**
+ * Configuration accepted by {@link HttpClient.request}.
+ *
+ * Intentionally mirrors the subset of the Axios request config that the
+ * library relied on, so call sites migrate verbatim.
+ */
+export interface HttpRequestConfig {
+  readonly data?: unknown
+  readonly headers?: Record<string, string>
+  readonly method?: string
+  readonly params?: Record<string, unknown>
+  readonly signal?: AbortSignal
+  readonly url?: string
+}
 
 /** Minimal response shape surfaced to callers. */
 export interface HttpResponse<T = unknown> {
@@ -47,29 +70,6 @@ export interface HttpTransport {
   readonly request: <T = unknown>(
     config: HttpRequestConfig,
   ) => Promise<HttpResponse<T>>
-}
-
-/**
- * Configuration accepted by {@link HttpClient.request}.
- *
- * Intentionally mirrors the subset of the Axios request config that the
- * library relied on, so call sites migrate verbatim.
- */
-export interface HttpRequestConfig {
-  readonly data?: unknown
-  readonly headers?: Record<string, string>
-  readonly method?: string
-  readonly params?: Record<string, unknown>
-  readonly signal?: AbortSignal
-  readonly url?: string
-}
-
-/** Construction options for {@link HttpClient}. */
-export interface HttpClientConfig {
-  readonly baseURL: string
-  readonly timeout: number
-  readonly dispatcher?: FetchDispatcher
-  readonly headers?: Record<string, string>
 }
 
 const resolveUrl = (baseURL: string, url: string | undefined): string => {
@@ -247,6 +247,18 @@ export class HttpClient implements HttpTransport {
     }
   }
 
+  /*
+   * `dispatcher` is declared with a nominally different (but structurally
+   * identical) type by undici-types vs the undici npm package. Attach it
+   * via `Object.assign` so the compiler mismatch stays scoped to the
+   * fetch hand-off, not the public surface.
+   */
+  #applyDispatcher(init: FetchInit): void {
+    if (this.#dispatcher !== undefined) {
+      Object.assign(init, { dispatcher: this.#dispatcher })
+    }
+  }
+
   #applySignal(init: FetchInit, callerSignal: AbortSignal | undefined): void {
     const timeoutSignal =
       this.timeout > 0 ? AbortSignal.timeout(this.timeout) : undefined
@@ -270,17 +282,5 @@ export class HttpClient implements HttpTransport {
     this.#applySignal(init, signal)
     this.#applyDispatcher(init)
     return init
-  }
-
-  /*
-   * `dispatcher` is declared with a nominally different (but structurally
-   * identical) type by undici-types vs the undici npm package. Attach it
-   * via `Object.assign` so the compiler mismatch stays scoped to the
-   * fetch hand-off, not the public surface.
-   */
-  #applyDispatcher(init: FetchInit): void {
-    if (this.#dispatcher !== undefined) {
-      Object.assign(init, { dispatcher: this.#dispatcher })
-    }
   }
 }

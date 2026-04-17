@@ -46,7 +46,6 @@ const createDeviceFacade = (
     case ClassicDeviceType.Erv: {
       return new ClassicDeviceErvFacade(api, registry, device)
     }
-    // No default
   }
 }
 
@@ -75,6 +74,5 @@ export const createFacade = (
     case 'floor': {
       return new ClassicFloorFacade(api, registry, instance)
     }
-    // No default
   }
 }

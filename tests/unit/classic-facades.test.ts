@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { ClassicAPIAdapter } from '../../src/api/index.ts'
+import type { ClassicAPIAdapter, SyncCallback } from '../../src/api/index.ts'
 import {
   ClassicDeviceType,
   ClassicOperationMode,
@@ -66,66 +66,102 @@ const createRegistry = (): ClassicRegistry => {
 const createMockApi = (
   overrides: Partial<ClassicAPIAdapter> = {},
 ): ClassicAPIAdapter =>
-  mock({
-    fetch: vi.fn().mockResolvedValue([]),
-    getEnergy: vi.fn().mockResolvedValue({ data: {} }),
-    getErrorEntries: vi.fn().mockResolvedValue({ data: [] }),
-    getErrorLog: vi.fn().mockResolvedValue({ errors: [] }),
-    getFrostProtection: vi.fn().mockResolvedValue({
-      data: frostProtectionResponse({ FPDefined: true }),
-    }),
-    getGroup: vi.fn().mockResolvedValue({
-      data: { Data: { Group: { State: { Power: true } } } },
-    }),
-    getHolidayMode: vi.fn().mockResolvedValue({
-      data: holidayModeResponse({ HMDefined: true }),
-    }),
-    getHourlyTemperatures: vi.fn().mockResolvedValue({
-      data: reportData(),
-    }),
-    getInternalTemperatures: vi.fn().mockResolvedValue({
-      data: reportData(),
-    }),
-    getOperationModes: vi.fn().mockResolvedValue({
-      data: [{ Key: 'Heating', Value: 100 }],
-    }),
-    getSignal: vi.fn().mockResolvedValue({
-      data: reportData(),
-    }),
-    getTemperatures: vi.fn().mockResolvedValue({
-      data: reportData(),
-    }),
-    getTiles: vi.fn().mockResolvedValue({
-      data: { SelectedDevice: null, Tiles: [] },
-    }),
-    getValues: vi.fn().mockResolvedValue({ data: { EffectiveFlags: 0 } }),
-    updateFrostProtection: vi.fn().mockResolvedValue({
-      data: { AttributeErrors: null, Success: true },
-    }),
-    updateGroupState: vi.fn().mockResolvedValue({
-      data: { AttributeErrors: null, Success: true },
-    }),
-    updateHolidayMode: vi.fn().mockResolvedValue({
-      data: { AttributeErrors: null, Success: true },
-    }),
-    updatePower: vi.fn().mockResolvedValue({ data: true }),
-    updateValues: vi.fn().mockResolvedValue({
-      data: mock<ClassicSetDeviceDataAta>({
-        DeviceType: ClassicDeviceType.Ata,
-        EffectiveFlags: 0x1,
-        LastCommunication: '',
-        NextCommunication: '',
-        NumberOfFanSpeeds: 5,
-        Offline: false,
-        OperationMode: ClassicOperationMode.heat,
-        Power: true,
-        RoomTemperature: 22,
-        SetFanSpeed: 3,
-        SetTemperature: 24,
-        VaneHorizontal: 0,
-        VaneVertical: 0,
+  mock<ClassicAPIAdapter>({
+    fetch: vi.fn<ClassicAPIAdapter['fetch']>().mockResolvedValue([]),
+    getEnergy: vi
+      .fn<ClassicAPIAdapter['getEnergy']>()
+      .mockResolvedValue(cast({ data: {} })),
+    getErrorEntries: vi
+      .fn<ClassicAPIAdapter['getErrorEntries']>()
+      .mockResolvedValue({ data: [] }),
+    getErrorLog: vi
+      .fn<ClassicAPIAdapter['getErrorLog']>()
+      .mockResolvedValue(cast({ errors: [] })),
+    getFrostProtection: vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockResolvedValue({
+        data: frostProtectionResponse({ FPDefined: true }),
       }),
+    getGroup: vi.fn<ClassicAPIAdapter['getGroup']>().mockResolvedValue(
+      cast({
+        data: { Data: { Group: { State: { Power: true } } } },
+      }),
+    ),
+    getHolidayMode: vi
+      .fn<ClassicAPIAdapter['getHolidayMode']>()
+      .mockResolvedValue({
+        data: holidayModeResponse({ HMDefined: true }),
+      }),
+    getHourlyTemperatures: vi
+      .fn<ClassicAPIAdapter['getHourlyTemperatures']>()
+      .mockResolvedValue({
+        data: reportData(),
+      }),
+    getInternalTemperatures: vi
+      .fn<ClassicAPIAdapter['getInternalTemperatures']>()
+      .mockResolvedValue({
+        data: reportData(),
+      }),
+    getOperationModes: vi
+      .fn<ClassicAPIAdapter['getOperationModes']>()
+      .mockResolvedValue({
+        data: [{ Key: 'Heating', Value: 100 }],
+      }),
+    getSignal: vi.fn<ClassicAPIAdapter['getSignal']>().mockResolvedValue({
+      data: reportData(),
     }),
+    getTemperatures: vi
+      .fn<ClassicAPIAdapter['getTemperatures']>()
+      .mockResolvedValue({
+        data: reportData(),
+      }),
+    getTiles: cast(
+      vi
+        .fn<ClassicAPIAdapter['getTiles']>()
+        .mockResolvedValue(cast({ data: { SelectedDevice: null, Tiles: [] } })),
+    ),
+    getValues: vi
+      .fn<ClassicAPIAdapter['getValues']>()
+      .mockResolvedValue(cast({ data: { EffectiveFlags: 0 } })),
+    updateFrostProtection: vi
+      .fn<ClassicAPIAdapter['updateFrostProtection']>()
+      .mockResolvedValue({
+        data: { AttributeErrors: null, Success: true },
+      }),
+    updateGroupState: vi
+      .fn<ClassicAPIAdapter['updateGroupState']>()
+      .mockResolvedValue({
+        data: { AttributeErrors: null, Success: true },
+      }),
+    updateHolidayMode: vi
+      .fn<ClassicAPIAdapter['updateHolidayMode']>()
+      .mockResolvedValue({
+        data: { AttributeErrors: null, Success: true },
+      }),
+    updatePower: vi
+      .fn<ClassicAPIAdapter['updatePower']>()
+      .mockResolvedValue({ data: true }),
+    updateValues: cast(
+      vi.fn<ClassicAPIAdapter['updateValues']>().mockResolvedValue(
+        cast({
+          data: mock<ClassicSetDeviceDataAta>({
+            DeviceType: ClassicDeviceType.Ata,
+            EffectiveFlags: 0x1,
+            LastCommunication: '',
+            NextCommunication: '',
+            NumberOfFanSpeeds: 5,
+            Offline: false,
+            OperationMode: ClassicOperationMode.heat,
+            Power: true,
+            RoomTemperature: 22,
+            SetFanSpeed: 3,
+            SetTemperature: 24,
+            VaneHorizontal: 0,
+            VaneVertical: 0,
+          }),
+        }),
+      ),
+    ),
     ...overrides,
   })
 
@@ -237,27 +273,31 @@ const createErvFacade = (
 const atwSetValuesResponse = (
   overrides: Record<string, unknown> = {},
 ): Partial<ClassicAPIAdapter> => ({
-  updateValues: vi.fn().mockResolvedValue({
-    data: {
-      DeviceType: ClassicDeviceType.Atw,
-      EffectiveFlags: 0x1,
-      ForcedHotWaterMode: false,
-      LastCommunication: '',
-      NextCommunication: '',
-      Offline: false,
-      OperationModeZone1: 0,
-      OperationModeZone2: 0,
-      Power: true,
-      SetCoolFlowTemperatureZone1: 20,
-      SetCoolFlowTemperatureZone2: 20,
-      SetHeatFlowTemperatureZone1: 40,
-      SetHeatFlowTemperatureZone2: 40,
-      SetTankWaterTemperature: 50,
-      SetTemperatureZone1: 22,
-      SetTemperatureZone2: 22,
-      ...overrides,
-    },
-  }),
+  updateValues: cast(
+    vi.fn<ClassicAPIAdapter['updateValues']>().mockResolvedValue(
+      cast({
+        data: {
+          DeviceType: ClassicDeviceType.Atw,
+          EffectiveFlags: 0x1,
+          ForcedHotWaterMode: false,
+          LastCommunication: '',
+          NextCommunication: '',
+          Offline: false,
+          OperationModeZone1: 0,
+          OperationModeZone2: 0,
+          Power: true,
+          SetCoolFlowTemperatureZone1: 20,
+          SetCoolFlowTemperatureZone2: 20,
+          SetHeatFlowTemperatureZone1: 40,
+          SetHeatFlowTemperatureZone2: 40,
+          SetTankWaterTemperature: 50,
+          SetTemperatureZone1: 22,
+          SetTemperatureZone2: 22,
+          ...overrides,
+        },
+      }),
+    ),
+  ),
 })
 
 const createZone2Facade = (
@@ -348,7 +388,7 @@ describe('building facade', () => {
   })
 
   it('calls notifySync', async () => {
-    const onSync = vi.fn()
+    const onSync = vi.fn<SyncCallback>()
     const { facade } = createBuildingFacade({ onSync })
     await facade.notifySync()
 
@@ -461,7 +501,9 @@ describe('building facade group', () => {
 
   it('throws when group API fails', async () => {
     const { facade } = createBuildingFacade({
-      getGroup: vi.fn().mockRejectedValue(new Error('fail')),
+      getGroup: vi
+        .fn<ClassicAPIAdapter['getGroup']>()
+        .mockRejectedValue(new Error('fail')),
     })
 
     await expect(facade.getGroup()).rejects.toThrow(
@@ -471,7 +513,9 @@ describe('building facade group', () => {
 
   it('throws when updateGroupState API fails', async () => {
     const { facade } = createBuildingFacade({
-      updateGroupState: vi.fn().mockRejectedValue(new Error('fail')),
+      updateGroupState: vi
+        .fn<ClassicAPIAdapter['updateGroupState']>()
+        .mockRejectedValue(new Error('fail')),
     })
 
     await expect(facade.updateGroupState({ Power: true })).rejects.toThrow(
@@ -513,7 +557,7 @@ describe('area facade', () => {
 describe('base facade frost protection fallback', () => {
   it('falls back to device frost protection when zone fails', async () => {
     const fpMock = vi
-      .fn()
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
         data: frostProtectionResponse(),
@@ -526,9 +570,11 @@ describe('base facade frost protection fallback', () => {
   })
 
   it('uses cached frost protection state on subsequent calls', async () => {
-    const fpMock = vi.fn().mockResolvedValue({
-      data: frostProtectionResponse({ FPDefined: true }),
-    })
+    const fpMock = vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockResolvedValue({
+        data: frostProtectionResponse({ FPDefined: true }),
+      })
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
     const result1 = await facade.getFrostProtection()
     const result2 = await facade.getFrostProtection()
@@ -539,7 +585,7 @@ describe('base facade frost protection fallback', () => {
 
   it('uses cached device-level frost protection on subsequent calls', async () => {
     const fpMock = vi
-      .fn()
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
         data: frostProtectionResponse(),
@@ -556,7 +602,7 @@ describe('base facade frost protection fallback', () => {
 describe('base facade holiday mode fallback', () => {
   it('falls back to device holiday mode when zone fails', async () => {
     const hmMock = vi
-      .fn()
+      .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
         data: holidayModeResponse(),
@@ -569,9 +615,11 @@ describe('base facade holiday mode fallback', () => {
   })
 
   it('uses cached zone-level holiday mode on subsequent calls', async () => {
-    const hmMock = vi.fn().mockResolvedValue({
-      data: holidayModeResponse({ HMDefined: true }),
-    })
+    const hmMock = vi
+      .fn<ClassicAPIAdapter['getHolidayMode']>()
+      .mockResolvedValue({
+        data: holidayModeResponse({ HMDefined: true }),
+      })
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
     const result1 = await facade.getHolidayMode()
     const result2 = await facade.getHolidayMode()
@@ -582,7 +630,7 @@ describe('base facade holiday mode fallback', () => {
 
   it('uses cached device-level holiday mode on subsequent calls', async () => {
     const hmMock = vi
-      .fn()
+      .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
         data: holidayModeResponse(),
@@ -599,7 +647,7 @@ describe('base facade holiday mode fallback', () => {
 describe('base facade frost protection with device fallback', () => {
   it('uses DeviceIds location when frost protection is not defined', async () => {
     const fpMock = vi
-      .fn()
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
         data: frostProtectionResponse(),
@@ -617,7 +665,7 @@ describe('base facade frost protection with device fallback', () => {
 describe('base facade holiday mode with device fallback', () => {
   it('uses Devices location when holiday mode is not defined', async () => {
     const hmMock = vi
-      .fn()
+      .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
         data: holidayModeResponse(),
@@ -671,7 +719,9 @@ describe('base facade instance error', () => {
   })
 
   it('throws when no device id for device-level frost protection fallback', async () => {
-    const fpMock = vi.fn().mockRejectedValueOnce(new Error('zone not found'))
+    const fpMock = vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockRejectedValueOnce(new Error('zone not found'))
     const api = createMockApi({ getFrostProtection: fpMock })
     const registry = createRegistry()
     registry.syncAreas([
@@ -1113,14 +1163,16 @@ describe('erv device facade', () => {
 
   it('filters operation modes for ERV-specific labels', async () => {
     const { facade } = createErvFacade({
-      getOperationModes: vi.fn().mockResolvedValue({
-        data: [
-          { Key: 'Power', Value: 50 },
-          { Key: 'ActualRecovery', Value: 30 },
-          { Key: 'ActualBypassOperationMode', Value: 10 },
-          { Key: 'Heating', Value: 10 },
-        ],
-      }),
+      getOperationModes: vi
+        .fn<ClassicAPIAdapter['getOperationModes']>()
+        .mockResolvedValue({
+          data: [
+            { Key: 'Power', Value: 50 },
+            { Key: 'ActualRecovery', Value: 30 },
+            { Key: 'ActualBypassOperationMode', Value: 10 },
+            { Key: 'Heating', Value: 10 },
+          ],
+        }),
     })
     const result = await facade.getOperationModes()
 

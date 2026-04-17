@@ -4,7 +4,6 @@ export interface ReportChartLineOptions extends ReportChartOptions {
     readonly data: (number | null)[]
     readonly name: string
   }[]
-
   /** Measurement unit label (e.g. `'°C'`, `'dBm'`). */
   readonly unit: string
 }
@@ -13,10 +12,8 @@ export interface ReportChartLineOptions extends ReportChartOptions {
 export interface ReportChartOptions {
   /** Start date of the report period. */
   readonly from: string
-
   /** Formatted axis labels (dates, months, etc.). */
   readonly labels: readonly string[]
-
   /** End date of the report period. */
   readonly to: string
 }
@@ -31,7 +28,6 @@ export interface ReportChartPieOptions extends ReportChartOptions {
 export interface ReportQuery {
   /** Start date in ISO 8601 format. Defaults to `'1970-01-01'`. */
   readonly from?: string
-
   /** End date in ISO 8601 format. Defaults to now. */
   readonly to?: string
 }

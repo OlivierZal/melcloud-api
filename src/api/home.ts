@@ -157,6 +157,37 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return this.#user !== null
   }
 
+  /**
+   * Fetch all buildings (owned + guest), sync the device registry,
+   * and schedule the next auto-sync.
+   * @returns All buildings or an empty array on failure.
+   */
+  @classicSyncDevices()
+  public async list(): Promise<HomeBuilding[]> {
+    this.clearSync()
+    try {
+      const data = await this.#fetchContext()
+      const buildings = [...data.buildings, ...data.guestBuildings]
+      this.#registry.sync(
+        buildings.flatMap(({ airToAirUnits, airToWaterUnits }) => [
+          ...airToAirUnits.map((device) => ({
+            device,
+            type: HomeDeviceType.Ata,
+          })),
+          ...airToWaterUnits.map((device) => ({
+            device,
+            type: HomeDeviceType.Atw,
+          })),
+        ]),
+      )
+      return buildings
+    } catch {
+      return []
+    } finally {
+      this.syncManager.planNext()
+    }
+  }
+
   public async getEnergy(
     id: string,
     params: { from: string; interval: string; to: string },
@@ -215,37 +246,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return this.#user !== null
   }
 
-  /**
-   * Fetch all buildings (owned + guest), sync the device registry,
-   * and schedule the next auto-sync.
-   * @returns All buildings or an empty array on failure.
-   */
-  @classicSyncDevices()
-  public async list(): Promise<HomeBuilding[]> {
-    this.clearSync()
-    try {
-      const data = await this.#fetchContext()
-      const buildings = [...data.buildings, ...data.guestBuildings]
-      this.#registry.sync(
-        buildings.flatMap(({ airToAirUnits, airToWaterUnits }) => [
-          ...airToAirUnits.map((device) => ({
-            device,
-            type: HomeDeviceType.Ata,
-          })),
-          ...airToWaterUnits.map((device) => ({
-            device,
-            type: HomeDeviceType.Atw,
-          })),
-        ]),
-      )
-      return buildings
-    } catch {
-      return []
-    } finally {
-      this.syncManager.planNext()
-    }
-  }
-
   public async updateValues(
     id: string,
     values: HomeAtaValues,
@@ -262,80 +262,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /* ---------------------------------------------------------------- */
   /*  Private — credentials & session                                 */
   /* ---------------------------------------------------------------- */
-
-  #clearPersistedSession(): void {
-    this.#user = null
-    this.accessToken = ''
-    this.refreshToken = ''
-    this.expiry = ''
-  }
-
-  #hasPersistedSession(): boolean {
-    return (
-      (this.accessToken !== '' &&
-        this.expiry !== '' &&
-        !isSessionExpired(this.expiry)) ||
-      this.refreshToken !== ''
-    )
-  }
-
-  #syncContext(data: HomeContext): void {
-    this.#context = data
-    this.#user = parseUser(data)
-  }
-
-  /**
-   * Fetch the user context from the BFF and update local state.
-   * Shared by `getUser()` and `list()`.
-   * @returns The fetched home context.
-   */
-  async #fetchContext(): Promise<HomeContext> {
-    const { data } = await this.request('get', CONTEXT_PATH)
-    const validated = parseOrThrow(HomeContextSchema, data, 'BFF /context')
-    this.#syncContext(validated)
-    return validated
-  }
-
-  /* ---------------------------------------------------------------- */
-  /*  Private — token management                                      */
-  /* ---------------------------------------------------------------- */
-
-  #storeTokens({
-    access_token: accessToken,
-    expires_in: expiresIn,
-    refresh_token: refreshToken,
-  }: TokenResponse): void {
-    this.accessToken = accessToken
-    if (refreshToken !== undefined && refreshToken !== '') {
-      this.refreshToken = refreshToken
-    }
-    this.expiry = new Date(
-      Date.now() + expiresIn * MILLISECONDS_IN_SECOND,
-    ).toISOString()
-  }
-
-  /**
-   * Use the refresh token to obtain a fresh access token.
-   * @returns Whether the refresh succeeded.
-   */
-  async #refreshAccessToken(): Promise<boolean> {
-    const tokens = await refreshAccessToken({
-      refreshToken: this.refreshToken,
-      ...(this.abortSignal === undefined ?
-        {}
-      : { abortSignal: this.abortSignal }),
-    })
-    if (tokens === null) {
-      return false
-    }
-    this.#storeTokens(tokens)
-    return true
-  }
-
-  /* ---------------------------------------------------------------- */
-  /*  Private — API request pipeline                                  */
-  /* ---------------------------------------------------------------- */
-
   protected async ensureSession(): Promise<void> {
     if (!isSessionExpired(this.expiry)) {
       return
@@ -367,6 +293,58 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return null
   }
 
+  #clearPersistedSession(): void {
+    this.#user = null
+    this.accessToken = ''
+    this.refreshToken = ''
+    this.expiry = ''
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Private — token management                                      */
+  /* ---------------------------------------------------------------- */
+  /**
+   * Fetch the user context from the BFF and update local state.
+   * Shared by `getUser()` and `list()`.
+   * @returns The fetched home context.
+   */
+  async #fetchContext(): Promise<HomeContext> {
+    const { data } = await this.request('get', CONTEXT_PATH)
+    const validated = parseOrThrow(HomeContextSchema, data, 'BFF /context')
+    this.#syncContext(validated)
+    return validated
+  }
+
+  #hasPersistedSession(): boolean {
+    return (
+      (this.accessToken !== '' &&
+        this.expiry !== '' &&
+        !isSessionExpired(this.expiry)) ||
+      this.refreshToken !== ''
+    )
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Private — API request pipeline                                  */
+  /* ---------------------------------------------------------------- */
+  /**
+   * Use the refresh token to obtain a fresh access token.
+   * @returns Whether the refresh succeeded.
+   */
+  async #refreshAccessToken(): Promise<boolean> {
+    const tokens = await refreshAccessToken({
+      refreshToken: this.refreshToken,
+      ...(this.abortSignal === undefined ?
+        {}
+      : { abortSignal: this.abortSignal }),
+    })
+    if (tokens === null) {
+      return false
+    }
+    this.#storeTokens(tokens)
+    return true
+  }
+
   async #safeRequest<T>(
     url: string,
     config?: Record<string, unknown>,
@@ -377,5 +355,24 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     } catch {
       return null
     }
+  }
+
+  #storeTokens({
+    access_token: accessToken,
+    expires_in: expiresIn,
+    refresh_token: refreshToken,
+  }: TokenResponse): void {
+    this.accessToken = accessToken
+    if (refreshToken !== undefined && refreshToken !== '') {
+      this.refreshToken = refreshToken
+    }
+    this.expiry = new Date(
+      Date.now() + expiresIn * MILLISECONDS_IN_SECOND,
+    ).toISOString()
+  }
+
+  #syncContext(data: HomeContext): void {
+    this.#context = data
+    this.#user = parseUser(data)
   }
 }

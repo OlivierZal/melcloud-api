@@ -14,13 +14,16 @@ describe.concurrent(typedKeys, () => {
   })
 
   it('returns keys preserving their insertion order', () => {
-    const object = {
-      zulu: 0,
-      // Intentionally unsorted
-      alpha: 1,
-      // To verify insertion order
-      mike: 2,
-    }
+    /*
+     * Built from an entries tuple so `perfectionist/sort-objects`
+     * can't reorder the keys away from the insertion sequence we
+     * want to assert on.
+     */
+    const object = Object.fromEntries([
+      ['zulu', 0],
+      ['alpha', 1],
+      ['mike', 2],
+    ])
 
     expect(typedKeys(object)).toStrictEqual(['zulu', 'alpha', 'mike'])
   })

@@ -71,7 +71,19 @@ const syncDeviceModel = (
   }
 }
 
+const KNOWN_DEVICE_TYPES = new Set<number>(Object.values(ClassicDeviceType))
+
 const createDeviceModel = (device: ClassicListDeviceAny): ClassicDeviceAny => {
+  /*
+   * Guard runtime values that slipped past Zod's `z.number()` on `Type`.
+   * Keeps the switch below exhaustive on the union so no `default` arm
+   * is needed (per the strict `switch-exhaustiveness-check` setting).
+   */
+  if (!KNOWN_DEVICE_TYPES.has(device.Type as number)) {
+    throw new Error(
+      `Unsupported device type: ${JSON.stringify((device as { Type: unknown }).Type)}`,
+    )
+  }
   switch (device.Type) {
     case ClassicDeviceType.Ata: {
       return new ClassicDevice(device)
@@ -81,11 +93,6 @@ const createDeviceModel = (device: ClassicListDeviceAny): ClassicDeviceAny => {
     }
     case ClassicDeviceType.Erv: {
       return new ClassicDevice(device)
-    }
-    default: {
-      throw new Error(
-        `Unsupported device type: ${JSON.stringify((device as { Type: unknown }).Type)}`,
-      )
     }
   }
 }
@@ -203,6 +210,19 @@ export class ClassicRegistry {
   #floorsByBuildingId = new Map<number, ClassicFloor[]>()
 
   /**
+   * Get all areas within a specific building.
+   * @param id - The building ID to look up areas for.
+   * @returns The areas belonging to the specified building.
+   */
+  public getAreasByBuildingId(id: ClassicBuildingID): ClassicArea[] {
+    return this.#areasByBuildingId.get(id) ?? []
+  }
+
+  public getAreasByFloorId(id: ClassicFloorID): ClassicArea[] {
+    return this.#areasByFloorId.get(id) ?? []
+  }
+
+  /**
    * Build a hierarchical zone structure from the registry, optionally filtered by device type.
    * @param root0 - Options object.
    * @param root0.type - Optional device type to filter the zone structure.
@@ -237,19 +257,6 @@ export class ClassicRegistry {
         name: building.name,
       }))
       .toSorted(compareNames)
-  }
-
-  /**
-   * Get all areas within a specific building.
-   * @param id - The building ID to look up areas for.
-   * @returns The areas belonging to the specified building.
-   */
-  public getAreasByBuildingId(id: ClassicBuildingID): ClassicArea[] {
-    return this.#areasByBuildingId.get(id) ?? []
-  }
-
-  public getAreasByFloorId(id: ClassicFloorID): ClassicArea[] {
-    return this.#areasByFloorId.get(id) ?? []
   }
 
   public getDevices(): ClassicDeviceAny[] {
