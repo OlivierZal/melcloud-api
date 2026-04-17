@@ -57,21 +57,6 @@ export interface HttpResponse<T = unknown> {
   readonly status: number
 }
 
-/**
- * Structural contract implemented by {@link HttpClient}. `BaseAPI`
- * depends on this interface (not the concrete class) so tests — or
- * a caller swapping the transport for a custom implementation — can
- * inject any object matching the contract without reaching through
- * the class's nominal typing + private fields.
- */
-export interface HttpTransport {
-  readonly baseURL: string
-  readonly timeout: number
-  readonly request: <T = unknown>(
-    config: HttpRequestConfig,
-  ) => Promise<HttpResponse<T>>
-}
-
 const resolveUrl = (baseURL: string, url: string | undefined): string => {
   if (url === undefined || url === '') {
     return baseURL
@@ -192,7 +177,7 @@ const combineSignals = (
  * throws {@link HttpError} on non-2xx — so retry/rate-limit/observability
  * layers stay unchanged when the transport is swapped.
  */
-export class HttpClient implements HttpTransport {
+export class HttpClient {
   public readonly baseURL: string
 
   public readonly timeout: number

@@ -20,7 +20,6 @@ export {
   isAPIError,
   NetworkError,
   RateLimitError,
-  TransientServerError,
 } from '../errors/index.ts'
 export {
   toClassicAreaId,

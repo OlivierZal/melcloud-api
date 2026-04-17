@@ -7,7 +7,6 @@ import {
   isAPIError,
   NetworkError,
   RateLimitError,
-  TransientServerError,
   ValidationError,
 } from '../../src/errors/index.ts'
 
@@ -22,15 +21,6 @@ describe.concurrent('apiError hierarchy', () => {
     expect(error.name).toBe('AuthenticationError')
   })
 
-  it('transientServerError inherits the hierarchy', () => {
-    const error = new TransientServerError('still unhealthy')
-
-    expect(error).toBeInstanceOf(TransientServerError)
-    expect(error).toBeInstanceOf(APIError)
-    expect(error).toBeInstanceOf(Error)
-    expect(error.name).toBe('TransientServerError')
-  })
-
   it('networkError inherits the hierarchy', () => {
     const error = new NetworkError('connection refused')
 
@@ -41,7 +31,7 @@ describe.concurrent('apiError hierarchy', () => {
 
   it('preserves the original rejection as `cause`', () => {
     const cause = new Error('upstream')
-    const error = new TransientServerError('wrapped', { cause })
+    const error = new NetworkError('wrapped', { cause })
 
     expect(error.cause).toBe(cause)
   })
@@ -91,7 +81,6 @@ describe.concurrent(isAPIError, () => {
   it.each([
     ['AuthenticationError', new AuthenticationError('x')],
     ['RateLimitError', new RateLimitError('x', { retryAfter: null })],
-    ['TransientServerError', new TransientServerError('x')],
     ['NetworkError', new NetworkError('x')],
   ])('returns true for %s', (_name, error) => {
     expect(isAPIError(error)).toBe(true)

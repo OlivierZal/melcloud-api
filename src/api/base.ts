@@ -5,7 +5,6 @@ import { setting } from '../decorators/index.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
-  type HttpTransport,
   HttpClient,
   isHttpError,
 } from '../http/index.ts'
@@ -14,7 +13,6 @@ import {
   APICallResponseData,
   createAPICallErrorData,
   RequestLifecycleEmitter,
-  subscribeUndiciDiagnostics,
 } from '../observability/index.ts'
 import {
   DEFAULT_TRANSIENT_RETRY_OPTIONS,
@@ -27,7 +25,6 @@ import {
 import type {
   BaseAPIConfig,
   Logger,
-  RequestLifecycleEvents,
   SettingManager,
   SyncCallback,
 } from './interfaces.ts'
@@ -41,7 +38,7 @@ interface BaseAPIConstructorOptions {
   httpConfig: HttpClientConfig
   rateLimitHours: number
   retryDelay: number
-  httpClient?: HttpTransport
+  httpClient?: HttpClient
   syncCallback: () => Promise<unknown>
 }
 
@@ -65,7 +62,7 @@ export abstract class BaseAPI implements Disposable {
 
   protected readonly abortSignal?: AbortSignal
 
-  protected readonly api: HttpTransport
+  protected readonly api: HttpClient
 
   protected readonly events: RequestLifecycleEmitter
 
@@ -87,8 +84,6 @@ export abstract class BaseAPI implements Disposable {
   }
 
   readonly #syncManager: SyncManager
-
-  readonly #undiciSubscription?: Disposable
 
   protected constructor(
     {
@@ -116,28 +111,6 @@ export abstract class BaseAPI implements Disposable {
     this.retryGuard = new RetryGuard(retryDelay)
     this.api = httpClient ?? new HttpClient(httpConfig)
     this.#syncManager = new SyncManager(syncCallback, logger, autoSyncInterval)
-    this.#undiciSubscription = BaseAPI.#wireUndiciDiagnostics(events, logger)
-  }
-
-  static #wireUndiciDiagnostics(
-    events: RequestLifecycleEvents | undefined,
-    logger: Logger,
-  ): Disposable | undefined {
-    if (!events?.onUndiciDiagnostic) {
-      return undefined
-    }
-    const { onUndiciDiagnostic } = events
-    return subscribeUndiciDiagnostics(
-      (channel, payload): void => {
-        onUndiciDiagnostic(channel, payload)
-      },
-      (error): void => {
-        logger.error(
-          'RequestLifecycleEvents.onUndiciDiagnostic threw — ignoring',
-          error,
-        )
-      },
-    )
   }
 
   public abstract authenticate(data?: ClassicLoginCredentials): Promise<boolean>
@@ -159,7 +132,6 @@ export abstract class BaseAPI implements Disposable {
   public [Symbol.dispose](): void {
     this.#syncManager[Symbol.dispose]()
     this.retryGuard[Symbol.dispose]()
-    this.#undiciSubscription?.[Symbol.dispose]()
   }
 
   public setSyncInterval(minutes: number | null): void {

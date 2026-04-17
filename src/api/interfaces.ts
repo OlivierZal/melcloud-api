@@ -1,5 +1,5 @@
 import type { DeviceType } from '../constants.ts'
-import type { HttpTransport } from '../http/index.ts'
+import type { HttpClient } from '../http/index.ts'
 import type { ClassicLoginCredentials } from '../types/index.ts'
 
 /** Common configuration shared by all API clients. */
@@ -24,16 +24,14 @@ export interface BaseAPIConfig extends Partial<ClassicLoginCredentials> {
    */
   readonly events?: RequestLifecycleEvents
   /**
-   * Custom HTTP transport. Defaults to a fetch-backed `HttpClient`
-   * built from the derived `baseURL` + `requestTimeout`. Override to
-   * swap the underlying transport entirely (e.g. inject a caching
-   * proxy, an OpenTelemetry-instrumented dispatcher, or a test double
-   * that short-circuits real network access).
-   *
-   * When provided, `requestTimeout` is ignored — timeout handling is
-   * the responsibility of the injected transport.
+   * Pre-built `HttpClient` instance. Defaults to a fetch-backed client
+   * constructed from the derived `baseURL` + `requestTimeout`. Supply
+   * your own when you need custom headers, a caching dispatcher, or
+   * the test spy pattern (`vi.spyOn(client, 'request')`). When
+   * provided, `requestTimeout` is ignored — it's already baked into
+   * the instance.
    */
-  readonly httpClient?: HttpTransport
+  readonly httpClient?: HttpClient
   /** Custom logger. Defaults to `console`. */
   readonly logger?: Logger
   /** Callback invoked after sync operations. */
@@ -102,17 +100,6 @@ export interface RequestLifecycleEvents {
   readonly onRequestRetry?: (event: RequestRetryEvent) => void
   /** Invoked when a request is dispatched for the first time. */
   readonly onRequestStart?: (event: RequestStartEvent) => void
-  /**
-   * Optional pass-through for Node's built-in undici
-   * `diagnostics_channel` topics (DNS, TCP/TLS, request lifecycle).
-   * Active when fetch runs on undici (Node ≥ 18 by default).
-   *
-   * The channel name and payload are forwarded verbatim — see
-   * `UNDICI_DIAGNOSTIC_CHANNELS` for the subscribed topics. Listener
-   * exceptions are swallowed and logged at error level via the
-   * configured logger.
-   */
-  readonly onUndiciDiagnostic?: (channel: string, payload: unknown) => void
 }
 
 /** Emitted each time a retry attempt is scheduled. */
