@@ -20,11 +20,16 @@ export class HomeDevice {
   #data: HomeDeviceData
 
   public constructor(device: HomeDeviceData, type: HomeDeviceType) {
-    this.#data = device
+    /*
+     * Defensive deep copy on ingress so a caller who keeps the original
+     * reference around cannot mutate our internal snapshot behind our
+     * back. Same rationale for `sync` below.
+     */
+    this.#data = structuredClone(device)
     this.type = type
   }
 
   public sync(device: HomeDeviceData): void {
-    this.#data = device
+    this.#data = structuredClone(device)
   }
 }

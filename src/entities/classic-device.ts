@@ -40,7 +40,12 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
     this.areaId = areaId
     this.buildingId = buildingId
     this.floorId = floorId
-    this.#data = data
+    /*
+     * Defensive deep copy on ingress: once a device model owns its
+     * payload, a mutation from the caller cannot ripple into later
+     * update/sync cycles. Same rationale in #data mutators below.
+     */
+    this.#data = structuredClone(data)
   }
 
   public [syncModel]({
@@ -54,10 +59,10 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
     this.areaId = areaId
     this.buildingId = buildingId
     this.floorId = floorId
-    Object.assign(this.#data, data)
+    Object.assign(this.#data, structuredClone(data))
   }
 
   public update(data: Partial<ClassicListDeviceDataAny>): void {
-    Object.assign(this.#data, data)
+    Object.assign(this.#data, structuredClone(data))
   }
 }
