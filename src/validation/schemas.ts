@@ -19,6 +19,11 @@ export const ClassicLoginDataSchema = z.looseObject({
     .nullable(),
 })
 
+/** Home OIDC /connect/par response. */
+export const HomeParResponseSchema = z.looseObject({
+  request_uri: z.string().min(1),
+})
+
 /** Home OIDC /connect/token response. */
 export const HomeTokenResponseSchema = z.looseObject({
   access_token: z.string().min(1),

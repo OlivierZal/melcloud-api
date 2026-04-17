@@ -28,7 +28,7 @@ import {
   type TokenResponse,
   performTokenAuth,
   refreshAccessToken,
-} from './token-auth/index.ts'
+} from './token-auth.ts'
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
