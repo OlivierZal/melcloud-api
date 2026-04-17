@@ -9,7 +9,6 @@ import type {
   RequestStartEvent,
 } from '../../src/api/interfaces.ts'
 import type { HttpResponse } from '../../src/http/index.ts'
-import type { ClassicLoginCredentials } from '../../src/types/index.ts'
 import { BaseAPI } from '../../src/api/base.ts'
 import { RateLimitError } from '../../src/errors/index.ts'
 import { HttpClient } from '../../src/http/client.ts'
@@ -67,9 +66,7 @@ class TestAPI extends BaseAPI {
   }
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
-  public override async authenticate(
-    _context?: ClassicLoginCredentials,
-  ): Promise<boolean> {
+  public override async authenticate(): Promise<boolean> {
     // eslint-disable-next-line unicorn/no-useless-promise-resolve-reject -- Satisfy abstract return type
     return Promise.resolve(true)
   }

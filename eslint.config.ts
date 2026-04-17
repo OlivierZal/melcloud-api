@@ -260,7 +260,6 @@ const config = defineConfig([
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
-          argsIgnorePattern: '^_context$',
           enableAutofixRemoval: {
             imports: true,
           },
@@ -576,6 +575,20 @@ const config = defineConfig([
         partitionByNewLine: false,
         type: 'custom',
       },
+    },
+  },
+  {
+    files: ['**/decorators/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_context$',
+          enableAutofixRemoval: {
+            imports: true,
+          },
+        },
+      ],
     },
   },
   {
