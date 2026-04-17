@@ -60,8 +60,9 @@ const createTestAPIClass = async () => {
         httpConfig: { baseURL: 'https://test.api', timeout: 30_000 },
         rateLimitHours: 2,
         retryDelay: 1000,
-        // eslint-disable-next-line @typescript-eslint/no-empty-function -- Stub
-        syncCallback: async () => {},
+        syncCallback: async () => {
+          // stub: sync is exercised by tests that drive it explicitly
+        },
       })
       this.getAuthHeadersMock.mockReturnValue({})
       this.ensureSessionMock.mockResolvedValue()
@@ -301,8 +302,9 @@ describe('baseAPI shared request pipeline', () => {
         .mockRejectedValueOnce(createServerError(503, '/data'))
 
       const promise = api.callRequest('get', '/data')
-      // eslint-disable-next-line @typescript-eslint/no-empty-function -- Suppress unhandled rejection warning while timers advance
-      promise.catch(() => {})
+      promise.catch(() => {
+        // attached to suppress unhandled-rejection while timers advance
+      })
       await vi.advanceTimersByTimeAsync(30_000)
 
       await expect(promise).rejects.toThrow('Status 503')
