@@ -8,6 +8,7 @@ import {
   NetworkError,
   RateLimitError,
   TransientServerError,
+  ValidationError,
 } from '../../src/errors/index.ts'
 
 describe.concurrent('apiError hierarchy', () => {
@@ -68,6 +69,20 @@ describe.concurrent('apiError hierarchy', () => {
       retryAfter: null,
     })
 
+    expect(error.cause).toBe(cause)
+  })
+
+  it('validationError carries context and cause', () => {
+    const cause = new Error('zod issue')
+    const error = new ValidationError('bad shape', {
+      cause,
+      context: 'BFF /context',
+    })
+
+    expect(error).toBeInstanceOf(ValidationError)
+    expect(error).toBeInstanceOf(APIError)
+    expect(error.name).toBe('ValidationError')
+    expect(error.context).toBe('BFF /context')
     expect(error.cause).toBe(cause)
   })
 })

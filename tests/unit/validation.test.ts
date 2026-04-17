@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
+import { ValidationError } from '../../src/errors/index.ts'
 import {
   ClassicLoginDataSchema,
   HomeTokenResponseSchema,
@@ -19,7 +20,10 @@ describe('validation/schemas', () => {
       expect(result).toStrictEqual({ value: 1 })
     })
 
-    it('throws a contextual error on failure', () => {
+    it('throws a ValidationError whose message interpolates the context', () => {
+      expect(() =>
+        parseOrThrow(z.object({ value: z.number() }), { value: 'x' }, 'ctx'),
+      ).toThrow(ValidationError)
       expect(() =>
         parseOrThrow(z.object({ value: z.number() }), { value: 'x' }, 'ctx'),
       ).toThrow(/Invalid API response shape \(ctx\)/u)

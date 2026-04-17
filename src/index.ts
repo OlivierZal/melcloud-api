@@ -177,6 +177,7 @@ export {
   NoChangesError,
   RateLimitError,
   TransientServerError,
+  ValidationError,
 } from './errors/index.ts'
 export {
   type ClassicBuildingFacade,

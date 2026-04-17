@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { ValidationError } from '../errors/index.ts'
+
 /*
  * Runtime schemas for API boundaries where silent shape drift would hide
  * behind later undefined-property errors. Scoped to payloads the SDK
@@ -131,7 +133,10 @@ export const ClassicBuildingListSchema = z.array(
 )
 
 /**
- * Parse `data` against `schema`; throw a descriptive error on mismatch.
+ * Parse `data` against `schema`; throw {@link ValidationError} on
+ * mismatch. The underlying ZodError is attached via `cause` so
+ * downstream observers can inspect the field path breakdown without
+ * re-parsing the message string.
  * @param schema - Zod schema to validate against.
  * @param data - Untrusted data from an upstream API response.
  * @param context - Short label surfaced in the thrown error message.
@@ -144,8 +149,9 @@ export const parseOrThrow = <T>(
 ): T => {
   const result = schema.safeParse(data)
   if (!result.success) {
-    throw new Error(
+    throw new ValidationError(
       `Invalid API response shape (${context}): ${result.error.message}`,
+      { cause: result.error, context },
     )
   }
   return result.data
