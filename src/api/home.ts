@@ -72,14 +72,29 @@ const parseUser = (data: HomeContext): HomeUser => ({
  * Uses a private constructor — create instances via {@link HomeAPI.create}.
  */
 export class HomeAPI extends BaseAPI implements HomeAPIContract {
+  /**
+   * Latest `/context` payload from the BFF, or `null` before the
+   * first successful call. Populated by {@link authenticate} and
+   * {@link list}; cleared on session invalidation.
+   * @returns The cached context, or `null`.
+   */
   public get context(): HomeContext | null {
     return this.#context
   }
 
+  /**
+   * In-memory device registry populated by {@link list}.
+   * @returns The registry instance.
+   */
   public get registry(): HomeRegistry {
     return this.#registry
   }
 
+  /**
+   * Currently authenticated user, or `null` when unauthenticated.
+   * Derived from the most recent `/context` response.
+   * @returns The user, or `null`.
+   */
   public get user(): HomeUser | null {
     return this.#user
   }
@@ -141,6 +156,17 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return api
   }
 
+  /**
+   * Run the full OIDC login flow (PAR → IdentityServer → Cognito →
+   * token exchange), persist the resulting tokens, and fetch
+   * `/context` to populate user state.
+   *
+   * Wrapped by the `@authenticate` decorator, so `data` may be
+   * omitted when credentials have already been persisted via the
+   * SettingManager — the decorator hydrates them before calling.
+   * @param data - Optional credentials; falls back to persisted values.
+   * @returns `true` when the session is established, `false` otherwise.
+   */
   @authenticate
   public async authenticate(data?: ClassicLoginCredentials): Promise<boolean> {
     /* v8 ignore next -- @authenticate guarantees data is always provided */
@@ -263,6 +289,17 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return this.#user !== null
   }
 
+  /**
+   * Send an ATA-unit setpoint update to the BFF and re-fetch the
+   * context so the registry reflects the new state.
+   *
+   * Swallows errors — the return flag signals success/failure so
+   * integrating hosts (e.g. Homey drivers) can treat a transient
+   * failure as a no-op and retry on the next sync.
+   * @param id - Target device id.
+   * @param values - Partial setpoint payload.
+   * @returns `true` when the update succeeded, `false` otherwise.
+   */
   public async updateValues(
     id: string,
     values: HomeAtaValues,

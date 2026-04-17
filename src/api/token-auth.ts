@@ -86,7 +86,7 @@ export interface TokenResponse {
 }
 
 /* ------------------------------------------------------------------ */
-/*  HTTP transport (fetch-based, replaces the former axios calls)     */
+/*  HTTP transport (fetch-based)                                      */
 /* ------------------------------------------------------------------ */
 
 const readResponseHeaders = (
@@ -104,11 +104,11 @@ const readResponseHeaders = (
 }
 
 /*
- * Minimal replacement for `axios.post` used by the OIDC flow. The two
- * endpoints it targets (PAR, token exchange) are always expected to
- * return JSON; we parse unconditionally and throw on non-2xx. Each
- * caller is responsible for narrowing the returned `unknown` (PAR via
- * a local guard, token exchange via a Zod schema).
+ * Small POST-form helper for the OIDC flow. The two endpoints it
+ * targets (PAR, token exchange) always return JSON; parse
+ * unconditionally and throw on non-2xx. Each caller is responsible
+ * for narrowing the returned `unknown` (PAR via a local guard, token
+ * exchange via a Zod schema).
  */
 const fetchPostForm = async ({
   abortSignal,
@@ -137,10 +137,10 @@ const fetchPostForm = async ({
 }
 
 /*
- * Minimal replacement for the low-level `axios.request` call used by
- * the auth redirect chain: `redirect: 'manual'` mirrors the former
- * `maxRedirects: 0`, and non-2xx statuses do not throw (the redirect
- * handling inspects the status explicitly).
+ * Low-level fetch helper for the auth redirect chain. Uses
+ * `redirect: 'manual'` so this module can inspect each 3xx response
+ * explicitly and drive the OIDC flow step-by-step; non-2xx statuses
+ * therefore do not throw.
  */
 const fetchRaw = async (
   options: AuthRequestOptions,

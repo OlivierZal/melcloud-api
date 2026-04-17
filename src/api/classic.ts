@@ -221,7 +221,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   /**
-   * Create and initialize a new ClassicAPI instance, performing an initial device sync.
+   * Create and initialize a MELCloud Classic API instance.
+   *
+   * Runs an initial `/User/ListDevices` fetch to populate the registry
+   * so facades built from `api.registry` are usable immediately. When
+   * the caller provides credentials (directly or via a SettingManager)
+   * and no persisted `contextKey` is available, the first protected
+   * call will transparently trigger the `@authenticate` decorator.
    * @param config - Optional configuration for the Classic API client.
    * @returns The initialized ClassicAPI instance.
    */

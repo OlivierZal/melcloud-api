@@ -173,7 +173,7 @@ const combineSignals = (
 /**
  * Thin fetch-based HTTP client used internally by the SDK.
  *
- * Returns an axios-compatible `{ data, status, headers }` response and
+ * Returns a normalised `{ data, status, headers }` response and
  * throws {@link HttpError} on non-2xx — so retry/rate-limit/observability
  * layers stay unchanged when the transport is swapped.
  */

@@ -7,12 +7,12 @@ export interface BaseAPIConfig extends Partial<ClassicLoginCredentials> {
   /**
    * Optional shutdown signal applied to every outgoing request.
    *
-   * When the signal fires, all in-flight HTTP requests are aborted
-   * (axios rejects with `ERR_CANCELED`). Subsequent calls from the
-   * same client instance will also abort immediately. Use this to
-   * tie the SDK lifetime to a host process lifetime — e.g. pass the
-   * Homey app's shutdown signal so outstanding requests don't dangle
-   * across a reload.
+   * When the signal fires, all in-flight HTTP requests abort with a
+   * DOMException of name `AbortError`. Subsequent calls from the same
+   * client instance will also abort immediately. Use this to tie the
+   * SDK lifetime to a host process lifetime — e.g. pass the Homey
+   * app's shutdown signal so outstanding requests don't dangle across
+   * a reload.
    */
   readonly abortSignal?: AbortSignal
   /** Interval in minutes between automatic syncs. Set to `null` to disable. */
@@ -38,7 +38,7 @@ export interface BaseAPIConfig extends Partial<ClassicLoginCredentials> {
   readonly onSync?: SyncCallback
   /**
    * Maximum time in milliseconds for a single HTTP request before
-   * axios aborts it. Defaults to 30 000 ms (30 s). Set to `0` to
+   * it is aborted. Defaults to 30 000 ms (30 s). Set to `0` to
    * disable the timeout (not recommended).
    */
   readonly requestTimeout?: number
