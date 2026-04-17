@@ -57,6 +57,12 @@ export interface HttpResponse<T = unknown> {
   readonly status: number
 }
 
+/*
+ * Join relative `url` onto `baseURL`. `new URL(absolutePath, base)` follows
+ * RFC 3986 and replaces base's path entirely — which drops any prefix like
+ * `/Mitsubishi.Wifi.Client` from `baseURL`. Strip the leading slash so the
+ * URL constructor treats it as a relative segment and concatenates.
+ */
 const resolveUrl = (baseURL: string, url: string | undefined): string => {
   if (url === undefined || url === '') {
     return baseURL
@@ -65,7 +71,7 @@ const resolveUrl = (baseURL: string, url: string | undefined): string => {
     return url
   }
   return new URL(
-    url.startsWith('/') ? url : `/${url}`,
+    url.startsWith('/') ? url.slice(1) : url,
     baseURL.endsWith('/') ? baseURL : `${baseURL}/`,
   ).href
 }
@@ -133,22 +139,29 @@ const readHeaders = (headers: Headers): Record<string, string | string[]> => {
   return result
 }
 
+/*
+ * Try JSON first, fall back to text. Axios auto-parses bodies by default —
+ * content-type from upstream can be absent or a JSON variant the strict
+ * `application/json` substring misses (e.g. `text/json`, `application/problem+json`).
+ * Matching on parseability keeps those callers working without a content-type
+ * allowlist that drifts with every new server flavour.
+ */
 const parseBody = async (response: Response): Promise<unknown> => {
-  const contentType = response.headers.get('content-type') ?? ''
   if (
     response.status === NULL_BODY_STATUS ||
     response.headers.get('content-length') === '0'
   ) {
     return ''
   }
-  if (contentType.includes(JSON_CONTENT_TYPE)) {
-    const text = await response.text()
-    if (text === '') {
-      return ''
-    }
-    return JSON.parse(text) as unknown
+  const text = await response.text()
+  if (text === '') {
+    return ''
   }
-  return response.text()
+  try {
+    return JSON.parse(text) as unknown
+  } catch {
+    return text
+  }
 }
 
 /*

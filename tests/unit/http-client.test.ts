@@ -299,6 +299,38 @@ describe(HttpClient, () => {
     expect(extractUrl()).toBe(`${BASE_URL}/rel`)
   })
 
+  it('preserves the base path when joining an absolute-style url', async () => {
+    const client = new HttpClient({
+      baseURL: `${BASE_URL}/Mitsubishi.Wifi.Client`,
+      timeout: 0,
+    })
+    mockFetch.mockResolvedValueOnce(mockFetchResponse({}, {}, 200))
+
+    await client.request({ url: '/User/ListDevices' })
+
+    expect(extractUrl()).toBe(
+      `${BASE_URL}/Mitsubishi.Wifi.Client/User/ListDevices`,
+    )
+  })
+
+  it('parses a JSON body when content-type is missing', async () => {
+    mockFetch.mockResolvedValueOnce(mockFetchResponse('{"ok":1}', {}, 200))
+
+    const { data } = await createClient().request({ url: '/j' })
+
+    expect(data).toStrictEqual({ ok: 1 })
+  })
+
+  it('parses a JSON body when content-type is a non-standard JSON variant', async () => {
+    mockFetch.mockResolvedValueOnce(
+      mockFetchResponse({ ok: 1 }, { 'content-type': 'text/json' }, 200),
+    )
+
+    const { data } = await createClient().request({ url: '/j' })
+
+    expect(data).toStrictEqual({ ok: 1 })
+  })
+
   it('merges defaultHeaders with per-request headers', async () => {
     const client = new HttpClient({
       baseURL: BASE_URL,
