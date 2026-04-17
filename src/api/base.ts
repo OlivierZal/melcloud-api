@@ -49,7 +49,7 @@ interface BaseAPIConstructorOptions {
  * retry guard, dispose), and credential handling that both ClassicAPI
  * and HomeAPI duplicate.
  */
-export abstract class BaseAPI implements Disposable {
+export abstract class BaseAPI implements AsyncDisposable, Disposable {
   public readonly logger: Logger
 
   public readonly onSync?: SyncCallback
@@ -132,6 +132,16 @@ export abstract class BaseAPI implements Disposable {
   public [Symbol.dispose](): void {
     this.#syncManager[Symbol.dispose]()
     this.retryGuard[Symbol.dispose]()
+  }
+
+  /*
+   * `await using` variant: lets callers await in-flight retry/backoff
+   * settling before resources are released. The synchronous
+   * `Symbol.dispose` remains valid for non-`await using` call sites.
+   */
+  public async [Symbol.asyncDispose](): Promise<void> {
+    await Promise.resolve()
+    this[Symbol.dispose]()
   }
 
   public setSyncInterval(minutes: number | null): void {
