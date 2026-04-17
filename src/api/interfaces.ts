@@ -1,4 +1,5 @@
 import type { DeviceType } from '../constants.ts'
+import type { HttpTransport } from '../http/index.ts'
 import type { ClassicLoginCredentials } from '../types/index.ts'
 
 /** Common configuration shared by all API clients. */
@@ -24,6 +25,18 @@ export interface BaseAPIConfig extends Partial<ClassicLoginCredentials> {
    * (pino / winston / OpenTelemetry / custom metrics).
    */
   readonly events?: RequestLifecycleEvents
+
+  /**
+   * Custom HTTP transport. Defaults to a fetch-backed `HttpClient`
+   * built from the derived `baseURL` + `requestTimeout`. Override to
+   * swap the underlying transport entirely (e.g. inject a caching
+   * proxy, an OpenTelemetry-instrumented dispatcher, or a test double
+   * that short-circuits real network access).
+   *
+   * When provided, `requestTimeout` is ignored — timeout handling is
+   * the responsibility of the injected transport.
+   */
+  readonly httpClient?: HttpTransport
 
   /** Custom logger. Defaults to `console`. */
   readonly logger?: Logger

@@ -190,6 +190,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   private constructor(config: ClassicAPIConfig = {}) {
     const {
       autoSyncInterval = DEFAULT_SYNC_INTERVAL,
+      httpClient,
       language,
       password,
       requestTimeout = DEFAULT_TIMEOUT_MS,
@@ -200,6 +201,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     super(
       { ...config, autoSyncInterval },
       {
+        httpClient,
         httpConfig: {
           baseURL: API_BASE_URL,
           /*

@@ -5,6 +5,7 @@ import { setting } from '../decorators/index.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
+  type HttpTransport,
   HttpClient,
   isHttpError,
 } from '../http/index.ts'
@@ -40,7 +41,7 @@ interface BaseAPIConstructorOptions {
   httpConfig: HttpClientConfig
   rateLimitHours: number
   retryDelay: number
-  httpClient?: HttpClient
+  httpClient?: HttpTransport
   syncCallback: () => Promise<unknown>
 }
 
@@ -64,7 +65,7 @@ export abstract class BaseAPI implements Disposable {
 
   protected readonly abortSignal?: AbortSignal
 
-  protected readonly api: HttpClient
+  protected readonly api: HttpTransport
 
   protected readonly events: RequestLifecycleEmitter
 

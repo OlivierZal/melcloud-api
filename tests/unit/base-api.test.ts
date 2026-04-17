@@ -11,6 +11,7 @@ import type {
 import type { HttpResponse } from '../../src/http/index.ts'
 import type { ClassicLoginCredentials } from '../../src/types/index.ts'
 import { RateLimitError } from '../../src/errors/index.ts'
+import { HttpClient } from '../../src/http/client.ts'
 import {
   cast,
   createHttpError,
@@ -20,28 +21,11 @@ import {
   mock,
 } from '../helpers.ts'
 
-const mockHttpClient = {
+const mockHttpClient = new HttpClient({
   baseURL: 'https://test.api',
-  request: vi.fn(),
   timeout: 30_000,
-}
-
-vi.mock(import('../../src/http/client.ts'), async (importOriginal) => {
-  const original = await importOriginal()
-  return {
-    ...original,
-    /*
-     * Vi.mock factories are hoisted; they cannot reference module-scope
-     * helpers yet. Rebuild the HttpClient mock with a plain function
-     * constructor that forwards every call to the shared
-     * `mockHttpClient` instance so every test asserts on the same vi.fn.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- nominal mismatch with the real HttpClient's private field shape
-    HttpClient: function mockHttpClientCtor(this: Record<string, unknown>) {
-      Object.assign(this, mockHttpClient)
-    } as unknown as typeof original.HttpClient,
-  }
 })
+const mockRequest = vi.spyOn(mockHttpClient, 'request')
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- Inferred return type of dynamic import class
 const createTestAPIClass = async () => {
@@ -65,8 +49,14 @@ const createTestAPIClass = async () => {
         ) => Promise<HttpResponse | null>
       >()
 
-    public constructor(config: BaseAPIConfig = {}) {
+    public constructor(
+      config: BaseAPIConfig = {},
+      {
+        shouldUseDefaultTransport = false,
+      }: { shouldUseDefaultTransport?: boolean } = {},
+    ) {
       super(config, {
+        ...(shouldUseDefaultTransport ? {} : { httpClient: mockHttpClient }),
         httpConfig: { baseURL: 'https://test.api', timeout: 30_000 },
         rateLimitHours: 2,
         retryDelay: 1000,
@@ -131,7 +121,7 @@ describe('baseAPI shared request pipeline', () => {
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
-    mockHttpClient.request.mockResolvedValue({
+    mockRequest.mockResolvedValue({
       data: {},
       headers: {},
       status: 200,
@@ -145,13 +135,23 @@ describe('baseAPI shared request pipeline', () => {
     vi.useRealTimers()
   })
 
+  describe('hTTP transport defaults', () => {
+    it('defaults to a fetch-backed HttpClient when no transport is injected', () => {
+      const instance = new TestAPI({}, { shouldUseDefaultTransport: true })
+
+      expect(instance).toBeDefined()
+
+      instance[Symbol.dispose]()
+    })
+  })
+
   describe('abortSignal wiring', () => {
     it('passes an AbortSignal into outgoing requests', async () => {
       const controller = new AbortController()
       api = new TestAPI({ abortSignal: controller.signal })
       await api.callRequest('get', '/data')
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ signal: controller.signal }),
       )
     })
@@ -159,7 +159,7 @@ describe('baseAPI shared request pipeline', () => {
     it('does not set a signal when no abortSignal is provided', async () => {
       await api.callRequest('get', '/data')
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
         expect.not.objectContaining({ signal: expect.anything() }),
       )
@@ -173,9 +173,7 @@ describe('baseAPI shared request pipeline', () => {
         headers: {},
         status: 200,
       })
-      mockHttpClient.request.mockRejectedValueOnce(
-        createUnauthorizedError('/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createUnauthorizedError('/data'))
       api.retryAuthMock.mockResolvedValueOnce(retryResponse)
 
       const result = await api.callRequest('get', '/data')
@@ -190,16 +188,12 @@ describe('baseAPI shared request pipeline', () => {
         headers: {},
         status: 200,
       })
-      mockHttpClient.request.mockRejectedValueOnce(
-        createUnauthorizedError('/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createUnauthorizedError('/data'))
       api.retryAuthMock.mockResolvedValueOnce(retryResponse)
       await api.callRequest('get', '/data')
 
       // Second 401 within the retry delay window
-      mockHttpClient.request.mockRejectedValueOnce(
-        createUnauthorizedError('/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createUnauthorizedError('/data'))
 
       await expect(api.callRequest('get', '/data')).rejects.toThrow(
         'Unauthorized',
@@ -215,9 +209,7 @@ describe('baseAPI shared request pipeline', () => {
         headers: {},
         status: 200,
       })
-      mockHttpClient.request.mockRejectedValueOnce(
-        createUnauthorizedError('/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createUnauthorizedError('/data'))
       api.retryAuthMock.mockResolvedValueOnce(retryResponse)
       await api.callRequest('get', '/data')
 
@@ -225,9 +217,7 @@ describe('baseAPI shared request pipeline', () => {
       vi.advanceTimersByTime(1500)
 
       // Now a second 401 should trigger retry again
-      mockHttpClient.request.mockRejectedValueOnce(
-        createUnauthorizedError('/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createUnauthorizedError('/data'))
       const retryResponse2 = mock<HttpResponse>({
         data: { second: true },
         headers: {},
@@ -245,9 +235,7 @@ describe('baseAPI shared request pipeline', () => {
     it('records rate limit on 429 and sets isRateLimited', async () => {
       expect(api.isRateLimited).toBe(false)
 
-      mockHttpClient.request.mockRejectedValueOnce(
-        createServerError(429, '/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createServerError(429, '/data'))
 
       await expect(api.callRequest('get', '/data')).rejects.toThrow(
         'Status 429',
@@ -257,9 +245,7 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('throws RateLimitError on subsequent requests when rate limited', async () => {
-      mockHttpClient.request.mockRejectedValueOnce(
-        createServerError(429, '/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createServerError(429, '/data'))
 
       await expect(api.callRequest('get', '/data')).rejects.toThrow(
         'Status 429',
@@ -271,7 +257,7 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('resets isRateLimited after the window expires', async () => {
-      mockHttpClient.request.mockRejectedValueOnce(
+      mockRequest.mockRejectedValueOnce(
         createHttpError({
           message: 'Status 429',
           responseHeaders: { 'retry-after': '2' },
@@ -295,7 +281,7 @@ describe('baseAPI shared request pipeline', () => {
 
   describe('transient 5xx retry on GET', () => {
     it('retries a 503 on GET and succeeds on the next attempt', async () => {
-      mockHttpClient.request
+      mockRequest
         .mockRejectedValueOnce(createServerError(503, '/data'))
         .mockResolvedValueOnce({ data: { ok: true }, headers: {}, status: 200 })
 
@@ -307,7 +293,7 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('gives up after exhausting the retry budget', async () => {
-      mockHttpClient.request
+      mockRequest
         .mockRejectedValueOnce(createServerError(502, '/data'))
         .mockRejectedValueOnce(createServerError(503, '/data'))
         .mockRejectedValueOnce(createServerError(504, '/data'))
@@ -323,28 +309,24 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('does not retry non-transient 500', async () => {
-      mockHttpClient.request.mockRejectedValueOnce(
-        createServerError(500, '/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createServerError(500, '/data'))
 
       await expect(api.callRequest('get', '/data')).rejects.toThrow(
         'Status 500',
       )
 
       // Only one call, no retry
-      expect(mockHttpClient.request).toHaveBeenCalledTimes(1)
+      expect(mockRequest).toHaveBeenCalledTimes(1)
     })
 
     it('does not retry on POST', async () => {
-      mockHttpClient.request.mockRejectedValueOnce(
-        createServerError(503, '/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createServerError(503, '/data'))
 
       await expect(api.callRequest('post', '/data')).rejects.toThrow(
         'Status 503',
       )
 
-      expect(mockHttpClient.request).toHaveBeenCalledTimes(1)
+      expect(mockRequest).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -357,7 +339,7 @@ describe('baseAPI shared request pipeline', () => {
         onRequestStart,
       }
       api = new TestAPI({ events })
-      mockHttpClient.request.mockResolvedValue({
+      mockRequest.mockResolvedValue({
         data: {},
         headers: {},
         status: 200,
@@ -383,9 +365,7 @@ describe('baseAPI shared request pipeline', () => {
       const onRequestError = vi.fn<(event: RequestErrorEvent) => void>()
       const events: RequestLifecycleEvents = { onRequestError }
       api = new TestAPI({ events })
-      mockHttpClient.request.mockRejectedValueOnce(
-        createServerError(500, '/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createServerError(500, '/data'))
 
       await expect(api.callRequest('get', '/data')).rejects.toThrow(
         'Status 500',
@@ -404,7 +384,7 @@ describe('baseAPI shared request pipeline', () => {
         onRequestStart,
       }
       api = new TestAPI({ events })
-      mockHttpClient.request
+      mockRequest
         .mockRejectedValueOnce(createServerError(503, '/data'))
         .mockResolvedValueOnce({ data: {}, headers: {}, status: 200 })
 
@@ -431,9 +411,7 @@ describe('baseAPI shared request pipeline', () => {
     it('logs HTTP errors via logError', async () => {
       const logger = createLogger()
       api = new TestAPI({ logger })
-      mockHttpClient.request.mockRejectedValueOnce(
-        createServerError(500, '/data'),
-      )
+      mockRequest.mockRejectedValueOnce(createServerError(500, '/data'))
 
       await expect(api.callRequest('get', '/data')).rejects.toThrow(
         'Status 500',
@@ -445,7 +423,7 @@ describe('baseAPI shared request pipeline', () => {
     it('does not log non-HTTP errors via logError', async () => {
       const logger = createLogger()
       api = new TestAPI({ logger })
-      mockHttpClient.request.mockRejectedValueOnce(new Error('network failure'))
+      mockRequest.mockRejectedValueOnce(new Error('network failure'))
 
       await expect(api.callRequest('get', '/data')).rejects.toThrow(
         'network failure',
@@ -458,7 +436,7 @@ describe('baseAPI shared request pipeline', () => {
   describe('dispatch with non-object headers', () => {
     it('handles non-object headers value gracefully', async () => {
       api.getAuthHeadersMock.mockReturnValue({ 'X-Auth': 'tok' })
-      mockHttpClient.request.mockResolvedValue({
+      mockRequest.mockResolvedValue({
         data: {},
         headers: {},
         status: 200,
@@ -469,7 +447,7 @@ describe('baseAPI shared request pipeline', () => {
         headers: cast('not-an-object'),
       })
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           headers: { 'X-Auth': 'tok' },
         }),
@@ -478,7 +456,7 @@ describe('baseAPI shared request pipeline', () => {
 
     it('merges object headers with auth headers', async () => {
       api.getAuthHeadersMock.mockReturnValue({ 'X-Auth': 'tok' })
-      mockHttpClient.request.mockResolvedValue({
+      mockRequest.mockResolvedValue({
         data: {},
         headers: {},
         status: 200,
@@ -488,7 +466,7 @@ describe('baseAPI shared request pipeline', () => {
         headers: { 'X-Custom': 'val' },
       })
 
-      expect(mockHttpClient.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           headers: { 'X-Auth': 'tok', 'X-Custom': 'val' },
         }),

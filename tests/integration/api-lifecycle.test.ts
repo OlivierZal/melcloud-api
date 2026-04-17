@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClassicAPI } from '../../src/api/classic.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
+import { HttpClient } from '../../src/http/client.ts'
 import { HttpError } from '../../src/http/index.ts'
 import {
   type ClassicBuildingWithStructure,
@@ -66,28 +67,11 @@ const buildingResponse: ClassicBuildingWithStructure[] = [
   }),
 ]
 
-const mockHttpClient = {
+const mockHttpClient = new HttpClient({
   baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
-  request: vi.fn(),
   timeout: 30_000,
-}
-
-vi.mock(import('../../src/http/client.ts'), async (importOriginal) => {
-  const original = await importOriginal()
-  return {
-    ...original,
-    /*
-     * Vi.mock factories are hoisted; they cannot reference module-scope
-     * helpers yet. Rebuild the HttpClient mock with a plain function
-     * constructor that forwards every call to the shared
-     * `mockHttpClient` instance so every test asserts on the same vi.fn.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- nominal mismatch with the real HttpClient's private field shape
-    HttpClient: function mockHttpClientCtor(this: Record<string, unknown>) {
-      Object.assign(this, mockHttpClient)
-    } as unknown as typeof original.HttpClient,
-  }
 })
+const mockRequest = vi.spyOn(mockHttpClient, 'request')
 
 describe('api lifecycle', () => {
   let melCloudApi: typeof ClassicAPI = cast(null)
@@ -95,7 +79,11 @@ describe('api lifecycle', () => {
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
-    mockHttpClient.request.mockResolvedValue({ data: buildingResponse })
+    mockRequest.mockResolvedValue({
+      data: buildingResponse,
+      headers: {},
+      status: 200,
+    })
     ;({ ClassicAPI: melCloudApi } = await import('../../src/api/classic.ts'))
   })
 
@@ -104,7 +92,10 @@ describe('api lifecycle', () => {
   })
 
   it('creates ClassicAPI, syncs buildings, and populates the registry', async () => {
-    const api = await melCloudApi.create({ autoSyncInterval: 0 })
+    const api = await melCloudApi.create({
+      autoSyncInterval: 0,
+      httpClient: mockHttpClient,
+    })
 
     expect(api.registry.getDevices()).toHaveLength(1)
     expect(
@@ -163,7 +154,10 @@ describe('api lifecycle', () => {
   })
 
   it('facadeManager works with registry populated by ClassicAPI', async () => {
-    const api = await melCloudApi.create({ autoSyncInterval: 0 })
+    const api = await melCloudApi.create({
+      autoSyncInterval: 0,
+      httpClient: mockHttpClient,
+    })
     const manager = new ClassicFacadeManager(api, api.registry)
 
     const building = defined(api.registry.buildings.getById(1))
@@ -175,27 +169,31 @@ describe('api lifecycle', () => {
   })
 
   it('authenticate → fetch → registry reflects updated data', async () => {
-    mockHttpClient.request.mockResolvedValue({ data: [] })
-    const api = await melCloudApi.create({ autoSyncInterval: 0 })
+    mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
+    const api = await melCloudApi.create({
+      autoSyncInterval: 0,
+      httpClient: mockHttpClient,
+    })
 
     expect(api.registry.getDevices()).toHaveLength(0)
 
     // Simulate authentication returning login data, then fetch returns buildings
-    mockHttpClient.request.mockImplementation(
-      (config: { url?: string } = {}) => {
-        if (config.url === '/Login/ClientLogin3') {
-          return {
-            data: {
-              LoginData: {
-                ContextKey: 'ctx-123',
-                Expiry: '2099-12-31T00:00:00',
-              },
+    mockRequest.mockImplementation(async (config) => {
+      await Promise.resolve()
+      if (config.url === '/Login/ClientLogin3') {
+        return {
+          data: {
+            LoginData: {
+              ContextKey: 'ctx-123',
+              Expiry: '2099-12-31T00:00:00',
             },
-          }
+          },
+          headers: {},
+          status: 200,
         }
-        return { data: buildingResponse }
-      },
-    )
+      }
+      return { data: buildingResponse, headers: {}, status: 200 }
+    })
 
     await api.authenticate({ password: 'pass', username: 'user@test.com' })
 
@@ -213,24 +211,26 @@ describe('api lifecycle', () => {
       }),
     }
 
-    mockHttpClient.request.mockImplementation(
-      (config: { url?: string } = {}) => {
-        if (config.url === '/Login/ClientLogin3') {
-          return {
-            data: {
-              LoginData: {
-                ContextKey: 'ctx-abc',
-                Expiry: '2099-12-31T00:00:00',
-              },
+    mockRequest.mockImplementation(async (config) => {
+      await Promise.resolve()
+      if (config.url === '/Login/ClientLogin3') {
+        return {
+          data: {
+            LoginData: {
+              ContextKey: 'ctx-abc',
+              Expiry: '2099-12-31T00:00:00',
             },
-          }
+          },
+          headers: {},
+          status: 200,
         }
-        return { data: buildingResponse }
-      },
-    )
+      }
+      return { data: buildingResponse, headers: {}, status: 200 }
+    })
 
     const api = await melCloudApi.create({
       autoSyncInterval: 0,
+      httpClient: mockHttpClient,
       settingManager,
     })
 
@@ -247,12 +247,15 @@ describe('api lifecycle', () => {
   })
 
   it('re-sync replaces registry data', async () => {
-    const api = await melCloudApi.create({ autoSyncInterval: 0 })
+    const api = await melCloudApi.create({
+      autoSyncInterval: 0,
+      httpClient: mockHttpClient,
+    })
 
     expect(api.registry.getDevices()).toHaveLength(1)
 
     // Next fetch returns empty buildings
-    mockHttpClient.request.mockResolvedValue({ data: [] })
+    mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
     await api.fetch()
 
     expect(api.registry.getDevices()).toHaveLength(0)
@@ -263,7 +266,11 @@ describe('api lifecycle', () => {
 
   it('onSync callback is invoked after fetch', async () => {
     const onSync = vi.fn()
-    await melCloudApi.create({ autoSyncInterval: 0, onSync })
+    await melCloudApi.create({
+      autoSyncInterval: 0,
+      httpClient: mockHttpClient,
+      onSync,
+    })
 
     expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
   })
@@ -275,25 +282,35 @@ describe('api lifecycle', () => {
    */
   describe('resilience end-to-end', () => {
     it('recovers from a transient 503 on fetch via exponential backoff', async () => {
-      const api = await melCloudApi.create({ autoSyncInterval: 0 })
-      mockHttpClient.request.mockClear()
-      mockHttpClient.request
+      const api = await melCloudApi.create({
+        autoSyncInterval: 0,
+        httpClient: mockHttpClient,
+      })
+      mockRequest.mockClear()
+      mockRequest
         .mockRejectedValueOnce(transientError(503))
-        .mockResolvedValueOnce({ data: buildingResponse })
+        .mockResolvedValueOnce({
+          data: buildingResponse,
+          headers: {},
+          status: 200,
+        })
 
       const fetchPromise = api.fetch()
       await vi.advanceTimersByTimeAsync(2000)
       const buildings = await fetchPromise
 
       expect(buildings).toHaveLength(1)
-      expect(mockHttpClient.request).toHaveBeenCalledTimes(2)
+      expect(mockRequest).toHaveBeenCalledTimes(2)
       expect(api.registry.getDevices()).toHaveLength(1)
     })
 
     it('gives up after exhausting the 5xx retry budget and returns empty data', async () => {
-      const api = await melCloudApi.create({ autoSyncInterval: 0 })
-      mockHttpClient.request.mockClear()
-      mockHttpClient.request
+      const api = await melCloudApi.create({
+        autoSyncInterval: 0,
+        httpClient: mockHttpClient,
+      })
+      mockRequest.mockClear()
+      mockRequest
         .mockRejectedValueOnce(transientError(502))
         .mockRejectedValueOnce(transientError(503))
         .mockRejectedValueOnce(transientError(504))
@@ -311,7 +328,7 @@ describe('api lifecycle', () => {
        */
       expect(buildings).toStrictEqual([])
       // 1 initial attempt + 4 retries = 5 total.
-      expect(mockHttpClient.request).toHaveBeenCalledTimes(5)
+      expect(mockRequest).toHaveBeenCalledTimes(5)
     })
   })
 })

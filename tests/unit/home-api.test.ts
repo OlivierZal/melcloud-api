@@ -9,6 +9,7 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../../src/types/index.ts'
+import { HttpClient } from '../../src/http/client.ts'
 import { HttpError } from '../../src/http/index.ts'
 import {
   cast,
@@ -147,30 +148,9 @@ const mockTokenResponse = {
   token_type: 'Bearer',
 }
 
-/** Mock for `this.#api.request()` — the BFF API HttpClient instance. */
-const mockRequest = vi.fn()
-const mockHttpClient = {
-  baseURL: BASE_URL,
-  request: mockRequest,
-  timeout: 30_000,
-}
-
-vi.mock(import('../../src/http/client.ts'), async (importOriginal) => {
-  const original = await importOriginal()
-  return {
-    ...original,
-    /*
-     * Vi.mock factories are hoisted; they cannot reference module-scope
-     * helpers yet. Rebuild the HttpClient mock with a plain function
-     * constructor that forwards every call to the shared
-     * `mockHttpClient` instance so every test asserts on the same vi.fn.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- nominal mismatch with the real HttpClient's private field shape
-    HttpClient: function mockHttpClientCtor(this: Record<string, unknown>) {
-      Object.assign(this, mockHttpClient)
-    } as unknown as typeof original.HttpClient,
-  }
-})
+/** Mock HttpClient injected via HomeAPIConfig.httpClient. */
+const mockHttpClient = new HttpClient({ baseURL: BASE_URL, timeout: 30_000 })
+const mockRequest = vi.spyOn(mockHttpClient, 'request')
 
 /*
  * The OIDC token-auth module uses the global `fetch` directly for PAR,
@@ -262,6 +242,12 @@ describe('melcloud home API', () => {
   beforeEach(async () => {
     mockRequest.mockReset()
     mockFetch.mockReset()
+    /*
+     * The spy would otherwise fall back to HttpClient.prototype.request
+     * (real fetch). Default to an empty success response so tests that
+     * don't queue a specific mock don't hit the network.
+     */
+    mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
     vi.clearAllMocks()
     ;({ HomeAPI: melCloudHomeApi } = await import('../../src/api/home.ts'))
   })
@@ -271,6 +257,7 @@ describe('melcloud home API', () => {
   ): ReturnType<typeof melCloudHomeApi.create> =>
     melCloudHomeApi.create({
       baseURL: BASE_URL,
+      httpClient: mockHttpClient,
       password: 'pass',
       username: 'user@test.com',
       ...config,
@@ -291,7 +278,10 @@ describe('melcloud home API', () => {
     })
 
     it('should return unauthenticated when no credentials', async () => {
-      const api = await melCloudHomeApi.create({ baseURL: BASE_URL })
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        httpClient: mockHttpClient,
+      })
 
       expect(api.isAuthenticated()).toBe(false)
       expect(api.user).toBeNull()
@@ -300,7 +290,10 @@ describe('melcloud home API', () => {
 
   describe('authentication', () => {
     it('should return false without credentials', async () => {
-      const api = await melCloudHomeApi.create({ baseURL: BASE_URL })
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        httpClient: mockHttpClient,
+      })
       const isAuthenticated = await api.authenticate()
 
       expect(isAuthenticated).toBe(false)
@@ -326,6 +319,7 @@ describe('melcloud home API', () => {
       mockFetch.mockRejectedValueOnce(new Error('network'))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         logger,
         password: 'pass',
         username: 'user@test.com',
@@ -738,6 +732,7 @@ describe('melcloud home API', () => {
 
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         settingManager,
       })
 
@@ -823,6 +818,7 @@ describe('melcloud home API', () => {
       mockFetch.mockRejectedValueOnce(httpUnauthorized())
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         logger,
         password: 'pass',
         username: 'user@test.com',
@@ -854,7 +850,10 @@ describe('melcloud home API', () => {
       mockFetch.mockResolvedValueOnce(
         mockFetchResponse({ error: 'denied' }, {}, 500),
       )
-      const api = await melCloudHomeApi.create({ baseURL: BASE_URL })
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        httpClient: mockHttpClient,
+      })
 
       await expect(
         api.authenticate({ password: 'pass', username: 'user@test.com' }),
@@ -902,6 +901,7 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         logger,
         password: 'pass',
         username: 'user@test.com',
@@ -938,6 +938,7 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         logger,
         password: 'pass',
         username: 'user@test.com',
@@ -1071,6 +1072,7 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         logger,
         password: 'pass',
         username: 'user@test.com',
@@ -1223,6 +1225,7 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         logger,
         password: 'pass',
         username: 'user@test.com',
@@ -1250,6 +1253,7 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         logger,
         password: 'pass',
         username: 'user@test.com',
@@ -1277,6 +1281,7 @@ describe('melcloud home API', () => {
 
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         settingManager,
       })
 
@@ -1302,6 +1307,7 @@ describe('melcloud home API', () => {
 
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         settingManager,
       })
 
@@ -1319,6 +1325,7 @@ describe('melcloud home API', () => {
 
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         settingManager,
       })
 
@@ -1337,6 +1344,7 @@ describe('melcloud home API', () => {
 
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         settingManager,
       })
 
@@ -1362,6 +1370,7 @@ describe('melcloud home API', () => {
 
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         settingManager,
       })
 
@@ -1374,6 +1383,7 @@ describe('melcloud home API', () => {
 
       await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         password: 'pass',
         settingManager,
         username: 'user@test.com',
@@ -1413,6 +1423,7 @@ describe('melcloud home API', () => {
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         settingManager,
       })
       setSpy.mockClear()
@@ -1578,6 +1589,7 @@ describe('melcloud home API', () => {
       mockFetch.mockRejectedValueOnce(new Error('PAR endpoint down'))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         logger,
         password: 'pass',
         username: 'user@test.com',
@@ -1620,6 +1632,7 @@ describe('melcloud home API', () => {
 
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
+        httpClient: mockHttpClient,
         logger,
         password: 'pass',
         username: 'user@test.com',

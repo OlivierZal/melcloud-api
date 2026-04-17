@@ -96,6 +96,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     const {
       autoSyncInterval = 1,
       baseURL = API_BASE_URL,
+      httpClient,
       password,
       requestTimeout = DEFAULT_TIMEOUT_MS,
       username,
@@ -103,6 +104,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     super(
       { ...config, autoSyncInterval },
       {
+        httpClient,
         httpConfig: { baseURL, timeout: requestTimeout },
         rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
         retryDelay: RETRY_DELAY,

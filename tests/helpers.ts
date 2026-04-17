@@ -193,10 +193,12 @@ const buildMockHeaders = (
   return result
 }
 
-const serializeBody = (body: unknown): string =>
-  typeof body === 'object' && body !== null ? JSON.stringify(body)
-  : typeof body === 'string' ? body
-  : JSON.stringify(body)
+const serializeBody = (body: unknown): string => {
+  if (typeof body === 'string') {
+    return body
+  }
+  return JSON.stringify(body)
+}
 
 /**
  * Build a fetch-compatible Response mock. The token-auth flow uses
