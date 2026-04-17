@@ -218,6 +218,19 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     }
   }
 
+  /**
+   * Fetch cumulative-energy telemetry for an ATA unit. The returned
+   * payload is Zod-validated against `HomeEnergyDataSchema`; any
+   * failure (network, 4xx, shape mismatch) resolves to `null` so the
+   * caller can treat missing data as a no-op rather than branching on
+   * errors.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.interval - Aggregation interval (e.g. `PT1H`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns The telemetry bundle, or `null` on any failure.
+   */
   public async getEnergy(
     id: string,
     params: { from: string; interval: string; to: string },
@@ -235,6 +248,14 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     })
   }
 
+  /**
+   * Fetch the error-log entries for an ATA unit. Unlike the other
+   * telemetry getters, a failure resolves to an empty array rather
+   * than `null`, matching how consumer code typically iterates the
+   * result.
+   * @param id - Device id.
+   * @returns The entries, or `[]` on any failure.
+   */
   public async getErrorLog(id: string): Promise<HomeErrorLogEntry[]> {
     return (
       (await this.#safeRequest({
@@ -245,6 +266,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     )
   }
 
+  /**
+   * Fetch RSSI telemetry for an ATA unit. Same silent-fail semantics
+   * as {@link getEnergy} — resolves to `null` on any failure.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns The telemetry bundle, or `null` on any failure.
+   */
   public async getSignal(
     id: string,
     params: { from: string; to: string },
@@ -257,6 +287,16 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     })
   }
 
+  /**
+   * Fetch a trend-summary report (temperatures, etc.) for an ATA
+   * unit. Silent-fail: resolves to `null` on any failure.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Aggregation period (e.g. `hour`, `day`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns The report datasets, or `null` on any failure.
+   */
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },

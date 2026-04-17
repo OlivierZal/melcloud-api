@@ -427,6 +427,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Tile/Get2', { data: postData })
   }
 
+  /**
+   * Read the live device data for a single device.
+   *
+   * Wrapped by `@classicUpdateDevice` — the returned payload is also
+   * written back into the in-memory registry, so subsequent
+   * registry-backed facades reflect the fresh state.
+   * @param root0 - Destructured options.
+   * @param root0.params - `buildingId` + `id` of the target device.
+   * @returns The device-type-discriminated data payload.
+   */
   public async getValues<T extends ClassicDeviceType>({
     params,
   }: {
@@ -454,6 +464,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return response
   }
 
+  /**
+   * Low-level POST to `/Login/ClientLogin3`. Prefer {@link authenticate},
+   * which adds credential fallback, persists the resulting
+   * `contextKey`/`expiry`, and is triggered automatically on 401.
+   * @param root0 - Destructured options.
+   * @param root0.postData - Login credentials + app version + language.
+   * @returns The raw login envelope, Zod-validated.
+   */
   public async login({
     postData,
   }: {
@@ -468,6 +486,18 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     }
   }
 
+  /**
+   * Update frost protection settings for a zone.
+   *
+   * The response is discriminated: on success returns
+   * `ClassicSuccessData` (`Success: true`); on partial/total failure
+   * returns `ClassicFailureData` with `AttributeErrors` describing the
+   * rejected fields. Callers should branch on `Success` before reading
+   * the remaining fields.
+   * @param root0 - Destructured options.
+   * @param root0.postData - Zone identifier + new temperature bounds.
+   * @returns The success or failure envelope.
+   */
   public async updateFrostProtection({
     postData,
   }: {
@@ -476,6 +506,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/FrostProtection/Update', { data: postData })
   }
 
+  /**
+   * Apply an ATA group state update across every device in a building
+   * zone. Same success/failure envelope shape as
+   * {@link updateFrostProtection}.
+   * @param root0 - Destructured options.
+   * @param root0.postData - Group target + state fields to apply.
+   * @returns The success or failure envelope.
+   */
   public async updateGroupState({
     postData,
   }: {
@@ -484,6 +522,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Group/SetAta', { data: postData })
   }
 
+  /**
+   * Update holiday-mode settings for a zone. Same envelope
+   * discrimination as {@link updateFrostProtection}.
+   * @param root0 - Destructured options.
+   * @param root0.postData - Zone identifier + holiday-mode fields.
+   * @returns The success or failure envelope.
+   */
   public async updateHolidayMode({
     postData,
   }: {
@@ -510,6 +555,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     }
   }
 
+  /**
+   * Toggle power on one or more devices via `/Device/Power`.
+   *
+   * Wrapped by `@classicUpdateDevices` — the updated `Power` flag is
+   * mirrored into every registry entry in scope, so facades reading
+   * `device.power` see the new state without a re-fetch.
+   * @param root0 - Destructured options.
+   * @param root0.postData - `DeviceIds` array + target `Power` state.
+   * @returns The server-echoed power state.
+   */
   public async updatePower({
     postData,
   }: {
@@ -518,6 +573,19 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Device/Power', { data: postData })
   }
 
+  /**
+   * Send a set-device payload to `/Device/SetAta`, `/Device/SetAtw`
+   * or `/Device/SetErv` depending on the `DeviceType` on the body.
+   *
+   * Wrapped by `@classicUpdateDevice` — the `EffectiveFlags` bitmask
+   * returned by MELCloud is applied back to the matching registry
+   * entry so subsequent reads reflect exactly the fields the server
+   * acknowledged (not necessarily the ones requested).
+   * @param root0 - Destructured options.
+   * @param root0.postData - Discriminated set-device payload.
+   * @param root0.type - Device type selecting the target endpoint.
+   * @returns The server response, narrowed by `DeviceType`.
+   */
   public async updateValues<T extends ClassicDeviceType>({
     postData,
     type,
