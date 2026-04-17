@@ -41,7 +41,7 @@ import {
   classicSyncDevices,
   setting,
 } from '../decorators/index.ts'
-import { ClassicRegistry } from '../entities/index.ts'
+import { type ClassicDeviceAny, ClassicRegistry } from '../entities/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
 import { isKeyOf } from '../utils.ts'
 import { ClassicLoginDataSchema, parseOrThrow } from '../validation/index.ts'
@@ -268,6 +268,22 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       return []
     } finally {
       this.syncManager.planNext()
+    }
+  }
+
+  /**
+   * Async iterator over every synced device. Triggers a fresh
+   * `fetch()` on first consumption, then yields directly from the
+   * registry so downstream pipelines can start processing before the
+   * whole building hierarchy has been traversed.
+   *
+   * Iteration order matches `registry.getDevices()`.
+   * @yields Each device model currently tracked by the registry.
+   */
+  public async *devices(): AsyncGenerator<ClassicDeviceAny> {
+    await this.fetch()
+    for (const device of this.#registry.getDevices()) {
+      yield device
     }
   }
 

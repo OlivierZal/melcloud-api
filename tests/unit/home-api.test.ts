@@ -380,6 +380,19 @@ describe('melcloud home API', () => {
 
       expect(buildings).toStrictEqual([])
     })
+
+    it('devices() async iterator yields every synced device', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+      const ids: string[] = []
+      for await (const device of api.devices()) {
+        ids.push(device.id)
+      }
+
+      expect(ids).toStrictEqual(['device-1', 'device-2'])
+    })
   })
 
   describe('sync callback', () => {
