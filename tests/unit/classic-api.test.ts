@@ -325,7 +325,12 @@ describe('mELCloud Classic API', () => {
     ])('calls $method via POST', async ({ args, method, path }) => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({ data: {} })
+      mockAxiosInstance.request.mockResolvedValue({
+        data:
+          method === 'login' ?
+            { LoginData: { ContextKey: 'ctx', Expiry: '2099-01-01T00:00:00Z' } }
+          : {},
+      })
       await api[method](cast(args))
 
       expect(mockAxiosInstance.request).toHaveBeenCalledWith(

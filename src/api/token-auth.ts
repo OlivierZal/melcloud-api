@@ -3,6 +3,8 @@ import { createHash, randomBytes } from 'node:crypto'
 import { CookieJar } from 'tough-cookie'
 import axios, { type AxiosResponse } from 'axios'
 
+import { HomeTokenResponseSchema, parseOrThrow } from '../validation/index.ts'
+
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
 /* ------------------------------------------------------------------ */
@@ -316,7 +318,7 @@ const tokenRequest = async ({
   params: Record<string, string>
   abortSignal?: AbortSignal
 }): Promise<TokenResponse> => {
-  const { data: tokens } = await axios.post<TokenResponse>(
+  const { data: tokens } = await axios.post<unknown>(
     `${AUTH_BASE_URL}${TOKEN_PATH}`,
     new URLSearchParams(params).toString(),
     {
@@ -327,7 +329,7 @@ const tokenRequest = async ({
       ...(abortSignal === undefined ? {} : { signal: abortSignal }),
     },
   )
-  return tokens
+  return parseOrThrow(HomeTokenResponseSchema, tokens, 'OIDC token endpoint')
 }
 
 /** Options for {@link submitCredentials}. */

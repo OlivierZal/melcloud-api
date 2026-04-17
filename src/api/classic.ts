@@ -45,6 +45,7 @@ import {
 import { ClassicRegistry } from '../entities/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
 import { isKeyOf } from '../utils.ts'
+import { ClassicLoginDataSchema, parseOrThrow } from '../validation/index.ts'
 import type {
   ClassicAPIAdapter,
   ClassicAPIConfig,
@@ -445,7 +446,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ClassicLoginPostData
   }): Promise<{ data: ClassicLoginData }> {
-    return this.dispatch('post', LOGIN_PATH, { data: postData })
+    const response = await this.dispatch<ClassicLoginData>('post', LOGIN_PATH, {
+      data: postData,
+    })
+    return {
+      ...response,
+      data: parseOrThrow(ClassicLoginDataSchema, response.data, 'ClientLogin3'),
+    }
   }
 
   public async updateFrostProtection({
