@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClassicAPI } from '../../src/api/classic.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
+import { HttpError } from '../../src/http/index.ts'
 import {
   type ClassicBuildingWithStructure,
   toClassicAreaId,
@@ -13,12 +14,12 @@ import {
 import { ataDeviceData, buildingData } from '../fixtures.ts'
 import { cast, defined, mock } from '../helpers.ts'
 
-const transientError = (status: number): Error =>
-  Object.assign(new Error(`Status ${String(status)}`), {
-    config: { url: '/User/ListDevices' },
-    isAxiosError: true,
-    response: { data: undefined, headers: {}, status },
-  })
+const transientError = (status: number): HttpError =>
+  new HttpError(
+    `Status ${String(status)}`,
+    { data: {}, headers: {}, status },
+    { url: '/User/ListDevices' },
+  )
 
 const buildingResponse: ClassicBuildingWithStructure[] = [
   mock<ClassicBuildingWithStructure>({
@@ -65,20 +66,27 @@ const buildingResponse: ClassicBuildingWithStructure[] = [
   }),
 ]
 
-const mockAxiosInstance = {
-  get: vi.fn(),
+const mockHttpClient = {
+  baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
   post: vi.fn(),
   request: vi.fn(),
+  timeout: 30_000,
 }
 
-vi.mock(import('axios'), async (importOriginal) => {
+vi.mock(import('../../src/http/client.ts'), async (importOriginal) => {
   const original = await importOriginal()
   return {
     ...original,
-    default: cast({
-      create: vi.fn().mockReturnValue(mockAxiosInstance),
-      isAxiosError: original.default.isAxiosError,
-    }),
+    /*
+     * Vi.mock factories are hoisted; they cannot reference module-scope
+     * helpers yet. Rebuild the HttpClient mock with a plain function
+     * constructor that forwards every call to the shared
+     * `mockHttpClient` instance so every test asserts on the same vi.fn.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- nominal mismatch with the real HttpClient's private field shape
+    HttpClient: function mockHttpClientCtor(this: Record<string, unknown>) {
+      Object.assign(this, mockHttpClient)
+    } as unknown as typeof original.HttpClient,
   }
 })
 
@@ -88,7 +96,7 @@ describe('api lifecycle', () => {
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
-    mockAxiosInstance.request.mockResolvedValue({ data: buildingResponse })
+    mockHttpClient.request.mockResolvedValue({ data: buildingResponse })
     ;({ ClassicAPI: melCloudApi } = await import('../../src/api/classic.ts'))
   })
 
@@ -168,13 +176,13 @@ describe('api lifecycle', () => {
   })
 
   it('authenticate → fetch → registry reflects updated data', async () => {
-    mockAxiosInstance.request.mockResolvedValue({ data: [] })
+    mockHttpClient.request.mockResolvedValue({ data: [] })
     const api = await melCloudApi.create({ autoSyncInterval: 0 })
 
     expect(api.registry.getDevices()).toHaveLength(0)
 
     // Simulate authentication returning login data, then fetch returns buildings
-    mockAxiosInstance.request.mockImplementation(
+    mockHttpClient.request.mockImplementation(
       (config: { url?: string } = {}) => {
         if (config.url === '/Login/ClientLogin3') {
           return {
@@ -206,7 +214,7 @@ describe('api lifecycle', () => {
       }),
     }
 
-    mockAxiosInstance.request.mockImplementation(
+    mockHttpClient.request.mockImplementation(
       (config: { url?: string } = {}) => {
         if (config.url === '/Login/ClientLogin3') {
           return {
@@ -245,7 +253,7 @@ describe('api lifecycle', () => {
     expect(api.registry.getDevices()).toHaveLength(1)
 
     // Next fetch returns empty buildings
-    mockAxiosInstance.request.mockResolvedValue({ data: [] })
+    mockHttpClient.request.mockResolvedValue({ data: [] })
     await api.fetch()
 
     expect(api.registry.getDevices()).toHaveLength(0)
@@ -269,8 +277,8 @@ describe('api lifecycle', () => {
   describe('resilience end-to-end', () => {
     it('recovers from a transient 503 on fetch via exponential backoff', async () => {
       const api = await melCloudApi.create({ autoSyncInterval: 0 })
-      mockAxiosInstance.request.mockClear()
-      mockAxiosInstance.request
+      mockHttpClient.request.mockClear()
+      mockHttpClient.request
         .mockRejectedValueOnce(transientError(503))
         .mockResolvedValueOnce({ data: buildingResponse })
 
@@ -279,14 +287,14 @@ describe('api lifecycle', () => {
       const buildings = await fetchPromise
 
       expect(buildings).toHaveLength(1)
-      expect(mockAxiosInstance.request).toHaveBeenCalledTimes(2)
+      expect(mockHttpClient.request).toHaveBeenCalledTimes(2)
       expect(api.registry.getDevices()).toHaveLength(1)
     })
 
     it('gives up after exhausting the 5xx retry budget and returns empty data', async () => {
       const api = await melCloudApi.create({ autoSyncInterval: 0 })
-      mockAxiosInstance.request.mockClear()
-      mockAxiosInstance.request
+      mockHttpClient.request.mockClear()
+      mockHttpClient.request
         .mockRejectedValueOnce(transientError(502))
         .mockRejectedValueOnce(transientError(503))
         .mockRejectedValueOnce(transientError(504))
@@ -304,7 +312,7 @@ describe('api lifecycle', () => {
        */
       expect(buildings).toStrictEqual([])
       // 1 initial attempt + 4 retries = 5 total.
-      expect(mockAxiosInstance.request).toHaveBeenCalledTimes(5)
+      expect(mockHttpClient.request).toHaveBeenCalledTimes(5)
     })
   })
 })

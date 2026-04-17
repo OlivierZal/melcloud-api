@@ -1,8 +1,3 @@
-import type {
-  AxiosError,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
-} from 'axios'
 import { vi } from 'vitest'
 
 import type {
@@ -21,6 +16,7 @@ import {
   type ClassicDeviceAny,
   ClassicRegistry,
 } from '../src/entities/index.ts'
+import { HttpError } from '../src/http/index.ts'
 
 const MOCK_RSSI = -60
 
@@ -154,18 +150,86 @@ export const mockResponse = (
   headers: Record<string, string | string[]> = {},
   status = HTTP_OK,
 ): {
-  config: object
   data: unknown
   headers: Record<string, string | string[]>
   status: number
 } => ({
-  config: {},
   data,
   headers,
   status,
 })
 
-export const createAxiosError = ({
+/*
+ * The Response constructor rejects a non-null body on the "null body"
+ * statuses defined in the Fetch spec. Listed explicitly so mocked
+ * fetches can model those responses without hitting the guard.
+ */
+const HTTP_SWITCHING_PROTOCOLS = 101
+const HTTP_EARLY_HINTS = 103
+const HTTP_NO_CONTENT = 204
+const HTTP_RESET_CONTENT = 205
+const HTTP_NOT_MODIFIED = 304
+const NULL_BODY_STATUSES: ReadonlySet<number> = new Set([
+  HTTP_EARLY_HINTS,
+  HTTP_NO_CONTENT,
+  HTTP_NOT_MODIFIED,
+  HTTP_RESET_CONTENT,
+  HTTP_SWITCHING_PROTOCOLS,
+])
+
+const buildMockHeaders = (
+  headers: Record<string, string | string[]>,
+): Headers => {
+  const result = new Headers()
+  for (const [key, value] of Object.entries(headers)) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        result.append(key, item)
+      }
+    } else {
+      result.set(key, value)
+    }
+  }
+  return result
+}
+
+const serializeBody = (body: unknown): string =>
+  typeof body === 'object' && body !== null ? JSON.stringify(body)
+  : typeof body === 'string' ? body
+  : JSON.stringify(body)
+
+/**
+ * Build a fetch-compatible Response mock. The token-auth flow uses
+ * `fetch()` directly (not the internal HttpClient) and relies on the
+ * Response surface: `.status`, `.ok`, `.text()`, `.headers.get()`, and
+ * `.headers.getSetCookie()`.
+ * @param body - Response body; objects are JSON-serialised, strings pass
+ *   through.
+ * @param headers - Response headers; `set-cookie` may be an array.
+ * @param status - Response status (defaults to 200).
+ * @returns A minimal `Response` object sufficient for the token-auth
+ *   flow tests.
+ */
+export const mockFetchResponse = (
+  body: unknown,
+  headers: Record<string, string | string[]> = {},
+  status = HTTP_OK,
+): Response => {
+  const responseHeaders = buildMockHeaders(headers)
+  if (
+    typeof body === 'object' &&
+    body !== null &&
+    !responseHeaders.has('content-type')
+  ) {
+    responseHeaders.set('content-type', 'application/json')
+  }
+  return new Response(
+    NULL_BODY_STATUSES.has(status) ? null : serializeBody(body),
+    { headers: responseHeaders, status },
+  )
+}
+
+export const createHttpError = ({
   message,
   method = 'get',
   responseHeaders = {},
@@ -177,21 +241,15 @@ export const createAxiosError = ({
   url: string
   method?: string
   responseHeaders?: Record<string, string>
-}): AxiosError =>
-  mock<AxiosError>({
-    config: mock<InternalAxiosRequestConfig>({ method, url }),
-    isAxiosError: true,
+}): HttpError =>
+  new HttpError(
     message,
-    response: mock<AxiosResponse>({
-      config: mock<InternalAxiosRequestConfig>({ data: null, method, url }),
-      data: {},
-      headers: responseHeaders,
-      status,
-    }),
-  })
+    { data: {}, headers: responseHeaders, status },
+    { method, url },
+  )
 
-export const createServerError = (status: number, url = '/test'): AxiosError =>
-  createAxiosError({ message: `Status ${String(status)}`, status, url })
+export const createServerError = (status: number, url = '/test'): HttpError =>
+  createHttpError({ message: `Status ${String(status)}`, status, url })
 
-export const createUnauthorizedError = (url = '/test'): AxiosError =>
-  createAxiosError({ message: 'Unauthorized', status: 401, url })
+export const createUnauthorizedError = (url = '/test'): HttpError =>
+  createHttpError({ message: 'Unauthorized', status: 401, url })

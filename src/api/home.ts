@@ -1,5 +1,4 @@
-import type { AxiosResponse } from 'axios'
-
+import type { HttpResponse } from '../http/index.ts'
 import type {
   ClassicLoginCredentials,
   HomeAtaValues,
@@ -103,7 +102,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     super(
       { ...config, autoSyncInterval },
       {
-        axiosConfig: { baseURL, timeout: requestTimeout },
+        httpConfig: { baseURL, timeout: requestTimeout },
         rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
         retryDelay: RETRY_DELAY,
         syncCallback: async () => this.list(),
@@ -349,17 +348,17 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       : { Authorization: `Bearer ${this.accessToken}` }
   }
 
-  protected async retryAuth(
+  protected async retryAuth<T>(
     method: string,
     url: string,
     config: Record<string, unknown>,
-  ): Promise<AxiosResponse | null> {
+  ): Promise<HttpResponse<T> | null> {
     if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
-      return this.dispatch(method, url, config)
+      return this.dispatch<T>(method, url, config)
     }
     this.#clearPersistedSession()
     if (await this.authenticate()) {
-      return this.dispatch(method, url, config)
+      return this.dispatch<T>(method, url, config)
     }
     return null
   }

@@ -9,10 +9,12 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../../src/types/index.ts'
+import { HttpError } from '../../src/http/index.ts'
 import {
   cast,
   createLogger,
   createSettingStore,
+  mockFetchResponse,
   mockResponse,
 } from '../helpers.ts'
 
@@ -123,76 +125,86 @@ const mockTokenResponse = {
   token_type: 'Bearer',
 }
 
-/** Mock for `this.#api.request()` — the BFF API instance. */
+/** Mock for `this.#api.request()` — the BFF API HttpClient instance. */
 const mockRequest = vi.fn()
-const mockAxiosInstance = {
-  defaults: { baseURL: undefined as string | undefined },
+const mockHttpClient = {
+  baseURL: BASE_URL,
+  post: vi.fn(),
   request: mockRequest,
+  timeout: 30_000,
 }
 
-/** Mock for bare `axios.post()` — used by PAR and token exchange. */
-const mockAxiosPost = vi.fn()
-
-/** Mock for bare `axios.request()` — used by the OIDC redirect chain. */
-const mockAxiosRequest = vi.fn()
-
-vi.mock(import('axios'), async (importOriginal) => {
+vi.mock(import('../../src/http/client.ts'), async (importOriginal) => {
   const original = await importOriginal()
   return {
     ...original,
-    default: cast({
-      create: vi.fn().mockReturnValue(mockAxiosInstance),
-      isAxiosError: original.default.isAxiosError,
-      post: mockAxiosPost,
-      request: mockAxiosRequest,
-    }),
+    /*
+     * Vi.mock factories are hoisted; they cannot reference module-scope
+     * helpers yet. Rebuild the HttpClient mock with a plain function
+     * constructor that forwards every call to the shared
+     * `mockHttpClient` instance so every test asserts on the same vi.fn.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- nominal mismatch with the real HttpClient's private field shape
+    HttpClient: function mockHttpClientCtor(this: Record<string, unknown>) {
+      Object.assign(this, mockHttpClient)
+    } as unknown as typeof original.HttpClient,
   }
 })
 
 /*
- * Simulate the OIDC token-based auth flow:
- *   1. axios.post to PAR endpoint → { request_uri }
- *   2. axios.request redirect chain → Cognito login page (200)
- *   3. axios.request credential POST → 302 with Location callback
- *   4. axios.request callback chain → melcloudhome://?code=auth-code
- *   5. axios.post to token endpoint → { access_token, refresh_token, ... }
- *   6. mockAxiosInstance.request for GET /context → mockContext
+ * The OIDC token-auth module uses the global `fetch` directly for PAR,
+ * the redirect chain, and the token exchange. We stub `fetch` globally
+ * and stage every OIDC hop via `mockResolvedValueOnce` so each test
+ * phase controls exactly the responses it needs, in order.
+ */
+const mockFetch = vi.fn<typeof fetch>()
+vi.stubGlobal('fetch', mockFetch)
+
+/*
+ * Queue a scripted sequence of OIDC responses on top of the global
+ * `fetch` mock. Order matches the runtime flow: PAR, redirect chain,
+ * credential submission, callback resolution, token exchange. The
+ * final `GET /context` goes through the BFF HttpClient mock.
  */
 const setupSuccessfulLogin = (): void => {
   const callbackUrl =
     'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz'
 
-  // 1. PAR
-  mockAxiosPost.mockResolvedValueOnce(
-    mockResponse({ request_uri: 'urn:ietf:params:oauth:request_uri:test' }),
-  )
-
-  // 2. Redirect chain to Cognito login page
-  mockAxiosRequest
+  mockFetch
+    // 1. PAR
     .mockResolvedValueOnce(
-      mockResponse('', { location: `${AUTH_BASE}/connect/redirect` }, 302),
+      mockFetchResponse(
+        { request_uri: 'urn:ietf:params:oauth:request_uri:test' },
+        {},
+        200,
+      ),
+    )
+    // 2. Redirect chain to Cognito login page
+    .mockResolvedValueOnce(
+      mockFetchResponse('', { location: `${AUTH_BASE}/connect/redirect` }, 302),
     )
     .mockResolvedValueOnce(
-      mockResponse(
+      mockFetchResponse(
         '',
         { location: `${COGNITO}/oauth2/authorize?client_id=test` },
         302,
       ),
     )
     .mockResolvedValueOnce(
-      mockResponse('', { location: `${COGNITO}/login?client_id=test` }, 302),
+      mockFetchResponse(
+        '',
+        { location: `${COGNITO}/login?client_id=test` },
+        302,
+      ),
     )
-    .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
-
-  // 3. Credential POST → 302 to callback
-  mockAxiosRequest.mockResolvedValueOnce(
-    mockResponse('', { location: callbackUrl }, 302),
-  )
-
-  // 4. Callback chain → JS redirect page → melcloudhome://?code=...
-  mockAxiosRequest
+    .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+    // 3. Credential POST → 302 to callback
     .mockResolvedValueOnce(
-      mockResponse(
+      mockFetchResponse('', { location: callbackUrl }, 302),
+    )
+    // 4. Callback chain → JS redirect page → melcloudhome://?code=...
+    .mockResolvedValueOnce(
+      mockFetchResponse(
         '',
         {
           location: 'https://auth.melcloudhome.com/ExternalLogin/Callback',
@@ -201,43 +213,35 @@ const setupSuccessfulLogin = (): void => {
       ),
     )
     .mockResolvedValueOnce(
-      mockResponse(
+      mockFetchResponse(
         "<script>window.location='melcloudhome://?code=auth-code&amp;state=xyz'</script>",
         {},
         200,
       ),
     )
+    // 5. Token exchange
+    .mockResolvedValueOnce(mockFetchResponse(mockTokenResponse, {}, 200))
 
-  // 5. Token exchange
-  mockAxiosPost.mockResolvedValueOnce(mockResponse(mockTokenResponse))
-
-  // 6. GET /context via the API instance
+  // 6. GET /context via the HttpClient BFF instance
   mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 }
 
 const HOUR_MS = 60 * 60 * 1000
 
-const axiosUnauthorized = (url = '/context'): Error =>
-  Object.assign(new Error('Unauthorized'), {
-    config: { url },
-    isAxiosError: true,
-    response: {
-      config: { url },
-      data: undefined,
-      headers: {},
-      status: 401,
-    },
-  })
+const httpUnauthorized = (url = '/context'): HttpError =>
+  new HttpError(
+    'Unauthorized',
+    { data: undefined, headers: {}, status: 401 },
+    { url },
+  )
 
 describe('melcloud home API', () => {
   let melCloudHomeApi: { create: typeof HomeAPI.create } = cast(null)
 
   beforeEach(async () => {
     mockRequest.mockReset()
-    mockAxiosPost.mockReset()
-    mockAxiosRequest.mockReset()
+    mockFetch.mockReset()
     vi.clearAllMocks()
-    mockAxiosInstance.defaults.baseURL = BASE_URL
     ;({ HomeAPI: melCloudHomeApi } = await import('../../src/api/home.ts'))
   })
 
@@ -287,7 +291,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(true)
 
-      mockAxiosPost.mockRejectedValueOnce(new Error('network'))
+      mockFetch.mockRejectedValueOnce(new Error('network'))
 
       await expect(
         api.authenticate({ password: 'wrong', username: 'u@t.com' }),
@@ -298,7 +302,7 @@ describe('melcloud home API', () => {
 
     it('should log and return false on stored credential failure', async () => {
       const logger = createLogger()
-      mockAxiosPost.mockRejectedValueOnce(new Error('network'))
+      mockFetch.mockRejectedValueOnce(new Error('network'))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         logger,
@@ -316,7 +320,7 @@ describe('melcloud home API', () => {
     it('should throw on explicit credential failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockAxiosPost.mockRejectedValueOnce(new Error('bad credentials'))
+      mockFetch.mockRejectedValueOnce(new Error('bad credentials'))
 
       await expect(
         api.authenticate({ password: 'wrong', username: 'user@test.com' }),
@@ -656,8 +660,8 @@ describe('melcloud home API', () => {
          * #ensureSession detects expired token, tries refresh first.
          * Refresh token call succeeds via axios.post to token endpoint.
          */
-        mockAxiosPost.mockResolvedValueOnce(
-          mockResponse({
+        mockFetch.mockResolvedValueOnce(
+          mockFetchResponse({
             ...mockTokenResponse,
             access_token: 'refreshed-token',
           }),
@@ -702,8 +706,8 @@ describe('melcloud home API', () => {
        *   -> #fetchContext completes with new token
        */
       // Refresh token succeeds
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({
           ...mockTokenResponse,
           access_token: 'refreshed-token',
         }),
@@ -729,10 +733,10 @@ describe('melcloud home API', () => {
        * refresh first (refreshToken is set) — that succeeds. The
        * retry dispatch then succeeds with mockContext.
        */
-      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      mockRequest.mockRejectedValueOnce(httpUnauthorized())
       // Refresh succeeds
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({
           ...mockTokenResponse,
           access_token: 'refreshed-after-401',
         }),
@@ -752,9 +756,9 @@ describe('melcloud home API', () => {
        * clears the session and attempts full re-authentication, which
        * succeeds. The retried dispatch then returns mockContext.
        */
-      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      mockRequest.mockRejectedValueOnce(httpUnauthorized())
       // Refresh fails
-      mockAxiosPost.mockRejectedValueOnce(new Error('refresh failed'))
+      mockFetch.mockRejectedValueOnce(new Error('refresh failed'))
       // Full re-auth succeeds
       setupSuccessfulLogin()
       // Retry dispatch after re-auth
@@ -771,10 +775,10 @@ describe('melcloud home API', () => {
        * First 401: retry budget consumed, refresh succeeds, retry succeeds.
        * Second 401 in the same retry window: no reauth, list() returns [].
        */
-      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      mockRequest.mockRejectedValueOnce(httpUnauthorized())
       // Refresh succeeds
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({
           ...mockTokenResponse,
           access_token: 'refreshed-after-401',
         }),
@@ -783,7 +787,7 @@ describe('melcloud home API', () => {
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       await api.list()
 
-      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      mockRequest.mockRejectedValueOnce(httpUnauthorized())
       const second = await api.list()
 
       expect(second).toStrictEqual([])
@@ -795,7 +799,7 @@ describe('melcloud home API', () => {
        * decorator catches and logs it, returning false.
        */
       const logger = createLogger()
-      mockAxiosPost.mockRejectedValueOnce(axiosUnauthorized())
+      mockFetch.mockRejectedValueOnce(httpUnauthorized())
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         logger,
@@ -818,11 +822,22 @@ describe('melcloud home API', () => {
        * `authenticate()` returns false, so the original 401 is re-thrown
        * and list()'s own catch swallows it to return [].
        */
-      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
-      mockAxiosPost.mockRejectedValueOnce(new Error('PAR failed'))
+      mockRequest.mockRejectedValueOnce(httpUnauthorized())
+      mockFetch.mockRejectedValueOnce(new Error('PAR failed'))
       const buildings = await api.list()
 
       expect(buildings).toStrictEqual([])
+    })
+
+    it('throws a descriptive error when the PAR endpoint returns a non-2xx status', async () => {
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ error: 'denied' }, {}, 500),
+      )
+      const api = await melCloudHomeApi.create({ baseURL: BASE_URL })
+
+      await expect(
+        api.authenticate({ password: 'pass', username: 'user@test.com' }),
+      ).rejects.toThrow(/failed with status 500/u)
     })
 
     it('should not retry on non-401 errors', async () => {
@@ -850,13 +865,13 @@ describe('melcloud home API', () => {
   describe('redirect handling', () => {
     it('should stop on too many redirects', async () => {
       // PAR succeeds
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
       // 21 redirects to exhaust the limit
       Array.from({ length: 21 }, (_unused, index) =>
-        mockAxiosRequest.mockResolvedValueOnce(
-          mockResponse(
+        mockFetch.mockResolvedValueOnce(
+          mockFetchResponse(
             '',
             { location: `${AUTH_BASE}/redirect-${String(index)}` },
             302,
@@ -883,21 +898,21 @@ describe('melcloud home API', () => {
 
     it('should treat a 302 with no location header as an empty redirect', async () => {
       // PAR succeeds
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
       // First redirect has a location, second 302 has no location header
-      mockAxiosRequest
+      mockFetch
         .mockResolvedValueOnce(
-          mockResponse('', { location: `${AUTH_BASE}/step1` }, 302),
+          mockFetchResponse('', { location: `${AUTH_BASE}/step1` }, 302),
         )
-        .mockResolvedValueOnce(mockResponse('', {}, 302))
+        .mockResolvedValueOnce(mockFetchResponse('', {}, 302))
         /*
          * The empty location resolves relative to current URL, producing an
          * invalid redirect that eventually loops back to a page with no form.
          */
         .mockResolvedValueOnce(
-          mockResponse('<html>no form here</html>', {}, 200),
+          mockFetchResponse('<html>no form here</html>', {}, 200),
         )
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
@@ -912,25 +927,29 @@ describe('melcloud home API', () => {
 
     it('should resolve relative redirect URLs', async () => {
       // PAR succeeds
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
-      mockAxiosRequest
+      mockFetch
         .mockResolvedValueOnce(
-          mockResponse('', { location: `${AUTH_BASE}/auth-redirect` }, 302),
+          mockFetchResponse(
+            '',
+            { location: `${AUTH_BASE}/auth-redirect` },
+            302,
+          ),
         )
         .mockResolvedValueOnce(
-          mockResponse('', { location: '/relative-path' }, 302),
+          mockFetchResponse('', { location: '/relative-path' }, 302),
         )
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: `${COGNITO}/login?client_id=test` },
             302,
           ),
         )
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             cognitoLoginPage(`${COGNITO}/login?client_id=test`),
             {},
             200,
@@ -938,7 +957,7 @@ describe('melcloud home API', () => {
         )
         // Credential POST
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             {
               location:
@@ -949,37 +968,36 @@ describe('melcloud home API', () => {
         )
         // Callback chain -> melcloudhome://
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: 'melcloudhome://?code=auth-code&state=y' },
             302,
           ),
         )
       // Token exchange
-      mockAxiosPost.mockResolvedValueOnce(mockResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
       // GET /context
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
       const api = await createApi()
 
       expect(api.isAuthenticated()).toBe(true)
-      expect(mockAxiosRequest).toHaveBeenCalledWith(
-        expect.objectContaining({
-          url: `${AUTH_BASE}/relative-path`,
-        }),
+      expect(mockFetch).toHaveBeenCalledWith(
+        `${AUTH_BASE}/relative-path`,
+        expect.anything(),
       )
     })
 
     it('should follow meta http-equiv refresh redirects', async () => {
       /* PAR succeeds */
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
-      mockAxiosRequest
-        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
+      mockFetch
+        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
         /* Credential POST */
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: 'https://auth.melcloudhome.com/callback?code=x' },
             302,
@@ -987,14 +1005,14 @@ describe('melcloud home API', () => {
         )
         /* IS callback → /Redirect page with meta refresh */
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: '/Redirect?RedirectUri=%2Fconnect%2Fauthorize' },
             302,
           ),
         )
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '<meta http-equiv="refresh" content="0;url=/connect/authorize/callback?client_id=homemobile&amp;request_uri=urn:test">',
             {},
             200,
@@ -1002,14 +1020,14 @@ describe('melcloud home API', () => {
         )
         /* Following the meta refresh URL → final redirect to melcloudhome:// */
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: 'melcloudhome://?code=auth-code&state=y' },
             302,
           ),
         )
       /* Token exchange */
-      mockAxiosPost.mockResolvedValueOnce(mockResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
       /* GET /context */
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
@@ -1022,12 +1040,12 @@ describe('melcloud home API', () => {
   describe('form parsing', () => {
     it('should throw when form action is missing', async () => {
       // PAR succeeds
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
       // Redirect chain lands on a page with no form
-      mockAxiosRequest.mockResolvedValueOnce(
-        mockResponse('<html>no form here</html>', {}, 200),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse('<html>no form here</html>', {}, 200),
       )
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
@@ -1046,13 +1064,13 @@ describe('melcloud home API', () => {
 
     it('should prefix relative form action with Cognito authority', async () => {
       // PAR succeeds
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
       // Directly to login page (no redirects before)
-      mockAxiosRequest
+      mockFetch
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             cognitoLoginPage('/login?client_id=test&amp;state=abc'),
             {},
             200,
@@ -1060,7 +1078,7 @@ describe('melcloud home API', () => {
         )
         // Credential POST
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             {
               location:
@@ -1071,23 +1089,22 @@ describe('melcloud home API', () => {
         )
         // Callback -> melcloudhome://
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: 'melcloudhome://?code=auth-code&state=y' },
             302,
           ),
         )
       // Token exchange
-      mockAxiosPost.mockResolvedValueOnce(mockResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
       // GET /context
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
       await createApi()
 
-      expect(mockAxiosRequest).toHaveBeenCalledWith(
-        expect.objectContaining({
-          url: `${COGNITO}/login?client_id=test&state=abc`,
-        }),
+      expect(mockFetch).toHaveBeenCalledWith(
+        `${COGNITO}/login?client_id=test&state=abc`,
+        expect.anything(),
       )
     })
 
@@ -1099,14 +1116,14 @@ describe('melcloud home API', () => {
         '<input type="hidden" name="noValue"/>' +
         '</form>'
       // PAR
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
-      mockAxiosRequest
-        .mockResolvedValueOnce(mockResponse(htmlWithEdgeCases, {}, 200))
+      mockFetch
+        .mockResolvedValueOnce(mockFetchResponse(htmlWithEdgeCases, {}, 200))
         // Credential POST
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             {
               location:
@@ -1117,14 +1134,14 @@ describe('melcloud home API', () => {
         )
         // Callback -> melcloudhome://
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: 'melcloudhome://?code=auth-code&state=y' },
             302,
           ),
         )
       // Token exchange
-      mockAxiosPost.mockResolvedValueOnce(mockResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
       // GET /context
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
@@ -1136,16 +1153,16 @@ describe('melcloud home API', () => {
     it('should use absolute form action as-is', async () => {
       const absoluteAction = `${COGNITO}/login?client_id=test`
       // PAR
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
-      mockAxiosRequest
+      mockFetch
         .mockResolvedValueOnce(
-          mockResponse(cognitoLoginPage(absoluteAction), {}, 200),
+          mockFetchResponse(cognitoLoginPage(absoluteAction), {}, 200),
         )
         // Credential POST
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             {
               location:
@@ -1156,33 +1173,31 @@ describe('melcloud home API', () => {
         )
         // Callback -> melcloudhome://
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: 'melcloudhome://?code=auth-code&state=y' },
             302,
           ),
         )
       // Token exchange
-      mockAxiosPost.mockResolvedValueOnce(mockResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
       // GET /context
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
       await createApi()
 
-      expect(mockAxiosRequest).toHaveBeenCalledWith(
-        expect.objectContaining({ url: absoluteAction }),
-      )
+      expect(mockFetch).toHaveBeenCalledWith(absoluteAction, expect.anything())
     })
 
     it('should handle missing location header from credential submission', async () => {
       // PAR
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
-      mockAxiosRequest
-        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
+      mockFetch
+        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
         // Credential POST -> no location header
-        .mockResolvedValueOnce(mockResponse('', {}, 302))
+        .mockResolvedValueOnce(mockFetchResponse('', {}, 302))
 
       const logger = createLogger()
       const api = await melCloudHomeApi.create({
@@ -1201,14 +1216,14 @@ describe('melcloud home API', () => {
 
     it('should handle callback URL without authorization code', async () => {
       // PAR
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
-      mockAxiosRequest
-        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
+      mockFetch
+        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
         // Credential POST -> callback without code param
         .mockResolvedValueOnce(
-          mockResponse('', { location: 'melcloudhome://?state=abc' }, 302),
+          mockFetchResponse('', { location: 'melcloudhome://?state=abc' }, 302),
         )
 
       const logger = createLogger()
@@ -1306,7 +1321,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(true)
       // First call must be PAR (axios.post), not GET /context
-      expect(mockAxiosPost.mock.calls[0]?.[0]).toContain('/connect/par')
+      expect(mockFetch.mock.calls[0]?.[0]).toContain('/connect/par')
     })
 
     it('should fall back to OIDC when expiry is in the past', async () => {
@@ -1409,8 +1424,8 @@ describe('melcloud home API', () => {
         vi.advanceTimersByTime(3601 * MILLISECONDS_IN_SECOND)
 
         // Refresh token request succeeds
-        mockAxiosPost.mockResolvedValueOnce(
-          mockResponse({
+        mockFetch.mockResolvedValueOnce(
+          mockFetchResponse({
             ...mockTokenResponse,
             access_token: 'refreshed-token',
           }),
@@ -1420,10 +1435,9 @@ describe('melcloud home API', () => {
 
         expect(buildings).toStrictEqual([mockBuilding])
 
-        /* Should have used refresh, not full OIDC (no axios.request calls for redirects) */
-        expect(mockAxiosPost).toHaveBeenLastCalledWith(
+        /* Should have used refresh, not full OIDC (no other fetch calls for redirects) */
+        expect(mockFetch).toHaveBeenLastCalledWith(
           expect.stringContaining('/connect/token'),
-          expect.any(String),
           expect.any(Object),
         )
       } finally {
@@ -1443,8 +1457,8 @@ describe('melcloud home API', () => {
 
         vi.advanceTimersByTime(3601 * MILLISECONDS_IN_SECOND)
 
-        mockAxiosPost.mockResolvedValueOnce(
-          mockResponse({
+        mockFetch.mockResolvedValueOnce(
+          mockFetchResponse({
             ...mockTokenResponse,
             access_token: 'refreshed-token',
           }),
@@ -1453,11 +1467,11 @@ describe('melcloud home API', () => {
         await api.list()
 
         /* Refresh token POST should include the signal */
-        const refreshCall = mockAxiosPost.mock.calls.find(([url]) =>
-          String(url).includes('/connect/token'),
+        const refreshCall = mockFetch.mock.calls.find(
+          ([url]) => typeof url === 'string' && url.includes('/connect/token'),
         )
 
-        expect(refreshCall?.[2]).toStrictEqual(
+        expect(refreshCall?.[1]).toStrictEqual(
           expect.objectContaining({ signal: controller.signal }),
         )
       } finally {
@@ -1475,7 +1489,7 @@ describe('melcloud home API', () => {
         vi.advanceTimersByTime(3601 * MILLISECONDS_IN_SECOND)
 
         // Refresh fails
-        mockAxiosPost.mockRejectedValueOnce(new Error('refresh failed'))
+        mockFetch.mockRejectedValueOnce(new Error('refresh failed'))
         // Full re-auth succeeds
         setupSuccessfulLogin()
         mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
@@ -1492,10 +1506,10 @@ describe('melcloud home API', () => {
       const api = await createApi({ autoSyncInterval: null })
 
       // API call fails with 401
-      mockRequest.mockRejectedValueOnce(axiosUnauthorized())
+      mockRequest.mockRejectedValueOnce(httpUnauthorized())
       // Refresh succeeds
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({
           ...mockTokenResponse,
           access_token: 'refreshed-after-401',
         }),
@@ -1519,8 +1533,8 @@ describe('melcloud home API', () => {
         vi.advanceTimersByTime(3601 * MILLISECONDS_IN_SECOND)
 
         // Refresh succeeds but response has no refresh_token
-        mockAxiosPost.mockResolvedValueOnce(
-          mockResponse({
+        mockFetch.mockResolvedValueOnce(
+          mockFetchResponse({
             access_token: 'refreshed-no-rt',
             expires_in: 3600,
             scope: mockTokenResponse.scope,
@@ -1540,7 +1554,7 @@ describe('melcloud home API', () => {
   describe('par and token exchange failures', () => {
     it('should handle PAR failure gracefully', async () => {
       const logger = createLogger()
-      mockAxiosPost.mockRejectedValueOnce(new Error('PAR endpoint down'))
+      mockFetch.mockRejectedValueOnce(new Error('PAR endpoint down'))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         logger,
@@ -1558,15 +1572,15 @@ describe('melcloud home API', () => {
     it('should handle token exchange failure gracefully', async () => {
       const logger = createLogger()
       // PAR succeeds
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
       // Redirect chain to login page
-      mockAxiosRequest
-        .mockResolvedValueOnce(mockResponse(cognitoLoginPage(), {}, 200))
+      mockFetch
+        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
         // Credential POST
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: 'https://auth.melcloudhome.com/callback?code=x' },
             302,
@@ -1574,14 +1588,14 @@ describe('melcloud home API', () => {
         )
         // Callback -> melcloudhome://
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: 'melcloudhome://?code=auth-code&state=y' },
             302,
           ),
         )
       // Token exchange fails
-      mockAxiosPost.mockRejectedValueOnce(new Error('token exchange failed'))
+      mockFetch.mockRejectedValueOnce(new Error('token exchange failed'))
 
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
@@ -1601,12 +1615,12 @@ describe('melcloud home API', () => {
   describe('cookie handling in auth flow', () => {
     it('should store and send Set-Cookie headers across redirect requests', async () => {
       // PAR
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
-      mockAxiosRequest
+      mockFetch
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             {
               location: `${COGNITO}/login`,
@@ -1616,11 +1630,15 @@ describe('melcloud home API', () => {
           ),
         )
         .mockResolvedValueOnce(
-          mockResponse(cognitoLoginPage(`${COGNITO}/login?id=test`), {}, 200),
+          mockFetchResponse(
+            cognitoLoginPage(`${COGNITO}/login?id=test`),
+            {},
+            200,
+          ),
         )
         // Credential POST
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             {
               location:
@@ -1631,14 +1649,14 @@ describe('melcloud home API', () => {
         )
         // Callback -> melcloudhome://
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: 'melcloudhome://?code=auth-code&state=y' },
             302,
           ),
         )
       // Token exchange
-      mockAxiosPost.mockResolvedValueOnce(mockResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
       // GET /context
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
@@ -1649,12 +1667,12 @@ describe('melcloud home API', () => {
 
     it('should ignore invalid Set-Cookie values', async () => {
       // PAR
-      mockAxiosPost.mockResolvedValueOnce(
-        mockResponse({ request_uri: 'urn:test' }),
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({ request_uri: 'urn:test' }),
       )
-      mockAxiosRequest
+      mockFetch
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             cognitoLoginPage(`${COGNITO}/login?id=test`),
             { 'set-cookie': [''] },
             200,
@@ -1662,7 +1680,7 @@ describe('melcloud home API', () => {
         )
         // Credential POST
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             {
               location:
@@ -1673,14 +1691,14 @@ describe('melcloud home API', () => {
         )
         // Callback -> melcloudhome://
         .mockResolvedValueOnce(
-          mockResponse(
+          mockFetchResponse(
             '',
             { location: 'melcloudhome://?code=auth-code&state=y' },
             302,
           ),
         )
       // Token exchange
-      mockAxiosPost.mockResolvedValueOnce(mockResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
       // GET /context
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
@@ -1709,14 +1727,16 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should log structured error data for axios errors', async () => {
+    it('should log structured error data for HTTP errors', async () => {
       setupSuccessfulLogin()
       const logger = createLogger()
       const api = await createApi({ logger })
-      const axiosError = Object.assign(new Error('Request failed'), {
-        isAxiosError: true,
-      })
-      mockRequest.mockRejectedValueOnce(axiosError)
+      const httpError = new HttpError(
+        'Request failed',
+        { data: {}, headers: {}, status: 500 },
+        { url: '/context' },
+      )
+      mockRequest.mockRejectedValueOnce(httpError)
       await api.list()
 
       expect(logger.error).toHaveBeenCalledWith(

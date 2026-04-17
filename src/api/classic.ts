@@ -1,8 +1,7 @@
-import https from 'node:https'
-
 import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
-import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
+import { Agent } from 'undici'
 
+import type { HttpResponse } from '../http/index.ts'
 import type {
   ClassicAreaDataAny,
   ClassicBuildingWithStructure,
@@ -194,34 +193,29 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       timezone,
       username,
     } = config
-    const axiosInstance = ClassicAPI.#createAxiosInstance(
-      shouldVerifySSL,
-      requestTimeout,
-    )
     super(
       { ...config, autoSyncInterval },
       {
-        axiosConfig: { baseURL: API_BASE_URL, timeout: requestTimeout },
-        axiosInstance,
+        httpConfig: {
+          baseURL: API_BASE_URL,
+          /*
+           * Self-signed-friendly dispatcher when the caller opts out of
+           * verification (shouldVerifySSL=false). `undefined` falls back
+           * to the global agent so verified TLS remains the default.
+           */
+          ...(shouldVerifySSL ?
+            {}
+          : {
+              dispatcher: new Agent({ connect: { rejectUnauthorized: false } }),
+            }),
+          timeout: requestTimeout,
+        },
         rateLimitHours: DEFAULT_RETRY_HOURS,
         retryDelay: RETRY_DELAY,
         syncCallback: async () => this.fetch(),
       },
     )
     this.#applyOptionalConfig({ language, password, timezone, username })
-  }
-
-  static #createAxiosInstance(
-    shouldRejectUnauthorized: boolean,
-    timeout: number,
-  ): AxiosInstance {
-    return axios.create({
-      baseURL: API_BASE_URL,
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: shouldRejectUnauthorized,
-      }),
-      timeout,
-    })
   }
 
   /**
@@ -533,13 +527,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.contextKey === '' ? {} : { 'X-MitsContextKey': this.contextKey }
   }
 
-  protected async retryAuth(
+  protected async retryAuth<T>(
     method: string,
     url: string,
     config: Record<string, unknown>,
-  ): Promise<AxiosResponse | null> {
+  ): Promise<HttpResponse<T> | null> {
     if (await this.authenticate()) {
-      return this.dispatch(method, url, config)
+      return this.dispatch<T>(method, url, config)
     }
     return null
   }

@@ -1,5 +1,4 @@
-import type { AxiosResponse } from 'axios'
-
+import type { HttpResponse } from '../http/index.ts'
 import { type LoggableRequestConfig, APICallLogData } from './context.ts'
 
 /** Structured log data for an API response. */
@@ -14,21 +13,14 @@ export class APICallResponseData extends APICallLogData {
 
   public readonly status?: number
 
-  public constructor(response?: AxiosResponse) {
-    /*
-     * `response.config` is typed as non-optional by axios, but an
-     * AxiosError captured before the request fully materialized can carry
-     * a `response` whose `config` is undefined at runtime. The cast to the
-     * structurally-wider LoggableRequestConfig (which marks every field
-     * optional) lets the constructor handle the missing-config case
-     * without throwing — the error logger must never crash, otherwise a
-     * recoverable failure becomes a silent crash.
-     */
-    const config = response?.config as LoggableRequestConfig | undefined
-    super(config)
+  public constructor(
+    response?: HttpResponse,
+    requestConfig?: LoggableRequestConfig,
+  ) {
+    super(requestConfig)
     this.headers = response?.headers
     this.status = response?.status
-    this.requestData = config?.data
+    this.requestData = requestConfig?.data
     this.responseData = response?.data
   }
 }

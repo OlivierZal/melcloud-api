@@ -8,7 +8,7 @@ import {
 } from '../../src/validation/index.ts'
 
 describe('validation/schemas', () => {
-  describe('parseOrThrow', () => {
+  describe(parseOrThrow, () => {
     it('returns parsed data on success', () => {
       const result = parseOrThrow(
         z.object({ value: z.number() }),

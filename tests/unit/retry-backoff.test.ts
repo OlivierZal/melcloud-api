@@ -1,44 +1,47 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { HttpError } from '../../src/http/index.ts'
 import {
   isTransientServerError,
   withRetryBackoff,
 } from '../../src/resilience/retry-backoff.ts'
-import { mock } from '../helpers.ts'
 
 const ALWAYS_RETRYABLE = (): boolean => true
 const NEVER_RETRYABLE = (): boolean => false
 
-const axiosError = (status?: number): unknown =>
-  mock<{ isAxiosError: boolean; response?: { status?: number } }>({
-    isAxiosError: true,
-    response: status === undefined ? undefined : { status },
-  })
+const httpError = (status?: number): unknown =>
+  status === undefined ?
+    new Error('network failure')
+  : new HttpError(`Status ${String(status)}`, {
+      data: {},
+      headers: {},
+      status,
+    })
 
 describe(isTransientServerError, () => {
   it.each([502, 503, 504])('returns true for HTTP %i', (status) => {
-    expect(isTransientServerError(axiosError(status))).toBe(true)
+    expect(isTransientServerError(httpError(status))).toBe(true)
   })
 
   it.each([400, 401, 404, 429, 500, 505])(
     'returns false for non-transient HTTP %i',
     (status) => {
-      expect(isTransientServerError(axiosError(status))).toBe(false)
+      expect(isTransientServerError(httpError(status))).toBe(false)
     },
   )
 
-  it('returns false when the axios error has no response', () => {
-    expect(isTransientServerError(axiosError())).toBe(false)
+  it('returns false when the error has no HTTP response', () => {
+    expect(isTransientServerError(httpError())).toBe(false)
   })
 
-  it('returns false for non-axios errors', () => {
+  it('returns false for non-HTTP errors', () => {
     expect(isTransientServerError(new Error('boom'))).toBe(false)
     expect(isTransientServerError('string')).toBe(false)
     expect(isTransientServerError(null)).toBe(false)
   })
 
-  it('walks the cause chain to find a wrapped axios error', () => {
-    const wrapped = new Error('Request failed', { cause: axiosError(503) })
+  it('walks the cause chain to find a wrapped HTTP error', () => {
+    const wrapped = new Error('Request failed', { cause: httpError(503) })
 
     expect(isTransientServerError(wrapped)).toBe(true)
   })

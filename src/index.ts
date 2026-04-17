@@ -199,3 +199,11 @@ export {
   isClassicAtwFacade,
   isClassicErvFacade,
 } from './facades/index.ts'
+export {
+  type HttpClientConfig,
+  type HttpRequestConfig,
+  type HttpResponse,
+  HttpClient,
+  HttpError,
+  isHttpError,
+} from './http/index.ts'

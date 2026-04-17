@@ -1,4 +1,3 @@
-import type { AxiosResponse } from 'axios'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type {
@@ -9,29 +8,39 @@ import type {
   RequestRetryEvent,
   RequestStartEvent,
 } from '../../src/api/interfaces.ts'
+import type { HttpResponse } from '../../src/http/index.ts'
 import type { ClassicLoginCredentials } from '../../src/types/index.ts'
 import { RateLimitError } from '../../src/errors/index.ts'
 import {
   cast,
-  createAxiosError,
+  createHttpError,
   createLogger,
   createServerError,
   createUnauthorizedError,
   mock,
 } from '../helpers.ts'
 
-const mockAxiosInstance = {
+const mockHttpClient = {
+  baseURL: 'https://test.api',
+  post: vi.fn(),
   request: vi.fn(),
+  timeout: 30_000,
 }
 
-vi.mock(import('axios'), async (importOriginal) => {
+vi.mock(import('../../src/http/client.ts'), async (importOriginal) => {
   const original = await importOriginal()
   return {
     ...original,
-    default: cast({
-      create: vi.fn().mockReturnValue(mockAxiosInstance),
-      isAxiosError: original.default.isAxiosError,
-    }),
+    /*
+     * Vi.mock factories are hoisted; they cannot reference module-scope
+     * helpers yet. Rebuild the HttpClient mock with a plain function
+     * constructor that forwards every call to the shared
+     * `mockHttpClient` instance so every test asserts on the same vi.fn.
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- nominal mismatch with the real HttpClient's private field shape
+    HttpClient: function mockHttpClientCtor(this: Record<string, unknown>) {
+      Object.assign(this, mockHttpClient)
+    } as unknown as typeof original.HttpClient,
   }
 })
 
@@ -54,12 +63,12 @@ const createTestAPIClass = async () => {
           method: string,
           url: string,
           config: Record<string, unknown>,
-        ) => Promise<AxiosResponse | null>
+        ) => Promise<HttpResponse | null>
       >()
 
     public constructor(config: BaseAPIConfig = {}) {
       super(config, {
-        axiosConfig: { baseURL: 'https://test.api', timeout: 30_000 },
+        httpConfig: { baseURL: 'https://test.api', timeout: 30_000 },
         rateLimitHours: 2,
         retryDelay: 1000,
         // eslint-disable-next-line @typescript-eslint/no-empty-function -- Stub
@@ -82,7 +91,7 @@ const createTestAPIClass = async () => {
       method: string,
       url: string,
       config: Record<string, unknown> = {},
-    ): Promise<AxiosResponse<T>> {
+    ): Promise<HttpResponse<T>> {
       return this.dispatch<T>(method, url, config)
     }
 
@@ -91,7 +100,7 @@ const createTestAPIClass = async () => {
       method: string,
       url: string,
       config: Record<string, unknown> = {},
-    ): Promise<AxiosResponse<T>> {
+    ): Promise<HttpResponse<T>> {
       return this.request<T>(method, url, config)
     }
 
@@ -107,12 +116,8 @@ const createTestAPIClass = async () => {
       method: string,
       url: string,
       config: Record<string, unknown>,
-    ): Promise<AxiosResponse<T> | null> {
-      return this.retryAuthMock(
-        method,
-        url,
-        config,
-      ) as Promise<AxiosResponse<T> | null>
+    ): Promise<HttpResponse<T> | null> {
+      return cast(await this.retryAuthMock(method, url, config))
     }
   }
 }
@@ -127,7 +132,11 @@ describe('baseAPI shared request pipeline', () => {
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
-    mockAxiosInstance.request.mockResolvedValue({ data: {}, status: 200 })
+    mockHttpClient.request.mockResolvedValue({
+      data: {},
+      headers: {},
+      status: 200,
+    })
     TestAPI = await createTestAPIClass()
     api = new TestAPI()
   })
@@ -143,7 +152,7 @@ describe('baseAPI shared request pipeline', () => {
       api = new TestAPI({ abortSignal: controller.signal })
       await api.callRequest('get', '/data')
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
         expect.objectContaining({ signal: controller.signal }),
       )
     })
@@ -151,7 +160,7 @@ describe('baseAPI shared request pipeline', () => {
     it('does not set a signal when no abortSignal is provided', async () => {
       await api.callRequest('get', '/data')
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
         expect.not.objectContaining({ signal: expect.anything() }),
       )
@@ -160,11 +169,12 @@ describe('baseAPI shared request pipeline', () => {
 
   describe('401 retry', () => {
     it('retries on 401 via shouldRetryAuth + retryAuth', async () => {
-      const retryResponse = mock<AxiosResponse>({
+      const retryResponse = mock<HttpResponse>({
         data: { retried: true },
+        headers: {},
         status: 200,
       })
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createUnauthorizedError('/data'),
       )
       api.retryAuthMock.mockResolvedValueOnce(retryResponse)
@@ -176,18 +186,19 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('consumes the retry guard so a second 401 is not retried', async () => {
-      const retryResponse = mock<AxiosResponse>({
+      const retryResponse = mock<HttpResponse>({
         data: {},
+        headers: {},
         status: 200,
       })
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createUnauthorizedError('/data'),
       )
       api.retryAuthMock.mockResolvedValueOnce(retryResponse)
       await api.callRequest('get', '/data')
 
       // Second 401 within the retry delay window
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createUnauthorizedError('/data'),
       )
 
@@ -200,11 +211,12 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('refills the retry guard after the delay', async () => {
-      const retryResponse = mock<AxiosResponse>({
+      const retryResponse = mock<HttpResponse>({
         data: {},
+        headers: {},
         status: 200,
       })
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createUnauthorizedError('/data'),
       )
       api.retryAuthMock.mockResolvedValueOnce(retryResponse)
@@ -214,11 +226,12 @@ describe('baseAPI shared request pipeline', () => {
       vi.advanceTimersByTime(1500)
 
       // Now a second 401 should trigger retry again
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createUnauthorizedError('/data'),
       )
-      const retryResponse2 = mock<AxiosResponse>({
+      const retryResponse2 = mock<HttpResponse>({
         data: { second: true },
+        headers: {},
         status: 200,
       })
       api.retryAuthMock.mockResolvedValueOnce(retryResponse2)
@@ -233,7 +246,7 @@ describe('baseAPI shared request pipeline', () => {
     it('records rate limit on 429 and sets isRateLimited', async () => {
       expect(api.isRateLimited).toBe(false)
 
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createServerError(429, '/data'),
       )
 
@@ -245,7 +258,7 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('throws RateLimitError on subsequent requests when rate limited', async () => {
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createServerError(429, '/data'),
       )
 
@@ -259,8 +272,8 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('resets isRateLimited after the window expires', async () => {
-      mockAxiosInstance.request.mockRejectedValueOnce(
-        createAxiosError({
+      mockHttpClient.request.mockRejectedValueOnce(
+        createHttpError({
           message: 'Status 429',
           responseHeaders: { 'retry-after': '2' },
           status: 429,
@@ -283,9 +296,9 @@ describe('baseAPI shared request pipeline', () => {
 
   describe('transient 5xx retry on GET', () => {
     it('retries a 503 on GET and succeeds on the next attempt', async () => {
-      mockAxiosInstance.request
+      mockHttpClient.request
         .mockRejectedValueOnce(createServerError(503, '/data'))
-        .mockResolvedValueOnce({ data: { ok: true }, status: 200 })
+        .mockResolvedValueOnce({ data: { ok: true }, headers: {}, status: 200 })
 
       const promise = api.callRequest('get', '/data')
       await vi.advanceTimersByTimeAsync(2000)
@@ -295,7 +308,7 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('gives up after exhausting the retry budget', async () => {
-      mockAxiosInstance.request
+      mockHttpClient.request
         .mockRejectedValueOnce(createServerError(502, '/data'))
         .mockRejectedValueOnce(createServerError(503, '/data'))
         .mockRejectedValueOnce(createServerError(504, '/data'))
@@ -311,7 +324,7 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('does not retry non-transient 500', async () => {
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createServerError(500, '/data'),
       )
 
@@ -320,11 +333,11 @@ describe('baseAPI shared request pipeline', () => {
       )
 
       // Only one call, no retry
-      expect(mockAxiosInstance.request).toHaveBeenCalledTimes(1)
+      expect(mockHttpClient.request).toHaveBeenCalledTimes(1)
     })
 
     it('does not retry on POST', async () => {
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createServerError(503, '/data'),
       )
 
@@ -332,7 +345,7 @@ describe('baseAPI shared request pipeline', () => {
         'Status 503',
       )
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledTimes(1)
+      expect(mockHttpClient.request).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -345,8 +358,9 @@ describe('baseAPI shared request pipeline', () => {
         onRequestStart,
       }
       api = new TestAPI({ events })
-      mockAxiosInstance.request.mockResolvedValue({
+      mockHttpClient.request.mockResolvedValue({
         data: {},
+        headers: {},
         status: 200,
       })
 
@@ -370,7 +384,7 @@ describe('baseAPI shared request pipeline', () => {
       const onRequestError = vi.fn<(event: RequestErrorEvent) => void>()
       const events: RequestLifecycleEvents = { onRequestError }
       api = new TestAPI({ events })
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createServerError(500, '/data'),
       )
 
@@ -391,9 +405,9 @@ describe('baseAPI shared request pipeline', () => {
         onRequestStart,
       }
       api = new TestAPI({ events })
-      mockAxiosInstance.request
+      mockHttpClient.request
         .mockRejectedValueOnce(createServerError(503, '/data'))
-        .mockResolvedValueOnce({ data: {}, status: 200 })
+        .mockResolvedValueOnce({ data: {}, headers: {}, status: 200 })
 
       const promise = api.callRequest('get', '/data')
       await vi.advanceTimersByTimeAsync(2000)
@@ -415,10 +429,10 @@ describe('baseAPI shared request pipeline', () => {
   })
 
   describe('error logging', () => {
-    it('logs axios errors via logError', async () => {
+    it('logs HTTP errors via logError', async () => {
       const logger = createLogger()
       api = new TestAPI({ logger })
-      mockAxiosInstance.request.mockRejectedValueOnce(
+      mockHttpClient.request.mockRejectedValueOnce(
         createServerError(500, '/data'),
       )
 
@@ -429,12 +443,10 @@ describe('baseAPI shared request pipeline', () => {
       expect(logger.error).toHaveBeenCalledWith(expect.any(String))
     })
 
-    it('does not log non-axios errors via logError', async () => {
+    it('does not log non-HTTP errors via logError', async () => {
       const logger = createLogger()
       api = new TestAPI({ logger })
-      mockAxiosInstance.request.mockRejectedValueOnce(
-        new Error('network failure'),
-      )
+      mockHttpClient.request.mockRejectedValueOnce(new Error('network failure'))
 
       await expect(api.callRequest('get', '/data')).rejects.toThrow(
         'network failure',
@@ -447,14 +459,18 @@ describe('baseAPI shared request pipeline', () => {
   describe('dispatch with non-object headers', () => {
     it('handles non-object headers value gracefully', async () => {
       api.getAuthHeadersMock.mockReturnValue({ 'X-Auth': 'tok' })
-      mockAxiosInstance.request.mockResolvedValue({ data: {}, status: 200 })
+      mockHttpClient.request.mockResolvedValue({
+        data: {},
+        headers: {},
+        status: 200,
+      })
 
       // Pass a non-object headers value (e.g. a string) to cover line 160
       await api.callDispatch('get', '/data', {
         headers: cast('not-an-object'),
       })
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
         expect.objectContaining({
           headers: { 'X-Auth': 'tok' },
         }),
@@ -463,13 +479,17 @@ describe('baseAPI shared request pipeline', () => {
 
     it('merges object headers with auth headers', async () => {
       api.getAuthHeadersMock.mockReturnValue({ 'X-Auth': 'tok' })
-      mockAxiosInstance.request.mockResolvedValue({ data: {}, status: 200 })
+      mockHttpClient.request.mockResolvedValue({
+        data: {},
+        headers: {},
+        status: 200,
+      })
 
       await api.callDispatch('get', '/data', {
         headers: { 'X-Custom': 'val' },
       })
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockHttpClient.request).toHaveBeenCalledWith(
         expect.objectContaining({
           headers: { 'X-Auth': 'tok', 'X-Custom': 'val' },
         }),
