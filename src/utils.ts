@@ -133,7 +133,7 @@ const getChartLineSeries = ({
   legend: (string | undefined)[]
 }): { data: (number | null)[]; name: string }[] =>
   data
-    .map((values, index) => ({ data: values, name: legend.at(index) }))
+    .map((values, index) => ({ data: values, name: legend[index] }))
     .filter(
       (item): item is { data: (number | null)[]; name: string } =>
         item.name !== undefined,

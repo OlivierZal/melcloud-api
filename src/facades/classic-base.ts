@@ -127,7 +127,8 @@ export abstract class BaseFacade<
     return instance
   }
 
-  get #deviceId(): number {
+  // Zone-level settings are shared across devices, so any device id samples the zone's state.
+  get #anyDeviceId(): number {
     const [id] = this.#deviceIds
     if (id === undefined) {
       throw new Error(
@@ -301,14 +302,14 @@ export abstract class BaseFacade<
 
   async #getDevicesFrostProtection(): Promise<ClassicFrostProtectionData> {
     return this.#getBaseFrostProtection(
-      { id: this.#deviceId, tableName: 'DeviceLocation' },
+      { id: this.#anyDeviceId, tableName: 'DeviceLocation' },
       false,
     )
   }
 
   async #getDevicesHolidayMode(): Promise<ClassicHolidayModeData> {
     return this.#getBaseHolidayMode(
-      { id: this.#deviceId, tableName: 'DeviceLocation' },
+      { id: this.#anyDeviceId, tableName: 'DeviceLocation' },
       false,
     )
   }

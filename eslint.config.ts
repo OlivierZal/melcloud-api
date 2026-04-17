@@ -239,6 +239,7 @@ const config = defineConfig([
         'error',
         {
           ignore: [0, 1, 2],
+          ignoreEnums: true,
           ignoreNumericLiteralTypes: true,
           ignoreReadonlyClassProperties: true,
           ignoreTypeIndexes: true,
