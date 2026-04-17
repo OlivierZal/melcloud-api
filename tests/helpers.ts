@@ -126,7 +126,7 @@ export function assertDeviceType(
 /**
  * Build a `ClassicRegistry` populated with the provided hierarchy in a
  * single call. Replaces the repeated 5-line
- * `new ClassicRegistry() + syncBuildings + syncFloors + syncAreas + classicSyncDevices`
+ * `new ClassicRegistry() + syncBuildings + syncFloors + syncAreas + syncDevices`
  * pattern found in multiple test files.
  * @param data - Flat arrays of buildings, floors, areas, and devices.
  * @param data.areas - ClassicArea rows to sync.

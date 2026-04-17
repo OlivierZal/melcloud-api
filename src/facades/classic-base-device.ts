@@ -13,8 +13,8 @@ import type {
 import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import {
   classicFetchDevices,
-  classicSyncDevices,
   classicUpdateDevice,
+  syncDevices,
 } from '../decorators/index.ts'
 import {
   type ClassicDeviceAny,
@@ -148,7 +148,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return data
   }
 
-  @classicSyncDevices()
+  @syncDevices()
   @classicUpdateDevice
   public async getValues(): Promise<ClassicGetDeviceData<T>> {
     const { data } = await this.api.getValues<T>({
@@ -157,7 +157,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return data
   }
 
-  @classicSyncDevices()
+  @syncDevices()
   @classicUpdateDevice
   public async updateValues(
     data: Partial<ClassicUpdateDeviceData<T>>,

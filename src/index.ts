@@ -136,9 +136,9 @@ export {
 export {
   authenticate,
   classicFetchDevices,
-  classicSyncDevices,
   classicUpdateDevice,
   classicUpdateDevices,
+  syncDevices,
 } from './decorators/index.ts'
 export {
   type ClassicDeviceAny,

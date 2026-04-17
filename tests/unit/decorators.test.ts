@@ -14,9 +14,9 @@ import {
 } from '../../src/constants.ts'
 import {
   classicFetchDevices,
-  classicSyncDevices,
   classicUpdateDevice,
   classicUpdateDevices,
+  syncDevices,
 } from '../../src/decorators/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { cast, mock } from '../helpers.ts'
@@ -162,16 +162,13 @@ describe(classicFetchDevices, () => {
   })
 })
 
-describe(classicSyncDevices, () => {
+describe(syncDevices, () => {
   it('calls onSync after the target method', async () => {
     const onSyncMock = vi.fn<SyncCallback>()
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       .mockResolvedValue(cast('result'))
-    const decorated = classicSyncDevices()(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
+    const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
     const context = { onSync: onSyncMock }
     const result = await decorated.call(context)
 
@@ -184,7 +181,7 @@ describe(classicSyncDevices, () => {
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       .mockResolvedValue(cast('result'))
-    const decorated = classicSyncDevices({ type: ClassicDeviceType.Ata })(
+    const decorated = syncDevices({ type: ClassicDeviceType.Ata })(
       target,
       mock<ClassMethodDecoratorContext>(),
     )
@@ -198,10 +195,7 @@ describe(classicSyncDevices, () => {
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       .mockResolvedValue(cast('result'))
-    const decorated = classicSyncDevices()(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
+    const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
     const context = {}
     const result = await decorated.call(context)
 

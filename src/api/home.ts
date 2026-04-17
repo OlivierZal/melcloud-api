@@ -12,11 +12,7 @@ import type {
   HomeUser,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
-import {
-  authenticate,
-  classicSyncDevices,
-  setting,
-} from '../decorators/index.ts'
+import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import {
@@ -170,7 +166,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * and schedule the next auto-sync.
    * @returns All buildings or an empty array on failure.
    */
-  @classicSyncDevices()
+  @syncDevices()
   public async list(): Promise<HomeBuilding[]> {
     this.clearSync()
     try {

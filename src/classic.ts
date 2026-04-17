@@ -116,7 +116,7 @@ export {
   ClassicOperationModeStateZone as OperationModeStateZone,
   ClassicOperationModeZone as OperationModeZone,
   ClassicRegistry as Registry,
-  classicSyncDevices as syncDevices,
+  syncDevices,
   ClassicTemperature as Temperature,
   classicUpdateDevice as updateDevice,
   classicUpdateDevices as updateDevices,

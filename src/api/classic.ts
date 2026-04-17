@@ -36,11 +36,7 @@ import type {
   ClassicTilesPostData,
 } from '../types/index.ts'
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
-import {
-  authenticate,
-  classicSyncDevices,
-  setting,
-} from '../decorators/index.ts'
+import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
 import { isKeyOf } from '../utils.ts'
@@ -264,7 +260,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Fetch all buildings, sync the model registry, and schedule the next auto-sync.
    * @returns The list of fetched buildings.
    */
-  @classicSyncDevices()
+  @syncDevices()
   public async fetch(): Promise<ClassicBuildingWithStructure[]> {
     this.clearSync()
     try {
