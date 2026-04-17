@@ -1,4 +1,8 @@
-import axios, { type AxiosError, HttpStatusCode } from 'axios'
+import { type HttpError, isHttpError } from '../http/index.ts'
+
+const HTTP_STATUS_BAD_GATEWAY = 502
+const HTTP_STATUS_SERVICE_UNAVAILABLE = 503
+const HTTP_STATUS_GATEWAY_TIMEOUT = 504
 
 /*
  * HTTP 5xx status codes considered transient (server-side glitches that
@@ -7,18 +11,18 @@ import axios, { type AxiosError, HttpStatusCode } from 'axios'
  * server, not a recoverable condition.
  */
 const TRANSIENT_STATUSES: ReadonlySet<number> = new Set([
-  HttpStatusCode.BadGateway,
-  HttpStatusCode.GatewayTimeout,
-  HttpStatusCode.ServiceUnavailable,
+  HTTP_STATUS_BAD_GATEWAY,
+  HTTP_STATUS_GATEWAY_TIMEOUT,
+  HTTP_STATUS_SERVICE_UNAVAILABLE,
 ])
 
 /*
- * Walk the `Error.cause` chain to find a nested AxiosError. Guards
- * against cycles via a visited set. Used by `isTransientServerError` so
- * that wrapped errors (e.g. Classic's `#onError` rethrows as
- * `new Error(msg, { cause: axiosError })`) are still correctly classified.
+ * Walk the `Error.cause` chain to find a nested HttpError. Guards against
+ * cycles via a visited set. Used by `isTransientServerError` so that
+ * wrapped errors (e.g. Classic's `#onError` rethrows as
+ * `new Error(msg, { cause: httpError })`) are still correctly classified.
  */
-const findAxiosError = (error: unknown): AxiosError | undefined => {
+const findHttpError = (error: unknown): HttpError | undefined => {
   const visited = new Set<object>()
   let current: unknown = error
   while (
@@ -26,7 +30,7 @@ const findAxiosError = (error: unknown): AxiosError | undefined => {
     current !== null &&
     !visited.has(current)
   ) {
-    if (axios.isAxiosError(current)) {
+    if (isHttpError(current)) {
       return current
     }
     visited.add(current)
@@ -38,15 +42,14 @@ const findAxiosError = (error: unknown): AxiosError | undefined => {
 
 /**
  * Predicate suitable for {@link RetryBackoffOptions.isRetryable}: returns
- * `true` for transient HTTP 5xx status codes (502 / 503 / 504) on axios
- * errors, including errors wrapped via `Error.cause`. All other inputs
- * return `false`.
- * @param error - The rejection reason thrown by an axios call.
+ * `true` for transient HTTP 5xx status codes (502 / 503 / 504) including
+ * errors wrapped via `Error.cause`. All other inputs return `false`.
+ * @param error - The rejection reason thrown by an HTTP call.
  * @returns Whether the error represents a transient server failure.
  */
 export const isTransientServerError = (error: unknown): boolean => {
-  const axiosError = findAxiosError(error)
-  const { status } = axiosError?.response ?? {}
+  const httpError = findHttpError(error)
+  const status = httpError?.response.status
   return typeof status === 'number' && TRANSIENT_STATUSES.has(status)
 }
 
@@ -68,21 +71,16 @@ export const DEFAULT_TRANSIENT_RETRY_OPTIONS = {
 
 /** Options for {@link withRetryBackoff}. */
 export interface RetryBackoffOptions {
-  /** Maximum retry attempts after the initial try (0 disables retries). */
-  readonly maxRetries: number
-
   /** Initial delay in milliseconds before the first retry. */
   readonly initialDelayMs: number
-
-  /** Upper bound on the backoff delay. */
-  readonly maxDelayMs: number
-
   /** Jitter ratio applied to each computed delay (`0..1`). */
   readonly jitterRatio: number
-
+  /** Upper bound on the backoff delay. */
+  readonly maxDelayMs: number
+  /** Maximum retry attempts after the initial try (0 disables retries). */
+  readonly maxRetries: number
   /** Predicate deciding whether a thrown error is worth retrying. */
   readonly isRetryable: (error: unknown) => boolean
-
   /** Optional hook invoked before the next attempt. */
   readonly onRetry?: (attempt: number, error: unknown, delayMs: number) => void
 }

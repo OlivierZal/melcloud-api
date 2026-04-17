@@ -1,29 +1,13 @@
-import type {
-  ClassicUpdateDeviceData,
-  ClassicUpdateDeviceDataAta,
-} from '../types/index.ts'
+import type { ClassicUpdateDeviceDataAta } from '../types/index.ts'
 import { ClassicDeviceType, ClassicOperationMode } from '../constants.ts'
 import { BaseDeviceFacade, clampToRange } from './classic-base-device.ts'
+import { classicAtaFlags } from './classic-flags.ts'
 
 /** Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping. */
 export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Ata
 > {
-  /*
-   * MELCloud EffectiveFlags bitfield — each bit tells the Classic API which
-   * fields in the update payload should actually be applied.
-   */
-  public readonly flags = {
-    OperationMode: 0x2,
-    Power: 0x1,
-    SetFanSpeed: 0x8,
-    SetTemperature: 0x4,
-    VaneHorizontal: 0x1_00,
-    VaneVertical: 0x10,
-  } as const satisfies Record<
-    keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Ata>,
-    number
-  >
+  public readonly flags = classicAtaFlags
 
   public readonly type = ClassicDeviceType.Ata
 

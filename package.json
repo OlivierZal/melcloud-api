@@ -59,6 +59,10 @@
       "types": "./dist/home.d.ts",
       "default": "./dist/home.js"
     },
+    "./http": {
+      "types": "./dist/http/index.d.ts",
+      "default": "./dist/http/index.js"
+    },
     "./observability": {
       "types": "./dist/observability/index.d.ts",
       "default": "./dist/observability/index.js"
@@ -92,9 +96,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "axios": "^1.14.0",
     "luxon": "^3.7.2",
-    "tough-cookie": "^6.0.1"
+    "tough-cookie": "^6.0.1",
+    "undici": "^7.25.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,10 +1,10 @@
 /**
  * Minimal structural shape required by the Classic API call loggers.
  *
- * Both `InternalAxiosRequestConfig` (Classic, via the axios interceptors)
+ * Both `HttpRequestConfig` (used internally by `HttpClient.request`)
  * and Home's literal request config (built inside `#dispatch`) satisfy
- * this contract structurally — no double type assertion is needed at the
- * call site, and changes to axios's internal config type can't break us.
+ * this contract structurally — no double type assertion is needed at
+ * the call site, and the transport stays free to evolve.
  */
 export interface LoggableRequestConfig {
   readonly data?: unknown

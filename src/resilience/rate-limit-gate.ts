@@ -12,18 +12,6 @@ const SECONDS_PER_MINUTE = 60
  * without hammering the upstream server.
  */
 export class RateLimitGate {
-  readonly #fallback: Duration
-
-  #pausedUntil: DateTime = DateTime.now()
-
-  /**
-   * @param fallback - Duration to pause when the server doesn't provide
-   *   a usable `Retry-After` header.
-   */
-  public constructor(fallback: DurationLike) {
-    this.#fallback = Duration.fromDurationLike(fallback)
-  }
-
   /**
    * Whether the gate is currently closed (caller should not make requests).
    * @returns `true` while the rate-limit window is active.
@@ -38,6 +26,18 @@ export class RateLimitGate {
    */
   public get remaining(): Duration | null {
     return this.isPaused ? this.#pausedUntil.diffNow() : null
+  }
+
+  readonly #fallback: Duration
+
+  #pausedUntil: DateTime = DateTime.now()
+
+  /**
+   * @param fallback - Duration to pause when the server doesn't provide
+   *   a usable `Retry-After` header.
+   */
+  public constructor(fallback: DurationLike) {
+    this.#fallback = Duration.fromDurationLike(fallback)
   }
 
   /**
@@ -57,20 +57,6 @@ export class RateLimitGate {
     return remaining.as('seconds') < SECONDS_PER_MINUTE ?
         remaining.shiftTo('seconds').toHuman()
       : remaining.shiftTo('minutes', 'seconds').rescale().toHuman()
-  }
-
-  /**
-   * Record a rate-limit response from upstream.
-   *
-   * Accepts the raw `Retry-After` header value (seconds). Non-numeric,
-   * zero, negative, or missing values fall back to the configured duration.
-   * @param retryAfterSeconds - Header value from the 429 response.
-   */
-  public recordRateLimit(retryAfterSeconds?: unknown): void {
-    const seconds = Number(retryAfterSeconds)
-    const duration =
-      Number.isFinite(seconds) && seconds > 0 ? { seconds } : this.#fallback
-    this.#pausedUntil = DateTime.now().plus(duration)
   }
 
   /**
@@ -94,6 +80,20 @@ export class RateLimitGate {
     logger.error(
       `Rate limited (429): pausing${suffix} for ${this.formatRemaining()}`,
     )
+  }
+
+  /**
+   * Record a rate-limit response from upstream.
+   *
+   * Accepts the raw `Retry-After` header value (seconds). Non-numeric,
+   * zero, negative, or missing values fall back to the configured duration.
+   * @param retryAfterSeconds - Header value from the 429 response.
+   */
+  public recordRateLimit(retryAfterSeconds?: unknown): void {
+    const seconds = Number(retryAfterSeconds)
+    const duration =
+      Number.isFinite(seconds) && seconds > 0 ? { seconds } : this.#fallback
+    this.#pausedUntil = DateTime.now().plus(duration)
   }
 
   /** Reset the gate immediately (testing or manual unblock). */

@@ -23,13 +23,13 @@ import { APIError } from './base.ts'
  * ```
  */
 export class EntityNotFoundError extends APIError {
+  /** Id that could not be resolved in the registry. */
+  public readonly entityId: number
+
   public override readonly name = 'EntityNotFoundError'
 
   /** Registry table the lookup was performed against (e.g. `'DeviceLocation'`). */
   public readonly tableName: ClassicSettingsParams['tableName']
-
-  /** Id that could not be resolved in the registry. */
-  public readonly entityId: number
 
   public constructor(
     tableName: ClassicSettingsParams['tableName'],

@@ -2,7 +2,6 @@ import type {
   ClassicHotWaterState,
   ClassicListDeviceDataAtw,
   ClassicTemperatureDataAtw,
-  ClassicUpdateDeviceData,
   ClassicUpdateDeviceDataAtw,
   ClassicZoneAtw,
   ClassicZoneState,
@@ -15,6 +14,7 @@ import {
 } from '../constants.ts'
 import type { ReportChartLineOptions, ReportQuery } from './interfaces.ts'
 import { BaseDeviceFacade, clampToRange } from './classic-base-device.ts'
+import { classicAtwFlags } from './classic-flags.ts'
 
 const DEFAULT_TEMPERATURE = 0
 
@@ -83,22 +83,7 @@ const mergeSeries = (
 export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Atw
 > {
-  public readonly flags = {
-    ForcedHotWaterMode: 0x1_00_00,
-    OperationModeZone1: 0x8,
-    OperationModeZone2: 0x10,
-    Power: 0x1,
-    SetCoolFlowTemperatureZone1: 0x1_00_00_00_00_00_00,
-    SetCoolFlowTemperatureZone2: 0x1_00_00_00_00_00_00,
-    SetHeatFlowTemperatureZone1: 0x1_00_00_00_00_00_00,
-    SetHeatFlowTemperatureZone2: 0x1_00_00_00_00_00_00,
-    SetTankWaterTemperature: 0x1_00_00_00_00_00_20,
-    SetTemperatureZone1: 0x2_00_00_00_80,
-    SetTemperatureZone2: 0x8_00_00_02_00,
-  } as const satisfies Record<
-    keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Atw>,
-    number
-  >
+  public readonly flags = classicAtwFlags
 
   public readonly type = ClassicDeviceType.Atw
 

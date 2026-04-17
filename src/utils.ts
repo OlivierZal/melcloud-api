@@ -23,6 +23,17 @@ const YEAR_MONTH_DIVISOR = 100
  */
 export const now = (): string => DateTime.now().toISO({ includeOffset: false })
 
+/**
+ * Factory for a type guard that narrows a key to the own keys of `record`.
+ * Uses `Object.hasOwn` so prototype-chain pollution cannot produce false positives.
+ * @param record - The record whose keys the returned guard recognises.
+ * @returns A type guard checking own-key membership on `record`.
+ */
+export const isKeyOf =
+  <T extends object>(record: T) =>
+  (key: PropertyKey): key is keyof T =>
+    Object.hasOwn(record, key)
+
 /** Maps ATA set-command keys to their corresponding list-data keys. */
 export const fromSetToListAta: Record<
   KeyOfClassicSetDeviceDataAtaNotInList,
@@ -38,9 +49,7 @@ export const fromSetToListAta: Record<
  * @param value - The key to check.
  * @returns Whether the key is a set-command key not present in list data.
  */
-export const isSetDeviceDataAtaNotInList = (
-  value: string,
-): value is KeyOfClassicSetDeviceDataAtaNotInList => value in fromSetToListAta
+export const isSetDeviceDataAtaNotInList = isKeyOf(fromSetToListAta)
 
 /** Maps ATA list-data keys to their corresponding set-command keys. */
 export const fromListToSetAta: Record<
@@ -57,9 +66,7 @@ export const fromListToSetAta: Record<
  * @param value - The key to check.
  * @returns Whether the key is a list-data key with a different set-command key.
  */
-export const isSetDeviceDataAtaInList = (
-  value: string,
-): value is keyof ClassicSetDeviceDataAtaInList => value in fromListToSetAta
+export const isSetDeviceDataAtaInList = isKeyOf(fromListToSetAta)
 
 /*
  * Strategy map: transform raw API label formats into human-readable strings
@@ -116,7 +123,7 @@ export function typedFromEntries(
 export const isUpdateDeviceData = <T extends ClassicDeviceType>(
   data: Record<keyof ClassicUpdateDeviceData<T>, unknown>,
   key: string,
-): key is string & keyof ClassicUpdateDeviceData<T> => key in data
+): key is string & keyof ClassicUpdateDeviceData<T> => Object.hasOwn(data, key)
 
 const getChartLineSeries = ({
   data,

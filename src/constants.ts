@@ -2,10 +2,8 @@
 export const ClassicDeviceType = {
   /** Air-to-Air (ATA) heat pump. */
   Ata: 0,
-
   /** Air-to-Water (ATW) heat pump. */
   Atw: 1,
-
   /** Energy Recovery Ventilation (ERV) unit. */
   Erv: 3,
 } as const
@@ -16,15 +14,14 @@ export type ClassicDeviceType =
 export const HomeDeviceType = {
   /** Air-to-Air (ATA) heat pump. */
   Ata: 'airToAir',
-
   /** Air-to-Water (ATW) heat pump. */
   Atw: 'airToWater',
 } as const
-export type HomeDeviceType =
-  (typeof HomeDeviceType)[keyof typeof HomeDeviceType]
-
 /** Unified MELCloud device type: union of Classic and Home API device types. */
 export type DeviceType = ClassicDeviceType | HomeDeviceType
+
+export type HomeDeviceType =
+  (typeof HomeDeviceType)[keyof typeof HomeDeviceType]
 
 /** Fan speed levels for ATA and ERV devices. */
 export const ClassicFanSpeed = {
@@ -171,16 +168,12 @@ export type ClassicOperationModeStateZone =
 export const ClassicOperationModeZone = {
   /** ClassicTemperature curve-based regulation. */
   curve: 2,
-
   /** Fixed flow temperature. */
   flow: 1,
-
   /** Fixed flow temperature with cooling. */
   flow_cool: 4,
-
   /** Room thermostat regulation. */
   room: 0,
-
   /** Room thermostat regulation with cooling. */
   room_cool: 3,
 } as const

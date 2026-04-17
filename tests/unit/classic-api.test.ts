@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { ClassicAPI, ClassicAPIConfig } from '../../src/api/index.ts'
+import type {
+  ClassicAPI,
+  ClassicAPIConfig,
+  SyncCallback,
+} from '../../src/api/index.ts'
 import type { ClassicDeviceType } from '../../src/constants.ts'
+import { HttpClient } from '../../src/http/client.ts'
 import {
   type ClassicBuildingWithStructure,
   type ClassicListDeviceAny,
@@ -11,44 +16,53 @@ import {
 } from '../../src/types/index.ts'
 import {
   cast,
-  createAxiosError,
+  createHttpError,
   createLogger,
   createSettingStore,
   mock,
 } from '../helpers.ts'
 
-const mockAxiosInstance = {
-  get: vi.fn(),
-  post: vi.fn(),
-  request: vi.fn(),
-}
+const mockHttpClient = new HttpClient({
+  baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
+  timeout: 30_000,
+})
+const mockRequest = vi.spyOn(mockHttpClient, 'request')
+
+const wrap = <T>(
+  data: T,
+): { data: T; headers: Record<string, never>; status: number } => ({
+  data,
+  headers: {},
+  status: 200,
+})
 
 const loginResponse = (
   contextKey = 'ctx',
   expiry = '2030-12-31T00:00:00',
-): { data: { LoginData: { ContextKey: string; Expiry: string } } } => ({
-  data: { LoginData: { ContextKey: contextKey, Expiry: expiry } },
-})
+): ReturnType<
+  typeof wrap<{ LoginData: { ContextKey: string; Expiry: string } }>
+> => wrap({ LoginData: { ContextKey: contextKey, Expiry: expiry } })
 
 /**
- * Configure `mockAxiosInstance.request` to handle login (POST) and list (GET)
+ * Configure `mockRequest` to handle login (POST) and list (GET)
  * calls by discriminating on the `url` field in the request config.
+ * @param contextKey - LoginData.ContextKey returned by the mocked login call.
+ * @param expiry - LoginData.Expiry returned by the mocked login call.
  */
 const mockLoginAndList = (
   contextKey = 'ctx',
   expiry = '2030-12-31T00:00:00',
 ): void => {
-  mockAxiosInstance.request.mockImplementation(
-    (config: { url?: string } = {}) => {
-      if (config.url === '/Login/ClientLogin3') {
-        return loginResponse(contextKey, expiry)
-      }
-      if (config.url === '/User/ListDevices') {
-        return { data: [] }
-      }
-      return { data: {} }
-    },
-  )
+  mockRequest.mockImplementation(async (config) => {
+    await Promise.resolve()
+    if (config.url === '/Login/ClientLogin3') {
+      return loginResponse(contextKey, expiry)
+    }
+    if (config.url === '/User/ListDevices') {
+      return wrap([])
+    }
+    return wrap({})
+  })
 }
 
 const errorEntry = (
@@ -95,24 +109,13 @@ const createBuilding = (
     ...overrides,
   })
 
-vi.mock(import('axios'), async (importOriginal) => {
-  const original = await importOriginal()
-  return {
-    ...original,
-    default: cast({
-      create: vi.fn().mockReturnValue(mockAxiosInstance),
-      isAxiosError: original.default.isAxiosError,
-    }),
-  }
-})
-
 describe('mELCloud Classic API', () => {
   let melCloudApi: typeof ClassicAPI = cast(null)
 
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
-    mockAxiosInstance.request.mockResolvedValue({ data: [] })
+    mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
     ;({ ClassicAPI: melCloudApi } = await import('../../src/api/classic.ts'))
   })
 
@@ -123,7 +126,11 @@ describe('mELCloud Classic API', () => {
   const createApi = async (
     config: ClassicAPIConfig = {},
   ): Promise<Awaited<ReturnType<typeof melCloudApi.create>>> =>
-    melCloudApi.create({ autoSyncInterval: 0, ...config })
+    melCloudApi.create({
+      autoSyncInterval: 0,
+      httpClient: mockHttpClient,
+      ...config,
+    })
 
   it('creates a ClassicAPI instance via static create()', async () => {
     const api = await createApi()
@@ -139,7 +146,7 @@ describe('mELCloud Classic API', () => {
   })
 
   it('accepts custom configuration', async () => {
-    const onSync = vi.fn()
+    const onSync = vi.fn<SyncCallback>()
     const api = await createApi({
       language: 'fr',
       logger: createLogger(),
@@ -152,7 +159,10 @@ describe('mELCloud Classic API', () => {
   })
 
   it('accepts null autoSyncInterval', async () => {
-    const api = await melCloudApi.create({ autoSyncInterval: null })
+    const api = await melCloudApi.create({
+      autoSyncInterval: null,
+      httpClient: mockHttpClient,
+    })
 
     expect(api).toBeDefined()
   })
@@ -170,7 +180,11 @@ describe('mELCloud Classic API', () => {
 
   it('fetches building list and syncs registry', async () => {
     const building = createBuilding()
-    mockAxiosInstance.request.mockResolvedValue({ data: [building] })
+    mockRequest.mockResolvedValue({
+      data: [building],
+      headers: {},
+      status: 200,
+    })
     const api = await createApi()
     const buildings = await api.fetch()
 
@@ -179,7 +193,7 @@ describe('mELCloud Classic API', () => {
 
   it('returns empty array when fetch fails', async () => {
     const api = await createApi()
-    mockAxiosInstance.request.mockRejectedValueOnce(new Error('Network'))
+    mockRequest.mockRejectedValueOnce(new Error('Network'))
     const buildings = await api.fetch()
 
     expect(buildings).toStrictEqual([])
@@ -202,7 +216,10 @@ describe('mELCloud Classic API', () => {
   })
 
   it('schedules next sync when autoSyncInterval is set', async () => {
-    await melCloudApi.create({ autoSyncInterval: 1 })
+    await melCloudApi.create({
+      autoSyncInterval: 1,
+      httpClient: mockHttpClient,
+    })
 
     expect(() => {
       vi.advanceTimersByTime(60_000)
@@ -211,10 +228,15 @@ describe('mELCloud Classic API', () => {
 
   it('logs error when auto-sync onSync callback throws', async () => {
     const logger = createLogger()
-    const onSync = vi.fn().mockImplementationOnce(() => {
+    const onSync = vi.fn<SyncCallback>().mockImplementationOnce(async () => {
       // First call (initial create) succeeds, subsequent calls can throw
     })
-    await melCloudApi.create({ autoSyncInterval: 1, logger, onSync })
+    await melCloudApi.create({
+      autoSyncInterval: 1,
+      httpClient: mockHttpClient,
+      logger,
+      onSync,
+    })
     onSync.mockImplementation(() => {
       throw new Error('sync callback failed')
     })
@@ -325,10 +347,16 @@ describe('mELCloud Classic API', () => {
     ])('calls $method via POST', async ({ args, method, path }) => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({ data: {} })
+      mockRequest.mockResolvedValue(
+        wrap(
+          method === 'login' ?
+            { LoginData: { ContextKey: 'ctx', Expiry: '2099-01-01T00:00:00Z' } }
+          : {},
+        ),
+      )
       await api[method](cast(args))
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ method: 'post', url: path }),
       )
     })
@@ -352,10 +380,10 @@ describe('mELCloud Classic API', () => {
     ])('calls $method via GET', async ({ args, method, path }) => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({ data: {} })
+      mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
       await api[method](cast(args))
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ method: 'get', url: path }),
       )
     })
@@ -363,10 +391,10 @@ describe('mELCloud Classic API', () => {
     it('calls list', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({ data: [] })
+      mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
       await api.list()
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ method: 'get', url: '/User/ListDevices' }),
       )
     })
@@ -380,7 +408,7 @@ describe('mELCloud Classic API', () => {
       async ({ path, type }) => {
         mockLoginAndList()
         const api = await createApi({ password: 'pass', username: 'user' })
-        mockAxiosInstance.request.mockResolvedValue({ data: {} })
+        mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
         await api.updateValues({
           postData: mock<
             ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>
@@ -391,7 +419,7 @@ describe('mELCloud Classic API', () => {
           type,
         })
 
-        expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+        expect(mockRequest).toHaveBeenCalledWith(
           expect.objectContaining({ method: 'post', url: path }),
         )
       },
@@ -413,9 +441,7 @@ describe('mELCloud Classic API', () => {
 
     it('returns false when login data is null', async () => {
       const api = await createApi()
-      mockAxiosInstance.request.mockResolvedValue({
-        data: { LoginData: null },
-      })
+      mockRequest.mockResolvedValue(wrap({ LoginData: null }))
       const isAuthenticated = await api.authenticate({
         password: 'pass',
         username: 'user',
@@ -432,9 +458,9 @@ describe('mELCloud Classic API', () => {
     })
 
     it('swallows error when no explicit data', async () => {
-      mockAxiosInstance.request.mockRejectedValueOnce(new Error('fail'))
+      mockRequest.mockRejectedValueOnce(new Error('fail'))
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockRejectedValue(new Error('fail'))
+      mockRequest.mockRejectedValue(new Error('fail'))
       const isAuthenticated = await api.authenticate()
 
       expect(isAuthenticated).toBe(false)
@@ -442,7 +468,7 @@ describe('mELCloud Classic API', () => {
 
     it('throws error when explicit data and auth fails', async () => {
       const api = await createApi()
-      mockAxiosInstance.request.mockRejectedValue(new Error('auth fail'))
+      mockRequest.mockRejectedValue(new Error('auth fail'))
 
       await expect(
         api.authenticate({ password: 'p', username: 'u' }),
@@ -458,10 +484,10 @@ describe('mELCloud Classic API', () => {
         password: 'pass',
         username: 'user',
       })
-      mockAxiosInstance.request.mockResolvedValue({ data: true })
+      mockRequest.mockResolvedValue({ data: true, headers: {}, status: 200 })
       await api.updateLanguage('fr')
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           method: 'post',
           url: '/User/UpdateLanguage',
@@ -476,10 +502,10 @@ describe('mELCloud Classic API', () => {
         password: 'pass',
         username: 'user',
       })
-      mockAxiosInstance.request.mockClear()
+      mockRequest.mockClear()
       await api.updateLanguage('en')
 
-      expect(mockAxiosInstance.request).not.toHaveBeenCalled()
+      expect(mockRequest).not.toHaveBeenCalled()
     })
 
     it('handles invalid language codes', async () => {
@@ -489,10 +515,10 @@ describe('mELCloud Classic API', () => {
         password: 'pass',
         username: 'user',
       })
-      mockAxiosInstance.request.mockResolvedValue({ data: true })
+      mockRequest.mockResolvedValue({ data: true, headers: {}, status: 200 })
       await api.updateLanguage('invalid')
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { language: 0 },
           method: 'post',
@@ -508,12 +534,12 @@ describe('mELCloud Classic API', () => {
         password: 'pass',
         username: 'user',
       })
-      mockAxiosInstance.request.mockResolvedValue({ data: false })
+      mockRequest.mockResolvedValue({ data: false, headers: {}, status: 200 })
       await api.updateLanguage('fr')
-      mockAxiosInstance.request.mockClear()
+      mockRequest.mockClear()
       await api.updateLanguage('en')
 
-      expect(mockAxiosInstance.request).not.toHaveBeenCalled()
+      expect(mockRequest).not.toHaveBeenCalled()
     })
   })
 
@@ -537,9 +563,7 @@ describe('mELCloud Classic API', () => {
     it('returns parsed error log', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({
-        data: [errorEntry()],
-      })
+      mockRequest.mockResolvedValue(wrap([errorEntry()]))
       const result = await api.getErrorLog(
         { from: '2024-01-01', to: '2024-01-02' },
         [1],
@@ -552,15 +576,15 @@ describe('mELCloud Classic API', () => {
     it('filters out entries with invalid year', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({
-        data: [
+      mockRequest.mockResolvedValue(
+        wrap([
           errorEntry({
             EndDate: '0001-01-01',
             ErrorMessage: 'Bad',
             StartDate: '0001-01-01T00:00:00',
           }),
-        ],
-      })
+        ]),
+      )
       const result = await api.getErrorLog({}, [1])
 
       expect(result.errors).toHaveLength(0)
@@ -569,9 +593,9 @@ describe('mELCloud Classic API', () => {
     it('throws when the API returns failure data', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({
-        data: { AttributeErrors: { field: ['error'] }, Success: false },
-      })
+      mockRequest.mockResolvedValue(
+        wrap({ AttributeErrors: { field: ['error'] }, Success: false }),
+      )
 
       await expect(api.getErrorLog({}, [1])).rejects.toThrow('field')
     })
@@ -579,7 +603,7 @@ describe('mELCloud Classic API', () => {
     it('handles offset and limit', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({ data: [] })
+      mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
       const result = await api.getErrorLog(
         { limit: '5', offset: '2', to: '2024-06-01' },
         [1],
@@ -597,27 +621,30 @@ describe('mELCloud Classic API', () => {
           Floors: [],
         },
       })
-      mockAxiosInstance.request.mockResolvedValue({ data: [building] })
+      mockRequest.mockResolvedValue({
+        data: [building],
+        headers: {},
+        status: 200,
+      })
       const api = await createApi()
       await api.fetch()
       mockLoginAndList()
-      mockAxiosInstance.request.mockImplementation(
-        (config: { url?: string } = {}) => {
-          if (config.url === '/Report/GetUnitErrorLog2') {
-            return { data: [] }
-          }
-          if (config.url === '/Login/ClientLogin3') {
-            return loginResponse()
-          }
-          return { data: [] }
-        },
-      )
+      mockRequest.mockImplementation(async (config) => {
+        await Promise.resolve()
+        if (config.url === '/Report/GetUnitErrorLog2') {
+          return wrap([])
+        }
+        if (config.url === '/Login/ClientLogin3') {
+          return loginResponse()
+        }
+        return wrap([])
+      })
       const result = await api.getErrorLog({})
 
       expect(result).toHaveProperty('errors')
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           data: expect.objectContaining({ DeviceIDs: [42] }),
           url: '/Report/GetUnitErrorLog2',
         }),
@@ -627,9 +654,7 @@ describe('mELCloud Classic API', () => {
     it('filters null/empty error messages', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({
-        data: [errorEntry({ ErrorMessage: null })],
-      })
+      mockRequest.mockResolvedValue(wrap([errorEntry({ ErrorMessage: null })]))
       const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
 
       expect(result.errors).toHaveLength(0)
@@ -638,7 +663,7 @@ describe('mELCloud Classic API', () => {
     it('throws on invalid date in query', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({ data: [] })
+      mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
 
       await expect(api.getErrorLog({ to: 'not-a-date' }, [1])).rejects.toThrow(
         'Invalid DateTime',
@@ -650,12 +675,12 @@ describe('mELCloud Classic API', () => {
     it('sets X-MitsContextKey header on authenticated requests', async () => {
       mockLoginAndList('my-ctx')
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockAxiosInstance.request.mockResolvedValue({ data: {} })
+      mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
       await api.getValues({ params: { buildingId: 1, id: 1 } })
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           headers: expect.objectContaining({
             'X-MitsContextKey': 'my-ctx',
           }),
@@ -665,9 +690,7 @@ describe('mELCloud Classic API', () => {
 
     it('does not set context key header for login path', async () => {
       const api = await createApi()
-      mockAxiosInstance.request.mockResolvedValue({
-        data: { LoginData: null },
-      })
+      mockRequest.mockResolvedValue(wrap({ LoginData: null }))
       await api.login({
         postData: {
           AppVersion: '1.0',
@@ -679,7 +702,7 @@ describe('mELCloud Classic API', () => {
       })
 
       // Login goes through #dispatch which sends empty headers when contextKey is ''
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           headers: {},
           url: '/Login/ClientLogin3',
@@ -694,16 +717,16 @@ describe('mELCloud Classic API', () => {
       })
       mockLoginAndList('newer', '2030-01-01T00:00:00')
       const api = await createApi({ settingManager })
-      /* Simulate an expired session after initial create */
+      // Simulate an expired session after initial create
       settingManager.set('contextKey', 'old-ctx')
       settingManager.set('expiry', '2020-01-01T00:00:00')
-      mockAxiosInstance.request.mockClear()
+      mockRequest.mockClear()
       mockLoginAndList('newest', '2030-01-01T00:00:00')
       await api.getValues({ params: { buildingId: 1, id: 1 } })
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           headers: expect.objectContaining({
             'X-MitsContextKey': 'newest',
           }),
@@ -719,15 +742,15 @@ describe('mELCloud Classic API', () => {
       })
       mockLoginAndList()
       const api = await createApi({ settingManager })
-      /* Simulate a cleared session after initial create */
+      // Simulate a cleared session after initial create
       settingManager.set('contextKey', '')
-      mockAxiosInstance.request.mockClear()
+      mockRequest.mockClear()
       mockLoginAndList('fresh', '2030-12-31T00:00:00')
       await api.getValues({ params: { buildingId: 1, id: 1 } })
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           data: expect.objectContaining({
             Email: 'user',
             Password: 'pass',
@@ -735,9 +758,9 @@ describe('mELCloud Classic API', () => {
           url: '/Login/ClientLogin3',
         }),
       )
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           headers: expect.objectContaining({
             'X-MitsContextKey': 'fresh',
           }),
@@ -753,19 +776,19 @@ describe('mELCloud Classic API', () => {
       })
       mockLoginAndList()
       const api = await createApi({ settingManager })
-      /* Simulate a stale session after initial create */
+      // Simulate a stale session after initial create
       settingManager.set('contextKey', 'stale')
       settingManager.set('expiry', 'not-a-valid-iso-date')
-      mockAxiosInstance.request.mockClear()
+      mockRequest.mockClear()
       mockLoginAndList('fresh', '2030-12-31T00:00:00')
       await api.getValues({ params: { buildingId: 1, id: 1 } })
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ url: '/Login/ClientLogin3' }),
       )
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           headers: expect.objectContaining({
             'X-MitsContextKey': 'fresh',
           }),
@@ -777,18 +800,18 @@ describe('mELCloud Classic API', () => {
       const { settingManager } = createSettingStore({ contextKey: 'valid' })
       mockLoginAndList()
       const api = await createApi({ settingManager })
-      mockAxiosInstance.request.mockClear()
-      mockAxiosInstance.request.mockResolvedValue({ data: {} })
+      mockRequest.mockClear()
+      mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
       await api.getValues({ params: { buildingId: 1, id: 1 } })
 
       // Should NOT have called login
-      expect(mockAxiosInstance.request).not.toHaveBeenCalledWith(
+      expect(mockRequest).not.toHaveBeenCalledWith(
         expect.objectContaining({ url: '/Login/ClientLogin3' }),
       )
 
-      expect(mockAxiosInstance.request).toHaveBeenCalledWith(
+      expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           headers: expect.objectContaining({
             'X-MitsContextKey': 'valid',
           }),
@@ -804,9 +827,7 @@ describe('mELCloud Classic API', () => {
       mockLoginAndList()
       const api = await createApi({ settingManager })
       setSpy.mockClear()
-      mockAxiosInstance.request.mockResolvedValueOnce({
-        data: { LoginData: null },
-      })
+      mockRequest.mockResolvedValueOnce(wrap({ LoginData: null }))
 
       const isAuthenticated = await api.authenticate({
         password: 'wrong',
@@ -824,25 +845,24 @@ describe('mELCloud Classic API', () => {
 
       // First call returns 401, re-auth succeeds, retry succeeds
       let isCallCount = 0
-      mockAxiosInstance.request.mockImplementation(
-        (config: { url?: string } = {}) => {
-          if (config.url === '/Login/ClientLogin3') {
-            return loginResponse('new-ctx', '2030-12-31T00:00:00')
-          }
-          if (config.url === '/User/ListDevices') {
-            return { data: [] }
-          }
-          isCallCount += 1
-          if (isCallCount === 1) {
-            throw createAxiosError({
-              message: 'unauthorized',
-              status: 401,
-              url: '/Device/Get',
-            })
-          }
-          return { data: { value: 'retried' } }
-        },
-      )
+      mockRequest.mockImplementation(async (config) => {
+        await Promise.resolve()
+        if (config.url === '/Login/ClientLogin3') {
+          return loginResponse('new-ctx', '2030-12-31T00:00:00')
+        }
+        if (config.url === '/User/ListDevices') {
+          return wrap([])
+        }
+        isCallCount += 1
+        if (isCallCount === 1) {
+          throw createHttpError({
+            message: 'unauthorized',
+            status: 401,
+            url: '/Device/Get',
+          })
+        }
+        return wrap({ value: 'retried' })
+      })
       const result = await api.getValues({
         params: { buildingId: 1, id: 1 },
       })
@@ -855,21 +875,20 @@ describe('mELCloud Classic API', () => {
       const api = await createApi({ password: 'pass', username: 'user' })
 
       // 401 on endpoint, re-auth returns LoginData: null → authenticate() returns false
-      mockAxiosInstance.request.mockImplementation(
-        (config: { url?: string } = {}) => {
-          if (config.url === '/Login/ClientLogin3') {
-            return { data: { LoginData: null } }
-          }
-          if (config.url === '/User/ListDevices') {
-            return { data: [] }
-          }
-          throw createAxiosError({
-            message: 'unauthorized',
-            status: 401,
-            url: '/Device/Get',
-          })
-        },
-      )
+      mockRequest.mockImplementation(async (config) => {
+        await Promise.resolve()
+        if (config.url === '/Login/ClientLogin3') {
+          return wrap({ LoginData: null })
+        }
+        if (config.url === '/User/ListDevices') {
+          return wrap([])
+        }
+        throw createHttpError({
+          message: 'unauthorized',
+          status: 401,
+          url: '/Device/Get',
+        })
+      })
 
       await expect(
         api.getValues({ params: { buildingId: 1, id: 1 } }),
@@ -885,9 +904,7 @@ describe('mELCloud Classic API', () => {
         username: 'user',
       })
       // An error with no response — e.g. network/TLS failure
-      mockAxiosInstance.request.mockRejectedValueOnce(
-        new Error('connect ECONNREFUSED'),
-      )
+      mockRequest.mockRejectedValueOnce(new Error('connect ECONNREFUSED'))
 
       await expect(
         api.getValues({ params: { buildingId: 1, id: 1 } }),
@@ -953,7 +970,11 @@ describe('mELCloud Classic API', () => {
           ],
         },
       })
-      mockAxiosInstance.request.mockResolvedValue({ data: [building] })
+      mockRequest.mockResolvedValue({
+        data: [building],
+        headers: {},
+        status: 200,
+      })
       const api = await createApi()
       const buildings = await api.fetch()
 

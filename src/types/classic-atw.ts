@@ -23,6 +23,17 @@ export interface ClassicEnergyDataAtw {
   readonly TotalHotWaterProduced: number
 }
 
+/** ATW hot water state derived from device data. */
+export interface ClassicHotWaterState {
+  readonly isEcoHotWater: boolean
+  readonly isForcedMode: boolean
+  readonly isProhibited: boolean
+  readonly maxTankTemperature: number
+  readonly operationalState: ClassicOperationModeStateHotWater
+  readonly setTankWaterTemperature: number
+  readonly tankWaterTemperature: number
+}
+
 export interface ClassicListDeviceDataAtw
   extends
     ClassicBaseListDeviceData,
@@ -97,17 +108,6 @@ export interface ClassicUpdateDeviceDataAtw
     ClassicOperationModeZoneDataAtw,
     ClassicTemperatureDataAtw {
   readonly ForcedHotWaterMode?: boolean
-}
-
-/** ATW hot water state derived from device data. */
-export interface ClassicHotWaterState {
-  readonly isEcoHotWater: boolean
-  readonly isForcedMode: boolean
-  readonly isProhibited: boolean
-  readonly maxTankTemperature: number
-  readonly operationalState: ClassicOperationModeStateHotWater
-  readonly setTankWaterTemperature: number
-  readonly tankWaterTemperature: number
 }
 
 /** ATW zone state derived from device data. */

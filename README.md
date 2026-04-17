@@ -57,13 +57,13 @@ Exports follow a `Classic*` / `Home*` prefix convention so the target API is obv
 
 ```ts title="imports"
 // From the root — prefixed names, works in mixed Classic/Home contexts
-import { ClassicAPI, ClassicGetDeviceData, HomeAPI } from '@olivierzal/melcloud-api'
+import { ClassicAPI, HomeAPI, type ClassicGetDeviceData } from '@olivierzal/melcloud-api'
 
 // From the Classic-scoped subpath — short names, no ambiguity
-import { API, GetDeviceData, FanSpeed } from '@olivierzal/melcloud-api/classic'
+import { API, FanSpeed, type GetDeviceData } from '@olivierzal/melcloud-api/classic'
 
 // From the Home-scoped subpath — short names
-import { API, AtaValues, DeviceCapabilities } from '@olivierzal/melcloud-api/home'
+import { API, type AtaValues, type DeviceCapabilities } from '@olivierzal/melcloud-api/home'
 
 // Namespace-like usage (recommended for mixed Classic + Home code)
 import type * as Classic from '@olivierzal/melcloud-api/classic'

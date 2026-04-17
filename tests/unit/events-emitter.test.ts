@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { Logger } from '../../src/api/index.ts'
+import type { Logger, RequestLifecycleEvents } from '../../src/api/index.ts'
 import { RequestLifecycleEmitter } from '../../src/observability/events-emitter.ts'
 
 const createLogger = (): Logger => ({
@@ -31,10 +31,14 @@ describe(RequestLifecycleEmitter, () => {
   it('forwards each lifecycle event to the matching callback', () => {
     const logger = createLogger()
     const events = {
-      onRequestComplete: vi.fn(),
-      onRequestError: vi.fn(),
-      onRequestRetry: vi.fn(),
-      onRequestStart: vi.fn(),
+      onRequestComplete:
+        vi.fn<NonNullable<RequestLifecycleEvents['onRequestComplete']>>(),
+      onRequestError:
+        vi.fn<NonNullable<RequestLifecycleEvents['onRequestError']>>(),
+      onRequestRetry:
+        vi.fn<NonNullable<RequestLifecycleEvents['onRequestRetry']>>(),
+      onRequestStart:
+        vi.fn<NonNullable<RequestLifecycleEvents['onRequestStart']>>(),
     }
     const emitter = new RequestLifecycleEmitter(events, logger)
     const cause = new Error('upstream')
@@ -66,7 +70,9 @@ describe(RequestLifecycleEmitter, () => {
   it('swallows callback exceptions and logs them at error level', () => {
     const logger = createLogger()
     const events = {
-      onRequestStart: vi.fn(() => {
+      onRequestStart: vi.fn<
+        NonNullable<RequestLifecycleEvents['onRequestStart']>
+      >(() => {
         throw new Error('observer went rogue')
       }),
     }

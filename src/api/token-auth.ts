@@ -1,7 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto'
 
 import { CookieJar } from 'tough-cookie'
-import axios, { type AxiosResponse } from 'axios'
+
+import {
+  HomeParResponseSchema,
+  HomeTokenResponseSchema,
+  parseOrThrow,
+} from '../validation/index.ts'
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                         */
@@ -27,20 +32,11 @@ const REDIRECT_STATUS_MAX = 400
 /*  Types                                                             */
 /* ------------------------------------------------------------------ */
 
-export interface TokenResponse {
-  access_token: string
-  expires_in: number
-  scope: string
-  token_type: string
-  id_token?: string
-  refresh_token?: string
-}
-
 /** Options for {@link authRequest}. */
 interface AuthRequestOptions {
   config: {
-    [key: string]: unknown
-    headers?: Record<string, string>
+    headers: Record<string, string>
+    data?: string
   }
   jar: CookieJar
   method: string
@@ -54,6 +50,172 @@ interface FollowRedirectsOptions {
   url: string
   abortSignal?: AbortSignal
   remaining?: number
+}
+
+/** Minimal response shape surfaced internally by the OIDC flow. */
+interface OidcResponse<T = unknown> {
+  readonly data: T
+  readonly headers: Record<string, string | string[]>
+  readonly status: number
+}
+
+/** Inputs for {@link fetchPostForm}. */
+interface PostFormOptions {
+  body: string
+  headers: Record<string, string>
+  url: string
+  abortSignal?: AbortSignal
+}
+
+/** Options for {@link submitCredentials}. */
+interface SubmitCredentialsOptions {
+  authorizeUrl: string
+  credentials: { password: string; username: string }
+  jar: CookieJar
+  abortSignal?: AbortSignal
+}
+
+/** Token response surfaced by the IdentityServer token endpoint. */
+export interface TokenResponse {
+  access_token: string
+  expires_in: number
+  scope: string
+  token_type: 'Bearer'
+  id_token?: string
+  refresh_token?: string
+}
+
+/* ------------------------------------------------------------------ */
+/*  HTTP transport (fetch-based)                                      */
+/* ------------------------------------------------------------------ */
+
+const readResponseHeaders = (
+  headers: Headers,
+): Record<string, string | string[]> => {
+  const result: Record<string, string | string[]> = {}
+  for (const [key, value] of headers.entries()) {
+    result[key] = value
+  }
+  const setCookie = headers.getSetCookie()
+  if (setCookie.length > 0) {
+    result['set-cookie'] = setCookie
+  }
+  return result
+}
+
+/*
+ * Small POST-form helper for the OIDC flow. The two endpoints it
+ * targets (PAR, token exchange) always return JSON; parse
+ * unconditionally and throw on non-2xx. Each caller is responsible
+ * for narrowing the returned `unknown` (PAR via a local guard, token
+ * exchange via a Zod schema).
+ */
+const fetchPostForm = async ({
+  abortSignal,
+  body,
+  headers,
+  url,
+}: PostFormOptions): Promise<OidcResponse> => {
+  const response = await fetch(url, {
+    body,
+    headers,
+    method: 'POST',
+    ...(abortSignal === undefined ? {} : { signal: abortSignal }),
+  })
+  const responseHeaders = readResponseHeaders(response.headers)
+  const text = await response.text()
+  if (!response.ok) {
+    throw new Error(
+      `Request to ${url} failed with status ${String(response.status)}`,
+    )
+  }
+  return {
+    data: JSON.parse(text) as unknown,
+    headers: responseHeaders,
+    status: response.status,
+  }
+}
+
+/*
+ * Low-level fetch helper for the auth redirect chain. Uses
+ * `redirect: 'manual'` so this module can inspect each 3xx response
+ * explicitly and drive the OIDC flow step-by-step; non-2xx statuses
+ * therefore do not throw.
+ */
+const fetchRaw = async (
+  options: AuthRequestOptions,
+): Promise<OidcResponse<string>> => {
+  const response = await fetch(options.url, {
+    headers: options.config.headers,
+    method: options.method.toUpperCase(),
+    redirect: 'manual',
+    ...(options.config.data === undefined ? {} : { body: options.config.data }),
+    ...(options.abortSignal === undefined ?
+      {}
+    : { signal: options.abortSignal }),
+  })
+  const headers = readResponseHeaders(response.headers)
+  const data = await response.text()
+  return { data, headers, status: response.status }
+}
+
+/**
+ * Store any `Set-Cookie` headers from an OIDC response into a CookieJar.
+ * @param jar - The cookie jar to populate.
+ * @param response - The response containing potential Set-Cookie headers.
+ * @param response.headers - The response headers.
+ * @param url - The URL context for cookie storage.
+ */
+const storeCookies = async (
+  jar: CookieJar,
+  { headers }: OidcResponse,
+  url: string,
+): Promise<void> => {
+  const { 'set-cookie': setCookies } = headers
+  if (!Array.isArray(setCookies)) {
+    return
+  }
+  await Promise.allSettled(
+    setCookies.map(async (raw: string) => jar.setCookie(raw, url)),
+  )
+}
+
+/**
+ * Low-level request for the OIDC auth flow. Uses a transient
+ * CookieJar (not the API instance) since the multi-domain redirect
+ * chain (IS <-> Cognito) requires cross-domain cookie management.
+ * @param options - The auth request options.
+ * @param options.abortSignal - Optional abort signal.
+ * @param options.config - Request config with optional headers and body.
+ * @param options.jar - CookieJar for cross-domain cookie management.
+ * @param options.method - HTTP method.
+ * @param options.url - Target URL.
+ * @returns The raw HTTP response as an {@link OidcResponse}.
+ */
+const authRequest = async ({
+  abortSignal,
+  config,
+  jar,
+  method,
+  url,
+}: AuthRequestOptions): Promise<OidcResponse<string>> => {
+  const cookieHeader = await jar.getCookieString(url)
+  const mergedHeaders: Record<string, string> = {
+    ...config.headers,
+    ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
+  }
+  const response = await fetchRaw({
+    config: {
+      headers: mergedHeaders,
+      ...(config.data === undefined ? {} : { data: config.data }),
+    },
+    jar,
+    method,
+    url,
+    ...(abortSignal === undefined ? {} : { abortSignal }),
+  })
+  await storeCookies(jar, response, url)
+  return response
 }
 
 /* ------------------------------------------------------------------ */
@@ -91,133 +253,6 @@ const extractHiddenFields = (html: string): Record<string, string> =>
   )
 
 /**
- * Generate a PKCE challenge and verifier pair.
- * @returns An object containing the `challenge` and `verifier` strings.
- */
-const generatePKCE = (): { challenge: string; verifier: string } => {
-  const verifier = randomBytes(PKCE_RANDOM_BYTES).toString('base64url')
-  const challenge = createHash('sha256').update(verifier).digest('base64url')
-  return { challenge, verifier }
-}
-
-/**
- * Resolve a potentially relative URL against a base URL.
- * @param options - The resolution options.
- * @param options.base - The base URL for resolution.
- * @param options.location - The URL or relative path to resolve.
- * @returns The fully qualified URL.
- */
-const resolveUrl = ({
-  base,
-  location,
-}: {
-  base: string
-  location: string
-}): string =>
-  location.startsWith('http') ? location : new URL(location, base).href
-
-/**
- * Store any `Set-Cookie` headers from an Axios response into a CookieJar.
- * @param jar - The cookie jar to populate.
- * @param response - The Axios response containing potential Set-Cookie headers.
- * @param response.headers - The response headers.
- * @param url - The URL context for cookie storage.
- */
-const storeCookies = async (
-  jar: CookieJar,
-  { headers }: AxiosResponse,
-  url: string,
-): Promise<void> => {
-  const { 'set-cookie': setCookies } = headers as { 'set-cookie'?: string[] }
-  if (!Array.isArray(setCookies)) {
-    return
-  }
-  await Promise.allSettled(
-    setCookies.map(async (raw: string) => jar.setCookie(raw, url)),
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/*  Auth flow functions                                               */
-/* ------------------------------------------------------------------ */
-
-/**
- * Push Authorization Request -- returns the opaque `request_uri`.
- * @param options - The PAR options.
- * @param options.challenge - The PKCE code challenge.
- * @param options.abortSignal - Optional signal to abort the request.
- * @returns The opaque PAR request URI.
- */
-const par = async ({
-  abortSignal,
-  challenge,
-}: {
-  challenge: string
-  abortSignal?: AbortSignal
-}): Promise<string> => {
-  const {
-    data: { request_uri: requestUri },
-  } = await axios.post<{ request_uri: string }>(
-    `${AUTH_BASE_URL}${PAR_PATH}`,
-    new URLSearchParams({
-      client_id: CLIENT_ID,
-      code_challenge: challenge,
-      code_challenge_method: 'S256',
-      redirect_uri: REDIRECT_URI,
-      response_type: 'code',
-      scope: SCOPES,
-      state: randomBytes(STATE_RANDOM_BYTES).toString('base64url'),
-    }).toString(),
-    {
-      headers: {
-        Authorization: AUTH_BASIC,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      ...(abortSignal === undefined ? {} : { signal: abortSignal }),
-    },
-  )
-  return requestUri
-}
-
-/**
- * Low-level request for the OIDC auth flow. Uses a transient
- * CookieJar (not the API instance) since the multi-domain redirect
- * chain (IS &lt;-&gt; Cognito) requires cross-domain cookie management.
- * @param options - The auth request options.
- * @param options.method - HTTP method.
- * @param options.url - Target URL.
- * @param options.config - Axios request config with optional headers.
- * @param options.jar - CookieJar for cross-domain cookie management.
- * @param options.abortSignal - Optional abort signal.
- * @returns The Axios response.
- */
-const authRequest = async <T = unknown>({
-  abortSignal,
-  config,
-  jar,
-  method,
-  url,
-}: AuthRequestOptions): Promise<AxiosResponse<T>> => {
-  const cookieHeader = await jar.getCookieString(url)
-  const { headers: configHeaders, ...rest } = config
-  const response = await axios.request<T>({
-    ...rest,
-    headers: {
-      ...configHeaders,
-      ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
-    },
-    maxRedirects: 0,
-    method,
-    url,
-    /* v8 ignore next -- callback passed to axios; never invoked in unit tests where axios.request is mocked */
-    validateStatus: () => true,
-    ...(abortSignal === undefined ? {} : { signal: abortSignal }),
-  })
-  await storeCookies(jar, response, url)
-  return response
-}
-
-/**
  * Extract a JavaScript-based redirect URL from an HTML response body.
  * @param html - The HTML string to search for a JS redirect.
  * @returns The redirect URL if found, or `null`.
@@ -238,13 +273,43 @@ const extractPageRedirect = (html: string): string | null => {
 }
 
 /**
+ * Resolve a potentially relative URL against a base URL.
+ * @param options - The resolution options.
+ * @param options.base - The base URL for resolution.
+ * @param options.location - The URL or relative path to resolve.
+ * @returns The fully qualified URL.
+ */
+const resolveUrl = ({
+  base,
+  location,
+}: {
+  base: string
+  location: string
+}): string =>
+  location.startsWith('http') ? location : new URL(location, base).href
+
+/**
+ * Generate a PKCE challenge and verifier pair.
+ * @returns An object containing the `challenge` and `verifier` strings.
+ */
+const generatePKCE = (): { challenge: string; verifier: string } => {
+  const verifier = randomBytes(PKCE_RANDOM_BYTES).toString('base64url')
+  const challenge = createHash('sha256').update(verifier).digest('base64url')
+  return { challenge, verifier }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Redirect-following                                                */
+/* ------------------------------------------------------------------ */
+
+/**
  * Extract the redirect target from an HTTP or JS redirect response.
- * @param response - The Axios response.
+ * @param response - The raw HTTP response.
  * @param currentUrl - The URL that produced this response.
  * @returns The resolved redirect URL, or `null` if no redirect was detected.
  */
 const extractRedirectTarget = (
-  response: AxiosResponse<string>,
+  response: OidcResponse<string>,
   currentUrl: string,
 ): string | null => {
   if (
@@ -265,10 +330,10 @@ const extractRedirectTarget = (
  * non-redirect page is reached or the URL matches the app's custom
  * scheme (`melcloudhome://`).
  * @param options - The redirect-following options.
- * @param options.url - Current URL to follow.
- * @param options.jar - CookieJar for cross-domain cookie management.
  * @param options.abortSignal - Optional abort signal.
+ * @param options.jar - CookieJar for cross-domain cookie management.
  * @param options.remaining - Number of remaining redirects allowed.
+ * @param options.url - Current URL to follow.
  * @returns The final response data and URL.
  */
 const authFollowRedirects = async ({
@@ -283,8 +348,8 @@ const authFollowRedirects = async ({
   if (url.startsWith(REDIRECT_URI)) {
     return { data: '', url }
   }
-  const response = await authRequest<string>({
-    config: {},
+  const response = await authRequest({
+    config: { headers: {} },
     jar,
     method: 'get',
     url,
@@ -302,49 +367,52 @@ const authFollowRedirects = async ({
   return { data: response.data, url }
 }
 
-/**
- * POST to the IdentityServer token endpoint.
- * @param options - The token request options.
- * @param options.params - URL-encoded form parameters for the token request.
- * @param options.abortSignal - Optional signal to abort the request.
- * @returns The token response.
- */
-const tokenRequest = async ({
-  abortSignal,
-  params,
-}: {
-  params: Record<string, string>
-  abortSignal?: AbortSignal
-}): Promise<TokenResponse> => {
-  const { data: tokens } = await axios.post<TokenResponse>(
-    `${AUTH_BASE_URL}${TOKEN_PATH}`,
-    new URLSearchParams(params).toString(),
-    {
-      headers: {
-        Authorization: AUTH_BASIC,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      ...(abortSignal === undefined ? {} : { signal: abortSignal }),
-    },
-  )
-  return tokens
-}
+/* ------------------------------------------------------------------ */
+/*  Auth flow steps                                                   */
+/* ------------------------------------------------------------------ */
 
-/** Options for {@link submitCredentials}. */
-interface SubmitCredentialsOptions {
-  authorizeUrl: string
-  credentials: { password: string; username: string }
-  jar: CookieJar
+/**
+ * Push Authorization Request — returns the opaque `request_uri`.
+ * @param options - The PAR options.
+ * @param options.challenge - The PKCE code challenge.
+ * @param options.abortSignal - Optional signal to abort the request.
+ * @returns The opaque PAR request URI.
+ */
+const par = async ({
+  abortSignal,
+  challenge,
+}: {
+  challenge: string
   abortSignal?: AbortSignal
+}): Promise<string> => {
+  const { data } = await fetchPostForm({
+    body: new URLSearchParams({
+      client_id: CLIENT_ID,
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+      redirect_uri: REDIRECT_URI,
+      response_type: 'code',
+      scope: SCOPES,
+      state: randomBytes(STATE_RANDOM_BYTES).toString('base64url'),
+    }).toString(),
+    headers: {
+      Authorization: AUTH_BASIC,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    url: `${AUTH_BASE_URL}${PAR_PATH}`,
+    ...(abortSignal === undefined ? {} : { abortSignal }),
+  })
+  return parseOrThrow(HomeParResponseSchema, data, 'OIDC PAR endpoint')
+    .request_uri
 }
 
 /**
  * Navigate to the Cognito login page and submit credentials.
  * @param options - The credential submission options.
+ * @param options.abortSignal - Optional abort signal.
  * @param options.authorizeUrl - The OIDC authorize URL to start from.
  * @param options.credentials - The user's login credentials.
  * @param options.jar - CookieJar for the auth flow.
- * @param options.abortSignal - Optional abort signal.
  * @returns The callback location URL after credential submission.
  */
 const submitCredentials = async ({
@@ -409,8 +477,37 @@ const extractAuthorizationCode = async (
 }
 
 /**
- * Full headless OIDC login: PAR -> Cognito -> token exchange.
- * Returns the token response on success.
+ * POST to the IdentityServer token endpoint and validate the response.
+ * @param options - The token request options.
+ * @param options.params - URL-encoded form parameters for the token request.
+ * @param options.abortSignal - Optional signal to abort the request.
+ * @returns The token response, validated by the Zod schema.
+ */
+const tokenRequest = async ({
+  abortSignal,
+  params,
+}: {
+  params: Record<string, string>
+  abortSignal?: AbortSignal
+}): Promise<TokenResponse> => {
+  const { data: tokens } = await fetchPostForm({
+    body: new URLSearchParams(params).toString(),
+    headers: {
+      Authorization: AUTH_BASIC,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    url: `${AUTH_BASE_URL}${TOKEN_PATH}`,
+    ...(abortSignal === undefined ? {} : { abortSignal }),
+  })
+  return parseOrThrow(HomeTokenResponseSchema, tokens, 'OIDC token endpoint')
+}
+
+/* ------------------------------------------------------------------ */
+/*  Public surface                                                    */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Full headless OIDC login: PAR → Cognito → token exchange.
  * @param options - The auth options.
  * @param options.credentials - The user's login credentials.
  * @param options.credentials.password - The user's password.
@@ -455,11 +552,11 @@ export const performTokenAuth = async ({
 }
 
 /**
- * Use the refresh token to obtain a fresh access token. Returns null on failure.
+ * Exchange a refresh token for a fresh access token.
  * @param options - The refresh options.
- * @param options.refreshToken - The refresh token to exchange.
- * @param options.abortSignal - Optional signal to abort the request.
- * @returns The token response, or `null` if the refresh failed.
+ * @param options.refreshToken - The user's refresh token.
+ * @param options.abortSignal - Optional signal to abort the refresh.
+ * @returns The new token response, or `null` if refresh failed.
  */
 export const refreshAccessToken = async ({
   abortSignal,

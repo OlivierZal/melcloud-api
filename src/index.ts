@@ -136,9 +136,9 @@ export {
 export {
   authenticate,
   classicFetchDevices,
-  classicSyncDevices,
   classicUpdateDevice,
   classicUpdateDevices,
+  syncDevices,
 } from './decorators/index.ts'
 export {
   type ClassicDeviceAny,
@@ -176,7 +176,7 @@ export {
   NetworkError,
   NoChangesError,
   RateLimitError,
-  TransientServerError,
+  ValidationError,
 } from './errors/index.ts'
 export {
   type ClassicBuildingFacade,
@@ -199,3 +199,11 @@ export {
   isClassicAtwFacade,
   isClassicErvFacade,
 } from './facades/index.ts'
+export {
+  type HttpClientConfig,
+  type HttpRequestConfig,
+  type HttpResponse,
+  HttpClient,
+  HttpError,
+  isHttpError,
+} from './http/index.ts'

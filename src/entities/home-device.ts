@@ -5,7 +5,7 @@ import type { HomeDeviceData } from '../types/index.ts'
 export class HomeDevice {
   public readonly type: HomeDeviceType
 
-  public get data(): HomeDeviceData {
+  public get data(): Readonly<HomeDeviceData> {
     return this.#data
   }
 

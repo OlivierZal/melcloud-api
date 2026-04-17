@@ -7,14 +7,14 @@ import type { ClassicDevice } from './classic-device.ts'
 /** Base building model providing zone settings (frost protection, holiday mode). */
 export type ClassicBaseBuilding = Pick<ClassicBuilding, 'data'>
 
-/** Base type for all model classes. */
-export type ClassicModel = BaseModel
-
 /** Base device model with type-discriminated device data. */
 export interface ClassicBaseDevice<T extends ClassicDeviceType> {
-  readonly data: ClassicListDeviceData<T>
+  readonly data: Readonly<ClassicListDeviceData<T>>
   readonly type: T
 }
+
+/** Base type for all model classes. */
+export type ClassicModel = BaseModel
 
 /**
  * Type guard that narrows a `ClassicDeviceAny` to a specific `ClassicDevice` variant.
@@ -27,11 +27,13 @@ export const isClassicDeviceOfType = <T extends ClassicDeviceType>(
   type: T,
 ): device is ClassicDevice<T> => device.type === type
 
+/**
+ * All classic device model variants. Kept non-distributive so
+ * `createDeviceModel()` can construct a single `ClassicDevice` without
+ * needing a per-variant switch; callers that need a specific literal
+ * variant should use `isClassicDeviceOfType` to narrow explicitly.
+ */
+export type ClassicDeviceAny = ClassicDevice<ClassicDeviceType>
+
 /** ClassicModel kind discriminants for polymorphic dispatch without instanceof. */
 export type ClassicModelKind = 'area' | 'building' | 'device' | 'floor'
-
-/** Union of all device model types. */
-export type ClassicDeviceAny =
-  | ClassicDevice<typeof ClassicDeviceType.Ata>
-  | ClassicDevice<typeof ClassicDeviceType.Atw>
-  | ClassicDevice<typeof ClassicDeviceType.Erv>

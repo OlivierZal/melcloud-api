@@ -1,5 +1,5 @@
 export { authenticate } from './authenticate.ts'
 export { classicFetchDevices } from './fetch-devices.ts'
 export { setting } from './setting.ts'
-export { classicSyncDevices } from './sync-devices.ts'
+export { syncDevices } from './sync-devices.ts'
 export { classicUpdateDevice, classicUpdateDevices } from './update-devices.ts'

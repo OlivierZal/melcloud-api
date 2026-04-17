@@ -1,8 +1,7 @@
-import https from 'node:https'
-
 import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
-import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
+import { Agent } from 'undici'
 
+import type { HttpResponse } from '../http/index.ts'
 import type {
   ClassicAreaDataAny,
   ClassicBuildingWithStructure,
@@ -37,13 +36,15 @@ import type {
   ClassicTilesPostData,
 } from '../types/index.ts'
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
-import {
-  authenticate,
-  classicSyncDevices,
-  setting,
-} from '../decorators/index.ts'
+import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
+import { isKeyOf } from '../utils.ts'
+import {
+  ClassicBuildingListSchema,
+  ClassicLoginDataSchema,
+  parseOrThrow,
+} from '../validation/index.ts'
 import type {
   ClassicAPIAdapter,
   ClassicAPIConfig,
@@ -81,8 +82,7 @@ const toISODate = (dateTime: DateTime): string => {
   return result
 }
 
-const isLanguage = (value: string): value is keyof typeof ClassicLanguage =>
-  value in ClassicLanguage
+const isLanguage = isKeyOf(ClassicLanguage)
 
 const formatErrors = (errors: Record<string, readonly string[]>): string =>
   Object.entries(errors)
@@ -186,6 +186,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   private constructor(config: ClassicAPIConfig = {}) {
     const {
       autoSyncInterval = DEFAULT_SYNC_INTERVAL,
+      httpClient,
       language,
       password,
       requestTimeout = DEFAULT_TIMEOUT_MS,
@@ -193,15 +194,24 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       timezone,
       username,
     } = config
-    const axiosInstance = ClassicAPI.#createAxiosInstance(
-      shouldVerifySSL,
-      requestTimeout,
-    )
     super(
       { ...config, autoSyncInterval },
       {
-        axiosConfig: { baseURL: API_BASE_URL, timeout: requestTimeout },
-        axiosInstance,
+        httpClient,
+        httpConfig: {
+          baseURL: API_BASE_URL,
+          /*
+           * Self-signed-friendly dispatcher when the caller opts out of
+           * verification (shouldVerifySSL=false). `undefined` falls back
+           * to the global agent so verified TLS remains the default.
+           */
+          ...(shouldVerifySSL ?
+            {}
+          : {
+              dispatcher: new Agent({ connect: { rejectUnauthorized: false } }),
+            }),
+          timeout: requestTimeout,
+        },
         rateLimitHours: DEFAULT_RETRY_HOURS,
         retryDelay: RETRY_DELAY,
         syncCallback: async () => this.fetch(),
@@ -210,21 +220,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     this.#applyOptionalConfig({ language, password, timezone, username })
   }
 
-  static #createAxiosInstance(
-    shouldRejectUnauthorized: boolean,
-    timeout: number,
-  ): AxiosInstance {
-    return axios.create({
-      baseURL: API_BASE_URL,
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: shouldRejectUnauthorized,
-      }),
-      timeout,
-    })
-  }
-
   /**
-   * Create and initialize a new ClassicAPI instance, performing an initial device sync.
+   * Create and initialize a MELCloud Classic API instance.
+   *
+   * Runs an initial `/User/ListDevices` fetch to populate the registry
+   * so facades built from `api.registry` are usable immediately. When
+   * the caller provides credentials (directly or via a SettingManager)
+   * and no persisted `contextKey` is available, the first protected
+   * call will transparently trigger the `@authenticate` decorator.
    * @param config - Optional configuration for the Classic API client.
    * @returns The initialized ClassicAPI instance.
    */
@@ -263,7 +266,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Fetch all buildings, sync the model registry, and schedule the next auto-sync.
    * @returns The list of fetched buildings.
    */
-  @classicSyncDevices()
+  @syncDevices()
   public async fetch(): Promise<ClassicBuildingWithStructure[]> {
     this.clearSync()
     try {
@@ -290,18 +293,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData: ClassicErrorLogPostData
   }): Promise<{ data: ClassicErrorLogData[] | ClassicFailureData }> {
     return this.request('post', '/Report/GetUnitErrorLog2', { data: postData })
-  }
-
-  public async getFrostProtection({
-    params,
-  }: {
-    params: ClassicSettingsParams
-  }): Promise<{ data: ClassicFrostProtectionData }> {
-    return this.request('get', '/FrostProtection/GetSettings', { params })
-  }
-
-  public isAuthenticated(): boolean {
-    return this.contextKey !== ''
   }
 
   /**
@@ -342,6 +333,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       nextFromDate: toISODate(nextToDate.minus({ days: period })),
       nextToDate: toISODate(nextToDate),
     }
+  }
+
+  public async getFrostProtection({
+    params,
+  }: {
+    params: ClassicSettingsParams
+  }): Promise<{ data: ClassicFrostProtectionData }> {
+    return this.request('get', '/FrostProtection/GetSettings', { params })
   }
 
   public async getGroup({
@@ -428,6 +427,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Tile/Get2', { data: postData })
   }
 
+  /**
+   * Read the live device data for a single device.
+   *
+   * Wrapped by `@classicUpdateDevice` — the returned payload is also
+   * written back into the in-memory registry, so subsequent
+   * registry-backed facades reflect the fresh state.
+   * @param root0 - Destructured options.
+   * @param root0.params - `buildingId` + `id` of the target device.
+   * @returns The device-type-discriminated data payload.
+   */
   public async getValues<T extends ClassicDeviceType>({
     params,
   }: {
@@ -436,18 +445,59 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('get', '/Device/Get', { params })
   }
 
-  public async list(): Promise<{ data: ClassicBuildingWithStructure[] }> {
-    return this.request('get', LIST_PATH)
+  public isAuthenticated(): boolean {
+    return this.contextKey !== ''
   }
 
+  public async list(): Promise<{ data: ClassicBuildingWithStructure[] }> {
+    const response = await this.request<ClassicBuildingWithStructure[]>(
+      'get',
+      LIST_PATH,
+    )
+    /*
+     * Zod validates the envelope + the minimal device header (Type,
+     * DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
+     * its compile-time contract — the `request<T>` generic binds T
+     * at the call site, Zod enforces it at runtime.
+     */
+    parseOrThrow(ClassicBuildingListSchema, response.data, 'ListDevices')
+    return response
+  }
+
+  /**
+   * Low-level POST to `/Login/ClientLogin3`. Prefer {@link authenticate},
+   * which adds credential fallback, persists the resulting
+   * `contextKey`/`expiry`, and is triggered automatically on 401.
+   * @param root0 - Destructured options.
+   * @param root0.postData - Login credentials + app version + language.
+   * @returns The raw login envelope, Zod-validated.
+   */
   public async login({
     postData,
   }: {
     postData: ClassicLoginPostData
   }): Promise<{ data: ClassicLoginData }> {
-    return this.dispatch('post', LOGIN_PATH, { data: postData })
+    const response = await this.dispatch<ClassicLoginData>('post', LOGIN_PATH, {
+      data: postData,
+    })
+    return {
+      ...response,
+      data: parseOrThrow(ClassicLoginDataSchema, response.data, 'ClientLogin3'),
+    }
   }
 
+  /**
+   * Update frost protection settings for a zone.
+   *
+   * The response is discriminated: on success returns
+   * `ClassicSuccessData` (`Success: true`); on partial/total failure
+   * returns `ClassicFailureData` with `AttributeErrors` describing the
+   * rejected fields. Callers should branch on `Success` before reading
+   * the remaining fields.
+   * @param root0 - Destructured options.
+   * @param root0.postData - Zone identifier + new temperature bounds.
+   * @returns The success or failure envelope.
+   */
   public async updateFrostProtection({
     postData,
   }: {
@@ -456,6 +506,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/FrostProtection/Update', { data: postData })
   }
 
+  /**
+   * Apply an ATA group state update across every device in a building
+   * zone. Same success/failure envelope shape as
+   * {@link updateFrostProtection}.
+   * @param root0 - Destructured options.
+   * @param root0.postData - Group target + state fields to apply.
+   * @returns The success or failure envelope.
+   */
   public async updateGroupState({
     postData,
   }: {
@@ -464,6 +522,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Group/SetAta', { data: postData })
   }
 
+  /**
+   * Update holiday-mode settings for a zone. Same envelope
+   * discrimination as {@link updateFrostProtection}.
+   * @param root0 - Destructured options.
+   * @param root0.postData - Zone identifier + holiday-mode fields.
+   * @returns The success or failure envelope.
+   */
   public async updateHolidayMode({
     postData,
   }: {
@@ -490,6 +555,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     }
   }
 
+  /**
+   * Toggle power on one or more devices via `/Device/Power`.
+   *
+   * Wrapped by `@classicUpdateDevices` — the updated `Power` flag is
+   * mirrored into every registry entry in scope, so facades reading
+   * `device.power` see the new state without a re-fetch.
+   * @param root0 - Destructured options.
+   * @param root0.postData - `DeviceIds` array + target `Power` state.
+   * @returns The server-echoed power state.
+   */
   public async updatePower({
     postData,
   }: {
@@ -498,6 +573,19 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.request('post', '/Device/Power', { data: postData })
   }
 
+  /**
+   * Send a set-device payload to `/Device/SetAta`, `/Device/SetAtw`
+   * or `/Device/SetErv` depending on the `DeviceType` on the body.
+   *
+   * Wrapped by `@classicUpdateDevice` — the `EffectiveFlags` bitmask
+   * returned by MELCloud is applied back to the matching registry
+   * entry so subsequent reads reflect exactly the fields the server
+   * acknowledged (not necessarily the ones requested).
+   * @param root0 - Destructured options.
+   * @param root0.postData - Discriminated set-device payload.
+   * @param root0.type - Device type selecting the target endpoint.
+   * @returns The server response, narrowed by `DeviceType`.
+   */
   public async updateValues<T extends ClassicDeviceType>({
     postData,
     type,
@@ -526,13 +614,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.contextKey === '' ? {} : { 'X-MitsContextKey': this.contextKey }
   }
 
-  protected async retryAuth(
+  protected async retryAuth<T>(
     method: string,
     url: string,
     config: Record<string, unknown>,
-  ): Promise<AxiosResponse | null> {
+  ): Promise<HttpResponse<T> | null> {
     if (await this.authenticate()) {
-      return this.dispatch(method, url, config)
+      return this.dispatch<T>(method, url, config)
     }
     return null
   }

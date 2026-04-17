@@ -19,10 +19,10 @@ import { APIError } from './base.ts'
  * ```
  */
 export class NoChangesError extends APIError {
-  public override readonly name = 'NoChangesError'
-
   /** Id of the entity the update targeted (device, zone, building, etc.). */
   public readonly entityId: number | string
+
+  public override readonly name = 'NoChangesError'
 
   public constructor(entityId: number | string, options?: { cause?: unknown }) {
     super(`No changes for entity with id ${String(entityId)}`, options)

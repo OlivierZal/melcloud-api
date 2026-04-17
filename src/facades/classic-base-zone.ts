@@ -10,10 +10,7 @@ import type {
   ClassicSuccessData,
 } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
-import {
-  classicSyncDevices,
-  classicUpdateDevices,
-} from '../decorators/index.ts'
+import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
 import type { ClassicZoneFacade } from './classic-interfaces.ts'
 import { BaseFacade } from './classic-base.ts'
 
@@ -44,7 +41,7 @@ export abstract class BaseZoneFacade<
     }
   }
 
-  @classicSyncDevices({ type: ClassicDeviceType.Ata })
+  @syncDevices({ type: ClassicDeviceType.Ata })
   @classicUpdateDevices({ type: ClassicDeviceType.Ata })
   public async updateGroupState(
     state: ClassicGroupState,

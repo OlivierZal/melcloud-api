@@ -6,12 +6,9 @@ import {
   isClassicDeviceOfType,
 } from '../../src/entities/index.ts'
 import {
-  type ClassicListDevice,
   type ClassicListDeviceAny,
-  type ClassicListDeviceDataAta,
   toClassicAreaId,
   toClassicBuildingId,
-  toClassicDeviceId,
   toClassicFloorId,
 } from '../../src/types/index.ts'
 import {
@@ -22,7 +19,7 @@ import {
   ervDevice,
   floorData,
 } from '../fixtures.ts'
-import { cast, createPopulatedRegistry, defined, mock } from '../helpers.ts'
+import { cast, createPopulatedRegistry, defined } from '../helpers.ts'
 
 const allBuildings = [
   buildingData({ Name: 'ClassicBuilding 1' }),
@@ -107,45 +104,6 @@ describe('model registry', () => {
 
       expect(registry.devices.getById(1000)?.name).toBe('ClassicDevice ATA')
       expect(registry.devices.getById(1000)?.type).toBe(ClassicDeviceType.Ata)
-    })
-
-    it('throws for unsupported device type', () => {
-      const registry = new ClassicRegistry()
-      const invalidDevice = mock<ClassicListDevice<0>>({
-        AreaID: null,
-        BuildingID: toClassicBuildingId(1),
-        Device: mock<ClassicListDeviceDataAta>(),
-        DeviceID: toClassicDeviceId(9999),
-        DeviceName: 'Invalid',
-        FloorID: null,
-        Type: cast(999),
-      }) as ClassicListDeviceAny
-
-      expect(() => {
-        registry.syncDevices([invalidDevice])
-      }).toThrow('Unsupported device type: 999')
-    })
-
-    it('serializes object-typed device type without losing information', () => {
-      /*
-       * Defensive: if a corrupted response produces a non-primitive Type
-       * field, the error message must still convey what was received
-       * rather than collapse to `[object Object]`.
-       */
-      const registry = new ClassicRegistry()
-      const invalidDevice = mock<ClassicListDevice<0>>({
-        AreaID: null,
-        BuildingID: toClassicBuildingId(1),
-        Device: mock<ClassicListDeviceDataAta>(),
-        DeviceID: toClassicDeviceId(9999),
-        DeviceName: 'Invalid',
-        FloorID: null,
-        Type: cast({ nested: 'value' }),
-      }) as ClassicListDeviceAny
-
-      expect(() => {
-        registry.syncDevices([invalidDevice])
-      }).toThrow('Unsupported device type: {"nested":"value"}')
     })
 
     it('updates data in-place on re-sync, preserving identity', () => {

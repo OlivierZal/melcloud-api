@@ -1,4 +1,5 @@
 import type { DeviceType } from '../constants.ts'
+import type { HttpClient } from '../http/index.ts'
 import type { ClassicLoginCredentials } from '../types/index.ts'
 
 /** Common configuration shared by all API clients. */
@@ -6,40 +7,67 @@ export interface BaseAPIConfig extends Partial<ClassicLoginCredentials> {
   /**
    * Optional shutdown signal applied to every outgoing request.
    *
-   * When the signal fires, all in-flight HTTP requests are aborted
-   * (axios rejects with `ERR_CANCELED`). Subsequent calls from the
-   * same client instance will also abort immediately. Use this to
-   * tie the SDK lifetime to a host process lifetime — e.g. pass the
-   * Homey app's shutdown signal so outstanding requests don't dangle
-   * across a reload.
+   * When the signal fires, all in-flight HTTP requests abort with a
+   * DOMException of name `AbortError`. Subsequent calls from the same
+   * client instance will also abort immediately. Use this to tie the
+   * SDK lifetime to a host process lifetime — e.g. pass the Homey
+   * app's shutdown signal so outstanding requests don't dangle across
+   * a reload.
    */
   readonly abortSignal?: AbortSignal
-
   /** Interval in minutes between automatic syncs. Set to `null` to disable. */
   readonly autoSyncInterval?: number | null
-
   /**
    * Structured-events callbacks invoked around the request lifecycle.
    * Useful to plug the SDK into a host observability stack
    * (pino / winston / OpenTelemetry / custom metrics).
    */
   readonly events?: RequestLifecycleEvents
-
+  /**
+   * Pre-built `HttpClient` instance. Defaults to a fetch-backed client
+   * constructed from the derived `baseURL` + `requestTimeout`. Supply
+   * your own when you need custom headers, a caching dispatcher, or
+   * the test spy pattern (`vi.spyOn(client, 'request')`). When
+   * provided, `requestTimeout` is ignored — it's already baked into
+   * the instance.
+   */
+  readonly httpClient?: HttpClient
   /** Custom logger. Defaults to `console`. */
   readonly logger?: Logger
-
   /** Callback invoked after sync operations. */
   readonly onSync?: SyncCallback
-
   /**
    * Maximum time in milliseconds for a single HTTP request before
-   * axios aborts it. Defaults to 30 000 ms (30 s). Set to `0` to
+   * it is aborted. Defaults to 30 000 ms (30 s). Set to `0` to
    * disable the timeout (not recommended).
    */
   readonly requestTimeout?: number
-
   /** External setting manager for persisting credentials and session data. */
   readonly settingManager?: SettingManager
+}
+
+/** Logger interface for API call tracing. */
+export interface Logger {
+  /** Log error messages. */
+  readonly error: Console['error']
+  /** Log informational messages. */
+  readonly log: Console['log']
+}
+
+/** Emitted when a request (possibly after retries) completes successfully. */
+export interface RequestCompleteEvent extends RequestLifecycleContext {
+  /** Elapsed time in milliseconds, including any retry delays. */
+  readonly durationMs: number
+  /** Final HTTP status code returned by the upstream server. */
+  readonly status: number
+}
+
+/** Emitted when a request ultimately fails after exhausting its retries. */
+export interface RequestErrorEvent extends RequestLifecycleContext {
+  /** Elapsed time in milliseconds, including any retry delays. */
+  readonly durationMs: number
+  /** The terminal error thrown by the request. */
+  readonly error: unknown
 }
 
 /**
@@ -52,45 +80,10 @@ export interface BaseAPIConfig extends Partial<ClassicLoginCredentials> {
 export interface RequestLifecycleContext {
   /** Unique request identifier (UUID v4). */
   readonly correlationId: string
-
   /** HTTP method, uppercase. */
   readonly method: string
-
   /** Request URL (possibly relative to the client's baseURL). */
   readonly url: string
-}
-
-/** Emitted at the start of a request, before any retry attempts. */
-export type RequestStartEvent = RequestLifecycleContext
-
-/** Emitted when a request (possibly after retries) completes successfully. */
-export interface RequestCompleteEvent extends RequestLifecycleContext {
-  /** Elapsed time in milliseconds, including any retry delays. */
-  readonly durationMs: number
-
-  /** Final HTTP status code returned by the upstream server. */
-  readonly status: number
-}
-
-/** Emitted when a request ultimately fails after exhausting its retries. */
-export interface RequestErrorEvent extends RequestLifecycleContext {
-  /** Elapsed time in milliseconds, including any retry delays. */
-  readonly durationMs: number
-
-  /** The terminal error thrown by the request. */
-  readonly error: unknown
-}
-
-/** Emitted each time a retry attempt is scheduled. */
-export interface RequestRetryEvent extends RequestLifecycleContext {
-  /** 1-based retry attempt number (1 = first retry, not the initial try). */
-  readonly attempt: number
-
-  /** Backoff delay in milliseconds before this retry fires. */
-  readonly delayMs: number
-
-  /** The error that triggered the retry. */
-  readonly error: unknown
 }
 
 /**
@@ -99,33 +92,33 @@ export interface RequestRetryEvent extends RequestLifecycleContext {
  * raise so a buggy observer cannot break the request flow.
  */
 export interface RequestLifecycleEvents {
-  /** Invoked when a request is dispatched for the first time. */
-  readonly onRequestStart?: (event: RequestStartEvent) => void
-
   /** Invoked after a successful HTTP response is received. */
   readonly onRequestComplete?: (event: RequestCompleteEvent) => void
-
   /** Invoked when a request fails permanently (retries exhausted). */
   readonly onRequestError?: (event: RequestErrorEvent) => void
-
   /** Invoked before each backoff-scheduled retry attempt. */
   readonly onRequestRetry?: (event: RequestRetryEvent) => void
+  /** Invoked when a request is dispatched for the first time. */
+  readonly onRequestStart?: (event: RequestStartEvent) => void
 }
 
-/** Logger interface for API call tracing. */
-export interface Logger {
-  /** Log error messages. */
-  readonly error: Console['error']
-
-  /** Log informational messages. */
-  readonly log: Console['log']
+/** Emitted each time a retry attempt is scheduled. */
+export interface RequestRetryEvent extends RequestLifecycleContext {
+  /** 1-based retry attempt number (1 = first retry, not the initial try). */
+  readonly attempt: number
+  /** Backoff delay in milliseconds before this retry fires. */
+  readonly delayMs: number
+  /** The error that triggered the retry. */
+  readonly error: unknown
 }
+
+/** Emitted at the start of a request, before any retry attempts. */
+export type RequestStartEvent = RequestLifecycleContext
 
 /** External storage adapter for persisting API session settings. */
 export interface SettingManager {
   /** Retrieve a setting value by key. Returns the stored value, or `null`/`undefined` if absent. */
   readonly get: (key: string) => string | null | undefined
-
   /** Store a setting value by key. */
   readonly set: (key: string, value: string) => void
 }

@@ -12,10 +12,7 @@ import type {
   ClassicModel,
   ClassicRegistry,
 } from '../entities/index.ts'
-import {
-  classicSyncDevices,
-  classicUpdateDevices,
-} from '../decorators/index.ts'
+import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
 import {
   type ClassicDateTimeComponents,
@@ -98,10 +95,6 @@ export abstract class BaseFacade<
 
   public readonly id: number
 
-  public get name(): string {
-    return this.instance.name
-  }
-
   /**
    * Whether the underlying entity still exists in the registry.
    * Non-throwing introspection: returns `false` instead of throwing
@@ -112,6 +105,10 @@ export abstract class BaseFacade<
    */
   public get exists(): boolean {
     return this.model.getById(this.id) !== undefined
+  }
+
+  public get name(): string {
+    return this.instance.name
   }
 
   protected readonly api: ClassicAPIAdapter
@@ -158,7 +155,7 @@ export abstract class BaseFacade<
     ;({ id: this.id } = instance)
   }
 
-  @classicSyncDevices()
+  @syncDevices()
   @classicUpdateDevices()
   public async updatePower(isOn = true): Promise<boolean> {
     const { data: isPowered } = await this.api.updatePower({

@@ -1,42 +1,46 @@
-import type {
-  AxiosError,
-  AxiosRequestHeaders,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
-} from 'axios'
 import { describe, expect, it } from 'vitest'
 
+import { HttpError } from '../../src/http/index.ts'
 import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
 } from '../../src/observability/index.ts'
-import { cast, mock } from '../helpers.ts'
+import { cast } from '../helpers.ts'
+
+interface TestRequestConfig {
+  data?: unknown
+  headers?: Record<string, string>
+  method?: string
+  params?: Record<string, unknown>
+  url?: string
+}
+
+interface TestResponse {
+  data: unknown
+  headers: Record<string, string | string[]>
+  status: number
+}
 
 const createConfig = (
-  overrides: Partial<InternalAxiosRequestConfig> = {},
-): InternalAxiosRequestConfig =>
-  mock<InternalAxiosRequestConfig>({
-    data: { key: 'value' },
-    headers: mock<AxiosRequestHeaders>({
-      'Content-Type': 'application/json',
-    }),
-    method: 'post',
-    params: { id: 1 },
-    url: '/test/endpoint',
-    ...overrides,
-  })
+  overrides: Partial<TestRequestConfig> = {},
+): TestRequestConfig => ({
+  data: { key: 'value' },
+  headers: { 'Content-Type': 'application/json' },
+  method: 'post',
+  params: { id: 1 },
+  url: '/test/endpoint',
+  ...overrides,
+})
 
 const createResponse = (
-  overrides: Partial<AxiosResponse> = {},
-): AxiosResponse =>
-  mock<AxiosResponse>({
-    config: createConfig(),
-    data: { result: 'ok' },
-    headers: { 'x-custom': 'header' },
-    status: 200,
-    ...overrides,
-  })
+  overrides: Partial<TestResponse> = {},
+): TestResponse => ({
+  data: { result: 'ok' },
+  headers: { 'x-custom': 'header' },
+  status: 200,
+  ...overrides,
+})
 
 describe('api call request data', () => {
   it('extracts request fields from config', () => {
@@ -75,7 +79,7 @@ describe('api call request data', () => {
 
 describe('api call response data', () => {
   it('extracts response fields', () => {
-    const data = new APICallResponseData(createResponse())
+    const data = new APICallResponseData(createResponse(), createConfig())
 
     expect(data.dataType).toBe('API response')
     expect(data.method).toBe('POST')
@@ -95,18 +99,18 @@ describe('api call response data', () => {
     expect(data.requestData).toBeUndefined()
   })
 
-  it('handles response without config (partial AxiosError shape)', () => {
+  it('handles response without config (partial HttpError shape)', () => {
     /*
-     * An AxiosError captured before the request fully materialized may carry
-     * a `response` object whose `config` field is undefined. The logger must
-     * not throw — turning a recoverable failure into a silent crash would
-     * be a much worse outcome than missing requestData on the log line.
+     * An HttpError captured before the request fully materialized may carry
+     * a response without a matching config. The logger must not throw —
+     * turning a recoverable failure into a silent crash would be a much
+     * worse outcome than missing requestData on the log line.
      */
-    const partial = mock<AxiosResponse>({
+    const partial: TestResponse = {
       data: { error: 'oops' },
       headers: {},
       status: 503,
-    })
+    }
     const data = new APICallResponseData(partial)
 
     expect(data.status).toBe(503)
@@ -115,7 +119,7 @@ describe('api call response data', () => {
   })
 
   it('serializes to JSON with logKeys', () => {
-    const data = new APICallResponseData(createResponse())
+    const data = new APICallResponseData(createResponse(), createConfig())
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 
     expect(parsed['dataType']).toBe('API response')
@@ -148,10 +152,10 @@ describe('sensitive data redaction', () => {
 
   it('redacts auth headers in request data', () => {
     const config = createConfig({
-      headers: mock<AxiosRequestHeaders>({
+      headers: {
         'Content-Type': 'application/json',
         'X-MitsContextKey': 'abc123',
-      }),
+      },
     })
     const { headers } = parseLog(new APICallRequestData(config).toString())
 
@@ -181,7 +185,7 @@ describe('sensitive data redaction', () => {
 
   it('redacts Cookie header in request data', () => {
     const config = createConfig({
-      headers: mock<AxiosRequestHeaders>({ Cookie: 'session=xyz' }),
+      headers: { Cookie: 'session=xyz' },
     })
     const { headers } = parseLog(new APICallRequestData(config).toString())
 
@@ -231,22 +235,19 @@ describe('sensitive data redaction', () => {
 
 describe(createAPICallErrorData, () => {
   it('creates error data from response error', () => {
-    const error = mock<AxiosError>({
-      config: createConfig(),
-      message: 'Request failed',
-      response: createResponse({ status: 500 }),
-    })
+    const error = new HttpError(
+      'Request failed',
+      { data: {}, headers: {}, status: 500 },
+      createConfig(),
+    )
     const data = createAPICallErrorData(error)
 
     expect(data.errorMessage).toBe('Request failed')
     expect(data.dataType).toBe('API response')
   })
 
-  it('creates error data from request error (no response)', () => {
-    const error = mock<AxiosError>({
-      config: createConfig(),
-      message: 'Network Error',
-    })
+  it('creates error data from request error (no HTTP response)', () => {
+    const error = new Error('Network Error')
     const data = createAPICallErrorData(error)
 
     expect(data.errorMessage).toBe('Network Error')
@@ -254,11 +255,11 @@ describe(createAPICallErrorData, () => {
   })
 
   it('serializes error data with errorMessage included', () => {
-    const error = mock<AxiosError>({
-      config: createConfig(),
-      message: 'Timeout',
-      response: createResponse(),
-    })
+    const error = new HttpError(
+      'Timeout',
+      { data: {}, headers: {}, status: 504 },
+      createConfig(),
+    )
     const data = createAPICallErrorData(error)
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 

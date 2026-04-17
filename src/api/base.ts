@@ -1,13 +1,13 @@
 import { randomUUID } from 'node:crypto'
 
-import axios, {
-  type AxiosInstance,
-  type AxiosResponse,
-  HttpStatusCode,
-} from 'axios'
-
 import type { ClassicLoginCredentials } from '../types/index.ts'
 import { setting } from '../decorators/index.ts'
+import {
+  type HttpClientConfig,
+  type HttpResponse,
+  HttpClient,
+  isHttpError,
+} from '../http/index.ts'
 import {
   APICallRequestData,
   APICallResponseData,
@@ -30,16 +30,15 @@ import type {
 } from './interfaces.ts'
 import { SyncManager } from './sync-manager.ts'
 
+const HTTP_STATUS_UNAUTHORIZED = 401
+const HTTP_STATUS_TOO_MANY_REQUESTS = 429
+
 /** Options for the {@link BaseAPI} constructor beyond the base config. */
 interface BaseAPIConstructorOptions {
-  axiosConfig: {
-    baseURL: string
-    timeout: number
-    headers?: Record<string, string>
-  }
+  httpConfig: HttpClientConfig
   rateLimitHours: number
   retryDelay: number
-  axiosInstance?: AxiosInstance
+  httpClient?: HttpClient
   syncCallback: () => Promise<unknown>
 }
 
@@ -63,7 +62,7 @@ export abstract class BaseAPI implements Disposable {
 
   protected readonly abortSignal?: AbortSignal
 
-  protected readonly api: AxiosInstance
+  protected readonly api: HttpClient
 
   protected readonly events: RequestLifecycleEmitter
 
@@ -96,8 +95,8 @@ export abstract class BaseAPI implements Disposable {
       settingManager,
     }: BaseAPIConfig,
     {
-      axiosConfig,
-      axiosInstance,
+      httpClient,
+      httpConfig,
       rateLimitHours,
       retryDelay,
       syncCallback,
@@ -110,7 +109,7 @@ export abstract class BaseAPI implements Disposable {
     this.events = new RequestLifecycleEmitter(events, logger)
     this.rateLimitGate = new RateLimitGate({ hours: rateLimitHours })
     this.retryGuard = new RetryGuard(retryDelay)
-    this.api = axiosInstance ?? axios.create(axiosConfig)
+    this.api = httpClient ?? new HttpClient(httpConfig)
     this.#syncManager = new SyncManager(syncCallback, logger, autoSyncInterval)
   }
 
@@ -124,7 +123,7 @@ export abstract class BaseAPI implements Disposable {
     method: string,
     url: string,
     config: Record<string, unknown>,
-  ): Promise<AxiosResponse<T> | null>
+  ): Promise<HttpResponse<T> | null>
 
   public clearSync(): void {
     this.#syncManager.clear()
@@ -152,7 +151,7 @@ export abstract class BaseAPI implements Disposable {
     method: string,
     url: string,
     config: Record<string, unknown> = {},
-  ): Promise<AxiosResponse<T>> {
+  ): Promise<HttpResponse<T>> {
     const { headers: configHeaders, ...rest } = config
     const requestConfig = {
       ...rest,
@@ -166,12 +165,12 @@ export abstract class BaseAPI implements Disposable {
     }
     this.logger.log(String(new APICallRequestData(requestConfig)))
     const response = await this.api.request<T>(requestConfig)
-    this.logger.log(String(new APICallResponseData(response)))
+    this.logger.log(String(new APICallResponseData(response, requestConfig)))
     return response
   }
 
   protected logError(error: unknown): void {
-    if (axios.isAxiosError(error)) {
+    if (isHttpError(error)) {
       this.logger.error(String(createAPICallErrorData(error)))
     }
   }
@@ -180,7 +179,7 @@ export abstract class BaseAPI implements Disposable {
     method: string,
     url: string,
     config: Record<string, unknown> = {},
-  ): Promise<AxiosResponse<T>> {
+  ): Promise<HttpResponse<T>> {
     await this.ensureSession()
     this.throwIfRateLimited()
     const context = {
@@ -191,7 +190,7 @@ export abstract class BaseAPI implements Disposable {
     const attempt = this.makeRequestAttempt<T>(method, url, config)
     const runner =
       method.toUpperCase() === 'GET' ?
-        async (): Promise<AxiosResponse<T>> =>
+        async (): Promise<HttpResponse<T>> =>
           withRetryBackoff(attempt, {
             ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
             isRetryable: isTransientServerError,
@@ -215,7 +214,7 @@ export abstract class BaseAPI implements Disposable {
     method: string,
     url: string,
     config: Record<string, unknown>,
-  ): () => Promise<AxiosResponse<T>> {
+  ): () => Promise<HttpResponse<T>> {
     return async () => {
       try {
         return await this.dispatch<T>(method, url, config)
@@ -234,22 +233,22 @@ export abstract class BaseAPI implements Disposable {
   }
 
   private recordRateLimitIfApplicable(error: unknown): void {
-    if (!axios.isAxiosError(error)) {
+    if (!isHttpError(error)) {
       return
     }
-    if (error.response?.status !== HttpStatusCode.TooManyRequests) {
+    if (error.response.status !== HTTP_STATUS_TOO_MANY_REQUESTS) {
       return
     }
     this.rateLimitGate.recordAndLog(
       this.logger,
-      (error.response.headers as Record<string, unknown>)['retry-after'],
+      error.response.headers['retry-after'],
     )
   }
 
   private async runWithEvents<T>(
     context: { correlationId: string; method: string; url: string },
-    runner: () => Promise<AxiosResponse<T>>,
-  ): Promise<AxiosResponse<T>> {
+    runner: () => Promise<HttpResponse<T>>,
+  ): Promise<HttpResponse<T>> {
     const startedAt = Date.now()
     this.events.emitStart(context)
     try {
@@ -271,10 +270,10 @@ export abstract class BaseAPI implements Disposable {
   }
 
   private shouldRetryAuth(error: unknown): boolean {
-    if (!axios.isAxiosError(error)) {
+    if (!isHttpError(error)) {
       return false
     }
-    if (error.response?.status !== HttpStatusCode.Unauthorized) {
+    if (error.response.status !== HTTP_STATUS_UNAUTHORIZED) {
       return false
     }
     return this.retryGuard.tryConsume()

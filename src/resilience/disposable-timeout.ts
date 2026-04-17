@@ -1,7 +1,5 @@
 /** A disposable wrapper around `setTimeout` that automatically clears the previous timeout when rescheduled. */
 export class DisposableTimeout implements Disposable {
-  #timeout?: ReturnType<typeof setTimeout>
-
   /**
    * Whether a timeout is currently scheduled and has not yet fired or been cleared.
    * @returns `true` if a timeout is pending.
@@ -9,6 +7,8 @@ export class DisposableTimeout implements Disposable {
   public get isActive(): boolean {
     return this.#timeout !== undefined
   }
+
+  #timeout?: ReturnType<typeof setTimeout>
 
   /** Cancel the current timeout if one is active. */
   public clear(): void {
