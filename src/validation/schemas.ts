@@ -1,5 +1,9 @@
 import { z } from 'zod'
 
+import type {
+  ClassicLoginData,
+  HomeContext,
+} from '../types/index.ts'
 import { ValidationError } from '../errors/index.ts'
 
 /*
@@ -10,14 +14,15 @@ import { ValidationError } from '../errors/index.ts'
  */
 
 /** Classic /Login/ClientLogin3 response. */
-export const ClassicLoginDataSchema = z.looseObject({
-  LoginData: z
-    .looseObject({
-      ContextKey: z.string(),
-      Expiry: z.string(),
-    })
-    .nullable(),
-})
+export const ClassicLoginDataSchema: z.ZodType<ClassicLoginData> =
+  z.looseObject({
+    LoginData: z
+      .looseObject({
+        ContextKey: z.string(),
+        Expiry: z.string(),
+      })
+      .nullable(),
+  })
 
 /** Home OIDC /connect/par response. */
 export const HomeParResponseSchema = z.looseObject({
@@ -80,7 +85,7 @@ const HomeBuildingSchema = z.looseObject({
 })
 
 /** Home BFF /context response. */
-export const HomeContextSchema = z.looseObject({
+export const HomeContextSchema: z.ZodType<HomeContext> = z.looseObject({
   buildings: z.array(HomeBuildingSchema),
   country: z.string(),
   email: z.string(),
@@ -128,7 +133,13 @@ const ClassicBuildingStructureSchema = z.looseObject({
   Floors: z.array(ClassicFloorSchema),
 })
 
-/** Classic /User/ListDevices response envelope. */
+/*
+ * Classic /User/ListDevices response envelope. Narrower than the full
+ * `ClassicBuildingWithStructure` compile-time contract — we only
+ * validate the fields the registry actually reads (ID, Name,
+ * Structure.{Areas,Devices,Floors}). Callers still bind the compile-
+ * time type at the use site.
+ */
 export const ClassicBuildingListSchema = z.array(
   z.looseObject({
     ID: z.number(),

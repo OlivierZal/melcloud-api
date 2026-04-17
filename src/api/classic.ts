@@ -275,7 +275,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     }
   }
 
-
   public async getEnergy<T extends ClassicDeviceType>({
     postData,
   }: {
@@ -437,18 +436,18 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   public async list(): Promise<{ data: ClassicBuildingWithStructure[] }> {
-    const response = await this.request('get', LIST_PATH)
-    parseOrThrow(ClassicBuildingListSchema, response.data, 'ListDevices')
+    const response = await this.request<ClassicBuildingWithStructure[]>(
+      'get',
+      LIST_PATH,
+    )
     /*
-     * Zod validated the envelope + the minimal device header (Type,
+     * Zod validates the envelope + the minimal device header (Type,
      * DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
-     * its compile-time contract so we narrow through `unknown` here.
+     * its compile-time contract — the `request<T>` generic binds T
+     * at the call site, Zod enforces it at runtime.
      */
-    return {
-      ...response,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above
-      data: response.data as ClassicBuildingWithStructure[],
-    }
+    parseOrThrow(ClassicBuildingListSchema, response.data, 'ListDevices')
+    return response
   }
 
   public async login({

@@ -289,15 +289,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    */
   async #fetchContext(): Promise<HomeContext> {
     const { data } = await this.request('get', CONTEXT_PATH)
-    /*
-     * The Zod schema's inferred type is a structural superset of
-     * `HomeContext` (additional `[key: string]: unknown` index
-     * signature from `looseObject`). The wire shape is identical, so
-     * narrowing through `unknown` is safe at this boundary.
-     */
-    parseOrThrow(HomeContextSchema, data, 'BFF /context')
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Zod already validated the wire shape; narrowing from the validated superset to our compile-time contract
-    const validated = data as HomeContext
+    const validated = parseOrThrow(
+      HomeContextSchema,
+      data,
+      'BFF /context',
+    )
     this.#syncContext(validated)
     return validated
   }
