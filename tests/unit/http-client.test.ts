@@ -168,18 +168,6 @@ describe(HttpClient, () => {
     expect(extractInit().body).toBe(body)
   })
 
-  it('post() is sugar for method:"POST"', async () => {
-    mockFetch.mockResolvedValueOnce(mockFetchResponse({ ok: 1 }, {}, 200))
-
-    const result = await createClient().post<{ ok: number }>('/a', { value: 1 })
-
-    expect(result.data).toStrictEqual({ ok: 1 })
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/a`,
-      expect.objectContaining({ method: 'POST' }),
-    )
-  })
-
   it('defaults the error config method to GET when none was specified', async () => {
     mockFetch.mockResolvedValueOnce(mockFetchResponse({}, {}, 500))
 

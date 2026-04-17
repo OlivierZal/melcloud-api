@@ -198,14 +198,6 @@ export class HttpClient {
     this.#defaultHeaders = { ...headers }
   }
 
-  public async post<T = unknown>(
-    url: string,
-    data: unknown,
-    config: Omit<HttpRequestConfig, 'data' | 'method' | 'url'> = {},
-  ): Promise<HttpResponse<T>> {
-    return this.request<T>({ ...config, data, method: 'POST', url })
-  }
-
   public async request<T = unknown>(
     config: HttpRequestConfig,
   ): Promise<HttpResponse<T>> {

@@ -19,7 +19,6 @@ import {
 
 const mockHttpClient = {
   baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
-  post: vi.fn(),
   request: vi.fn(),
   timeout: 30_000,
 }

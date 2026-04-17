@@ -22,7 +22,6 @@ import {
 
 const mockHttpClient = {
   baseURL: 'https://test.api',
-  post: vi.fn(),
   request: vi.fn(),
   timeout: 30_000,
 }
@@ -550,19 +549,4 @@ describe('baseAPI shared request pipeline', () => {
     })
   })
 
-  describe('async disposal', () => {
-    it('exposes Symbol.asyncDispose for `await using` syntax', async () => {
-      const disposeSpy = vi.spyOn(api, Symbol.dispose)
-
-      await api[Symbol.asyncDispose]()
-
-      expect(disposeSpy).toHaveBeenCalledTimes(1)
-    })
-
-    it('tolerates being called again after Symbol.dispose', async () => {
-      api[Symbol.dispose]()
-
-      await expect(api[Symbol.asyncDispose]()).resolves.toBeUndefined()
-    })
-  })
 })

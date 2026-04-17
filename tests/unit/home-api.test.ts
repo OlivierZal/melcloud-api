@@ -151,7 +151,6 @@ const mockTokenResponse = {
 const mockRequest = vi.fn()
 const mockHttpClient = {
   baseURL: BASE_URL,
-  post: vi.fn(),
   request: mockRequest,
   timeout: 30_000,
 }
