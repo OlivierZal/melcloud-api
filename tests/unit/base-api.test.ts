@@ -497,6 +497,59 @@ describe('baseAPI shared request pipeline', () => {
     })
   })
 
+  describe('undici diagnostics_channel forwarding', () => {
+    it('forwards diagnostics_channel payloads to onUndiciDiagnostic', async () => {
+      const onUndiciDiagnostic =
+        vi.fn<(channel: string, payload: unknown) => void>()
+      api[Symbol.dispose]()
+      api = new TestAPI({ events: { onUndiciDiagnostic } })
+
+      const { default: dc } = await import('node:diagnostics_channel')
+      dc.channel('undici:request:create').publish({ probe: true })
+
+      expect(onUndiciDiagnostic).toHaveBeenCalledWith('undici:request:create', {
+        probe: true,
+      })
+    })
+
+    it('detaches the subscription on dispose', async () => {
+      const onUndiciDiagnostic =
+        vi.fn<(channel: string, payload: unknown) => void>()
+      api[Symbol.dispose]()
+      const { default: dc } = await import('node:diagnostics_channel')
+      const subscribed = new TestAPI({ events: { onUndiciDiagnostic } })
+      subscribed[Symbol.dispose]()
+      dc.channel('undici:request:create').publish({ ignored: true })
+
+      expect(onUndiciDiagnostic).not.toHaveBeenCalled()
+
+      /* Re-init so afterEach has something disposable. */
+      // eslint-disable-next-line require-atomic-updates -- no concurrency: awaits above complete before this reassignment
+      api = new TestAPI()
+    })
+
+    it('logs and swallows listener exceptions', async () => {
+      const logger = createLogger()
+      api[Symbol.dispose]()
+      api = new TestAPI({
+        events: {
+          onUndiciDiagnostic: (): void => {
+            throw new Error('boom')
+          },
+        },
+        logger,
+      })
+
+      const { default: dc } = await import('node:diagnostics_channel')
+      dc.channel('undici:request:create').publish({})
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('onUndiciDiagnostic'),
+        expect.any(Error),
+      )
+    })
+  })
+
   describe('async disposal', () => {
     it('exposes Symbol.asyncDispose for `await using` syntax', async () => {
       const disposeSpy = vi.spyOn(api, Symbol.dispose)

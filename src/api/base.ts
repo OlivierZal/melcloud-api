@@ -13,6 +13,7 @@ import {
   APICallResponseData,
   createAPICallErrorData,
   RequestLifecycleEmitter,
+  subscribeUndiciDiagnostics,
 } from '../observability/index.ts'
 import {
   DEFAULT_TRANSIENT_RETRY_OPTIONS,
@@ -25,6 +26,7 @@ import {
 import type {
   BaseAPIConfig,
   Logger,
+  RequestLifecycleEvents,
   SettingManager,
   SyncCallback,
 } from './interfaces.ts'
@@ -85,6 +87,8 @@ export abstract class BaseAPI implements AsyncDisposable, Disposable {
 
   readonly #syncManager: SyncManager
 
+  readonly #undiciSubscription?: Disposable
+
   protected constructor(
     {
       abortSignal,
@@ -111,6 +115,28 @@ export abstract class BaseAPI implements AsyncDisposable, Disposable {
     this.retryGuard = new RetryGuard(retryDelay)
     this.api = httpClient ?? new HttpClient(httpConfig)
     this.#syncManager = new SyncManager(syncCallback, logger, autoSyncInterval)
+    this.#undiciSubscription = BaseAPI.#wireUndiciDiagnostics(events, logger)
+  }
+
+  static #wireUndiciDiagnostics(
+    events: RequestLifecycleEvents | undefined,
+    logger: Logger,
+  ): Disposable | undefined {
+    if (!events?.onUndiciDiagnostic) {
+      return undefined
+    }
+    const { onUndiciDiagnostic } = events
+    return subscribeUndiciDiagnostics(
+      (channel, payload): void => {
+        onUndiciDiagnostic(channel, payload)
+      },
+      (error): void => {
+        logger.error(
+          'RequestLifecycleEvents.onUndiciDiagnostic threw — ignoring',
+          error,
+        )
+      },
+    )
   }
 
   public abstract authenticate(data?: ClassicLoginCredentials): Promise<boolean>
@@ -132,6 +158,7 @@ export abstract class BaseAPI implements AsyncDisposable, Disposable {
   public [Symbol.dispose](): void {
     this.#syncManager[Symbol.dispose]()
     this.retryGuard[Symbol.dispose]()
+    this.#undiciSubscription?.[Symbol.dispose]()
   }
 
   /*

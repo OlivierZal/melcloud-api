@@ -110,6 +110,18 @@ export interface RequestLifecycleEvents {
 
   /** Invoked before each backoff-scheduled retry attempt. */
   readonly onRequestRetry?: (event: RequestRetryEvent) => void
+
+  /**
+   * Optional pass-through for Node's built-in undici
+   * `diagnostics_channel` topics (DNS, TCP/TLS, request lifecycle).
+   * Active when fetch runs on undici (Node ≥ 18 by default).
+   *
+   * The channel name and payload are forwarded verbatim — see
+   * `UNDICI_DIAGNOSTIC_CHANNELS` for the subscribed topics. Listener
+   * exceptions are swallowed and logged at error level via the
+   * configured logger.
+   */
+  readonly onUndiciDiagnostic?: (channel: string, payload: unknown) => void
 }
 
 /** Logger interface for API call tracing. */
