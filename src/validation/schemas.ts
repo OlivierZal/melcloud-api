@@ -2,8 +2,9 @@ import { z } from 'zod'
 
 /*
  * Runtime schemas for API boundaries where silent shape drift would hide
- * behind later undefined-property errors. Scoped to authentication-critical
- * payloads; the bulk of the response surface stays on compile-time types.
+ * behind later undefined-property errors. Scoped to payloads the SDK
+ * actually consumes fields from — the wire format carries many more
+ * keys that the compile-time types already document.
  */
 
 /** Classic /Login/ClientLogin3 response. */
@@ -25,6 +26,109 @@ export const HomeTokenResponseSchema = z.looseObject({
   scope: z.string(),
   token_type: z.string(),
 })
+
+/*
+ * Home BFF /context response — the single top-level payload that drives
+ * user identity, building listing and device registry sync. Validating
+ * it up-front turns an "undefined is not iterable" crash deep inside
+ * the registry into an up-front error with a full field path.
+ */
+const HomeDeviceSettingSchema = z.looseObject({
+  name: z.string(),
+  value: z.string(),
+})
+
+const HomeDeviceCapabilitiesSchema = z.looseObject({
+  hasAirDirection: z.boolean(),
+  hasAutomaticFanSpeed: z.boolean(),
+  hasAutoOperationMode: z.boolean(),
+  hasCoolOperationMode: z.boolean(),
+  hasDryOperationMode: z.boolean(),
+  hasHalfDegreeIncrements: z.boolean(),
+  hasHeatOperationMode: z.boolean(),
+  hasSwing: z.boolean(),
+  maxTempAutomatic: z.number(),
+  maxTempCoolDry: z.number(),
+  maxTempHeat: z.number(),
+  minTempAutomatic: z.number(),
+  minTempCoolDry: z.number(),
+  minTempHeat: z.number(),
+  numberOfFanSpeeds: z.number(),
+})
+
+const HomeDeviceDataSchema = z.looseObject({
+  capabilities: HomeDeviceCapabilitiesSchema,
+  givenDisplayName: z.string(),
+  id: z.string(),
+  rssi: z.number(),
+  settings: z.array(HomeDeviceSettingSchema),
+})
+
+const HomeBuildingSchema = z.looseObject({
+  airToAirUnits: z.array(HomeDeviceDataSchema),
+  airToWaterUnits: z.array(HomeDeviceDataSchema),
+  id: z.string(),
+  name: z.string(),
+  timezone: z.string(),
+})
+
+/** Home BFF /context response. */
+export const HomeContextSchema = z.looseObject({
+  buildings: z.array(HomeBuildingSchema),
+  country: z.string(),
+  email: z.string(),
+  firstname: z.string(),
+  guestBuildings: z.array(HomeBuildingSchema),
+  id: z.string(),
+  language: z.string(),
+  lastname: z.string(),
+})
+
+/*
+ * Classic /User/ListDevices returns an array of building-with-structure
+ * envelopes. The registry iterates structure.Devices and expects every
+ * entry to carry a Type/DeviceID/DeviceName/Device triple. Validate the
+ * envelope shape plus that minimal device header — the per-device-type
+ * payload (Ata/Atw/Erv) stays on compile-time types because each schema
+ * would otherwise duplicate 300 LOC of field definitions.
+ */
+const ClassicMinimalDeviceSchema = z.looseObject({
+  AreaID: z.number().nullable(),
+  BuildingID: z.number(),
+  Device: z.looseObject({}),
+  DeviceID: z.number(),
+  DeviceName: z.string(),
+  FloorID: z.number().nullable(),
+  Type: z.number(),
+})
+
+const ClassicFloorSchema = z.looseObject({
+  Areas: z.array(
+    z.looseObject({
+      Devices: z.array(ClassicMinimalDeviceSchema),
+    }),
+  ),
+  Devices: z.array(ClassicMinimalDeviceSchema),
+})
+
+const ClassicBuildingStructureSchema = z.looseObject({
+  Areas: z.array(
+    z.looseObject({
+      Devices: z.array(ClassicMinimalDeviceSchema),
+    }),
+  ),
+  Devices: z.array(ClassicMinimalDeviceSchema),
+  Floors: z.array(ClassicFloorSchema),
+})
+
+/** Classic /User/ListDevices response envelope. */
+export const ClassicBuildingListSchema = z.array(
+  z.looseObject({
+    ID: z.number(),
+    Name: z.string(),
+    Structure: ClassicBuildingStructureSchema,
+  }),
+)
 
 /**
  * Parse `data` against `schema`; throw a descriptive error on mismatch.

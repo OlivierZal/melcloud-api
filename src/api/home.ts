@@ -18,6 +18,7 @@ import {
 } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
+import { HomeContextSchema, parseOrThrow } from '../validation/index.ts'
 import type {
   HomeAPIConfig,
   HomeAPI as HomeAPIContract,
@@ -302,9 +303,18 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns The fetched home context.
    */
   async #fetchContext(): Promise<HomeContext> {
-    const { data } = await this.request<HomeContext>('get', CONTEXT_PATH)
-    this.#syncContext(data)
-    return data
+    const { data } = await this.request('get', CONTEXT_PATH)
+    /*
+     * The Zod schema's inferred type is a structural superset of
+     * `HomeContext` (additional `[key: string]: unknown` index
+     * signature from `looseObject`). The wire shape is identical, so
+     * narrowing through `unknown` is safe at this boundary.
+     */
+    parseOrThrow(HomeContextSchema, data, 'BFF /context')
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Zod already validated the wire shape; narrowing from the validated superset to our compile-time contract
+    const validated = data as HomeContext
+    this.#syncContext(validated)
+    return validated
   }
 
   /* ---------------------------------------------------------------- */

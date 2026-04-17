@@ -35,20 +35,42 @@ const cognitoLoginPage = (
   '<input type="hidden" name="cognitoAsfData" value=""/>' +
   '</form>'
 
+const mockCapabilities = {
+  hasAirDirection: true,
+  hasAutomaticFanSpeed: true,
+  hasAutoOperationMode: true,
+  hasCoolOperationMode: true,
+  hasDryOperationMode: true,
+  hasHalfDegreeIncrements: false,
+  hasHeatOperationMode: true,
+  hasSwing: true,
+  maxTempAutomatic: 30,
+  maxTempCoolDry: 30,
+  maxTempHeat: 30,
+  minTempAutomatic: 10,
+  minTempCoolDry: 10,
+  minTempHeat: 10,
+  numberOfFanSpeeds: 5,
+}
+
 const mockBuilding: HomeBuilding = {
   airToAirUnits: [
-    cast({
+    {
+      capabilities: mockCapabilities,
       givenDisplayName: 'Test ClassicDevice',
       id: 'device-1',
+      rssi: -50,
       settings: [{ name: 'Power', value: 'True' }],
-    }),
+    },
   ],
   airToWaterUnits: [
-    cast({
+    {
+      capabilities: mockCapabilities,
       givenDisplayName: 'ATW ClassicDevice',
       id: 'device-2',
+      rssi: -55,
       settings: [],
-    }),
+    },
   ],
   id: 'building-1',
   name: 'Home',

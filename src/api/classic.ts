@@ -44,7 +44,11 @@ import {
 import { type ClassicDeviceAny, ClassicRegistry } from '../entities/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
 import { isKeyOf } from '../utils.ts'
-import { ClassicLoginDataSchema, parseOrThrow } from '../validation/index.ts'
+import {
+  ClassicBuildingListSchema,
+  ClassicLoginDataSchema,
+  parseOrThrow,
+} from '../validation/index.ts'
 import type {
   ClassicAPIAdapter,
   ClassicAPIConfig,
@@ -448,7 +452,18 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   public async list(): Promise<{ data: ClassicBuildingWithStructure[] }> {
-    return this.request('get', LIST_PATH)
+    const response = await this.request('get', LIST_PATH)
+    parseOrThrow(ClassicBuildingListSchema, response.data, 'ListDevices')
+    /*
+     * Zod validated the envelope + the minimal device header (Type,
+     * DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
+     * its compile-time contract so we narrow through `unknown` here.
+     */
+    return {
+      ...response,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above
+      data: response.data as ClassicBuildingWithStructure[],
+    }
   }
 
   public async login({
