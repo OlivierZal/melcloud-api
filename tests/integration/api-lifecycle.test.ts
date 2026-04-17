@@ -1,20 +1,29 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPI } from '../../src/api/classic.ts'
+import type { HomeAPI } from '../../src/api/home.ts'
 import type { SyncCallback } from '../../src/api/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
+import { RateLimitError } from '../../src/errors/index.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { HttpClient } from '../../src/http/client.ts'
 import { HttpError } from '../../src/http/index.ts'
 import {
   type ClassicBuildingWithStructure,
+  type HomeContext,
   toClassicAreaId,
   toClassicBuildingId,
   toClassicDeviceId,
   toClassicFloorId,
 } from '../../src/types/index.ts'
 import { ataDeviceData, buildingData } from '../fixtures.ts'
-import { cast, defined, mock } from '../helpers.ts'
+import {
+  cast,
+  createSettingStore,
+  defined,
+  mock,
+  mockFetchResponse,
+} from '../helpers.ts'
 
 const transientError = (status: number): HttpError =>
   new HttpError(
@@ -334,6 +343,221 @@ describe('api lifecycle', () => {
       expect(buildings).toStrictEqual([])
       // 1 initial attempt + 4 retries = 5 total.
       expect(mockRequest).toHaveBeenCalledTimes(5)
+    })
+
+    /*
+     * 429 closes the rate-limit gate for the duration signalled by
+     * `Retry-After`, so subsequent requests fail fast with
+     * `RateLimitError` from the gate check — no HTTP call is issued.
+     */
+    it('rate-limit 429 closes the gate and short-circuits the next request', async () => {
+      const rateLimitError = new HttpError(
+        'Status 429',
+        { data: {}, headers: { 'retry-after': '60' }, status: 429 },
+        { url: '/User/ListDevices' },
+      )
+      mockRequest.mockRejectedValue(rateLimitError)
+      const api = await melCloudApi.create({
+        autoSyncInterval: 0,
+        httpClient: mockHttpClient,
+      })
+
+      // First fetch swallows the 429 (graceful degradation) and records the gate.
+      expect(api.registry.getDevices()).toHaveLength(0)
+      expect(api.isRateLimited).toBe(true)
+
+      mockRequest.mockClear()
+
+      // Second fetch short-circuits via the rate-limit gate: no HTTP call is made.
+      const buildings = await api.fetch()
+
+      expect(buildings).toStrictEqual([])
+      expect(mockRequest).not.toHaveBeenCalled()
+
+      /*
+       * A non-fetch() method that doesn't swallow errors surfaces the
+       * gate's RateLimitError directly, proving the gate is closed.
+       */
+      await expect(
+        api.getHolidayMode({ params: { id: 1, tableName: 'ClassicBuilding' } }),
+      ).rejects.toBeInstanceOf(RateLimitError)
+      expect(mockRequest).not.toHaveBeenCalled()
+    })
+
+    it('propagates AbortSignal end-to-end to the HTTP client', async () => {
+      const controller = new AbortController()
+      mockRequest.mockImplementation(async (config) => {
+        await Promise.resolve()
+        if (config.signal?.aborted === true) {
+          throw new DOMException('The operation was aborted.', 'AbortError')
+        }
+        return { data: buildingResponse, headers: {}, status: 200 }
+      })
+      const api = await melCloudApi.create({
+        abortSignal: controller.signal,
+        autoSyncInterval: 0,
+        httpClient: mockHttpClient,
+      })
+
+      // Verify the initial sync carried the caller-provided signal.
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ signal: controller.signal }),
+      )
+
+      /*
+       * After aborting, fetch() swallows the AbortError (like any other
+       * failure) but the underlying request still received the aborted
+       * signal — proving the signal is wired through to the HTTP layer.
+       */
+      controller.abort()
+      mockRequest.mockClear()
+      const buildings = await api.fetch()
+
+      expect(buildings).toStrictEqual([])
+
+      const abortedCall = mockRequest.mock.calls.find(
+        ([config]) => config.signal?.aborted === true,
+      )
+
+      expect(abortedCall).toBeDefined()
+      expect(abortedCall?.[0].signal).toBe(controller.signal)
+
+      /*
+       * A non-fetch() method surfaces the AbortError so the DOMException
+       * /abort/i name check is exercised end-to-end.
+       */
+      await expect(
+        api.getHolidayMode({ params: { id: 1, tableName: 'ClassicBuilding' } }),
+      ).rejects.toThrow(/abort/iu)
+    })
+  })
+
+  /*
+   * HomeAPI lifecycle covers token-based session handling: reusing a
+   * valid persisted session and refreshing an expired access token.
+   */
+  describe('home api session lifecycle', () => {
+    const HOUR_MS = 60 * 60 * 1000
+
+    const homeContext: HomeContext = {
+      buildings: [],
+      country: 'FR',
+      email: 'user@test.com',
+      firstname: 'Test',
+      guestBuildings: [],
+      id: 'user-1',
+      language: 'fr',
+      lastname: 'User',
+    }
+
+    const mockFetch = vi.fn<typeof fetch>()
+
+    beforeEach(() => {
+      vi.unstubAllGlobals()
+      vi.stubGlobal('fetch', mockFetch)
+      mockFetch.mockReset()
+    })
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('reuses a valid persisted session without triggering OIDC', async () => {
+      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
+      const { settingManager } = createSettingStore({
+        accessToken: 'valid',
+        expiry: futureExpiry,
+        refreshToken: 'refresh',
+      })
+      // Switch back to real timers so luxon's session-expiry math works.
+      vi.useRealTimers()
+      mockRequest.mockReset()
+      mockRequest.mockResolvedValueOnce({
+        data: homeContext,
+        headers: {},
+        status: 200,
+      })
+
+      const { HomeAPI: melCloudHomeApi } = await import('../../src/api/home.ts')
+      const api: HomeAPI = await melCloudHomeApi.create({
+        autoSyncInterval: 0,
+        httpClient: mockHttpClient,
+        settingManager,
+      })
+
+      // Only GET /context — no /connect/par, no /connect/token.
+      expect(mockRequest).toHaveBeenCalledTimes(1)
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ url: '/context' }),
+      )
+      expect(mockFetch).not.toHaveBeenCalled()
+      expect(api.isAuthenticated()).toBe(true)
+      expect(api.user).toStrictEqual({
+        email: 'user@test.com',
+        firstName: 'Test',
+        lastName: 'User',
+        sub: 'user-1',
+      })
+    })
+
+    it('refreshes an expired access token and persists the new tokens', async () => {
+      const pastExpiry = new Date(Date.now() - HOUR_MS).toISOString()
+      const { setSpy, settingManager } = createSettingStore({
+        accessToken: 'expired',
+        expiry: pastExpiry,
+        refreshToken: 'refresh',
+      })
+      // Real timers so luxon sees the actually-past expiry.
+      vi.useRealTimers()
+      mockRequest.mockReset()
+      /*
+       * ensureSession() sees the expired token, calls refreshAccessToken
+       * (via global fetch) which succeeds, stores the new tokens, and
+       * then dispatches GET /context with the refreshed Bearer.
+       */
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({
+          access_token: 'fresh-access',
+          expires_in: 3600,
+          refresh_token: 'fresh-refresh',
+          scope: 'openid',
+          token_type: 'Bearer',
+        }),
+      )
+      mockRequest.mockResolvedValueOnce({
+        data: homeContext,
+        headers: {},
+        status: 200,
+      })
+
+      const { HomeAPI: melCloudHomeApi } = await import('../../src/api/home.ts')
+      const api: HomeAPI = await melCloudHomeApi.create({
+        autoSyncInterval: 0,
+        httpClient: mockHttpClient,
+        settingManager,
+      })
+
+      // Refresh endpoint called exactly once, then /context succeeds.
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+
+      const refreshUrl = mockFetch.mock.calls[0]?.[0]
+
+      expect(typeof refreshUrl === 'string' ? refreshUrl : '').toContain(
+        '/connect/token',
+      )
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ url: '/context' }),
+      )
+
+      // Dispatch carried the fresh access token.
+      const lastCall = mockRequest.mock.calls.at(-1)
+      const lastHeaders = lastCall?.[0].headers ?? {}
+
+      expect(lastHeaders['Authorization']).toBe('Bearer fresh-access')
+      // New tokens persisted via settingManager.set.
+      expect(setSpy).toHaveBeenCalledWith('accessToken', 'fresh-access')
+      expect(setSpy).toHaveBeenCalledWith('refreshToken', 'fresh-refresh')
+      expect(api.isAuthenticated()).toBe(true)
     })
   })
 })

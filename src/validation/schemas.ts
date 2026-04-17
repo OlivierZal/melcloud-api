@@ -1,7 +1,13 @@
 import { z } from 'zod'
 
 import type { TokenResponse } from '../api/token-auth.ts'
-import type { ClassicLoginData, HomeContext } from '../types/index.ts'
+import type {
+  ClassicLoginData,
+  HomeContext,
+  HomeEnergyData,
+  HomeErrorLogEntry,
+  HomeReportData,
+} from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import { ValidationError } from '../errors/index.ts'
 
@@ -94,6 +100,58 @@ export const HomeContextSchema: z.ZodType<HomeContext> = z.looseObject({
   language: z.string(),
   lastname: z.string(),
 })
+
+/*
+ * Home telemetry / report endpoints. Responses are consumed as arrays
+ * the SDK iterates downstream, so a malformed shape would surface as
+ * "undefined is not iterable" rather than a tractable error. Schemas
+ * bind to the canonical interfaces in `types/home.ts` so divergence
+ * becomes a compile-time error.
+ */
+const HomeEnergyPointSchema = z.looseObject({
+  time: z.string(),
+  value: z.string(),
+})
+
+const HomeEnergyMeasureSchema = z.looseObject({
+  type: z.string(),
+  values: z.array(HomeEnergyPointSchema),
+})
+
+/** Home /monitor/telemetry/energy/{id} + /monitor/telemetry/actual/{id} response. */
+export const HomeEnergyDataSchema: z.ZodType<HomeEnergyData> = z.looseObject({
+  deviceId: z.string(),
+  measureData: z.array(HomeEnergyMeasureSchema),
+})
+
+const HomeReportPointSchema = z.looseObject({
+  /* eslint-disable id-length -- match the wire format produced by the BFF */
+  x: z.string(),
+  y: z.number(),
+  /* eslint-enable id-length */
+})
+
+const HomeReportDatasetSchema = z.looseObject({
+  data: z.array(HomeReportPointSchema),
+  id: z.string(),
+  label: z.string(),
+})
+
+/** Home /report/trendsummary response. */
+export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
+  datasets: z.array(HomeReportDatasetSchema),
+  reportPeriod: z.number(),
+})
+
+/** Home /monitor/ataunit/{id}/errorlog response (array of entries). */
+export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
+  z.array(
+    z.looseObject({
+      date: z.string(),
+      errorCode: z.string(),
+      errorMessage: z.string(),
+    }),
+  )
 
 /*
  * Classic /User/ListDevices returns an array of building-with-structure

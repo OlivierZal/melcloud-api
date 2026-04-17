@@ -473,5 +473,4 @@ describe('baseAPI shared request pipeline', () => {
       )
     })
   })
-
 })

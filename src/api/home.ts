@@ -1,3 +1,5 @@
+import type { z } from 'zod'
+
 import type { HttpResponse } from '../http/index.ts'
 import type {
   ClassicLoginCredentials,
@@ -17,7 +19,13 @@ import {
 } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
-import { HomeContextSchema, parseOrThrow } from '../validation/index.ts'
+import {
+  HomeContextSchema,
+  HomeEnergyDataSchema,
+  HomeErrorLogEntryListSchema,
+  HomeReportDataSchema,
+  parseOrThrow,
+} from '../validation/index.ts'
 import type {
   HomeAPIConfig,
   HomeAPI as HomeAPIContract,
@@ -192,19 +200,26 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     id: string,
     params: { from: string; interval: string; to: string },
   ): Promise<HomeEnergyData | null> {
-    return this.#safeRequest<HomeEnergyData>(`${ENERGY_PATH}/${id}`, {
-      params: {
-        ...params,
-        measure: 'cumulative_energy_consumed_since_last_upload',
+    return this.#safeRequest({
+      config: {
+        params: {
+          ...params,
+          measure: 'cumulative_energy_consumed_since_last_upload',
+        },
       },
+      context: 'BFF /monitor/telemetry/energy',
+      schema: HomeEnergyDataSchema,
+      url: `${ENERGY_PATH}/${id}`,
     })
   }
 
   public async getErrorLog(id: string): Promise<HomeErrorLogEntry[]> {
     return (
-      (await this.#safeRequest<HomeErrorLogEntry[]>(
-        `${ATA_UNIT_PATH}/${id}/errorlog`,
-      )) ?? []
+      (await this.#safeRequest({
+        context: 'BFF /monitor/ataunit/:id/errorlog',
+        schema: HomeErrorLogEntryListSchema,
+        url: `${ATA_UNIT_PATH}/${id}/errorlog`,
+      })) ?? []
     )
   }
 
@@ -212,8 +227,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     id: string,
     params: { from: string; to: string },
   ): Promise<HomeEnergyData | null> {
-    return this.#safeRequest<HomeEnergyData>(`${SIGNAL_PATH}/${id}`, {
-      params: { ...params, measure: 'rssi' },
+    return this.#safeRequest({
+      config: { params: { ...params, measure: 'rssi' } },
+      context: 'BFF /monitor/telemetry/actual',
+      schema: HomeEnergyDataSchema,
+      url: `${SIGNAL_PATH}/${id}`,
     })
   }
 
@@ -221,8 +239,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     id: string,
     params: { from: string; period: string; to: string },
   ): Promise<HomeReportData[] | null> {
-    return this.#safeRequest<HomeReportData[]>(REPORT_PATH, {
-      params: { ...params, unitId: id },
+    return this.#safeRequest({
+      config: { params: { ...params, unitId: id } },
+      context: 'BFF /report/trendsummary',
+      schema: HomeReportDataSchema.array(),
+      url: REPORT_PATH,
     })
   }
 
@@ -345,13 +366,20 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return true
   }
 
-  async #safeRequest<T>(
-    url: string,
-    config?: Record<string, unknown>,
-  ): Promise<T | null> {
+  async #safeRequest<T>({
+    config,
+    context,
+    schema,
+    url,
+  }: {
+    context: string
+    schema: z.ZodType<T>
+    url: string
+    config?: Record<string, unknown>
+  }): Promise<T | null> {
     try {
-      const { data } = await this.request<T>('get', url, config)
-      return data
+      const { data } = await this.request('get', url, config)
+      return parseOrThrow(schema, data, context)
     } catch {
       return null
     }
