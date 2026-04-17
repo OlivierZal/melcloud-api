@@ -401,7 +401,6 @@ describe('melcloud home API', () => {
 
       expect(buildings).toStrictEqual([])
     })
-
   })
 
   describe('sync callback', () => {

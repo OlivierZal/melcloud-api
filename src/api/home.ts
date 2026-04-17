@@ -289,11 +289,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    */
   async #fetchContext(): Promise<HomeContext> {
     const { data } = await this.request('get', CONTEXT_PATH)
-    const validated = parseOrThrow(
-      HomeContextSchema,
-      data,
-      'BFF /context',
-    )
+    const validated = parseOrThrow(HomeContextSchema, data, 'BFF /context')
     this.#syncContext(validated)
     return validated
   }

@@ -1,9 +1,6 @@
 import { z } from 'zod'
 
-import type {
-  ClassicLoginData,
-  HomeContext,
-} from '../types/index.ts'
+import type { ClassicLoginData, HomeContext } from '../types/index.ts'
 import { ValidationError } from '../errors/index.ts'
 
 /*
