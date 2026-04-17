@@ -717,7 +717,7 @@ describe('mELCloud Classic API', () => {
       })
       mockLoginAndList('newer', '2030-01-01T00:00:00')
       const api = await createApi({ settingManager })
-      /* Simulate an expired session after initial create */
+      // Simulate an expired session after initial create
       settingManager.set('contextKey', 'old-ctx')
       settingManager.set('expiry', '2020-01-01T00:00:00')
       mockRequest.mockClear()
@@ -742,7 +742,7 @@ describe('mELCloud Classic API', () => {
       })
       mockLoginAndList()
       const api = await createApi({ settingManager })
-      /* Simulate a cleared session after initial create */
+      // Simulate a cleared session after initial create
       settingManager.set('contextKey', '')
       mockRequest.mockClear()
       mockLoginAndList('fresh', '2030-12-31T00:00:00')
@@ -776,7 +776,7 @@ describe('mELCloud Classic API', () => {
       })
       mockLoginAndList()
       const api = await createApi({ settingManager })
-      /* Simulate a stale session after initial create */
+      // Simulate a stale session after initial create
       settingManager.set('contextKey', 'stale')
       settingManager.set('expiry', 'not-a-valid-iso-date')
       mockRequest.mockClear()

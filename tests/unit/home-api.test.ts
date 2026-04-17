@@ -681,7 +681,7 @@ describe('melcloud home API', () => {
             access_token: 'refreshed-token',
           }),
         )
-        /* List → #fetchContext → GET /context */
+        // List → #fetchContext → GET /context
         mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
         const buildings = await api.list()
 
@@ -1011,13 +1011,13 @@ describe('melcloud home API', () => {
     })
 
     it('should follow meta http-equiv refresh redirects', async () => {
-      /* PAR succeeds */
+      // PAR succeeds
       mockFetch.mockResolvedValueOnce(
         mockFetchResponse({ request_uri: 'urn:test' }),
       )
       mockFetch
         .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
-        /* Credential POST */
+        // Credential POST
         .mockResolvedValueOnce(
           mockFetchResponse(
             '',
@@ -1025,7 +1025,7 @@ describe('melcloud home API', () => {
             302,
           ),
         )
-        /* IS callback → /Redirect page with meta refresh */
+        // IS callback → /Redirect page with meta refresh
         .mockResolvedValueOnce(
           mockFetchResponse(
             '',
@@ -1040,7 +1040,7 @@ describe('melcloud home API', () => {
             200,
           ),
         )
-        /* Following the meta refresh URL → final redirect to melcloudhome:// */
+        // Following the meta refresh URL → final redirect to melcloudhome://
         .mockResolvedValueOnce(
           mockFetchResponse(
             '',
@@ -1048,9 +1048,9 @@ describe('melcloud home API', () => {
             302,
           ),
         )
-      /* Token exchange */
+      // Token exchange
       mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
-      /* GET /context */
+      // GET /context
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
       const api = await createApi()
@@ -1419,7 +1419,7 @@ describe('melcloud home API', () => {
         refreshToken: 'old-refresh',
         username: 'user@test.com',
       })
-      /* GetUser succeeds with existing token — no OIDC needed for create */
+      // GetUser succeeds with existing token — no OIDC needed for create
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
@@ -1439,7 +1439,7 @@ describe('melcloud home API', () => {
         ([key]) => key === 'accessToken',
       )
 
-      /* First call sets '' (clear), subsequent call sets the new token */
+      // First call sets '' (clear), subsequent call sets the new token
       expect(tokenCalls[0]?.[1]).toBe('')
       expect(tokenCalls.at(-1)?.[1]).toBe('test-access-token')
     })
@@ -1467,7 +1467,7 @@ describe('melcloud home API', () => {
 
         expect(buildings).toStrictEqual([mockBuilding])
 
-        /* Should have used refresh, not full OIDC (no other fetch calls for redirects) */
+        // Should have used refresh, not full OIDC (no other fetch calls for redirects)
         expect(mockFetch).toHaveBeenLastCalledWith(
           expect.stringContaining('/connect/token'),
           expect.any(Object),
@@ -1498,7 +1498,7 @@ describe('melcloud home API', () => {
         mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
         await api.list()
 
-        /* Refresh token POST should include the signal */
+        // Refresh token POST should include the signal
         const refreshCall = mockFetch.mock.calls.find(
           ([url]) => typeof url === 'string' && url.includes('/connect/token'),
         )

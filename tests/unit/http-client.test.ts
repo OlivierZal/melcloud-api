@@ -344,7 +344,7 @@ describe(HttpClient, () => {
   })
 
   it('forwards the configured dispatcher into fetch', async () => {
-    /* Sentinel object — runtime shape is the only thing fetch inspects. */
+    // Sentinel object — runtime shape is the only thing fetch inspects.
     const dispatcher = { sentinel: true }
     const client = new HttpClient({
       baseURL: BASE_URL,
