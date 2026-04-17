@@ -1,4 +1,4 @@
-import { ClassicDeviceType } from '../constants.ts'
+import type { ClassicDeviceType } from '../constants.ts'
 import {
   type ClassicAreaDataAny,
   type ClassicAreaID,
@@ -71,31 +71,13 @@ const syncDeviceModel = (
   }
 }
 
-const KNOWN_DEVICE_TYPES: ReadonlySet<unknown> = new Set(
-  Object.values(ClassicDeviceType),
-)
-
-const createDeviceModel = (device: ClassicListDeviceAny): ClassicDeviceAny => {
-  /*
-   * Guard runtime values that slipped past Zod's `z.number()` on `Type`.
-   * Keeps the switch below exhaustive on the union so no `default` arm
-   * is needed (per the strict `switch-exhaustiveness-check` setting).
-   */
-  if (!KNOWN_DEVICE_TYPES.has(device.Type)) {
-    throw new Error(`Unsupported device type: ${JSON.stringify(device.Type)}`)
-  }
-  switch (device.Type) {
-    case ClassicDeviceType.Ata: {
-      return new ClassicDevice(device)
-    }
-    case ClassicDeviceType.Atw: {
-      return new ClassicDevice(device)
-    }
-    case ClassicDeviceType.Erv: {
-      return new ClassicDevice(device)
-    }
-  }
-}
+/*
+ * `ClassicBuildingListSchema` has already validated `device.Type` against
+ * the literal union of `ClassicDeviceType`, so no runtime guard nor
+ * per-variant switch is needed here.
+ */
+const createDeviceModel = (device: ClassicListDeviceAny): ClassicDeviceAny =>
+  new ClassicDevice(device)
 
 const level = {
   building: 0,

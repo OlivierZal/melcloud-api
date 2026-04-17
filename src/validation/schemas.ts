@@ -1,6 +1,8 @@
 import { z } from 'zod'
 
+import type { TokenResponse } from '../api/token-auth.ts'
 import type { ClassicLoginData, HomeContext } from '../types/index.ts'
+import { ClassicDeviceType } from '../constants.ts'
 import { ValidationError } from '../errors/index.ts'
 
 /*
@@ -27,13 +29,13 @@ export const HomeParResponseSchema = z.looseObject({
 })
 
 /** Home OIDC /connect/token response. */
-export const HomeTokenResponseSchema = z.looseObject({
+export const HomeTokenResponseSchema: z.ZodType<TokenResponse> = z.looseObject({
   access_token: z.string().min(1),
   expires_in: z.number(),
   id_token: z.string().optional(),
   refresh_token: z.string().optional(),
   scope: z.string(),
-  token_type: z.string(),
+  token_type: z.literal('Bearer'),
 })
 
 /*
@@ -108,7 +110,11 @@ const ClassicMinimalDeviceSchema = z.looseObject({
   DeviceID: z.number(),
   DeviceName: z.string(),
   FloorID: z.number().nullable(),
-  Type: z.number(),
+  Type: z.union([
+    z.literal(ClassicDeviceType.Ata),
+    z.literal(ClassicDeviceType.Atw),
+    z.literal(ClassicDeviceType.Erv),
+  ]),
 })
 
 const ClassicFloorSchema = z.looseObject({

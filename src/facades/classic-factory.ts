@@ -1,10 +1,11 @@
 import type { ClassicAPIAdapter } from '../api/index.ts'
-import type {
-  ClassicDeviceAny,
-  ClassicModel,
-  ClassicRegistry,
-} from '../entities/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
+import {
+  type ClassicDeviceAny,
+  type ClassicModel,
+  type ClassicRegistry,
+  isClassicDeviceOfType,
+} from '../entities/index.ts'
 import type {
   ClassicDeviceFacadeAny,
   ClassicFacade,
@@ -34,19 +35,15 @@ const createDeviceFacade = (
   instance: ClassicModel,
 ): ClassicDeviceFacadeAny => {
   const device = getDeviceFromRegistry(registry, instance.id)
-  switch (device.type) {
-    case ClassicDeviceType.Ata: {
-      return new ClassicDeviceAtaFacade(api, registry, device)
-    }
-    case ClassicDeviceType.Atw: {
-      return device.data.HasZone2 ?
-          new ClassicDeviceAtwHasZone2Facade(api, registry, device)
-        : new ClassicDeviceAtwFacade(api, registry, device)
-    }
-    case ClassicDeviceType.Erv: {
-      return new ClassicDeviceErvFacade(api, registry, device)
-    }
+  if (isClassicDeviceOfType(device, ClassicDeviceType.Ata)) {
+    return new ClassicDeviceAtaFacade(api, registry, device)
   }
+  if (isClassicDeviceOfType(device, ClassicDeviceType.Atw)) {
+    return device.data.HasZone2 ?
+        new ClassicDeviceAtwHasZone2Facade(api, registry, device)
+      : new ClassicDeviceAtwFacade(api, registry, device)
+  }
+  return new ClassicDeviceErvFacade(api, registry, device)
 }
 
 /**

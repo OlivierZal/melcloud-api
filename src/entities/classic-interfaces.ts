@@ -27,11 +27,13 @@ export const isClassicDeviceOfType = <T extends ClassicDeviceType>(
   type: T,
 ): device is ClassicDevice<T> => device.type === type
 
-/** Union of all device model types. */
-export type ClassicDeviceAny =
-  | ClassicDevice<typeof ClassicDeviceType.Ata>
-  | ClassicDevice<typeof ClassicDeviceType.Atw>
-  | ClassicDevice<typeof ClassicDeviceType.Erv>
+/**
+ * All classic device model variants. Kept non-distributive so
+ * `createDeviceModel()` can construct a single `ClassicDevice` without
+ * needing a per-variant switch; callers that need a specific literal
+ * variant should use `isClassicDeviceOfType` to narrow explicitly.
+ */
+export type ClassicDeviceAny = ClassicDevice<ClassicDeviceType>
 
 /** ClassicModel kind discriminants for polymorphic dispatch without instanceof. */
 export type ClassicModelKind = 'area' | 'building' | 'device' | 'floor'
