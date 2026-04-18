@@ -38,6 +38,7 @@ import type {
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
+import { AuthenticationError } from '../errors/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
 import { isKeyOf } from '../utils.ts'
 import {
@@ -238,7 +239,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   @authenticate
-  public async authenticate(data?: ClassicLoginCredentials): Promise<boolean> {
+  public async authenticate(data?: ClassicLoginCredentials): Promise<void> {
     /* v8 ignore next -- @authenticate guarantees data is always provided */
     const { password, username } = data ?? { password: '', username: '' }
     this.#clearPersistedSession()
@@ -253,13 +254,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
         Persist: true,
       },
     })
-    if (loginData) {
-      this.username = username
-      this.password = password
-      ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
-      await this.fetch()
+    if (loginData === null) {
+      throw new AuthenticationError('MELCloud Classic rejected the credentials')
     }
-    return loginData !== null
+    this.username = username
+    this.password = password
+    ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
+    await this.fetch()
   }
 
   /**
@@ -619,10 +620,11 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     url: string,
     config: Record<string, unknown>,
   ): Promise<HttpResponse<T> | null> {
-    if (await this.authenticate()) {
-      return this.dispatch<T>(method, url, config)
+    await this.authenticate()
+    if (!this.isAuthenticated()) {
+      return null
     }
-    return null
+    return this.dispatch<T>(method, url, config)
   }
 
   #applyOptionalConfig({

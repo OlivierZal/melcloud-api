@@ -113,7 +113,7 @@ export abstract class BaseAPI implements Disposable {
     this.#syncManager = new SyncManager(syncCallback, logger, autoSyncInterval)
   }
 
-  public abstract authenticate(data?: ClassicLoginCredentials): Promise<boolean>
+  public abstract authenticate(data?: ClassicLoginCredentials): Promise<void>
 
   protected abstract ensureSession(): Promise<void>
 
