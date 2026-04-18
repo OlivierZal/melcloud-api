@@ -179,11 +179,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       : { abortSignal: this.abortSignal }),
     })
     this.#storeTokens(tokens)
-    await this.#fetchContext()
     ;({ password: this.password, username: this.username } = {
       password,
       username,
     })
+    await this.list()
   }
 
   /**

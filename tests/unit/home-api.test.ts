@@ -364,6 +364,9 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
+      // authenticate triggers list() internally — reset so the assertion
+      // only covers the explicit list() below.
+      onSync.mockClear()
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       await api.list()
 
@@ -374,6 +377,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
+      onSync.mockClear()
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
@@ -386,10 +390,20 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
+      onSync.mockClear()
       mockRequest.mockRejectedValueOnce(new Error('network'))
       await api.list()
 
       expect(onSync).toHaveBeenCalledTimes(1)
+    })
+
+    it('should populate the registry during authenticate', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      expect(
+        api.registry.getAll().map(({ id }: { id: string }) => id),
+      ).toContain(mockBuilding.airToAirUnits[0]?.id)
     })
   })
 
@@ -626,7 +640,9 @@ describe('melcloud home API', () => {
       vi.useFakeTimers()
       try {
         setupSuccessfulLogin()
-        const api = await createApi()
+        // Disable auto-sync so the 3601s advance below does not fire
+        // the background sync timer (which authenticate→list() plans).
+        const api = await createApi({ autoSyncInterval: null })
 
         expect(api.isAuthenticated()).toBe(true)
 
