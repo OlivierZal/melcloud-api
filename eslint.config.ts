@@ -406,31 +406,6 @@ const config = defineConfig([
           newlinesInside: 1,
         },
       ],
-      'perfectionist/sort-decorators': [
-        'error',
-        {
-          customGroups: [
-            {
-              elementNamePattern: '^fetchDevices$',
-              groupName: 'fetch-decorator',
-            },
-            {
-              elementNamePattern: '^syncDevices$',
-              groupName: 'sync-decorator',
-            },
-            {
-              elementNamePattern: '^updateDevice(s)?$',
-              groupName: 'update-decorator',
-            },
-          ],
-          groups: [
-            'sync-decorator',
-            'update-decorator',
-            'unknown',
-            'fetch-decorator',
-          ],
-        },
-      ],
       'perfectionist/sort-enums': [
         'error',
         {
