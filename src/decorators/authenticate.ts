@@ -6,9 +6,11 @@ import { isHttpError } from '../http/index.ts'
 const HTTP_STATUS_UNAUTHORIZED = 401
 
 /*
- * Normalize thrown auth failures so consumers only have one error type to
- * catch. A 401 from the HTTP client is wrapped into {@link AuthenticationError}
- * with the original error preserved as `cause`; other errors pass through.
+ * Wrap 401 responses from the HTTP client into a typed
+ * {@link AuthenticationError} (preserving the original via `cause`) so
+ * credential rejections have a stable, semantic error type. Errors from
+ * other sources (fetch-based OIDC flow, network issues, non-401 statuses)
+ * are returned unchanged and keep their original type.
  */
 const toAuthFailure = (error: unknown): unknown =>
   isHttpError(error) && error.response.status === HTTP_STATUS_UNAUTHORIZED ?
@@ -26,8 +28,9 @@ const toAuthFailure = (error: unknown): unknown =>
  * 3. On success, return the result of the decorated method.
  * 4. On failure: throw if explicit credentials were provided (caller error),
  *    or log and return `false` if using stored credentials (startup/auto-login).
- *    A 401 from the HTTP client is normalized to {@link AuthenticationError}
- *    before being re-thrown or logged.
+ *    Only 401 HttpErrors are wrapped as {@link AuthenticationError}; other
+ *    failures (OIDC flow errors, network issues, non-401 statuses) propagate
+ *    as their original error type.
  *
  * Requires the class to expose `password`, `username` (string accessors
  * decorated with @setting) and `logger` (a Logger instance).
