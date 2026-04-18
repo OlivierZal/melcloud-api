@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import type { ClassicLoginCredentials } from '../types/index.ts'
 import { setting } from '../decorators/index.ts'
+import { AuthenticationError } from '../errors/index.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
@@ -32,6 +33,20 @@ import { SyncManager } from './sync-manager.ts'
 
 const HTTP_STATUS_UNAUTHORIZED = 401
 const HTTP_STATUS_TOO_MANY_REQUESTS = 429
+
+/*
+ * Wrap 401 responses from the HTTP client into a typed
+ * {@link AuthenticationError} (preserving the original via `cause`) so
+ * credential rejections have a stable, semantic error type. Errors from
+ * other sources (fetch-based OIDC flow, network issues, non-401 statuses)
+ * are returned unchanged and keep their original type.
+ */
+const toAuthFailure = (error: unknown): unknown =>
+  isHttpError(error) && error.response.status === HTTP_STATUS_UNAUTHORIZED ?
+    new AuthenticationError('MELCloud rejected the credentials', {
+      cause: error,
+    })
+  : error
 
 /** Options for the {@link BaseAPI} constructor beyond the base config. */
 interface BaseAPIConstructorOptions {
@@ -113,17 +128,53 @@ export abstract class BaseAPI implements Disposable {
     this.#syncManager = new SyncManager(syncCallback, logger, autoSyncInterval)
   }
 
-  public abstract authenticate(data?: ClassicLoginCredentials): Promise<void>
+  protected abstract doAuthenticate(
+    credentials: ClassicLoginCredentials,
+  ): Promise<void>
 
   protected abstract ensureSession(): Promise<void>
 
   protected abstract getAuthHeaders(): Record<string, string>
+
+  public abstract isAuthenticated(): boolean
 
   protected abstract retryAuth<T>(
     method: string,
     url: string,
     config: Record<string, unknown>,
   ): Promise<HttpResponse<T> | null>
+
+  protected abstract syncRegistry(): Promise<void>
+
+  /**
+   * Authenticate against MELCloud and populate the device registry.
+   *
+   * Contract: a successful return guarantees the registry reflects the
+   * server state. The post-auth registry sync is mandatory and enforced
+   * here so subclasses cannot forget it (regression-prone, see
+   * OlivierZal/com.melcloud#1281).
+   *
+   * Credential resolution: falls back to persisted `username`/`password`
+   * when `data` is omitted. Missing credentials is a no-op — callers
+   * should check {@link isAuthenticated} to detect this case.
+   *
+   * Error handling: explicit credentials surface failures to the caller;
+   * persisted-credential auto-login failures are logged and swallowed
+   * so startup doesn't crash when the saved session is stale. Only 401
+   * HttpErrors are wrapped as {@link AuthenticationError}; other failures
+   * propagate with their original type.
+   * @param data - Optional credentials; falls back to persisted values.
+   */
+  public async authenticate(data?: ClassicLoginCredentials): Promise<void> {
+    const credentials = this.resolveCredentials(data)
+    if (credentials === null) {
+      return
+    }
+    if (!(await this.runDoAuthenticate(credentials, data !== undefined))) {
+      return
+    }
+    await this.syncRegistry()
+  }
 
   public clearSync(): void {
     this.#syncManager.clear()
@@ -243,6 +294,34 @@ export abstract class BaseAPI implements Disposable {
       this.logger,
       error.response.headers['retry-after'],
     )
+  }
+
+  private resolveCredentials(
+    data: ClassicLoginCredentials | undefined,
+  ): ClassicLoginCredentials | null {
+    const username = data?.username ?? this.username
+    const password = data?.password ?? this.password
+    if (!username || !password) {
+      return null
+    }
+    return { password, username }
+  }
+
+  private async runDoAuthenticate(
+    credentials: ClassicLoginCredentials,
+    hasExplicitCredentials: boolean,
+  ): Promise<boolean> {
+    try {
+      await this.doAuthenticate(credentials)
+      return true
+    } catch (error) {
+      const failure = toAuthFailure(error)
+      if (hasExplicitCredentials) {
+        throw failure
+      }
+      this.logger.error('Authentication failed:', failure)
+      return false
+    }
   }
 
   private async runWithEvents<T>(

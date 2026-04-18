@@ -437,6 +437,43 @@ describe('melcloud home API', () => {
 
       expect(isSuccess).toBe(false)
     })
+
+    /*
+     * Post-condition contract: even on a failed PUT, the registry must be
+     * refreshed so downstream readers never see stale state masquerading
+     * as successful. Regression guard for the bug class fixed after
+     * OlivierZal/com.melcloud#1281 (silent local-state drift).
+     */
+    it('resyncs the registry after a failed updateValues', async () => {
+      setupSuccessfulLogin()
+      const onSync = vi.fn<() => Promise<void>>()
+      const api = await createApi({ onSync })
+      onSync.mockClear()
+      mockRequest
+        .mockRejectedValueOnce(new Error('network'))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.updateValues('device-1', { power: false })
+
+      expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+    })
+
+    it('swallows and logs sync failures during updateValues refresh', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const onSync = vi.fn<() => Promise<void>>()
+      const api = await createApi({ logger, onSync })
+      onSync.mockRejectedValueOnce(new Error('sync exploded'))
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const isSuccess = await api.updateValues('device-1', { power: false })
+
+      expect(isSuccess).toBe(true)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to refresh registry after updateValues:',
+        expect.any(Error),
+      )
+    })
   })
 
   describe('error log', () => {
@@ -789,8 +826,8 @@ describe('melcloud home API', () => {
 
     it('should not trigger reactive retry during the OIDC flow', async () => {
       /*
-       * PAR request fails with a network error. The @authenticate
-       * decorator catches and logs it, returning false.
+       * PAR request fails with a network error. BaseAPI.authenticate
+       * catches and logs it; no session is established.
        */
       const logger = createLogger()
       mockFetch.mockRejectedValueOnce(httpUnauthorized())

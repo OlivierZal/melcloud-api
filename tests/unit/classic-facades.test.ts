@@ -484,6 +484,42 @@ describe('building facade holiday mode', () => {
   })
 })
 
+/*
+ * Post-condition contract: facade write methods that mutate server state
+ * must notify onSync so external observers (e.g. Homey drivers) can
+ * refresh their cached view. Regression guard for the class of bug
+ * fixed after OlivierZal/com.melcloud#1281 (silent local-state drift).
+ */
+describe('facade write methods notify onSync', () => {
+  it('updatePower fires onSync', async () => {
+    const onSync = vi.fn<SyncCallback>()
+    const { facade } = createBuildingFacade({ onSync })
+    await facade.updatePower(true)
+
+    expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+  })
+
+  it('updateFrostProtection fires onSync', async () => {
+    const onSync = vi.fn<SyncCallback>()
+    const { facade } = createBuildingFacade({ onSync })
+    await facade.getFrostProtection()
+    onSync.mockClear()
+    await facade.updateFrostProtection({ isEnabled: true, max: 14, min: 6 })
+
+    expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+  })
+
+  it('updateHolidayMode fires onSync', async () => {
+    const onSync = vi.fn<SyncCallback>()
+    const { facade } = createBuildingFacade({ onSync })
+    await facade.getHolidayMode()
+    onSync.mockClear()
+    await facade.updateHolidayMode({ from: '2024-06-01', to: '2024-06-15' })
+
+    expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+  })
+})
+
 describe('building facade group', () => {
   it('calls getGroup', async () => {
     const { facade } = createBuildingFacade()

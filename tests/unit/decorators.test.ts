@@ -13,20 +13,13 @@ import {
   ClassicOperationMode,
 } from '../../src/constants.ts'
 import {
-  authenticate,
   classicFetchDevices,
   classicUpdateDevice,
   classicUpdateDevices,
   syncDevices,
 } from '../../src/decorators/index.ts'
-import { AuthenticationError, NoChangesError } from '../../src/errors/index.ts'
-import {
-  cast,
-  createHttpError,
-  createLogger,
-  createUnauthorizedError,
-  mock,
-} from '../helpers.ts'
+import { NoChangesError } from '../../src/errors/index.ts'
+import { cast, mock } from '../helpers.ts'
 
 const createMockFacade = (
   devices: { type: ClassicDeviceType; update: ReturnType<typeof vi.fn> }[] = [],
@@ -314,137 +307,5 @@ describe(classicUpdateDevice, () => {
     )
 
     expect(update).toHaveBeenCalledTimes(1)
-  })
-})
-
-describe('@authenticate decorator', () => {
-  interface Context {
-    logger: ReturnType<typeof createLogger>
-    password: string
-    username: string
-  }
-
-  type Target = (data: { password: string; username: string }) => Promise<void>
-
-  const wrapTarget = (
-    target: Target,
-  ): ((
-    this: Context,
-    data?: { password: string; username: string },
-  ) => Promise<void>) =>
-    authenticate(target, mock<ClassMethodDecoratorContext>({ name: 'auth' }))
-
-  const createContext = (overrides: Partial<Context> = {}): Context => ({
-    logger: createLogger(),
-    password: 'stored-pass',
-    username: 'stored-user',
-    ...overrides,
-  })
-
-  it('skips target without throwing when credentials are missing', async () => {
-    const target = vi.fn<Target>()
-
-    await expect(
-      wrapTarget(target).call(createContext({ password: '', username: '' })),
-    ).resolves.toBeUndefined()
-
-    expect(target).not.toHaveBeenCalled()
-  })
-
-  it('falls back to stored credentials when data is omitted', async () => {
-    const target = vi.fn<Target>().mockResolvedValue()
-    const context = createContext({
-      password: 'stored-p',
-      username: 'stored-u',
-    })
-
-    await wrapTarget(target).call(context)
-
-    expect(target).toHaveBeenCalledWith({
-      password: 'stored-p',
-      username: 'stored-u',
-    })
-  })
-
-  it('merges partial explicit data over stored credentials', async () => {
-    const target = vi.fn<Target>().mockResolvedValue()
-    const context = createContext({
-      password: 'stored-p',
-      username: 'stored-u',
-    })
-
-    await wrapTarget(target).call(context, cast({ password: 'new-p' }))
-
-    expect(target).toHaveBeenCalledWith({
-      password: 'new-p',
-      username: 'stored-u',
-    })
-  })
-
-  it('re-throws on explicit credentials failure', async () => {
-    const target = vi.fn<Target>().mockRejectedValue(new Error('boom'))
-
-    await expect(
-      wrapTarget(target).call(createContext(), {
-        password: 'p',
-        username: 'u',
-      }),
-    ).rejects.toThrow('boom')
-  })
-
-  it('logs and swallows on stored credentials failure', async () => {
-    const target = vi.fn<Target>().mockRejectedValue(new Error('boom'))
-    const context = createContext()
-
-    await expect(wrapTarget(target).call(context)).resolves.toBeUndefined()
-
-    expect(context.logger.error).toHaveBeenCalledWith(
-      'Authentication failed:',
-      expect.any(Error),
-    )
-  })
-
-  it('wraps a 401 HttpError into AuthenticationError (with cause) on throw', async () => {
-    const httpError = createUnauthorizedError('/login')
-    const target = vi.fn<Target>().mockRejectedValue(httpError)
-
-    await expect(
-      wrapTarget(target).call(createContext(), {
-        password: 'p',
-        username: 'u',
-      }),
-    ).rejects.toMatchObject({
-      cause: httpError,
-      name: 'AuthenticationError',
-    })
-  })
-
-  it('wraps a 401 HttpError into AuthenticationError when logging', async () => {
-    const httpError = createUnauthorizedError('/login')
-    const target = vi.fn<Target>().mockRejectedValue(httpError)
-    const context = createContext()
-
-    await wrapTarget(target).call(context)
-
-    expect(context.logger.error).toHaveBeenCalledWith(
-      'Authentication failed:',
-      expect.any(AuthenticationError),
-    )
-  })
-
-  it('does not wrap non-401 HttpErrors', async () => {
-    const httpError = createHttpError({
-      message: 'Server error',
-      status: 500,
-      url: '/login',
-    })
-    const target = vi.fn<Target>().mockRejectedValue(httpError)
-
-    await expect(
-      wrapTarget(target).call(createContext(), {
-        password: 'p',
-        username: 'u',
-      }),
-    ).rejects.toBe(httpError)
   })
 })

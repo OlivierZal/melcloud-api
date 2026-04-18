@@ -65,11 +65,6 @@ class TestAPI extends BaseAPI {
     this.retryAuthMock.mockResolvedValue(null)
   }
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
-  public override async authenticate(): Promise<void> {
-    await Promise.resolve()
-  }
-
   /** Expose the protected dispatch for direct testing. */
   public async callDispatch<T = unknown>(
     method: string,
@@ -88,6 +83,16 @@ class TestAPI extends BaseAPI {
     return this.request<T>(method, url, config)
   }
 
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
+  public override isAuthenticated(): boolean {
+    return true
+  }
+
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
+  protected override async doAuthenticate(): Promise<void> {
+    await Promise.resolve()
+  }
+
   protected override async ensureSession(): Promise<void> {
     return this.ensureSessionMock()
   }
@@ -102,6 +107,11 @@ class TestAPI extends BaseAPI {
     config: Record<string, unknown>,
   ): Promise<HttpResponse<T> | null> {
     return cast(await this.retryAuthMock(method, url, config))
+  }
+
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
+  protected override async syncRegistry(): Promise<void> {
+    await Promise.resolve()
   }
 }
 

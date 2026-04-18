@@ -12,7 +12,7 @@ import type {
   HomeUser,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
-import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import { setting, syncDevices } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import {
@@ -154,36 +154,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     }
     await api.authenticate()
     return api
-  }
-
-  /**
-   * Run the full OIDC login flow (PAR → IdentityServer → Cognito →
-   * token exchange), persist the resulting tokens, and fetch
-   * `/context` to populate user state. Throws on failure; query
-   * {@link HomeAPI.isAuthenticated} to check the resulting session state.
-   *
-   * Wrapped by the `@authenticate` decorator, so `data` may be
-   * omitted when credentials have already been persisted via the
-   * SettingManager — the decorator hydrates them before calling.
-   * @param data - Optional credentials; falls back to persisted values.
-   */
-  @authenticate
-  public async authenticate(data?: ClassicLoginCredentials): Promise<void> {
-    /* v8 ignore next -- @authenticate guarantees data is always provided */
-    const { password, username } = data ?? { password: '', username: '' }
-    this.#clearPersistedSession()
-    const tokens = await performTokenAuth({
-      credentials: { password, username },
-      ...(this.abortSignal === undefined ?
-        {}
-      : { abortSignal: this.abortSignal }),
-    })
-    this.#storeTokens(tokens)
-    ;({ password: this.password, username: this.username } = {
-      password,
-      username,
-    })
-    await this.list()
   }
 
   /**
@@ -343,13 +313,38 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     id: string,
     values: HomeAtaValues,
   ): Promise<boolean> {
+    let hasSucceeded = false
     try {
       await this.request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
-      await this.list()
-      return true
+      hasSucceeded = true
     } catch {
-      return false
+      // Swallow — caller reads boolean; registry is resynced below so stale
+      // state never masquerades as successful state after a failed PUT.
     }
+    try {
+      await this.list()
+    } catch (error) {
+      this.logger.error('Failed to refresh registry after updateValues:', error)
+    }
+    return hasSucceeded
+  }
+
+  protected override async doAuthenticate({
+    password,
+    username,
+  }: ClassicLoginCredentials): Promise<void> {
+    this.#clearPersistedSession()
+    const tokens = await performTokenAuth({
+      credentials: { password, username },
+      ...(this.abortSignal === undefined ?
+        {}
+      : { abortSignal: this.abortSignal }),
+    })
+    this.#storeTokens(tokens)
+    ;({ password: this.password, username: this.username } = {
+      password,
+      username,
+    })
   }
 
   /* ---------------------------------------------------------------- */
@@ -385,6 +380,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       return null
     }
     return this.dispatch<T>(method, url, config)
+  }
+
+  protected override async syncRegistry(): Promise<void> {
+    await this.list()
   }
 
   #clearPersistedSession(): void {
@@ -423,7 +422,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /* ---------------------------------------------------------------- */
   /**
    * Use the refresh token to obtain a fresh access token.
-   * @returns Whether the refresh succeeded.
+   * @returns Whether the refresh hasSucceeded.
    */
   async #refreshAccessToken(): Promise<boolean> {
     const tokens = await refreshAccessToken({

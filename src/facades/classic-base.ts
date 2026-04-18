@@ -157,6 +157,61 @@ export abstract class BaseFacade<
   }
 
   @syncDevices()
+  public async updateFrostProtection({
+    isEnabled = true,
+    max,
+    min,
+  }: ClassicFrostProtectionQuery): Promise<
+    ClassicFailureData | ClassicSuccessData
+  > {
+    /*
+     * Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
+     * in case the adjustment pushed max out of bounds
+     */
+    const newMin = Math.max(
+      temperatureRange.min,
+      Math.min(min, temperatureRange.max - TEMPERATURE_GAP),
+    )
+    let newMax = Math.min(
+      temperatureRange.max,
+      Math.max(max, temperatureRange.min + TEMPERATURE_GAP),
+    )
+    if (newMax - newMin < TEMPERATURE_GAP) {
+      newMax = newMin + TEMPERATURE_GAP
+    }
+    const { data } = await this.api.updateFrostProtection({
+      postData: {
+        Enabled: isEnabled,
+        MaximumTemperature: newMax,
+        MinimumTemperature: newMin,
+        ...(await this.#getFrostProtectionLocation()),
+      },
+    })
+    return data
+  }
+
+  @syncDevices()
+  public async updateHolidayMode({
+    from,
+    to,
+  }: ClassicHolidayModeQuery = {}): Promise<
+    ClassicFailureData | ClassicSuccessData
+  > {
+    const isEnabled = to !== undefined
+    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
+    const endDate = isEnabled ? DateTime.fromISO(to) : null
+    const { data } = await this.api.updateHolidayMode({
+      postData: {
+        Enabled: isEnabled,
+        EndDate: getDateTimeComponents(endDate),
+        HMTimeZones: await this.#getHolidayModeLocation(),
+        StartDate: getDateTimeComponents(startDate),
+      },
+    })
+    return data
+  }
+
+  @syncDevices()
   @classicUpdateDevices()
   public async updatePower(isOn = true): Promise<boolean> {
     const { data: isPowered } = await this.api.updatePower({
@@ -227,59 +282,6 @@ export abstract class BaseFacade<
     type,
   }: { type?: ClassicDeviceType } = {}): Promise<void> {
     await this.api.onSync?.({ ids: this.#deviceIds, type })
-  }
-
-  public async updateFrostProtection({
-    isEnabled = true,
-    max,
-    min,
-  }: ClassicFrostProtectionQuery): Promise<
-    ClassicFailureData | ClassicSuccessData
-  > {
-    /*
-     * Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
-     * in case the adjustment pushed max out of bounds
-     */
-    const newMin = Math.max(
-      temperatureRange.min,
-      Math.min(min, temperatureRange.max - TEMPERATURE_GAP),
-    )
-    let newMax = Math.min(
-      temperatureRange.max,
-      Math.max(max, temperatureRange.min + TEMPERATURE_GAP),
-    )
-    if (newMax - newMin < TEMPERATURE_GAP) {
-      newMax = newMin + TEMPERATURE_GAP
-    }
-    const { data } = await this.api.updateFrostProtection({
-      postData: {
-        Enabled: isEnabled,
-        MaximumTemperature: newMax,
-        MinimumTemperature: newMin,
-        ...(await this.#getFrostProtectionLocation()),
-      },
-    })
-    return data
-  }
-
-  public async updateHolidayMode({
-    from,
-    to,
-  }: ClassicHolidayModeQuery = {}): Promise<
-    ClassicFailureData | ClassicSuccessData
-  > {
-    const isEnabled = to !== undefined
-    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
-    const endDate = isEnabled ? DateTime.fromISO(to) : null
-    const { data } = await this.api.updateHolidayMode({
-      postData: {
-        Enabled: isEnabled,
-        EndDate: getDateTimeComponents(endDate),
-        HMTimeZones: await this.#getHolidayModeLocation(),
-        StartDate: getDateTimeComponents(startDate),
-      },
-    })
-    return data
   }
 
   async #getBaseFrostProtection(

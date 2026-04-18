@@ -464,6 +464,36 @@ describe('mELCloud Classic API', () => {
         expect.any(AuthenticationError),
       )
     })
+
+    /*
+     * Post-condition contract: a successful authenticate() must leave
+     * the registry populated so callers never see an empty device list
+     * after a successful login. Enforced by BaseAPI.authenticate's
+     * template method (guard against OlivierZal/com.melcloud#1281-style regressions).
+     */
+    it('populates the device registry during authenticate', async () => {
+      const building = createBuilding({
+        Structure: {
+          Areas: [],
+          Devices: [createDevice({ DeviceID: 42, DeviceName: 'Populated' })],
+          Floors: [],
+        },
+      })
+      mockRequest.mockImplementation(async (config) => {
+        await Promise.resolve()
+        if (config.url === '/Login/ClientLogin3') {
+          return loginResponse()
+        }
+        if (config.url === '/User/ListDevices') {
+          return wrap([building])
+        }
+        return wrap({})
+      })
+      const api = await createApi()
+      await api.authenticate({ password: 'pass', username: 'user' })
+
+      expect(api.registry.devices.getById(42)?.name).toBe('Populated')
+    })
   })
 
   describe('language settings', () => {

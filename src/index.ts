@@ -134,7 +134,6 @@ export {
   HomeDeviceType,
 } from './constants.ts'
 export {
-  authenticate,
   classicFetchDevices,
   classicUpdateDevice,
   classicUpdateDevices,
