@@ -159,16 +159,16 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /**
    * Run the full OIDC login flow (PAR → IdentityServer → Cognito →
    * token exchange), persist the resulting tokens, and fetch
-   * `/context` to populate user state.
+   * `/context` to populate user state. Throws on failure; query
+   * {@link HomeAPI.isAuthenticated} to check the resulting session state.
    *
    * Wrapped by the `@authenticate` decorator, so `data` may be
    * omitted when credentials have already been persisted via the
    * SettingManager — the decorator hydrates them before calling.
    * @param data - Optional credentials; falls back to persisted values.
-   * @returns `true` when the session is established, `false` otherwise.
    */
   @authenticate
-  public async authenticate(data?: ClassicLoginCredentials): Promise<boolean> {
+  public async authenticate(data?: ClassicLoginCredentials): Promise<void> {
     /* v8 ignore next -- @authenticate guarantees data is always provided */
     const { password, username } = data ?? { password: '', username: '' }
     this.#clearPersistedSession()
@@ -184,7 +184,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       password,
       username,
     })
-    return this.#user !== null
   }
 
   /**
@@ -381,10 +380,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       return this.dispatch<T>(method, url, config)
     }
     this.#clearPersistedSession()
-    if (await this.authenticate()) {
-      return this.dispatch<T>(method, url, config)
+    await this.authenticate()
+    if (!this.isAuthenticated()) {
+      return null
     }
-    return null
+    return this.dispatch<T>(method, url, config)
   }
 
   #clearPersistedSession(): void {

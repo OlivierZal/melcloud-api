@@ -66,9 +66,8 @@ class TestAPI extends BaseAPI {
   }
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
-  public override async authenticate(): Promise<boolean> {
-    // eslint-disable-next-line unicorn/no-useless-promise-resolve-reject -- Satisfy abstract return type
-    return Promise.resolve(true)
+  public override async authenticate(): Promise<void> {
+    await Promise.resolve()
   }
 
   /** Expose the protected dispatch for direct testing. */

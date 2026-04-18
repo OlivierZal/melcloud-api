@@ -24,10 +24,11 @@ const toAuthFailure = (error: unknown): unknown =>
  * shared credential resolution and error handling:
  *
  * 1. Resolve credentials from explicit `data` or fall back to stored values.
- * 2. Return `false` immediately if either credential is missing.
- * 3. On success, return the result of the decorated method.
+ * 2. No-op when either credential is still missing (lets callers defer
+ *    authentication; query `isAuthenticated()` to check session state).
+ * 3. On success, `authenticate()` resolves with `void`.
  * 4. On failure: throw if explicit credentials were provided (caller error),
- *    or log and return `false` if using stored credentials (startup/auto-login).
+ *    or log and swallow if using stored credentials (startup/auto-login).
  *    Only 401 HttpErrors are wrapped as {@link AuthenticationError}; other
  *    failures (OIDC flow errors, network issues, non-401 statuses) propagate
  *    as their original error type.
@@ -36,25 +37,24 @@ const toAuthFailure = (error: unknown): unknown =>
  * decorated with @setting) and `logger` (a Logger instance).
  */
 export const authenticate = (
-  target: (...args: any[]) => Promise<boolean>,
+  target: (...args: any[]) => Promise<void>,
   _context: ClassMethodDecoratorContext,
-): ((data?: ClassicLoginCredentials) => Promise<boolean>) =>
+): ((data?: ClassicLoginCredentials) => Promise<void>) =>
   async function newTarget(
     this: { logger: Logger; password: string; username: string },
     data?: ClassicLoginCredentials,
-  ): Promise<boolean> {
+  ): Promise<void> {
     const { password = this.password, username = this.username } = data ?? {}
     if (!username || !password) {
-      return false
+      return
     }
     try {
-      return await target.call(this, { password, username })
+      await target.call(this, { password, username })
     } catch (error) {
       const failure = toAuthFailure(error)
       if (data !== undefined) {
         throw failure
       }
       this.logger.error('Authentication failed:', failure)
-      return false
     }
   }

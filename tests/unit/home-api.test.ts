@@ -308,12 +308,12 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       setupSuccessfulLogin()
-      const isAuthenticated = await api.authenticate({
+      await api.authenticate({
         password: 'new-pass',
         username: 'new@test.com',
       })
 
-      expect(isAuthenticated).toBe(true)
+      expect(api.isAuthenticated()).toBe(true)
     })
   })
 

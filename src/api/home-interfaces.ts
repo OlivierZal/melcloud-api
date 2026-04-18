@@ -32,7 +32,7 @@ export interface HomeAPI {
   /** The currently authenticated user, or `null`. */
   readonly user: HomeUser | null
   /** Authenticate with MELCloud Home using the provided or stored credentials. */
-  readonly authenticate: (data?: ClassicLoginCredentials) => Promise<boolean>
+  readonly authenticate: (data?: ClassicLoginCredentials) => Promise<void>
   /** Cancel any pending automatic sync. */
   readonly clearSync: () => void
   /** Fetch energy consumption data for a device. */

@@ -432,12 +432,9 @@ describe('mELCloud Classic API', () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
       mockLoginAndList()
-      const isAuthenticated = await api.authenticate({
-        password: 'pass',
-        username: 'user',
-      })
+      await api.authenticate({ password: 'pass', username: 'user' })
 
-      expect(isAuthenticated).toBe(true)
+      expect(api.isAuthenticated()).toBe(true)
     })
 
     it('throws AuthenticationError when login data is null with explicit credentials', async () => {
@@ -449,7 +446,7 @@ describe('mELCloud Classic API', () => {
       ).rejects.toThrow(AuthenticationError)
     })
 
-    it('logs and returns false when login data is null with stored credentials', async () => {
+    it('logs and swallows when login data is null with stored credentials', async () => {
       const logger = createLogger()
       mockLoginAndList()
       const api = await createApi({
@@ -459,9 +456,9 @@ describe('mELCloud Classic API', () => {
       })
       mockRequest.mockResolvedValue(wrap({ LoginData: null }))
 
-      const isAuthenticated = await api.authenticate()
+      await api.authenticate()
 
-      expect(isAuthenticated).toBe(false)
+      expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
         'Authentication failed:',
         expect.any(AuthenticationError),

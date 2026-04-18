@@ -324,17 +324,14 @@ describe('@authenticate decorator', () => {
     username: string
   }
 
-  type Target = (data: {
-    password: string
-    username: string
-  }) => Promise<boolean>
+  type Target = (data: { password: string; username: string }) => Promise<void>
 
   const wrapTarget = (
     target: Target,
   ): ((
     this: Context,
     data?: { password: string; username: string },
-  ) => Promise<boolean>) =>
+  ) => Promise<void>) =>
     authenticate(target, mock<ClassMethodDecoratorContext>({ name: 'auth' }))
 
   const createContext = (overrides: Partial<Context> = {}): Context => ({
@@ -344,20 +341,18 @@ describe('@authenticate decorator', () => {
     ...overrides,
   })
 
-  it('returns false without invoking target when credentials are missing', async () => {
+  it('skips target without throwing when credentials are missing', async () => {
     const target = vi.fn<Target>()
-    const wrapped = wrapTarget(target)
 
-    const isAuthenticated = await wrapped.call(
-      createContext({ password: '', username: '' }),
-    )
+    await expect(
+      wrapTarget(target).call(createContext({ password: '', username: '' })),
+    ).resolves.toBeUndefined()
 
-    expect(isAuthenticated).toBe(false)
     expect(target).not.toHaveBeenCalled()
   })
 
   it('falls back to stored credentials when data is omitted', async () => {
-    const target = vi.fn<Target>().mockResolvedValue(true)
+    const target = vi.fn<Target>().mockResolvedValue()
     const context = createContext({
       password: 'stored-p',
       username: 'stored-u',
@@ -372,7 +367,7 @@ describe('@authenticate decorator', () => {
   })
 
   it('merges partial explicit data over stored credentials', async () => {
-    const target = vi.fn<Target>().mockResolvedValue(true)
+    const target = vi.fn<Target>().mockResolvedValue()
     const context = createContext({
       password: 'stored-p',
       username: 'stored-u',
@@ -397,13 +392,12 @@ describe('@authenticate decorator', () => {
     ).rejects.toThrow('boom')
   })
 
-  it('logs and returns false on stored credentials failure', async () => {
+  it('logs and swallows on stored credentials failure', async () => {
     const target = vi.fn<Target>().mockRejectedValue(new Error('boom'))
     const context = createContext()
 
-    const isAuthenticated = await wrapTarget(target).call(context)
+    await expect(wrapTarget(target).call(context)).resolves.toBeUndefined()
 
-    expect(isAuthenticated).toBe(false)
     expect(context.logger.error).toHaveBeenCalledWith(
       'Authentication failed:',
       expect.any(Error),
