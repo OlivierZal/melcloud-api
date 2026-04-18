@@ -9,6 +9,7 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../../src/types/index.ts'
+import { AuthenticationError } from '../../src/errors/index.ts'
 import { HttpClient } from '../../src/http/client.ts'
 import { HttpError } from '../../src/http/index.ts'
 import {
@@ -340,6 +341,16 @@ describe('melcloud home API', () => {
       await expect(
         api.authenticate({ password: 'wrong', username: 'user@test.com' }),
       ).rejects.toThrow('bad credentials')
+    })
+
+    it('should wrap 401 HttpError from auth as AuthenticationError', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockFetch.mockRejectedValueOnce(httpUnauthorized())
+
+      await expect(
+        api.authenticate({ password: 'wrong', username: 'user@test.com' }),
+      ).rejects.toThrow(AuthenticationError)
     })
 
     it('should re-authenticate with new credentials', async () => {

@@ -6,6 +6,7 @@ import type {
   SyncCallback,
 } from '../../src/api/index.ts'
 import type { ClassicDeviceType } from '../../src/constants.ts'
+import { AuthenticationError } from '../../src/errors/index.ts'
 import { HttpClient } from '../../src/http/client.ts'
 import {
   type ClassicBuildingWithStructure,
@@ -439,15 +440,32 @@ describe('mELCloud Classic API', () => {
       expect(isAuthenticated).toBe(true)
     })
 
-    it('returns false when login data is null', async () => {
+    it('throws AuthenticationError when login data is null with explicit credentials', async () => {
       const api = await createApi()
       mockRequest.mockResolvedValue(wrap({ LoginData: null }))
-      const isAuthenticated = await api.authenticate({
+
+      await expect(
+        api.authenticate({ password: 'pass', username: 'user' }),
+      ).rejects.toThrow(AuthenticationError)
+    })
+
+    it('logs and returns false when login data is null with stored credentials', async () => {
+      const logger = createLogger()
+      mockLoginAndList()
+      const api = await createApi({
+        logger,
         password: 'pass',
         username: 'user',
       })
+      mockRequest.mockResolvedValue(wrap({ LoginData: null }))
+
+      const isAuthenticated = await api.authenticate()
 
       expect(isAuthenticated).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Authentication failed:',
+        expect.any(AuthenticationError),
+      )
     })
 
     it('returns false when no credentials', async () => {
@@ -829,12 +847,10 @@ describe('mELCloud Classic API', () => {
       setSpy.mockClear()
       mockRequest.mockResolvedValueOnce(wrap({ LoginData: null }))
 
-      const isAuthenticated = await api.authenticate({
-        password: 'wrong',
-        username: 'user',
-      })
+      await expect(
+        api.authenticate({ password: 'wrong', username: 'user' }),
+      ).rejects.toThrow(AuthenticationError)
 
-      expect(isAuthenticated).toBe(false)
       expect(setSpy).toHaveBeenCalledWith('contextKey', '')
       expect(setSpy).toHaveBeenCalledWith('expiry', '')
     })
@@ -874,7 +890,7 @@ describe('mELCloud Classic API', () => {
       mockLoginAndList('ctx', '2030-12-31T00:00:00')
       const api = await createApi({ password: 'pass', username: 'user' })
 
-      // 401 on endpoint, re-auth returns LoginData: null → authenticate() returns false
+      // 401 on endpoint, re-auth throws AuthenticationError → decorator logs + returns false
       mockRequest.mockImplementation(async (config) => {
         await Promise.resolve()
         if (config.url === '/Login/ClientLogin3') {

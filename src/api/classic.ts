@@ -38,6 +38,7 @@ import type {
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
 import { authenticate, setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
+import { AuthenticationError } from '../errors/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
 import { isKeyOf } from '../utils.ts'
 import {
@@ -253,13 +254,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
         Persist: true,
       },
     })
-    if (loginData) {
-      this.username = username
-      this.password = password
-      ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
-      await this.fetch()
+    if (loginData === null) {
+      throw new AuthenticationError('MELCloud Classic rejected the credentials')
     }
-    return loginData !== null
+    this.username = username
+    this.password = password
+    ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
+    await this.fetch()
+    return true
   }
 
   /**
