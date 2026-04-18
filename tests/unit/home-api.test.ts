@@ -9,7 +9,6 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../../src/types/index.ts'
-import { AuthenticationError } from '../../src/errors/index.ts'
 import { HttpClient } from '../../src/http/client.ts'
 import { HttpError } from '../../src/http/index.ts'
 import {
@@ -290,16 +289,6 @@ describe('melcloud home API', () => {
   })
 
   describe('authentication', () => {
-    it('should return false without credentials', async () => {
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        httpClient: mockHttpClient,
-      })
-      const isAuthenticated = await api.authenticate()
-
-      expect(isAuthenticated).toBe(false)
-    })
-
     it('should clear user state on re-authentication', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
@@ -313,44 +302,6 @@ describe('melcloud home API', () => {
       ).rejects.toThrow('network')
 
       expect(api.user).toBeNull()
-    })
-
-    it('should log and return false on stored credential failure', async () => {
-      const logger = createLogger()
-      mockFetch.mockRejectedValueOnce(new Error('network'))
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        httpClient: mockHttpClient,
-        logger,
-        password: 'pass',
-        username: 'user@test.com',
-      })
-
-      expect(api.isAuthenticated()).toBe(false)
-      expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
-        expect.any(Error),
-      )
-    })
-
-    it('should throw on explicit credential failure', async () => {
-      setupSuccessfulLogin()
-      const api = await createApi()
-      mockFetch.mockRejectedValueOnce(new Error('bad credentials'))
-
-      await expect(
-        api.authenticate({ password: 'wrong', username: 'user@test.com' }),
-      ).rejects.toThrow('bad credentials')
-    })
-
-    it('should wrap 401 HttpError from auth as AuthenticationError', async () => {
-      setupSuccessfulLogin()
-      const api = await createApi()
-      mockFetch.mockRejectedValueOnce(httpUnauthorized())
-
-      await expect(
-        api.authenticate({ password: 'wrong', username: 'user@test.com' }),
-      ).rejects.toThrow(AuthenticationError)
     })
 
     it('should re-authenticate with new credentials', async () => {

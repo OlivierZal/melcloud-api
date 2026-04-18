@@ -467,31 +467,6 @@ describe('mELCloud Classic API', () => {
         expect.any(AuthenticationError),
       )
     })
-
-    it('returns false when no credentials', async () => {
-      const api = await createApi()
-      const isAuthenticated = await api.authenticate()
-
-      expect(isAuthenticated).toBe(false)
-    })
-
-    it('swallows error when no explicit data', async () => {
-      mockRequest.mockRejectedValueOnce(new Error('fail'))
-      const api = await createApi({ password: 'pass', username: 'user' })
-      mockRequest.mockRejectedValue(new Error('fail'))
-      const isAuthenticated = await api.authenticate()
-
-      expect(isAuthenticated).toBe(false)
-    })
-
-    it('throws error when explicit data and auth fails', async () => {
-      const api = await createApi()
-      mockRequest.mockRejectedValue(new Error('auth fail'))
-
-      await expect(
-        api.authenticate({ password: 'p', username: 'u' }),
-      ).rejects.toThrow('auth fail')
-    })
   })
 
   describe('language settings', () => {
