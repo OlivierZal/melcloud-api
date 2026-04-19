@@ -306,9 +306,7 @@ describe('api lifecycle', () => {
       onSync,
     })
     const manager = new ClassicFacadeManager(api, api.registry)
-    const building = manager.get(
-      defined(api.registry.buildings.getById(1)),
-    )
+    const building = manager.get(defined(api.registry.buildings.getById(1)))
 
     mockRequest.mockImplementation(
       // eslint-disable-next-line @typescript-eslint/require-await -- vitest mockImplementation signature requires async

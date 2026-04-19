@@ -174,15 +174,30 @@ const setupFetchDevices = (
 
 describe(fetchDevices, () => {
   it.each([
-    { expected: ['fetch', 'target'], label: 'default (before)', options: undefined },
-    { expected: ['fetch', 'target'], label: 'when=before', options: { when: 'before' as const } },
-    { expected: ['target', 'fetch'], label: 'when=after', options: { when: 'after' as const } },
-  ])('invokes api.fetch and target in the correct order: $label', async ({ expected, options }) => {
-    const { callOrder, invoke } = setupFetchDevices(options)
-    await invoke()
+    {
+      expected: ['fetch', 'target'],
+      label: 'default (before)',
+      options: undefined,
+    },
+    {
+      expected: ['fetch', 'target'],
+      label: 'when=before',
+      options: { when: 'before' as const },
+    },
+    {
+      expected: ['target', 'fetch'],
+      label: 'when=after',
+      options: { when: 'after' as const },
+    },
+  ])(
+    'invokes api.fetch and target in the correct order: $label',
+    async ({ expected, options }) => {
+      const { callOrder, invoke } = setupFetchDevices(options)
+      await invoke()
 
-    expect(callOrder).toStrictEqual(expected)
-  })
+      expect(callOrder).toStrictEqual(expected)
+    },
+  )
 
   it('prefers syncRegistry() over api.fetch() when both are exposed', async () => {
     const callOrder: string[] = []
