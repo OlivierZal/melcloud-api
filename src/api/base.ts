@@ -16,12 +16,13 @@ import {
   RequestLifecycleEmitter,
 } from '../observability/index.ts'
 import {
-  DEFAULT_TRANSIENT_RETRY_OPTIONS,
-  isTransientServerError,
-  RateLimitError,
+  type ResiliencePolicy,
+  AuthRetryPolicy,
+  CompositePolicy,
   RateLimitGate,
+  RateLimitPolicy,
   RetryGuard,
-  withRetryBackoff,
+  TransientRetryPolicy,
 } from '../resilience/index.ts'
 import type {
   BaseAPIConfig,
@@ -32,7 +33,6 @@ import type {
 import { SyncManager } from './sync-manager.ts'
 
 const HTTP_STATUS_UNAUTHORIZED = 401
-const HTTP_STATUS_TOO_MANY_REQUESTS = 429
 
 /**
  * Narrow any error the HTTP client can surface into either an
@@ -103,6 +103,16 @@ export abstract class BaseAPI implements Disposable {
   }
 
   /*
+   * Policy instances are created once in the constructor and reused
+   * for every request. Stateless w.r.t. individual calls — the shared
+   * state (rate-limit gate, retry guard) lives in the policy's
+   * injected dependencies, not in the policy itself.
+   */
+  readonly #authRetryPolicy: AuthRetryPolicy
+
+  readonly #rateLimitPolicy: RateLimitPolicy
+
+  /*
    * Single in-flight refresh handle. Set when the first `ensureSession`
    * call detects an expired session, cleared when the refresh resolves
    * (success or failure). Subsequent concurrent callers await the same
@@ -113,6 +123,7 @@ export abstract class BaseAPI implements Disposable {
 
   readonly #syncManager: SyncManager
 
+  // eslint-disable-next-line max-statements -- constructor is 12 field assignments + 2 policy wirings; further decomposition would just hide the wiring behind a second helper without clarifying anything
   protected constructor(
     {
       abortSignal,
@@ -139,6 +150,9 @@ export abstract class BaseAPI implements Disposable {
     this.retryGuard = new RetryGuard(retryDelay)
     this.api = httpClient ?? new HttpClient(httpConfig)
     this.#syncManager = new SyncManager(syncCallback, logger, autoSyncInterval)
+    const { authRetry, rateLimit } = this.#buildStaticPolicies()
+    this.#authRetryPolicy = authRetry
+    this.#rateLimitPolicy = rateLimit
   }
 
   protected abstract doAuthenticate(
@@ -176,11 +190,20 @@ export abstract class BaseAPI implements Disposable {
    */
   protected abstract performSessionRefresh(): Promise<void>
 
-  protected abstract retryAuth<T>(
-    method: string,
-    url: string,
-    config: Record<string, unknown>,
-  ): Promise<HttpResponse<T> | null>
+  /**
+   * Subclass hook: refresh the session after a reactive 401. Called
+   * by {@link AuthRetryPolicy} before it replays the original request.
+   * Returns `true` when the session is authenticated afterwards
+   * (token exchange succeeded OR a fallback `resumeSession` worked),
+   * `false` otherwise.
+   *
+   * Distinct from {@link performSessionRefresh}: this hook fires
+   * after* the server has already rejected the current credential,
+   * so implementations typically clear persisted tokens first. The
+   * pre-emptive hook runs before any rejection and can keep the
+   * existing state untouched when the refresh-token path succeeds.
+   */
+  protected abstract reauthenticate(): Promise<boolean>
 
   protected abstract syncRegistry(): Promise<void>
 
@@ -366,79 +389,89 @@ export abstract class BaseAPI implements Disposable {
     config: Record<string, unknown> = {},
   ): Promise<HttpResponse<T>> {
     await this.ensureSession()
-    this.throwIfRateLimited()
     const context = {
       correlationId: randomUUID(),
       method: method.toUpperCase(),
       url,
     }
-    const attempt = this.makeRequestAttempt<T>(method, url, config)
-    const runner =
-      method.toUpperCase() === 'GET' ?
-        async (): Promise<HttpResponse<T>> =>
-          withRetryBackoff(attempt, {
-            ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
-            isRetryable: isTransientServerError,
-            onRetry: (retryAttempt, error, delayMs) => {
-              this.logger.log(
-                `Transient server error on ${url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,
-              )
-              this.events.emitRetry({
-                ...context,
-                attempt: retryAttempt,
-                delayMs,
-                error,
-              })
-            },
-          })
-      : attempt
-    return this.runWithEvents(context, runner)
-  }
-
-  private makeRequestAttempt<T>(
-    method: string,
-    url: string,
-    config: Record<string, unknown>,
-  ): () => Promise<HttpResponse<T>> {
-    return async () => {
+    const policy = this.#buildPolicy(context)
+    const attempt = async (): Promise<HttpResponse<T>> => {
       try {
         return await this.dispatch<T>(method, url, config)
       } catch (error) {
         this.logError(error)
-        this.recordRateLimitIfApplicable(error)
-        if (this.shouldRetryAuth(error)) {
-          const retried = await this.retryAuth<T>(method, url, config)
-          if (retried !== null) {
-            return retried
-          }
-        }
         throw error
       }
     }
+    return this.#runWithEvents(context, async () => policy.run(attempt))
   }
 
-  private recordRateLimitIfApplicable(error: unknown): void {
-    if (!isHttpError(error)) {
-      return
+  /**
+   * Build the per-request resilience pipeline. Order matters — outer
+   * policies see the attempt first: rate-limit guards the entry
+   * point, auth-retry handles 401s after the inner retries give up,
+   * and the optional transient retry (GET-only) is the innermost
+   * wrapper around the raw `dispatch`.
+   * @param context - Per-request correlation context used by the
+   * transient-retry telemetry when it fires.
+   * @param context.correlationId - UUID for cross-emission linkage.
+   * @param context.method - HTTP method (uppercased) of the request.
+   * @param context.url - URL of the request being dispatched.
+   * @returns The composite policy ready to run the attempt.
+   */
+  #buildPolicy(context: {
+    correlationId: string
+    method: string
+    url: string
+  }): ResiliencePolicy {
+    const policies: ResiliencePolicy[] = [
+      this.#rateLimitPolicy,
+      this.#authRetryPolicy,
+    ]
+    if (context.method === 'GET') {
+      policies.push(
+        new TransientRetryPolicy({
+          onRetry: (
+            retryAttempt: number,
+            error: unknown,
+            delayMs: number,
+          ): void => {
+            this.logger.log(
+              `Transient server error on ${context.url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,
+            )
+            this.events.emitRetry({
+              ...context,
+              attempt: retryAttempt,
+              delayMs,
+              error,
+            })
+          },
+        }),
+      )
     }
-    if (error.response.status !== HTTP_STATUS_TOO_MANY_REQUESTS) {
-      return
-    }
-    this.rateLimitGate.recordAndLog(
-      this.logger,
-      error.response.headers['retry-after'],
-    )
+    return new CompositePolicy(policies)
   }
 
-  private resolvePersistedCredentials(): ClassicLoginCredentials | null {
-    const { password, username } = this
-    if (!username || !password) {
-      return null
+  /**
+   * Instantiate the request-independent policies once. Both reuse
+   * shared state ({@link RateLimitGate}, {@link RetryGuard}) wired
+   * earlier in the constructor so the policies themselves stay
+   * stateless w.r.t. individual requests.
+   * @returns The two stateful policies shared across every request.
+   */
+  #buildStaticPolicies(): {
+    authRetry: AuthRetryPolicy
+    rateLimit: RateLimitPolicy
+  } {
+    return {
+      authRetry: new AuthRetryPolicy(this.retryGuard, async () =>
+        this.reauthenticate(),
+      ),
+      rateLimit: new RateLimitPolicy(this.rateLimitGate, this.logger),
     }
-    return { password, username }
   }
 
-  private async runWithEvents<T>(
+  async #runWithEvents<T>(
     context: { correlationId: string; method: string; url: string },
     runner: () => Promise<HttpResponse<T>>,
   ): Promise<HttpResponse<T>> {
@@ -462,22 +495,11 @@ export abstract class BaseAPI implements Disposable {
     }
   }
 
-  private shouldRetryAuth(error: unknown): boolean {
-    if (!isHttpError(error)) {
-      return false
+  private resolvePersistedCredentials(): ClassicLoginCredentials | null {
+    const { password, username } = this
+    if (!username || !password) {
+      return null
     }
-    if (error.response.status !== HTTP_STATUS_UNAUTHORIZED) {
-      return false
-    }
-    return this.retryGuard.tryConsume()
-  }
-
-  private throwIfRateLimited(): void {
-    if (this.rateLimitGate.isPaused) {
-      throw new RateLimitError(
-        `API requests are on hold for ${this.rateLimitGate.formatRemaining()}`,
-        { retryAfter: this.rateLimitGate.remaining },
-      )
-    }
+    return { password, username }
   }
 }

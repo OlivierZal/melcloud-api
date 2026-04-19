@@ -1,7 +1,6 @@
 import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
 import { Agent } from 'undici'
 
-import type { HttpResponse } from '../http/index.ts'
 import type {
   ClassicAreaDataAny,
   ClassicBuildingWithStructure,
@@ -635,15 +634,15 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     await this.resumeSession()
   }
 
-  protected async retryAuth<T>(
-    method: string,
-    url: string,
-    config: Record<string, unknown>,
-  ): Promise<HttpResponse<T> | null> {
-    if (!(await this.resumeSession())) {
-      return null
-    }
-    return this.dispatch<T>(method, url, config)
+  /**
+   * Reactive-401 refresh for Classic: no token-refresh shortcut exists
+   * on this API, so the only recovery path is a best-effort
+   * {@link resumeSession} from persisted credentials. On success the
+   * shared {@link AuthRetryPolicy} replays the original request.
+   * @returns `true` when the session is authenticated afterwards.
+   */
+  protected override async reauthenticate(): Promise<boolean> {
+    return this.resumeSession()
   }
 
   protected override async syncRegistry(): Promise<void> {

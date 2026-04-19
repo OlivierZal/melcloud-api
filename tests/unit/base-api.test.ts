@@ -41,14 +41,7 @@ class TestAPI extends BaseAPI {
 
   public readonly performSessionRefreshMock = vi.fn<() => Promise<void>>()
 
-  public readonly retryAuthMock =
-    vi.fn<
-      (
-        method: string,
-        url: string,
-        config: Record<string, unknown>,
-      ) => Promise<HttpResponse | null>
-    >()
+  public readonly reauthenticateMock = vi.fn<() => Promise<boolean>>()
 
   public readonly syncRegistryMock = vi.fn<() => Promise<void>>()
 
@@ -72,7 +65,7 @@ class TestAPI extends BaseAPI {
     this.getAuthHeadersMock.mockReturnValue({})
     this.needsSessionRefreshMock.mockReturnValue(false)
     this.performSessionRefreshMock.mockResolvedValue()
-    this.retryAuthMock.mockResolvedValue(null)
+    this.reauthenticateMock.mockResolvedValue(false)
     this.doAuthenticateMock.mockResolvedValue()
     this.syncRegistryMock.mockResolvedValue()
     this.tryReuseSessionMock.mockResolvedValue(false)
@@ -122,12 +115,8 @@ class TestAPI extends BaseAPI {
     return this.performSessionRefreshMock()
   }
 
-  protected override async retryAuth<T>(
-    method: string,
-    url: string,
-    config: Record<string, unknown>,
-  ): Promise<HttpResponse<T> | null> {
-    return cast(await this.retryAuthMock(method, url, config))
+  protected override async reauthenticate(): Promise<boolean> {
+    return this.reauthenticateMock()
   }
 
   protected override async syncRegistry(): Promise<void> {
@@ -213,12 +202,13 @@ describe('baseAPI shared request pipeline', () => {
         status: 200,
       })
       mockRequest.mockRejectedValueOnce(createUnauthorizedError('/data'))
-      api.retryAuthMock.mockResolvedValueOnce(retryResponse)
+      api.reauthenticateMock.mockResolvedValueOnce(true)
+      mockRequest.mockResolvedValueOnce(retryResponse)
 
       const result = await api.callRequest('get', '/data')
 
       expect(result.data).toStrictEqual({ retried: true })
-      expect(api.retryAuthMock).toHaveBeenCalledTimes(1)
+      expect(api.reauthenticateMock).toHaveBeenCalledTimes(1)
     })
 
     it('consumes the retry guard so a second 401 is not retried', async () => {
@@ -228,7 +218,8 @@ describe('baseAPI shared request pipeline', () => {
         status: 200,
       })
       mockRequest.mockRejectedValueOnce(createUnauthorizedError('/data'))
-      api.retryAuthMock.mockResolvedValueOnce(retryResponse)
+      api.reauthenticateMock.mockResolvedValueOnce(true)
+      mockRequest.mockResolvedValueOnce(retryResponse)
       await api.callRequest('get', '/data')
 
       // Second 401 within the retry delay window
@@ -239,7 +230,7 @@ describe('baseAPI shared request pipeline', () => {
       )
 
       // RetryAuth should NOT have been called a second time
-      expect(api.retryAuthMock).toHaveBeenCalledTimes(1)
+      expect(api.reauthenticateMock).toHaveBeenCalledTimes(1)
     })
 
     it('refills the retry guard after the delay', async () => {
@@ -249,7 +240,8 @@ describe('baseAPI shared request pipeline', () => {
         status: 200,
       })
       mockRequest.mockRejectedValueOnce(createUnauthorizedError('/data'))
-      api.retryAuthMock.mockResolvedValueOnce(retryResponse)
+      api.reauthenticateMock.mockResolvedValueOnce(true)
+      mockRequest.mockResolvedValueOnce(retryResponse)
       await api.callRequest('get', '/data')
 
       // Advance past the retry delay (1000ms)
@@ -262,11 +254,12 @@ describe('baseAPI shared request pipeline', () => {
         headers: {},
         status: 200,
       })
-      api.retryAuthMock.mockResolvedValueOnce(retryResponse2)
+      api.reauthenticateMock.mockResolvedValueOnce(true)
+      mockRequest.mockResolvedValueOnce(retryResponse2)
       const result = await api.callRequest('get', '/data')
 
       expect(result.data).toStrictEqual({ second: true })
-      expect(api.retryAuthMock).toHaveBeenCalledTimes(2)
+      expect(api.reauthenticateMock).toHaveBeenCalledTimes(2)
     })
   })
 

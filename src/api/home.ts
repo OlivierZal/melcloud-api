@@ -1,4 +1,3 @@
-import type { HttpResponse } from '../http/index.ts'
 import type {
   ClassicLoginCredentials,
   HomeAtaValues,
@@ -400,19 +399,20 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     await this.resumeSession()
   }
 
-  protected async retryAuth<T>(
-    method: string,
-    url: string,
-    config: Record<string, unknown>,
-  ): Promise<HttpResponse<T> | null> {
+  /**
+   * Reactive-401 refresh for Home. The access token was just
+   * rejected, so we clear it before trying recovery: first the
+   * cheap refresh-token exchange, then a full {@link resumeSession}
+   * as fallback. The shared {@link AuthRetryPolicy} replays the
+   * original request on success.
+   * @returns `true` when the instance is authenticated afterwards.
+   */
+  protected override async reauthenticate(): Promise<boolean> {
     if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
-      return this.dispatch<T>(method, url, config)
+      return true
     }
     this.#clearPersistedSession()
-    if (!(await this.resumeSession())) {
-      return null
-    }
-    return this.dispatch<T>(method, url, config)
+    return this.resumeSession()
   }
 
   protected override async syncRegistry(): Promise<void> {
