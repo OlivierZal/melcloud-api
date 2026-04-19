@@ -12,7 +12,7 @@ import type {
   HomeUser,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
-import { setting, syncDevices } from '../decorators/index.ts'
+import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import {
@@ -136,32 +136,17 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /**
    * Create and initialize a MELCloud Home API instance.
    *
-   * If the SettingManager holds a persisted session (tokens + unexpired
-   * expiry), the instance reuses it via `getUser()` and skips re-login.
-   * If the access token is expired but a refresh token is available,
-   * a token refresh is attempted. Otherwise, falls back to a full
-   * `authenticate()` flow.
-   *
-   * In every successful branch the registry is populated before return
-   * — `authenticate()` does so via its template method, and the
-   * reuse-session branch calls `list()` (which hydrates both
-   * `context`/`user` and the device registry in a single /context
-   * request). A successful return therefore guarantees a non-empty
-   * registry (regression guard for the #1281-class of bug, applied to
-   * the persisted-session path as well as the fresh-login path).
+   * Delegates post-construction setup to {@link BaseAPI.initialize}
+   * so the #1281-class invariant is enforced uniformly: the reuse
+   * path, the fresh-auth path, and the "no credentials" path all go
+   * through the same template and cannot leave the registry empty
+   * while claiming success.
    * @param config - Optional configuration.
    * @returns The initialized HomeAPI instance.
    */
   public static async create(config?: HomeAPIConfig): Promise<HomeAPI> {
     const api = new HomeAPI(config)
-    if (api.#hasPersistedSession()) {
-      await api.list()
-      if (api.context !== null) {
-        return api
-      }
-      api.#clearPersistedSession()
-    }
-    await api.authenticate()
+    await api.initialize()
     return api
   }
 
@@ -307,10 +292,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return this.#user !== null
   }
 
-  public override async syncRegistry(): Promise<void> {
-    await this.list()
-  }
-
   /**
    * Send an ATA-unit setpoint update to the BFF. On success, re-sync
    * the registry so it reflects the server-side effect of the write
@@ -318,11 +299,13 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * skip the sync — the server state is presumed unchanged, so a
    * re-fetch would be wasted work.
    *
-   * Swallows PUT errors — the return flag signals success/failure so
-   * integrating hosts (e.g. Homey drivers) can treat a transient
-   * failure as a no-op and retry on the next sync. Sync errors after a
-   * successful PUT are logged and swallowed: they must not flip the
-   * return value to `false`, since the mutation did land on the server.
+   * Boolean surface is preserved for integrating hosts (e.g. Homey
+   * drivers) that treat transient failures as a no-op and retry on
+   * the next sync. The actual mutation + post-sync orchestration
+   * lives in {@link #putAndSync}, where `@fetchDevices({ when: 'after' })`
+   * applies the same post-mutation-refresh contract as Classic
+   * facades — just resolved via `syncRegistry()` instead of
+   * `api.fetch()`.
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
    * @returns `true` when the update succeeded, `false` otherwise.
@@ -332,16 +315,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     values: HomeAtaValues,
   ): Promise<boolean> {
     try {
-      await this.request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
+      await this.putAndSync(id, values)
+      return true
     } catch {
       return false
     }
-    try {
-      await this.syncRegistry()
-    } catch (error) {
-      this.logger.error('Failed to refresh registry after updateValues:', error)
-    }
-    return true
   }
 
   protected override async doAuthenticate({
@@ -397,6 +375,51 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return this.dispatch<T>(method, url, config)
   }
 
+  protected override async syncRegistry(): Promise<void> {
+    await this.list()
+  }
+
+  /**
+   * Reuse a persisted Home session by issuing the standard
+   * `list()` call, which hits `/context` once and hydrates both
+   * `context`/`user` AND the device registry in a single request.
+   * A valid token returns populated context; an expired one triggers
+   * the request pipeline's 401-retry + refresh-token flow; anything
+   * else falls through to a full authenticate.
+   * @returns `true` when persisted tokens verified against the BFF
+   * (registry populated via the same round-trip); `false` otherwise.
+   */
+  protected override async tryReuseSession(): Promise<boolean> {
+    if (!this.#hasPersistedSession()) {
+      return false
+    }
+    await this.list()
+    if (this.context !== null) {
+      return true
+    }
+    this.#clearPersistedSession()
+    return false
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Private — token management                                      */
+  /* ---------------------------------------------------------------- */
+  /**
+   * Core of {@link updateValues}: perform the PUT and, on success,
+   * trigger a post-mutation registry refresh via
+   * `@fetchDevices({ when: 'after' })`. Throws on PUT failure so the
+   * decorator skips the sync (failed mutation → server state
+   * unchanged → re-fetch wasted). Sync failures after a successful
+   * PUT are logged and swallowed by the decorator itself, preserving
+   * the "mutation landed" truth even when the post-refresh flakes.
+   * @param id - Target device id.
+   * @param values - Partial setpoint payload.
+   */
+  @fetchDevices({ when: 'after' })
+  private async putAndSync(id: string, values: HomeAtaValues): Promise<void> {
+    await this.request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
+  }
+
   #clearPersistedSession(): void {
     this.#user = null
     this.accessToken = ''
@@ -404,9 +427,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     this.expiry = ''
   }
 
-  /* ---------------------------------------------------------------- */
-  /*  Private — token management                                      */
-  /* ---------------------------------------------------------------- */
   /**
    * Fetch the user context from the BFF and update local state.
    * Shared by `getUser()` and `list()`.

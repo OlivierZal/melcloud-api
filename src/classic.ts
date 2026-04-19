@@ -99,7 +99,7 @@ export {
   ClassicFanSpeed as FanSpeed,
   CLASSIC_FLAG_UNCHANGED as FLAG_UNCHANGED,
   ClassicFloor as Floor,
-  classicFetchDevices as fetchDevices,
+  fetchDevices,
   ClassicHorizontal as Horizontal,
   hasClassicZone2 as hasZone2,
   classicHeatModes as heatModes,

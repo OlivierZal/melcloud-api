@@ -13,9 +13,9 @@ import {
   ClassicOperationMode,
 } from '../../src/constants.ts'
 import {
-  classicFetchDevices,
   classicUpdateDevice,
   classicUpdateDevices,
+  fetchDevices,
   syncDevices,
 } from '../../src/decorators/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
@@ -144,27 +144,56 @@ const resolvePowerData = async (): Promise<{ Alpha: null; Power: true }> => {
   return result
 }
 
-describe(classicFetchDevices, () => {
-  it('calls api.fetch before the target method by default', async () => {
-    const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>()
-    const target = vi
-      .fn<(...args: unknown[]) => Promise<never>>()
-      .mockResolvedValue(cast('result'))
-    const decorated = classicFetchDevices()(
-      target,
-      mock<ClassMethodDecoratorContext>(),
+const setupFetchDevices = (
+  options?: Parameters<typeof fetchDevices>[0],
+): { callOrder: string[]; invoke: () => Promise<void> } => {
+  const callOrder: string[] = []
+  const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/require-await -- ClassicAPIAdapter['fetch'] is async
+    async () => {
+      callOrder.push('fetch')
+      return cast([])
+    },
+  )
+  const target = vi
+    .fn<(...args: unknown[]) => Promise<never>>()
+    .mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+      async () => {
+        callOrder.push('target')
+        return cast('result')
+      },
     )
-    const context = { api: mock<ClassicAPIAdapter>({ fetch: fetchMock }) }
-    await decorated.call(context)
+  const decorated = fetchDevices(options)(
+    target,
+    mock<ClassMethodDecoratorContext>(),
+  )
+  const context = { api: mock<ClassicAPIAdapter>({ fetch: fetchMock }) }
+  return { callOrder, invoke: async () => decorated.call(context) }
+}
 
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(target).toHaveBeenCalledTimes(1)
+describe(fetchDevices, () => {
+  it.each([
+    { expected: ['fetch', 'target'], label: 'default (before)', options: undefined },
+    { expected: ['fetch', 'target'], label: 'when=before', options: { when: 'before' as const } },
+    { expected: ['target', 'fetch'], label: 'when=after', options: { when: 'after' as const } },
+  ])('invokes api.fetch and target in the correct order: $label', async ({ expected, options }) => {
+    const { callOrder, invoke } = setupFetchDevices(options)
+    await invoke()
+
+    expect(callOrder).toStrictEqual(expected)
   })
 
-  it('calls api.fetch after the target method when when=after', async () => {
+  it('prefers syncRegistry() over api.fetch() when both are exposed', async () => {
     const callOrder: string[] = []
+    const syncRegistry = vi.fn<() => Promise<void>>().mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/require-await -- signature is async
+      async () => {
+        callOrder.push('syncRegistry')
+      },
+    )
     const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockImplementation(
-      // eslint-disable-next-line @typescript-eslint/require-await -- ClassicAPIAdapter['fetch'] is async
+      // eslint-disable-next-line @typescript-eslint/require-await -- signature is async
       async () => {
         callOrder.push('fetch')
         return cast([])
@@ -172,21 +201,60 @@ describe(classicFetchDevices, () => {
     )
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
-      .mockImplementation(
-        // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
-        async () => {
-          callOrder.push('target')
-          return cast('result')
-        },
-      )
-    const decorated = classicFetchDevices({ when: 'after' })(
+      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+      .mockImplementation(async () => cast('result'))
+    const decorated = fetchDevices({ when: 'after' })(
       target,
       mock<ClassMethodDecoratorContext>(),
     )
-    const context = { api: mock<ClassicAPIAdapter>({ fetch: fetchMock }) }
+    const context = {
+      api: mock<ClassicAPIAdapter>({ fetch: fetchMock }),
+      syncRegistry,
+    }
     await decorated.call(context)
 
-    expect(callOrder).toStrictEqual(['target', 'fetch'])
+    expect(callOrder).toStrictEqual(['syncRegistry'])
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('silently no-ops when host exposes neither syncRegistry nor api.fetch', async () => {
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+      .mockImplementation(async () => cast('result'))
+    const decorated = fetchDevices({ when: 'after' })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(decorated.call({})).resolves.toBe('result')
+    expect(target).toHaveBeenCalledTimes(1)
+  })
+
+  it('logs via logger.error when when=after and sync throws', async () => {
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+      .mockImplementation(async () => cast('result'))
+    const syncRegistry = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValue(new Error('sync boom'))
+    const logger = {
+      error: vi.fn<(...args: unknown[]) => void>(),
+      log: vi.fn<(...args: unknown[]) => void>(),
+    }
+    const decorated = fetchDevices({ when: 'after' })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(decorated.call({ logger, syncRegistry })).resolves.toBe(
+      'result',
+    )
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to refresh registry after mutation:',
+      expect.any(Error),
+    )
   })
 })
 

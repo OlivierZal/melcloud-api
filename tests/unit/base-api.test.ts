@@ -32,6 +32,8 @@ const mockRequest = vi.spyOn(mockHttpClient, 'request')
  * request pipeline without any Classic/Home-specific logic.
  */
 class TestAPI extends BaseAPI {
+  public readonly doAuthenticateMock = vi.fn<() => Promise<void>>()
+
   public readonly ensureSessionMock = vi.fn<() => Promise<void>>()
 
   public readonly getAuthHeadersMock = vi.fn<() => Record<string, string>>()
@@ -44,6 +46,10 @@ class TestAPI extends BaseAPI {
         config: Record<string, unknown>,
       ) => Promise<HttpResponse | null>
     >()
+
+  public readonly syncRegistryMock = vi.fn<() => Promise<void>>()
+
+  public readonly tryReuseSessionMock = vi.fn<() => Promise<boolean>>()
 
   public constructor(
     config: BaseAPIConfig = {},
@@ -63,6 +69,9 @@ class TestAPI extends BaseAPI {
     this.getAuthHeadersMock.mockReturnValue({})
     this.ensureSessionMock.mockResolvedValue()
     this.retryAuthMock.mockResolvedValue(null)
+    this.doAuthenticateMock.mockResolvedValue()
+    this.syncRegistryMock.mockResolvedValue()
+    this.tryReuseSessionMock.mockResolvedValue(false)
   }
 
   /** Expose the protected dispatch for direct testing. */
@@ -88,14 +97,8 @@ class TestAPI extends BaseAPI {
     return true
   }
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
-  public override async syncRegistry(): Promise<void> {
-    await Promise.resolve()
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
   protected override async doAuthenticate(): Promise<void> {
-    await Promise.resolve()
+    return this.doAuthenticateMock()
   }
 
   protected override async ensureSession(): Promise<void> {
@@ -112,6 +115,14 @@ class TestAPI extends BaseAPI {
     config: Record<string, unknown>,
   ): Promise<HttpResponse<T> | null> {
     return cast(await this.retryAuthMock(method, url, config))
+  }
+
+  protected override async syncRegistry(): Promise<void> {
+    return this.syncRegistryMock()
+  }
+
+  protected override async tryReuseSession(): Promise<boolean> {
+    return this.tryReuseSessionMock()
   }
 }
 
@@ -472,6 +483,60 @@ describe('baseAPI shared request pipeline', () => {
           headers: { 'X-Auth': 'tok', 'X-Custom': 'val' },
         }),
       )
+    })
+  })
+
+  /*
+   * Template contract: `initialize()` is the sole lifecycle entry
+   * point that subclass `create()` factories may call. It guarantees
+   * that on return, either the persisted session has been reused
+   * (tryReuseSession=true and, by contract, registry populated) or
+   * `authenticate()` has run (which syncs the registry via its own
+   * template). Regression guard for the #1281-class bug on the
+   * reuse-session branch that the original PR didn't cover.
+   */
+  describe('initialize() template', () => {
+    it('exits early when tryReuseSession returns true and skips authenticate', async () => {
+      api.tryReuseSessionMock.mockResolvedValueOnce(true)
+
+      await api.initialize()
+
+      expect(api.tryReuseSessionMock).toHaveBeenCalledTimes(1)
+      expect(api.doAuthenticateMock).not.toHaveBeenCalled()
+      expect(api.syncRegistryMock).not.toHaveBeenCalled()
+    })
+
+    it('falls through to authenticate when tryReuseSession returns false', async () => {
+      api.tryReuseSessionMock.mockResolvedValueOnce(false)
+
+      await api.initialize()
+
+      expect(api.tryReuseSessionMock).toHaveBeenCalledTimes(1)
+      // authenticate() is a no-op without credentials, so
+      // doAuthenticate is never reached — the point is simply that we
+      // attempted the full auth flow rather than bailing out silently.
+      expect(api.doAuthenticateMock).not.toHaveBeenCalled()
+    })
+
+    it('runs doAuthenticate + syncRegistry when credentials are persisted', async () => {
+      const store: Record<string, string> = {
+        password: 'p',
+        username: 'u',
+      }
+      api = new TestAPI({
+        settingManager: {
+          get: (key: string): string | null => store[key] ?? null,
+          set: (key: string, value: string): void => {
+            store[key] = value
+          },
+        },
+      })
+      api.tryReuseSessionMock.mockResolvedValueOnce(false)
+
+      await api.initialize()
+
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
+      expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
     })
   })
 })

@@ -229,6 +229,18 @@ const setupSuccessfulLogin = (): void => {
 
 const HOUR_MS = 60 * 60 * 1000
 
+const persistedSessionStore = (
+  overrides: Record<string, string> = {},
+): ReturnType<typeof createSettingStore> =>
+  createSettingStore({
+    accessToken: 'persisted-token',
+    expiry: new Date(Date.now() + HOUR_MS).toISOString(),
+    password: 'pass',
+    refreshToken: 'persisted-refresh',
+    username: 'user@test.com',
+    ...overrides,
+  })
+
 const httpUnauthorized = (url = '/context'): HttpError =>
   new HttpError(
     'Unauthorized',
@@ -503,7 +515,7 @@ describe('melcloud home API', () => {
 
       expect(isSuccess).toBe(true)
       expect(logger.error).toHaveBeenCalledWith(
-        'Failed to refresh registry after updateValues:',
+        'Failed to refresh registry after mutation:',
         expect.any(Error),
       )
     })
@@ -1316,76 +1328,55 @@ describe('melcloud home API', () => {
   })
 
   describe('session persistence', () => {
-    it('should reuse persisted session and skip OIDC re-login', async () => {
-      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { settingManager } = createSettingStore({
-        accessToken: 'persisted-token',
-        expiry: futureExpiry,
-        password: 'pass',
-        refreshToken: 'persisted-refresh',
-        username: 'user@test.com',
-      })
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-
-      const api = await melCloudHomeApi.create({
+    /* eslint-disable unicorn/consistent-function-scoping -- captures describe-scoped `melCloudHomeApi` (deferred import) */
+    const createFromPersistedStore = async (
+      settingManager: ReturnType<typeof createSettingStore>['settingManager'],
+    ): ReturnType<typeof melCloudHomeApi.create> =>
+      melCloudHomeApi.create({
         baseURL: BASE_URL,
         httpClient: mockHttpClient,
         settingManager,
       })
+    /* eslint-enable unicorn/consistent-function-scoping */
 
-      expect(api.isAuthenticated()).toBe(true)
-      expect(mockRequest).toHaveBeenCalledTimes(1)
-      expect(mockRequest).toHaveBeenCalledWith(
-        expect.objectContaining({ url: '/context' }),
-      )
-    })
+    describe('valid persisted session', () => {
+      it('reuses the session and hits /context exactly once', async () => {
+        const { settingManager } = persistedSessionStore()
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
-    /*
-     * Regression guard for the persisted-session branch of the
-     * #1281-class of bug: before this fix, `create()` with a valid
-     * persisted session returned an instance whose device registry
-     * was still empty (only `context`/`user` were hydrated). Now the
-     * reuse path goes through `list()`, which populates both in a
-     * single /context request.
-     */
-    it('populates the device registry on the persisted-session path', async () => {
-      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { settingManager } = createSettingStore({
-        accessToken: 'persisted-token',
-        expiry: futureExpiry,
-        password: 'pass',
-        refreshToken: 'persisted-refresh',
-        username: 'user@test.com',
-      })
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        const api = await createFromPersistedStore(settingManager)
 
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        httpClient: mockHttpClient,
-        settingManager,
+        expect(api.isAuthenticated()).toBe(true)
+        expect(mockRequest).toHaveBeenCalledTimes(1)
+        expect(mockRequest).toHaveBeenCalledWith(
+          expect.objectContaining({ url: '/context' }),
+        )
       })
 
-      expect(api.registry.getAll().length).toBeGreaterThan(0)
+      /*
+       * Regression guard for the persisted-session branch of the
+       * #1281-class of bug: before this fix, `create()` with a valid
+       * persisted session returned an instance whose device registry
+       * was still empty (only `context`/`user` were hydrated). Now
+       * the reuse path goes through `list()`, which populates both
+       * in a single /context request.
+       */
+      it('populates the device registry on the persisted-session path', async () => {
+        const { settingManager } = persistedSessionStore()
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+        const api = await createFromPersistedStore(settingManager)
+
+        expect(api.registry.getAll().length).toBeGreaterThan(0)
+      })
     })
 
     it('should fall back to OIDC when persisted session is rejected', async () => {
-      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { settingManager } = createSettingStore({
-        accessToken: 'persisted-token',
-        expiry: futureExpiry,
-        password: 'pass',
-        refreshToken: 'persisted-refresh',
-        username: 'user@test.com',
-      })
-      // First getUser() call fails -> triggers fallback to full authenticate()
+      const { settingManager } = persistedSessionStore()
       mockRequest.mockRejectedValueOnce(new Error('401 Unauthorized'))
       setupSuccessfulLogin()
 
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        httpClient: mockHttpClient,
-        settingManager,
-      })
+      const api = await createFromPersistedStore(settingManager)
 
       expect(api.isAuthenticated()).toBe(true)
     })
@@ -1399,11 +1390,7 @@ describe('melcloud home API', () => {
       })
       mockRequest.mockRejectedValueOnce(new Error('401 Unauthorized'))
 
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        httpClient: mockHttpClient,
-        settingManager,
-      })
+      const api = await createFromPersistedStore(settingManager)
 
       expect(api.isAuthenticated()).toBe(false)
       expect(setSpy).toHaveBeenCalledWith('accessToken', '')

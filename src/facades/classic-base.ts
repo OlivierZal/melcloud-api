@@ -13,8 +13,8 @@ import type {
   ClassicRegistry,
 } from '../entities/index.ts'
 import {
-  classicFetchDevices,
   classicUpdateDevices,
+  fetchDevices,
   syncDevices,
 } from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
@@ -160,7 +160,18 @@ export abstract class BaseFacade<
     ;({ id: this.id } = instance)
   }
 
-  @classicFetchDevices({ when: 'after' })
+  /*
+   * Uses `@fetchDevices({ when: 'after' })` rather than `@syncDevices()`
+   * because the update response is a success/failure envelope with no
+   * device payload — notifying onSync without a genuine registry
+   * refresh would be a stale signal. The trade-off: onSync now fires
+   * from `api.fetch()` at the API level, carrying `{ type }` only —
+   * not the facade's `{ ids, type }` shape with specific device ids.
+   * Consumers listening to onSync should treat any call as "registry
+   * changed, re-inspect" rather than keying on the payload. Same
+   * applies to updateHolidayMode below.
+   */
+  @fetchDevices({ when: 'after' })
   public async updateFrostProtection({
     isEnabled = true,
     max,
@@ -194,7 +205,7 @@ export abstract class BaseFacade<
     return data
   }
 
-  @classicFetchDevices({ when: 'after' })
+  @fetchDevices({ when: 'after' })
   public async updateHolidayMode({
     from,
     to,

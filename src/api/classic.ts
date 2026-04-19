@@ -224,17 +224,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   /**
    * Create and initialize a MELCloud Classic API instance.
    *
-   * Runs an initial `/User/ListDevices` fetch to populate the registry
-   * so facades built from `api.registry` are usable immediately. When
-   * the caller provides credentials (directly or via a SettingManager)
-   * and no persisted `contextKey` is available, the first protected
-   * call will transparently trigger {@link BaseAPI.authenticate}.
+   * Delegates post-construction setup to {@link BaseAPI.initialize}
+   * so the #1281-class invariant is enforced uniformly: on return,
+   * either the registry is populated or the instance is in a
+   * documented empty state (no credentials, no persisted session).
    * @param config - Optional configuration for the Classic API client.
    * @returns The initialized ClassicAPI instance.
    */
   public static async create(config?: ClassicAPIConfig): Promise<ClassicAPI> {
     const api = new ClassicAPI(config)
-    await api.fetch()
+    await api.initialize()
     return api
   }
 
@@ -462,10 +461,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     }
   }
 
-  public override async syncRegistry(): Promise<void> {
-    await this.fetch()
-  }
-
   /**
    * Update frost protection settings for a zone.
    *
@@ -628,6 +623,27 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       return null
     }
     return this.dispatch<T>(method, url, config)
+  }
+
+  protected override async syncRegistry(): Promise<void> {
+    await this.fetch()
+  }
+
+  /**
+   * Classic's request pipeline is auth-self-healing: a call that
+   * arrives with a stale `contextKey` 401s, triggers retry-auth via
+   * stored credentials, and succeeds on the second try. A single
+   * `fetch()` therefore covers both "valid session" and "expired
+   * session, re-auth from stored creds" in one round-trip. We report
+   * `true` iff that produced an authenticated state; otherwise the
+   * template falls through to {@link authenticate}, preserving the
+   * explicit-credentials path and leaving a consistent empty state
+   * when neither a session nor credentials are available.
+   * @returns `true` when fetch yielded an authenticated session.
+   */
+  protected override async tryReuseSession(): Promise<boolean> {
+    await this.fetch()
+    return this.isAuthenticated()
   }
 
   #applyOptionalConfig({

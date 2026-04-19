@@ -290,6 +290,45 @@ describe('api lifecycle', () => {
   })
 
   /*
+   * End-to-end cascade: zone-level writes (frost protection / holiday
+   * mode) return envelopes with no device payload — we rely on
+   * `@classicFetchDevices({ when: 'after' })` to trigger `api.fetch()`
+   * post-mutation, which in turn fires `onSync` via its own
+   * `@syncDevices()` wrap. This test closes that wiring end-to-end at
+   * the ClassicAPI level, since unit-level facade tests use a mock
+   * adapter where the cascade can't be observed.
+   */
+  it('facade.updateFrostProtection cascades to onSync via api.fetch', async () => {
+    const onSync = vi.fn<SyncCallback>()
+    const api = await melCloudApi.create({
+      autoSyncInterval: 0,
+      httpClient: mockHttpClient,
+      onSync,
+    })
+    const manager = new ClassicFacadeManager(api, api.registry)
+    const building = manager.get(
+      defined(api.registry.buildings.getById(1)),
+    )
+
+    mockRequest.mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/require-await -- vitest mockImplementation signature requires async
+      async (config) =>
+        config.url === '/FrostProtection/Update' ?
+          cast({
+            data: { AttributeErrors: null, Success: true },
+            headers: {},
+            status: 200,
+          })
+        : cast({ data: buildingResponse, headers: {}, status: 200 }),
+    )
+    onSync.mockClear()
+
+    await building.updateFrostProtection({ max: 14, min: 6 })
+
+    expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+  })
+
+  /*
    * End-to-end resilience: exercises the `withRetryBackoff` wrapper
    * around `list()` (the classic heartbeat) to confirm a transient
    * 5xx is recovered without the consumer seeing it.

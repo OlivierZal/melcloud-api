@@ -144,7 +144,25 @@ export abstract class BaseAPI implements Disposable {
     config: Record<string, unknown>,
   ): Promise<HttpResponse<T> | null>
 
-  public abstract syncRegistry(): Promise<void>
+  protected abstract syncRegistry(): Promise<void>
+
+  /**
+   * Subclass hook: attempt to reuse an existing persisted session
+   * without going through a full re-authentication. Implementations
+   * must return `true` ONLY when the session has been **verified
+   * against the server** (a single credentialed request that also
+   * populates the device registry is the canonical shape). A `true`
+   * return therefore carries two guarantees: the instance is
+   * authenticated, and its registry reflects server state.
+   *
+   * Returning `false` is the contract for "no usable session" — the
+   * template `initialize()` will then fall through to a full
+   * {@link authenticate} flow (which has its own registry sync
+   * guarantee).
+   * @returns `true` when a persisted session has been reused and the
+   * registry is populated; `false` to fall through to authenticate.
+   */
+  protected abstract tryReuseSession(): Promise<boolean>
 
   /**
    * Authenticate against MELCloud and populate the device registry.
@@ -178,6 +196,31 @@ export abstract class BaseAPI implements Disposable {
 
   public clearSync(): void {
     this.#syncManager.clear()
+  }
+
+  /**
+   * Post-construction lifecycle hook. Every subclass `create()`
+   * factory must delegate to this method — it is the sole path that
+   * guarantees the #1281-class invariant at instance-creation time:
+   * a successful return leaves the registry populated whenever
+   * credentials or a persisted session are available.
+   *
+   * Two-branch template:
+   * 1. {@link tryReuseSession} — if the subclass can reuse a
+   *    persisted session (and populate the registry in the process),
+   *    we are done.
+   * 2. Otherwise, {@link authenticate} runs — which has its own
+   *    post-auth registry sync (compile-time enforced above).
+   *
+   * The "no credentials + no session" case falls through both
+   * branches and leaves the instance intentionally empty; callers
+   * should check {@link isAuthenticated} after `create()` returns.
+   */
+  public async initialize(): Promise<void> {
+    if (await this.tryReuseSession()) {
+      return
+    }
+    await this.authenticate()
   }
 
   public [Symbol.dispose](): void {
