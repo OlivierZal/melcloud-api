@@ -75,6 +75,11 @@ const parseUser = (data: HomeContext): HomeUser => ({
  * `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros
  * (e.g. `2026-04-19T00:00:00.0000000`). Anything shorter is silently
  * truncated to an empty window by the BFF.
+ *
+ * Parse with `{ zone: 'utc' }` so offset-less inputs (e.g. `'2026-03-01'`)
+ * are read as UTC rather than being re-interpreted through the host's
+ * local timezone — otherwise the formatted output drifts by the host's
+ * current offset.
  */
 const toReportDate = (iso: string): string =>
   DateTime.fromISO(iso, { zone: 'utc' }).toFormat(
@@ -84,7 +89,8 @@ const toReportDate = (iso: string): string =>
 /*
  * `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
  * space and no seconds. Seconds or an ISO `T` separator produce an empty
- * payload rather than an error.
+ * payload rather than an error. Same UTC-parse rationale as
+ * {@link toReportDate}.
  */
 const toTelemetryDate = (iso: string): string =>
   DateTime.fromISO(iso, { zone: 'utc' }).toFormat('yyyy-MM-dd HH:mm')
