@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon'
+
 import type {
   ClassicLoginCredentials,
   HomeAtaValues,
@@ -46,9 +48,9 @@ const ATA_UNIT_PATH = '/monitor/ataunit'
 const CONTEXT_PATH = '/context'
 const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
 const DEFAULT_TIMEOUT_MS = 30_000
-const ENERGY_PATH = '/monitor/telemetry/energy'
+const ENERGY_PATH = '/telemetry/telemetry/energy'
 const MILLISECONDS_IN_SECOND = 1000
-const REPORT_PATH = '/report/trendsummary'
+const REPORT_PATH = '/report/v1/trendsummary'
 const RETRY_DELAY = 1000
 const SECONDS_PER_MINUTE = 60
 const SESSION_REFRESH_AHEAD_MINUTES = 5
@@ -56,7 +58,7 @@ const SESSION_REFRESH_AHEAD_MINUTES = 5
 // no request pays the full OIDC round-trip on its critical path.
 const SESSION_REFRESH_AHEAD_MS =
   SESSION_REFRESH_AHEAD_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_IN_SECOND
-const SIGNAL_PATH = '/monitor/telemetry/actual'
+const SIGNAL_PATH = '/telemetry/telemetry/actual'
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
@@ -68,6 +70,30 @@ const parseUser = (data: HomeContext): HomeUser => ({
   lastName: data.lastname,
   sub: data.id,
 })
+
+/*
+ * `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros
+ * (e.g. `2026-04-19T00:00:00.0000000`). Anything shorter is silently
+ * truncated to an empty window by the BFF.
+ *
+ * Parse with `{ zone: 'utc' }` so offset-less inputs (e.g. `'2026-03-01'`)
+ * are read as UTC rather than being re-interpreted through the host's
+ * local timezone — otherwise the formatted output drifts by the host's
+ * current offset.
+ */
+const toReportDate = (iso: string): string =>
+  DateTime.fromISO(iso, { zone: 'utc' }).toFormat(
+    "yyyy-MM-dd'T'HH:mm:ss'.0000000'",
+  )
+
+/*
+ * `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
+ * space and no seconds. Seconds or an ISO `T` separator produce an empty
+ * payload rather than an error. Same UTC-parse rationale as
+ * {@link toReportDate}.
+ */
+const toTelemetryDate = (iso: string): string =>
+  DateTime.fromISO(iso, { zone: 'utc' }).toFormat('yyyy-MM-dd HH:mm')
 
 /**
  * MELCloud Home API client using the mobile BFF at
@@ -182,7 +208,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns Success with the telemetry bundle, or a typed failure.
    */
   @validate({
-    context: 'BFF /monitor/telemetry/energy',
+    context: 'BFF /telemetry/telemetry/energy',
     schema: HomeEnergyDataSchema,
   })
   public async getEnergy(
@@ -194,8 +220,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       `${ENERGY_PATH}/${id}`,
       {
         params: {
-          ...params,
+          from: toTelemetryDate(params.from),
+          interval: params.interval,
           measure: 'cumulative_energy_consumed_since_last_upload',
+          to: toTelemetryDate(params.to),
         },
       },
     )
@@ -235,7 +263,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns Success with the telemetry bundle, or a typed failure.
    */
   @validate({
-    context: 'BFF /monitor/telemetry/actual',
+    context: 'BFF /telemetry/telemetry/actual',
     schema: HomeEnergyDataSchema,
   })
   public async getSignal(
@@ -245,7 +273,13 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     const { data } = await this.request<HomeEnergyData>(
       'get',
       `${SIGNAL_PATH}/${id}`,
-      { params: { ...params, measure: 'rssi' } },
+      {
+        params: {
+          from: toTelemetryDate(params.from),
+          measure: 'rssi',
+          to: toTelemetryDate(params.to),
+        },
+      },
     )
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
     return data as unknown as Result<HomeEnergyData, HomeError>
@@ -262,7 +296,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns Success with the report datasets, or a typed failure.
    */
   @validate({
-    context: 'BFF /report/trendsummary',
+    context: 'BFF /report/v1/trendsummary',
     schema: HomeReportDataSchema.array(),
   })
   public async getTemperatures(
@@ -270,7 +304,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     params: { from: string; period: string; to: string },
   ): Promise<Result<HomeReportData[], HomeError>> {
     const { data } = await this.request<HomeReportData[]>('get', REPORT_PATH, {
-      params: { ...params, unitId: id },
+      params: {
+        from: toReportDate(params.from),
+        period: params.period,
+        to: toReportDate(params.to),
+        unitId: id,
+      },
     })
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
     return data as unknown as Result<HomeReportData[], HomeError>
