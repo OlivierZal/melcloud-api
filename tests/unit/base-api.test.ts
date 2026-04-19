@@ -126,6 +126,28 @@ class TestAPI extends BaseAPI {
   }
 }
 
+/**
+ * Build a {@link TestAPI} instance wired to a fresh in-memory
+ * SettingManager holding `{ username, password }`. Used by the
+ * `authenticate() vs resumeSession() contract` tests that need a
+ * persisted-credentials scenario without reimplementing the setter
+ * boilerplate per test.
+ */
+const apiWithPersistedCredentials = (
+  overrides: Partial<BaseAPIConfig> = {},
+): TestAPI => {
+  const store: Record<string, string> = { password: 'p', username: 'u' }
+  return new TestAPI({
+    settingManager: {
+      get: (key: string): string | null => store[key] ?? null,
+      set: (key: string, value: string): void => {
+        store[key] = value
+      },
+    },
+    ...overrides,
+  })
+}
+
 describe('baseAPI shared request pipeline', () => {
   // eslint-disable-next-line @typescript-eslint/init-declarations -- Assigned in beforeEach
   let api: TestAPI
@@ -491,12 +513,13 @@ describe('baseAPI shared request pipeline', () => {
    * point that subclass `create()` factories may call. It guarantees
    * that on return, either the persisted session has been reused
    * (tryReuseSession=true and, by contract, registry populated) or
-   * `authenticate()` has run (which syncs the registry via its own
-   * template). Regression guard for the #1281-class bug on the
-   * reuse-session branch that the original PR didn't cover.
+   * `resumeSession()` has run (which itself syncs the registry when
+   * credentials are persisted, or is a no-op otherwise). Regression
+   * guard for the #1281-class bug on the reuse-session branch that
+   * the original PR didn't cover.
    */
   describe('initialize() template', () => {
-    it('exits early when tryReuseSession returns true and skips authenticate', async () => {
+    it('exits early when tryReuseSession returns true', async () => {
       api.tryReuseSessionMock.mockResolvedValueOnce(true)
 
       await api.initialize()
@@ -506,37 +529,16 @@ describe('baseAPI shared request pipeline', () => {
       expect(api.syncRegistryMock).not.toHaveBeenCalled()
     })
 
-    it('falls through to authenticate when tryReuseSession returns false', async () => {
+    it('falls through to resumeSession when tryReuseSession returns false', async () => {
       api.tryReuseSessionMock.mockResolvedValueOnce(false)
 
       await api.initialize()
 
       expect(api.tryReuseSessionMock).toHaveBeenCalledTimes(1)
-      // authenticate() is a no-op without credentials, so
-      // doAuthenticate is never reached — the point is simply that we
-      // attempted the full auth flow rather than bailing out silently.
+      // resumeSession() without persisted credentials is a silent
+      // no-op — doAuthenticate is only reached when credentials are
+      // persisted (see `resumeSession() returns true ...` below).
       expect(api.doAuthenticateMock).not.toHaveBeenCalled()
-    })
-
-    it('runs doAuthenticate + syncRegistry when credentials are persisted', async () => {
-      const store: Record<string, string> = {
-        password: 'p',
-        username: 'u',
-      }
-      api = new TestAPI({
-        settingManager: {
-          get: (key: string): string | null => store[key] ?? null,
-          set: (key: string, value: string): void => {
-            store[key] = value
-          },
-        },
-      })
-      api.tryReuseSessionMock.mockResolvedValueOnce(false)
-
-      await api.initialize()
-
-      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
-      expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -546,7 +548,10 @@ describe('baseAPI shared request pipeline', () => {
    * the best-effort restore entry — it logs and swallows. This
    * describe block pins the observable difference between the two
    * so future refactors cannot collapse them back into a dual-mode
-   * function.
+   * function. Subsumes the former `initialize() → runs doAuthenticate
+   * + syncRegistry when credentials are persisted` test: the
+   * persisted-credentials path is now exercised at its natural unit
+   * (resumeSession) rather than through initialize's indirection.
    */
   describe('authenticate() vs resumeSession() contract', () => {
     it('authenticate() throws when doAuthenticate rejects', async () => {
@@ -574,16 +579,7 @@ describe('baseAPI shared request pipeline', () => {
 
     it('resumeSession() logs + returns false when sign-in fails', async () => {
       const logger = createLogger()
-      const store: Record<string, string> = { password: 'p', username: 'u' }
-      api = new TestAPI({
-        logger,
-        settingManager: {
-          get: (key: string): string | null => store[key] ?? null,
-          set: (key: string, value: string): void => {
-            store[key] = value
-          },
-        },
-      })
+      api = apiWithPersistedCredentials({ logger })
       api.doAuthenticateMock.mockRejectedValueOnce(new Error('rejected'))
 
       const isResumed = await api.resumeSession()
@@ -596,15 +592,7 @@ describe('baseAPI shared request pipeline', () => {
     })
 
     it('resumeSession() returns true and syncs registry on success', async () => {
-      const store: Record<string, string> = { password: 'p', username: 'u' }
-      api = new TestAPI({
-        settingManager: {
-          get: (key: string): string | null => store[key] ?? null,
-          set: (key: string, value: string): void => {
-            store[key] = value
-          },
-        },
-      })
+      api = apiWithPersistedCredentials()
 
       const isResumed = await api.resumeSession()
 

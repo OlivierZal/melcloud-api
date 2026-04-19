@@ -948,8 +948,8 @@ describe('melcloud home API', () => {
 
     it('should not trigger reactive retry during the OIDC flow', async () => {
       /*
-       * PAR request fails with a network error. BaseAPI.authenticate
-       * catches and logs it; no session is established.
+       * PAR request fails with a 401. `resumeSession()` (called from
+       * `initialize()`) catches and logs it; no session is established.
        */
       const logger = createLogger()
       mockFetch.mockRejectedValueOnce(httpUnauthorized())
@@ -972,9 +972,10 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       /*
-       * 401 on list -> reactive retry -> reauth itself fails (PAR rejects).
-       * `authenticate()` returns false, so the original 401 is re-thrown
-       * and list()'s own catch swallows it to return [].
+       * 401 on list -> reactive retry -> resumeSession() itself fails
+       * (PAR rejects). `resumeSession()` returns false, so `retryAuth`
+       * returns null and the original 401 propagates until list()'s
+       * own catch swallows it and resolves to [].
        */
       mockRequest.mockRejectedValueOnce(httpUnauthorized())
       mockFetch.mockRejectedValueOnce(new Error('PAR failed'))
@@ -1559,7 +1560,7 @@ describe('melcloud home API', () => {
         refreshToken: 'old-refresh',
         username: 'user@test.com',
       })
-      // GetUser succeeds with existing token — no OIDC needed for create
+      // list() succeeds with existing token — no OIDC needed for create
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
