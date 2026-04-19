@@ -1,3 +1,4 @@
+import { Duration } from 'luxon'
 import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 
@@ -20,7 +21,8 @@ import {
   syncDevices,
   validate,
 } from '../../src/decorators/index.ts'
-import { NoChangesError } from '../../src/errors/index.ts'
+import { AuthenticationError, NoChangesError, RateLimitError  } from '../../src/errors/index.ts'
+import { HttpError } from '../../src/http/index.ts'
 import { cast, mock } from '../helpers.ts'
 
 const createMockFacade = (
@@ -441,7 +443,7 @@ describe(classicUpdateDevice, () => {
 describe(validate, () => {
   const schema = z.object({ value: z.number() })
 
-  it('returns the parsed payload on success', async () => {
+  it('returns Result.ok with the parsed payload on success', async () => {
     const target = vi
       .fn<(...args: unknown[]) => Promise<unknown>>()
       // eslint-disable-next-line @typescript-eslint/require-await -- target is async
@@ -451,10 +453,13 @@ describe(validate, () => {
       mock<ClassMethodDecoratorContext>(),
     )
 
-    await expect(decorated.call({})).resolves.toStrictEqual({ value: 42 })
+    await expect(decorated.call({})).resolves.toStrictEqual({
+      ok: true,
+      value: { value: 42 },
+    })
   })
 
-  it('returns null + logs on method rejection', async () => {
+  it('returns Result.err(network) + logs on plain error rejection', async () => {
     const logError = vi.fn<(...args: unknown[]) => void>()
     const target = vi
       .fn<(...args: unknown[]) => Promise<unknown>>()
@@ -468,14 +473,14 @@ describe(validate, () => {
       decorated.call({
         logger: { error: logError, log: vi.fn<(...args: unknown[]) => void>() },
       }),
-    ).resolves.toBeNull()
+    ).resolves.toMatchObject({ error: { kind: 'network' }, ok: false })
     expect(logError).toHaveBeenCalledWith(
       '[ctx] request or validation failed:',
       expect.any(Error),
     )
   })
 
-  it('returns null + logs on shape mismatch', async () => {
+  it('returns Result.err(validation) + logs on shape mismatch', async () => {
     const logError = vi.fn<(...args: unknown[]) => void>()
     const target = vi
       .fn<(...args: unknown[]) => Promise<unknown>>()
@@ -490,11 +495,62 @@ describe(validate, () => {
       decorated.call({
         logger: { error: logError, log: vi.fn<(...args: unknown[]) => void>() },
       }),
-    ).resolves.toBeNull()
+    ).resolves.toMatchObject({ error: { kind: 'validation' }, ok: false })
     expect(logError).toHaveBeenCalledWith(
       '[ctx] request or validation failed:',
       expect.anything(),
     )
+  })
+
+  it.each([
+    {
+      error: new AuthenticationError('nope'),
+      expected: { kind: 'unauthorized' } as const,
+      label: 'AuthenticationError → unauthorized',
+    },
+    {
+      error: new RateLimitError('paused', {
+        retryAfter: Duration.fromMillis(5000),
+      }),
+      expected: { kind: 'rate-limited', retryAfterMs: 5000 } as const,
+      label: 'RateLimitError with Duration → rate-limited',
+    },
+    {
+      error: new RateLimitError('paused', { retryAfter: null }),
+      expected: { kind: 'rate-limited', retryAfterMs: null } as const,
+      label: 'RateLimitError with null Duration → rate-limited null',
+    },
+    {
+      error: new HttpError(
+        'Unauthorized',
+        { data: undefined, headers: {}, status: 401 },
+        { url: '/x' },
+      ),
+      expected: { kind: 'unauthorized' } as const,
+      label: '401 HttpError → unauthorized',
+    },
+    {
+      error: new HttpError(
+        'Server error',
+        { data: undefined, headers: {}, status: 500 },
+        { url: '/x' },
+      ),
+      expected: { kind: 'server', status: 500 } as const,
+      label: 'non-401 HttpError → server',
+    },
+  ])('classifies $label', async ({ error, expected }) => {
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockRejectedValue(error)
+    const decorated = validate({ context: 'ctx', schema })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(decorated.call({})).resolves.toMatchObject({
+      error: expected,
+      ok: false,
+    })
   })
 })
 

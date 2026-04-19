@@ -109,6 +109,7 @@ describe(AuthRetryPolicy, () => {
     await expect(policy.run(attempt)).resolves.toBe('retried')
     expect(attempt).toHaveBeenCalledTimes(2)
     expect(reauthenticate).toHaveBeenCalledTimes(1)
+
     guard[Symbol.dispose]()
   })
 
@@ -126,6 +127,7 @@ describe(AuthRetryPolicy, () => {
       }),
     ).rejects.toThrow('Unauthorized')
     expect(reauthenticate).not.toHaveBeenCalled()
+
     guard[Symbol.dispose]()
   })
 
@@ -143,6 +145,7 @@ describe(AuthRetryPolicy, () => {
       }),
     ).rejects.toThrow('Unauthorized')
     expect(reauthenticate).toHaveBeenCalledTimes(1)
+
     guard[Symbol.dispose]()
   })
 
@@ -158,6 +161,7 @@ describe(AuthRetryPolicy, () => {
       }),
     ).rejects.toThrow('Status 500')
     expect(reauthenticate).not.toHaveBeenCalled()
+
     guard[Symbol.dispose]()
   })
 })
@@ -178,6 +182,7 @@ describe(TransientRetryPolicy, () => {
 
     await expect(promise).resolves.toBe('ok')
     expect(onRetry).toHaveBeenCalledTimes(1)
+
     vi.useRealTimers()
   })
 

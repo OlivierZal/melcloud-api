@@ -4,9 +4,11 @@ import type {
   HomeAtaValues,
   HomeBuilding,
   HomeEnergyData,
+  HomeError,
   HomeErrorLogEntry,
   HomeReportData,
   HomeUser,
+  Result,
 } from '../types/index.ts'
 import type { BaseAPIConfig } from './interfaces.ts'
 
@@ -43,19 +45,21 @@ export interface HomeAPI {
   readonly getEnergy: (
     id: string,
     params: { from: string; interval: string; to: string },
-  ) => Promise<HomeEnergyData | null>
+  ) => Promise<Result<HomeEnergyData, HomeError>>
   /** Fetch the error log for a device. */
-  readonly getErrorLog: (id: string) => Promise<HomeErrorLogEntry[]>
+  readonly getErrorLog: (
+    id: string,
+  ) => Promise<Result<HomeErrorLogEntry[], HomeError>>
   /** Fetch WiFi signal strength (RSSI) telemetry for a device. */
   readonly getSignal: (
     id: string,
     params: { from: string; to: string },
-  ) => Promise<HomeEnergyData | null>
+  ) => Promise<Result<HomeEnergyData, HomeError>>
   /** Fetch temperature trend summary for a device. */
   readonly getTemperatures: (
     id: string,
     params: { from: string; period: string; to: string },
-  ) => Promise<HomeReportData[] | null>
+  ) => Promise<Result<HomeReportData[], HomeError>>
   /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
   readonly getUser: () => Promise<HomeUser | null>
   /** Whether a user is currently authenticated (session cookie valid). */

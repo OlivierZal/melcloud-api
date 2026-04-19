@@ -647,7 +647,7 @@ describe('melcloud home API', () => {
       mockRequest.mockResolvedValueOnce(mockResponse(mockErrorLog, {}, 200))
       const result = await api.getErrorLog('device-1')
 
-      expect(result).toStrictEqual(mockErrorLog)
+      expect(result).toStrictEqual({ ok: true, value: mockErrorLog })
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           url: '/monitor/ataunit/device-1/errorlog',
@@ -655,13 +655,13 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return empty array on failure', async () => {
+    it('should return a typed network failure on transport error', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
       const result = await api.getErrorLog('device-1')
 
-      expect(result).toStrictEqual([])
+      expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
     })
   })
 
@@ -676,7 +676,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toStrictEqual(mockReportData)
+      expect(result).toStrictEqual({ ok: true, value: mockReportData })
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
@@ -689,7 +689,7 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return null on failure', async () => {
+    it('should return a typed network failure on transport error', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
@@ -699,7 +699,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toBeNull()
+      expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
     })
   })
 
@@ -714,7 +714,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toStrictEqual(mockEnergyData)
+      expect(result).toStrictEqual({ ok: true, value: mockEnergyData })
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
@@ -727,7 +727,7 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return null on failure', async () => {
+    it('should return a typed network failure on transport error', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
@@ -737,7 +737,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toBeNull()
+      expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
     })
   })
 
@@ -751,7 +751,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toStrictEqual(mockSignalData)
+      expect(result).toStrictEqual({ ok: true, value: mockSignalData })
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
@@ -763,7 +763,7 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return null on failure', async () => {
+    it('should return a typed network failure on transport error', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
@@ -772,7 +772,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toBeNull()
+      expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
     })
   })
 

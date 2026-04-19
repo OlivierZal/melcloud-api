@@ -4,9 +4,11 @@ import type {
   HomeBuilding,
   HomeContext,
   HomeEnergyData,
+  HomeError,
   HomeErrorLogEntry,
   HomeReportData,
   HomeUser,
+  Result,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import {
@@ -159,16 +161,25 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   }
 
   /**
-   * Fetch cumulative-energy telemetry for an ATA unit. The payload is
-   * Zod-validated by `@validate`; any failure (network, 4xx, shape
-   * mismatch) resolves to `null` with a `logger.error` trace — the
-   * SDK does not leak transport exceptions to the caller.
+   * Fetch cumulative-energy telemetry for an ATA unit. Returns a
+   * {@link Result} so callers can branch on the failure class —
+   * `validation` (shape drift), `server` (4xx/5xx), `unauthorized`
+   * (token rejected), `rate-limited`, `network`. The prior shape
+   * `T | null` collapsed all five into a single `null`; this one
+   * keeps them distinguishable at the type level.
+   *
+   * `@validate` wraps the resolved value into the `ok` half on parse
+   * success and injects the `err` half on any thrown branch. The
+   * method body returns raw `T`; the cast below reconciles the
+   * body's static type with the decorator's runtime transformation —
+   * TC39 stage-3 decorators do not narrow the method's declared
+   * return type, so the cast is the pragmatic alignment.
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
    * @param params.interval - Aggregation interval (e.g. `PT1H`).
    * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or `null` on any failure.
+   * @returns Success with the telemetry bundle, or a typed failure.
    */
   @validate({
     context: 'BFF /monitor/telemetry/energy',
@@ -177,7 +188,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getEnergy(
     id: string,
     params: { from: string; interval: string; to: string },
-  ): Promise<HomeEnergyData | null> {
+  ): Promise<Result<HomeEnergyData, HomeError>> {
     const { data } = await this.request<HomeEnergyData>(
       'get',
       `${ENERGY_PATH}/${id}`,
@@ -188,17 +199,40 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
         },
       },
     )
-    return data
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
+    return data as unknown as Result<HomeEnergyData, HomeError>
   }
 
   /**
-   * Fetch RSSI telemetry for an ATA unit. Same silent-fail-with-log
-   * semantics as {@link getEnergy}.
+   * Fetch the error-log entries for an ATA unit. Same {@link Result}
+   * contract as {@link getEnergy}: consumers that previously relied
+   * on a `null → []` coalesce should now branch on `result.ok`.
+   * @param id - Device id.
+   * @returns Success with the entries (possibly empty), or a typed failure.
+   */
+  @validate({
+    context: 'BFF /monitor/ataunit/:id/errorlog',
+    schema: HomeErrorLogEntryListSchema,
+  })
+  public async getErrorLog(
+    id: string,
+  ): Promise<Result<HomeErrorLogEntry[], HomeError>> {
+    const { data } = await this.request<HomeErrorLogEntry[]>(
+      'get',
+      `${ATA_UNIT_PATH}/${id}/errorlog`,
+    )
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
+    return data as unknown as Result<HomeErrorLogEntry[], HomeError>
+  }
+
+  /**
+   * Fetch RSSI telemetry for an ATA unit. Same {@link Result}
+   * contract as {@link getEnergy}.
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
    * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or `null` on any failure.
+   * @returns Success with the telemetry bundle, or a typed failure.
    */
   @validate({
     context: 'BFF /monitor/telemetry/actual',
@@ -207,24 +241,25 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getSignal(
     id: string,
     params: { from: string; to: string },
-  ): Promise<HomeEnergyData | null> {
+  ): Promise<Result<HomeEnergyData, HomeError>> {
     const { data } = await this.request<HomeEnergyData>(
       'get',
       `${SIGNAL_PATH}/${id}`,
       { params: { ...params, measure: 'rssi' } },
     )
-    return data
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
+    return data as unknown as Result<HomeEnergyData, HomeError>
   }
 
   /**
    * Fetch a trend-summary report (temperatures, etc.) for an ATA
-   * unit. Silent-fail-with-log: resolves to `null` on any failure.
+   * unit. Same {@link Result} contract as {@link getEnergy}.
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
    * @param params.period - Aggregation period (e.g. `hour`, `day`).
    * @param params.to - ISO end timestamp (exclusive).
-   * @returns The report datasets, or `null` on any failure.
+   * @returns Success with the report datasets, or a typed failure.
    */
   @validate({
     context: 'BFF /report/trendsummary',
@@ -233,11 +268,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
-  ): Promise<HomeReportData[] | null> {
+  ): Promise<Result<HomeReportData[], HomeError>> {
     const { data } = await this.request<HomeReportData[]>('get', REPORT_PATH, {
       params: { ...params, unitId: id },
     })
-    return data
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
+    return data as unknown as Result<HomeReportData[], HomeError>
   }
 
   /**
@@ -269,18 +305,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     } finally {
       this.syncManager.planNext()
     }
-  }
-
-  /**
-   * Fetch the error-log entries for an ATA unit. Unlike the other
-   * telemetry getters, a failure resolves to an empty array rather
-   * than `null`, matching how consumer code typically iterates the
-   * result.
-   * @param id - Device id.
-   * @returns The entries, or `[]` on any failure.
-   */
-  public async getErrorLog(id: string): Promise<HomeErrorLogEntry[]> {
-    return (await this.fetchErrorLog(id)) ?? []
   }
 
   /**
@@ -439,27 +463,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     }
     this.#clearPersistedSession()
     return false
-  }
-
-  /**
-   * Raw error-log fetch: returns the validated entry list or `null`
-   * on any failure (network, 4xx, shape mismatch). Split out from the
-   * public {@link getErrorLog} so the public surface can coalesce the
-   * `null` branch into an empty array without also short-circuiting
-   * the `@validate` decorator's type narrowing.
-   * @param id - Device id.
-   * @returns The entries, or `null` on any failure.
-   */
-  @validate({
-    context: 'BFF /monitor/ataunit/:id/errorlog',
-    schema: HomeErrorLogEntryListSchema,
-  })
-  private async fetchErrorLog(id: string): Promise<HomeErrorLogEntry[] | null> {
-    const { data } = await this.request<HomeErrorLogEntry[]>(
-      'get',
-      `${ATA_UNIT_PATH}/${id}/errorlog`,
-    )
-    return data
   }
 
   /* ---------------------------------------------------------------- */
