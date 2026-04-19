@@ -516,9 +516,11 @@ describe('decorator stacking order', () => {
         callOrder.push('onSync')
       },
     )
+    const innerTarget = vi
+      .fn<(isOn: boolean) => Promise<boolean>>()
+      .mockResolvedValue(true)
     const inner = classicUpdateDevices({ kind: 'power' })(
-      // eslint-disable-next-line @typescript-eslint/require-await -- target is async
-      async () => true,
+      innerTarget,
       mock<ClassMethodDecoratorContext>(),
     )
     const outer = syncDevices()(inner, mock<ClassMethodDecoratorContext>())
