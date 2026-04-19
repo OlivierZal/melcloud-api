@@ -21,7 +21,11 @@ import {
   syncDevices,
   validate,
 } from '../../src/decorators/index.ts'
-import { AuthenticationError, NoChangesError, RateLimitError  } from '../../src/errors/index.ts'
+import {
+  AuthenticationError,
+  NoChangesError,
+  RateLimitError,
+} from '../../src/errors/index.ts'
 import { HttpError } from '../../src/http/index.ts'
 import { cast, mock } from '../helpers.ts'
 
