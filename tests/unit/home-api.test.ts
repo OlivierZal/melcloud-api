@@ -24,8 +24,8 @@ const MILLISECONDS_IN_SECOND = 1000
 const COGNITO = 'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 const AUTH_BASE = 'https://auth.melcloudhome.com'
 
-const X_KEY = 'x'
-const Y_KEY = 'y'
+const REPORT_TIME_KEY = 'x'
+const REPORT_VALUE_KEY = 'y'
 
 const cognitoLoginPage = (
   action = '/login?client_id=test&amp;state=abc',
@@ -115,8 +115,11 @@ const mockReportData: HomeReportData[] = [
     datasets: [
       {
         data: [
-          { [X_KEY]: '2026-03-01T00:00:00', [Y_KEY]: 20.5 },
-          { [X_KEY]: '2026-03-01T01:00:00', [Y_KEY]: 21 },
+          {
+            [REPORT_TIME_KEY]: '2026-03-01T00:00:00',
+            [REPORT_VALUE_KEY]: 20.5,
+          },
+          { [REPORT_TIME_KEY]: '2026-03-01T01:00:00', [REPORT_VALUE_KEY]: 21 },
         ],
         id: 'room_temperature',
         label: 'Room ClassicTemperature',
@@ -229,6 +232,18 @@ const setupSuccessfulLogin = (): void => {
 
 const HOUR_MS = 60 * 60 * 1000
 
+const persistedSessionStore = (
+  overrides: Record<string, string> = {},
+): ReturnType<typeof createSettingStore> =>
+  createSettingStore({
+    accessToken: 'persisted-token',
+    expiry: new Date(Date.now() + HOUR_MS).toISOString(),
+    password: 'pass',
+    refreshToken: 'persisted-refresh',
+    username: 'user@test.com',
+    ...overrides,
+  })
+
 const httpUnauthorized = (url = '/context'): HttpError =>
   new HttpError(
     'Unauthorized',
@@ -289,6 +304,83 @@ describe('melcloud home API', () => {
   })
 
   describe('authentication', () => {
+    /*
+     * Contract: a 401 from the BFF token exchange is wrapped into
+     * AuthenticationError by `doAuthenticate` (via
+     * `normalizeUnauthorized`) so callers see a stable domain error
+     * instead of a raw HttpError — mirroring the Classic
+     * `LoginData: null → AuthenticationError` path.
+     */
+    it('should wrap 401 from token exchange into AuthenticationError', async () => {
+      mockFetch
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            { request_uri: 'urn:ietf:params:oauth:request_uri:test' },
+            {},
+            200,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            { location: `${AUTH_BASE}/connect/redirect` },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            { location: `${COGNITO}/oauth2/authorize?client_id=test` },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            { location: `${COGNITO}/login?client_id=test` },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            {
+              location:
+                'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz',
+            },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            {
+              location: 'https://auth.melcloudhome.com/ExternalLogin/Callback',
+            },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            "<script>window.location='melcloudhome://?code=auth-code&amp;state=xyz'</script>",
+            {},
+            200,
+          ),
+        )
+        .mockRejectedValueOnce(httpUnauthorized('/connect/token'))
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        httpClient: mockHttpClient,
+      })
+
+      const { AuthenticationError } = await import('../../src/errors/index.ts')
+
+      await expect(
+        api.authenticate({ password: 'bad', username: 'u@test.com' }),
+      ).rejects.toThrow(AuthenticationError)
+    })
+
     it('should clear user state on re-authentication', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
@@ -317,7 +409,60 @@ describe('melcloud home API', () => {
     })
   })
 
+  /*
+   * `resumeSession()` has generic coverage at the BaseAPI unit level;
+   * these cases pin the HomeAPI-specific shape (OIDC round-trip +
+   * `/context` + registry hydration) that the base mocks can't
+   * exercise. Regression guard for two observable behaviours:
+   * - a successful resume repopulates user/context AND registry;
+   * - a rejected resume (fetch throws) returns false + logs, without
+   *   leaving partial state behind.
+   */
+  describe('resumeSession', () => {
+    it('returns true and populates context + registry on success', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      setupSuccessfulLogin()
+
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(true)
+      expect(api.isAuthenticated()).toBe(true)
+      expect(api.user).not.toBeNull()
+      expect(api.registry.getAll().length).toBeGreaterThan(0)
+    })
+
+    it('returns false + logs when persisted credentials are rejected', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await createApi({ logger })
+      mockFetch.mockRejectedValueOnce(httpUnauthorized('/connect/par'))
+
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Session resume failed:',
+        expect.any(Error),
+      )
+    })
+  })
+
   describe('user retrieval', () => {
+    it('should return the user on success', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const user = await api.getUser()
+
+      expect(user).toStrictEqual({
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        sub: 'user-1',
+      })
+    })
+
     it('should return null on failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
@@ -437,6 +582,62 @@ describe('melcloud home API', () => {
 
       expect(isSuccess).toBe(false)
     })
+
+    /*
+     * Post-condition contract: on a failed PUT, the server state is
+     * presumed unchanged so no re-sync is issued — a failed write must
+     * not cost an extra registry fetch. Sync happens only on success
+     * (see `resyncs the registry after a successful updateValues`).
+     */
+    it('does not resync after a failed updateValues', async () => {
+      setupSuccessfulLogin()
+      const onSync = vi.fn<() => Promise<void>>()
+      const api = await createApi({ onSync })
+      onSync.mockClear()
+      mockRequest.mockClear()
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      const isSuccess = await api.updateValues('device-1', { power: false })
+
+      expect(isSuccess).toBe(false)
+      expect(mockRequest).toHaveBeenCalledTimes(1)
+      expect(onSync).not.toHaveBeenCalled()
+    })
+
+    /*
+     * Post-condition contract: on successful PUT, the registry is
+     * refreshed so downstream readers see the server-side effect of
+     * the write (the PUT response does not echo device fields).
+     */
+    it('resyncs the registry after a successful updateValues', async () => {
+      setupSuccessfulLogin()
+      const onSync = vi.fn<() => Promise<void>>()
+      const api = await createApi({ onSync })
+      onSync.mockClear()
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.updateValues('device-1', { power: false })
+
+      expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+    })
+
+    it('swallows and logs sync failures during updateValues refresh', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const onSync = vi.fn<() => Promise<void>>()
+      const api = await createApi({ logger, onSync })
+      onSync.mockRejectedValueOnce(new Error('sync exploded'))
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const isSuccess = await api.updateValues('device-1', { power: false })
+
+      expect(isSuccess).toBe(true)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Failed to refresh registry after mutation:',
+        expect.any(Error),
+      )
+    })
   })
 
   describe('error log', () => {
@@ -446,7 +647,7 @@ describe('melcloud home API', () => {
       mockRequest.mockResolvedValueOnce(mockResponse(mockErrorLog, {}, 200))
       const result = await api.getErrorLog('device-1')
 
-      expect(result).toStrictEqual(mockErrorLog)
+      expect(result).toStrictEqual({ ok: true, value: mockErrorLog })
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           url: '/monitor/ataunit/device-1/errorlog',
@@ -454,13 +655,13 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return empty array on failure', async () => {
+    it('should return a typed network failure on transport error', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
       const result = await api.getErrorLog('device-1')
 
-      expect(result).toStrictEqual([])
+      expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
     })
   })
 
@@ -475,7 +676,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toStrictEqual(mockReportData)
+      expect(result).toStrictEqual({ ok: true, value: mockReportData })
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
@@ -489,7 +690,7 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return null on failure', async () => {
+    it('should return a typed network failure on transport error', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
@@ -499,7 +700,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toBeNull()
+      expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
     })
   })
 
@@ -514,7 +715,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toStrictEqual(mockEnergyData)
+      expect(result).toStrictEqual({ ok: true, value: mockEnergyData })
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
@@ -528,7 +729,7 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return null on failure', async () => {
+    it('should return a typed network failure on transport error', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
@@ -538,7 +739,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toBeNull()
+      expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
     })
   })
 
@@ -552,7 +753,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toStrictEqual(mockSignalData)
+      expect(result).toStrictEqual({ ok: true, value: mockSignalData })
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
@@ -565,7 +766,7 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return null on failure', async () => {
+    it('should return a typed network failure on transport error', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
@@ -574,7 +775,7 @@ describe('melcloud home API', () => {
         to: '2026-03-02',
       })
 
-      expect(result).toBeNull()
+      expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
     })
   })
 
@@ -792,8 +993,8 @@ describe('melcloud home API', () => {
 
     it('should not trigger reactive retry during the OIDC flow', async () => {
       /*
-       * PAR request fails with a network error. The @authenticate
-       * decorator catches and logs it, returning false.
+       * PAR request fails with a 401. `resumeSession()` (called from
+       * `initialize()`) catches and logs it; no session is established.
        */
       const logger = createLogger()
       mockFetch.mockRejectedValueOnce(httpUnauthorized())
@@ -807,7 +1008,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })
@@ -816,9 +1017,10 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       /*
-       * 401 on list -> reactive retry -> reauth itself fails (PAR rejects).
-       * `authenticate()` returns false, so the original 401 is re-thrown
-       * and list()'s own catch swallows it to return [].
+       * 401 on list -> reactive retry -> resumeSession() itself fails
+       * (PAR rejects). `resumeSession()` returns false, so `retryAuth`
+       * returns null and the original 401 propagates until list()'s
+       * own catch swallows it and resolves to [].
        */
       mockRequest.mockRejectedValueOnce(httpUnauthorized())
       mockFetch.mockRejectedValueOnce(new Error('PAR failed'))
@@ -890,7 +1092,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.objectContaining({
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           message: expect.stringContaining('Too many redirects'),
@@ -1061,7 +1263,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })
@@ -1214,7 +1416,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })
@@ -1242,55 +1444,62 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })
   })
 
   describe('session persistence', () => {
-    it('should reuse persisted session and skip OIDC re-login', async () => {
-      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { settingManager } = createSettingStore({
-        accessToken: 'persisted-token',
-        expiry: futureExpiry,
-        password: 'pass',
-        refreshToken: 'persisted-refresh',
-        username: 'user@test.com',
-      })
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-
-      const api = await melCloudHomeApi.create({
+    /* eslint-disable unicorn/consistent-function-scoping -- captures describe-scoped `melCloudHomeApi` (deferred import) */
+    const createFromPersistedStore = async (
+      settingManager: ReturnType<typeof createSettingStore>['settingManager'],
+    ): ReturnType<typeof melCloudHomeApi.create> =>
+      melCloudHomeApi.create({
         baseURL: BASE_URL,
         httpClient: mockHttpClient,
         settingManager,
       })
+    /* eslint-enable unicorn/consistent-function-scoping */
 
-      expect(api.isAuthenticated()).toBe(true)
-      expect(mockRequest).toHaveBeenCalledTimes(1)
-      expect(mockRequest).toHaveBeenCalledWith(
-        expect.objectContaining({ url: '/context' }),
-      )
+    describe('valid persisted session', () => {
+      it('reuses the session and hits /context exactly once', async () => {
+        const { settingManager } = persistedSessionStore()
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+        const api = await createFromPersistedStore(settingManager)
+
+        expect(api.isAuthenticated()).toBe(true)
+        expect(mockRequest).toHaveBeenCalledTimes(1)
+        expect(mockRequest).toHaveBeenCalledWith(
+          expect.objectContaining({ url: '/context' }),
+        )
+      })
+
+      /*
+       * Regression guard for the persisted-session branch of the
+       * #1281-class of bug: before this fix, `create()` with a valid
+       * persisted session returned an instance whose device registry
+       * was still empty (only `context`/`user` were hydrated). Now
+       * the reuse path goes through `list()`, which populates both
+       * in a single /context request.
+       */
+      it('populates the device registry on the persisted-session path', async () => {
+        const { settingManager } = persistedSessionStore()
+        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+        const api = await createFromPersistedStore(settingManager)
+
+        expect(api.registry.getAll().length).toBeGreaterThan(0)
+      })
     })
 
     it('should fall back to OIDC when persisted session is rejected', async () => {
-      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
-      const { settingManager } = createSettingStore({
-        accessToken: 'persisted-token',
-        expiry: futureExpiry,
-        password: 'pass',
-        refreshToken: 'persisted-refresh',
-        username: 'user@test.com',
-      })
-      // First getUser() call fails -> triggers fallback to full authenticate()
+      const { settingManager } = persistedSessionStore()
       mockRequest.mockRejectedValueOnce(new Error('401 Unauthorized'))
       setupSuccessfulLogin()
 
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        httpClient: mockHttpClient,
-        settingManager,
-      })
+      const api = await createFromPersistedStore(settingManager)
 
       expect(api.isAuthenticated()).toBe(true)
     })
@@ -1304,11 +1513,7 @@ describe('melcloud home API', () => {
       })
       mockRequest.mockRejectedValueOnce(new Error('401 Unauthorized'))
 
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        httpClient: mockHttpClient,
-        settingManager,
-      })
+      const api = await createFromPersistedStore(settingManager)
 
       expect(api.isAuthenticated()).toBe(false)
       expect(setSpy).toHaveBeenCalledWith('accessToken', '')
@@ -1388,9 +1593,12 @@ describe('melcloud home API', () => {
 
     it('should clear persisted tokens at the start of authenticate()', async () => {
       /*
-       * Create an API with persisted tokens, then explicitly call
-       * authenticate() with new credentials. The first thing authenticate()
-       * does is call #clearPersistedSession(), wiping the old tokens.
+       * Flow: create() → initialize() → tryReuseSession() → list()
+       * hydrates context with the old token (no OIDC needed). Then
+       * explicitly calling authenticate(newCredentials) runs
+       * doAuthenticate, whose first step is #clearPersistedSession()
+       * wiping the old accessToken/refreshToken/expiry before the
+       * new OIDC flow starts.
        */
       const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
       const { setSpy, settingManager } = createSettingStore({
@@ -1400,7 +1608,7 @@ describe('melcloud home API', () => {
         refreshToken: 'old-refresh',
         username: 'user@test.com',
       })
-      // GetUser succeeds with existing token — no OIDC needed for create
+      // list() succeeds with existing token — no OIDC needed for create
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
@@ -1578,7 +1786,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })
@@ -1621,7 +1829,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })

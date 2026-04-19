@@ -105,3 +105,11 @@ export {
   toClassicDeviceId,
   toClassicFloorId,
 } from './ids.ts'
+export {
+  type Failure,
+  type HomeError,
+  type Result,
+  type Success,
+  err,
+  ok,
+} from './result.ts'

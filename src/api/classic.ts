@@ -1,7 +1,6 @@
 import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
 import { Agent } from 'undici'
 
-import type { HttpResponse } from '../http/index.ts'
 import type {
   ClassicAreaDataAny,
   ClassicBuildingWithStructure,
@@ -36,7 +35,7 @@ import type {
   ClassicTilesPostData,
 } from '../types/index.ts'
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
-import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import { setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
 import { AuthenticationError } from '../errors/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
@@ -69,6 +68,13 @@ const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL = 5
 const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_DELAY = 1000
+const SESSION_REFRESH_AHEAD_MINUTES = 5
+const SECONDS_PER_MINUTE = 60
+const MILLISECONDS_PER_SECOND = 1000
+// Refresh the session when it's within 5 min of its real expiry so
+// no request pays the full re-login latency on its critical path.
+const SESSION_REFRESH_AHEAD_MS =
+  SESSION_REFRESH_AHEAD_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND
 
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
@@ -224,43 +230,17 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   /**
    * Create and initialize a MELCloud Classic API instance.
    *
-   * Runs an initial `/User/ListDevices` fetch to populate the registry
-   * so facades built from `api.registry` are usable immediately. When
-   * the caller provides credentials (directly or via a SettingManager)
-   * and no persisted `contextKey` is available, the first protected
-   * call will transparently trigger the `@authenticate` decorator.
+   * Delegates post-construction setup to {@link BaseAPI.initialize}
+   * so the #1281-class invariant is enforced uniformly: on return,
+   * either the registry is populated or the instance is in a
+   * documented empty state (no credentials, no persisted session).
    * @param config - Optional configuration for the Classic API client.
    * @returns The initialized ClassicAPI instance.
    */
   public static async create(config?: ClassicAPIConfig): Promise<ClassicAPI> {
     const api = new ClassicAPI(config)
-    await api.fetch()
+    await api.initialize()
     return api
-  }
-
-  @authenticate
-  public async authenticate(data?: ClassicLoginCredentials): Promise<void> {
-    /* v8 ignore next -- @authenticate guarantees data is always provided */
-    const { password, username } = data ?? { password: '', username: '' }
-    this.#clearPersistedSession()
-    const {
-      data: { LoginData: loginData },
-    } = await this.login({
-      postData: {
-        AppVersion: APP_VERSION,
-        Email: username,
-        Language: this.#getLanguageCode(),
-        Password: password,
-        Persist: true,
-      },
-    })
-    if (loginData === null) {
-      throw new AuthenticationError('MELCloud Classic rejected the credentials')
-    }
-    this.username = username
-    this.password = password
-    ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
-    await this.fetch()
   }
 
   /**
@@ -599,32 +579,91 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     })
   }
 
-  // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
-  protected async ensureSession(): Promise<void> {
-    /*
-     * Re-authenticate proactively if the context key is missing or the
-     * session token is expired/invalid. A malformed `expiry` (e.g. from
-     * a settings migration) is treated as expired, not silently ignored.
-     */
-    if (this.contextKey === '' || isSessionExpired(this.expiry)) {
-      await this.authenticate()
+  protected override async doAuthenticate({
+    password,
+    username,
+  }: ClassicLoginCredentials): Promise<void> {
+    this.#clearPersistedSession()
+    const {
+      data: { LoginData: loginData },
+    } = await this.login({
+      postData: {
+        AppVersion: APP_VERSION,
+        Email: username,
+        Language: this.#getLanguageCode(),
+        Password: password,
+        Persist: true,
+      },
+    })
+    if (loginData === null) {
+      throw new AuthenticationError('MELCloud Classic rejected the credentials')
     }
+    this.username = username
+    this.password = password
+    ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
   }
 
   protected getAuthHeaders(): Record<string, string> {
     return this.contextKey === '' ? {} : { 'X-MitsContextKey': this.contextKey }
   }
 
-  protected async retryAuth<T>(
-    method: string,
-    url: string,
-    config: Record<string, unknown>,
-  ): Promise<HttpResponse<T> | null> {
-    await this.authenticate()
-    if (!this.isAuthenticated()) {
-      return null
-    }
-    return this.dispatch<T>(method, url, config)
+  /**
+   * Classic considers a session in need of refresh when the
+   * `contextKey` is missing **or** its expiry timestamp is within
+   * {@link SESSION_REFRESH_AHEAD_MS} of now. The forward window lets
+   * the shared `BaseAPI.ensureSession` template renew the session
+   * pre-emptively, keeping re-login latency off the request's
+   * critical path.
+   * @returns `true` when a refresh should run before the next request.
+   */
+  protected override needsSessionRefresh(): boolean {
+    return (
+      this.contextKey === '' ||
+      isSessionExpired(this.expiry, SESSION_REFRESH_AHEAD_MS)
+    )
+  }
+
+  /**
+   * Classic session refresh = best-effort `resumeSession`. The
+   * `contextKey → login → refetch` flow is the only path available
+   * (no refresh-token equivalent on the Classic API); `resumeSession`
+   * logs + swallows on failure so the triggering request can still
+   * attempt its own 401 retry path.
+   */
+  protected override async performSessionRefresh(): Promise<void> {
+    await this.resumeSession()
+  }
+
+  /**
+   * Reactive-401 refresh for Classic: no token-refresh shortcut exists
+   * on this API, so the only recovery path is a best-effort
+   * {@link resumeSession} from persisted credentials. On success the
+   * shared {@link AuthRetryPolicy} replays the original request.
+   * @returns `true` when the session is authenticated afterwards.
+   */
+  protected override async reauthenticate(): Promise<boolean> {
+    return this.resumeSession()
+  }
+
+  protected override async syncRegistry(): Promise<void> {
+    await this.fetch()
+  }
+
+  /**
+   * Classic's request pipeline is auth-self-healing: a call that
+   * arrives with a stale `contextKey` 401s, triggers retry-auth via
+   * stored credentials, and succeeds on the second try. A single
+   * `fetch()` therefore covers both "valid session" and "expired
+   * session, re-auth from stored creds" in one round-trip. We report
+   * `true` iff that produced an authenticated state; otherwise the
+   * template falls through to {@link authenticate}, preserving the
+   * explicit-credentials path and leaving a consistent empty state
+   * when neither a session nor credentials are available.
+   * @returns `true` when fetch yielded an authenticated session.
+   */
+  protected override async tryReuseSession(): Promise<boolean> {
+    await this.fetch()
+    return this.isAuthenticated()
   }
 
   #applyOptionalConfig({

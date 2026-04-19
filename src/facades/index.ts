@@ -7,7 +7,7 @@ export type {
 export { ClassicAreaFacade } from './classic-area.ts'
 export { ClassicBuildingFacade } from './classic-building.ts'
 export { ClassicDeviceAtaFacade } from './classic-device-ata.ts'
-export { ClassicDeviceAtwHasZone2Facade } from './classic-device-atw-has-zone2.ts'
+export { ClassicDeviceAtwHasZone2Facade } from './classic-device-atw-dual-zone.ts'
 export { ClassicDeviceAtwFacade } from './classic-device-atw.ts'
 export { ClassicDeviceErvFacade } from './classic-device-erv.ts'
 export { createFacade } from './classic-factory.ts'

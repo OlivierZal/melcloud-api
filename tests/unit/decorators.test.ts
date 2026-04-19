@@ -1,4 +1,6 @@
+import { Duration } from 'luxon'
 import { describe, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 
 import type { ClassicAPIAdapter, SyncCallback } from '../../src/api/index.ts'
 import type {
@@ -13,20 +15,19 @@ import {
   ClassicOperationMode,
 } from '../../src/constants.ts'
 import {
-  authenticate,
-  classicFetchDevices,
   classicUpdateDevice,
   classicUpdateDevices,
+  fetchDevices,
   syncDevices,
+  validate,
 } from '../../src/decorators/index.ts'
-import { AuthenticationError, NoChangesError } from '../../src/errors/index.ts'
 import {
-  cast,
-  createHttpError,
-  createLogger,
-  createUnauthorizedError,
-  mock,
-} from '../helpers.ts'
+  AuthenticationError,
+  NoChangesError,
+  RateLimitError,
+} from '../../src/errors/index.ts'
+import { HttpError } from '../../src/http/index.ts'
+import { cast, mock } from '../helpers.ts'
 
 const createMockFacade = (
   devices: { type: ClassicDeviceType; update: ReturnType<typeof vi.fn> }[] = [],
@@ -40,18 +41,14 @@ const createMockFacade = (
 })
 
 const decorateUpdateDevices = (
-  name: string,
   target: (
     ...args: unknown[]
   ) => Promise<
     boolean | ClassicFailureData | ClassicGroupState | ClassicSuccessData
   >,
-  options?: { type?: ClassicDeviceType },
+  options?: { kind?: 'payload' | 'power'; type?: ClassicDeviceType },
 ): ReturnType<ReturnType<typeof classicUpdateDevices>> =>
-  classicUpdateDevices(options)(
-    target,
-    mock<ClassMethodDecoratorContext>({ name }),
-  )
+  classicUpdateDevices(options)(target, mock<ClassMethodDecoratorContext>())
 
 const ataFlags = {
   OperationMode: 0x2,
@@ -134,7 +131,7 @@ const callUpdateDevice = async (
   const target = vi
     .fn<(...args: unknown[]) => Promise<never>>()
     .mockResolvedValue(cast(setData))
-  const decorated = classicUpdateDevice(
+  const decorated = classicUpdateDevice()(
     target,
     mock<ClassMethodDecoratorContext>(),
   )
@@ -151,21 +148,154 @@ const resolvePowerData = async (): Promise<{ Alpha: null; Power: true }> => {
   return result
 }
 
-describe(classicFetchDevices, () => {
-  it('calls api.fetch before the target method', async () => {
-    const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>()
+const setupFetchDevices = (
+  options?: Parameters<typeof fetchDevices>[0],
+): { callOrder: string[]; invoke: () => Promise<void> } => {
+  const callOrder: string[] = []
+  const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/require-await -- ClassicAPIAdapter['fetch'] is async
+    async () => {
+      callOrder.push('fetch')
+      return cast([])
+    },
+  )
+  const target = vi
+    .fn<(...args: unknown[]) => Promise<never>>()
+    .mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+      async () => {
+        callOrder.push('target')
+        return cast('result')
+      },
+    )
+  const decorated = fetchDevices(options)(
+    target,
+    mock<ClassMethodDecoratorContext>(),
+  )
+  const context = { api: mock<ClassicAPIAdapter>({ fetch: fetchMock }) }
+  return { callOrder, invoke: async () => decorated.call(context) }
+}
+
+describe(fetchDevices, () => {
+  it.each([
+    {
+      expected: ['fetch', 'target'],
+      label: 'default (before)',
+      options: undefined,
+    },
+    {
+      expected: ['fetch', 'target'],
+      label: 'when=before',
+      options: { when: 'before' as const },
+    },
+    {
+      expected: ['target', 'fetch'],
+      label: 'when=after',
+      options: { when: 'after' as const },
+    },
+  ])(
+    'invokes api.fetch and target in the correct order: $label',
+    async ({ expected, options }) => {
+      const { callOrder, invoke } = setupFetchDevices(options)
+      await invoke()
+
+      expect(callOrder).toStrictEqual(expected)
+    },
+  )
+
+  it('prefers syncRegistry() over api.fetch() when both are exposed', async () => {
+    const callOrder: string[] = []
+    const syncRegistry = vi.fn<() => Promise<void>>().mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/require-await -- signature is async
+      async () => {
+        callOrder.push('syncRegistry')
+      },
+    )
+    const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/require-await -- signature is async
+      async () => {
+        callOrder.push('fetch')
+        return cast([])
+      },
+    )
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
-      .mockResolvedValue(cast('result'))
-    const decorated = classicFetchDevices(
+      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+      .mockImplementation(async () => cast('result'))
+    const decorated = fetchDevices({ when: 'after' })(
       target,
       mock<ClassMethodDecoratorContext>(),
     )
-    const context = { api: mock<ClassicAPIAdapter>({ fetch: fetchMock }) }
+    const context = {
+      api: mock<ClassicAPIAdapter>({ fetch: fetchMock }),
+      syncRegistry,
+    }
     await decorated.call(context)
 
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(target).toHaveBeenCalledTimes(1)
+    expect(callOrder).toStrictEqual(['syncRegistry'])
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('throws TypeError when host exposes neither syncRegistry nor api.fetch (when=before)', async () => {
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+      .mockImplementation(async () => cast('result'))
+    const decorated = fetchDevices({ when: 'before' })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(decorated.call({})).rejects.toThrow(TypeError)
+    expect(target).not.toHaveBeenCalled()
+  })
+
+  it('logs and swallows when host exposes neither (when=after)', async () => {
+    const logError = vi.fn<(...args: unknown[]) => void>()
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+      .mockImplementation(async () => cast('result'))
+    const decorated = fetchDevices({ when: 'after' })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(
+      decorated.call({
+        logger: { error: logError, log: vi.fn<(...args: unknown[]) => void>() },
+      }),
+    ).resolves.toBe('result')
+    expect(logError).toHaveBeenCalledWith(
+      'Failed to refresh registry after mutation:',
+      expect.any(TypeError),
+    )
+  })
+
+  it('logs via logger.error when when=after and sync throws', async () => {
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+      .mockImplementation(async () => cast('result'))
+    const syncRegistry = vi
+      .fn<() => Promise<void>>()
+      .mockRejectedValue(new Error('sync boom'))
+    const logger = {
+      error: vi.fn<(...args: unknown[]) => void>(),
+      log: vi.fn<(...args: unknown[]) => void>(),
+    }
+    const decorated = fetchDevices({ when: 'after' })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(decorated.call({ logger, syncRegistry })).resolves.toBe(
+      'result',
+    )
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to refresh registry after mutation:',
+      expect.any(Error),
+    )
   })
 })
 
@@ -214,7 +344,7 @@ describe(classicUpdateDevices, () => {
   it('updates all devices with the arg data', async () => {
     const update = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices('updateGroupState', resolveTrue)
+    const decorated = decorateUpdateDevices(resolveTrue)
     await decorated.call(facade, { Power: true })
 
     expect(update).toHaveBeenCalledWith({ Power: true })
@@ -222,7 +352,7 @@ describe(classicUpdateDevices, () => {
 
   it('throws when arg is empty object', async () => {
     const facade = createMockFacade([], 42)
-    const decorated = decorateUpdateDevices('updateGroupState', resolveTrue)
+    const decorated = decorateUpdateDevices(resolveTrue)
 
     await expect(decorated.call(facade, {})).rejects.toThrow(
       new NoChangesError(42),
@@ -236,7 +366,7 @@ describe(classicUpdateDevices, () => {
       { type: ClassicDeviceType.Ata, update: updateAta },
       { type: ClassicDeviceType.Atw, update: updateAtw },
     ])
-    const decorated = decorateUpdateDevices('updateGroupState', resolveTrue, {
+    const decorated = decorateUpdateDevices(resolveTrue, {
       type: ClassicDeviceType.Ata,
     })
     await decorated.call(facade, { Power: true })
@@ -245,22 +375,19 @@ describe(classicUpdateDevices, () => {
     expect(updateAtw).not.toHaveBeenCalled()
   })
 
-  it('uses updatePower logic when method name is updatePower', async () => {
+  it('wraps a boolean arg into { Power } when kind is power', async () => {
     const update = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices('updatePower', resolveTrue)
+    const decorated = decorateUpdateDevices(resolveTrue, { kind: 'power' })
     await decorated.call(facade, true)
 
     expect(update).toHaveBeenCalledWith({ Power: true })
   })
 
-  it('filters null/undefined values from data when not updatePower', async () => {
+  it('filters null/undefined values from data with kind=payload', async () => {
     const update = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices(
-      'updateGroupState',
-      resolvePowerData,
-    )
+    const decorated = decorateUpdateDevices(resolvePowerData)
     await decorated.call(facade, null)
 
     expect(update).toHaveBeenCalledWith({ Power: true })
@@ -317,134 +444,175 @@ describe(classicUpdateDevice, () => {
   })
 })
 
-describe('@authenticate decorator', () => {
-  interface Context {
-    logger: ReturnType<typeof createLogger>
-    password: string
-    username: string
-  }
+describe(validate, () => {
+  const schema = z.object({ value: z.number() })
 
-  type Target = (data: { password: string; username: string }) => Promise<void>
+  it('returns Result.ok with the parsed payload on success', async () => {
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- target is async
+      .mockImplementation(async () => ({ value: 42 }))
+    const decorated = validate({ context: 'test', schema })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
 
-  const wrapTarget = (
-    target: Target,
-  ): ((
-    this: Context,
-    data?: { password: string; username: string },
-  ) => Promise<void>) =>
-    authenticate(target, mock<ClassMethodDecoratorContext>({ name: 'auth' }))
-
-  const createContext = (overrides: Partial<Context> = {}): Context => ({
-    logger: createLogger(),
-    password: 'stored-pass',
-    username: 'stored-user',
-    ...overrides,
+    await expect(decorated.call({})).resolves.toStrictEqual({
+      ok: true,
+      value: { value: 42 },
+    })
   })
 
-  it('skips target without throwing when credentials are missing', async () => {
-    const target = vi.fn<Target>()
+  it('returns Result.err(network) + logs on plain error rejection', async () => {
+    const logError = vi.fn<(...args: unknown[]) => void>()
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockRejectedValue(new Error('boom'))
+    const decorated = validate({ context: 'ctx', schema })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
 
     await expect(
-      wrapTarget(target).call(createContext({ password: '', username: '' })),
-    ).resolves.toBeUndefined()
-
-    expect(target).not.toHaveBeenCalled()
-  })
-
-  it('falls back to stored credentials when data is omitted', async () => {
-    const target = vi.fn<Target>().mockResolvedValue()
-    const context = createContext({
-      password: 'stored-p',
-      username: 'stored-u',
-    })
-
-    await wrapTarget(target).call(context)
-
-    expect(target).toHaveBeenCalledWith({
-      password: 'stored-p',
-      username: 'stored-u',
-    })
-  })
-
-  it('merges partial explicit data over stored credentials', async () => {
-    const target = vi.fn<Target>().mockResolvedValue()
-    const context = createContext({
-      password: 'stored-p',
-      username: 'stored-u',
-    })
-
-    await wrapTarget(target).call(context, cast({ password: 'new-p' }))
-
-    expect(target).toHaveBeenCalledWith({
-      password: 'new-p',
-      username: 'stored-u',
-    })
-  })
-
-  it('re-throws on explicit credentials failure', async () => {
-    const target = vi.fn<Target>().mockRejectedValue(new Error('boom'))
-
-    await expect(
-      wrapTarget(target).call(createContext(), {
-        password: 'p',
-        username: 'u',
+      decorated.call({
+        logger: { error: logError, log: vi.fn<(...args: unknown[]) => void>() },
       }),
-    ).rejects.toThrow('boom')
-  })
-
-  it('logs and swallows on stored credentials failure', async () => {
-    const target = vi.fn<Target>().mockRejectedValue(new Error('boom'))
-    const context = createContext()
-
-    await expect(wrapTarget(target).call(context)).resolves.toBeUndefined()
-
-    expect(context.logger.error).toHaveBeenCalledWith(
-      'Authentication failed:',
+    ).resolves.toMatchObject({ error: { kind: 'network' }, ok: false })
+    expect(logError).toHaveBeenCalledWith(
+      '[ctx] request or validation failed:',
       expect.any(Error),
     )
   })
 
-  it('wraps a 401 HttpError into AuthenticationError (with cause) on throw', async () => {
-    const httpError = createUnauthorizedError('/login')
-    const target = vi.fn<Target>().mockRejectedValue(httpError)
+  it('returns Result.err(validation) + logs on shape mismatch', async () => {
+    const logError = vi.fn<(...args: unknown[]) => void>()
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- target is async
+      .mockImplementation(async () => ({ value: 'not-a-number' }))
+    const decorated = validate({ context: 'ctx', schema })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
 
     await expect(
-      wrapTarget(target).call(createContext(), {
-        password: 'p',
-        username: 'u',
+      decorated.call({
+        logger: { error: logError, log: vi.fn<(...args: unknown[]) => void>() },
       }),
-    ).rejects.toMatchObject({
-      cause: httpError,
-      name: 'AuthenticationError',
-    })
-  })
-
-  it('wraps a 401 HttpError into AuthenticationError when logging', async () => {
-    const httpError = createUnauthorizedError('/login')
-    const target = vi.fn<Target>().mockRejectedValue(httpError)
-    const context = createContext()
-
-    await wrapTarget(target).call(context)
-
-    expect(context.logger.error).toHaveBeenCalledWith(
-      'Authentication failed:',
-      expect.any(AuthenticationError),
+    ).resolves.toMatchObject({ error: { kind: 'validation' }, ok: false })
+    expect(logError).toHaveBeenCalledWith(
+      '[ctx] request or validation failed:',
+      expect.anything(),
     )
   })
 
-  it('does not wrap non-401 HttpErrors', async () => {
-    const httpError = createHttpError({
-      message: 'Server error',
-      status: 500,
-      url: '/login',
-    })
-    const target = vi.fn<Target>().mockRejectedValue(httpError)
-
-    await expect(
-      wrapTarget(target).call(createContext(), {
-        password: 'p',
-        username: 'u',
+  it.each([
+    {
+      error: new AuthenticationError('nope'),
+      expected: { kind: 'unauthorized' } as const,
+      label: 'AuthenticationError → unauthorized',
+    },
+    {
+      error: new RateLimitError('paused', {
+        retryAfter: Duration.fromMillis(5000),
       }),
-    ).rejects.toBe(httpError)
+      expected: { kind: 'rate-limited', retryAfterMs: 5000 } as const,
+      label: 'RateLimitError with Duration → rate-limited',
+    },
+    {
+      error: new RateLimitError('paused', { retryAfter: null }),
+      expected: { kind: 'rate-limited', retryAfterMs: null } as const,
+      label: 'RateLimitError with null Duration → rate-limited null',
+    },
+    {
+      error: new HttpError(
+        'Unauthorized',
+        { data: undefined, headers: {}, status: 401 },
+        { url: '/x' },
+      ),
+      expected: { kind: 'unauthorized' } as const,
+      label: '401 HttpError → unauthorized',
+    },
+    {
+      error: new HttpError(
+        'Server error',
+        { data: undefined, headers: {}, status: 500 },
+        { url: '/x' },
+      ),
+      expected: { kind: 'server', status: 500 } as const,
+      label: 'non-401 HttpError → server',
+    },
+  ])('classifies $label', async ({ error, expected }) => {
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockRejectedValue(error)
+    const decorated = validate({ context: 'ctx', schema })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(decorated.call({})).resolves.toMatchObject({
+      error: expected,
+      ok: false,
+    })
+  })
+})
+
+/*
+ * Stacking contract. The project applies `@syncDevices()` on top of
+ * `@classicUpdateDevices()` for `updatePower` (classic-base.ts). If
+ * the order ever silently flips, update-patch propagation would race
+ * the notify — worth pinning.
+ */
+describe('decorator stacking order', () => {
+  it('runs outer syncDevices after inner classicUpdateDevices', async () => {
+    const callOrder: string[] = []
+    const update = vi.fn<(data: unknown) => void>().mockImplementation(() => {
+      callOrder.push('update')
+    })
+    const onSync = vi.fn<SyncCallback>().mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/require-await -- signature is async
+      async () => {
+        callOrder.push('onSync')
+      },
+    )
+    const innerTarget = vi
+      .fn<(isOn: boolean) => Promise<boolean>>()
+      .mockResolvedValue(true)
+    const inner = classicUpdateDevices({ kind: 'power' })(
+      innerTarget,
+      mock<ClassMethodDecoratorContext>(),
+    )
+    const outer = syncDevices()(inner, mock<ClassMethodDecoratorContext>())
+    const facade = {
+      devices: [{ type: ClassicDeviceType.Ata, update }],
+      id: 1,
+      onSync,
+    }
+
+    await outer.call(facade, true)
+
+    expect(callOrder).toStrictEqual(['update', 'onSync'])
+  })
+})
+
+/*
+ * The `type` filter in `@classicUpdateDevices` and `@syncDevices`
+ * drives which devices receive a patch / which type label rides on
+ * the onSync payload. A regression here would silently broadcast the
+ * patch to unrelated device types.
+ */
+describe('decorator type-filter forwarding', () => {
+  it('@syncDevices forwards the configured type to onSync', async () => {
+    const onSync = vi.fn<SyncCallback>()
+    const decorated = syncDevices({ type: ClassicDeviceType.Atw })(
+      // eslint-disable-next-line @typescript-eslint/require-await -- target is async
+      async () => 'ok',
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await decorated.call({ onSync })
+
+    expect(onSync).toHaveBeenCalledWith({ type: ClassicDeviceType.Atw })
   })
 })

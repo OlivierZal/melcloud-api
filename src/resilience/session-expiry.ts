@@ -8,7 +8,13 @@ import { DateTime } from 'luxon'
  * - Unparseable value → `true` (defensive: corruption is treated as expired
  *   so the caller reauthenticates instead of silently trusting stale state)
  * - Valid ISO date in the past → `true`
- * - Valid ISO date in the future → `false`
+ * - Valid ISO date in the future → `false` (subject to `aheadMs` below)
+ *
+ * Pre-emptive refresh: pass `aheadMs > 0` to treat a token as expired
+ * while it still has that much lifetime left. This lets `ensureSession`
+ * renew the session **before** the real expiry tick, so no request
+ * ever pays the full re-auth round-trip in its critical path. The
+ * common value is 5 minutes (`5 * 60 * 1000`).
  *
  * Uses Luxon `DateTime.fromISO` (not native `Date.parse`) so that ISO
  * strings without an explicit timezone offset — the format the MELCloud
@@ -18,12 +24,18 @@ import { DateTime } from 'luxon'
  * timezone, shifting the comparison by hours when the deployment timezone
  * differs from the host (e.g. UTC CI runner, Docker container).
  * @param expiry - ISO 8601 expiry timestamp (or empty string).
- * @returns `true` if the expiry is past or cannot be parsed, `false` otherwise.
+ * @param aheadMs - Consider the session expired `aheadMs` milliseconds
+ * before its real expiry (default 0 = real expiry).
+ * @returns `true` if the expiry is past (or within `aheadMs`) or cannot be parsed, `false` otherwise.
  */
-export const isSessionExpired = (expiry: string): boolean => {
+export const isSessionExpired = (expiry: string, aheadMs = 0): boolean => {
   if (expiry === '') {
     return false
   }
   const parsed = DateTime.fromISO(expiry)
-  return !parsed.isValid || parsed < DateTime.now()
+  if (!parsed.isValid) {
+    return true
+  }
+  const threshold = DateTime.now().plus({ milliseconds: aheadMs })
+  return parsed < threshold
 }

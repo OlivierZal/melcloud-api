@@ -1,18 +1,24 @@
-import type { z } from 'zod'
+import { DateTime } from 'luxon'
 
-import type { HttpResponse } from '../http/index.ts'
 import type {
   ClassicLoginCredentials,
   HomeAtaValues,
   HomeBuilding,
   HomeContext,
   HomeEnergyData,
+  HomeError,
   HomeErrorLogEntry,
   HomeReportData,
   HomeUser,
+  Result,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
-import { authenticate, setting, syncDevices } from '../decorators/index.ts'
+import {
+  fetchDevices,
+  setting,
+  syncDevices,
+  validate,
+} from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import {
@@ -26,7 +32,7 @@ import type {
   HomeAPIConfig,
   HomeAPI as HomeAPIContract,
 } from './home-interfaces.ts'
-import { BaseAPI } from './base.ts'
+import { BaseAPI, normalizeUnauthorized } from './base.ts'
 import {
   type TokenResponse,
   performTokenAuth,
@@ -46,6 +52,12 @@ const ENERGY_PATH = '/telemetry/telemetry/energy'
 const MILLISECONDS_IN_SECOND = 1000
 const REPORT_PATH = '/report/v1/trendsummary'
 const RETRY_DELAY = 1000
+const SECONDS_PER_MINUTE = 60
+const SESSION_REFRESH_AHEAD_MINUTES = 5
+// Refresh the session when it's within 5 min of its real expiry so
+// no request pays the full OIDC round-trip on its critical path.
+const SESSION_REFRESH_AHEAD_MS =
+  SESSION_REFRESH_AHEAD_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_IN_SECOND
 const SIGNAL_PATH = '/telemetry/telemetry/actual'
 
 /* ------------------------------------------------------------------ */
@@ -59,27 +71,23 @@ const parseUser = (data: HomeContext): HomeUser => ({
   sub: data.id,
 })
 
-const pad = (value: number): string => String(value).padStart(2, '0')
-
 /*
  * `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros
  * (e.g. `2026-04-19T00:00:00.0000000`). Anything shorter is silently
  * truncated to an empty window by the BFF.
  */
-const toReportDate = (iso: string): string => {
-  const date = new Date(iso)
-  return `${String(date.getUTCFullYear())}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}.0000000`
-}
+const toReportDate = (iso: string): string =>
+  DateTime.fromISO(iso, { zone: 'utc' }).toFormat(
+    "yyyy-MM-dd'T'HH:mm:ss'.0000000'",
+  )
 
 /*
  * `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
  * space and no seconds. Seconds or an ISO `T` separator produce an empty
  * payload rather than an error.
  */
-const toTelemetryDate = (iso: string): string => {
-  const date = new Date(iso)
-  return `${String(date.getUTCFullYear())}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`
-}
+const toTelemetryDate = (iso: string): string =>
+  DateTime.fromISO(iso, { zone: 'utc' }).toFormat('yyyy-MM-dd HH:mm')
 
 /**
  * MELCloud Home API client using the mobile BFF at
@@ -158,54 +166,147 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /**
    * Create and initialize a MELCloud Home API instance.
    *
-   * If the SettingManager holds a persisted session (tokens + unexpired
-   * expiry), the instance reuses it via `getUser()` and skips re-login.
-   * If the access token is expired but a refresh token is available,
-   * a token refresh is attempted. Otherwise, falls back to a full
-   * `authenticate()` flow.
+   * Delegates post-construction setup to {@link BaseAPI.initialize}
+   * so the #1281-class invariant is enforced uniformly: the reuse
+   * path, the fresh-auth path, and the "no credentials" path all go
+   * through the same template and cannot leave the registry empty
+   * while claiming success.
    * @param config - Optional configuration.
    * @returns The initialized HomeAPI instance.
    */
   public static async create(config?: HomeAPIConfig): Promise<HomeAPI> {
     const api = new HomeAPI(config)
-    if (api.#hasPersistedSession()) {
-      if ((await api.getUser()) !== null) {
-        return api
-      }
-      api.#clearPersistedSession()
-    }
-    await api.authenticate()
+    await api.initialize()
     return api
   }
 
   /**
-   * Run the full OIDC login flow (PAR → IdentityServer → Cognito →
-   * token exchange), persist the resulting tokens, and fetch
-   * `/context` to populate user state. Throws on failure; query
-   * {@link HomeAPI.isAuthenticated} to check the resulting session state.
+   * Fetch cumulative-energy telemetry for an ATA unit. Returns a
+   * {@link Result} so callers can branch on the failure class —
+   * `validation` (shape drift), `server` (4xx/5xx), `unauthorized`
+   * (token rejected), `rate-limited`, `network`. The prior shape
+   * `T | null` collapsed all five into a single `null`; this one
+   * keeps them distinguishable at the type level.
    *
-   * Wrapped by the `@authenticate` decorator, so `data` may be
-   * omitted when credentials have already been persisted via the
-   * SettingManager — the decorator hydrates them before calling.
-   * @param data - Optional credentials; falls back to persisted values.
+   * `@validate` wraps the resolved value into the `ok` half on parse
+   * success and injects the `err` half on any thrown branch. The
+   * method body returns raw `T`; the cast below reconciles the
+   * body's static type with the decorator's runtime transformation —
+   * TC39 stage-3 decorators do not narrow the method's declared
+   * return type, so the cast is the pragmatic alignment.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.interval - Aggregation interval (e.g. `PT1H`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the telemetry bundle, or a typed failure.
    */
-  @authenticate
-  public async authenticate(data?: ClassicLoginCredentials): Promise<void> {
-    /* v8 ignore next -- @authenticate guarantees data is always provided */
-    const { password, username } = data ?? { password: '', username: '' }
-    this.#clearPersistedSession()
-    const tokens = await performTokenAuth({
-      credentials: { password, username },
-      ...(this.abortSignal === undefined ?
-        {}
-      : { abortSignal: this.abortSignal }),
+  @validate({
+    context: 'BFF /telemetry/telemetry/energy',
+    schema: HomeEnergyDataSchema,
+  })
+  public async getEnergy(
+    id: string,
+    params: { from: string; interval: string; to: string },
+  ): Promise<Result<HomeEnergyData, HomeError>> {
+    const { data } = await this.request<HomeEnergyData>(
+      'get',
+      `${ENERGY_PATH}/${id}`,
+      {
+        params: {
+          from: toTelemetryDate(params.from),
+          interval: params.interval,
+          measure: 'cumulative_energy_consumed_since_last_upload',
+          to: toTelemetryDate(params.to),
+        },
+      },
+    )
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
+    return data as unknown as Result<HomeEnergyData, HomeError>
+  }
+
+  /**
+   * Fetch the error-log entries for an ATA unit. Same {@link Result}
+   * contract as {@link getEnergy}: consumers that previously relied
+   * on a `null → []` coalesce should now branch on `result.ok`.
+   * @param id - Device id.
+   * @returns Success with the entries (possibly empty), or a typed failure.
+   */
+  @validate({
+    context: 'BFF /monitor/ataunit/:id/errorlog',
+    schema: HomeErrorLogEntryListSchema,
+  })
+  public async getErrorLog(
+    id: string,
+  ): Promise<Result<HomeErrorLogEntry[], HomeError>> {
+    const { data } = await this.request<HomeErrorLogEntry[]>(
+      'get',
+      `${ATA_UNIT_PATH}/${id}/errorlog`,
+    )
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
+    return data as unknown as Result<HomeErrorLogEntry[], HomeError>
+  }
+
+  /**
+   * Fetch RSSI telemetry for an ATA unit. Same {@link Result}
+   * contract as {@link getEnergy}.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the telemetry bundle, or a typed failure.
+   */
+  @validate({
+    context: 'BFF /telemetry/telemetry/actual',
+    schema: HomeEnergyDataSchema,
+  })
+  public async getSignal(
+    id: string,
+    params: { from: string; to: string },
+  ): Promise<Result<HomeEnergyData, HomeError>> {
+    const { data } = await this.request<HomeEnergyData>(
+      'get',
+      `${SIGNAL_PATH}/${id}`,
+      {
+        params: {
+          from: toTelemetryDate(params.from),
+          measure: 'rssi',
+          to: toTelemetryDate(params.to),
+        },
+      },
+    )
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
+    return data as unknown as Result<HomeEnergyData, HomeError>
+  }
+
+  /**
+   * Fetch a trend-summary report (temperatures, etc.) for an ATA
+   * unit. Same {@link Result} contract as {@link getEnergy}.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Aggregation period (e.g. `hour`, `day`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the report datasets, or a typed failure.
+   */
+  @validate({
+    context: 'BFF /report/v1/trendsummary',
+    schema: HomeReportDataSchema.array(),
+  })
+  public async getTemperatures(
+    id: string,
+    params: { from: string; period: string; to: string },
+  ): Promise<Result<HomeReportData[], HomeError>> {
+    const { data } = await this.request<HomeReportData[]>('get', REPORT_PATH, {
+      params: {
+        from: toReportDate(params.from),
+        period: params.period,
+        to: toReportDate(params.to),
+        unitId: id,
+      },
     })
-    this.#storeTokens(tokens)
-    ;({ password: this.password, username: this.username } = {
-      password,
-      username,
-    })
-    await this.list()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
+    return data as unknown as Result<HomeReportData[], HomeError>
   }
 
   /**
@@ -240,112 +341,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   }
 
   /**
-   * Fetch cumulative-energy telemetry for an ATA unit. The returned
-   * payload is Zod-validated against `HomeEnergyDataSchema`; any
-   * failure (network, 4xx, shape mismatch) resolves to `null` so the
-   * caller can treat missing data as a no-op rather than branching on
-   * errors.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (e.g. `PT1H`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or `null` on any failure.
-   */
-  public async getEnergy(
-    id: string,
-    params: { from: string; interval: string; to: string },
-  ): Promise<HomeEnergyData | null> {
-    return this.#safeRequest({
-      config: {
-        params: {
-          from: toTelemetryDate(params.from),
-          interval: params.interval,
-          measure: 'cumulative_energy_consumed_since_last_upload',
-          to: toTelemetryDate(params.to),
-        },
-      },
-      context: 'BFF /telemetry/telemetry/energy',
-      schema: HomeEnergyDataSchema,
-      url: `${ENERGY_PATH}/${id}`,
-    })
-  }
-
-  /**
-   * Fetch the error-log entries for an ATA unit. Unlike the other
-   * telemetry getters, a failure resolves to an empty array rather
-   * than `null`, matching how consumer code typically iterates the
-   * result.
-   * @param id - Device id.
-   * @returns The entries, or `[]` on any failure.
-   */
-  public async getErrorLog(id: string): Promise<HomeErrorLogEntry[]> {
-    return (
-      (await this.#safeRequest({
-        context: 'BFF /monitor/ataunit/:id/errorlog',
-        schema: HomeErrorLogEntryListSchema,
-        url: `${ATA_UNIT_PATH}/${id}/errorlog`,
-      })) ?? []
-    )
-  }
-
-  /**
-   * Fetch RSSI telemetry for an ATA unit. Same silent-fail semantics
-   * as {@link getEnergy} — resolves to `null` on any failure.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or `null` on any failure.
-   */
-  public async getSignal(
-    id: string,
-    params: { from: string; to: string },
-  ): Promise<HomeEnergyData | null> {
-    return this.#safeRequest({
-      config: {
-        params: {
-          from: toTelemetryDate(params.from),
-          measure: 'rssi',
-          to: toTelemetryDate(params.to),
-        },
-      },
-      context: 'BFF /telemetry/telemetry/actual',
-      schema: HomeEnergyDataSchema,
-      url: `${SIGNAL_PATH}/${id}`,
-    })
-  }
-
-  /**
-   * Fetch a trend-summary report (temperatures, etc.) for an ATA
-   * unit. Silent-fail: resolves to `null` on any failure.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.period - Aggregation period (e.g. `hour`, `day`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The report datasets, or `null` on any failure.
-   */
-  public async getTemperatures(
-    id: string,
-    params: { from: string; period: string; to: string },
-  ): Promise<HomeReportData[] | null> {
-    return this.#safeRequest({
-      config: {
-        params: {
-          from: toReportDate(params.from),
-          period: params.period,
-          to: toReportDate(params.to),
-          unitId: id,
-        },
-      },
-      context: 'BFF /report/v1/trendsummary',
-      schema: HomeReportDataSchema.array(),
-      url: REPORT_PATH,
-    })
-  }
-
-  /**
    * Validate the current session by fetching the user context.
    * Returns `null` if the request fails (401, network error, etc.)
    * and clears the stored user state.
@@ -366,12 +361,19 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   }
 
   /**
-   * Send an ATA-unit setpoint update to the BFF and re-fetch the
-   * context so the registry reflects the new state.
+   * Send an ATA-unit setpoint update to the BFF. On success, re-sync
+   * the registry so it reflects the server-side effect of the write
+   * (the PUT response itself does not echo device fields). On failure,
+   * skip the sync — the server state is presumed unchanged, so a
+   * re-fetch would be wasted work.
    *
-   * Swallows errors — the return flag signals success/failure so
-   * integrating hosts (e.g. Homey drivers) can treat a transient
-   * failure as a no-op and retry on the next sync.
+   * Boolean surface is preserved for integrating hosts (e.g. Homey
+   * drivers) that treat transient failures as a no-op and retry on
+   * the next sync. The actual mutation + post-sync orchestration
+   * lives in {@link #putAndSync}, where `@fetchDevices({ when: 'after' })`
+   * applies the same post-mutation-refresh contract as Classic
+   * facades — just resolved via `syncRegistry()` instead of
+   * `api.fetch()`.
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
    * @returns `true` when the update succeeded, `false` otherwise.
@@ -381,47 +383,138 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     values: HomeAtaValues,
   ): Promise<boolean> {
     try {
-      await this.request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
-      await this.list()
+      await this.putAndSync(id, values)
       return true
     } catch {
       return false
     }
   }
 
+  protected override async doAuthenticate({
+    password,
+    username,
+  }: ClassicLoginCredentials): Promise<void> {
+    this.#clearPersistedSession()
+    try {
+      const tokens = await performTokenAuth({
+        credentials: { password, username },
+        ...(this.abortSignal === undefined ?
+          {}
+        : { abortSignal: this.abortSignal }),
+      })
+      this.#storeTokens(tokens)
+    } catch (error) {
+      /*
+       * Normalize transport-level `401 Unauthorized` from the BFF
+       * into the shared {@link AuthenticationError} domain type so
+       * callers of `authenticate()` get a stable error shape (mirror
+       * of the Classic `LoginData: null → AuthenticationError` path).
+       * Non-401 errors (PAR failures, Cognito redirect chain issues,
+       * network timeouts) propagate unchanged.
+       */
+      throw normalizeUnauthorized(error)
+    }
+    ;({ password: this.password, username: this.username } = {
+      password,
+      username,
+    })
+  }
+
   /* ---------------------------------------------------------------- */
   /*  Private — credentials & session                                 */
   /* ---------------------------------------------------------------- */
-  protected async ensureSession(): Promise<void> {
-    if (!isSessionExpired(this.expiry)) {
-      return
-    }
-    if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
-      return
-    }
-    await this.authenticate()
-  }
-
   protected getAuthHeaders(): Record<string, string> {
     return this.accessToken === '' ?
         {}
       : { Authorization: `Bearer ${this.accessToken}` }
   }
 
-  protected async retryAuth<T>(
-    method: string,
-    url: string,
-    config: Record<string, unknown>,
-  ): Promise<HttpResponse<T> | null> {
+  /**
+   * Home considers a session in need of refresh when the access
+   * token is within {@link SESSION_REFRESH_AHEAD_MS} of its real
+   * expiry. The forward window lets the shared `BaseAPI.ensureSession`
+   * template renew the token pre-emptively via
+   * {@link performSessionRefresh}, keeping the OIDC round-trip off
+   * the request's critical path.
+   * @returns `true` when a refresh should run before the next request.
+   */
+  protected override needsSessionRefresh(): boolean {
+    return isSessionExpired(this.expiry, SESSION_REFRESH_AHEAD_MS)
+  }
+
+  /**
+   * Home session refresh = try the cheap refresh-token exchange
+   * first; if the refresh token is rejected (or missing), fall
+   * through to a full {@link resumeSession} (re-auth from persisted
+   * username/password). `resumeSession` logs + swallows on failure;
+   * the 401 retry path on the triggering request handles hard errors.
+   */
+  protected override async performSessionRefresh(): Promise<void> {
     if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
-      return this.dispatch<T>(method, url, config)
+      return
+    }
+    await this.resumeSession()
+  }
+
+  /**
+   * Reactive-401 refresh for Home. The access token was just
+   * rejected, so we clear it before trying recovery: first the
+   * cheap refresh-token exchange, then a full {@link resumeSession}
+   * as fallback. The shared {@link AuthRetryPolicy} replays the
+   * original request on success.
+   * @returns `true` when the instance is authenticated afterwards.
+   */
+  protected override async reauthenticate(): Promise<boolean> {
+    if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
+      return true
     }
     this.#clearPersistedSession()
-    await this.authenticate()
-    if (!this.isAuthenticated()) {
-      return null
+    return this.resumeSession()
+  }
+
+  protected override async syncRegistry(): Promise<void> {
+    await this.list()
+  }
+
+  /**
+   * Reuse a persisted Home session by issuing the standard
+   * `list()` call, which hits `/context` once and hydrates both
+   * `context`/`user` AND the device registry in a single request.
+   * A valid token returns populated context; an expired one triggers
+   * the request pipeline's 401-retry + refresh-token flow; anything
+   * else falls through to a full authenticate.
+   * @returns `true` when persisted tokens verified against the BFF
+   * (registry populated via the same round-trip); `false` otherwise.
+   */
+  protected override async tryReuseSession(): Promise<boolean> {
+    if (!this.#hasPersistedSession()) {
+      return false
     }
-    return this.dispatch<T>(method, url, config)
+    await this.list()
+    if (this.context !== null) {
+      return true
+    }
+    this.#clearPersistedSession()
+    return false
+  }
+
+  /* ---------------------------------------------------------------- */
+  /*  Private — token management                                      */
+  /* ---------------------------------------------------------------- */
+  /**
+   * Core of {@link updateValues}: perform the PUT and, on success,
+   * trigger a post-mutation registry refresh via
+   * `@fetchDevices({ when: 'after' })`. Throws on PUT failure so the
+   * decorator skips the sync (failed mutation → server state
+   * unchanged → re-fetch wasted). Sync failures after a successful
+   * PUT are logged and swallowed by the decorator itself, preserving
+   * the "mutation landed" truth even when the post-refresh flakes.
+   * @param id - Target device id.
+   * @param values - Partial setpoint payload.
+   */
+  @fetchDevices({ when: 'after' })
+  private async putAndSync(id: string, values: HomeAtaValues): Promise<void> {
+    await this.request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
   }
 
   #clearPersistedSession(): void {
@@ -431,9 +524,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     this.expiry = ''
   }
 
-  /* ---------------------------------------------------------------- */
-  /*  Private — token management                                      */
-  /* ---------------------------------------------------------------- */
   /**
    * Fetch the user context from the BFF and update local state.
    * Shared by `getUser()` and `list()`.
@@ -464,6 +554,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    */
   async #refreshAccessToken(): Promise<boolean> {
     const tokens = await refreshAccessToken({
+      logger: this.logger,
       refreshToken: this.refreshToken,
       ...(this.abortSignal === undefined ?
         {}
@@ -474,25 +565,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     }
     this.#storeTokens(tokens)
     return true
-  }
-
-  async #safeRequest<T>({
-    config,
-    context,
-    schema,
-    url,
-  }: {
-    context: string
-    schema: z.ZodType<T>
-    url: string
-    config?: Record<string, unknown>
-  }): Promise<T | null> {
-    try {
-      const { data } = await this.request('get', url, config)
-      return parseOrThrow(schema, data, context)
-    } catch {
-      return null
-    }
   }
 
   #storeTokens({

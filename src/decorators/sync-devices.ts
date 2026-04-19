@@ -8,24 +8,27 @@ interface HasOnSync {
 }
 
 /**
- * Method decorator factory that invokes the sync callback after the decorated method completes.
- * Works with any class that exposes `notifySync` (facades) or `onSync` (API services) —
- * used by both Classic and Home APIs.
+ * Method decorator factory that invokes a sync notification **after**
+ * the decorated method resolves. Resolves to the host's `notifySync`
+ * (facades — enriches the payload with `ids`) when available,
+ * otherwise falls back to `onSync` directly (API services — bare
+ * `{ type }` payload). No action is taken if neither hook is exposed.
+ *
+ * Intended for one-shot post-method notifications; this is **not**
+ * a subscription. Exceptions thrown by the consumer's callback
+ * propagate — the decorator does not swallow them, so a buggy sync
+ * handler surfaces on the caller rather than dying silently.
  * @param root0 - Options object.
- * @param root0.type - Optional device type to pass to the sync callback.
+ * @param root0.type - Optional device type forwarded in the payload.
  * @returns A method decorator that triggers sync after execution.
  */
 export const syncDevices =
-  ({
-    type,
-  }: {
-    type?: DeviceType
-  } = {}) =>
-  <TResult>(
-    target: (...args: any[]) => Promise<TResult>,
+  ({ type }: { type?: DeviceType } = {}) =>
+  <TArgs extends readonly unknown[], TResult>(
+    target: (...args: TArgs) => Promise<TResult>,
     _context: ClassMethodDecoratorContext,
-  ): ((...args: unknown[]) => Promise<TResult>) =>
-    async function newTarget(this: HasOnSync, ...args: unknown[]) {
+  ): ((...args: TArgs) => Promise<TResult>) =>
+    async function newTarget(this: HasOnSync, ...args: TArgs) {
       const data = await target.call(this, ...args)
       await (this.notifySync ?
         this.notifySync({ type })

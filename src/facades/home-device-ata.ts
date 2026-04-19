@@ -5,8 +5,10 @@ import type {
   HomeDeviceCapabilities,
   HomeDeviceSetting,
   HomeEnergyData,
+  HomeError,
   HomeErrorLogEntry,
   HomeReportData,
+  Result,
 } from '../types/index.ts'
 import { ClassicFanSpeed } from '../constants.ts'
 import {
@@ -129,18 +131,18 @@ export class HomeDeviceAtaFacade {
     from: string
     interval: string
     to: string
-  }): Promise<HomeEnergyData | null> {
+  }): Promise<Result<HomeEnergyData, HomeError>> {
     return this.#api.getEnergy(this.id, params)
   }
 
-  public async getErrorLog(): Promise<HomeErrorLogEntry[]> {
+  public async getErrorLog(): Promise<Result<HomeErrorLogEntry[], HomeError>> {
     return this.#api.getErrorLog(this.id)
   }
 
   public async getSignal(params: {
     from: string
     to: string
-  }): Promise<HomeEnergyData | null> {
+  }): Promise<Result<HomeEnergyData, HomeError>> {
     return this.#api.getSignal(this.id, params)
   }
 
@@ -148,7 +150,7 @@ export class HomeDeviceAtaFacade {
     from: string
     period: string
     to: string
-  }): Promise<HomeReportData[] | null> {
+  }): Promise<Result<HomeReportData[], HomeError>> {
     return this.#api.getTemperatures(this.id, params)
   }
 

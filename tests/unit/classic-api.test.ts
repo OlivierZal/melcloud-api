@@ -446,7 +446,16 @@ describe('mELCloud Classic API', () => {
       ).rejects.toThrow(AuthenticationError)
     })
 
-    it('logs and swallows when login data is null with stored credentials', async () => {
+    /*
+     * Pins the Classic-specific normalization path: MELCloud returns
+     * `HTTP 200 { LoginData: null }` for bad credentials (not a 401),
+     * so `doAuthenticate` throws AuthenticationError directly — which
+     * `resumeSession` then logs and swallows. The generic "no
+     * credentials persisted" and "doAuthenticate rejects → logged +
+     * false" cases are covered at the BaseAPI unit level
+     * (base-api.test.ts → `authenticate() vs resumeSession() contract`).
+     */
+    it('resumeSession logs AuthenticationError when LoginData is null', async () => {
       const logger = createLogger()
       mockLoginAndList()
       const api = await createApi({
@@ -456,13 +465,44 @@ describe('mELCloud Classic API', () => {
       })
       mockRequest.mockResolvedValue(wrap({ LoginData: null }))
 
-      await api.authenticate()
+      const isResumed = await api.resumeSession()
 
+      expect(isResumed).toBe(false)
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(AuthenticationError),
       )
+    })
+
+    /*
+     * Post-condition contract: a successful authenticate() must leave
+     * the registry populated so callers never see an empty device list
+     * after a successful login. Enforced by BaseAPI.authenticate's
+     * template method (guard against OlivierZal/com.melcloud#1281-style regressions).
+     */
+    it('populates the device registry during authenticate', async () => {
+      const building = createBuilding({
+        Structure: {
+          Areas: [],
+          Devices: [createDevice({ DeviceID: 42, DeviceName: 'Populated' })],
+          Floors: [],
+        },
+      })
+      mockRequest.mockImplementation(async (config) => {
+        await Promise.resolve()
+        if (config.url === '/Login/ClientLogin3') {
+          return loginResponse()
+        }
+        if (config.url === '/User/ListDevices') {
+          return wrap([building])
+        }
+        return wrap({})
+      })
+      const api = await createApi()
+      await api.authenticate({ password: 'pass', username: 'user' })
+
+      expect(api.registry.devices.getById(42)?.name).toBe('Populated')
     })
   })
 
