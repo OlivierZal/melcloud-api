@@ -43,6 +43,8 @@ import { BaseFacade } from './classic-base.ts'
 // Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
 
+const MS_PER_DAY = 86_400_000
+
 /**
  * Clamp a numeric value into the inclusive `[min, max]` range.
  *
@@ -70,7 +72,7 @@ const getReportPostDataDates = ({
 })
 
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
-  Math.ceil(DateTime.fromISO(to).diff(DateTime.fromISO(from), 'days').days)
+  Math.ceil((new Date(to).getTime() - new Date(from).getTime()) / MS_PER_DAY)
 
 /**
  * Abstract base for device-specific facades. Handles device data access, report generation,

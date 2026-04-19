@@ -1,5 +1,3 @@
-import type { HourNumbers } from 'luxon'
-
 import type { ClassicDeviceType, ClassicLabelType } from '../constants.ts'
 import type {
   ClassicEnergyDataAta,
@@ -208,6 +206,32 @@ export interface ClassicHolidayModeTimeZone extends ClassicHolidayModeLocation {
   readonly TimeZone?: number
 }
 
+export type ClassicHour =
+  | 0
+  | 1
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 2
+  | 20
+  | 21
+  | 22
+  | 23
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+
 export interface ClassicListDevice<
   T extends ClassicDeviceType,
 > extends ClassicBaseListDevice<T> {
@@ -330,5 +354,5 @@ export interface ClassicZoneSettings
 
 export interface HourlyReportPostData {
   readonly devices: number[]
-  readonly hour: HourNumbers
+  readonly hour: ClassicHour
 }

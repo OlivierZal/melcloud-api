@@ -55,6 +55,7 @@ export type {
   ClassicHolidayModeLocation,
   ClassicHolidayModePostData,
   ClassicHolidayModeTimeZone,
+  ClassicHour,
   ClassicListDevice,
   ClassicListDeviceAny,
   ClassicListDeviceData,

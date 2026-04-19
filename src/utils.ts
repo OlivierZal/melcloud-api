@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'
+import { DateTime, Settings as LuxonSettings } from 'luxon'
 
 import type {
   ReportChartLineOptions,
@@ -16,6 +16,50 @@ import { type ClassicDeviceType, ClassicLabelType } from './constants.ts'
 
 // API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
 const YEAR_MONTH_DIVISOR = 100
+
+// 2024-01-01 was a Monday (ISO weekday 1), so UTC day N of Jan 2024 maps cleanly to weekday N.
+const DAY_OF_WEEK_BASE_YEAR = 2024
+const MONTH_NAME_BASE_YEAR = 2024
+
+interface LabelFormatterCache {
+  readonly dayOfWeek: Intl.DateTimeFormat
+  readonly locale: string | null | undefined
+  readonly month: Intl.DateTimeFormat
+  readonly monthYear: Intl.DateTimeFormat
+}
+
+let formatterCache: LabelFormatterCache | null = null
+
+// Tracks LuxonSettings.defaultLocale so output stays consistent with the rest
+// of the codebase's datetime formatting without re-creating Intl.DateTimeFormat per call.
+const getLabelFormatters = (): LabelFormatterCache => {
+  const { defaultLocale: locale } = LuxonSettings
+  if (formatterCache?.locale === locale) {
+    return formatterCache
+  }
+  // Luxon types defaultLocale as `string` but emits `null` at runtime when unset; Intl throws on null.
+  const base: string | undefined =
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- see above
+    locale ?? undefined
+  const cache: LabelFormatterCache = {
+    dayOfWeek: new Intl.DateTimeFormat(base, {
+      timeZone: 'UTC',
+      weekday: 'short',
+    }),
+    locale,
+    month: new Intl.DateTimeFormat(base, {
+      month: 'short',
+      timeZone: 'UTC',
+    }),
+    monthYear: new Intl.DateTimeFormat(base, {
+      month: 'short',
+      timeZone: 'UTC',
+      year: 'numeric',
+    }),
+  }
+  formatterCache = cache
+  return cache
+}
 
 /**
  * Get the current date/time as an ISO 8601 string without timezone offset.
@@ -74,14 +118,21 @@ export const isSetDeviceDataAtaInList = isKeyOf(fromListToSetAta)
  */
 const labelFormatters: Record<ClassicLabelType, (label: string) => string> = {
   [ClassicLabelType.day_of_week]: (label) =>
-    DateTime.fromFormat(label, 'c').toFormat('ccc'),
+    getLabelFormatters().dayOfWeek.format(
+      Date.UTC(DAY_OF_WEEK_BASE_YEAR, 0, Number(label)),
+    ),
   [ClassicLabelType.month]: (label) =>
-    DateTime.fromObject({ month: Number(label) }).toFormat('MMM'),
+    getLabelFormatters().month.format(
+      Date.UTC(MONTH_NAME_BASE_YEAR, Number(label) - 1, 1),
+    ),
   [ClassicLabelType.month_of_year]: (label) =>
-    DateTime.local(
-      Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
-      Number(label) % YEAR_MONTH_DIVISOR,
-    ).toFormat('MMM yyyy'),
+    getLabelFormatters().monthYear.format(
+      Date.UTC(
+        Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
+        (Number(label) % YEAR_MONTH_DIVISOR) - 1,
+        1,
+      ),
+    ),
   [ClassicLabelType.raw]: (label) => label,
   [ClassicLabelType.time]: (label) => label,
 }
