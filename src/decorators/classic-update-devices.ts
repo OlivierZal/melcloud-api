@@ -20,11 +20,29 @@ import {
 } from '../utils.ts'
 
 /**
- * Method decorator factory that propagates data changes to device models after
- * the decorated method completes. Supports filtering by device type and handles
- * the special `SetPower` method name for power state updates.
+ * How the decorator should compute the patch that gets propagated to
+ * each device in scope:
+ * - `'payload'` (default): use the method's request payload (the
+ *   single first argument), filtering out `null`/`undefined` fields so
+ *   callers can't accidentally clear existing values.
+ * - `'power'`: specialisation for power-toggle methods whose argument
+ *   is a bare `boolean` rather than an object. The boolean is wrapped
+ *   into `{ Power: bool }` before the propagation step.
+ *
+ * Replacing the former `String(context.name) === 'updatePower'`
+ * heuristic: a silent rename is no longer a latent bug.
+ */
+type UpdatePatchKind = 'payload' | 'power'
+
+/**
+ * Method decorator factory that propagates data changes to device
+ * models after the decorated method completes. Supports filtering by
+ * device type; the patch-computation strategy is explicit via
+ * {@link UpdatePatchKind} rather than inferred from the method name.
  * @param root0 - Options object.
- * @param root0.type - Optional device type to filter which devices are updated.
+ * @param root0.kind - Patch-computation strategy (default `'payload'`).
+ * @param root0.type - Optional device type to filter which devices
+ * are updated. When omitted, every device in the facade is patched.
  * @returns A method decorator that updates device models after execution.
  */
 export const classicUpdateDevices =
@@ -35,15 +53,17 @@ export const classicUpdateDevices =
       | ClassicGroupState
       | ClassicSuccessData,
   >({
+    kind = 'payload',
     type,
   }: {
+    kind?: UpdatePatchKind
     type?: ClassicDeviceType
   } = {}) =>
-  (
-    target: (...args: any[]) => Promise<T>,
-    context: ClassMethodDecoratorContext,
-  ): ((...args: unknown[]) => Promise<T>) =>
-    async function newTarget(this: ClassicZoneFacade, ...args: unknown[]) {
+  <TArgs extends readonly unknown[]>(
+    target: (...args: TArgs) => Promise<T>,
+    _context: ClassMethodDecoratorContext,
+  ): ((...args: TArgs) => Promise<T>) =>
+    async function newTarget(this: ClassicZoneFacade, ...args: TArgs) {
       const [arg] = args
       if (
         arg !== null &&
@@ -52,21 +72,15 @@ export const classicUpdateDevices =
       ) {
         throw new NoChangesError(this.id)
       }
-      const data = await target.call(this, arg)
-
-      /*
-       * SetPower takes a boolean directly, not an object. For other methods,
-       * filter out null/undefined values to avoid clearing fields unintentionally.
-       */
+      const data = await target.call(this, ...args)
       const newData =
-        String(context.name) === 'updatePower' ?
+        kind === 'power' ?
           { Power: arg }
         : Object.fromEntries(
             Object.entries(arg ?? data).filter(
               ([, value]) => value !== undefined && value !== null,
             ),
           )
-
       const targetDevices =
         type === undefined ?
           this.devices
@@ -110,21 +124,15 @@ const convertToListDeviceData = <T extends ClassicDeviceType>(
   )
 }
 
-/**
- * Method decorator that converts API response data back to list format
- * and updates the device model, using effective flags to determine which fields changed.
- * @param target - The original method to wrap.
- * @param _context - Decorator context provided by the runtime.
- * @returns A wrapper that updates the device model after calling the original method.
- */
-export const classicUpdateDevice = <
+const updateSingleDevice = <
   T extends ClassicDeviceType,
+  TArgs extends readonly unknown[],
   TData extends ClassicGetDeviceData<T> | ClassicSetDeviceData<T>,
 >(
-  target: (...args: any[]) => Promise<TData>,
+  target: (...args: TArgs) => Promise<TData>,
   _context: ClassMethodDecoratorContext,
-): ((...args: unknown[]) => Promise<TData>) =>
-  async function newTarget(this: ClassicDeviceFacade<T>, ...args: unknown[]) {
+): ((...args: TArgs) => Promise<TData>) =>
+  async function newTarget(this: ClassicDeviceFacade<T>, ...args: TArgs) {
     const data = await target.call(this, ...args)
     const {
       devices: [device],
@@ -134,3 +142,18 @@ export const classicUpdateDevice = <
     }
     return data
   }
+
+/**
+ * Method decorator factory that converts the API response back to
+ * list-data shape and updates the targeted device model, using
+ * `EffectiveFlags` to propagate only fields the device actually
+ * acknowledged.
+ *
+ * Factory form (always invoked as `@classicUpdateDevice()`) for
+ * signature symmetry with {@link classicUpdateDevices}; the decorator
+ * takes no configuration today but the shape is stable for future
+ * options without breaking call sites.
+ * @returns A method decorator.
+ */
+export const classicUpdateDevice = (): typeof updateSingleDevice =>
+  updateSingleDevice

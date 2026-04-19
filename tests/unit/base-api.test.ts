@@ -8,15 +8,16 @@ import type {
   RequestRetryEvent,
   RequestStartEvent,
 } from '../../src/api/interfaces.ts'
-import type { HttpResponse } from '../../src/http/index.ts'
-import { BaseAPI } from '../../src/api/base.ts'
-import { RateLimitError } from '../../src/errors/index.ts'
+import { BaseAPI, normalizeUnauthorized } from '../../src/api/base.ts'
+import { AuthenticationError, RateLimitError } from '../../src/errors/index.ts'
 import { HttpClient } from '../../src/http/client.ts'
+import { type HttpResponse, HttpError } from '../../src/http/index.ts'
 import {
   cast,
   createHttpError,
   createLogger,
   createServerError,
+  createSettingStore,
   createUnauthorizedError,
   mock,
 } from '../helpers.ts'
@@ -32,6 +33,8 @@ const mockRequest = vi.spyOn(mockHttpClient, 'request')
  * request pipeline without any Classic/Home-specific logic.
  */
 class TestAPI extends BaseAPI {
+  public readonly doAuthenticateMock = vi.fn<() => Promise<void>>()
+
   public readonly ensureSessionMock = vi.fn<() => Promise<void>>()
 
   public readonly getAuthHeadersMock = vi.fn<() => Record<string, string>>()
@@ -44,6 +47,10 @@ class TestAPI extends BaseAPI {
         config: Record<string, unknown>,
       ) => Promise<HttpResponse | null>
     >()
+
+  public readonly syncRegistryMock = vi.fn<() => Promise<void>>()
+
+  public readonly tryReuseSessionMock = vi.fn<() => Promise<boolean>>()
 
   public constructor(
     config: BaseAPIConfig = {},
@@ -63,11 +70,9 @@ class TestAPI extends BaseAPI {
     this.getAuthHeadersMock.mockReturnValue({})
     this.ensureSessionMock.mockResolvedValue()
     this.retryAuthMock.mockResolvedValue(null)
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
-  public override async authenticate(): Promise<void> {
-    await Promise.resolve()
+    this.doAuthenticateMock.mockResolvedValue()
+    this.syncRegistryMock.mockResolvedValue()
+    this.tryReuseSessionMock.mockResolvedValue(false)
   }
 
   /** Expose the protected dispatch for direct testing. */
@@ -88,6 +93,15 @@ class TestAPI extends BaseAPI {
     return this.request<T>(method, url, config)
   }
 
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
+  public override isAuthenticated(): boolean {
+    return true
+  }
+
+  protected override async doAuthenticate(): Promise<void> {
+    return this.doAuthenticateMock()
+  }
+
   protected override async ensureSession(): Promise<void> {
     return this.ensureSessionMock()
   }
@@ -103,7 +117,30 @@ class TestAPI extends BaseAPI {
   ): Promise<HttpResponse<T> | null> {
     return cast(await this.retryAuthMock(method, url, config))
   }
+
+  protected override async syncRegistry(): Promise<void> {
+    return this.syncRegistryMock()
+  }
+
+  protected override async tryReuseSession(): Promise<boolean> {
+    return this.tryReuseSessionMock()
+  }
 }
+
+/**
+ * Build a {@link TestAPI} instance wired to an in-memory
+ * SettingManager holding `{ username, password }`. Used by the
+ * `authenticate() vs resumeSession() contract` tests that need a
+ * persisted-credentials scenario.
+ */
+const apiWithPersistedCredentials = (
+  overrides: Partial<BaseAPIConfig> = {},
+): TestAPI =>
+  new TestAPI({
+    settingManager: createSettingStore({ password: 'p', username: 'u' })
+      .settingManager,
+    ...overrides,
+  })
 
 describe('baseAPI shared request pipeline', () => {
   // eslint-disable-next-line @typescript-eslint/init-declarations -- Assigned in beforeEach
@@ -463,5 +500,137 @@ describe('baseAPI shared request pipeline', () => {
         }),
       )
     })
+  })
+
+  /*
+   * Template contract: `initialize()` is the sole lifecycle entry
+   * point that subclass `create()` factories may call. It guarantees
+   * that on return, either the persisted session has been reused
+   * (tryReuseSession=true and, by contract, registry populated) or
+   * `resumeSession()` has run (which itself syncs the registry when
+   * credentials are persisted, or is a no-op otherwise). Regression
+   * guard for the #1281-class bug on the reuse-session branch that
+   * the original PR didn't cover.
+   */
+  describe('initialize() template', () => {
+    it('exits early when tryReuseSession returns true', async () => {
+      api.tryReuseSessionMock.mockResolvedValueOnce(true)
+
+      await api.initialize()
+
+      expect(api.tryReuseSessionMock).toHaveBeenCalledTimes(1)
+      expect(api.doAuthenticateMock).not.toHaveBeenCalled()
+      expect(api.syncRegistryMock).not.toHaveBeenCalled()
+    })
+
+    it('falls through to resumeSession when tryReuseSession returns false', async () => {
+      api.tryReuseSessionMock.mockResolvedValueOnce(false)
+
+      await api.initialize()
+
+      expect(api.tryReuseSessionMock).toHaveBeenCalledTimes(1)
+      // resumeSession() without persisted credentials is a silent
+      // no-op — doAuthenticate is only reached when credentials are
+      // persisted (see `resumeSession() returns true ...` below).
+      expect(api.doAuthenticateMock).not.toHaveBeenCalled()
+    })
+  })
+
+  /*
+   * Contract split: `authenticate(credentials)` is the explicit
+   * sign-in entry — it throws on rejection. `resumeSession()` is
+   * the best-effort restore entry — it logs and swallows. This
+   * describe block pins the observable difference between the two
+   * so future refactors cannot collapse them back into a dual-mode
+   * function. Subsumes the former `initialize() → runs doAuthenticate
+   * + syncRegistry when credentials are persisted` test: the
+   * persisted-credentials path is now exercised at its natural unit
+   * (resumeSession) rather than through initialize's indirection.
+   */
+  describe('authenticate() vs resumeSession() contract', () => {
+    it('authenticate() throws when doAuthenticate rejects', async () => {
+      api.doAuthenticateMock.mockRejectedValueOnce(new Error('rejected'))
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('rejected')
+      expect(api.syncRegistryMock).not.toHaveBeenCalled()
+    })
+
+    it('authenticate() syncs the registry on success', async () => {
+      await api.authenticate({ password: 'p', username: 'u' })
+
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
+      expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('resumeSession() returns false with no persisted credentials', async () => {
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(false)
+      expect(api.doAuthenticateMock).not.toHaveBeenCalled()
+    })
+
+    it('resumeSession() logs + returns false when sign-in fails', async () => {
+      const logger = createLogger()
+      api = apiWithPersistedCredentials({ logger })
+      api.doAuthenticateMock.mockRejectedValueOnce(new Error('rejected'))
+
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Session resume failed:',
+        expect.any(Error),
+      )
+    })
+
+    it('resumeSession() returns true and syncs registry on success', async () => {
+      api = apiWithPersistedCredentials()
+
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(true)
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
+      expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
+    })
+  })
+})
+
+/*
+ * Direct-unit coverage for the `normalizeUnauthorized` helper. Its
+ * only other exercise is through `HomeAPI.doAuthenticate`, where the
+ * OIDC mock stack can mask subtle branching. Pinning the contract
+ * here keeps the three error classes (401 HttpError, non-401
+ * HttpError, non-HttpError) traceable in isolation.
+ */
+describe(normalizeUnauthorized, () => {
+  it('wraps a 401 HttpError into AuthenticationError with original as cause', () => {
+    const http = new HttpError(
+      'Unauthorized',
+      { data: undefined, headers: {}, status: 401 },
+      { url: '/context' },
+    )
+
+    const result = normalizeUnauthorized(http)
+
+    expect(result).toBeInstanceOf(AuthenticationError)
+    expect(result).toMatchObject({ cause: http })
+  })
+
+  it('passes non-401 HttpErrors through unchanged', () => {
+    const http = new HttpError(
+      'Server error',
+      { data: undefined, headers: {}, status: 500 },
+      { url: '/context' },
+    )
+
+    expect(normalizeUnauthorized(http)).toBe(http)
+  })
+
+  it('passes non-HttpError errors through unchanged', () => {
+    const native = new Error('network')
+
+    expect(normalizeUnauthorized(native)).toBe(native)
   })
 })

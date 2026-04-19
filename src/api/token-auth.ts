@@ -552,18 +552,27 @@ export const performTokenAuth = async ({
 }
 
 /**
- * Exchange a refresh token for a fresh access token.
+ * Exchange a refresh token for a fresh access token. Returns `null`
+ * on **any** failure so the caller can fall through to a full re-auth
+ * without threading an exception up the stack — but logs the error
+ * reason via the optional logger so the failure mode (expired refresh
+ * token vs. transient network flake vs. 5xx) stays observable. Prior
+ * behaviour silently discarded all diagnostic context.
  * @param options - The refresh options.
  * @param options.refreshToken - The user's refresh token.
  * @param options.abortSignal - Optional signal to abort the refresh.
+ * @param options.logger - Optional logger; defaults to no-op.
+ * @param options.logger.error - Error-level sink used for the diagnostic.
  * @returns The new token response, or `null` if refresh failed.
  */
 export const refreshAccessToken = async ({
   abortSignal,
+  logger,
   refreshToken,
 }: {
   refreshToken: string
   abortSignal?: AbortSignal
+  logger?: { readonly error: (...args: unknown[]) => void }
 }): Promise<TokenResponse | null> => {
   try {
     return await tokenRequest({
@@ -574,7 +583,8 @@ export const refreshAccessToken = async ({
       },
       ...(abortSignal === undefined ? {} : { abortSignal }),
     })
-  } catch {
+  } catch (error) {
+    logger?.error('Refresh token exchange failed:', error)
     return null
   }
 }

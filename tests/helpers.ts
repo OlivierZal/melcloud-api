@@ -19,7 +19,13 @@ import {
 } from '../src/entities/index.ts'
 import { HttpError } from '../src/http/index.ts'
 
-const MOCK_RSSI = -60
+/*
+ * Default RSSI value (in dBm) used in the mock `getSignal` response
+ * below. A mid-range -60 dBm keeps derived assertions (chart-line
+ * thresholds, signal-quality bands) in a predictable band without
+ * special-casing weak or strong-signal branches.
+ */
+const MOCK_SIGNAL_RSSI_DBM = -60
 
 export function cast(value: unknown): never
 export function cast(value: unknown): unknown {
@@ -62,7 +68,7 @@ export const createMockApi = (
     getSignal: vi.fn<ClassicAPIAdapter['getSignal']>().mockResolvedValue(
       cast({
         data: {
-          Data: [[{ Data: [MOCK_RSSI], Name: 'ClassicDevice' }]],
+          Data: [[{ Data: [MOCK_SIGNAL_RSSI_DBM], Name: 'ClassicDevice' }]],
           Labels: ['12:00'],
         },
       }),

@@ -31,8 +31,12 @@ export interface HomeAPI {
   readonly registry: HomeRegistry
   /** The currently authenticated user, or `null`. */
   readonly user: HomeUser | null
-  /** Authenticate with MELCloud Home using the provided or stored credentials. */
-  readonly authenticate: (data?: ClassicLoginCredentials) => Promise<void>
+  /**
+   * Sign in with explicit credentials. Throws `AuthenticationError`
+   * on rejection. For best-effort restore from persisted credentials,
+   * use {@link resumeSession} instead.
+   */
+  readonly authenticate: (credentials: ClassicLoginCredentials) => Promise<void>
   /** Cancel any pending automatic sync. */
   readonly clearSync: () => void
   /** Fetch energy consumption data for a device. */
@@ -58,6 +62,12 @@ export interface HomeAPI {
   readonly isAuthenticated: () => boolean
   /** Fetch all buildings and sync the device registry. */
   readonly list: () => Promise<HomeBuilding[]>
+  /**
+   * Best-effort session restore from persisted credentials. Never
+   * throws — returns `false` when no credentials are persisted or
+   * sign-in fails (logged via the SDK logger).
+   */
+  readonly resumeSession: () => Promise<boolean>
   /** Update the automatic sync interval and reschedule. Set to `0` or `null` to disable. */
   readonly setSyncInterval: (minutes: number | null) => void
   /** Update device values and refresh device data via list(). */

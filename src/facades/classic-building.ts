@@ -6,7 +6,7 @@ import type {
   ClassicRegistry,
 } from '../entities/index.ts'
 import type { ClassicBuildingID, ClassicZoneSettings } from '../types/index.ts'
-import { classicFetchDevices } from '../decorators/index.ts'
+import { fetchDevices } from '../decorators/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 
 /** Facade for a building, providing access to all its devices and zone settings. */
@@ -49,7 +49,7 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
     } = this)
   }
 
-  @classicFetchDevices
+  @fetchDevices()
   public async fetch(): Promise<ClassicZoneSettings> {
     const data = await Promise.resolve(this.data)
     return data

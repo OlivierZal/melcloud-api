@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import type { ClassicLoginCredentials } from '../types/index.ts'
 import { setting } from '../decorators/index.ts'
+import { AuthenticationError } from '../errors/index.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
@@ -32,6 +33,24 @@ import { SyncManager } from './sync-manager.ts'
 
 const HTTP_STATUS_UNAUTHORIZED = 401
 const HTTP_STATUS_TOO_MANY_REQUESTS = 429
+
+/**
+ * Narrow any error the HTTP client can surface into either an
+ * {@link AuthenticationError} (for `401 Unauthorized`) or the error
+ * unchanged. Subclass `doAuthenticate` implementations call this
+ * helper to normalize transport-level rejections into the shared
+ * domain error type — callers of {@link BaseAPI.authenticate} then
+ * get a stable `AuthenticationError` regardless of whether the
+ * underlying flow was cookie-based (Classic) or bearer-token (Home).
+ * @param error - The error to inspect.
+ * @returns `AuthenticationError` if a 401 HttpError; `error` otherwise.
+ */
+export const normalizeUnauthorized = (error: unknown): unknown =>
+  isHttpError(error) && error.response.status === HTTP_STATUS_UNAUTHORIZED ?
+    new AuthenticationError('MELCloud rejected the credentials', {
+      cause: error,
+    })
+  : error
 
 /** Options for the {@link BaseAPI} constructor beyond the base config. */
 interface BaseAPIConstructorOptions {
@@ -113,11 +132,15 @@ export abstract class BaseAPI implements Disposable {
     this.#syncManager = new SyncManager(syncCallback, logger, autoSyncInterval)
   }
 
-  public abstract authenticate(data?: ClassicLoginCredentials): Promise<void>
+  protected abstract doAuthenticate(
+    credentials: ClassicLoginCredentials,
+  ): Promise<void>
 
   protected abstract ensureSession(): Promise<void>
 
   protected abstract getAuthHeaders(): Record<string, string>
+
+  public abstract isAuthenticated(): boolean
 
   protected abstract retryAuth<T>(
     method: string,
@@ -125,8 +148,109 @@ export abstract class BaseAPI implements Disposable {
     config: Record<string, unknown>,
   ): Promise<HttpResponse<T> | null>
 
+  protected abstract syncRegistry(): Promise<void>
+
+  /**
+   * Subclass hook: attempt to reuse an existing persisted session
+   * without going through a full re-authentication. Implementations
+   * must return `true` ONLY when the session has been **verified
+   * against the server** (a single credentialed request that also
+   * populates the device registry is the canonical shape). A `true`
+   * return therefore carries two guarantees: the instance is
+   * authenticated, and its registry reflects server state.
+   *
+   * Returning `false` is the contract for "no usable session" — the
+   * template `initialize()` will then fall through to a full
+   * {@link authenticate} flow (which has its own registry sync
+   * guarantee).
+   * @returns `true` when a persisted session has been reused and the
+   * registry is populated; `false` to fall through to authenticate.
+   */
+  protected abstract tryReuseSession(): Promise<boolean>
+
+  /**
+   * Sign in with explicit credentials.
+   *
+   * Contract: throws an {@link AuthenticationError} if MELCloud
+   * rejects the credentials — whatever the underlying transport
+   * (Classic `ClientLogin3` returning `LoginData: null`, Home BFF
+   * returning 401, etc.). A successful return guarantees the
+   * registry reflects server state — the post-auth sync is
+   * mandatory and enforced here so subclasses cannot forget it
+   * (regression guard, see OlivierZal/com.melcloud#1281).
+   *
+   * Use {@link resumeSession} instead when you want a best-effort
+   * restore from persisted credentials that logs + swallows errors.
+   * @param credentials - Explicit username/password.
+   * @throws {AuthenticationError} when credentials are rejected.
+   */
+  public async authenticate(
+    credentials: ClassicLoginCredentials,
+  ): Promise<void> {
+    this.applyCredentials(credentials.username, credentials.password)
+    await this.doAuthenticate(credentials)
+    await this.syncRegistry()
+  }
+
   public clearSync(): void {
     this.#syncManager.clear()
+  }
+
+  /**
+   * Post-construction lifecycle hook. Every subclass `create()`
+   * factory must delegate to this method — it is the sole path that
+   * guarantees the #1281-class invariant at instance-creation time:
+   * a successful return leaves the registry populated whenever
+   * credentials or a persisted session are available.
+   *
+   * Two-branch template:
+   * 1. {@link tryReuseSession} — if the subclass can reuse a
+   *    persisted session (and populate the registry in the process),
+   *    we are done.
+   * 2. Otherwise, {@link resumeSession} runs — best-effort restore
+   *    from persisted credentials. Does nothing (silently) if no
+   *    credentials are persisted, so the "no creds + no session"
+   *    case falls through to a documented empty state.
+   *
+   * Callers should check {@link isAuthenticated} after `create()`
+   * returns if they need to distinguish "empty state" from "ready".
+   */
+  public async initialize(): Promise<void> {
+    if (await this.tryReuseSession()) {
+      return
+    }
+    await this.resumeSession()
+  }
+
+  /**
+   * Best-effort session restore from persisted credentials.
+   *
+   * Reads `username`/`password` from the SettingManager and signs
+   * in. Unlike {@link authenticate}, failures are **logged and
+   * swallowed** — the method never throws. Use this from lifecycle
+   * hooks (init, 401 retry, `ensureSession`) where a stale or
+   * missing persisted credential must not crash the caller.
+   *
+   * On success, the registry is populated (delegates to
+   * {@link authenticate}).
+   * @returns `true` when a sign-in round-trip succeeded and the
+   * instance is now authenticated; `false` for "no persisted
+   * credentials" or "sign-in failed" (both indistinguishable by
+   * the return value alone — check the logger / `isAuthenticated`
+   * if the distinction matters).
+   */
+  public async resumeSession(): Promise<boolean> {
+    const credentials = this.resolvePersistedCredentials()
+    if (credentials === null) {
+      return false
+    }
+    try {
+      await this.authenticate(credentials)
+      return true
+    } catch (error) {
+      this.logger.error('Session resume failed:', error)
+      return false
+    }
   }
 
   public [Symbol.dispose](): void {
@@ -243,6 +367,14 @@ export abstract class BaseAPI implements Disposable {
       this.logger,
       error.response.headers['retry-after'],
     )
+  }
+
+  private resolvePersistedCredentials(): ClassicLoginCredentials | null {
+    const { password, username } = this
+    if (!username || !password) {
+      return null
+    }
+    return { password, username }
   }
 
   private async runWithEvents<T>(
