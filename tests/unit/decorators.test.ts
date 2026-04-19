@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { z } from 'zod'
 
 import type { ClassicAPIAdapter, SyncCallback } from '../../src/api/index.ts'
 import type {
@@ -17,6 +18,7 @@ import {
   classicUpdateDevices,
   fetchDevices,
   syncDevices,
+  validate,
 } from '../../src/decorators/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { cast, mock } from '../helpers.ts'
@@ -228,7 +230,22 @@ describe(fetchDevices, () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('silently no-ops when host exposes neither syncRegistry nor api.fetch', async () => {
+  it('throws TypeError when host exposes neither syncRegistry nor api.fetch (when=before)', async () => {
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+      .mockImplementation(async () => cast('result'))
+    const decorated = fetchDevices({ when: 'before' })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(decorated.call({})).rejects.toThrow(TypeError)
+    expect(target).not.toHaveBeenCalled()
+  })
+
+  it('logs and swallows when host exposes neither (when=after)', async () => {
+    const logError = vi.fn<(...args: unknown[]) => void>()
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
@@ -238,8 +255,15 @@ describe(fetchDevices, () => {
       mock<ClassMethodDecoratorContext>(),
     )
 
-    await expect(decorated.call({})).resolves.toBe('result')
-    expect(target).toHaveBeenCalledTimes(1)
+    await expect(
+      decorated.call({
+        logger: { error: logError, log: vi.fn<(...args: unknown[]) => void>() },
+      }),
+    ).resolves.toBe('result')
+    expect(logError).toHaveBeenCalledWith(
+      'Failed to refresh registry after mutation:',
+      expect.any(TypeError),
+    )
   })
 
   it('logs via logger.error when when=after and sync throws', async () => {
@@ -411,5 +435,122 @@ describe(classicUpdateDevice, () => {
     )
 
     expect(update).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe(validate, () => {
+  const schema = z.object({ value: z.number() })
+
+  it('returns the parsed payload on success', async () => {
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- target is async
+      .mockImplementation(async () => ({ value: 42 }))
+    const decorated = validate({ context: 'test', schema })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(decorated.call({})).resolves.toStrictEqual({ value: 42 })
+  })
+
+  it('returns null + logs on method rejection', async () => {
+    const logError = vi.fn<(...args: unknown[]) => void>()
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockRejectedValue(new Error('boom'))
+    const decorated = validate({ context: 'ctx', schema })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(
+      decorated.call({
+        logger: { error: logError, log: vi.fn<(...args: unknown[]) => void>() },
+      }),
+    ).resolves.toBeNull()
+    expect(logError).toHaveBeenCalledWith(
+      '[ctx] request or validation failed:',
+      expect.any(Error),
+    )
+  })
+
+  it('returns null + logs on shape mismatch', async () => {
+    const logError = vi.fn<(...args: unknown[]) => void>()
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- target is async
+      .mockImplementation(async () => ({ value: 'not-a-number' }))
+    const decorated = validate({ context: 'ctx', schema })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await expect(
+      decorated.call({
+        logger: { error: logError, log: vi.fn<(...args: unknown[]) => void>() },
+      }),
+    ).resolves.toBeNull()
+    expect(logError).toHaveBeenCalledWith(
+      '[ctx] request or validation failed:',
+      expect.anything(),
+    )
+  })
+})
+
+/*
+ * Stacking contract. The project applies `@syncDevices()` on top of
+ * `@classicUpdateDevices()` for `updatePower` (classic-base.ts). If
+ * the order ever silently flips, update-patch propagation would race
+ * the notify — worth pinning.
+ */
+describe('decorator stacking order', () => {
+  it('runs outer syncDevices after inner classicUpdateDevices', async () => {
+    const callOrder: string[] = []
+    const update = vi.fn<(data: unknown) => void>().mockImplementation(() => {
+      callOrder.push('update')
+    })
+    const onSync = vi.fn<SyncCallback>().mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/require-await -- signature is async
+      async () => {
+        callOrder.push('onSync')
+      },
+    )
+    const inner = classicUpdateDevices({ kind: 'power' })(
+      // eslint-disable-next-line @typescript-eslint/require-await -- target is async
+      async () => true,
+      mock<ClassMethodDecoratorContext>(),
+    )
+    const outer = syncDevices()(inner, mock<ClassMethodDecoratorContext>())
+    const facade = {
+      devices: [{ type: ClassicDeviceType.Ata, update }],
+      id: 1,
+      onSync,
+    }
+
+    await outer.call(facade, true)
+
+    expect(callOrder).toStrictEqual(['update', 'onSync'])
+  })
+})
+
+/*
+ * The `type` filter in `@classicUpdateDevices` and `@syncDevices`
+ * drives which devices receive a patch / which type label rides on
+ * the onSync payload. A regression here would silently broadcast the
+ * patch to unrelated device types.
+ */
+describe('decorator type-filter forwarding', () => {
+  it('@syncDevices forwards the configured type to onSync', async () => {
+    const onSync = vi.fn<SyncCallback>()
+    const decorated = syncDevices({ type: ClassicDeviceType.Atw })(
+      // eslint-disable-next-line @typescript-eslint/require-await -- target is async
+      async () => 'ok',
+      mock<ClassMethodDecoratorContext>(),
+    )
+
+    await decorated.call({ onSync })
+
+    expect(onSync).toHaveBeenCalledWith({ type: ClassicDeviceType.Atw })
   })
 })

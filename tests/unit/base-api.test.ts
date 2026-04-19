@@ -8,10 +8,10 @@ import type {
   RequestRetryEvent,
   RequestStartEvent,
 } from '../../src/api/interfaces.ts'
-import type { HttpResponse } from '../../src/http/index.ts'
-import { BaseAPI } from '../../src/api/base.ts'
-import { RateLimitError } from '../../src/errors/index.ts'
+import { BaseAPI, normalizeUnauthorized } from '../../src/api/base.ts'
+import { AuthenticationError, RateLimitError } from '../../src/errors/index.ts'
 import { HttpClient } from '../../src/http/client.ts'
+import { type HttpResponse, HttpError } from '../../src/http/index.ts'
 import {
   cast,
   createHttpError,
@@ -594,5 +594,43 @@ describe('baseAPI shared request pipeline', () => {
       expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
       expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
     })
+  })
+})
+
+/*
+ * Direct-unit coverage for the `normalizeUnauthorized` helper. Its
+ * only other exercise is through `HomeAPI.doAuthenticate`, where the
+ * OIDC mock stack can mask subtle branching. Pinning the contract
+ * here keeps the three error classes (401 HttpError, non-401
+ * HttpError, non-HttpError) traceable in isolation.
+ */
+describe(normalizeUnauthorized, () => {
+  it('wraps a 401 HttpError into AuthenticationError with original as cause', () => {
+    const http = new HttpError(
+      'Unauthorized',
+      { data: undefined, headers: {}, status: 401 },
+      { url: '/context' },
+    )
+
+    const result = normalizeUnauthorized(http)
+
+    expect(result).toBeInstanceOf(AuthenticationError)
+    expect(result).toMatchObject({ cause: http })
+  })
+
+  it('passes non-401 HttpErrors through unchanged', () => {
+    const http = new HttpError(
+      'Server error',
+      { data: undefined, headers: {}, status: 500 },
+      { url: '/context' },
+    )
+
+    expect(normalizeUnauthorized(http)).toBe(http)
+  })
+
+  it('passes non-HttpError errors through unchanged', () => {
+    const native = new Error('network')
+
+    expect(normalizeUnauthorized(native)).toBe(native)
   })
 })

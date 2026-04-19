@@ -24,8 +24,8 @@ const MILLISECONDS_IN_SECOND = 1000
 const COGNITO = 'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 const AUTH_BASE = 'https://auth.melcloudhome.com'
 
-const X_KEY = 'x'
-const Y_KEY = 'y'
+const REPORT_TIME_KEY = 'x'
+const REPORT_VALUE_KEY = 'y'
 
 const cognitoLoginPage = (
   action = '/login?client_id=test&amp;state=abc',
@@ -115,8 +115,11 @@ const mockReportData: HomeReportData[] = [
     datasets: [
       {
         data: [
-          { [X_KEY]: '2026-03-01T00:00:00', [Y_KEY]: 20.5 },
-          { [X_KEY]: '2026-03-01T01:00:00', [Y_KEY]: 21 },
+          {
+            [REPORT_TIME_KEY]: '2026-03-01T00:00:00',
+            [REPORT_VALUE_KEY]: 20.5,
+          },
+          { [REPORT_TIME_KEY]: '2026-03-01T01:00:00', [REPORT_VALUE_KEY]: 21 },
         ],
         id: 'room_temperature',
         label: 'Room ClassicTemperature',
@@ -403,6 +406,45 @@ describe('melcloud home API', () => {
       })
 
       expect(api.isAuthenticated()).toBe(true)
+    })
+  })
+
+  /*
+   * `resumeSession()` has generic coverage at the BaseAPI unit level;
+   * these cases pin the HomeAPI-specific shape (OIDC round-trip +
+   * `/context` + registry hydration) that the base mocks can't
+   * exercise. Regression guard for two observable behaviours:
+   * - a successful resume repopulates user/context AND registry;
+   * - a rejected resume (fetch throws) returns false + logs, without
+   *   leaving partial state behind.
+   */
+  describe('resumeSession', () => {
+    it('returns true and populates context + registry on success', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      setupSuccessfulLogin()
+
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(true)
+      expect(api.isAuthenticated()).toBe(true)
+      expect(api.user).not.toBeNull()
+      expect(api.registry.getAll().length).toBeGreaterThan(0)
+    })
+
+    it('returns false + logs when persisted credentials are rejected', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await createApi({ logger })
+      mockFetch.mockRejectedValueOnce(httpUnauthorized('/connect/par'))
+
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Session resume failed:',
+        expect.any(Error),
+      )
     })
   })
 
