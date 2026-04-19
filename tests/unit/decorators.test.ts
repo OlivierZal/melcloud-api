@@ -33,18 +33,14 @@ const createMockFacade = (
 })
 
 const decorateUpdateDevices = (
-  name: string,
   target: (
     ...args: unknown[]
   ) => Promise<
     boolean | ClassicFailureData | ClassicGroupState | ClassicSuccessData
   >,
-  options?: { type?: ClassicDeviceType },
+  options?: { kind?: 'payload' | 'power'; type?: ClassicDeviceType },
 ): ReturnType<ReturnType<typeof classicUpdateDevices>> =>
-  classicUpdateDevices(options)(
-    target,
-    mock<ClassMethodDecoratorContext>({ name }),
-  )
+  classicUpdateDevices(options)(target, mock<ClassMethodDecoratorContext>())
 
 const ataFlags = {
   OperationMode: 0x2,
@@ -127,7 +123,7 @@ const callUpdateDevice = async (
   const target = vi
     .fn<(...args: unknown[]) => Promise<never>>()
     .mockResolvedValue(cast(setData))
-  const decorated = classicUpdateDevice(
+  const decorated = classicUpdateDevice()(
     target,
     mock<ClassMethodDecoratorContext>(),
   )
@@ -318,7 +314,7 @@ describe(classicUpdateDevices, () => {
   it('updates all devices with the arg data', async () => {
     const update = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices('updateGroupState', resolveTrue)
+    const decorated = decorateUpdateDevices(resolveTrue)
     await decorated.call(facade, { Power: true })
 
     expect(update).toHaveBeenCalledWith({ Power: true })
@@ -326,7 +322,7 @@ describe(classicUpdateDevices, () => {
 
   it('throws when arg is empty object', async () => {
     const facade = createMockFacade([], 42)
-    const decorated = decorateUpdateDevices('updateGroupState', resolveTrue)
+    const decorated = decorateUpdateDevices(resolveTrue)
 
     await expect(decorated.call(facade, {})).rejects.toThrow(
       new NoChangesError(42),
@@ -340,7 +336,7 @@ describe(classicUpdateDevices, () => {
       { type: ClassicDeviceType.Ata, update: updateAta },
       { type: ClassicDeviceType.Atw, update: updateAtw },
     ])
-    const decorated = decorateUpdateDevices('updateGroupState', resolveTrue, {
+    const decorated = decorateUpdateDevices(resolveTrue, {
       type: ClassicDeviceType.Ata,
     })
     await decorated.call(facade, { Power: true })
@@ -349,22 +345,19 @@ describe(classicUpdateDevices, () => {
     expect(updateAtw).not.toHaveBeenCalled()
   })
 
-  it('uses updatePower logic when method name is updatePower', async () => {
+  it('wraps a boolean arg into { Power } when kind is power', async () => {
     const update = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices('updatePower', resolveTrue)
+    const decorated = decorateUpdateDevices(resolveTrue, { kind: 'power' })
     await decorated.call(facade, true)
 
     expect(update).toHaveBeenCalledWith({ Power: true })
   })
 
-  it('filters null/undefined values from data when not updatePower', async () => {
+  it('filters null/undefined values from data with kind=payload', async () => {
     const update = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
-    const decorated = decorateUpdateDevices(
-      'updateGroupState',
-      resolvePowerData,
-    )
+    const decorated = decorateUpdateDevices(resolvePowerData)
     await decorated.call(facade, null)
 
     expect(update).toHaveBeenCalledWith({ Power: true })

@@ -149,7 +149,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   @syncDevices()
-  @classicUpdateDevice
+  @classicUpdateDevice()
   public async getValues(): Promise<ClassicGetDeviceData<T>> {
     const { data } = await this.api.getValues<T>({
       params: { buildingId: this.device.buildingId, id: this.id },
@@ -158,7 +158,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   @syncDevices()
-  @classicUpdateDevice
+  @classicUpdateDevice()
   public async updateValues(
     data: Partial<ClassicUpdateDeviceData<T>>,
   ): Promise<ClassicSetDeviceData<T>> {

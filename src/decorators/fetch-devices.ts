@@ -2,7 +2,7 @@ import type { ClassicAPIAdapter, Logger } from '../api/index.ts'
 
 /**
  * Structural contract consumed by {@link fetchDevices}. A host class
- * must expose exactly one of:
+ * must expose **at least one** of:
  * - `syncRegistry()` — BaseAPI-derived classes (template hook).
  * - `api.fetch()` — Classic facades (delegate to the underlying API).
  *
@@ -29,7 +29,19 @@ const runSync = async (self: FetchDevicesHost): Promise<void> => {
   }
   if (self.api) {
     await self.api.fetch()
+    return
   }
+  /*
+   * Structural contract violation: the decorator was applied to a
+   * host that exposes neither hook. Failing loudly at the first
+   * invocation is preferable to silently no-op'ing — a no-op
+   * refresh would give consumers a misleading sense that the
+   * registry is up to date.
+   */
+  throw new TypeError(
+    'fetchDevices: host exposes neither syncRegistry() nor api.fetch() — ' +
+      'decorator cannot resolve a refresh path',
+  )
 }
 
 /**
@@ -51,18 +63,20 @@ const runSync = async (self: FetchDevicesHost): Promise<void> => {
  *
  * `when: 'after'` is fail-soft: refresh failures are logged via
  * `logger.error` and swallowed, so a buggy `onSync` cannot mask a
- * landed mutation.
+ * landed mutation. `when: 'before'` **does** surface refresh errors
+ * — the method body hasn't run yet, and the caller should know the
+ * registry is stale before acting on it.
  * @param root0 - Options object.
  * @param root0.when - Whether to refresh before or after the call.
  * @returns A method decorator.
  */
 export const fetchDevices =
   ({ when = 'before' }: { when?: 'after' | 'before' } = {}) =>
-  <T>(
-    target: (...args: any[]) => Promise<T>,
+  <TArgs extends readonly unknown[], TResult>(
+    target: (...args: TArgs) => Promise<TResult>,
     _context: ClassMethodDecoratorContext,
-  ): ((...args: unknown[]) => Promise<T>) =>
-    async function newTarget(this: FetchDevicesHost, ...args: unknown[]) {
+  ): ((...args: TArgs) => Promise<TResult>) =>
+    async function newTarget(this: FetchDevicesHost, ...args: TArgs) {
       if (when === 'before') {
         await runSync(this)
       }

@@ -5,3 +5,4 @@ export {
 export { fetchDevices } from './fetch-devices.ts'
 export { setting } from './setting.ts'
 export { syncDevices } from './sync-devices.ts'
+export { validate } from './validate.ts'

@@ -1,5 +1,3 @@
-import type { z } from 'zod'
-
 import type { HttpResponse } from '../http/index.ts'
 import type {
   ClassicLoginCredentials,
@@ -12,7 +10,12 @@ import type {
   HomeUser,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
-import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
+import {
+  fetchDevices,
+  setting,
+  syncDevices,
+  validate,
+} from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import {
@@ -151,6 +154,88 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   }
 
   /**
+   * Fetch cumulative-energy telemetry for an ATA unit. The payload is
+   * Zod-validated by `@validate`; any failure (network, 4xx, shape
+   * mismatch) resolves to `null` with a `logger.error` trace — the
+   * SDK does not leak transport exceptions to the caller.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.interval - Aggregation interval (e.g. `PT1H`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns The telemetry bundle, or `null` on any failure.
+   */
+  @validate({
+    context: 'BFF /monitor/telemetry/energy',
+    schema: HomeEnergyDataSchema,
+  })
+  public async getEnergy(
+    id: string,
+    params: { from: string; interval: string; to: string },
+  ): Promise<HomeEnergyData | null> {
+    const { data } = await this.request<HomeEnergyData>(
+      'get',
+      `${ENERGY_PATH}/${id}`,
+      {
+        params: {
+          ...params,
+          measure: 'cumulative_energy_consumed_since_last_upload',
+        },
+      },
+    )
+    return data
+  }
+
+  /**
+   * Fetch RSSI telemetry for an ATA unit. Same silent-fail-with-log
+   * semantics as {@link getEnergy}.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns The telemetry bundle, or `null` on any failure.
+   */
+  @validate({
+    context: 'BFF /monitor/telemetry/actual',
+    schema: HomeEnergyDataSchema,
+  })
+  public async getSignal(
+    id: string,
+    params: { from: string; to: string },
+  ): Promise<HomeEnergyData | null> {
+    const { data } = await this.request<HomeEnergyData>(
+      'get',
+      `${SIGNAL_PATH}/${id}`,
+      { params: { ...params, measure: 'rssi' } },
+    )
+    return data
+  }
+
+  /**
+   * Fetch a trend-summary report (temperatures, etc.) for an ATA
+   * unit. Silent-fail-with-log: resolves to `null` on any failure.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Aggregation period (e.g. `hour`, `day`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns The report datasets, or `null` on any failure.
+   */
+  @validate({
+    context: 'BFF /report/trendsummary',
+    schema: HomeReportDataSchema.array(),
+  })
+  public async getTemperatures(
+    id: string,
+    params: { from: string; period: string; to: string },
+  ): Promise<HomeReportData[] | null> {
+    const { data } = await this.request<HomeReportData[]>('get', REPORT_PATH, {
+      params: { ...params, unitId: id },
+    })
+    return data
+  }
+
+  /**
    * Fetch all buildings (owned + guest), sync the device registry,
    * and schedule the next auto-sync.
    * @returns All buildings or an empty array on failure.
@@ -182,36 +267,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   }
 
   /**
-   * Fetch cumulative-energy telemetry for an ATA unit. The returned
-   * payload is Zod-validated against `HomeEnergyDataSchema`; any
-   * failure (network, 4xx, shape mismatch) resolves to `null` so the
-   * caller can treat missing data as a no-op rather than branching on
-   * errors.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (e.g. `PT1H`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or `null` on any failure.
-   */
-  public async getEnergy(
-    id: string,
-    params: { from: string; interval: string; to: string },
-  ): Promise<HomeEnergyData | null> {
-    return this.#safeRequest({
-      config: {
-        params: {
-          ...params,
-          measure: 'cumulative_energy_consumed_since_last_upload',
-        },
-      },
-      context: 'BFF /monitor/telemetry/energy',
-      schema: HomeEnergyDataSchema,
-      url: `${ENERGY_PATH}/${id}`,
-    })
-  }
-
-  /**
    * Fetch the error-log entries for an ATA unit. Unlike the other
    * telemetry getters, a failure resolves to an empty array rather
    * than `null`, matching how consumer code typically iterates the
@@ -220,56 +275,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns The entries, or `[]` on any failure.
    */
   public async getErrorLog(id: string): Promise<HomeErrorLogEntry[]> {
-    return (
-      (await this.#safeRequest({
-        context: 'BFF /monitor/ataunit/:id/errorlog',
-        schema: HomeErrorLogEntryListSchema,
-        url: `${ATA_UNIT_PATH}/${id}/errorlog`,
-      })) ?? []
-    )
-  }
-
-  /**
-   * Fetch RSSI telemetry for an ATA unit. Same silent-fail semantics
-   * as {@link getEnergy} — resolves to `null` on any failure.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or `null` on any failure.
-   */
-  public async getSignal(
-    id: string,
-    params: { from: string; to: string },
-  ): Promise<HomeEnergyData | null> {
-    return this.#safeRequest({
-      config: { params: { ...params, measure: 'rssi' } },
-      context: 'BFF /monitor/telemetry/actual',
-      schema: HomeEnergyDataSchema,
-      url: `${SIGNAL_PATH}/${id}`,
-    })
-  }
-
-  /**
-   * Fetch a trend-summary report (temperatures, etc.) for an ATA
-   * unit. Silent-fail: resolves to `null` on any failure.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.period - Aggregation period (e.g. `hour`, `day`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The report datasets, or `null` on any failure.
-   */
-  public async getTemperatures(
-    id: string,
-    params: { from: string; period: string; to: string },
-  ): Promise<HomeReportData[] | null> {
-    return this.#safeRequest({
-      config: { params: { ...params, unitId: id } },
-      context: 'BFF /report/trendsummary',
-      schema: HomeReportDataSchema.array(),
-      url: REPORT_PATH,
-    })
+    return (await this.fetchErrorLog(id)) ?? []
   }
 
   /**
@@ -412,6 +418,27 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return false
   }
 
+  /**
+   * Raw error-log fetch: returns the validated entry list or `null`
+   * on any failure (network, 4xx, shape mismatch). Split out from the
+   * public {@link getErrorLog} so the public surface can coalesce the
+   * `null` branch into an empty array without also short-circuiting
+   * the `@validate` decorator's type narrowing.
+   * @param id - Device id.
+   * @returns The entries, or `null` on any failure.
+   */
+  @validate({
+    context: 'BFF /monitor/ataunit/:id/errorlog',
+    schema: HomeErrorLogEntryListSchema,
+  })
+  private async fetchErrorLog(id: string): Promise<HomeErrorLogEntry[] | null> {
+    const { data } = await this.request<HomeErrorLogEntry[]>(
+      'get',
+      `${ATA_UNIT_PATH}/${id}/errorlog`,
+    )
+    return data
+  }
+
   /* ---------------------------------------------------------------- */
   /*  Private — token management                                      */
   /* ---------------------------------------------------------------- */
@@ -468,6 +495,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    */
   async #refreshAccessToken(): Promise<boolean> {
     const tokens = await refreshAccessToken({
+      logger: this.logger,
       refreshToken: this.refreshToken,
       ...(this.abortSignal === undefined ?
         {}
@@ -478,25 +506,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     }
     this.#storeTokens(tokens)
     return true
-  }
-
-  async #safeRequest<T>({
-    config,
-    context,
-    schema,
-    url,
-  }: {
-    context: string
-    schema: z.ZodType<T>
-    url: string
-    config?: Record<string, unknown>
-  }): Promise<T | null> {
-    try {
-      const { data } = await this.request('get', url, config)
-      return parseOrThrow(schema, data, context)
-    } catch {
-      return null
-    }
   }
 
   #storeTokens({

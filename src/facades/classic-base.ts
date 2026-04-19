@@ -227,7 +227,7 @@ export abstract class BaseFacade<
   }
 
   @syncDevices()
-  @classicUpdateDevices()
+  @classicUpdateDevices({ kind: 'power' })
   public async updatePower(isOn = true): Promise<boolean> {
     const { data: isPowered } = await this.api.updatePower({
       postData: {
