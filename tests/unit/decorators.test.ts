@@ -145,12 +145,12 @@ const resolvePowerData = async (): Promise<{ Alpha: null; Power: true }> => {
 }
 
 describe(classicFetchDevices, () => {
-  it('calls api.fetch before the target method', async () => {
+  it('calls api.fetch before the target method by default', async () => {
     const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>()
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       .mockResolvedValue(cast('result'))
-    const decorated = classicFetchDevices(
+    const decorated = classicFetchDevices()(
       target,
       mock<ClassMethodDecoratorContext>(),
     )
@@ -159,6 +159,34 @@ describe(classicFetchDevices, () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(target).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls api.fetch after the target method when when=after', async () => {
+    const callOrder: string[] = []
+    const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/require-await -- ClassicAPIAdapter['fetch'] is async
+      async () => {
+        callOrder.push('fetch')
+        return cast([])
+      },
+    )
+    const target = vi
+      .fn<(...args: unknown[]) => Promise<never>>()
+      .mockImplementation(
+        // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
+        async () => {
+          callOrder.push('target')
+          return cast('result')
+        },
+      )
+    const decorated = classicFetchDevices({ when: 'after' })(
+      target,
+      mock<ClassMethodDecoratorContext>(),
+    )
+    const context = { api: mock<ClassicAPIAdapter>({ fetch: fetchMock }) }
+    await decorated.call(context)
+
+    expect(callOrder).toStrictEqual(['target', 'fetch'])
   })
 })
 

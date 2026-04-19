@@ -49,7 +49,7 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
     } = this)
   }
 
-  @classicFetchDevices
+  @classicFetchDevices()
   public async fetch(): Promise<ClassicZoneSettings> {
     const data = await Promise.resolve(this.data)
     return data

@@ -89,6 +89,11 @@ class TestAPI extends BaseAPI {
   }
 
   // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
+  public override async syncRegistry(): Promise<void> {
+    await Promise.resolve()
+  }
+
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
   protected override async doAuthenticate(): Promise<void> {
     await Promise.resolve()
   }
@@ -107,11 +112,6 @@ class TestAPI extends BaseAPI {
     config: Record<string, unknown>,
   ): Promise<HttpResponse<T> | null> {
     return cast(await this.retryAuthMock(method, url, config))
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
-  protected override async syncRegistry(): Promise<void> {
-    await Promise.resolve()
   }
 }
 

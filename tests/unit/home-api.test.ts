@@ -318,6 +318,20 @@ describe('melcloud home API', () => {
   })
 
   describe('user retrieval', () => {
+    it('should return the user on success', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const user = await api.getUser()
+
+      expect(user).toStrictEqual({
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        sub: 'user-1',
+      })
+    })
+
     it('should return null on failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
@@ -439,18 +453,37 @@ describe('melcloud home API', () => {
     })
 
     /*
-     * Post-condition contract: even on a failed PUT, the registry must be
-     * refreshed so downstream readers never see stale state masquerading
-     * as successful. Regression guard for the bug class fixed after
-     * OlivierZal/com.melcloud#1281 (silent local-state drift).
+     * Post-condition contract: on a failed PUT, the server state is
+     * presumed unchanged so no re-sync is issued — a failed write must
+     * not cost an extra registry fetch. Sync happens only on success
+     * (see `resyncs the registry after a successful updateValues`).
      */
-    it('resyncs the registry after a failed updateValues', async () => {
+    it('does not resync after a failed updateValues', async () => {
+      setupSuccessfulLogin()
+      const onSync = vi.fn<() => Promise<void>>()
+      const api = await createApi({ onSync })
+      onSync.mockClear()
+      mockRequest.mockClear()
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      const isSuccess = await api.updateValues('device-1', { power: false })
+
+      expect(isSuccess).toBe(false)
+      expect(mockRequest).toHaveBeenCalledTimes(1)
+      expect(onSync).not.toHaveBeenCalled()
+    })
+
+    /*
+     * Post-condition contract: on successful PUT, the registry is
+     * refreshed so downstream readers see the server-side effect of
+     * the write (the PUT response does not echo device fields).
+     */
+    it('resyncs the registry after a successful updateValues', async () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ onSync })
       onSync.mockClear()
       mockRequest
-        .mockRejectedValueOnce(new Error('network'))
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       await api.updateValues('device-1', { power: false })
 
@@ -1305,6 +1338,34 @@ describe('melcloud home API', () => {
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ url: '/context' }),
       )
+    })
+
+    /*
+     * Regression guard for the persisted-session branch of the
+     * #1281-class of bug: before this fix, `create()` with a valid
+     * persisted session returned an instance whose device registry
+     * was still empty (only `context`/`user` were hydrated). Now the
+     * reuse path goes through `list()`, which populates both in a
+     * single /context request.
+     */
+    it('populates the device registry on the persisted-session path', async () => {
+      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
+      const { settingManager } = createSettingStore({
+        accessToken: 'persisted-token',
+        expiry: futureExpiry,
+        password: 'pass',
+        refreshToken: 'persisted-refresh',
+        username: 'user@test.com',
+      })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        httpClient: mockHttpClient,
+        settingManager,
+      })
+
+      expect(api.registry.getAll().length).toBeGreaterThan(0)
     })
 
     it('should fall back to OIDC when persisted session is rejected', async () => {

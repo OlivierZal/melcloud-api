@@ -462,6 +462,10 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     }
   }
 
+  public override async syncRegistry(): Promise<void> {
+    await this.fetch()
+  }
+
   /**
    * Update frost protection settings for a zone.
    *
@@ -624,10 +628,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       return null
     }
     return this.dispatch<T>(method, url, config)
-  }
-
-  protected override async syncRegistry(): Promise<void> {
-    await this.fetch()
   }
 
   #applyOptionalConfig({

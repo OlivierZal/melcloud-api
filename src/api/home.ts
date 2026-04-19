@@ -141,13 +141,22 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * If the access token is expired but a refresh token is available,
    * a token refresh is attempted. Otherwise, falls back to a full
    * `authenticate()` flow.
+   *
+   * In every successful branch the registry is populated before return
+   * — `authenticate()` does so via its template method, and the
+   * reuse-session branch calls `list()` (which hydrates both
+   * `context`/`user` and the device registry in a single /context
+   * request). A successful return therefore guarantees a non-empty
+   * registry (regression guard for the #1281-class of bug, applied to
+   * the persisted-session path as well as the fresh-login path).
    * @param config - Optional configuration.
    * @returns The initialized HomeAPI instance.
    */
   public static async create(config?: HomeAPIConfig): Promise<HomeAPI> {
     const api = new HomeAPI(config)
     if (api.#hasPersistedSession()) {
-      if ((await api.getUser()) !== null) {
+      await api.list()
+      if (api.context !== null) {
         return api
       }
       api.#clearPersistedSession()
@@ -298,13 +307,22 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return this.#user !== null
   }
 
+  public override async syncRegistry(): Promise<void> {
+    await this.list()
+  }
+
   /**
-   * Send an ATA-unit setpoint update to the BFF and re-fetch the
-   * context so the registry reflects the new state.
+   * Send an ATA-unit setpoint update to the BFF. On success, re-sync
+   * the registry so it reflects the server-side effect of the write
+   * (the PUT response itself does not echo device fields). On failure,
+   * skip the sync — the server state is presumed unchanged, so a
+   * re-fetch would be wasted work.
    *
-   * Swallows errors — the return flag signals success/failure so
+   * Swallows PUT errors — the return flag signals success/failure so
    * integrating hosts (e.g. Homey drivers) can treat a transient
-   * failure as a no-op and retry on the next sync.
+   * failure as a no-op and retry on the next sync. Sync errors after a
+   * successful PUT are logged and swallowed: they must not flip the
+   * return value to `false`, since the mutation did land on the server.
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
    * @returns `true` when the update succeeded, `false` otherwise.
@@ -313,20 +331,17 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     id: string,
     values: HomeAtaValues,
   ): Promise<boolean> {
-    let hasSucceeded = false
     try {
       await this.request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
-      hasSucceeded = true
     } catch {
-      // Swallow — caller reads boolean; registry is resynced below so stale
-      // state never masquerades as successful state after a failed PUT.
+      return false
     }
     try {
-      await this.list()
+      await this.syncRegistry()
     } catch (error) {
       this.logger.error('Failed to refresh registry after updateValues:', error)
     }
-    return hasSucceeded
+    return true
   }
 
   protected override async doAuthenticate({
@@ -382,10 +397,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return this.dispatch<T>(method, url, config)
   }
 
-  protected override async syncRegistry(): Promise<void> {
-    await this.list()
-  }
-
   #clearPersistedSession(): void {
     this.#user = null
     this.accessToken = ''
@@ -422,7 +433,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /* ---------------------------------------------------------------- */
   /**
    * Use the refresh token to obtain a fresh access token.
-   * @returns Whether the refresh hasSucceeded.
+   * @returns Whether the refresh succeeded.
    */
   async #refreshAccessToken(): Promise<boolean> {
     const tokens = await refreshAccessToken({

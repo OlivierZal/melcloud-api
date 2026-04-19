@@ -485,13 +485,18 @@ describe('building facade holiday mode', () => {
 })
 
 /*
- * Post-condition contract: facade write methods that mutate server state
- * must notify onSync so external observers (e.g. Homey drivers) can
- * refresh their cached view. Regression guard for the class of bug
- * fixed after OlivierZal/com.melcloud#1281 (silent local-state drift).
+ * Post-condition contract: facade write methods that mutate server
+ * state must refresh the registry (`updatePower` does so via
+ * @classicUpdateDevices + @syncDevices; `updateFrostProtection` /
+ * `updateHolidayMode` do so via @classicFetchDevices({when:'after'})
+ * because the response carries no device value to apply locally).
+ * Regression guard for the bug class fixed after
+ * OlivierZal/com.melcloud#1281 (silent local-state drift). The
+ * downstream onSync notification from api.fetch() is covered by the
+ * ClassicAPI contract tests.
  */
-describe('facade write methods notify onSync', () => {
-  it('updatePower fires onSync', async () => {
+describe('facade write methods refresh registry', () => {
+  it('updatePower fires onSync directly', async () => {
     const onSync = vi.fn<SyncCallback>()
     const { facade } = createBuildingFacade({ onSync })
     await facade.updatePower(true)
@@ -499,24 +504,22 @@ describe('facade write methods notify onSync', () => {
     expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
   })
 
-  it('updateFrostProtection fires onSync', async () => {
-    const onSync = vi.fn<SyncCallback>()
-    const { facade } = createBuildingFacade({ onSync })
+  it('updateFrostProtection refreshes via api.fetch()', async () => {
+    const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
-    onSync.mockClear()
+    vi.mocked(api.fetch).mockClear()
     await facade.updateFrostProtection({ isEnabled: true, max: 14, min: 6 })
 
-    expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+    expect(api.fetch).toHaveBeenCalledTimes(1)
   })
 
-  it('updateHolidayMode fires onSync', async () => {
-    const onSync = vi.fn<SyncCallback>()
-    const { facade } = createBuildingFacade({ onSync })
+  it('updateHolidayMode refreshes via api.fetch()', async () => {
+    const { api, facade } = createBuildingFacade()
     await facade.getHolidayMode()
-    onSync.mockClear()
+    vi.mocked(api.fetch).mockClear()
     await facade.updateHolidayMode({ from: '2024-06-01', to: '2024-06-15' })
 
-    expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+    expect(api.fetch).toHaveBeenCalledTimes(1)
   })
 })
 

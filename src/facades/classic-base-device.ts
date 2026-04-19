@@ -142,7 +142,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return typedFromEntries<Required<ClassicUpdateDeviceData<T>>>(entries)
   }
 
-  @classicFetchDevices
+  @classicFetchDevices()
   public async fetch(): Promise<Readonly<ClassicListDeviceData<T>>> {
     const data = await Promise.resolve(this.data)
     return data

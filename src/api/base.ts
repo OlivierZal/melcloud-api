@@ -144,7 +144,7 @@ export abstract class BaseAPI implements Disposable {
     config: Record<string, unknown>,
   ): Promise<HttpResponse<T> | null>
 
-  protected abstract syncRegistry(): Promise<void>
+  public abstract syncRegistry(): Promise<void>
 
   /**
    * Authenticate against MELCloud and populate the device registry.

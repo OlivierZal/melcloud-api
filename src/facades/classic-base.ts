@@ -12,7 +12,11 @@ import type {
   ClassicModel,
   ClassicRegistry,
 } from '../entities/index.ts'
-import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
+import {
+  classicFetchDevices,
+  classicUpdateDevices,
+  syncDevices,
+} from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
 import {
   type ClassicDateTimeComponents,
@@ -156,7 +160,7 @@ export abstract class BaseFacade<
     ;({ id: this.id } = instance)
   }
 
-  @syncDevices()
+  @classicFetchDevices({ when: 'after' })
   public async updateFrostProtection({
     isEnabled = true,
     max,
@@ -190,7 +194,7 @@ export abstract class BaseFacade<
     return data
   }
 
-  @syncDevices()
+  @classicFetchDevices({ when: 'after' })
   public async updateHolidayMode({
     from,
     to,
