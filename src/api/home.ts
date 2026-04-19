@@ -42,11 +42,11 @@ const ATA_UNIT_PATH = '/monitor/ataunit'
 const CONTEXT_PATH = '/context'
 const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
 const DEFAULT_TIMEOUT_MS = 30_000
-const ENERGY_PATH = '/monitor/telemetry/energy'
+const ENERGY_PATH = '/telemetry/telemetry/energy'
 const MILLISECONDS_IN_SECOND = 1000
-const REPORT_PATH = '/report/trendsummary'
+const REPORT_PATH = '/report/v1/trendsummary'
 const RETRY_DELAY = 1000
-const SIGNAL_PATH = '/monitor/telemetry/actual'
+const SIGNAL_PATH = '/telemetry/telemetry/actual'
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                           */
@@ -58,6 +58,28 @@ const parseUser = (data: HomeContext): HomeUser => ({
   lastName: data.lastname,
   sub: data.id,
 })
+
+const pad = (value: number): string => String(value).padStart(2, '0')
+
+/*
+ * `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros
+ * (e.g. `2026-04-19T00:00:00.0000000`). Anything shorter is silently
+ * truncated to an empty window by the BFF.
+ */
+const toReportDate = (iso: string): string => {
+  const date = new Date(iso)
+  return `${String(date.getUTCFullYear())}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}.0000000`
+}
+
+/*
+ * `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
+ * space and no seconds. Seconds or an ISO `T` separator produce an empty
+ * payload rather than an error.
+ */
+const toTelemetryDate = (iso: string): string => {
+  const date = new Date(iso)
+  return `${String(date.getUTCFullYear())}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`
+}
 
 /**
  * MELCloud Home API client using the mobile BFF at
@@ -237,11 +259,13 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return this.#safeRequest({
       config: {
         params: {
-          ...params,
+          from: toTelemetryDate(params.from),
+          interval: params.interval,
           measure: 'cumulative_energy_consumed_since_last_upload',
+          to: toTelemetryDate(params.to),
         },
       },
-      context: 'BFF /monitor/telemetry/energy',
+      context: 'BFF /telemetry/telemetry/energy',
       schema: HomeEnergyDataSchema,
       url: `${ENERGY_PATH}/${id}`,
     })
@@ -279,8 +303,14 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     params: { from: string; to: string },
   ): Promise<HomeEnergyData | null> {
     return this.#safeRequest({
-      config: { params: { ...params, measure: 'rssi' } },
-      context: 'BFF /monitor/telemetry/actual',
+      config: {
+        params: {
+          from: toTelemetryDate(params.from),
+          measure: 'rssi',
+          to: toTelemetryDate(params.to),
+        },
+      },
+      context: 'BFF /telemetry/telemetry/actual',
       schema: HomeEnergyDataSchema,
       url: `${SIGNAL_PATH}/${id}`,
     })
@@ -301,8 +331,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     params: { from: string; period: string; to: string },
   ): Promise<HomeReportData[] | null> {
     return this.#safeRequest({
-      config: { params: { ...params, unitId: id } },
-      context: 'BFF /report/trendsummary',
+      config: {
+        params: {
+          from: toReportDate(params.from),
+          period: params.period,
+          to: toReportDate(params.to),
+          unitId: id,
+        },
+      },
+      context: 'BFF /report/v1/trendsummary',
       schema: HomeReportDataSchema.array(),
       url: REPORT_PATH,
     })

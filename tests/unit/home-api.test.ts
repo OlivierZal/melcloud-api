@@ -122,7 +122,7 @@ const mockReportData: HomeReportData[] = [
         label: 'Room ClassicTemperature',
       },
     ],
-    reportPeriod: 0,
+    reportPeriod: 'hourly',
   },
 ]
 
@@ -479,11 +479,12 @@ describe('melcloud home API', () => {
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
-            from: '2026-03-01',
+            from: '2026-03-01T00:00:00.0000000',
             period: 'Hourly',
-            to: '2026-03-02',
+            to: '2026-03-02T00:00:00.0000000',
             unitId: 'device-1',
           },
+          url: '/report/v1/trendsummary',
         }),
       )
     })
@@ -517,11 +518,12 @@ describe('melcloud home API', () => {
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
-            from: '2026-03-01',
+            from: '2026-03-01 00:00',
             interval: 'Hour',
             measure: 'cumulative_energy_consumed_since_last_upload',
-            to: '2026-03-02',
+            to: '2026-03-02 00:00',
           },
+          url: '/telemetry/telemetry/energy/device-1',
         }),
       )
     })
@@ -554,10 +556,11 @@ describe('melcloud home API', () => {
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
           params: {
-            from: '2026-03-01',
+            from: '2026-03-01 00:00',
             measure: 'rssi',
-            to: '2026-03-02',
+            to: '2026-03-02 00:00',
           },
+          url: '/telemetry/telemetry/actual/device-1',
         }),
       )
     })

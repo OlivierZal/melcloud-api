@@ -114,13 +114,20 @@ const HomeEnergyPointSchema = z.looseObject({
 })
 
 const HomeEnergyMeasureSchema = z.looseObject({
+  deviceId: z.string().optional(),
   type: z.string(),
   values: z.array(HomeEnergyPointSchema),
 })
 
-/** Home /monitor/telemetry/energy/{id} + /monitor/telemetry/actual/{id} response. */
+/*
+ * Home /telemetry/telemetry/energy/{id} responses carry deviceId at the top
+ * level, while /telemetry/telemetry/actual/{id} responses expose deviceId
+ * only on each measure entry. Both shapes share the measureData layout;
+ * accept `deviceId` as optional at either level rather than maintaining
+ * two parallel schemas.
+ */
 export const HomeEnergyDataSchema: z.ZodType<HomeEnergyData> = z.looseObject({
-  deviceId: z.string(),
+  deviceId: z.string().optional(),
   measureData: z.array(HomeEnergyMeasureSchema),
 })
 
@@ -137,10 +144,10 @@ const HomeReportDatasetSchema = z.looseObject({
   label: z.string(),
 })
 
-/** Home /report/trendsummary response. */
+/** Home /report/v1/trendsummary response. */
 export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
   datasets: z.array(HomeReportDatasetSchema),
-  reportPeriod: z.number(),
+  reportPeriod: z.string(),
 })
 
 /** Home /monitor/ataunit/{id}/errorlog response (array of entries). */

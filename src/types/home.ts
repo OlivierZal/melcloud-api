@@ -73,13 +73,14 @@ export interface HomeDeviceSetting {
 }
 
 export interface HomeEnergyData {
-  readonly deviceId: string
   readonly measureData: HomeEnergyMeasure[]
+  readonly deviceId?: string
 }
 
 export interface HomeEnergyMeasure {
   readonly type: string
   readonly values: HomeEnergyPoint[]
+  readonly deviceId?: string
 }
 
 export interface HomeEnergyPoint {
@@ -95,7 +96,7 @@ export interface HomeErrorLogEntry {
 
 export interface HomeReportData {
   readonly datasets: HomeReportDataset[]
-  readonly reportPeriod: number
+  readonly reportPeriod: string
 }
 
 export interface HomeReportDataset {
