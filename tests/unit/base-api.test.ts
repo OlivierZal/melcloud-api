@@ -539,4 +539,78 @@ describe('baseAPI shared request pipeline', () => {
       expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
     })
   })
+
+  /*
+   * Contract split: `authenticate(credentials)` is the explicit
+   * sign-in entry — it throws on rejection. `resumeSession()` is
+   * the best-effort restore entry — it logs and swallows. This
+   * describe block pins the observable difference between the two
+   * so future refactors cannot collapse them back into a dual-mode
+   * function.
+   */
+  describe('authenticate() vs resumeSession() contract', () => {
+    it('authenticate() throws when doAuthenticate rejects', async () => {
+      api.doAuthenticateMock.mockRejectedValueOnce(new Error('rejected'))
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('rejected')
+      expect(api.syncRegistryMock).not.toHaveBeenCalled()
+    })
+
+    it('authenticate() syncs the registry on success', async () => {
+      await api.authenticate({ password: 'p', username: 'u' })
+
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
+      expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('resumeSession() returns false with no persisted credentials', async () => {
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(false)
+      expect(api.doAuthenticateMock).not.toHaveBeenCalled()
+    })
+
+    it('resumeSession() logs + returns false when sign-in fails', async () => {
+      const logger = createLogger()
+      const store: Record<string, string> = { password: 'p', username: 'u' }
+      api = new TestAPI({
+        logger,
+        settingManager: {
+          get: (key: string): string | null => store[key] ?? null,
+          set: (key: string, value: string): void => {
+            store[key] = value
+          },
+        },
+      })
+      api.doAuthenticateMock.mockRejectedValueOnce(new Error('rejected'))
+
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Session resume failed:',
+        expect.any(Error),
+      )
+    })
+
+    it('resumeSession() returns true and syncs registry on success', async () => {
+      const store: Record<string, string> = { password: 'p', username: 'u' }
+      api = new TestAPI({
+        settingManager: {
+          get: (key: string): string | null => store[key] ?? null,
+          set: (key: string, value: string): void => {
+            store[key] = value
+          },
+        },
+      })
+
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(true)
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
+      expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
+    })
+  })
 })

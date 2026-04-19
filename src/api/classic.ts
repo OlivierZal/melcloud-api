@@ -603,9 +603,11 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
      * Re-authenticate proactively if the context key is missing or the
      * session token is expired/invalid. A malformed `expiry` (e.g. from
      * a settings migration) is treated as expired, not silently ignored.
+     * `resumeSession()` is best-effort: a failure here does not crash
+     * the caller's request; the request will fail on its own merits.
      */
     if (this.contextKey === '' || isSessionExpired(this.expiry)) {
-      await this.authenticate()
+      await this.resumeSession()
     }
   }
 
@@ -618,8 +620,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     url: string,
     config: Record<string, unknown>,
   ): Promise<HttpResponse<T> | null> {
-    await this.authenticate()
-    if (!this.isAuthenticated()) {
+    if (!(await this.resumeSession())) {
       return null
     }
     return this.dispatch<T>(method, url, config)

@@ -26,7 +26,7 @@ import type {
   HomeAPIConfig,
   HomeAPI as HomeAPIContract,
 } from './home-interfaces.ts'
-import { BaseAPI } from './base.ts'
+import { BaseAPI, normalizeUnauthorized } from './base.ts'
 import {
   type TokenResponse,
   performTokenAuth,
@@ -327,13 +327,25 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     username,
   }: ClassicLoginCredentials): Promise<void> {
     this.#clearPersistedSession()
-    const tokens = await performTokenAuth({
-      credentials: { password, username },
-      ...(this.abortSignal === undefined ?
-        {}
-      : { abortSignal: this.abortSignal }),
-    })
-    this.#storeTokens(tokens)
+    try {
+      const tokens = await performTokenAuth({
+        credentials: { password, username },
+        ...(this.abortSignal === undefined ?
+          {}
+        : { abortSignal: this.abortSignal }),
+      })
+      this.#storeTokens(tokens)
+    } catch (error) {
+      /*
+       * Normalize transport-level `401 Unauthorized` from the BFF
+       * into the shared {@link AuthenticationError} domain type so
+       * callers of `authenticate()` get a stable error shape (mirror
+       * of the Classic `LoginData: null → AuthenticationError` path).
+       * Non-401 errors (PAR failures, Cognito redirect chain issues,
+       * network timeouts) propagate unchanged.
+       */
+      throw normalizeUnauthorized(error)
+    }
     ;({ password: this.password, username: this.username } = {
       password,
       username,
@@ -350,7 +362,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
       return
     }
-    await this.authenticate()
+    await this.resumeSession()
   }
 
   protected getAuthHeaders(): Record<string, string> {
@@ -368,8 +380,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       return this.dispatch<T>(method, url, config)
     }
     this.#clearPersistedSession()
-    await this.authenticate()
-    if (!this.isAuthenticated()) {
+    if (!(await this.resumeSession())) {
       return null
     }
     return this.dispatch<T>(method, url, config)

@@ -34,14 +34,18 @@ import { SyncManager } from './sync-manager.ts'
 const HTTP_STATUS_UNAUTHORIZED = 401
 const HTTP_STATUS_TOO_MANY_REQUESTS = 429
 
-/*
- * Wrap 401 responses from the HTTP client into a typed
- * {@link AuthenticationError} (preserving the original via `cause`) so
- * credential rejections have a stable, semantic error type. Errors from
- * other sources (fetch-based OIDC flow, network issues, non-401 statuses)
- * are returned unchanged and keep their original type.
+/**
+ * Narrow any error the HTTP client can surface into either an
+ * {@link AuthenticationError} (for `401 Unauthorized`) or the error
+ * unchanged. Subclass `doAuthenticate` implementations call this
+ * helper to normalize transport-level rejections into the shared
+ * domain error type — callers of {@link BaseAPI.authenticate} then
+ * get a stable `AuthenticationError` regardless of whether the
+ * underlying flow was cookie-based (Classic) or bearer-token (Home).
+ * @param error - The error to inspect.
+ * @returns `AuthenticationError` if a 401 HttpError; `error` otherwise.
  */
-const toAuthFailure = (error: unknown): unknown =>
+export const normalizeUnauthorized = (error: unknown): unknown =>
   isHttpError(error) && error.response.status === HTTP_STATUS_UNAUTHORIZED ?
     new AuthenticationError('MELCloud rejected the credentials', {
       cause: error,
@@ -165,32 +169,26 @@ export abstract class BaseAPI implements Disposable {
   protected abstract tryReuseSession(): Promise<boolean>
 
   /**
-   * Authenticate against MELCloud and populate the device registry.
+   * Sign in with explicit credentials.
    *
-   * Contract: a successful return guarantees the registry reflects the
-   * server state. The post-auth registry sync is mandatory and enforced
-   * here so subclasses cannot forget it (regression-prone, see
-   * OlivierZal/com.melcloud#1281).
+   * Contract: throws an {@link AuthenticationError} if MELCloud
+   * rejects the credentials — whatever the underlying transport
+   * (Classic `ClientLogin3` returning `LoginData: null`, Home BFF
+   * returning 401, etc.). A successful return guarantees the
+   * registry reflects server state — the post-auth sync is
+   * mandatory and enforced here so subclasses cannot forget it
+   * (regression guard, see OlivierZal/com.melcloud#1281).
    *
-   * Credential resolution: falls back to persisted `username`/`password`
-   * when `data` is omitted. Missing credentials is a no-op — callers
-   * should check {@link isAuthenticated} to detect this case.
-   *
-   * Error handling: explicit credentials surface failures to the caller;
-   * persisted-credential auto-login failures are logged and swallowed
-   * so startup doesn't crash when the saved session is stale. Only 401
-   * HttpErrors are wrapped as {@link AuthenticationError}; other failures
-   * propagate with their original type.
-   * @param data - Optional credentials; falls back to persisted values.
+   * Use {@link resumeSession} instead when you want a best-effort
+   * restore from persisted credentials that logs + swallows errors.
+   * @param credentials - Explicit username/password.
+   * @throws {AuthenticationError} when credentials are rejected.
    */
-  public async authenticate(data?: ClassicLoginCredentials): Promise<void> {
-    const credentials = this.resolveCredentials(data)
-    if (credentials === null) {
-      return
-    }
-    if (!(await this.runDoAuthenticate(credentials, data !== undefined))) {
-      return
-    }
+  public async authenticate(
+    credentials: ClassicLoginCredentials,
+  ): Promise<void> {
+    this.applyCredentials(credentials.username, credentials.password)
+    await this.doAuthenticate(credentials)
     await this.syncRegistry()
   }
 
@@ -209,18 +207,50 @@ export abstract class BaseAPI implements Disposable {
    * 1. {@link tryReuseSession} — if the subclass can reuse a
    *    persisted session (and populate the registry in the process),
    *    we are done.
-   * 2. Otherwise, {@link authenticate} runs — which has its own
-   *    post-auth registry sync (compile-time enforced above).
+   * 2. Otherwise, {@link resumeSession} runs — best-effort restore
+   *    from persisted credentials. Does nothing (silently) if no
+   *    credentials are persisted, so the "no creds + no session"
+   *    case falls through to a documented empty state.
    *
-   * The "no credentials + no session" case falls through both
-   * branches and leaves the instance intentionally empty; callers
-   * should check {@link isAuthenticated} after `create()` returns.
+   * Callers should check {@link isAuthenticated} after `create()`
+   * returns if they need to distinguish "empty state" from "ready".
    */
   public async initialize(): Promise<void> {
     if (await this.tryReuseSession()) {
       return
     }
-    await this.authenticate()
+    await this.resumeSession()
+  }
+
+  /**
+   * Best-effort session restore from persisted credentials.
+   *
+   * Reads `username`/`password` from the SettingManager and signs
+   * in. Unlike {@link authenticate}, failures are **logged and
+   * swallowed** — the method never throws. Use this from lifecycle
+   * hooks (init, 401 retry, `ensureSession`) where a stale or
+   * missing persisted credential must not crash the caller.
+   *
+   * On success, the registry is populated (delegates to
+   * {@link authenticate}).
+   * @returns `true` when a sign-in round-trip succeeded and the
+   * instance is now authenticated; `false` for "no persisted
+   * credentials" or "sign-in failed" (both indistinguishable by
+   * the return value alone — check the logger / `isAuthenticated`
+   * if the distinction matters).
+   */
+  public async resumeSession(): Promise<boolean> {
+    const credentials = this.resolvePersistedCredentials()
+    if (credentials === null) {
+      return false
+    }
+    try {
+      await this.authenticate(credentials)
+      return true
+    } catch (error) {
+      this.logger.error('Session resume failed:', error)
+      return false
+    }
   }
 
   public [Symbol.dispose](): void {
@@ -339,32 +369,12 @@ export abstract class BaseAPI implements Disposable {
     )
   }
 
-  private resolveCredentials(
-    data: ClassicLoginCredentials | undefined,
-  ): ClassicLoginCredentials | null {
-    const username = data?.username ?? this.username
-    const password = data?.password ?? this.password
+  private resolvePersistedCredentials(): ClassicLoginCredentials | null {
+    const { password, username } = this
     if (!username || !password) {
       return null
     }
     return { password, username }
-  }
-
-  private async runDoAuthenticate(
-    credentials: ClassicLoginCredentials,
-    hasExplicitCredentials: boolean,
-  ): Promise<boolean> {
-    try {
-      await this.doAuthenticate(credentials)
-      return true
-    } catch (error) {
-      const failure = toAuthFailure(error)
-      if (hasExplicitCredentials) {
-        throw failure
-      }
-      this.logger.error('Authentication failed:', failure)
-      return false
-    }
   }
 
   private async runWithEvents<T>(

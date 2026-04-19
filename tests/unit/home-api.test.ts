@@ -301,6 +301,83 @@ describe('melcloud home API', () => {
   })
 
   describe('authentication', () => {
+    /*
+     * Contract: a 401 from the BFF token exchange is wrapped into
+     * AuthenticationError by `doAuthenticate` (via
+     * `normalizeUnauthorized`) so callers see a stable domain error
+     * instead of a raw HttpError — mirroring the Classic
+     * `LoginData: null → AuthenticationError` path.
+     */
+    it('should wrap 401 from token exchange into AuthenticationError', async () => {
+      mockFetch
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            { request_uri: 'urn:ietf:params:oauth:request_uri:test' },
+            {},
+            200,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            { location: `${AUTH_BASE}/connect/redirect` },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            { location: `${COGNITO}/oauth2/authorize?client_id=test` },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            { location: `${COGNITO}/login?client_id=test` },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            {
+              location:
+                'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz',
+            },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            {
+              location: 'https://auth.melcloudhome.com/ExternalLogin/Callback',
+            },
+            302,
+          ),
+        )
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            "<script>window.location='melcloudhome://?code=auth-code&amp;state=xyz'</script>",
+            {},
+            200,
+          ),
+        )
+        .mockRejectedValueOnce(httpUnauthorized('/connect/token'))
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        httpClient: mockHttpClient,
+      })
+
+      const { AuthenticationError } = await import('../../src/errors/index.ts')
+
+      await expect(
+        api.authenticate({ password: 'bad', username: 'u@test.com' }),
+      ).rejects.toThrow(AuthenticationError)
+    })
+
     it('should clear user state on re-authentication', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
@@ -886,7 +963,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })
@@ -969,7 +1046,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.objectContaining({
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
           message: expect.stringContaining('Too many redirects'),
@@ -1140,7 +1217,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })
@@ -1293,7 +1370,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })
@@ -1321,7 +1398,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })
@@ -1660,7 +1737,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })
@@ -1703,7 +1780,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(Error),
       )
     })

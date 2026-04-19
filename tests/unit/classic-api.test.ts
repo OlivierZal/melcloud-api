@@ -446,7 +446,7 @@ describe('mELCloud Classic API', () => {
       ).rejects.toThrow(AuthenticationError)
     })
 
-    it('logs and swallows when login data is null with stored credentials', async () => {
+    it('resumeSession logs and swallows when stored credentials are rejected', async () => {
       const logger = createLogger()
       mockLoginAndList()
       const api = await createApi({
@@ -456,13 +456,24 @@ describe('mELCloud Classic API', () => {
       })
       mockRequest.mockResolvedValue(wrap({ LoginData: null }))
 
-      await api.authenticate()
+      const isResumed = await api.resumeSession()
 
+      expect(isResumed).toBe(false)
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        'Authentication failed:',
+        'Session resume failed:',
         expect.any(AuthenticationError),
       )
+    })
+
+    it('resumeSession returns false when no credentials are persisted', async () => {
+      mockLoginAndList()
+      const api = await createApi()
+
+      const isResumed = await api.resumeSession()
+
+      expect(isResumed).toBe(false)
+      expect(api.isAuthenticated()).toBe(false)
     })
 
     /*
