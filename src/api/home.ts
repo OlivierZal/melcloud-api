@@ -49,6 +49,12 @@ const ENERGY_PATH = '/monitor/telemetry/energy'
 const MILLISECONDS_IN_SECOND = 1000
 const REPORT_PATH = '/report/trendsummary'
 const RETRY_DELAY = 1000
+const SECONDS_PER_MINUTE = 60
+const SESSION_REFRESH_AHEAD_MINUTES = 5
+// Refresh the session when it's within 5 min of its real expiry so
+// no request pays the full OIDC round-trip on its critical path.
+const SESSION_REFRESH_AHEAD_MS =
+  SESSION_REFRESH_AHEAD_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_IN_SECOND
 const SIGNAL_PATH = '/monitor/telemetry/actual'
 
 /* ------------------------------------------------------------------ */
@@ -361,20 +367,37 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /* ---------------------------------------------------------------- */
   /*  Private — credentials & session                                 */
   /* ---------------------------------------------------------------- */
-  protected async ensureSession(): Promise<void> {
-    if (!isSessionExpired(this.expiry)) {
-      return
-    }
-    if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
-      return
-    }
-    await this.resumeSession()
-  }
-
   protected getAuthHeaders(): Record<string, string> {
     return this.accessToken === '' ?
         {}
       : { Authorization: `Bearer ${this.accessToken}` }
+  }
+
+  /**
+   * Home considers a session in need of refresh when the access
+   * token is within {@link SESSION_REFRESH_AHEAD_MS} of its real
+   * expiry. The forward window lets the shared `BaseAPI.ensureSession`
+   * template renew the token pre-emptively via
+   * {@link performSessionRefresh}, keeping the OIDC round-trip off
+   * the request's critical path.
+   * @returns `true` when a refresh should run before the next request.
+   */
+  protected override needsSessionRefresh(): boolean {
+    return isSessionExpired(this.expiry, SESSION_REFRESH_AHEAD_MS)
+  }
+
+  /**
+   * Home session refresh = try the cheap refresh-token exchange
+   * first; if the refresh token is rejected (or missing), fall
+   * through to a full {@link resumeSession} (re-auth from persisted
+   * username/password). `resumeSession` logs + swallows on failure;
+   * the 401 retry path on the triggering request handles hard errors.
+   */
+  protected override async performSessionRefresh(): Promise<void> {
+    if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
+      return
+    }
+    await this.resumeSession()
   }
 
   protected async retryAuth<T>(

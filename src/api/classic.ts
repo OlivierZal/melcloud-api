@@ -69,6 +69,13 @@ const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL = 5
 const DEFAULT_TIMEOUT_MS = 30_000
 const RETRY_DELAY = 1000
+const SESSION_REFRESH_AHEAD_MINUTES = 5
+const SECONDS_PER_MINUTE = 60
+const MILLISECONDS_PER_SECOND = 1000
+// Refresh the session when it's within 5 min of its real expiry so
+// no request pays the full re-login latency on its critical path.
+const SESSION_REFRESH_AHEAD_MS =
+  SESSION_REFRESH_AHEAD_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND
 
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
@@ -597,22 +604,35 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
   }
 
-  // Allow one retry per RETRY_DELAY window to avoid infinite retry loops
-  protected async ensureSession(): Promise<void> {
-    /*
-     * Re-authenticate proactively if the context key is missing or the
-     * session token is expired/invalid. A malformed `expiry` (e.g. from
-     * a settings migration) is treated as expired, not silently ignored.
-     * `resumeSession()` is best-effort: a failure here does not crash
-     * the caller's request; the request will fail on its own merits.
-     */
-    if (this.contextKey === '' || isSessionExpired(this.expiry)) {
-      await this.resumeSession()
-    }
-  }
-
   protected getAuthHeaders(): Record<string, string> {
     return this.contextKey === '' ? {} : { 'X-MitsContextKey': this.contextKey }
+  }
+
+  /**
+   * Classic considers a session in need of refresh when the
+   * `contextKey` is missing **or** its expiry timestamp is within
+   * {@link SESSION_REFRESH_AHEAD_MS} of now. The forward window lets
+   * the shared `BaseAPI.ensureSession` template renew the session
+   * pre-emptively, keeping re-login latency off the request's
+   * critical path.
+   * @returns `true` when a refresh should run before the next request.
+   */
+  protected override needsSessionRefresh(): boolean {
+    return (
+      this.contextKey === '' ||
+      isSessionExpired(this.expiry, SESSION_REFRESH_AHEAD_MS)
+    )
+  }
+
+  /**
+   * Classic session refresh = best-effort `resumeSession`. The
+   * `contextKey → login → refetch` flow is the only path available
+   * (no refresh-token equivalent on the Classic API); `resumeSession`
+   * logs + swallows on failure so the triggering request can still
+   * attempt its own 401 retry path.
+   */
+  protected override async performSessionRefresh(): Promise<void> {
+    await this.resumeSession()
   }
 
   protected async retryAuth<T>(

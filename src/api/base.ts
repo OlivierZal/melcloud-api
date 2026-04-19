@@ -102,6 +102,15 @@ export abstract class BaseAPI implements Disposable {
     return this.#syncManager
   }
 
+  /*
+   * Single in-flight refresh handle. Set when the first `ensureSession`
+   * call detects an expired session, cleared when the refresh resolves
+   * (success or failure). Subsequent concurrent callers await the same
+   * promise instead of each triggering their own round-trip — prevents
+   * the thundering-herd pattern on token expiry.
+   */
+  #refreshPromise: Promise<void> | null = null
+
   readonly #syncManager: SyncManager
 
   protected constructor(
@@ -136,11 +145,36 @@ export abstract class BaseAPI implements Disposable {
     credentials: ClassicLoginCredentials,
   ): Promise<void>
 
-  protected abstract ensureSession(): Promise<void>
-
   protected abstract getAuthHeaders(): Record<string, string>
 
   public abstract isAuthenticated(): boolean
+
+  /**
+   * Subclass hook: whether the current persisted session needs to be
+   * refreshed before the next request goes out. Implementations
+   * typically check `isSessionExpired(this.expiry, aheadMs)` with a
+   * non-zero `aheadMs` so refresh happens **before** the real expiry
+   * tick (pre-emptive renewal), keeping the re-auth latency off the
+   * request's critical path.
+   *
+   * Used exclusively by the template {@link ensureSession}; not meant
+   * to be called by subclass code directly.
+   */
+  protected abstract needsSessionRefresh(): boolean
+
+  /**
+   * Subclass hook: perform the actual session refresh. Called by the
+   * template {@link ensureSession} when {@link needsSessionRefresh}
+   * returns `true`. Implementations decide the best path — a token
+   * refresh (cheap) if available, otherwise a full {@link resumeSession}
+   * (re-auth from persisted credentials).
+   *
+   * Errors inside this hook propagate — the template does not swallow
+   * them; the triggering request will fail and the caller decides how
+   * to react. Use {@link resumeSession}'s own log + swallow semantics
+   * if best-effort behaviour is required.
+   */
+  protected abstract performSessionRefresh(): Promise<void>
 
   protected abstract retryAuth<T>(
     method: string,
@@ -291,6 +325,33 @@ export abstract class BaseAPI implements Disposable {
     const response = await this.api.request<T>(requestConfig)
     this.logger.log(String(new APICallResponseData(response, requestConfig)))
     return response
+  }
+
+  /**
+   * Ensure the persisted session is fresh before letting a request
+   * hit the transport. Template method — subclasses do **not**
+   * override; they provide {@link needsSessionRefresh} and
+   * {@link performSessionRefresh} hooks instead.
+   *
+   * Two guarantees this method enforces on top of the hooks:
+   * 1. **Pre-emptive refresh** — subclass `needsSessionRefresh`
+   *    should check expiry with a forward window (`aheadMs`), so the
+   *    refresh fires before the token actually expires and no request
+   *    ever pays the full re-auth round-trip on its critical path.
+   * 2. **Concurrent-refresh deduplication** — the single in-flight
+   *    refresh handle (`#refreshPromise`) prevents the thundering-herd
+   *    pattern where N concurrent requests each trigger their own
+   *    refresh. Only the first caller kicks off the hook; the rest
+   *    await the same promise.
+   */
+  protected async ensureSession(): Promise<void> {
+    if (!this.needsSessionRefresh()) {
+      return
+    }
+    this.#refreshPromise ??= this.performSessionRefresh().finally(() => {
+      this.#refreshPromise = null
+    })
+    await this.#refreshPromise
   }
 
   protected logError(error: unknown): void {

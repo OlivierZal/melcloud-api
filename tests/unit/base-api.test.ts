@@ -35,9 +35,11 @@ const mockRequest = vi.spyOn(mockHttpClient, 'request')
 class TestAPI extends BaseAPI {
   public readonly doAuthenticateMock = vi.fn<() => Promise<void>>()
 
-  public readonly ensureSessionMock = vi.fn<() => Promise<void>>()
-
   public readonly getAuthHeadersMock = vi.fn<() => Record<string, string>>()
+
+  public readonly needsSessionRefreshMock = vi.fn<() => boolean>()
+
+  public readonly performSessionRefreshMock = vi.fn<() => Promise<void>>()
 
   public readonly retryAuthMock =
     vi.fn<
@@ -68,7 +70,8 @@ class TestAPI extends BaseAPI {
       },
     })
     this.getAuthHeadersMock.mockReturnValue({})
-    this.ensureSessionMock.mockResolvedValue()
+    this.needsSessionRefreshMock.mockReturnValue(false)
+    this.performSessionRefreshMock.mockResolvedValue()
     this.retryAuthMock.mockResolvedValue(null)
     this.doAuthenticateMock.mockResolvedValue()
     this.syncRegistryMock.mockResolvedValue()
@@ -82,6 +85,11 @@ class TestAPI extends BaseAPI {
     config: Record<string, unknown> = {},
   ): Promise<HttpResponse<T>> {
     return this.dispatch<T>(method, url, config)
+  }
+
+  /** Expose the protected ensureSession for direct testing. */
+  public async callEnsureSession(): Promise<void> {
+    return this.ensureSession()
   }
 
   /** Expose the protected request for testing. */
@@ -102,12 +110,16 @@ class TestAPI extends BaseAPI {
     return this.doAuthenticateMock()
   }
 
-  protected override async ensureSession(): Promise<void> {
-    return this.ensureSessionMock()
-  }
-
   protected override getAuthHeaders(): Record<string, string> {
     return this.getAuthHeadersMock()
+  }
+
+  protected override needsSessionRefresh(): boolean {
+    return this.needsSessionRefreshMock()
+  }
+
+  protected override async performSessionRefresh(): Promise<void> {
+    return this.performSessionRefreshMock()
   }
 
   protected override async retryAuth<T>(
@@ -593,6 +605,62 @@ describe('baseAPI shared request pipeline', () => {
       expect(isResumed).toBe(true)
       expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
       expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  /*
+   * `ensureSession` is the template method that every `request()` goes
+   * through. Two guarantees to pin: (1) the concurrent-refresh mutex
+   * dedups callers — N parallel requests on an expired session
+   * trigger exactly one `performSessionRefresh`; (2) an early-out path
+   * when the session is still fresh (no hook invocation at all).
+   */
+  describe('ensureSession() template', () => {
+    it('is a no-op when needsSessionRefresh returns false', async () => {
+      api.needsSessionRefreshMock.mockReturnValue(false)
+
+      await api.callEnsureSession()
+
+      expect(api.performSessionRefreshMock).not.toHaveBeenCalled()
+    })
+
+    it('dedupes concurrent refresh calls via in-flight promise', async () => {
+      api.needsSessionRefreshMock.mockReturnValue(true)
+      let refreshCalls = 0
+      api.performSessionRefreshMock.mockImplementation(async () => {
+        refreshCalls += 1
+        await Promise.resolve()
+      })
+
+      await Promise.all([
+        api.callEnsureSession(),
+        api.callEnsureSession(),
+        api.callEnsureSession(),
+      ])
+
+      expect(refreshCalls).toBe(1)
+    })
+
+    it('releases the in-flight slot after the refresh resolves', async () => {
+      api.needsSessionRefreshMock.mockReturnValue(true)
+      api.performSessionRefreshMock.mockResolvedValue()
+
+      await api.callEnsureSession()
+      await api.callEnsureSession()
+
+      expect(api.performSessionRefreshMock).toHaveBeenCalledTimes(2)
+    })
+
+    it('releases the in-flight slot even if the refresh rejects', async () => {
+      api.needsSessionRefreshMock.mockReturnValue(true)
+      api.performSessionRefreshMock.mockRejectedValueOnce(new Error('boom'))
+      api.performSessionRefreshMock.mockResolvedValueOnce()
+
+      await expect(api.callEnsureSession()).rejects.toThrow('boom')
+
+      await api.callEnsureSession()
+
+      expect(api.performSessionRefreshMock).toHaveBeenCalledTimes(2)
     })
   })
 })
