@@ -17,6 +17,7 @@ import {
   createHttpError,
   createLogger,
   createServerError,
+  createSettingStore,
   createUnauthorizedError,
   mock,
 } from '../helpers.ts'
@@ -127,26 +128,19 @@ class TestAPI extends BaseAPI {
 }
 
 /**
- * Build a {@link TestAPI} instance wired to a fresh in-memory
+ * Build a {@link TestAPI} instance wired to an in-memory
  * SettingManager holding `{ username, password }`. Used by the
  * `authenticate() vs resumeSession() contract` tests that need a
- * persisted-credentials scenario without reimplementing the setter
- * boilerplate per test.
+ * persisted-credentials scenario.
  */
 const apiWithPersistedCredentials = (
   overrides: Partial<BaseAPIConfig> = {},
-): TestAPI => {
-  const store: Record<string, string> = { password: 'p', username: 'u' }
-  return new TestAPI({
-    settingManager: {
-      get: (key: string): string | null => store[key] ?? null,
-      set: (key: string, value: string): void => {
-        store[key] = value
-      },
-    },
+): TestAPI =>
+  new TestAPI({
+    settingManager: createSettingStore({ password: 'p', username: 'u' })
+      .settingManager,
     ...overrides,
   })
-}
 
 describe('baseAPI shared request pipeline', () => {
   // eslint-disable-next-line @typescript-eslint/init-declarations -- Assigned in beforeEach

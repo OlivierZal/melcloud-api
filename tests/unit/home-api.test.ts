@@ -1548,9 +1548,12 @@ describe('melcloud home API', () => {
 
     it('should clear persisted tokens at the start of authenticate()', async () => {
       /*
-       * Create an API with persisted tokens, then explicitly call
-       * authenticate() with new credentials. The first thing authenticate()
-       * does is call #clearPersistedSession(), wiping the old tokens.
+       * Flow: create() → initialize() → tryReuseSession() → list()
+       * hydrates context with the old token (no OIDC needed). Then
+       * explicitly calling authenticate(newCredentials) runs
+       * doAuthenticate, whose first step is #clearPersistedSession()
+       * wiping the old accessToken/refreshToken/expiry before the
+       * new OIDC flow starts.
        */
       const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
       const { setSpy, settingManager } = createSettingStore({

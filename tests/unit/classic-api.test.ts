@@ -446,7 +446,16 @@ describe('mELCloud Classic API', () => {
       ).rejects.toThrow(AuthenticationError)
     })
 
-    it('resumeSession logs and swallows when stored credentials are rejected', async () => {
+    /*
+     * Pins the Classic-specific normalization path: MELCloud returns
+     * `HTTP 200 { LoginData: null }` for bad credentials (not a 401),
+     * so `doAuthenticate` throws AuthenticationError directly — which
+     * `resumeSession` then logs and swallows. The generic "no
+     * credentials persisted" and "doAuthenticate rejects → logged +
+     * false" cases are covered at the BaseAPI unit level
+     * (base-api.test.ts → `authenticate() vs resumeSession() contract`).
+     */
+    it('resumeSession logs AuthenticationError when LoginData is null', async () => {
       const logger = createLogger()
       mockLoginAndList()
       const api = await createApi({
@@ -464,16 +473,6 @@ describe('mELCloud Classic API', () => {
         'Session resume failed:',
         expect.any(AuthenticationError),
       )
-    })
-
-    it('resumeSession returns false when no credentials are persisted', async () => {
-      mockLoginAndList()
-      const api = await createApi()
-
-      const isResumed = await api.resumeSession()
-
-      expect(isResumed).toBe(false)
-      expect(api.isAuthenticated()).toBe(false)
     })
 
     /*
