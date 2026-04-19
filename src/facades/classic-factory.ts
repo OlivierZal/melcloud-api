@@ -13,7 +13,7 @@ import type {
 import { ClassicAreaFacade } from './classic-area.ts'
 import { ClassicBuildingFacade } from './classic-building.ts'
 import { ClassicDeviceAtaFacade } from './classic-device-ata.ts'
-import { ClassicDeviceAtwHasZone2Facade } from './classic-device-atw-has-zone2.ts'
+import { ClassicDeviceAtwHasZone2Facade } from './classic-device-atw-dual-zone.ts'
 import { ClassicDeviceAtwFacade } from './classic-device-atw.ts'
 import { ClassicDeviceErvFacade } from './classic-device-erv.ts'
 import { ClassicFloorFacade } from './classic-floor.ts'

@@ -12,8 +12,8 @@ import type {
 } from '../types/index.ts'
 import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import {
-  classicFetchDevices,
   classicUpdateDevice,
+  fetchDevices,
   syncDevices,
 } from '../decorators/index.ts'
 import {
@@ -142,14 +142,14 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return typedFromEntries<Required<ClassicUpdateDeviceData<T>>>(entries)
   }
 
-  @classicFetchDevices
+  @fetchDevices()
   public async fetch(): Promise<Readonly<ClassicListDeviceData<T>>> {
     const data = await Promise.resolve(this.data)
     return data
   }
 
   @syncDevices()
-  @classicUpdateDevice
+  @classicUpdateDevice()
   public async getValues(): Promise<ClassicGetDeviceData<T>> {
     const { data } = await this.api.getValues<T>({
       params: { buildingId: this.device.buildingId, id: this.id },
@@ -158,7 +158,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   @syncDevices()
-  @classicUpdateDevice
+  @classicUpdateDevice()
   public async updateValues(
     data: Partial<ClassicUpdateDeviceData<T>>,
   ): Promise<ClassicSetDeviceData<T>> {

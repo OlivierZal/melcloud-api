@@ -12,7 +12,11 @@ import type {
   ClassicModel,
   ClassicRegistry,
 } from '../entities/index.ts'
-import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
+import {
+  classicUpdateDevices,
+  fetchDevices,
+  syncDevices,
+} from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
 import {
   type ClassicDateTimeComponents,
@@ -156,8 +160,74 @@ export abstract class BaseFacade<
     ;({ id: this.id } = instance)
   }
 
+  /*
+   * Uses `@fetchDevices({ when: 'after' })` rather than `@syncDevices()`
+   * because the update response is a success/failure envelope with no
+   * device payload — notifying onSync without a genuine registry
+   * refresh would be a stale signal. The trade-off: onSync now fires
+   * from `api.fetch()` at the API level, carrying `{ type }` only —
+   * not the facade's `{ ids, type }` shape with specific device ids.
+   * Consumers listening to onSync should treat any call as "registry
+   * changed, re-inspect" rather than keying on the payload. Same
+   * applies to updateHolidayMode below.
+   */
+  @fetchDevices({ when: 'after' })
+  public async updateFrostProtection({
+    isEnabled = true,
+    max,
+    min,
+  }: ClassicFrostProtectionQuery): Promise<
+    ClassicFailureData | ClassicSuccessData
+  > {
+    /*
+     * Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
+     * in case the adjustment pushed max out of bounds
+     */
+    const newMin = Math.max(
+      temperatureRange.min,
+      Math.min(min, temperatureRange.max - TEMPERATURE_GAP),
+    )
+    let newMax = Math.min(
+      temperatureRange.max,
+      Math.max(max, temperatureRange.min + TEMPERATURE_GAP),
+    )
+    if (newMax - newMin < TEMPERATURE_GAP) {
+      newMax = newMin + TEMPERATURE_GAP
+    }
+    const { data } = await this.api.updateFrostProtection({
+      postData: {
+        Enabled: isEnabled,
+        MaximumTemperature: newMax,
+        MinimumTemperature: newMin,
+        ...(await this.#getFrostProtectionLocation()),
+      },
+    })
+    return data
+  }
+
+  @fetchDevices({ when: 'after' })
+  public async updateHolidayMode({
+    from,
+    to,
+  }: ClassicHolidayModeQuery = {}): Promise<
+    ClassicFailureData | ClassicSuccessData
+  > {
+    const isEnabled = to !== undefined
+    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
+    const endDate = isEnabled ? DateTime.fromISO(to) : null
+    const { data } = await this.api.updateHolidayMode({
+      postData: {
+        Enabled: isEnabled,
+        EndDate: getDateTimeComponents(endDate),
+        HMTimeZones: await this.#getHolidayModeLocation(),
+        StartDate: getDateTimeComponents(startDate),
+      },
+    })
+    return data
+  }
+
   @syncDevices()
-  @classicUpdateDevices()
+  @classicUpdateDevices({ kind: 'power' })
   public async updatePower(isOn = true): Promise<boolean> {
     const { data: isPowered } = await this.api.updatePower({
       postData: {
@@ -227,59 +297,6 @@ export abstract class BaseFacade<
     type,
   }: { type?: ClassicDeviceType } = {}): Promise<void> {
     await this.api.onSync?.({ ids: this.#deviceIds, type })
-  }
-
-  public async updateFrostProtection({
-    isEnabled = true,
-    max,
-    min,
-  }: ClassicFrostProtectionQuery): Promise<
-    ClassicFailureData | ClassicSuccessData
-  > {
-    /*
-     * Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
-     * in case the adjustment pushed max out of bounds
-     */
-    const newMin = Math.max(
-      temperatureRange.min,
-      Math.min(min, temperatureRange.max - TEMPERATURE_GAP),
-    )
-    let newMax = Math.min(
-      temperatureRange.max,
-      Math.max(max, temperatureRange.min + TEMPERATURE_GAP),
-    )
-    if (newMax - newMin < TEMPERATURE_GAP) {
-      newMax = newMin + TEMPERATURE_GAP
-    }
-    const { data } = await this.api.updateFrostProtection({
-      postData: {
-        Enabled: isEnabled,
-        MaximumTemperature: newMax,
-        MinimumTemperature: newMin,
-        ...(await this.#getFrostProtectionLocation()),
-      },
-    })
-    return data
-  }
-
-  public async updateHolidayMode({
-    from,
-    to,
-  }: ClassicHolidayModeQuery = {}): Promise<
-    ClassicFailureData | ClassicSuccessData
-  > {
-    const isEnabled = to !== undefined
-    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
-    const endDate = isEnabled ? DateTime.fromISO(to) : null
-    const { data } = await this.api.updateHolidayMode({
-      postData: {
-        Enabled: isEnabled,
-        EndDate: getDateTimeComponents(endDate),
-        HMTimeZones: await this.#getHolidayModeLocation(),
-        StartDate: getDateTimeComponents(startDate),
-      },
-    })
-    return data
   }
 
   async #getBaseFrostProtection(

@@ -4,9 +4,11 @@ import type {
   HomeAtaValues,
   HomeBuilding,
   HomeEnergyData,
+  HomeError,
   HomeErrorLogEntry,
   HomeReportData,
   HomeUser,
+  Result,
 } from '../types/index.ts'
 import type { BaseAPIConfig } from './interfaces.ts'
 
@@ -31,33 +33,45 @@ export interface HomeAPI {
   readonly registry: HomeRegistry
   /** The currently authenticated user, or `null`. */
   readonly user: HomeUser | null
-  /** Authenticate with MELCloud Home using the provided or stored credentials. */
-  readonly authenticate: (data?: ClassicLoginCredentials) => Promise<void>
+  /**
+   * Sign in with explicit credentials. Throws `AuthenticationError`
+   * on rejection. For best-effort restore from persisted credentials,
+   * use {@link resumeSession} instead.
+   */
+  readonly authenticate: (credentials: ClassicLoginCredentials) => Promise<void>
   /** Cancel any pending automatic sync. */
   readonly clearSync: () => void
   /** Fetch energy consumption data for a device. */
   readonly getEnergy: (
     id: string,
     params: { from: string; interval: string; to: string },
-  ) => Promise<HomeEnergyData | null>
+  ) => Promise<Result<HomeEnergyData, HomeError>>
   /** Fetch the error log for a device. */
-  readonly getErrorLog: (id: string) => Promise<HomeErrorLogEntry[]>
+  readonly getErrorLog: (
+    id: string,
+  ) => Promise<Result<HomeErrorLogEntry[], HomeError>>
   /** Fetch WiFi signal strength (RSSI) telemetry for a device. */
   readonly getSignal: (
     id: string,
     params: { from: string; to: string },
-  ) => Promise<HomeEnergyData | null>
+  ) => Promise<Result<HomeEnergyData, HomeError>>
   /** Fetch temperature trend summary for a device. */
   readonly getTemperatures: (
     id: string,
     params: { from: string; period: string; to: string },
-  ) => Promise<HomeReportData[] | null>
+  ) => Promise<Result<HomeReportData[], HomeError>>
   /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
   readonly getUser: () => Promise<HomeUser | null>
   /** Whether a user is currently authenticated (session cookie valid). */
   readonly isAuthenticated: () => boolean
   /** Fetch all buildings and sync the device registry. */
   readonly list: () => Promise<HomeBuilding[]>
+  /**
+   * Best-effort session restore from persisted credentials. Never
+   * throws — returns `false` when no credentials are persisted or
+   * sign-in fails (logged via the SDK logger).
+   */
+  readonly resumeSession: () => Promise<boolean>
   /** Update the automatic sync interval and reschedule. Set to `0` or `null` to disable. */
   readonly setSyncInterval: (minutes: number | null) => void
   /** Update device values and refresh device data via list(). */
