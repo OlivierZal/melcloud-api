@@ -124,6 +124,7 @@ const createMockApi = (
     getValues: vi
       .fn<ClassicAPIAdapter['getValues']>()
       .mockResolvedValue(cast({ data: { EffectiveFlags: 0 } })),
+    notifySync: vi.fn<SyncCallback>().mockResolvedValue(),
     updateFrostProtection: vi
       .fn<ClassicAPIAdapter['updateFrostProtection']>()
       .mockResolvedValue({
@@ -389,8 +390,8 @@ describe('building facade', () => {
   })
 
   it('calls notifySync', async () => {
-    const onSync = vi.fn<SyncCallback>()
-    const { facade } = createBuildingFacade({ onSync })
+    const onSync = vi.fn<SyncCallback>().mockResolvedValue()
+    const { facade } = createBuildingFacade({ notifySync: onSync })
     await facade.notifySync()
 
     expect(onSync).toHaveBeenCalledWith(expect.any(Object))
@@ -498,8 +499,8 @@ describe('building facade holiday mode', () => {
  */
 describe('facade write methods refresh registry', () => {
   it('updatePower fires onSync directly', async () => {
-    const onSync = vi.fn<SyncCallback>()
-    const { facade } = createBuildingFacade({ onSync })
+    const onSync = vi.fn<SyncCallback>().mockResolvedValue()
+    const { facade } = createBuildingFacade({ notifySync: onSync })
     await facade.updatePower(true)
 
     expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
@@ -1093,8 +1094,10 @@ describe('device type guards', () => {
   ])(
     '$name returns true for matching facade and false otherwise',
     ({ guard, match, noMatch }) => {
-      // Widen through destructuring so the guard's predicate is not
-      // trivially inferred at the call site (preserves the runtime check).
+      /*
+       * Widen through destructuring so the guard's predicate is not
+       * trivially inferred at the call site (preserves the runtime check).
+       */
       const {
         facade: matching,
       }: { facade: ClassicDeviceFacade<ClassicDeviceType> } = match()

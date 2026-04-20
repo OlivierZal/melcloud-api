@@ -1,6 +1,6 @@
 import { type DurationLike, DateTime, Duration } from 'luxon'
 
-const SECONDS_PER_MINUTE = 60
+import { SECONDS_PER_MINUTE } from '../time-units.ts'
 
 /**
  * Tracks an upstream rate-limit window and lets callers check whether

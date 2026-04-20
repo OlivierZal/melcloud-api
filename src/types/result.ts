@@ -40,7 +40,6 @@ export const ok = <T>(value: T): Success<T> => ({ ok: true, value })
  * @param error - The typed failure description to wrap.
  * @returns A `{ ok: false, error }` failure outcome.
  */
-// eslint-disable-next-line unicorn/prevent-abbreviations -- paired with `ok` — `error` would collide with the local catch binding at call sites
 export const err = <TError>(error: TError): Failure<TError> => ({
   error,
   ok: false,

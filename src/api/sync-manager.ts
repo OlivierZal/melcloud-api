@@ -1,7 +1,9 @@
 import { DisposableTimeout } from '../resilience/index.ts'
+import { MS_PER_MINUTE } from '../time-units.ts'
 import type { Logger } from './interfaces.ts'
 
-const MILLISECONDS_PER_MINUTE = 60_000
+const toIntervalMs = (minutes: number | false): number =>
+  minutes === false ? 0 : minutes * MS_PER_MINUTE
 
 /**
  * Manages periodic auto-sync with a configurable interval.
@@ -19,11 +21,11 @@ export class SyncManager implements Disposable {
   public constructor(
     syncFunction: () => Promise<unknown>,
     logger: Logger,
-    intervalMinutes: number | null = 0,
+    intervalMinutes: number | false = false,
   ) {
     this.#syncFunction = syncFunction
     this.#logger = logger
-    this.#interval = (intervalMinutes ?? 0) * MILLISECONDS_PER_MINUTE
+    this.#interval = toIntervalMs(intervalMinutes)
   }
 
   public clear(): void {
@@ -44,8 +46,8 @@ export class SyncManager implements Disposable {
     this.#timeout[Symbol.dispose]()
   }
 
-  public setInterval(minutes: number | null): void {
-    this.#interval = (minutes ?? 0) * MILLISECONDS_PER_MINUTE
+  public setInterval(minutes: number | false): void {
+    this.#interval = toIntervalMs(minutes)
     this.clear()
     this.planNext()
   }

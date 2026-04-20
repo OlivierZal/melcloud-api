@@ -31,6 +31,7 @@ const runSync = async (self: FetchDevicesHost): Promise<void> => {
     await self.api.fetch()
     return
   }
+
   /*
    * Structural contract violation: the decorator was applied to a
    * host that exposes neither hook. Failing loudly at the first

@@ -9,3 +9,4 @@ export {
   HomeTokenResponseSchema,
   parseOrThrow,
 } from './schemas.ts'
+export { type ValidateHost, validateRequest } from './validate-request.ts'

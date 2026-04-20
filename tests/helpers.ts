@@ -1,4 +1,4 @@
-import { vi } from 'vitest'
+import { type MockInstance, expect, vi } from 'vitest'
 
 import type {
   ClassicAPIAdapter,
@@ -17,7 +17,7 @@ import {
   type ClassicDeviceAny,
   ClassicRegistry,
 } from '../src/entities/index.ts'
-import { HttpError } from '../src/http/index.ts'
+import { HttpClient, HttpError } from '../src/http/index.ts'
 
 /*
  * Default RSSI value (in dBm) used in the mock `getSignal` response
@@ -30,6 +30,19 @@ const MOCK_SIGNAL_RSSI_DBM = -60
 export function cast(value: unknown): never
 export function cast(value: unknown): unknown {
   return value
+}
+
+/*
+ * Wrap `expect.objectContaining` so call sites get a `never`-typed
+ * matcher (assignable anywhere) instead of `any` — the latter trips
+ * `@typescript-eslint/no-unsafe-assignment` when nested inside another
+ * matcher's shape literal. Keeps the unsafe-return concession at one
+ * boundary instead of scattered across every test file.
+ */
+export function matchObject(shape: object): never
+export function matchObject(shape: object): unknown {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- vitest's `objectContaining` is typed `any`; this helper is the single boundary that scopes the concession
+  return expect.objectContaining(shape)
 }
 
 export const defined = <T>(value: T | null | undefined): T => {
@@ -80,7 +93,7 @@ export const createMockApi = (
         .mockResolvedValue(cast({ data: {} })),
     ),
     getValues: vi.fn<ClassicAPIAdapter['getValues']>(),
-    onSync: vi.fn<SyncCallback>(),
+    notifySync: vi.fn<SyncCallback>().mockResolvedValue(),
     updateFrostProtection: vi
       .fn<ClassicAPIAdapter['updateFrostProtection']>()
       .mockResolvedValue(cast({ data: { Success: true } })),
@@ -94,6 +107,27 @@ export const createMockApi = (
     updateValues: cast(vi.fn<ClassicAPIAdapter['updateValues']>()),
     ...overrides,
   })
+
+/**
+ * Spin up an `HttpClient` instance and a Vitest spy on its `request`
+ * method in one call. Centralises the four-file duplication of
+ *
+ *     const client = new HttpClient({ baseURL, timeout: 30_000 })
+ *     const requestSpy = vi.spyOn(client, 'request')
+ *
+ * so tests can do `const { client, requestSpy } = createMockHttpClient(url)`.
+ * @param baseURL - Base URL forwarded to the underlying HttpClient.
+ * @returns The wired client + a spy on `request`.
+ */
+export const createMockHttpClient = (
+  baseURL: string,
+): {
+  client: HttpClient
+  requestSpy: MockInstance<HttpClient['request']>
+} => {
+  const client = new HttpClient({ baseURL, timeout: 30_000 })
+  return { client, requestSpy: vi.spyOn(client, 'request') }
+}
 
 export const createSettingStore = (
   initial: Record<string, string> = {},

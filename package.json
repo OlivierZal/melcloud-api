@@ -86,7 +86,7 @@
     "docs": "typedoc",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
-    "lint": "eslint .",
+    "lint": "node --max-old-space-size=8192 ./node_modules/eslint/bin/eslint.js .",
     "lint:fix": "npm run lint -- --fix",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run typecheck && npm run lint && npm run format",

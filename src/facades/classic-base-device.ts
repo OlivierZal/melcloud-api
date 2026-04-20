@@ -71,9 +71,11 @@ const getReportPostDataDates = ({
   to,
 })
 
-// Use Luxon parsing so offset-less ISO inputs are interpreted in
-// `LuxonSettings.defaultZone` (matching the Classic API's timezone contract),
-// not the host runtime timezone.
+/*
+ * Use Luxon parsing so offset-less ISO inputs are interpreted in
+ * `LuxonSettings.defaultZone` (matching the Classic API's timezone contract),
+ * not the host runtime timezone.
+ */
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(
     (DateTime.fromISO(to).toMillis() - DateTime.fromISO(from).toMillis()) /

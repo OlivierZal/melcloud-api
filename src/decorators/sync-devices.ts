@@ -1,18 +1,24 @@
-import type { SyncCallback } from '../api/index.ts'
 import type { DeviceType } from '../constants.ts'
 
-/** Object that supports sync notification via `notifySync` or `onSync`. */
-interface HasOnSync {
-  readonly onSync?: SyncCallback
-  readonly notifySync?: (params?: { type?: DeviceType }) => Promise<void>
+/**
+ * Object that supports sync notification via `notifySync`. Both
+ * BaseAPI (bare `{ type }` payload, routed through the lifecycle
+ * emitter) and facades (enrich the payload with `ids` then delegate
+ * to `api.notifySync`) implement this contract structurally.
+ */
+interface HasNotifySync {
+  readonly notifySync?: (params?: {
+    ids?: (number | string)[]
+    type?: DeviceType
+  }) => Promise<void>
 }
 
 /**
  * Method decorator factory that invokes a sync notification **after**
- * the decorated method resolves. Resolves to the host's `notifySync`
- * (facades — enriches the payload with `ids`) when available,
- * otherwise falls back to `onSync` directly (API services — bare
- * `{ type }` payload). No action is taken if neither hook is exposed.
+ * the decorated method resolves. The host implements `notifySync`
+ * structurally — facades enrich the payload with `ids` before
+ * delegating, BaseAPI emits straight through the lifecycle emitter.
+ * No action is taken when the host doesn't expose the hook.
  *
  * Intended for one-shot post-method notifications; this is **not**
  * a subscription. Exceptions thrown by the consumer's callback
@@ -28,10 +34,8 @@ export const syncDevices =
     target: (...args: TArgs) => Promise<TResult>,
     _context: ClassMethodDecoratorContext,
   ): ((...args: TArgs) => Promise<TResult>) =>
-    async function newTarget(this: HasOnSync, ...args: TArgs) {
+    async function newTarget(this: HasNotifySync, ...args: TArgs) {
       const data = await target.call(this, ...args)
-      await (this.notifySync ?
-        this.notifySync({ type })
-      : this.onSync?.({ type }))
+      await this.notifySync?.({ type })
       return data
     }

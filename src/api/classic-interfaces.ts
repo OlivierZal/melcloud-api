@@ -35,8 +35,12 @@ import type { BaseAPIConfig, SyncCallback } from './interfaces.ts'
  * Methods are grouped by supported device types.
  */
 export interface ClassicAPIAdapter {
-  /** Callback invoked after sync operations. */
-  readonly onSync?: SyncCallback
+  /**
+   * Notify any registered `events.onSyncComplete` observer that a sync
+   * just landed. Routed through the lifecycle emitter so a misbehaving
+   * observer cannot break the caller.
+   */
+  readonly notifySync: SyncCallback
   /** Fetch all buildings and sync the model registry. */
   readonly fetch: () => Promise<ClassicBuildingWithStructure[]>
   /** Fetch energy consumption report. Supported by ATA and ATW devices. */

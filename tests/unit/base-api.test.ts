@@ -2,31 +2,28 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type {
   BaseAPIConfig,
+  LifecycleEvents,
   RequestCompleteEvent,
   RequestErrorEvent,
-  RequestLifecycleEvents,
   RequestRetryEvent,
   RequestStartEvent,
 } from '../../src/api/interfaces.ts'
 import { BaseAPI, normalizeUnauthorized } from '../../src/api/base.ts'
 import { AuthenticationError, RateLimitError } from '../../src/errors/index.ts'
-import { HttpClient } from '../../src/http/client.ts'
 import { type HttpResponse, HttpError } from '../../src/http/index.ts'
 import {
   cast,
   createHttpError,
   createLogger,
+  createMockHttpClient,
   createServerError,
   createSettingStore,
   createUnauthorizedError,
   mock,
 } from '../helpers.ts'
 
-const mockHttpClient = new HttpClient({
-  baseURL: 'https://test.api',
-  timeout: 30_000,
-})
-const mockRequest = vi.spyOn(mockHttpClient, 'request')
+const { client: mockHttpClient, requestSpy: mockRequest } =
+  createMockHttpClient('https://test.api')
 
 /**
  * Minimal concrete subclass of BaseAPI used to test the shared
@@ -36,6 +33,8 @@ class TestAPI extends BaseAPI {
   public readonly doAuthenticateMock = vi.fn<() => Promise<void>>()
 
   public readonly getAuthHeadersMock = vi.fn<() => Record<string, string>>()
+
+  public readonly isAuthenticatedMock = vi.fn<() => boolean>()
 
   public readonly needsSessionRefreshMock = vi.fn<() => boolean>()
 
@@ -53,16 +52,21 @@ class TestAPI extends BaseAPI {
       shouldUseDefaultTransport = false,
     }: { shouldUseDefaultTransport?: boolean } = {},
   ) {
-    super(config, {
-      ...(shouldUseDefaultTransport ? {} : { httpClient: mockHttpClient }),
-      httpConfig: { baseURL: 'https://test.api', timeout: 30_000 },
-      rateLimitHours: 2,
-      retryDelay: 1000,
-      syncCallback: async () => {
-        // stub: sync is exercised by tests that drive it explicitly
+    super(
+      shouldUseDefaultTransport ? config : (
+        { transport: mockHttpClient, ...config }
+      ),
+      {
+        defaultSyncIntervalMinutes: false,
+        httpConfig: { baseURL: 'https://test.api' },
+        rateLimitHours: 2,
+        syncCallback: async () => {
+          // stub: sync is exercised by tests that drive it explicitly
+        },
       },
-    })
+    )
     this.getAuthHeadersMock.mockReturnValue({})
+    this.isAuthenticatedMock.mockReturnValue(true)
     this.needsSessionRefreshMock.mockReturnValue(false)
     this.performSessionRefreshMock.mockResolvedValue()
     this.reauthenticateMock.mockResolvedValue(false)
@@ -94,9 +98,8 @@ class TestAPI extends BaseAPI {
     return this.request<T>(method, url, config)
   }
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this -- Abstract stub
   public override isAuthenticated(): boolean {
-    return true
+    return this.isAuthenticatedMock()
   }
 
   protected override async doAuthenticate(): Promise<void> {
@@ -144,8 +147,7 @@ const apiWithPersistedCredentials = (
   })
 
 describe('baseAPI shared request pipeline', () => {
-  // eslint-disable-next-line @typescript-eslint/init-declarations -- Assigned in beforeEach
-  let api: TestAPI
+  let api: TestAPI = cast(null)
 
   beforeEach(() => {
     vi.useFakeTimers()
@@ -187,10 +189,7 @@ describe('baseAPI shared request pipeline', () => {
     it('does not set a signal when no abortSignal is provided', async () => {
       await api.callRequest('get', '/data')
 
-      expect(mockRequest).toHaveBeenCalledWith(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
-        expect.not.objectContaining({ signal: expect.anything() }),
-      )
+      expect(mockRequest.mock.lastCall?.[0]).not.toHaveProperty('signal')
     })
   })
 
@@ -367,7 +366,7 @@ describe('baseAPI shared request pipeline', () => {
     it('emits onRequestStart and onRequestComplete pair', async () => {
       const onRequestStart = vi.fn<(event: RequestStartEvent) => void>()
       const onRequestComplete = vi.fn<(event: RequestCompleteEvent) => void>()
-      const events: RequestLifecycleEvents = {
+      const events: LifecycleEvents = {
         onRequestComplete,
         onRequestStart,
       }
@@ -396,7 +395,7 @@ describe('baseAPI shared request pipeline', () => {
 
     it('emits onRequestError when a request fails', async () => {
       const onRequestError = vi.fn<(event: RequestErrorEvent) => void>()
-      const events: RequestLifecycleEvents = { onRequestError }
+      const events: LifecycleEvents = { onRequestError }
       api = new TestAPI({ events })
       mockRequest.mockRejectedValueOnce(createServerError(500, '/data'))
 
@@ -411,7 +410,7 @@ describe('baseAPI shared request pipeline', () => {
       const onRequestStart = vi.fn<(event: RequestStartEvent) => void>()
       const onRequestComplete = vi.fn<(event: RequestCompleteEvent) => void>()
       const onRequestRetry = vi.fn<(event: RequestRetryEvent) => void>()
-      const events: RequestLifecycleEvents = {
+      const events: LifecycleEvents = {
         onRequestComplete,
         onRequestRetry,
         onRequestStart,
@@ -534,9 +533,12 @@ describe('baseAPI shared request pipeline', () => {
       await api.initialize()
 
       expect(api.tryReuseSessionMock).toHaveBeenCalledTimes(1)
-      // resumeSession() without persisted credentials is a silent
-      // no-op — doAuthenticate is only reached when credentials are
-      // persisted (see `resumeSession() returns true ...` below).
+
+      /*
+       * resumeSession() without persisted credentials is a silent
+       * no-op — doAuthenticate is only reached when credentials are
+       * persisted (see `resumeSession() returns true ...` below).
+       */
       expect(api.doAuthenticateMock).not.toHaveBeenCalled()
     })
   })
@@ -654,6 +656,71 @@ describe('baseAPI shared request pipeline', () => {
       await api.callEnsureSession()
 
       expect(api.performSessionRefreshMock).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  /*
+   * Pins the "non-throwing observer" contract at the BaseAPI boundary.
+   * A buggy `events.onSyncComplete` callback (sync throw OR async
+   * rejection) must NEVER break the caller — `notifySync` resolves
+   * cleanly and the error lands in the logger. This invariant is what
+   * lets `@syncDevices`-decorated mutations (updatePower, updateValues,
+   * etc.) succeed even when an observer crashes; without it, a single
+   * misbehaving listener would silently fail every mutation that
+   * touches the sync cascade.
+   */
+  describe('observer error isolation', () => {
+    it('swallows synchronous throws from events.onSyncComplete', async () => {
+      const logger = createLogger()
+      api[Symbol.dispose]()
+      api = new TestAPI({
+        events: {
+          /*
+           * `mockImplementation` lets us register a sync-throwing body
+           * against a callback that's typed `() => Promise<void>` —
+           * neither `(): Promise<void> => { throw … }` (triggers
+           * `promise-function-async`) nor `async () => { throw … }`
+           * (triggers `require-await`) is lint-clean.
+           */
+          onSyncComplete: vi
+            .fn<NonNullable<LifecycleEvents['onSyncComplete']>>()
+            .mockImplementation(() => {
+              throw new Error('observer rogue')
+            }),
+        },
+        logger,
+      })
+
+      await expect(api.notifySync({ type: undefined })).resolves.toBeUndefined()
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('onSyncComplete'),
+        expect.any(Error),
+      )
+    })
+
+    it('swallows async rejections from events.onSyncComplete', async () => {
+      const logger = createLogger()
+      api[Symbol.dispose]()
+      api = new TestAPI({
+        events: {
+          onSyncComplete: vi
+            .fn<NonNullable<LifecycleEvents['onSyncComplete']>>()
+            .mockRejectedValue(new Error('observer rejected')),
+        },
+        logger,
+      })
+
+      await api.notifySync({ type: undefined })
+      /*
+       * The emitter chains `.catch(...)` onto the rejected promise — give
+       * the microtask a turn before asserting the log fired.
+       */
+      await Promise.resolve()
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('onSyncComplete'),
+        expect.any(Error),
+      )
     })
   })
 })

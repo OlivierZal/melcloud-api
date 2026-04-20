@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { Logger, RequestLifecycleEvents } from '../../src/api/index.ts'
-import { RequestLifecycleEmitter } from '../../src/observability/events-emitter.ts'
+import type { LifecycleEvents, Logger } from '../../src/api/index.ts'
+import { LifecycleEmitter } from '../../src/observability/events-emitter.ts'
 
 const createLogger = (): Logger => ({
   error: vi.fn<(...data: unknown[]) => void>(),
@@ -10,10 +10,10 @@ const createLogger = (): Logger => ({
 
 const context = { correlationId: 'corr-1', method: 'GET', url: '/test' }
 
-describe(RequestLifecycleEmitter, () => {
+describe(LifecycleEmitter, () => {
   it('no-ops when no events bundle is configured', () => {
     const logger = createLogger()
-    const emitter = new RequestLifecycleEmitter(undefined, logger)
+    const emitter = new LifecycleEmitter(undefined, logger)
 
     expect(() => {
       emitter.emitStart(context)
@@ -32,15 +32,12 @@ describe(RequestLifecycleEmitter, () => {
     const logger = createLogger()
     const events = {
       onRequestComplete:
-        vi.fn<NonNullable<RequestLifecycleEvents['onRequestComplete']>>(),
-      onRequestError:
-        vi.fn<NonNullable<RequestLifecycleEvents['onRequestError']>>(),
-      onRequestRetry:
-        vi.fn<NonNullable<RequestLifecycleEvents['onRequestRetry']>>(),
-      onRequestStart:
-        vi.fn<NonNullable<RequestLifecycleEvents['onRequestStart']>>(),
+        vi.fn<NonNullable<LifecycleEvents['onRequestComplete']>>(),
+      onRequestError: vi.fn<NonNullable<LifecycleEvents['onRequestError']>>(),
+      onRequestRetry: vi.fn<NonNullable<LifecycleEvents['onRequestRetry']>>(),
+      onRequestStart: vi.fn<NonNullable<LifecycleEvents['onRequestStart']>>(),
     }
-    const emitter = new RequestLifecycleEmitter(events, logger)
+    const emitter = new LifecycleEmitter(events, logger)
     const cause = new Error('upstream')
 
     emitter.emitStart(context)
@@ -70,17 +67,45 @@ describe(RequestLifecycleEmitter, () => {
   it('swallows callback exceptions and logs them at error level', () => {
     const logger = createLogger()
     const events = {
-      onRequestStart: vi.fn<
-        NonNullable<RequestLifecycleEvents['onRequestStart']>
-      >(() => {
-        throw new Error('observer went rogue')
-      }),
+      onRequestStart: vi.fn<NonNullable<LifecycleEvents['onRequestStart']>>(
+        () => {
+          throw new Error('observer went rogue')
+        },
+      ),
     }
-    const emitter = new RequestLifecycleEmitter(events, logger)
+    const emitter = new LifecycleEmitter(events, logger)
 
     expect(() => {
       emitter.emitStart(context)
     }).not.toThrow()
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('onRequestStart'),
+      expect.any(Error),
+    )
+  })
+
+  it('swallows async-callback rejections and logs them at error level', async () => {
+    const logger = createLogger()
+    /*
+     * `onRequestStart` is typed `(event) => void` but structural
+     * assignability lets callers pass `async () => Promise<void>`.
+     * `mockRejectedValue` produces exactly such a function — pins the
+     * rejection-swallowing branch in `#safeInvoke`.
+     */
+    const events: LifecycleEvents = {
+      onRequestStart: vi
+        .fn<NonNullable<LifecycleEvents['onRequestStart']>>()
+        .mockRejectedValue(new Error('async observer rejected')),
+    }
+    const emitter = new LifecycleEmitter(events, logger)
+    emitter.emitStart(context)
+    /*
+     * Allow the catch microtask to run before asserting — the
+     * `result.catch(...)` chain inside `#safeInvoke` settles
+     * asynchronously after `emitStart` returns.
+     */
+    await Promise.resolve()
+
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('onRequestStart'),
       expect.any(Error),

@@ -40,6 +40,7 @@ import { setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
 import { AuthenticationError } from '../errors/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
+import { MS_PER_MINUTE } from '../time-units.ts'
 import { isKeyOf } from '../utils.ts'
 import {
   ClassicBuildingListSchema,
@@ -66,16 +67,14 @@ const LIST_PATH = '/User/ListDevices'
 const LOGIN_PATH = '/Login/ClientLogin3'
 
 const DEFAULT_RETRY_HOURS = 2
-const DEFAULT_SYNC_INTERVAL = 5
-const DEFAULT_TIMEOUT_MS = 30_000
-const RETRY_DELAY = 1000
+const DEFAULT_SYNC_INTERVAL_MINUTES = 5
 const SESSION_REFRESH_AHEAD_MINUTES = 5
-const SECONDS_PER_MINUTE = 60
-const MILLISECONDS_PER_SECOND = 1000
-// Refresh the session when it's within 5 min of its real expiry so
-// no request pays the full re-login latency on its critical path.
-const SESSION_REFRESH_AHEAD_MS =
-  SESSION_REFRESH_AHEAD_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND
+
+/*
+ * Refresh the session when it's within 5 min of its real expiry so
+ * no request pays the full re-login latency on its critical path.
+ */
+const SESSION_REFRESH_AHEAD_MS = SESSION_REFRESH_AHEAD_MINUTES * MS_PER_MINUTE
 
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
@@ -193,39 +192,38 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   private constructor(config: ClassicAPIConfig = {}) {
     const {
-      autoSyncInterval = DEFAULT_SYNC_INTERVAL,
-      httpClient,
       language,
       password,
-      requestTimeout = DEFAULT_TIMEOUT_MS,
       shouldVerifySSL = true,
       timezone,
       username,
     } = config
-    super(
-      { ...config, autoSyncInterval },
-      {
-        httpClient,
-        httpConfig: {
-          baseURL: API_BASE_URL,
-          /*
-           * Self-signed-friendly dispatcher when the caller opts out of
-           * verification (shouldVerifySSL=false). `undefined` falls back
-           * to the global agent so verified TLS remains the default.
-           */
-          ...(shouldVerifySSL ?
-            {}
-          : {
-              dispatcher: new Agent({ connect: { rejectUnauthorized: false } }),
-            }),
-          timeout: requestTimeout,
-        },
-        rateLimitHours: DEFAULT_RETRY_HOURS,
-        retryDelay: RETRY_DELAY,
-        syncCallback: async () => this.fetch(),
+    super(config, {
+      defaultSyncIntervalMinutes: DEFAULT_SYNC_INTERVAL_MINUTES,
+      httpConfig: {
+        baseURL: API_BASE_URL,
+
+        /*
+         * Self-signed-friendly dispatcher when the caller opts out of
+         * verification (shouldVerifySSL=false). `undefined` falls back
+         * to the global agent so verified TLS remains the default.
+         */
+        ...(shouldVerifySSL ?
+          {}
+        : {
+            dispatcher: new Agent({ connect: { rejectUnauthorized: false } }),
+          }),
       },
-    )
-    this.#applyOptionalConfig({ language, password, timezone, username })
+      rateLimitHours: DEFAULT_RETRY_HOURS,
+      syncCallback: async () => this.fetch(),
+    })
+    if (timezone !== undefined) {
+      LuxonSettings.defaultZone = timezone
+    }
+    if (language !== undefined) {
+      this.language = language
+    }
+    this.applyCredentials(username, password)
   }
 
   /**
@@ -436,6 +434,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       'get',
       LIST_PATH,
     )
+
     /*
      * Zod validates the envelope + the minimal device header (Type,
      * DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
@@ -665,26 +664,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   protected override async tryReuseSession(): Promise<boolean> {
     await this.fetch()
     return this.isAuthenticated()
-  }
-
-  #applyOptionalConfig({
-    language,
-    password,
-    timezone,
-    username,
-  }: {
-    language?: string
-    password?: string
-    timezone?: string
-    username?: string
-  }): void {
-    if (timezone !== undefined) {
-      LuxonSettings.defaultZone = timezone
-    }
-    if (language !== undefined) {
-      this.language = language
-    }
-    this.applyCredentials(username, password)
   }
 
   #clearPersistedSession(): void {

@@ -15,35 +15,52 @@ export interface BaseAPIConfig extends Partial<ClassicLoginCredentials> {
    * a reload.
    */
   readonly abortSignal?: AbortSignal
-  /** Interval in minutes between automatic syncs. Set to `null` to disable. */
-  readonly autoSyncInterval?: number | null
   /**
-   * Structured-events callbacks invoked around the request lifecycle.
+   * Structured-events callbacks invoked around SDK lifecycle moments.
    * Useful to plug the SDK into a host observability stack
    * (pino / winston / OpenTelemetry / custom metrics).
    */
-  readonly events?: RequestLifecycleEvents
-  /**
-   * Pre-built `HttpClient` instance. Defaults to a fetch-backed client
-   * constructed from the derived `baseURL` + `requestTimeout`. Supply
-   * your own when you need custom headers, a caching dispatcher, or
-   * the test spy pattern (`vi.spyOn(client, 'request')`). When
-   * provided, `requestTimeout` is ignored — it's already baked into
-   * the instance.
-   */
-  readonly httpClient?: HttpClient
+  readonly events?: LifecycleEvents
   /** Custom logger. Defaults to `console`. */
   readonly logger?: Logger
-  /** Callback invoked after sync operations. */
-  readonly onSync?: SyncCallback
-  /**
-   * Maximum time in milliseconds for a single HTTP request before
-   * it is aborted. Defaults to 30 000 ms (30 s). Set to `0` to
-   * disable the timeout (not recommended).
-   */
-  readonly requestTimeout?: number
   /** External setting manager for persisting credentials and session data. */
   readonly settingManager?: SettingManager
+  /**
+   * Auto-sync timer in minutes. `false` disables the timer entirely
+   * (manual `list()` / `fetch()` only). Omit to use the subclass
+   * default (1 for Home, 5 for Classic).
+   */
+  readonly syncIntervalMinutes?: number | false
+  /** HTTP transport: pre-built {@link HttpClient} or build options. */
+  readonly transport?: TransportConfig
+}
+
+/**
+ * Callback bundle invoked around SDK lifecycle moments. All callbacks
+ * are optional and non-throwing — the SDK ignores any exceptions they
+ * raise so a buggy observer cannot break the request flow.
+ *
+ * Two scopes coexist here:
+ * - **Per-request** (`onRequest*`) — fires for every outgoing HTTP call.
+ * - **Per-sync** (`onSyncComplete`) — fires after each sync trigger
+ *   (auto-timer OR a `@syncDevices`-decorated mutation), once the
+ *   downstream device state has been refreshed.
+ */
+export interface LifecycleEvents {
+  /**
+   * Invoked after each sync trigger (auto-timer or
+   * `@syncDevices`-decorated mutation). Receives the device-type
+   * filter and any IDs the cascade was scoped to.
+   */
+  readonly onSyncComplete?: SyncCallback
+  /** Invoked after a successful HTTP response is received. */
+  readonly onRequestComplete?: (event: RequestCompleteEvent) => void
+  /** Invoked when a request fails permanently (retries exhausted). */
+  readonly onRequestError?: (event: RequestErrorEvent) => void
+  /** Invoked before each backoff-scheduled retry attempt. */
+  readonly onRequestRetry?: (event: RequestRetryEvent) => void
+  /** Invoked when a request is dispatched for the first time. */
+  readonly onRequestStart?: (event: RequestStartEvent) => void
 }
 
 /** Logger interface for API call tracing. */
@@ -86,22 +103,6 @@ export interface RequestLifecycleContext {
   readonly url: string
 }
 
-/**
- * Callback bundle invoked around each logical request. All callbacks
- * are optional and non-throwing — the SDK ignores any exceptions they
- * raise so a buggy observer cannot break the request flow.
- */
-export interface RequestLifecycleEvents {
-  /** Invoked after a successful HTTP response is received. */
-  readonly onRequestComplete?: (event: RequestCompleteEvent) => void
-  /** Invoked when a request fails permanently (retries exhausted). */
-  readonly onRequestError?: (event: RequestErrorEvent) => void
-  /** Invoked before each backoff-scheduled retry attempt. */
-  readonly onRequestRetry?: (event: RequestRetryEvent) => void
-  /** Invoked when a request is dispatched for the first time. */
-  readonly onRequestStart?: (event: RequestStartEvent) => void
-}
-
 /** Emitted each time a retry attempt is scheduled. */
 export interface RequestRetryEvent extends RequestLifecycleContext {
   /** 1-based retry attempt number (1 = first retry, not the initial try). */
@@ -128,3 +129,20 @@ export type SyncCallback = (params?: {
   ids?: (number | string)[]
   type?: DeviceType
 }) => Promise<void>
+
+/**
+ * Transport configuration. Discriminated by presence of an
+ * `HttpClient` instance — the SDK either reuses your wired client
+ * (with its own dispatcher, headers, timeout) or builds a fetch-backed
+ * default whose timeout you can tweak via `timeoutMs`.
+ */
+export type TransportConfig =
+  | HttpClient
+  | {
+      /**
+       * Maximum time in milliseconds for a single HTTP request before
+       * it is aborted. Defaults to 30 000 ms (30 s). Pass `0` to
+       * disable the timeout (not recommended).
+       */
+      readonly timeoutMs?: number
+    }
