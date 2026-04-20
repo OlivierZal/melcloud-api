@@ -86,6 +86,7 @@ export type {
   HomeReportDataset,
   HomeReportPoint,
   HomeUser,
+  Hour,
   KeyOfClassicSetDeviceDataAtaNotInList,
 } from './types/index.ts'
 
