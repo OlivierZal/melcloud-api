@@ -12,6 +12,7 @@ import {
 } from '../../src/entities/index.ts'
 import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import {
+  type ClassicDeviceFacade,
   ClassicAreaFacade,
   ClassicBuildingFacade,
   ClassicDeviceAtaFacade,
@@ -1092,8 +1093,17 @@ describe('device type guards', () => {
   ])(
     '$name returns true for matching facade and false otherwise',
     ({ guard, match, noMatch }) => {
-      expect(guard(match().facade)).toBe(true)
-      expect(guard(noMatch().facade)).toBe(false)
+      // Widen through destructuring so the guard's predicate is not
+      // trivially inferred at the call site (preserves the runtime check).
+      const {
+        facade: matching,
+      }: { facade: ClassicDeviceFacade<ClassicDeviceType> } = match()
+      const {
+        facade: nonMatching,
+      }: { facade: ClassicDeviceFacade<ClassicDeviceType> } = noMatch()
+
+      expect(guard(matching)).toBe(true)
+      expect(guard(nonMatching)).toBe(false)
     },
   )
 })

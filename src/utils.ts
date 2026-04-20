@@ -124,7 +124,9 @@ const labelFormatters: Record<ClassicLabelType, (label: string) => string> = {
     const month = (Number(label) % YEAR_MONTH_DIVISOR) - 1
     // Format month and year separately to preserve the "MMM yyyy" ordering
     // across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
-    const monthName = getLabelFormatters().month.format(Date.UTC(year, month, 1))
+    const monthName = getLabelFormatters().month.format(
+      Date.UTC(year, month, 1),
+    )
     return `${monthName} ${String(year)}`
   },
   [ClassicLabelType.raw]: (label) => label,

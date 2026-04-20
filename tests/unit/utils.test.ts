@@ -32,29 +32,33 @@ describe.concurrent('ata list-to-set conversion', () => {
 })
 
 describe.concurrent(isSetDeviceDataAtaNotInList, () => {
-  it('returns true for keys in fromSetToListAta', () => {
-    expect(isSetDeviceDataAtaNotInList('SetFanSpeed')).toBe(true)
-    expect(isSetDeviceDataAtaNotInList('VaneHorizontal')).toBe(true)
-    expect(isSetDeviceDataAtaNotInList('VaneVertical')).toBe(true)
+  it('returns true for every key in fromSetToListAta', () => {
+    for (const key of Object.keys(fromSetToListAta)) {
+      expect(isSetDeviceDataAtaNotInList(key)).toBe(true)
+    }
   })
 
-  it('returns false for keys not in fromSetToListAta', () => {
-    expect(isSetDeviceDataAtaNotInList('Power')).toBe(false)
-    expect(isSetDeviceDataAtaNotInList('FanSpeed')).toBe(false)
-  })
+  it.each(['Power', 'FanSpeed'])(
+    'returns false for %s (not in fromSetToListAta)',
+    (key) => {
+      expect(isSetDeviceDataAtaNotInList(key)).toBe(false)
+    },
+  )
 })
 
 describe.concurrent(isSetDeviceDataAtaInList, () => {
-  it('returns true for keys in fromListToSetAta', () => {
-    expect(isSetDeviceDataAtaInList('FanSpeed')).toBe(true)
-    expect(isSetDeviceDataAtaInList('VaneHorizontalDirection')).toBe(true)
-    expect(isSetDeviceDataAtaInList('VaneVerticalDirection')).toBe(true)
+  it('returns true for every key in fromListToSetAta', () => {
+    for (const key of Object.keys(fromListToSetAta)) {
+      expect(isSetDeviceDataAtaInList(key)).toBe(true)
+    }
   })
 
-  it('returns false for keys not in fromListToSetAta', () => {
-    expect(isSetDeviceDataAtaInList('SetFanSpeed')).toBe(false)
-    expect(isSetDeviceDataAtaInList('Power')).toBe(false)
-  })
+  it.each(['SetFanSpeed', 'Power'])(
+    'returns false for %s (not in fromListToSetAta)',
+    (key) => {
+      expect(isSetDeviceDataAtaInList(key)).toBe(false)
+    },
+  )
 })
 
 describe.concurrent(typedFromEntries, () => {
