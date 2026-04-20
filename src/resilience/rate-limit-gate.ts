@@ -32,6 +32,11 @@ export class RateLimitGate {
    * Absolute moment at which the gate re-opens. Use alongside
    * {@link remaining} when consumers want to render an "at HH:MM"
    * message rather than a relative duration.
+   *
+   * Callers that need both `remaining` and `unblockAt` together should
+   * prefer {@link snapshot} to avoid reading each against a separate
+   * `DateTime.now()` tick (near the window boundary the pair can
+   * otherwise land on different sides of `isPaused`).
    * @returns The unblock `DateTime` if paused, or `null` if the gate is open.
    */
   public get unblockAt(): DateTime | null {
@@ -109,5 +114,26 @@ export class RateLimitGate {
   /** Reset the gate immediately (testing or manual unblock). */
   public reset(): void {
     this.#pausedUntil = DateTime.now()
+  }
+
+  /**
+   * Atomic read of the gate's state. All three fields are computed
+   * against a single `DateTime.now()` capture, so `remaining` and
+   * `unblockAt` cannot observe inconsistent "one null, one not" pairs
+   * that separate getter reads might hit near the boundary.
+   * @returns The current pause state and derived timing fields.
+   */
+  public snapshot(): {
+    isPaused: boolean
+    remaining: Duration | null
+    unblockAt: DateTime | null
+  } {
+    const now = DateTime.now()
+    const isPaused = this.#pausedUntil > now
+    return {
+      isPaused,
+      remaining: isPaused ? this.#pausedUntil.diff(now) : null,
+      unblockAt: isPaused ? this.#pausedUntil : null,
+    }
   }
 }

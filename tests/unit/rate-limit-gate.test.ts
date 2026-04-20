@@ -102,6 +102,28 @@ describe(RateLimitGate, () => {
     expect(gate.formatRemaining()).toBe('')
   })
 
+  it('snapshot() returns all fields consistently when paused', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    gate.recordRateLimit()
+
+    const snap = gate.snapshot()
+
+    expect(snap.isPaused).toBe(true)
+    expect(snap.remaining).not.toBeNull()
+    expect(snap.unblockAt).not.toBeNull()
+    expect(snap.unblockAt?.toUTC().toISO()).toBe('2026-04-11T14:00:00.000Z')
+  })
+
+  it('snapshot() returns all nulls when open', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+
+    const snap = gate.snapshot()
+
+    expect(snap.isPaused).toBe(false)
+    expect(snap.remaining).toBeNull()
+    expect(snap.unblockAt).toBeNull()
+  })
+
   it('formatRemaining returns a human-readable duration when paused', () => {
     const gate = new RateLimitGate({ hours: 2 })
     gate.recordRateLimit(120)
