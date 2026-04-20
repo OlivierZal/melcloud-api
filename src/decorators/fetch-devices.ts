@@ -32,13 +32,11 @@ const runSync = async (self: FetchDevicesHost): Promise<void> => {
     return
   }
 
-  /*
-   * Structural contract violation: the decorator was applied to a
-   * host that exposes neither hook. Failing loudly at the first
-   * invocation is preferable to silently no-op'ing — a no-op
-   * refresh would give consumers a misleading sense that the
-   * registry is up to date.
-   */
+  // Structural contract violation: the decorator was applied to a
+  // host that exposes neither hook. Failing loudly at the first
+  // invocation is preferable to silently no-op'ing — a no-op
+  // refresh would give consumers a misleading sense that the
+  // registry is up to date.
   throw new TypeError(
     'fetchDevices: host exposes neither syncRegistry() nor api.fetch() — ' +
       'decorator cannot resolve a refresh path',

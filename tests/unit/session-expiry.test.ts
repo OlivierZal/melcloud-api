@@ -37,13 +37,11 @@ describe(isSessionExpired, () => {
   })
 
   it('parses ISO timestamps without explicit timezone offset', () => {
-    /*
-     * Regression for the format MELCloud Classic returns in
-     * `ClassicLoginData.Expiry` (no `Z`, no offset). Native `Date.parse` would
-     * interpret these in the host runtime timezone, shifting comparisons
-     * by hours when host TZ ≠ configured TZ. Luxon `DateTime.fromISO`
-     * uses `LuxonSettings.defaultZone` (set by Classic from ClassicAPIConfig.timezone).
-     */
+    // Regression for the format MELCloud Classic returns in
+    // `ClassicLoginData.Expiry` (no `Z`, no offset). Native `Date.parse` would
+    // interpret these in the host runtime timezone, shifting comparisons
+    // by hours when host TZ ≠ configured TZ. Luxon `DateTime.fromISO`
+    // uses `LuxonSettings.defaultZone` (set by Classic from ClassicAPIConfig.timezone).
     expect(isSessionExpired('2030-12-31T00:00:00')).toBe(false)
     expect(isSessionExpired('2020-01-01T00:00:00')).toBe(true)
   })

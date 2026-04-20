@@ -155,21 +155,17 @@ const mockTokenResponse = {
 const { client: mockHttpClient, requestSpy: mockRequest } =
   createMockHttpClient(BASE_URL)
 
-/*
- * The OIDC token-auth module uses the global `fetch` directly for PAR,
- * the redirect chain, and the token exchange. We stub `fetch` globally
- * and stage every OIDC hop via `mockResolvedValueOnce` so each test
- * phase controls exactly the responses it needs, in order.
- */
+// The OIDC token-auth module uses the global `fetch` directly for PAR,
+// the redirect chain, and the token exchange. We stub `fetch` globally
+// and stage every OIDC hop via `mockResolvedValueOnce` so each test
+// phase controls exactly the responses it needs, in order.
 const mockFetch = vi.fn<typeof fetch>()
 vi.stubGlobal('fetch', mockFetch)
 
-/*
- * Queue a scripted sequence of OIDC responses on top of the global
- * `fetch` mock. Order matches the runtime flow: PAR, redirect chain,
- * credential submission, callback resolution, token exchange. The
- * final `GET /context` goes through the BFF HttpClient mock.
- */
+// Queue a scripted sequence of OIDC responses on top of the global
+// `fetch` mock. Order matches the runtime flow: PAR, redirect chain,
+// credential submission, callback resolution, token exchange. The
+// final `GET /context` goes through the BFF HttpClient mock.
 const setupSuccessfulLogin = (): void => {
   const callbackUrl =
     'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz'
@@ -256,11 +252,9 @@ describe('melcloud home API', () => {
     mockRequest.mockReset()
     mockFetch.mockReset()
 
-    /*
-     * The spy would otherwise fall back to HttpClient.prototype.request
-     * (real fetch). Default to an empty success response so tests that
-     * don't queue a specific mock don't hit the network.
-     */
+    // The spy would otherwise fall back to HttpClient.prototype.request
+    // (real fetch). Default to an empty success response so tests that
+    // don't queue a specific mock don't hit the network.
     mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
     vi.clearAllMocks()
     ;({ HomeAPI: melCloudHomeApi } = await import('../../src/api/home.ts'))
@@ -312,13 +306,11 @@ describe('melcloud home API', () => {
   })
 
   describe('authentication', () => {
-    /*
-     * Contract: a 401 from the BFF token exchange is wrapped into
-     * AuthenticationError by `doAuthenticate` (via
-     * `normalizeUnauthorized`) so callers see a stable domain error
-     * instead of a raw HttpError — mirroring the Classic
-     * `LoginData: null → AuthenticationError` path.
-     */
+    // Contract: a 401 from the BFF token exchange is wrapped into
+    // AuthenticationError by `doAuthenticate` (via
+    // `normalizeUnauthorized`) so callers see a stable domain error
+    // instead of a raw HttpError — mirroring the Classic
+    // `LoginData: null → AuthenticationError` path.
     it('should wrap 401 from token exchange into AuthenticationError', async () => {
       mockFetch
         .mockResolvedValueOnce(
@@ -417,15 +409,13 @@ describe('melcloud home API', () => {
     })
   })
 
-  /*
-   * `resumeSession()` has generic coverage at the BaseAPI unit level;
-   * these cases pin the HomeAPI-specific shape (OIDC round-trip +
-   * `/context` + registry hydration) that the base mocks can't
-   * exercise. Regression guard for two observable behaviours:
-   * - a successful resume repopulates user/context AND registry;
-   * - a rejected resume (fetch throws) returns false + logs, without
-   *   leaving partial state behind.
-   */
+  // `resumeSession()` has generic coverage at the BaseAPI unit level;
+  // these cases pin the HomeAPI-specific shape (OIDC round-trip +
+  // `/context` + registry hydration) that the base mocks can't
+  // exercise. Regression guard for two observable behaviours:
+  // - a successful resume repopulates user/context AND registry;
+  // - a rejected resume (fetch throws) returns false + logs, without
+  //   leaving partial state behind.
   describe('resumeSession', () => {
     it('returns true and populates context + registry on success', async () => {
       setupSuccessfulLogin()
@@ -518,10 +508,8 @@ describe('melcloud home API', () => {
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ events: { onSyncComplete: onSync } })
 
-      /*
-       * authenticate triggers list() internally — reset so the assertion
-       * only covers the explicit list() below.
-       */
+      // authenticate triggers list() internally — reset so the assertion
+      // only covers the explicit list() below.
       onSync.mockClear()
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       await api.list()
@@ -594,12 +582,10 @@ describe('melcloud home API', () => {
       expect(isSuccess).toBe(false)
     })
 
-    /*
-     * Post-condition contract: on a failed PUT, the server state is
-     * presumed unchanged so no re-sync is issued — a failed write must
-     * not cost an extra registry fetch. Sync happens only on success
-     * (see `resyncs the registry after a successful updateValues`).
-     */
+    // Post-condition contract: on a failed PUT, the server state is
+    // presumed unchanged so no re-sync is issued — a failed write must
+    // not cost an extra registry fetch. Sync happens only on success
+    // (see `resyncs the registry after a successful updateValues`).
     it('does not resync after a failed updateValues', async () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
@@ -614,11 +600,9 @@ describe('melcloud home API', () => {
       expect(onSync).not.toHaveBeenCalled()
     })
 
-    /*
-     * Post-condition contract: on successful PUT, the registry is
-     * refreshed so downstream readers see the server-side effect of
-     * the write (the PUT response does not echo device fields).
-     */
+    // Post-condition contract: on successful PUT, the registry is
+    // refreshed so downstream readers see the server-side effect of
+    // the write (the PUT response does not echo device fields).
     it('resyncs the registry after a successful updateValues', async () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
@@ -859,10 +843,8 @@ describe('melcloud home API', () => {
       try {
         setupSuccessfulLogin()
 
-        /*
-         * Disable auto-sync so the 3601s advance below does not fire
-         * the background sync timer (which authenticate→list() plans).
-         */
+        // Disable auto-sync so the 3601s advance below does not fire
+        // the background sync timer (which authenticate→list() plans).
         const api = await createApi({ syncIntervalMinutes: false })
 
         expect(api.isAuthenticated()).toBe(true)
@@ -870,10 +852,8 @@ describe('melcloud home API', () => {
         // Advance past the 3600s token expiry
         vi.advanceTimersByTime(3601 * MS_PER_SECOND)
 
-        /*
-         * #ensureSession detects expired token, tries refresh first.
-         * Refresh token call succeeds via axios.post to token endpoint.
-         */
+        // #ensureSession detects expired token, tries refresh first.
+        // Refresh token call succeeds via axios.post to token endpoint.
         mockFetch.mockResolvedValueOnce(
           mockFetchResponse({
             ...mockTokenResponse,
@@ -913,13 +893,11 @@ describe('melcloud home API', () => {
         username: 'user@test.com',
       })
 
-      /*
-       * #hasPersistedSession() returns true (refreshToken is set).
-       * getUser() -> #fetchContext() -> #request() -> #ensureSession()
-       *   -> isSessionExpired('not-a-valid-iso-date') -> true
-       *   -> try refresh (refreshToken is set) -> succeeds
-       *   -> #fetchContext completes with new token
-       */
+      // #hasPersistedSession() returns true (refreshToken is set).
+      // getUser() -> #fetchContext() -> #request() -> #ensureSession()
+      //   -> isSessionExpired('not-a-valid-iso-date') -> true
+      //   -> try refresh (refreshToken is set) -> succeeds
+      //   -> #fetchContext completes with new token
       // Refresh token succeeds
       mockFetch.mockResolvedValueOnce(
         mockFetchResponse({
@@ -945,11 +923,9 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
 
-      /*
-       * First attempt rejects with 401. The reactive handler tries
-       * refresh first (refreshToken is set) — that succeeds. The
-       * retry dispatch then succeeds with mockContext.
-       */
+      // First attempt rejects with 401. The reactive handler tries
+      // refresh first (refreshToken is set) — that succeeds. The
+      // retry dispatch then succeeds with mockContext.
       mockRequest.mockRejectedValueOnce(httpUnauthorized())
       // Refresh succeeds
       mockFetch.mockResolvedValueOnce(
@@ -969,11 +945,9 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
 
-      /*
-       * 401 triggers reactive retry. Refresh token fails, so the handler
-       * clears the session and attempts full re-authentication, which
-       * succeeds. The retried dispatch then returns mockContext.
-       */
+      // 401 triggers reactive retry. Refresh token fails, so the handler
+      // clears the session and attempts full re-authentication, which
+      // succeeds. The retried dispatch then returns mockContext.
       mockRequest.mockRejectedValueOnce(httpUnauthorized())
       // Refresh fails
       mockFetch.mockRejectedValueOnce(new Error('refresh failed'))
@@ -990,10 +964,8 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
 
-      /*
-       * First 401: retry budget consumed, refresh succeeds, retry succeeds.
-       * Second 401 in the same retry window: no reauth, list() returns [].
-       */
+      // First 401: retry budget consumed, refresh succeeds, retry succeeds.
+      // Second 401 in the same retry window: no reauth, list() returns [].
       mockRequest.mockRejectedValueOnce(httpUnauthorized())
       // Refresh succeeds
       mockFetch.mockResolvedValueOnce(
@@ -1013,10 +985,8 @@ describe('melcloud home API', () => {
     })
 
     it('should not trigger reactive retry during the OIDC flow', async () => {
-      /*
-       * PAR request fails with a 401. `resumeSession()` (called from
-       * `initialize()`) catches and logs it; no session is established.
-       */
+      // PAR request fails with a 401. `resumeSession()` (called from
+      // `initialize()`) catches and logs it; no session is established.
       const logger = createLogger()
       mockFetch.mockRejectedValueOnce(httpUnauthorized())
       const api = await melCloudHomeApi.create({
@@ -1038,12 +1008,10 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
 
-      /*
-       * 401 on list -> reactive retry -> resumeSession() itself fails
-       * (PAR rejects). `resumeSession()` returns false, so `retryAuth`
-       * returns null and the original 401 propagates until list()'s
-       * own catch swallows it and resolves to [].
-       */
+      // 401 on list -> reactive retry -> resumeSession() itself fails
+      // (PAR rejects). `resumeSession()` returns false, so `retryAuth`
+      // returns null and the original 401 propagates until list()'s
+      // own catch swallows it and resolves to [].
       mockRequest.mockRejectedValueOnce(httpUnauthorized())
       mockFetch.mockRejectedValueOnce(new Error('PAR failed'))
       const buildings = await api.list()
@@ -1133,10 +1101,8 @@ describe('melcloud home API', () => {
         )
         .mockResolvedValueOnce(mockFetchResponse('', {}, 302))
 
-        /*
-         * The empty location resolves relative to current URL, producing an
-         * invalid redirect that eventually loops back to a page with no form.
-         */
+        // The empty location resolves relative to current URL, producing an
+        // invalid redirect that eventually loops back to a page with no form.
         .mockResolvedValueOnce(
           mockFetchResponse('<html>no form here</html>', {}, 200),
         )
@@ -1487,14 +1453,12 @@ describe('melcloud home API', () => {
         )
       })
 
-      /*
-       * Regression guard for the persisted-session branch of the
-       * #1281-class of bug: before this fix, `create()` with a valid
-       * persisted session returned an instance whose device registry
-       * was still empty (only `context`/`user` were hydrated). Now
-       * the reuse path goes through `list()`, which populates both
-       * in a single /context request.
-       */
+      // Regression guard for the persisted-session branch of the
+      // #1281-class of bug: before this fix, `create()` with a valid
+      // persisted session returned an instance whose device registry
+      // was still empty (only `context`/`user` were hydrated). Now
+      // the reuse path goes through `list()`, which populates both
+      // in a single /context request.
       it('populates the device registry on the persisted-session path', async () => {
         const { settingManager } = persistedSessionStore()
         mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
@@ -1560,10 +1524,8 @@ describe('melcloud home API', () => {
         username: 'user@test.com',
       })
 
-      /*
-       * Refresh token attempt — #hasPersistedSession returns true
-       * since refreshToken is set, getUser is tried.
-       */
+      // Refresh token attempt — #hasPersistedSession returns true
+      // since refreshToken is set, getUser is tried.
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 
       const api = await melCloudHomeApi.create({
@@ -1604,14 +1566,12 @@ describe('melcloud home API', () => {
     })
 
     it('should clear persisted tokens at the start of authenticate()', async () => {
-      /*
-       * Flow: create() → initialize() → tryReuseSession() → list()
-       * hydrates context with the old token (no OIDC needed). Then
-       * explicitly calling authenticate(newCredentials) runs
-       * doAuthenticate, whose first step is #clearPersistedSession()
-       * wiping the old accessToken/refreshToken/expiry before the
-       * new OIDC flow starts.
-       */
+      // Flow: create() → initialize() → tryReuseSession() → list()
+      // hydrates context with the old token (no OIDC needed). Then
+      // explicitly calling authenticate(newCredentials) runs
+      // doAuthenticate, whose first step is #clearPersistedSession()
+      // wiping the old accessToken/refreshToken/expiry before the
+      // new OIDC flow starts.
       const futureExpiry = new Date(Date.now() + MS_PER_HOUR).toISOString()
       const { setSpy, settingManager } = createSettingStore({
         accessToken: 'old-token',

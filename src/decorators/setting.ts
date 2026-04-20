@@ -4,10 +4,14 @@ interface HasSettingManager {
   settingManager?: SettingManager
 }
 
-/*
- * Accessor decorator that delegates storage to an external SettingManager
- * (e.g., persistent settings), falling back to the in-memory field when none is configured.
- * Validates the setting key once at decoration time rather than on every get/set.
+/**
+ * Accessor decorator that delegates storage to an external `SettingManager`
+ * (e.g. persistent settings), falling back to the in-memory field when none
+ * is configured. The setting key is resolved once at decoration time rather
+ * than on every get/set.
+ * @param target - The underlying accessor descriptor provided by the runtime.
+ * @param context - The accessor decoration context carrying the property name.
+ * @returns The replacement accessor that routes through `settingManager` when present.
  */
 const setting = (
   target: ClassAccessorDecoratorTarget<HasSettingManager, string>,

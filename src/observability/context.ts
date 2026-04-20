@@ -43,16 +43,14 @@ const sensitiveKeys = new Set([
 const isSensitive = (key: string): boolean =>
   sensitiveKeys.has(key.toLowerCase())
 
-/*
- * Detect a string that looks like an `application/x-www-form-urlencoded`
- * body and contains at least one sensitive key (e.g. `password=...`).
- * Returns the redacted form, or `undefined` when nothing was redacted so
- * the caller can keep the original value untouched.
- *
- * Required because Home's `#submitCredentials()` posts credentials as a
- * URLSearchParams string, and the object-key redaction below otherwise
- * passes the entire body through verbatim.
- */
+// Detect a string that looks like an `application/x-www-form-urlencoded`
+// body and contains at least one sensitive key (e.g. `password=...`).
+// Returns the redacted form, or `undefined` when nothing was redacted so
+// the caller can keep the original value untouched.
+//
+// Required because Home's `#submitCredentials()` posts credentials as a
+// URLSearchParams string, and the object-key redaction below otherwise
+// passes the entire body through verbatim.
 const redactFormEncoded = (value: string): string | undefined => {
   if (!value.includes('=')) {
     return undefined

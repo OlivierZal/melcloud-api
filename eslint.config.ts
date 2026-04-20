@@ -88,7 +88,7 @@ const config = defineConfig([
       perfectionist,
     },
     rules: {
-      '@stylistic/multiline-comment-style': 'error',
+      '@stylistic/multiline-comment-style': ['error', 'separate-lines'],
       '@stylistic/quotes': [
         'error',
         'single',
@@ -130,33 +130,29 @@ const config = defineConfig([
       '@typescript-eslint/member-ordering': 'off',
       '@typescript-eslint/naming-convention': [
         'error',
-        /* ── Catch-all ──────────────────────────────────────── */
+        // ── Catch-all ────────────────────────────────────────
         {
           format: ['camelCase'],
           leadingUnderscore: 'forbid',
           selector: 'default',
           trailingUnderscore: 'forbid',
         },
-        /*
-         * ── Variables ────────────────────────────────────────
-         * PascalCase: `as const` enum-like objects.
-         * UPPER_CASE: scalar constants.
-         */
+        // ── Variables ────────────────────────────────────────
+        // PascalCase: `as const` enum-like objects.
+        // UPPER_CASE: scalar constants.
         {
           format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
           selector: 'variable',
         },
-        /* Destructured — we don't control external shapes (API responses, libs). */
+        // Destructured — we don't control external shapes (API responses, libs).
         {
           format: null,
           modifiers: ['destructured'],
           selector: 'variable',
         },
-        /*
-         * ── Booleans (variables, parameters, class properties) ──
-         * Semantic prefixes make intent obvious at the call site.
-         * `device` is excluded: its type includes `false` as a sentinel but it is not a boolean flag.
-         */
+        // ── Booleans (variables, parameters, class properties) ──
+        // Semantic prefixes make intent obvious at the call site.
+        // `device` is excluded: its type includes `false` as a sentinel but it is not a boolean flag.
         {
           filter: { match: false, regex: '^device$' },
           format: ['PascalCase'],
@@ -164,16 +160,14 @@ const config = defineConfig([
           selector: ['variable', 'parameter', 'classProperty'],
           types: ['boolean'],
         },
-        /*
-         * ── Parameters ───────────────────────────────────────
-         * Leading underscore for intentionally unused params.
-         */
+        // ── Parameters ───────────────────────────────────────
+        // Leading underscore for intentionally unused params.
         {
           format: ['camelCase'],
           leadingUnderscore: 'allow',
           selector: 'parameter',
         },
-        /* ── Functions & methods ────────────────────────────── */
+        // ── Functions & methods ──────────────────────────────
         {
           format: ['camelCase'],
           selector: [
@@ -183,21 +177,19 @@ const config = defineConfig([
             'typeMethod',
           ],
         },
-        /*
-         * ── Properties ───────────────────────────────────────
-         * Permissive: DTOs, API contracts, and serialization use mixed conventions.
-         */
+        // ── Properties ───────────────────────────────────────
+        // Permissive: DTOs, API contracts, and serialization use mixed conventions.
         {
           format: ['camelCase', 'PascalCase', 'snake_case', 'UPPER_CASE'],
           selector: ['objectLiteralProperty', 'typeProperty'],
         },
-        /* Branded types use __brand as a phantom sentinel — universal TS convention. */
+        // Branded types use __brand as a phantom sentinel — universal TS convention.
         {
           filter: { match: true, regex: '^__brand$' },
           format: null,
           selector: 'typeProperty',
         },
-        /* Quoted keys ('Content-Type', 'x-api-key', '@scope/pkg') — skip entirely. */
+        // Quoted keys ('Content-Type', 'x-api-key', '@scope/pkg') — skip entirely.
         {
           format: null,
           modifiers: ['requiresQuotes'],
@@ -208,20 +200,18 @@ const config = defineConfig([
           leadingUnderscore: 'allow',
           selector: 'classProperty',
         },
-        /* ── Imports ────────────────────────────────────────── */
+        // ── Imports ──────────────────────────────────────────
         {
           format: ['camelCase', 'PascalCase'],
           selector: 'import',
         },
-        /* ── Types, interfaces, classes, enums ──────────────── */
+        // ── Types, interfaces, classes, enums ────────────────
         {
           format: ['PascalCase'],
           selector: 'typeLike',
         },
-        /*
-         * ── Type parameters (generics) ───────────────────────
-         * T-prefix: T, TKey, TValue, TResult — universal TS convention.
-         */
+        // ── Type parameters (generics) ───────────────────────
+        // T-prefix: T, TKey, TValue, TResult — universal TS convention.
         {
           format: ['PascalCase'],
           prefix: ['T'],
@@ -339,9 +329,9 @@ const config = defineConfig([
         'error',
         {
           groups: [
-            /* ── Signatures ──────────────────────────────────────── */
+            // ── Signatures ────────────────────────────────────────
             'index-signature',
-            /* ── Static fields ───────────────────────────────────── */
+            // ── Static fields ─────────────────────────────────────
             'static-decorated-property',
             'static-property',
             'static-accessor-property',
@@ -355,7 +345,7 @@ const config = defineConfig([
             'private-static-accessor-property',
             ['private-static-get-method', 'private-static-set-method'],
             'static-block',
-            /* ── Instance fields ─────────────────────────────────── */
+            // ── Instance fields ───────────────────────────────────
             'declare-property',
             'abstract-property',
             'abstract-accessor-property',
@@ -372,9 +362,9 @@ const config = defineConfig([
             'private-property',
             'private-accessor-property',
             ['private-get-method', 'private-set-method'],
-            /* ── Constructor ─────────────────────────────────────── */
+            // ── Constructor ───────────────────────────────────────
             'constructor',
-            /* ── Static methods ──────────────────────────────────── */
+            // ── Static methods ────────────────────────────────────
             'static-decorated-method',
             'static-function-property',
             'static-method',
@@ -384,7 +374,7 @@ const config = defineConfig([
             'private-static-decorated-method',
             'private-static-function-property',
             'private-static-method',
-            /* ── Instance methods ────────────────────────────────── */
+            // ── Instance methods ──────────────────────────────────
             'abstract-method',
             'decorated-method',
             'function-property',
@@ -395,7 +385,7 @@ const config = defineConfig([
             'private-decorated-method',
             'private-function-property',
             'private-method',
-            /* ── Unknown (catch-all) ─────────────────────────────── */
+            // ── Unknown (catch-all) ───────────────────────────────
             'unknown',
           ],
           newlinesBetween: 1,

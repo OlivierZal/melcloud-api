@@ -17,10 +17,8 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
     'OutdoorTemperature',
   ]
 
-  /*
-   * Clamp SetTemperature to the valid range for the current or requested
-   * operation mode before sending to the Classic API
-   */
+  // Clamp SetTemperature to the valid range for the current or requested
+  // operation mode before sending to the Classic API
   protected override prepareUpdateData(
     data: Partial<ClassicUpdateDeviceDataAta>,
   ): Required<ClassicUpdateDeviceDataAta> {

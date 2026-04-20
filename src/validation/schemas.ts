@@ -11,12 +11,10 @@ import type {
 import { ClassicDeviceType } from '../constants.ts'
 import { ValidationError } from '../errors/index.ts'
 
-/*
- * Runtime schemas for API boundaries where silent shape drift would hide
- * behind later undefined-property errors. Scoped to payloads the SDK
- * actually consumes fields from — the wire format carries many more
- * keys that the compile-time types already document.
- */
+// Runtime schemas for API boundaries where silent shape drift would hide
+// behind later undefined-property errors. Scoped to payloads the SDK
+// actually consumes fields from — the wire format carries many more
+// keys that the compile-time types already document.
 
 /** Classic /Login/ClientLogin3 response. */
 export const ClassicLoginDataSchema: z.ZodType<ClassicLoginData> =
@@ -44,12 +42,10 @@ export const HomeTokenResponseSchema: z.ZodType<TokenResponse> = z.looseObject({
   token_type: z.literal('Bearer'),
 })
 
-/*
- * Home BFF /context response — the single top-level payload that drives
- * user identity, building listing and device registry sync. Validating
- * it up-front turns an "undefined is not iterable" crash deep inside
- * the registry into an up-front error with a full field path.
- */
+// Home BFF /context response — the single top-level payload that drives
+// user identity, building listing and device registry sync. Validating
+// it up-front turns an "undefined is not iterable" crash deep inside
+// the registry into an up-front error with a full field path.
 const HomeDeviceSettingSchema = z.looseObject({
   name: z.string(),
   value: z.string(),
@@ -101,13 +97,11 @@ export const HomeContextSchema: z.ZodType<HomeContext> = z.looseObject({
   lastname: z.string(),
 })
 
-/*
- * Home telemetry / report endpoints. Responses are consumed as arrays
- * the SDK iterates downstream, so a malformed shape would surface as
- * "undefined is not iterable" rather than a tractable error. Schemas
- * bind to the canonical interfaces in `types/home.ts` so divergence
- * becomes a compile-time error.
- */
+// Home telemetry / report endpoints. Responses are consumed as arrays
+// the SDK iterates downstream, so a malformed shape would surface as
+// "undefined is not iterable" rather than a tractable error. Schemas
+// bind to the canonical interfaces in `types/home.ts` so divergence
+// becomes a compile-time error.
 const HomeEnergyPointSchema = z.looseObject({
   time: z.string(),
   value: z.string(),
@@ -119,12 +113,12 @@ const HomeEnergyMeasureSchema = z.looseObject({
   values: z.array(HomeEnergyPointSchema),
 })
 
-/*
- * Home /telemetry/telemetry/energy/{id} responses carry deviceId at the top
- * level, while /telemetry/telemetry/actual/{id} responses expose deviceId
- * only on each measure entry. Both shapes share the measureData layout;
- * accept `deviceId` as optional at either level rather than maintaining
- * two parallel schemas.
+/**
+ * Home `/telemetry/telemetry/energy/{id}` and `/telemetry/telemetry/actual/{id}`
+ * response shape. The energy endpoint carries `deviceId` at the top level, the
+ * actual endpoint only on each measure entry — both layouts share the same
+ * `measureData` format, so `deviceId` is optional at either level rather than
+ * maintaining two parallel schemas.
  */
 export const HomeEnergyDataSchema: z.ZodType<HomeEnergyData> = z.looseObject({
   deviceId: z.string().optional(),
@@ -160,14 +154,12 @@ export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
     }),
   )
 
-/*
- * Classic /User/ListDevices returns an array of building-with-structure
- * envelopes. The registry iterates structure.Devices and expects every
- * entry to carry a Type/DeviceID/DeviceName/Device triple. Validate the
- * envelope shape plus that minimal device header — the per-device-type
- * payload (Ata/Atw/Erv) stays on compile-time types because each schema
- * would otherwise duplicate 300 LOC of field definitions.
- */
+// Classic /User/ListDevices returns an array of building-with-structure
+// envelopes. The registry iterates structure.Devices and expects every
+// entry to carry a Type/DeviceID/DeviceName/Device triple. Validate the
+// envelope shape plus that minimal device header — the per-device-type
+// payload (Ata/Atw/Erv) stays on compile-time types because each schema
+// would otherwise duplicate 300 LOC of field definitions.
 const ClassicMinimalDeviceSchema = z.looseObject({
   AreaID: z.number().nullable(),
   BuildingID: z.number(),
@@ -201,12 +193,11 @@ const ClassicBuildingStructureSchema = z.looseObject({
   Floors: z.array(ClassicFloorSchema),
 })
 
-/*
- * Classic /User/ListDevices response envelope. Narrower than the full
- * `ClassicBuildingWithStructure` compile-time contract — we only
- * validate the fields the registry actually reads (ID, Name,
- * Structure.{Areas,Devices,Floors}). Callers still bind the compile-
- * time type at the use site.
+/**
+ * Classic `/User/ListDevices` response envelope. Narrower than the full
+ * `ClassicBuildingWithStructure` compile-time contract — only the fields the
+ * registry actually reads are validated (`ID`, `Name`, `Structure.{Areas,
+ * Devices, Floors}`). Callers still bind the compile-time type at the use site.
  */
 export const ClassicBuildingListSchema = z.array(
   z.looseObject({

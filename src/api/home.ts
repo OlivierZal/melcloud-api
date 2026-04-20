@@ -36,9 +36,9 @@ import {
   refreshAccessToken,
 } from './token-auth.ts'
 
-/* ------------------------------------------------------------------ */
-/*  Constants                                                         */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+//  Constants
+// ------------------------------------------------------------------
 
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
@@ -49,16 +49,14 @@ const ENERGY_PATH = '/telemetry/telemetry/energy'
 const REPORT_PATH = '/report/v1/trendsummary'
 const SESSION_REFRESH_AHEAD_MINUTES = 5
 
-/*
- * Refresh the session when it's within 5 min of its real expiry so
- * no request pays the full OIDC round-trip on its critical path.
- */
+// Refresh the session when it's within 5 min of its real expiry so
+// no request pays the full OIDC round-trip on its critical path.
 const SESSION_REFRESH_AHEAD_MS = SESSION_REFRESH_AHEAD_MINUTES * MS_PER_MINUTE
 const SIGNAL_PATH = '/telemetry/telemetry/actual'
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                           */
-/* ------------------------------------------------------------------ */
+// ------------------------------------------------------------------
+//  Helpers
+// ------------------------------------------------------------------
 
 const parseUser = (data: HomeContext): HomeUser => ({
   email: data.email,
@@ -67,27 +65,23 @@ const parseUser = (data: HomeContext): HomeUser => ({
   sub: data.id,
 })
 
-/*
- * `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros
- * (e.g. `2026-04-19T00:00:00.0000000`). Anything shorter is silently
- * truncated to an empty window by the BFF.
- *
- * Parse with `{ zone: 'utc' }` so offset-less inputs (e.g. `'2026-03-01'`)
- * are read as UTC rather than being re-interpreted through the host's
- * local timezone — otherwise the formatted output drifts by the host's
- * current offset.
- */
+// `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros
+// (e.g. `2026-04-19T00:00:00.0000000`). Anything shorter is silently
+// truncated to an empty window by the BFF.
+//
+// Parse with `{ zone: 'utc' }` so offset-less inputs (e.g. `'2026-03-01'`)
+// are read as UTC rather than being re-interpreted through the host's
+// local timezone — otherwise the formatted output drifts by the host's
+// current offset.
 const toReportDate = (iso: string): string =>
   DateTime.fromISO(iso, { zone: 'utc' }).toFormat(
     "yyyy-MM-dd'T'HH:mm:ss'.0000000'",
   )
 
-/*
- * `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
- * space and no seconds. Seconds or an ISO `T` separator produce an empty
- * payload rather than an error. Same UTC-parse rationale as
- * {@link toReportDate}.
- */
+// `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
+// space and no seconds. Seconds or an ISO `T` separator produce an empty
+// payload rather than an error. Same UTC-parse rationale as
+// {@link toReportDate}.
 const toTelemetryDate = (iso: string): string =>
   DateTime.fromISO(iso, { zone: 'utc' }).toFormat('yyyy-MM-dd HH:mm')
 
@@ -400,14 +394,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
       })
       this.#storeTokens(tokens)
     } catch (error) {
-      /*
-       * Normalize transport-level `401 Unauthorized` from the BFF
-       * into the shared {@link AuthenticationError} domain type so
-       * callers of `authenticate()` get a stable error shape (mirror
-       * of the Classic `LoginData: null → AuthenticationError` path).
-       * Non-401 errors (PAR failures, Cognito redirect chain issues,
-       * network timeouts) propagate unchanged.
-       */
+      // Normalize transport-level `401 Unauthorized` from the BFF
+      // into the shared {@link AuthenticationError} domain type so
+      // callers of `authenticate()` get a stable error shape (mirror
+      // of the Classic `LoginData: null → AuthenticationError` path).
+      // Non-401 errors (PAR failures, Cognito redirect chain issues,
+      // network timeouts) propagate unchanged.
       throw normalizeUnauthorized(error)
     }
     ;({ password: this.password, username: this.username } = {
@@ -416,9 +408,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     })
   }
 
-  /* ---------------------------------------------------------------- */
-  /*  Private — credentials & session                                 */
-  /* ---------------------------------------------------------------- */
+  // ----------------------------------------------------------------
+  //  Private — credentials & session
+  // ----------------------------------------------------------------
   protected getAuthHeaders(): Record<string, string> {
     return this.accessToken === '' ?
         {}
@@ -494,9 +486,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return false
   }
 
-  /* ---------------------------------------------------------------- */
-  /*  Private — token management                                      */
-  /* ---------------------------------------------------------------- */
+  // ----------------------------------------------------------------
+  //  Private — token management
+  // ----------------------------------------------------------------
   /**
    * Core of {@link updateValues}: perform the PUT and, on success,
    * trigger a post-mutation registry refresh via
@@ -541,9 +533,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     )
   }
 
-  /* ---------------------------------------------------------------- */
-  /*  Private — API request pipeline                                  */
-  /* ---------------------------------------------------------------- */
+  // ----------------------------------------------------------------
+  //  Private — API request pipeline
+  // ----------------------------------------------------------------
   /**
    * Use the refresh token to obtain a fresh access token.
    * @returns Whether the refresh succeeded.

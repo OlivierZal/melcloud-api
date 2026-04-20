@@ -67,17 +67,15 @@ export class LifecycleEmitter {
   }
 
   #safeInvoke(callback: string, invoke: () => unknown): void {
-    /*
-     * Catch BOTH synchronous throws and async rejections. The
-     * `onRequest*` signatures are typed `(event) => void`, but TS's
-     * structural assignability lets callers pass `async () => …`
-     * (a `() => Promise<void>` is assignable to `() => void`).
-     * `invoke` is widened to `() => unknown` so we can detect when
-     * the runtime return is a Promise and chain `.catch` onto it —
-     * otherwise a rejected promise escapes as an unhandled rejection
-     * and breaks the "non-throwing observer" contract this emitter
-     * is meant to enforce.
-     */
+    // Catch BOTH synchronous throws and async rejections. The
+    // `onRequest*` signatures are typed `(event) => void`, but TS's
+    // structural assignability lets callers pass `async () => …`
+    // (a `() => Promise<void>` is assignable to `() => void`).
+    // `invoke` is widened to `() => unknown` so we can detect when
+    // the runtime return is a Promise and chain `.catch` onto it —
+    // otherwise a rejected promise escapes as an unhandled rejection
+    // and breaks the "non-throwing observer" contract this emitter
+    // is meant to enforce.
     try {
       const result = invoke()
       if (result instanceof Promise) {

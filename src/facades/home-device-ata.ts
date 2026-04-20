@@ -93,11 +93,9 @@ export class HomeDeviceAtaFacade {
   }
 
   public get setFanSpeed(): HomeFanSpeed {
-    /*
-     * MELCloud Home API inconsistency: SetFanSpeed returns a stringified
-     * number ("0") instead of the enum name ("Auto") like other settings.
-     * Normalize via fanSpeedFromClassic, falling back to raw if already a name.
-     */
+    // MELCloud Home API inconsistency: SetFanSpeed returns a stringified
+    // number ("0") instead of the enum name ("Auto") like other settings.
+    // Normalize via fanSpeedFromClassic, falling back to raw if already a name.
     const raw = this.#setting('SetFanSpeed')
     const numeric = Number(raw)
     if (raw !== '' && isClassicFanSpeed(numeric)) {

@@ -153,12 +153,10 @@ describe('registry + facade manager integration', () => {
     expect(registry.getDevicesByAreaId(toClassicAreaId(200))).toHaveLength(1)
   })
 
-  /*
-   * Inline snapshot capturing the zone tree shape returned by
-   * getBuildings(). Guards against regressions in the hierarchy
-   * flattening logic without being brittle on device-data fields
-   * that may change with upstream API bumps.
-   */
+  // Inline snapshot capturing the zone tree shape returned by
+  // getBuildings(). Guards against regressions in the hierarchy
+  // flattening logic without being brittle on device-data fields
+  // that may change with upstream API bumps.
   it('zone tree shape matches the expected hierarchy', () => {
     const { registry } = createContext()
 

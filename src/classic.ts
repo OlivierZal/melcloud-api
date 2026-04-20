@@ -1,3 +1,9 @@
+/**
+ * Namespaced barrel for the MELCloud Classic API surface. Re-exports every
+ * `Classic*` symbol from the main index under shorter aliases, so consumers
+ * can write `import * as classic from 'melcloud-api/classic'` and reach the
+ * public API as `classic.API`, `classic.Device`, `classic.FanSpeed`, etc.
+ */
 export {
   type ClassicAPIAdapter as APIAdapter,
   type ClassicAPIConfig as APIConfig,

@@ -546,12 +546,10 @@ describe(validateRequest, () => {
   })
 })
 
-/*
- * Stacking contract. The project applies `@syncDevices()` on top of
- * `@classicUpdateDevices()` for `updatePower` (classic-base.ts). If
- * the order ever silently flips, update-patch propagation would race
- * the notify — worth pinning.
- */
+// Stacking contract. The project applies `@syncDevices()` on top of
+// `@classicUpdateDevices()` for `updatePower` (classic-base.ts). If
+// the order ever silently flips, update-patch propagation would race
+// the notify — worth pinning.
 describe('decorator stacking order', () => {
   it('runs outer syncDevices after inner classicUpdateDevices', async () => {
     const callOrder: string[] = []
@@ -584,12 +582,10 @@ describe('decorator stacking order', () => {
   })
 })
 
-/*
- * The `type` filter in `@classicUpdateDevices` and `@syncDevices`
- * drives which devices receive a patch / which type label rides on
- * the notifySync payload. A regression here would silently broadcast
- * the patch to unrelated device types.
- */
+// The `type` filter in `@classicUpdateDevices` and `@syncDevices`
+// drives which devices receive a patch / which type label rides on
+// the notifySync payload. A regression here would silently broadcast
+// the patch to unrelated device types.
 describe('decorator type-filter forwarding', () => {
   it('@syncDevices forwards the configured type to notifySync', async () => {
     const notifySync = vi.fn<SyncCallback>().mockResolvedValue()

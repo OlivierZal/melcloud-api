@@ -53,12 +53,10 @@ export const normalizeUnauthorized = (error: unknown): unknown =>
 
 const DEFAULT_TIMEOUT_MS = 30_000
 
-/*
- * Cool-down between consecutive auth-retry consumptions on the same
- * RetryGuard. Hardcoded because no caller has ever needed to tune it
- * — every Classic + Home flow uses the same 1 s value, and adjusting
- * it is more likely to mask bugs than reflect a real product need.
- */
+// Cool-down between consecutive auth-retry consumptions on the same
+// RetryGuard. Hardcoded because no caller has ever needed to tune it
+// — every Classic + Home flow uses the same 1 s value, and adjusting
+// it is more likely to mask bugs than reflect a real product need.
 const DEFAULT_AUTH_RETRY_COOLDOWN_MS = 1000
 
 /**
@@ -118,23 +116,19 @@ export abstract class BaseAPI implements Disposable {
     return this.#syncManager
   }
 
-  /*
-   * Policy instances are created once in the constructor and reused
-   * for every request. Stateless w.r.t. individual calls — the shared
-   * state (rate-limit gate, retry guard) lives in the policy's
-   * injected dependencies, not in the policy itself.
-   */
+  // Policy instances are created once in the constructor and reused
+  // for every request. Stateless w.r.t. individual calls — the shared
+  // state (rate-limit gate, retry guard) lives in the policy's
+  // injected dependencies, not in the policy itself.
   readonly #authRetryPolicy: AuthRetryPolicy
 
   readonly #rateLimitPolicy: RateLimitPolicy
 
-  /*
-   * Single in-flight refresh handle. Set when the first `ensureSession`
-   * call detects an expired session, cleared when the refresh resolves
-   * (success or failure). Subsequent concurrent callers await the same
-   * promise instead of each triggering their own round-trip — prevents
-   * the thundering-herd pattern on token expiry.
-   */
+  // Single in-flight refresh handle. Set when the first `ensureSession`
+  // call detects an expired session, cleared when the refresh resolves
+  // (success or failure). Subsequent concurrent callers await the same
+  // promise instead of each triggering their own round-trip — prevents
+  // the thundering-herd pattern on token expiry.
   #refreshPromise: Promise<void> | null = null
 
   readonly #syncManager: SyncManager

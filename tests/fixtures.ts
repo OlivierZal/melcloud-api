@@ -22,11 +22,9 @@ import {
 } from '../src/types/index.ts'
 import { mock } from './helpers.ts'
 
-/*
- * ---------------------------------------------------------------------------
- * Primitive model data factories
- * ---------------------------------------------------------------------------
- */
+// ---------------------------------------------------------------------------
+// Primitive model data factories
+// ---------------------------------------------------------------------------
 
 export const buildingData = (
   overrides: Partial<ClassicBuildingData> = {},
@@ -65,11 +63,9 @@ export const areaData = (
   ...overrides,
 })
 
-/*
- * ---------------------------------------------------------------------------
- * ClassicDevice data factories (inner `ClassicDevice` payloads)
- * ---------------------------------------------------------------------------
- */
+// ---------------------------------------------------------------------------
+// ClassicDevice data factories (inner `ClassicDevice` payloads)
+// ---------------------------------------------------------------------------
 
 export const ataDeviceData = (
   overrides: Partial<ClassicListDeviceDataAta> = {},
@@ -173,13 +169,11 @@ export const ervDeviceData = (
     ...overrides,
   })
 
-/*
- * ---------------------------------------------------------------------------
- * Default fixture IDs — named constants so the numeric literals don't
- * trigger `@typescript-eslint/no-magic-numbers` outside the vitest
- * override (this file is a helper, not a `.test.ts`).
- * ---------------------------------------------------------------------------
- */
+// ---------------------------------------------------------------------------
+// Default fixture IDs — named constants so the numeric literals don't
+// trigger `@typescript-eslint/no-magic-numbers` outside the vitest
+// override (this file is a helper, not a `.test.ts`).
+// ---------------------------------------------------------------------------
 
 const DEFAULT_AREA_ID = toClassicAreaId(100)
 const DEFAULT_BUILDING_ID = toClassicBuildingId(1)
@@ -188,11 +182,9 @@ const DEFAULT_ATA_DEVICE_ID = toClassicDeviceId(1000)
 const DEFAULT_ATW_DEVICE_ID = toClassicDeviceId(1001)
 const DEFAULT_ERV_DEVICE_ID = toClassicDeviceId(1002)
 
-/*
- * ---------------------------------------------------------------------------
- * Full list-device wrappers (envelope around device data)
- * ---------------------------------------------------------------------------
- */
+// ---------------------------------------------------------------------------
+// Full list-device wrappers (envelope around device data)
+// ---------------------------------------------------------------------------
 
 export const ataDevice = (
   overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Ata>> = {},
@@ -233,11 +225,9 @@ export const ervDevice = (
   ...overrides,
 })
 
-/*
- * ---------------------------------------------------------------------------
- * API response fixtures
- * ---------------------------------------------------------------------------
- */
+// ---------------------------------------------------------------------------
+// API response fixtures
+// ---------------------------------------------------------------------------
 
 export const reportData = (
   overrides: Partial<ClassicReportData> = {},

@@ -33,10 +33,8 @@ let formatterCache: LabelFormatterCache | null = null
 const getDefaultLocale = (): string | null | undefined =>
   LuxonSettings.defaultLocale
 
-/*
- * Tracks LuxonSettings.defaultLocale so output stays consistent with the rest
- * of the codebase's datetime formatting without re-creating Intl.DateTimeFormat per call.
- */
+// Tracks LuxonSettings.defaultLocale so output stays consistent with the rest
+// of the codebase's datetime formatting without re-creating Intl.DateTimeFormat per call.
 const getLabelFormatters = (): LabelFormatterCache => {
   const locale = getDefaultLocale()
   if (formatterCache !== null && formatterCache.locale === locale) {
@@ -109,10 +107,8 @@ export const fromListToSetAta: Record<
  */
 export const isSetDeviceDataAtaInList = isKeyOf(fromListToSetAta)
 
-/*
- * Strategy map: transform raw API label formats into human-readable strings
- * based on report granularity (day of week, month name, year-month, etc.)
- */
+// Strategy map: transform raw API label formats into human-readable strings
+// based on report granularity (day of week, month name, year-month, etc.)
 const labelFormatters: Record<ClassicLabelType, (label: string) => string> = {
   [ClassicLabelType.day_of_week]: (label) =>
     getLabelFormatters().dayOfWeek.format(
@@ -126,10 +122,8 @@ const labelFormatters: Record<ClassicLabelType, (label: string) => string> = {
     const year = Math.floor(Number(label) / YEAR_MONTH_DIVISOR)
     const month = (Number(label) % YEAR_MONTH_DIVISOR) - 1
 
-    /*
-     * Format month and year separately to preserve the "MMM yyyy" ordering
-     * across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
-     */
+    // Format month and year separately to preserve the "MMM yyyy" ordering
+    // across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
     const monthName = getLabelFormatters().month.format(
       Date.UTC(year, month, 1),
     )

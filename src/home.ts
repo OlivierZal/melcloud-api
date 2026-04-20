@@ -1,3 +1,9 @@
+/**
+ * Namespaced barrel for the MELCloud Home API surface. Re-exports every
+ * `Home*` symbol from the main index under shorter aliases, so consumers can
+ * write `import * as home from 'melcloud-api/home'` and reach the public API
+ * as `home.API`, `home.Device`, `home.DeviceType`, etc.
+ */
 export {
   type HomeAPIConfig as APIConfig,
   type HomeAPISettings as APISettings,

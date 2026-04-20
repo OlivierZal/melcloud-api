@@ -6,24 +6,20 @@ import {
   isHttpError,
 } from '../http/index.ts'
 
-/*
- * HTTP 5xx status codes considered transient (server-side glitches that
- * retrying a short moment later can plausibly recover from). 500 is
- * intentionally excluded: it usually indicates an application bug on the
- * server, not a recoverable condition.
- */
+// HTTP 5xx status codes considered transient (server-side glitches that
+// retrying a short moment later can plausibly recover from). 500 is
+// intentionally excluded: it usually indicates an application bug on the
+// server, not a recoverable condition.
 const TRANSIENT_STATUSES: ReadonlySet<number> = new Set([
   HTTP_STATUS_BAD_GATEWAY,
   HTTP_STATUS_GATEWAY_TIMEOUT,
   HTTP_STATUS_SERVICE_UNAVAILABLE,
 ])
 
-/*
- * Walk the `Error.cause` chain to find a nested HttpError. Guards against
- * cycles via a visited set. Used by `isTransientServerError` so that
- * wrapped errors (e.g. Classic's `#onError` rethrows as
- * `new Error(msg, { cause: httpError })`) are still correctly classified.
- */
+// Walk the `Error.cause` chain to find a nested HttpError. Guards against
+// cycles via a visited set. Used by `isTransientServerError` so that
+// wrapped errors (e.g. Classic's `#onError` rethrows as
+// `new Error(msg, { cause: httpError })`) are still correctly classified.
 const findHttpError = (error: unknown): HttpError | undefined => {
   const visited = new Set<object>()
   let current: unknown = error
@@ -92,17 +88,15 @@ const sleep = async (ms: number): Promise<void> =>
     setTimeout(resolve, ms)
   })
 
-/*
- * Exponential backoff with symmetric uniform jitter around the base delay.
- * The jittered delay is sampled uniformly in
- * [base * (1 - ratio), base * (1 + ratio)] and clamped to [0, maxDelayMs].
- *
- * `Math.random()` is intentional here: retry timing is NOT
- * security-sensitive — it's only used to desynchronize concurrent retries
- * so a bursty error pattern doesn't resonate into a thundering herd.
- * SonarCloud's S2245 hotspot on this line is marked SAFE in the project
- * dashboard with that rationale.
- */
+// Exponential backoff with symmetric uniform jitter around the base delay.
+// The jittered delay is sampled uniformly in
+// [base * (1 - ratio), base * (1 + ratio)] and clamped to [0, maxDelayMs].
+//
+// `Math.random()` is intentional here: retry timing is NOT
+// security-sensitive — it's only used to desynchronize concurrent retries
+// so a bursty error pattern doesn't resonate into a thundering herd.
+// SonarCloud's S2245 hotspot on this line is marked SAFE in the project
+// dashboard with that rationale.
 const computeDelay = (
   attempt: number,
   { initialDelayMs, jitterRatio, maxDelayMs }: RetryBackoffOptions,
@@ -127,13 +121,11 @@ export const withRetryBackoff = async <T>(
   operation: () => Promise<T>,
   options: RetryBackoffOptions,
 ): Promise<T> => {
-  /*
-   * Recursive shape (over a loop) makes the sequential nature of each
-   * attempt structural: every retry strictly awaits the previous
-   * attempt's settlement and the backoff delay before the next call.
-   * Also gives the function a single, type-checked exit — no need for
-   * an unreachable post-loop throw.
-   */
+  // Recursive shape (over a loop) makes the sequential nature of each
+  // attempt structural: every retry strictly awaits the previous
+  // attempt's settlement and the backoff delay before the next call.
+  // Also gives the function a single, type-checked exit — no need for
+  // an unreachable post-loop throw.
   const attempt = async (number: number): Promise<T> => {
     try {
       return await operation()

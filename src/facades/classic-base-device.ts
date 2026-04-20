@@ -71,11 +71,9 @@ const getReportPostDataDates = ({
   to,
 })
 
-/*
- * Use Luxon parsing so offset-less ISO inputs are interpreted in
- * `LuxonSettings.defaultZone` (matching the Classic API's timezone contract),
- * not the host runtime timezone.
- */
+// Use Luxon parsing so offset-less ISO inputs are interpreted in
+// `LuxonSettings.defaultZone` (matching the Classic API's timezone contract),
+// not the host runtime timezone.
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(
     (DateTime.fromISO(to).toMillis() - DateTime.fromISO(from).toMillis()) /
@@ -133,11 +131,9 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return this.registry.devices
   }
 
-  /*
-   * For ATA devices, ClassicAPI list responses use different property names than set
-   * requests (e.g., "FanSpeed" in list vs "SetFanSpeed" in set). Convert keys
-   * to set format, then keep only the fields tracked by flags.
-   */
+  // For ATA devices, ClassicAPI list responses use different property names than set
+  // requests (e.g., "FanSpeed" in list vs "SetFanSpeed" in set). Convert keys
+  // to set format, then keep only the fields tracked by flags.
   protected get setData(): Required<ClassicUpdateDeviceData<T>> {
     const dataEntries = Object.entries(this.data)
     const entries =
@@ -288,10 +284,8 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     }
   }
 
-  /*
-   * Combine individual field flags via bitwise OR to tell the Classic API
-   * which device settings were actually changed
-   */
+  // Combine individual field flags via bitwise OR to tell the Classic API
+  // which device settings were actually changed
   #computeFlags(keys: (keyof ClassicUpdateDeviceData<T>)[]): number {
     return Number(
       keys.reduce(

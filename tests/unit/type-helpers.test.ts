@@ -14,11 +14,9 @@ describe.concurrent(typedKeys, () => {
   })
 
   it('returns keys preserving their insertion order', () => {
-    /*
-     * Built from an entries tuple so `perfectionist/sort-objects`
-     * can't reorder the keys away from the insertion sequence we
-     * want to assert on.
-     */
+    // Built from an entries tuple so `perfectionist/sort-objects`
+    // can't reorder the keys away from the insertion sequence we
+    // want to assert on.
     const object = Object.fromEntries([
       ['zulu', 0],
       ['alpha', 1],

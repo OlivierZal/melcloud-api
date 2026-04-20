@@ -449,15 +449,13 @@ describe('mELCloud Classic API', () => {
       ).rejects.toThrow(AuthenticationError)
     })
 
-    /*
-     * Pins the Classic-specific normalization path: MELCloud returns
-     * `HTTP 200 { LoginData: null }` for bad credentials (not a 401),
-     * so `doAuthenticate` throws AuthenticationError directly — which
-     * `resumeSession` then logs and swallows. The generic "no
-     * credentials persisted" and "doAuthenticate rejects → logged +
-     * false" cases are covered at the BaseAPI unit level
-     * (base-api.test.ts → `authenticate() vs resumeSession() contract`).
-     */
+    // Pins the Classic-specific normalization path: MELCloud returns
+    // `HTTP 200 { LoginData: null }` for bad credentials (not a 401),
+    // so `doAuthenticate` throws AuthenticationError directly — which
+    // `resumeSession` then logs and swallows. The generic "no
+    // credentials persisted" and "doAuthenticate rejects → logged +
+    // false" cases are covered at the BaseAPI unit level
+    // (base-api.test.ts → `authenticate() vs resumeSession() contract`).
     it('resumeSession logs AuthenticationError when LoginData is null', async () => {
       const logger = createLogger()
       mockLoginAndList()
@@ -478,12 +476,10 @@ describe('mELCloud Classic API', () => {
       )
     })
 
-    /*
-     * Post-condition contract: a successful authenticate() must leave
-     * the registry populated so callers never see an empty device list
-     * after a successful login. Enforced by BaseAPI.authenticate's
-     * template method (guard against OlivierZal/com.melcloud#1281-style regressions).
-     */
+    // Post-condition contract: a successful authenticate() must leave
+    // the registry populated so callers never see an empty device list
+    // after a successful login. Enforced by BaseAPI.authenticate's
+    // template method (guard against OlivierZal/com.melcloud#1281-style regressions).
     it('populates the device registry during authenticate', async () => {
       const building = createBuilding({
         Structure: {

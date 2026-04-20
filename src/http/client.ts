@@ -1,24 +1,20 @@
 import { HttpError } from './errors.ts'
 
-/*
- * `fetch()` in Node 22+ accepts `dispatcher` (undici-specific). We import
- * the type from undici-types (the copy bundled with @types/node that
- * Node's `fetch()` declaration uses) so passing a dispatcher
- * instantiated from the `undici` runtime package remains structurally
- * compatible with what fetch expects.
- */
+// `fetch()` in Node 22+ accepts `dispatcher` (undici-specific). We import
+// the type from undici-types (the copy bundled with @types/node that
+// Node's `fetch()` declaration uses) so passing a dispatcher
+// instantiated from the `undici` runtime package remains structurally
+// compatible with what fetch expects.
 type FetchBody = NonNullable<FetchInit['body']>
 
-/*
- * `Dispatcher` is defined both in the `undici` npm package and in
- * `undici-types` (the copy bundled with `@types/node` that fetch's
- * declaration uses). They are structurally identical at runtime but
- * TypeScript treats them as nominally distinct, so a dispatcher built
- * from one cannot be assigned to the other. Accepting `object` on the
- * construction side keeps the public surface agnostic; the runtime
- * hand-off to fetch below spreads it into RequestInit via a tagged
- * property so the compiler stays out of the way.
- */
+// `Dispatcher` is defined both in the `undici` npm package and in
+// `undici-types` (the copy bundled with `@types/node` that fetch's
+// declaration uses). They are structurally identical at runtime but
+// TypeScript treats them as nominally distinct, so a dispatcher built
+// from one cannot be assigned to the other. Accepting `object` on the
+// construction side keeps the public surface agnostic; the runtime
+// hand-off to fetch below spreads it into RequestInit via a tagged
+// property so the compiler stays out of the way.
 type FetchDispatcher = object
 
 type FetchInit = NonNullable<Parameters<typeof fetch>[1]>
@@ -57,12 +53,10 @@ export interface HttpResponse<T = unknown> {
   readonly status: number
 }
 
-/*
- * Join relative `url` onto `baseURL`. `new URL(absolutePath, base)` follows
- * RFC 3986 and replaces base's path entirely — which drops any prefix like
- * `/Mitsubishi.Wifi.Client` from `baseURL`. Strip the leading slash so the
- * URL constructor treats it as a relative segment and concatenates.
- */
+// Join relative `url` onto `baseURL`. `new URL(absolutePath, base)` follows
+// RFC 3986 and replaces base's path entirely — which drops any prefix like
+// `/Mitsubishi.Wifi.Client` from `baseURL`. Strip the leading slash so the
+// URL constructor treats it as a relative segment and concatenates.
 const resolveUrl = (baseURL: string, url: string | undefined): string => {
   if (url === undefined || url === '') {
     return baseURL
@@ -121,12 +115,10 @@ const serializeBody = (
   return JSON.stringify(data)
 }
 
-/*
- * Headers.entries() collapses same-name values into a single
- * comma-joined string, so iterating once is enough. `set-cookie` is the
- * exception: `Headers` preserves it as a distinct list exposed only via
- * `getSetCookie()`, so we merge that explicitly.
- */
+// Headers.entries() collapses same-name values into a single
+// comma-joined string, so iterating once is enough. `set-cookie` is the
+// exception: `Headers` preserves it as a distinct list exposed only via
+// `getSetCookie()`, so we merge that explicitly.
 const readHeaders = (headers: Headers): Record<string, string | string[]> => {
   const result: Record<string, string | string[]> = {}
   for (const [key, value] of headers.entries()) {
@@ -139,13 +131,11 @@ const readHeaders = (headers: Headers): Record<string, string | string[]> => {
   return result
 }
 
-/*
- * Try JSON first, fall back to text. Axios auto-parses bodies by default —
- * content-type from upstream can be absent or a JSON variant the strict
- * `application/json` substring misses (e.g. `text/json`, `application/problem+json`).
- * Matching on parseability keeps those callers working without a content-type
- * allowlist that drifts with every new server flavour.
- */
+// Try JSON first, fall back to text. Axios auto-parses bodies by default —
+// content-type from upstream can be absent or a JSON variant the strict
+// `application/json` substring misses (e.g. `text/json`, `application/problem+json`).
+// Matching on parseability keeps those callers working without a content-type
+// allowlist that drifts with every new server flavour.
 const parseBody = async (response: Response): Promise<unknown> => {
   if (
     response.status === NULL_BODY_STATUS ||
@@ -164,10 +154,8 @@ const parseBody = async (response: Response): Promise<unknown> => {
   }
 }
 
-/*
- * When callers passed an `AbortSignal` and we also need to enforce a
- * timeout, combine both so whichever fires first aborts the request.
- */
+// When callers passed an `AbortSignal` and we also need to enforce a
+// timeout, combine both so whichever fires first aborts the request.
 const combineSignals = (
   signals: (AbortSignal | undefined)[],
 ): AbortSignal | undefined => {
@@ -245,12 +233,10 @@ export class HttpClient {
     }
   }
 
-  /*
-   * `dispatcher` is declared with a nominally different (but structurally
-   * identical) type by undici-types vs the undici npm package. Attach it
-   * via `Object.assign` so the compiler mismatch stays scoped to the
-   * fetch hand-off, not the public surface.
-   */
+  // `dispatcher` is declared with a nominally different (but structurally
+  // identical) type by undici-types vs the undici npm package. Attach it
+  // via `Object.assign` so the compiler mismatch stays scoped to the
+  // fetch hand-off, not the public surface.
   #applyDispatcher(init: FetchInit): void {
     if (this.#dispatcher !== undefined) {
       Object.assign(init, { dispatcher: this.#dispatcher })

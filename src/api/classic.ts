@@ -70,10 +70,8 @@ const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 5
 const SESSION_REFRESH_AHEAD_MINUTES = 5
 
-/*
- * Refresh the session when it's within 5 min of its real expiry so
- * no request pays the full re-login latency on its critical path.
- */
+// Refresh the session when it's within 5 min of its real expiry so
+// no request pays the full re-login latency on its critical path.
 const SESSION_REFRESH_AHEAD_MS = SESSION_REFRESH_AHEAD_MINUTES * MS_PER_MINUTE
 
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
@@ -106,11 +104,9 @@ const parseErrorLogQuery = ({
   period: number
   toDate: DateTime
 } => {
-  /*
-   * When fromDate is specified, period is fixed and offset is ignored, allowing
-   * queries around a specific date. Otherwise, offset pages through history
-   * in period-sized chunks.
-   */
+  // When fromDate is specified, period is fixed and offset is ignored, allowing
+  // queries around a specific date. Otherwise, offset pages through history
+  // in period-sized chunks.
   const fromDate =
     from !== undefined && from !== '' ? DateTime.fromISO(from) : null
   const toDate =
@@ -203,11 +199,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       httpConfig: {
         baseURL: API_BASE_URL,
 
-        /*
-         * Self-signed-friendly dispatcher when the caller opts out of
-         * verification (shouldVerifySSL=false). `undefined` falls back
-         * to the global agent so verified TLS remains the default.
-         */
+        // Self-signed-friendly dispatcher when the caller opts out of
+        // verification (shouldVerifySSL=false). `undefined` falls back
+        // to the global agent so verified TLS remains the default.
         ...(shouldVerifySSL ?
           {}
         : {
@@ -435,12 +429,10 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       LIST_PATH,
     )
 
-    /*
-     * Zod validates the envelope + the minimal device header (Type,
-     * DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
-     * its compile-time contract — the `request<T>` generic binds T
-     * at the call site, Zod enforces it at runtime.
-     */
+    // Zod validates the envelope + the minimal device header (Type,
+    // DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
+    // its compile-time contract — the `request<T>` generic binds T
+    // at the call site, Zod enforces it at runtime.
     parseOrThrow(ClassicBuildingListSchema, response.data, 'ListDevices')
     return response
   }

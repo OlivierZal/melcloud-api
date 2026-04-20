@@ -39,10 +39,8 @@ import type {
 } from './classic-interfaces.ts'
 import type { ReportChartLineOptions } from './interfaces.ts'
 
-/*
- * Settings can be defined at zone or device level. Try zone first;
- * if unsupported, fall back to device level and cache the result.
- */
+// Settings can be defined at zone or device level. Try zone first;
+// if unsupported, fall back to device level and cache the result.
 const getWithZoneFallback = async <TResult>(
   isAtZoneLevel: boolean | null,
   zoneGetter: () => Promise<TResult>,
@@ -160,17 +158,15 @@ export abstract class BaseFacade<
     ;({ id: this.id } = instance)
   }
 
-  /*
-   * Uses `@fetchDevices({ when: 'after' })` rather than `@syncDevices()`
-   * because the update response is a success/failure envelope with no
-   * device payload — notifying onSync without a genuine registry
-   * refresh would be a stale signal. The trade-off: onSync now fires
-   * from `api.fetch()` at the API level, carrying `{ type }` only —
-   * not the facade's `{ ids, type }` shape with specific device ids.
-   * Consumers listening to onSync should treat any call as "registry
-   * changed, re-inspect" rather than keying on the payload. Same
-   * applies to updateHolidayMode below.
-   */
+  // Uses `@fetchDevices({ when: 'after' })` rather than `@syncDevices()`
+  // because the update response is a success/failure envelope with no
+  // device payload — notifying onSync without a genuine registry
+  // refresh would be a stale signal. The trade-off: onSync now fires
+  // from `api.fetch()` at the API level, carrying `{ type }` only —
+  // not the facade's `{ ids, type }` shape with specific device ids.
+  // Consumers listening to onSync should treat any call as "registry
+  // changed, re-inspect" rather than keying on the payload. Same
+  // applies to updateHolidayMode below.
   @fetchDevices({ when: 'after' })
   public async updateFrostProtection({
     isEnabled = true,
@@ -179,10 +175,8 @@ export abstract class BaseFacade<
   }: ClassicFrostProtectionQuery): Promise<
     ClassicFailureData | ClassicSuccessData
   > {
-    /*
-     * Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
-     * in case the adjustment pushed max out of bounds
-     */
+    // Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
+    // in case the adjustment pushed max out of bounds
     const newMin = Math.max(
       temperatureRange.min,
       Math.min(min, temperatureRange.max - TEMPERATURE_GAP),

@@ -86,12 +86,10 @@ describe(LifecycleEmitter, () => {
 
   it('swallows async-callback rejections and logs them at error level', async () => {
     const logger = createLogger()
-    /*
-     * `onRequestStart` is typed `(event) => void` but structural
-     * assignability lets callers pass `async () => Promise<void>`.
-     * `mockRejectedValue` produces exactly such a function — pins the
-     * rejection-swallowing branch in `#safeInvoke`.
-     */
+    // `onRequestStart` is typed `(event) => void` but structural
+    // assignability lets callers pass `async () => Promise<void>`.
+    // `mockRejectedValue` produces exactly such a function — pins the
+    // rejection-swallowing branch in `#safeInvoke`.
     const events: LifecycleEvents = {
       onRequestStart: vi
         .fn<NonNullable<LifecycleEvents['onRequestStart']>>()
@@ -99,11 +97,9 @@ describe(LifecycleEmitter, () => {
     }
     const emitter = new LifecycleEmitter(events, logger)
     emitter.emitStart(context)
-    /*
-     * Allow the catch microtask to run before asserting — the
-     * `result.catch(...)` chain inside `#safeInvoke` settles
-     * asynchronously after `emitStart` returns.
-     */
+    // Allow the catch microtask to run before asserting — the
+    // `result.catch(...)` chain inside `#safeInvoke` settles
+    // asynchronously after `emitStart` returns.
     await Promise.resolve()
 
     expect(logger.error).toHaveBeenCalledWith(

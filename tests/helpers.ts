@@ -19,12 +19,10 @@ import {
 } from '../src/entities/index.ts'
 import { HttpClient, HttpError } from '../src/http/index.ts'
 
-/*
- * Default RSSI value (in dBm) used in the mock `getSignal` response
- * below. A mid-range -60 dBm keeps derived assertions (chart-line
- * thresholds, signal-quality bands) in a predictable band without
- * special-casing weak or strong-signal branches.
- */
+// Default RSSI value (in dBm) used in the mock `getSignal` response
+// below. A mid-range -60 dBm keeps derived assertions (chart-line
+// thresholds, signal-quality bands) in a predictable band without
+// special-casing weak or strong-signal branches.
 const MOCK_SIGNAL_RSSI_DBM = -60
 
 export function cast(value: unknown): never
@@ -32,13 +30,11 @@ export function cast(value: unknown): unknown {
   return value
 }
 
-/*
- * Wrap `expect.objectContaining` so call sites get a `never`-typed
- * matcher (assignable anywhere) instead of `any` — the latter trips
- * `@typescript-eslint/no-unsafe-assignment` when nested inside another
- * matcher's shape literal. Keeps the unsafe-return concession at one
- * boundary instead of scattered across every test file.
- */
+// Wrap `expect.objectContaining` so call sites get a `never`-typed
+// matcher (assignable anywhere) instead of `any` — the latter trips
+// `@typescript-eslint/no-unsafe-assignment` when nested inside another
+// matcher's shape literal. Keeps the unsafe-return concession at one
+// boundary instead of scattered across every test file.
 export function matchObject(shape: object): never
 export function matchObject(shape: object): unknown {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- vitest's `objectContaining` is typed `any`; this helper is the single boundary that scopes the concession
@@ -213,11 +209,9 @@ export const mockResponse = (
   status,
 })
 
-/*
- * The Response constructor rejects a non-null body on the "null body"
- * statuses defined in the Fetch spec. Listed explicitly so mocked
- * fetches can model those responses without hitting the guard.
- */
+// The Response constructor rejects a non-null body on the "null body"
+// statuses defined in the Fetch spec. Listed explicitly so mocked
+// fetches can model those responses without hitting the guard.
 const HTTP_SWITCHING_PROTOCOLS = 101
 const HTTP_EARLY_HINTS = 103
 const HTTP_NO_CONTENT = 204

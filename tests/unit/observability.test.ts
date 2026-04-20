@@ -100,12 +100,10 @@ describe('api call response data', () => {
   })
 
   it('handles response without config (partial HttpError shape)', () => {
-    /*
-     * An HttpError captured before the request fully materialized may carry
-     * a response without a matching config. The logger must not throw —
-     * turning a recoverable failure into a silent crash would be a much
-     * worse outcome than missing requestData on the log line.
-     */
+    // An HttpError captured before the request fully materialized may carry
+    // a response without a matching config. The logger must not throw —
+    // turning a recoverable failure into a silent crash would be a much
+    // worse outcome than missing requestData on the log line.
     const partial: TestResponse = {
       data: { error: 'oops' },
       headers: {},
@@ -193,13 +191,11 @@ describe('sensitive data redaction', () => {
   })
 
   it('redacts sensitive keys inside form-encoded string bodies', () => {
-    /*
-     * Home's `#submitCredentials()` posts credentials as a form-encoded
-     * string (URLSearchParams.toString()). Without explicit string
-     * handling in `redactValue()`, the entire body — including
-     * `password=...` and `username=...` — would leak verbatim into the
-     * request log lines.
-     */
+    // Home's `#submitCredentials()` posts credentials as a form-encoded
+    // string (URLSearchParams.toString()). Without explicit string
+    // handling in `redactValue()`, the entire body — including
+    // `password=...` and `username=...` — would leak verbatim into the
+    // request log lines.
     const config = createConfig({
       data: 'csrf=tok&password=s3cret&username=user%40example.com&extra=visible',
     })

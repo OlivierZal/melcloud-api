@@ -506,16 +506,14 @@ describe('baseAPI shared request pipeline', () => {
     })
   })
 
-  /*
-   * Template contract: `initialize()` is the sole lifecycle entry
-   * point that subclass `create()` factories may call. It guarantees
-   * that on return, either the persisted session has been reused
-   * (tryReuseSession=true and, by contract, registry populated) or
-   * `resumeSession()` has run (which itself syncs the registry when
-   * credentials are persisted, or is a no-op otherwise). Regression
-   * guard for the #1281-class bug on the reuse-session branch that
-   * the original PR didn't cover.
-   */
+  // Template contract: `initialize()` is the sole lifecycle entry
+  // point that subclass `create()` factories may call. It guarantees
+  // that on return, either the persisted session has been reused
+  // (tryReuseSession=true and, by contract, registry populated) or
+  // `resumeSession()` has run (which itself syncs the registry when
+  // credentials are persisted, or is a no-op otherwise). Regression
+  // guard for the #1281-class bug on the reuse-session branch that
+  // the original PR didn't cover.
   describe('initialize() template', () => {
     it('exits early when tryReuseSession returns true', async () => {
       api.tryReuseSessionMock.mockResolvedValueOnce(true)
@@ -534,26 +532,22 @@ describe('baseAPI shared request pipeline', () => {
 
       expect(api.tryReuseSessionMock).toHaveBeenCalledTimes(1)
 
-      /*
-       * resumeSession() without persisted credentials is a silent
-       * no-op — doAuthenticate is only reached when credentials are
-       * persisted (see `resumeSession() returns true ...` below).
-       */
+      // resumeSession() without persisted credentials is a silent
+      // no-op — doAuthenticate is only reached when credentials are
+      // persisted (see `resumeSession() returns true ...` below).
       expect(api.doAuthenticateMock).not.toHaveBeenCalled()
     })
   })
 
-  /*
-   * Contract split: `authenticate(credentials)` is the explicit
-   * sign-in entry — it throws on rejection. `resumeSession()` is
-   * the best-effort restore entry — it logs and swallows. This
-   * describe block pins the observable difference between the two
-   * so future refactors cannot collapse them back into a dual-mode
-   * function. Subsumes the former `initialize() → runs doAuthenticate
-   * + syncRegistry when credentials are persisted` test: the
-   * persisted-credentials path is now exercised at its natural unit
-   * (resumeSession) rather than through initialize's indirection.
-   */
+  // Contract split: `authenticate(credentials)` is the explicit
+  // sign-in entry — it throws on rejection. `resumeSession()` is
+  // the best-effort restore entry — it logs and swallows. This
+  // describe block pins the observable difference between the two
+  // so future refactors cannot collapse them back into a dual-mode
+  // function. Subsumes the former `initialize() → runs doAuthenticate
+  // + syncRegistry when credentials are persisted` test: the
+  // persisted-credentials path is now exercised at its natural unit
+  // (resumeSession) rather than through initialize's indirection.
   describe('authenticate() vs resumeSession() contract', () => {
     it('authenticate() throws when doAuthenticate rejects', async () => {
       api.doAuthenticateMock.mockRejectedValueOnce(new Error('rejected'))
@@ -603,13 +597,11 @@ describe('baseAPI shared request pipeline', () => {
     })
   })
 
-  /*
-   * `ensureSession` is the template method that every `request()` goes
-   * through. Two guarantees to pin: (1) the concurrent-refresh mutex
-   * dedups callers — N parallel requests on an expired session
-   * trigger exactly one `performSessionRefresh`; (2) an early-out path
-   * when the session is still fresh (no hook invocation at all).
-   */
+  // `ensureSession` is the template method that every `request()` goes
+  // through. Two guarantees to pin: (1) the concurrent-refresh mutex
+  // dedups callers — N parallel requests on an expired session
+  // trigger exactly one `performSessionRefresh`; (2) an early-out path
+  // when the session is still fresh (no hook invocation at all).
   describe('ensureSession() template', () => {
     it('is a no-op when needsSessionRefresh returns false', async () => {
       api.needsSessionRefreshMock.mockReturnValue(false)
@@ -659,29 +651,25 @@ describe('baseAPI shared request pipeline', () => {
     })
   })
 
-  /*
-   * Pins the "non-throwing observer" contract at the BaseAPI boundary.
-   * A buggy `events.onSyncComplete` callback (sync throw OR async
-   * rejection) must NEVER break the caller — `notifySync` resolves
-   * cleanly and the error lands in the logger. This invariant is what
-   * lets `@syncDevices`-decorated mutations (updatePower, updateValues,
-   * etc.) succeed even when an observer crashes; without it, a single
-   * misbehaving listener would silently fail every mutation that
-   * touches the sync cascade.
-   */
+  // Pins the "non-throwing observer" contract at the BaseAPI boundary.
+  // A buggy `events.onSyncComplete` callback (sync throw OR async
+  // rejection) must NEVER break the caller — `notifySync` resolves
+  // cleanly and the error lands in the logger. This invariant is what
+  // lets `@syncDevices`-decorated mutations (updatePower, updateValues,
+  // etc.) succeed even when an observer crashes; without it, a single
+  // misbehaving listener would silently fail every mutation that
+  // touches the sync cascade.
   describe('observer error isolation', () => {
     it('swallows synchronous throws from events.onSyncComplete', async () => {
       const logger = createLogger()
       api[Symbol.dispose]()
       api = new TestAPI({
         events: {
-          /*
-           * `mockImplementation` lets us register a sync-throwing body
-           * against a callback that's typed `() => Promise<void>` —
-           * neither `(): Promise<void> => { throw … }` (triggers
-           * `promise-function-async`) nor `async () => { throw … }`
-           * (triggers `require-await`) is lint-clean.
-           */
+          // `mockImplementation` lets us register a sync-throwing body
+          // against a callback that's typed `() => Promise<void>` —
+          // neither `(): Promise<void> => { throw … }` (triggers
+          // `promise-function-async`) nor `async () => { throw … }`
+          // (triggers `require-await`) is lint-clean.
           onSyncComplete: vi
             .fn<NonNullable<LifecycleEvents['onSyncComplete']>>()
             .mockImplementation(() => {
@@ -711,10 +699,8 @@ describe('baseAPI shared request pipeline', () => {
       })
 
       await api.notifySync({ type: undefined })
-      /*
-       * The emitter chains `.catch(...)` onto the rejected promise — give
-       * the microtask a turn before asserting the log fired.
-       */
+      // The emitter chains `.catch(...)` onto the rejected promise — give
+      // the microtask a turn before asserting the log fired.
       await Promise.resolve()
 
       expect(logger.error).toHaveBeenCalledWith(
@@ -725,13 +711,11 @@ describe('baseAPI shared request pipeline', () => {
   })
 })
 
-/*
- * Direct-unit coverage for the `normalizeUnauthorized` helper. Its
- * only other exercise is through `HomeAPI.doAuthenticate`, where the
- * OIDC mock stack can mask subtle branching. Pinning the contract
- * here keeps the three error classes (401 HttpError, non-401
- * HttpError, non-HttpError) traceable in isolation.
- */
+// Direct-unit coverage for the `normalizeUnauthorized` helper. Its
+// only other exercise is through `HomeAPI.doAuthenticate`, where the
+// OIDC mock stack can mask subtle branching. Pinning the contract
+// here keeps the three error classes (401 HttpError, non-401
+// HttpError, non-HttpError) traceable in isolation.
 describe(normalizeUnauthorized, () => {
   it('wraps a 401 HttpError into AuthenticationError with original as cause', () => {
     const http = new HttpError(

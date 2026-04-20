@@ -123,11 +123,9 @@ describe('api lifecycle', () => {
     expect(defined(device).name).toBe('AC unit')
     expect(defined(device).type).toBe(ClassicDeviceType.Ata)
 
-    /*
-     * Inline snapshot on the registry summary after initial sync.
-     * Captures building → floor → area → device hierarchy shape
-     * without being brittle on device-data fields.
-     */
+    // Inline snapshot on the registry summary after initial sync.
+    // Captures building → floor → area → device hierarchy shape
+    // without being brittle on device-data fields.
     expect(
       api.registry.getBuildings().map(({ floors, name }) => ({
         floors: floors.map(({ areas, name: floorName }) => ({
@@ -274,15 +272,13 @@ describe('api lifecycle', () => {
     expect(onSyncComplete).toHaveBeenCalledWith(expect.objectContaining({}))
   })
 
-  /*
-   * End-to-end cascade: zone-level writes (frost protection / holiday
-   * mode) return envelopes with no device payload — we rely on
-   * `@classicFetchDevices({ when: 'after' })` to trigger `api.fetch()`
-   * post-mutation, which in turn fires `events.onSyncComplete` via its
-   * own `@syncDevices()` wrap. This test closes that wiring end-to-end
-   * at the ClassicAPI level, since unit-level facade tests use a mock
-   * adapter where the cascade can't be observed.
-   */
+  // End-to-end cascade: zone-level writes (frost protection / holiday
+  // mode) return envelopes with no device payload — we rely on
+  // `@classicFetchDevices({ when: 'after' })` to trigger `api.fetch()`
+  // post-mutation, which in turn fires `events.onSyncComplete` via its
+  // own `@syncDevices()` wrap. This test closes that wiring end-to-end
+  // at the ClassicAPI level, since unit-level facade tests use a mock
+  // adapter where the cascade can't be observed.
   it('facade.updateFrostProtection cascades to onSyncComplete via api.fetch', async () => {
     const onSyncComplete = vi.fn<SyncCallback>()
     const api = await melCloudApi.create({
@@ -311,11 +307,9 @@ describe('api lifecycle', () => {
     expect(onSyncComplete).toHaveBeenCalledWith(expect.objectContaining({}))
   })
 
-  /*
-   * End-to-end resilience: exercises the `withRetryBackoff` wrapper
-   * around `list()` (the classic heartbeat) to confirm a transient
-   * 5xx is recovered without the consumer seeing it.
-   */
+  // End-to-end resilience: exercises the `withRetryBackoff` wrapper
+  // around `list()` (the classic heartbeat) to confirm a transient
+  // 5xx is recovered without the consumer seeing it.
   describe('resilience end-to-end', () => {
     it('recovers from a transient 503 on fetch via exponential backoff', async () => {
       const api = await melCloudApi.create({
@@ -357,21 +351,17 @@ describe('api lifecycle', () => {
       await vi.advanceTimersByTimeAsync(60_000)
       const buildings = await fetchPromise
 
-      /*
-       * `fetch()` catches the final rejection and returns `[]` so the
-       * Homey app's sync loop keeps running through an outage — the
-       * registry just reflects what was last known.
-       */
+      // `fetch()` catches the final rejection and returns `[]` so the
+      // Homey app's sync loop keeps running through an outage — the
+      // registry just reflects what was last known.
       expect(buildings).toStrictEqual([])
       // 1 initial attempt + 4 retries = 5 total.
       expect(mockRequest).toHaveBeenCalledTimes(5)
     })
 
-    /*
-     * 429 closes the rate-limit gate for the duration signalled by
-     * `Retry-After`, so subsequent requests fail fast with
-     * `RateLimitError` from the gate check — no HTTP call is issued.
-     */
+    // 429 closes the rate-limit gate for the duration signalled by
+    // `Retry-After`, so subsequent requests fail fast with
+    // `RateLimitError` from the gate check — no HTTP call is issued.
     it('rate-limit 429 closes the gate and short-circuits the next request', async () => {
       const rateLimitError = new HttpError(
         'Status 429',
@@ -396,10 +386,8 @@ describe('api lifecycle', () => {
       expect(buildings).toStrictEqual([])
       expect(mockRequest).not.toHaveBeenCalled()
 
-      /*
-       * A non-fetch() method that doesn't swallow errors surfaces the
-       * gate's RateLimitError directly, proving the gate is closed.
-       */
+      // A non-fetch() method that doesn't swallow errors surfaces the
+      // gate's RateLimitError directly, proving the gate is closed.
       await expect(
         api.getHolidayMode({ params: { id: 1, tableName: 'ClassicBuilding' } }),
       ).rejects.toBeInstanceOf(RateLimitError)
@@ -426,11 +414,9 @@ describe('api lifecycle', () => {
         expect.objectContaining({ signal: controller.signal }),
       )
 
-      /*
-       * After aborting, fetch() swallows the AbortError (like any other
-       * failure) but the underlying request still received the aborted
-       * signal — proving the signal is wired through to the HTTP layer.
-       */
+      // After aborting, fetch() swallows the AbortError (like any other
+      // failure) but the underlying request still received the aborted
+      // signal — proving the signal is wired through to the HTTP layer.
       controller.abort()
       mockRequest.mockClear()
       const buildings = await api.fetch()
@@ -444,20 +430,16 @@ describe('api lifecycle', () => {
       expect(abortedCall).toBeDefined()
       expect(abortedCall?.[0].signal).toBe(controller.signal)
 
-      /*
-       * A non-fetch() method surfaces the AbortError so the DOMException
-       * /abort/i name check is exercised end-to-end.
-       */
+      // A non-fetch() method surfaces the AbortError so the DOMException
+      // /abort/i name check is exercised end-to-end.
       await expect(
         api.getHolidayMode({ params: { id: 1, tableName: 'ClassicBuilding' } }),
       ).rejects.toThrow(/abort/iu)
     })
   })
 
-  /*
-   * HomeAPI lifecycle covers token-based session handling: reusing a
-   * valid persisted session and refreshing an expired access token.
-   */
+  // HomeAPI lifecycle covers token-based session handling: reusing a
+  // valid persisted session and refreshing an expired access token.
   describe('home api session lifecycle', () => {
     const homeContext: HomeContext = {
       buildings: [],
@@ -531,11 +513,9 @@ describe('api lifecycle', () => {
       vi.useRealTimers()
       mockRequest.mockReset()
 
-      /*
-       * ensureSession() sees the expired token, calls refreshAccessToken
-       * (via global fetch) which succeeds, stores the new tokens, and
-       * then dispatches GET /context with the refreshed Bearer.
-       */
+      // ensureSession() sees the expired token, calls refreshAccessToken
+      // (via global fetch) which succeeds, stores the new tokens, and
+      // then dispatches GET /context with the refreshed Bearer.
       mockFetch.mockResolvedValueOnce(
         mockFetchResponse({
           access_token: 'fresh-access',

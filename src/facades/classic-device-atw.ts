@@ -67,10 +67,8 @@ const getZoneOperationalState = (
     : (zoneStateMap[data.OperationMode] ?? ClassicOperationModeStateZone.idle)
 }
 
-/*
- * Merge external and internal temperature reports, deduplicating series
- * that appear in both (e.g., FlowTemperature from different endpoints)
- */
+// Merge external and internal temperature reports, deduplicating series
+// that appear in both (e.g., FlowTemperature from different endpoints)
 const mergeSeries = (
   series1: ReportChartLineOptions['series'],
   series2: ReportChartLineOptions['series'],
@@ -140,10 +138,8 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     ]
   }
 
-  /*
-   * ATW reports both external (building) and internal (tank/boiler)
-   * temperatures — merge them into a single chart
-   */
+  // ATW reports both external (building) and internal (tank/boiler)
+  // temperatures — merge them into a single chart
   public override async getTemperatures(
     query?: ReportQuery,
     shouldUseExactRange = true,

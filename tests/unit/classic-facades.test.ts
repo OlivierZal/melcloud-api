@@ -486,17 +486,15 @@ describe('building facade holiday mode', () => {
   })
 })
 
-/*
- * Post-condition contract: facade write methods that mutate server
- * state must refresh the registry (`updatePower` does so via
- * @classicUpdateDevices + @syncDevices; `updateFrostProtection` /
- * `updateHolidayMode` do so via @classicFetchDevices({when:'after'})
- * because the response carries no device value to apply locally).
- * Regression guard for the bug class fixed after
- * OlivierZal/com.melcloud#1281 (silent local-state drift). The
- * downstream onSync notification from api.fetch() is covered by the
- * ClassicAPI contract tests.
- */
+// Post-condition contract: facade write methods that mutate server
+// state must refresh the registry (`updatePower` does so via
+// @classicUpdateDevices + @syncDevices; `updateFrostProtection` /
+// `updateHolidayMode` do so via @classicFetchDevices({when:'after'})
+// because the response carries no device value to apply locally).
+// Regression guard for the bug class fixed after
+// OlivierZal/com.melcloud#1281 (silent local-state drift). The
+// downstream onSync notification from api.fetch() is covered by the
+// ClassicAPI contract tests.
 describe('facade write methods refresh registry', () => {
   it('updatePower fires onSync directly', async () => {
     const onSync = vi.fn<SyncCallback>().mockResolvedValue()
@@ -1094,10 +1092,8 @@ describe('device type guards', () => {
   ])(
     '$name returns true for matching facade and false otherwise',
     ({ guard, match, noMatch }) => {
-      /*
-       * Widen through destructuring so the guard's predicate is not
-       * trivially inferred at the call site (preserves the runtime check).
-       */
+      // Widen through destructuring so the guard's predicate is not
+      // trivially inferred at the call site (preserves the runtime check).
       const {
         facade: matching,
       }: { facade: ClassicDeviceFacade<ClassicDeviceType> } = match()

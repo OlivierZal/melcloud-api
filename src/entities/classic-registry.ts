@@ -23,11 +23,9 @@ import { ClassicDevice } from './classic-device.ts'
 import { ClassicFloor } from './floor.ts'
 import { syncModel } from './symbols.ts'
 
-/*
- * Upsert + prune: update existing models in-place, create new ones,
- * and remove stale entries. Preserves object identity across syncs
- * so that facade references remain valid.
- */
+// Upsert + prune: update existing models in-place, create new ones,
+// and remove stale entries. Preserves object identity across syncs
+// so that facade references remain valid.
 const syncMap = <TModel, TData>(
   map: Map<number, TModel>,
   items: readonly TData[],
@@ -71,11 +69,9 @@ const syncDeviceModel = (
   }
 }
 
-/*
- * `ClassicBuildingListSchema` has already validated `device.Type` against
- * the literal union of `ClassicDeviceType`, so no runtime guard nor
- * per-variant switch is needed here.
- */
+// `ClassicBuildingListSchema` has already validated `device.Type` against
+// the literal union of `ClassicDeviceType`, so no runtime guard nor
+// per-variant switch is needed here.
 const createDeviceModel = (device: ClassicListDeviceAny): ClassicDeviceAny =>
   new ClassicDevice(device)
 
@@ -148,11 +144,9 @@ const buildDeviceZones = (
  * Synced from the Classic API response and queryable by ID or parent relationship.
  */
 export class ClassicRegistry {
-  /*
-   * Pre-computed indexes for O(1) lookups by parent relationship.
-   * Public accessors expose readonly query interfaces over private maps,
-   * preventing callers from clearing or replacing entire collections.
-   */
+  // Pre-computed indexes for O(1) lookups by parent relationship.
+  // Public accessors expose readonly query interfaces over private maps,
+  // preventing callers from clearing or replacing entire collections.
   readonly #areas = new Map<number, ClassicArea>()
 
   public readonly areas = {
