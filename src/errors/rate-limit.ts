@@ -24,11 +24,11 @@ export class RateLimitError extends APIError {
     message: string,
     options: {
       retryAfter: Duration | null
+      unblockAt: DateTime | null
       cause?: unknown
-      unblockAt?: DateTime | null
     },
   ) {
-    const { cause, retryAfter, unblockAt = null } = options
+    const { cause, retryAfter, unblockAt } = options
     super(message, { cause })
     this.retryAfter = retryAfter
     this.unblockAt = unblockAt
