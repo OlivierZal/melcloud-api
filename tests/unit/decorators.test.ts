@@ -510,12 +510,16 @@ describe(validateRequest, () => {
     {
       error: new RateLimitError('paused', {
         retryAfter: Duration.fromMillis(5000),
+        unblockAt: null,
       }),
       expected: { kind: 'rate-limited', retryAfterMs: 5000 } as const,
       label: 'RateLimitError with Duration → rate-limited',
     },
     {
-      error: new RateLimitError('paused', { retryAfter: null }),
+      error: new RateLimitError('paused', {
+        retryAfter: null,
+        unblockAt: null,
+      }),
       expected: { kind: 'rate-limited', retryAfterMs: null } as const,
       label: 'RateLimitError with null Duration → rate-limited null',
     },

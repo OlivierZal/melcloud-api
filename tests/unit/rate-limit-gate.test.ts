@@ -12,11 +12,12 @@ describe(RateLimitGate, () => {
     vi.useRealTimers()
   })
 
-  it('starts open with no remaining time', () => {
+  it('starts open with no remaining time and no unblockAt', () => {
     const gate = new RateLimitGate({ hours: 1 })
 
     expect(gate.isPaused).toBe(false)
     expect(gate.remaining).toBeNull()
+    expect(gate.unblockAt).toBeNull()
   })
 
   it('closes for the full fallback duration when no Retry-After is provided', () => {
@@ -28,6 +29,8 @@ describe(RateLimitGate, () => {
     // Use Luxon's millisecond conversion, accounting for slight drift.
     expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
     expect(gate.remaining?.as('hours')).toBeLessThanOrEqual(2)
+    // Absolute unblock time is 2 hours after the fixed system time.
+    expect(gate.unblockAt?.toUTC().toISO()).toBe('2026-04-11T14:00:00.000Z')
   })
 
   it('honors a numeric Retry-After header (seconds)', () => {
@@ -97,6 +100,28 @@ describe(RateLimitGate, () => {
     const gate = new RateLimitGate({ hours: 2 })
 
     expect(gate.formatRemaining()).toBe('')
+  })
+
+  it('snapshot() returns all fields consistently when paused', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+    gate.recordRateLimit()
+
+    const snap = gate.snapshot()
+
+    expect(snap.isPaused).toBe(true)
+    expect(snap.remaining).not.toBeNull()
+    expect(snap.unblockAt).not.toBeNull()
+    expect(snap.unblockAt?.toUTC().toISO()).toBe('2026-04-11T14:00:00.000Z')
+  })
+
+  it('snapshot() returns all nulls when open', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+
+    const snap = gate.snapshot()
+
+    expect(snap.isPaused).toBe(false)
+    expect(snap.remaining).toBeNull()
+    expect(snap.unblockAt).toBeNull()
   })
 
   it('formatRemaining returns a human-readable duration when paused', () => {
