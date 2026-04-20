@@ -658,6 +658,62 @@ describe('baseAPI shared request pipeline', () => {
       expect(api.performSessionRefreshMock).toHaveBeenCalledTimes(2)
     })
   })
+
+  /*
+   * Pins the "non-throwing observer" contract at the BaseAPI boundary.
+   * A buggy `events.onSyncComplete` callback (sync throw OR async
+   * rejection) must NEVER break the caller — `notifySync` resolves
+   * cleanly and the error lands in the logger. This invariant is what
+   * lets `@syncDevices`-decorated mutations (updatePower, updateValues,
+   * etc.) succeed even when an observer crashes; without it, a single
+   * misbehaving listener would silently fail every mutation that
+   * touches the sync cascade.
+   */
+  describe('observer error isolation', () => {
+    it('swallows synchronous throws from events.onSyncComplete', async () => {
+      const logger = createLogger()
+      api[Symbol.dispose]()
+      api = new TestAPI({
+        events: {
+          onSyncComplete: (): void => {
+            throw new Error('observer rogue')
+          },
+        },
+        logger,
+      })
+
+      await expect(api.notifySync({ type: undefined })).resolves.toBeUndefined()
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('onSyncComplete'),
+        expect.any(Error),
+      )
+    })
+
+    it('swallows async rejections from events.onSyncComplete', async () => {
+      const logger = createLogger()
+      api[Symbol.dispose]()
+      api = new TestAPI({
+        events: {
+          onSyncComplete: vi
+            .fn<NonNullable<LifecycleEvents['onSyncComplete']>>()
+            .mockRejectedValue(new Error('observer rejected')),
+        },
+        logger,
+      })
+
+      await api.notifySync({ type: undefined })
+      /*
+       * The emitter chains `.catch(...)` onto the rejected promise — give
+       * the microtask a turn before asserting the log fired.
+       */
+      await Promise.resolve()
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('onSyncComplete'),
+        expect.any(Error),
+      )
+    })
+  })
 })
 
 /*
