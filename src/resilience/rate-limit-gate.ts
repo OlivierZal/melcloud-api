@@ -28,6 +28,16 @@ export class RateLimitGate {
     return this.isPaused ? this.#pausedUntil.diffNow() : null
   }
 
+  /**
+   * Absolute moment at which the gate re-opens. Use alongside
+   * {@link remaining} when consumers want to render an "at HH:MM"
+   * message rather than a relative duration.
+   * @returns The unblock `DateTime` if paused, or `null` if the gate is open.
+   */
+  public get unblockAt(): DateTime | null {
+    return this.isPaused ? this.#pausedUntil : null
+  }
+
   readonly #fallback: Duration
 
   #pausedUntil: DateTime = DateTime.now()

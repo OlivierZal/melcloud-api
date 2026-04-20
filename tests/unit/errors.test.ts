@@ -1,4 +1,4 @@
-import { Duration } from 'luxon'
+import { DateTime, Duration } from 'luxon'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -36,27 +36,34 @@ describe.concurrent('apiError hierarchy', () => {
     expect(error.cause).toBe(cause)
   })
 
-  it('rateLimitError carries the retryAfter duration', () => {
+  it('rateLimitError carries the retryAfter duration and unblockAt time', () => {
     const retryAfter = Duration.fromObject({ seconds: 30 })
-    const error = new RateLimitError('throttled', { retryAfter })
+    const unblockAt = DateTime.fromISO('2026-01-01T12:30:00Z')
+    const error = new RateLimitError('throttled', { retryAfter, unblockAt })
 
     expect(error).toBeInstanceOf(RateLimitError)
     expect(error).toBeInstanceOf(APIError)
     expect(error.retryAfter?.as('seconds')).toBe(30)
+    expect(error.unblockAt?.toISO()).toBe(unblockAt.toISO())
     expect(error.name).toBe('RateLimitError')
   })
 
-  it('rateLimitError accepts null retryAfter when the window is unknown', () => {
-    const error = new RateLimitError('throttled', { retryAfter: null })
+  it('rateLimitError accepts null fields when the window is unknown', () => {
+    const error = new RateLimitError('throttled', {
+      retryAfter: null,
+      unblockAt: null,
+    })
 
     expect(error.retryAfter).toBeNull()
+    expect(error.unblockAt).toBeNull()
   })
 
-  it('rateLimitError preserves the cause alongside retryAfter', () => {
+  it('rateLimitError preserves the cause alongside its structured fields', () => {
     const cause = new Error('429')
     const error = new RateLimitError('throttled', {
       cause,
       retryAfter: null,
+      unblockAt: null,
     })
 
     expect(error.cause).toBe(cause)
@@ -80,7 +87,10 @@ describe.concurrent('apiError hierarchy', () => {
 describe.concurrent(isAPIError, () => {
   it.each([
     ['AuthenticationError', new AuthenticationError('x')],
-    ['RateLimitError', new RateLimitError('x', { retryAfter: null })],
+    [
+      'RateLimitError',
+      new RateLimitError('x', { retryAfter: null, unblockAt: null }),
+    ],
     ['NetworkError', new NetworkError('x')],
   ])('returns true for %s', (_name, error) => {
     expect(isAPIError(error)).toBe(true)
@@ -98,7 +108,10 @@ describe.concurrent(isAPIError, () => {
   })
 
   it('narrows the type so the subclass surface is accessible', () => {
-    const value: unknown = new RateLimitError('x', { retryAfter: null })
+    const value: unknown = new RateLimitError('x', {
+      retryAfter: null,
+      unblockAt: null,
+    })
     // Compile-time proof: `isAPIError` narrows `unknown` → `APIError`.
     const narrowed = isAPIError(value) ? value : null
 

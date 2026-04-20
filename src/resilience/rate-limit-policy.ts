@@ -31,7 +31,10 @@ export class RateLimitPolicy implements ResiliencePolicy {
     if (this.#gate.isPaused) {
       throw new RateLimitError(
         `API requests are on hold for ${this.#gate.formatRemaining()}`,
-        { retryAfter: this.#gate.remaining },
+        {
+          retryAfter: this.#gate.remaining,
+          unblockAt: this.#gate.unblockAt,
+        },
       )
     }
     try {
