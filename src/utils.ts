@@ -25,7 +25,6 @@ interface LabelFormatterCache {
   readonly dayOfWeek: Intl.DateTimeFormat
   readonly locale: string | null | undefined
   readonly month: Intl.DateTimeFormat
-  readonly monthYear: Intl.DateTimeFormat
 }
 
 let formatterCache: LabelFormatterCache | null = null
@@ -50,11 +49,6 @@ const getLabelFormatters = (): LabelFormatterCache => {
     month: new Intl.DateTimeFormat(base, {
       month: 'short',
       timeZone: 'UTC',
-    }),
-    monthYear: new Intl.DateTimeFormat(base, {
-      month: 'short',
-      timeZone: 'UTC',
-      year: 'numeric',
     }),
   }
   formatterCache = cache
@@ -125,14 +119,14 @@ const labelFormatters: Record<ClassicLabelType, (label: string) => string> = {
     getLabelFormatters().month.format(
       Date.UTC(MONTH_NAME_BASE_YEAR, Number(label) - 1, 1),
     ),
-  [ClassicLabelType.month_of_year]: (label) =>
-    getLabelFormatters().monthYear.format(
-      Date.UTC(
-        Math.floor(Number(label) / YEAR_MONTH_DIVISOR),
-        (Number(label) % YEAR_MONTH_DIVISOR) - 1,
-        1,
-      ),
-    ),
+  [ClassicLabelType.month_of_year]: (label) => {
+    const year = Math.floor(Number(label) / YEAR_MONTH_DIVISOR)
+    const month = (Number(label) % YEAR_MONTH_DIVISOR) - 1
+    // Format month and year separately to preserve the "MMM yyyy" ordering
+    // across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
+    const monthName = getLabelFormatters().month.format(Date.UTC(year, month, 1))
+    return `${monthName} ${String(year)}`
+  },
   [ClassicLabelType.raw]: (label) => label,
   [ClassicLabelType.time]: (label) => label,
 }

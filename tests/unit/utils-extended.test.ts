@@ -157,3 +157,28 @@ describe.concurrent(getChartPieOptions, () => {
     expect(result.to).toBe('2024-01-31')
   })
 })
+
+describe('formatLabels with unset defaultLocale', () => {
+  it('falls back to system locale when LuxonSettings.defaultLocale is null', () => {
+    const { defaultLocale: originalLocale } = LuxonSettings
+    try {
+      // Luxon types defaultLocale as `string` but null is the unset sentinel
+      ;(LuxonSettings as { defaultLocale: string | null }).defaultLocale = null
+      const data: ClassicReportData = {
+        Data: [[1]],
+        FromDate: '2024-01-01',
+        Labels: ['1'],
+        LabelType: ClassicLabelType.month,
+        Points: 1,
+        Series: 1,
+        ToDate: '2024-01-02',
+      }
+      const result = getChartLineOptions(data, ['Series 1'], 'unit')
+
+      expect(result.labels).toHaveLength(1)
+      expect(result.labels[0]).toBeDefined()
+    } finally {
+      LuxonSettings.defaultLocale = originalLocale
+    }
+  })
+})
