@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "34.1.1",
+  "version": "35.0.0",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",
@@ -23,10 +23,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./api": {
-      "types": "./dist/api/index.d.ts",
-      "default": "./dist/api/index.js"
-    },
     "./classic": {
       "types": "./dist/classic.d.ts",
       "default": "./dist/classic.js"
@@ -35,45 +31,9 @@
       "types": "./dist/constants.d.ts",
       "default": "./dist/constants.js"
     },
-    "./decorators": {
-      "types": "./dist/decorators/index.d.ts",
-      "default": "./dist/decorators/index.js"
-    },
-    "./entities": {
-      "types": "./dist/entities/index.d.ts",
-      "default": "./dist/entities/index.js"
-    },
-    "./enum-mappings": {
-      "types": "./dist/enum-mappings.d.ts",
-      "default": "./dist/enum-mappings.js"
-    },
-    "./errors": {
-      "types": "./dist/errors/index.d.ts",
-      "default": "./dist/errors/index.js"
-    },
-    "./facades": {
-      "types": "./dist/facades/index.d.ts",
-      "default": "./dist/facades/index.js"
-    },
     "./home": {
       "types": "./dist/home.d.ts",
       "default": "./dist/home.js"
-    },
-    "./http": {
-      "types": "./dist/http/index.d.ts",
-      "default": "./dist/http/index.js"
-    },
-    "./observability": {
-      "types": "./dist/observability/index.d.ts",
-      "default": "./dist/observability/index.js"
-    },
-    "./resilience": {
-      "types": "./dist/resilience/index.d.ts",
-      "default": "./dist/resilience/index.js"
-    },
-    "./types": {
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/types/index.js"
     }
   },
   "types": "dist/index.d.ts",
