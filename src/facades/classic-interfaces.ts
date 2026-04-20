@@ -1,5 +1,3 @@
-import type { HourNumbers } from 'luxon'
-
 import type {
   ClassicErrorLog,
   ClassicErrorLogQuery,
@@ -26,6 +24,7 @@ import type {
   ClassicUpdateDeviceData,
   ClassicZoneSettings,
   ClassicZoneState,
+  Hour,
 } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import type {
@@ -68,7 +67,7 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   readonly getEnergy: (query: ReportQuery) => Promise<ClassicEnergyData<T>>
   /** Fetch hourly temperature report. ATW only. */
   readonly getHourlyTemperatures: (
-    hour?: HourNumbers,
+    hour?: Hour,
   ) => Promise<ReportChartLineOptions>
   /** Fetch internal temperature report. ATW only. */
   readonly getInternalTemperatures: (
@@ -121,9 +120,7 @@ export interface ClassicFacade extends Identifiable {
   /** Get the current holiday mode settings. */
   readonly getHolidayMode: () => Promise<ClassicHolidayModeData>
   /** Fetch WiFi signal strength report as line chart data. */
-  readonly getSignalStrength: (
-    hour?: HourNumbers,
-  ) => Promise<ReportChartLineOptions>
+  readonly getSignalStrength: (hour?: Hour) => Promise<ReportChartLineOptions>
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((device?: false) => Promise<ClassicTilesData<null>>) &
     (<T extends ClassicDeviceType>(

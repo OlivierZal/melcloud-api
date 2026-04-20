@@ -94,6 +94,7 @@ export type {
   HomeReportPoint,
   HomeUser,
 } from './home.ts'
+export type { Hour } from './hour.ts'
 
 export {
   type ClassicAreaID,

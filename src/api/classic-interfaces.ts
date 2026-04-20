@@ -1,5 +1,3 @@
-import type { HourNumbers } from 'luxon'
-
 import type { ClassicDeviceType } from '../constants.ts'
 import type {
   ClassicBuildingWithStructure,
@@ -28,6 +26,7 @@ import type {
   ClassicTemperatureLogPostData,
   ClassicTilesData,
   ClassicTilesPostData,
+  Hour,
 } from '../types/index.ts'
 import type { BaseAPIConfig, SyncCallback } from './interfaces.ts'
 
@@ -82,7 +81,7 @@ export interface ClassicAPIAdapter {
   readonly getHourlyTemperatures: ({
     postData,
   }: {
-    postData: { device: number; hour: HourNumbers }
+    postData: { device: number; hour: Hour }
   }) => Promise<{ data: ClassicReportData }>
   /** Fetch internal temperature report. ATW only. */
   readonly getInternalTemperatures: ({
@@ -100,7 +99,7 @@ export interface ClassicAPIAdapter {
   readonly getSignal: ({
     postData,
   }: {
-    postData: { devices: number | number[]; hour: HourNumbers }
+    postData: { devices: number | number[]; hour: Hour }
   }) => Promise<{ data: ClassicReportData }>
   /** Fetch temperature log data. */
   readonly getTemperatures: ({

@@ -1,4 +1,4 @@
-import { type HourNumbers, DateTime, Settings as LuxonSettings } from 'luxon'
+import { DateTime, Settings as LuxonSettings } from 'luxon'
 import { Agent } from 'undici'
 
 import type {
@@ -33,6 +33,7 @@ import type {
   ClassicTemperatureLogPostData,
   ClassicTilesData,
   ClassicTilesPostData,
+  Hour,
 } from '../types/index.ts'
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
 import { setting, syncDevices } from '../decorators/index.ts'
@@ -343,7 +344,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getHourlyTemperatures({
     postData,
   }: {
-    postData: { device: number; hour: HourNumbers }
+    postData: { device: number; hour: Hour }
   }): Promise<{ data: ClassicReportData }> {
     return this.request('post', '/Report/GetHourlyTemperature', {
       data: postData,
@@ -373,7 +374,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getSignal({
     postData,
   }: {
-    postData: { devices: number | number[]; hour: HourNumbers }
+    postData: { devices: number | number[]; hour: Hour }
   }): Promise<{ data: ClassicReportData }> {
     return this.request('post', '/Report/GetSignalStrength', {
       data: postData,

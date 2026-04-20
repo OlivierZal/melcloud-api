@@ -43,6 +43,8 @@ import { BaseFacade } from './classic-base.ts'
 // Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
 
+const MS_PER_DAY = 86_400_000
+
 /**
  * Clamp a numeric value into the inclusive `[min, max]` range.
  *
@@ -69,8 +71,14 @@ const getReportPostDataDates = ({
   to,
 })
 
+// Use Luxon parsing so offset-less ISO inputs are interpreted in
+// `LuxonSettings.defaultZone` (matching the Classic API's timezone contract),
+// not the host runtime timezone.
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
-  Math.ceil(DateTime.fromISO(to).diff(DateTime.fromISO(from), 'days').days)
+  Math.ceil(
+    (DateTime.fromISO(to).toMillis() - DateTime.fromISO(from).toMillis()) /
+      MS_PER_DAY,
+  )
 
 /**
  * Abstract base for device-specific facades. Handles device data access, report generation,
