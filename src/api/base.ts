@@ -310,9 +310,7 @@ export abstract class BaseAPI implements Disposable {
    * `@syncDevices` decorator after each decorated mutation.
    * @param args - `SyncCallback`-shaped payload (`type`, `ids`).
    */
-  public async notifySync(
-    ...args: Parameters<SyncCallback>
-  ): Promise<void> {
+  public async notifySync(...args: Parameters<SyncCallback>): Promise<void> {
     await this.events.emitSyncComplete(...args)
   }
 
