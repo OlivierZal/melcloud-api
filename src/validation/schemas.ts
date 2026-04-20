@@ -33,14 +33,15 @@ export const HomeParResponseSchema = z.looseObject({
 })
 
 /** Home OIDC /connect/token response. */
-export const HomeTokenResponseSchema: z.ZodType<HomeTokenResponse> = z.looseObject({
-  access_token: z.string().min(1),
-  expires_in: z.number(),
-  id_token: z.string().optional(),
-  refresh_token: z.string().optional(),
-  scope: z.string(),
-  token_type: z.literal('Bearer'),
-})
+export const HomeTokenResponseSchema: z.ZodType<HomeTokenResponse> =
+  z.looseObject({
+    access_token: z.string().min(1),
+    expires_in: z.number(),
+    id_token: z.string().optional(),
+    refresh_token: z.string().optional(),
+    scope: z.string(),
+    token_type: z.literal('Bearer'),
+  })
 
 // Home BFF /context response — the single top-level payload that drives
 // user identity, building listing and device registry sync. Validating

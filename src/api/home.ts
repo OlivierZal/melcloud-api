@@ -26,10 +26,7 @@ import {
   parseOrThrow,
   validateRequest,
 } from '../validation/index.ts'
-import type {
-  HomeAPIConfig,
-  HomeAPI as HomeAPIContract,
-} from './home-types.ts'
+import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './home-types.ts'
 import { BaseAPI, normalizeUnauthorized } from './base.ts'
 import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 
