@@ -1,14 +1,14 @@
 import type {
   ClassicErrorLog,
   ClassicErrorLogQuery,
-} from '../api/classic-interfaces.ts'
+} from '../api/classic-types.ts'
 import type { ClassicDevice } from '../entities/classic-device.ts'
 import type {
   ClassicBaseBuilding,
   ClassicBaseDevice,
   ClassicDeviceAny,
-} from '../entities/classic-interfaces.ts'
-import type { Identifiable } from '../entities/interfaces.ts'
+} from '../entities/classic-types.ts'
+import type { Identifiable } from '../entities/types.ts'
 import type {
   ClassicEnergyData,
   ClassicFailureData,
@@ -31,7 +31,7 @@ import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
-} from './interfaces.ts'
+} from './report-types.ts'
 
 /** Facade for a MELCloud building, combining zone settings with super device operations. */
 export interface ClassicBuildingFacade

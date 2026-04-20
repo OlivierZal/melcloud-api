@@ -1,4 +1,4 @@
-import type { SettingManager } from '../api/interfaces.ts'
+import type { SettingManager } from '../api/types.ts'
 
 interface HasSettingManager {
   settingManager?: SettingManager

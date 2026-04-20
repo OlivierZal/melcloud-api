@@ -1,4 +1,4 @@
-import type { Logger } from '../api/interfaces.ts'
+import type { Logger } from '../api/types.ts'
 import { RateLimitError } from '../errors/index.ts'
 import { HTTP_STATUS_TOO_MANY_REQUESTS, isHttpError } from '../http/index.ts'
 import type { ResiliencePolicy } from './policy.ts'

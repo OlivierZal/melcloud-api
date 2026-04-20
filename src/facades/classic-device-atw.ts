@@ -12,7 +12,7 @@ import {
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
 } from '../constants.ts'
-import type { ReportChartLineOptions, ReportQuery } from './interfaces.ts'
+import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { BaseDeviceFacade, clampToRange } from './classic-base-device.ts'
 import { classicAtwFlags } from './classic-flags.ts'
 

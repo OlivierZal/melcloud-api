@@ -52,7 +52,7 @@ import type {
   ClassicAPIConfig,
   ClassicErrorLog,
   ClassicErrorLogQuery,
-} from './classic-interfaces.ts'
+} from './classic-types.ts'
 import { BaseAPI } from './base.ts'
 
 const deviceTypeNames = {

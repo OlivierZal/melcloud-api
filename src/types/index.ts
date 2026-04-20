@@ -92,6 +92,7 @@ export type {
   HomeReportData,
   HomeReportDataset,
   HomeReportPoint,
+  HomeTokenResponse,
   HomeUser,
 } from './home.ts'
 export type { Hour } from './hour.ts'

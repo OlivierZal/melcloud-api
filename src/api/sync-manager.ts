@@ -1,6 +1,6 @@
 import { DisposableTimeout } from '../resilience/index.ts'
 import { MS_PER_MINUTE } from '../time-units.ts'
-import type { Logger } from './interfaces.ts'
+import type { Logger } from './types.ts'
 
 const toIntervalMs = (minutes: number | false): number =>
   minutes === false ? 0 : minutes * MS_PER_MINUTE

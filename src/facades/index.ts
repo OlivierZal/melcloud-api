@@ -2,7 +2,7 @@ export type {
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
-} from './interfaces.ts'
+} from './report-types.ts'
 
 export { ClassicAreaFacade } from './classic-area.ts'
 export { ClassicBuildingFacade } from './classic-building.ts'
@@ -12,6 +12,7 @@ export { ClassicDeviceAtwFacade } from './classic-device-atw.ts'
 export { ClassicDeviceErvFacade } from './classic-device-erv.ts'
 export { createFacade } from './classic-factory.ts'
 export { ClassicFloorFacade } from './classic-floor.ts'
+export { ClassicFacadeManager } from './classic-manager.ts'
 export {
   type ClassicDeviceFacade,
   type ClassicDeviceFacadeAny,
@@ -23,7 +24,6 @@ export {
   isClassicAtaFacade,
   isClassicAtwFacade,
   isClassicErvFacade,
-} from './classic-interfaces.ts'
-export { ClassicFacadeManager } from './classic-manager.ts'
+} from './classic-types.ts'
 export { HomeDeviceAtaFacade } from './home-device-ata.ts'
 export { HomeFacadeManager } from './home-manager.ts'

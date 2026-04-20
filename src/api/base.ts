@@ -30,7 +30,7 @@ import type {
   Logger,
   SettingManager,
   SyncCallback,
-} from './interfaces.ts'
+} from './types.ts'
 import { SyncManager } from './sync-manager.ts'
 
 /**

@@ -16,7 +16,7 @@ import type {
   ClassicDeviceFacadeAny,
   ClassicFacade,
   ClassicZoneFacade,
-} from './classic-interfaces.ts'
+} from './classic-types.ts'
 import { createFacade } from './classic-factory.ts'
 
 /**

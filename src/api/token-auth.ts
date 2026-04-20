@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto'
 
 import { CookieJar } from 'tough-cookie'
 
+import type { HomeTokenResponse } from '../types/index.ts'
 import {
   HomeParResponseSchema,
   HomeTokenResponseSchema,
@@ -73,16 +74,6 @@ interface SubmitCredentialsOptions {
   credentials: { password: string; username: string }
   jar: CookieJar
   abortSignal?: AbortSignal
-}
-
-/** Token response surfaced by the IdentityServer token endpoint. */
-export interface TokenResponse {
-  access_token: string
-  expires_in: number
-  scope: string
-  token_type: 'Bearer'
-  id_token?: string
-  refresh_token?: string
 }
 
 // ------------------------------------------------------------------
@@ -485,7 +476,7 @@ const tokenRequest = async ({
 }: {
   params: Record<string, string>
   abortSignal?: AbortSignal
-}): Promise<TokenResponse> => {
+}): Promise<HomeTokenResponse> => {
   const { data: tokens } = await fetchPostForm({
     body: new URLSearchParams(params).toString(),
     headers: {
@@ -517,7 +508,7 @@ export const performTokenAuth = async ({
 }: {
   credentials: { password: string; username: string }
   abortSignal?: AbortSignal
-}): Promise<TokenResponse> => {
+}): Promise<HomeTokenResponse> => {
   const { challenge, verifier } = generatePKCE()
   const jar = new CookieJar()
 
@@ -569,7 +560,7 @@ export const refreshAccessToken = async ({
   refreshToken: string
   abortSignal?: AbortSignal
   logger?: { readonly error: (...args: unknown[]) => void }
-}): Promise<TokenResponse | null> => {
+}): Promise<HomeTokenResponse | null> => {
   try {
     return await tokenRequest({
       params: {

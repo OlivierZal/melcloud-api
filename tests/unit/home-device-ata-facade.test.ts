@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { HomeAPI } from '../../src/api/home-interfaces.ts'
+import type { HomeAPI } from '../../src/api/home-types.ts'
 import type { HomeDeviceData } from '../../src/types/index.ts'
 import { HomeDeviceType } from '../../src/constants.ts'
 import { HomeDevice } from '../../src/entities/home-device.ts'

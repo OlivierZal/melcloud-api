@@ -1,12 +1,12 @@
 import { z } from 'zod'
 
-import type { TokenResponse } from '../api/token-auth.ts'
 import type {
   ClassicLoginData,
   HomeContext,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
+  HomeTokenResponse,
 } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import { ValidationError } from '../errors/index.ts'
@@ -33,7 +33,7 @@ export const HomeParResponseSchema = z.looseObject({
 })
 
 /** Home OIDC /connect/token response. */
-export const HomeTokenResponseSchema: z.ZodType<TokenResponse> = z.looseObject({
+export const HomeTokenResponseSchema: z.ZodType<HomeTokenResponse> = z.looseObject({
   access_token: z.string().min(1),
   expires_in: z.number(),
   id_token: z.string().optional(),

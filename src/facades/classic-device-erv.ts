@@ -1,5 +1,5 @@
 import { ClassicDeviceType } from '../constants.ts'
-import type { ReportChartPieOptions, ReportQuery } from './interfaces.ts'
+import type { ReportChartPieOptions, ReportQuery } from './report-types.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicErvFlags } from './classic-flags.ts'
 

@@ -28,7 +28,7 @@ import type {
   ClassicTilesPostData,
   Hour,
 } from '../types/index.ts'
-import type { BaseAPIConfig, SyncCallback } from './interfaces.ts'
+import type { BaseAPIConfig, SyncCallback } from './types.ts'
 
 /**
  * Low-level API adapter exposing all MELCloud HTTP endpoints.

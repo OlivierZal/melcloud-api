@@ -5,8 +5,8 @@ export type {
   ClassicErrorDetails,
   ClassicErrorLog,
   ClassicErrorLogQuery,
-} from './classic-interfaces.ts'
-export type { HomeAPIConfig, HomeAPISettings } from './home-interfaces.ts'
+} from './classic-types.ts'
+export type { HomeAPIConfig, HomeAPISettings } from './home-types.ts'
 export type {
   BaseAPIConfig,
   LifecycleEvents,
@@ -18,7 +18,7 @@ export type {
   RequestStartEvent,
   SettingManager,
   SyncCallback,
-} from './interfaces.ts'
+} from './types.ts'
 
 export { BaseAPI } from './base.ts'
 export { ClassicAPI } from './classic.ts'

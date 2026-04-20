@@ -110,6 +110,15 @@ export interface HomeReportPoint {
   readonly y: number
 }
 
+export interface HomeTokenResponse {
+  readonly access_token: string
+  readonly expires_in: number
+  readonly scope: string
+  readonly token_type: 'Bearer'
+  readonly id_token?: string
+  readonly refresh_token?: string
+}
+
 export interface HomeUser {
   readonly email: string
   readonly firstName: string

@@ -7,7 +7,7 @@ import type {
   RequestErrorEvent,
   RequestRetryEvent,
   RequestStartEvent,
-} from '../../src/api/interfaces.ts'
+} from '../../src/api/types.ts'
 import { BaseAPI, normalizeUnauthorized } from '../../src/api/base.ts'
 import { AuthenticationError, RateLimitError } from '../../src/errors/index.ts'
 import { type HttpResponse, HttpError } from '../../src/http/index.ts'

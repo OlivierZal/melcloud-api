@@ -32,12 +32,12 @@ import {
   typedFromEntries,
   typedKeys,
 } from '../utils.ts'
-import type { ClassicDeviceFacade } from './classic-interfaces.ts'
+import type { ClassicDeviceFacade } from './classic-types.ts'
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
-} from './interfaces.ts'
+} from './report-types.ts'
 import { BaseFacade } from './classic-base.ts'
 
 // Unix epoch as fallback for open-ended report queries

@@ -10,7 +10,7 @@ import type {
   HomeUser,
   Result,
 } from '../types/index.ts'
-import type { BaseAPIConfig } from './interfaces.ts'
+import type { BaseAPIConfig } from './types.ts'
 
 /**
  * Injectable contract for the MELCloud Home API client.

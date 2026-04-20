@@ -9,6 +9,7 @@ import type {
   HomeError,
   HomeErrorLogEntry,
   HomeReportData,
+  HomeTokenResponse,
   HomeUser,
   Result,
 } from '../types/index.ts'
@@ -28,13 +29,9 @@ import {
 import type {
   HomeAPIConfig,
   HomeAPI as HomeAPIContract,
-} from './home-interfaces.ts'
+} from './home-types.ts'
 import { BaseAPI, normalizeUnauthorized } from './base.ts'
-import {
-  type TokenResponse,
-  performTokenAuth,
-  refreshAccessToken,
-} from './token-auth.ts'
+import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 
 // ------------------------------------------------------------------
 //  Constants
@@ -559,7 +556,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     access_token: accessToken,
     expires_in: expiresIn,
     refresh_token: refreshToken,
-  }: TokenResponse): void {
+  }: HomeTokenResponse): void {
     this.accessToken = accessToken
     if (refreshToken !== undefined && refreshToken !== '') {
       this.refreshToken = refreshToken

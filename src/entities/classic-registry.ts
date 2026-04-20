@@ -16,7 +16,7 @@ import {
   toClassicBuildingId,
   toClassicFloorId,
 } from '../types/index.ts'
-import type { ClassicDeviceAny } from './classic-interfaces.ts'
+import type { ClassicDeviceAny } from './classic-types.ts'
 import { ClassicArea } from './area.ts'
 import { ClassicBuilding } from './building.ts'
 import { ClassicDevice } from './classic-device.ts'

@@ -1,4 +1,4 @@
-import type { HomeAPI } from '../api/home-interfaces.ts'
+import type { HomeAPI } from '../api/home-types.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 
