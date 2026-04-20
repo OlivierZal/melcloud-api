@@ -17,7 +17,6 @@ import type {
   ClassicGetGroupPostData,
   ClassicHolidayModeData,
   ClassicHolidayModePostData,
-  ClassicHour,
   ClassicListDeviceAny,
   ClassicLoginCredentials,
   ClassicLoginData,
@@ -34,6 +33,7 @@ import type {
   ClassicTemperatureLogPostData,
   ClassicTilesData,
   ClassicTilesPostData,
+  Hour,
 } from '../types/index.ts'
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
 import { setting, syncDevices } from '../decorators/index.ts'
@@ -344,7 +344,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getHourlyTemperatures({
     postData,
   }: {
-    postData: { device: number; hour: ClassicHour }
+    postData: { device: number; hour: Hour }
   }): Promise<{ data: ClassicReportData }> {
     return this.request('post', '/Report/GetHourlyTemperature', {
       data: postData,
@@ -374,7 +374,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getSignal({
     postData,
   }: {
-    postData: { devices: number | number[]; hour: ClassicHour }
+    postData: { devices: number | number[]; hour: Hour }
   }): Promise<{ data: ClassicReportData }> {
     return this.request('post', '/Report/GetSignalStrength', {
       data: postData,

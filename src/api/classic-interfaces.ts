@@ -14,7 +14,6 @@ import type {
   ClassicGetGroupPostData,
   ClassicHolidayModeData,
   ClassicHolidayModePostData,
-  ClassicHour,
   ClassicOperationModeLogData,
   ClassicReportData,
   ClassicReportPostData,
@@ -27,6 +26,7 @@ import type {
   ClassicTemperatureLogPostData,
   ClassicTilesData,
   ClassicTilesPostData,
+  Hour,
 } from '../types/index.ts'
 import type { BaseAPIConfig, SyncCallback } from './interfaces.ts'
 
@@ -81,7 +81,7 @@ export interface ClassicAPIAdapter {
   readonly getHourlyTemperatures: ({
     postData,
   }: {
-    postData: { device: number; hour: ClassicHour }
+    postData: { device: number; hour: Hour }
   }) => Promise<{ data: ClassicReportData }>
   /** Fetch internal temperature report. ATW only. */
   readonly getInternalTemperatures: ({
@@ -99,7 +99,7 @@ export interface ClassicAPIAdapter {
   readonly getSignal: ({
     postData,
   }: {
-    postData: { devices: number | number[]; hour: ClassicHour }
+    postData: { devices: number | number[]; hour: Hour }
   }) => Promise<{ data: ClassicReportData }>
   /** Fetch temperature log data. */
   readonly getTemperatures: ({
