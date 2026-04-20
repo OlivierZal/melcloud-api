@@ -7,7 +7,6 @@ import type {
 } from '../../src/api/index.ts'
 import type { ClassicDeviceType } from '../../src/constants.ts'
 import { AuthenticationError } from '../../src/errors/index.ts'
-import { HttpClient } from '../../src/http/client.ts'
 import {
   type ClassicBuildingWithStructure,
   type ClassicListDeviceAny,
@@ -19,15 +18,14 @@ import {
   cast,
   createHttpError,
   createLogger,
+  createMockHttpClient,
   createSettingStore,
+  matchObject,
   mock,
 } from '../helpers.ts'
 
-const mockHttpClient = new HttpClient({
-  baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
-  timeout: 30_000,
-})
-const mockRequest = vi.spyOn(mockHttpClient, 'request')
+const { client: mockHttpClient, requestSpy: mockRequest } =
+  createMockHttpClient('https://app.melcloud.com/Mitsubishi.Wifi.Client')
 
 const wrap = <T>(
   data: T,
@@ -128,8 +126,8 @@ describe('mELCloud Classic API', () => {
     config: ClassicAPIConfig = {},
   ): Promise<Awaited<ReturnType<typeof melCloudApi.create>>> =>
     melCloudApi.create({
-      autoSyncInterval: 0,
-      httpClient: mockHttpClient,
+      syncIntervalMinutes: false,
+      transport: mockHttpClient,
       ...config,
     })
 
@@ -147,22 +145,25 @@ describe('mELCloud Classic API', () => {
   })
 
   it('accepts custom configuration', async () => {
-    const onSync = vi.fn<SyncCallback>()
+    const onSyncComplete = vi.fn<SyncCallback>()
     const api = await createApi({
+      events: { onSyncComplete },
       language: 'fr',
       logger: createLogger(),
-      onSync,
       shouldVerifySSL: false,
       timezone: 'Europe/Paris',
     })
 
-    expect(api.onSync).toBe(onSync)
+    onSyncComplete.mockClear()
+    await api.notifySync({ type: undefined })
+
+    expect(onSyncComplete).toHaveBeenCalledWith({ type: undefined })
   })
 
-  it('accepts null autoSyncInterval', async () => {
+  it('accepts a disabled sync timer', async () => {
     const api = await melCloudApi.create({
-      autoSyncInterval: null,
-      httpClient: mockHttpClient,
+      syncIntervalMinutes: false,
+      transport: mockHttpClient,
     })
 
     expect(api).toBeDefined()
@@ -216,10 +217,10 @@ describe('mELCloud Classic API', () => {
     }).not.toThrow()
   })
 
-  it('schedules next sync when autoSyncInterval is set', async () => {
+  it('schedules next sync when intervalMinutes is set', async () => {
     await melCloudApi.create({
-      autoSyncInterval: 1,
-      httpClient: mockHttpClient,
+      syncIntervalMinutes: 1,
+      transport: mockHttpClient,
     })
 
     expect(() => {
@@ -227,24 +228,26 @@ describe('mELCloud Classic API', () => {
     }).not.toThrow()
   })
 
-  it('logs error when auto-sync onSync callback throws', async () => {
+  it('logs error when auto-sync onSyncComplete callback throws', async () => {
     const logger = createLogger()
-    const onSync = vi.fn<SyncCallback>().mockImplementationOnce(async () => {
-      // First call (initial create) succeeds, subsequent calls can throw
-    })
+    const onSyncComplete = vi
+      .fn<SyncCallback>()
+      .mockImplementationOnce(async () => {
+        // First call (initial create) succeeds, subsequent calls can throw
+      })
     await melCloudApi.create({
-      autoSyncInterval: 1,
-      httpClient: mockHttpClient,
+      events: { onSyncComplete },
       logger,
-      onSync,
+      syncIntervalMinutes: 1,
+      transport: mockHttpClient,
     })
-    onSync.mockImplementation(() => {
+    onSyncComplete.mockImplementation(() => {
       throw new Error('sync callback failed')
     })
     await vi.advanceTimersByTimeAsync(60_000)
 
     expect(logger.error).toHaveBeenCalledWith(
-      'Auto-sync failed:',
+      'LifecycleEvents.onSyncComplete callback threw — ignoring',
       expect.any(Error),
     )
   })
@@ -575,15 +578,15 @@ describe('mELCloud Classic API', () => {
 
   describe('sync interval', () => {
     it('reschedules sync with new interval', async () => {
-      const api = await createApi({ autoSyncInterval: 0 })
+      const api = await createApi({ syncIntervalMinutes: false })
       api.setSyncInterval(10)
 
       expect(vi.getTimerCount()).toBe(1)
     })
 
-    it('disables sync when set to null', async () => {
-      const api = await createApi({ autoSyncInterval: 5 })
-      api.setSyncInterval(null)
+    it('disables sync when set to false', async () => {
+      const api = await createApi({ syncIntervalMinutes: 5 })
+      api.setSyncInterval(false)
 
       expect(vi.getTimerCount()).toBe(0)
     })
@@ -674,8 +677,7 @@ describe('mELCloud Classic API', () => {
       expect(result).toHaveProperty('errors')
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
-          data: expect.objectContaining({ DeviceIDs: [42] }),
+          data: matchObject({ DeviceIDs: [42] }),
           url: '/Report/GetUnitErrorLog2',
         }),
       )
@@ -710,8 +712,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
-          headers: expect.objectContaining({
+          headers: matchObject({
             'X-MitsContextKey': 'my-ctx',
           }),
         }),
@@ -756,8 +757,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
-          headers: expect.objectContaining({
+          headers: matchObject({
             'X-MitsContextKey': 'newest',
           }),
           url: '/Device/Get',
@@ -780,8 +780,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
-          data: expect.objectContaining({
+          data: matchObject({
             Email: 'user',
             Password: 'pass',
           }),
@@ -790,8 +789,7 @@ describe('mELCloud Classic API', () => {
       )
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
-          headers: expect.objectContaining({
+          headers: matchObject({
             'X-MitsContextKey': 'fresh',
           }),
           url: '/Device/Get',
@@ -818,8 +816,7 @@ describe('mELCloud Classic API', () => {
       )
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
-          headers: expect.objectContaining({
+          headers: matchObject({
             'X-MitsContextKey': 'fresh',
           }),
         }),
@@ -841,8 +838,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- vitest matcher returns `any`
-          headers: expect.objectContaining({
+          headers: matchObject({
             'X-MitsContextKey': 'valid',
           }),
         }),

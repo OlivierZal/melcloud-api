@@ -17,6 +17,7 @@ export const HomeDeviceType = {
   /** Air-to-Water (ATW) heat pump. */
   Atw: 'airToWater',
 } as const
+
 /** Unified MELCloud device type: union of Classic and Home API device types. */
 export type DeviceType = ClassicDeviceType | HomeDeviceType
 

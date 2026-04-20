@@ -6,6 +6,7 @@ import { AuthenticationError } from '../errors/index.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
+  HTTP_STATUS_UNAUTHORIZED,
   HttpClient,
   isHttpError,
 } from '../http/index.ts'
@@ -13,7 +14,7 @@ import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
-  RequestLifecycleEmitter,
+  LifecycleEmitter,
 } from '../observability/index.ts'
 import {
   type ResiliencePolicy,
@@ -31,8 +32,6 @@ import type {
   SyncCallback,
 } from './interfaces.ts'
 import { SyncManager } from './sync-manager.ts'
-
-const HTTP_STATUS_UNAUTHORIZED = 401
 
 /**
  * Narrow any error the HTTP client can surface into either an
@@ -52,12 +51,31 @@ export const normalizeUnauthorized = (error: unknown): unknown =>
     })
   : error
 
-/** Options for the {@link BaseAPI} constructor beyond the base config. */
+const DEFAULT_TIMEOUT_MS = 30_000
+
+/*
+ * Cool-down between consecutive auth-retry consumptions on the same
+ * RetryGuard. Hardcoded because no caller has ever needed to tune it
+ * — every Classic + Home flow uses the same 1 s value, and adjusting
+ * it is more likely to mask bugs than reflect a real product need.
+ */
+const DEFAULT_AUTH_RETRY_COOLDOWN_MS = 1000
+
+/**
+ * Subclass-internal options injected into the {@link BaseAPI}
+ * constructor. Distinct from {@link BaseAPIConfig} (the user-facing
+ * surface) — these capture **what the subclass knows** that the user
+ * doesn't pick (baseURL, rate-limit window, default sync cadence,
+ * the sync runner closure).
+ */
 interface BaseAPIConstructorOptions {
-  httpConfig: HttpClientConfig
+  /** Subclass default for {@link BaseAPIConfig.syncIntervalMinutes}. */
+  defaultSyncIntervalMinutes: number | false
+  /** Subclass-fixed HTTP defaults (baseURL, optional dispatcher). */
+  httpConfig: Omit<HttpClientConfig, 'timeout'>
+  /** Sliding-window length the rate-limit gate observes. */
   rateLimitHours: number
-  retryDelay: number
-  httpClient?: HttpClient
+  /** Sync runner the auto-timer drives. */
   syncCallback: () => Promise<unknown>
 }
 
@@ -71,8 +89,6 @@ interface BaseAPIConstructorOptions {
 export abstract class BaseAPI implements Disposable {
   public readonly logger: Logger
 
-  public readonly onSync?: SyncCallback
-
   public readonly settingManager?: SettingManager
 
   public get isRateLimited(): boolean {
@@ -83,7 +99,7 @@ export abstract class BaseAPI implements Disposable {
 
   protected readonly api: HttpClient
 
-  protected readonly events: RequestLifecycleEmitter
+  protected readonly events: LifecycleEmitter
 
   protected readonly rateLimitGate: RateLimitGate
 
@@ -123,36 +139,44 @@ export abstract class BaseAPI implements Disposable {
 
   readonly #syncManager: SyncManager
 
-  // eslint-disable-next-line max-statements -- constructor is 12 field assignments + 2 policy wirings; further decomposition would just hide the wiring behind a second helper without clarifying anything
   protected constructor(
     {
       abortSignal,
-      autoSyncInterval,
       events,
       logger = console,
-      onSync,
       settingManager,
+      syncIntervalMinutes,
+      transport,
     }: BaseAPIConfig,
     {
-      httpClient,
+      defaultSyncIntervalMinutes,
       httpConfig,
       rateLimitHours,
-      retryDelay,
       syncCallback,
     }: BaseAPIConstructorOptions,
   ) {
     this.abortSignal = abortSignal
     this.logger = logger
-    this.onSync = onSync
     this.settingManager = settingManager
-    this.events = new RequestLifecycleEmitter(events, logger)
+    this.events = new LifecycleEmitter(events, logger)
     this.rateLimitGate = new RateLimitGate({ hours: rateLimitHours })
-    this.retryGuard = new RetryGuard(retryDelay)
-    this.api = httpClient ?? new HttpClient(httpConfig)
-    this.#syncManager = new SyncManager(syncCallback, logger, autoSyncInterval)
-    const { authRetry, rateLimit } = this.#buildStaticPolicies()
-    this.#authRetryPolicy = authRetry
-    this.#rateLimitPolicy = rateLimit
+    this.retryGuard = new RetryGuard(DEFAULT_AUTH_RETRY_COOLDOWN_MS)
+    this.api =
+      transport instanceof HttpClient ? transport : (
+        new HttpClient({
+          ...httpConfig,
+          timeout: transport?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+        })
+      )
+    this.#syncManager = new SyncManager(
+      syncCallback,
+      logger,
+      syncIntervalMinutes ?? defaultSyncIntervalMinutes,
+    )
+    this.#authRetryPolicy = new AuthRetryPolicy(this.retryGuard, async () =>
+      this.reauthenticate(),
+    )
+    this.#rateLimitPolicy = new RateLimitPolicy(this.rateLimitGate, this.logger)
   }
 
   protected abstract doAuthenticate(
@@ -280,6 +304,19 @@ export abstract class BaseAPI implements Disposable {
   }
 
   /**
+   * Notify any registered `events.onSyncComplete` observer that a
+   * sync just landed. Routed through the lifecycle emitter so a
+   * misbehaving callback cannot break the caller. Invoked by the
+   * `@syncDevices` decorator after each decorated mutation.
+   * @param args - `SyncCallback`-shaped payload (`type`, `ids`).
+   */
+  public async notifySync(
+    ...args: Parameters<SyncCallback>
+  ): Promise<void> {
+    await this.events.emitSyncComplete(...args)
+  }
+
+  /**
    * Best-effort session restore from persisted credentials.
    *
    * Reads `username`/`password` from the SettingManager and signs
@@ -315,7 +352,7 @@ export abstract class BaseAPI implements Disposable {
     this.retryGuard[Symbol.dispose]()
   }
 
-  public setSyncInterval(minutes: number | null): void {
+  public setSyncInterval(minutes: number | false): void {
     this.#syncManager.setInterval(minutes)
   }
 
@@ -450,25 +487,6 @@ export abstract class BaseAPI implements Disposable {
       )
     }
     return new CompositePolicy(policies)
-  }
-
-  /**
-   * Instantiate the request-independent policies once. Both reuse
-   * shared state ({@link RateLimitGate}, {@link RetryGuard}) wired
-   * earlier in the constructor so the policies themselves stay
-   * stateless w.r.t. individual requests.
-   * @returns The two stateful policies shared across every request.
-   */
-  #buildStaticPolicies(): {
-    authRetry: AuthRetryPolicy
-    rateLimit: RateLimitPolicy
-  } {
-    return {
-      authRetry: new AuthRetryPolicy(this.retryGuard, async () =>
-        this.reauthenticate(),
-      ),
-      rateLimit: new RateLimitPolicy(this.rateLimitGate, this.logger),
-    }
   }
 
   async #runWithEvents<T>(

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { Logger, RequestLifecycleEvents } from '../../src/api/index.ts'
-import { RequestLifecycleEmitter } from '../../src/observability/events-emitter.ts'
+import type { LifecycleEvents, Logger } from '../../src/api/index.ts'
+import { LifecycleEmitter } from '../../src/observability/events-emitter.ts'
 
 const createLogger = (): Logger => ({
   error: vi.fn<(...data: unknown[]) => void>(),
@@ -10,10 +10,10 @@ const createLogger = (): Logger => ({
 
 const context = { correlationId: 'corr-1', method: 'GET', url: '/test' }
 
-describe(RequestLifecycleEmitter, () => {
+describe(LifecycleEmitter, () => {
   it('no-ops when no events bundle is configured', () => {
     const logger = createLogger()
-    const emitter = new RequestLifecycleEmitter(undefined, logger)
+    const emitter = new LifecycleEmitter(undefined, logger)
 
     expect(() => {
       emitter.emitStart(context)
@@ -32,15 +32,12 @@ describe(RequestLifecycleEmitter, () => {
     const logger = createLogger()
     const events = {
       onRequestComplete:
-        vi.fn<NonNullable<RequestLifecycleEvents['onRequestComplete']>>(),
-      onRequestError:
-        vi.fn<NonNullable<RequestLifecycleEvents['onRequestError']>>(),
-      onRequestRetry:
-        vi.fn<NonNullable<RequestLifecycleEvents['onRequestRetry']>>(),
-      onRequestStart:
-        vi.fn<NonNullable<RequestLifecycleEvents['onRequestStart']>>(),
+        vi.fn<NonNullable<LifecycleEvents['onRequestComplete']>>(),
+      onRequestError: vi.fn<NonNullable<LifecycleEvents['onRequestError']>>(),
+      onRequestRetry: vi.fn<NonNullable<LifecycleEvents['onRequestRetry']>>(),
+      onRequestStart: vi.fn<NonNullable<LifecycleEvents['onRequestStart']>>(),
     }
-    const emitter = new RequestLifecycleEmitter(events, logger)
+    const emitter = new LifecycleEmitter(events, logger)
     const cause = new Error('upstream')
 
     emitter.emitStart(context)
@@ -70,13 +67,13 @@ describe(RequestLifecycleEmitter, () => {
   it('swallows callback exceptions and logs them at error level', () => {
     const logger = createLogger()
     const events = {
-      onRequestStart: vi.fn<
-        NonNullable<RequestLifecycleEvents['onRequestStart']>
-      >(() => {
-        throw new Error('observer went rogue')
-      }),
+      onRequestStart: vi.fn<NonNullable<LifecycleEvents['onRequestStart']>>(
+        () => {
+          throw new Error('observer went rogue')
+        },
+      ),
     }
-    const emitter = new RequestLifecycleEmitter(events, logger)
+    const emitter = new LifecycleEmitter(events, logger)
 
     expect(() => {
       emitter.emitStart(context)

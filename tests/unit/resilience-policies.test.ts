@@ -115,7 +115,8 @@ describe(AuthRetryPolicy, () => {
 
   it('rethrows the 401 when the guard refuses a retry', async () => {
     const guard = new RetryGuard(1000)
-    /* consume the single token */
+
+    // consume the single token
     guard.tryConsume()
     const reauthenticate = vi.fn<() => Promise<boolean>>()
     const policy = new AuthRetryPolicy(guard, reauthenticate)

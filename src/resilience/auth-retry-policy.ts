@@ -1,8 +1,6 @@
-import { isHttpError } from '../http/index.ts'
+import { HTTP_STATUS_UNAUTHORIZED, isHttpError } from '../http/index.ts'
 import type { ResiliencePolicy } from './policy.ts'
 import type { RetryGuard } from './retry-guard.ts'
-
-const HTTP_STATUS_UNAUTHORIZED = 401
 
 /**
  * Reactive authentication retry. On a `401 Unauthorized`:

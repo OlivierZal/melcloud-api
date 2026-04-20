@@ -9,11 +9,11 @@ export type {
 export type { HomeAPIConfig, HomeAPISettings } from './home-interfaces.ts'
 export type {
   BaseAPIConfig,
+  LifecycleEvents,
   Logger,
   RequestCompleteEvent,
   RequestErrorEvent,
   RequestLifecycleContext,
-  RequestLifecycleEvents,
   RequestRetryEvent,
   RequestStartEvent,
   SettingManager,

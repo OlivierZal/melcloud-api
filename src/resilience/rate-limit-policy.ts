@@ -1,10 +1,8 @@
 import type { Logger } from '../api/interfaces.ts'
 import { RateLimitError } from '../errors/index.ts'
-import { isHttpError } from '../http/index.ts'
+import { HTTP_STATUS_TOO_MANY_REQUESTS, isHttpError } from '../http/index.ts'
 import type { ResiliencePolicy } from './policy.ts'
 import type { RateLimitGate } from './rate-limit-gate.ts'
-
-const HTTP_STATUS_TOO_MANY_REQUESTS = 429
 
 /**
  * Rate-limit circuit breaker. Two responsibilities:

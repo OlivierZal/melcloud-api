@@ -13,20 +13,17 @@ import type {
   Result,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
-import {
-  fetchDevices,
-  setting,
-  syncDevices,
-  validate,
-} from '../decorators/index.ts'
+import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
+import { MS_PER_MINUTE, MS_PER_SECOND } from '../time-units.ts'
 import {
   HomeContextSchema,
   HomeEnergyDataSchema,
   HomeErrorLogEntryListSchema,
   HomeReportDataSchema,
   parseOrThrow,
+  validateRequest,
 } from '../validation/index.ts'
 import type {
   HomeAPIConfig,
@@ -47,17 +44,16 @@ const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
 const CONTEXT_PATH = '/context'
 const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
-const DEFAULT_TIMEOUT_MS = 30_000
+const DEFAULT_SYNC_INTERVAL_MINUTES = 1
 const ENERGY_PATH = '/telemetry/telemetry/energy'
-const MILLISECONDS_IN_SECOND = 1000
 const REPORT_PATH = '/report/v1/trendsummary'
-const RETRY_DELAY = 1000
-const SECONDS_PER_MINUTE = 60
 const SESSION_REFRESH_AHEAD_MINUTES = 5
-// Refresh the session when it's within 5 min of its real expiry so
-// no request pays the full OIDC round-trip on its critical path.
-const SESSION_REFRESH_AHEAD_MS =
-  SESSION_REFRESH_AHEAD_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_IN_SECOND
+
+/*
+ * Refresh the session when it's within 5 min of its real expiry so
+ * no request pays the full OIDC round-trip on its critical path.
+ */
+const SESSION_REFRESH_AHEAD_MS = SESSION_REFRESH_AHEAD_MINUTES * MS_PER_MINUTE
 const SIGNAL_PATH = '/telemetry/telemetry/actual'
 
 /* ------------------------------------------------------------------ */
@@ -148,24 +144,13 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   private accessor refreshToken = ''
 
   private constructor(config: HomeAPIConfig = {}) {
-    const {
-      autoSyncInterval = 1,
-      baseURL = API_BASE_URL,
-      httpClient,
-      password,
-      requestTimeout = DEFAULT_TIMEOUT_MS,
-      username,
-    } = config
-    super(
-      { ...config, autoSyncInterval },
-      {
-        httpClient,
-        httpConfig: { baseURL, timeout: requestTimeout },
-        rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
-        retryDelay: RETRY_DELAY,
-        syncCallback: async () => this.list(),
-      },
-    )
+    const { baseURL = API_BASE_URL, password, username } = config
+    super(config, {
+      defaultSyncIntervalMinutes: DEFAULT_SYNC_INTERVAL_MINUTES,
+      httpConfig: { baseURL },
+      rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
+      syncCallback: async () => this.list(),
+    })
     this.applyCredentials(username, password)
   }
 
@@ -184,135 +169,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     const api = new HomeAPI(config)
     await api.initialize()
     return api
-  }
-
-  /**
-   * Fetch cumulative-energy telemetry for an ATA unit. Returns a
-   * {@link Result} so callers can branch on the failure class —
-   * `validation` (shape drift), `server` (4xx/5xx), `unauthorized`
-   * (token rejected), `rate-limited`, `network`. The prior shape
-   * `T | null` collapsed all five into a single `null`; this one
-   * keeps them distinguishable at the type level.
-   *
-   * `@validate` wraps the resolved value into the `ok` half on parse
-   * success and injects the `err` half on any thrown branch. The
-   * method body returns raw `T`; the cast below reconciles the
-   * body's static type with the decorator's runtime transformation —
-   * TC39 stage-3 decorators do not narrow the method's declared
-   * return type, so the cast is the pragmatic alignment.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (e.g. `PT1H`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns Success with the telemetry bundle, or a typed failure.
-   */
-  @validate({
-    context: 'BFF /telemetry/telemetry/energy',
-    schema: HomeEnergyDataSchema,
-  })
-  public async getEnergy(
-    id: string,
-    params: { from: string; interval: string; to: string },
-  ): Promise<Result<HomeEnergyData, HomeError>> {
-    const { data } = await this.request<HomeEnergyData>(
-      'get',
-      `${ENERGY_PATH}/${id}`,
-      {
-        params: {
-          from: toTelemetryDate(params.from),
-          interval: params.interval,
-          measure: 'cumulative_energy_consumed_since_last_upload',
-          to: toTelemetryDate(params.to),
-        },
-      },
-    )
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
-    return data as unknown as Result<HomeEnergyData, HomeError>
-  }
-
-  /**
-   * Fetch the error-log entries for an ATA unit. Same {@link Result}
-   * contract as {@link getEnergy}: consumers that previously relied
-   * on a `null → []` coalesce should now branch on `result.ok`.
-   * @param id - Device id.
-   * @returns Success with the entries (possibly empty), or a typed failure.
-   */
-  @validate({
-    context: 'BFF /monitor/ataunit/:id/errorlog',
-    schema: HomeErrorLogEntryListSchema,
-  })
-  public async getErrorLog(
-    id: string,
-  ): Promise<Result<HomeErrorLogEntry[], HomeError>> {
-    const { data } = await this.request<HomeErrorLogEntry[]>(
-      'get',
-      `${ATA_UNIT_PATH}/${id}/errorlog`,
-    )
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
-    return data as unknown as Result<HomeErrorLogEntry[], HomeError>
-  }
-
-  /**
-   * Fetch RSSI telemetry for an ATA unit. Same {@link Result}
-   * contract as {@link getEnergy}.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns Success with the telemetry bundle, or a typed failure.
-   */
-  @validate({
-    context: 'BFF /telemetry/telemetry/actual',
-    schema: HomeEnergyDataSchema,
-  })
-  public async getSignal(
-    id: string,
-    params: { from: string; to: string },
-  ): Promise<Result<HomeEnergyData, HomeError>> {
-    const { data } = await this.request<HomeEnergyData>(
-      'get',
-      `${SIGNAL_PATH}/${id}`,
-      {
-        params: {
-          from: toTelemetryDate(params.from),
-          measure: 'rssi',
-          to: toTelemetryDate(params.to),
-        },
-      },
-    )
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
-    return data as unknown as Result<HomeEnergyData, HomeError>
-  }
-
-  /**
-   * Fetch a trend-summary report (temperatures, etc.) for an ATA
-   * unit. Same {@link Result} contract as {@link getEnergy}.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.period - Aggregation period (e.g. `hour`, `day`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns Success with the report datasets, or a typed failure.
-   */
-  @validate({
-    context: 'BFF /report/v1/trendsummary',
-    schema: HomeReportDataSchema.array(),
-  })
-  public async getTemperatures(
-    id: string,
-    params: { from: string; period: string; to: string },
-  ): Promise<Result<HomeReportData[], HomeError>> {
-    const { data } = await this.request<HomeReportData[]>('get', REPORT_PATH, {
-      params: {
-        from: toReportDate(params.from),
-        period: params.period,
-        to: toReportDate(params.to),
-        unitId: id,
-      },
-    })
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- @validate rewrites the return at runtime; this cast reconciles the body type with the decorator contract
-    return data as unknown as Result<HomeReportData[], HomeError>
   }
 
   /**
@@ -344,6 +200,140 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     } finally {
       this.syncManager.planNext()
     }
+  }
+
+  /**
+   * Fetch cumulative-energy telemetry for an ATA unit. Returns a
+   * {@link Result} so callers can branch on the failure class —
+   * `validation` (shape drift), `server` (4xx/5xx), `unauthorized`
+   * (token rejected), `rate-limited`, `network`. The prior shape
+   * `T | null` collapsed all five into a single `null`; this one
+   * keeps them distinguishable at the type level.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.interval - Aggregation interval (e.g. `PT1H`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the telemetry bundle, or a typed failure.
+   */
+  public async getEnergy(
+    id: string,
+    params: { from: string; interval: string; to: string },
+  ): Promise<Result<HomeEnergyData, HomeError>> {
+    return validateRequest({
+      context: 'BFF /telemetry/telemetry/energy',
+      host: this,
+      schema: HomeEnergyDataSchema,
+      operation: async () => {
+        const { data } = await this.request<HomeEnergyData>(
+          'get',
+          `${ENERGY_PATH}/${id}`,
+          {
+            params: {
+              from: toTelemetryDate(params.from),
+              interval: params.interval,
+              measure: 'cumulative_energy_consumed_since_last_upload',
+              to: toTelemetryDate(params.to),
+            },
+          },
+        )
+        return data
+      },
+    })
+  }
+
+  /**
+   * Fetch the error-log entries for an ATA unit. Same {@link Result}
+   * contract as {@link getEnergy}: consumers that previously relied
+   * on a `null → []` coalesce should now branch on `result.ok`.
+   * @param id - Device id.
+   * @returns Success with the entries (possibly empty), or a typed failure.
+   */
+  public async getErrorLog(
+    id: string,
+  ): Promise<Result<HomeErrorLogEntry[], HomeError>> {
+    return validateRequest({
+      context: 'BFF /monitor/ataunit/:id/errorlog',
+      host: this,
+      schema: HomeErrorLogEntryListSchema,
+      operation: async () => {
+        const { data } = await this.request<HomeErrorLogEntry[]>(
+          'get',
+          `${ATA_UNIT_PATH}/${id}/errorlog`,
+        )
+        return data
+      },
+    })
+  }
+
+  /**
+   * Fetch RSSI telemetry for an ATA unit. Same {@link Result}
+   * contract as {@link getEnergy}.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the telemetry bundle, or a typed failure.
+   */
+  public async getSignal(
+    id: string,
+    params: { from: string; to: string },
+  ): Promise<Result<HomeEnergyData, HomeError>> {
+    return validateRequest({
+      context: 'BFF /telemetry/telemetry/actual',
+      host: this,
+      schema: HomeEnergyDataSchema,
+      operation: async () => {
+        const { data } = await this.request<HomeEnergyData>(
+          'get',
+          `${SIGNAL_PATH}/${id}`,
+          {
+            params: {
+              from: toTelemetryDate(params.from),
+              measure: 'rssi',
+              to: toTelemetryDate(params.to),
+            },
+          },
+        )
+        return data
+      },
+    })
+  }
+
+  /**
+   * Fetch a trend-summary report (temperatures, etc.) for an ATA
+   * unit. Same {@link Result} contract as {@link getEnergy}.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Aggregation period (e.g. `hour`, `day`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the report datasets, or a typed failure.
+   */
+  public async getTemperatures(
+    id: string,
+    params: { from: string; period: string; to: string },
+  ): Promise<Result<HomeReportData[], HomeError>> {
+    return validateRequest({
+      context: 'BFF /report/v1/trendsummary',
+      host: this,
+      schema: HomeReportDataSchema.array(),
+      operation: async () => {
+        const { data } = await this.request<HomeReportData[]>(
+          'get',
+          REPORT_PATH,
+          {
+            params: {
+              from: toReportDate(params.from),
+              period: params.period,
+              to: toReportDate(params.to),
+              unitId: id,
+            },
+          },
+        )
+        return data
+      },
+    })
   }
 
   /**
@@ -582,9 +572,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     if (refreshToken !== undefined && refreshToken !== '') {
       this.refreshToken = refreshToken
     }
-    this.expiry = new Date(
-      Date.now() + expiresIn * MILLISECONDS_IN_SECOND,
-    ).toISOString()
+    this.expiry = new Date(Date.now() + expiresIn * MS_PER_SECOND).toISOString()
   }
 
   #syncContext(data: HomeContext): void {

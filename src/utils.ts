@@ -29,17 +29,20 @@ interface LabelFormatterCache {
 
 let formatterCache: LabelFormatterCache | null = null
 
-// Tracks LuxonSettings.defaultLocale so output stays consistent with the rest
-// of the codebase's datetime formatting without re-creating Intl.DateTimeFormat per call.
+// Luxon types defaultLocale as `string` but emits `null` at runtime when unset; widen at the boundary.
+const getDefaultLocale = (): string | null | undefined =>
+  LuxonSettings.defaultLocale
+
+/*
+ * Tracks LuxonSettings.defaultLocale so output stays consistent with the rest
+ * of the codebase's datetime formatting without re-creating Intl.DateTimeFormat per call.
+ */
 const getLabelFormatters = (): LabelFormatterCache => {
-  const { defaultLocale: locale } = LuxonSettings
-  if (formatterCache?.locale === locale) {
+  const locale = getDefaultLocale()
+  if (formatterCache !== null && formatterCache.locale === locale) {
     return formatterCache
   }
-  // Luxon types defaultLocale as `string` but emits `null` at runtime when unset; Intl throws on null.
-  const base: string | undefined =
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- see above
-    locale ?? undefined
+  const base = locale ?? undefined
   const cache: LabelFormatterCache = {
     dayOfWeek: new Intl.DateTimeFormat(base, {
       timeZone: 'UTC',
@@ -122,8 +125,11 @@ const labelFormatters: Record<ClassicLabelType, (label: string) => string> = {
   [ClassicLabelType.month_of_year]: (label) => {
     const year = Math.floor(Number(label) / YEAR_MONTH_DIVISOR)
     const month = (Number(label) % YEAR_MONTH_DIVISOR) - 1
-    // Format month and year separately to preserve the "MMM yyyy" ordering
-    // across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
+
+    /*
+     * Format month and year separately to preserve the "MMM yyyy" ordering
+     * across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
+     */
     const monthName = getLabelFormatters().month.format(
       Date.UTC(year, month, 1),
     )

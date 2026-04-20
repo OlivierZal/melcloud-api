@@ -72,8 +72,8 @@ export interface HomeAPI {
    * sign-in fails (logged via the SDK logger).
    */
   readonly resumeSession: () => Promise<boolean>
-  /** Update the automatic sync interval and reschedule. Set to `0` or `null` to disable. */
-  readonly setSyncInterval: (minutes: number | null) => void
+  /** Update the automatic sync interval and reschedule. Pass `false` to disable. */
+  readonly setSyncInterval: (minutes: number | false) => void
   /** Update device values and refresh device data via list(). */
   readonly updateValues: (id: string, values: HomeAtaValues) => Promise<boolean>
 }

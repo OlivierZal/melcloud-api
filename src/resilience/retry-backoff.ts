@@ -1,8 +1,10 @@
-import { type HttpError, isHttpError } from '../http/index.ts'
-
-const HTTP_STATUS_BAD_GATEWAY = 502
-const HTTP_STATUS_SERVICE_UNAVAILABLE = 503
-const HTTP_STATUS_GATEWAY_TIMEOUT = 504
+import {
+  type HttpError,
+  HTTP_STATUS_BAD_GATEWAY,
+  HTTP_STATUS_GATEWAY_TIMEOUT,
+  HTTP_STATUS_SERVICE_UNAVAILABLE,
+  isHttpError,
+} from '../http/index.ts'
 
 /*
  * HTTP 5xx status codes considered transient (server-side glitches that
@@ -125,26 +127,25 @@ export const withRetryBackoff = async <T>(
   operation: () => Promise<T>,
   options: RetryBackoffOptions,
 ): Promise<T> => {
-  for (let attempt = 0; attempt <= options.maxRetries; attempt += 1) {
+  /*
+   * Recursive shape (over a loop) makes the sequential nature of each
+   * attempt structural: every retry strictly awaits the previous
+   * attempt's settlement and the backoff delay before the next call.
+   * Also gives the function a single, type-checked exit — no need for
+   * an unreachable post-loop throw.
+   */
+  const attempt = async (number: number): Promise<T> => {
     try {
-      /*
-       * Sequential awaits inside this loop are intentional (each retry
-       * waits for the previous attempt to settle and for the backoff
-       * window to elapse before starting the next one). Disable the
-       * rule for the whole body so the intent is explicit.
-       */
-      // eslint-disable-next-line no-await-in-loop -- sequential retry
       return await operation()
     } catch (error) {
-      if (attempt >= options.maxRetries || !options.isRetryable(error)) {
+      if (number >= options.maxRetries || !options.isRetryable(error)) {
         throw error
       }
-      const delayMs = computeDelay(attempt, options)
-      options.onRetry?.(attempt + 1, error, delayMs)
-      // eslint-disable-next-line no-await-in-loop -- sequential retry
+      const delayMs = computeDelay(number, options)
+      options.onRetry?.(number + 1, error, delayMs)
       await sleep(delayMs)
+      return attempt(number + 1)
     }
   }
-  /* v8 ignore next -- unreachable: loop always exits via return or throw */
-  throw new Error('withRetryBackoff: unreachable')
+  return attempt(0)
 }

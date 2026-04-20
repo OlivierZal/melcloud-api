@@ -6,8 +6,8 @@ import type { SyncCallback } from '../../src/api/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { RateLimitError } from '../../src/errors/index.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
-import { HttpClient } from '../../src/http/client.ts'
 import { HttpError } from '../../src/http/index.ts'
+import { MS_PER_HOUR } from '../../src/time-units.ts'
 import {
   type ClassicBuildingWithStructure,
   type HomeContext,
@@ -19,6 +19,7 @@ import {
 import { ataDeviceData, buildingData } from '../fixtures.ts'
 import {
   cast,
+  createMockHttpClient,
   createSettingStore,
   defined,
   mock,
@@ -77,11 +78,8 @@ const buildingResponse: ClassicBuildingWithStructure[] = [
   }),
 ]
 
-const mockHttpClient = new HttpClient({
-  baseURL: 'https://app.melcloud.com/Mitsubishi.Wifi.Client',
-  timeout: 30_000,
-})
-const mockRequest = vi.spyOn(mockHttpClient, 'request')
+const { client: mockHttpClient, requestSpy: mockRequest } =
+  createMockHttpClient('https://app.melcloud.com/Mitsubishi.Wifi.Client')
 
 describe('api lifecycle', () => {
   let melCloudApi: typeof ClassicAPI = cast(null)
@@ -103,8 +101,8 @@ describe('api lifecycle', () => {
 
   it('creates ClassicAPI, syncs buildings, and populates the registry', async () => {
     const api = await melCloudApi.create({
-      autoSyncInterval: 0,
-      httpClient: mockHttpClient,
+      syncIntervalMinutes: false,
+      transport: mockHttpClient,
     })
 
     expect(api.registry.getDevices()).toHaveLength(1)
@@ -165,8 +163,8 @@ describe('api lifecycle', () => {
 
   it('facadeManager works with registry populated by ClassicAPI', async () => {
     const api = await melCloudApi.create({
-      autoSyncInterval: 0,
-      httpClient: mockHttpClient,
+      syncIntervalMinutes: false,
+      transport: mockHttpClient,
     })
     const manager = new ClassicFacadeManager(api, api.registry)
 
@@ -181,8 +179,8 @@ describe('api lifecycle', () => {
   it('authenticate → fetch → registry reflects updated data', async () => {
     mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
     const api = await melCloudApi.create({
-      autoSyncInterval: 0,
-      httpClient: mockHttpClient,
+      syncIntervalMinutes: false,
+      transport: mockHttpClient,
     })
 
     expect(api.registry.getDevices()).toHaveLength(0)
@@ -213,17 +211,7 @@ describe('api lifecycle', () => {
   })
 
   it('settingManager persists credentials across ClassicAPI operations', async () => {
-    const store = new Map<string, string | null | undefined>()
-    const settingManager = {
-      get: vi.fn<(key: string) => string | null | undefined>((key) =>
-        store.get(key),
-      ),
-      set: vi.fn<(key: string, value: string | null | undefined) => void>(
-        (key, value) => {
-          store.set(key, value)
-        },
-      ),
-    }
+    const { setSpy, settingManager } = createSettingStore()
 
     mockRequest.mockImplementation(async (config) => {
       await Promise.resolve()
@@ -243,27 +231,24 @@ describe('api lifecycle', () => {
     })
 
     const api = await melCloudApi.create({
-      autoSyncInterval: 0,
-      httpClient: mockHttpClient,
       settingManager,
+      syncIntervalMinutes: false,
+      transport: mockHttpClient,
     })
 
     await api.authenticate({ password: 'secret', username: 'me@test.com' })
 
     // Verify credentials were persisted
-    expect(settingManager.set).toHaveBeenCalledWith('username', 'me@test.com')
-    expect(settingManager.set).toHaveBeenCalledWith('password', 'secret')
-    expect(settingManager.set).toHaveBeenCalledWith('contextKey', 'ctx-abc')
-    expect(settingManager.set).toHaveBeenCalledWith(
-      'expiry',
-      '2099-12-31T00:00:00',
-    )
+    expect(setSpy).toHaveBeenCalledWith('username', 'me@test.com')
+    expect(setSpy).toHaveBeenCalledWith('password', 'secret')
+    expect(setSpy).toHaveBeenCalledWith('contextKey', 'ctx-abc')
+    expect(setSpy).toHaveBeenCalledWith('expiry', '2099-12-31T00:00:00')
   })
 
   it('re-sync replaces registry data', async () => {
     const api = await melCloudApi.create({
-      autoSyncInterval: 0,
-      httpClient: mockHttpClient,
+      syncIntervalMinutes: false,
+      transport: mockHttpClient,
     })
 
     expect(api.registry.getDevices()).toHaveLength(1)
@@ -278,32 +263,32 @@ describe('api lifecycle', () => {
     ).toHaveLength(0)
   })
 
-  it('onSync callback is invoked after fetch', async () => {
-    const onSync = vi.fn<SyncCallback>()
+  it('events.onSyncComplete is invoked after fetch', async () => {
+    const onSyncComplete = vi.fn<SyncCallback>()
     await melCloudApi.create({
-      autoSyncInterval: 0,
-      httpClient: mockHttpClient,
-      onSync,
+      events: { onSyncComplete },
+      syncIntervalMinutes: false,
+      transport: mockHttpClient,
     })
 
-    expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+    expect(onSyncComplete).toHaveBeenCalledWith(expect.objectContaining({}))
   })
 
   /*
    * End-to-end cascade: zone-level writes (frost protection / holiday
    * mode) return envelopes with no device payload — we rely on
    * `@classicFetchDevices({ when: 'after' })` to trigger `api.fetch()`
-   * post-mutation, which in turn fires `onSync` via its own
-   * `@syncDevices()` wrap. This test closes that wiring end-to-end at
-   * the ClassicAPI level, since unit-level facade tests use a mock
+   * post-mutation, which in turn fires `events.onSyncComplete` via its
+   * own `@syncDevices()` wrap. This test closes that wiring end-to-end
+   * at the ClassicAPI level, since unit-level facade tests use a mock
    * adapter where the cascade can't be observed.
    */
-  it('facade.updateFrostProtection cascades to onSync via api.fetch', async () => {
-    const onSync = vi.fn<SyncCallback>()
+  it('facade.updateFrostProtection cascades to onSyncComplete via api.fetch', async () => {
+    const onSyncComplete = vi.fn<SyncCallback>()
     const api = await melCloudApi.create({
-      autoSyncInterval: 0,
-      httpClient: mockHttpClient,
-      onSync,
+      events: { onSyncComplete },
+      syncIntervalMinutes: false,
+      transport: mockHttpClient,
     })
     const manager = new ClassicFacadeManager(api, api.registry)
     const building = manager.get(defined(api.registry.buildings.getById(1)))
@@ -319,11 +304,11 @@ describe('api lifecycle', () => {
           })
         : cast({ data: buildingResponse, headers: {}, status: 200 }),
     )
-    onSync.mockClear()
+    onSyncComplete.mockClear()
 
     await building.updateFrostProtection({ max: 14, min: 6 })
 
-    expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
+    expect(onSyncComplete).toHaveBeenCalledWith(expect.objectContaining({}))
   })
 
   /*
@@ -334,8 +319,8 @@ describe('api lifecycle', () => {
   describe('resilience end-to-end', () => {
     it('recovers from a transient 503 on fetch via exponential backoff', async () => {
       const api = await melCloudApi.create({
-        autoSyncInterval: 0,
-        httpClient: mockHttpClient,
+        syncIntervalMinutes: false,
+        transport: mockHttpClient,
       })
       mockRequest.mockClear()
       mockRequest
@@ -357,8 +342,8 @@ describe('api lifecycle', () => {
 
     it('gives up after exhausting the 5xx retry budget and returns empty data', async () => {
       const api = await melCloudApi.create({
-        autoSyncInterval: 0,
-        httpClient: mockHttpClient,
+        syncIntervalMinutes: false,
+        transport: mockHttpClient,
       })
       mockRequest.mockClear()
       mockRequest
@@ -395,8 +380,8 @@ describe('api lifecycle', () => {
       )
       mockRequest.mockRejectedValue(rateLimitError)
       const api = await melCloudApi.create({
-        autoSyncInterval: 0,
-        httpClient: mockHttpClient,
+        syncIntervalMinutes: false,
+        transport: mockHttpClient,
       })
 
       // First fetch swallows the 429 (graceful degradation) and records the gate.
@@ -432,8 +417,8 @@ describe('api lifecycle', () => {
       })
       const api = await melCloudApi.create({
         abortSignal: controller.signal,
-        autoSyncInterval: 0,
-        httpClient: mockHttpClient,
+        syncIntervalMinutes: false,
+        transport: mockHttpClient,
       })
 
       // Verify the initial sync carried the caller-provided signal.
@@ -474,8 +459,6 @@ describe('api lifecycle', () => {
    * valid persisted session and refreshing an expired access token.
    */
   describe('home api session lifecycle', () => {
-    const HOUR_MS = 60 * 60 * 1000
-
     const homeContext: HomeContext = {
       buildings: [],
       country: 'FR',
@@ -500,7 +483,7 @@ describe('api lifecycle', () => {
     })
 
     it('reuses a valid persisted session without triggering OIDC', async () => {
-      const futureExpiry = new Date(Date.now() + HOUR_MS).toISOString()
+      const futureExpiry = new Date(Date.now() + MS_PER_HOUR).toISOString()
       const { settingManager } = createSettingStore({
         accessToken: 'valid',
         expiry: futureExpiry,
@@ -517,9 +500,9 @@ describe('api lifecycle', () => {
 
       const { HomeAPI: melCloudHomeApi } = await import('../../src/api/home.ts')
       const api: HomeAPI = await melCloudHomeApi.create({
-        autoSyncInterval: 0,
-        httpClient: mockHttpClient,
         settingManager,
+        syncIntervalMinutes: false,
+        transport: mockHttpClient,
       })
 
       // Only GET /context — no /connect/par, no /connect/token.
@@ -538,7 +521,7 @@ describe('api lifecycle', () => {
     })
 
     it('refreshes an expired access token and persists the new tokens', async () => {
-      const pastExpiry = new Date(Date.now() - HOUR_MS).toISOString()
+      const pastExpiry = new Date(Date.now() - MS_PER_HOUR).toISOString()
       const { setSpy, settingManager } = createSettingStore({
         accessToken: 'expired',
         expiry: pastExpiry,
@@ -547,6 +530,7 @@ describe('api lifecycle', () => {
       // Real timers so luxon sees the actually-past expiry.
       vi.useRealTimers()
       mockRequest.mockReset()
+
       /*
        * ensureSession() sees the expired token, calls refreshAccessToken
        * (via global fetch) which succeeds, stores the new tokens, and
@@ -569,9 +553,9 @@ describe('api lifecycle', () => {
 
       const { HomeAPI: melCloudHomeApi } = await import('../../src/api/home.ts')
       const api: HomeAPI = await melCloudHomeApi.create({
-        autoSyncInterval: 0,
-        httpClient: mockHttpClient,
         settingManager,
+        syncIntervalMinutes: false,
+        transport: mockHttpClient,
       })
 
       // Refresh endpoint called exactly once, then /context succeeds.
