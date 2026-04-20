@@ -675,9 +675,18 @@ describe('baseAPI shared request pipeline', () => {
       api[Symbol.dispose]()
       api = new TestAPI({
         events: {
-          onSyncComplete: (): void => {
-            throw new Error('observer rogue')
-          },
+          /*
+           * `mockImplementation` lets us register a sync-throwing body
+           * against a callback that's typed `() => Promise<void>` —
+           * neither `(): Promise<void> => { throw … }` (triggers
+           * `promise-function-async`) nor `async () => { throw … }`
+           * (triggers `require-await`) is lint-clean.
+           */
+          onSyncComplete: vi
+            .fn<NonNullable<LifecycleEvents['onSyncComplete']>>()
+            .mockImplementation(() => {
+              throw new Error('observer rogue')
+            }),
         },
         logger,
       })
