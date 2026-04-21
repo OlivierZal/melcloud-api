@@ -59,7 +59,6 @@ export type {
   ClassicListDeviceAny,
   ClassicListDeviceData,
   ClassicListDeviceDataAny,
-  ClassicLoginCredentials,
   ClassicLoginData,
   ClassicLoginPostData,
   ClassicOperationModeLogData,
@@ -77,6 +76,7 @@ export type {
   ClassicZone,
   ClassicZoneSettings,
 } from './classic-generic.ts'
+export type { LoginCredentials } from './credentials.ts'
 export type {
   HomeAtaValues,
   HomeBuilding,

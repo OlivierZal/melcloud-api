@@ -223,11 +223,6 @@ export type ClassicListDeviceData<T extends ClassicDeviceType> =
 
 export type ClassicListDeviceDataAny = ClassicListDeviceData<ClassicDeviceType>
 
-export interface ClassicLoginCredentials {
-  readonly password: string
-  readonly username: string
-}
-
 export interface ClassicLoginData {
   readonly LoginData: {
     readonly ContextKey: string

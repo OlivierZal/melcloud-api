@@ -1,7 +1,6 @@
 import { DateTime } from 'luxon'
 
 import type {
-  ClassicLoginCredentials,
   HomeAtaValues,
   HomeBuilding,
   HomeContext,
@@ -11,6 +10,7 @@ import type {
   HomeReportData,
   HomeTokenResponse,
   HomeUser,
+  LoginCredentials,
   Result,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
@@ -377,7 +377,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   protected override async doAuthenticate({
     password,
     username,
-  }: ClassicLoginCredentials): Promise<void> {
+  }: LoginCredentials): Promise<void> {
     this.#clearPersistedSession()
     try {
       const tokens = await performTokenAuth({

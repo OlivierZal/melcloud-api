@@ -1,6 +1,5 @@
 import type { HomeRegistry } from '../entities/home-registry.ts'
 import type {
-  ClassicLoginCredentials,
   HomeAtaValues,
   HomeBuilding,
   HomeEnergyData,
@@ -8,6 +7,7 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
   HomeUser,
+  LoginCredentials,
   Result,
 } from '../types/index.ts'
 import type { BaseAPIConfig } from './types.ts'
@@ -38,7 +38,7 @@ export interface HomeAPI {
    * on rejection. For best-effort restore from persisted credentials,
    * use {@link resumeSession} instead.
    */
-  readonly authenticate: (credentials: ClassicLoginCredentials) => Promise<void>
+  readonly authenticate: (credentials: LoginCredentials) => Promise<void>
   /** Cancel any pending automatic sync. */
   readonly clearSync: () => void
   /** Fetch energy consumption data for a device. */

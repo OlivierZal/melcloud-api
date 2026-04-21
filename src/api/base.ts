@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import type { ClassicLoginCredentials } from '../types/index.ts'
+import type { LoginCredentials } from '../types/index.ts'
 import { setting } from '../decorators/index.ts'
 import { AuthenticationError } from '../errors/index.ts'
 import {
@@ -174,7 +174,7 @@ export abstract class BaseAPI implements Disposable {
   }
 
   protected abstract doAuthenticate(
-    credentials: ClassicLoginCredentials,
+    credentials: LoginCredentials,
   ): Promise<void>
 
   protected abstract getAuthHeaders(): Record<string, string>
@@ -259,9 +259,7 @@ export abstract class BaseAPI implements Disposable {
    * @param credentials - Explicit username/password.
    * @throws {AuthenticationError} when credentials are rejected.
    */
-  public async authenticate(
-    credentials: ClassicLoginCredentials,
-  ): Promise<void> {
+  public async authenticate(credentials: LoginCredentials): Promise<void> {
     this.applyCredentials(credentials.username, credentials.password)
     await this.doAuthenticate(credentials)
     await this.syncRegistry()
@@ -505,7 +503,7 @@ export abstract class BaseAPI implements Disposable {
     }
   }
 
-  private resolvePersistedCredentials(): ClassicLoginCredentials | null {
+  private resolvePersistedCredentials(): LoginCredentials | null {
     const { password, username } = this
     if (!username || !password) {
       return null

@@ -42,7 +42,6 @@ export type {
   ClassicListDeviceDataAta,
   ClassicListDeviceDataAtw,
   ClassicListDeviceDataErv,
-  ClassicLoginCredentials,
   ClassicLoginData,
   ClassicLoginPostData,
   ClassicOperationModeLogData,
@@ -88,6 +87,7 @@ export type {
   HomeUser,
   Hour,
   KeyOfClassicSetDeviceDataAtaNotInList,
+  LoginCredentials,
 } from './types/index.ts'
 
 export {

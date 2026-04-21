@@ -1,9 +1,9 @@
 import type { DeviceType } from '../constants.ts'
 import type { HttpClient } from '../http/index.ts'
-import type { ClassicLoginCredentials } from '../types/index.ts'
+import type { LoginCredentials } from '../types/index.ts'
 
 /** Common configuration shared by all API clients. */
-export interface BaseAPIConfig extends Partial<ClassicLoginCredentials> {
+export interface BaseAPIConfig extends Partial<LoginCredentials> {
   /**
    * Optional shutdown signal applied to every outgoing request.
    *

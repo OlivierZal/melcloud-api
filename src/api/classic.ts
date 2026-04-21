@@ -18,7 +18,6 @@ import type {
   ClassicHolidayModeData,
   ClassicHolidayModePostData,
   ClassicListDeviceAny,
-  ClassicLoginCredentials,
   ClassicLoginData,
   ClassicLoginPostData,
   ClassicOperationModeLogData,
@@ -34,6 +33,7 @@ import type {
   ClassicTilesData,
   ClassicTilesPostData,
   Hour,
+  LoginCredentials,
 } from '../types/index.ts'
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
 import { setting, syncDevices } from '../decorators/index.ts'
@@ -574,7 +574,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   protected override async doAuthenticate({
     password,
     username,
-  }: ClassicLoginCredentials): Promise<void> {
+  }: LoginCredentials): Promise<void> {
     this.#clearPersistedSession()
     const {
       data: { LoginData: loginData },
