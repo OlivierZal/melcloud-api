@@ -63,7 +63,6 @@ export {
   type ClassicListDeviceDataAta as ListDeviceDataAta,
   type ClassicListDeviceDataAtw as ListDeviceDataAtw,
   type ClassicListDeviceDataErv as ListDeviceDataErv,
-  type LoginCredentials,
   type ClassicLoginData as LoginData,
   type ClassicLoginPostData as LoginPostData,
   type ClassicModel as Model,

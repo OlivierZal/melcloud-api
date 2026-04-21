@@ -20,7 +20,6 @@ export {
   type HomeErrorLogEntry as ErrorLogEntry,
   type HomeFanSpeed as FanSpeed,
   type HomeHorizontal as Horizontal,
-  type LoginCredentials,
   type HomeOperationMode as OperationMode,
   type HomeReportData as ReportData,
   type HomeReportDataset as ReportDataset,
