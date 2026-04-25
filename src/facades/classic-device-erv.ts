@@ -12,11 +12,11 @@ const isRelevantVentilationMode = (label?: string): boolean =>
 export class ClassicDeviceErvFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Erv
 > {
-  public readonly flags = classicErvFlags
+  public readonly flags: typeof classicErvFlags = classicErvFlags
 
-  public readonly type = ClassicDeviceType.Erv
+  public readonly type: typeof ClassicDeviceType.Erv = ClassicDeviceType.Erv
 
-  protected readonly temperaturesLegend = [
+  protected readonly temperaturesLegend: readonly (string | undefined)[] = [
     undefined,
     'RoomTemperature',
     undefined,

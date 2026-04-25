@@ -159,9 +159,7 @@ const parseBody = async (response: Response): Promise<unknown> => {
 const combineSignals = (
   signals: (AbortSignal | undefined)[],
 ): AbortSignal | undefined => {
-  const defined = signals.filter(
-    (signal): signal is AbortSignal => signal !== undefined,
-  )
+  const defined = signals.filter((signal) => signal !== undefined)
   if (defined.length === 0) {
     return undefined
   }

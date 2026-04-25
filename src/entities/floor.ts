@@ -1,6 +1,5 @@
 import type { ClassicFloorData } from '../types/index.ts'
 import { BaseModel } from './base.ts'
-import { syncModel } from './symbols.ts'
 
 /** ClassicFloor model representing a level within a building. */
 export class ClassicFloor extends BaseModel {
@@ -16,12 +15,21 @@ export class ClassicFloor extends BaseModel {
     super({ id, name })
     this.buildingId = buildingId
   }
+}
 
-  public [syncModel]({
-    BuildingId: buildingId,
-    Name: name,
-  }: ClassicFloorData): void {
-    this.name = name
-    this.buildingId = buildingId
-  }
+/**
+ * Apply a sync update from upstream floor data onto an existing model.
+ *
+ * Module-internal: not re-exported from `entities/index.ts`.
+ * @param model - The model to mutate in-place.
+ * @param data - The fresh floor data from the upstream API.
+ * @param data.BuildingId - Owning building identifier.
+ * @param data.Name - Updated floor display name.
+ */
+export const syncFloor = (
+  model: ClassicFloor,
+  { BuildingId: buildingId, Name: name }: ClassicFloorData,
+): void => {
+  model.name = name
+  model.buildingId = buildingId
 }

@@ -7,11 +7,11 @@ import { classicAtaFlags } from './classic-flags.ts'
 export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Ata
 > {
-  public readonly flags = classicAtaFlags
+  public readonly flags: typeof classicAtaFlags = classicAtaFlags
 
-  public readonly type = ClassicDeviceType.Ata
+  public readonly type: typeof ClassicDeviceType.Ata = ClassicDeviceType.Ata
 
-  protected readonly temperaturesLegend = [
+  protected readonly temperaturesLegend: readonly string[] = [
     'SetTemperature',
     'RoomTemperature',
     'OutdoorTemperature',

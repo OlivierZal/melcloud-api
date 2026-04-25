@@ -81,9 +81,9 @@ const mergeSeries = (
 export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Atw
 > {
-  public readonly flags = classicAtwFlags
+  public readonly flags: typeof classicAtwFlags = classicAtwFlags
 
-  public readonly type = ClassicDeviceType.Atw
+  public readonly type: typeof ClassicDeviceType.Atw = ClassicDeviceType.Atw
 
   public get hotWater(): ClassicHotWaterState {
     const { data } = this
@@ -102,7 +102,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     return this.getZoneState('Zone1')
   }
 
-  protected override readonly internalTemperaturesLegend = [
+  protected override readonly internalTemperaturesLegend: readonly string[] = [
     'FlowTemperature',
     'FlowTemperatureBoiler',
     'ReturnTemperature',
@@ -112,7 +112,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     'MixingTankWaterTemperature',
   ]
 
-  protected readonly temperaturesLegend = [
+  protected readonly temperaturesLegend: readonly string[] = [
     'SetTemperatureZone1',
     'RoomTemperatureZone1',
     'OutdoorTemperature',

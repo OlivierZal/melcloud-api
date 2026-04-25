@@ -198,7 +198,7 @@ export const createLogger = (): Logger => ({
 export const mockResponse = (
   data: unknown,
   headers: Record<string, string | string[]> = {},
-  status = HTTP_OK,
+  status: number = HTTP_OK,
 ): {
   data: unknown
   headers: Record<string, string | string[]>
@@ -263,7 +263,7 @@ const serializeBody = (body: unknown): string => {
 export const mockFetchResponse = (
   body: unknown,
   headers: Record<string, string | string[]> = {},
-  status = HTTP_OK,
+  status: number = HTTP_OK,
 ): Response => {
   const responseHeaders = buildMockHeaders(headers)
   if (

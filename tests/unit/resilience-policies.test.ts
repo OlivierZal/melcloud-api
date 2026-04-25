@@ -96,7 +96,7 @@ describe(RateLimitPolicy, () => {
 
 describe(AuthRetryPolicy, () => {
   it('replays the attempt after a 401 when reauthenticate returns true', async () => {
-    const guard = new RetryGuard(1000)
+    using guard = new RetryGuard(1000)
     const reauthenticate = vi
       .fn<() => Promise<boolean>>()
       .mockResolvedValue(true)
@@ -109,12 +109,10 @@ describe(AuthRetryPolicy, () => {
     await expect(policy.run(attempt)).resolves.toBe('retried')
     expect(attempt).toHaveBeenCalledTimes(2)
     expect(reauthenticate).toHaveBeenCalledTimes(1)
-
-    guard[Symbol.dispose]()
   })
 
   it('rethrows the 401 when the guard refuses a retry', async () => {
-    const guard = new RetryGuard(1000)
+    using guard = new RetryGuard(1000)
 
     // consume the single token
     guard.tryConsume()
@@ -128,12 +126,10 @@ describe(AuthRetryPolicy, () => {
       }),
     ).rejects.toThrow('Unauthorized')
     expect(reauthenticate).not.toHaveBeenCalled()
-
-    guard[Symbol.dispose]()
   })
 
   it('rethrows the 401 when reauthenticate fails', async () => {
-    const guard = new RetryGuard(1000)
+    using guard = new RetryGuard(1000)
     const reauthenticate = vi
       .fn<() => Promise<boolean>>()
       .mockResolvedValue(false)
@@ -146,12 +142,10 @@ describe(AuthRetryPolicy, () => {
       }),
     ).rejects.toThrow('Unauthorized')
     expect(reauthenticate).toHaveBeenCalledTimes(1)
-
-    guard[Symbol.dispose]()
   })
 
   it('passes non-401 errors through untouched', async () => {
-    const guard = new RetryGuard(1000)
+    using guard = new RetryGuard(1000)
     const reauthenticate = vi.fn<() => Promise<boolean>>()
     const policy = new AuthRetryPolicy(guard, reauthenticate)
 
@@ -162,8 +156,6 @@ describe(AuthRetryPolicy, () => {
       }),
     ).rejects.toThrow('Status 500')
     expect(reauthenticate).not.toHaveBeenCalled()
-
-    guard[Symbol.dispose]()
   })
 })
 

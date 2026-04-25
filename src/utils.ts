@@ -74,7 +74,11 @@ export const isKeyOf =
     Object.hasOwn(record, key)
 
 /** Maps ATA set-command keys to their corresponding list-data keys. */
-export const fromSetToListAta = {
+export const fromSetToListAta: {
+  readonly SetFanSpeed: 'FanSpeed'
+  readonly VaneHorizontal: 'VaneHorizontalDirection'
+  readonly VaneVertical: 'VaneVerticalDirection'
+} = {
   SetFanSpeed: 'FanSpeed',
   VaneHorizontal: 'VaneHorizontalDirection',
   VaneVertical: 'VaneVerticalDirection',
@@ -88,10 +92,16 @@ export const fromSetToListAta = {
  * @param value - The key to check.
  * @returns Whether the key is a set-command key not present in list data.
  */
-export const isSetDeviceDataAtaNotInList = isKeyOf(fromSetToListAta)
+export const isSetDeviceDataAtaNotInList: (
+  key: PropertyKey,
+) => key is KeyOfClassicSetDeviceDataAtaNotInList = isKeyOf(fromSetToListAta)
 
 /** Maps ATA list-data keys to their corresponding set-command keys. */
-export const fromListToSetAta = {
+export const fromListToSetAta: {
+  readonly FanSpeed: 'SetFanSpeed'
+  readonly VaneHorizontalDirection: 'VaneHorizontal'
+  readonly VaneVerticalDirection: 'VaneVertical'
+} = {
   FanSpeed: 'SetFanSpeed',
   VaneHorizontalDirection: 'VaneHorizontal',
   VaneVerticalDirection: 'VaneVertical',
@@ -105,7 +115,9 @@ export const fromListToSetAta = {
  * @param value - The key to check.
  * @returns Whether the key is a list-data key with a different set-command key.
  */
-export const isSetDeviceDataAtaInList = isKeyOf(fromListToSetAta)
+export const isSetDeviceDataAtaInList: (
+  key: PropertyKey,
+) => key is keyof ClassicSetDeviceDataAtaInList = isKeyOf(fromListToSetAta)
 
 // Strategy map: transform raw API label formats into human-readable strings
 // based on report granularity (day of week, month name, year-month, etc.)
@@ -177,10 +189,16 @@ const getChartLineSeries = ({
   legend,
 }: {
   data: readonly (readonly (number | null)[])[]
-  legend: (string | undefined)[]
+  legend: readonly (string | undefined)[]
 }): { data: (number | null)[]; name: string }[] =>
   data
-    .map((values, index) => ({ data: values, name: legend[index] }))
+    .map((values, index) => ({
+      // Copy so the returned mutable `data` does not alias the readonly
+      // source; the public `ReportChartLineOptions.series[].data` is
+      // typed as a mutable array and consumers may mutate in place.
+      data: [...values],
+      name: legend[index],
+    }))
     .filter(
       (item): item is { data: (number | null)[]; name: string } =>
         item.name !== undefined,
@@ -206,7 +224,7 @@ export const getChartLineOptions = (
     LabelType: labelType,
     ToDate: to,
   }: ClassicReportData,
-  legend: (string | undefined)[],
+  legend: readonly (string | undefined)[],
   unit: string,
 ): ReportChartLineOptions => ({
   from,
