@@ -458,20 +458,23 @@ export abstract class BaseAPI implements Disposable {
     if (context.method === 'GET') {
       policies.push(
         new TransientRetryPolicy({
-          onRetry: (
-            retryAttempt: number,
-            error: unknown,
-            delayMs: number,
-          ): void => {
-            this.logger.log(
-              `Transient server error on ${context.url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,
-            )
-            this.events.emitRetry({
-              ...context,
-              attempt: retryAttempt,
-              delayMs,
-              error,
-            })
+          signal: this.abortSignal,
+          telemetry: {
+            onRetry: (
+              retryAttempt: number,
+              error: unknown,
+              delayMs: number,
+            ): void => {
+              this.logger.log(
+                `Transient server error on ${context.url}: retry ${String(retryAttempt)} in ${String(delayMs)} ms`,
+              )
+              this.events.emitRetry({
+                ...context,
+                attempt: retryAttempt,
+                delayMs,
+                error,
+              })
+            },
           },
         }),
       )

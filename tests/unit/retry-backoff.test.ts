@@ -227,6 +227,74 @@ describe(withRetryBackoff, () => {
     }
   })
 
+  it('aborts the backoff sleep when the signal fires', async () => {
+    const controller = new AbortController()
+    const op = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValue('ok')
+
+    const promise = withRetryBackoff(op, {
+      initialDelayMs: 60_000,
+      isRetryable: ALWAYS_RETRYABLE,
+      jitterRatio: 0,
+      maxDelayMs: 60_000,
+      maxRetries: 3,
+      signal: controller.signal,
+    })
+    // Let the first attempt reject and the loop reach `await sleep(...)`.
+    await Promise.resolve()
+    controller.abort(new Error('cancelled'))
+
+    await expect(promise).rejects.toThrow('cancelled')
+    // Only the first attempt fired — the second never started.
+    expect(op).toHaveBeenCalledTimes(1)
+  })
+
+  it('wraps a non-Error abort reason into an Error rejection', async () => {
+    const controller = new AbortController()
+    const op = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValue('ok')
+
+    const promise = withRetryBackoff(op, {
+      initialDelayMs: 60_000,
+      isRetryable: ALWAYS_RETRYABLE,
+      jitterRatio: 0,
+      maxDelayMs: 60_000,
+      maxRetries: 3,
+      signal: controller.signal,
+    })
+    await Promise.resolve()
+    controller.abort('cancelled-as-string')
+
+    await expect(promise).rejects.toThrow('cancelled-as-string')
+    expect(op).toHaveBeenCalledTimes(1)
+  })
+
+  it('rejects immediately when the signal is already aborted on entry', async () => {
+    const controller = new AbortController()
+    controller.abort(new Error('pre-cancelled'))
+    const op = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValue('ok')
+
+    await expect(
+      withRetryBackoff(op, {
+        initialDelayMs: 60_000,
+        isRetryable: ALWAYS_RETRYABLE,
+        jitterRatio: 0,
+        maxDelayMs: 60_000,
+        maxRetries: 3,
+        signal: controller.signal,
+      }),
+    ).rejects.toThrow('pre-cancelled')
+    // First attempt ran, sleep refused to start, no second attempt.
+    expect(op).toHaveBeenCalledTimes(1)
+  })
+
   it('passes the error and attempt number to onRetry', async () => {
     const onRetry =
       vi.fn<(attempt: number, error: unknown, delayMs: number) => void>()

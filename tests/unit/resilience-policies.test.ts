@@ -172,7 +172,7 @@ describe(TransientRetryPolicy, () => {
     vi.useFakeTimers()
     const onRetry =
       vi.fn<(retryAttempt: number, error: unknown, delayMs: number) => void>()
-    const policy = new TransientRetryPolicy({ onRetry })
+    const policy = new TransientRetryPolicy({ telemetry: { onRetry } })
     const attempt = vi
       .fn<() => Promise<string>>()
       .mockRejectedValueOnce(createServerError(503, '/x'))
@@ -190,7 +190,7 @@ describe(TransientRetryPolicy, () => {
   it('does not retry on non-transient 500', async () => {
     const onRetry =
       vi.fn<(retryAttempt: number, error: unknown, delayMs: number) => void>()
-    const policy = new TransientRetryPolicy({ onRetry })
+    const policy = new TransientRetryPolicy({ telemetry: { onRetry } })
     const attempt = vi
       .fn<() => Promise<string>>()
       .mockRejectedValue(createServerError(500, '/x'))
@@ -198,5 +198,27 @@ describe(TransientRetryPolicy, () => {
     await expect(policy.run(attempt)).rejects.toThrow('Status 500')
     expect(attempt).toHaveBeenCalledTimes(1)
     expect(onRetry).not.toHaveBeenCalled()
+  })
+
+  it('forwards an abort signal so a cancel during backoff bails out', async () => {
+    const onRetry =
+      vi.fn<(retryAttempt: number, error: unknown, delayMs: number) => void>()
+    const controller = new AbortController()
+    const policy = new TransientRetryPolicy({
+      signal: controller.signal,
+      telemetry: { onRetry },
+    })
+    const attempt = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValue(createServerError(503, '/x'))
+
+    const promise = policy.run(attempt)
+    // Wait for the first failure to land in the backoff sleep.
+    await Promise.resolve()
+    controller.abort(new Error('cancelled'))
+
+    await expect(promise).rejects.toThrow('cancelled')
+    expect(attempt).toHaveBeenCalledTimes(1)
+    expect(onRetry).toHaveBeenCalledTimes(1)
   })
 })
