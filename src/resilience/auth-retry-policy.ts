@@ -1,4 +1,4 @@
-import { HTTP_STATUS_UNAUTHORIZED, isHttpError } from '../http/index.ts'
+import { HttpStatus, isHttpError } from '../http/index.ts'
 import type { ResiliencePolicy } from './policy.ts'
 import type { RetryGuard } from './retry-guard.ts'
 
@@ -47,7 +47,7 @@ export class AuthRetryPolicy implements ResiliencePolicy {
   #shouldRetry(error: unknown): boolean {
     return (
       isHttpError(error) &&
-      error.response.status === HTTP_STATUS_UNAUTHORIZED &&
+      error.response.status === HttpStatus.Unauthorized &&
       this.#guard.tryConsume()
     )
   }

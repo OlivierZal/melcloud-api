@@ -1,19 +1,13 @@
-import {
-  type HttpError,
-  HTTP_STATUS_BAD_GATEWAY,
-  HTTP_STATUS_GATEWAY_TIMEOUT,
-  HTTP_STATUS_SERVICE_UNAVAILABLE,
-  isHttpError,
-} from '../http/index.ts'
+import { type HttpError, HttpStatus, isHttpError } from '../http/index.ts'
 
 // HTTP 5xx status codes considered transient (server-side glitches that
 // retrying a short moment later can plausibly recover from). 500 is
 // intentionally excluded: it usually indicates an application bug on the
 // server, not a recoverable condition.
 const TRANSIENT_STATUSES: ReadonlySet<number> = new Set([
-  HTTP_STATUS_BAD_GATEWAY,
-  HTTP_STATUS_GATEWAY_TIMEOUT,
-  HTTP_STATUS_SERVICE_UNAVAILABLE,
+  HttpStatus.BadGateway,
+  HttpStatus.GatewayTimeout,
+  HttpStatus.ServiceUnavailable,
 ])
 
 // Walk the `Error.cause` chain to find a nested HttpError. Guards against
@@ -77,16 +71,49 @@ export interface RetryBackoffOptions {
   readonly maxDelayMs: number
   /** Maximum retry attempts after the initial try (0 disables retries). */
   readonly maxRetries: number
+  /**
+   * Optional abort signal. When fired during a backoff sleep, the
+   * pending wait rejects with `signal.reason` and the retry loop exits
+   * immediately — so a cancelled caller doesn't pay for an in-flight
+   * delay before the next attempt would have started.
+   */
+  readonly signal?: AbortSignal
   /** Predicate deciding whether a thrown error is worth retrying. */
   readonly isRetryable: (error: unknown) => boolean
   /** Optional hook invoked before the next attempt. */
   readonly onRetry?: (attempt: number, error: unknown, delayMs: number) => void
 }
 
-const sleep = async (ms: number): Promise<void> =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, ms)
+// `AbortSignal.reason` is typed `any` and may be a non-Error value
+// (the spec lets callers `controller.abort('reason-string')`). Normalise
+// to an Error so Promise rejections always satisfy
+// `prefer-promise-reject-errors` and downstream `instanceof Error` checks.
+const toAbortReason = (signal: AbortSignal): Error =>
+  signal.reason instanceof Error ?
+    signal.reason
+  : new Error(String(signal.reason))
+
+// Wrapper over `setTimeout` that surfaces the caller's `signal` as a
+// rejection mid-wait. We use the global `setTimeout` (rather than
+// `node:timers/promises.setTimeout`, which already accepts `{ signal }`)
+// so `vi.useFakeTimers()` keeps mocking the wait — the promises-based
+// timer isn't part of the default fake-timers surface in vitest v4.
+const sleep = async (ms: number, signal?: AbortSignal): Promise<void> => {
+  if (signal?.aborted === true) {
+    throw toAbortReason(signal)
+  }
+  return new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(resolve, ms)
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer)
+        reject(toAbortReason(signal))
+      },
+      { once: true },
+    )
   })
+}
 
 // Exponential backoff with symmetric uniform jitter around the base delay.
 // The jittered delay is sampled uniformly in
@@ -111,7 +138,8 @@ const computeDelay = (
  *
  * Uses exponential backoff with bounded jitter between attempts. Stops
  * and rethrows once `maxRetries` is exhausted or the error is judged
- * non-retryable.
+ * non-retryable. If `options.signal` aborts during a backoff sleep, the
+ * loop exits with the signal's reason instead of waiting out the delay.
  * @param operation - The async function to attempt; will be invoked up
  *   to `maxRetries + 1` times.
  * @param options - Backoff parameters and retry predicate.
@@ -135,7 +163,7 @@ export const withRetryBackoff = async <T>(
       }
       const delayMs = computeDelay(number, options)
       options.onRetry?.(number + 1, error, delayMs)
-      await sleep(delayMs)
+      await sleep(delayMs, options.signal)
       return attempt(number + 1)
     }
   }

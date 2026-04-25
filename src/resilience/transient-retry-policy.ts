@@ -25,10 +25,13 @@ export interface RetryTelemetry {
  * other error propagates untouched on the first failure — no retry.
  */
 export class TransientRetryPolicy implements ResiliencePolicy {
+  readonly #signal: AbortSignal | undefined
+
   readonly #telemetry: RetryTelemetry
 
-  public constructor(telemetry: RetryTelemetry) {
+  public constructor(telemetry: RetryTelemetry, signal?: AbortSignal) {
     this.#telemetry = telemetry
+    this.#signal = signal
   }
 
   public async run<T>(attempt: () => Promise<T>): Promise<T> {
@@ -36,6 +39,7 @@ export class TransientRetryPolicy implements ResiliencePolicy {
       ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
       isRetryable: isTransientServerError,
       onRetry: this.#telemetry.onRetry,
+      signal: this.#signal,
     })
   }
 }

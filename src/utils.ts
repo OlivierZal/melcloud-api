@@ -74,14 +74,14 @@ export const isKeyOf =
     Object.hasOwn(record, key)
 
 /** Maps ATA set-command keys to their corresponding list-data keys. */
-export const fromSetToListAta: Record<
-  KeyOfClassicSetDeviceDataAtaNotInList,
-  keyof ClassicSetDeviceDataAtaInList
-> = {
+export const fromSetToListAta = {
   SetFanSpeed: 'FanSpeed',
   VaneHorizontal: 'VaneHorizontalDirection',
   VaneVertical: 'VaneVerticalDirection',
-}
+} as const satisfies Record<
+  KeyOfClassicSetDeviceDataAtaNotInList,
+  keyof ClassicSetDeviceDataAtaInList
+>
 
 /**
  * Type guard for ATA set-command keys that differ from list-data keys.
@@ -91,14 +91,14 @@ export const fromSetToListAta: Record<
 export const isSetDeviceDataAtaNotInList = isKeyOf(fromSetToListAta)
 
 /** Maps ATA list-data keys to their corresponding set-command keys. */
-export const fromListToSetAta: Record<
-  keyof ClassicSetDeviceDataAtaInList,
-  KeyOfClassicSetDeviceDataAtaNotInList
-> = {
+export const fromListToSetAta = {
   FanSpeed: 'SetFanSpeed',
   VaneHorizontalDirection: 'VaneHorizontal',
   VaneVerticalDirection: 'VaneVertical',
-}
+} as const satisfies Record<
+  keyof ClassicSetDeviceDataAtaInList,
+  KeyOfClassicSetDeviceDataAtaNotInList
+>
 
 /**
  * Type guard for ATA list-data keys that map to different set-command keys.

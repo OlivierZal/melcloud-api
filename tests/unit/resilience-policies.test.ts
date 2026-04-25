@@ -199,4 +199,23 @@ describe(TransientRetryPolicy, () => {
     expect(attempt).toHaveBeenCalledTimes(1)
     expect(onRetry).not.toHaveBeenCalled()
   })
+
+  it('forwards an abort signal so a cancel during backoff bails out', async () => {
+    const onRetry =
+      vi.fn<(retryAttempt: number, error: unknown, delayMs: number) => void>()
+    const controller = new AbortController()
+    const policy = new TransientRetryPolicy({ onRetry }, controller.signal)
+    const attempt = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValue(createServerError(503, '/x'))
+
+    const promise = policy.run(attempt)
+    // Wait for the first failure to land in the backoff sleep.
+    await Promise.resolve()
+    controller.abort(new Error('cancelled'))
+
+    await expect(promise).rejects.toThrow('cancelled')
+    expect(attempt).toHaveBeenCalledTimes(1)
+    expect(onRetry).toHaveBeenCalledTimes(1)
+  })
 })
