@@ -18,6 +18,3 @@ export const HttpStatus = {
   /** HTTP 401 — authentication required or rejected. Triggers session re-auth. */
   Unauthorized: 401,
 } as const
-
-/** Union of HTTP status codes the SDK explicitly handles. */
-export type HttpStatusCode = (typeof HttpStatus)[keyof typeof HttpStatus]
