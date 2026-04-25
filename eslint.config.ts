@@ -583,6 +583,16 @@ const config = defineConfig([
     },
   },
   {
+    // Bitfield enumeration: `EffectiveFlags` hex values are the file's
+    // entire purpose. `no-magic-numbers` would flag every entry, and
+    // `ignoreNumericLiteralTypes` does not cover literal types nested
+    // inside object type annotations (typescript-eslint rule limitation).
+    files: ['src/facades/classic-flags.ts'],
+    rules: {
+      '@typescript-eslint/no-magic-numbers': 'off',
+    },
+  },
+  {
     extends: [vitest.configs.all, vitest.configs.recommended],
     files: ['tests/**/*.test.ts', 'tests/fixtures.ts'],
     rules: {
