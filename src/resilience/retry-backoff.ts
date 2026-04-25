@@ -1,19 +1,13 @@
-import {
-  type HttpError,
-  HTTP_STATUS_BAD_GATEWAY,
-  HTTP_STATUS_GATEWAY_TIMEOUT,
-  HTTP_STATUS_SERVICE_UNAVAILABLE,
-  isHttpError,
-} from '../http/index.ts'
+import { type HttpError, HttpStatus, isHttpError } from '../http/index.ts'
 
 // HTTP 5xx status codes considered transient (server-side glitches that
 // retrying a short moment later can plausibly recover from). 500 is
 // intentionally excluded: it usually indicates an application bug on the
 // server, not a recoverable condition.
 const TRANSIENT_STATUSES: ReadonlySet<number> = new Set([
-  HTTP_STATUS_BAD_GATEWAY,
-  HTTP_STATUS_GATEWAY_TIMEOUT,
-  HTTP_STATUS_SERVICE_UNAVAILABLE,
+  HttpStatus.BadGateway,
+  HttpStatus.GatewayTimeout,
+  HttpStatus.ServiceUnavailable,
 ])
 
 // Walk the `Error.cause` chain to find a nested HttpError. Guards against

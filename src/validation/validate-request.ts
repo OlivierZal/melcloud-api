@@ -2,11 +2,7 @@ import type { z } from 'zod'
 
 import type { Logger } from '../api/index.ts'
 import { AuthenticationError, RateLimitError } from '../errors/index.ts'
-import {
-  type HttpError,
-  HTTP_STATUS_UNAUTHORIZED,
-  isHttpError,
-} from '../http/index.ts'
+import { type HttpError, HttpStatus, isHttpError } from '../http/index.ts'
 import {
   type HomeError,
   type Result,
@@ -21,7 +17,7 @@ export interface ValidateHost {
 }
 
 const classifyHttpError = (error: HttpError): HomeError =>
-  error.response.status === HTTP_STATUS_UNAUTHORIZED ?
+  error.response.status === HttpStatus.Unauthorized ?
     { cause: error, kind: 'unauthorized' }
   : { cause: error, kind: 'server', status: error.response.status }
 

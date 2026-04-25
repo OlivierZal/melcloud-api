@@ -6,8 +6,8 @@ import { AuthenticationError } from '../errors/index.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
-  HTTP_STATUS_UNAUTHORIZED,
   HttpClient,
+  HttpStatus,
   isHttpError,
 } from '../http/index.ts'
 import {
@@ -45,7 +45,7 @@ import { SyncManager } from './sync-manager.ts'
  * @returns `AuthenticationError` if a 401 HttpError; `error` otherwise.
  */
 export const normalizeUnauthorized = (error: unknown): unknown =>
-  isHttpError(error) && error.response.status === HTTP_STATUS_UNAUTHORIZED ?
+  isHttpError(error) && error.response.status === HttpStatus.Unauthorized ?
     new AuthenticationError('MELCloud rejected the credentials', {
       cause: error,
     })
