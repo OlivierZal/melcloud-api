@@ -40,7 +40,7 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
     return this.getZoneState('Zone2')
   }
 
-  protected override readonly internalTemperaturesLegend = [
+  protected override readonly internalTemperaturesLegend: readonly string[] = [
     'FlowTemperature',
     'FlowTemperatureBoiler',
     'FlowTemperatureZone1',
@@ -54,7 +54,7 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
     'MixingTankWaterTemperature',
   ]
 
-  protected override readonly temperaturesLegend = [
+  protected override readonly temperaturesLegend: readonly string[] = [
     'SetTemperatureZone1',
     'RoomTemperatureZone1',
     'SetTemperatureZone2',

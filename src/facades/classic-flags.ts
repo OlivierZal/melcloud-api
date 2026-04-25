@@ -13,21 +13,22 @@ import type { ClassicUpdateDeviceData } from '../types/index.ts'
 // `ClassicUpdateDeviceData<T>`: adding a field without a flag (or a flag
 // without a field) now fails to type-check.
 
+type ClassicFlagMap<T extends ClassicDeviceType> = Readonly<
+  Record<keyof ClassicUpdateDeviceData<T>, number>
+>
+
 /** `EffectiveFlags` bitfield values for ATA update payloads — one bit per updatable field. */
-export const classicAtaFlags = {
+export const classicAtaFlags: ClassicFlagMap<typeof ClassicDeviceType.Ata> = {
   OperationMode: 0x2,
   Power: 0x1,
   SetFanSpeed: 0x8,
   SetTemperature: 0x4,
   VaneHorizontal: 0x1_00,
   VaneVertical: 0x10,
-} as const satisfies Record<
-  keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Ata>,
-  number
->
+}
 
 /** `EffectiveFlags` bitfield values for ATW update payloads — one bit per updatable field. */
-export const classicAtwFlags = {
+export const classicAtwFlags: ClassicFlagMap<typeof ClassicDeviceType.Atw> = {
   ForcedHotWaterMode: 0x1_00_00,
   OperationModeZone1: 0x8,
   OperationModeZone2: 0x10,
@@ -39,17 +40,11 @@ export const classicAtwFlags = {
   SetTankWaterTemperature: 0x1_00_00_00_00_00_20,
   SetTemperatureZone1: 0x2_00_00_00_80,
   SetTemperatureZone2: 0x8_00_00_02_00,
-} as const satisfies Record<
-  keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Atw>,
-  number
->
+}
 
 /** `EffectiveFlags` bitfield values for ERV update payloads — one bit per updatable field. */
-export const classicErvFlags = {
+export const classicErvFlags: ClassicFlagMap<typeof ClassicDeviceType.Erv> = {
   Power: 0x1,
   SetFanSpeed: 0x8,
   VentilationMode: 0x4,
-} as const satisfies Record<
-  keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Erv>,
-  number
->
+}

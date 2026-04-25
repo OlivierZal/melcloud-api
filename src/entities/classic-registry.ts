@@ -17,15 +17,18 @@ import {
   toClassicFloorId,
 } from '../types/index.ts'
 import type { ClassicDeviceAny } from './classic-types.ts'
-import { ClassicArea } from './area.ts'
-import { ClassicBuilding } from './building.ts'
-import { ClassicDevice } from './classic-device.ts'
-import { ClassicFloor } from './floor.ts'
-import { syncModel } from './symbols.ts'
+import { ClassicArea, syncArea } from './area.ts'
+import { ClassicBuilding, syncBuilding } from './building.ts'
+import { ClassicDevice, syncDevice } from './classic-device.ts'
+import { ClassicFloor, syncFloor } from './floor.ts'
 
 // Upsert + prune: update existing models in-place, create new ones,
 // and remove stale entries. Preserves object identity across syncs
 // so that facade references remain valid.
+//
+// `NoInfer<TModel>` on the callback positions pins inference to the
+// `map` argument: a typo'd `create` returning the wrong subtype is
+// rejected at the call site instead of silently widening `TModel`.
 const syncMap = <TModel, TData>(
   map: Map<number, TModel>,
   items: readonly TData[],
@@ -34,9 +37,9 @@ const syncMap = <TModel, TData>(
     getId,
     update,
   }: {
-    create: (item: TData) => TModel
+    create: (item: TData) => NoInfer<TModel>
     getId: (item: TData) => number
-    update: (model: TModel, item: TData) => void
+    update: (model: NoInfer<TModel>, item: TData) => void
   },
 ): TModel[] => {
   const activeIds = new Set<number>()
@@ -65,7 +68,7 @@ const syncDeviceModel = (
   device: ClassicListDeviceAny,
 ): void => {
   if (model.type === device.Type) {
-    model[syncModel](device)
+    syncDevice(model, device)
   }
 }
 
@@ -273,7 +276,7 @@ export class ClassicRegistry {
       create: (area) => new ClassicArea(area),
       getId: (area) => area.ID,
       update: (model, area) => {
-        model[syncModel](area)
+        syncArea(model, area)
       },
     })
     this.#areasByBuildingId = Map.groupBy(
@@ -294,7 +297,7 @@ export class ClassicRegistry {
       create: (building) => new ClassicBuilding(building),
       getId: (building) => building.ID,
       update: (model, building) => {
-        model[syncModel](building)
+        syncBuilding(model, building)
       },
     })
   }
@@ -330,7 +333,7 @@ export class ClassicRegistry {
       create: (floor) => new ClassicFloor(floor),
       getId: (floor) => floor.ID,
       update: (model, floor) => {
-        model[syncModel](floor)
+        syncFloor(model, floor)
       },
     })
     this.#floorsByBuildingId = Map.groupBy(

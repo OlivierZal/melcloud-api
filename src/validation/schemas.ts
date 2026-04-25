@@ -28,9 +28,10 @@ export const ClassicLoginDataSchema: z.ZodType<ClassicLoginData> =
   })
 
 /** Home OIDC /connect/par response. */
-export const HomeParResponseSchema = z.looseObject({
-  request_uri: z.string().min(1),
-})
+export const HomeParResponseSchema: z.ZodType<{ request_uri: string }> =
+  z.looseObject({
+    request_uri: z.string().min(1),
+  })
 
 /** Home OIDC /connect/token response. */
 export const HomeTokenResponseSchema: z.ZodType<HomeTokenResponse> =
@@ -200,7 +201,7 @@ const ClassicBuildingStructureSchema = z.looseObject({
  * registry actually reads are validated (`ID`, `Name`, `Structure.{Areas,
  * Devices, Floors}`). Callers still bind the compile-time type at the use site.
  */
-export const ClassicBuildingListSchema = z.array(
+export const ClassicBuildingListSchema: z.ZodType<unknown[]> = z.array(
   z.looseObject({
     ID: z.number(),
     Name: z.string(),

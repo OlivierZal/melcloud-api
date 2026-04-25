@@ -16,33 +16,29 @@ describe(SyncManager, () => {
   it('does not schedule when constructed with interval=0', () => {
     const syncFunction = vi.fn<() => Promise<void>>().mockResolvedValue()
     const logger = createLogger()
-    const manager = new SyncManager(syncFunction, logger, 0)
+    using manager = new SyncManager(syncFunction, logger, 0)
 
     manager.planNext()
     vi.advanceTimersByTime(10 * MS_PER_MINUTE)
 
     expect(syncFunction).not.toHaveBeenCalled()
-
-    manager[Symbol.dispose]()
   })
 
   it('does not schedule when constructed with `false` intervalMinutes', () => {
     const syncFunction = vi.fn<() => Promise<void>>().mockResolvedValue()
     const logger = createLogger()
-    const manager = new SyncManager(syncFunction, logger, false)
+    using manager = new SyncManager(syncFunction, logger, false)
 
     manager.planNext()
     vi.advanceTimersByTime(10 * MS_PER_MINUTE)
 
     expect(syncFunction).not.toHaveBeenCalled()
-
-    manager[Symbol.dispose]()
   })
 
   it('schedules syncFunction after interval ms and invokes it', async () => {
     const syncFunction = vi.fn<() => Promise<void>>().mockResolvedValue()
     const logger = createLogger()
-    const manager = new SyncManager(syncFunction, logger, 5)
+    using manager = new SyncManager(syncFunction, logger, 5)
 
     manager.planNext()
 
@@ -52,8 +48,6 @@ describe(SyncManager, () => {
 
     expect(syncFunction).toHaveBeenCalledTimes(1)
     expect(logger.error).not.toHaveBeenCalled()
-
-    manager[Symbol.dispose]()
   })
 
   it('catches and logs a rejection from syncFunction', async () => {
@@ -62,48 +56,42 @@ describe(SyncManager, () => {
       .fn<() => Promise<void>>()
       .mockRejectedValueOnce(error)
     const logger = createLogger()
-    const manager = new SyncManager(syncFunction, logger, 1)
+    using manager = new SyncManager(syncFunction, logger, 1)
 
     manager.planNext()
     await vi.advanceTimersByTimeAsync(MS_PER_MINUTE)
 
     expect(syncFunction).toHaveBeenCalledTimes(1)
     expect(logger.error).toHaveBeenCalledWith('Auto-sync failed:', error)
-
-    manager[Symbol.dispose]()
   })
 
   it('clear() cancels a pending timeout', () => {
     const syncFunction = vi.fn<() => Promise<void>>().mockResolvedValue()
     const logger = createLogger()
-    const manager = new SyncManager(syncFunction, logger, 3)
+    using manager = new SyncManager(syncFunction, logger, 3)
 
     manager.planNext()
     manager.clear()
     vi.advanceTimersByTime(3 * MS_PER_MINUTE)
 
     expect(syncFunction).not.toHaveBeenCalled()
-
-    manager[Symbol.dispose]()
   })
 
   it('setInterval(minutes) updates interval and auto-reschedules', async () => {
     const syncFunction = vi.fn<() => Promise<void>>().mockResolvedValue()
     const logger = createLogger()
-    const manager = new SyncManager(syncFunction, logger, 0)
+    using manager = new SyncManager(syncFunction, logger, 0)
 
     manager.setInterval(10)
     await vi.advanceTimersByTimeAsync(10 * MS_PER_MINUTE)
 
     expect(syncFunction).toHaveBeenCalledTimes(1)
-
-    manager[Symbol.dispose]()
   })
 
   it('setInterval replaces an existing pending timeout with the new interval', async () => {
     const syncFunction = vi.fn<() => Promise<void>>().mockResolvedValue()
     const logger = createLogger()
-    const manager = new SyncManager(syncFunction, logger, 5)
+    using manager = new SyncManager(syncFunction, logger, 5)
 
     manager.planNext()
 
@@ -118,36 +106,30 @@ describe(SyncManager, () => {
     await vi.advanceTimersByTimeAsync(5 * MS_PER_MINUTE)
 
     expect(syncFunction).toHaveBeenCalledTimes(1)
-
-    manager[Symbol.dispose]()
   })
 
   it('setInterval(false) clears the timeout and does not reschedule', () => {
     const syncFunction = vi.fn<() => Promise<void>>().mockResolvedValue()
     const logger = createLogger()
-    const manager = new SyncManager(syncFunction, logger, 5)
+    using manager = new SyncManager(syncFunction, logger, 5)
 
     manager.planNext()
     manager.setInterval(false)
     vi.advanceTimersByTime(10 * MS_PER_MINUTE)
 
     expect(syncFunction).not.toHaveBeenCalled()
-
-    manager[Symbol.dispose]()
   })
 
   it('setInterval(0) clears the timeout and does not reschedule', () => {
     const syncFunction = vi.fn<() => Promise<void>>().mockResolvedValue()
     const logger = createLogger()
-    const manager = new SyncManager(syncFunction, logger, 5)
+    using manager = new SyncManager(syncFunction, logger, 5)
 
     manager.planNext()
     manager.setInterval(0)
     vi.advanceTimersByTime(10 * MS_PER_MINUTE)
 
     expect(syncFunction).not.toHaveBeenCalled()
-
-    manager[Symbol.dispose]()
   })
 
   it('symbol.dispose clears a pending timeout', () => {
@@ -165,7 +147,7 @@ describe(SyncManager, () => {
   it('planNext() replaces an existing pending timeout (DisposableTimeout semantics)', async () => {
     const syncFunction = vi.fn<() => Promise<void>>().mockResolvedValue()
     const logger = createLogger()
-    const manager = new SyncManager(syncFunction, logger, 2)
+    using manager = new SyncManager(syncFunction, logger, 2)
 
     manager.planNext()
     // Advance partway through the first schedule, then re-schedule.
@@ -180,7 +162,5 @@ describe(SyncManager, () => {
     await vi.advanceTimersByTimeAsync(MS_PER_MINUTE)
 
     expect(syncFunction).toHaveBeenCalledTimes(1)
-
-    manager[Symbol.dispose]()
   })
 })

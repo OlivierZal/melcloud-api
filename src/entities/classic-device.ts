@@ -6,7 +6,6 @@ import type {
   ClassicListDeviceDataAny,
 } from '../types/index.ts'
 import { BaseModel } from './base.ts'
-import { syncModel } from './symbols.ts'
 
 /** Concrete device model holding mutable device data that can be partially updated after API calls. */
 export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
@@ -43,21 +42,38 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
     this.#data = data
   }
 
-  public [syncModel]({
+  public update(data: Partial<ClassicListDeviceDataAny>): void {
+    Object.assign(this.#data, data)
+  }
+}
+
+/**
+ * Apply a sync update from upstream device data onto an existing model.
+ *
+ * Module-internal: not re-exported from `entities/index.ts`. Identifying
+ * fields and the mutable device payload are reset; the per-device-type
+ * generic is checked at the call site (`model.type === source.Type`).
+ * @param model - The model to mutate in-place.
+ * @param source - The fresh list-device entry from the upstream API.
+ * @param source.AreaID - Owning area identifier (or `null` if directly under the building).
+ * @param source.BuildingID - Owning building identifier.
+ * @param source.Device - Mutable device payload merged onto the existing data.
+ * @param source.DeviceName - Updated device display name.
+ * @param source.FloorID - Owning floor identifier (or `null`).
+ */
+export const syncDevice = (
+  model: ClassicDevice<ClassicDeviceType>,
+  {
     AreaID: areaId,
     BuildingID: buildingId,
     Device: data,
     DeviceName: name,
     FloorID: floorId,
-  }: ClassicListDeviceAny): void {
-    this.name = name
-    this.areaId = areaId
-    this.buildingId = buildingId
-    this.floorId = floorId
-    Object.assign(this.#data, data)
-  }
-
-  public update(data: Partial<ClassicListDeviceDataAny>): void {
-    Object.assign(this.#data, data)
-  }
+  }: ClassicListDeviceAny,
+): void => {
+  model.name = name
+  model.areaId = areaId
+  model.buildingId = buildingId
+  model.floorId = floorId
+  model.update(data)
 }

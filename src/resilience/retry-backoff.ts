@@ -51,15 +51,15 @@ export const isTransientServerError = (error: unknown): boolean => {
  * one place prevents drift: if we decide to tune the upper bound or
  * jitter ratio, we update a single constant instead of two.
  */
-export const DEFAULT_TRANSIENT_RETRY_OPTIONS = {
+export const DEFAULT_TRANSIENT_RETRY_OPTIONS: Pick<
+  RetryBackoffOptions,
+  'initialDelayMs' | 'jitterRatio' | 'maxDelayMs' | 'maxRetries'
+> = {
   initialDelayMs: 1000,
   jitterRatio: 0.25,
   maxDelayMs: 16_000,
   maxRetries: 4,
-} as const satisfies Pick<
-  RetryBackoffOptions,
-  'initialDelayMs' | 'jitterRatio' | 'maxDelayMs' | 'maxRetries'
->
+}
 
 /** Options for {@link withRetryBackoff}. */
 export interface RetryBackoffOptions {

@@ -278,7 +278,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    */
   public async getErrorLog(
     query: ClassicErrorLogQuery,
-    deviceIds = this.#registry.getDevices().map(({ id }) => id),
+    deviceIds: number[] = this.#registry.getDevices().map(({ id }) => id),
   ): Promise<ClassicErrorLog> {
     const { fromDate, period, toDate } = parseErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })

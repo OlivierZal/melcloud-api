@@ -64,10 +64,12 @@ export const fanSpeedToClassic: Record<HomeFanSpeed, ClassicFanSpeed> = {
 }
 
 /** Type guard: `value` is a valid Classic fan speed numeric value. */
-export const isClassicFanSpeed = isKeyOf(fanSpeedFromClassic)
+export const isClassicFanSpeed: (key: PropertyKey) => key is ClassicFanSpeed =
+  isKeyOf(fanSpeedFromClassic)
 
 /** Type guard: `value` is a valid Home fan speed string. */
-export const isHomeFanSpeed = isKeyOf(fanSpeedToClassic)
+export const isHomeFanSpeed: (key: PropertyKey) => key is HomeFanSpeed =
+  isKeyOf(fanSpeedToClassic)
 
 /** Mapping from Classic numeric horizontal vane position to Home string value. */
 export const horizontalFromClassic: Record<ClassicHorizontal, HomeHorizontal> =

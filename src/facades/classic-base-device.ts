@@ -9,6 +9,7 @@ import type {
   ClassicSetDeviceData,
   ClassicTilesData,
   ClassicUpdateDeviceData,
+  Hour,
 } from '../types/index.ts'
 import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import {
@@ -95,7 +96,10 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     number
   >
 
-  protected abstract readonly temperaturesLegend: (string | undefined)[]
+  protected abstract readonly temperaturesLegend: readonly (
+    | string
+    | undefined
+  )[]
 
   public abstract readonly type: T
 
@@ -111,7 +115,10 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   protected readonly holidayModeLocation = 'Devices'
 
-  protected readonly internalTemperaturesLegend: (string | undefined)[] = []
+  protected readonly internalTemperaturesLegend: readonly (
+    | string
+    | undefined
+  )[] = []
 
   protected readonly tableName = 'DeviceLocation'
 
@@ -202,7 +209,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   public async getHourlyTemperatures(
-    hour = DateTime.now().hour,
+    hour: Hour = DateTime.now().hour,
   ): Promise<ReportChartLineOptions> {
     const { data } = await this.api.getHourlyTemperatures({
       postData: { device: this.id, hour },

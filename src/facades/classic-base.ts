@@ -29,6 +29,7 @@ import {
   type ClassicSettingsParams,
   type ClassicSuccessData,
   type ClassicTilesData,
+  type Hour,
   toClassicDeviceId,
 } from '../types/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'
@@ -255,7 +256,7 @@ export abstract class BaseFacade<
   }
 
   public async getSignalStrength(
-    hour = DateTime.now().hour,
+    hour: Hour = DateTime.now().hour,
   ): Promise<ReportChartLineOptions> {
     const { data } = await this.api.getSignal({
       postData: { devices: this.#deviceIds, hour },
