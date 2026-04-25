@@ -10,17 +10,6 @@ export interface RetryTelemetry {
   readonly onRetry: (attempt: number, error: unknown, delayMs: number) => void
 }
 
-/** Construction options for {@link TransientRetryPolicy}. */
-export interface TransientRetryPolicyOptions {
-  readonly telemetry: RetryTelemetry
-  /**
-   * Caller's abort signal. Threaded into the backoff sleep so a cancel
-   * mid-retry resolves the pending wait immediately rather than running
-   * out the delay before the cancelled attempt would have re-fired.
-   */
-  readonly signal?: AbortSignal
-}
-
 /**
  * Exponential-backoff retry for transient server-side failures (502,
  * 503, 504 — see {@link isTransientServerError}). Wraps the attempt
@@ -36,18 +25,21 @@ export interface TransientRetryPolicyOptions {
  * other error propagates untouched on the first failure — no retry.
  */
 export class TransientRetryPolicy implements ResiliencePolicy {
-  readonly #options: TransientRetryPolicyOptions
+  readonly #signal: AbortSignal | undefined
 
-  public constructor(options: TransientRetryPolicyOptions) {
-    this.#options = options
+  readonly #telemetry: RetryTelemetry
+
+  public constructor(telemetry: RetryTelemetry, signal?: AbortSignal) {
+    this.#telemetry = telemetry
+    this.#signal = signal
   }
 
   public async run<T>(attempt: () => Promise<T>): Promise<T> {
     return withRetryBackoff(attempt, {
       ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
       isRetryable: isTransientServerError,
-      onRetry: this.#options.telemetry.onRetry,
-      signal: this.#options.signal,
+      onRetry: this.#telemetry.onRetry,
+      signal: this.#signal,
     })
   }
 }

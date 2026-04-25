@@ -172,7 +172,7 @@ describe(TransientRetryPolicy, () => {
     vi.useFakeTimers()
     const onRetry =
       vi.fn<(retryAttempt: number, error: unknown, delayMs: number) => void>()
-    const policy = new TransientRetryPolicy({ telemetry: { onRetry } })
+    const policy = new TransientRetryPolicy({ onRetry })
     const attempt = vi
       .fn<() => Promise<string>>()
       .mockRejectedValueOnce(createServerError(503, '/x'))
@@ -190,7 +190,7 @@ describe(TransientRetryPolicy, () => {
   it('does not retry on non-transient 500', async () => {
     const onRetry =
       vi.fn<(retryAttempt: number, error: unknown, delayMs: number) => void>()
-    const policy = new TransientRetryPolicy({ telemetry: { onRetry } })
+    const policy = new TransientRetryPolicy({ onRetry })
     const attempt = vi
       .fn<() => Promise<string>>()
       .mockRejectedValue(createServerError(500, '/x'))
@@ -204,10 +204,7 @@ describe(TransientRetryPolicy, () => {
     const onRetry =
       vi.fn<(retryAttempt: number, error: unknown, delayMs: number) => void>()
     const controller = new AbortController()
-    const policy = new TransientRetryPolicy({
-      signal: controller.signal,
-      telemetry: { onRetry },
-    })
+    const policy = new TransientRetryPolicy({ onRetry }, controller.signal)
     const attempt = vi
       .fn<() => Promise<string>>()
       .mockRejectedValue(createServerError(503, '/x'))

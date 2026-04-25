@@ -457,9 +457,8 @@ export abstract class BaseAPI implements Disposable {
     ]
     if (context.method === 'GET') {
       policies.push(
-        new TransientRetryPolicy({
-          signal: this.abortSignal,
-          telemetry: {
+        new TransientRetryPolicy(
+          {
             onRetry: (
               retryAttempt: number,
               error: unknown,
@@ -476,7 +475,8 @@ export abstract class BaseAPI implements Disposable {
               })
             },
           },
-        }),
+          this.abortSignal,
+        ),
       )
     }
     return new CompositePolicy(policies)
