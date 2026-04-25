@@ -192,7 +192,13 @@ const getChartLineSeries = ({
   legend: readonly (string | undefined)[]
 }): { data: (number | null)[]; name: string }[] =>
   data
-    .map((values, index) => ({ data: values, name: legend[index] }))
+    .map((values, index) => ({
+      // Copy so the returned mutable `data` does not alias the readonly
+      // source; the public `ReportChartLineOptions.series[].data` is
+      // typed as a mutable array and consumers may mutate in place.
+      data: [...values],
+      name: legend[index],
+    }))
     .filter(
       (item): item is { data: (number | null)[]; name: string } =>
         item.name !== undefined,

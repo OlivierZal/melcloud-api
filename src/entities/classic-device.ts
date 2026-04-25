@@ -51,7 +51,9 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
  * Apply a sync update from upstream device data onto an existing model.
  *
  * Module-internal: not re-exported from `entities/index.ts`. Identifying
- * fields and the mutable device payload are reset; the per-device-type
+ * fields are reassigned and the mutable device payload is merged in
+ * (via `model.update`, which `Object.assign`s into the existing data
+ * so consumers keep stable object identity). The per-device-type
  * generic is checked at the call site (`model.type === source.Type`).
  * @param model - The model to mutate in-place.
  * @param source - The fresh list-device entry from the upstream API.

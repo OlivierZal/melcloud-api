@@ -195,19 +195,27 @@ const ClassicBuildingStructureSchema = z.looseObject({
   Floors: z.array(ClassicFloorSchema),
 })
 
+/** Minimal shape the {@link ClassicBuildingListSchema} guarantees on success. */
+export interface ClassicBuildingListEntry {
+  readonly ID: number
+  readonly Name: string
+  readonly Structure: unknown
+}
+
 /**
  * Classic `/User/ListDevices` response envelope. Narrower than the full
  * `ClassicBuildingWithStructure` compile-time contract — only the fields the
  * registry actually reads are validated (`ID`, `Name`, `Structure.{Areas,
  * Devices, Floors}`). Callers still bind the compile-time type at the use site.
  */
-export const ClassicBuildingListSchema: z.ZodType<unknown[]> = z.array(
-  z.looseObject({
-    ID: z.number(),
-    Name: z.string(),
-    Structure: ClassicBuildingStructureSchema,
-  }),
-)
+export const ClassicBuildingListSchema: z.ZodType<ClassicBuildingListEntry[]> =
+  z.array(
+    z.looseObject({
+      ID: z.number(),
+      Name: z.string(),
+      Structure: ClassicBuildingStructureSchema,
+    }),
+  )
 
 /**
  * Parse `data` against `schema`; throw {@link ValidationError} on
