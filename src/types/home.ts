@@ -74,11 +74,6 @@ export interface HomeDeviceSetting {
 
 export interface HomeEnergyData {
   readonly measureData: HomeEnergyMeasure[]
-  // `?: T | undefined` (rather than `?: T`) because Zod's `.optional()`
-  // produces `T | undefined` in the inferred output. Under
-  // `exactOptionalPropertyTypes` the two are no longer interchangeable,
-  // so the schema-bound interface must permit explicit `undefined` for
-  // the parsed value to satisfy this contract.
   readonly deviceId?: string | undefined
 }
 
