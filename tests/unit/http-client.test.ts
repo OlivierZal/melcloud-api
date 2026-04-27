@@ -186,12 +186,13 @@ describe(HttpClient, () => {
     const promise = createClient().request({
       data: { key: 1 },
       method: 'POST',
+      params: { tag: 'a' },
       url: '/x',
     })
 
     await expect(promise).rejects.toThrow(HttpError)
     await expect(promise).rejects.toMatchObject({
-      config: { method: 'POST', url: '/x' },
+      config: { method: 'POST', params: { tag: 'a' }, url: '/x' },
       isHttpError: true,
       response: {
         data: { err: 'denied' },
