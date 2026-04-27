@@ -36,6 +36,6 @@ export const syncDevices =
   ): ((...args: TArgs) => Promise<TResult>) =>
     async function newTarget(this: HasNotifySync, ...args: TArgs) {
       const data = await target.call(this, ...args)
-      await this.notifySync?.({ type })
+      await this.notifySync?.(type === undefined ? {} : { type })
       return data
     }

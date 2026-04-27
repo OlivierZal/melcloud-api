@@ -241,11 +241,13 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     query?: ReportQuery,
     shouldUseExactRange = true,
   ): Promise<ReportChartLineOptions> {
+    const location = this.registry.buildings.getById(
+      this.device.buildingId,
+    )?.location
     const { data } = await this.api.getTemperatures({
       postData: {
         ...this.#buildReportPostData(query, shouldUseExactRange),
-        Location: this.registry.buildings.getById(this.device.buildingId)
-          ?.location,
+        ...(location !== undefined && { Location: location }),
       },
     })
     return getChartLineOptions(data, this.temperaturesLegend, '°C')
@@ -276,16 +278,15 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   #buildReportPostData(
-    { from, to }: ReportQuery = {},
+    query: ReportQuery = {},
     shouldUseExactRange = false,
   ): ClassicReportPostData {
-    const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
+    const { from: newFrom, to: newTo } = getReportPostDataDates(query)
     return {
       DeviceID: this.id,
-      Duration:
-        shouldUseExactRange ?
-          getDuration({ from: newFrom, to: newTo })
-        : undefined,
+      ...(shouldUseExactRange && {
+        Duration: getDuration({ from: newFrom, to: newTo }),
+      }),
       FromDate: newFrom,
       ToDate: newTo,
     }

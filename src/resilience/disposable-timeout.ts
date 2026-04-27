@@ -8,7 +8,7 @@ export class DisposableTimeout implements Disposable {
     return this.#timeout !== undefined
   }
 
-  #timeout?: ReturnType<typeof setTimeout>
+  #timeout: ReturnType<typeof setTimeout> | undefined
 
   /** Cancel the current timeout if one is active. */
   public clear(): void {

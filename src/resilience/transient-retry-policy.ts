@@ -39,7 +39,7 @@ export class TransientRetryPolicy implements ResiliencePolicy {
       ...DEFAULT_TRANSIENT_RETRY_OPTIONS,
       isRetryable: isTransientServerError,
       onRetry: this.#telemetry.onRetry,
-      signal: this.#signal,
+      ...(this.#signal !== undefined && { signal: this.#signal }),
     })
   }
 }

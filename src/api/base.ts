@@ -87,13 +87,13 @@ interface BaseAPIConstructorOptions {
 export abstract class BaseAPI implements Disposable {
   public readonly logger: Logger
 
-  public readonly settingManager?: SettingManager
+  public readonly settingManager: SettingManager | undefined
 
   public get isRateLimited(): boolean {
     return this.rateLimitGate.isPaused
   }
 
-  protected readonly abortSignal?: AbortSignal
+  protected readonly abortSignal: AbortSignal | undefined
 
   protected readonly api: HttpClient
 

@@ -15,7 +15,7 @@ export interface HttpErrorRequestConfig {
  * does not need to branch on the error's origin.
  */
 export class HttpError<T = unknown> extends Error {
-  public readonly config?: HttpErrorRequestConfig
+  public readonly config: HttpErrorRequestConfig | undefined
 
   public readonly isHttpError = true
 

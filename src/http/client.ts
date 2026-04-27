@@ -183,7 +183,7 @@ export class HttpClient {
 
   readonly #defaultHeaders: Record<string, string>
 
-  readonly #dispatcher?: FetchDispatcher
+  readonly #dispatcher: FetchDispatcher | undefined
 
   public constructor({
     baseURL,
@@ -218,8 +218,8 @@ export class HttpClient {
             ...config.headers,
           },
           method: config.method ?? 'GET',
-          params: config.params,
-          url: config.url,
+          ...(config.params !== undefined && { params: config.params }),
+          ...(config.url !== undefined && { url: config.url }),
         },
       )
     }
@@ -256,8 +256,9 @@ export class HttpClient {
       ...this.#defaultHeaders,
       ...headers,
     }
+    const body = serializeBody(data, mergedHeaders)
     const init: FetchInit = {
-      body: serializeBody(data, mergedHeaders),
+      ...(body !== undefined && { body }),
       headers: mergedHeaders,
       method: method.toUpperCase(),
     }

@@ -78,7 +78,7 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
   ): ClassicOperationModeZoneDataAtw | null {
     const [operationModeZone1, operationModeZone2]: {
       key: keyof ClassicOperationModeZoneDataAtw
-      value?: ClassicOperationModeZone
+      value: ClassicOperationModeZone | undefined
     }[] = [
       { key: 'OperationModeZone1', value: data.OperationModeZone1 },
       { key: 'OperationModeZone2', value: data.OperationModeZone2 },

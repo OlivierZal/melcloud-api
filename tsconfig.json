@@ -6,6 +6,7 @@
     "declaration": true,
     "declarationMap": true,
     "erasableSyntaxOnly": true,
+    "exactOptionalPropertyTypes": true,
     "isolatedDeclarations": true,
     "lib": ["ESNext"],
     "libReplacement": false,

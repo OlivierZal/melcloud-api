@@ -16,7 +16,7 @@ import type {
  * blocker.
  */
 export class LifecycleEmitter {
-  readonly #events?: LifecycleEvents
+  readonly #events: LifecycleEvents | undefined
 
   readonly #logger: Logger
 

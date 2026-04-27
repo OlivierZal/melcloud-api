@@ -679,7 +679,7 @@ describe('baseAPI shared request pipeline', () => {
         logger,
       })
 
-      await expect(api.notifySync({ type: undefined })).resolves.toBeUndefined()
+      await expect(api.notifySync({})).resolves.toBeUndefined()
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining('onSyncComplete'),
         expect.any(Error),
@@ -698,7 +698,7 @@ describe('baseAPI shared request pipeline', () => {
         logger,
       })
 
-      await api.notifySync({ type: undefined })
+      await api.notifySync({})
       // The emitter chains `.catch(...)` onto the rejected promise — give
       // the microtask a turn before asserting the log fired.
       await Promise.resolve()

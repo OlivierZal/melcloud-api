@@ -11,7 +11,7 @@ export class APICallResponseData extends APICallLogData {
 
   public readonly responseData: unknown
 
-  public readonly status?: number
+  public readonly status: number | undefined
 
   public constructor(
     response?: HttpResponse,

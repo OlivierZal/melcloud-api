@@ -155,9 +155,9 @@ describe('mELCloud Classic API', () => {
     })
 
     onSyncComplete.mockClear()
-    await api.notifySync({ type: undefined })
+    await api.notifySync({})
 
-    expect(onSyncComplete).toHaveBeenCalledWith({ type: undefined })
+    expect(onSyncComplete).toHaveBeenCalledWith({})
   })
 
   it('accepts a disabled sync timer', async () => {

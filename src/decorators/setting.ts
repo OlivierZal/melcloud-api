@@ -1,7 +1,7 @@
 import type { SettingManager } from '../api/types.ts'
 
 interface HasSettingManager {
-  settingManager?: SettingManager
+  settingManager: SettingManager | undefined
 }
 
 /**
