@@ -554,7 +554,7 @@ describe('api lifecycle', () => {
       const lastCall = mockRequest.mock.calls.at(-1)
       const lastHeaders = lastCall?.[0].headers ?? {}
 
-      expect(lastHeaders['Authorization']).toBe('Bearer fresh-access')
+      expect(lastHeaders.Authorization).toBe('Bearer fresh-access')
       // New tokens persisted via settingManager.set.
       expect(setSpy).toHaveBeenCalledWith('accessToken', 'fresh-access')
       expect(setSpy).toHaveBeenCalledWith('refreshToken', 'fresh-refresh')

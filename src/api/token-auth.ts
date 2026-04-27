@@ -216,7 +216,7 @@ const authRequest = async ({
  */
 const extractFormAction = (html: string): string | null => {
   const match = /<form[^>]+action="(?<action>[^"]+)"/iu.exec(html)
-  const encoded = match?.groups?.['action']
+  const encoded = match?.groups?.action
   if (encoded === undefined) {
     return null
   }
@@ -232,9 +232,8 @@ const extractFormAction = (html: string): string | null => {
 const extractHiddenFields = (html: string): Record<string, string> =>
   Object.fromEntries(
     [...html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu)].flatMap(([tag]) => {
-      const name = /name="(?<name>[^"]+)"/u.exec(tag)?.groups?.['name']
-      const value =
-        /value="(?<value>[^"]*)"/u.exec(tag)?.groups?.['value'] ?? ''
+      const name = /name="(?<name>[^"]+)"/u.exec(tag)?.groups?.name
+      const value = /value="(?<value>[^"]*)"/u.exec(tag)?.groups?.value ?? ''
       return name === undefined ? [] : [[name, value] as const]
     }),
   )
@@ -246,15 +245,15 @@ const extractHiddenFields = (html: string): Record<string, string> =>
  */
 const extractPageRedirect = (html: string): string | null => {
   const jsMatch = /window\.location\s*=\s*['"](?<url>[^'"]+)/u.exec(html)
-  if (jsMatch?.groups?.['url'] !== undefined) {
-    return jsMatch.groups['url'].split('&amp;').join('&')
+  if (jsMatch?.groups?.url !== undefined) {
+    return jsMatch.groups.url.split('&amp;').join('&')
   }
   const metaMatch =
     /<meta[^>]+http-equiv="refresh"[^>]+content="[^"]*url=(?<url>[^"]+)/iu.exec(
       html,
     )
-  if (metaMatch?.groups?.['url'] !== undefined) {
-    return metaMatch.groups['url'].split('&amp;').join('&')
+  if (metaMatch?.groups?.url !== undefined) {
+    return metaMatch.groups.url.split('&amp;').join('&')
   }
   return null
 }
@@ -303,7 +302,7 @@ const extractRedirectTarget = (
     response.status >= REDIRECT_STATUS_MIN &&
     response.status < REDIRECT_STATUS_MAX
   ) {
-    const location = String(response.headers['location'] ?? '')
+    const location = String(response.headers.location ?? '')
     return resolveUrl({ base: currentUrl, location })
   }
   const jsRedirect = extractPageRedirect(response.data)
@@ -432,7 +431,7 @@ const submitCredentials = async ({
     url: action,
     ...(abortSignal === undefined ? {} : { abortSignal }),
   })
-  const callbackLocation = String(submitResponse.headers['location'] ?? '')
+  const callbackLocation = String(submitResponse.headers.location ?? '')
   if (callbackLocation === '') {
     throw new Error('No redirect after credential submission')
   }
