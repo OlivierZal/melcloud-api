@@ -74,7 +74,7 @@ const config = defineConfig([
       ecmaVersion: 'latest',
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['*.js', '*.config.ts', 'eslint-utils/*.ts'],
+          allowDefaultProject: ['*.js', '*.config.ts'],
         },
         warnOnUnsupportedTypeScriptVersion: false,
       },
@@ -563,12 +563,6 @@ const config = defineConfig([
           target: 'any',
         },
       ],
-    },
-  },
-  {
-    files: ['eslint-utils/**'],
-    rules: {
-      '@typescript-eslint/naming-convention': 'off',
     },
   },
   {
