@@ -25,9 +25,6 @@ const BASE_URL = 'https://melcloudhome.com'
 const COGNITO = 'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 const AUTH_BASE = 'https://auth.melcloudhome.com'
 
-const REPORT_TIME_KEY = 'x'
-const REPORT_VALUE_KEY = 'y'
-
 const cognitoLoginPage = (
   action = '/login?client_id=test&amp;state=abc',
   csrf = 'csrf-token',
@@ -116,11 +113,10 @@ const mockReportData: HomeReportData[] = [
     datasets: [
       {
         data: [
-          {
-            [REPORT_TIME_KEY]: '2026-03-01T00:00:00',
-            [REPORT_VALUE_KEY]: 20.5,
-          },
-          { [REPORT_TIME_KEY]: '2026-03-01T01:00:00', [REPORT_VALUE_KEY]: 21 },
+          /* eslint-disable id-length -- match the wire format produced by the BFF */
+          { x: '2026-03-01T00:00:00', y: 20.5 },
+          { x: '2026-03-01T01:00:00', y: 21 },
+          /* eslint-enable id-length */
         ],
         id: 'room_temperature',
         label: 'Room ClassicTemperature',

@@ -157,7 +157,7 @@ const formatLabels = (
  */
 export const typedKeys = <T extends Record<string, unknown>>(
   object: T,
-): (string & keyof T)[] => Object.keys(object) as (string & keyof T)[]
+): (string & keyof T)[] => Object.keys(object)
 
 /**
  * Type-safe `Object.fromEntries` that returns a properly typed object.

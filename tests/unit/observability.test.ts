@@ -68,9 +68,9 @@ describe('api call request data', () => {
     const data = new APICallRequestData(createConfig())
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 
-    expect(parsed['dataType']).toBe('API request')
-    expect(parsed['method']).toBe('POST')
-    expect(parsed['url']).toBe('/test/endpoint')
+    expect(parsed.dataType).toBe('API request')
+    expect(parsed.method).toBe('POST')
+    expect(parsed.url).toBe('/test/endpoint')
     expect(parsed).toHaveProperty('headers')
     expect(parsed).toHaveProperty('params')
     expect(parsed).toHaveProperty('requestData')
@@ -120,10 +120,10 @@ describe('api call response data', () => {
     const data = new APICallResponseData(createResponse(), createConfig())
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 
-    expect(parsed['dataType']).toBe('API response')
-    expect(parsed['method']).toBe('POST')
-    expect(parsed['url']).toBe('/test/endpoint')
-    expect(parsed['status']).toBe(200)
+    expect(parsed.dataType).toBe('API response')
+    expect(parsed.method).toBe('POST')
+    expect(parsed.url).toBe('/test/endpoint')
+    expect(parsed.status).toBe(200)
     expect(parsed).toHaveProperty('requestData')
     expect(parsed).toHaveProperty('responseData')
   })
@@ -143,9 +143,9 @@ describe('sensitive data redaction', () => {
     })
     const { requestData } = parseLog(new APICallRequestData(config).toString())
 
-    expect(requestData['Email']).toBe('******')
-    expect(requestData['Password']).toBe('******')
-    expect(requestData['Other']).toBe('visible')
+    expect(requestData.Email).toBe('******')
+    expect(requestData.Password).toBe('******')
+    expect(requestData.Other).toBe('visible')
   })
 
   it('redacts auth headers in request data', () => {
@@ -177,8 +177,8 @@ describe('sensitive data redaction', () => {
     })
     const { requestData } = parseLog(new APICallRequestData(config).toString())
 
-    expect(requestData['password']).toBe('******')
-    expect(requestData['username']).toBe('******')
+    expect(requestData.password).toBe('******')
+    expect(requestData.username).toBe('******')
   })
 
   it('redacts Cookie header in request data', () => {
@@ -187,7 +187,7 @@ describe('sensitive data redaction', () => {
     })
     const { headers } = parseLog(new APICallRequestData(config).toString())
 
-    expect(headers['Cookie']).toBe('******')
+    expect(headers.Cookie).toBe('******')
   })
 
   it('redacts sensitive keys inside form-encoded string bodies', () => {
@@ -259,6 +259,6 @@ describe(createAPICallErrorData, () => {
     const data = createAPICallErrorData(error)
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 
-    expect(parsed['errorMessage']).toBe('Timeout')
+    expect(parsed.errorMessage).toBe('Timeout')
   })
 })

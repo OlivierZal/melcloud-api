@@ -184,9 +184,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
       ),
     )
 
-    const flags = this.#computeFlags(
-      typedKeys(newData) as (keyof ClassicUpdateDeviceData<T>)[],
-    )
+    const flags = this.#computeFlags(typedKeys(newData))
     if (!flags) {
       throw new NoChangesError(id)
     }
