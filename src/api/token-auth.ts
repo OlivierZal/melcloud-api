@@ -239,24 +239,32 @@ const extractHiddenFields = (html: string): Record<string, string> =>
   )
 
 /**
- * Extract a JavaScript-based redirect URL from an HTML response body.
- * @param html - The HTML string to search for a JS redirect.
+ * Extract a redirect URL from an HTML response body via the given
+ * regex, which must capture the URL in a named group `url`. HTML
+ * entity `&amp;` is unescaped so the returned URL is directly usable
+ * as a fetch target.
+ * @param html - The HTML string to search.
+ * @param regex - A RegExp with a named capture group `url`.
+ * @returns The redirect URL if matched, or `null`.
+ */
+const extractRedirectUrl = (html: string, regex: RegExp): string | null => {
+  const url = regex.exec(html)?.groups?.url
+  return url === undefined ? null : url.split('&amp;').join('&')
+}
+
+/**
+ * Extract a redirect URL from an HTML response body. Tries a
+ * JavaScript `window.location = "…"` assignment first, then falls
+ * back to a `<meta http-equiv="refresh">` tag.
+ * @param html - The HTML string to search for a redirect.
  * @returns The redirect URL if found, or `null`.
  */
-const extractPageRedirect = (html: string): string | null => {
-  const jsMatch = /window\.location\s*=\s*['"](?<url>[^'"]+)/u.exec(html)
-  if (jsMatch?.groups?.url !== undefined) {
-    return jsMatch.groups.url.split('&amp;').join('&')
-  }
-  const metaMatch =
-    /<meta[^>]+http-equiv="refresh"[^>]+content="[^"]*url=(?<url>[^"]+)/iu.exec(
-      html,
-    )
-  if (metaMatch?.groups?.url !== undefined) {
-    return metaMatch.groups.url.split('&amp;').join('&')
-  }
-  return null
-}
+const extractPageRedirect = (html: string): string | null =>
+  extractRedirectUrl(html, /window\.location\s*=\s*['"](?<url>[^'"]+)/u) ??
+  extractRedirectUrl(
+    html,
+    /<meta[^>]+http-equiv="refresh"[^>]+content="[^"]*url=(?<url>[^"]+)/iu,
+  )
 
 /**
  * Resolve a potentially relative URL against a base URL.
