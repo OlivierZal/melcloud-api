@@ -291,8 +291,7 @@ export abstract class BaseFacade<
   public async notifySync({
     type,
   }: { type?: ClassicDeviceType } = {}): Promise<void> {
-    const ids = this.#deviceIds
-    await this.api.notifySync(type === undefined ? { ids } : { ids, type })
+    await this.api.notifySync({ ids: this.#deviceIds, type })
   }
 
   async #getBaseFrostProtection(

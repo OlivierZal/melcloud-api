@@ -266,11 +266,9 @@ export class ClassicRegistry {
   }
 
   public getZones({ type }: { type?: ClassicDeviceType } = {}): ClassicZone[] {
-    return [
-      ...flattenBuildings(
-        this.getBuildings(type === undefined ? {} : { type }),
-      ),
-    ].toSorted(compareNames)
+    return [...flattenBuildings(this.getBuildings({ type }))].toSorted(
+      compareNames,
+    )
   }
 
   public syncAreas(areas: ClassicAreaDataAny[]): void {
