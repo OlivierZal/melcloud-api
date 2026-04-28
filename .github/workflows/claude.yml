@@ -41,7 +41,7 @@ on:
   issue_comment:
     types: [created]
   issues:
-    types: [assigned, opened]
+    types: [opened]
   pull_request_review:
     types: [submitted]
   pull_request_review_comment:
