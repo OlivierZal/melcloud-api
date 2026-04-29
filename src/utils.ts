@@ -57,6 +57,23 @@ const getLabelFormatters = (): LabelFormatterCache => {
 }
 
 /**
+ * Clamp a numeric value into the inclusive `[min, max]` range.
+ *
+ * Shared by every device facade (Classic ATA, Classic ATW, Home ATA)
+ * that enforces target-temperature limits before sending updates to
+ * their respective upstream APIs.
+ * @param value - The value to clamp.
+ * @param range - Inclusive bounds.
+ * @param range.max - Upper bound (inclusive).
+ * @param range.min - Lower bound (inclusive).
+ * @returns `value`, clamped to `[range.min, range.max]`.
+ */
+export const clampToRange = (
+  value: number,
+  range: { max: number; min: number },
+): number => Math.min(Math.max(value, range.min), range.max)
+
+/**
  * Get the current date/time as an ISO 8601 string without timezone offset.
  * @returns The current date/time as an ISO string.
  */

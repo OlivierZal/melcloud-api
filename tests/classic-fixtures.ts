@@ -6,6 +6,7 @@ import {
 import {
   type ClassicAreaDataAny,
   type ClassicBuildingData,
+  type ClassicBuildingWithStructure,
   type ClassicFloorData,
   type ClassicFrostProtectionData,
   type ClassicHolidayModeData,
@@ -20,13 +21,13 @@ import {
   toClassicDeviceId,
   toClassicFloorId,
 } from '../src/types/index.ts'
-import { mock } from './helpers.ts'
+import { cast, mock } from './helpers.ts'
 
 // ---------------------------------------------------------------------------
 // Primitive model data factories
 // ---------------------------------------------------------------------------
 
-export const buildingData = (
+export const classicBuildingData = (
   overrides: Partial<ClassicBuildingData> = {},
 ): ClassicBuildingData => ({
   FPDefined: true,
@@ -44,7 +45,7 @@ export const buildingData = (
   ...overrides,
 })
 
-export const floorData = (
+export const classicFloorData = (
   overrides: Partial<ClassicFloorData> = {},
 ): ClassicFloorData => ({
   BuildingId: toClassicBuildingId(1),
@@ -53,7 +54,7 @@ export const floorData = (
   ...overrides,
 })
 
-export const areaData = (
+export const classicAreaData = (
   overrides: Partial<ClassicAreaDataAny> = {},
 ): ClassicAreaDataAny => ({
   BuildingId: toClassicBuildingId(1),
@@ -67,7 +68,7 @@ export const areaData = (
 // ClassicDevice data factories (inner `ClassicDevice` payloads)
 // ---------------------------------------------------------------------------
 
-export const ataDeviceData = (
+export const classicAtaDeviceData = (
   overrides: Partial<ClassicListDeviceDataAta> = {},
 ): ClassicListDeviceDataAta =>
   mock<ClassicListDeviceDataAta>({
@@ -93,7 +94,7 @@ export const ataDeviceData = (
     ...overrides,
   })
 
-const atwDefaults: Partial<ClassicListDeviceDataAtw> = {
+const classicAtwDefaults: Partial<ClassicListDeviceDataAtw> = {
   BoosterHeater1Status: false,
   BoosterHeater2PlusStatus: false,
   BoosterHeater2Status: false,
@@ -147,12 +148,12 @@ const atwDefaults: Partial<ClassicListDeviceDataAtw> = {
   Zone2InHeatMode: false,
 }
 
-export const atwDeviceData = (
+export const classicAtwDeviceData = (
   overrides: Partial<ClassicListDeviceDataAtw> = {},
 ): ClassicListDeviceDataAtw =>
-  mock<ClassicListDeviceDataAtw>({ ...atwDefaults, ...overrides })
+  mock<ClassicListDeviceDataAtw>({ ...classicAtwDefaults, ...overrides })
 
-export const ervDeviceData = (
+export const classicErvDeviceData = (
   overrides: Partial<ClassicListDeviceDataErv> = {},
 ): ClassicListDeviceDataErv =>
   mock<ClassicListDeviceDataErv>({
@@ -186,12 +187,12 @@ const DEFAULT_ERV_DEVICE_ID = toClassicDeviceId(1002)
 // Full list-device wrappers (envelope around device data)
 // ---------------------------------------------------------------------------
 
-export const ataDevice = (
+export const classicAtaDevice = (
   overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Ata>> = {},
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  Device: ataDeviceData(),
+  Device: classicAtaDeviceData(),
   DeviceID: DEFAULT_ATA_DEVICE_ID,
   DeviceName: 'ATA ClassicDevice',
   FloorID: DEFAULT_FLOOR_ID,
@@ -199,12 +200,12 @@ export const ataDevice = (
   ...overrides,
 })
 
-export const atwDevice = (
+export const classicAtwDevice = (
   overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Atw>> = {},
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  Device: atwDeviceData(),
+  Device: classicAtwDeviceData(),
   DeviceID: DEFAULT_ATW_DEVICE_ID,
   DeviceName: 'ATW ClassicDevice',
   FloorID: DEFAULT_FLOOR_ID,
@@ -212,12 +213,12 @@ export const atwDevice = (
   ...overrides,
 })
 
-export const ervDevice = (
+export const classicErvDevice = (
   overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Erv>> = {},
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  Device: ervDeviceData(),
+  Device: classicErvDeviceData(),
   DeviceID: DEFAULT_ERV_DEVICE_ID,
   DeviceName: 'ERV ClassicDevice',
   FloorID: null,
@@ -229,7 +230,7 @@ export const ervDevice = (
 // API response fixtures
 // ---------------------------------------------------------------------------
 
-export const reportData = (
+export const classicReportData = (
   overrides: Partial<ClassicReportData> = {},
 ): ClassicReportData => ({
   Data: [[1]],
@@ -242,7 +243,7 @@ export const reportData = (
   ...overrides,
 })
 
-export const holidayModeResponse = (
+export const classicHolidayModeResponse = (
   overrides: Partial<ClassicHolidayModeData> = {},
 ): ClassicHolidayModeData => ({
   EndDate: { Day: 1, Hour: 0, Minute: 0, Month: 1, Second: 0, Year: 2024 },
@@ -255,7 +256,7 @@ export const holidayModeResponse = (
   ...overrides,
 })
 
-export const frostProtectionResponse = (
+export const classicFrostProtectionResponse = (
   overrides: Partial<ClassicFrostProtectionData> = {},
 ): ClassicFrostProtectionData => ({
   FPDefined: false,
@@ -264,3 +265,32 @@ export const frostProtectionResponse = (
   FPMinTemperature: 4,
   ...overrides,
 })
+
+// ---------------------------------------------------------------------------
+// Permissive raw factories — accept arbitrary overrides via `cast`. Used by
+// API-level tests that exercise unbranded ID inputs and minimal device
+// payloads where the typed envelope above is too strict.
+// ---------------------------------------------------------------------------
+
+export const classicBuildingWithStructure = (
+  overrides: Partial<ClassicBuildingWithStructure> = {},
+): ClassicBuildingWithStructure =>
+  mock<ClassicBuildingWithStructure>({
+    ...classicBuildingData(),
+    Structure: { Areas: [], Devices: [], Floors: [] },
+    ...overrides,
+  })
+
+export const classicRawDevice = (
+  overrides: Record<string, unknown> = {},
+): ClassicListDeviceAny =>
+  cast({
+    AreaID: null,
+    BuildingID: 1,
+    Device: {},
+    DeviceID: 1,
+    DeviceName: 'ClassicDevice',
+    FloorID: null,
+    Type: 0,
+    ...overrides,
+  })

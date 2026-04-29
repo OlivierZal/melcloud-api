@@ -252,7 +252,6 @@ describe('melcloud home API', () => {
     // (real fetch). Default to an empty success response so tests that
     // don't queue a specific mock don't hit the network.
     mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
-    vi.clearAllMocks()
     ;({ HomeAPI: melCloudHomeApi } = await import('../../src/api/home.ts'))
   })
 

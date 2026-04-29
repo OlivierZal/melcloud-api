@@ -9,25 +9,25 @@ import {
   toClassicFloorId,
 } from '../../src/types/index.ts'
 import {
-  areaData,
-  ataDevice,
-  ataDeviceData,
-  atwDevice,
-  atwDeviceData,
-  buildingData,
-  floorData,
-} from '../fixtures.ts'
+  classicAreaData,
+  classicAtaDevice,
+  classicAtaDeviceData,
+  classicAtwDevice,
+  classicAtwDeviceData,
+  classicBuildingData,
+  classicFloorData,
+} from '../classic-fixtures.ts'
 import { createPopulatedRegistry, defined } from '../helpers.ts'
 
 const buildings = [
-  buildingData({
+  classicBuildingData({
     HMDefined: false,
     ID: toClassicBuildingId(1),
     Location: 0,
     Name: 'Bravo',
     TimeZone: 1,
   }),
-  buildingData({
+  classicBuildingData({
     FPDefined: false,
     HMDefined: false,
     ID: toClassicBuildingId(2),
@@ -38,7 +38,7 @@ const buildings = [
 ]
 
 const floors = [
-  floorData({
+  classicFloorData({
     BuildingId: toClassicBuildingId(1),
     ID: 10,
     Name: 'Ground floor',
@@ -46,13 +46,13 @@ const floors = [
 ]
 
 const areas = [
-  areaData({
+  classicAreaData({
     BuildingId: toClassicBuildingId(1),
     FloorId: 10,
     ID: 100,
     Name: 'Salon',
   }),
-  areaData({
+  classicAreaData({
     BuildingId: toClassicBuildingId(2),
     FloorId: null,
     ID: 200,
@@ -61,26 +61,26 @@ const areas = [
 ]
 
 const devices = [
-  ataDevice({
+  classicAtaDevice({
     AreaID: toClassicAreaId(100),
     BuildingID: toClassicBuildingId(1),
-    Device: ataDeviceData(),
+    Device: classicAtaDeviceData(),
     DeviceID: toClassicDeviceId(1001),
     DeviceName: 'AC unit',
     FloorID: toClassicFloorId(10),
   }),
-  atwDevice({
+  classicAtwDevice({
     AreaID: null,
     BuildingID: toClassicBuildingId(1),
-    Device: atwDeviceData({ HasZone2: false }),
+    Device: classicAtwDeviceData({ HasZone2: false }),
     DeviceID: toClassicDeviceId(1002),
     DeviceName: 'Heat pump',
     FloorID: null,
   }),
-  ataDevice({
+  classicAtaDevice({
     AreaID: toClassicAreaId(200),
     BuildingID: toClassicBuildingId(2),
-    Device: ataDeviceData(),
+    Device: classicAtaDeviceData(),
     DeviceID: toClassicDeviceId(2001),
     DeviceName: 'Studio AC',
     FloorID: null,

@@ -151,7 +151,6 @@ describe('baseAPI shared request pipeline', () => {
 
   beforeEach(() => {
     vi.useFakeTimers()
-    vi.clearAllMocks()
     mockRequest.mockResolvedValue({
       data: {},
       headers: {},

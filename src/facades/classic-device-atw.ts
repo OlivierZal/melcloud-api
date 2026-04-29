@@ -12,8 +12,9 @@ import {
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
 } from '../constants.ts'
+import { clampToRange } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
-import { BaseDeviceFacade, clampToRange } from './classic-base-device.ts'
+import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicAtwFlags } from './classic-flags.ts'
 
 const DEFAULT_TEMPERATURE = 0

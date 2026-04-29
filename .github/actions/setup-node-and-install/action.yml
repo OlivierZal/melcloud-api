@@ -1,0 +1,36 @@
+description: Checkout, set up Node.js with npm cache, and install dependencies with hardened flags
+inputs:
+  fetch-depth:
+    default: '1'
+    description: Depth to pass to actions/checkout. Use '0' for jobs that need full history (e.g. SonarCloud).
+    required: false
+  install:
+    default: 'true'
+    description: Whether to run `npm ci --ignore-scripts`. Set to 'false' for jobs that only need the source tree (no install).
+    required: false
+  node-version:
+    default: latest
+    description: Node.js version to install. Use 'lts/*' for reproducibility, 'latest' for forward-compat tests.
+    required: false
+  registry-url:
+    description: Optional registry URL forwarded to actions/setup-node (used by the publish job).
+    required: false
+  scope:
+    description: Optional npm scope forwarded to actions/setup-node (used by the publish job).
+    required: false
+name: Setup Node and install
+runs:
+  steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+    - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+      with:
+        cache: npm
+        node-version: ${{ inputs.node-version }}
+        registry-url: ${{ inputs.registry-url }}
+        scope: ${{ inputs.scope }}
+    - if: inputs.install == 'true'
+      run: npm ci --ignore-scripts
+      shell: bash
+  using: composite

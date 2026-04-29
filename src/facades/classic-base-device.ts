@@ -39,30 +39,12 @@ import type {
   ReportChartPieOptions,
   ReportQuery,
 } from './report-types.ts'
-import { BaseFacade } from './classic-base.ts'
+import { ClassicBaseFacade } from './classic-base.ts'
 
 // Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
 
 const MS_PER_DAY = 86_400_000
-
-/**
- * Clamp a numeric value into the inclusive `[min, max]` range.
- *
- * Shared by the three device facades (Classic ATA, Classic ATW, Home
- * ATA) that enforce target-temperature limits before sending updates
- * to their respective upstream APIs. Kept here rather than in
- * `utils.ts` so the import graph stays within the facades folder.
- * @param value - The value to clamp.
- * @param range - Inclusive bounds.
- * @param range.max - Upper bound (inclusive).
- * @param range.min - Lower bound (inclusive).
- * @returns `value`, clamped to `[range.min, range.max]`.
- */
-export const clampToRange = (
-  value: number,
-  range: { max: number; min: number },
-): number => Math.min(Math.max(value, range.min), range.max)
 
 const getReportPostDataDates = ({
   from = DEFAULT_YEAR,
@@ -86,7 +68,7 @@ const getDuration = ({ from, to }: Required<ReportQuery>): number =>
  * value updates with effective flags, and ATA key conversion between set/list formats.
  */
 export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
-  extends BaseFacade<ClassicDeviceAny>
+  extends ClassicBaseFacade<ClassicDeviceAny>
   implements ClassicDeviceFacade<T>
 {
   declare public readonly id: ClassicDeviceID

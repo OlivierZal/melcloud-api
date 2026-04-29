@@ -1,24 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPI } from '../../src/api/home-types.ts'
-import type { HomeDeviceData } from '../../src/types/index.ts'
-import { HomeDeviceType } from '../../src/constants.ts'
-import { HomeDevice } from '../../src/entities/home-device.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
 import { mock } from '../helpers.ts'
+import { homeDevice } from '../home-fixtures.ts'
 
-const createModel = (): HomeDevice =>
-  new HomeDevice(
-    mock<HomeDeviceData>({
-      capabilities: mock<HomeDeviceData['capabilities']>(),
-      givenDisplayName: 'Test ClassicDevice',
-      id: 'device-1',
-      rssi: -50,
-      settings: [],
-    }),
-    HomeDeviceType.Ata,
-  )
+const createModel = (): ReturnType<typeof homeDevice> =>
+  homeDevice({ id: 'device-1', name: 'Test ClassicDevice' })
 
 const createApi = (): HomeAPI =>
   mock<HomeAPI>({
@@ -53,16 +42,11 @@ describe('home facade manager', () => {
   it('returns different facades for different instances', () => {
     const manager = new HomeFacadeManager(createApi())
     const model1 = createModel()
-    const model2 = new HomeDevice(
-      mock<HomeDeviceData>({
-        capabilities: mock<HomeDeviceData['capabilities']>(),
-        givenDisplayName: 'Other ClassicDevice',
-        id: 'device-2',
-        rssi: -60,
-        settings: [],
-      }),
-      HomeDeviceType.Ata,
-    )
+    const model2 = homeDevice({
+      id: 'device-2',
+      name: 'Other ClassicDevice',
+      rssi: -60,
+    })
 
     expect(manager.get(model1)).not.toBe(manager.get(model2))
   })

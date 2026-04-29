@@ -5,19 +5,18 @@ import type {
   HomeBuilding,
   HomeContext,
   HomeEnergyData,
-  HomeError,
   HomeErrorLogEntry,
   HomeReportData,
+  HomeResult,
   HomeTokenResponse,
   HomeUser,
   LoginCredentials,
-  Result,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
-import { MS_PER_MINUTE, MS_PER_SECOND } from '../time-units.ts'
+import { MS_PER_SECOND, SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
   HomeContextSchema,
   HomeEnergyDataSchema,
@@ -41,11 +40,6 @@ const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 1
 const ENERGY_PATH = '/telemetry/telemetry/energy'
 const REPORT_PATH = '/report/v1/trendsummary'
-const SESSION_REFRESH_AHEAD_MINUTES = 5
-
-// Refresh the session when it's within 5 min of its real expiry so
-// no request pays the full OIDC round-trip on its critical path.
-const SESSION_REFRESH_AHEAD_MS = SESSION_REFRESH_AHEAD_MINUTES * MS_PER_MINUTE
 const SIGNAL_PATH = '/telemetry/telemetry/actual'
 
 // ------------------------------------------------------------------
@@ -207,7 +201,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getEnergy(
     id: string,
     params: { from: string; interval: string; to: string },
-  ): Promise<Result<HomeEnergyData, HomeError>> {
+  ): Promise<HomeResult<HomeEnergyData>> {
     return validateRequest({
       context: 'BFF /telemetry/telemetry/energy',
       host: this,
@@ -239,7 +233,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    */
   public async getErrorLog(
     id: string,
-  ): Promise<Result<HomeErrorLogEntry[], HomeError>> {
+  ): Promise<HomeResult<HomeErrorLogEntry[]>> {
     return validateRequest({
       context: 'BFF /monitor/ataunit/:id/errorlog',
       host: this,
@@ -266,7 +260,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getSignal(
     id: string,
     params: { from: string; to: string },
-  ): Promise<Result<HomeEnergyData, HomeError>> {
+  ): Promise<HomeResult<HomeEnergyData>> {
     return validateRequest({
       context: 'BFF /telemetry/telemetry/actual',
       host: this,
@@ -301,7 +295,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
-  ): Promise<Result<HomeReportData[], HomeError>> {
+  ): Promise<HomeResult<HomeReportData[]>> {
     return validateRequest({
       context: 'BFF /report/v1/trendsummary',
       host: this,

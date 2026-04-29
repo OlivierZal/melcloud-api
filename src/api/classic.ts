@@ -40,7 +40,7 @@ import { setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
 import { AuthenticationError } from '../errors/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
-import { MS_PER_MINUTE } from '../time-units.ts'
+import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import { isKeyOf } from '../utils.ts'
 import {
   ClassicBuildingListSchema,
@@ -68,11 +68,6 @@ const LOGIN_PATH = '/Login/ClientLogin3'
 
 const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 5
-const SESSION_REFRESH_AHEAD_MINUTES = 5
-
-// Refresh the session when it's within 5 min of its real expiry so
-// no request pays the full re-login latency on its critical path.
-const SESSION_REFRESH_AHEAD_MS = SESSION_REFRESH_AHEAD_MINUTES * MS_PER_MINUTE
 
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1

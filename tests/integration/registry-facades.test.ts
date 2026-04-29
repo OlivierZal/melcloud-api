@@ -10,24 +10,24 @@ import {
   toClassicFloorId,
 } from '../../src/types/index.ts'
 import {
-  areaData,
-  ataDevice,
-  ataDeviceData,
-  atwDevice,
-  atwDeviceData,
-  buildingData,
-  ervDevice,
-  ervDeviceData,
-  floorData,
-} from '../fixtures.ts'
+  classicAreaData,
+  classicAtaDevice,
+  classicAtaDeviceData,
+  classicAtwDevice,
+  classicAtwDeviceData,
+  classicBuildingData,
+  classicErvDevice,
+  classicErvDeviceData,
+  classicFloorData,
+} from '../classic-fixtures.ts'
 import { createMockApi, createPopulatedRegistry, defined } from '../helpers.ts'
 
-const ataData = ataDeviceData({
+const ataData = classicAtaDeviceData({
   NumberOfFanSpeeds: 5,
   SetTemperature: 23,
 })
 
-const atwData = atwDeviceData({
+const atwData = classicAtwDeviceData({
   HasZone2: true,
   OperationMode: 0,
   OutdoorTemperature: 10,
@@ -36,7 +36,7 @@ const atwData = atwDeviceData({
   SetHeatFlowTemperatureZone2: 35,
 })
 
-const ervData = ervDeviceData({
+const ervData = classicErvDeviceData({
   HasAutomaticFanSpeed: false,
   HasCO2Sensor: true,
   NumberOfFanSpeeds: 4,
@@ -47,13 +47,13 @@ const ervData = ervDeviceData({
 })
 
 const buildings = [
-  buildingData({
+  classicBuildingData({
     HMDefined: true,
     Location: 0,
     Name: 'Main house',
     TimeZone: 1,
   }),
-  buildingData({
+  classicBuildingData({
     FPDefined: false,
     HMDefined: false,
     ID: toClassicBuildingId(2),
@@ -64,15 +64,15 @@ const buildings = [
 ]
 
 const floors = [
-  floorData({ Name: 'Ground floor' }),
-  floorData({ ID: 11, Name: 'First floor' }),
+  classicFloorData({ Name: 'Ground floor' }),
+  classicFloorData({ ID: 11, Name: 'First floor' }),
 ]
 
 const areas = [
-  areaData({ Name: 'Living room' }),
-  areaData({ ID: 101, Name: 'Kitchen' }),
-  areaData({ FloorId: 11, ID: 102, Name: 'Bedroom' }),
-  areaData({
+  classicAreaData({ Name: 'Living room' }),
+  classicAreaData({ ID: 101, Name: 'Kitchen' }),
+  classicAreaData({ FloorId: 11, ID: 102, Name: 'Bedroom' }),
+  classicAreaData({
     BuildingId: toClassicBuildingId(2),
     FloorId: null,
     ID: 200,
@@ -81,18 +81,18 @@ const areas = [
 ]
 
 const devices = [
-  ataDevice({
+  classicAtaDevice({
     Device: ataData,
     DeviceID: toClassicDeviceId(1001),
     DeviceName: 'Living room AC',
   }),
-  atwDevice({
+  classicAtwDevice({
     AreaID: toClassicAreaId(101),
     Device: atwData,
     DeviceID: toClassicDeviceId(1002),
     DeviceName: 'Kitchen heat pump',
   }),
-  ervDevice({
+  classicErvDevice({
     AreaID: toClassicAreaId(102),
     BuildingID: toClassicBuildingId(1),
     Device: ervData,
@@ -100,10 +100,10 @@ const devices = [
     DeviceName: 'Bedroom ERV',
     FloorID: toClassicFloorId(11),
   }),
-  ataDevice({
+  classicAtaDevice({
     AreaID: toClassicAreaId(200),
     BuildingID: toClassicBuildingId(2),
-    Device: ataDeviceData({ ...ataData, Power: false }),
+    Device: classicAtaDeviceData({ ...ataData, Power: false }),
     DeviceID: toClassicDeviceId(2001),
     DeviceName: 'Studio AC',
     FloorID: null,
@@ -279,7 +279,7 @@ describe('registry + facade manager integration', () => {
 
     registry.syncDevices([
       ...devices,
-      ataDevice({
+      classicAtaDevice({
         AreaID: toClassicAreaId(200),
         BuildingID: toClassicBuildingId(2),
         Device: ataData,
@@ -317,7 +317,7 @@ describe('registry + facade manager integration', () => {
     registry.syncBuildings([defined(buildings[1])])
     registry.syncFloors([])
     registry.syncAreas([
-      areaData({
+      classicAreaData({
         BuildingId: toClassicBuildingId(2),
         FloorId: null,
         ID: 200,

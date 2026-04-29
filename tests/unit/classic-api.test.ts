@@ -8,12 +8,14 @@ import type {
 import type { ClassicDeviceType } from '../../src/constants.ts'
 import { AuthenticationError } from '../../src/errors/index.ts'
 import {
-  type ClassicBuildingWithStructure,
-  type ClassicListDeviceAny,
   type ClassicSetDevicePostData,
   toClassicBuildingId,
   toClassicDeviceId,
 } from '../../src/types/index.ts'
+import {
+  classicBuildingWithStructure,
+  classicRawDevice,
+} from '../classic-fixtures.ts'
 import {
   cast,
   createHttpError,
@@ -74,46 +76,11 @@ const errorEntry = (
   ...overrides,
 })
 
-const createDevice = (
-  overrides: Record<string, unknown> = {},
-): ClassicListDeviceAny =>
-  cast({
-    AreaID: null,
-    BuildingID: 1,
-    Device: {},
-    DeviceID: 1,
-    DeviceName: 'ClassicDevice',
-    FloorID: null,
-    Type: 0,
-    ...overrides,
-  })
-
-const createBuilding = (
-  overrides: Partial<ClassicBuildingWithStructure> = {},
-): ClassicBuildingWithStructure =>
-  mock({
-    FPDefined: false,
-    FPEnabled: false,
-    FPMaxTemperature: 16,
-    FPMinTemperature: 4,
-    HMDefined: false,
-    HMEnabled: false,
-    HMEndDate: null,
-    HMStartDate: null,
-    ID: toClassicBuildingId(1),
-    Location: 10,
-    Name: 'Test',
-    Structure: { Areas: [], Devices: [], Floors: [] },
-    TimeZone: 0,
-    ...overrides,
-  })
-
 describe('mELCloud Classic API', () => {
   let melCloudApi: typeof ClassicAPI = cast(null)
 
   beforeEach(async () => {
     vi.useFakeTimers()
-    vi.clearAllMocks()
     mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
     ;({ ClassicAPI: melCloudApi } = await import('../../src/api/classic.ts'))
   })
@@ -181,7 +148,7 @@ describe('mELCloud Classic API', () => {
   })
 
   it('fetches building list and syncs registry', async () => {
-    const building = createBuilding()
+    const building = classicBuildingWithStructure()
     mockRequest.mockResolvedValue({
       data: [building],
       headers: {},
@@ -481,10 +448,12 @@ describe('mELCloud Classic API', () => {
     // after a successful login. Enforced by BaseAPI.authenticate's
     // template method (guard against OlivierZal/com.melcloud#1281-style regressions).
     it('populates the device registry during authenticate', async () => {
-      const building = createBuilding({
+      const building = classicBuildingWithStructure({
         Structure: {
           Areas: [],
-          Devices: [createDevice({ DeviceID: 42, DeviceName: 'Populated' })],
+          Devices: [
+            classicRawDevice({ DeviceID: 42, DeviceName: 'Populated' }),
+          ],
           Floors: [],
         },
       })
@@ -643,10 +612,10 @@ describe('mELCloud Classic API', () => {
     })
 
     it('uses all devices when no deviceIds provided', async () => {
-      const building = createBuilding({
+      const building = classicBuildingWithStructure({
         Structure: {
           Areas: [],
-          Devices: [createDevice({ DeviceID: 42, DeviceName: 'D1' })],
+          Devices: [classicRawDevice({ DeviceID: 42, DeviceName: 'D1' })],
           Floors: [],
         },
       })
@@ -934,14 +903,14 @@ describe('mELCloud Classic API', () => {
 
   describe('fetch with complex building structure', () => {
     it('syncs floors, areas, and devices from building structure', async () => {
-      const building = createBuilding({
+      const building = classicBuildingWithStructure({
         Name: 'B1',
         Structure: {
           Areas: [
             {
               BuildingId: toClassicBuildingId(1),
               Devices: [
-                createDevice({
+                classicRawDevice({
                   AreaID: 100,
                   DeviceID: 2000,
                   DeviceName: 'ClassicArea ClassicDevice',
@@ -953,7 +922,7 @@ describe('mELCloud Classic API', () => {
             },
           ],
           Devices: [
-            createDevice({
+            classicRawDevice({
               DeviceID: 1000,
               DeviceName: 'ClassicBuilding ClassicDevice',
             }),
@@ -964,7 +933,7 @@ describe('mELCloud Classic API', () => {
                 {
                   BuildingId: toClassicBuildingId(1),
                   Devices: [
-                    createDevice({
+                    classicRawDevice({
                       AreaID: 200,
                       DeviceID: 3000,
                       DeviceName: 'ClassicFloor ClassicArea ClassicDevice',
@@ -978,7 +947,7 @@ describe('mELCloud Classic API', () => {
               ],
               BuildingId: toClassicBuildingId(1),
               Devices: [
-                createDevice({
+                classicRawDevice({
                   DeviceID: 4000,
                   DeviceName: 'ClassicFloor ClassicDevice',
                   FloorID: 10,

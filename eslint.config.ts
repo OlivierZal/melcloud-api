@@ -588,7 +588,7 @@ const config = defineConfig([
   },
   {
     extends: [vitest.configs.all, vitest.configs.recommended],
-    files: ['tests/**/*.test.ts', 'tests/fixtures.ts'],
+    files: ['tests/**/*.test.ts', 'tests/*fixtures.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
       'max-lines-per-function': 'off',

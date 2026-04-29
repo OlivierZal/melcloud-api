@@ -81,7 +81,7 @@ const getDateTimeComponents = (
  * holiday mode, power control, signal strength, tiles, and error log retrieval.
  * Settings resolution falls back from zone level to device level when needed.
  */
-export abstract class BaseFacade<
+export abstract class ClassicBaseFacade<
   T extends ClassicModel,
 > implements ClassicFacade {
   protected abstract readonly frostProtectionLocation: keyof ClassicFrostProtectionLocation

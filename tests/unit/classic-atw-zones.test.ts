@@ -13,23 +13,30 @@ import {
   ClassicDeviceAtwFacade,
   ClassicDeviceAtwHasZone2Facade,
 } from '../../src/facades/index.ts'
-import { atwDevice, atwDeviceData, buildingData } from '../fixtures.ts'
+import {
+  classicAtwDevice,
+  classicAtwDeviceData,
+  classicBuildingData,
+} from '../classic-fixtures.ts'
 import { assertDeviceType, createMockApi } from '../helpers.ts'
 
 const createAtwData = (
   overrides: Partial<ClassicListDeviceDataAtw> = {},
 ): ClassicListDeviceDataAtw =>
-  atwDeviceData({ OperationMode: ClassicOperationModeState.idle, ...overrides })
+  classicAtwDeviceData({
+    OperationMode: ClassicOperationModeState.idle,
+    ...overrides,
+  })
 
 const mockApi = createMockApi()
 
 const createAtwRegistry = (data: ClassicListDeviceDataAtw): ClassicRegistry => {
   const registry = new ClassicRegistry()
   registry.syncBuildings([
-    buildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
+    classicBuildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
   ])
   registry.syncDevices([
-    atwDevice({
+    classicAtwDevice({
       AreaID: null,
       Device: data,
       FloorID: null,

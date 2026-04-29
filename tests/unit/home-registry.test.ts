@@ -1,21 +1,17 @@
 import { describe, expect, it } from 'vitest'
 
-import type { HomeDeviceData } from '../../src/types/index.ts'
 import { HomeDeviceType } from '../../src/constants.ts'
 import {
   type TypedHomeDeviceData,
   HomeRegistry,
 } from '../../src/entities/home-registry.ts'
-import { mock } from '../helpers.ts'
+import { typedHomeDeviceData } from '../home-fixtures.ts'
 
 const createDevice = (
   id: string,
   name = 'ClassicDevice',
   type: HomeDeviceType = HomeDeviceType.Ata,
-): TypedHomeDeviceData => ({
-  device: mock<HomeDeviceData>({ givenDisplayName: name, id, settings: [] }),
-  type,
-})
+): TypedHomeDeviceData => typedHomeDeviceData({ id, name }, type)
 
 describe('home device registry', () => {
   it('should sync new devices', () => {

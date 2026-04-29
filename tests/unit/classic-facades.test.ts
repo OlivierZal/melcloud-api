@@ -31,35 +31,37 @@ import {
   toClassicBuildingId,
 } from '../../src/types/index.ts'
 import {
-  areaData,
-  ataDevice,
-  ataDeviceData,
-  atwDevice,
-  atwDeviceData,
-  buildingData,
-  ervDevice,
-  floorData,
-  frostProtectionResponse,
-  holidayModeResponse,
-  reportData,
-} from '../fixtures.ts'
+  classicAreaData,
+  classicAtaDevice,
+  classicAtaDeviceData,
+  classicAtwDevice,
+  classicAtwDeviceData,
+  classicBuildingData,
+  classicErvDevice,
+  classicFloorData,
+  classicFrostProtectionResponse,
+  classicHolidayModeResponse,
+  classicReportData,
+} from '../classic-fixtures.ts'
 import { assertDeviceType, cast, defined, mock } from '../helpers.ts'
 
 type DeviceModelAta = ClassicDevice<typeof ClassicDeviceType.Ata>
 
 const createRegistry = (): ClassicRegistry => {
   const registry = new ClassicRegistry()
-  registry.syncBuildings([buildingData({ HMDefined: true })])
-  registry.syncFloors([floorData()])
-  registry.syncAreas([areaData()])
+  registry.syncBuildings([classicBuildingData({ HMDefined: true })])
+  registry.syncFloors([classicFloorData()])
+  registry.syncAreas([classicAreaData()])
   registry.syncDevices([
-    ataDevice({
-      Device: ataDeviceData({
+    classicAtaDevice({
+      Device: classicAtaDeviceData({
         OperationMode: ClassicOperationMode.heat,
       }),
     }),
-    atwDevice({ Device: atwDeviceData({ SetTemperatureZone2: 22 }) }),
-    ervDevice(),
+    classicAtwDevice({
+      Device: classicAtwDeviceData({ SetTemperatureZone2: 22 }),
+    }),
+    classicErvDevice(),
   ])
   return registry
 }
@@ -81,7 +83,7 @@ const createMockApi = (
     getFrostProtection: vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockResolvedValue({
-        data: frostProtectionResponse({ FPDefined: true }),
+        data: classicFrostProtectionResponse({ FPDefined: true }),
       }),
     getGroup: vi.fn<ClassicAPIAdapter['getGroup']>().mockResolvedValue(
       cast({
@@ -91,17 +93,17 @@ const createMockApi = (
     getHolidayMode: vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockResolvedValue({
-        data: holidayModeResponse({ HMDefined: true }),
+        data: classicHolidayModeResponse({ HMDefined: true }),
       }),
     getHourlyTemperatures: vi
       .fn<ClassicAPIAdapter['getHourlyTemperatures']>()
       .mockResolvedValue({
-        data: reportData(),
+        data: classicReportData(),
       }),
     getInternalTemperatures: vi
       .fn<ClassicAPIAdapter['getInternalTemperatures']>()
       .mockResolvedValue({
-        data: reportData(),
+        data: classicReportData(),
       }),
     getOperationModes: vi
       .fn<ClassicAPIAdapter['getOperationModes']>()
@@ -109,12 +111,12 @@ const createMockApi = (
         data: [{ Key: 'Heating', Value: 100 }],
       }),
     getSignal: vi.fn<ClassicAPIAdapter['getSignal']>().mockResolvedValue({
-      data: reportData(),
+      data: classicReportData(),
     }),
     getTemperatures: vi
       .fn<ClassicAPIAdapter['getTemperatures']>()
       .mockResolvedValue({
-        data: reportData(),
+        data: classicReportData(),
       }),
     getTiles: cast(
       vi
@@ -311,12 +313,12 @@ const createZone2Facade = (
   registry: ClassicRegistry
 } => {
   const registry = new ClassicRegistry()
-  registry.syncBuildings([buildingData({ HMDefined: true })])
-  registry.syncFloors([floorData()])
-  registry.syncAreas([areaData()])
+  registry.syncBuildings([classicBuildingData({ HMDefined: true })])
+  registry.syncFloors([classicFloorData()])
+  registry.syncAreas([classicAreaData()])
   registry.syncDevices([
-    atwDevice({
-      Device: atwDeviceData({ HasZone2: true, ...deviceOverrides }),
+    classicAtwDevice({
+      Device: classicAtwDeviceData({ HasZone2: true, ...deviceOverrides }),
     }),
   ])
   const api = createMockApi(apiOverrides)
@@ -599,7 +601,7 @@ describe('base facade frost protection fallback', () => {
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: frostProtectionResponse(),
+        data: classicFrostProtectionResponse(),
       })
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
     const result = await facade.getFrostProtection()
@@ -612,7 +614,7 @@ describe('base facade frost protection fallback', () => {
     const fpMock = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockResolvedValue({
-        data: frostProtectionResponse({ FPDefined: true }),
+        data: classicFrostProtectionResponse({ FPDefined: true }),
       })
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
     const result1 = await facade.getFrostProtection()
@@ -627,7 +629,7 @@ describe('base facade frost protection fallback', () => {
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: frostProtectionResponse(),
+        data: classicFrostProtectionResponse(),
       })
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
     const result1 = await facade.getFrostProtection()
@@ -644,7 +646,7 @@ describe('base facade holiday mode fallback', () => {
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: holidayModeResponse(),
+        data: classicHolidayModeResponse(),
       })
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
     const result = await facade.getHolidayMode()
@@ -657,7 +659,7 @@ describe('base facade holiday mode fallback', () => {
     const hmMock = vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockResolvedValue({
-        data: holidayModeResponse({ HMDefined: true }),
+        data: classicHolidayModeResponse({ HMDefined: true }),
       })
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
     const result1 = await facade.getHolidayMode()
@@ -672,7 +674,7 @@ describe('base facade holiday mode fallback', () => {
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: holidayModeResponse(),
+        data: classicHolidayModeResponse(),
       })
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
     const result1 = await facade.getHolidayMode()
@@ -689,7 +691,7 @@ describe('base facade frost protection with device fallback', () => {
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: frostProtectionResponse(),
+        data: classicFrostProtectionResponse(),
       })
     const { api, facade } = createAreaFacade({ getFrostProtection: fpMock })
     await facade.updateFrostProtection({ max: 14, min: 6 })
@@ -707,7 +709,7 @@ describe('base facade holiday mode with device fallback', () => {
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockRejectedValueOnce(new Error('zone not found'))
       .mockResolvedValue({
-        data: holidayModeResponse(),
+        data: classicHolidayModeResponse(),
       })
     const { api, facade } = createAreaFacade({ getHolidayMode: hmMock })
     await facade.updateHolidayMode({ to: '2024-12-31' })

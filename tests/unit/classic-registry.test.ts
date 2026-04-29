@@ -12,18 +12,18 @@ import {
   toClassicFloorId,
 } from '../../src/types/index.ts'
 import {
-  areaData,
-  ataDevice,
-  atwDevice,
-  buildingData,
-  ervDevice,
-  floorData,
-} from '../fixtures.ts'
+  classicAreaData,
+  classicAtaDevice,
+  classicAtwDevice,
+  classicBuildingData,
+  classicErvDevice,
+  classicFloorData,
+} from '../classic-fixtures.ts'
 import { cast, createPopulatedRegistry, defined } from '../helpers.ts'
 
 const allBuildings = [
-  buildingData({ Name: 'ClassicBuilding 1' }),
-  buildingData({
+  classicBuildingData({ Name: 'ClassicBuilding 1' }),
+  classicBuildingData({
     FPDefined: false,
     ID: toClassicBuildingId(2),
     Location: 20,
@@ -32,9 +32,9 @@ const allBuildings = [
 ]
 
 const allFloors = [
-  floorData({ Name: 'ClassicFloor 1' }),
-  floorData({ ID: 11, Name: 'ClassicFloor 2' }),
-  floorData({
+  classicFloorData({ Name: 'ClassicFloor 1' }),
+  classicFloorData({ ID: 11, Name: 'ClassicFloor 2' }),
+  classicFloorData({
     BuildingId: toClassicBuildingId(2),
     ID: 12,
     Name: 'ClassicFloor 3',
@@ -42,9 +42,9 @@ const allFloors = [
 ]
 
 const allAreas = [
-  areaData({ Name: 'ClassicArea 1' }),
-  areaData({ FloorId: null, ID: 101, Name: 'ClassicArea 2' }),
-  areaData({
+  classicAreaData({ Name: 'ClassicArea 1' }),
+  classicAreaData({ FloorId: null, ID: 101, Name: 'ClassicArea 2' }),
+  classicAreaData({
     BuildingId: toClassicBuildingId(2),
     FloorId: 12,
     ID: 102,
@@ -53,14 +53,14 @@ const allAreas = [
 ]
 
 const allDevices: ClassicListDeviceAny[] = [
-  ataDevice({ DeviceName: 'ClassicDevice ATA' }),
-  atwDevice({
+  classicAtaDevice({ DeviceName: 'ClassicDevice ATA' }),
+  classicAtwDevice({
     AreaID: toClassicAreaId(102),
     BuildingID: toClassicBuildingId(2),
     DeviceName: 'ClassicDevice ATW',
     FloorID: toClassicFloorId(12),
   }),
-  ervDevice({ AreaID: null, DeviceName: 'ClassicDevice ERV' }),
+  classicErvDevice({ AreaID: null, DeviceName: 'ClassicDevice ERV' }),
 ]
 
 const allFixtures = {
@@ -130,14 +130,14 @@ describe('model registry', () => {
       const ervBefore = registry.devices.getById(1002)
 
       registry.syncDevices([
-        ataDevice({ DeviceName: 'Updated ATA' }),
-        atwDevice({
+        classicAtaDevice({ DeviceName: 'Updated ATA' }),
+        classicAtwDevice({
           AreaID: toClassicAreaId(102),
           BuildingID: toClassicBuildingId(2),
           DeviceName: 'Updated ATW',
           FloorID: toClassicFloorId(12),
         }),
-        ervDevice({ AreaID: null, DeviceName: 'Updated ERV' }),
+        classicErvDevice({ AreaID: null, DeviceName: 'Updated ERV' }),
       ])
 
       expect(registry.devices.getById(1000)).toBe(ataBefore)
@@ -155,17 +155,17 @@ describe('model registry', () => {
       // Re-sync each device ID with a mismatched Type to cover all false branches
       registry.syncDevices([
         cast({
-          ...ataDevice(),
+          ...classicAtaDevice(),
           DeviceName: 'Mismatched',
           Type: ClassicDeviceType.Atw,
         }),
         cast({
-          ...atwDevice(),
+          ...classicAtwDevice(),
           DeviceName: 'Mismatched',
           Type: ClassicDeviceType.Erv,
         }),
         cast({
-          ...ervDevice(),
+          ...classicErvDevice(),
           DeviceName: 'Mismatched',
           Type: ClassicDeviceType.Ata,
         }),

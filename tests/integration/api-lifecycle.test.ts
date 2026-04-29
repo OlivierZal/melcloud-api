@@ -16,7 +16,10 @@ import {
   toClassicDeviceId,
   toClassicFloorId,
 } from '../../src/types/index.ts'
-import { ataDeviceData, buildingData } from '../fixtures.ts'
+import {
+  classicAtaDeviceData,
+  classicBuildingData,
+} from '../classic-fixtures.ts'
 import {
   cast,
   createMockHttpClient,
@@ -35,7 +38,7 @@ const transientError = (status: number): HttpError =>
 
 const buildingResponse: ClassicBuildingWithStructure[] = [
   mock<ClassicBuildingWithStructure>({
-    ...buildingData({
+    ...classicBuildingData({
       HMDefined: true,
       Location: 0,
       Name: 'Home',
@@ -53,7 +56,7 @@ const buildingResponse: ClassicBuildingWithStructure[] = [
                 {
                   AreaID: toClassicAreaId(100),
                   BuildingID: toClassicBuildingId(1),
-                  Device: ataDeviceData({
+                  Device: classicAtaDeviceData({
                     NumberOfFanSpeeds: 5,
                     SetTemperature: 23,
                   }),
@@ -86,7 +89,6 @@ describe('api lifecycle', () => {
 
   beforeEach(async () => {
     vi.useFakeTimers()
-    vi.clearAllMocks()
     mockRequest.mockResolvedValue({
       data: buildingResponse,
       headers: {},

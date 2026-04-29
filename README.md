@@ -2,6 +2,15 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 
 ## Installation
 
+This package is published to **GitHub Packages**, not the public npm registry. Configure your project so npm fetches the `@olivierzal` scope from GitHub:
+
+```ini title=".npmrc"
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+@olivierzal:registry=https://npm.pkg.github.com
+```
+
+`GITHUB_TOKEN` must be a GitHub personal access token with the `read:packages` scope (export it in your shell or set it in your CI environment). Then:
+
 ```sh title="install"
 npm install @olivierzal/melcloud-api
 ```
@@ -27,8 +36,10 @@ for (const zone of manager.getZones()) {
 
 // Interact with a device through its facade
 const [device] = api.registry.getDevices()
-const facade = manager.get(device)
-await facade.updateValues({ Power: true })
+if (device !== undefined) {
+  const facade = manager.get(device)
+  await facade.updateValues({ Power: true })
+}
 ```
 
 ### MELCloud Home
@@ -46,9 +57,11 @@ const manager = new HomeFacadeManager(api)
 
 // Interact with a device through its facade
 const [device] = api.registry.getAll()
-const facade = manager.get(device)
-console.log(facade.name, facade.operationMode, facade.setTemperature)
-await facade.updateValues({ setTemperature: 21 })
+if (device !== undefined) {
+  const facade = manager.get(device)
+  console.log(facade.name, facade.operationMode, facade.setTemperature)
+  await facade.updateValues({ setTemperature: 21 })
+}
 ```
 
 ## Imports
@@ -71,12 +84,11 @@ import type * as Home from '@olivierzal/melcloud-api/home'
 const a: Classic.GetDeviceData<0> = ...
 const b: Home.AtaValues = ...
 
-// Module-scoped subpaths for fine-grained imports (tree-shaking hints)
-import { NoChangesError } from '@olivierzal/melcloud-api/errors'
-import type { ClassicGetDeviceData } from '@olivierzal/melcloud-api/types'
+// Shared enum-like constants (e.g. CLASSIC_FLAG_UNCHANGED, HomeDeviceType)
+import { ClassicDeviceType, HomeDeviceType } from '@olivierzal/melcloud-api/constants'
 ```
 
-Available subpaths: `/classic`, `/home`, `/api`, `/constants`, `/decorators`, `/entities`, `/enum-mappings`, `/errors`, `/facades`, `/observability`, `/resilience`, `/types`.
+Available subpaths: `/classic`, `/home`, `/constants`.
 
 ## Documentation
 

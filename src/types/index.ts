@@ -110,6 +110,7 @@ export {
 export {
   type Failure,
   type HomeError,
+  type HomeResult,
   type Result,
   type Success,
   err,

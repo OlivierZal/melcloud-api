@@ -6,15 +6,10 @@ jobs:
       packages: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+      - uses: ./.github/actions/setup-node-and-install
         with:
-          cache: npm
-          node-version: latest
           registry-url: https://npm.pkg.github.com
           scope: '@olivierzal'
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
       - env:
           IS_PRERELEASE: ${{ github.event.release.prerelease }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

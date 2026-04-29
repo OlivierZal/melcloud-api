@@ -4,6 +4,9 @@ export interface Failure<TError> {
   readonly ok: false
 }
 
+/** Convenience alias for Home outcomes — every Home best-effort getter uses {@link HomeError} as its failure type. */
+export type HomeResult<T> = Result<T, HomeError>
+
 /**
  * Discriminated result for best-effort SDK calls whose failure modes
  * carry information the caller should be able to branch on.

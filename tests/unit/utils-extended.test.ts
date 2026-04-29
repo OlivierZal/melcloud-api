@@ -93,7 +93,7 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
 })
 
 describe.concurrent(getChartLineOptions, () => {
-  const reportData: ClassicReportData = {
+  const classicReportData: ClassicReportData = {
     Data: [
       [1, 2, 3],
       [4, 5, 6],
@@ -108,7 +108,7 @@ describe.concurrent(getChartLineOptions, () => {
 
   it('maps data series with legend names', () => {
     const result = getChartLineOptions(
-      reportData,
+      classicReportData,
       ['ClassicTemperature', 'Humidity'],
       '°C',
     )
@@ -123,7 +123,7 @@ describe.concurrent(getChartLineOptions, () => {
 
   it('filters out series with undefined legend entries', () => {
     const result = getChartLineOptions(
-      reportData,
+      classicReportData,
       ['ClassicTemperature', undefined],
       '°C',
     )
@@ -133,7 +133,11 @@ describe.concurrent(getChartLineOptions, () => {
   })
 
   it('returns empty series when all legends are undefined', () => {
-    const result = getChartLineOptions(reportData, [undefined, undefined], '°C')
+    const result = getChartLineOptions(
+      classicReportData,
+      [undefined, undefined],
+      '°C',
+    )
 
     expect(result.series).toHaveLength(0)
   })

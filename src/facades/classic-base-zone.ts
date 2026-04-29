@@ -12,13 +12,13 @@ import type {
 import { ClassicDeviceType } from '../constants.ts'
 import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
 import type { ClassicZoneFacade } from './classic-types.ts'
-import { BaseFacade } from './classic-base.ts'
+import { ClassicBaseFacade } from './classic-base.ts'
 
 /** Abstract base for zone facades (building, floor, area) that support ATA group operations. */
 export abstract class BaseZoneFacade<
   T extends ClassicArea | ClassicBuilding | ClassicFloor,
 >
-  extends BaseFacade<T>
+  extends ClassicBaseFacade<T>
   implements ClassicZoneFacade
 {
   protected abstract readonly groupSpecificationKey: keyof ClassicSetGroupPostData['Specification']

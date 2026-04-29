@@ -9,11 +9,10 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+      - uses: ./.github/actions/setup-node-and-install
         with:
-          cache: npm
-          node-version: latest
+          install: 'false'
+          node-version: lts/*
       - run: npm audit --audit-level=high --omit=dev
   check:
     if: github.actor != 'dependabot[bot]'
@@ -22,12 +21,9 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+      - uses: ./.github/actions/setup-node-and-install
         with:
-          cache: npm
-          node-version: latest
-      - run: npm ci --ignore-scripts
+          node-version: lts/*
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run format
@@ -38,14 +34,10 @@ jobs:
       contents: read
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: ./.github/actions/setup-node-and-install
         with:
-          fetch-depth: 0
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          cache: npm
+          fetch-depth: '0'
           node-version: ${{ matrix.node-version }}
-      - run: npm ci --ignore-scripts
       - run: npm test -- --coverage
       - if: matrix.node-version == 'latest'
         uses: SonarSource/sonarqube-scan-action@299e4b793aaa83bf2aba7c9c14bedbb485688ec4
