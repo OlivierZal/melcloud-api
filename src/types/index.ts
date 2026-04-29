@@ -108,6 +108,9 @@ export {
   toClassicFloorId,
 } from './ids.ts'
 export {
+  type ApiRequestError,
+  type ClassicError,
+  type ClassicResult,
   type Failure,
   type HomeError,
   type HomeResult,
