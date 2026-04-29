@@ -177,13 +177,15 @@ export class HomeDeviceAtaFacade {
 
   #setting(name: 'OperationMode'): HomeOperationMode
 
+  #setting(name: 'Power' | 'SetFanSpeed'): string
+
   #setting(name: 'RoomTemperature' | 'SetTemperature'): number
 
   #setting(name: 'VaneHorizontalDirection'): HomeHorizontal
 
   #setting(name: 'VaneVerticalDirection'): HomeVertical
 
-  #setting(name: string): string
+  #setting(name: string): unknown
 
   #setting(name: string): unknown {
     const raw = getSetting(this.#model.data.settings, name)
