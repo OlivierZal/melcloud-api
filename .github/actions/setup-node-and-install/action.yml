@@ -1,9 +1,5 @@
-description: Checkout, set up Node.js with npm cache, and install dependencies with hardened flags
+description: Set up Node.js with npm cache and install dependencies with hardened flags. Caller must run actions/checkout first — composite actions cannot reference local files before the repo is checked out.
 inputs:
-  fetch-depth:
-    default: '1'
-    description: Depth to pass to actions/checkout. Use '0' for jobs that need full history (e.g. SonarCloud).
-    required: false
   install:
     default: 'true'
     description: Whether to run `npm ci --ignore-scripts`. Set to 'false' for jobs that only need the source tree (no install).
@@ -21,9 +17,6 @@ inputs:
 name: Setup Node and install
 runs:
   steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      with:
-        fetch-depth: ${{ inputs.fetch-depth }}
     - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
       with:
         cache: npm
