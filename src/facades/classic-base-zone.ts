@@ -3,14 +3,15 @@ import type {
   ClassicBuilding,
   ClassicFloor,
 } from '../entities/index.ts'
-import type {
-  ClassicFailureData,
-  ClassicGroupState,
-  ClassicSetGroupPostData,
-  ClassicSuccessData,
-} from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
+import {
+  type ClassicFailureData,
+  type ClassicGroupState,
+  type ClassicSetGroupPostData,
+  type ClassicSuccessData,
+  unwrapOrThrow,
+} from '../types/index.ts'
 import type { ClassicZoneFacade } from './classic-types.ts'
 import { ClassicBaseFacade } from './classic-base.ts'
 
@@ -27,14 +28,14 @@ export abstract class BaseZoneFacade<
   public async getGroup(): Promise<ClassicGroupState> {
     try {
       const {
-        data: {
-          Data: {
-            Group: { State: state },
-          },
+        Data: {
+          Group: { State: state },
         },
-      } = await this.api.getGroup({
-        postData: { [this.groupSpecificationKey]: this.id },
-      })
+      } = unwrapOrThrow(
+        await this.api.getGroup({
+          postData: { [this.groupSpecificationKey]: this.id },
+        }),
+      )
       return state
     } catch (error) {
       throw new Error('No air-to-air device found', { cause: error })

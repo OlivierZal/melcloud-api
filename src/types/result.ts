@@ -52,6 +52,32 @@ export const err = <TError>(error: TError): Failure<TError> => ({
 })
 
 /**
+ * Unwrap a {@link ClassicResult} / {@link HomeResult}: return the
+ * value on success, or throw the underlying `cause` (preserving the
+ * original exception class) when present, falling back to a synthetic
+ * `Error` for the variants that carry no cause (`rate-limited`).
+ *
+ * The helper exists so facades can preserve their throw-on-failure
+ * contract while the underlying SDK methods expose the typed
+ * {@link Result} surface to power users who want to branch on the
+ * failure variant directly.
+ * @param result - The {@link Result} to unwrap.
+ * @returns The success value.
+ * @throws The original `cause` exception, or an `Error` synthesised
+ * from the failure variant.
+ */
+export const unwrapOrThrow = <T>(result: Result<T, ApiRequestError>): T => {
+  if (result.ok) {
+    return result.value
+  }
+  const { error } = result
+  if ('cause' in error && error.cause instanceof Error) {
+    throw error.cause
+  }
+  throw new Error(`API request failed: ${error.kind}`)
+}
+
+/**
  * Discriminated failure class emitted by the SDK's best-effort getters
  * (Classic + Home telemetry, reports, and settings reads).
  *
@@ -70,8 +96,9 @@ export const err = <TError>(error: TError): Failure<TError> => ({
  * - `server`: any other HTTP error from the transport.
  *
  * Classic and Home share the same error space (same transport layer,
- * same resilience policies), so {@link ClassicError} and
- * {@link HomeError} are aliases for this neutral type.
+ * same resilience policies); both surfaces reference this single
+ * neutral type. {@link ClassicResult} and {@link HomeResult} are
+ * convenience aliases for `Result<T, ApiRequestError>`.
  */
 export type ApiRequestError =
   | {
@@ -87,9 +114,3 @@ export type ApiRequestError =
       readonly cause?: unknown
     }
   | { readonly kind: 'unauthorized'; readonly cause?: unknown }
-
-/** Backwards-compat alias for {@link ApiRequestError} on the Classic surface. */
-export type ClassicError = ApiRequestError
-
-/** Backwards-compat alias for {@link ApiRequestError} on the Home surface. */
-export type HomeError = ApiRequestError

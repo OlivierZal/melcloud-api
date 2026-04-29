@@ -17,6 +17,7 @@ import type {
   ClassicOperationModeLogData,
   ClassicReportData,
   ClassicReportPostData,
+  ClassicResult,
   ClassicSetDeviceData,
   ClassicSetDevicePostData,
   ClassicSetGroupPostData,
@@ -33,6 +34,16 @@ import type { BaseAPIConfig, SyncCallback } from './types.ts'
 /**
  * Low-level API adapter exposing all MELCloud HTTP endpoints.
  * Methods are grouped by supported device types.
+ *
+ * Best-effort getters return a {@link ClassicResult} so callers can
+ * branch on the typed failure shape (`network` / `unauthorized` /
+ * `rate-limited` / `server`) instead of catching opaque exceptions.
+ * The success payload is the unwrapped data — the prior `{ data }`
+ * envelope was stripped at the boundary, mirroring the Home API.
+ *
+ * Mutations (`update*`, `login`) and sync (`fetch`) keep their
+ * throw-on-failure contract — symmetric with Home's `updateValues`
+ * and `list`.
  */
 export interface ClassicAPIAdapter {
   /**
@@ -48,13 +59,13 @@ export interface ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicEnergyPostData
-  }) => Promise<{ data: ClassicEnergyData<T> }>
+  }) => Promise<ClassicResult<ClassicEnergyData<T>>>
   /** Fetch raw error log entries from the Classic API. */
   readonly getErrorEntries: ({
     postData,
   }: {
     postData: ClassicErrorLogPostData
-  }) => Promise<{ data: ClassicErrorLogData[] | ClassicFailureData }>
+  }) => Promise<ClassicResult<ClassicErrorLogData[] | ClassicFailureData>>
   /**
    * Retrieve a parsed and paginated error log for the given devices.
    * Supported by all device types.
@@ -68,66 +79,66 @@ export interface ClassicAPIAdapter {
     params,
   }: {
     params: ClassicSettingsParams
-  }) => Promise<{ data: ClassicFrostProtectionData }>
+  }) => Promise<ClassicResult<ClassicFrostProtectionData>>
   /** Fetch ATA device group state. ATA only. */
   readonly getGroup: ({
     postData,
   }: {
     postData: ClassicGetGroupPostData
-  }) => Promise<{ data: ClassicGetGroupData }>
+  }) => Promise<ClassicResult<ClassicGetGroupData>>
   /** Get holiday mode settings for a building, floor, area, or device. */
   readonly getHolidayMode: ({
     params,
   }: {
     params: ClassicSettingsParams
-  }) => Promise<{ data: ClassicHolidayModeData }>
+  }) => Promise<ClassicResult<ClassicHolidayModeData>>
   /** Fetch hourly temperature report. ATW only. */
   readonly getHourlyTemperatures: ({
     postData,
   }: {
     postData: { device: number; hour: Hour }
-  }) => Promise<{ data: ClassicReportData }>
+  }) => Promise<ClassicResult<ClassicReportData>>
   /** Fetch internal temperature report. ATW only. */
   readonly getInternalTemperatures: ({
     postData,
   }: {
     postData: ClassicReportPostData
-  }) => Promise<{ data: ClassicReportData }>
+  }) => Promise<ClassicResult<ClassicReportData>>
   /** Fetch operation mode log data for charting. */
   readonly getOperationModes: ({
     postData,
   }: {
     postData: ClassicReportPostData
-  }) => Promise<{ data: ClassicOperationModeLogData }>
+  }) => Promise<ClassicResult<ClassicOperationModeLogData>>
   /** Fetch WiFi signal strength report. */
   readonly getSignal: ({
     postData,
   }: {
     postData: { devices: number | number[]; hour: Hour }
-  }) => Promise<{ data: ClassicReportData }>
+  }) => Promise<ClassicResult<ClassicReportData>>
   /** Fetch temperature log data. */
   readonly getTemperatures: ({
     postData,
   }: {
     postData: ClassicTemperatureLogPostData
-  }) => Promise<{ data: ClassicReportData }>
+  }) => Promise<ClassicResult<ClassicReportData>>
   /** Fetch tile data for device overview. */
   readonly getTiles: (({
     postData,
   }: {
     postData: ClassicTilesPostData<null>
-  }) => Promise<{ data: ClassicTilesData<null> }>) &
+  }) => Promise<ClassicResult<ClassicTilesData<null>>>) &
     (<T extends ClassicDeviceType>({
       postData,
     }: {
       postData: ClassicTilesPostData<T>
-    }) => Promise<{ data: ClassicTilesData<T> }>)
+    }) => Promise<ClassicResult<ClassicTilesData<T>>>)
   /** Fetch current device data by device and building ID. */
   readonly getValues: <T extends ClassicDeviceType>({
     params,
   }: {
     params: ClassicGetDeviceDataParams
-  }) => Promise<{ data: ClassicGetDeviceData<T> }>
+  }) => Promise<ClassicResult<ClassicGetDeviceData<T>>>
   /** Update frost protection settings. */
   readonly updateFrostProtection: ({
     postData,

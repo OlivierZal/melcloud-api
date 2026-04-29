@@ -28,6 +28,7 @@ import {
 import {
   type ClassicSetDeviceDataAta,
   type ClassicSetDevicePostData,
+  ok,
   toClassicBuildingId,
 } from '../../src/types/index.ts'
 import {
@@ -74,59 +75,49 @@ const createMockClassicApi = (
     fetch: vi.fn<ClassicAPIAdapter['fetch']>().mockResolvedValue([]),
     getEnergy: vi
       .fn<ClassicAPIAdapter['getEnergy']>()
-      .mockResolvedValue(cast({ data: {} })),
+      .mockResolvedValue(ok(cast({}))),
     getErrorEntries: vi
       .fn<ClassicAPIAdapter['getErrorEntries']>()
-      .mockResolvedValue({ data: [] }),
+      .mockResolvedValue(ok([])),
     getErrorLog: vi
       .fn<ClassicAPIAdapter['getErrorLog']>()
       .mockResolvedValue(cast({ errors: [] })),
     getFrostProtection: vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
-      .mockResolvedValue({
-        data: classicFrostProtectionResponse({ FPDefined: true }),
-      }),
-    getGroup: vi.fn<ClassicAPIAdapter['getGroup']>().mockResolvedValue(
-      cast({
-        data: { Data: { Group: { State: { Power: true } } } },
-      }),
-    ),
+      .mockResolvedValue(
+        ok(classicFrostProtectionResponse({ FPDefined: true })),
+      ),
+    getGroup: vi
+      .fn<ClassicAPIAdapter['getGroup']>()
+      .mockResolvedValue(
+        ok(cast({ Data: { Group: { State: { Power: true } } } })),
+      ),
     getHolidayMode: vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
-      .mockResolvedValue({
-        data: classicHolidayModeResponse({ HMDefined: true }),
-      }),
+      .mockResolvedValue(ok(classicHolidayModeResponse({ HMDefined: true }))),
     getHourlyTemperatures: vi
       .fn<ClassicAPIAdapter['getHourlyTemperatures']>()
-      .mockResolvedValue({
-        data: classicReportData(),
-      }),
+      .mockResolvedValue(ok(classicReportData())),
     getInternalTemperatures: vi
       .fn<ClassicAPIAdapter['getInternalTemperatures']>()
-      .mockResolvedValue({
-        data: classicReportData(),
-      }),
+      .mockResolvedValue(ok(classicReportData())),
     getOperationModes: vi
       .fn<ClassicAPIAdapter['getOperationModes']>()
-      .mockResolvedValue({
-        data: [{ Key: 'Heating', Value: 100 }],
-      }),
-    getSignal: vi.fn<ClassicAPIAdapter['getSignal']>().mockResolvedValue({
-      data: classicReportData(),
-    }),
+      .mockResolvedValue(ok([{ Key: 'Heating', Value: 100 }])),
+    getSignal: vi
+      .fn<ClassicAPIAdapter['getSignal']>()
+      .mockResolvedValue(ok(classicReportData())),
     getTemperatures: vi
       .fn<ClassicAPIAdapter['getTemperatures']>()
-      .mockResolvedValue({
-        data: classicReportData(),
-      }),
+      .mockResolvedValue(ok(classicReportData())),
     getTiles: cast(
       vi
         .fn<ClassicAPIAdapter['getTiles']>()
-        .mockResolvedValue(cast({ data: { SelectedDevice: null, Tiles: [] } })),
+        .mockResolvedValue(ok(cast({ SelectedDevice: null, Tiles: [] }))),
     ),
     getValues: vi
       .fn<ClassicAPIAdapter['getValues']>()
-      .mockResolvedValue(cast({ data: { EffectiveFlags: 0 } })),
+      .mockResolvedValue(ok(cast({ EffectiveFlags: 0 }))),
     notifySync: vi.fn<SyncCallback>().mockResolvedValue(),
     updateFrostProtection: vi
       .fn<ClassicAPIAdapter['updateFrostProtection']>()
@@ -601,9 +592,7 @@ describe('base facade frost protection fallback', () => {
     const fpMock = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockRejectedValueOnce(new Error('zone not found'))
-      .mockResolvedValue({
-        data: classicFrostProtectionResponse(),
-      })
+      .mockResolvedValue(ok(classicFrostProtectionResponse()))
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
     const result = await facade.getFrostProtection()
 
@@ -614,9 +603,9 @@ describe('base facade frost protection fallback', () => {
   it('uses cached frost protection state on subsequent calls', async () => {
     const fpMock = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
-      .mockResolvedValue({
-        data: classicFrostProtectionResponse({ FPDefined: true }),
-      })
+      .mockResolvedValue(
+        ok(classicFrostProtectionResponse({ FPDefined: true })),
+      )
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
     const result1 = await facade.getFrostProtection()
     const result2 = await facade.getFrostProtection()
@@ -629,9 +618,7 @@ describe('base facade frost protection fallback', () => {
     const fpMock = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockRejectedValueOnce(new Error('zone not found'))
-      .mockResolvedValue({
-        data: classicFrostProtectionResponse(),
-      })
+      .mockResolvedValue(ok(classicFrostProtectionResponse()))
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
     const result1 = await facade.getFrostProtection()
     const result2 = await facade.getFrostProtection()
@@ -646,9 +633,7 @@ describe('base facade holiday mode fallback', () => {
     const hmMock = vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockRejectedValueOnce(new Error('zone not found'))
-      .mockResolvedValue({
-        data: classicHolidayModeResponse(),
-      })
+      .mockResolvedValue(ok(classicHolidayModeResponse()))
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
     const result = await facade.getHolidayMode()
 
@@ -659,9 +644,7 @@ describe('base facade holiday mode fallback', () => {
   it('uses cached zone-level holiday mode on subsequent calls', async () => {
     const hmMock = vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
-      .mockResolvedValue({
-        data: classicHolidayModeResponse({ HMDefined: true }),
-      })
+      .mockResolvedValue(ok(classicHolidayModeResponse({ HMDefined: true })))
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
     const result1 = await facade.getHolidayMode()
     const result2 = await facade.getHolidayMode()
@@ -674,9 +657,7 @@ describe('base facade holiday mode fallback', () => {
     const hmMock = vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockRejectedValueOnce(new Error('zone not found'))
-      .mockResolvedValue({
-        data: classicHolidayModeResponse(),
-      })
+      .mockResolvedValue(ok(classicHolidayModeResponse()))
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
     const result1 = await facade.getHolidayMode()
     const result2 = await facade.getHolidayMode()
@@ -691,9 +672,7 @@ describe('base facade frost protection with device fallback', () => {
     const fpMock = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockRejectedValueOnce(new Error('zone not found'))
-      .mockResolvedValue({
-        data: classicFrostProtectionResponse(),
-      })
+      .mockResolvedValue(ok(classicFrostProtectionResponse()))
     const { api, facade } = createAreaFacade({ getFrostProtection: fpMock })
     await facade.updateFrostProtection({ max: 14, min: 6 })
     const call = vi.mocked(api.updateFrostProtection).mock.lastCall?.[0]
@@ -709,9 +688,7 @@ describe('base facade holiday mode with device fallback', () => {
     const hmMock = vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockRejectedValueOnce(new Error('zone not found'))
-      .mockResolvedValue({
-        data: classicHolidayModeResponse(),
-      })
+      .mockResolvedValue(ok(classicHolidayModeResponse()))
     const { api, facade } = createAreaFacade({ getHolidayMode: hmMock })
     await facade.updateHolidayMode({ to: '2024-12-31' })
     const call = vi.mocked(api.updateHolidayMode).mock.lastCall?.[0]
@@ -1216,14 +1193,14 @@ describe('erv device facade', () => {
     const { facade } = createErvFacade({
       getOperationModes: vi
         .fn<ClassicAPIAdapter['getOperationModes']>()
-        .mockResolvedValue({
-          data: [
+        .mockResolvedValue(
+          ok([
             { Key: 'Power', Value: 50 },
             { Key: 'ActualRecovery', Value: 30 },
             { Key: 'ActualBypassOperationMode', Value: 10 },
             { Key: 'Heating', Value: 10 },
-          ],
-        }),
+          ]),
+        ),
     })
     const result = await facade.getOperationModes()
 

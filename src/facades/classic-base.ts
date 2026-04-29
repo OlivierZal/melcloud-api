@@ -31,6 +31,7 @@ import {
   type ClassicTilesData,
   type Hour,
   toClassicDeviceId,
+  unwrapOrThrow,
 } from '../types/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'
 import type {
@@ -258,9 +259,11 @@ export abstract class ClassicBaseFacade<
   public async getSignalStrength(
     hour: Hour = DateTime.now().hour,
   ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.getSignal({
-      postData: { devices: this.#deviceIds, hour },
-    })
+    const data = unwrapOrThrow(
+      await this.api.getSignal({
+        postData: { devices: this.#deviceIds, hour },
+      }),
+    )
     return getChartLineOptions(data, this.#deviceNames, 'dBm')
   }
 
@@ -275,16 +278,17 @@ export abstract class ClassicBaseFacade<
       DeviceIDs: this.#deviceIds.map((id) => toClassicDeviceId(id)),
     }
     if (device === false || !this.#deviceIds.includes(device.id)) {
-      const { data } = await this.api.getTiles({ postData })
-      return data
+      return unwrapOrThrow(await this.api.getTiles({ postData }))
     }
-    const { data } = await this.api.getTiles({
-      postData: {
-        ...postData,
-        SelectedBuilding: device.buildingId,
-        SelectedDevice: device.id,
-      },
-    })
+    const data = unwrapOrThrow(
+      await this.api.getTiles({
+        postData: {
+          ...postData,
+          SelectedBuilding: device.buildingId,
+          SelectedDevice: device.id,
+        },
+      }),
+    )
     return data as ClassicTilesData<TDeviceType>
   }
 
@@ -298,7 +302,7 @@ export abstract class ClassicBaseFacade<
     params: ClassicSettingsParams,
     isDefined = true,
   ): Promise<ClassicFrostProtectionData> {
-    const { data } = await this.api.getFrostProtection({ params })
+    const data = unwrapOrThrow(await this.api.getFrostProtection({ params }))
     this.isFrostProtectionAtZoneLevel = isDefined
     return data
   }
@@ -307,7 +311,7 @@ export abstract class ClassicBaseFacade<
     params: ClassicSettingsParams,
     isDefined = true,
   ): Promise<ClassicHolidayModeData> {
-    const { data } = await this.api.getHolidayMode({ params })
+    const data = unwrapOrThrow(await this.api.getHolidayMode({ params }))
     this.isHolidayModeAtZoneLevel = isDefined
     return data
   }

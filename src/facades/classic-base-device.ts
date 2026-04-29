@@ -1,16 +1,5 @@
 import { DateTime } from 'luxon'
 
-import type {
-  ClassicDeviceID,
-  ClassicEnergyData,
-  ClassicGetDeviceData,
-  ClassicListDeviceData,
-  ClassicReportPostData,
-  ClassicSetDeviceData,
-  ClassicTilesData,
-  ClassicUpdateDeviceData,
-  Hour,
-} from '../types/index.ts'
 import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import {
   classicUpdateDevice,
@@ -23,6 +12,18 @@ import {
   isClassicDeviceOfType,
 } from '../entities/index.ts'
 import { NoChangesError } from '../errors/index.ts'
+import {
+  type ClassicDeviceID,
+  type ClassicEnergyData,
+  type ClassicGetDeviceData,
+  type ClassicListDeviceData,
+  type ClassicReportPostData,
+  type ClassicSetDeviceData,
+  type ClassicTilesData,
+  type ClassicUpdateDeviceData,
+  type Hour,
+  unwrapOrThrow,
+} from '../types/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -146,10 +147,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   @syncDevices()
   @classicUpdateDevice()
   public async getValues(): Promise<ClassicGetDeviceData<T>> {
-    const { data } = await this.api.getValues<T>({
-      params: { buildingId: this.device.buildingId, id: this.id },
-    })
-    return data
+    return unwrapOrThrow(
+      await this.api.getValues<T>({
+        params: { buildingId: this.device.buildingId, id: this.id },
+      }),
+    )
   }
 
   @syncDevices()
@@ -182,18 +184,21 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   public async getEnergy(query?: ReportQuery): Promise<ClassicEnergyData<T>> {
-    const { data } = await this.api.getEnergy<T>({
-      postData: this.#buildReportPostData(query),
-    })
-    return data
+    return unwrapOrThrow(
+      await this.api.getEnergy<T>({
+        postData: this.#buildReportPostData(query),
+      }),
+    )
   }
 
   public async getHourlyTemperatures(
     hour: Hour = DateTime.now().hour,
   ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.getHourlyTemperatures({
-      postData: { device: this.id, hour },
-    })
+    const data = unwrapOrThrow(
+      await this.api.getHourlyTemperatures({
+        postData: { device: this.id, hour },
+      }),
+    )
     return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
   }
 
@@ -201,9 +206,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     query?: ReportQuery,
     shouldUseExactRange = true,
   ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.getInternalTemperatures({
-      postData: this.#buildReportPostData(query, shouldUseExactRange),
-    })
+    const data = unwrapOrThrow(
+      await this.api.getInternalTemperatures({
+        postData: this.#buildReportPostData(query, shouldUseExactRange),
+      }),
+    )
     return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
   }
 
@@ -213,7 +220,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   ): Promise<ReportChartPieOptions> {
     const postData = this.#buildReportPostData(query, shouldUseExactRange)
     const dateRange = { from: postData.FromDate, to: postData.ToDate }
-    const { data } = await this.api.getOperationModes({ postData })
+    const data = unwrapOrThrow(await this.api.getOperationModes({ postData }))
     return getChartPieOptions(data, dateRange)
   }
 
@@ -221,13 +228,15 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     query?: ReportQuery,
     shouldUseExactRange = true,
   ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.getTemperatures({
-      postData: {
-        ...this.#buildReportPostData(query, shouldUseExactRange),
-        Location: this.registry.buildings.getById(this.device.buildingId)
-          ?.location,
-      },
-    })
+    const data = unwrapOrThrow(
+      await this.api.getTemperatures({
+        postData: {
+          ...this.#buildReportPostData(query, shouldUseExactRange),
+          Location: this.registry.buildings.getById(this.device.buildingId)
+            ?.location,
+        },
+      }),
+    )
     return getChartLineOptions(data, this.temperaturesLegend, '°C')
   }
 

@@ -856,7 +856,7 @@ describe('mELCloud Classic API', () => {
         params: { buildingId: 1, id: 1 },
       })
 
-      expect(result.data).toStrictEqual({ value: 'retried' })
+      expect(result.ok && result.value).toStrictEqual({ value: 'retried' })
     })
 
     it('surfaces 401 when re-authentication fails', async () => {
@@ -879,9 +879,12 @@ describe('mELCloud Classic API', () => {
         })
       })
 
-      await expect(
-        api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toThrow('unauthorized')
+      const result = await api.getValues({
+        params: { buildingId: 1, id: 1 },
+      })
+
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.error.kind).toBe('unauthorized')
     })
 
     it('handles errors without crashing when error has no config', async () => {
@@ -895,9 +898,12 @@ describe('mELCloud Classic API', () => {
       // An error with no response — e.g. network/TLS failure
       mockRequest.mockRejectedValueOnce(new Error('connect ECONNREFUSED'))
 
-      await expect(
-        api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toThrow('connect ECONNREFUSED')
+      const result = await api.getValues({
+        params: { buildingId: 1, id: 1 },
+      })
+
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.error.kind).toBe('network')
     })
   })
 
