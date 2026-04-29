@@ -19,8 +19,10 @@ import {
   classicErvDevice,
   classicErvDeviceData,
   classicFloorData,
+  createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { createMockApi, createPopulatedRegistry, defined } from '../helpers.ts'
+import { defined } from '../helpers.ts'
 
 const ataData = classicAtaDeviceData({
   NumberOfFanSpeeds: 5,
@@ -111,17 +113,17 @@ const devices = [
 ]
 
 const createContext = (): {
-  api: ReturnType<typeof createMockApi>
+  api: ReturnType<typeof createMockClassicApi>
   manager: ClassicFacadeManager
   registry: ClassicRegistry
 } => {
-  const registry = createPopulatedRegistry({
+  const registry = populatedClassicRegistry({
     areas,
     buildings,
     devices,
     floors,
   })
-  const api = createMockApi()
+  const api = createMockClassicApi()
   const manager = new ClassicFacadeManager(api, registry)
   return { api, manager, registry }
 }
@@ -326,7 +328,7 @@ describe('registry + facade manager integration', () => {
     ])
     registry.syncDevices([defined(devices[3])])
 
-    const manager = new ClassicFacadeManager(createMockApi(), registry)
+    const manager = new ClassicFacadeManager(createMockClassicApi(), registry)
     const facade = manager.get(defined(registry.buildings.getById(2)))
 
     expect(facade.devices).toHaveLength(1)

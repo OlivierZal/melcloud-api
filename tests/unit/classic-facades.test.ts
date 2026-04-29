@@ -31,6 +31,7 @@ import {
   toClassicBuildingId,
 } from '../../src/types/index.ts'
 import {
+  assertClassicDeviceType,
   classicAreaData,
   classicAtaDevice,
   classicAtaDeviceData,
@@ -43,7 +44,7 @@ import {
   classicHolidayModeResponse,
   classicReportData,
 } from '../classic-fixtures.ts'
-import { assertDeviceType, cast, defined, mock } from '../helpers.ts'
+import { cast, defined, mock } from '../helpers.ts'
 
 type DeviceModelAta = ClassicDevice<typeof ClassicDeviceType.Ata>
 
@@ -66,7 +67,7 @@ const createRegistry = (): ClassicRegistry => {
   return registry
 }
 
-const createMockApi = (
+const createMockClassicApi = (
   overrides: Partial<ClassicAPIAdapter> = {},
 ): ClassicAPIAdapter =>
   mock<ClassicAPIAdapter>({
@@ -177,7 +178,7 @@ const createBuildingFacade = (
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
-  const api = createMockApi(apiOverrides)
+  const api = createMockClassicApi(apiOverrides)
   const instance = defined(registry.buildings.getById(1))
   return {
     api,
@@ -194,7 +195,7 @@ const createFloorFacade = (
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
-  const api = createMockApi(apiOverrides)
+  const api = createMockClassicApi(apiOverrides)
   const instance = defined(registry.floors.getById(10))
   return {
     api,
@@ -211,7 +212,7 @@ const createAreaFacade = (
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
-  const api = createMockApi(apiOverrides)
+  const api = createMockClassicApi(apiOverrides)
   const instance = defined(registry.areas.getById(100))
   return {
     api,
@@ -228,9 +229,9 @@ const createAtaFacade = (
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
-  const api = createMockApi(apiOverrides)
+  const api = createMockClassicApi(apiOverrides)
   const instance = defined(registry.devices.getById(1000))
-  assertDeviceType(instance, ClassicDeviceType.Ata)
+  assertClassicDeviceType(instance, ClassicDeviceType.Ata)
   return {
     api,
     facade: new ClassicDeviceAtaFacade(api, registry, instance),
@@ -246,9 +247,9 @@ const createAtwFacade = (
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
-  const api = createMockApi(apiOverrides)
+  const api = createMockClassicApi(apiOverrides)
   const instance = defined(registry.devices.getById(1001))
-  assertDeviceType(instance, ClassicDeviceType.Atw)
+  assertClassicDeviceType(instance, ClassicDeviceType.Atw)
   return {
     api,
     facade: new ClassicDeviceAtwFacade(api, registry, instance),
@@ -264,9 +265,9 @@ const createErvFacade = (
   registry: ClassicRegistry
 } => {
   const registry = createRegistry()
-  const api = createMockApi(apiOverrides)
+  const api = createMockClassicApi(apiOverrides)
   const instance = defined(registry.devices.getById(1002))
-  assertDeviceType(instance, ClassicDeviceType.Erv)
+  assertClassicDeviceType(instance, ClassicDeviceType.Erv)
   return {
     api,
     facade: new ClassicDeviceErvFacade(api, registry, instance),
@@ -321,9 +322,9 @@ const createZone2Facade = (
       Device: classicAtwDeviceData({ HasZone2: true, ...deviceOverrides }),
     }),
   ])
-  const api = createMockApi(apiOverrides)
+  const api = createMockClassicApi(apiOverrides)
   const instance = defined(registry.devices.getById(1001))
-  assertDeviceType(instance, ClassicDeviceType.Atw)
+  assertClassicDeviceType(instance, ClassicDeviceType.Atw)
   return {
     api,
     facade: new ClassicDeviceAtwHasZone2Facade(api, registry, instance),
@@ -385,7 +386,7 @@ describe('building facade', () => {
   it('calls getTiles with device selection', async () => {
     const { facade, registry } = createBuildingFacade()
     const device = defined(registry.devices.getById(1000))
-    assertDeviceType(device, ClassicDeviceType.Ata)
+    assertClassicDeviceType(device, ClassicDeviceType.Ata)
     const result = await facade.getTiles(device)
 
     expect(result).toHaveProperty('Tiles')
@@ -724,9 +725,9 @@ describe('base facade holiday mode with device fallback', () => {
 describe('base device facade type mismatch', () => {
   it('throws when device type does not match facade type', () => {
     const registry = createRegistry()
-    const api = createMockApi()
+    const api = createMockClassicApi()
     const instance = defined(registry.devices.getById(1001))
-    assertDeviceType(instance, ClassicDeviceType.Atw)
+    assertClassicDeviceType(instance, ClassicDeviceType.Atw)
     const facade = new ClassicDeviceAtaFacade(api, registry, cast(instance))
 
     expect(() => facade.data).toThrow('ClassicDevice type mismatch')
@@ -763,7 +764,7 @@ describe('base facade instance error', () => {
     const fpMock = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockRejectedValueOnce(new Error('zone not found'))
-    const api = createMockApi({ getFrostProtection: fpMock })
+    const api = createMockClassicApi({ getFrostProtection: fpMock })
     const registry = createRegistry()
     registry.syncAreas([
       {
@@ -1127,7 +1128,7 @@ describe('base device facade tiles', () => {
   it('calls super.getTiles when passed a different device instance', async () => {
     const { facade, registry } = createAtaFacade()
     const otherDevice = defined(registry.devices.getById(1001))
-    assertDeviceType(otherDevice, ClassicDeviceType.Atw)
+    assertClassicDeviceType(otherDevice, ClassicDeviceType.Atw)
     const result = await facade.getTiles(
       mock<DeviceModelAta>(cast(otherDevice)),
     )

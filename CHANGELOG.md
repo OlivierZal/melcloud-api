@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `HomeResult<T>` type alias (`Result<T, HomeError>`) re-exported from `./types`.
 - `tests/home-fixtures.ts` consolidating the `HomeDevice` / `HomeDeviceData` / `HomeDeviceCapabilities` factories that were duplicated across the Home test files.
 
+### Refactored
+
+- The Classic-only helpers `createMockApi`, `createPopulatedRegistry`, and `assertDeviceType` moved from `tests/helpers.ts` to `tests/classic-fixtures.ts` and renamed to `createMockClassicApi`, `populatedClassicRegistry`, and `assertClassicDeviceType` for consistency with the project-wide `Classic*` / `Home*` prefix convention. `tests/helpers.ts` now contains only scope-neutral helpers.
+
 ### Changed
 
 - `README.md`: subpath list trimmed to the actually exported `./classic`, `./home`, and `./constants`. Quick start examples now guard the destructured device against `undefined` (matches `noUncheckedIndexedAccess`). Installation section now documents the `.npmrc` setup required to pull from GitHub Packages.

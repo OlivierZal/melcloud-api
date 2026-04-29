@@ -16,8 +16,9 @@ import {
   classicAtwDeviceData,
   classicBuildingData,
   classicFloorData,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { createPopulatedRegistry, defined } from '../helpers.ts'
+import { defined } from '../helpers.ts'
 
 const buildings = [
   classicBuildingData({
@@ -88,7 +89,7 @@ const devices = [
 ]
 
 const createSyncedRegistry = (): ClassicRegistry =>
-  createPopulatedRegistry({ areas, buildings, devices, floors })
+  populatedClassicRegistry({ areas, buildings, devices, floors })
 
 describe('building retrieval', () => {
   it('returns all buildings with their hierarchy', () => {

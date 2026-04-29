@@ -14,11 +14,12 @@ import {
   ClassicDeviceAtwHasZone2Facade,
 } from '../../src/facades/index.ts'
 import {
+  assertClassicDeviceType,
   classicAtwDevice,
   classicAtwDeviceData,
   classicBuildingData,
+  createMockClassicApi,
 } from '../classic-fixtures.ts'
-import { assertDeviceType, createMockApi } from '../helpers.ts'
 
 const createAtwData = (
   overrides: Partial<ClassicListDeviceDataAtw> = {},
@@ -28,7 +29,7 @@ const createAtwData = (
     ...overrides,
   })
 
-const mockApi = createMockApi()
+const mockApi = createMockClassicApi()
 
 const createAtwRegistry = (data: ClassicListDeviceDataAtw): ClassicRegistry => {
   const registry = new ClassicRegistry()
@@ -50,7 +51,7 @@ const createFacade = (
 ): ClassicDeviceAtwFacade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
-  assertDeviceType(device, ClassicDeviceType.Atw)
+  assertClassicDeviceType(device, ClassicDeviceType.Atw)
   return new ClassicDeviceAtwFacade(mockApi, registry, device)
 }
 
@@ -59,7 +60,7 @@ const createZone2Facade = (
 ): ClassicDeviceAtwHasZone2Facade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
-  assertDeviceType(device, ClassicDeviceType.Atw)
+  assertClassicDeviceType(device, ClassicDeviceType.Atw)
   return new ClassicDeviceAtwHasZone2Facade(mockApi, registry, device)
 }
 

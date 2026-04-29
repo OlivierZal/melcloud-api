@@ -8,8 +8,9 @@ import {
   classicAtaDevice,
   classicBuildingData,
   classicFloorData,
+  createMockClassicApi,
 } from '../classic-fixtures.ts'
-import { createMockApi, defined } from '../helpers.ts'
+import { defined } from '../helpers.ts'
 
 const createManagerWithRegistry = (): {
   manager: ClassicFacadeManager
@@ -20,14 +21,14 @@ const createManagerWithRegistry = (): {
   registry.syncFloors([classicFloorData()])
   registry.syncAreas([classicAreaData()])
   registry.syncDevices([classicAtaDevice()])
-  const manager = new ClassicFacadeManager(createMockApi(), registry)
+  const manager = new ClassicFacadeManager(createMockClassicApi(), registry)
   return { manager, registry }
 }
 
 describe('facade manager', () => {
   it('returns null when no instance is provided', () => {
     const registry = new ClassicRegistry()
-    const manager = new ClassicFacadeManager(createMockApi(), registry)
+    const manager = new ClassicFacadeManager(createMockClassicApi(), registry)
 
     expect(manager.get()).toBeNull()
   })

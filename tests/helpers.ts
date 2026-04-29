@@ -1,29 +1,7 @@
 import { type MockInstance, expect, vi } from 'vitest'
 
-import type {
-  ClassicAPIAdapter,
-  Logger,
-  SettingManager,
-  SyncCallback,
-} from '../src/api/index.ts'
-import type { ClassicDeviceType } from '../src/constants.ts'
-import type {
-  ClassicAreaDataAny,
-  ClassicBuildingData,
-  ClassicFloorData,
-  ClassicListDeviceAny,
-} from '../src/types/index.ts'
-import {
-  type ClassicDeviceAny,
-  ClassicRegistry,
-} from '../src/entities/index.ts'
+import type { Logger, SettingManager } from '../src/api/index.ts'
 import { HttpClient, HttpError } from '../src/http/index.ts'
-
-// Default RSSI value (in dBm) used in the mock `getSignal` response
-// below. A mid-range -60 dBm keeps derived assertions (chart-line
-// thresholds, signal-quality bands) in a predictable band without
-// special-casing weak or strong-signal branches.
-const MOCK_SIGNAL_RSSI_DBM = -60
 
 export function cast(value: unknown): never
 export function cast(value: unknown): unknown {
@@ -54,55 +32,6 @@ export function mock<T extends object>(value?: Partial<T>): T
 export function mock(value: unknown = {}): unknown {
   return value
 }
-
-export const createMockApi = (
-  overrides: Partial<ClassicAPIAdapter> = {},
-): ClassicAPIAdapter =>
-  mock<ClassicAPIAdapter>({
-    fetch: vi.fn<ClassicAPIAdapter['fetch']>().mockResolvedValue([]),
-    getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>(),
-    getErrorEntries: vi.fn<ClassicAPIAdapter['getErrorEntries']>(),
-    getErrorLog: vi.fn<ClassicAPIAdapter['getErrorLog']>(),
-    getFrostProtection: vi
-      .fn<ClassicAPIAdapter['getFrostProtection']>()
-      .mockResolvedValue(cast({ data: { FPEnabled: false } })),
-    getGroup: vi.fn<ClassicAPIAdapter['getGroup']>(),
-    getHolidayMode: vi
-      .fn<ClassicAPIAdapter['getHolidayMode']>()
-      .mockResolvedValue(cast({ data: { HMEnabled: false } })),
-    getHourlyTemperatures: vi.fn<ClassicAPIAdapter['getHourlyTemperatures']>(),
-    getInternalTemperatures:
-      vi.fn<ClassicAPIAdapter['getInternalTemperatures']>(),
-    getOperationModes: vi.fn<ClassicAPIAdapter['getOperationModes']>(),
-    getSignal: vi.fn<ClassicAPIAdapter['getSignal']>().mockResolvedValue(
-      cast({
-        data: {
-          Data: [[{ Data: [MOCK_SIGNAL_RSSI_DBM], Name: 'ClassicDevice' }]],
-          Labels: ['12:00'],
-        },
-      }),
-    ),
-    getTemperatures: vi.fn<ClassicAPIAdapter['getTemperatures']>(),
-    getTiles: cast(
-      vi
-        .fn<ClassicAPIAdapter['getTiles']>()
-        .mockResolvedValue(cast({ data: {} })),
-    ),
-    getValues: vi.fn<ClassicAPIAdapter['getValues']>(),
-    notifySync: vi.fn<SyncCallback>().mockResolvedValue(),
-    updateFrostProtection: vi
-      .fn<ClassicAPIAdapter['updateFrostProtection']>()
-      .mockResolvedValue(cast({ data: { Success: true } })),
-    updateGroupState: vi.fn<ClassicAPIAdapter['updateGroupState']>(),
-    updateHolidayMode: vi
-      .fn<ClassicAPIAdapter['updateHolidayMode']>()
-      .mockResolvedValue(cast({ data: { Success: true } })),
-    updatePower: vi
-      .fn<ClassicAPIAdapter['updatePower']>()
-      .mockResolvedValue({ data: true }),
-    updateValues: cast(vi.fn<ClassicAPIAdapter['updateValues']>()),
-    ...overrides,
-  })
 
 /**
  * Spin up an `HttpClient` instance and a Vitest spy on its `request`
@@ -142,52 +71,6 @@ export const createSettingStore = (
       get: (key: string) => store.get(key) ?? null,
     },
   }
-}
-
-export function assertDeviceType<T extends ClassicDeviceType>(
-  device: ClassicDeviceAny | undefined,
-  type: T,
-): asserts device is Extract<ClassicDeviceAny, { type: T }>
-export function assertDeviceType(
-  device: ClassicDeviceAny | undefined,
-  type: ClassicDeviceType,
-): void {
-  if (device?.type !== type) {
-    throw new Error(
-      `Expected device of type ${String(type)}, got ${device ? String(device.type) : 'undefined'}`,
-    )
-  }
-}
-
-/**
- * Build a `ClassicRegistry` populated with the provided hierarchy in a
- * single call. Replaces the repeated 5-line
- * `new ClassicRegistry() + syncBuildings + syncFloors + syncAreas + syncDevices`
- * pattern found in multiple test files.
- * @param data - Flat arrays of buildings, floors, areas, and devices.
- * @param data.areas - ClassicArea rows to sync.
- * @param data.buildings - ClassicBuilding rows to sync.
- * @param data.devices - ClassicDevice rows to sync.
- * @param data.floors - ClassicFloor rows to sync.
- * @returns A fully synced `ClassicRegistry` instance.
- */
-export const createPopulatedRegistry = ({
-  areas,
-  buildings,
-  devices,
-  floors,
-}: {
-  areas: ClassicAreaDataAny[]
-  buildings: ClassicBuildingData[]
-  devices: ClassicListDeviceAny[]
-  floors: ClassicFloorData[]
-}): ClassicRegistry => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings(buildings)
-  registry.syncFloors(floors)
-  registry.syncAreas(areas)
-  registry.syncDevices(devices)
-  return registry
 }
 
 export const createLogger = (): Logger => ({
