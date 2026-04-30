@@ -1,13 +1,10 @@
+import type { TypedHomeDeviceData } from '../src/entities/home-registry.ts'
 import type {
   HomeDeviceCapabilities,
   HomeDeviceData,
 } from '../src/types/index.ts'
 import { HomeDeviceType } from '../src/constants.ts'
 import { HomeDevice } from '../src/entities/home-device.ts'
-import {
-  type TypedHomeDeviceData,
-  HomeRegistry,
-} from '../src/entities/home-registry.ts'
 import { mock } from './helpers.ts'
 
 // ---------------------------------------------------------------------------
@@ -40,7 +37,7 @@ const defaultCapabilities: HomeDeviceCapabilities = {
   numberOfFanSpeeds: 5,
 }
 
-export const homeDeviceCapabilities = (
+const homeDeviceCapabilities = (
   overrides: Partial<HomeDeviceCapabilities> = {},
 ): HomeDeviceCapabilities => ({ ...defaultCapabilities, ...overrides })
 
@@ -92,16 +89,3 @@ export const typedHomeDeviceData = (
   overrides: HomeDeviceDataOverrides = {},
   type: HomeDeviceType = HomeDeviceType.Ata,
 ): TypedHomeDeviceData => ({ device: homeDeviceData(overrides), type })
-
-// ---------------------------------------------------------------------------
-// Populated registry — mirrors the Classic `createPopulatedRegistry` helper
-// in `helpers.ts` for the flat Home registry shape.
-// ---------------------------------------------------------------------------
-
-export const populatedHomeRegistry = (
-  devices: readonly TypedHomeDeviceData[],
-): HomeRegistry => {
-  const registry = new HomeRegistry()
-  registry.sync([...devices])
-  return registry
-}

@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Removed
+
+- `tests/home-fixtures.ts`: dropped the speculative `populatedHomeRegistry` factory (no consumer) and un-exported `homeDeviceCapabilities` (used internally only). YAGNI cleanup surfaced by the post-merge audit of PR #1487.
+
 ## [38.0.0] - 2026-04-30
 
 ### Breaking
