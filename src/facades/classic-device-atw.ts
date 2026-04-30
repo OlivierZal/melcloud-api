@@ -1,17 +1,20 @@
-import type {
-  ClassicHotWaterState,
-  ClassicListDeviceDataAtw,
-  ClassicTemperatureDataAtw,
-  ClassicUpdateDeviceDataAtw,
-  ClassicZoneAtw,
-  ClassicZoneState,
-} from '../types/index.ts'
 import {
   ClassicDeviceType,
   ClassicOperationModeState,
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
 } from '../constants.ts'
+import {
+  type ApiRequestError,
+  type ClassicHotWaterState,
+  type ClassicListDeviceDataAtw,
+  type ClassicTemperatureDataAtw,
+  type ClassicUpdateDeviceDataAtw,
+  type ClassicZoneAtw,
+  type ClassicZoneState,
+  type Result,
+  mapResult,
+} from '../types/index.ts'
 import { clampToRange } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
@@ -144,14 +147,22 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   public override async getTemperatures(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<ReportChartLineOptions> {
+  ): Promise<Result<ReportChartLineOptions, ApiRequestError>> {
     const temperatures = await super.getTemperatures(query, shouldUseExactRange)
-    const { series: internalTemperaturesSeries } =
-      await this.getInternalTemperatures(query, shouldUseExactRange)
-    return {
-      ...temperatures,
-      series: mergeSeries(temperatures.series, internalTemperaturesSeries),
+    if (!temperatures.ok) {
+      return temperatures
     }
+    const internal = await this.getInternalTemperatures(
+      query,
+      shouldUseExactRange,
+    )
+    return mapResult(internal, ({ series: internalTemperaturesSeries }) => ({
+      ...temperatures.value,
+      series: mergeSeries(
+        temperatures.value.series,
+        internalTemperaturesSeries,
+      ),
+    }))
   }
 
   protected getZoneState(zone: ClassicZoneAtw): ClassicZoneState {

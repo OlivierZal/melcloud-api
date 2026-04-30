@@ -46,30 +46,21 @@ export const err = <TError>(error: TError): Failure<TError> => ({
 })
 
 /**
- * Unwrap a {@link Result}: return the value on success, or throw the
- * underlying `cause` (preserving the original exception class) when
- * present, falling back to a synthetic `Error` for the variants that
- * carry no cause (`rate-limited`).
- *
- * The helper exists so facades can preserve their throw-on-failure
- * contract while the underlying SDK methods expose the typed
- * {@link Result} surface to power users who want to branch on the
- * failure variant directly.
- * @param result - The {@link Result} to unwrap.
- * @returns The success value.
- * @throws The original `cause` exception, or an `Error` synthesised
- * from the failure variant.
+ * Transform the success branch of a {@link Result} while passing the
+ * failure branch through unchanged. The standard "functor map" operation
+ * from neverthrow / ts-results / oxide; lets callers compose
+ * Result-returning calls with synchronous transforms (e.g.
+ * `mapResult(await api.getEnergy(...), getChartLineOptions)`) without
+ * unwrapping then re-wrapping by hand.
+ * @param result - The {@link Result} to transform.
+ * @param fn - Pure function applied to the success value.
+ * @returns A new {@link Result} with the transformed value (success
+ * branch) or the original error (failure branch).
  */
-export const unwrapOrThrow = <T>(result: Result<T, ApiRequestError>): T => {
-  if (result.ok) {
-    return result.value
-  }
-  const { error } = result
-  if ('cause' in error && error.cause instanceof Error) {
-    throw error.cause
-  }
-  throw new Error(`API request failed: ${error.kind}`)
-}
+export const mapResult = <T, TResult, TError>(
+  result: Result<T, TError>,
+  fn: (value: T) => TResult,
+): Result<TResult, TError> => (result.ok ? ok(fn(result.value)) : result)
 
 /**
  * Discriminated failure class emitted by the SDK's best-effort getters

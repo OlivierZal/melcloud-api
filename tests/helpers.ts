@@ -1,6 +1,7 @@
 import { type MockInstance, expect, vi } from 'vitest'
 
 import type { Logger, SettingManager } from '../src/api/index.ts'
+import type { ApiRequestError, Result } from '../src/types/index.ts'
 import { HttpClient, HttpError } from '../src/http/index.ts'
 
 export function cast(value: unknown): never
@@ -24,6 +25,21 @@ export const defined = <T>(value: T | null | undefined): T => {
     throw new Error('Expected value to be defined')
   }
   return value
+}
+
+/**
+ * Test-only helper: assert that a `Result` is `ok` and return its value.
+ * Lets tests assert on the success payload without manual narrowing
+ * boilerplate at every call site (`result.ok && result.value.X`).
+ * @param result - The {@link Result} to unwrap.
+ * @returns The success value.
+ * @throws An `Error` summarising the failure variant when `result.ok` is `false`.
+ */
+export const okValue = <T>(result: Result<T, ApiRequestError>): T => {
+  if (!result.ok) {
+    throw new Error(`Expected ok result, got ${JSON.stringify(result.error)}`)
+  }
+  return result.value
 }
 
 const HTTP_OK = 200

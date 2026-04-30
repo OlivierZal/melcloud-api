@@ -3,6 +3,7 @@ import { DateTime } from 'luxon'
 import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import {
   classicUpdateDevice,
+  convertToListDeviceData,
   fetchDevices,
   syncDevices,
 } from '../decorators/index.ts'
@@ -13,6 +14,7 @@ import {
 } from '../entities/index.ts'
 import { NoChangesError } from '../errors/index.ts'
 import {
+  type ApiRequestError,
   type ClassicDeviceID,
   type ClassicEnergyData,
   type ClassicGetDeviceData,
@@ -22,7 +24,8 @@ import {
   type ClassicTilesData,
   type ClassicUpdateDeviceData,
   type Hour,
-  unwrapOrThrow,
+  type Result,
+  mapResult,
 } from '../types/index.ts'
 import {
   fromListToSetAta,
@@ -145,13 +148,17 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   @syncDevices()
-  @classicUpdateDevice()
-  public async getValues(): Promise<ClassicGetDeviceData<T>> {
-    return unwrapOrThrow(
-      await this.api.getValues<T>({
-        params: { buildingId: this.device.buildingId, id: this.id },
-      }),
-    )
+  public async getValues(): Promise<
+    Result<ClassicGetDeviceData<T>, ApiRequestError>
+  > {
+    const { api, device } = this
+    const result = await api.getValues<T>({
+      params: { buildingId: device.buildingId, id: device.id },
+    })
+    if (result.ok) {
+      device.update(convertToListDeviceData(this, result.value))
+    }
+    return result
   }
 
   @syncDevices()
@@ -183,52 +190,55 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return finalData
   }
 
-  public async getEnergy(query?: ReportQuery): Promise<ClassicEnergyData<T>> {
-    return unwrapOrThrow(
-      await this.api.getEnergy<T>({
-        postData: this.#buildReportPostData(query),
-      }),
-    )
+  public async getEnergy(
+    query?: ReportQuery,
+  ): Promise<Result<ClassicEnergyData<T>, ApiRequestError>> {
+    return this.api.getEnergy<T>({
+      postData: this.#buildReportPostData(query),
+    })
   }
 
   public async getHourlyTemperatures(
     hour: Hour = DateTime.now().hour,
-  ): Promise<ReportChartLineOptions> {
-    const data = unwrapOrThrow(
+  ): Promise<Result<ReportChartLineOptions, ApiRequestError>> {
+    return mapResult(
       await this.api.getHourlyTemperatures({
         postData: { device: this.id, hour },
       }),
+      (data) =>
+        getChartLineOptions(data, this.internalTemperaturesLegend, '°C'),
     )
-    return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
   }
 
   public async getInternalTemperatures(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<ReportChartLineOptions> {
-    const data = unwrapOrThrow(
+  ): Promise<Result<ReportChartLineOptions, ApiRequestError>> {
+    return mapResult(
       await this.api.getInternalTemperatures({
         postData: this.#buildReportPostData(query, shouldUseExactRange),
       }),
+      (data) =>
+        getChartLineOptions(data, this.internalTemperaturesLegend, '°C'),
     )
-    return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
   }
 
   public async getOperationModes(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<ReportChartPieOptions> {
+  ): Promise<Result<ReportChartPieOptions, ApiRequestError>> {
     const postData = this.#buildReportPostData(query, shouldUseExactRange)
     const dateRange = { from: postData.FromDate, to: postData.ToDate }
-    const data = unwrapOrThrow(await this.api.getOperationModes({ postData }))
-    return getChartPieOptions(data, dateRange)
+    return mapResult(await this.api.getOperationModes({ postData }), (data) =>
+      getChartPieOptions(data, dateRange),
+    )
   }
 
   public async getTemperatures(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<ReportChartLineOptions> {
-    const data = unwrapOrThrow(
+  ): Promise<Result<ReportChartLineOptions, ApiRequestError>> {
+    return mapResult(
       await this.api.getTemperatures({
         postData: {
           ...this.#buildReportPostData(query, shouldUseExactRange),
@@ -236,19 +246,19 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
             ?.location,
         },
       }),
+      (data) => getChartLineOptions(data, this.temperaturesLegend, '°C'),
     )
-    return getChartLineOptions(data, this.temperaturesLegend, '°C')
   }
 
   public override async getTiles(
     device?: false,
-  ): Promise<ClassicTilesData<null>>
+  ): Promise<Result<ClassicTilesData<null>, ApiRequestError>>
   public override async getTiles(
     device: true | ClassicDeviceAny,
-  ): Promise<ClassicTilesData<T>>
+  ): Promise<Result<ClassicTilesData<T>, ApiRequestError>>
   public override async getTiles(
     device: boolean | ClassicDeviceAny = false,
-  ): Promise<ClassicTilesData<T | null>> {
+  ): Promise<Result<ClassicTilesData<T | null>, ApiRequestError>> {
     if (
       device === false ||
       (device instanceof ClassicDevice && device.id !== this.id)

@@ -113,6 +113,6 @@ export {
   type Result,
   type Success,
   err,
+  mapResult,
   ok,
-  unwrapOrThrow,
 } from './result.ts'

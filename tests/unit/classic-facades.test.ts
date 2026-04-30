@@ -28,6 +28,7 @@ import {
 import {
   type ClassicSetDeviceDataAta,
   type ClassicSetDevicePostData,
+  err,
   ok,
   toClassicBuildingId,
 } from '../../src/types/index.ts'
@@ -45,7 +46,7 @@ import {
   classicHolidayModeResponse,
   classicReportData,
 } from '../classic-fixtures.ts'
-import { cast, defined, mock } from '../helpers.ts'
+import { cast, defined, mock, okValue } from '../helpers.ts'
 
 type DeviceModelAta = ClassicDevice<typeof ClassicDeviceType.Ata>
 
@@ -81,7 +82,7 @@ const createMockClassicApi = (
       .mockResolvedValue(ok([])),
     getErrorLog: vi
       .fn<ClassicAPIAdapter['getErrorLog']>()
-      .mockResolvedValue(cast({ errors: [] })),
+      .mockResolvedValue(ok(cast({ errors: [] }))),
     getFrostProtection: vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockResolvedValue(
@@ -354,33 +355,32 @@ describe('building facade', () => {
 
   it('calls getErrorLog', async () => {
     const { facade } = createBuildingFacade()
-    const result = await facade.getErrorLog({})
 
-    expect(result).toStrictEqual({ errors: [] })
+    expect(okValue(await facade.getErrorLog({}))).toStrictEqual({ errors: [] })
   })
 
   it('calls getSignalStrength', async () => {
     const { api, facade } = createBuildingFacade()
-    const result = await facade.getSignalStrength(12)
+    const value = okValue(await facade.getSignalStrength(12))
 
-    expect(result).toHaveProperty('series')
+    expect(value).toHaveProperty('series')
     expect(api.getSignal).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls getTiles without selection', async () => {
     const { facade } = createBuildingFacade()
-    const result = await facade.getTiles()
+    const value = okValue(await facade.getTiles())
 
-    expect(result).toHaveProperty('Tiles')
+    expect(value).toHaveProperty('Tiles')
   })
 
   it('calls getTiles with device selection', async () => {
     const { facade, registry } = createBuildingFacade()
     const device = defined(registry.devices.getById(1000))
     assertClassicDeviceType(device, ClassicDeviceType.Ata)
-    const result = await facade.getTiles(device)
+    const value = okValue(await facade.getTiles(device))
 
-    expect(result).toHaveProperty('Tiles')
+    expect(value).toHaveProperty('Tiles')
   })
 
   it('calls notifySync', async () => {
@@ -395,9 +395,9 @@ describe('building facade', () => {
 describe('building facade frost protection', () => {
   it('gets frost protection with defined settings', async () => {
     const { api, facade } = createBuildingFacade()
-    const result = await facade.getFrostProtection()
+    const value = okValue(await facade.getFrostProtection())
 
-    expect(result).toHaveProperty('FPDefined')
+    expect(value).toHaveProperty('FPDefined')
     expect(api.getFrostProtection).toHaveBeenCalledWith(expect.any(Object))
   })
 
@@ -452,9 +452,9 @@ describe('building facade frost protection', () => {
 describe('building facade holiday mode', () => {
   it('gets holiday mode', async () => {
     const { facade } = createBuildingFacade()
-    const result = await facade.getHolidayMode()
+    const value = okValue(await facade.getHolidayMode())
 
-    expect(result).toHaveProperty('HMDefined')
+    expect(value).toHaveProperty('HMDefined')
   })
 
   it('sets holiday mode with dates', async () => {
@@ -520,9 +520,9 @@ describe('facade write methods refresh registry', () => {
 describe('building facade group', () => {
   it('calls getGroup', async () => {
     const { facade } = createBuildingFacade()
-    const result = await facade.getGroup()
+    const value = okValue(await facade.getGroup())
 
-    expect(result).toHaveProperty('Power')
+    expect(value).toHaveProperty('Power')
   })
 
   it('calls updateGroupState', async () => {
@@ -532,16 +532,18 @@ describe('building facade group', () => {
     expect(result).toHaveProperty('Success')
   })
 
-  it('throws when group API fails', async () => {
+  it('propagates network failure when group API fails', async () => {
     const { facade } = createBuildingFacade({
       getGroup: vi
         .fn<ClassicAPIAdapter['getGroup']>()
-        .mockRejectedValue(new Error('fail')),
+        .mockResolvedValue(
+          err({ cause: new Error('fail'), kind: 'network' as const }),
+        ),
     })
+    const result = await facade.getGroup()
 
-    await expect(facade.getGroup()).rejects.toThrow(
-      'No air-to-air device found',
-    )
+    expect(result.ok).toBe(false)
+    expect(!result.ok && result.error.kind).toBe('network')
   })
 
   it('throws when updateGroupState API fails', async () => {
@@ -591,12 +593,14 @@ describe('base facade frost protection fallback', () => {
   it('falls back to device frost protection when zone fails', async () => {
     const fpMock = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
-      .mockRejectedValueOnce(new Error('zone not found'))
+      .mockResolvedValueOnce(
+        err({ cause: new Error('zone not found'), kind: 'network' as const }),
+      )
       .mockResolvedValue(ok(classicFrostProtectionResponse()))
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
-    const result = await facade.getFrostProtection()
+    const value = okValue(await facade.getFrostProtection())
 
-    expect(result).toHaveProperty('FPDefined')
+    expect(value).toHaveProperty('FPDefined')
     expect(fpMock).toHaveBeenCalledTimes(2)
   })
 
@@ -617,7 +621,9 @@ describe('base facade frost protection fallback', () => {
   it('uses cached device-level frost protection on subsequent calls', async () => {
     const fpMock = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
-      .mockRejectedValueOnce(new Error('zone not found'))
+      .mockResolvedValueOnce(
+        err({ cause: new Error('zone not found'), kind: 'network' as const }),
+      )
       .mockResolvedValue(ok(classicFrostProtectionResponse()))
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
     const result1 = await facade.getFrostProtection()
@@ -632,12 +638,14 @@ describe('base facade holiday mode fallback', () => {
   it('falls back to device holiday mode when zone fails', async () => {
     const hmMock = vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
-      .mockRejectedValueOnce(new Error('zone not found'))
+      .mockResolvedValueOnce(
+        err({ cause: new Error('zone not found'), kind: 'network' as const }),
+      )
       .mockResolvedValue(ok(classicHolidayModeResponse()))
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
-    const result = await facade.getHolidayMode()
+    const value = okValue(await facade.getHolidayMode())
 
-    expect(result).toHaveProperty('HMDefined')
+    expect(value).toHaveProperty('HMDefined')
     expect(hmMock).toHaveBeenCalledTimes(2)
   })
 
@@ -656,7 +664,9 @@ describe('base facade holiday mode fallback', () => {
   it('uses cached device-level holiday mode on subsequent calls', async () => {
     const hmMock = vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
-      .mockRejectedValueOnce(new Error('zone not found'))
+      .mockResolvedValueOnce(
+        err({ cause: new Error('zone not found'), kind: 'network' as const }),
+      )
       .mockResolvedValue(ok(classicHolidayModeResponse()))
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
     const result1 = await facade.getHolidayMode()
@@ -671,7 +681,9 @@ describe('base facade frost protection with device fallback', () => {
   it('uses DeviceIds location when frost protection is not defined', async () => {
     const fpMock = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
-      .mockRejectedValueOnce(new Error('zone not found'))
+      .mockResolvedValueOnce(
+        err({ cause: new Error('zone not found'), kind: 'network' as const }),
+      )
       .mockResolvedValue(ok(classicFrostProtectionResponse()))
     const { api, facade } = createAreaFacade({ getFrostProtection: fpMock })
     await facade.updateFrostProtection({ max: 14, min: 6 })
@@ -681,13 +693,38 @@ describe('base facade frost protection with device fallback', () => {
 
     expect(defined(call).postData).toHaveProperty('DeviceIds')
   })
+
+  it('rethrows the original cause when location fetch fails', async () => {
+    const cause = new Error('upstream-fail')
+    const fpMock = vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockResolvedValue(err({ cause, kind: 'network' as const }))
+    const { facade } = createAreaFacade({ getFrostProtection: fpMock })
+
+    await expect(
+      facade.updateFrostProtection({ max: 14, min: 6 }),
+    ).rejects.toBe(cause)
+  })
+
+  it('throws a synthesised Error when location failure has no Error cause', async () => {
+    const fpMock = vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockResolvedValue(err({ kind: 'rate-limited', retryAfterMs: 60_000 }))
+    const { facade } = createAreaFacade({ getFrostProtection: fpMock })
+
+    await expect(
+      facade.updateFrostProtection({ max: 14, min: 6 }),
+    ).rejects.toThrow('Could not resolve location: rate-limited')
+  })
 })
 
 describe('base facade holiday mode with device fallback', () => {
   it('uses Devices location when holiday mode is not defined', async () => {
     const hmMock = vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
-      .mockRejectedValueOnce(new Error('zone not found'))
+      .mockResolvedValueOnce(
+        err({ cause: new Error('zone not found'), kind: 'network' as const }),
+      )
       .mockResolvedValue(ok(classicHolidayModeResponse()))
     const { api, facade } = createAreaFacade({ getHolidayMode: hmMock })
     await facade.updateHolidayMode({ to: '2024-12-31' })
@@ -740,7 +777,9 @@ describe('base facade instance error', () => {
   it('throws when no device id for device-level frost protection fallback', async () => {
     const fpMock = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
-      .mockRejectedValueOnce(new Error('zone not found'))
+      .mockResolvedValueOnce(
+        err({ cause: new Error('zone not found'), kind: 'network' as const }),
+      )
     const api = createMockClassicApi({ getFrostProtection: fpMock })
     const registry = createRegistry()
     registry.syncAreas([
@@ -806,48 +845,48 @@ describe('ata device facade', () => {
 
   it('calls operationModes', async () => {
     const { facade } = createAtaFacade()
-    const result = await facade.getOperationModes()
+    const value = okValue(await facade.getOperationModes())
 
-    expect(result).toHaveProperty('labels')
-    expect(result).toHaveProperty('series')
+    expect(value).toHaveProperty('labels')
+    expect(value).toHaveProperty('series')
   })
 
   it('calls temperatures', async () => {
     const { api, facade } = createAtaFacade()
-    const result = await facade.getTemperatures()
+    const value = okValue(await facade.getTemperatures())
 
-    expect(result).toHaveProperty('series')
+    expect(value).toHaveProperty('series')
     expect(api.getTemperatures).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls internalTemperatures', async () => {
     const { api, facade } = createAtaFacade()
-    const result = await facade.getInternalTemperatures()
+    const value = okValue(await facade.getInternalTemperatures())
 
-    expect(result).toHaveProperty('series')
+    expect(value).toHaveProperty('series')
     expect(api.getInternalTemperatures).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls hourlyTemperatures', async () => {
     const { api, facade } = createAtaFacade()
-    const result = await facade.getHourlyTemperatures(12)
+    const value = okValue(await facade.getHourlyTemperatures(12))
 
-    expect(result).toHaveProperty('series')
+    expect(value).toHaveProperty('series')
     expect(api.getHourlyTemperatures).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('calls getTiles without selection', async () => {
     const { facade } = createAtaFacade()
-    const result = await facade.getTiles()
+    const value = okValue(await facade.getTiles())
 
-    expect(result).toHaveProperty('Tiles')
+    expect(value).toHaveProperty('Tiles')
   })
 
   it('calls getTiles with true selection', async () => {
     const { facade } = createAtaFacade()
-    const result = await facade.getTiles(true)
+    const value = okValue(await facade.getTiles(true))
 
-    expect(result).toHaveProperty('Tiles')
+    expect(value).toHaveProperty('Tiles')
   })
 
   it('updateValues calls api.updateValues', async () => {
@@ -855,6 +894,20 @@ describe('ata device facade', () => {
     await facade.updateValues({ Power: false })
 
     expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
+  })
+
+  it('getValues propagates failure without touching the device model', async () => {
+    const { facade } = createAtaFacade({
+      getValues: vi
+        .fn<ClassicAPIAdapter['getValues']>()
+        .mockResolvedValue(
+          err({ cause: new Error('boom'), kind: 'network' as const }),
+        ),
+    })
+    const result = await facade.getValues()
+
+    expect(result.ok).toBe(false)
+    expect(!result.ok && result.error.kind).toBe('network')
   })
 
   it('updateValues throws when no data differs', async () => {
@@ -960,9 +1013,29 @@ describe('atw device facade', () => {
 
   it('merges internal temperatures into temperatures', async () => {
     const { facade } = createAtwFacade()
+    const value = okValue(await facade.getTemperatures())
+
+    expect(value).toHaveProperty('series')
+  })
+
+  it('propagates outer-temperatures failure without calling internal-temperatures', async () => {
+    const failingTemperatures = vi
+      .fn<ClassicAPIAdapter['getTemperatures']>()
+      .mockResolvedValue(
+        err({ cause: new Error('boom'), kind: 'network' as const }),
+      )
+    const internalTemperatures = vi
+      .fn<ClassicAPIAdapter['getInternalTemperatures']>()
+      .mockResolvedValue(ok(classicReportData()))
+    const { facade } = createAtwFacade({
+      getInternalTemperatures: internalTemperatures,
+      getTemperatures: failingTemperatures,
+    })
     const result = await facade.getTemperatures()
 
-    expect(result).toHaveProperty('series')
+    expect(result.ok).toBe(false)
+    expect(!result.ok && result.error.kind).toBe('network')
+    expect(internalTemperatures).not.toHaveBeenCalled()
   })
 })
 
@@ -1106,11 +1179,11 @@ describe('base device facade tiles', () => {
     const { facade, registry } = createAtaFacade()
     const otherDevice = defined(registry.devices.getById(1001))
     assertClassicDeviceType(otherDevice, ClassicDeviceType.Atw)
-    const result = await facade.getTiles(
-      mock<DeviceModelAta>(cast(otherDevice)),
+    const value = okValue(
+      await facade.getTiles(mock<DeviceModelAta>(cast(otherDevice))),
     )
 
-    expect(result).toHaveProperty('Tiles')
+    expect(value).toHaveProperty('Tiles')
   })
 })
 
@@ -1204,9 +1277,12 @@ describe('erv device facade', () => {
     })
     const result = await facade.getOperationModes()
 
-    expect(result.labels).toContain('Power')
-    expect(result.labels).toContain('ActualRecovery')
-    expect(result.labels).not.toContain('ActualBypassOperationMode')
-    expect(result.labels).not.toContain('Heating')
+    expect(result.ok).toBe(true)
+    expect(result.ok && result.value.labels).toContain('Power')
+    expect(result.ok && result.value.labels).toContain('ActualRecovery')
+    expect(result.ok && result.value.labels).not.toContain(
+      'ActualBypassOperationMode',
+    )
+    expect(result.ok && result.value.labels).not.toContain('Heating')
   })
 })

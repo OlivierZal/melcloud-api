@@ -1,6 +1,7 @@
 export {
   classicUpdateDevice,
   classicUpdateDevices,
+  convertToListDeviceData,
 } from './classic-update-devices.ts'
 export { fetchDevices } from './fetch-devices.ts'
 export { setting } from './setting.ts'

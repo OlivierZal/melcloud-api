@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { err, ok, unwrapOrThrow } from '../../src/types/index.ts'
+import { err, mapResult, ok } from '../../src/types/index.ts'
 import { typedKeys } from '../../src/utils.ts'
 
 describe.concurrent(typedKeys, () => {
@@ -28,26 +28,17 @@ describe.concurrent(typedKeys, () => {
   })
 })
 
-describe.concurrent(unwrapOrThrow, () => {
-  it('returns the success value', () => {
-    expect(unwrapOrThrow(ok(42))).toBe(42)
+describe.concurrent(mapResult, () => {
+  it('transforms the success value via fn', () => {
+    expect(mapResult(ok(2), (value) => value * 3)).toStrictEqual({
+      ok: true,
+      value: 6,
+    })
   })
 
-  it('rethrows the original cause when present', () => {
-    const cause = new Error('boom')
+  it('passes the failure branch through unchanged', () => {
+    const failure = err({ cause: new Error('boom'), kind: 'network' as const })
 
-    expect(() => unwrapOrThrow(err({ cause, kind: 'network' }))).toThrow(cause)
-  })
-
-  it('throws a synthesised Error for variants without a cause', () => {
-    expect(() =>
-      unwrapOrThrow(err({ kind: 'rate-limited', retryAfterMs: 60_000 })),
-    ).toThrow('API request failed: rate-limited')
-  })
-
-  it('synthesises an Error when the cause is not an Error instance', () => {
-    expect(() =>
-      unwrapOrThrow(err({ cause: 'plain string', kind: 'network' })),
-    ).toThrow('API request failed: network')
+    expect(mapResult(failure, (value: number) => value * 3)).toBe(failure)
   })
 })

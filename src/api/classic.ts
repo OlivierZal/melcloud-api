@@ -42,7 +42,9 @@ import {
   type Hour,
   type LoginCredentials,
   type Result,
-  unwrapOrThrow,
+  err,
+  mapResult,
+  ok,
 } from '../types/index.ts'
 import { isKeyOf } from '../utils.ts'
 import {
@@ -282,39 +284,40 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Filters out entries with invalid dates or empty messages.
    * @param query - The error log query parameters (date range, pagination).
    * @param deviceIds - ClassicDevice IDs to fetch errors for; defaults to all devices.
-   * @returns Parsed error log with pagination metadata.
+   * @returns Parsed error log with pagination metadata, or a typed failure.
    */
   public async getErrorLog(
     query: ClassicErrorLogQuery,
     deviceIds: number[] = this.#registry.getDevices().map(({ id }) => id),
-  ): Promise<ClassicErrorLog> {
+  ): Promise<Result<ClassicErrorLog, ApiRequestError>> {
     const { fromDate, period, toDate } = parseErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
-    const errorLog = await this.#errorLog(deviceIds, fromDate, toDate)
-
-    return {
-      errors: errorLog
-        .flatMap(
-          ({
-            DeviceId: errorDeviceId,
-            ErrorMessage: errorMessage,
-            StartDate: startDate,
-          }) => {
-            const dateTime = DateTime.fromISO(startDate)
-            if (dateTime.year === INVALID_YEAR) {
-              return []
-            }
-            const error = errorMessage?.trim() ?? ''
-            return error ?
-                [{ date: startDate, deviceId: errorDeviceId, error }]
-              : []
-          },
-        )
-        .toReversed(),
-      fromDate: toISODate(fromDate),
-      nextFromDate: toISODate(nextToDate.minus({ days: period })),
-      nextToDate: toISODate(nextToDate),
-    }
+    return mapResult(
+      await this.#getErrorLog(deviceIds, fromDate, toDate),
+      (errorLog) => ({
+        errors: errorLog
+          .flatMap(
+            ({
+              DeviceId: errorDeviceId,
+              ErrorMessage: errorMessage,
+              StartDate: startDate,
+            }) => {
+              const dateTime = DateTime.fromISO(startDate)
+              if (dateTime.year === INVALID_YEAR) {
+                return []
+              }
+              const error = errorMessage?.trim() ?? ''
+              return error ?
+                  [{ date: startDate, deviceId: errorDeviceId, error }]
+                : []
+            },
+          )
+          .toReversed(),
+        fromDate: toISODate(fromDate),
+        nextFromDate: toISODate(nextToDate.minus({ days: period })),
+        nextToDate: toISODate(nextToDate),
+      }),
+    )
   }
 
   public async getFrostProtection({
@@ -695,26 +698,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     this.expiry = ''
   }
 
-  async #errorLog(
-    deviceIds: number[],
-    fromDate: DateTime,
-    toDate: DateTime,
-  ): Promise<ClassicErrorLogData[]> {
-    const data = unwrapOrThrow(
-      await this.getErrorEntries({
-        postData: {
-          DeviceIDs: deviceIds.map((id) => toClassicDeviceId(id)),
-          FromDate: toISODate(fromDate),
-          ToDate: toISODate(toDate),
-        },
-      }),
-    )
-    if ('AttributeErrors' in data) {
-      throw new Error(formatErrors(data.AttributeErrors))
-    }
-    return data
-  }
-
   async #fetch(): Promise<ClassicBuildingWithStructure[]> {
     const { data } = await this.list()
     this.#registry.syncBuildings(data)
@@ -724,6 +707,35 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     this.#registry.syncAreas([...collectAreas(data)])
     this.#registry.syncDevices([...collectDevices(data)])
     return data
+  }
+
+  async #getErrorLog(
+    deviceIds: number[],
+    fromDate: DateTime,
+    toDate: DateTime,
+  ): Promise<Result<ClassicErrorLogData[], ApiRequestError>> {
+    const result = await this.getErrorEntries({
+      postData: {
+        DeviceIDs: deviceIds.map((id) => toClassicDeviceId(id)),
+        FromDate: toISODate(fromDate),
+        ToDate: toISODate(toDate),
+      },
+    })
+    if (!result.ok) {
+      return result
+    }
+    const { value: data } = result
+    if ('AttributeErrors' in data) {
+      // Domain-level failure (server rejected the query) surfaces as a
+      // synthetic `validation` variant — the call itself succeeded at
+      // transport, but the payload is unusable.
+      return err({
+        cause: new Error(formatErrors(data.AttributeErrors)),
+        issue: formatErrors(data.AttributeErrors),
+        kind: 'validation',
+      })
+    }
+    return ok(data)
   }
 
   #getLanguageCode(language: string = this.language): ClassicLanguage {

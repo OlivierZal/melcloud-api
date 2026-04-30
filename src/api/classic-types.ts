@@ -76,7 +76,7 @@ export interface ClassicAPIAdapter {
   readonly getErrorLog: (
     query: ClassicErrorLogQuery,
     deviceIds: number[],
-  ) => Promise<ClassicErrorLog>
+  ) => Promise<Result<ClassicErrorLog, ApiRequestError>>
   /** Get frost protection settings for a building, floor, area, or device. */
   readonly getFrostProtection: ({
     params,

@@ -567,8 +567,9 @@ describe('mELCloud Classic API', () => {
         [1],
       )
 
-      expect(result.errors).toHaveLength(1)
-      expect(result.errors[0]?.error).toBe('Some error')
+      expect(result.ok).toBe(true)
+      expect(result.ok && result.value.errors).toHaveLength(1)
+      expect(result.ok && result.value.errors[0]?.error).toBe('Some error')
     })
 
     it('filters out entries with invalid year', async () => {
@@ -585,17 +586,19 @@ describe('mELCloud Classic API', () => {
       )
       const result = await api.getErrorLog({}, [1])
 
-      expect(result.errors).toHaveLength(0)
+      expect(result.ok && result.value.errors).toHaveLength(0)
     })
 
-    it('throws when the API returns failure data', async () => {
+    it('returns validation failure when the API returns failure data', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
       mockRequest.mockResolvedValue(
         wrap({ AttributeErrors: { field: ['error'] }, Success: false }),
       )
+      const result = await api.getErrorLog({}, [1])
 
-      await expect(api.getErrorLog({}, [1])).rejects.toThrow('field')
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.error.kind).toBe('validation')
     })
 
     it('handles offset and limit', async () => {
@@ -607,8 +610,8 @@ describe('mELCloud Classic API', () => {
         [1],
       )
 
-      expect(result).toHaveProperty('fromDate')
-      expect(result).toHaveProperty('nextFromDate')
+      expect(result.ok && result.value).toHaveProperty('fromDate')
+      expect(result.ok && result.value).toHaveProperty('nextFromDate')
     })
 
     it('uses all devices when no deviceIds provided', async () => {
@@ -639,7 +642,7 @@ describe('mELCloud Classic API', () => {
       })
       const result = await api.getErrorLog({})
 
-      expect(result).toHaveProperty('errors')
+      expect(result.ok && result.value).toHaveProperty('errors')
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           data: matchObject({ DeviceIDs: [42] }),
@@ -654,7 +657,7 @@ describe('mELCloud Classic API', () => {
       mockRequest.mockResolvedValue(wrap([errorEntry({ ErrorMessage: null })]))
       const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
 
-      expect(result.errors).toHaveLength(0)
+      expect(result.ok && result.value.errors).toHaveLength(0)
     })
 
     it('throws on invalid date in query', async () => {
@@ -665,6 +668,22 @@ describe('mELCloud Classic API', () => {
       await expect(api.getErrorLog({ to: 'not-a-date' }, [1])).rejects.toThrow(
         'Invalid DateTime',
       )
+    })
+
+    it('propagates transport failure from getErrorEntries', async () => {
+      mockLoginAndList()
+      const api = await createApi({ password: 'pass', username: 'user' })
+      mockRequest.mockRejectedValue(
+        createHttpError({
+          message: 'boom',
+          status: 500,
+          url: '/Report/GetUnitErrorLog2',
+        }),
+      )
+      const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
+
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.error.kind).toBe('server')
     })
   })
 
