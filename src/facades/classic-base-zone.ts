@@ -6,7 +6,6 @@ import type {
 import { ClassicDeviceType } from '../constants.ts'
 import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
 import {
-  type ApiRequestError,
   type ClassicFailureData,
   type ClassicGroupState,
   type ClassicSetGroupPostData,
@@ -44,7 +43,7 @@ export abstract class BaseZoneFacade<
     }
   }
 
-  public async getGroup(): Promise<Result<ClassicGroupState, ApiRequestError>> {
+  public async getGroup(): Promise<Result<ClassicGroupState>> {
     const result = mapResult(
       await this.api.getGroup({
         postData: { [this.groupSpecificationKey]: this.id },

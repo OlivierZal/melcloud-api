@@ -8,7 +8,6 @@ import { AuthenticationError } from '../errors/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
 import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
-  type ApiRequestError,
   type ClassicAreaDataAny,
   type ClassicBuildingWithStructure,
   type ClassicEnergyData,
@@ -241,7 +240,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicEnergyPostData
-  }): Promise<Result<ClassicEnergyData<T>, ApiRequestError>> {
+  }): Promise<Result<ClassicEnergyData<T>>> {
     return this.safeRequest<ClassicEnergyData<T>>(
       'post',
       '/EnergyCost/Report',
@@ -253,9 +252,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicErrorLogPostData
-  }): Promise<
-    Result<ClassicErrorLogData[] | ClassicFailureData, ApiRequestError>
-  > {
+  }): Promise<Result<ClassicErrorLogData[] | ClassicFailureData>> {
     return this.safeRequest<ClassicErrorLogData[] | ClassicFailureData>(
       'post',
       '/Report/GetUnitErrorLog2',
@@ -273,7 +270,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getErrorLog(
     query: ClassicErrorLogQuery,
     deviceIds: number[] = this.#registry.getDevices().map(({ id }) => id),
-  ): Promise<Result<ClassicErrorLog, ApiRequestError>> {
+  ): Promise<Result<ClassicErrorLog>> {
     const { fromDate, period, toDate } = parseErrorLogQuery(query)
     const nextToDate = fromDate.minus({ days: 1 })
     return mapResult(
@@ -308,7 +305,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     params,
   }: {
     params: ClassicSettingsParams
-  }): Promise<Result<ClassicFrostProtectionData, ApiRequestError>> {
+  }): Promise<Result<ClassicFrostProtectionData>> {
     return this.safeRequest<ClassicFrostProtectionData>(
       'get',
       '/FrostProtection/GetSettings',
@@ -320,7 +317,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicGetGroupPostData
-  }): Promise<Result<ClassicGetGroupData, ApiRequestError>> {
+  }): Promise<Result<ClassicGetGroupData>> {
     return this.safeRequest<ClassicGetGroupData>('post', '/Group/Get', {
       data: postData,
     })
@@ -330,7 +327,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     params,
   }: {
     params: ClassicSettingsParams
-  }): Promise<Result<ClassicHolidayModeData, ApiRequestError>> {
+  }): Promise<Result<ClassicHolidayModeData>> {
     return this.safeRequest<ClassicHolidayModeData>(
       'get',
       '/HolidayMode/GetSettings',
@@ -342,7 +339,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: { device: number; hour: Hour }
-  }): Promise<Result<ClassicReportData, ApiRequestError>> {
+  }): Promise<Result<ClassicReportData>> {
     return this.safeRequest<ClassicReportData>(
       'post',
       '/Report/GetHourlyTemperature',
@@ -354,7 +351,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicReportPostData
-  }): Promise<Result<ClassicReportData, ApiRequestError>> {
+  }): Promise<Result<ClassicReportData>> {
     return this.safeRequest<ClassicReportData>(
       'post',
       '/Report/GetInternalTemperatures2',
@@ -366,7 +363,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicReportPostData
-  }): Promise<Result<ClassicOperationModeLogData, ApiRequestError>> {
+  }): Promise<Result<ClassicOperationModeLogData>> {
     return this.safeRequest<ClassicOperationModeLogData>(
       'post',
       '/Report/GetOperationModeLog2',
@@ -378,7 +375,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: { devices: number | number[]; hour: Hour }
-  }): Promise<Result<ClassicReportData, ApiRequestError>> {
+  }): Promise<Result<ClassicReportData>> {
     return this.safeRequest<ClassicReportData>(
       'post',
       '/Report/GetSignalStrength',
@@ -390,7 +387,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicTemperatureLogPostData
-  }): Promise<Result<ClassicReportData, ApiRequestError>> {
+  }): Promise<Result<ClassicReportData>> {
     return this.safeRequest<ClassicReportData>(
       'post',
       '/Report/GetTemperatureLog2',
@@ -402,17 +399,17 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicTilesPostData<null>
-  }): Promise<Result<ClassicTilesData<null>, ApiRequestError>>
+  }): Promise<Result<ClassicTilesData<null>>>
   public async getTiles<T extends ClassicDeviceType>({
     postData,
   }: {
     postData: ClassicTilesPostData<T>
-  }): Promise<Result<ClassicTilesData<T>, ApiRequestError>>
+  }): Promise<Result<ClassicTilesData<T>>>
   public async getTiles<T extends ClassicDeviceType | null>({
     postData,
   }: {
     postData: ClassicTilesPostData<T>
-  }): Promise<Result<ClassicTilesData<T>, ApiRequestError>> {
+  }): Promise<Result<ClassicTilesData<T>>> {
     return this.safeRequest<ClassicTilesData<T>>('post', '/Tile/Get2', {
       data: postData,
     })
@@ -428,7 +425,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     params,
   }: {
     params: ClassicGetDeviceDataParams
-  }): Promise<Result<ClassicGetDeviceData<T>, ApiRequestError>> {
+  }): Promise<Result<ClassicGetDeviceData<T>>> {
     return this.safeRequest<ClassicGetDeviceData<T>>('get', '/Device/Get', {
       params,
     })
@@ -686,7 +683,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     deviceIds: number[],
     fromDate: DateTime,
     toDate: DateTime,
-  ): Promise<Result<ClassicErrorLogData[], ApiRequestError>> {
+  ): Promise<Result<ClassicErrorLogData[]>> {
     const result = await this.getErrorEntries({
       postData: {
         DeviceIDs: deviceIds.map((id) => toClassicDeviceId(id)),

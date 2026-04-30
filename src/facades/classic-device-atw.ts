@@ -5,7 +5,6 @@ import {
   ClassicOperationModeStateZone,
 } from '../constants.ts'
 import {
-  type ApiRequestError,
   type ClassicHotWaterState,
   type ClassicListDeviceDataAtw,
   type ClassicTemperatureDataAtw,
@@ -147,7 +146,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   public override async getTemperatures(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<Result<ReportChartLineOptions, ApiRequestError>> {
+  ): Promise<Result<ReportChartLineOptions>> {
     const temperatures = await super.getTemperatures(query, shouldUseExactRange)
     if (!temperatures.ok) {
       return temperatures

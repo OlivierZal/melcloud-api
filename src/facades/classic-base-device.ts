@@ -14,7 +14,6 @@ import {
 } from '../entities/index.ts'
 import { NoChangesError } from '../errors/index.ts'
 import {
-  type ApiRequestError,
   type ClassicDeviceID,
   type ClassicEnergyData,
   type ClassicGetDeviceData,
@@ -145,9 +144,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   @syncDevices()
-  public async getValues(): Promise<
-    Result<ClassicGetDeviceData<T>, ApiRequestError>
-  > {
+  public async getValues(): Promise<Result<ClassicGetDeviceData<T>>> {
     const { api, device } = this
     const result = await api.getValues<T>({
       params: { buildingId: device.buildingId, id: device.id },
@@ -189,7 +186,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   public async getEnergy(
     query?: ReportQuery,
-  ): Promise<Result<ClassicEnergyData<T>, ApiRequestError>> {
+  ): Promise<Result<ClassicEnergyData<T>>> {
     return this.api.getEnergy<T>({
       postData: this.#buildReportPostData(query),
     })
@@ -197,7 +194,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   public async getHourlyTemperatures(
     hour: Hour = DateTime.now().hour,
-  ): Promise<Result<ReportChartLineOptions, ApiRequestError>> {
+  ): Promise<Result<ReportChartLineOptions>> {
     return mapResult(
       await this.api.getHourlyTemperatures({
         postData: { device: this.id, hour },
@@ -210,7 +207,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public async getInternalTemperatures(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<Result<ReportChartLineOptions, ApiRequestError>> {
+  ): Promise<Result<ReportChartLineOptions>> {
     return mapResult(
       await this.api.getInternalTemperatures({
         postData: this.#buildReportPostData(query, shouldUseExactRange),
@@ -223,7 +220,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public async getOperationModes(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<Result<ReportChartPieOptions, ApiRequestError>> {
+  ): Promise<Result<ReportChartPieOptions>> {
     const postData = this.#buildReportPostData(query, shouldUseExactRange)
     const dateRange = { from: postData.FromDate, to: postData.ToDate }
     return mapResult(await this.api.getOperationModes({ postData }), (data) =>
@@ -234,7 +231,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public async getTemperatures(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<Result<ReportChartLineOptions, ApiRequestError>> {
+  ): Promise<Result<ReportChartLineOptions>> {
     return mapResult(
       await this.api.getTemperatures({
         postData: {
@@ -249,13 +246,13 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   public override async getTiles(
     device?: false,
-  ): Promise<Result<ClassicTilesData<null>, ApiRequestError>>
+  ): Promise<Result<ClassicTilesData<null>>>
   public override async getTiles(
     device: true | ClassicDeviceAny,
-  ): Promise<Result<ClassicTilesData<T>, ApiRequestError>>
+  ): Promise<Result<ClassicTilesData<T>>>
   public override async getTiles(
     device: boolean | ClassicDeviceAny = false,
-  ): Promise<Result<ClassicTilesData<T | null>, ApiRequestError>> {
+  ): Promise<Result<ClassicTilesData<T | null>>> {
     if (
       device === false ||
       (device instanceof ClassicDevice && device.id !== this.id)

@@ -1,7 +1,6 @@
 import type { HomeAPI } from '../api/home-types.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type {
-  ApiRequestError,
   HomeAtaValues,
   HomeDeviceCapabilities,
   HomeDeviceSetting,
@@ -129,20 +128,18 @@ export class HomeDeviceAtaFacade {
     from: string
     interval: string
     to: string
-  }): Promise<Result<HomeEnergyData, ApiRequestError>> {
+  }): Promise<Result<HomeEnergyData>> {
     return this.#api.getEnergy(this.id, params)
   }
 
-  public async getErrorLog(): Promise<
-    Result<HomeErrorLogEntry[], ApiRequestError>
-  > {
+  public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
     return this.#api.getErrorLog(this.id)
   }
 
   public async getSignal(params: {
     from: string
     to: string
-  }): Promise<Result<HomeEnergyData, ApiRequestError>> {
+  }): Promise<Result<HomeEnergyData>> {
     return this.#api.getSignal(this.id, params)
   }
 
@@ -150,7 +147,7 @@ export class HomeDeviceAtaFacade {
     from: string
     period: string
     to: string
-  }): Promise<Result<HomeReportData[], ApiRequestError>> {
+  }): Promise<Result<HomeReportData[]>> {
     return this.#api.getTemperatures(this.id, params)
   }
 

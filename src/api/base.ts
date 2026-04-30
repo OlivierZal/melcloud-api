@@ -498,7 +498,7 @@ export abstract class BaseAPI implements Disposable {
     method: string,
     url: string,
     options: Record<string, unknown> & { readonly schema?: z.ZodType<T> } = {},
-  ): Promise<Result<T, ApiRequestError>> {
+  ): Promise<Result<T>> {
     const { schema, ...config } = options
     try {
       const { data } = await this.request<T>(method, url, config)

@@ -1,7 +1,6 @@
 import { DateTime } from 'luxon'
 
 import type {
-  ApiRequestError,
   HomeAtaValues,
   HomeBuilding,
   HomeContext,
@@ -189,7 +188,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getEnergy(
     id: string,
     params: { from: string; interval: string; to: string },
-  ): Promise<Result<HomeEnergyData, ApiRequestError>> {
+  ): Promise<Result<HomeEnergyData>> {
     return this.safeRequest('get', `/telemetry/telemetry/energy/${id}`, {
       params: {
         from: toTelemetryDate(params.from),
@@ -208,9 +207,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @param id - Device id.
    * @returns Success with the entries (possibly empty), or a typed failure.
    */
-  public async getErrorLog(
-    id: string,
-  ): Promise<Result<HomeErrorLogEntry[], ApiRequestError>> {
+  public async getErrorLog(id: string): Promise<Result<HomeErrorLogEntry[]>> {
     return this.safeRequest('get', `${ATA_UNIT_PATH}/${id}/errorlog`, {
       schema: HomeErrorLogEntryListSchema,
     })
@@ -228,7 +225,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getSignal(
     id: string,
     params: { from: string; to: string },
-  ): Promise<Result<HomeEnergyData, ApiRequestError>> {
+  ): Promise<Result<HomeEnergyData>> {
     return this.safeRequest('get', `/telemetry/telemetry/actual/${id}`, {
       params: {
         from: toTelemetryDate(params.from),
@@ -252,7 +249,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
-  ): Promise<Result<HomeReportData[], ApiRequestError>> {
+  ): Promise<Result<HomeReportData[]>> {
     return this.safeRequest('get', '/report/v1/trendsummary', {
       params: {
         from: toReportDate(params.from),

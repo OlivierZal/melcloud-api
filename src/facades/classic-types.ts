@@ -10,7 +10,6 @@ import type {
 } from '../entities/classic-types.ts'
 import type { Identifiable } from '../entities/types.ts'
 import type {
-  ApiRequestError,
   ClassicEnergyData,
   ClassicFailureData,
   ClassicFrostProtectionData,
@@ -68,34 +67,30 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   /** Fetch energy consumption report. ATA and ATW only. */
   readonly getEnergy: (
     query: ReportQuery,
-  ) => Promise<Result<ClassicEnergyData<T>, ApiRequestError>>
+  ) => Promise<Result<ClassicEnergyData<T>>>
   /** Fetch hourly temperature report. ATW only. */
   readonly getHourlyTemperatures: (
     hour?: Hour,
-  ) => Promise<Result<ReportChartLineOptions, ApiRequestError>>
+  ) => Promise<Result<ReportChartLineOptions>>
   /** Fetch internal temperature report. ATW only. */
   readonly getInternalTemperatures: (
     query: ReportQuery,
-  ) => Promise<Result<ReportChartLineOptions, ApiRequestError>>
+  ) => Promise<Result<ReportChartLineOptions>>
   /** Fetch operation mode usage as pie chart data. */
   readonly getOperationModes: (
     query: ReportQuery,
-  ) => Promise<Result<ReportChartPieOptions, ApiRequestError>>
+  ) => Promise<Result<ReportChartPieOptions>>
   /** Fetch temperature history as line chart data. */
   readonly getTemperatures: (
     query: ReportQuery,
-  ) => Promise<Result<ReportChartLineOptions, ApiRequestError>>
+  ) => Promise<Result<ReportChartLineOptions>>
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((
     device: true | ClassicDeviceAny,
-  ) => Promise<Result<ClassicTilesData<T>, ApiRequestError>>) &
-    ((
-      device?: false,
-    ) => Promise<Result<ClassicTilesData<null>, ApiRequestError>>)
+  ) => Promise<Result<ClassicTilesData<T>>>) &
+    ((device?: false) => Promise<Result<ClassicTilesData<null>>>)
   /** Fetch current device values from the Classic API. */
-  readonly getValues: () => Promise<
-    Result<ClassicGetDeviceData<T>, ApiRequestError>
-  >
+  readonly getValues: () => Promise<Result<ClassicGetDeviceData<T>>>
   /** Send updated device values, clamping temperatures to valid ranges. */
   readonly updateValues: (
     data: ClassicUpdateDeviceData<T>,
@@ -122,26 +117,22 @@ export interface ClassicFacade extends Identifiable {
   /** Retrieve the error log for all devices in this facade. */
   readonly getErrorLog: (
     query: ClassicErrorLogQuery,
-  ) => Promise<Result<ClassicErrorLog, ApiRequestError>>
+  ) => Promise<Result<ClassicErrorLog>>
   /** Get the current frost protection settings. */
-  readonly getFrostProtection: () => Promise<
-    Result<ClassicFrostProtectionData, ApiRequestError>
-  >
+  readonly getFrostProtection: () => Promise<Result<ClassicFrostProtectionData>>
   /** Get the current holiday mode settings. */
-  readonly getHolidayMode: () => Promise<
-    Result<ClassicHolidayModeData, ApiRequestError>
-  >
+  readonly getHolidayMode: () => Promise<Result<ClassicHolidayModeData>>
   /** Fetch WiFi signal strength report as line chart data. */
   readonly getSignalStrength: (
     hour?: Hour,
-  ) => Promise<Result<ReportChartLineOptions, ApiRequestError>>
+  ) => Promise<Result<ReportChartLineOptions>>
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((
     device?: false,
-  ) => Promise<Result<ClassicTilesData<null>, ApiRequestError>>) &
+  ) => Promise<Result<ClassicTilesData<null>>>) &
     (<T extends ClassicDeviceType>(
       device: ClassicDevice<T>,
-    ) => Promise<Result<ClassicTilesData<T>, ApiRequestError>>)
+    ) => Promise<Result<ClassicTilesData<T>>>)
   /** Trigger a sync callback for downstream consumers. */
   readonly notifySync: (params?: { type?: ClassicDeviceType }) => Promise<void>
   /** Update frost protection settings with temperature clamping. */
@@ -177,7 +168,7 @@ export interface ClassicHolidayModeQuery {
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
 export interface ClassicZoneFacade extends ClassicFacade {
   /** Get the current group state for all ATA devices. */
-  readonly getGroup: () => Promise<Result<ClassicGroupState, ApiRequestError>>
+  readonly getGroup: () => Promise<Result<ClassicGroupState>>
   /** Update the group state for all ATA devices. */
   readonly updateGroupState: (
     state: ClassicGroupState,

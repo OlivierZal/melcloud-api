@@ -1,7 +1,7 @@
 import { type MockInstance, expect, vi } from 'vitest'
 
 import type { Logger, SettingManager } from '../src/api/index.ts'
-import type { ApiRequestError, Result } from '../src/types/index.ts'
+import type { Result } from '../src/types/index.ts'
 import { HttpClient, HttpError } from '../src/http/index.ts'
 
 export function cast(value: unknown): never
@@ -35,7 +35,7 @@ export const defined = <T>(value: T | null | undefined): T => {
  * @returns The success value.
  * @throws An `Error` summarising the failure variant when `result.ok` is `false`.
  */
-export const okValue = <T>(result: Result<T, ApiRequestError>): T => {
+export const okValue = <T>(result: Result<T>): T => {
   if (!result.ok) {
     throw new Error(`Expected ok result, got ${JSON.stringify(result.error)}`)
   }

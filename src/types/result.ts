@@ -1,6 +1,6 @@
-/** Failed outcome carrying a typed error description. */
-export interface Failure<TError> {
-  readonly error: TError
+/** Failed outcome carrying a typed {@link ApiRequestError}. */
+export interface Failure {
+  readonly error: ApiRequestError
   readonly ok: false
 }
 
@@ -15,12 +15,17 @@ export interface Failure<TError> {
  * distinction; the SDK previously exposed it only via `logger.error`,
  * out of band.
  *
- * A `Result<T, TError>` makes the error class part of the type, so
- * `result.ok ? result.value : result.error.kind` is typeable
- * end-to-end. Policies and decorators that produce typed failures
- * return the same shape, keeping the call-site pattern uniform.
+ * A `Result<T>` makes the error class part of the type, so
+ * `result.ok ? result.value : result.error.kind` is typeable end-to-end.
+ *
+ * The error type is fixed to {@link ApiRequestError} — every call site
+ * in the SDK fails through the same classification pipeline, so
+ * carrying a generic `<TError>` would just be a degree of freedom
+ * never exercised. Domain-specific SDKs lock the error type;
+ * general-purpose Result libraries (neverthrow, ts-results) keep it
+ * generic because they cannot assume a single domain.
  */
-export type Result<T, TError> = Failure<TError> | Success<T>
+export type Result<T> = Failure | Success<T>
 
 /** Successful outcome carrying the parsed value. */
 export interface Success<T> {
@@ -40,7 +45,7 @@ export const ok = <T>(value: T): Success<T> => ({ ok: true, value })
  * @param error - The typed failure description to wrap.
  * @returns A `{ ok: false, error }` failure outcome.
  */
-export const err = <TError>(error: TError): Failure<TError> => ({
+export const err = (error: ApiRequestError): Failure => ({
   error,
   ok: false,
 })
@@ -57,10 +62,10 @@ export const err = <TError>(error: TError): Failure<TError> => ({
  * @returns A new {@link Result} with the transformed value (success
  * branch) or the original error (failure branch).
  */
-export const mapResult = <T, TResult, TError>(
-  result: Result<T, TError>,
+export const mapResult = <T, TResult>(
+  result: Result<T>,
   fn: (value: T) => TResult,
-): Result<TResult, TError> => (result.ok ? ok(fn(result.value)) : result)
+): Result<TResult> => (result.ok ? ok(fn(result.value)) : result)
 
 /**
  * Discriminated failure class emitted by the SDK's best-effort getters
@@ -82,7 +87,7 @@ export const mapResult = <T, TResult, TError>(
  *
  * Classic and Home share the same error space (same transport layer,
  * same resilience policies); both surfaces reference this single
- * neutral type via `Result<T, ApiRequestError>`.
+ * neutral type via `Result<T>`.
  */
 export type ApiRequestError =
   | {
