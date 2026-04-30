@@ -1,4 +1,5 @@
 export type {
+  ApiRequestError,
   ClassicAreaData,
   ClassicAreaDataAny,
   ClassicAreaID,
@@ -70,6 +71,7 @@ export type {
   ClassicZoneAtw,
   ClassicZoneSettings,
   ClassicZoneState,
+  Failure,
   HomeAtaValues,
   HomeBuilding,
   HomeClaim,
@@ -88,6 +90,8 @@ export type {
   Hour,
   KeyOfClassicSetDeviceDataAtaNotInList,
   LoginCredentials,
+  Result,
+  Success,
 } from './types/index.ts'
 
 export {
@@ -207,3 +211,4 @@ export {
   HttpError,
   isHttpError,
 } from './http/index.ts'
+export { err, mapResult, ok } from './types/index.ts'
