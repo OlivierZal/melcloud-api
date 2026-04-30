@@ -476,18 +476,46 @@ export abstract class BaseAPI implements Disposable {
   }
 
   /**
-   * Run a best-effort GET/POST/… request and wrap the outcome in a
-   * {@link Result}. The unwrapped response body is returned on success
-   * (no `{ data }` envelope); on failure the typed
-   * {@link ApiRequestError} variant lets callers branch on the failure
-   * mode without catching opaque exceptions.
+   * Run a request and return the unwrapped response body, throwing on
+   * transport failure. Companion to {@link safeRequest} — same shape,
+   * same optional Zod validation via `options.schema`, but the
+   * throw-on-failure contract appropriate for mutations and required
+   * sync paths (fail fast, no Result branching).
    *
-   * Pass `options.schema` to validate the response shape with Zod;
-   * without it the response is trusted at compile time only —
-   * appropriate for the Classic surface where every endpoint payload
-   * has a hand-rolled TS type but no runtime schema. Other keys on
-   * `options` flow through to the underlying {@link request}
-   * (`params`, `data`, `signal`, `headers`).
+   * Three-method API surface:
+   * - {@link request} returns the full `HttpResponse<T>` (status,
+   *   headers, data) — full transport access for retry policies and
+   *   telemetry.
+   * - `requestData` strips the envelope and throws on failure — for
+   *   mutations and required sync paths.
+   * - {@link safeRequest} strips the envelope and Result-wraps failure
+   *   — for best-effort getters.
+   * @param method - HTTP method (`get`, `post`, …).
+   * @param url - Request URL relative to the API base.
+   * @param options - Request config plus an optional `schema` peer key.
+   * @returns The unwrapped response body, parsed by the schema if one
+   * was supplied.
+   */
+  protected async requestData<T>(
+    method: string,
+    url: string,
+    options: Record<string, unknown> & { readonly schema?: z.ZodType<T> } = {},
+  ): Promise<T> {
+    const { schema, ...config } = options
+    const { data } = await this.request<T>(method, url, config)
+    return schema === undefined ? data : (
+        parseOrThrow(schema, data, `${method.toUpperCase()} ${url}`)
+      )
+  }
+
+  /**
+   * Run a best-effort GET/POST/… request and wrap the outcome in a
+   * {@link Result}. The unwrapped response body is returned on success;
+   * on failure the typed {@link ApiRequestError} variant lets callers
+   * branch on the failure mode without catching opaque exceptions.
+   *
+   * See {@link requestData} for the throw-on-failure companion that
+   * shares the same shape.
    * @param method - HTTP method (`get`, `post`, …).
    * @param url - Request URL relative to the API base.
    * @param options - Request config plus an optional `schema` peer key.
@@ -499,14 +527,8 @@ export abstract class BaseAPI implements Disposable {
     url: string,
     options: Record<string, unknown> & { readonly schema?: z.ZodType<T> } = {},
   ): Promise<Result<T>> {
-    const { schema, ...config } = options
     try {
-      const { data } = await this.request<T>(method, url, config)
-      return ok(
-        schema === undefined ? data : (
-          parseOrThrow(schema, data, `${method.toUpperCase()} ${url}`)
-        ),
-      )
+      return ok(await this.requestData<T>(method, url, options))
     } catch (error) {
       this.logger.error(
         `[${method.toUpperCase()} ${url}] request or validation failed:`,

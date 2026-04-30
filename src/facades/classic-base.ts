@@ -19,6 +19,7 @@ import {
 } from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
 import {
+  type ApiRequestError,
   type ClassicDateTimeComponents,
   type ClassicFailureData,
   type ClassicFrostProtectionData,
@@ -59,19 +60,17 @@ const getWithZoneFallback = async <TResult>(
   return isAtZoneLevel ? zoneGetter() : deviceGetter()
 }
 
-// `#getFrostProtectionLocation` / `#getHolidayModeLocation` are used by
-// the throw-based mutations (`updateFrostProtection`, `updateHolidayMode`):
-// when the prerequisite fetch fails, we cannot build the mutation
-// post-data and have to surface a throw. Inlines the unwrap-or-throw
-// pattern so the helper stays self-contained.
-const unwrapOrThrowLocation = <T>(result: Result<T>): T => {
-  if (result.ok) {
-    return result.value
+// Mutation prep paths (`#getFrostProtectionLocation`,
+// `#getHolidayModeLocation`) cannot proceed without a resolved
+// location, so a `!ok` result must surface as a throw. Preserves the
+// original `cause` when one is available so the caller sees the
+// underlying transport error class; otherwise synthesises a labeled
+// `Error` from the kind.
+const throwLocationError = (error: ApiRequestError): never => {
+  if ('cause' in error && error.cause instanceof Error) {
+    throw error.cause
   }
-  if ('cause' in result.error && result.error.cause instanceof Error) {
-    throw result.error.cause
-  }
-  throw new Error(`Could not resolve location: ${result.error.kind}`)
+  throw new Error(`Could not resolve location: ${error.kind}`)
 }
 
 // Minimum 2°C gap between min and max to prevent invalid frost protection ranges
@@ -354,7 +353,10 @@ export abstract class ClassicBaseFacade<
   async #getFrostProtectionLocation(): Promise<ClassicFrostProtectionLocation> {
     if (this.isFrostProtectionAtZoneLevel === null) {
       // Mutations need a concrete location; surface fetch failure as throw.
-      unwrapOrThrowLocation(await this.getFrostProtection())
+      const result = await this.getFrostProtection()
+      if (!result.ok) {
+        throwLocationError(result.error)
+      }
     }
     return this.isFrostProtectionAtZoneLevel === true ?
         { [this.frostProtectionLocation]: [this.id] }
@@ -363,7 +365,10 @@ export abstract class ClassicBaseFacade<
 
   async #getHolidayModeLocation(): Promise<ClassicHolidayModeTimeZone[]> {
     if (this.isHolidayModeAtZoneLevel === null) {
-      unwrapOrThrowLocation(await this.getHolidayMode())
+      const result = await this.getHolidayMode()
+      if (!result.ok) {
+        throwLocationError(result.error)
+      }
     }
     return this.isHolidayModeAtZoneLevel === true ?
         [{ [this.holidayModeLocation]: [this.id] }]

@@ -436,15 +436,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   public async list(): Promise<ClassicBuildingWithStructure[]> {
-    const { data } = await this.request<ClassicBuildingWithStructure[]>(
+    const data = await this.requestData<ClassicBuildingWithStructure[]>(
       'get',
       '/User/ListDevices',
     )
-
     // Zod validates the envelope + the minimal device header (Type,
     // DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
-    // its compile-time contract — the `request<T>` generic binds T
-    // at the call site, Zod enforces it at runtime.
+    // its compile-time contract. The schema's inferred type is a
+    // strict subset, so we run it as a side-effect check rather than
+    // through `requestData`'s schema option (which would substitute
+    // the narrower inferred type).
     parseOrThrow(ClassicBuildingListSchema, data, 'ListDevices')
     return data
   }
@@ -487,10 +488,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ClassicFrostProtectionPostData
   }): Promise<ClassicFailureData | ClassicSuccessData> {
-    const { data } = await this.request<
-      ClassicFailureData | ClassicSuccessData
-    >('post', '/FrostProtection/Update', { data: postData })
-    return data
+    return this.requestData('post', '/FrostProtection/Update', {
+      data: postData,
+    })
   }
 
   /**
@@ -505,10 +505,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ClassicSetGroupPostData
   }): Promise<ClassicFailureData | ClassicSuccessData> {
-    const { data } = await this.request<
-      ClassicFailureData | ClassicSuccessData
-    >('post', '/Group/SetAta', { data: postData })
-    return data
+    return this.requestData('post', '/Group/SetAta', { data: postData })
   }
 
   /**
@@ -523,10 +520,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ClassicHolidayModePostData
   }): Promise<ClassicFailureData | ClassicSuccessData> {
-    const { data } = await this.request<
-      ClassicFailureData | ClassicSuccessData
-    >('post', '/HolidayMode/Update', { data: postData })
-    return data
+    return this.requestData('post', '/HolidayMode/Update', {
+      data: postData,
+    })
   }
 
   /**
@@ -558,12 +554,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ClassicSetPowerPostData
   }): Promise<boolean> {
-    const { data: isPowered } = await this.request<boolean>(
-      'post',
-      '/Device/Power',
-      { data: postData },
-    )
-    return isPowered
+    return this.requestData('post', '/Device/Power', { data: postData })
   }
 
   /**
@@ -581,12 +572,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData: ClassicSetDevicePostData<T>
     type: T
   }): Promise<ClassicSetDeviceData<T>> {
-    const { data } = await this.request<ClassicSetDeviceData<T>>(
-      'post',
-      `/Device/Set${deviceTypeNames[type]}`,
-      { data: postData },
-    )
-    return data
+    return this.requestData('post', `/Device/Set${deviceTypeNames[type]}`, {
+      data: postData,
+    })
   }
 
   protected override async doAuthenticate({

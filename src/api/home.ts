@@ -22,7 +22,6 @@ import {
   HomeEnergyDataSchema,
   HomeErrorLogEntryListSchema,
   HomeReportDataSchema,
-  parseOrThrow,
 } from '../validation/index.ts'
 import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './home-types.ts'
 import { BaseAPI, normalizeUnauthorized } from './base.ts'
@@ -443,10 +442,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns The fetched home context.
    */
   async #fetchContext(): Promise<HomeContext> {
-    const { data } = await this.request('get', '/context')
-    const validated = parseOrThrow(HomeContextSchema, data, 'BFF /context')
-    this.#syncContext(validated)
-    return validated
+    const data = await this.requestData('get', '/context', {
+      schema: HomeContextSchema,
+    })
+    this.#syncContext(data)
+    return data
   }
 
   #hasPersistedSession(): boolean {

@@ -625,6 +625,18 @@ describe('base facade holiday mode with device fallback', () => {
 
     expect(defined(call).postData.HMTimeZones[0]).toHaveProperty('Devices')
   })
+
+  it('rethrows the original cause when holiday mode location fetch fails', async () => {
+    const cause = new Error('upstream-fail')
+    const hmMock = vi
+      .fn<ClassicAPIAdapter['getHolidayMode']>()
+      .mockResolvedValue(err({ cause, kind: 'network' as const }))
+    const { facade } = createAreaFacade({ getHolidayMode: hmMock })
+
+    await expect(facade.updateHolidayMode({ to: '2024-12-31' })).rejects.toBe(
+      cause,
+    )
+  })
 })
 
 describe('base device facade type mismatch', () => {
