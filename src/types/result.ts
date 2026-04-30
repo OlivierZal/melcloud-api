@@ -1,14 +1,8 @@
-/** Convenience alias for Classic outcomes — every Classic best-effort getter uses {@link ApiRequestError} as its failure type. */
-export type ClassicResult<T> = Result<T, ApiRequestError>
-
 /** Failed outcome carrying a typed error description. */
 export interface Failure<TError> {
   readonly error: TError
   readonly ok: false
 }
-
-/** Convenience alias for Home outcomes — every Home best-effort getter uses {@link ApiRequestError} as its failure type. */
-export type HomeResult<T> = Result<T, ApiRequestError>
 
 /**
  * Discriminated result for best-effort SDK calls whose failure modes
@@ -52,10 +46,10 @@ export const err = <TError>(error: TError): Failure<TError> => ({
 })
 
 /**
- * Unwrap a {@link ClassicResult} / {@link HomeResult}: return the
- * value on success, or throw the underlying `cause` (preserving the
- * original exception class) when present, falling back to a synthetic
- * `Error` for the variants that carry no cause (`rate-limited`).
+ * Unwrap a {@link Result}: return the value on success, or throw the
+ * underlying `cause` (preserving the original exception class) when
+ * present, falling back to a synthetic `Error` for the variants that
+ * carry no cause (`rate-limited`).
  *
  * The helper exists so facades can preserve their throw-on-failure
  * contract while the underlying SDK methods expose the typed
@@ -97,8 +91,7 @@ export const unwrapOrThrow = <T>(result: Result<T, ApiRequestError>): T => {
  *
  * Classic and Home share the same error space (same transport layer,
  * same resilience policies); both surfaces reference this single
- * neutral type. {@link ClassicResult} and {@link HomeResult} are
- * convenience aliases for `Result<T, ApiRequestError>`.
+ * neutral type via `Result<T, ApiRequestError>`.
  */
 export type ApiRequestError =
   | {

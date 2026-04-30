@@ -1,16 +1,17 @@
 import { DateTime } from 'luxon'
 
 import type {
+  ApiRequestError,
   HomeAtaValues,
   HomeBuilding,
   HomeContext,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
-  HomeResult,
   HomeTokenResponse,
   HomeUser,
   LoginCredentials,
+  Result,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
@@ -23,7 +24,6 @@ import {
   HomeErrorLogEntryListSchema,
   HomeReportDataSchema,
   parseOrThrow,
-  validateRequest,
 } from '../validation/index.ts'
 import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './home-types.ts'
 import { BaseAPI, normalizeUnauthorized } from './base.ts'
@@ -201,26 +201,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getEnergy(
     id: string,
     params: { from: string; interval: string; to: string },
-  ): Promise<HomeResult<HomeEnergyData>> {
-    return validateRequest({
-      context: 'BFF /telemetry/telemetry/energy',
-      host: this,
-      schema: HomeEnergyDataSchema,
-      operation: async () => {
-        const { data } = await this.request<HomeEnergyData>(
-          'get',
-          `${ENERGY_PATH}/${id}`,
-          {
-            params: {
-              from: toTelemetryDate(params.from),
-              interval: params.interval,
-              measure: 'cumulative_energy_consumed_since_last_upload',
-              to: toTelemetryDate(params.to),
-            },
-          },
-        )
-        return data
+  ): Promise<Result<HomeEnergyData, ApiRequestError>> {
+    return this.safeRequest('get', `${ENERGY_PATH}/${id}`, {
+      params: {
+        from: toTelemetryDate(params.from),
+        interval: params.interval,
+        measure: 'cumulative_energy_consumed_since_last_upload',
+        to: toTelemetryDate(params.to),
       },
+      schema: HomeEnergyDataSchema,
     })
   }
 
@@ -233,18 +222,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    */
   public async getErrorLog(
     id: string,
-  ): Promise<HomeResult<HomeErrorLogEntry[]>> {
-    return validateRequest({
-      context: 'BFF /monitor/ataunit/:id/errorlog',
-      host: this,
+  ): Promise<Result<HomeErrorLogEntry[], ApiRequestError>> {
+    return this.safeRequest('get', `${ATA_UNIT_PATH}/${id}/errorlog`, {
       schema: HomeErrorLogEntryListSchema,
-      operation: async () => {
-        const { data } = await this.request<HomeErrorLogEntry[]>(
-          'get',
-          `${ATA_UNIT_PATH}/${id}/errorlog`,
-        )
-        return data
-      },
     })
   }
 
@@ -260,25 +240,14 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getSignal(
     id: string,
     params: { from: string; to: string },
-  ): Promise<HomeResult<HomeEnergyData>> {
-    return validateRequest({
-      context: 'BFF /telemetry/telemetry/actual',
-      host: this,
-      schema: HomeEnergyDataSchema,
-      operation: async () => {
-        const { data } = await this.request<HomeEnergyData>(
-          'get',
-          `${SIGNAL_PATH}/${id}`,
-          {
-            params: {
-              from: toTelemetryDate(params.from),
-              measure: 'rssi',
-              to: toTelemetryDate(params.to),
-            },
-          },
-        )
-        return data
+  ): Promise<Result<HomeEnergyData, ApiRequestError>> {
+    return this.safeRequest('get', `${SIGNAL_PATH}/${id}`, {
+      params: {
+        from: toTelemetryDate(params.from),
+        measure: 'rssi',
+        to: toTelemetryDate(params.to),
       },
+      schema: HomeEnergyDataSchema,
     })
   }
 
@@ -295,26 +264,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
-  ): Promise<HomeResult<HomeReportData[]>> {
-    return validateRequest({
-      context: 'BFF /report/v1/trendsummary',
-      host: this,
-      schema: HomeReportDataSchema.array(),
-      operation: async () => {
-        const { data } = await this.request<HomeReportData[]>(
-          'get',
-          REPORT_PATH,
-          {
-            params: {
-              from: toReportDate(params.from),
-              period: params.period,
-              to: toReportDate(params.to),
-              unitId: id,
-            },
-          },
-        )
-        return data
+  ): Promise<Result<HomeReportData[], ApiRequestError>> {
+    return this.safeRequest('get', REPORT_PATH, {
+      params: {
+        from: toReportDate(params.from),
+        period: params.period,
+        to: toReportDate(params.to),
+        unitId: id,
       },
+      schema: HomeReportDataSchema.array(),
     })
   }
 

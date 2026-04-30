@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Removed
 
 - `tests/home-fixtures.ts`: dropped the speculative `populatedHomeRegistry` factory (no consumer) and un-exported `homeDeviceCapabilities` (used internally only). YAGNI cleanup surfaced by the post-merge audit of PR #1487.
+- Removed the `runRequest` and `validateRequest` free helpers along with their `ValidateHost` / `RunRequestOptions` / `ValidateRequestOptions` interfaces from `src/validation/`. Replaced by `BaseAPI.safeRequest(method, url, options?)` — a single protected method on the shared API base class. The previous helpers required passing `host: this` as plumbing, a redundant `context` string duplicating the URL, and an `operation` closure that unwrapped `{ data }` only for the helper to re-wrap in `Result`. The new method takes 3 parameters and reads as `this.safeRequest('post', url, { data: postData })` (Classic) or `this.safeRequest('get', url, { params, schema })` (Home).
+- Removed the `ClassicResult<T>` / `HomeResult<T>` type aliases. They were structurally identical (`Result<T, ApiRequestError>`) and added no type-system distinction — same redundant-alias smell that earlier prompted dropping `ClassicError` / `HomeError`. Use `Result<T, ApiRequestError>` directly. Consistency with the (also removed) error aliases.
+
+### Added
+
+- `classifyError(error)` exported from `src/api/base.ts` — pure function turning any thrown value into the discriminated `ApiRequestError` union. Replaces the inline classifier logic in the deleted `validate-request.ts`.
 
 ## [38.0.0] - 2026-04-30
 

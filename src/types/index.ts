@@ -109,9 +109,7 @@ export {
 } from './ids.ts'
 export {
   type ApiRequestError,
-  type ClassicResult,
   type Failure,
-  type HomeResult,
   type Result,
   type Success,
   err,

@@ -1,13 +1,14 @@
 import type { HomeRegistry } from '../entities/home-registry.ts'
 import type {
+  ApiRequestError,
   HomeAtaValues,
   HomeBuilding,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
-  HomeResult,
   HomeUser,
   LoginCredentials,
+  Result,
 } from '../types/index.ts'
 import type { BaseAPIConfig } from './types.ts'
 
@@ -44,19 +45,21 @@ export interface HomeAPI {
   readonly getEnergy: (
     id: string,
     params: { from: string; interval: string; to: string },
-  ) => Promise<HomeResult<HomeEnergyData>>
+  ) => Promise<Result<HomeEnergyData, ApiRequestError>>
   /** Fetch the error log for a device. */
-  readonly getErrorLog: (id: string) => Promise<HomeResult<HomeErrorLogEntry[]>>
+  readonly getErrorLog: (
+    id: string,
+  ) => Promise<Result<HomeErrorLogEntry[], ApiRequestError>>
   /** Fetch WiFi signal strength (RSSI) telemetry for a device. */
   readonly getSignal: (
     id: string,
     params: { from: string; to: string },
-  ) => Promise<HomeResult<HomeEnergyData>>
+  ) => Promise<Result<HomeEnergyData, ApiRequestError>>
   /** Fetch temperature trend summary for a device. */
   readonly getTemperatures: (
     id: string,
     params: { from: string; period: string; to: string },
-  ) => Promise<HomeResult<HomeReportData[]>>
+  ) => Promise<Result<HomeReportData[], ApiRequestError>>
   /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
   readonly getUser: () => Promise<HomeUser | null>
   /** Whether a user is currently authenticated (session cookie valid). */

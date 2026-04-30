@@ -1,13 +1,14 @@
 import type { HomeAPI } from '../api/home-types.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type {
+  ApiRequestError,
   HomeAtaValues,
   HomeDeviceCapabilities,
   HomeDeviceSetting,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
-  HomeResult,
+  Result,
 } from '../types/index.ts'
 import { ClassicFanSpeed } from '../constants.ts'
 import {
@@ -128,18 +129,20 @@ export class HomeDeviceAtaFacade {
     from: string
     interval: string
     to: string
-  }): Promise<HomeResult<HomeEnergyData>> {
+  }): Promise<Result<HomeEnergyData, ApiRequestError>> {
     return this.#api.getEnergy(this.id, params)
   }
 
-  public async getErrorLog(): Promise<HomeResult<HomeErrorLogEntry[]>> {
+  public async getErrorLog(): Promise<
+    Result<HomeErrorLogEntry[], ApiRequestError>
+  > {
     return this.#api.getErrorLog(this.id)
   }
 
   public async getSignal(params: {
     from: string
     to: string
-  }): Promise<HomeResult<HomeEnergyData>> {
+  }): Promise<Result<HomeEnergyData, ApiRequestError>> {
     return this.#api.getSignal(this.id, params)
   }
 
@@ -147,7 +150,7 @@ export class HomeDeviceAtaFacade {
     from: string
     period: string
     to: string
-  }): Promise<HomeResult<HomeReportData[]>> {
+  }): Promise<Result<HomeReportData[], ApiRequestError>> {
     return this.#api.getTemperatures(this.id, params)
   }
 

@@ -8,6 +8,7 @@ import { AuthenticationError } from '../errors/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
 import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
+  type ApiRequestError,
   type ClassicAreaDataAny,
   type ClassicBuildingWithStructure,
   type ClassicEnergyData,
@@ -29,7 +30,6 @@ import {
   type ClassicOperationModeLogData,
   type ClassicReportData,
   type ClassicReportPostData,
-  type ClassicResult,
   type ClassicSetDeviceData,
   type ClassicSetDevicePostData,
   type ClassicSetGroupPostData,
@@ -41,6 +41,7 @@ import {
   type ClassicTilesPostData,
   type Hour,
   type LoginCredentials,
+  type Result,
   unwrapOrThrow,
 } from '../types/index.ts'
 import { isKeyOf } from '../utils.ts'
@@ -48,7 +49,6 @@ import {
   ClassicBuildingListSchema,
   ClassicLoginDataSchema,
   parseOrThrow,
-  runRequest,
 } from '../validation/index.ts'
 import type {
   ClassicAPIAdapter,
@@ -255,36 +255,26 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicEnergyPostData
-  }): Promise<ClassicResult<ClassicEnergyData<T>>> {
-    return runRequest({
-      context: 'Classic /EnergyCost/Report',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicEnergyData<T>>(
-          'post',
-          '/EnergyCost/Report',
-          { data: postData },
-        )
-        return data
-      },
-    })
+  }): Promise<Result<ClassicEnergyData<T>, ApiRequestError>> {
+    return this.safeRequest<ClassicEnergyData<T>>(
+      'post',
+      '/EnergyCost/Report',
+      { data: postData },
+    )
   }
 
   public async getErrorEntries({
     postData,
   }: {
     postData: ClassicErrorLogPostData
-  }): Promise<ClassicResult<ClassicErrorLogData[] | ClassicFailureData>> {
-    return runRequest({
-      context: 'Classic /Report/GetUnitErrorLog2',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<
-          ClassicErrorLogData[] | ClassicFailureData
-        >('post', '/Report/GetUnitErrorLog2', { data: postData })
-        return data
-      },
-    })
+  }): Promise<
+    Result<ClassicErrorLogData[] | ClassicFailureData, ApiRequestError>
+  > {
+    return this.safeRequest<ClassicErrorLogData[] | ClassicFailureData>(
+      'post',
+      '/Report/GetUnitErrorLog2',
+      { data: postData },
+    )
   }
 
   /**
@@ -331,37 +321,21 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     params,
   }: {
     params: ClassicSettingsParams
-  }): Promise<ClassicResult<ClassicFrostProtectionData>> {
-    return runRequest({
-      context: 'Classic /FrostProtection/GetSettings',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicFrostProtectionData>(
-          'get',
-          '/FrostProtection/GetSettings',
-          { params },
-        )
-        return data
-      },
-    })
+  }): Promise<Result<ClassicFrostProtectionData, ApiRequestError>> {
+    return this.safeRequest<ClassicFrostProtectionData>(
+      'get',
+      '/FrostProtection/GetSettings',
+      { params },
+    )
   }
 
   public async getGroup({
     postData,
   }: {
     postData: ClassicGetGroupPostData
-  }): Promise<ClassicResult<ClassicGetGroupData>> {
-    return runRequest({
-      context: 'Classic /Group/Get',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicGetGroupData>(
-          'post',
-          '/Group/Get',
-          { data: postData },
-        )
-        return data
-      },
+  }): Promise<Result<ClassicGetGroupData, ApiRequestError>> {
+    return this.safeRequest<ClassicGetGroupData>('post', '/Group/Get', {
+      data: postData,
     })
   }
 
@@ -369,142 +343,91 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     params,
   }: {
     params: ClassicSettingsParams
-  }): Promise<ClassicResult<ClassicHolidayModeData>> {
-    return runRequest({
-      context: 'Classic /HolidayMode/GetSettings',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicHolidayModeData>(
-          'get',
-          '/HolidayMode/GetSettings',
-          { params },
-        )
-        return data
-      },
-    })
+  }): Promise<Result<ClassicHolidayModeData, ApiRequestError>> {
+    return this.safeRequest<ClassicHolidayModeData>(
+      'get',
+      '/HolidayMode/GetSettings',
+      { params },
+    )
   }
 
   public async getHourlyTemperatures({
     postData,
   }: {
     postData: { device: number; hour: Hour }
-  }): Promise<ClassicResult<ClassicReportData>> {
-    return runRequest({
-      context: 'Classic /Report/GetHourlyTemperature',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicReportData>(
-          'post',
-          '/Report/GetHourlyTemperature',
-          { data: postData },
-        )
-        return data
-      },
-    })
+  }): Promise<Result<ClassicReportData, ApiRequestError>> {
+    return this.safeRequest<ClassicReportData>(
+      'post',
+      '/Report/GetHourlyTemperature',
+      { data: postData },
+    )
   }
 
   public async getInternalTemperatures({
     postData,
   }: {
     postData: ClassicReportPostData
-  }): Promise<ClassicResult<ClassicReportData>> {
-    return runRequest({
-      context: 'Classic /Report/GetInternalTemperatures2',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicReportData>(
-          'post',
-          '/Report/GetInternalTemperatures2',
-          { data: postData },
-        )
-        return data
-      },
-    })
+  }): Promise<Result<ClassicReportData, ApiRequestError>> {
+    return this.safeRequest<ClassicReportData>(
+      'post',
+      '/Report/GetInternalTemperatures2',
+      { data: postData },
+    )
   }
 
   public async getOperationModes({
     postData,
   }: {
     postData: ClassicReportPostData
-  }): Promise<ClassicResult<ClassicOperationModeLogData>> {
-    return runRequest({
-      context: 'Classic /Report/GetOperationModeLog2',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicOperationModeLogData>(
-          'post',
-          '/Report/GetOperationModeLog2',
-          { data: postData },
-        )
-        return data
-      },
-    })
+  }): Promise<Result<ClassicOperationModeLogData, ApiRequestError>> {
+    return this.safeRequest<ClassicOperationModeLogData>(
+      'post',
+      '/Report/GetOperationModeLog2',
+      { data: postData },
+    )
   }
 
   public async getSignal({
     postData,
   }: {
     postData: { devices: number | number[]; hour: Hour }
-  }): Promise<ClassicResult<ClassicReportData>> {
-    return runRequest({
-      context: 'Classic /Report/GetSignalStrength',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicReportData>(
-          'post',
-          '/Report/GetSignalStrength',
-          { data: postData },
-        )
-        return data
-      },
-    })
+  }): Promise<Result<ClassicReportData, ApiRequestError>> {
+    return this.safeRequest<ClassicReportData>(
+      'post',
+      '/Report/GetSignalStrength',
+      { data: postData },
+    )
   }
 
   public async getTemperatures({
     postData,
   }: {
     postData: ClassicTemperatureLogPostData
-  }): Promise<ClassicResult<ClassicReportData>> {
-    return runRequest({
-      context: 'Classic /Report/GetTemperatureLog2',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicReportData>(
-          'post',
-          '/Report/GetTemperatureLog2',
-          { data: postData },
-        )
-        return data
-      },
-    })
+  }): Promise<Result<ClassicReportData, ApiRequestError>> {
+    return this.safeRequest<ClassicReportData>(
+      'post',
+      '/Report/GetTemperatureLog2',
+      { data: postData },
+    )
   }
 
   public async getTiles({
     postData,
   }: {
     postData: ClassicTilesPostData<null>
-  }): Promise<ClassicResult<ClassicTilesData<null>>>
+  }): Promise<Result<ClassicTilesData<null>, ApiRequestError>>
   public async getTiles<T extends ClassicDeviceType>({
     postData,
   }: {
     postData: ClassicTilesPostData<T>
-  }): Promise<ClassicResult<ClassicTilesData<T>>>
+  }): Promise<Result<ClassicTilesData<T>, ApiRequestError>>
   public async getTiles<T extends ClassicDeviceType | null>({
     postData,
   }: {
     postData: ClassicTilesPostData<T>
-  }): Promise<ClassicResult<ClassicTilesData<T>>> {
-    return runRequest({
-      context: 'Classic /Tile/Get2',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicTilesData<T>>(
-          'post',
-          '/Tile/Get2',
-          { data: postData },
-        )
-        return data
-      },
+  }): Promise<Result<ClassicTilesData<T>, ApiRequestError>> {
+    return this.safeRequest<ClassicTilesData<T>>('post', '/Tile/Get2', {
+      data: postData,
     })
   }
 
@@ -522,18 +445,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     params,
   }: {
     params: ClassicGetDeviceDataParams
-  }): Promise<ClassicResult<ClassicGetDeviceData<T>>> {
-    return runRequest({
-      context: 'Classic /Device/Get',
-      host: this,
-      operation: async () => {
-        const { data } = await this.request<ClassicGetDeviceData<T>>(
-          'get',
-          '/Device/Get',
-          { params },
-        )
-        return data
-      },
+  }): Promise<Result<ClassicGetDeviceData<T>, ApiRequestError>> {
+    return this.safeRequest<ClassicGetDeviceData<T>>('get', '/Device/Get', {
+      params,
     })
   }
 

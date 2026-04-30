@@ -1,6 +1,5 @@
 import { Duration } from 'luxon'
 import { describe, expect, it, vi } from 'vitest'
-import { z } from 'zod'
 
 import type { ClassicAPIAdapter, SyncCallback } from '../../src/api/index.ts'
 import type {
@@ -9,6 +8,7 @@ import type {
   ClassicSetDeviceDataAta,
   ClassicSuccessData,
 } from '../../src/types/index.ts'
+import { classifyError } from '../../src/api/base.ts'
 import {
   CLASSIC_FLAG_UNCHANGED,
   ClassicDeviceType,
@@ -26,7 +26,6 @@ import {
   RateLimitError,
 } from '../../src/errors/index.ts'
 import { HttpError } from '../../src/http/index.ts'
-import { validateRequest } from '../../src/validation/index.ts'
 import { cast, mock } from '../helpers.ts'
 
 const createMockFacade = (
@@ -440,65 +439,19 @@ describe(classicUpdateDevice, () => {
   })
 })
 
-describe(validateRequest, () => {
-  const schema = z.object({ value: z.number() })
-
-  it('returns Result.ok with the parsed payload on success', async () => {
-    const operation = vi
-      .fn<() => Promise<unknown>>()
-      .mockResolvedValue({ value: 42 })
-
-    await expect(
-      validateRequest({ context: 'test', host: {}, operation, schema }),
-    ).resolves.toStrictEqual({ ok: true, value: { value: 42 } })
+describe(classifyError, () => {
+  it('returns network for plain Error', () => {
+    expect(classifyError(new Error('boom'))).toMatchObject({ kind: 'network' })
   })
 
-  it('returns Result.err(network) + logs on plain error rejection', async () => {
-    const logError = vi.fn<(...args: unknown[]) => void>()
-    const logger = {
-      error: logError,
-      log: vi.fn<(...args: unknown[]) => void>(),
-    }
-    const operation = vi
-      .fn<() => Promise<unknown>>()
-      .mockRejectedValue(new Error('boom'))
+  it('returns validation for Error with name === ValidationError', () => {
+    const error = new Error('shape mismatch')
+    error.name = 'ValidationError'
 
-    await expect(
-      validateRequest({
-        context: 'ctx',
-        host: { logger },
-        operation,
-        schema,
-      }),
-    ).resolves.toMatchObject({ error: { kind: 'network' }, ok: false })
-    expect(logError).toHaveBeenCalledWith(
-      '[ctx] request or validation failed:',
-      expect.any(Error),
-    )
-  })
-
-  it('returns Result.err(validation) + logs on shape mismatch', async () => {
-    const logError = vi.fn<(...args: unknown[]) => void>()
-    const logger = {
-      error: logError,
-      log: vi.fn<(...args: unknown[]) => void>(),
-    }
-    const operation = vi
-      .fn<() => Promise<unknown>>()
-      .mockResolvedValue({ value: 'not-a-number' })
-
-    await expect(
-      validateRequest({
-        context: 'ctx',
-        host: { logger },
-        operation,
-        schema,
-      }),
-    ).resolves.toMatchObject({ error: { kind: 'validation' }, ok: false })
-    expect(logError).toHaveBeenCalledWith(
-      '[ctx] request or validation failed:',
-      expect.anything(),
-    )
+    expect(classifyError(error)).toMatchObject({
+      issue: 'shape mismatch',
+      kind: 'validation',
+    })
   })
 
   it.each([
@@ -541,12 +494,8 @@ describe(validateRequest, () => {
       expected: { kind: 'server', status: 500 } as const,
       label: 'non-401 HttpError → server',
     },
-  ])('classifies $label', async ({ error, expected }) => {
-    const operation = vi.fn<() => Promise<unknown>>().mockRejectedValue(error)
-
-    await expect(
-      validateRequest({ context: 'ctx', host: {}, operation, schema }),
-    ).resolves.toMatchObject({ error: expected, ok: false })
+  ])('classifies $label', ({ error, expected }) => {
+    expect(classifyError(error)).toMatchObject(expected)
   })
 })
 

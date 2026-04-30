@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto'
 
-import type { LoginCredentials } from '../types/index.ts'
+import type { z } from 'zod'
+
 import { setting } from '../decorators/index.ts'
-import { AuthenticationError } from '../errors/index.ts'
+import { AuthenticationError, RateLimitError } from '../errors/index.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
@@ -25,6 +26,14 @@ import {
   RetryGuard,
   TransientRetryPolicy,
 } from '../resilience/index.ts'
+import {
+  type ApiRequestError,
+  type LoginCredentials,
+  type Result,
+  err,
+  ok,
+} from '../types/index.ts'
+import { parseOrThrow } from '../validation/index.ts'
 import type {
   BaseAPIConfig,
   Logger,
@@ -32,6 +41,39 @@ import type {
   SyncCallback,
 } from './types.ts'
 import { SyncManager } from './sync-manager.ts'
+
+/**
+ * Classify any thrown error into the discriminated {@link ApiRequestError}
+ * union surfaced by {@link BaseAPI.safeRequest}.
+ *
+ * Order matters: domain errors (`AuthenticationError`, `RateLimitError`)
+ * are checked before transport errors so a credential rejection isn't
+ * misclassified as a `server` failure. Zod parse failures bubble up as
+ * `Error` with `name === 'ValidationError'` from {@link parseOrThrow},
+ * which is detected here and reported as the `validation` variant.
+ * @param error - The thrown value to classify.
+ * @returns A typed {@link ApiRequestError}.
+ */
+export const classifyError = (error: unknown): ApiRequestError => {
+  if (error instanceof Error && error.name === 'ValidationError') {
+    return { cause: error, issue: error.message, kind: 'validation' }
+  }
+  if (error instanceof AuthenticationError) {
+    return { cause: error, kind: 'unauthorized' }
+  }
+  if (error instanceof RateLimitError) {
+    return {
+      kind: 'rate-limited',
+      retryAfterMs: error.retryAfter?.toMillis() ?? null,
+    }
+  }
+  if (isHttpError(error)) {
+    return error.response.status === HttpStatus.Unauthorized ?
+        { cause: error, kind: 'unauthorized' }
+      : { cause: error, kind: 'server', status: error.response.status }
+  }
+  return { cause: error, kind: 'network' }
+}
 
 /**
  * Narrow any error the HTTP client can surface into either an
@@ -431,6 +473,47 @@ export abstract class BaseAPI implements Disposable {
       }
     }
     return this.#runWithEvents(context, async () => policy.run(attempt))
+  }
+
+  /**
+   * Run a best-effort GET/POST/… request and wrap the outcome in a
+   * {@link Result}. The unwrapped response body is returned on success
+   * (no `{ data }` envelope); on failure the typed
+   * {@link ApiRequestError} variant lets callers branch on the failure
+   * mode without catching opaque exceptions.
+   *
+   * Pass `options.schema` to validate the response shape with Zod;
+   * without it the response is trusted at compile time only —
+   * appropriate for the Classic surface where every endpoint payload
+   * has a hand-rolled TS type but no runtime schema. Other keys on
+   * `options` flow through to the underlying {@link request}
+   * (`params`, `data`, `signal`, `headers`).
+   * @param method - HTTP method (`get`, `post`, …).
+   * @param url - Request URL relative to the API base.
+   * @param options - Request config plus an optional `schema` peer key.
+   * @returns `{ ok: true, value }` on success or `{ ok: false, error }`
+   * with the classified failure mode.
+   */
+  protected async safeRequest<T>(
+    method: string,
+    url: string,
+    options: Record<string, unknown> & { readonly schema?: z.ZodType<T> } = {},
+  ): Promise<Result<T, ApiRequestError>> {
+    const { schema, ...config } = options
+    try {
+      const { data } = await this.request<T>(method, url, config)
+      return ok(
+        schema === undefined ? data : (
+          parseOrThrow(schema, data, `${method.toUpperCase()} ${url}`)
+        ),
+      )
+    } catch (error) {
+      this.logger.error(
+        `[${method.toUpperCase()} ${url}] request or validation failed:`,
+        error,
+      )
+      return err(classifyError(error))
+    }
   }
 
   /**
