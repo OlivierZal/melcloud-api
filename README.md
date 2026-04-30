@@ -64,6 +64,28 @@ if (device !== undefined) {
 }
 ```
 
+## Error handling
+
+Best-effort getters (telemetry, reports, error logs, settings reads) return a `Result<T>` so callers can branch on the failure class — `network`, `unauthorized`, `rate-limited`, `validation`, or `server`. Mutations (`update*`, `updatePower`) keep their throw-on-failure contract.
+
+```ts title="result"
+const result = await facade.getEnergy({ from: '2024-01-01', to: '2024-12-31' })
+if (!result.ok) {
+  switch (result.error.kind) {
+    case 'rate-limited':
+      // result.error.retryAfterMs
+      break
+    case 'unauthorized':
+      // re-authenticate before retrying
+      break
+    default:
+      // network / server / validation — log and skip
+  }
+  return
+}
+const energy = result.value
+```
+
 ## Imports
 
 Exports follow a `Classic*` / `Home*` prefix convention so the target API is obvious at the call site. The `./classic` and `./home` subpaths re-export everything with the prefix stripped — a modern alternative to TypeScript's deprecated `namespace` keyword.

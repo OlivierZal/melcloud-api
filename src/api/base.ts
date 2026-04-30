@@ -224,80 +224,55 @@ export abstract class BaseAPI implements Disposable {
   public abstract isAuthenticated(): boolean
 
   /**
-   * Subclass hook: whether the current persisted session needs to be
-   * refreshed before the next request goes out. Implementations
-   * typically check `isSessionExpired(this.expiry, aheadMs)` with a
-   * non-zero `aheadMs` so refresh happens **before** the real expiry
-   * tick (pre-emptive renewal), keeping the re-auth latency off the
-   * request's critical path.
-   *
-   * Used exclusively by the template {@link ensureSession}; not meant
-   * to be called by subclass code directly.
+   * Subclass hook: whether the persisted session needs refreshing
+   * before the next request. Implementations typically check
+   * `isSessionExpired(this.expiry, aheadMs)` with a non-zero
+   * `aheadMs` so refresh fires pre-emptively, keeping the re-auth
+   * latency off the request's critical path.
    */
   protected abstract needsSessionRefresh(): boolean
 
   /**
-   * Subclass hook: perform the actual session refresh. Called by the
-   * template {@link ensureSession} when {@link needsSessionRefresh}
-   * returns `true`. Implementations decide the best path — a token
-   * refresh (cheap) if available, otherwise a full {@link resumeSession}
-   * (re-auth from persisted credentials).
-   *
-   * Errors inside this hook propagate — the template does not swallow
-   * them; the triggering request will fail and the caller decides how
-   * to react. Use {@link resumeSession}'s own log + swallow semantics
-   * if best-effort behaviour is required.
+   * Subclass hook: perform the actual session refresh. Called by
+   * {@link ensureSession} when {@link needsSessionRefresh} returns
+   * `true`. Errors propagate — the triggering request fails. Use
+   * {@link resumeSession} for best-effort behaviour.
    */
   protected abstract performSessionRefresh(): Promise<void>
 
   /**
-   * Subclass hook: refresh the session after a reactive 401. Called
-   * by {@link AuthRetryPolicy} before it replays the original request.
-   * Returns `true` when the session is authenticated afterwards
-   * (token exchange succeeded OR a fallback `resumeSession` worked),
-   * `false` otherwise.
-   *
-   * Distinct from {@link performSessionRefresh}: this hook fires
-   * after* the server has already rejected the current credential,
-   * so implementations typically clear persisted tokens first. The
-   * pre-emptive hook runs before any rejection and can keep the
-   * existing state untouched when the refresh-token path succeeds.
+   * Subclass hook: refresh the session after a reactive 401, before
+   * {@link AuthRetryPolicy} replays the request. Distinct from
+   * {@link performSessionRefresh} — this fires *after* the server
+   * rejected the current credential, so implementations typically
+   * clear persisted tokens first.
+   * @returns `true` when authenticated afterwards.
    */
   protected abstract reauthenticate(): Promise<boolean>
 
   protected abstract syncRegistry(): Promise<void>
 
   /**
-   * Subclass hook: attempt to reuse an existing persisted session
-   * without going through a full re-authentication. Implementations
-   * must return `true` ONLY when the session has been **verified
-   * against the server** (a single credentialed request that also
-   * populates the device registry is the canonical shape). A `true`
-   * return therefore carries two guarantees: the instance is
-   * authenticated, and its registry reflects server state.
-   *
-   * Returning `false` is the contract for "no usable session" — the
-   * template `initialize()` will then fall through to a full
-   * {@link authenticate} flow (which has its own registry sync
-   * guarantee).
-   * @returns `true` when a persisted session has been reused and the
-   * registry is populated; `false` to fall through to authenticate.
+   * Subclass hook: try to reuse a persisted session without a full
+   * re-authentication. A `true` return carries two guarantees: the
+   * instance is authenticated, and the registry has been verified
+   * against the server (typically via a credentialed request that
+   * also populates it). Returning `false` falls through to a full
+   * {@link authenticate}.
+   * @returns `true` on reuse + registry populated; `false` otherwise.
    */
   protected abstract tryReuseSession(): Promise<boolean>
 
   /**
-   * Sign in with explicit credentials.
+   * Sign in with explicit credentials. Throws
+   * {@link AuthenticationError} on rejection (Classic `ClientLogin3`
+   * returning `LoginData: null`, Home BFF returning 401, etc.).
+   * Successful return guarantees the registry reflects server state
+   * — the post-auth sync is enforced here so subclasses cannot
+   * forget it.
    *
-   * Contract: throws an {@link AuthenticationError} if MELCloud
-   * rejects the credentials — whatever the underlying transport
-   * (Classic `ClientLogin3` returning `LoginData: null`, Home BFF
-   * returning 401, etc.). A successful return guarantees the
-   * registry reflects server state — the post-auth sync is
-   * mandatory and enforced here so subclasses cannot forget it
-   * (regression guard, see OlivierZal/com.melcloud#1281).
-   *
-   * Use {@link resumeSession} instead when you want a best-effort
-   * restore from persisted credentials that logs + swallows errors.
+   * Use {@link resumeSession} for a best-effort restore from
+   * persisted credentials that logs + swallows errors.
    * @param credentials - Explicit username/password.
    * @throws {AuthenticationError} when credentials are rejected.
    */
