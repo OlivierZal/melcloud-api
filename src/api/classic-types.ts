@@ -35,15 +35,19 @@ import type { BaseAPIConfig, SyncCallback } from './types.ts'
  * Low-level API adapter exposing all MELCloud HTTP endpoints.
  * Methods are grouped by supported device types.
  *
- * Best-effort getters return `Result<T>` so callers
- * can branch on the typed failure shape (`network` / `unauthorized` /
- * `rate-limited` / `server`) instead of catching opaque exceptions.
- * The success payload is the unwrapped data — the prior `{ data }`
- * envelope was stripped at the boundary, mirroring the Home API.
+ * Best-effort getters return `Result<T>` so callers can branch on the
+ * typed failure shape (`network` / `unauthorized` / `rate-limited` /
+ * `server`) instead of catching opaque exceptions.
  *
  * Mutations (`update*`, `login`) and sync (`fetch`) keep their
  * throw-on-failure contract — symmetric with Home's `updateValues`
  * and `list`.
+ *
+ * Every method returns the unwrapped payload (no `{ data }` wrapper).
+ * Transport metadata (status, headers) lives inside the SDK on
+ * `request<T>()`; consumers don't see it. This is the resource-focused
+ * convention (Stripe, Linear) — applied uniformly across both Classic
+ * and Home so the public surface is symmetric.
  */
 export interface ClassicAPIAdapter {
   /**
@@ -144,25 +148,25 @@ export interface ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicFrostProtectionPostData
-  }) => Promise<{ data: ClassicFailureData | ClassicSuccessData }>
+  }) => Promise<ClassicFailureData | ClassicSuccessData>
   /** Update ATA device group state. ATA only. */
   readonly updateGroupState: ({
     postData,
   }: {
     postData: ClassicSetGroupPostData
-  }) => Promise<{ data: ClassicFailureData | ClassicSuccessData }>
+  }) => Promise<ClassicFailureData | ClassicSuccessData>
   /** Update holiday mode settings. */
   readonly updateHolidayMode: ({
     postData,
   }: {
     postData: ClassicHolidayModePostData
-  }) => Promise<{ data: ClassicFailureData | ClassicSuccessData }>
+  }) => Promise<ClassicFailureData | ClassicSuccessData>
   /** Turn devices on or off. */
   readonly updatePower: ({
     postData,
   }: {
     postData: ClassicSetPowerPostData
-  }) => Promise<{ data: boolean }>
+  }) => Promise<boolean>
   /** Send updated device values to the Classic API. */
   readonly updateValues: <T extends ClassicDeviceType>({
     postData,
@@ -170,7 +174,7 @@ export interface ClassicAPIAdapter {
   }: {
     postData: ClassicSetDevicePostData<T>
     type: T
-  }) => Promise<{ data: ClassicSetDeviceData<T> }>
+  }) => Promise<ClassicSetDeviceData<T>>
 }
 
 /** Configuration options for creating a MELCloud Classic API instance. */

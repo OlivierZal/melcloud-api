@@ -173,7 +173,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     if (!flags) {
       throw new NoChangesError(id)
     }
-    const { data: finalData } = await api.updateValues({
+    return api.updateValues({
       postData: {
         ...this.prepareUpdateData(newData),
         DeviceID: id,
@@ -181,7 +181,6 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
       },
       type,
     })
-    return finalData
   }
 
   public async getEnergy(

@@ -206,7 +206,7 @@ export abstract class ClassicBaseFacade<
     if (newMax - newMin < TEMPERATURE_GAP) {
       newMax = newMin + TEMPERATURE_GAP
     }
-    const { data } = await this.api.updateFrostProtection({
+    return this.api.updateFrostProtection({
       postData: {
         Enabled: isEnabled,
         MaximumTemperature: newMax,
@@ -214,7 +214,6 @@ export abstract class ClassicBaseFacade<
         ...(await this.#getFrostProtectionLocation()),
       },
     })
-    return data
   }
 
   @fetchDevices({ when: 'after' })
@@ -227,7 +226,7 @@ export abstract class ClassicBaseFacade<
     const isEnabled = to !== undefined
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
     const endDate = isEnabled ? DateTime.fromISO(to) : null
-    const { data } = await this.api.updateHolidayMode({
+    return this.api.updateHolidayMode({
       postData: {
         Enabled: isEnabled,
         EndDate: getDateTimeComponents(endDate),
@@ -235,19 +234,17 @@ export abstract class ClassicBaseFacade<
         StartDate: getDateTimeComponents(startDate),
       },
     })
-    return data
   }
 
   @syncDevices()
   @classicUpdateDevices({ kind: 'power' })
   public async updatePower(isOn = true): Promise<boolean> {
-    const { data: isPowered } = await this.api.updatePower({
+    return this.api.updatePower({
       postData: {
         DeviceIds: this.#deviceIds.map((id) => toClassicDeviceId(id)),
         Power: isOn,
       },
     })
-    return isPowered
   }
 
   public async getErrorLog(

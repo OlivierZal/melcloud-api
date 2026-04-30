@@ -435,8 +435,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.contextKey !== ''
   }
 
-  public async list(): Promise<{ data: ClassicBuildingWithStructure[] }> {
-    const response = await this.request<ClassicBuildingWithStructure[]>(
+  public async list(): Promise<ClassicBuildingWithStructure[]> {
+    const { data } = await this.request<ClassicBuildingWithStructure[]>(
       'get',
       '/User/ListDevices',
     )
@@ -445,8 +445,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     // DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
     // its compile-time contract — the `request<T>` generic binds T
     // at the call site, Zod enforces it at runtime.
-    parseOrThrow(ClassicBuildingListSchema, response.data, 'ListDevices')
-    return response
+    parseOrThrow(ClassicBuildingListSchema, data, 'ListDevices')
+    return data
   }
 
   /**
@@ -455,22 +455,19 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * `contextKey`/`expiry`, and is triggered automatically on 401.
    * @param root0 - Destructured options.
    * @param root0.postData - Login credentials + app version + language.
-   * @returns The raw login envelope, Zod-validated.
+   * @returns The raw login payload, Zod-validated.
    */
   public async login({
     postData,
   }: {
     postData: ClassicLoginPostData
-  }): Promise<{ data: ClassicLoginData }> {
-    const response = await this.dispatch<ClassicLoginData>(
+  }): Promise<ClassicLoginData> {
+    const { data } = await this.dispatch<ClassicLoginData>(
       'post',
       '/Login/ClientLogin3',
       { data: postData },
     )
-    return {
-      ...response,
-      data: parseOrThrow(ClassicLoginDataSchema, response.data, 'ClientLogin3'),
-    }
+    return parseOrThrow(ClassicLoginDataSchema, data, 'ClientLogin3')
   }
 
   /**
@@ -483,45 +480,53 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * the remaining fields.
    * @param root0 - Destructured options.
    * @param root0.postData - Zone identifier + new temperature bounds.
-   * @returns The success or failure envelope.
+   * @returns The success or failure payload.
    */
   public async updateFrostProtection({
     postData,
   }: {
     postData: ClassicFrostProtectionPostData
-  }): Promise<{ data: ClassicFailureData | ClassicSuccessData }> {
-    return this.request('post', '/FrostProtection/Update', { data: postData })
+  }): Promise<ClassicFailureData | ClassicSuccessData> {
+    const { data } = await this.request<
+      ClassicFailureData | ClassicSuccessData
+    >('post', '/FrostProtection/Update', { data: postData })
+    return data
   }
 
   /**
    * Apply an ATA group state update across every device in a building
-   * zone. Same success/failure envelope shape as
-   * {@link updateFrostProtection}.
+   * zone. Same success/failure shape as {@link updateFrostProtection}.
    * @param root0 - Destructured options.
    * @param root0.postData - Group target + state fields to apply.
-   * @returns The success or failure envelope.
+   * @returns The success or failure payload.
    */
   public async updateGroupState({
     postData,
   }: {
     postData: ClassicSetGroupPostData
-  }): Promise<{ data: ClassicFailureData | ClassicSuccessData }> {
-    return this.request('post', '/Group/SetAta', { data: postData })
+  }): Promise<ClassicFailureData | ClassicSuccessData> {
+    const { data } = await this.request<
+      ClassicFailureData | ClassicSuccessData
+    >('post', '/Group/SetAta', { data: postData })
+    return data
   }
 
   /**
-   * Update holiday-mode settings for a zone. Same envelope
-   * discrimination as {@link updateFrostProtection}.
+   * Update holiday-mode settings for a zone. Same shape discrimination
+   * as {@link updateFrostProtection}.
    * @param root0 - Destructured options.
    * @param root0.postData - Zone identifier + holiday-mode fields.
-   * @returns The success or failure envelope.
+   * @returns The success or failure payload.
    */
   public async updateHolidayMode({
     postData,
   }: {
     postData: ClassicHolidayModePostData
-  }): Promise<{ data: ClassicFailureData | ClassicSuccessData }> {
-    return this.request('post', '/HolidayMode/Update', { data: postData })
+  }): Promise<ClassicFailureData | ClassicSuccessData> {
+    const { data } = await this.request<
+      ClassicFailureData | ClassicSuccessData
+    >('post', '/HolidayMode/Update', { data: postData })
+    return data
   }
 
   /**
@@ -552,8 +557,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData,
   }: {
     postData: ClassicSetPowerPostData
-  }): Promise<{ data: boolean }> {
-    return this.request('post', '/Device/Power', { data: postData })
+  }): Promise<boolean> {
+    const { data: isPowered } = await this.request<boolean>(
+      'post',
+      '/Device/Power',
+      { data: postData },
+    )
+    return isPowered
   }
 
   /**
@@ -570,10 +580,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ClassicSetDevicePostData<T>
     type: T
-  }): Promise<{ data: ClassicSetDeviceData<T> }> {
-    return this.request('post', `/Device/Set${deviceTypeNames[type]}`, {
-      data: postData,
-    })
+  }): Promise<ClassicSetDeviceData<T>> {
+    const { data } = await this.request<ClassicSetDeviceData<T>>(
+      'post',
+      `/Device/Set${deviceTypeNames[type]}`,
+      { data: postData },
+    )
+    return data
   }
 
   protected override async doAuthenticate({
@@ -581,9 +594,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     username,
   }: LoginCredentials): Promise<void> {
     this.#clearPersistedSession()
-    const {
-      data: { LoginData: loginData },
-    } = await this.login({
+    const { LoginData: loginData } = await this.login({
       postData: {
         AppVersion: APP_VERSION,
         Email: username,
@@ -669,7 +680,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   async #fetch(): Promise<ClassicBuildingWithStructure[]> {
-    const { data } = await this.list()
+    const data = await this.list()
     this.#registry.syncBuildings(data)
     this.#registry.syncFloors(
       data.flatMap(({ Structure: { Floors: floors } }) => floors),

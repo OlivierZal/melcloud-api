@@ -31,13 +31,12 @@ export abstract class BaseZoneFacade<
     state: ClassicGroupState,
   ): Promise<ClassicFailureData | ClassicSuccessData> {
     try {
-      const { data } = await this.api.updateGroupState({
+      return await this.api.updateGroupState({
         postData: {
           Specification: { [this.groupSpecificationKey]: this.id },
           State: state,
         },
       })
-      return data
     } catch (error) {
       throw new Error('No air-to-air device found', { cause: error })
     }

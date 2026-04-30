@@ -362,40 +362,32 @@ export const createMockClassicApi = (
     notifySync: vi.fn<SyncCallback>().mockResolvedValue(),
     updateFrostProtection: vi
       .fn<ClassicAPIAdapter['updateFrostProtection']>()
-      .mockResolvedValue({
-        data: { AttributeErrors: null, Success: true },
-      }),
+      .mockResolvedValue({ AttributeErrors: null, Success: true }),
     updateGroupState: vi
       .fn<ClassicAPIAdapter['updateGroupState']>()
-      .mockResolvedValue({
-        data: { AttributeErrors: null, Success: true },
-      }),
+      .mockResolvedValue({ AttributeErrors: null, Success: true }),
     updateHolidayMode: vi
       .fn<ClassicAPIAdapter['updateHolidayMode']>()
-      .mockResolvedValue({
-        data: { AttributeErrors: null, Success: true },
-      }),
+      .mockResolvedValue({ AttributeErrors: null, Success: true }),
     updatePower: vi
       .fn<ClassicAPIAdapter['updatePower']>()
-      .mockResolvedValue({ data: true }),
+      .mockResolvedValue(true),
     updateValues: cast(
       vi.fn<ClassicAPIAdapter['updateValues']>().mockResolvedValue(
-        cast({
-          data: mock<ClassicSetDeviceDataAta>({
-            DeviceType: ClassicDeviceType.Ata,
-            EffectiveFlags: 0x1,
-            LastCommunication: '',
-            NextCommunication: '',
-            NumberOfFanSpeeds: 5,
-            Offline: false,
-            OperationMode: ClassicOperationMode.heat,
-            Power: true,
-            RoomTemperature: 22,
-            SetFanSpeed: 3,
-            SetTemperature: 24,
-            VaneHorizontal: 0,
-            VaneVertical: 0,
-          }),
+        mock<ClassicSetDeviceDataAta>({
+          DeviceType: ClassicDeviceType.Ata,
+          EffectiveFlags: 0x1,
+          LastCommunication: '',
+          NextCommunication: '',
+          NumberOfFanSpeeds: 5,
+          Offline: false,
+          OperationMode: ClassicOperationMode.heat,
+          Power: true,
+          RoomTemperature: 22,
+          SetFanSpeed: 3,
+          SetTemperature: 24,
+          VaneHorizontal: 0,
+          VaneVertical: 0,
         }),
       ),
     ),
