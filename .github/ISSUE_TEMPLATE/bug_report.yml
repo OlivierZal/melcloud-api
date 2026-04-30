@@ -1,0 +1,55 @@
+body:
+  - attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in as much of the template as you can — minimal reproduction steps make the report several times easier to fix.
+    type: markdown
+  - attributes:
+      description: The version of `@olivierzal/melcloud-api` you are running.
+      label: Package version
+      placeholder: 37.2.1
+    id: version
+    type: input
+    validations:
+      required: true
+  - attributes:
+      label: Node.js version
+      placeholder: 22.11.0
+    id: node-version
+    type: input
+    validations:
+      required: true
+  - attributes:
+      description: Which API are you using?
+      label: API surface
+      options:
+        - Both
+        - MELCloud Classic
+        - MELCloud Home
+    id: api
+    type: dropdown
+    validations:
+      required: true
+  - attributes:
+      description: What did you expect to happen, and what happened instead?
+      label: Description
+    id: description
+    type: textarea
+    validations:
+      required: true
+  - attributes:
+      description: A small code snippet or repository link that reproduces the issue. Please redact any credentials.
+      label: Minimal reproduction
+      render: ts
+    id: reproduction
+    type: textarea
+    validations:
+      required: true
+  - attributes:
+      description: Any error or unexpected log output. Trim it to the relevant lines.
+      label: Relevant logs
+      render: shell
+    id: logs
+    type: textarea
+description: Report a defect, regression, or unexpected behavior
+labels: [bug]
+name: Bug report

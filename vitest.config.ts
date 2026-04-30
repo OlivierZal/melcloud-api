@@ -18,6 +18,7 @@ export default defineConfig({
     }),
   ],
   test: {
+    clearMocks: true,
     coverage: {
       include: ['src/**/*.ts'],
       reporter: ['text', 'lcov'],

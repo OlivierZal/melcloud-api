@@ -49,6 +49,7 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
     } = this)
   }
 
+  // See `BaseDeviceFacade.fetch` for the rationale on this shape.
   @fetchDevices()
   public async fetch(): Promise<ClassicZoneSettings> {
     const data = await Promise.resolve(this.data)

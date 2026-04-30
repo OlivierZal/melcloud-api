@@ -8,12 +8,14 @@ import type {
 import type { ClassicDeviceType } from '../../src/constants.ts'
 import { AuthenticationError } from '../../src/errors/index.ts'
 import {
-  type ClassicBuildingWithStructure,
-  type ClassicListDeviceAny,
   type ClassicSetDevicePostData,
   toClassicBuildingId,
   toClassicDeviceId,
 } from '../../src/types/index.ts'
+import {
+  classicBuildingWithStructure,
+  classicRawDevice,
+} from '../classic-fixtures.ts'
 import {
   cast,
   createHttpError,
@@ -22,6 +24,7 @@ import {
   createSettingStore,
   matchObject,
   mock,
+  okValue,
 } from '../helpers.ts'
 
 const { client: mockHttpClient, requestSpy: mockRequest } =
@@ -74,46 +77,11 @@ const errorEntry = (
   ...overrides,
 })
 
-const createDevice = (
-  overrides: Record<string, unknown> = {},
-): ClassicListDeviceAny =>
-  cast({
-    AreaID: null,
-    BuildingID: 1,
-    Device: {},
-    DeviceID: 1,
-    DeviceName: 'ClassicDevice',
-    FloorID: null,
-    Type: 0,
-    ...overrides,
-  })
-
-const createBuilding = (
-  overrides: Partial<ClassicBuildingWithStructure> = {},
-): ClassicBuildingWithStructure =>
-  mock({
-    FPDefined: false,
-    FPEnabled: false,
-    FPMaxTemperature: 16,
-    FPMinTemperature: 4,
-    HMDefined: false,
-    HMEnabled: false,
-    HMEndDate: null,
-    HMStartDate: null,
-    ID: toClassicBuildingId(1),
-    Location: 10,
-    Name: 'Test',
-    Structure: { Areas: [], Devices: [], Floors: [] },
-    TimeZone: 0,
-    ...overrides,
-  })
-
 describe('mELCloud Classic API', () => {
   let melCloudApi: typeof ClassicAPI = cast(null)
 
   beforeEach(async () => {
     vi.useFakeTimers()
-    vi.clearAllMocks()
     mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
     ;({ ClassicAPI: melCloudApi } = await import('../../src/api/classic.ts'))
   })
@@ -181,7 +149,7 @@ describe('mELCloud Classic API', () => {
   })
 
   it('fetches building list and syncs registry', async () => {
-    const building = createBuilding()
+    const building = classicBuildingWithStructure()
     mockRequest.mockResolvedValue({
       data: [building],
       headers: {},
@@ -481,10 +449,12 @@ describe('mELCloud Classic API', () => {
     // after a successful login. Enforced by BaseAPI.authenticate's
     // template method (guard against OlivierZal/com.melcloud#1281-style regressions).
     it('populates the device registry during authenticate', async () => {
-      const building = createBuilding({
+      const building = classicBuildingWithStructure({
         Structure: {
           Areas: [],
-          Devices: [createDevice({ DeviceID: 42, DeviceName: 'Populated' })],
+          Devices: [
+            classicRawDevice({ DeviceID: 42, DeviceName: 'Populated' }),
+          ],
           Floors: [],
         },
       })
@@ -598,8 +568,10 @@ describe('mELCloud Classic API', () => {
         [1],
       )
 
-      expect(result.errors).toHaveLength(1)
-      expect(result.errors[0]?.error).toBe('Some error')
+      const value = okValue(result)
+
+      expect(value.errors).toHaveLength(1)
+      expect(value.errors[0]?.error).toBe('Some error')
     })
 
     it('filters out entries with invalid year', async () => {
@@ -616,37 +588,45 @@ describe('mELCloud Classic API', () => {
       )
       const result = await api.getErrorLog({}, [1])
 
-      expect(result.errors).toHaveLength(0)
+      expect(okValue(result).errors).toHaveLength(0)
     })
 
-    it('throws when the API returns failure data', async () => {
+    it('returns validation failure when the API returns failure data', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
       mockRequest.mockResolvedValue(
         wrap({ AttributeErrors: { field: ['error'] }, Success: false }),
       )
+      const result = await api.getErrorLog({}, [1])
 
-      await expect(api.getErrorLog({}, [1])).rejects.toThrow('field')
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.error.kind).toBe('validation')
     })
 
-    it('handles offset and limit', async () => {
+    it('handles offset and period', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
       mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
       const result = await api.getErrorLog(
-        { limit: '5', offset: '2', to: '2024-06-01' },
+        { offset: 2, period: 5, to: '2024-06-01' },
         [1],
       )
 
-      expect(result).toHaveProperty('fromDate')
-      expect(result).toHaveProperty('nextFromDate')
+      // offset=2, period=5 → daysBack = 2 * (5 + 1) = 12
+      // toDate = 2024-06-01 - 12d = 2024-05-20
+      // fromDate = toDate - 5d = 2024-05-15
+      expect(okValue(result)).toMatchObject({
+        fromDate: '2024-05-15',
+        nextFromDate: '2024-05-09',
+        nextToDate: '2024-05-14',
+      })
     })
 
     it('uses all devices when no deviceIds provided', async () => {
-      const building = createBuilding({
+      const building = classicBuildingWithStructure({
         Structure: {
           Areas: [],
-          Devices: [createDevice({ DeviceID: 42, DeviceName: 'D1' })],
+          Devices: [classicRawDevice({ DeviceID: 42, DeviceName: 'D1' })],
           Floors: [],
         },
       })
@@ -670,7 +650,7 @@ describe('mELCloud Classic API', () => {
       })
       const result = await api.getErrorLog({})
 
-      expect(result).toHaveProperty('errors')
+      expect(okValue(result)).toHaveProperty('errors')
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           data: matchObject({ DeviceIDs: [42] }),
@@ -685,7 +665,7 @@ describe('mELCloud Classic API', () => {
       mockRequest.mockResolvedValue(wrap([errorEntry({ ErrorMessage: null })]))
       const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
 
-      expect(result.errors).toHaveLength(0)
+      expect(okValue(result).errors).toHaveLength(0)
     })
 
     it('throws on invalid date in query', async () => {
@@ -696,6 +676,22 @@ describe('mELCloud Classic API', () => {
       await expect(api.getErrorLog({ to: 'not-a-date' }, [1])).rejects.toThrow(
         'Invalid DateTime',
       )
+    })
+
+    it('propagates transport failure from getErrorEntries', async () => {
+      mockLoginAndList()
+      const api = await createApi({ password: 'pass', username: 'user' })
+      mockRequest.mockRejectedValue(
+        createHttpError({
+          message: 'boom',
+          status: 500,
+          url: '/Report/GetUnitErrorLog2',
+        }),
+      )
+      const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
+
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.error.kind).toBe('server')
     })
   })
 
@@ -887,7 +883,7 @@ describe('mELCloud Classic API', () => {
         params: { buildingId: 1, id: 1 },
       })
 
-      expect(result.data).toStrictEqual({ value: 'retried' })
+      expect(okValue(result)).toStrictEqual({ value: 'retried' })
     })
 
     it('surfaces 401 when re-authentication fails', async () => {
@@ -910,9 +906,12 @@ describe('mELCloud Classic API', () => {
         })
       })
 
-      await expect(
-        api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toThrow('unauthorized')
+      const result = await api.getValues({
+        params: { buildingId: 1, id: 1 },
+      })
+
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.error.kind).toBe('unauthorized')
     })
 
     it('handles errors without crashing when error has no config', async () => {
@@ -926,22 +925,25 @@ describe('mELCloud Classic API', () => {
       // An error with no response — e.g. network/TLS failure
       mockRequest.mockRejectedValueOnce(new Error('connect ECONNREFUSED'))
 
-      await expect(
-        api.getValues({ params: { buildingId: 1, id: 1 } }),
-      ).rejects.toThrow('connect ECONNREFUSED')
+      const result = await api.getValues({
+        params: { buildingId: 1, id: 1 },
+      })
+
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.error.kind).toBe('network')
     })
   })
 
   describe('fetch with complex building structure', () => {
     it('syncs floors, areas, and devices from building structure', async () => {
-      const building = createBuilding({
+      const building = classicBuildingWithStructure({
         Name: 'B1',
         Structure: {
           Areas: [
             {
               BuildingId: toClassicBuildingId(1),
               Devices: [
-                createDevice({
+                classicRawDevice({
                   AreaID: 100,
                   DeviceID: 2000,
                   DeviceName: 'ClassicArea ClassicDevice',
@@ -953,7 +955,7 @@ describe('mELCloud Classic API', () => {
             },
           ],
           Devices: [
-            createDevice({
+            classicRawDevice({
               DeviceID: 1000,
               DeviceName: 'ClassicBuilding ClassicDevice',
             }),
@@ -964,7 +966,7 @@ describe('mELCloud Classic API', () => {
                 {
                   BuildingId: toClassicBuildingId(1),
                   Devices: [
-                    createDevice({
+                    classicRawDevice({
                       AreaID: 200,
                       DeviceID: 3000,
                       DeviceName: 'ClassicFloor ClassicArea ClassicDevice',
@@ -978,7 +980,7 @@ describe('mELCloud Classic API', () => {
               ],
               BuildingId: toClassicBuildingId(1),
               Devices: [
-                createDevice({
+                classicRawDevice({
                   DeviceID: 4000,
                   DeviceName: 'ClassicFloor ClassicDevice',
                   FloorID: 10,

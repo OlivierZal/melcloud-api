@@ -1,11 +1,20 @@
+import { vi } from 'vitest'
+
+import type { ClassicAPIAdapter, SyncCallback } from '../src/api/index.ts'
 import {
   ClassicDeviceType,
   ClassicLabelType,
+  ClassicOperationMode,
   ClassicOperationModeZone,
 } from '../src/constants.ts'
 import {
+  type ClassicDeviceAny,
+  ClassicRegistry,
+} from '../src/entities/index.ts'
+import {
   type ClassicAreaDataAny,
   type ClassicBuildingData,
+  type ClassicBuildingWithStructure,
   type ClassicFloorData,
   type ClassicFrostProtectionData,
   type ClassicHolidayModeData,
@@ -15,18 +24,20 @@ import {
   type ClassicListDeviceDataAtw,
   type ClassicListDeviceDataErv,
   type ClassicReportData,
+  type ClassicSetDeviceDataAta,
+  ok,
   toClassicAreaId,
   toClassicBuildingId,
   toClassicDeviceId,
   toClassicFloorId,
 } from '../src/types/index.ts'
-import { mock } from './helpers.ts'
+import { cast, mock } from './helpers.ts'
 
 // ---------------------------------------------------------------------------
 // Primitive model data factories
 // ---------------------------------------------------------------------------
 
-export const buildingData = (
+export const classicBuildingData = (
   overrides: Partial<ClassicBuildingData> = {},
 ): ClassicBuildingData => ({
   FPDefined: true,
@@ -44,7 +55,7 @@ export const buildingData = (
   ...overrides,
 })
 
-export const floorData = (
+export const classicFloorData = (
   overrides: Partial<ClassicFloorData> = {},
 ): ClassicFloorData => ({
   BuildingId: toClassicBuildingId(1),
@@ -53,7 +64,7 @@ export const floorData = (
   ...overrides,
 })
 
-export const areaData = (
+export const classicAreaData = (
   overrides: Partial<ClassicAreaDataAny> = {},
 ): ClassicAreaDataAny => ({
   BuildingId: toClassicBuildingId(1),
@@ -67,7 +78,7 @@ export const areaData = (
 // ClassicDevice data factories (inner `ClassicDevice` payloads)
 // ---------------------------------------------------------------------------
 
-export const ataDeviceData = (
+export const classicAtaDeviceData = (
   overrides: Partial<ClassicListDeviceDataAta> = {},
 ): ClassicListDeviceDataAta =>
   mock<ClassicListDeviceDataAta>({
@@ -93,7 +104,7 @@ export const ataDeviceData = (
     ...overrides,
   })
 
-const atwDefaults: Partial<ClassicListDeviceDataAtw> = {
+const classicAtwDefaults: Partial<ClassicListDeviceDataAtw> = {
   BoosterHeater1Status: false,
   BoosterHeater2PlusStatus: false,
   BoosterHeater2Status: false,
@@ -147,12 +158,12 @@ const atwDefaults: Partial<ClassicListDeviceDataAtw> = {
   Zone2InHeatMode: false,
 }
 
-export const atwDeviceData = (
+export const classicAtwDeviceData = (
   overrides: Partial<ClassicListDeviceDataAtw> = {},
 ): ClassicListDeviceDataAtw =>
-  mock<ClassicListDeviceDataAtw>({ ...atwDefaults, ...overrides })
+  mock<ClassicListDeviceDataAtw>({ ...classicAtwDefaults, ...overrides })
 
-export const ervDeviceData = (
+export const classicErvDeviceData = (
   overrides: Partial<ClassicListDeviceDataErv> = {},
 ): ClassicListDeviceDataErv =>
   mock<ClassicListDeviceDataErv>({
@@ -186,12 +197,12 @@ const DEFAULT_ERV_DEVICE_ID = toClassicDeviceId(1002)
 // Full list-device wrappers (envelope around device data)
 // ---------------------------------------------------------------------------
 
-export const ataDevice = (
+export const classicAtaDevice = (
   overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Ata>> = {},
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  Device: ataDeviceData(),
+  Device: classicAtaDeviceData(),
   DeviceID: DEFAULT_ATA_DEVICE_ID,
   DeviceName: 'ATA ClassicDevice',
   FloorID: DEFAULT_FLOOR_ID,
@@ -199,12 +210,12 @@ export const ataDevice = (
   ...overrides,
 })
 
-export const atwDevice = (
+export const classicAtwDevice = (
   overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Atw>> = {},
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  Device: atwDeviceData(),
+  Device: classicAtwDeviceData(),
   DeviceID: DEFAULT_ATW_DEVICE_ID,
   DeviceName: 'ATW ClassicDevice',
   FloorID: DEFAULT_FLOOR_ID,
@@ -212,12 +223,12 @@ export const atwDevice = (
   ...overrides,
 })
 
-export const ervDevice = (
+export const classicErvDevice = (
   overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Erv>> = {},
 ): ClassicListDeviceAny => ({
   AreaID: DEFAULT_AREA_ID,
   BuildingID: DEFAULT_BUILDING_ID,
-  Device: ervDeviceData(),
+  Device: classicErvDeviceData(),
   DeviceID: DEFAULT_ERV_DEVICE_ID,
   DeviceName: 'ERV ClassicDevice',
   FloorID: null,
@@ -229,7 +240,7 @@ export const ervDevice = (
 // API response fixtures
 // ---------------------------------------------------------------------------
 
-export const reportData = (
+export const classicReportData = (
   overrides: Partial<ClassicReportData> = {},
 ): ClassicReportData => ({
   Data: [[1]],
@@ -242,7 +253,7 @@ export const reportData = (
   ...overrides,
 })
 
-export const holidayModeResponse = (
+export const classicHolidayModeResponse = (
   overrides: Partial<ClassicHolidayModeData> = {},
 ): ClassicHolidayModeData => ({
   EndDate: { Day: 1, Hour: 0, Minute: 0, Month: 1, Second: 0, Year: 2024 },
@@ -255,7 +266,7 @@ export const holidayModeResponse = (
   ...overrides,
 })
 
-export const frostProtectionResponse = (
+export const classicFrostProtectionResponse = (
   overrides: Partial<ClassicFrostProtectionData> = {},
 ): ClassicFrostProtectionData => ({
   FPDefined: false,
@@ -264,3 +275,171 @@ export const frostProtectionResponse = (
   FPMinTemperature: 4,
   ...overrides,
 })
+
+// ---------------------------------------------------------------------------
+// Permissive raw factories — accept arbitrary overrides via `cast`. Used by
+// API-level tests that exercise unbranded ID inputs and minimal device
+// payloads where the typed envelope above is too strict.
+// ---------------------------------------------------------------------------
+
+export const classicBuildingWithStructure = (
+  overrides: Partial<ClassicBuildingWithStructure> = {},
+): ClassicBuildingWithStructure =>
+  mock<ClassicBuildingWithStructure>({
+    ...classicBuildingData(),
+    Structure: { Areas: [], Devices: [], Floors: [] },
+    ...overrides,
+  })
+
+export const classicRawDevice = (
+  overrides: Record<string, unknown> = {},
+): ClassicListDeviceAny =>
+  cast({
+    AreaID: null,
+    BuildingID: 1,
+    Device: {},
+    DeviceID: 1,
+    DeviceName: 'ClassicDevice',
+    FloorID: null,
+    Type: 0,
+    ...overrides,
+  })
+
+// ---------------------------------------------------------------------------
+// Mock factories
+// ---------------------------------------------------------------------------
+
+export const createMockClassicApi = (
+  overrides: Partial<ClassicAPIAdapter> = {},
+): ClassicAPIAdapter =>
+  mock<ClassicAPIAdapter>({
+    fetch: vi.fn<ClassicAPIAdapter['fetch']>().mockResolvedValue([]),
+    getEnergy: vi
+      .fn<ClassicAPIAdapter['getEnergy']>()
+      .mockResolvedValue(ok(cast({}))),
+    getErrorEntries: vi
+      .fn<ClassicAPIAdapter['getErrorEntries']>()
+      .mockResolvedValue(ok([])),
+    getErrorLog: vi
+      .fn<ClassicAPIAdapter['getErrorLog']>()
+      .mockResolvedValue(ok(cast({ errors: [] }))),
+    getFrostProtection: vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockResolvedValue(
+        ok(classicFrostProtectionResponse({ FPDefined: true })),
+      ),
+    getGroup: vi
+      .fn<ClassicAPIAdapter['getGroup']>()
+      .mockResolvedValue(
+        ok(cast({ Data: { Group: { State: { Power: true } } } })),
+      ),
+    getHolidayMode: vi
+      .fn<ClassicAPIAdapter['getHolidayMode']>()
+      .mockResolvedValue(ok(classicHolidayModeResponse({ HMDefined: true }))),
+    getHourlyTemperatures: vi
+      .fn<ClassicAPIAdapter['getHourlyTemperatures']>()
+      .mockResolvedValue(ok(classicReportData())),
+    getInternalTemperatures: vi
+      .fn<ClassicAPIAdapter['getInternalTemperatures']>()
+      .mockResolvedValue(ok(classicReportData())),
+    getOperationModes: vi
+      .fn<ClassicAPIAdapter['getOperationModes']>()
+      .mockResolvedValue(ok([{ Key: 'Heating', Value: 100 }])),
+    getSignal: vi
+      .fn<ClassicAPIAdapter['getSignal']>()
+      .mockResolvedValue(ok(classicReportData())),
+    getTemperatures: vi
+      .fn<ClassicAPIAdapter['getTemperatures']>()
+      .mockResolvedValue(ok(classicReportData())),
+    getTiles: cast(
+      vi
+        .fn<ClassicAPIAdapter['getTiles']>()
+        .mockResolvedValue(ok(cast({ SelectedDevice: null, Tiles: [] }))),
+    ),
+    getValues: vi
+      .fn<ClassicAPIAdapter['getValues']>()
+      .mockResolvedValue(ok(cast({ EffectiveFlags: 0 }))),
+    notifySync: vi.fn<SyncCallback>().mockResolvedValue(),
+    updateFrostProtection: vi
+      .fn<ClassicAPIAdapter['updateFrostProtection']>()
+      .mockResolvedValue({ AttributeErrors: null, Success: true }),
+    updateGroupState: vi
+      .fn<ClassicAPIAdapter['updateGroupState']>()
+      .mockResolvedValue({ AttributeErrors: null, Success: true }),
+    updateHolidayMode: vi
+      .fn<ClassicAPIAdapter['updateHolidayMode']>()
+      .mockResolvedValue({ AttributeErrors: null, Success: true }),
+    updatePower: vi
+      .fn<ClassicAPIAdapter['updatePower']>()
+      .mockResolvedValue(true),
+    updateValues: cast(
+      vi.fn<ClassicAPIAdapter['updateValues']>().mockResolvedValue(
+        mock<ClassicSetDeviceDataAta>({
+          DeviceType: ClassicDeviceType.Ata,
+          EffectiveFlags: 0x1,
+          LastCommunication: '',
+          NextCommunication: '',
+          NumberOfFanSpeeds: 5,
+          Offline: false,
+          OperationMode: ClassicOperationMode.heat,
+          Power: true,
+          RoomTemperature: 22,
+          SetFanSpeed: 3,
+          SetTemperature: 24,
+          VaneHorizontal: 0,
+          VaneVertical: 0,
+        }),
+      ),
+    ),
+    ...overrides,
+  })
+
+// ---------------------------------------------------------------------------
+// Type guards & registry helpers
+// ---------------------------------------------------------------------------
+
+export function assertClassicDeviceType<T extends ClassicDeviceType>(
+  device: ClassicDeviceAny | undefined,
+  type: T,
+): asserts device is Extract<ClassicDeviceAny, { type: T }>
+export function assertClassicDeviceType(
+  device: ClassicDeviceAny | undefined,
+  type: ClassicDeviceType,
+): void {
+  if (device?.type !== type) {
+    throw new Error(
+      `Expected device of type ${String(type)}, got ${device ? String(device.type) : 'undefined'}`,
+    )
+  }
+}
+
+/**
+ * Build a `ClassicRegistry` populated with the provided hierarchy in a
+ * single call. Replaces the repeated 5-line
+ * `new ClassicRegistry() + syncBuildings + syncFloors + syncAreas + syncDevices`
+ * pattern found in multiple test files.
+ * @param data - Flat arrays of buildings, floors, areas, and devices.
+ * @param data.areas - ClassicArea rows to sync.
+ * @param data.buildings - ClassicBuilding rows to sync.
+ * @param data.devices - ClassicDevice rows to sync.
+ * @param data.floors - ClassicFloor rows to sync.
+ * @returns A fully synced `ClassicRegistry` instance.
+ */
+export const populatedClassicRegistry = ({
+  areas,
+  buildings,
+  devices,
+  floors,
+}: {
+  areas: ClassicAreaDataAny[]
+  buildings: ClassicBuildingData[]
+  devices: ClassicListDeviceAny[]
+  floors: ClassicFloorData[]
+}): ClassicRegistry => {
+  const registry = new ClassicRegistry()
+  registry.syncBuildings(buildings)
+  registry.syncFloors(floors)
+  registry.syncAreas(areas)
+  registry.syncDevices(devices)
+  return registry
+}

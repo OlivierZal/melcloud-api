@@ -1,19 +1,9 @@
 import { DateTime } from 'luxon'
 
-import type {
-  ClassicDeviceID,
-  ClassicEnergyData,
-  ClassicGetDeviceData,
-  ClassicListDeviceData,
-  ClassicReportPostData,
-  ClassicSetDeviceData,
-  ClassicTilesData,
-  ClassicUpdateDeviceData,
-  Hour,
-} from '../types/index.ts'
 import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import {
   classicUpdateDevice,
+  convertToListDeviceData,
   fetchDevices,
   syncDevices,
 } from '../decorators/index.ts'
@@ -23,6 +13,19 @@ import {
   isClassicDeviceOfType,
 } from '../entities/index.ts'
 import { NoChangesError } from '../errors/index.ts'
+import {
+  type ClassicDeviceID,
+  type ClassicEnergyData,
+  type ClassicGetDeviceData,
+  type ClassicListDeviceData,
+  type ClassicReportPostData,
+  type ClassicSetDeviceData,
+  type ClassicTilesData,
+  type ClassicUpdateDeviceData,
+  type Hour,
+  type Result,
+  mapResult,
+} from '../types/index.ts'
 import {
   fromListToSetAta,
   getChartLineOptions,
@@ -39,38 +42,12 @@ import type {
   ReportChartPieOptions,
   ReportQuery,
 } from './report-types.ts'
-import { BaseFacade } from './classic-base.ts'
+import { ClassicBaseFacade } from './classic-base.ts'
 
 // Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
 
 const MS_PER_DAY = 86_400_000
-
-/**
- * Clamp a numeric value into the inclusive `[min, max]` range.
- *
- * Shared by the three device facades (Classic ATA, Classic ATW, Home
- * ATA) that enforce target-temperature limits before sending updates
- * to their respective upstream APIs. Kept here rather than in
- * `utils.ts` so the import graph stays within the facades folder.
- * @param value - The value to clamp.
- * @param range - Inclusive bounds.
- * @param range.max - Upper bound (inclusive).
- * @param range.min - Lower bound (inclusive).
- * @returns `value`, clamped to `[range.min, range.max]`.
- */
-export const clampToRange = (
-  value: number,
-  range: { max: number; min: number },
-): number => Math.min(Math.max(value, range.min), range.max)
-
-const getReportPostDataDates = ({
-  from = DEFAULT_YEAR,
-  to = now(),
-}: ReportQuery): Required<ReportQuery> => ({
-  from,
-  to,
-})
 
 // Use Luxon parsing so offset-less ISO inputs are interpreted in
 // `LuxonSettings.defaultZone` (matching the Classic API's timezone contract),
@@ -86,7 +63,7 @@ const getDuration = ({ from, to }: Required<ReportQuery>): number =>
  * value updates with effective flags, and ATA key conversion between set/list formats.
  */
 export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
-  extends BaseFacade<ClassicDeviceAny>
+  extends ClassicBaseFacade<ClassicDeviceAny>
   implements ClassicDeviceFacade<T>
 {
   declare public readonly id: ClassicDeviceID
@@ -155,6 +132,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return typedFromEntries<Required<ClassicUpdateDeviceData<T>>>(entries)
   }
 
+  // The `@fetchDevices` decorator awaits a registry sync before this
+  // body runs; the body just exposes the now-fresh `this.data`. The
+  // `const data = await Promise.resolve(...)` shape is the only one
+  // that simultaneously satisfies `promise-function-async`,
+  // `require-await`, and `return-await`.
   @fetchDevices()
   public async fetch(): Promise<Readonly<ClassicListDeviceData<T>>> {
     const data = await Promise.resolve(this.data)
@@ -162,12 +144,15 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   @syncDevices()
-  @classicUpdateDevice()
-  public async getValues(): Promise<ClassicGetDeviceData<T>> {
-    const { data } = await this.api.getValues<T>({
-      params: { buildingId: this.device.buildingId, id: this.id },
+  public async getValues(): Promise<Result<ClassicGetDeviceData<T>>> {
+    const { api, device } = this
+    const result = await api.getValues<T>({
+      params: { buildingId: device.buildingId, id: device.id },
     })
-    return data
+    if (result.ok) {
+      device.update(convertToListDeviceData(this, result.value))
+    }
+    return result
   }
 
   @syncDevices()
@@ -188,7 +173,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     if (!flags) {
       throw new NoChangesError(id)
     }
-    const { data: finalData } = await api.updateValues({
+    return api.updateValues({
       postData: {
         ...this.prepareUpdateData(newData),
         DeviceID: id,
@@ -196,68 +181,77 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
       },
       type,
     })
-    return finalData
   }
 
-  public async getEnergy(query?: ReportQuery): Promise<ClassicEnergyData<T>> {
-    const { data } = await this.api.getEnergy<T>({
+  public async getEnergy(
+    query?: ReportQuery,
+  ): Promise<Result<ClassicEnergyData<T>>> {
+    return this.api.getEnergy<T>({
       postData: this.#buildReportPostData(query),
     })
-    return data
   }
 
   public async getHourlyTemperatures(
     hour: Hour = DateTime.now().hour,
-  ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.getHourlyTemperatures({
-      postData: { device: this.id, hour },
-    })
-    return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
+  ): Promise<Result<ReportChartLineOptions>> {
+    return mapResult(
+      await this.api.getHourlyTemperatures({
+        postData: { device: this.id, hour },
+      }),
+      (data) =>
+        getChartLineOptions(data, this.internalTemperaturesLegend, '°C'),
+    )
   }
 
   public async getInternalTemperatures(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.getInternalTemperatures({
-      postData: this.#buildReportPostData(query, shouldUseExactRange),
-    })
-    return getChartLineOptions(data, this.internalTemperaturesLegend, '°C')
+  ): Promise<Result<ReportChartLineOptions>> {
+    return mapResult(
+      await this.api.getInternalTemperatures({
+        postData: this.#buildReportPostData(query, shouldUseExactRange),
+      }),
+      (data) =>
+        getChartLineOptions(data, this.internalTemperaturesLegend, '°C'),
+    )
   }
 
   public async getOperationModes(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<ReportChartPieOptions> {
+  ): Promise<Result<ReportChartPieOptions>> {
     const postData = this.#buildReportPostData(query, shouldUseExactRange)
     const dateRange = { from: postData.FromDate, to: postData.ToDate }
-    const { data } = await this.api.getOperationModes({ postData })
-    return getChartPieOptions(data, dateRange)
+    return mapResult(await this.api.getOperationModes({ postData }), (data) =>
+      getChartPieOptions(data, dateRange),
+    )
   }
 
   public async getTemperatures(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.getTemperatures({
-      postData: {
-        ...this.#buildReportPostData(query, shouldUseExactRange),
-        Location: this.registry.buildings.getById(this.device.buildingId)
-          ?.location,
-      },
-    })
-    return getChartLineOptions(data, this.temperaturesLegend, '°C')
+  ): Promise<Result<ReportChartLineOptions>> {
+    return mapResult(
+      await this.api.getTemperatures({
+        postData: {
+          ...this.#buildReportPostData(query, shouldUseExactRange),
+          Location: this.registry.buildings.getById(this.device.buildingId)
+            ?.location,
+        },
+      }),
+      (data) => getChartLineOptions(data, this.temperaturesLegend, '°C'),
+    )
   }
 
   public override async getTiles(
     device?: false,
-  ): Promise<ClassicTilesData<null>>
+  ): Promise<Result<ClassicTilesData<null>>>
   public override async getTiles(
     device: true | ClassicDeviceAny,
-  ): Promise<ClassicTilesData<T>>
+  ): Promise<Result<ClassicTilesData<T>>>
   public override async getTiles(
     device: boolean | ClassicDeviceAny = false,
-  ): Promise<ClassicTilesData<T | null>> {
+  ): Promise<Result<ClassicTilesData<T | null>>> {
     if (
       device === false ||
       (device instanceof ClassicDevice && device.id !== this.id)
@@ -274,18 +268,14 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   #buildReportPostData(
-    { from, to }: ReportQuery = {},
+    { from = DEFAULT_YEAR, to = now() }: ReportQuery = {},
     shouldUseExactRange = false,
   ): ClassicReportPostData {
-    const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
       DeviceID: this.id,
-      Duration:
-        shouldUseExactRange ?
-          getDuration({ from: newFrom, to: newTo })
-        : undefined,
-      FromDate: newFrom,
-      ToDate: newTo,
+      Duration: shouldUseExactRange ? getDuration({ from, to }) : undefined,
+      FromDate: from,
+      ToDate: to,
     }
   }
 

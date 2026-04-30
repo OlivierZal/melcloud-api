@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto'
 
-import type { LoginCredentials } from '../types/index.ts'
+import type { z } from 'zod'
+
 import { setting } from '../decorators/index.ts'
-import { AuthenticationError } from '../errors/index.ts'
+import { AuthenticationError, RateLimitError } from '../errors/index.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
@@ -25,6 +26,14 @@ import {
   RetryGuard,
   TransientRetryPolicy,
 } from '../resilience/index.ts'
+import {
+  type ApiRequestError,
+  type LoginCredentials,
+  type Result,
+  err,
+  ok,
+} from '../types/index.ts'
+import { parseOrThrow } from '../validation/index.ts'
 import type {
   BaseAPIConfig,
   Logger,
@@ -32,6 +41,39 @@ import type {
   SyncCallback,
 } from './types.ts'
 import { SyncManager } from './sync-manager.ts'
+
+/**
+ * Classify any thrown error into the discriminated {@link ApiRequestError}
+ * union surfaced by {@link BaseAPI.safeRequest}.
+ *
+ * Order matters: domain errors (`AuthenticationError`, `RateLimitError`)
+ * are checked before transport errors so a credential rejection isn't
+ * misclassified as a `server` failure. Zod parse failures bubble up as
+ * `Error` with `name === 'ValidationError'` from {@link parseOrThrow},
+ * which is detected here and reported as the `validation` variant.
+ * @param error - The thrown value to classify.
+ * @returns A typed {@link ApiRequestError}.
+ */
+export const classifyError = (error: unknown): ApiRequestError => {
+  if (error instanceof Error && error.name === 'ValidationError') {
+    return { cause: error, issue: error.message, kind: 'validation' }
+  }
+  if (error instanceof AuthenticationError) {
+    return { cause: error, kind: 'unauthorized' }
+  }
+  if (error instanceof RateLimitError) {
+    return {
+      kind: 'rate-limited',
+      retryAfterMs: error.retryAfter?.toMillis() ?? null,
+    }
+  }
+  if (isHttpError(error)) {
+    return error.response.status === HttpStatus.Unauthorized ?
+        { cause: error, kind: 'unauthorized' }
+      : { cause: error, kind: 'server', status: error.response.status }
+  }
+  return { cause: error, kind: 'network' }
+}
 
 /**
  * Narrow any error the HTTP client can surface into either an
@@ -182,80 +224,55 @@ export abstract class BaseAPI implements Disposable {
   public abstract isAuthenticated(): boolean
 
   /**
-   * Subclass hook: whether the current persisted session needs to be
-   * refreshed before the next request goes out. Implementations
-   * typically check `isSessionExpired(this.expiry, aheadMs)` with a
-   * non-zero `aheadMs` so refresh happens **before** the real expiry
-   * tick (pre-emptive renewal), keeping the re-auth latency off the
-   * request's critical path.
-   *
-   * Used exclusively by the template {@link ensureSession}; not meant
-   * to be called by subclass code directly.
+   * Subclass hook: whether the persisted session needs refreshing
+   * before the next request. Implementations typically check
+   * `isSessionExpired(this.expiry, aheadMs)` with a non-zero
+   * `aheadMs` so refresh fires pre-emptively, keeping the re-auth
+   * latency off the request's critical path.
    */
   protected abstract needsSessionRefresh(): boolean
 
   /**
-   * Subclass hook: perform the actual session refresh. Called by the
-   * template {@link ensureSession} when {@link needsSessionRefresh}
-   * returns `true`. Implementations decide the best path — a token
-   * refresh (cheap) if available, otherwise a full {@link resumeSession}
-   * (re-auth from persisted credentials).
-   *
-   * Errors inside this hook propagate — the template does not swallow
-   * them; the triggering request will fail and the caller decides how
-   * to react. Use {@link resumeSession}'s own log + swallow semantics
-   * if best-effort behaviour is required.
+   * Subclass hook: perform the actual session refresh. Called by
+   * {@link ensureSession} when {@link needsSessionRefresh} returns
+   * `true`. Errors propagate — the triggering request fails. Use
+   * {@link resumeSession} for best-effort behaviour.
    */
   protected abstract performSessionRefresh(): Promise<void>
 
   /**
-   * Subclass hook: refresh the session after a reactive 401. Called
-   * by {@link AuthRetryPolicy} before it replays the original request.
-   * Returns `true` when the session is authenticated afterwards
-   * (token exchange succeeded OR a fallback `resumeSession` worked),
-   * `false` otherwise.
-   *
-   * Distinct from {@link performSessionRefresh}: this hook fires
-   * after* the server has already rejected the current credential,
-   * so implementations typically clear persisted tokens first. The
-   * pre-emptive hook runs before any rejection and can keep the
-   * existing state untouched when the refresh-token path succeeds.
+   * Subclass hook: refresh the session after a reactive 401, before
+   * {@link AuthRetryPolicy} replays the request. Distinct from
+   * {@link performSessionRefresh} — this fires *after* the server
+   * rejected the current credential, so implementations typically
+   * clear persisted tokens first.
+   * @returns `true` when authenticated afterwards.
    */
   protected abstract reauthenticate(): Promise<boolean>
 
   protected abstract syncRegistry(): Promise<void>
 
   /**
-   * Subclass hook: attempt to reuse an existing persisted session
-   * without going through a full re-authentication. Implementations
-   * must return `true` ONLY when the session has been **verified
-   * against the server** (a single credentialed request that also
-   * populates the device registry is the canonical shape). A `true`
-   * return therefore carries two guarantees: the instance is
-   * authenticated, and its registry reflects server state.
-   *
-   * Returning `false` is the contract for "no usable session" — the
-   * template `initialize()` will then fall through to a full
-   * {@link authenticate} flow (which has its own registry sync
-   * guarantee).
-   * @returns `true` when a persisted session has been reused and the
-   * registry is populated; `false` to fall through to authenticate.
+   * Subclass hook: try to reuse a persisted session without a full
+   * re-authentication. A `true` return carries two guarantees: the
+   * instance is authenticated, and the registry has been verified
+   * against the server (typically via a credentialed request that
+   * also populates it). Returning `false` falls through to a full
+   * {@link authenticate}.
+   * @returns `true` on reuse + registry populated; `false` otherwise.
    */
   protected abstract tryReuseSession(): Promise<boolean>
 
   /**
-   * Sign in with explicit credentials.
+   * Sign in with explicit credentials. Throws
+   * {@link AuthenticationError} on rejection (Classic `ClientLogin3`
+   * returning `LoginData: null`, Home BFF returning 401, etc.).
+   * Successful return guarantees the registry reflects server state
+   * — the post-auth sync is enforced here so subclasses cannot
+   * forget it.
    *
-   * Contract: throws an {@link AuthenticationError} if MELCloud
-   * rejects the credentials — whatever the underlying transport
-   * (Classic `ClientLogin3` returning `LoginData: null`, Home BFF
-   * returning 401, etc.). A successful return guarantees the
-   * registry reflects server state — the post-auth sync is
-   * mandatory and enforced here so subclasses cannot forget it
-   * (regression guard, see OlivierZal/com.melcloud#1281).
-   *
-   * Use {@link resumeSession} instead when you want a best-effort
-   * restore from persisted credentials that logs + swallows errors.
+   * Use {@link resumeSession} for a best-effort restore from
+   * persisted credentials that logs + swallows errors.
    * @param credentials - Explicit username/password.
    * @throws {AuthenticationError} when credentials are rejected.
    */
@@ -431,6 +448,69 @@ export abstract class BaseAPI implements Disposable {
       }
     }
     return this.#runWithEvents(context, async () => policy.run(attempt))
+  }
+
+  /**
+   * Run a request and return the unwrapped response body, throwing on
+   * transport failure. Companion to {@link safeRequest} — same shape,
+   * same optional Zod validation via `options.schema`, but the
+   * throw-on-failure contract appropriate for mutations and required
+   * sync paths (fail fast, no Result branching).
+   *
+   * Three-method API surface:
+   * - {@link request} returns the full `HttpResponse<T>` (status,
+   *   headers, data) — full transport access for retry policies and
+   *   telemetry.
+   * - `requestData` strips the envelope and throws on failure — for
+   *   mutations and required sync paths.
+   * - {@link safeRequest} strips the envelope and Result-wraps failure
+   *   — for best-effort getters.
+   * @param method - HTTP method (`get`, `post`, …).
+   * @param url - Request URL relative to the API base.
+   * @param options - Request config plus an optional `schema` peer key.
+   * @returns The unwrapped response body, parsed by the schema if one
+   * was supplied.
+   */
+  protected async requestData<T>(
+    method: string,
+    url: string,
+    options: Record<string, unknown> & { readonly schema?: z.ZodType<T> } = {},
+  ): Promise<T> {
+    const { schema, ...config } = options
+    const { data } = await this.request<T>(method, url, config)
+    return schema === undefined ? data : (
+        parseOrThrow(schema, data, `${method.toUpperCase()} ${url}`)
+      )
+  }
+
+  /**
+   * Run a best-effort GET/POST/… request and wrap the outcome in a
+   * {@link Result}. The unwrapped response body is returned on success;
+   * on failure the typed {@link ApiRequestError} variant lets callers
+   * branch on the failure mode without catching opaque exceptions.
+   *
+   * See {@link requestData} for the throw-on-failure companion that
+   * shares the same shape.
+   * @param method - HTTP method (`get`, `post`, …).
+   * @param url - Request URL relative to the API base.
+   * @param options - Request config plus an optional `schema` peer key.
+   * @returns `{ ok: true, value }` on success or `{ ok: false, error }`
+   * with the classified failure mode.
+   */
+  protected async safeRequest<T>(
+    method: string,
+    url: string,
+    options: Record<string, unknown> & { readonly schema?: z.ZodType<T> } = {},
+  ): Promise<Result<T>> {
+    try {
+      return ok(await this.requestData<T>(method, url, options))
+    } catch (error) {
+      this.logger.error(
+        `[${method.toUpperCase()} ${url}] request or validation failed:`,
+        error,
+      )
+      return err(classifyError(error))
+    }
   }
 
   /**

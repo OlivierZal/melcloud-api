@@ -1,6 +1,7 @@
 import type { ClassicUpdateDeviceDataAta } from '../types/index.ts'
 import { ClassicDeviceType, ClassicOperationMode } from '../constants.ts'
-import { BaseDeviceFacade, clampToRange } from './classic-base-device.ts'
+import { clampToRange } from '../utils.ts'
+import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
 
 /** Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping. */

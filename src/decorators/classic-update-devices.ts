@@ -4,7 +4,6 @@ import type {
 } from '../facades/index.ts'
 import type {
   ClassicFailureData,
-  ClassicGetDeviceData,
   ClassicGroupState,
   ClassicListDeviceData,
   ClassicSetDeviceData,
@@ -91,10 +90,18 @@ export const classicUpdateDevices =
       return data
     }
 
-// EffectiveFlags from the Classic API response indicates which fields were actually
-// changed by the device. Use this to update only those fields, converting
-// ATA set-command keys back to list-data keys (e.g., SetFanSpeed → ClassicFanSpeed).
-const convertToListDeviceData = <T extends ClassicDeviceType>(
+/**
+ * EffectiveFlags from the Classic API response indicates which fields
+ * were actually changed by the device. Use this to update only those
+ * fields, converting ATA set-command keys back to list-data keys
+ * (e.g., `SetFanSpeed` → `FanSpeed`). Exported for facade methods that
+ * return Result and apply the registry update inline (e.g.,
+ * `BaseDeviceFacade.getValues`).
+ * @param facade - The facade whose registry device should be patched.
+ * @param data - The Classic API set/get device payload.
+ * @returns A list-data partial ready to feed `device.update(...)`.
+ */
+export const convertToListDeviceData = <T extends ClassicDeviceType>(
   facade: ClassicDeviceFacade<T>,
   data: ClassicSetDeviceData<T>,
 ): Partial<ClassicListDeviceData<T>> => {
@@ -122,10 +129,14 @@ const convertToListDeviceData = <T extends ClassicDeviceType>(
   )
 }
 
+// The decorator handles raw-payload methods only. `getValues` returns
+// `Result<...>` and applies its registry update inline on the success
+// branch — keeping the decorator's input shape homogeneously raw
+// preserves clean type narrowing here.
 const updateSingleDevice = <
   T extends ClassicDeviceType,
   TArgs extends readonly unknown[],
-  TData extends ClassicGetDeviceData<T> | ClassicSetDeviceData<T>,
+  TData extends ClassicSetDeviceData<T>,
 >(
   target: (...args: TArgs) => Promise<TData>,
   _context: ClassMethodDecoratorContext,

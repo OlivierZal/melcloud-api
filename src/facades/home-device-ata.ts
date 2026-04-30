@@ -5,7 +5,6 @@ import type {
   HomeDeviceCapabilities,
   HomeDeviceSetting,
   HomeEnergyData,
-  HomeError,
   HomeErrorLogEntry,
   HomeReportData,
   Result,
@@ -21,7 +20,7 @@ import {
   isHomeFanSpeed,
 } from '../enum-mappings.ts'
 import { NoChangesError } from '../errors/index.ts'
-import { clampToRange } from './classic-base-device.ts'
+import { clampToRange } from '../utils.ts'
 
 interface TemperatureRange {
   max: number
@@ -85,7 +84,7 @@ export class HomeDeviceAtaFacade {
   }
 
   public get roomTemperature(): number {
-    return Number(this.#setting('RoomTemperature'))
+    return this.#setting('RoomTemperature')
   }
 
   public get rssi(): number {
@@ -105,7 +104,7 @@ export class HomeDeviceAtaFacade {
   }
 
   public get setTemperature(): number {
-    return Number(this.#setting('SetTemperature'))
+    return this.#setting('SetTemperature')
   }
 
   public get vaneHorizontalDirection(): HomeHorizontal {
@@ -129,18 +128,18 @@ export class HomeDeviceAtaFacade {
     from: string
     interval: string
     to: string
-  }): Promise<Result<HomeEnergyData, HomeError>> {
+  }): Promise<Result<HomeEnergyData>> {
     return this.#api.getEnergy(this.id, params)
   }
 
-  public async getErrorLog(): Promise<Result<HomeErrorLogEntry[], HomeError>> {
+  public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
     return this.#api.getErrorLog(this.id)
   }
 
   public async getSignal(params: {
     from: string
     to: string
-  }): Promise<Result<HomeEnergyData, HomeError>> {
+  }): Promise<Result<HomeEnergyData>> {
     return this.#api.getSignal(this.id, params)
   }
 
@@ -148,7 +147,7 @@ export class HomeDeviceAtaFacade {
     from: string
     period: string
     to: string
-  }): Promise<Result<HomeReportData[], HomeError>> {
+  }): Promise<Result<HomeReportData[]>> {
     return this.#api.getTemperatures(this.id, params)
   }
 
@@ -178,13 +177,21 @@ export class HomeDeviceAtaFacade {
 
   #setting(name: 'OperationMode'): HomeOperationMode
 
+  #setting(name: 'Power' | 'SetFanSpeed'): string
+
+  #setting(name: 'RoomTemperature' | 'SetTemperature'): number
+
   #setting(name: 'VaneHorizontalDirection'): HomeHorizontal
 
   #setting(name: 'VaneVerticalDirection'): HomeVertical
 
-  #setting(name: string): string
+  #setting(name: string): unknown
 
-  #setting(name: string): string {
-    return getSetting(this.#model.data.settings, name)
+  #setting(name: string): unknown {
+    const raw = getSetting(this.#model.data.settings, name)
+    if (name === 'RoomTemperature' || name === 'SetTemperature') {
+      return Number(raw)
+    }
+    return raw
   }
 }

@@ -1,0 +1,29 @@
+description: Set up Node.js with npm cache and install dependencies with hardened flags. Caller must run actions/checkout first — composite actions cannot reference local files before the repo is checked out.
+inputs:
+  install:
+    default: 'true'
+    description: Whether to run `npm ci --ignore-scripts`. Set to 'false' for jobs that only need the source tree (no install).
+    required: false
+  node-version:
+    default: latest
+    description: Node.js version to install. Use 'lts/*' for reproducibility, 'latest' for forward-compat tests.
+    required: false
+  registry-url:
+    description: Optional registry URL forwarded to actions/setup-node (used by the publish job).
+    required: false
+  scope:
+    description: Optional npm scope forwarded to actions/setup-node (used by the publish job).
+    required: false
+name: Setup Node and install
+runs:
+  steps:
+    - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+      with:
+        cache: npm
+        node-version: ${{ inputs.node-version }}
+        registry-url: ${{ inputs.registry-url }}
+        scope: ${{ inputs.scope }}
+    - if: inputs.install == 'true'
+      run: npm ci --ignore-scripts
+      shell: bash
+  using: composite

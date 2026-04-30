@@ -1,49 +1,24 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPI } from '../../src/api/home-types.ts'
-import type { HomeDeviceData } from '../../src/types/index.ts'
-import { HomeDeviceType } from '../../src/constants.ts'
-import { HomeDevice } from '../../src/entities/home-device.ts'
+import type { HomeDeviceCapabilities } from '../../src/types/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { mock } from '../helpers.ts'
-
-const defaultCapabilities: HomeDeviceData['capabilities'] = {
-  hasAirDirection: true,
-  hasAutomaticFanSpeed: true,
-  hasAutoOperationMode: true,
-  hasCoolOperationMode: true,
-  hasDryOperationMode: true,
-  hasHalfDegreeIncrements: true,
-  hasHeatOperationMode: true,
-  hasSwing: true,
-  maxTempAutomatic: 31,
-  maxTempCoolDry: 31,
-  maxTempHeat: 31,
-  minTempAutomatic: 16,
-  minTempCoolDry: 16,
-  minTempHeat: 10,
-  numberOfFanSpeeds: 5,
-}
+import { homeDevice } from '../home-fixtures.ts'
 
 const createModel = (
   settings: Record<string, string> = {},
-  capabilities: Partial<HomeDeviceData['capabilities']> = {},
+  capabilities: Partial<HomeDeviceCapabilities> = {},
   rssi = -50,
-): HomeDevice =>
-  new HomeDevice(
-    mock({
-      capabilities: { ...defaultCapabilities, ...capabilities },
-      givenDisplayName: 'Test ClassicDevice',
-      id: 'device-1',
-      rssi,
-      settings: Object.entries(settings).map(([name, value]) => ({
-        name,
-        value,
-      })),
-    }),
-    HomeDeviceType.Ata,
-  )
+): ReturnType<typeof homeDevice> =>
+  homeDevice({
+    capabilities,
+    id: 'device-1',
+    name: 'Test ClassicDevice',
+    rssi,
+    settings,
+  })
 
 const createApi = (): HomeAPI =>
   mock<HomeAPI>({

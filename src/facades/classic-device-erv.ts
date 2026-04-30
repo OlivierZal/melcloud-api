@@ -1,4 +1,5 @@
 import { ClassicDeviceType } from '../constants.ts'
+import { type Result, mapResult } from '../types/index.ts'
 import type { ReportChartPieOptions, ReportQuery } from './report-types.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicErvFlags } from './classic-flags.ts'
@@ -26,22 +27,23 @@ export class ClassicDeviceErvFacade extends BaseDeviceFacade<
   public override async getOperationModes(
     query?: ReportQuery,
     shouldUseExactRange = true,
-  ): Promise<ReportChartPieOptions> {
-    const { labels, series, ...options } = await super.getOperationModes(
-      query,
-      shouldUseExactRange,
-    )
-    // Filter labels and series together to keep indices in sync
-    const filtered = labels
-      .map((label, index) => ({ label, value: series[index] }))
-      .filter((item): item is { label: string; value: number } =>
-        isRelevantVentilationMode(item.label),
-      )
+  ): Promise<Result<ReportChartPieOptions>> {
+    return mapResult(
+      await super.getOperationModes(query, shouldUseExactRange),
+      ({ labels, series, ...options }) => {
+        // Filter labels and series together to keep indices in sync
+        const filtered = labels
+          .map((label, index) => ({ label, value: series[index] }))
+          .filter((item): item is { label: string; value: number } =>
+            isRelevantVentilationMode(item.label),
+          )
 
-    return {
-      ...options,
-      labels: filtered.map(({ label }) => label),
-      series: filtered.map(({ value }) => value),
-    }
+        return {
+          ...options,
+          labels: filtered.map(({ label }) => label),
+          series: filtered.map(({ value }) => value),
+        }
+      },
+    )
   }
 }

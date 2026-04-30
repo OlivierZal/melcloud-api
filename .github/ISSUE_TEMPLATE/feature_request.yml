@@ -1,0 +1,23 @@
+body:
+  - attributes:
+      description: What problem are you trying to solve? What is the user-facing or developer-facing pain point?
+      label: Problem
+    id: problem
+    type: textarea
+    validations:
+      required: true
+  - attributes:
+      description: How would you like the library to behave? Sketches, signatures, and short usage examples are welcome.
+      label: Proposed solution
+    id: proposal
+    type: textarea
+    validations:
+      required: true
+  - attributes:
+      description: What workarounds do you currently use, and why are they unsatisfactory?
+      label: Alternatives considered
+    id: alternatives
+    type: textarea
+description: Suggest a new capability or improvement
+labels: [enhancement]
+name: Feature request

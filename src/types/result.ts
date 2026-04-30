@@ -1,26 +1,24 @@
-/** Failed outcome carrying a typed error description. */
-export interface Failure<TError> {
-  readonly error: TError
+/** Failed outcome carrying a typed {@link ApiRequestError}. */
+export interface Failure {
+  readonly error: ApiRequestError
   readonly ok: false
 }
 
 /**
- * Discriminated result for best-effort SDK calls whose failure modes
- * carry information the caller should be able to branch on.
+ * Discriminated outcome for best-effort SDK calls. The success branch
+ * carries the parsed value; the failure branch carries an
+ * {@link ApiRequestError} variant the caller can branch on (retry on
+ * `network`, refresh on `unauthorized`, surface on `validation`, etc.)
+ * — distinctions a flat `T | null` would collapse.
  *
- * `T | null` — the prior return shape for {@link HomeAPI.getEnergy}
- * and friends — lies to consumers: a `null` could mean "empty
- * window", "token expired", "transient 5xx", "shape drift" or
- * "unreachable". Modern consumers (retry strategies, UI error
- * banners, debug overlays) need the distinction; the SDK
- * previously exposed it only via `logger.error`, out of band.
- *
- * A `Result<T, TError>` makes the error class part of the type, so
- * `result.ok ? result.value : result.error.kind` is typeable
- * end-to-end. Policies and decorators that produce typed failures
- * return the same shape, keeping the call-site pattern uniform.
+ * The error type is fixed to {@link ApiRequestError} rather than
+ * generic: every call site in the SDK fails through the same
+ * classification pipeline, so a `<TError>` parameter would be a
+ * degree of freedom nothing exercises. General-purpose Result
+ * libraries (neverthrow, ts-results) keep it generic because they
+ * cannot assume a single domain; domain-specific SDKs lock it.
  */
-export type Result<T, TError> = Failure<TError> | Success<T>
+export type Result<T> = Failure | Success<T>
 
 /** Successful outcome carrying the parsed value. */
 export interface Success<T> {
@@ -40,33 +38,51 @@ export const ok = <T>(value: T): Success<T> => ({ ok: true, value })
  * @param error - The typed failure description to wrap.
  * @returns A `{ ok: false, error }` failure outcome.
  */
-export const err = <TError>(error: TError): Failure<TError> => ({
+export const err = (error: ApiRequestError): Failure => ({
   error,
   ok: false,
 })
 
 /**
- * Discriminated failure class emitted by HomeAPI best-effort getters
- * ({@link HomeAPI.getEnergy}, {@link HomeAPI.getSignal},
- * {@link HomeAPI.getTemperatures}, {@link HomeAPI.getErrorLog}).
+ * Transform the success branch of a {@link Result} while passing the
+ * failure branch through unchanged. The standard "functor map" operation
+ * from neverthrow / ts-results / oxide; lets callers compose
+ * Result-returning calls with synchronous transforms (e.g.
+ * `mapResult(await api.getEnergy(...), getChartLineOptions)`) without
+ * unwrapping then re-wrapping by hand.
+ * @param result - The {@link Result} to transform.
+ * @param fn - Pure function applied to the success value.
+ * @returns A new {@link Result} with the transformed value (success
+ * branch) or the original error (failure branch).
+ */
+export const mapResult = <T, TResult>(
+  result: Result<T>,
+  fn: (value: T) => TResult,
+): Result<TResult> => (result.ok ? ok(fn(result.value)) : result)
+
+/**
+ * Discriminated failure class emitted by the SDK's best-effort getters
+ * (Classic + Home telemetry, reports, and settings reads).
  *
- * Each variant carries enough context for a caller to decide how
- * to react — distinguishing "retry this later" from "wipe the
- * session" from "surface to user" without inspecting the logger:
+ * Each variant carries enough context for a caller to decide how to
+ * react — distinguishing "retry this later" from "wipe the session"
+ * from "surface to user" without inspecting the logger:
  * - `network`: transport-level failure (ECONNRESET, timeout, DNS).
  *   Transient; safe to retry.
- * - `unauthorized`: server rejected the credential mid-flight. A
- *   full reauth via {@link HomeAPI.resumeSession} is typically
- *   needed before retrying.
+ * - `unauthorized`: server rejected the credential mid-flight. A full
+ *   reauth is typically needed before retrying.
  * - `rate-limited`: the SDK's internal rate-limit gate refused the
- *   call. `retryAfterMs` is the remaining milliseconds on the
- *   pause, or `null` when the upstream header did not carry a
- *   duration.
- * - `validation`: Zod refused the response shape. Indicates API
- *   drift server-side; not retryable on its own — investigate.
+ *   call. `retryAfterMs` is the remaining milliseconds on the pause,
+ *   or `null` when the upstream header did not carry a duration.
+ * - `validation`: Zod refused the response shape. Indicates API drift
+ *   server-side; not retryable on its own — investigate.
  * - `server`: any other HTTP error from the transport.
+ *
+ * Classic and Home share the same error space (same transport layer,
+ * same resilience policies); both surfaces reference this single
+ * neutral type via `Result<T>`.
  */
-export type HomeError =
+export type ApiRequestError =
   | {
       readonly issue: string
       readonly kind: 'validation'

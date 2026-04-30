@@ -13,23 +13,31 @@ import {
   ClassicDeviceAtwFacade,
   ClassicDeviceAtwHasZone2Facade,
 } from '../../src/facades/index.ts'
-import { atwDevice, atwDeviceData, buildingData } from '../fixtures.ts'
-import { assertDeviceType, createMockApi } from '../helpers.ts'
+import {
+  assertClassicDeviceType,
+  classicAtwDevice,
+  classicAtwDeviceData,
+  classicBuildingData,
+  createMockClassicApi,
+} from '../classic-fixtures.ts'
 
 const createAtwData = (
   overrides: Partial<ClassicListDeviceDataAtw> = {},
 ): ClassicListDeviceDataAtw =>
-  atwDeviceData({ OperationMode: ClassicOperationModeState.idle, ...overrides })
+  classicAtwDeviceData({
+    OperationMode: ClassicOperationModeState.idle,
+    ...overrides,
+  })
 
-const mockApi = createMockApi()
+const mockApi = createMockClassicApi()
 
 const createAtwRegistry = (data: ClassicListDeviceDataAtw): ClassicRegistry => {
   const registry = new ClassicRegistry()
   registry.syncBuildings([
-    buildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
+    classicBuildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
   ])
   registry.syncDevices([
-    atwDevice({
+    classicAtwDevice({
       AreaID: null,
       Device: data,
       FloorID: null,
@@ -43,7 +51,7 @@ const createFacade = (
 ): ClassicDeviceAtwFacade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
-  assertDeviceType(device, ClassicDeviceType.Atw)
+  assertClassicDeviceType(device, ClassicDeviceType.Atw)
   return new ClassicDeviceAtwFacade(mockApi, registry, device)
 }
 
@@ -52,7 +60,7 @@ const createZone2Facade = (
 ): ClassicDeviceAtwHasZone2Facade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
-  assertDeviceType(device, ClassicDeviceType.Atw)
+  assertClassicDeviceType(device, ClassicDeviceType.Atw)
   return new ClassicDeviceAtwHasZone2Facade(mockApi, registry, device)
 }
 

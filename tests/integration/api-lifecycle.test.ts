@@ -4,7 +4,6 @@ import type { ClassicAPI } from '../../src/api/classic.ts'
 import type { HomeAPI } from '../../src/api/home.ts'
 import type { SyncCallback } from '../../src/api/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
-import { RateLimitError } from '../../src/errors/index.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { HttpError } from '../../src/http/index.ts'
 import { MS_PER_HOUR } from '../../src/time-units.ts'
@@ -16,7 +15,10 @@ import {
   toClassicDeviceId,
   toClassicFloorId,
 } from '../../src/types/index.ts'
-import { ataDeviceData, buildingData } from '../fixtures.ts'
+import {
+  classicAtaDeviceData,
+  classicBuildingData,
+} from '../classic-fixtures.ts'
 import {
   cast,
   createMockHttpClient,
@@ -35,7 +37,7 @@ const transientError = (status: number): HttpError =>
 
 const buildingResponse: ClassicBuildingWithStructure[] = [
   mock<ClassicBuildingWithStructure>({
-    ...buildingData({
+    ...classicBuildingData({
       HMDefined: true,
       Location: 0,
       Name: 'Home',
@@ -53,7 +55,7 @@ const buildingResponse: ClassicBuildingWithStructure[] = [
                 {
                   AreaID: toClassicAreaId(100),
                   BuildingID: toClassicBuildingId(1),
-                  Device: ataDeviceData({
+                  Device: classicAtaDeviceData({
                     NumberOfFanSpeeds: 5,
                     SetTemperature: 23,
                   }),
@@ -86,7 +88,6 @@ describe('api lifecycle', () => {
 
   beforeEach(async () => {
     vi.useFakeTimers()
-    vi.clearAllMocks()
     mockRequest.mockResolvedValue({
       data: buildingResponse,
       headers: {},
@@ -386,11 +387,15 @@ describe('api lifecycle', () => {
       expect(buildings).toStrictEqual([])
       expect(mockRequest).not.toHaveBeenCalled()
 
-      // A non-fetch() method that doesn't swallow errors surfaces the
-      // gate's RateLimitError directly, proving the gate is closed.
-      await expect(
-        api.getHolidayMode({ params: { id: 1, tableName: 'ClassicBuilding' } }),
-      ).rejects.toBeInstanceOf(RateLimitError)
+      // A non-fetch() method now reports the gate's typed failure via
+      // Result instead of throwing — the rate-limited variant proves
+      // the gate is closed.
+      const result = await api.getHolidayMode({
+        params: { id: 1, tableName: 'ClassicBuilding' },
+      })
+
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.error.kind).toBe('rate-limited')
       expect(mockRequest).not.toHaveBeenCalled()
     })
 
@@ -430,11 +435,19 @@ describe('api lifecycle', () => {
       expect(abortedCall).toBeDefined()
       expect(abortedCall?.[0].signal).toBe(controller.signal)
 
-      // A non-fetch() method surfaces the AbortError so the DOMException
-      // /abort/i name check is exercised end-to-end.
-      await expect(
-        api.getHolidayMode({ params: { id: 1, tableName: 'ClassicBuilding' } }),
-      ).rejects.toThrow(/abort/iu)
+      // A non-fetch() method now reports the AbortError as a typed
+      // `network` failure preserving the original DOMException as
+      // `cause` — the /abort/i name check is exercised end-to-end.
+      const abortResult = await api.getHolidayMode({
+        params: { id: 1, tableName: 'ClassicBuilding' },
+      })
+
+      expect(abortResult.ok).toBe(false)
+      expect(
+        !abortResult.ok && 'cause' in abortResult.error ?
+          String(abortResult.error.cause)
+        : '<unexpected success>',
+      ).toMatch(/abort/iu)
     })
   })
 

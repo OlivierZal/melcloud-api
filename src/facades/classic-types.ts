@@ -25,6 +25,7 @@ import type {
   ClassicZoneSettings,
   ClassicZoneState,
   Hour,
+  Result,
 } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import type {
@@ -64,30 +65,32 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   /** Fetch the latest device data after syncing. */
   readonly fetch: () => Promise<Readonly<ClassicListDeviceData<T>>>
   /** Fetch energy consumption report. ATA and ATW only. */
-  readonly getEnergy: (query: ReportQuery) => Promise<ClassicEnergyData<T>>
+  readonly getEnergy: (
+    query: ReportQuery,
+  ) => Promise<Result<ClassicEnergyData<T>>>
   /** Fetch hourly temperature report. ATW only. */
   readonly getHourlyTemperatures: (
     hour?: Hour,
-  ) => Promise<ReportChartLineOptions>
+  ) => Promise<Result<ReportChartLineOptions>>
   /** Fetch internal temperature report. ATW only. */
   readonly getInternalTemperatures: (
     query: ReportQuery,
-  ) => Promise<ReportChartLineOptions>
+  ) => Promise<Result<ReportChartLineOptions>>
   /** Fetch operation mode usage as pie chart data. */
   readonly getOperationModes: (
     query: ReportQuery,
-  ) => Promise<ReportChartPieOptions>
+  ) => Promise<Result<ReportChartPieOptions>>
   /** Fetch temperature history as line chart data. */
   readonly getTemperatures: (
     query: ReportQuery,
-  ) => Promise<ReportChartLineOptions>
+  ) => Promise<Result<ReportChartLineOptions>>
   /** Fetch tile overview data, optionally selecting a specific device. */
   readonly getTiles: ((
     device: true | ClassicDeviceAny,
-  ) => Promise<ClassicTilesData<T>>) &
-    ((device?: false) => Promise<ClassicTilesData<null>>)
+  ) => Promise<Result<ClassicTilesData<T>>>) &
+    ((device?: false) => Promise<Result<ClassicTilesData<null>>>)
   /** Fetch current device values from the Classic API. */
-  readonly getValues: () => Promise<ClassicGetDeviceData<T>>
+  readonly getValues: () => Promise<Result<ClassicGetDeviceData<T>>>
   /** Send updated device values, clamping temperatures to valid ranges. */
   readonly updateValues: (
     data: ClassicUpdateDeviceData<T>,
@@ -114,18 +117,22 @@ export interface ClassicFacade extends Identifiable {
   /** Retrieve the error log for all devices in this facade. */
   readonly getErrorLog: (
     query: ClassicErrorLogQuery,
-  ) => Promise<ClassicErrorLog | ClassicFailureData>
+  ) => Promise<Result<ClassicErrorLog>>
   /** Get the current frost protection settings. */
-  readonly getFrostProtection: () => Promise<ClassicFrostProtectionData>
+  readonly getFrostProtection: () => Promise<Result<ClassicFrostProtectionData>>
   /** Get the current holiday mode settings. */
-  readonly getHolidayMode: () => Promise<ClassicHolidayModeData>
+  readonly getHolidayMode: () => Promise<Result<ClassicHolidayModeData>>
   /** Fetch WiFi signal strength report as line chart data. */
-  readonly getSignalStrength: (hour?: Hour) => Promise<ReportChartLineOptions>
+  readonly getSignalStrength: (
+    hour?: Hour,
+  ) => Promise<Result<ReportChartLineOptions>>
   /** Fetch tile overview data, optionally selecting a specific device. */
-  readonly getTiles: ((device?: false) => Promise<ClassicTilesData<null>>) &
+  readonly getTiles: ((
+    device?: false,
+  ) => Promise<Result<ClassicTilesData<null>>>) &
     (<T extends ClassicDeviceType>(
       device: ClassicDevice<T>,
-    ) => Promise<ClassicTilesData<T>>)
+    ) => Promise<Result<ClassicTilesData<T>>>)
   /** Trigger a sync callback for downstream consumers. */
   readonly notifySync: (params?: { type?: ClassicDeviceType }) => Promise<void>
   /** Update frost protection settings with temperature clamping. */
@@ -161,7 +168,7 @@ export interface ClassicHolidayModeQuery {
 /** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
 export interface ClassicZoneFacade extends ClassicFacade {
   /** Get the current group state for all ATA devices. */
-  readonly getGroup: () => Promise<ClassicGroupState>
+  readonly getGroup: () => Promise<Result<ClassicGroupState>>
   /** Update the group state for all ATA devices. */
   readonly updateGroupState: (
     state: ClassicGroupState,

@@ -5,7 +5,6 @@ import type {
   HomeBuilding,
   HomeContext,
   HomeEnergyData,
-  HomeError,
   HomeErrorLogEntry,
   HomeReportData,
   HomeTokenResponse,
@@ -17,40 +16,21 @@ import { HomeDeviceType } from '../constants.ts'
 import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
-import { MS_PER_MINUTE, MS_PER_SECOND } from '../time-units.ts'
+import { MS_PER_SECOND, SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
   HomeContextSchema,
   HomeEnergyDataSchema,
   HomeErrorLogEntryListSchema,
   HomeReportDataSchema,
-  parseOrThrow,
-  validateRequest,
 } from '../validation/index.ts'
 import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './home-types.ts'
 import { BaseAPI, normalizeUnauthorized } from './base.ts'
 import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 
-// ------------------------------------------------------------------
-//  Constants
-// ------------------------------------------------------------------
-
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
-const CONTEXT_PATH = '/context'
 const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 1
-const ENERGY_PATH = '/telemetry/telemetry/energy'
-const REPORT_PATH = '/report/v1/trendsummary'
-const SESSION_REFRESH_AHEAD_MINUTES = 5
-
-// Refresh the session when it's within 5 min of its real expiry so
-// no request pays the full OIDC round-trip on its critical path.
-const SESSION_REFRESH_AHEAD_MS = SESSION_REFRESH_AHEAD_MINUTES * MS_PER_MINUTE
-const SIGNAL_PATH = '/telemetry/telemetry/actual'
-
-// ------------------------------------------------------------------
-//  Helpers
-// ------------------------------------------------------------------
 
 const parseUser = (data: HomeContext): HomeUser => ({
   email: data.email,
@@ -192,11 +172,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
 
   /**
    * Fetch cumulative-energy telemetry for an ATA unit. Returns a
-   * {@link Result} so callers can branch on the failure class —
-   * `validation` (shape drift), `server` (4xx/5xx), `unauthorized`
-   * (token rejected), `rate-limited`, `network`. The prior shape
-   * `T | null` collapsed all five into a single `null`; this one
-   * keeps them distinguishable at the type level.
+   * {@link Result} so callers can branch on the failure class
+   * (`validation` for shape drift, `server` for 4xx/5xx,
+   * `unauthorized` for token rejection, `rate-limited`, `network`).
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
@@ -207,50 +185,27 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getEnergy(
     id: string,
     params: { from: string; interval: string; to: string },
-  ): Promise<Result<HomeEnergyData, HomeError>> {
-    return validateRequest({
-      context: 'BFF /telemetry/telemetry/energy',
-      host: this,
-      schema: HomeEnergyDataSchema,
-      operation: async () => {
-        const { data } = await this.request<HomeEnergyData>(
-          'get',
-          `${ENERGY_PATH}/${id}`,
-          {
-            params: {
-              from: toTelemetryDate(params.from),
-              interval: params.interval,
-              measure: 'cumulative_energy_consumed_since_last_upload',
-              to: toTelemetryDate(params.to),
-            },
-          },
-        )
-        return data
+  ): Promise<Result<HomeEnergyData>> {
+    return this.safeRequest('get', `/telemetry/telemetry/energy/${id}`, {
+      params: {
+        from: toTelemetryDate(params.from),
+        interval: params.interval,
+        measure: 'cumulative_energy_consumed_since_last_upload',
+        to: toTelemetryDate(params.to),
       },
+      schema: HomeEnergyDataSchema,
     })
   }
 
   /**
    * Fetch the error-log entries for an ATA unit. Same {@link Result}
-   * contract as {@link getEnergy}: consumers that previously relied
-   * on a `null → []` coalesce should now branch on `result.ok`.
+   * contract as {@link getEnergy}.
    * @param id - Device id.
    * @returns Success with the entries (possibly empty), or a typed failure.
    */
-  public async getErrorLog(
-    id: string,
-  ): Promise<Result<HomeErrorLogEntry[], HomeError>> {
-    return validateRequest({
-      context: 'BFF /monitor/ataunit/:id/errorlog',
-      host: this,
+  public async getErrorLog(id: string): Promise<Result<HomeErrorLogEntry[]>> {
+    return this.safeRequest('get', `${ATA_UNIT_PATH}/${id}/errorlog`, {
       schema: HomeErrorLogEntryListSchema,
-      operation: async () => {
-        const { data } = await this.request<HomeErrorLogEntry[]>(
-          'get',
-          `${ATA_UNIT_PATH}/${id}/errorlog`,
-        )
-        return data
-      },
     })
   }
 
@@ -266,25 +221,14 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getSignal(
     id: string,
     params: { from: string; to: string },
-  ): Promise<Result<HomeEnergyData, HomeError>> {
-    return validateRequest({
-      context: 'BFF /telemetry/telemetry/actual',
-      host: this,
-      schema: HomeEnergyDataSchema,
-      operation: async () => {
-        const { data } = await this.request<HomeEnergyData>(
-          'get',
-          `${SIGNAL_PATH}/${id}`,
-          {
-            params: {
-              from: toTelemetryDate(params.from),
-              measure: 'rssi',
-              to: toTelemetryDate(params.to),
-            },
-          },
-        )
-        return data
+  ): Promise<Result<HomeEnergyData>> {
+    return this.safeRequest('get', `/telemetry/telemetry/actual/${id}`, {
+      params: {
+        from: toTelemetryDate(params.from),
+        measure: 'rssi',
+        to: toTelemetryDate(params.to),
       },
+      schema: HomeEnergyDataSchema,
     })
   }
 
@@ -301,26 +245,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
-  ): Promise<Result<HomeReportData[], HomeError>> {
-    return validateRequest({
-      context: 'BFF /report/v1/trendsummary',
-      host: this,
-      schema: HomeReportDataSchema.array(),
-      operation: async () => {
-        const { data } = await this.request<HomeReportData[]>(
-          'get',
-          REPORT_PATH,
-          {
-            params: {
-              from: toReportDate(params.from),
-              period: params.period,
-              to: toReportDate(params.to),
-              unitId: id,
-            },
-          },
-        )
-        return data
+  ): Promise<Result<HomeReportData[]>> {
+    return this.safeRequest('get', '/report/v1/trendsummary', {
+      params: {
+        from: toReportDate(params.from),
+        period: params.period,
+        to: toReportDate(params.to),
+        unitId: id,
       },
+      schema: HomeReportDataSchema.array(),
     })
   }
 
@@ -402,9 +335,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     })
   }
 
-  // ----------------------------------------------------------------
-  //  Private — credentials & session
-  // ----------------------------------------------------------------
   protected getAuthHeaders(): Record<string, string> {
     return this.accessToken === '' ?
         {}
@@ -480,9 +410,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return false
   }
 
-  // ----------------------------------------------------------------
-  //  Private — token management
-  // ----------------------------------------------------------------
   /**
    * Core of {@link updateValues}: perform the PUT and, on success,
    * trigger a post-mutation registry refresh via
@@ -512,10 +439,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns The fetched home context.
    */
   async #fetchContext(): Promise<HomeContext> {
-    const { data } = await this.request('get', CONTEXT_PATH)
-    const validated = parseOrThrow(HomeContextSchema, data, 'BFF /context')
-    this.#syncContext(validated)
-    return validated
+    const data = await this.requestData('get', '/context', {
+      schema: HomeContextSchema,
+    })
+    this.#syncContext(data)
+    return data
   }
 
   #hasPersistedSession(): boolean {
@@ -527,9 +455,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     )
   }
 
-  // ----------------------------------------------------------------
-  //  Private — API request pipeline
-  // ----------------------------------------------------------------
   /**
    * Use the refresh token to obtain a fresh access token.
    * @returns Whether the refresh succeeded.

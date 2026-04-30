@@ -19,6 +19,7 @@ import {
 } from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
 import {
+  type ApiRequestError,
   type ClassicDateTimeComponents,
   type ClassicFailureData,
   type ClassicFrostProtectionData,
@@ -30,6 +31,8 @@ import {
   type ClassicSuccessData,
   type ClassicTilesData,
   type Hour,
+  type Result,
+  mapResult,
   toClassicDeviceId,
 } from '../types/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'
@@ -42,19 +45,32 @@ import type { ReportChartLineOptions } from './report-types.ts'
 
 // Settings can be defined at zone or device level. Try zone first;
 // if unsupported, fall back to device level and cache the result.
+// Result-aware fallback: a `!ok` zone result triggers the device-level
+// retry, mirroring the previous try/catch semantic without losing the
+// typed-failure surface for the final outcome.
 const getWithZoneFallback = async <TResult>(
   isAtZoneLevel: boolean | null,
-  zoneGetter: () => Promise<TResult>,
-  deviceGetter: () => Promise<TResult>,
-): Promise<TResult> => {
+  zoneGetter: () => Promise<Result<TResult>>,
+  deviceGetter: () => Promise<Result<TResult>>,
+): Promise<Result<TResult>> => {
   if (isAtZoneLevel === null) {
-    try {
-      return await zoneGetter()
-    } catch {
-      return deviceGetter()
-    }
+    const zoneResult = await zoneGetter()
+    return zoneResult.ok ? zoneResult : deviceGetter()
   }
   return isAtZoneLevel ? zoneGetter() : deviceGetter()
+}
+
+// Mutation prep paths (`#getFrostProtectionLocation`,
+// `#getHolidayModeLocation`) cannot proceed without a resolved
+// location, so a `!ok` result must surface as a throw. Preserves the
+// original `cause` when one is available so the caller sees the
+// underlying transport error class; otherwise synthesises a labeled
+// `Error` from the kind.
+const throwLocationError = (error: ApiRequestError): never => {
+  if ('cause' in error && error.cause instanceof Error) {
+    throw error.cause
+  }
+  throw new Error(`Could not resolve location: ${error.kind}`)
 }
 
 // Minimum 2°C gap between min and max to prevent invalid frost protection ranges
@@ -81,7 +97,7 @@ const getDateTimeComponents = (
  * holiday mode, power control, signal strength, tiles, and error log retrieval.
  * Settings resolution falls back from zone level to device level when needed.
  */
-export abstract class BaseFacade<
+export abstract class ClassicBaseFacade<
   T extends ClassicModel,
 > implements ClassicFacade {
   protected abstract readonly frostProtectionLocation: keyof ClassicFrostProtectionLocation
@@ -189,7 +205,7 @@ export abstract class BaseFacade<
     if (newMax - newMin < TEMPERATURE_GAP) {
       newMax = newMin + TEMPERATURE_GAP
     }
-    const { data } = await this.api.updateFrostProtection({
+    return this.api.updateFrostProtection({
       postData: {
         Enabled: isEnabled,
         MaximumTemperature: newMax,
@@ -197,7 +213,6 @@ export abstract class BaseFacade<
         ...(await this.#getFrostProtectionLocation()),
       },
     })
-    return data
   }
 
   @fetchDevices({ when: 'after' })
@@ -210,7 +225,7 @@ export abstract class BaseFacade<
     const isEnabled = to !== undefined
     const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
     const endDate = isEnabled ? DateTime.fromISO(to) : null
-    const { data } = await this.api.updateHolidayMode({
+    return this.api.updateHolidayMode({
       postData: {
         Enabled: isEnabled,
         EndDate: getDateTimeComponents(endDate),
@@ -218,28 +233,28 @@ export abstract class BaseFacade<
         StartDate: getDateTimeComponents(startDate),
       },
     })
-    return data
   }
 
   @syncDevices()
   @classicUpdateDevices({ kind: 'power' })
   public async updatePower(isOn = true): Promise<boolean> {
-    const { data: isPowered } = await this.api.updatePower({
+    return this.api.updatePower({
       postData: {
         DeviceIds: this.#deviceIds.map((id) => toClassicDeviceId(id)),
         Power: isOn,
       },
     })
-    return isPowered
   }
 
   public async getErrorLog(
     query: ClassicErrorLogQuery,
-  ): Promise<ClassicErrorLog> {
+  ): Promise<Result<ClassicErrorLog>> {
     return this.api.getErrorLog(query, this.#deviceIds)
   }
 
-  public async getFrostProtection(): Promise<ClassicFrostProtectionData> {
+  public async getFrostProtection(): Promise<
+    Result<ClassicFrostProtectionData>
+  > {
     return getWithZoneFallback(
       this.isFrostProtectionAtZoneLevel,
       async () => this.#getZoneFrostProtection(),
@@ -247,7 +262,7 @@ export abstract class BaseFacade<
     )
   }
 
-  public async getHolidayMode(): Promise<ClassicHolidayModeData> {
+  public async getHolidayMode(): Promise<Result<ClassicHolidayModeData>> {
     return getWithZoneFallback(
       this.isHolidayModeAtZoneLevel,
       async () => this.#getZoneHolidayMode(),
@@ -257,35 +272,38 @@ export abstract class BaseFacade<
 
   public async getSignalStrength(
     hour: Hour = DateTime.now().hour,
-  ): Promise<ReportChartLineOptions> {
-    const { data } = await this.api.getSignal({
-      postData: { devices: this.#deviceIds, hour },
-    })
-    return getChartLineOptions(data, this.#deviceNames, 'dBm')
+  ): Promise<Result<ReportChartLineOptions>> {
+    return mapResult(
+      await this.api.getSignal({
+        postData: { devices: this.#deviceIds, hour },
+      }),
+      (data) => getChartLineOptions(data, this.#deviceNames, 'dBm'),
+    )
   }
 
-  public async getTiles(device?: false): Promise<ClassicTilesData<null>>
+  public async getTiles(device?: false): Promise<Result<ClassicTilesData<null>>>
   public async getTiles<TDeviceType extends ClassicDeviceType>(
     device: ClassicDevice<TDeviceType>,
-  ): Promise<ClassicTilesData<TDeviceType>>
+  ): Promise<Result<ClassicTilesData<TDeviceType>>>
   public async getTiles<TDeviceType extends ClassicDeviceType>(
     device: false | ClassicDevice<TDeviceType> = false,
-  ): Promise<ClassicTilesData<TDeviceType | null>> {
+  ): Promise<Result<ClassicTilesData<TDeviceType | null>>> {
     const postData = {
       DeviceIDs: this.#deviceIds.map((id) => toClassicDeviceId(id)),
     }
     if (device === false || !this.#deviceIds.includes(device.id)) {
-      const { data } = await this.api.getTiles({ postData })
-      return data
+      return this.api.getTiles({ postData })
     }
-    const { data } = await this.api.getTiles({
-      postData: {
-        ...postData,
-        SelectedBuilding: device.buildingId,
-        SelectedDevice: device.id,
-      },
-    })
-    return data as ClassicTilesData<TDeviceType>
+    return mapResult(
+      await this.api.getTiles({
+        postData: {
+          ...postData,
+          SelectedBuilding: device.buildingId,
+          SelectedDevice: device.id,
+        },
+      }),
+      (data) => data as ClassicTilesData<TDeviceType>,
+    )
   }
 
   public async notifySync({
@@ -297,29 +315,35 @@ export abstract class BaseFacade<
   async #getBaseFrostProtection(
     params: ClassicSettingsParams,
     isDefined = true,
-  ): Promise<ClassicFrostProtectionData> {
-    const { data } = await this.api.getFrostProtection({ params })
-    this.isFrostProtectionAtZoneLevel = isDefined
-    return data
+  ): Promise<Result<ClassicFrostProtectionData>> {
+    const result = await this.api.getFrostProtection({ params })
+    if (result.ok) {
+      this.isFrostProtectionAtZoneLevel = isDefined
+    }
+    return result
   }
 
   async #getBaseHolidayMode(
     params: ClassicSettingsParams,
     isDefined = true,
-  ): Promise<ClassicHolidayModeData> {
-    const { data } = await this.api.getHolidayMode({ params })
-    this.isHolidayModeAtZoneLevel = isDefined
-    return data
+  ): Promise<Result<ClassicHolidayModeData>> {
+    const result = await this.api.getHolidayMode({ params })
+    if (result.ok) {
+      this.isHolidayModeAtZoneLevel = isDefined
+    }
+    return result
   }
 
-  async #getDevicesFrostProtection(): Promise<ClassicFrostProtectionData> {
+  async #getDevicesFrostProtection(): Promise<
+    Result<ClassicFrostProtectionData>
+  > {
     return this.#getBaseFrostProtection(
       { id: this.#anyDeviceId, tableName: 'DeviceLocation' },
       false,
     )
   }
 
-  async #getDevicesHolidayMode(): Promise<ClassicHolidayModeData> {
+  async #getDevicesHolidayMode(): Promise<Result<ClassicHolidayModeData>> {
     return this.#getBaseHolidayMode(
       { id: this.#anyDeviceId, tableName: 'DeviceLocation' },
       false,
@@ -328,7 +352,11 @@ export abstract class BaseFacade<
 
   async #getFrostProtectionLocation(): Promise<ClassicFrostProtectionLocation> {
     if (this.isFrostProtectionAtZoneLevel === null) {
-      await this.getFrostProtection()
+      // Mutations need a concrete location; surface fetch failure as throw.
+      const result = await this.getFrostProtection()
+      if (!result.ok) {
+        throwLocationError(result.error)
+      }
     }
     return this.isFrostProtectionAtZoneLevel === true ?
         { [this.frostProtectionLocation]: [this.id] }
@@ -337,21 +365,24 @@ export abstract class BaseFacade<
 
   async #getHolidayModeLocation(): Promise<ClassicHolidayModeTimeZone[]> {
     if (this.isHolidayModeAtZoneLevel === null) {
-      await this.getHolidayMode()
+      const result = await this.getHolidayMode()
+      if (!result.ok) {
+        throwLocationError(result.error)
+      }
     }
     return this.isHolidayModeAtZoneLevel === true ?
         [{ [this.holidayModeLocation]: [this.id] }]
       : [{ Devices: this.#deviceIds }]
   }
 
-  async #getZoneFrostProtection(): Promise<ClassicFrostProtectionData> {
+  async #getZoneFrostProtection(): Promise<Result<ClassicFrostProtectionData>> {
     return this.#getBaseFrostProtection({
       id: this.id,
       tableName: this.tableName,
     })
   }
 
-  async #getZoneHolidayMode(): Promise<ClassicHolidayModeData> {
+  async #getZoneHolidayMode(): Promise<Result<ClassicHolidayModeData>> {
     return this.#getBaseHolidayMode({
       id: this.id,
       tableName: this.tableName,

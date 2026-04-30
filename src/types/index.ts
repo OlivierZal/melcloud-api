@@ -108,10 +108,11 @@ export {
   toClassicFloorId,
 } from './ids.ts'
 export {
+  type ApiRequestError,
   type Failure,
-  type HomeError,
   type Result,
   type Success,
   err,
+  mapResult,
   ok,
 } from './result.ts'
