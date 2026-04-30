@@ -4,6 +4,7 @@ import type { ClassicAPIAdapter, SyncCallback } from '../src/api/index.ts'
 import {
   ClassicDeviceType,
   ClassicLabelType,
+  ClassicOperationMode,
   ClassicOperationModeZone,
 } from '../src/constants.ts'
 import {
@@ -23,6 +24,8 @@ import {
   type ClassicListDeviceDataAtw,
   type ClassicListDeviceDataErv,
   type ClassicReportData,
+  type ClassicSetDeviceDataAta,
+  ok,
   toClassicAreaId,
   toClassicBuildingId,
   toClassicDeviceId,
@@ -306,54 +309,96 @@ export const classicRawDevice = (
 // Mock factories
 // ---------------------------------------------------------------------------
 
-const MOCK_SIGNAL_RSSI_DBM = -60
-
 export const createMockClassicApi = (
   overrides: Partial<ClassicAPIAdapter> = {},
 ): ClassicAPIAdapter =>
   mock<ClassicAPIAdapter>({
     fetch: vi.fn<ClassicAPIAdapter['fetch']>().mockResolvedValue([]),
-    getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>(),
-    getErrorEntries: vi.fn<ClassicAPIAdapter['getErrorEntries']>(),
-    getErrorLog: vi.fn<ClassicAPIAdapter['getErrorLog']>(),
+    getEnergy: vi
+      .fn<ClassicAPIAdapter['getEnergy']>()
+      .mockResolvedValue(ok(cast({}))),
+    getErrorEntries: vi
+      .fn<ClassicAPIAdapter['getErrorEntries']>()
+      .mockResolvedValue(ok([])),
+    getErrorLog: vi
+      .fn<ClassicAPIAdapter['getErrorLog']>()
+      .mockResolvedValue(ok(cast({ errors: [] }))),
     getFrostProtection: vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
-      .mockResolvedValue(cast({ data: { FPEnabled: false } })),
-    getGroup: vi.fn<ClassicAPIAdapter['getGroup']>(),
+      .mockResolvedValue(
+        ok(classicFrostProtectionResponse({ FPDefined: true })),
+      ),
+    getGroup: vi
+      .fn<ClassicAPIAdapter['getGroup']>()
+      .mockResolvedValue(
+        ok(cast({ Data: { Group: { State: { Power: true } } } })),
+      ),
     getHolidayMode: vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
-      .mockResolvedValue(cast({ data: { HMEnabled: false } })),
-    getHourlyTemperatures: vi.fn<ClassicAPIAdapter['getHourlyTemperatures']>(),
-    getInternalTemperatures:
-      vi.fn<ClassicAPIAdapter['getInternalTemperatures']>(),
-    getOperationModes: vi.fn<ClassicAPIAdapter['getOperationModes']>(),
-    getSignal: vi.fn<ClassicAPIAdapter['getSignal']>().mockResolvedValue(
-      cast({
-        data: {
-          Data: [[{ Data: [MOCK_SIGNAL_RSSI_DBM], Name: 'ClassicDevice' }]],
-          Labels: ['12:00'],
-        },
-      }),
-    ),
-    getTemperatures: vi.fn<ClassicAPIAdapter['getTemperatures']>(),
+      .mockResolvedValue(ok(classicHolidayModeResponse({ HMDefined: true }))),
+    getHourlyTemperatures: vi
+      .fn<ClassicAPIAdapter['getHourlyTemperatures']>()
+      .mockResolvedValue(ok(classicReportData())),
+    getInternalTemperatures: vi
+      .fn<ClassicAPIAdapter['getInternalTemperatures']>()
+      .mockResolvedValue(ok(classicReportData())),
+    getOperationModes: vi
+      .fn<ClassicAPIAdapter['getOperationModes']>()
+      .mockResolvedValue(ok([{ Key: 'Heating', Value: 100 }])),
+    getSignal: vi
+      .fn<ClassicAPIAdapter['getSignal']>()
+      .mockResolvedValue(ok(classicReportData())),
+    getTemperatures: vi
+      .fn<ClassicAPIAdapter['getTemperatures']>()
+      .mockResolvedValue(ok(classicReportData())),
     getTiles: cast(
       vi
         .fn<ClassicAPIAdapter['getTiles']>()
-        .mockResolvedValue(cast({ data: {} })),
+        .mockResolvedValue(ok(cast({ SelectedDevice: null, Tiles: [] }))),
     ),
-    getValues: vi.fn<ClassicAPIAdapter['getValues']>(),
+    getValues: vi
+      .fn<ClassicAPIAdapter['getValues']>()
+      .mockResolvedValue(ok(cast({ EffectiveFlags: 0 }))),
     notifySync: vi.fn<SyncCallback>().mockResolvedValue(),
     updateFrostProtection: vi
       .fn<ClassicAPIAdapter['updateFrostProtection']>()
-      .mockResolvedValue(cast({ data: { Success: true } })),
-    updateGroupState: vi.fn<ClassicAPIAdapter['updateGroupState']>(),
+      .mockResolvedValue({
+        data: { AttributeErrors: null, Success: true },
+      }),
+    updateGroupState: vi
+      .fn<ClassicAPIAdapter['updateGroupState']>()
+      .mockResolvedValue({
+        data: { AttributeErrors: null, Success: true },
+      }),
     updateHolidayMode: vi
       .fn<ClassicAPIAdapter['updateHolidayMode']>()
-      .mockResolvedValue(cast({ data: { Success: true } })),
+      .mockResolvedValue({
+        data: { AttributeErrors: null, Success: true },
+      }),
     updatePower: vi
       .fn<ClassicAPIAdapter['updatePower']>()
       .mockResolvedValue({ data: true }),
-    updateValues: cast(vi.fn<ClassicAPIAdapter['updateValues']>()),
+    updateValues: cast(
+      vi.fn<ClassicAPIAdapter['updateValues']>().mockResolvedValue(
+        cast({
+          data: mock<ClassicSetDeviceDataAta>({
+            DeviceType: ClassicDeviceType.Ata,
+            EffectiveFlags: 0x1,
+            LastCommunication: '',
+            NextCommunication: '',
+            NumberOfFanSpeeds: 5,
+            Offline: false,
+            OperationMode: ClassicOperationMode.heat,
+            Power: true,
+            RoomTemperature: 22,
+            SetFanSpeed: 3,
+            SetTemperature: 24,
+            VaneHorizontal: 0,
+            VaneVertical: 0,
+          }),
+        }),
+      ),
+    ),
     ...overrides,
   })
 
