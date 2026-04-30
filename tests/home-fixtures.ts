@@ -7,18 +7,11 @@ import { HomeDeviceType } from '../src/constants.ts'
 import { HomeDevice } from '../src/entities/home-device.ts'
 import { mock } from './helpers.ts'
 
-// ---------------------------------------------------------------------------
-// Default RSSI (in dBm). Mid-range so derived assertions land in a
-// predictable signal-quality band without special-casing weak/strong values.
-// ---------------------------------------------------------------------------
-
+// Mid-range RSSI so derived signal-quality assertions land in a
+// predictable band without special-casing weak/strong values.
 const DEFAULT_RSSI_DBM = -50
 
-// ---------------------------------------------------------------------------
-// Capabilities — 15 booleans + temperature ranges. Realistic defaults so
-// every operation mode resolves to a non-empty range.
-// ---------------------------------------------------------------------------
-
+// Realistic defaults so every operation mode resolves to a non-empty range.
 const defaultCapabilities: HomeDeviceCapabilities = {
   hasAirDirection: true,
   hasAutomaticFanSpeed: true,
@@ -41,20 +34,12 @@ const homeDeviceCapabilities = (
   overrides: Partial<HomeDeviceCapabilities> = {},
 ): HomeDeviceCapabilities => ({ ...defaultCapabilities, ...overrides })
 
-// ---------------------------------------------------------------------------
-// Settings: convert a `Record<string, string>` to the BFF's
-// `{ name, value }[]` shape so call sites can express settings as plain
-// string maps.
-// ---------------------------------------------------------------------------
-
+// Convert a `Record<string, string>` to the BFF's `{ name, value }[]`
+// shape so call sites can express settings as plain string maps.
 const buildSettings = (
   settings: Record<string, string>,
 ): HomeDeviceData['settings'] =>
   Object.entries(settings).map(([name, value]) => ({ name, value }))
-
-// ---------------------------------------------------------------------------
-// HomeDeviceData factories
-// ---------------------------------------------------------------------------
 
 export interface HomeDeviceDataOverrides {
   readonly capabilities?: Partial<HomeDeviceCapabilities>
@@ -74,11 +59,6 @@ export const homeDeviceData = (
     rssi: overrides.rssi ?? DEFAULT_RSSI_DBM,
     settings: buildSettings(overrides.settings ?? {}),
   })
-
-// ---------------------------------------------------------------------------
-// HomeDevice instance factories — the single most-duplicated shape across
-// Home tests (HomeDeviceAtaFacade, HomeFacadeManager, HomeRegistry).
-// ---------------------------------------------------------------------------
 
 export const homeDevice = (
   overrides: HomeDeviceDataOverrides = {},

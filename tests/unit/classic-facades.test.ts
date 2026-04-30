@@ -69,110 +69,96 @@ const createRegistry = (): ClassicRegistry => {
   return registry
 }
 
-const createBuildingFacade = (
-  apiOverrides?: Partial<ClassicAPIAdapter>,
-): {
+interface FacadeContext<T> {
   api: ClassicAPIAdapter
-  facade: ClassicBuildingFacade
+  facade: T
   registry: ClassicRegistry
-} => {
+}
+
+const buildFacade = <TFacade, TInstance>(
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- PascalCase is the conventional shape for constructor references; the conflicting `new-cap` rule fires otherwise
+  Ctor: new (
+    api: ClassicAPIAdapter,
+    registry: ClassicRegistry,
+    instance: TInstance,
+  ) => TFacade,
+  resolveInstance: (registry: ClassicRegistry) => TInstance,
+  apiOverrides?: Partial<ClassicAPIAdapter>,
+): FacadeContext<TFacade> => {
   const registry = createRegistry()
   const api = createMockClassicApi(apiOverrides)
-  const instance = defined(registry.buildings.getById(1))
   return {
     api,
-    facade: new ClassicBuildingFacade(api, registry, instance),
+    facade: new Ctor(api, registry, resolveInstance(registry)),
     registry,
   }
 }
+
+const createBuildingFacade = (
+  apiOverrides?: Partial<ClassicAPIAdapter>,
+): FacadeContext<ClassicBuildingFacade> =>
+  buildFacade(
+    ClassicBuildingFacade,
+    (registry) => defined(registry.buildings.getById(1)),
+    apiOverrides,
+  )
 
 const createFloorFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
-): {
-  api: ClassicAPIAdapter
-  facade: ClassicFloorFacade
-  registry: ClassicRegistry
-} => {
-  const registry = createRegistry()
-  const api = createMockClassicApi(apiOverrides)
-  const instance = defined(registry.floors.getById(10))
-  return {
-    api,
-    facade: new ClassicFloorFacade(api, registry, instance),
-    registry,
-  }
-}
+): FacadeContext<ClassicFloorFacade> =>
+  buildFacade(
+    ClassicFloorFacade,
+    (registry) => defined(registry.floors.getById(10)),
+    apiOverrides,
+  )
 
 const createAreaFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
-): {
-  api: ClassicAPIAdapter
-  facade: ClassicAreaFacade
-  registry: ClassicRegistry
-} => {
-  const registry = createRegistry()
-  const api = createMockClassicApi(apiOverrides)
-  const instance = defined(registry.areas.getById(100))
-  return {
-    api,
-    facade: new ClassicAreaFacade(api, registry, instance),
-    registry,
-  }
-}
+): FacadeContext<ClassicAreaFacade> =>
+  buildFacade(
+    ClassicAreaFacade,
+    (registry) => defined(registry.areas.getById(100)),
+    apiOverrides,
+  )
 
 const createAtaFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
-): {
-  api: ClassicAPIAdapter
-  facade: ClassicDeviceAtaFacade
-  registry: ClassicRegistry
-} => {
-  const registry = createRegistry()
-  const api = createMockClassicApi(apiOverrides)
-  const instance = defined(registry.devices.getById(1000))
-  assertClassicDeviceType(instance, ClassicDeviceType.Ata)
-  return {
-    api,
-    facade: new ClassicDeviceAtaFacade(api, registry, instance),
-    registry,
-  }
-}
+): FacadeContext<ClassicDeviceAtaFacade> =>
+  buildFacade(
+    ClassicDeviceAtaFacade,
+    (registry) => {
+      const instance = defined(registry.devices.getById(1000))
+      assertClassicDeviceType(instance, ClassicDeviceType.Ata)
+      return instance
+    },
+    apiOverrides,
+  )
 
 const createAtwFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
-): {
-  api: ClassicAPIAdapter
-  facade: ClassicDeviceAtwFacade
-  registry: ClassicRegistry
-} => {
-  const registry = createRegistry()
-  const api = createMockClassicApi(apiOverrides)
-  const instance = defined(registry.devices.getById(1001))
-  assertClassicDeviceType(instance, ClassicDeviceType.Atw)
-  return {
-    api,
-    facade: new ClassicDeviceAtwFacade(api, registry, instance),
-    registry,
-  }
-}
+): FacadeContext<ClassicDeviceAtwFacade> =>
+  buildFacade(
+    ClassicDeviceAtwFacade,
+    (registry) => {
+      const instance = defined(registry.devices.getById(1001))
+      assertClassicDeviceType(instance, ClassicDeviceType.Atw)
+      return instance
+    },
+    apiOverrides,
+  )
 
 const createErvFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
-): {
-  api: ClassicAPIAdapter
-  facade: ClassicDeviceErvFacade
-  registry: ClassicRegistry
-} => {
-  const registry = createRegistry()
-  const api = createMockClassicApi(apiOverrides)
-  const instance = defined(registry.devices.getById(1002))
-  assertClassicDeviceType(instance, ClassicDeviceType.Erv)
-  return {
-    api,
-    facade: new ClassicDeviceErvFacade(api, registry, instance),
-    registry,
-  }
-}
+): FacadeContext<ClassicDeviceErvFacade> =>
+  buildFacade(
+    ClassicDeviceErvFacade,
+    (registry) => {
+      const instance = defined(registry.devices.getById(1002))
+      assertClassicDeviceType(instance, ClassicDeviceType.Erv)
+      return instance
+    },
+    apiOverrides,
+  )
 
 const atwSetValuesResponse = (
   overrides: Record<string, unknown> = {},
