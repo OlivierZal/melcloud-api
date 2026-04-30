@@ -96,35 +96,29 @@ const formatErrors = (errors: Record<string, readonly string[]>): string =>
 
 const parseErrorLogQuery = ({
   from,
-  limit,
-  offset,
+  offset = 0,
+  period = 1,
   to,
 }: ClassicErrorLogQuery): {
   fromDate: DateTime
   period: number
   toDate: DateTime
 } => {
-  // When fromDate is specified, period is fixed and offset is ignored, allowing
-  // queries around a specific date. Otherwise, offset pages through history
-  // in period-sized chunks.
-  const fromDate =
+  // When `from` is set the query is pinned to that single day; offset
+  // is therefore moot and ignored. Otherwise pages are stacked
+  // backwards from `to` in `period`-sized windows.
+  const fromDateOverride =
     from !== undefined && from !== '' ? DateTime.fromISO(from) : null
   const toDate =
     to !== undefined && to !== '' ? DateTime.fromISO(to) : DateTime.now()
-
-  const numberLimit = Number(limit)
-  const period = Number.isFinite(numberLimit) ? numberLimit : 1
-
-  const numberOffset = Number(offset)
-  const daysOffset =
-    !fromDate && Number.isFinite(numberOffset) ? numberOffset : 0
-
-  const daysLimit = fromDate ? 1 : period
-  const days = daysLimit * daysOffset + daysOffset
+  // A page covers `period` days; consecutive pages are separated by a
+  // one-day boundary so day N is never returned twice. Each step back
+  // therefore moves `period + 1` days, hence the `* (period + 1)`.
+  const daysBack = fromDateOverride ? 0 : offset * (period + 1)
   return {
-    fromDate: fromDate ?? toDate.minus({ days: days + daysLimit }),
+    fromDate: fromDateOverride ?? toDate.minus({ days: daysBack + period }),
     period,
-    toDate: toDate.minus({ days }),
+    toDate: toDate.minus({ days: daysBack }),
   }
 }
 

@@ -222,12 +222,20 @@ export interface ClassicErrorLog {
 
 /** Query parameters for paginating the error log. */
 export interface ClassicErrorLogQuery {
-  /** Start date in ISO 8601 format. */
+  /**
+   * Start date in ISO 8601 format. When set, the query is pinned to that
+   * single day; `offset` is ignored and `period` only shapes
+   * `nextFromDate` for chained pagination.
+   */
   readonly from?: string
-  /** Number of days per page. */
-  readonly limit?: string
-  /** Page offset (number of pages to skip). */
-  readonly offset?: string
+  /**
+   * Page offset, in `period`-sized windows. `0` (default) is the most
+   * recent window; `1` is the previous, etc. Pages are separated by a
+   * one-day boundary so consecutive pages don't overlap.
+   */
+  readonly offset?: number
+  /** Number of days per page. Defaults to `1`. */
+  readonly period?: number
   /** End date in ISO 8601 format. Defaults to now. */
   readonly to?: string
 }

@@ -601,17 +601,23 @@ describe('mELCloud Classic API', () => {
       expect(!result.ok && result.error.kind).toBe('validation')
     })
 
-    it('handles offset and limit', async () => {
+    it('handles offset and period', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
       mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
       const result = await api.getErrorLog(
-        { limit: '5', offset: '2', to: '2024-06-01' },
+        { offset: 2, period: 5, to: '2024-06-01' },
         [1],
       )
 
-      expect(result.ok && result.value).toHaveProperty('fromDate')
-      expect(result.ok && result.value).toHaveProperty('nextFromDate')
+      // offset=2, period=5 → daysBack = 2 * (5 + 1) = 12
+      // toDate = 2024-06-01 - 12d = 2024-05-20
+      // fromDate = toDate - 5d = 2024-05-15
+      expect(result.ok && result.value).toMatchObject({
+        fromDate: '2024-05-15',
+        nextFromDate: '2024-05-09',
+        nextToDate: '2024-05-14',
+      })
     })
 
     it('uses all devices when no deviceIds provided', async () => {
