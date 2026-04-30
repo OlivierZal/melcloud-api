@@ -172,11 +172,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
 
   /**
    * Fetch cumulative-energy telemetry for an ATA unit. Returns a
-   * {@link Result} so callers can branch on the failure class —
-   * `validation` (shape drift), `server` (4xx/5xx), `unauthorized`
-   * (token rejected), `rate-limited`, `network`. The prior shape
-   * `T | null` collapsed all five into a single `null`; this one
-   * keeps them distinguishable at the type level.
+   * {@link Result} so callers can branch on the failure class
+   * (`validation` for shape drift, `server` for 4xx/5xx,
+   * `unauthorized` for token rejection, `rate-limited`, `network`).
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
@@ -201,8 +199,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
 
   /**
    * Fetch the error-log entries for an ATA unit. Same {@link Result}
-   * contract as {@link getEnergy}: consumers that previously relied
-   * on a `null → []` coalesce should now branch on `result.ok`.
+   * contract as {@link getEnergy}.
    * @param id - Device id.
    * @returns Success with the entries (possibly empty), or a typed failure.
    */

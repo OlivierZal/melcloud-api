@@ -5,25 +5,18 @@ export interface Failure {
 }
 
 /**
- * Discriminated result for best-effort SDK calls whose failure modes
- * carry information the caller should be able to branch on.
+ * Discriminated outcome for best-effort SDK calls. The success branch
+ * carries the parsed value; the failure branch carries an
+ * {@link ApiRequestError} variant the caller can branch on (retry on
+ * `network`, refresh on `unauthorized`, surface on `validation`, etc.)
+ * — distinctions a flat `T | null` would collapse.
  *
- * `T | null` — the prior return shape for `getEnergy` and friends — lies
- * to consumers: a `null` could mean "empty window", "token expired",
- * "transient 5xx", "shape drift" or "unreachable". Modern consumers
- * (retry strategies, UI error banners, debug overlays) need the
- * distinction; the SDK previously exposed it only via `logger.error`,
- * out of band.
- *
- * A `Result<T>` makes the error class part of the type, so
- * `result.ok ? result.value : result.error.kind` is typeable end-to-end.
- *
- * The error type is fixed to {@link ApiRequestError} — every call site
- * in the SDK fails through the same classification pipeline, so
- * carrying a generic `<TError>` would just be a degree of freedom
- * never exercised. Domain-specific SDKs lock the error type;
- * general-purpose Result libraries (neverthrow, ts-results) keep it
- * generic because they cannot assume a single domain.
+ * The error type is fixed to {@link ApiRequestError} rather than
+ * generic: every call site in the SDK fails through the same
+ * classification pipeline, so a `<TError>` parameter would be a
+ * degree of freedom nothing exercises. General-purpose Result
+ * libraries (neverthrow, ts-results) keep it generic because they
+ * cannot assume a single domain; domain-specific SDKs lock it.
  */
 export type Result<T> = Failure | Success<T>
 

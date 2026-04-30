@@ -129,9 +129,10 @@ export const convertToListDeviceData = <T extends ClassicDeviceType>(
   )
 }
 
-// Used only by `updateValues` — `getValues` does its own registry
-// update inline because it now returns `Result<...>` and the decorator
-// shape stays homogeneously raw to keep the type narrowing clean.
+// The decorator handles raw-payload methods only. `getValues` returns
+// `Result<...>` and applies its registry update inline on the success
+// branch — keeping the decorator's input shape homogeneously raw
+// preserves clean type narrowing here.
 const updateSingleDevice = <
   T extends ClassicDeviceType,
   TArgs extends readonly unknown[],
