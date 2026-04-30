@@ -50,14 +50,6 @@ const DEFAULT_YEAR = '1970-01-01'
 
 const MS_PER_DAY = 86_400_000
 
-const getReportPostDataDates = ({
-  from = DEFAULT_YEAR,
-  to = now(),
-}: ReportQuery): Required<ReportQuery> => ({
-  from,
-  to,
-})
-
 // Use Luxon parsing so offset-less ISO inputs are interpreted in
 // `LuxonSettings.defaultZone` (matching the Classic API's timezone contract),
 // not the host runtime timezone.
@@ -141,6 +133,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return typedFromEntries<Required<ClassicUpdateDeviceData<T>>>(entries)
   }
 
+  // The `@fetchDevices` decorator awaits a registry sync before this
+  // body runs; the body just exposes the now-fresh `this.data`. The
+  // `const data = await Promise.resolve(...)` shape is the only one
+  // that simultaneously satisfies `promise-function-async`,
+  // `require-await`, and `return-await`.
   @fetchDevices()
   public async fetch(): Promise<Readonly<ClassicListDeviceData<T>>> {
     const data = await Promise.resolve(this.data)
@@ -275,18 +272,14 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   #buildReportPostData(
-    { from, to }: ReportQuery = {},
+    { from = DEFAULT_YEAR, to = now() }: ReportQuery = {},
     shouldUseExactRange = false,
   ): ClassicReportPostData {
-    const { from: newFrom, to: newTo } = getReportPostDataDates({ from, to })
     return {
       DeviceID: this.id,
-      Duration:
-        shouldUseExactRange ?
-          getDuration({ from: newFrom, to: newTo })
-        : undefined,
-      FromDate: newFrom,
-      ToDate: newTo,
+      Duration: shouldUseExactRange ? getDuration({ from, to }) : undefined,
+      FromDate: from,
+      ToDate: to,
     }
   }
 

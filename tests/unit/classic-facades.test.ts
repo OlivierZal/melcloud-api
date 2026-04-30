@@ -1275,14 +1275,11 @@ describe('erv device facade', () => {
           ]),
         ),
     })
-    const result = await facade.getOperationModes()
+    const { labels } = okValue(await facade.getOperationModes())
 
-    expect(result.ok).toBe(true)
-    expect(result.ok && result.value.labels).toContain('Power')
-    expect(result.ok && result.value.labels).toContain('ActualRecovery')
-    expect(result.ok && result.value.labels).not.toContain(
-      'ActualBypassOperationMode',
-    )
-    expect(result.ok && result.value.labels).not.toContain('Heating')
+    expect(labels).toContain('Power')
+    expect(labels).toContain('ActualRecovery')
+    expect(labels).not.toContain('ActualBypassOperationMode')
+    expect(labels).not.toContain('Heating')
   })
 })

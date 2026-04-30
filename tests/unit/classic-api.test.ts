@@ -24,6 +24,7 @@ import {
   createSettingStore,
   matchObject,
   mock,
+  okValue,
 } from '../helpers.ts'
 
 const { client: mockHttpClient, requestSpy: mockRequest } =
@@ -567,9 +568,10 @@ describe('mELCloud Classic API', () => {
         [1],
       )
 
-      expect(result.ok).toBe(true)
-      expect(result.ok && result.value.errors).toHaveLength(1)
-      expect(result.ok && result.value.errors[0]?.error).toBe('Some error')
+      const value = okValue(result)
+
+      expect(value.errors).toHaveLength(1)
+      expect(value.errors[0]?.error).toBe('Some error')
     })
 
     it('filters out entries with invalid year', async () => {
@@ -586,7 +588,7 @@ describe('mELCloud Classic API', () => {
       )
       const result = await api.getErrorLog({}, [1])
 
-      expect(result.ok && result.value.errors).toHaveLength(0)
+      expect(okValue(result).errors).toHaveLength(0)
     })
 
     it('returns validation failure when the API returns failure data', async () => {
@@ -613,7 +615,7 @@ describe('mELCloud Classic API', () => {
       // offset=2, period=5 → daysBack = 2 * (5 + 1) = 12
       // toDate = 2024-06-01 - 12d = 2024-05-20
       // fromDate = toDate - 5d = 2024-05-15
-      expect(result.ok && result.value).toMatchObject({
+      expect(okValue(result)).toMatchObject({
         fromDate: '2024-05-15',
         nextFromDate: '2024-05-09',
         nextToDate: '2024-05-14',
@@ -648,7 +650,7 @@ describe('mELCloud Classic API', () => {
       })
       const result = await api.getErrorLog({})
 
-      expect(result.ok && result.value).toHaveProperty('errors')
+      expect(okValue(result)).toHaveProperty('errors')
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           data: matchObject({ DeviceIDs: [42] }),
@@ -663,7 +665,7 @@ describe('mELCloud Classic API', () => {
       mockRequest.mockResolvedValue(wrap([errorEntry({ ErrorMessage: null })]))
       const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
 
-      expect(result.ok && result.value.errors).toHaveLength(0)
+      expect(okValue(result).errors).toHaveLength(0)
     })
 
     it('throws on invalid date in query', async () => {
@@ -881,7 +883,7 @@ describe('mELCloud Classic API', () => {
         params: { buildingId: 1, id: 1 },
       })
 
-      expect(result.ok && result.value).toStrictEqual({ value: 'retried' })
+      expect(okValue(result)).toStrictEqual({ value: 'retried' })
     })
 
     it('surfaces 401 when re-authentication fails', async () => {

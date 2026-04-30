@@ -29,10 +29,6 @@ import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './home-types.ts'
 import { BaseAPI, normalizeUnauthorized } from './base.ts'
 import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 
-// ------------------------------------------------------------------
-//  Constants
-// ------------------------------------------------------------------
-
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
 const CONTEXT_PATH = '/context'
@@ -41,10 +37,6 @@ const DEFAULT_SYNC_INTERVAL_MINUTES = 1
 const ENERGY_PATH = '/telemetry/telemetry/energy'
 const REPORT_PATH = '/report/v1/trendsummary'
 const SIGNAL_PATH = '/telemetry/telemetry/actual'
-
-// ------------------------------------------------------------------
-//  Helpers
-// ------------------------------------------------------------------
 
 const parseUser = (data: HomeContext): HomeUser => ({
   email: data.email,
@@ -354,9 +346,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     })
   }
 
-  // ----------------------------------------------------------------
-  //  Private — credentials & session
-  // ----------------------------------------------------------------
   protected getAuthHeaders(): Record<string, string> {
     return this.accessToken === '' ?
         {}
@@ -432,9 +421,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     return false
   }
 
-  // ----------------------------------------------------------------
-  //  Private — token management
-  // ----------------------------------------------------------------
   /**
    * Core of {@link updateValues}: perform the PUT and, on success,
    * trigger a post-mutation registry refresh via
@@ -479,9 +465,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     )
   }
 
-  // ----------------------------------------------------------------
-  //  Private — API request pipeline
-  // ----------------------------------------------------------------
   /**
    * Use the refresh token to obtain a fresh access token.
    * @returns Whether the refresh succeeded.

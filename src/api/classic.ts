@@ -172,14 +172,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   @setting
   private accessor contextKey = ''
 
-  private get language(): string {
-    return this.#language
-  }
-
-  private set language(value: string) {
-    this.#language = value
-  }
-
   private constructor(config: ClassicAPIConfig = {}) {
     const {
       language,
@@ -209,7 +201,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       LuxonSettings.defaultZone = timezone
     }
     if (language !== undefined) {
-      this.language = language
+      this.#language = language
     }
     this.applyCredentials(username, password)
   }
@@ -430,10 +422,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   /**
    * Read the live device data for a single device.
-   *
-   * Wrapped by `@classicUpdateDevice` — the returned payload is also
-   * written back into the in-memory registry, so subsequent
-   * registry-backed facades reflect the fresh state.
    * @param root0 - Destructured options.
    * @param root0.params - `buildingId` + `id` of the target device.
    * @returns The device-type-discriminated data payload.
@@ -544,7 +532,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * @param language - The language code to set.
    */
   public async updateLanguage(language: string): Promise<void> {
-    if (language === this.language) {
+    if (language === this.#language) {
       return
     }
     const { data: hasLanguageChanged } = await this.request<boolean>(
@@ -553,16 +541,12 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       { data: { language: this.#getLanguageCode(language) } },
     )
     if (hasLanguageChanged) {
-      this.language = language
+      this.#language = language
     }
   }
 
   /**
    * Toggle power on one or more devices via `/Device/Power`.
-   *
-   * Wrapped by `@classicUpdateDevices` — the updated `Power` flag is
-   * mirrored into every registry entry in scope, so facades reading
-   * `device.power` see the new state without a re-fetch.
    * @param root0 - Destructured options.
    * @param root0.postData - `DeviceIds` array + target `Power` state.
    * @returns The server-echoed power state.
@@ -578,11 +562,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   /**
    * Send a set-device payload to `/Device/SetAta`, `/Device/SetAtw`
    * or `/Device/SetErv` depending on the `DeviceType` on the body.
-   *
-   * Wrapped by `@classicUpdateDevice` — the `EffectiveFlags` bitmask
-   * returned by MELCloud is applied back to the matching registry
-   * entry so subsequent reads reflect exactly the fields the server
-   * acknowledged (not necessarily the ones requested).
    * @param root0 - Destructured options.
    * @param root0.postData - Discriminated set-device payload.
    * @param root0.type - Device type selecting the target endpoint.
@@ -723,16 +702,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       // Domain-level failure (server rejected the query) surfaces as a
       // synthetic `validation` variant — the call itself succeeded at
       // transport, but the payload is unusable.
-      return err({
-        cause: new Error(formatErrors(data.AttributeErrors)),
-        issue: formatErrors(data.AttributeErrors),
-        kind: 'validation',
-      })
+      const issue = formatErrors(data.AttributeErrors)
+      return err({ cause: new Error(issue), issue, kind: 'validation' })
     }
     return ok(data)
   }
 
-  #getLanguageCode(language: string = this.language): ClassicLanguage {
+  #getLanguageCode(language: string = this.#language): ClassicLanguage {
     return isLanguage(language) ? ClassicLanguage[language] : ClassicLanguage.en
   }
 }
