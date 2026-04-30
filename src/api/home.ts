@@ -31,12 +31,8 @@ import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
-const CONTEXT_PATH = '/context'
 const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 1
-const ENERGY_PATH = '/telemetry/telemetry/energy'
-const REPORT_PATH = '/report/v1/trendsummary'
-const SIGNAL_PATH = '/telemetry/telemetry/actual'
 
 const parseUser = (data: HomeContext): HomeUser => ({
   email: data.email,
@@ -194,7 +190,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     id: string,
     params: { from: string; interval: string; to: string },
   ): Promise<Result<HomeEnergyData, ApiRequestError>> {
-    return this.safeRequest('get', `${ENERGY_PATH}/${id}`, {
+    return this.safeRequest('get', `/telemetry/telemetry/energy/${id}`, {
       params: {
         from: toTelemetryDate(params.from),
         interval: params.interval,
@@ -233,7 +229,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     id: string,
     params: { from: string; to: string },
   ): Promise<Result<HomeEnergyData, ApiRequestError>> {
-    return this.safeRequest('get', `${SIGNAL_PATH}/${id}`, {
+    return this.safeRequest('get', `/telemetry/telemetry/actual/${id}`, {
       params: {
         from: toTelemetryDate(params.from),
         measure: 'rssi',
@@ -257,7 +253,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     id: string,
     params: { from: string; period: string; to: string },
   ): Promise<Result<HomeReportData[], ApiRequestError>> {
-    return this.safeRequest('get', REPORT_PATH, {
+    return this.safeRequest('get', '/report/v1/trendsummary', {
       params: {
         from: toReportDate(params.from),
         period: params.period,
@@ -450,7 +446,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * @returns The fetched home context.
    */
   async #fetchContext(): Promise<HomeContext> {
-    const { data } = await this.request('get', CONTEXT_PATH)
+    const { data } = await this.request('get', '/context')
     const validated = parseOrThrow(HomeContextSchema, data, 'BFF /context')
     this.#syncContext(validated)
     return validated

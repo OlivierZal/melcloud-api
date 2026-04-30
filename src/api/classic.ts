@@ -68,8 +68,6 @@ const deviceTypeNames = {
 
 const API_BASE_URL = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
 const APP_VERSION = '1.38.4.0'
-const LIST_PATH = '/User/ListDevices'
-const LOGIN_PATH = '/Login/ClientLogin3'
 
 const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 5
@@ -443,7 +441,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async list(): Promise<{ data: ClassicBuildingWithStructure[] }> {
     const response = await this.request<ClassicBuildingWithStructure[]>(
       'get',
-      LIST_PATH,
+      '/User/ListDevices',
     )
 
     // Zod validates the envelope + the minimal device header (Type,
@@ -467,9 +465,11 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ClassicLoginPostData
   }): Promise<{ data: ClassicLoginData }> {
-    const response = await this.dispatch<ClassicLoginData>('post', LOGIN_PATH, {
-      data: postData,
-    })
+    const response = await this.dispatch<ClassicLoginData>(
+      'post',
+      '/Login/ClientLogin3',
+      { data: postData },
+    )
     return {
       ...response,
       data: parseOrThrow(ClassicLoginDataSchema, response.data, 'ClientLogin3'),
