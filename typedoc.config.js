@@ -13,6 +13,7 @@ const config = {
     npm: 'https://www.npmjs.com/package/@olivierzal/melcloud-api',
   },
   out: 'docs',
+  plugin: ['typedoc-plugin-mdn-links', 'typedoc-plugin-coverage'],
   readme: 'README.md',
   searchInComments: true,
   skipErrorChecking: true,

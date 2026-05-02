@@ -1,5 +1,7 @@
 A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELCloud Home](https://melcloudhome.com/) APIs, providing access to Mitsubishi Electric air-to-air (Ata), air-to-water (Atw) and energy recovery ventilation (Erv) devices.
 
+[![Documentation coverage](https://olivierzal.github.io/melcloud-api/coverage.svg)](https://olivierzal.github.io/melcloud-api/)
+
 ## Installation
 
 This package is published to **GitHub Packages**, not the public npm registry. Configure your project so npm fetches the `@olivierzal` scope from GitHub:
