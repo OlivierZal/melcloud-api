@@ -14,15 +14,16 @@ import type { BaseAPIConfig } from './types.ts'
 /**
  * Injectable contract for the MELCloud Home API client.
  *
- * Exists alongside the `HomeAPI` class with the same name (declaration
- * merging). This interface uses property-with-arrow syntax so facades,
- * mocks, and tests can reference methods safely (`expect(api.updateValues)`,
- * `mock<HomeAPI>({...})`) without triggering `unbound-method` lint —
- * the class has real methods that carry `this`, whereas the interface
- * shape declares them as plain functions with no implicit binding.
- * @internal
+ * Mirrors the public surface of the {@link HomeAPI} class with
+ * property-with-arrow syntax so facades, mocks, and tests can
+ * reference methods safely (`expect(api.updateValues)`,
+ * `mock<HomeAPIAdapter>({...})`) without triggering `unbound-method`
+ * lint — the class has real methods that carry `this`, whereas this
+ * interface declares them as plain functions with no implicit
+ * binding.
+ * @category Configuration
  */
-export interface HomeAPI {
+export interface HomeAPIAdapter {
   /**
    * Whether the upstream rate-limit gate is currently holding a pause
    * window. `true` means the SDK is intentionally failing fast to

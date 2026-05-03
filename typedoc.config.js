@@ -12,50 +12,37 @@ const config = {
     'Decorators',
     'HTTP',
     'Types',
-    '*',
   ],
   cleanOutputDir: true,
-  defaultCategory: 'Other',
   entryPoints: ['src/index.ts'],
   excludeInternal: true,
   excludePrivate: true,
   excludeProtected: true,
+  // Single H1 on the index page, owned by the README.
+  headings: { document: false, readme: false },
   hideGenerator: true,
-  highlightLanguages: [
-    'bash',
-    'console',
-    'css',
-    'html',
-    'ini',
-    'javascript',
-    'json',
-    'jsonc',
-    'json5',
-    'shell',
-    'tsx',
-    'typescript',
-  ],
+  // Languages used in code fences across the README and TSDoc. `javascript`
+  // covers `js` blocks inherited from the TypeScript stdlib's `Error`
+  // example annotations, which propagate to every error subclass.
+  highlightLanguages: ['ini', 'javascript', 'shell', 'typescript'],
   hostedBaseUrl: 'https://olivierzal.github.io/melcloud-api/',
   includeVersion: true,
-  // Symbols referenced by public types but intentionally not separately
-  // exported. Two categories:
-  //   - Internal infrastructure leaked through public type signatures
-  //     (also tagged `@internal` in source).
-  //   - Declaration-merged interfaces that share their name with a
-  //     public class export (the merge makes them a single symbol at
-  //     the public surface; TypeDoc sees them as two).
   intentionallyNotExported: [
+    // Internal infrastructure leaked through public type signatures
+    // (also tagged `@internal` in source).
     'BaseModel',
     'Brand',
-    'ClassicBuildingFacade',
-    'ClassicDeviceAtwFacade',
-    'ClassicDeviceAtwHasZone2Facade',
     'DeviceDataMapping',
-    'HomeAPI',
     'HttpErrorRequestConfig',
     'TransportConfig',
     'TypedHomeDeviceData',
     'UpdatePatchKind',
+    // Facade declaration-merged interfaces sharing a name with their
+    // class. The class side carries the public surface; TypeDoc sees
+    // the interface as a separate symbol and would warn otherwise.
+    'ClassicBuildingFacade',
+    'ClassicDeviceAtwFacade',
+    'ClassicDeviceAtwHasZone2Facade',
   ],
   markdownLinkExternal: true,
   name: 'MELCloud & MELCloud Home API for Node.js',
@@ -67,14 +54,9 @@ const config = {
   out: 'docs',
   plugin: ['typedoc-plugin-mdn-links', 'typedoc-plugin-coverage'],
   readme: 'README.md',
-  // Documentation is required at the declaration level (interfaces,
-  // classes, functions, methods, type aliases). Per-property /
-  // per-enum-member descriptions are not required because most public
-  // types here mirror the MELCloud wire protocol verbatim — field
-  // names are self-explanatory and forcing prose for each would be
-  // noise. Authors are still free (and encouraged) to add property
-  // comments where they convey units, constraints, or semantics
-  // beyond the name.
+  // Property and EnumMember excluded: most public types mirror the
+  // MELCloud wire protocol verbatim, where field names speak for
+  // themselves. Per-field prose would be noise.
   requiredToBeDocumented: [
     'Accessor',
     'Class',

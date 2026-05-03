@@ -5,6 +5,7 @@
  * as `home.API`, `home.Device`, `home.DeviceType`, etc.
  */
 export {
+  type HomeAPIAdapter as APIAdapter,
   type HomeAPIConfig as APIConfig,
   type HomeAPISettings as APISettings,
   type HomeAtaValues as AtaValues,
