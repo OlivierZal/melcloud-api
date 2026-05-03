@@ -6,11 +6,13 @@ import type {
   ClassicFloorID,
 } from './ids.ts'
 
+/** Common header fields for any `Device/Set*` POST body: target id and the bitfield identifying which mutated fields should be applied. */
 export interface ClassicBaseDevicePostData {
   readonly DeviceID: ClassicDeviceID
   readonly EffectiveFlags: number
 }
 
+/** Shape returned by `Device/Get` for any device type — same body as a set-device payload but with `EffectiveFlags` pinned to the unchanged sentinel. */
 export interface ClassicBaseGetDeviceData extends ClassicBaseSetDeviceData {
   readonly EffectiveFlags: typeof CLASSIC_FLAG_UNCHANGED
 }
