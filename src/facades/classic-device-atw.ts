@@ -88,6 +88,12 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
 
   public readonly type: typeof ClassicDeviceType.Atw = ClassicDeviceType.Atw
 
+  /**
+   * Hot-water tank state derived from the last-synced device payload
+   * (eco/forced/prohibited flags, current and target tank temperatures,
+   * computed operational state).
+   * @returns The hot-water snapshot.
+   */
   public get hotWater(): ClassicHotWaterState {
     const { data } = this
     return {
@@ -101,6 +107,10 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     }
   }
 
+  /**
+   * Operation, hot-water and temperature state for Zone 1.
+   * @returns The Zone 1 state snapshot.
+   */
   public get zone1(): ClassicZoneState {
     return this.getZoneState('Zone1')
   }

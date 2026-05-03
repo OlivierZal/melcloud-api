@@ -76,6 +76,7 @@ const config = {
   // comments where they convey units, constraints, or semantics
   // beyond the name.
   requiredToBeDocumented: [
+    'Accessor',
     'Class',
     'Constructor',
     'Enum',

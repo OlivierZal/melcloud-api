@@ -5,14 +5,26 @@ import type { HomeDeviceData } from '../types/index.ts'
 export class HomeDevice {
   public readonly type: HomeDeviceType
 
+  /**
+   * Last-synced wire-format payload for this device.
+   * @returns A read-only snapshot of the device data.
+   */
   public get data(): Readonly<HomeDeviceData> {
     return this.#data
   }
 
+  /**
+   * Unique device identifier as assigned by MELCloud Home.
+   * @returns The device id.
+   */
   public get id(): string {
     return this.#data.id
   }
 
+  /**
+   * User-facing display name set in the MELCloud Home app.
+   * @returns The device's display name.
+   */
   public get name(): string {
     return this.#data.givenDisplayName
   }

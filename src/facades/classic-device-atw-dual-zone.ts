@@ -36,6 +36,10 @@ const toOperationModeZone = (value: number): ClassicOperationModeZone => {
  * modes so that cooling and room/flow modes stay consistent between zones.
  */
 export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
+  /**
+   * Operation, hot-water and temperature state for Zone 2.
+   * @returns The Zone 2 state snapshot.
+   */
   public get zone2(): ClassicZoneState {
     return this.getZoneState('Zone2')
   }

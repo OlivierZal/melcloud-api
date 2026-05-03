@@ -126,6 +126,10 @@ export abstract class ClassicBaseFacade<
     return this.model.getById(this.id) !== undefined
   }
 
+  /**
+   * Display name of the underlying entity at the time of the last sync.
+   * @returns The entity's name.
+   */
   public get name(): string {
     return this.instance.name
   }

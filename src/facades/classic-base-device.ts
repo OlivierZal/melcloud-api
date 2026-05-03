@@ -80,10 +80,19 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   public abstract readonly type: T
 
+  /**
+   * Last-synced wire-format payload for this device.
+   * @returns A read-only snapshot of the device data.
+   */
   public get data(): Readonly<ClassicListDeviceData<T>> {
     return this.device.data
   }
 
+  /**
+   * Single-element list containing this device, mirroring the
+   * collection-style accessor on building/floor/area facades.
+   * @returns A list with the wrapped device.
+   */
   public override get devices(): ClassicDeviceAny[] {
     return [this.instance]
   }

@@ -131,6 +131,11 @@ export abstract class BaseAPI implements Disposable {
 
   public readonly settingManager?: SettingManager
 
+  /**
+   * Whether the upstream rate-limit gate is currently holding a pause
+   * window after a recent 429 `Retry-After` response.
+   * @returns `true` while the SDK is intentionally failing fast.
+   */
   public get isRateLimited(): boolean {
     return this.rateLimitGate.isPaused
   }

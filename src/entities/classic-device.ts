@@ -19,6 +19,10 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
 
   public readonly type: T
 
+  /**
+   * Last-synced wire-format payload for this device.
+   * @returns A read-only snapshot of the device data.
+   */
   public get data(): Readonly<ClassicListDeviceData<T>> {
     return this.#data
   }

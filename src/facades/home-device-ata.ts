@@ -63,34 +63,68 @@ const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
  * values to the Classic API.
  */
 export class HomeDeviceAtaFacade {
+  /**
+   * Static capability flags and per-mode temperature bounds advertised
+   * by this device.
+   * @returns The capability descriptor.
+   */
   public get capabilities(): HomeDeviceCapabilities {
     return this.#model.data.capabilities
   }
 
+  /**
+   * Unique device identifier as assigned by MELCloud Home.
+   * @returns The device id.
+   */
   public get id(): string {
     return this.#model.id
   }
 
+  /**
+   * User-facing display name set in the MELCloud Home app.
+   * @returns The device's display name.
+   */
   public get name(): string {
     return this.#model.name
   }
 
+  /**
+   * Currently active operation mode (heat/cool/auto/dry/fan/off).
+   * @returns The operation mode.
+   */
   public get operationMode(): HomeOperationMode {
     return this.#setting('OperationMode')
   }
 
+  /**
+   * Whether the unit is powered on.
+   * @returns `true` when on, `false` when standby.
+   */
   public get power(): boolean {
     return this.#setting('Power') === 'True'
   }
 
+  /**
+   * Last-reported room temperature in degrees Celsius.
+   * @returns The room temperature.
+   */
   public get roomTemperature(): number {
     return this.#setting('RoomTemperature')
   }
 
+  /**
+   * Last-reported Wi-Fi signal strength of the device adapter, in dBm.
+   * @returns The RSSI value.
+   */
   public get rssi(): number {
     return this.#model.data.rssi
   }
 
+  /**
+   * Currently configured fan speed. Normalised from MELCloud Home's
+   * inconsistent stringified-number representation back to the enum.
+   * @returns The fan speed.
+   */
   public get setFanSpeed(): HomeFanSpeed {
     // MELCloud Home API inconsistency: SetFanSpeed returns a stringified
     // number ("0") instead of the enum name ("Auto") like other settings.
@@ -103,14 +137,26 @@ export class HomeDeviceAtaFacade {
     return isHomeFanSpeed(raw) ? raw : fanSpeedFromClassic[ClassicFanSpeed.auto]
   }
 
+  /**
+   * Target temperature setpoint in degrees Celsius.
+   * @returns The setpoint temperature.
+   */
   public get setTemperature(): number {
     return this.#setting('SetTemperature')
   }
 
+  /**
+   * Currently configured horizontal vane direction.
+   * @returns The horizontal vane setting.
+   */
   public get vaneHorizontalDirection(): HomeHorizontal {
     return this.#setting('VaneHorizontalDirection')
   }
 
+  /**
+   * Currently configured vertical vane direction.
+   * @returns The vertical vane setting.
+   */
   public get vaneVerticalDirection(): HomeVertical {
     return this.#setting('VaneVerticalDirection')
   }

@@ -13,10 +13,18 @@ import { BaseZoneFacade } from './classic-base-zone.ts'
 export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
   declare public readonly id: ClassicBuildingID
 
+  /**
+   * Frost-protection and holiday-mode flags for this building.
+   * @returns The building's zone settings.
+   */
   public get data(): ClassicZoneSettings {
     return this.instance.data
   }
 
+  /**
+   * All devices currently registered under this building (any floor or area).
+   * @returns The flat list of devices.
+   */
   public override get devices(): ClassicDeviceAny[] {
     return this.registry.getDevicesByBuildingId(this.id)
   }

@@ -158,6 +158,10 @@ const collectDevices = function* collectDevices(
  * ClassicAPI endpoint calls. Uses a private constructor — create instances via {@link ClassicAPI.create}.
  */
 export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
+  /**
+   * In-memory entity registry populated by `fetch` / `list`.
+   * @returns The registry instance.
+   */
   public get registry(): ClassicRegistry {
     return this.#registry
   }
