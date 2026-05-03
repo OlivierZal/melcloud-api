@@ -119,11 +119,25 @@ export class HomeDeviceAtaFacade {
 
   readonly #model: HomeDevice
 
+  /**
+   * Builds a Home ATA facade backed by the given API client and
+   * registry-resident device model.
+   * @param api - Home API client.
+   * @param model - Backing device model.
+   */
   public constructor(api: HomeAPI, model: HomeDevice) {
     this.#api = api
     this.#model = model
   }
 
+  /**
+   * Fetches cumulative-energy telemetry for this device over the given time window.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.interval - Aggregation interval (e.g. `PT1H`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns The telemetry bundle, or a typed failure.
+   */
   public async getEnergy(params: {
     from: string
     interval: string
@@ -132,10 +146,21 @@ export class HomeDeviceAtaFacade {
     return this.#api.getEnergy(this.id, params)
   }
 
+  /**
+   * Fetches the error-log entries for this device.
+   * @returns The entries (possibly empty), or a typed failure.
+   */
   public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
     return this.#api.getErrorLog(this.id)
   }
 
+  /**
+   * Fetches RSSI telemetry for this device over the given time window.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns The telemetry bundle, or a typed failure.
+   */
   public async getSignal(params: {
     from: string
     to: string
@@ -143,6 +168,15 @@ export class HomeDeviceAtaFacade {
     return this.#api.getSignal(this.id, params)
   }
 
+  /**
+   * Fetches the trend-summary temperature report for this device over
+   * the given time window.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Aggregation period (e.g. `hour`, `day`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns The report datasets, or a typed failure.
+   */
   public async getTemperatures(params: {
     from: string
     period: string
@@ -151,6 +185,13 @@ export class HomeDeviceAtaFacade {
     return this.#api.getTemperatures(this.id, params)
   }
 
+  /**
+   * Pushes a partial setpoint update; throws {@link NoChangesError} when
+   * `values` is empty, otherwise clamps `setTemperature` to the active
+   * mode's bounds and forwards.
+   * @param values - Partial setpoint payload.
+   * @returns `true` when the update succeeded.
+   */
   public async updateValues(values: HomeAtaValues): Promise<boolean> {
     if (Object.keys(values).length === 0) {
       throw new NoChangesError(this.id)

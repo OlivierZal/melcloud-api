@@ -13,6 +13,7 @@ import type {
 } from './classic-bases.ts'
 import type { ClassicGetDeviceData } from './classic-generic.ts'
 
+/** Energy report payload for an ATW (air-to-water) device returned by `EnergyCost/Report`. */
 export interface ClassicEnergyDataAtw {
   readonly CoP: readonly number[]
   readonly TotalCoolingConsumed: number
@@ -34,6 +35,7 @@ export interface ClassicHotWaterState {
   readonly tankWaterTemperature: number
 }
 
+/** Wire-format `Device` payload for an ATW (air-to-water) unit in `ListDevices`. */
 export interface ClassicListDeviceDataAtw
   extends
     ClassicBaseListDeviceData,
@@ -70,11 +72,13 @@ export interface ClassicListDeviceDataAtw
   readonly Zone2InHeatMode: boolean
 }
 
+/** Per-zone operation-mode fields on an ATW update payload. */
 export interface ClassicOperationModeZoneDataAtw {
   readonly OperationModeZone1?: ClassicOperationModeZone
   readonly OperationModeZone2?: ClassicOperationModeZone
 }
 
+/** Wire-format response from `Device/SetAtw`. */
 export interface ClassicSetDeviceDataAtw
   extends ClassicBaseSetDeviceData, Required<ClassicUpdateDeviceDataAtw> {
   readonly DeviceType: typeof ClassicDeviceType.Atw
@@ -92,6 +96,7 @@ export interface ClassicSetDeviceDataAtw
   readonly TankWaterTemperature: number
 }
 
+/** Per-zone target temperatures on an ATW update payload (heating / cooling flow temps, tank water, room set-points). */
 export interface ClassicTemperatureDataAtw {
   readonly SetCoolFlowTemperatureZone1?: number
   readonly SetCoolFlowTemperatureZone2?: number
@@ -102,6 +107,7 @@ export interface ClassicTemperatureDataAtw {
   readonly SetTemperatureZone2?: number
 }
 
+/** Mutable subset of an ATW device's data; combines per-zone operation modes, target temperatures, and the hot-water override. */
 export interface ClassicUpdateDeviceDataAtw
   extends
     ClassicBaseUpdateDeviceData,
@@ -113,6 +119,7 @@ export interface ClassicUpdateDeviceDataAtw
 /** ATW zone state derived from device data. */
 export type ClassicZoneAtw = 'Zone1' | 'Zone2'
 
+/** Aggregated heating/cooling state for one zone of an ATW device, derived from `ListDevices` data. */
 export interface ClassicZoneState {
   readonly isCoolingProhibited: boolean
   readonly isHeatingProhibited: boolean

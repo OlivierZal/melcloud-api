@@ -11,6 +11,14 @@ export class ClassicArea<
 
   public readonly modelKind = 'area'
 
+  /**
+   * Builds an area model from a wire-format `ClassicAreaData` entry.
+   * @param root0 - Wire-format area data.
+   * @param root0.BuildingId - Owning building identifier.
+   * @param root0.FloorId - Owning floor identifier (or `null` if directly under the building).
+   * @param root0.ID - Area identifier.
+   * @param root0.Name - Area display name.
+   */
   public constructor({
     BuildingId: buildingId,
     FloorId: floorId,

@@ -282,6 +282,7 @@ export abstract class BaseAPI implements Disposable {
     await this.syncRegistry()
   }
 
+  /** Cancels any pending auto-sync timer; subsequent `setSyncInterval` or `fetch` calls re-arm it. */
   public clearSync(): void {
     this.#syncManager.clear()
   }
@@ -354,11 +355,16 @@ export abstract class BaseAPI implements Disposable {
     }
   }
 
+  /** Releases the auto-sync timer and any retry-guard timers; the instance must not be reused after disposal. */
   public [Symbol.dispose](): void {
     this.#syncManager[Symbol.dispose]()
     this.retryGuard[Symbol.dispose]()
   }
 
+  /**
+   * Reschedules the auto-sync timer.
+   * @param minutes - Cadence in minutes; pass `false` to disable.
+   */
   public setSyncInterval(minutes: number | false): void {
     this.#syncManager.setInterval(minutes)
   }

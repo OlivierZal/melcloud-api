@@ -431,10 +431,19 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     })
   }
 
+  /**
+   * Whether a Classic session context key has been issued.
+   * @returns `true` once authenticated.
+   */
   public isAuthenticated(): boolean {
     return this.contextKey !== ''
   }
 
+  /**
+   * Fetches the raw `ListDevices` payload (validated against the
+   * envelope schema) without touching the registry.
+   * @returns The full building hierarchy.
+   */
   public async list(): Promise<ClassicBuildingWithStructure[]> {
     const data = await this.requestData<ClassicBuildingWithStructure[]>(
       'get',

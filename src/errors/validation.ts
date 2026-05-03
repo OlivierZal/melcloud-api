@@ -15,6 +15,14 @@ export class ValidationError extends APIError {
 
   public override readonly name = 'ValidationError'
 
+  /**
+   * Builds the error from the validator's message, the boundary
+   * `context` label, and (typically) the underlying `ZodError` as the cause.
+   * @param message - Human-readable error description.
+   * @param options - Boundary label plus optional cause.
+   * @param options.context - Boundary the rejected payload came from.
+   * @param options.cause - Original error (typically a `ZodError`).
+   */
   public constructor(
     message: string,
     options: { context: string; cause?: unknown },

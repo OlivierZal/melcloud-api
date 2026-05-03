@@ -19,11 +19,22 @@ export class HomeDevice {
 
   #data: HomeDeviceData
 
+  /**
+   * Builds a Home device wrapper from a wire-format `HomeDeviceData`
+   * entry tagged with its connection type (Ata or Atw).
+   * @param device - Wire-format device payload.
+   * @param type - Connection-type discriminator.
+   */
   public constructor(device: HomeDeviceData, type: HomeDeviceType) {
     this.#data = device
     this.type = type
   }
 
+  /**
+   * Replaces the internal data snapshot with a fresh payload while
+   * preserving the wrapper's object identity.
+   * @param device - Fresh wire-format device payload.
+   */
   public sync(device: HomeDeviceData): void {
     this.#data = device
   }

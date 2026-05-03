@@ -4,6 +4,12 @@
 export abstract class APIError extends Error {
   public override readonly name: string = 'APIError'
 
+  /**
+   * Builds an SDK error.
+   * @param message - Human-readable error description.
+   * @param options - Optional bag carrying the underlying cause.
+   * @param options.cause - Original error that triggered this one.
+   */
   public constructor(message: string, options?: { cause?: unknown }) {
     super(message, options)
   }

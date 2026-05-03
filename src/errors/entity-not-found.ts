@@ -31,6 +31,14 @@ export class EntityNotFoundError extends APIError {
   /** Registry table the lookup was performed against (e.g. `'DeviceLocation'`). */
   public readonly tableName: ClassicSettingsParams['tableName']
 
+  /**
+   * Builds the error from the registry table and the unresolved entity id;
+   * the message bakes both into a human-readable summary.
+   * @param tableName - Registry table the lookup was performed against.
+   * @param entityId - Id that could not be resolved.
+   * @param options - Optional bag carrying the underlying cause.
+   * @param options.cause - Original error that triggered this one.
+   */
   public constructor(
     tableName: ClassicSettingsParams['tableName'],
     entityId: number,

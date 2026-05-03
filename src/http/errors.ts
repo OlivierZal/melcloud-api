@@ -28,6 +28,16 @@ export class HttpError<T = unknown> extends Error {
     readonly status: number
   }
 
+  /**
+   * Builds the error from the response triplet plus an optional snapshot
+   * of the request that produced it.
+   * @param message - Human-readable error description.
+   * @param response - Normalized response that carried the non-2xx status.
+   * @param response.data - Parsed (or raw text) response body.
+   * @param response.headers - Response headers.
+   * @param response.status - HTTP status code.
+   * @param config - Snapshot of the request that triggered the error.
+   */
   public constructor(
     message: string,
     response: {

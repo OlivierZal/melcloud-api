@@ -24,6 +24,13 @@ export class NoChangesError extends APIError {
 
   public override readonly name = 'NoChangesError'
 
+  /**
+   * Builds the error tagged with the id of the entity that was already
+   * in the requested state.
+   * @param entityId - Id of the targeted entity.
+   * @param options - Optional bag carrying the underlying cause.
+   * @param options.cause - Original error that triggered this one.
+   */
   public constructor(entityId: number | string, options?: { cause?: unknown }) {
     super(`No changes for entity with id ${String(entityId)}`, options)
     this.entityId = entityId

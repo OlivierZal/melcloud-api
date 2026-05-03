@@ -30,11 +30,23 @@ export class ClassicFacadeManager {
 
   readonly #registry: ClassicRegistry
 
+  /**
+   * Builds a facade manager bound to the given API client and registry;
+   * facades it returns share these references.
+   * @param api - Classic API client.
+   * @param registry - Backing registry.
+   */
   public constructor(api: ClassicAPIAdapter, registry: ClassicRegistry) {
     this.#api = api
     this.#registry = registry
   }
 
+  /**
+   * Returns the cached facade for the given model, lazily creating one
+   * on first access; passing `undefined` returns `null`.
+   * @param instance - Registry model to wrap, or `undefined`.
+   * @returns The facade, or `null` when no instance was supplied.
+   */
   public get<T extends ClassicDeviceType>(
     instance: ClassicDevice<T>,
   ): ClassicDeviceFacade<T>
@@ -61,12 +73,26 @@ export class ClassicFacadeManager {
     return facade
   }
 
+  /**
+   * Returns the registry's hierarchical building zone tree, optionally
+   * filtered to a single device type.
+   * @param params - Optional filter.
+   * @param params.type - Restrict to a single device type.
+   * @returns The building zone tree.
+   */
   public getBuildings(params?: {
     type?: ClassicDeviceType
   }): ClassicBuildingZone[] {
     return this.#registry.getBuildings(params)
   }
 
+  /**
+   * Returns the flattened list of every registry zone (buildings, floors,
+   * areas, devices), optionally filtered to a single device type.
+   * @param params - Optional filter.
+   * @param params.type - Restrict to a single device type.
+   * @returns Every zone, name-sorted.
+   */
   public getZones(params?: { type?: ClassicDeviceType }): ClassicZone[] {
     return this.#registry.getZones(params)
   }

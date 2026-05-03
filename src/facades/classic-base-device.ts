@@ -243,6 +243,12 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     )
   }
 
+  /**
+   * Fetches dashboard tile data for this device; passing `true` (or
+   * this device itself) pins the response to its full `SelectedDevice` payload.
+   * @param device - `true`/this device to pin selection, or `false` for none.
+   * @returns The tile data, or a typed failure.
+   */
   public override async getTiles(
     device?: false,
   ): Promise<Result<ClassicTilesData<null>>>

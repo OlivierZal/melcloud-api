@@ -185,6 +185,15 @@ export class HttpClient {
 
   readonly #dispatcher?: FetchDispatcher
 
+  /**
+   * Builds an HTTP client pinned to a base URL, request-timeout budget,
+   * and optional default headers / undici dispatcher.
+   * @param root0 - Client configuration.
+   * @param root0.baseURL - Base URL prepended to every request URL.
+   * @param root0.dispatcher - Optional undici dispatcher.
+   * @param root0.headers - Default headers merged into every request.
+   * @param root0.timeout - Per-request timeout in milliseconds (`0` disables it).
+   */
   public constructor({
     baseURL,
     dispatcher,
@@ -197,6 +206,12 @@ export class HttpClient {
     this.#defaultHeaders = { ...headers }
   }
 
+  /**
+   * Issues an HTTP request and returns the normalized response; non-2xx
+   * statuses throw {@link HttpError}.
+   * @param config - Per-request configuration.
+   * @returns The normalized `{ data, status, headers }` triple.
+   */
   public async request<T = unknown>(
     config: HttpRequestConfig,
   ): Promise<HttpResponse<T>> {

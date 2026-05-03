@@ -7,6 +7,13 @@ export class ClassicFloor extends BaseModel {
 
   public readonly modelKind = 'floor'
 
+  /**
+   * Builds a floor model from a wire-format `ClassicFloorData` entry.
+   * @param root0 - Wire-format floor data.
+   * @param root0.BuildingId - Owning building identifier.
+   * @param root0.ID - Floor identifier.
+   * @param root0.Name - Floor display name.
+   */
   public constructor({
     BuildingId: buildingId,
     ID: id,

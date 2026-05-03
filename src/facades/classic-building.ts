@@ -49,6 +49,11 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
     } = this)
   }
 
+  /**
+   * Refreshes the underlying device registry and returns the building's
+   * current zone settings (frost-protection + holiday-mode flags).
+   * @returns The building's zone settings.
+   */
   // See `BaseDeviceFacade.fetch` for the rationale on this shape.
   @fetchDevices()
   public async fetch(): Promise<ClassicZoneSettings> {

@@ -273,6 +273,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     }
   }
 
+  /**
+   * Whether the BFF `/context` call has resolved a user identity.
+   * @returns `true` once authenticated.
+   */
   public isAuthenticated(): boolean {
     return this.#user !== null
   }

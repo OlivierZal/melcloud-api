@@ -281,6 +281,12 @@ export abstract class ClassicBaseFacade<
     )
   }
 
+  /**
+   * Fetches dashboard tile data for the zone's devices; passing a specific
+   * device pins the response to its full `SelectedDevice` payload.
+   * @param device - Optional device to pin as `SelectedDevice`.
+   * @returns The tile data, or a typed failure.
+   */
   public async getTiles(device?: false): Promise<Result<ClassicTilesData<null>>>
   public async getTiles<TDeviceType extends ClassicDeviceType>(
     device: ClassicDevice<TDeviceType>,

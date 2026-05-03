@@ -25,6 +25,18 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
 
   readonly #data: ClassicListDeviceData<T>
 
+  /**
+   * Builds a device model from a wire-format `ClassicListDevice` entry;
+   * the typed `Device` payload is captured by reference for in-place sync.
+   * @param root0 - Wire-format list-device entry.
+   * @param root0.AreaID - Owning area identifier (or `null`).
+   * @param root0.BuildingID - Owning building identifier.
+   * @param root0.Device - Device payload kept by reference.
+   * @param root0.DeviceID - Device identifier.
+   * @param root0.DeviceName - Device display name.
+   * @param root0.FloorID - Owning floor identifier (or `null`).
+   * @param root0.Type - Device type discriminator.
+   */
   public constructor({
     AreaID: areaId,
     BuildingID: buildingId,
@@ -42,6 +54,11 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
     this.#data = data
   }
 
+  /**
+   * Merges a partial device payload onto the existing data so consumers
+   * keep stable object identity across syncs.
+   * @param data - Partial wire-format payload to merge.
+   */
   public update(data: Partial<ClassicListDeviceDataAny>): void {
     Object.assign(this.#data, data)
   }
