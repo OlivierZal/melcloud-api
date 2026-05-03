@@ -1,4 +1,4 @@
-import type { HomeAPI } from '../api/home-types.ts'
+import type { HomeAPIAdapter } from '../api/home-types.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 
@@ -8,7 +8,7 @@ import { HomeDeviceAtaFacade } from './home-device-ata.ts'
  * @category Facades
  */
 export class HomeFacadeManager {
-  readonly #api: HomeAPI
+  readonly #api: HomeAPIAdapter
 
   readonly #facades = new WeakMap<HomeDevice, HomeDeviceAtaFacade>()
 
@@ -17,7 +17,7 @@ export class HomeFacadeManager {
    * it returns share this reference.
    * @param api - Home API client.
    */
-  public constructor(api: HomeAPI) {
+  public constructor(api: HomeAPIAdapter) {
     this.#api = api
   }
 

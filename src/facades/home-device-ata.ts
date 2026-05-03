@@ -1,4 +1,4 @@
-import type { HomeAPI } from '../api/home-types.ts'
+import type { HomeAPIAdapter } from '../api/home-types.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type {
   HomeAtaValues,
@@ -162,7 +162,7 @@ export class HomeDeviceAtaFacade {
     return this.#setting('VaneVerticalDirection')
   }
 
-  readonly #api: HomeAPI
+  readonly #api: HomeAPIAdapter
 
   readonly #model: HomeDevice
 
@@ -172,7 +172,7 @@ export class HomeDeviceAtaFacade {
    * @param api - Home API client.
    * @param model - Backing device model.
    */
-  public constructor(api: HomeAPI, model: HomeDevice) {
+  public constructor(api: HomeAPIAdapter, model: HomeDevice) {
     this.#api = api
     this.#model = model
   }
