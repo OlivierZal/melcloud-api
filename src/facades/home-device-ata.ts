@@ -1,4 +1,4 @@
-import type { HomeAPIAdapter } from '../api/home-types.ts'
+import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type {
   HomeAtaValues,
