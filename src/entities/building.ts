@@ -16,7 +16,7 @@ export class ClassicBuilding extends BaseModel {
   public readonly modelKind = 'building'
 
   /**
-   * Builds a building model from a wire-format `ClassicBuildingData` entry.
+   * Builds a building model from a wire-format {@link ClassicBuildingData} entry.
    * @param root0 - Wire-format building data.
    * @param root0.ID - Building identifier.
    * @param root0.Location - Geographic location identifier.

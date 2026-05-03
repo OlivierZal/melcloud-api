@@ -33,7 +33,7 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
   readonly #data: ClassicListDeviceData<T>
 
   /**
-   * Builds a device model from a wire-format `ClassicListDevice` entry;
+   * Builds a device model from a wire-format {@link ClassicListDevice} entry;
    * the typed `Device` payload is captured by reference for in-place sync.
    * @param root0 - Wire-format list-device entry.
    * @param root0.AreaID - Owning area identifier (or `null`).

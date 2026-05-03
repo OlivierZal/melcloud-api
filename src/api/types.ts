@@ -158,7 +158,7 @@ export type SyncCallback = (params?: {
 
 /**
  * Transport configuration. Discriminated by presence of an
- * `HttpClient` instance — the SDK either reuses your wired client
+ * {@link HttpClient} instance — the SDK either reuses your wired client
  * (with its own dispatcher, headers, timeout) or builds a fetch-backed
  * default whose timeout you can tweak via `timeoutMs`.
  * @internal

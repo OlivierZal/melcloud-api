@@ -46,7 +46,7 @@ import { SyncManager } from './sync-manager.ts'
  * Classify any thrown error into the discriminated {@link ApiRequestError}
  * union surfaced by {@link BaseAPI.safeRequest}.
  *
- * Order matters: domain errors (`AuthenticationError`, `RateLimitError`)
+ * Order matters: domain errors ({@link AuthenticationError}, {@link RateLimitError})
  * are checked before transport errors so a credential rejection isn't
  * misclassified as a `server` failure. Zod parse failures bubble up as
  * `Error` with `name === 'ValidationError'` from {@link parseOrThrow},
@@ -81,10 +81,10 @@ export const classifyError = (error: unknown): ApiRequestError => {
  * unchanged. Subclass `doAuthenticate` implementations call this
  * helper to normalize transport-level rejections into the shared
  * domain error type — callers of {@link BaseAPI.authenticate} then
- * get a stable `AuthenticationError` regardless of whether the
+ * get a stable {@link AuthenticationError} regardless of whether the
  * underlying flow was cookie-based (Classic) or bearer-token (Home).
  * @param error - The error to inspect.
- * @returns `AuthenticationError` if a 401 HttpError; `error` otherwise.
+ * @returns An {@link AuthenticationError} if a 401 {@link HttpError}; `error` otherwise.
  */
 export const normalizeUnauthorized = (error: unknown): unknown =>
   isHttpError(error) && error.response.status === HttpStatus.Unauthorized ?
@@ -323,7 +323,7 @@ export abstract class BaseAPI implements Disposable {
    * sync just landed. Routed through the lifecycle emitter so a
    * misbehaving callback cannot break the caller. Invoked by the
    * `@syncDevices` decorator after each decorated mutation.
-   * @param args - `SyncCallback`-shaped payload (`type`, `ids`).
+   * @param args - {@link SyncCallback}-shaped payload (`type`, `ids`).
    */
   public async notifySync(...args: Parameters<SyncCallback>): Promise<void> {
     await this.events.emitSyncComplete(...args)

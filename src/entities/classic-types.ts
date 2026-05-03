@@ -20,7 +20,7 @@ export interface ClassicBaseDevice<T extends ClassicDeviceType> {
 export type ClassicModel = BaseModel
 
 /**
- * Type guard that narrows a `ClassicDeviceAny` to a specific `ClassicDevice` variant.
+ * Type guard that narrows a {@link ClassicDeviceAny} to a specific {@link ClassicDevice} variant.
  * @param device - The device model to narrow.
  * @param type - The expected device type literal.
  * @returns Whether the device matches the given type.
@@ -33,9 +33,9 @@ export const isClassicDeviceOfType = <T extends ClassicDeviceType>(
 
 /**
  * All classic device model variants. Kept non-distributive so
- * `createDeviceModel()` can construct a single `ClassicDevice` without
+ * `createDeviceModel()` can construct a single {@link ClassicDevice} without
  * needing a per-variant switch; callers that need a specific literal
- * variant should use `isClassicDeviceOfType` to narrow explicitly.
+ * variant should use {@link isClassicDeviceOfType} to narrow explicitly.
  * @category Entities
  */
 export type ClassicDeviceAny = ClassicDevice<ClassicDeviceType>

@@ -489,8 +489,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Update frost protection settings for a zone.
    *
    * The response is discriminated: on success returns
-   * `ClassicSuccessData` (`Success: true`); on partial/total failure
-   * returns `ClassicFailureData` with `AttributeErrors` describing the
+   * {@link ClassicSuccessData} (`Success: true`); on partial/total failure
+   * returns {@link ClassicFailureData} with `AttributeErrors` describing the
    * rejected fields. Callers should branch on `Success` before reading
    * the remaining fields.
    * @param root0 - Destructured options.

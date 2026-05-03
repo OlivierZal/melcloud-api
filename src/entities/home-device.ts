@@ -2,7 +2,7 @@ import type { HomeDeviceType } from '../constants.ts'
 import type { HomeDeviceData } from '../types/index.ts'
 
 /**
- * Mutable wrapper around a HomeDeviceData, preserving object identity across syncs.
+ * Mutable wrapper around a {@link HomeDeviceData}, preserving object identity across syncs.
  * @category Entities
  */
 export class HomeDevice {
@@ -35,7 +35,7 @@ export class HomeDevice {
   #data: HomeDeviceData
 
   /**
-   * Builds a Home device wrapper from a wire-format `HomeDeviceData`
+   * Builds a Home device wrapper from a wire-format {@link HomeDeviceData}
    * entry tagged with its connection type (Ata or Atw).
    * @param device - Wire-format device payload.
    * @param type - Connection-type discriminator.
