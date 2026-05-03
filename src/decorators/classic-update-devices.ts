@@ -45,6 +45,7 @@ type UpdatePatchKind = 'payload' | 'power'
  * @param root0.type - Optional device type to filter which devices
  * are updated. When omitted, every device in the facade is patched.
  * @returns A method decorator that updates device models after execution.
+ * @category Decorators
  */
 export const classicUpdateDevices =
   <
@@ -165,6 +166,7 @@ const updateSingleDevice = <
  * takes no configuration today but the shape is stable for future
  * options without breaking call sites.
  * @returns A method decorator.
+ * @category Decorators
  */
 export const classicUpdateDevice = (): typeof updateSingleDevice =>
   updateSingleDevice

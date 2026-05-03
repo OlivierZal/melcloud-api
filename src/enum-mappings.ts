@@ -15,10 +15,16 @@ import { isKeyOf } from './utils.ts'
 // Home → Classic: used by ClassicAtaAdapter to convert normalized input
 // back to the classic API format.
 
-/** Home API fan speed string values. */
+/**
+ * Home API fan speed string values.
+ * @category Mappings
+ */
 export type HomeFanSpeed = 'Auto' | 'Five' | 'Four' | 'One' | 'Three' | 'Two'
 
-/** Home API horizontal vane position string values. */
+/**
+ * Home API horizontal vane position string values.
+ * @category Mappings
+ */
 export type HomeHorizontal =
   | 'Auto'
   | 'Centre'
@@ -29,10 +35,16 @@ export type HomeHorizontal =
   | 'Swing'
   | 'Wide'
 
-/** Home API operation mode string values. */
+/**
+ * Home API operation mode string values.
+ * @category Mappings
+ */
 export type HomeOperationMode = 'Automatic' | 'Cool' | 'Dry' | 'Fan' | 'Heat'
 
-/** Home API vertical vane position string values. */
+/**
+ * Home API vertical vane position string values.
+ * @category Mappings
+ */
 export type HomeVertical =
   | 'Auto'
   | 'Five'
@@ -42,7 +54,10 @@ export type HomeVertical =
   | 'Three'
   | 'Two'
 
-/** Mapping from Classic numeric fan speed to Home string value. */
+/**
+ * Mapping from Classic numeric fan speed to Home string value.
+ * @category Mappings
+ */
 export const fanSpeedFromClassic: Record<ClassicFanSpeed, HomeFanSpeed> = {
   [ClassicFanSpeed.auto]: 'Auto',
   [ClassicFanSpeed.fast]: 'Four',
@@ -53,7 +68,10 @@ export const fanSpeedFromClassic: Record<ClassicFanSpeed, HomeFanSpeed> = {
   [ClassicFanSpeed.very_slow]: 'One',
 }
 
-/** Mapping from Home string fan speed to Classic numeric value. */
+/**
+ * Mapping from Home string fan speed to Classic numeric value.
+ * @category Mappings
+ */
 export const fanSpeedToClassic: Record<HomeFanSpeed, ClassicFanSpeed> = {
   Auto: ClassicFanSpeed.auto,
   Five: ClassicFanSpeed.very_fast,
@@ -71,7 +89,10 @@ export const isClassicFanSpeed: (key: PropertyKey) => key is ClassicFanSpeed =
 export const isHomeFanSpeed: (key: PropertyKey) => key is HomeFanSpeed =
   isKeyOf(fanSpeedToClassic)
 
-/** Mapping from Classic numeric horizontal vane position to Home string value. */
+/**
+ * Mapping from Classic numeric horizontal vane position to Home string value.
+ * @category Mappings
+ */
 export const horizontalFromClassic: Record<ClassicHorizontal, HomeHorizontal> =
   {
     [ClassicHorizontal.auto]: 'Auto',
@@ -84,7 +105,10 @@ export const horizontalFromClassic: Record<ClassicHorizontal, HomeHorizontal> =
     [ClassicHorizontal.wide]: 'Wide',
   }
 
-/** Mapping from Home string horizontal vane position to Classic numeric value. */
+/**
+ * Mapping from Home string horizontal vane position to Classic numeric value.
+ * @category Mappings
+ */
 export const horizontalToClassic: Record<HomeHorizontal, ClassicHorizontal> = {
   Auto: ClassicHorizontal.auto,
   Centre: ClassicHorizontal.center,
@@ -96,7 +120,10 @@ export const horizontalToClassic: Record<HomeHorizontal, ClassicHorizontal> = {
   Wide: ClassicHorizontal.wide,
 }
 
-/** Mapping from Classic numeric operation mode to Home string value. */
+/**
+ * Mapping from Classic numeric operation mode to Home string value.
+ * @category Mappings
+ */
 export const operationModeFromClassic: Record<
   ClassicOperationMode,
   HomeOperationMode
@@ -108,7 +135,10 @@ export const operationModeFromClassic: Record<
   [ClassicOperationMode.heat]: 'Heat',
 }
 
-/** Mapping from Home string operation mode to Classic numeric value. */
+/**
+ * Mapping from Home string operation mode to Classic numeric value.
+ * @category Mappings
+ */
 export const operationModeToClassic: Record<
   HomeOperationMode,
   ClassicOperationMode
@@ -120,7 +150,10 @@ export const operationModeToClassic: Record<
   Heat: ClassicOperationMode.heat,
 }
 
-/** Mapping from Classic numeric vertical vane position to Home string value. */
+/**
+ * Mapping from Classic numeric vertical vane position to Home string value.
+ * @category Mappings
+ */
 export const verticalFromClassic: Record<ClassicVertical, HomeVertical> = {
   [ClassicVertical.auto]: 'Auto',
   [ClassicVertical.downwards]: 'Five',
@@ -131,7 +164,10 @@ export const verticalFromClassic: Record<ClassicVertical, HomeVertical> = {
   [ClassicVertical.upwards]: 'One',
 }
 
-/** Mapping from Home string vertical vane position to Classic numeric value. */
+/**
+ * Mapping from Home string vertical vane position to Classic numeric value.
+ * @category Mappings
+ */
 export const verticalToClassic: Record<HomeVertical, ClassicVertical> = {
   Auto: ClassicVertical.auto,
   Five: ClassicVertical.downwards,
@@ -142,7 +178,10 @@ export const verticalToClassic: Record<HomeVertical, ClassicVertical> = {
   Two: ClassicVertical.mid_high,
 }
 
-/** Mapping from Classic numeric device type to Home string value (ATA/ATW only — ERV is Classic-only). */
+/**
+ * Mapping from Classic numeric device type to Home string value (ATA/ATW only — ERV is Classic-only).
+ * @category Mappings
+ */
 export const homeDeviceTypeFromClassic: Record<
   typeof ClassicDeviceType.Ata | typeof ClassicDeviceType.Atw,
   HomeDeviceType
@@ -151,7 +190,10 @@ export const homeDeviceTypeFromClassic: Record<
   [ClassicDeviceType.Atw]: HomeDeviceType.Atw,
 }
 
-/** Mapping from Home string device type to Classic numeric value. */
+/**
+ * Mapping from Home string device type to Classic numeric value.
+ * @category Mappings
+ */
 export const homeDeviceTypeToClassic: Record<
   HomeDeviceType,
   typeof ClassicDeviceType.Ata | typeof ClassicDeviceType.Atw

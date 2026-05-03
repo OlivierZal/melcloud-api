@@ -49,6 +49,7 @@ const createDeviceFacade = (
  * @param registry - The model registry containing all synced models.
  * @param instance - The model instance to create a facade for.
  * @returns The facade matching the model's kind.
+ * @category Facades
  */
 export const createFacade = (
   api: ClassicAPIAdapter,

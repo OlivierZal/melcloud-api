@@ -2,7 +2,10 @@ import type { DeviceType } from '../constants.ts'
 import type { HttpClient } from '../http/index.ts'
 import type { LoginCredentials } from '../types/index.ts'
 
-/** Common configuration shared by all API clients. */
+/**
+ * Common configuration shared by all API clients.
+ * @category Configuration
+ */
 export interface BaseAPIConfig extends Partial<LoginCredentials> {
   /**
    * Optional shutdown signal applied to every outgoing request.
@@ -45,6 +48,7 @@ export interface BaseAPIConfig extends Partial<LoginCredentials> {
  * - **Per-sync** (`onSyncComplete`) — fires after each sync trigger
  *   (auto-timer OR a `@syncDevices`-decorated mutation), once the
  *   downstream device state has been refreshed.
+ * @category Configuration
  */
 export interface LifecycleEvents {
   /**
@@ -63,7 +67,10 @@ export interface LifecycleEvents {
   readonly onRequestStart?: (event: RequestStartEvent) => void
 }
 
-/** Logger interface for API call tracing. */
+/**
+ * Logger interface for API call tracing.
+ * @category Configuration
+ */
 export interface Logger {
   /** Log error messages. */
   readonly error: Console['error']
@@ -71,7 +78,10 @@ export interface Logger {
   readonly log: Console['log']
 }
 
-/** Emitted when a request (possibly after retries) completes successfully. */
+/**
+ * Emitted when a request (possibly after retries) completes successfully.
+ * @category Configuration
+ */
 export interface RequestCompleteEvent extends RequestLifecycleContext {
   /** Elapsed time in milliseconds, including any retry delays. */
   readonly durationMs: number
@@ -79,7 +89,10 @@ export interface RequestCompleteEvent extends RequestLifecycleContext {
   readonly status: number
 }
 
-/** Emitted when a request ultimately fails after exhausting its retries. */
+/**
+ * Emitted when a request ultimately fails after exhausting its retries.
+ * @category Configuration
+ */
 export interface RequestErrorEvent extends RequestLifecycleContext {
   /** Elapsed time in milliseconds, including any retry delays. */
   readonly durationMs: number
@@ -93,6 +106,7 @@ export interface RequestErrorEvent extends RequestLifecycleContext {
  * starts, so consumers can correlate a `onRequestStart` with its
  * eventual `onRequestComplete` or `onRequestError` — including across
  * retry attempts, which share the same `correlationId`.
+ * @category Configuration
  */
 export interface RequestLifecycleContext {
   /** Unique request identifier (UUID v4). */
@@ -103,7 +117,10 @@ export interface RequestLifecycleContext {
   readonly url: string
 }
 
-/** Emitted each time a retry attempt is scheduled. */
+/**
+ * Emitted each time a retry attempt is scheduled.
+ * @category Configuration
+ */
 export interface RequestRetryEvent extends RequestLifecycleContext {
   /** 1-based retry attempt number (1 = first retry, not the initial try). */
   readonly attempt: number
@@ -113,10 +130,16 @@ export interface RequestRetryEvent extends RequestLifecycleContext {
   readonly error: unknown
 }
 
-/** Emitted at the start of a request, before any retry attempts. */
+/**
+ * Emitted at the start of a request, before any retry attempts.
+ * @category Configuration
+ */
 export type RequestStartEvent = RequestLifecycleContext
 
-/** External storage adapter for persisting API session settings. */
+/**
+ * External storage adapter for persisting API session settings.
+ * @category Configuration
+ */
 export interface SettingManager {
   /** Retrieve a setting value by key. Returns the stored value, or `null`/`undefined` if absent. */
   readonly get: (key: string) => string | null | undefined
@@ -124,7 +147,10 @@ export interface SettingManager {
   readonly set: (key: string, value: string) => void
 }
 
-/** Callback invoked after sync operations, with optional device IDs and type filter. */
+/**
+ * Callback invoked after sync operations, with optional device IDs and type filter.
+ * @category Configuration
+ */
 export type SyncCallback = (params?: {
   ids?: (number | string)[]
   type?: DeviceType

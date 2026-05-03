@@ -2,7 +2,10 @@ import type { ClassicArea, ClassicDeviceAny } from '../entities/index.ts'
 import type { ClassicAreaID } from '../types/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 
-/** Facade for an area, grouping devices within a floor or building. */
+/**
+ * Facade for an area, grouping devices within a floor or building.
+ * @category Facades
+ */
 export class ClassicAreaFacade extends BaseZoneFacade<ClassicArea> {
   declare public readonly id: ClassicAreaID
 

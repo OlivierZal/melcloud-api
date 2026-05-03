@@ -70,6 +70,7 @@ const toTelemetryDate = (iso: string): string =>
  * (analogous to the Classic API's `contextKey`).
  *
  * Uses a private constructor — create instances via {@link HomeAPI.create}.
+ * @category API Clients
  */
 export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /**

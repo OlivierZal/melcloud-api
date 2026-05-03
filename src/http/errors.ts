@@ -16,6 +16,7 @@ export interface HttpErrorRequestConfig {
  * `response.headers`, and `response.data` — identical to the relevant
  * surface of the previous `AxiosError` contract so retry/rate-limit logic
  * does not need to branch on the error's origin.
+ * @category HTTP
  */
 export class HttpError<T = unknown> extends Error {
   public readonly config?: HttpErrorRequestConfig
@@ -58,6 +59,7 @@ export class HttpError<T = unknown> extends Error {
  * Type guard for HTTP errors thrown by the internal HTTP client.
  * @param error - Value caught from a failed HTTP request.
  * @returns Whether the value is an HttpError.
+ * @category HTTP
  */
 export const isHttpError = (error: unknown): error is HttpError =>
   error instanceof HttpError

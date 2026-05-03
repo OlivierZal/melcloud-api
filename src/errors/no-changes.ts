@@ -17,6 +17,7 @@ import { APIError } from './base.ts'
  *   throw error
  * }
  * ```
+ * @category Errors
  */
 export class NoChangesError extends APIError {
   /** Id of the entity the update targeted (device, zone, building, etc.). */

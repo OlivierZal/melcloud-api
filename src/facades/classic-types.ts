@@ -57,7 +57,10 @@ export interface ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
   readonly zone2: ClassicZoneState
 }
 
-/** Facade for an individual MELCloud device with type-safe data access and control. */
+/**
+ * Facade for an individual MELCloud device with type-safe data access and control.
+ * @category Facades
+ */
 export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   extends ClassicBaseDevice<T>, ClassicFacade {
   /** Bitfield flags mapping each updatable property to its effective flag value. */
@@ -97,14 +100,20 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   ) => Promise<ClassicSetDeviceData<T>>
 }
 
-/** Union of all device facade types. */
+/**
+ * Union of all device facade types.
+ * @category Facades
+ */
 export type ClassicDeviceFacadeAny =
   | ClassicDeviceAtwFacade
   | ClassicDeviceAtwHasZone2Facade
   | ClassicDeviceFacade<typeof ClassicDeviceType.Ata>
   | ClassicDeviceFacade<typeof ClassicDeviceType.Erv>
 
-/** Base facade contract shared by all facade types (building, floor, area, device). */
+/**
+ * Base facade contract shared by all facade types (building, floor, area, device).
+ * @category Facades
+ */
 export interface ClassicFacade extends Identifiable {
   /** All devices managed by this facade. */
   readonly devices: readonly ClassicDeviceAny[]
@@ -147,7 +156,10 @@ export interface ClassicFacade extends Identifiable {
   readonly updatePower: (value?: boolean) => Promise<boolean>
 }
 
-/** Parameters for configuring frost protection temperature bounds. */
+/**
+ * Parameters for configuring frost protection temperature bounds.
+ * @category Facades
+ */
 export interface ClassicFrostProtectionQuery {
   /** Maximum temperature threshold (clamped to 4–16 °C range). */
   readonly max: number
@@ -157,7 +169,10 @@ export interface ClassicFrostProtectionQuery {
   readonly isEnabled?: boolean
 }
 
-/** Parameters for enabling or disabling holiday mode. */
+/**
+ * Parameters for enabling or disabling holiday mode.
+ * @category Facades
+ */
 export interface ClassicHolidayModeQuery {
   /** Start date in ISO 8601 format. Defaults to now when `to` is provided. */
   readonly from?: string
@@ -165,7 +180,10 @@ export interface ClassicHolidayModeQuery {
   readonly to?: string
 }
 
-/** Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations. */
+/**
+ * Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations.
+ * @category Facades
+ */
 export interface ClassicZoneFacade extends ClassicFacade {
   /** Get the current group state for all ATA devices. */
   readonly getGroup: () => Promise<Result<ClassicGroupState>>
@@ -179,6 +197,7 @@ export interface ClassicZoneFacade extends ClassicFacade {
  * Type guard that narrows a device facade to the ATA variant.
  * @param facade - The device facade to check.
  * @returns Whether the facade is an ATA facade.
+ * @category Facades
  */
 export const isClassicAtaFacade = (
   facade: ClassicDeviceFacade<ClassicDeviceType>,
@@ -190,6 +209,7 @@ export const isClassicAtaFacade = (
  * Allows consumers to safely access `hotWater` and `zone1` without type assertions.
  * @param facade - The device facade to check.
  * @returns Whether the facade is an ATW facade.
+ * @category Facades
  */
 export const isClassicAtwFacade = (
   facade: ClassicDeviceFacade<ClassicDeviceType>,
@@ -199,6 +219,7 @@ export const isClassicAtwFacade = (
  * Type guard that narrows a device facade to the ERV variant.
  * @param facade - The device facade to check.
  * @returns Whether the facade is an ERV facade.
+ * @category Facades
  */
 export const isClassicErvFacade = (
   facade: ClassicDeviceFacade<ClassicDeviceType>,
@@ -210,6 +231,7 @@ export const isClassicErvFacade = (
  * Allows consumers to safely access `zone2` without type assertions.
  * @param facade - The ATW device facade to check.
  * @returns Whether the facade supports zone 2.
+ * @category Facades
  */
 export const hasClassicZone2 = (
   facade: ClassicDeviceAtwFacade,

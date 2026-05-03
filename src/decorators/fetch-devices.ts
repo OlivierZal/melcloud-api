@@ -53,6 +53,7 @@ const runSync = async (self: FetchDevicesHost): Promise<void> => {
  * @param root0 - Options object.
  * @param root0.when - Whether to refresh before or after the call.
  * @returns A method decorator.
+ * @category Decorators
  */
 export const fetchDevices =
   ({ when = 'before' }: { when?: 'after' | 'before' } = {}) =>

@@ -9,6 +9,7 @@ import { APIError } from './base.ts'
  *
  * The underlying `ZodError` (or any other validator error) is attached
  * through the standard `cause` chain.
+ * @category Errors
  */
 export class ValidationError extends APIError {
   public readonly context: string

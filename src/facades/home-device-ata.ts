@@ -61,6 +61,7 @@ const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
  * Facade for a MELCloud Home ATA device. Provides typed access to device
  * settings and temperature clamping per operation mode before sending
  * values to the Classic API.
+ * @category Facades
  */
 export class HomeDeviceAtaFacade {
   /**

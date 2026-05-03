@@ -1,7 +1,10 @@
 import type { HomeDeviceType } from '../constants.ts'
 import type { HomeDeviceData } from '../types/index.ts'
 
-/** Mutable wrapper around a HomeDeviceData, preserving object identity across syncs. */
+/**
+ * Mutable wrapper around a HomeDeviceData, preserving object identity across syncs.
+ * @category Entities
+ */
 export class HomeDevice {
   public readonly type: HomeDeviceType
 

@@ -1,7 +1,10 @@
 import type { ClassicFloorData } from '../types/index.ts'
 import { BaseModel } from './base.ts'
 
-/** ClassicFloor model representing a level within a building. */
+/**
+ * ClassicFloor model representing a level within a building.
+ * @category Entities
+ */
 export class ClassicFloor extends BaseModel {
   public buildingId: number
 

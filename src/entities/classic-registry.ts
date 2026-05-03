@@ -145,6 +145,7 @@ const buildDeviceZones = (
 /**
  * Central in-memory registry of all MELCloud models (buildings, floors, areas, devices).
  * Synced from the Classic API response and queryable by ID or parent relationship.
+ * @category Entities
  */
 export class ClassicRegistry {
   // Pre-computed indexes for O(1) lookups by parent relationship.

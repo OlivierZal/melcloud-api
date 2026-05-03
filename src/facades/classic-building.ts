@@ -9,7 +9,10 @@ import type { ClassicBuildingID, ClassicZoneSettings } from '../types/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 
-/** Facade for a building, providing access to all its devices and zone settings. */
+/**
+ * Facade for a building, providing access to all its devices and zone settings.
+ * @category Facades
+ */
 export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
   declare public readonly id: ClassicBuildingID
 

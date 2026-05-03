@@ -7,7 +7,10 @@ import type {
 } from '../types/index.ts'
 import { BaseModel } from './base.ts'
 
-/** Concrete device model holding mutable device data that can be partially updated after API calls. */
+/**
+ * Concrete device model holding mutable device data that can be partially updated after API calls.
+ * @category Entities
+ */
 export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
   public areaId: number | null = null
 

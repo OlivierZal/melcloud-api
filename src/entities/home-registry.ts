@@ -14,6 +14,7 @@ export interface TypedHomeDeviceData {
 /**
  * Lightweight device registry for the Home API.
  * Maintains stable model references across syncs using upsert + prune.
+ * @category Entities
  */
 export class HomeRegistry {
   readonly #devices = new Map<string, HomeDevice>()

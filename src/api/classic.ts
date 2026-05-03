@@ -156,6 +156,7 @@ const collectDevices = function* collectDevices(
 /**
  * Main MELCloud Classic API client. Handles authentication, device syncing, and all
  * ClassicAPI endpoint calls. Uses a private constructor — create instances via {@link ClassicAPI.create}.
+ * @category API Clients
  */
 export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   /**

@@ -12,6 +12,7 @@ import { APIError } from './base.ts'
  *   "try again in 5 min" phrasing).
  * - {@link unblockAt}: absolute unblock time (ideal for
  *   "try again at 14:30" phrasing).
+ * @category Errors
  */
 export class RateLimitError extends APIError {
   public override readonly name = 'RateLimitError'

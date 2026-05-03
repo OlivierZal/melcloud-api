@@ -13,7 +13,10 @@ import type {
 } from './classic-bases.ts'
 import type { ClassicGetDeviceData } from './classic-generic.ts'
 
-/** Energy report payload for an ATW (air-to-water) device returned by `EnergyCost/Report`. */
+/**
+ * Energy report payload for an ATW (air-to-water) device returned by `EnergyCost/Report`.
+ * @category Types
+ */
 export interface ClassicEnergyDataAtw {
   readonly CoP: readonly number[]
   readonly TotalCoolingConsumed: number
@@ -24,7 +27,10 @@ export interface ClassicEnergyDataAtw {
   readonly TotalHotWaterProduced: number
 }
 
-/** ATW hot water state derived from device data. */
+/**
+ * ATW hot water state derived from device data.
+ * @category Types
+ */
 export interface ClassicHotWaterState {
   readonly isEcoHotWater: boolean
   readonly isForcedMode: boolean
@@ -35,7 +41,10 @@ export interface ClassicHotWaterState {
   readonly tankWaterTemperature: number
 }
 
-/** Wire-format `Device` payload for an ATW (air-to-water) unit in `ListDevices`. */
+/**
+ * Wire-format `Device` payload for an ATW (air-to-water) unit in `ListDevices`.
+ * @category Types
+ */
 export interface ClassicListDeviceDataAtw
   extends
     ClassicBaseListDeviceData,
@@ -72,13 +81,19 @@ export interface ClassicListDeviceDataAtw
   readonly Zone2InHeatMode: boolean
 }
 
-/** Per-zone operation-mode fields on an ATW update payload. */
+/**
+ * Per-zone operation-mode fields on an ATW update payload.
+ * @category Types
+ */
 export interface ClassicOperationModeZoneDataAtw {
   readonly OperationModeZone1?: ClassicOperationModeZone
   readonly OperationModeZone2?: ClassicOperationModeZone
 }
 
-/** Wire-format response from `Device/SetAtw`. */
+/**
+ * Wire-format response from `Device/SetAtw`.
+ * @category Types
+ */
 export interface ClassicSetDeviceDataAtw
   extends ClassicBaseSetDeviceData, Required<ClassicUpdateDeviceDataAtw> {
   readonly DeviceType: typeof ClassicDeviceType.Atw
@@ -96,7 +111,10 @@ export interface ClassicSetDeviceDataAtw
   readonly TankWaterTemperature: number
 }
 
-/** Per-zone target temperatures on an ATW update payload (heating / cooling flow temps, tank water, room set-points). */
+/**
+ * Per-zone target temperatures on an ATW update payload (heating / cooling flow temps, tank water, room set-points).
+ * @category Types
+ */
 export interface ClassicTemperatureDataAtw {
   readonly SetCoolFlowTemperatureZone1?: number
   readonly SetCoolFlowTemperatureZone2?: number
@@ -107,7 +125,10 @@ export interface ClassicTemperatureDataAtw {
   readonly SetTemperatureZone2?: number
 }
 
-/** Mutable subset of an ATW device's data; combines per-zone operation modes, target temperatures, and the hot-water override. */
+/**
+ * Mutable subset of an ATW device's data; combines per-zone operation modes, target temperatures, and the hot-water override.
+ * @category Types
+ */
 export interface ClassicUpdateDeviceDataAtw
   extends
     ClassicBaseUpdateDeviceData,
@@ -116,10 +137,16 @@ export interface ClassicUpdateDeviceDataAtw
   readonly ForcedHotWaterMode?: boolean
 }
 
-/** ATW zone state derived from device data. */
+/**
+ * ATW zone state derived from device data.
+ * @category Types
+ */
 export type ClassicZoneAtw = 'Zone1' | 'Zone2'
 
-/** Aggregated heating/cooling state for one zone of an ATW device, derived from `ListDevices` data. */
+/**
+ * Aggregated heating/cooling state for one zone of an ATW device, derived from `ListDevices` data.
+ * @category Types
+ */
 export interface ClassicZoneState {
   readonly isCoolingProhibited: boolean
   readonly isHeatingProhibited: boolean

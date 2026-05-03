@@ -21,6 +21,7 @@ import { APIError } from './base.ts'
  *   throw error
  * }
  * ```
+ * @category Errors
  */
 export class EntityNotFoundError extends APIError {
   /** Id that could not be resolved in the registry. */

@@ -1,7 +1,10 @@
 import type { ClassicAreaData, ClassicAreaDataAny } from '../types/index.ts'
 import { BaseModel } from './base.ts'
 
-/** ClassicArea model representing a zone within a building or floor. */
+/**
+ * ClassicArea model representing a zone within a building or floor.
+ * @category Entities
+ */
 export class ClassicArea<
   T extends number | null = number | null,
 > extends BaseModel {

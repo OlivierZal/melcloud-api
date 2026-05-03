@@ -34,6 +34,7 @@ const toOperationModeZone = (value: number): ClassicOperationModeZone => {
 /**
  * Extended ATW facade for units with two zones. Automatically couples zone operation
  * modes so that cooling and room/flow modes stay consistent between zones.
+ * @category Facades
  */
 export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
   /**

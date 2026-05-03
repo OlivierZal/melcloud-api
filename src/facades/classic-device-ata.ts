@@ -4,7 +4,10 @@ import { clampToRange } from '../utils.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
 
-/** Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping. */
+/**
+ * Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping.
+ * @category Facades
+ */
 export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Ata
 > {

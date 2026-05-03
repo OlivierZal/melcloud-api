@@ -4,7 +4,10 @@ import type {
 } from '../types/index.ts'
 import { BaseModel } from './base.ts'
 
-/** ClassicBuilding model holding zone settings and geographic location. */
+/**
+ * ClassicBuilding model holding zone settings and geographic location.
+ * @category Entities
+ */
 export class ClassicBuilding extends BaseModel {
   public data: ClassicZoneSettings
 

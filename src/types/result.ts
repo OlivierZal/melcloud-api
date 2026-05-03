@@ -1,4 +1,7 @@
-/** Failed outcome carrying a typed {@link ApiRequestError}. */
+/**
+ * Failed outcome carrying a typed {@link ApiRequestError}.
+ * @category Types
+ */
 export interface Failure {
   readonly error: ApiRequestError
   readonly ok: false
@@ -17,10 +20,14 @@ export interface Failure {
  * degree of freedom nothing exercises. General-purpose Result
  * libraries (neverthrow, ts-results) keep it generic because they
  * cannot assume a single domain; domain-specific SDKs lock it.
+ * @category Types
  */
 export type Result<T> = Failure | Success<T>
 
-/** Successful outcome carrying the parsed value. */
+/**
+ * Successful outcome carrying the parsed value.
+ * @category Types
+ */
 export interface Success<T> {
   readonly ok: true
   readonly value: T
@@ -30,6 +37,7 @@ export interface Success<T> {
  * Construct a {@link Success}.
  * @param value - The parsed payload to wrap.
  * @returns A `{ ok: true, value }` success outcome.
+ * @category Types
  */
 export const ok = <T>(value: T): Success<T> => ({ ok: true, value })
 
@@ -37,6 +45,7 @@ export const ok = <T>(value: T): Success<T> => ({ ok: true, value })
  * Construct a {@link Failure}.
  * @param error - The typed failure description to wrap.
  * @returns A `{ ok: false, error }` failure outcome.
+ * @category Types
  */
 export const err = (error: ApiRequestError): Failure => ({
   error,
@@ -54,6 +63,7 @@ export const err = (error: ApiRequestError): Failure => ({
  * @param fn - Pure function applied to the success value.
  * @returns A new {@link Result} with the transformed value (success
  * branch) or the original error (failure branch).
+ * @category Types
  */
 export const mapResult = <T, TResult>(
   result: Result<T>,
@@ -81,6 +91,7 @@ export const mapResult = <T, TResult>(
  * Classic and Home share the same error space (same transport layer,
  * same resilience policies); both surfaces reference this single
  * neutral type via `Result<T>`.
+ * @category Types
  */
 export type ApiRequestError =
   | {
