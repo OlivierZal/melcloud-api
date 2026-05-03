@@ -28,6 +28,7 @@ import type { ClassicBuildingID, ClassicDeviceID } from './ids.ts'
  * Central mapping from device type to its associated data types.
  * Adding a new device type requires a single entry here instead of
  * updating multiple conditional type chains.
+ * @internal
  */
 interface DeviceDataMapping {
   [ClassicDeviceType.Ata]: {

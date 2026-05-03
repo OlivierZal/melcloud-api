@@ -294,7 +294,7 @@ export abstract class BaseAPI implements Disposable {
    * credentials or a persisted session are available.
    *
    * Two-branch template:
-   * 1. {@link tryReuseSession} — if the subclass can reuse a
+   * 1. `tryReuseSession` — if the subclass can reuse a
    *    persisted session (and populate the registry in the process),
    *    we are done.
    * 2. Otherwise, {@link resumeSession} runs — best-effort restore

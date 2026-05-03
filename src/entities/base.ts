@@ -1,6 +1,9 @@
 import type { ClassicModelKind } from './classic-types.ts'
 
-/** Abstract base model providing common `id` and `name` properties. */
+/**
+ * Abstract base model providing common `id` and `name` properties.
+ * @internal
+ */
 export abstract class BaseModel {
   public abstract readonly modelKind: ClassicModelKind
 

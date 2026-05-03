@@ -1,4 +1,7 @@
-/** Snapshot of the request that triggered an {@link HttpError}. */
+/**
+ * Snapshot of the request that triggered an {@link HttpError}.
+ * @internal
+ */
 export interface HttpErrorRequestConfig {
   readonly data?: unknown
   readonly headers?: Record<string, string>

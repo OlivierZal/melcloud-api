@@ -6,6 +6,7 @@
  * `ClassicBuildingID` where a `ClassicFloorID` is expected is a type error.
  */
 
+/** @internal */
 type Brand<T extends string> = number & { readonly __brand: T }
 
 /** Unique identifier for a MELCloud area. */

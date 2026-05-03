@@ -20,6 +20,7 @@ import type { BaseAPIConfig } from './types.ts'
  * `mock<HomeAPI>({...})`) without triggering `unbound-method` lint —
  * the class has real methods that carry `this`, whereas the interface
  * shape declares them as plain functions with no implicit binding.
+ * @internal
  */
 export interface HomeAPI {
   /**

@@ -30,6 +30,7 @@ import {
  *
  * Replacing the former `String(context.name) === 'updatePower'`
  * heuristic: a silent rename is no longer a latent bug.
+ * @internal
  */
 type UpdatePatchKind = 'payload' | 'power'
 
@@ -37,7 +38,8 @@ type UpdatePatchKind = 'payload' | 'power'
  * Method decorator factory that propagates data changes to device
  * models after the decorated method completes. Supports filtering by
  * device type; the patch-computation strategy is explicit via
- * {@link UpdatePatchKind} rather than inferred from the method name.
+ * the `kind` option (`'payload'` or `'power'`) rather than inferred
+ * from the method name.
  * @param root0 - Options object.
  * @param root0.kind - Patch-computation strategy (default `'payload'`).
  * @param root0.type - Optional device type to filter which devices
