@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { HomeAPI } from '../../src/api/home-types.ts'
+import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
 import { mock } from '../helpers.ts'
@@ -9,13 +9,13 @@ import { homeDevice } from '../home-fixtures.ts'
 const createModel = (): ReturnType<typeof homeDevice> =>
   homeDevice({ id: 'device-1', name: 'Test ClassicDevice' })
 
-const createApi = (): HomeAPI =>
-  mock<HomeAPI>({
-    getEnergy: vi.fn<HomeAPI['getEnergy']>(),
-    getErrorLog: vi.fn<HomeAPI['getErrorLog']>(),
-    getSignal: vi.fn<HomeAPI['getSignal']>(),
-    getTemperatures: vi.fn<HomeAPI['getTemperatures']>(),
-    updateValues: vi.fn<HomeAPI['updateValues']>(),
+const createApi = (): HomeAPIAdapter =>
+  mock<HomeAPIAdapter>({
+    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
+    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
+    getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
+    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
+    updateValues: vi.fn<HomeAPIAdapter['updateValues']>(),
   })
 
 describe('home facade manager', () => {

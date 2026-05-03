@@ -23,7 +23,7 @@ import {
   HomeErrorLogEntryListSchema,
   HomeReportDataSchema,
 } from '../validation/index.ts'
-import type { HomeAPIConfig, HomeAPI as HomeAPIContract } from './home-types.ts'
+import type { HomeAPIAdapter, HomeAPIConfig } from './home-types.ts'
 import { BaseAPI, normalizeUnauthorized } from './base.ts'
 import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 
@@ -72,7 +72,7 @@ const toTelemetryDate = (iso: string): string =>
  * Uses a private constructor — create instances via {@link HomeAPI.create}.
  * @category API Clients
  */
-export class HomeAPI extends BaseAPI implements HomeAPIContract {
+export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   /**
    * Latest `/context` payload from the BFF, or `null` before the
    * first successful call. Populated by {@link authenticate} and

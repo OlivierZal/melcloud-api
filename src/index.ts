@@ -102,6 +102,7 @@ export {
   type ClassicErrorDetails,
   type ClassicErrorLog,
   type ClassicErrorLogQuery,
+  type HomeAPIAdapter,
   type HomeAPIConfig,
   type HomeAPISettings,
   type LifecycleEvents,

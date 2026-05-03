@@ -6,7 +6,11 @@ export type {
   ClassicErrorLog,
   ClassicErrorLogQuery,
 } from './classic-types.ts'
-export type { HomeAPIConfig, HomeAPISettings } from './home-types.ts'
+export type {
+  HomeAPIAdapter,
+  HomeAPIConfig,
+  HomeAPISettings,
+} from './home-types.ts'
 export type {
   BaseAPIConfig,
   LifecycleEvents,
