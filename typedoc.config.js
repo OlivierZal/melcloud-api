@@ -20,6 +20,10 @@ const config = {
   excludeInternal: true,
   excludePrivate: true,
   excludeProtected: true,
+  // Suppress TypeDoc's auto-generated <h1> above the README content
+  // on the index page — the README provides its own H1 to keep a
+  // single, author-controlled top-level heading and good a11y.
+  headings: { document: false, readme: false },
   hideGenerator: true,
   highlightLanguages: [
     'bash',
