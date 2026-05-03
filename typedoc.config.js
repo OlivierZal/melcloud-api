@@ -14,7 +14,6 @@ const config = {
     'Types',
   ],
   cleanOutputDir: true,
-  defaultCategory: 'Other',
   entryPoints: ['src/index.ts'],
   excludeInternal: true,
   excludePrivate: true,
@@ -22,41 +21,31 @@ const config = {
   // Single H1 on the index page, owned by the README.
   headings: { document: false, readme: false },
   hideGenerator: true,
-  highlightLanguages: [
-    'bash',
-    'console',
-    'css',
-    'html',
-    'ini',
-    'javascript',
-    'json',
-    'jsonc',
-    'json5',
-    'shell',
-    'tsx',
-    'typescript',
-  ],
+  // Languages used in code fences across the README and TSDoc. `javascript`
+  // covers `js` blocks inherited from the TypeScript stdlib's `Error`
+  // example annotations, which propagate to every error subclass.
+  highlightLanguages: ['ini', 'javascript', 'shell', 'typescript'],
   hostedBaseUrl: 'https://olivierzal.github.io/melcloud-api/',
   includeVersion: true,
-  // Symbols referenced by public types but intentionally not separately
-  // exported. Two categories:
-  //   - Internal infrastructure leaked through public type signatures
-  //     (also tagged `@internal` in source).
-  //   - Declaration-merged interfaces that share their name with a
-  //     public class export (the merge makes them a single symbol at
-  //     the public surface; TypeDoc sees them as two).
   intentionallyNotExported: [
+    // Internal infrastructure leaked through public type signatures
+    // (also tagged `@internal` in source).
     'BaseModel',
     'Brand',
-    'ClassicBuildingFacade',
-    'ClassicDeviceAtwFacade',
-    'ClassicDeviceAtwHasZone2Facade',
     'DeviceDataMapping',
-    'HomeAPI',
     'HttpErrorRequestConfig',
     'TransportConfig',
     'TypedHomeDeviceData',
     'UpdatePatchKind',
+    // Declaration-merged interfaces sharing a name with their public
+    // class. The class side carries the public surface; TypeDoc sees
+    // the interface as a separate symbol and would warn otherwise.
+    // No symmetric Classic entry: `ClassicAPI` implements the
+    // differently-named `ClassicAPIAdapter`, so no merge happens.
+    'ClassicBuildingFacade',
+    'ClassicDeviceAtwFacade',
+    'ClassicDeviceAtwHasZone2Facade',
+    'HomeAPI',
   ],
   markdownLinkExternal: true,
   name: 'MELCloud & MELCloud Home API for Node.js',
