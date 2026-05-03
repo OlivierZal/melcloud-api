@@ -1,5 +1,3 @@
-# @olivierzal/melcloud-api
-
 A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELCloud Home](https://melcloudhome.com/) APIs, providing access to Mitsubishi Electric air-to-air (Ata), air-to-water (Atw) and energy recovery ventilation (Erv) devices.
 
 [![License](https://img.shields.io/github/license/OlivierZal/melcloud-api)](LICENSE)
