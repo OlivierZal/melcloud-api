@@ -89,6 +89,8 @@ const config = {
     'Variable',
   ],
   searchInComments: true,
+  searchInDocuments: true,
+  sort: ['kind', 'instance-first', 'alphabetical-ignoring-documents'],
   sourceLinkExternal: true,
   treatValidationWarningsAsErrors: true,
   tsconfig: 'tsconfig.build.json',
@@ -99,6 +101,7 @@ const config = {
     notDocumented: true,
     notExported: true,
     rewrittenLink: true,
+    unusedMergeModuleWith: true,
   },
 }
 

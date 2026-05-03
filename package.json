@@ -49,7 +49,7 @@
     "lint": "node --max-old-space-size=8192 ./node_modules/eslint/bin/eslint.js .",
     "lint:fix": "npm run lint -- --fix",
     "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run typecheck && npm run lint && npm run format",
+    "prepublishOnly": "npm test && npm run typecheck && npm run lint && npm run format && npm run docs",
     "test": "vitest run",
     "test:coverage": "npm test -- --coverage",
     "test:update": "npm test -- --update",
