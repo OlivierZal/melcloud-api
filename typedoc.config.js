@@ -61,7 +61,8 @@ const config = {
   name: 'MELCloud & MELCloud Home API for Node.js',
   navigationLinks: {
     GitHub: 'https://github.com/OlivierZal/melcloud-api',
-    npm: 'https://www.npmjs.com/package/@olivierzal/melcloud-api',
+    'GitHub Packages':
+      'https://github.com/OlivierZal/melcloud-api/pkgs/npm/melcloud-api',
   },
   out: 'docs',
   plugin: ['typedoc-plugin-mdn-links', 'typedoc-plugin-coverage'],
@@ -88,7 +89,6 @@ const config = {
     'Variable',
   ],
   searchInComments: true,
-  skipErrorChecking: true,
   sourceLinkExternal: true,
   treatValidationWarningsAsErrors: true,
   tsconfig: 'tsconfig.build.json',

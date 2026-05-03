@@ -152,7 +152,6 @@ export class ClassicRegistry {
   // preventing callers from clearing or replacing entire collections.
   readonly #areas = new Map<number, ClassicArea>()
 
-  /** Lookup interface for areas — `getById` returns the area with the given id, or `undefined` if absent. */
   public readonly areas = {
     /**
      * Returns the area with the given id, or `undefined` when no such area is registered.
@@ -164,7 +163,6 @@ export class ClassicRegistry {
 
   readonly #buildings = new Map<number, ClassicBuilding>()
 
-  /** Lookup interface for buildings — `getById` returns the building with the given id, or `undefined` if absent. */
   public readonly buildings = {
     /**
      * Returns the building with the given id, or `undefined` when no such building is registered.
@@ -177,7 +175,6 @@ export class ClassicRegistry {
 
   readonly #devices = new Map<number, ClassicDeviceAny>()
 
-  /** Lookup interface for devices — `getById` returns the device with the given id, or `undefined` if absent. */
   public readonly devices = {
     /**
      * Returns the device with the given id, or `undefined` when no such device is registered.
@@ -190,7 +187,6 @@ export class ClassicRegistry {
 
   readonly #floors = new Map<number, ClassicFloor>()
 
-  /** Lookup interface for floors — `getById` returns the floor with the given id, or `undefined` if absent. */
   public readonly floors = {
     /**
      * Returns the floor with the given id, or `undefined` when no such floor is registered.
