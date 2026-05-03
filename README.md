@@ -31,8 +31,7 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 
 ## Installation
 
-> [!IMPORTANT]
-> This package is published to **GitHub Packages**, not the public npm registry.
+> **Important** — this package is published to **GitHub Packages**, not the public npm registry.
 
 Configure your project so npm fetches the `@olivierzal` scope from GitHub:
 
@@ -160,8 +159,7 @@ For vulnerability reports, see [SECURITY.md](SECURITY.md).
 
 See [CHANGELOG.md](CHANGELOG.md).
 
-> [!CAUTION]
-> This API is not endorsed, verified or approved by Mitsubishi Electric Corporation. Mitsubishi cannot be held liable for any claims or damages that may occur when using this client to control MELCloud devices.
+> **Disclaimer** — this API is not endorsed, verified or approved by Mitsubishi Electric Corporation. Mitsubishi cannot be held liable for any claims or damages that may occur when using this client to control MELCloud devices.
 
 ## License
 

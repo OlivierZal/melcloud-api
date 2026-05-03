@@ -574,10 +574,6 @@ const config = defineConfig([
       'markdown/no-bare-urls': 'error',
       'markdown/no-duplicate-headings': 'error',
       'markdown/no-html': 'error',
-      // GitHub alert syntax (`> [!IMPORTANT]`, `> [!CAUTION]`, etc.) is
-      // mis-detected by this rule as missing reference labels. Alerts
-      // are first-class GitHub-flavored Markdown since 2024.
-      'markdown/no-missing-label-refs': 'off',
     },
   },
   {
