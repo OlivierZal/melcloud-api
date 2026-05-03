@@ -1,7 +1,7 @@
 A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELCloud Home](https://melcloudhome.com/) APIs, providing access to Mitsubishi Electric air-to-air (Ata), air-to-water (Atw) and energy recovery ventilation (Erv) devices.
 
 [![License](https://img.shields.io/github/license/OlivierZal/melcloud-api)](LICENSE)
-[![Node](https://img.shields.io/node/v/@olivierzal/melcloud-api?registry_uri=https%3A%2F%2Fnpm.pkg.github.com)](package.json)
+[![Node](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FOlivierZal%2Fmelcloud-api%2Fmain%2Fpackage.json&query=%24.engines.node&label=node&color=brightgreen)](package.json)
 [![GitHub release](https://img.shields.io/github/v/release/OlivierZal/melcloud-api?sort=semver)](https://github.com/OlivierZal/melcloud-api/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/OlivierZal/melcloud-api/ci.yml?branch=main&label=CI)](https://github.com/OlivierZal/melcloud-api/actions/workflows/ci.yml)
 
@@ -10,7 +10,7 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=sqale_rating)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=Maintainability)
 [![Security](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=security_rating)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=Security)
 [![Test coverage](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=coverage)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=coverage)
-[![Docs coverage](https://olivierzal.github.io/melcloud-api/coverage.svg)](https://olivierzal.github.io/melcloud-api/)
+[![Docs coverage](https://olivierzal.github.io/melcloud-api/coverage.svg?v=2)](https://olivierzal.github.io/melcloud-api/)
 
 ## Installation
 
