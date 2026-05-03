@@ -12,7 +12,6 @@ const config = {
     'Decorators',
     'HTTP',
     'Types',
-    '*',
   ],
   cleanOutputDir: true,
   defaultCategory: 'Other',
@@ -20,9 +19,7 @@ const config = {
   excludeInternal: true,
   excludePrivate: true,
   excludeProtected: true,
-  // Suppress TypeDoc's auto-generated <h1> above the README content
-  // on the index page — the README provides its own H1 to keep a
-  // single, author-controlled top-level heading and good a11y.
+  // Single H1 on the index page, owned by the README.
   headings: { document: false, readme: false },
   hideGenerator: true,
   highlightLanguages: [
@@ -71,14 +68,9 @@ const config = {
   out: 'docs',
   plugin: ['typedoc-plugin-mdn-links', 'typedoc-plugin-coverage'],
   readme: 'README.md',
-  // Documentation is required at the declaration level (interfaces,
-  // classes, functions, methods, type aliases). Per-property /
-  // per-enum-member descriptions are not required because most public
-  // types here mirror the MELCloud wire protocol verbatim — field
-  // names are self-explanatory and forcing prose for each would be
-  // noise. Authors are still free (and encouraged) to add property
-  // comments where they convey units, constraints, or semantics
-  // beyond the name.
+  // Property and EnumMember excluded: most public types mirror the
+  // MELCloud wire protocol verbatim, where field names speak for
+  // themselves. Per-field prose would be noise.
   requiredToBeDocumented: [
     'Accessor',
     'Class',
