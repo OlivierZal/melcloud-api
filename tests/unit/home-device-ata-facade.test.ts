@@ -26,7 +26,9 @@ const createApi = (): HomeAPIAdapter =>
     getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
-    updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(true),
+    updateValues: vi
+      .fn<HomeAPIAdapter['updateValues']>()
+      .mockResolvedValue(true),
   })
 
 describe('home device ata facade', () => {
