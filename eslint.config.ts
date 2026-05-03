@@ -574,6 +574,17 @@ const config = defineConfig([
       'markdown/no-bare-urls': 'error',
       'markdown/no-duplicate-headings': 'error',
       'markdown/no-html': 'error',
+      // Allow GitHub alert syntax (`> [!IMPORTANT]`, `> [!CAUTION]`, …).
+      // It's a GitHub UI extension to GFM, not part of the GFM spec, so
+      // the rule's parser sees the bracketed marker as a missing
+      // reference label. The plugin exposes `allowLabels` for exactly
+      // this case (see eslint/markdown PR #256).
+      'markdown/no-missing-label-refs': [
+        'error',
+        {
+          allowLabels: ['!CAUTION', '!IMPORTANT', '!NOTE', '!TIP', '!WARNING'],
+        },
+      ],
     },
   },
   {
