@@ -1,3 +1,5 @@
+# @olivierzal/melcloud-api
+
 A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELCloud Home](https://melcloudhome.com/) APIs, providing access to Mitsubishi Electric air-to-air (Ata), air-to-water (Atw) and energy recovery ventilation (Erv) devices.
 
 [![License](https://img.shields.io/github/license/OlivierZal/melcloud-api)](LICENSE)
@@ -12,9 +14,27 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 [![Test coverage](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=coverage)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=coverage)
 [![Docs coverage](https://olivierzal.github.io/melcloud-api/coverage.svg?v=2)](https://olivierzal.github.io/melcloud-api/)
 
+## Features
+
+- **Strongly typed** — full TypeScript types for both MELCloud Classic and MELCloud Home APIs, with 100% TSDoc coverage on the public surface.
+- **Two APIs, one client** — Classic and Home behind consistent ergonomics; pick what your account uses.
+- **Ata / Atw / Erv support** — air conditioners, heat pumps with hot water, and energy-recovery ventilation units.
+- **Resilient by default** — auto-retry on transient failures, rate-limit awareness, pre-emptive session refresh.
+- **Typed failures** — telemetry, reports and error-log getters return `Result<T>` so callers branch on `network` / `unauthorized` / `rate-limited` / `validation` / `server` instead of catching generic exceptions.
+- **Tree-shakable** — `sideEffects: false` plus `/classic`, `/home` and `/constants` subpath exports for namespace-style imports.
+
+## Requirements
+
+- Node.js >= 22
+- A valid MELCloud or MELCloud Home account
+- For installing the package: a GitHub personal access token with the `read:packages` scope
+
 ## Installation
 
-This package is published to **GitHub Packages**, not the public npm registry. Configure your project so npm fetches the `@olivierzal` scope from GitHub:
+> [!IMPORTANT]
+> This package is published to **GitHub Packages**, not the public npm registry.
+
+Configure your project so npm fetches the `@olivierzal` scope from GitHub:
 
 ```ini title=".npmrc"
 //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
@@ -27,7 +47,7 @@ This package is published to **GitHub Packages**, not the public npm registry. C
 npm install @olivierzal/melcloud-api
 ```
 
-## Quick start
+## Usage
 
 ### MELCloud (classic)
 
@@ -128,10 +148,21 @@ Available subpaths: `/classic`, `/home`, `/constants`.
 
 Full API reference at <https://olivierzal.github.io/melcloud-api/>.
 
-## Disclaimer
+## Contributing
 
-This API is not endorsed, verified or approved by Mitsubishi Electric Corporation. Mitsubishi cannot be held liable for any claims or damages that may occur when using this app to control MELCloud devices.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Security
+
+For vulnerability reports, see [SECURITY.md](SECURITY.md).
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
+> [!CAUTION]
+> This API is not endorsed, verified or approved by Mitsubishi Electric Corporation. Mitsubishi cannot be held liable for any claims or damages that may occur when using this client to control MELCloud devices.
 
 ## License
 
-ISC
+[MIT](LICENSE) © Olivier Zalmanski
