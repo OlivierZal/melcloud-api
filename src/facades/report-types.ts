@@ -1,4 +1,7 @@
-/** Line chart data with named series and a measurement unit. */
+/**
+ * Line chart data with named series and a measurement unit.
+ * @category Facades
+ */
 export interface ReportChartLineOptions extends ReportChartOptions {
   readonly series: readonly {
     readonly data: (number | null)[]
@@ -18,13 +21,19 @@ export interface ReportChartOptions {
   readonly to: string
 }
 
-/** Pie chart data with labeled segments. */
+/**
+ * Pie chart data with labeled segments.
+ * @category Facades
+ */
 export interface ReportChartPieOptions extends ReportChartOptions {
   /** Numeric values for each pie segment. */
   readonly series: number[]
 }
 
-/** Date range query for report endpoints. */
+/**
+ * Date range query for report endpoints.
+ * @category Facades
+ */
 export interface ReportQuery {
   /** Start date in ISO 8601 format. Defaults to `'1970-01-01'`. */
   readonly from?: string

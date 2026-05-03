@@ -1,4 +1,7 @@
-/** Integer hour of the day in 24-hour form (0 through 23). */
+/**
+ * Integer hour of the day in 24-hour form (0 through 23).
+ * @category Types
+ */
 export type Hour =
   | 0
   | 1

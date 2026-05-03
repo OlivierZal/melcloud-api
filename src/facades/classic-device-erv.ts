@@ -9,7 +9,10 @@ const isRelevantVentilationMode = (label?: string): boolean =>
   (label === 'Power' ||
     (label.startsWith('Actual') && !label.endsWith('OperationMode')))
 
-/** Facade for Energy Recovery Ventilation (ERV) devices with filtered ventilation mode reporting. */
+/**
+ * Facade for Energy Recovery Ventilation (ERV) devices with filtered ventilation mode reporting.
+ * @category Facades
+ */
 export class ClassicDeviceErvFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Erv
 > {

@@ -80,7 +80,10 @@ const mergeSeries = (
   return [...series1, ...series2.filter(({ name }) => !series1Names.has(name))]
 }
 
-/** Facade for Air-to-Water (ATW) devices with per-zone temperature clamping and merged temperature reports. */
+/**
+ * Facade for Air-to-Water (ATW) devices with per-zone temperature clamping and merged temperature reports.
+ * @category Facades
+ */
 export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   typeof ClassicDeviceType.Atw
 > {
@@ -88,6 +91,12 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
 
   public readonly type: typeof ClassicDeviceType.Atw = ClassicDeviceType.Atw
 
+  /**
+   * Hot-water tank state derived from the last-synced device payload
+   * (eco/forced/prohibited flags, current and target tank temperatures,
+   * computed operational state).
+   * @returns The hot-water snapshot.
+   */
   public get hotWater(): ClassicHotWaterState {
     const { data } = this
     return {
@@ -101,6 +110,10 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     }
   }
 
+  /**
+   * Operation, hot-water and temperature state for Zone 1.
+   * @returns The Zone 1 state snapshot.
+   */
   public get zone1(): ClassicZoneState {
     return this.getZoneState('Zone1')
   }
@@ -141,6 +154,13 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     ]
   }
 
+  /**
+   * Fetches both the external (building) and internal (tank/boiler)
+   * temperature reports and merges them into a single chart series.
+   * @param query - Optional report time window.
+   * @param shouldUseExactRange - Whether to clamp the query to its exact bounds.
+   * @returns The merged chart options, or a typed failure.
+   */
   // ATW reports both external (building) and internal (tank/boiler)
   // temperatures — merge them into a single chart
   public override async getTemperatures(

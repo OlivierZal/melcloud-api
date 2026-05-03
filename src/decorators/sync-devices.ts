@@ -27,6 +27,7 @@ interface HasNotifySync {
  * @param root0 - Options object.
  * @param root0.type - Optional device type forwarded in the payload.
  * @returns A method decorator that triggers sync after execution.
+ * @category Decorators
  */
 export const syncDevices =
   ({ type }: { type?: DeviceType } = {}) =>

@@ -70,6 +70,7 @@ const toTelemetryDate = (iso: string): string =>
  * (analogous to the Classic API's `contextKey`).
  *
  * Uses a private constructor — create instances via {@link HomeAPI.create}.
+ * @category API Clients
  */
 export class HomeAPI extends BaseAPI implements HomeAPIContract {
   /**
@@ -273,6 +274,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
     }
   }
 
+  /**
+   * Whether the BFF `/context` call has resolved a user identity.
+   * @returns `true` once authenticated.
+   */
   public isAuthenticated(): boolean {
     return this.#user !== null
   }
@@ -287,7 +292,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIContract {
    * Boolean surface is preserved for integrating hosts (e.g. Homey
    * drivers) that treat transient failures as a no-op and retry on
    * the next sync. The actual mutation + post-sync orchestration
-   * lives in {@link #putAndSync}, where `@fetchDevices({ when: 'after' })`
+   * lives in `#putAndSync`, where `@fetchDevices({ when: 'after' })`
    * applies the same post-mutation-refresh contract as Classic
    * facades — just resolved via `syncRegistry()` instead of
    * `api.fetch()`.

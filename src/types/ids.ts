@@ -6,18 +6,31 @@
  * `ClassicBuildingID` where a `ClassicFloorID` is expected is a type error.
  */
 
+/** @internal */
 type Brand<T extends string> = number & { readonly __brand: T }
 
-/** Unique identifier for a MELCloud area. */
+/**
+ * Unique identifier for a MELCloud area.
+ * @category Types
+ */
 export type ClassicAreaID = Brand<'AreaID'>
 
-/** Unique identifier for a MELCloud building. */
+/**
+ * Unique identifier for a MELCloud building.
+ * @category Types
+ */
 export type ClassicBuildingID = Brand<'BuildingID'>
 
-/** Unique identifier for a MELCloud device. */
+/**
+ * Unique identifier for a MELCloud device.
+ * @category Types
+ */
 export type ClassicDeviceID = Brand<'DeviceID'>
 
-/** Unique identifier for a MELCloud floor. */
+/**
+ * Unique identifier for a MELCloud floor.
+ * @category Types
+ */
 export type ClassicFloorID = Brand<'FloorID'>
 
 /* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- branding helpers: the only place raw `as` casts to branded IDs are allowed */

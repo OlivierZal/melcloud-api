@@ -126,6 +126,10 @@ export abstract class ClassicBaseFacade<
     return this.model.getById(this.id) !== undefined
   }
 
+  /**
+   * Display name of the underlying entity at the time of the last sync.
+   * @returns The entity's name.
+   */
   public get name(): string {
     return this.instance.name
   }
@@ -281,6 +285,12 @@ export abstract class ClassicBaseFacade<
     )
   }
 
+  /**
+   * Fetches dashboard tile data for the zone's devices; passing a specific
+   * device pins the response to its full `SelectedDevice` payload.
+   * @param device - Optional device to pin as `SelectedDevice`.
+   * @returns The tile data, or a typed failure.
+   */
   public async getTiles(device?: false): Promise<Result<ClassicTilesData<null>>>
   public async getTiles<TDeviceType extends ClassicDeviceType>(
     device: ClassicDevice<TDeviceType>,

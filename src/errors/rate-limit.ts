@@ -12,6 +12,7 @@ import { APIError } from './base.ts'
  *   "try again in 5 min" phrasing).
  * - {@link unblockAt}: absolute unblock time (ideal for
  *   "try again at 14:30" phrasing).
+ * @category Errors
  */
 export class RateLimitError extends APIError {
   public override readonly name = 'RateLimitError'
@@ -20,6 +21,16 @@ export class RateLimitError extends APIError {
 
   public readonly unblockAt: DateTime | null
 
+  /**
+   * Builds the error from the message and rate-limit window metadata;
+   * both `retryAfter` and `unblockAt` may be `null` when the upstream
+   * supplies no window.
+   * @param message - Human-readable error description.
+   * @param options - Rate-limit window metadata plus optional cause.
+   * @param options.retryAfter - Duration until retry is allowed, or `null`.
+   * @param options.unblockAt - Absolute unblock time, or `null`.
+   * @param options.cause - Original error that triggered this one.
+   */
   public constructor(
     message: string,
     options: {

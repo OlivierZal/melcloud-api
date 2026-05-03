@@ -48,10 +48,12 @@ const runSync = async (self: FetchDevicesHost): Promise<void> => {
  *   refresh failures are logged and swallowed so a stale-registry
  *   error cannot mask the landed mutation.
  *
- * Refresh path is resolved structurally via {@link FetchDevicesHost}.
+ * Refresh path is resolved structurally via the `FetchDevicesHost`
+ * shape (the host must expose `fetch()` or `registry.sync()`).
  * @param root0 - Options object.
  * @param root0.when - Whether to refresh before or after the call.
  * @returns A method decorator.
+ * @category Decorators
  */
 export const fetchDevices =
   ({ when = 'before' }: { when?: 'after' | 'before' } = {}) =>

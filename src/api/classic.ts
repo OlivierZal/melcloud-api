@@ -156,8 +156,13 @@ const collectDevices = function* collectDevices(
 /**
  * Main MELCloud Classic API client. Handles authentication, device syncing, and all
  * ClassicAPI endpoint calls. Uses a private constructor — create instances via {@link ClassicAPI.create}.
+ * @category API Clients
  */
 export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
+  /**
+   * In-memory entity registry populated by `fetch` / `list`.
+   * @returns The registry instance.
+   */
   public get registry(): ClassicRegistry {
     return this.#registry
   }
@@ -431,10 +436,19 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     })
   }
 
+  /**
+   * Whether a Classic session context key has been issued.
+   * @returns `true` once authenticated.
+   */
   public isAuthenticated(): boolean {
     return this.contextKey !== ''
   }
 
+  /**
+   * Fetches the raw `ListDevices` payload (validated against the
+   * envelope schema) without touching the registry.
+   * @returns The full building hierarchy.
+   */
   public async list(): Promise<ClassicBuildingWithStructure[]> {
     const data = await this.requestData<ClassicBuildingWithStructure[]>(
       'get',
@@ -475,8 +489,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Update frost protection settings for a zone.
    *
    * The response is discriminated: on success returns
-   * `ClassicSuccessData` (`Success: true`); on partial/total failure
-   * returns `ClassicFailureData` with `AttributeErrors` describing the
+   * {@link ClassicSuccessData} (`Success: true`); on partial/total failure
+   * returns {@link ClassicFailureData} with `AttributeErrors` describing the
    * rejected fields. Callers should branch on `Success` before reading
    * the remaining fields.
    * @param root0 - Destructured options.

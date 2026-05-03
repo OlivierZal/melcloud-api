@@ -23,7 +23,10 @@ const NULL_BODY_STATUS = 204
 
 const JSON_CONTENT_TYPE = 'application/json'
 
-/** Construction options for {@link HttpClient}. */
+/**
+ * Construction options for {@link HttpClient}.
+ * @category HTTP
+ */
 export interface HttpClientConfig {
   readonly baseURL: string
   readonly timeout: number
@@ -36,6 +39,7 @@ export interface HttpClientConfig {
  *
  * Intentionally mirrors the subset of the Axios request config that the
  * library relied on, so call sites migrate verbatim.
+ * @category HTTP
  */
 export interface HttpRequestConfig {
   readonly data?: unknown
@@ -46,7 +50,10 @@ export interface HttpRequestConfig {
   readonly url?: string
 }
 
-/** Minimal response shape surfaced to callers. */
+/**
+ * Minimal response shape surfaced to callers.
+ * @category HTTP
+ */
 export interface HttpResponse<T = unknown> {
   readonly data: T
   readonly headers: Record<string, string | string[]>
@@ -175,6 +182,7 @@ const combineSignals = (
  * Returns a normalised `{ data, status, headers }` response and
  * throws {@link HttpError} on non-2xx — so retry/rate-limit/observability
  * layers stay unchanged when the transport is swapped.
+ * @category HTTP
  */
 export class HttpClient {
   public readonly baseURL: string
@@ -185,6 +193,15 @@ export class HttpClient {
 
   readonly #dispatcher?: FetchDispatcher
 
+  /**
+   * Builds an HTTP client pinned to a base URL, request-timeout budget,
+   * and optional default headers / undici dispatcher.
+   * @param root0 - Client configuration.
+   * @param root0.baseURL - Base URL prepended to every request URL.
+   * @param root0.dispatcher - Optional undici dispatcher.
+   * @param root0.headers - Default headers merged into every request.
+   * @param root0.timeout - Per-request timeout in milliseconds (`0` disables it).
+   */
   public constructor({
     baseURL,
     dispatcher,
@@ -197,6 +214,12 @@ export class HttpClient {
     this.#defaultHeaders = { ...headers }
   }
 
+  /**
+   * Issues an HTTP request and returns the normalized response; non-2xx
+   * statuses throw {@link HttpError}.
+   * @param config - Per-request configuration.
+   * @returns The normalized `{ data, status, headers }` triple.
+   */
   public async request<T = unknown>(
     config: HttpRequestConfig,
   ): Promise<HttpResponse<T>> {

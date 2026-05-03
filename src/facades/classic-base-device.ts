@@ -80,10 +80,19 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   public abstract readonly type: T
 
+  /**
+   * Last-synced wire-format payload for this device.
+   * @returns A read-only snapshot of the device data.
+   */
   public get data(): Readonly<ClassicListDeviceData<T>> {
     return this.device.data
   }
 
+  /**
+   * Single-element list containing this device, mirroring the
+   * collection-style accessor on building/floor/area facades.
+   * @returns A list with the wrapped device.
+   */
   public override get devices(): ClassicDeviceAny[] {
     return [this.instance]
   }
@@ -243,6 +252,12 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     )
   }
 
+  /**
+   * Fetches dashboard tile data for this device; passing `true` (or
+   * this device itself) pins the response to its full `SelectedDevice` payload.
+   * @param device - `true`/this device to pin selection, or `false` for none.
+   * @returns The tile data, or a typed failure.
+   */
   public override async getTiles(
     device?: false,
   ): Promise<Result<ClassicTilesData<null>>>

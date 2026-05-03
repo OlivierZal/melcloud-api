@@ -20,6 +20,7 @@ import type { BaseAPIConfig } from './types.ts'
  * `mock<HomeAPI>({...})`) without triggering `unbound-method` lint —
  * the class has real methods that carry `this`, whereas the interface
  * shape declares them as plain functions with no implicit binding.
+ * @internal
  */
 export interface HomeAPI {
   /**
@@ -75,13 +76,19 @@ export interface HomeAPI {
   readonly updateValues: (id: string, values: HomeAtaValues) => Promise<boolean>
 }
 
-/** Configuration options for the MELCloud Home API. */
+/**
+ * Configuration options for the MELCloud Home API.
+ * @category Configuration
+ */
 export interface HomeAPIConfig extends BaseAPIConfig {
   /** Base URL of the MELCloud Home BFF server. */
   readonly baseURL?: string
 }
 
-/** Persistent settings managed by the Home API for session authentication. */
+/**
+ * Persistent settings managed by the Home API for session authentication.
+ * @category Configuration
+ */
 export interface HomeAPISettings {
   /** IdentityServer access token (Bearer). */
   readonly accessToken?: string | null

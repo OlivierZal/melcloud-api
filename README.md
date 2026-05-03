@@ -1,5 +1,17 @@
 A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELCloud Home](https://melcloudhome.com/) APIs, providing access to Mitsubishi Electric air-to-air (Ata), air-to-water (Atw) and energy recovery ventilation (Erv) devices.
 
+[![License](https://img.shields.io/github/license/OlivierZal/melcloud-api)](LICENSE)
+[![Node](https://img.shields.io/node/v/@olivierzal/melcloud-api?registry_uri=https%3A%2F%2Fnpm.pkg.github.com)](package.json)
+[![GitHub release](https://img.shields.io/github/v/release/OlivierZal/melcloud-api?sort=semver)](https://github.com/OlivierZal/melcloud-api/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/OlivierZal/melcloud-api/ci.yml?branch=main&label=CI)](https://github.com/OlivierZal/melcloud-api/actions/workflows/ci.yml)
+
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=alert_status)](https://sonarcloud.io/dashboard?id=OlivierZal_melcloud-api)
+[![Reliability](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=reliability_rating)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=Reliability)
+[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=sqale_rating)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=Maintainability)
+[![Security](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=security_rating)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=Security)
+[![Test coverage](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=coverage)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=coverage)
+[![Docs coverage](https://olivierzal.github.io/melcloud-api/coverage.svg)](https://olivierzal.github.io/melcloud-api/)
+
 ## Installation
 
 This package is published to **GitHub Packages**, not the public npm registry. Configure your project so npm fetches the `@olivierzal` scope from GitHub:

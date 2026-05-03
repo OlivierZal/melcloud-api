@@ -9,14 +9,25 @@ import type { ClassicBuildingID, ClassicZoneSettings } from '../types/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 
-/** Facade for a building, providing access to all its devices and zone settings. */
+/**
+ * Facade for a building, providing access to all its devices and zone settings.
+ * @category Facades
+ */
 export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
   declare public readonly id: ClassicBuildingID
 
+  /**
+   * Frost-protection and holiday-mode flags for this building.
+   * @returns The building's zone settings.
+   */
   public get data(): ClassicZoneSettings {
     return this.instance.data
   }
 
+  /**
+   * All devices currently registered under this building (any floor or area).
+   * @returns The flat list of devices.
+   */
   public override get devices(): ClassicDeviceAny[] {
     return this.registry.getDevicesByBuildingId(this.id)
   }
@@ -49,6 +60,11 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
     } = this)
   }
 
+  /**
+   * Refreshes the underlying device registry and returns the building's
+   * current zone settings (frost-protection + holiday-mode flags).
+   * @returns The building's zone settings.
+   */
   // See `BaseDeviceFacade.fetch` for the rationale on this shape.
   @fetchDevices()
   public async fetch(): Promise<ClassicZoneSettings> {

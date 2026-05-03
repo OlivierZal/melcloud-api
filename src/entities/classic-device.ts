@@ -7,7 +7,10 @@ import type {
 } from '../types/index.ts'
 import { BaseModel } from './base.ts'
 
-/** Concrete device model holding mutable device data that can be partially updated after API calls. */
+/**
+ * Concrete device model holding mutable device data that can be partially updated after API calls.
+ * @category Entities
+ */
 export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
   public areaId: number | null = null
 
@@ -19,12 +22,28 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
 
   public readonly type: T
 
+  /**
+   * Last-synced wire-format payload for this device.
+   * @returns A read-only snapshot of the device data.
+   */
   public get data(): Readonly<ClassicListDeviceData<T>> {
     return this.#data
   }
 
   readonly #data: ClassicListDeviceData<T>
 
+  /**
+   * Builds a device model from a wire-format {@link ClassicListDevice} entry;
+   * the typed `Device` payload is captured by reference for in-place sync.
+   * @param root0 - Wire-format list-device entry.
+   * @param root0.AreaID - Owning area identifier (or `null`).
+   * @param root0.BuildingID - Owning building identifier.
+   * @param root0.Device - Device payload kept by reference.
+   * @param root0.DeviceID - Device identifier.
+   * @param root0.DeviceName - Device display name.
+   * @param root0.FloorID - Owning floor identifier (or `null`).
+   * @param root0.Type - Device type discriminator.
+   */
   public constructor({
     AreaID: areaId,
     BuildingID: buildingId,
@@ -42,6 +61,11 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
     this.#data = data
   }
 
+  /**
+   * Merges a partial device payload onto the existing data so consumers
+   * keep stable object identity across syncs.
+   * @param data - Partial wire-format payload to merge.
+   */
   public update(data: Partial<ClassicListDeviceDataAny>): void {
     Object.assign(this.#data, data)
   }

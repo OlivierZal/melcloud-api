@@ -48,6 +48,7 @@ import type { BaseAPIConfig, SyncCallback } from './types.ts'
  * `request<T>()`; consumers don't see it. This is the resource-focused
  * convention (Stripe, Linear) — applied uniformly across both Classic
  * and Home so the public surface is symmetric.
+ * @category Configuration
  */
 export interface ClassicAPIAdapter {
   /**
@@ -177,7 +178,10 @@ export interface ClassicAPIAdapter {
   }) => Promise<ClassicSetDeviceData<T>>
 }
 
-/** Configuration options for creating a MELCloud Classic API instance. */
+/**
+ * Configuration options for creating a MELCloud Classic API instance.
+ * @category Configuration
+ */
 export interface ClassicAPIConfig extends BaseAPIConfig {
   /** Locale language code (e.g. `'en'`, `'fr'`). */
   readonly language?: string
@@ -187,7 +191,10 @@ export interface ClassicAPIConfig extends BaseAPIConfig {
   readonly timezone?: string
 }
 
-/** Persistent settings managed by the Classic API for session authentication. */
+/**
+ * Persistent settings managed by the Classic API for session authentication.
+ * @category Configuration
+ */
 export interface ClassicAPISettings {
   /** MELCloud session context key. */
   readonly contextKey?: string | null
@@ -199,7 +206,10 @@ export interface ClassicAPISettings {
   readonly username?: string | null
 }
 
-/** A single error entry from the device error log. */
+/**
+ * A single error entry from the device error log.
+ * @category Configuration
+ */
 export interface ClassicErrorDetails {
   /** ISO 8601 date of the error occurrence. */
   readonly date: string
@@ -209,7 +219,10 @@ export interface ClassicErrorDetails {
   readonly error: string
 }
 
-/** Parsed error log with pagination support. */
+/**
+ * Parsed error log with pagination support.
+ * @category Configuration
+ */
 export interface ClassicErrorLog {
   /** List of error entries, sorted in reverse chronological order. */
   readonly errors: readonly ClassicErrorDetails[]
@@ -221,7 +234,10 @@ export interface ClassicErrorLog {
   readonly nextToDate: string
 }
 
-/** Query parameters for paginating the error log. */
+/**
+ * Query parameters for paginating the error log.
+ * @category Configuration
+ */
 export interface ClassicErrorLogQuery {
   /**
    * Start date in ISO 8601 format. When set, the query is pinned to that

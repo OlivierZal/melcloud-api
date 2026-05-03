@@ -145,6 +145,7 @@ const buildDeviceZones = (
 /**
  * Central in-memory registry of all MELCloud models (buildings, floors, areas, devices).
  * Synced from the Classic API response and queryable by ID or parent relationship.
+ * @category Entities
  */
 export class ClassicRegistry {
   // Pre-computed indexes for O(1) lookups by parent relationship.
@@ -153,12 +154,22 @@ export class ClassicRegistry {
   readonly #areas = new Map<number, ClassicArea>()
 
   public readonly areas = {
+    /**
+     * Returns the area with the given id, or `undefined` when no such area is registered.
+     * @param id - Area identifier.
+     * @returns The area, or `undefined`.
+     */
     getById: (id: number): ClassicArea | undefined => this.#areas.get(id),
   }
 
   readonly #buildings = new Map<number, ClassicBuilding>()
 
   public readonly buildings = {
+    /**
+     * Returns the building with the given id, or `undefined` when no such building is registered.
+     * @param id - Building identifier.
+     * @returns The building, or `undefined`.
+     */
     getById: (id: number): ClassicBuilding | undefined =>
       this.#buildings.get(id),
   }
@@ -166,6 +177,11 @@ export class ClassicRegistry {
   readonly #devices = new Map<number, ClassicDeviceAny>()
 
   public readonly devices = {
+    /**
+     * Returns the device with the given id, or `undefined` when no such device is registered.
+     * @param id - Device identifier.
+     * @returns The device, or `undefined`.
+     */
     getById: (id: number): ClassicDeviceAny | undefined =>
       this.#devices.get(id),
   }
@@ -173,6 +189,11 @@ export class ClassicRegistry {
   readonly #floors = new Map<number, ClassicFloor>()
 
   public readonly floors = {
+    /**
+     * Returns the floor with the given id, or `undefined` when no such floor is registered.
+     * @param id - Floor identifier.
+     * @returns The floor, or `undefined`.
+     */
     getById: (id: number): ClassicFloor | undefined => this.#floors.get(id),
   }
 
@@ -197,6 +218,11 @@ export class ClassicRegistry {
     return this.#areasByBuildingId.get(id) ?? []
   }
 
+  /**
+   * Returns the areas attached to the given floor (excluding building-level areas).
+   * @param id - Floor identifier.
+   * @returns The areas under that floor.
+   */
   public getAreasByFloorId(id: ClassicFloorID): ClassicArea[] {
     return this.#areasByFloorId.get(id) ?? []
   }
@@ -238,22 +264,46 @@ export class ClassicRegistry {
       .toSorted(compareNames)
   }
 
+  /**
+   * Returns every device currently held in the registry.
+   * @returns All devices.
+   */
   public getDevices(): ClassicDeviceAny[] {
     return [...this.#devices.values()]
   }
 
+  /**
+   * Returns the devices attached directly to the given area.
+   * @param id - Area identifier.
+   * @returns The devices in that area.
+   */
   public getDevicesByAreaId(id: ClassicAreaID): ClassicDeviceAny[] {
     return this.#devicesByAreaId.get(id) ?? []
   }
 
+  /**
+   * Returns every device under the given building (regardless of floor or area placement).
+   * @param id - Building identifier.
+   * @returns The devices under that building.
+   */
   public getDevicesByBuildingId(id: ClassicBuildingID): ClassicDeviceAny[] {
     return this.#devicesByBuildingId.get(id) ?? []
   }
 
+  /**
+   * Returns every device under the given floor (regardless of area placement).
+   * @param id - Floor identifier.
+   * @returns The devices under that floor.
+   */
   public getDevicesByFloorId(id: ClassicFloorID): ClassicDeviceAny[] {
     return this.#devicesByFloorId.get(id) ?? []
   }
 
+  /**
+   * Returns every device whose `Type` matches the given device type.
+   * @param type - Ata, Atw, or Erv discriminator.
+   * @returns The matching devices.
+   */
   public getDevicesByType<T extends ClassicDeviceType>(
     type: T,
   ): ClassicDevice<T>[]
@@ -261,16 +311,33 @@ export class ClassicRegistry {
     return this.getDevices().filter((instance) => instance.type === type)
   }
 
+  /**
+   * Returns the floors of the given building.
+   * @param id - Building identifier.
+   * @returns The floors under that building.
+   */
   public getFloorsByBuildingId(id: ClassicBuildingID): ClassicFloor[] {
     return this.#floorsByBuildingId.get(id) ?? []
   }
 
+  /**
+   * Flattens the hierarchical zone tree returned by {@link getBuildings}
+   * into a single, name-sorted list.
+   * @param root0 - Optional filter.
+   * @param root0.type - Restrict to a single device type.
+   * @returns Every zone (buildings, floors, areas, devices), sorted by name.
+   */
   public getZones({ type }: { type?: ClassicDeviceType } = {}): ClassicZone[] {
     return [...flattenBuildings(this.getBuildings({ type }))].toSorted(
       compareNames,
     )
   }
 
+  /**
+   * Upserts the area registry and rebuilds the by-building / by-floor
+   * indexes; entries absent from `areas` are pruned.
+   * @param areas - Fresh wire-format area entries.
+   */
   public syncAreas(areas: ClassicAreaDataAny[]): void {
     const models = syncMap(this.#areas, areas, {
       create: (area) => new ClassicArea(area),
@@ -292,6 +359,10 @@ export class ClassicRegistry {
     )
   }
 
+  /**
+   * Upserts the building registry; entries absent from `buildings` are pruned.
+   * @param buildings - Fresh wire-format building entries.
+   */
   public syncBuildings(buildings: ClassicBuildingData[]): void {
     syncMap(this.#buildings, buildings, {
       create: (building) => new ClassicBuilding(building),
@@ -302,6 +373,11 @@ export class ClassicRegistry {
     })
   }
 
+  /**
+   * Upserts the device registry and rebuilds the by-building / by-floor /
+   * by-area indexes; entries absent from `devices` are pruned.
+   * @param devices - Fresh wire-format list-device entries.
+   */
   public syncDevices(devices: readonly ClassicListDeviceAny[]): void {
     const models = syncMap(this.#devices, devices, {
       create: createDeviceModel,
@@ -328,6 +404,11 @@ export class ClassicRegistry {
     )
   }
 
+  /**
+   * Upserts the floor registry and rebuilds the by-building index;
+   * entries absent from `floors` are pruned.
+   * @param floors - Fresh wire-format floor entries.
+   */
   public syncFloors(floors: ClassicFloorData[]): void {
     const models = syncMap(this.#floors, floors, {
       create: (floor) => new ClassicFloor(floor),

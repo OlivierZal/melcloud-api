@@ -11,6 +11,10 @@ import type {
 } from './classic-bases.ts'
 import type { ClassicGetDeviceData } from './classic-generic.ts'
 
+/**
+ * Wire-format `Device` payload for an ERV (energy-recovery ventilation) unit in `ListDevices`.
+ * @category Types
+ */
 export interface ClassicListDeviceDataErv
   extends
     ClassicBaseListDeviceData,
@@ -24,6 +28,10 @@ export interface ClassicListDeviceDataErv
   readonly PM25Level: number
 }
 
+/**
+ * Wire-format response from `Device/SetErv`.
+ * @category Types
+ */
 export interface ClassicSetDeviceDataErv
   extends ClassicBaseSetDeviceData, Required<ClassicUpdateDeviceDataErv> {
   readonly DeviceType: typeof ClassicDeviceType.Erv
@@ -33,6 +41,10 @@ export interface ClassicSetDeviceDataErv
   readonly RoomTemperature: number
 }
 
+/**
+ * Mutable subset of an ERV device's data; every field is optional so callers can push partial updates.
+ * @category Types
+ */
 export interface ClassicUpdateDeviceDataErv extends ClassicBaseUpdateDeviceData {
   readonly SetFanSpeed?: ClassicNonSilentFanSpeed
   readonly VentilationMode?: ClassicVentilationMode
