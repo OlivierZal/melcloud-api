@@ -6,11 +6,9 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 [![Node](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FOlivierZal%2Fmelcloud-api%2Fmain%2Fpackage.json&query=%24.engines.node&label=node&color=brightgreen)](package.json)
 [![GitHub release](https://img.shields.io/github/v/release/OlivierZal/melcloud-api?sort=semver)](https://github.com/OlivierZal/melcloud-api/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/OlivierZal/melcloud-api/ci.yml?branch=main&label=CI)](https://github.com/OlivierZal/melcloud-api/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/OlivierZal/melcloud-api/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/OlivierZal/melcloud-api/security/code-scanning)
 
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=alert_status)](https://sonarcloud.io/dashboard?id=OlivierZal_melcloud-api)
-[![Reliability](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=reliability_rating)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=Reliability)
-[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=sqale_rating)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=Maintainability)
-[![Security](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=security_rating)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=Security)
 [![Test coverage](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=coverage)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=coverage)
 [![Docs coverage](https://olivierzal.github.io/melcloud-api/coverage.svg?v=2)](https://olivierzal.github.io/melcloud-api/)
 
