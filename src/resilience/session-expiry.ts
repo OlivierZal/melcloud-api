@@ -28,10 +28,13 @@ import { DateTime } from 'luxon'
  * @param expiry - ISO 8601 expiry timestamp (or empty string).
  * @param aheadMs - Consider the session expired `aheadMs` milliseconds
  * before its real expiry (default 0 = real expiry).
- * @param zone - IANA timezone identifier used to interpret offset-less
- * ISO strings. When `undefined`, falls back to `'local'` (the host's
- * system zone) so the result is independent of any process-global
- * `Settings.defaultZone` state another module might mutate.
+ * @param zone - Luxon zone identifier used to interpret offset-less
+ * ISO strings — accepts an IANA name (`'Europe/Paris'`), one of
+ * Luxon's special tokens (`'utc'`, `'local'`, `'system'`), or a
+ * fixed-offset string (`'UTC+5'`). When `undefined`, falls back to
+ * `'local'` (the host's system zone) so the result is independent of
+ * any process-global `Settings.defaultZone` state another module
+ * might mutate.
  * @returns `true` if the expiry is past (or within `aheadMs`) or cannot be parsed, `false` otherwise.
  */
 export const isSessionExpired = (

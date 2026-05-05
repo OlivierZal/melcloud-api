@@ -20,6 +20,23 @@ describe.concurrent(now, () => {
     expect(result).not.toContain('Z')
     expect(() => DateTime.fromISO(result)).not.toThrow()
   })
+
+  it('emits the wall clock in the requested zone', () => {
+    const result = now('Europe/Paris')
+
+    expect(result).not.toContain('+')
+    expect(result).not.toContain('Z')
+    // Re-parsing with the same zone must succeed (no drift round-trip).
+    expect(DateTime.fromISO(result, { zone: 'Europe/Paris' }).isValid).toBe(
+      true,
+    )
+  })
+
+  it('returns an empty string for an unrecognised zone', () => {
+    // setZone returns an invalid DateTime; the helper surfaces the
+    // misconfiguration as `''` rather than silently falling back to host.
+    expect(now('NotAZone/AtAll')).toBe('')
+  })
 })
 
 describe.concurrent('formatLabels (via getChartLineOptions)', () => {

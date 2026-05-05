@@ -232,9 +232,13 @@ export abstract class ClassicBaseFacade<
     // server's holiday-mode contract). Falls back to `'local'` when no
     // timezone was configured — equivalent to the previous behaviour
     // which relied on `Settings.defaultZone` (default `'system'`).
+    // Pass `zone` to `now()` so its emitted wall-clock matches the
+    // zone the parser will re-interpret it in — otherwise the
+    // round-trip drifts by the host-vs-zone offset whenever `from`
+    // is omitted.
     const zone = this.api.timezone ?? 'local'
     const startDate =
-      isEnabled ? DateTime.fromISO(from ?? now(), { zone }) : null
+      isEnabled ? DateTime.fromISO(from ?? now(zone), { zone }) : null
     const endDate = isEnabled ? DateTime.fromISO(to, { zone }) : null
     return this.api.updateHolidayMode({
       postData: {
@@ -282,11 +286,23 @@ export abstract class ClassicBaseFacade<
   }
 
   public async getSignalStrength(
-    hour: Hour = DateTime.now().hour,
+    hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
+    // Resolve the default in the instance's configured zone so the
+    // hour stays consistent with `ClassicAPIConfig.timezone` regardless
+    // of the host's zone (no implicit reliance on `Settings.defaultZone`).
+    // The cast is needed because Luxon types `setZone()`'s `.hour` as
+    // `HourNumbers | NaN` (the `NaN` branch fires only for invalid zone
+    // identifiers); `ClassicAPIConfig.timezone` is part of the user's
+    // contract — passing an invalid zone is a configuration error, not
+    // a case the SDK promises to recover from.
+    const resolvedHour =
+      hour ??
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see comment above; trust the user-supplied zone
+      (DateTime.now().setZone(this.api.timezone ?? 'local').hour as Hour)
     return mapResult(
       await this.api.getSignal({
-        postData: { devices: this.#deviceIds, hour },
+        postData: { devices: this.#deviceIds, hour: resolvedHour },
       }),
       (data) => getChartLineOptions(data, this.#deviceNames, 'dBm'),
     )

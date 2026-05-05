@@ -258,6 +258,18 @@ describe('building facade', () => {
     expect(api.getSignal).toHaveBeenCalledWith(expect.any(Object))
   })
 
+  it('calls getSignalStrength with default hour resolved in api timezone', async () => {
+    // No hour passed → default is `DateTime.now().setZone(api.timezone).hour`,
+    // which guarantees the dispatched `hour` is in the configured zone
+    // rather than the host's. Asserting the call shape (any Object) is
+    // enough — the branch coverage check is what matters here.
+    const { api, facade } = createBuildingFacade()
+    const value = okValue(await facade.getSignalStrength())
+
+    expect(value).toHaveProperty('series')
+    expect(api.getSignal).toHaveBeenCalledWith(expect.any(Object))
+  })
+
   it('calls getTiles without selection', async () => {
     const { facade } = createBuildingFacade()
     const value = okValue(await facade.getTiles())
@@ -773,6 +785,16 @@ describe('ata device facade', () => {
   it('calls hourlyTemperatures', async () => {
     const { api, facade } = createAtaFacade()
     const value = okValue(await facade.getHourlyTemperatures(12))
+
+    expect(value).toHaveProperty('series')
+    expect(api.getHourlyTemperatures).toHaveBeenCalledWith(expect.any(Object))
+  })
+
+  it('calls hourlyTemperatures with default hour resolved in api timezone', async () => {
+    // Same rationale as `getSignalStrength`'s default-hour test: covers
+    // the `hour ?? DateTime.now().setZone(...).hour` branch.
+    const { api, facade } = createAtaFacade()
+    const value = okValue(await facade.getHourlyTemperatures())
 
     expect(value).toHaveProperty('series')
     expect(api.getHourlyTemperatures).toHaveBeenCalledWith(expect.any(Object))
