@@ -227,8 +227,15 @@ export abstract class ClassicBaseFacade<
     ClassicFailureData | ClassicSuccessData
   > {
     const isEnabled = to !== undefined
-    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
-    const endDate = isEnabled ? DateTime.fromISO(to) : null
+    // Use the API instance's configured timezone so offset-less ISO
+    // inputs are interpreted in the user's zone (matching the Classic
+    // server's holiday-mode contract). Falls back to `'local'` when no
+    // timezone was configured — equivalent to the previous behaviour
+    // which relied on `Settings.defaultZone` (default `'system'`).
+    const zone = this.api.timezone ?? 'local'
+    const startDate =
+      isEnabled ? DateTime.fromISO(from ?? now(), { zone }) : null
+    const endDate = isEnabled ? DateTime.fromISO(to, { zone }) : null
     return this.api.updateHolidayMode({
       postData: {
         Enabled: isEnabled,

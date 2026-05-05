@@ -49,12 +49,14 @@ const DEFAULT_YEAR = '1970-01-01'
 
 const MS_PER_DAY = 86_400_000
 
-// Use Luxon parsing so offset-less ISO inputs are interpreted in
-// `LuxonSettings.defaultZone` (matching the Classic API's timezone contract),
-// not the host runtime timezone.
+// Differential between two ISO strings: the parse zone cancels out of
+// the subtraction, so `'utc'` is the simplest neutral choice — both
+// sides resolve to the same instant regardless of the user's
+// configured timezone, and we avoid touching `Settings.defaultZone`.
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(
-    (DateTime.fromISO(to).toMillis() - DateTime.fromISO(from).toMillis()) /
+    (DateTime.fromISO(to, { zone: 'utc' }).toMillis() -
+      DateTime.fromISO(from, { zone: 'utc' }).toMillis()) /
       MS_PER_DAY,
   )
 

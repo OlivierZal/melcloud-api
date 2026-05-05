@@ -10,6 +10,7 @@ import markdown from '@eslint/markdown'
 import stylistic from '@stylistic/eslint-plugin'
 import vitest from '@vitest/eslint-plugin'
 import prettier from 'eslint-config-prettier/flat'
+import nodePlugin from 'eslint-plugin-n'
 import perfectionist from 'eslint-plugin-perfectionist'
 import unicorn from 'eslint-plugin-unicorn'
 
@@ -556,6 +557,10 @@ const config = defineConfig([
     files: ['**/*.config.{ts,js}'],
     rules: {
       '@typescript-eslint/naming-convention': 'off',
+      // Plugin namespaces are dictated by the rule names they expose
+      // (e.g. `n/no-unsupported-features/...`), so `plugins: { n }` has
+      // no naming flexibility — disable the length floor here only.
+      'id-length': 'off',
       'import-x/no-default-export': 'off',
       'import-x/prefer-default-export': [
         'error',
@@ -572,7 +577,11 @@ const config = defineConfig([
     rules: {
       'markdown/fenced-code-meta': 'error',
       'markdown/no-bare-urls': 'error',
-      'markdown/no-duplicate-headings': 'error',
+      // CHANGELOG.md (Keep-a-Changelog format) reuses section titles
+      // ('Added', 'Changed', 'Fixed', …) across version blocks — that's
+      // the spec, not a duplication mistake. `checkSiblingsOnly` scopes
+      // the rule to within a parent heading.
+      'markdown/no-duplicate-headings': ['error', { checkSiblingsOnly: true }],
       'markdown/no-html': 'error',
       // Allow GitHub alert syntax (`> [!IMPORTANT]`, `> [!CAUTION]`, …).
       // It's a GitHub UI extension to GFM, not part of the GFM spec, so
@@ -595,6 +604,19 @@ const config = defineConfig([
     files: ['src/facades/classic-flags.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
+    },
+  },
+  {
+    // Engines.node is `>=22` because com.melcloud (consumer) ships on
+    // Homey's bundled Node 22. Hard-fail on any Node-builtin or
+    // Node-API used in `src/` that isn't available on that floor —
+    // catches drift the moment a contributor's local Node is ahead.
+    // Scoped to source only: tests, configs and the build pipeline run
+    // on the developer/CI Node which is not constrained by Homey.
+    files: ['src/**/*.{ts,js}'],
+    plugins: { n: nodePlugin },
+    rules: {
+      'n/no-unsupported-features/node-builtins': ['error', { version: '>=22' }],
     },
   },
   {

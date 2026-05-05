@@ -128,6 +128,32 @@ describe('mELCloud Classic API', () => {
     expect(onSyncComplete).toHaveBeenCalledWith({ type: undefined })
   })
 
+  it('exposes the configured timezone without mutating Settings.defaultZone', async () => {
+    // Multi-instance isolation guard. Two APIs configured with
+    // different IANA zones must each remember their own — and crucially
+    // must NOT touch the process-global `Settings.defaultZone`. A
+    // previous implementation set `Settings.defaultZone = timezone` in
+    // the constructor, leaking timezone state between SDK instances and
+    // any other Luxon consumer in the host process.
+    const { Settings: LuxonSettings } = await import('luxon')
+    // Wrap the lookup in a closure: every call re-reads the global so a
+    // re-assignment of `LuxonSettings.defaultZone` between snapshots
+    // would surface as a name change in the final assertion. A
+    // destructured snapshot would freeze the reference and hide the
+    // very mutation this test is meant to catch.
+    const readDefaultZoneName = (): string => LuxonSettings.defaultZone.name
+    const before = readDefaultZoneName()
+
+    const apiParis = await createApi({ timezone: 'Europe/Paris' })
+    const apiNY = await createApi({ timezone: 'America/New_York' })
+    const apiDefault = await createApi()
+
+    expect(apiParis.timezone).toBe('Europe/Paris')
+    expect(apiNY.timezone).toBe('America/New_York')
+    expect(apiDefault.timezone).toBeUndefined()
+    expect(readDefaultZoneName()).toBe(before)
+  })
+
   it('accepts a disabled sync timer', async () => {
     const api = await melCloudApi.create({
       syncIntervalMinutes: false,

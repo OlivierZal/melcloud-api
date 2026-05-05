@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `ClassicAPI.timezone` getter exposing the IANA timezone the instance was configured with (or `undefined`). The same property is now part of the `ClassicAPIAdapter` interface so facades can interpret offset-less ISO strings (`updateHolidayMode` from/to dates, error-log windows) in the user's zone via `this.api.timezone` instead of relying on `Settings.defaultZone` global state.
+- `isSessionExpired(expiry, aheadMs, zone?)` accepts an optional IANA timezone as third argument. Classic threads its configured `timezone`; Home passes `'utc'` (its tokens are emitted as `Z`-suffixed UTC). The argument is optional and falls back to `'local'` when omitted, so existing callers don't need to change.
+- CI matrix now tests against Node `22`, `24`, `26`, `latest` and `lts/*` explicitly. Node 26 was just released; pinning it (rather than relying on `latest`) guarantees coverage doesn't silently drop when Node 28 ships.
+- `eslint-plugin-n` wired to enforce `n/no-unsupported-features/node-builtins` on `src/**/*.{ts,js}` against `engines.node: '>=22'`. Catches drift the moment a contributor's local Node is ahead of the floor (Homey runs Node 22 — using a Node 24+ API would silently break `com.melcloud`).
+- npm provenance attestation on the `publish` workflow (`npm publish --provenance` + `id-token: write`). Each release now publishes with a verifiable SLSA L2 attestation tying the artifact to the GitHub Actions run that built it.
+
+### Changed
+
+- **`ClassicAPI` no longer mutates `LuxonSettings.defaultZone` in its constructor.** The `timezone` config option is now stored as a private instance field (`#timezone`) and threaded explicitly to every Luxon parse site (`updateHolidayMode`, `getErrorLog`, `needsSessionRefresh`). The previous behaviour silently leaked the configured timezone to **every other Luxon consumer in the same Node process** and clobbered itself when two `ClassicAPI` instances were created with different timezones — including `HomeAPI` instances whose token-expiry parsing happens to use `DateTime.fromISO` without an explicit zone. Behaviour-equivalent for single-instance hosts that didn't configure another Luxon consumer; correct for everyone else.
+
 ## [38.0.1] - 2026-05-01
 
 ### Fixed

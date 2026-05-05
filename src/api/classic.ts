@@ -1,4 +1,4 @@
-import { DateTime, Settings as LuxonSettings } from 'luxon'
+import { DateTime } from 'luxon'
 import { Agent } from 'undici'
 
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
@@ -91,12 +91,10 @@ const formatErrors = (errors: Record<string, readonly string[]>): string =>
     .map(([error, messages]) => `${error}: ${messages.join(', ')}`)
     .join('\n')
 
-const parseErrorLogQuery = ({
-  from,
-  offset = 0,
-  period = 1,
-  to,
-}: ClassicErrorLogQuery): {
+const parseErrorLogQuery = (
+  { from, offset = 0, period = 1, to }: ClassicErrorLogQuery,
+  zone: string | undefined,
+): {
   fromDate: DateTime
   period: number
   toDate: DateTime
@@ -104,10 +102,13 @@ const parseErrorLogQuery = ({
   // When `from` is set the query is pinned to that single day; offset
   // is therefore moot and ignored. Otherwise pages are stacked
   // backwards from `to` in `period`-sized windows.
+  const options = { zone: zone ?? 'local' }
   const fromDateOverride =
-    from !== undefined && from !== '' ? DateTime.fromISO(from) : null
+    from !== undefined && from !== '' ? DateTime.fromISO(from, options) : null
   const toDate =
-    to !== undefined && to !== '' ? DateTime.fromISO(to) : DateTime.now()
+    to !== undefined && to !== '' ?
+      DateTime.fromISO(to, options)
+    : DateTime.now().setZone(options.zone)
   // A page covers `period` days; consecutive pages are separated by a
   // one-day boundary so day N is never returned twice. Each step back
   // therefore moves `period + 1` days, hence the `* (period + 1)`.
@@ -167,9 +168,22 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.#registry
   }
 
+  /**
+   * IANA timezone the instance was configured with, or `undefined`
+   * when the caller didn't pass one. Used by facades to interpret
+   * offset-less ISO strings (e.g. `updateHolidayMode` from/to) in
+   * the user's zone — without mutating any process-global state.
+   * @returns The configured IANA timezone identifier, or `undefined`.
+   */
+  public get timezone(): string | undefined {
+    return this.#timezone
+  }
+
   #language = 'en'
 
   readonly #registry = new ClassicRegistry()
+
+  readonly #timezone: string | undefined
 
   @setting
   private accessor contextKey = ''
@@ -199,9 +213,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       rateLimitHours: DEFAULT_RETRY_HOURS,
       syncCallback: async () => this.fetch(),
     })
-    if (timezone !== undefined) {
-      LuxonSettings.defaultZone = timezone
-    }
+    this.#timezone = timezone
     if (language !== undefined) {
       this.#language = language
     }
@@ -276,7 +288,10 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     query: ClassicErrorLogQuery,
     deviceIds: number[] = this.#registry.getDevices().map(({ id }) => id),
   ): Promise<Result<ClassicErrorLog>> {
-    const { fromDate, period, toDate } = parseErrorLogQuery(query)
+    const { fromDate, period, toDate } = parseErrorLogQuery(
+      query,
+      this.#timezone,
+    )
     const nextToDate = fromDate.minus({ days: 1 })
     return mapResult(
       await this.#getErrorLog(deviceIds, fromDate, toDate),
@@ -288,7 +303,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
               ErrorMessage: errorMessage,
               StartDate: startDate,
             }) => {
-              const dateTime = DateTime.fromISO(startDate)
+              const dateTime = DateTime.fromISO(startDate, {
+                zone: this.#timezone ?? 'local',
+              })
               if (dateTime.year === INVALID_YEAR) {
                 return []
               }
@@ -629,7 +646,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   protected override needsSessionRefresh(): boolean {
     return (
       this.contextKey === '' ||
-      isSessionExpired(this.expiry, SESSION_REFRESH_AHEAD_MS)
+      isSessionExpired(this.expiry, SESSION_REFRESH_AHEAD_MS, this.#timezone)
     )
   }
 

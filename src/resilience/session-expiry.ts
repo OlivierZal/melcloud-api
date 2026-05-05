@@ -18,21 +18,31 @@ import { DateTime } from 'luxon'
  *
  * Uses Luxon `DateTime.fromISO` (not native `Date.parse`) so that ISO
  * strings without an explicit timezone offset — the format the MELCloud
- * Classic server actually returns in `ClassicLoginData.Expiry` — are interpreted
- * in `LuxonSettings.defaultZone`, which Classic configures from
- * `ClassicAPIConfig.timezone`. Native parsing would anchor on the host runtime
- * timezone, shifting the comparison by hours when the deployment timezone
- * differs from the host (e.g. UTC CI runner, Docker container).
+ * Classic server actually returns in `ClassicLoginData.Expiry` — are
+ * interpreted in the caller-supplied `zone`. Classic passes its
+ * configured `ClassicAPIConfig.timezone`, Home passes `'utc'` (the
+ * `/connect/token` flow stamps `expires_in` against UTC). Native
+ * parsing would anchor on the host runtime timezone, shifting the
+ * comparison by hours when the deployment timezone differs from the
+ * host (e.g. UTC CI runner, Docker container).
  * @param expiry - ISO 8601 expiry timestamp (or empty string).
  * @param aheadMs - Consider the session expired `aheadMs` milliseconds
  * before its real expiry (default 0 = real expiry).
+ * @param zone - IANA timezone identifier used to interpret offset-less
+ * ISO strings. When `undefined`, falls back to `'local'` (the host's
+ * system zone) so the result is independent of any process-global
+ * `Settings.defaultZone` state another module might mutate.
  * @returns `true` if the expiry is past (or within `aheadMs`) or cannot be parsed, `false` otherwise.
  */
-export const isSessionExpired = (expiry: string, aheadMs = 0): boolean => {
+export const isSessionExpired = (
+  expiry: string,
+  aheadMs = 0,
+  zone?: string,
+): boolean => {
   if (expiry === '') {
     return false
   }
-  const parsed = DateTime.fromISO(expiry)
+  const parsed = DateTime.fromISO(expiry, { zone: zone ?? 'local' })
   if (!parsed.isValid) {
     return true
   }

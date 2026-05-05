@@ -57,6 +57,13 @@ export interface ClassicAPIAdapter {
    * observer cannot break the caller.
    */
   readonly notifySync: SyncCallback
+  /**
+   * IANA timezone the instance was configured with (or `undefined` when
+   * the caller didn't pass one). Facades read it to interpret offset-less
+   * ISO strings (`updateHolidayMode` from/to dates) in the user's zone
+   * rather than relying on `Settings.defaultZone` global state.
+   */
+  readonly timezone: string | undefined
   /** Fetch all buildings and sync the model registry. */
   readonly fetch: () => Promise<ClassicBuildingWithStructure[]>
   /** Fetch energy consumption report. Supported by ATA and ATW devices. */

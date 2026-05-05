@@ -360,6 +360,7 @@ export const createMockClassicApi = (
       .fn<ClassicAPIAdapter['getValues']>()
       .mockResolvedValue(ok(cast({ EffectiveFlags: 0 }))),
     notifySync: vi.fn<SyncCallback>().mockResolvedValue(),
+    timezone: undefined,
     updateFrostProtection: vi
       .fn<ClassicAPIAdapter['updateFrostProtection']>()
       .mockResolvedValue({ AttributeErrors: null, Success: true }),
