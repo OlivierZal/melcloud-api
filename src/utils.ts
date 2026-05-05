@@ -74,26 +74,20 @@ export const clampToRange = (
 ): number => Math.min(Math.max(value, range.min), range.max)
 
 /**
- * Get the current date/time as an ISO 8601 string without timezone offset.
+ * Current date/time as an ISO 8601 string without offset.
  *
- * The wall-clock numerals are emitted in `zone` (or the host's `'local'`
- * zone when `zone` is omitted). Pass the Classic instance's configured
- * timezone when the resulting string will be re-parsed with that same
- * zone — otherwise the wall clock and the parser disagree and the
- * round-trip drifts by the host-vs-zone offset.
+ * The wall-clock numerals are emitted in `zone`. When the result is
+ * re-parsed with the same zone (the typical use), this round-trip is
+ * stable; emitting in the host zone and re-parsing as another would
+ * drift by the offset.
  *
- * Returns `''` when `zone` is not a recognised Luxon zone identifier
- * (`setZone` produces an invalid DateTime whose `toISO()` is `null`);
- * callers re-parse the result, so a downstream parse failure surfaces
- * the misconfiguration rather than silently using the host's zone.
- * @param zone - Luxon zone identifier (IANA name, `'utc'`, `'local'`,
- * `'system'`, or fixed offset). Defaults to `'local'`.
- * @returns The current date/time as an ISO string without offset, or `''` on invalid zone.
+ * Returns `''` if `zone` is not a recognised Luxon identifier — the
+ * downstream parse fails loudly rather than silently using the host.
+ * @param zone - Luxon zone (IANA, `'utc'`, `'local'`, fixed offset). Defaults to system zone.
+ * @returns ISO string without offset, or `''` on invalid zone.
  */
 export const now = (zone?: string): string =>
-  DateTime.now()
-    .setZone(zone ?? 'local')
-    .toISO({ includeOffset: false }) ?? ''
+  DateTime.now().setZone(zone).toISO({ includeOffset: false }) ?? ''
 
 /**
  * Factory for a type guard that narrows a key to the own keys of `record`.

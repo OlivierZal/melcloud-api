@@ -131,29 +131,24 @@ const config = defineConfig([
       '@typescript-eslint/member-ordering': 'off',
       '@typescript-eslint/naming-convention': [
         'error',
-        // ── Catch-all ────────────────────────────────────────
         {
           format: ['camelCase'],
           leadingUnderscore: 'forbid',
           selector: 'default',
           trailingUnderscore: 'forbid',
         },
-        // ── Variables ────────────────────────────────────────
-        // PascalCase: `as const` enum-like objects.
-        // UPPER_CASE: scalar constants.
+        // PascalCase = `as const` enum-likes; UPPER_CASE = scalar consts.
         {
           format: ['camelCase', 'PascalCase', 'UPPER_CASE'],
           selector: 'variable',
         },
-        // Destructured — we don't control external shapes (API responses, libs).
+        // External shapes (API responses, libs) — don't enforce.
         {
           format: null,
           modifiers: ['destructured'],
           selector: 'variable',
         },
-        // ── Booleans (variables, parameters, class properties) ──
-        // Semantic prefixes make intent obvious at the call site.
-        // `device` is excluded: its type includes `false` as a sentinel but it is not a boolean flag.
+        // `device` excluded: type includes `false` as a sentinel, not a flag.
         {
           filter: { match: false, regex: '^device$' },
           format: ['PascalCase'],
@@ -161,14 +156,11 @@ const config = defineConfig([
           selector: ['variable', 'parameter', 'classProperty'],
           types: ['boolean'],
         },
-        // ── Parameters ───────────────────────────────────────
-        // Leading underscore for intentionally unused params.
         {
           format: ['camelCase'],
           leadingUnderscore: 'allow',
           selector: 'parameter',
         },
-        // ── Functions & methods ──────────────────────────────
         {
           format: ['camelCase'],
           selector: [
@@ -178,19 +170,16 @@ const config = defineConfig([
             'typeMethod',
           ],
         },
-        // ── Properties ───────────────────────────────────────
-        // Permissive: DTOs, API contracts, and serialization use mixed conventions.
+        // DTO/API/serialization conventions vary — permissive.
         {
           format: ['camelCase', 'PascalCase', 'snake_case', 'UPPER_CASE'],
           selector: ['objectLiteralProperty', 'typeProperty'],
         },
-        // Branded types use __brand as a phantom sentinel — universal TS convention.
         {
           filter: { match: true, regex: '^__brand$' },
           format: null,
           selector: 'typeProperty',
         },
-        // Quoted keys ('Content-Type', 'x-api-key', '@scope/pkg') — skip entirely.
         {
           format: null,
           modifiers: ['requiresQuotes'],
@@ -201,18 +190,14 @@ const config = defineConfig([
           leadingUnderscore: 'allow',
           selector: 'classProperty',
         },
-        // ── Imports ──────────────────────────────────────────
         {
           format: ['camelCase', 'PascalCase'],
           selector: 'import',
         },
-        // ── Types, interfaces, classes, enums ────────────────
         {
           format: ['PascalCase'],
           selector: 'typeLike',
         },
-        // ── Type parameters (generics) ───────────────────────
-        // T-prefix: T, TKey, TValue, TResult — universal TS convention.
         {
           format: ['PascalCase'],
           prefix: ['T'],
@@ -557,10 +542,6 @@ const config = defineConfig([
     files: ['**/*.config.{ts,js}'],
     rules: {
       '@typescript-eslint/naming-convention': 'off',
-      // Plugin namespaces are dictated by the rule names they expose
-      // (e.g. `n/no-unsupported-features/...`), so `plugins: { n }` has
-      // no naming flexibility — disable the length floor here only.
-      'id-length': 'off',
       'import-x/no-default-export': 'off',
       'import-x/prefer-default-export': [
         'error',
@@ -577,17 +558,10 @@ const config = defineConfig([
     rules: {
       'markdown/fenced-code-meta': 'error',
       'markdown/no-bare-urls': 'error',
-      // CHANGELOG.md (Keep-a-Changelog format) reuses section titles
-      // ('Added', 'Changed', 'Fixed', …) across version blocks — that's
-      // the spec, not a duplication mistake. `checkSiblingsOnly` scopes
-      // the rule to within a parent heading.
+      // Keep-a-Changelog reuses 'Added'/'Changed'/'Fixed' across versions.
       'markdown/no-duplicate-headings': ['error', { checkSiblingsOnly: true }],
       'markdown/no-html': 'error',
-      // Allow GitHub alert syntax (`> [!IMPORTANT]`, `> [!CAUTION]`, …).
-      // It's a GitHub UI extension to GFM, not part of the GFM spec, so
-      // the rule's parser sees the bracketed marker as a missing
-      // reference label. The plugin exposes `allowLabels` for exactly
-      // this case (see eslint/markdown PR #256).
+      // GitHub alerts (`> [!IMPORTANT]`) are GFM extensions the parser sees as missing refs.
       'markdown/no-missing-label-refs': [
         'error',
         {
@@ -597,25 +571,20 @@ const config = defineConfig([
     },
   },
   {
-    // Bitfield enumeration: `EffectiveFlags` hex values are the file's
-    // entire purpose. `no-magic-numbers` would flag every entry, and
-    // `ignoreNumericLiteralTypes` does not cover literal types nested
-    // inside object type annotations (typescript-eslint rule limitation).
+    // Bitfield hex values are the file's entire purpose.
     files: ['src/facades/classic-flags.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
     },
   },
   {
-    // Engines.node is `>=22` because com.melcloud (consumer) ships on
-    // Homey's bundled Node 22. Hard-fail on any Node-builtin or
-    // Node-API used in `src/` that isn't available on that floor —
-    // catches drift the moment a contributor's local Node is ahead.
-    // Scoped to source only: tests, configs and the build pipeline run
-    // on the developer/CI Node which is not constrained by Homey.
+    // Floor (`>=22`) is set by com.melcloud → Homey's bundled Node.
+    // Source only — tests/configs run on the dev/CI Node, not Homey's.
     files: ['src/**/*.{ts,js}'],
+    // eslint-disable-next-line id-length -- plugin namespace `n` is fixed by the rule names (`n/...`)
     plugins: { n: nodePlugin },
     rules: {
+      'n/no-deprecated-api': 'error',
       'n/no-unsupported-features/node-builtins': ['error', { version: '>=22' }],
     },
   },

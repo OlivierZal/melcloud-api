@@ -44,15 +44,12 @@ import type {
 } from './report-types.ts'
 import { ClassicBaseFacade } from './classic-base.ts'
 
-// Unix epoch as fallback for open-ended report queries
+// Fallback for open-ended report queries.
 const DEFAULT_YEAR = '1970-01-01'
 
 const MS_PER_DAY = 86_400_000
 
-// Differential between two ISO strings: the parse zone cancels out of
-// the subtraction, so `'utc'` is the simplest neutral choice — both
-// sides resolve to the same instant regardless of the user's
-// configured timezone, and we avoid touching `Settings.defaultZone`.
+// Differential — the parse zone cancels out, `'utc'` is the neutral pick.
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
   Math.ceil(
     (DateTime.fromISO(to, { zone: 'utc' }).toMillis() -
@@ -205,13 +202,10 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public async getHourlyTemperatures(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    // Resolve the default in the instance's configured zone — same
-    // rationale (and same trust-the-user-supplied-zone caveat) as
-    // `getSignalStrength`.
     const resolvedHour =
       hour ??
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ClassicAPIConfig.timezone is a user-supplied Luxon zone; an invalid zone here is a configuration error, not an SDK responsibility
-      (DateTime.now().setZone(this.api.timezone ?? 'local').hour as Hour)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see getSignalStrength
+      (DateTime.now().setZone(this.api.timezone).hour as Hour)
     return mapResult(
       await this.api.getHourlyTemperatures({
         postData: { device: this.id, hour: resolvedHour },
@@ -295,9 +289,6 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     { from = DEFAULT_YEAR, to }: ReportQuery = {},
     shouldUseExactRange = false,
   ): ClassicReportPostData {
-    // Default `to` to the current wall clock in the instance's zone so
-    // open-ended report windows match `ClassicAPIConfig.timezone` — same
-    // pattern as `updateHolidayMode`'s `from ?? now(zone)`.
     const resolvedTo = to ?? now(this.api.timezone)
     return {
       DeviceID: this.id,

@@ -57,16 +57,7 @@ export interface ClassicAPIAdapter {
    * observer cannot break the caller.
    */
   readonly notifySync: SyncCallback
-  /**
-   * Luxon zone identifier the instance was configured with (typically an
-   * IANA name like `'Europe/Paris'`, but Luxon also accepts `'utc'`,
-   * `'local'`, `'system'`, fixed offsets `'UTC+5'`, or a `Zone`
-   * instance). Optional so existing custom adapters / test doubles
-   * remain source-compatible without having to declare it. Facades read
-   * it to interpret offset-less ISO strings (`updateHolidayMode`
-   * from/to dates) in the user's zone rather than relying on
-   * `Settings.defaultZone` global state.
-   */
+  /** Luxon zone read by facades to interpret offset-less ISO strings in the user's zone. */
   readonly timezone?: string
   /** Fetch all buildings and sync the model registry. */
   readonly fetch: () => Promise<ClassicBuildingWithStructure[]>

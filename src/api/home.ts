@@ -356,11 +356,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @returns `true` when a refresh should run before the next request.
    */
   protected override needsSessionRefresh(): boolean {
-    // Home tokens originate from `new Date(...).toISOString()` (cf.
-    // `#storeTokens`), which always emits a `Z`-suffixed UTC string —
-    // the parser would honour the offset regardless of `zone`. Passing
-    // `'utc'` explicitly is defence-in-depth in case a custom storage
-    // layer round-trips the value through a non-ISO-aware path.
     return isSessionExpired(this.expiry, SESSION_REFRESH_AHEAD_MS, 'utc')
   }
 
