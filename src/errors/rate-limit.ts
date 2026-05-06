@@ -17,6 +17,9 @@ export class RateLimitError extends APIError {
   public readonly unblockAt: Temporal.Instant | null
 
   /**
+   * Build a `RateLimitError` from the message and rate-limit window
+   * metadata. Both `retryAfter` and `unblockAt` may be `null` when the
+   * upstream supplies no window.
    * @param message - Human-readable error description.
    * @param options - Rate-limit window metadata plus optional cause.
    * @param options.retryAfter - Duration until retry is allowed, or `null`.
