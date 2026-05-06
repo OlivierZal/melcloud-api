@@ -56,7 +56,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "luxon": "^3.7.2",
+    "temporal-polyfill": "^0.3.2",
     "tough-cookie": "^6.0.1",
     "undici": "^8.2.0",
     "zod": "^4.4.2"
@@ -66,7 +66,6 @@
     "@eslint/markdown": "^8.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@swc/core": "^1.15.33",
-    "@types/luxon": "^3.7.1",
     "@types/node": "^25.6.0",
     "@typescript/native-preview": "^7.0.0-dev.20260503.1",
     "@vitest/coverage-v8": "^4.1.5",

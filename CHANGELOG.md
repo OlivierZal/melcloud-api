@@ -6,17 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Breaking
+
+- **Luxon replaced by [`temporal-polyfill`](https://github.com/fullcalendar/temporal-polyfill).** Public types that previously exposed `Duration`/`DateTime` from Luxon now expose `Temporal.Duration` / `Temporal.Instant`. Affected surface:
+  - `RateLimitError.retryAfter: Temporal.Duration | null` (was `Duration | null`)
+  - `RateLimitError.unblockAt: Temporal.Instant | null` (was `DateTime | null`)
+  - `RateLimitGate.remaining: Temporal.Duration | null`
+  - `RateLimitGate.unblockAt: Temporal.Instant | null`
+  - `RateLimitGate.snapshot()` — same migration on `remaining` and `unblockAt`
+  - `RateLimitGate` constructor now takes `Temporal.DurationLike` (time units only — `hours`, `minutes`, `seconds`, `milliseconds` — calendar units throw at runtime since `Instant` has no calendar context)
+    Migrations: `dur.toMillis()` → `dur.total({ unit: 'milliseconds' })`, `dur.as('seconds')` → `dur.total({ unit: 'seconds' })`, `dt.toUTC().toISO()` → `instant.toString()`. The polyfill is a no-op on Node 26+ once Homey ships it (Temporal becomes native), so no second migration is needed.
+- **`LuxonSettings.defaultLocale = 'fr'` is no longer honoured.** The lib now exposes `setDefaultLocale(locale: string | null)` from `src/utils.ts` for the same purpose. Migration: replace any `LuxonSettings.defaultLocale = 'X'` in `com.melcloud` with `setDefaultLocale('X')`.
+- **`RateLimitGate.formatRemaining()` is English-only.** Luxon's `Duration.toHuman()` was localised; Temporal has no built-in equivalent until `Intl.DurationFormat` lands natively (Stage 3, partial Node 24+ support). The output format is unchanged for English (`"20 seconds"`, `"2 minutes, 15 seconds"`); other locales now render in English.
+
 ### Added
 
-- `ClassicAPI.timezone` getter and matching optional field on `ClassicAPIAdapter`, exposing the configured Luxon zone (or `undefined`) so facades parse offset-less ISO strings in the user's zone instead of reading `Settings.defaultZone` global state.
-- `isSessionExpired` and `now` accept an optional `zone` argument; both fall through to Luxon's system-zone default when omitted, so existing callers don't change.
-- CI matrix pins Node `22`, `24`, `26` explicitly (alongside `latest` and `lts/*`) so coverage doesn't silently drop when `latest` rolls forward.
+- `ClassicAPI.timezone` getter and matching optional field on `ClassicAPIAdapter`, exposing the configured zone (or `undefined`) so facades parse offset-less ISO strings in the user's zone instead of reading any process-global state.
+- `isSessionExpired` and `now` accept an optional `zone` argument.
+- `setDefaultLocale(locale)` in `src/utils.ts` — replacement for the previously-implicit `LuxonSettings.defaultLocale` channel used by report-label formatters.
+- CI matrix pins Node `22`, `24`, `26` explicitly so coverage doesn't drop silently when `latest` rolls forward.
 - `eslint-plugin-n` enforces `n/no-unsupported-features/node-builtins` and `n/no-deprecated-api` on `src/**/*.{ts,js}` against `engines.node: '>=22'` — the floor `com.melcloud` ships on.
 
 ### Changed
 
-- **`ClassicAPI` no longer mutates `LuxonSettings.defaultZone`.** The `timezone` config is stored per-instance and threaded to every Luxon parse site. Previously leaked across all Luxon consumers in the process and clobbered between concurrent `ClassicAPI` instances. Behaviour-equivalent for single-instance hosts; correct for everyone else.
-- `getSignalStrength(hour?)`, `getHourlyTemperatures(hour?)` — `hour` is now optional. The default resolves in the instance's zone instead of the host's, matching the new explicit-timezone contract.
+- **`ClassicAPI` no longer mutates any process-global timezone state.** The `timezone` config is stored per-instance and threaded to every parse site. Previous Luxon-based implementation set `Settings.defaultZone = timezone`, leaking across all Luxon consumers in the process and clobbering between concurrent `ClassicAPI` instances.
+- `getSignalStrength(hour?)`, `getHourlyTemperatures(hour?)` — `hour` is now optional. The default resolves in the instance's zone instead of the host's.
+
+### Removed
+
+- `luxon` and `@types/luxon` runtime/dev dependencies. Replaced by `temporal-polyfill` (~30 KB minified vs Luxon's ~70 KB). When Homey ships Node 26+, the polyfill no-ops in favour of native `globalThis.Temporal` without further code changes.
 
 ## [38.0.1] - 2026-05-01
 

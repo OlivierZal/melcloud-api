@@ -27,10 +27,10 @@ describe(RateLimitGate, () => {
 
     expect(gate.isPaused).toBe(true)
     // Use Luxon's millisecond conversion, accounting for slight drift.
-    expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
-    expect(gate.remaining?.as('hours')).toBeLessThanOrEqual(2)
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeLessThanOrEqual(2)
     // Absolute unblock time is 2 hours after the fixed system time.
-    expect(gate.unblockAt?.toUTC().toISO()).toBe('2026-04-11T14:00:00.000Z')
+    expect(gate.unblockAt?.toString()).toBe('2026-04-11T14:00:00Z')
   })
 
   it('honors a numeric Retry-After header (seconds)', () => {
@@ -39,8 +39,8 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit(30)
 
     expect(gate.isPaused).toBe(true)
-    expect(gate.remaining?.as('seconds')).toBeGreaterThan(29)
-    expect(gate.remaining?.as('seconds')).toBeLessThanOrEqual(30)
+    expect(gate.remaining?.total({ unit: 'seconds' })).toBeGreaterThan(29)
+    expect(gate.remaining?.total({ unit: 'seconds' })).toBeLessThanOrEqual(30)
   })
 
   it('honors a string Retry-After header (seconds)', () => {
@@ -49,7 +49,7 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit('45')
 
     expect(gate.isPaused).toBe(true)
-    expect(gate.remaining?.as('seconds')).toBeGreaterThan(44)
+    expect(gate.remaining?.total({ unit: 'seconds' })).toBeGreaterThan(44)
   })
 
   it('falls back when Retry-After is non-numeric', () => {
@@ -58,7 +58,7 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit('not-a-number')
 
     expect(gate.isPaused).toBe(true)
-    expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
   })
 
   it('falls back when Retry-After is zero or negative', () => {
@@ -66,11 +66,11 @@ describe(RateLimitGate, () => {
 
     gate.recordRateLimit(0)
 
-    expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
 
     gate.recordRateLimit(-5)
 
-    expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
   })
 
   it('re-opens automatically after the window elapses', () => {
@@ -111,7 +111,7 @@ describe(RateLimitGate, () => {
     expect(snap.isPaused).toBe(true)
     expect(snap.remaining).not.toBeNull()
     expect(snap.unblockAt).not.toBeNull()
-    expect(snap.unblockAt?.toUTC().toISO()).toBe('2026-04-11T14:00:00.000Z')
+    expect(snap.unblockAt?.toString()).toBe('2026-04-11T14:00:00Z')
   })
 
   it('snapshot() returns all nulls when open', () => {

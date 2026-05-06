@@ -1,4 +1,4 @@
-import { Duration } from 'luxon'
+import { Temporal } from 'temporal-polyfill'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter, SyncCallback } from '../../src/api/index.ts'
@@ -462,7 +462,7 @@ describe(classifyError, () => {
     },
     {
       error: new RateLimitError('paused', {
-        retryAfter: Duration.fromMillis(5000),
+        retryAfter: Temporal.Duration.from({ milliseconds: 5000 }),
         unblockAt: null,
       }),
       expected: { kind: 'rate-limited', retryAfterMs: 5000 } as const,

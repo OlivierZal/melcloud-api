@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'
+import { Temporal } from 'temporal-polyfill'
 
 import type {
   HomeAtaValues,
@@ -39,25 +39,25 @@ const parseUser = (data: HomeContext): HomeUser => ({
   sub: data.id,
 })
 
-// `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros
-// (e.g. `2026-04-19T00:00:00.0000000`). Anything shorter is silently
-// truncated to an empty window by the BFF.
-//
-// Parse with `{ zone: 'utc' }` so offset-less inputs (e.g. `'2026-03-01'`)
-// are read as UTC rather than being re-interpreted through the host's
-// local timezone — otherwise the formatted output drifts by the host's
-// current offset.
-const toReportDate = (iso: string): string =>
-  DateTime.fromISO(iso, { zone: 'utc' }).toFormat(
-    "yyyy-MM-dd'T'HH:mm:ss'.0000000'",
-  )
+// Offset-bearing inputs are converted to UTC; offset-less are read as-is.
+const parseAsUTC = (iso: string): Temporal.PlainDateTime => {
+  try {
+    return Temporal.Instant.from(iso)
+      .toZonedDateTimeISO('UTC')
+      .toPlainDateTime()
+  } catch {
+    return Temporal.PlainDateTime.from(iso)
+  }
+}
 
-// `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
-// space and no seconds. Seconds or an ISO `T` separator produce an empty
-// payload rather than an error. Same UTC-parse rationale as
-// {@link toReportDate}.
+// `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros;
+// shorter input is silently truncated to an empty window by the BFF.
+const toReportDate = (iso: string): string =>
+  `${parseAsUTC(iso).toString({ smallestUnit: 'seconds' })}.0000000`
+
+// `/telemetry/telemetry/{energy,actual}` expects `YYYY-MM-DD HH:MM` (space, no seconds).
 const toTelemetryDate = (iso: string): string =>
-  DateTime.fromISO(iso, { zone: 'utc' }).toFormat('yyyy-MM-dd HH:mm')
+  parseAsUTC(iso).toString({ smallestUnit: 'minutes' }).replace('T', ' ')
 
 /**
  * MELCloud Home API client using the mobile BFF at

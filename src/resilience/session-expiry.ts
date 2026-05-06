@@ -1,19 +1,33 @@
-import { DateTime } from 'luxon'
+import { Temporal } from 'temporal-polyfill'
+
+const parseExpiry = (
+  expiry: string,
+  zone: string | undefined,
+): Temporal.Instant | null => {
+  try {
+    return Temporal.Instant.from(expiry)
+  } catch {
+    try {
+      return Temporal.PlainDateTime.from(expiry)
+        .toZonedDateTime(zone ?? Temporal.Now.timeZoneId())
+        .toInstant()
+    } catch {
+      return null
+    }
+  }
+}
 
 /**
  * Whether an ISO 8601 expiry has passed (or is unparseable).
  *
  * Empty string → `false` (no expiry recorded). Malformed → `true`
- * (defensive: forces re-auth rather than trusting stale state). Pass
- * `aheadMs > 0` for pre-emptive refresh.
+ * (defensive: forces re-auth). Pass `aheadMs > 0` for pre-emptive refresh.
  *
- * `zone` interprets offset-less ISO strings — Classic's `Expiry`
- * field has no offset, so the host TZ would otherwise shift the
- * comparison. Home's tokens are `Z`-suffixed and `zone` is honoured
- * but redundant.
+ * `zone` interprets offset-less inputs (Classic's `Expiry` is offset-less).
+ * Home's tokens are `Z`-suffixed and `zone` is ignored.
  * @param expiry - ISO 8601 timestamp (or empty string).
  * @param aheadMs - Pre-empt expiry by this many milliseconds.
- * @param zone - Luxon zone (IANA, `'utc'`, `'local'`, fixed offset). Defaults to system zone.
+ * @param zone - IANA zone identifier. Defaults to system zone.
  * @returns `true` if past (or within `aheadMs`) or unparseable.
  */
 export const isSessionExpired = (
@@ -24,10 +38,10 @@ export const isSessionExpired = (
   if (expiry === '') {
     return false
   }
-  const parsed = DateTime.fromISO(expiry, { zone })
-  if (!parsed.isValid) {
+  const parsed = parseExpiry(expiry, zone)
+  if (parsed === null) {
     return true
   }
-  const threshold = DateTime.now().plus({ milliseconds: aheadMs })
-  return parsed < threshold
+  const threshold = Temporal.Now.instant().add({ milliseconds: aheadMs })
+  return Temporal.Instant.compare(parsed, threshold) < 0
 }

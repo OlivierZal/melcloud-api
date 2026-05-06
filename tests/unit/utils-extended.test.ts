@@ -1,4 +1,4 @@
-import { DateTime, Settings as LuxonSettings } from 'luxon'
+import { Temporal } from 'temporal-polyfill'
 import { describe, expect, it } from 'vitest'
 
 import type {
@@ -10,6 +10,7 @@ import {
   getChartLineOptions,
   getChartPieOptions,
   now,
+  setDefaultLocale,
 } from '../../src/utils.ts'
 
 describe.concurrent(now, () => {
@@ -18,7 +19,7 @@ describe.concurrent(now, () => {
 
     expect(result).not.toContain('+')
     expect(result).not.toContain('Z')
-    expect(() => DateTime.fromISO(result)).not.toThrow()
+    expect(() => Temporal.PlainDateTime.from(result)).not.toThrow()
   })
 
   it('emits the wall clock in the requested zone', () => {
@@ -26,15 +27,10 @@ describe.concurrent(now, () => {
 
     expect(result).not.toContain('+')
     expect(result).not.toContain('Z')
-    // Re-parsing with the same zone must succeed (no drift round-trip).
-    expect(DateTime.fromISO(result, { zone: 'Europe/Paris' }).isValid).toBe(
-      true,
-    )
+    expect(() => Temporal.PlainDateTime.from(result)).not.toThrow()
   })
 
   it('returns an empty string for an unrecognised zone', () => {
-    // setZone returns an invalid DateTime; the helper surfaces the
-    // misconfiguration as `''` rather than silently falling back to host.
     expect(now('NotAZone/AtAll')).toBe('')
   })
 })
@@ -69,7 +65,7 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   })
 
   it('formats day_of_week labels', () => {
-    LuxonSettings.defaultLocale = 'en'
+    setDefaultLocale('en')
     const data = {
       ...baseReportData,
       Labels: ['1', '2', '3'],
@@ -82,7 +78,7 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   })
 
   it('formats month labels', () => {
-    LuxonSettings.defaultLocale = 'en'
+    setDefaultLocale('en')
     const data = {
       ...baseReportData,
       Labels: ['1', '6', '12'],
@@ -96,7 +92,7 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   })
 
   it('formats month_of_year labels', () => {
-    LuxonSettings.defaultLocale = 'en'
+    setDefaultLocale('en')
     const data = {
       ...baseReportData,
       Labels: ['202401', '202412'],
@@ -180,26 +176,20 @@ describe.concurrent(getChartPieOptions, () => {
 })
 
 describe('formatLabels with unset defaultLocale', () => {
-  it('falls back to system locale when LuxonSettings.defaultLocale is null', () => {
-    const { defaultLocale: originalLocale } = LuxonSettings
-    try {
-      // Luxon types defaultLocale as `string` but null is the unset sentinel
-      ;(LuxonSettings as { defaultLocale: string | null }).defaultLocale = null
-      const data: ClassicReportData = {
-        Data: [[1]],
-        FromDate: '2024-01-01',
-        Labels: ['1'],
-        LabelType: ClassicLabelType.month,
-        Points: 1,
-        Series: 1,
-        ToDate: '2024-01-02',
-      }
-      const result = getChartLineOptions(data, ['Series 1'], 'unit')
-
-      expect(result.labels).toHaveLength(1)
-      expect(result.labels[0]).toBeDefined()
-    } finally {
-      LuxonSettings.defaultLocale = originalLocale
+  it('falls back to host Intl default when defaultLocale is null', () => {
+    setDefaultLocale(null)
+    const data: ClassicReportData = {
+      Data: [[1]],
+      FromDate: '2024-01-01',
+      Labels: ['1'],
+      LabelType: ClassicLabelType.month,
+      Points: 1,
+      Series: 1,
+      ToDate: '2024-01-02',
     }
+    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+
+    expect(result.labels).toHaveLength(1)
+    expect(result.labels[0]).toBeDefined()
   })
 })

@@ -1,4 +1,4 @@
-import { DateTime, Settings as LuxonSettings } from 'luxon'
+import { Temporal } from 'temporal-polyfill'
 
 import type {
   ReportChartLineOptions,
@@ -23,30 +23,35 @@ const MONTH_NAME_BASE_YEAR = 2024
 
 interface LabelFormatterCache {
   readonly dayOfWeek: Intl.DateTimeFormat
-  readonly locale: string | null | undefined
+  readonly locale: string | null
   readonly month: Intl.DateTimeFormat
 }
 
 let formatterCache: LabelFormatterCache | null = null
 
-// Luxon types defaultLocale as `string` but emits `null` at runtime when unset; widen at the boundary.
-const getDefaultLocale = (): string | null | undefined =>
-  LuxonSettings.defaultLocale
+let defaultLocale: string | null = null
 
-// Tracks LuxonSettings.defaultLocale so output stays consistent with the rest
-// of the codebase's datetime formatting without re-creating Intl.DateTimeFormat per call.
+/**
+ * Override the locale used by report-label formatters (replaces Luxon's
+ * `Settings.defaultLocale`). Pass `null` to clear and fall back to the host's
+ * `Intl` default.
+ * @param locale - BCP-47 locale tag, or `null` to clear.
+ */
+export const setDefaultLocale = (locale: string | null): void => {
+  defaultLocale = locale
+}
+
 const getLabelFormatters = (): LabelFormatterCache => {
-  const locale = getDefaultLocale()
-  if (formatterCache !== null && formatterCache.locale === locale) {
+  if (formatterCache !== null && formatterCache.locale === defaultLocale) {
     return formatterCache
   }
-  const base = locale ?? undefined
+  const base = defaultLocale ?? undefined
   const cache: LabelFormatterCache = {
     dayOfWeek: new Intl.DateTimeFormat(base, {
       timeZone: 'UTC',
       weekday: 'short',
     }),
-    locale,
+    locale: defaultLocale,
     month: new Intl.DateTimeFormat(base, {
       month: 'short',
       timeZone: 'UTC',
@@ -76,18 +81,20 @@ export const clampToRange = (
 /**
  * Current date/time as an ISO 8601 string without offset.
  *
- * The wall-clock numerals are emitted in `zone`. When the result is
- * re-parsed with the same zone (the typical use), this round-trip is
- * stable; emitting in the host zone and re-parsing as another would
- * drift by the offset.
- *
- * Returns `''` if `zone` is not a recognised Luxon identifier — the
- * downstream parse fails loudly rather than silently using the host.
- * @param zone - Luxon zone (IANA, `'utc'`, `'local'`, fixed offset). Defaults to system zone.
+ * Returns `''` if `zone` is not a recognised IANA identifier — `Temporal.Now`
+ * throws on invalid zones; surfacing `''` lets the downstream parse fail loudly.
+ * @param zone - IANA zone identifier. Defaults to system zone.
  * @returns ISO string without offset, or `''` on invalid zone.
  */
-export const now = (zone?: string): string =>
-  DateTime.now().setZone(zone).toISO({ includeOffset: false }) ?? ''
+export const now = (zone?: string): string => {
+  try {
+    return Temporal.Now.plainDateTimeISO(zone).toString({
+      fractionalSecondDigits: 3,
+    })
+  } catch {
+    return ''
+  }
+}
 
 /**
  * Factory for a type guard that narrows a key to the own keys of `record`.

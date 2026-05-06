@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'
+import { Temporal } from 'temporal-polyfill'
 
 import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import {
@@ -49,13 +49,13 @@ const DEFAULT_YEAR = '1970-01-01'
 
 const MS_PER_DAY = 86_400_000
 
-// Differential — the parse zone cancels out, `'utc'` is the neutral pick.
+// Differential — anchor both sides to UTC so the offset cancels out.
+const toEpochMs = (iso: string): number =>
+  Temporal.PlainDateTime.from(iso).toZonedDateTime('UTC').toInstant()
+    .epochMilliseconds
+
 const getDuration = ({ from, to }: Required<ReportQuery>): number =>
-  Math.ceil(
-    (DateTime.fromISO(to, { zone: 'utc' }).toMillis() -
-      DateTime.fromISO(from, { zone: 'utc' }).toMillis()) /
-      MS_PER_DAY,
-  )
+  Math.ceil((toEpochMs(to) - toEpochMs(from)) / MS_PER_DAY)
 
 /**
  * Abstract base for device-specific facades. Handles device data access, report generation,
@@ -205,7 +205,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     const resolvedHour =
       hour ??
       // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- see getSignalStrength
-      (DateTime.now().setZone(this.api.timezone).hour as Hour)
+      (Temporal.Now.zonedDateTimeISO(this.api.timezone).hour as Hour)
     return mapResult(
       await this.api.getHourlyTemperatures({
         postData: { device: this.id, hour: resolvedHour },

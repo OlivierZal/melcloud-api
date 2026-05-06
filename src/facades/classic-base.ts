@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'
+import { Temporal } from 'temporal-polyfill'
 
 import type {
   ClassicAPIAdapter,
@@ -79,7 +79,7 @@ const TEMPERATURE_GAP = 2
 const temperatureRange = { max: 16, min: 4 }
 
 const getDateTimeComponents = (
-  date: DateTime | null,
+  date: Temporal.PlainDateTime | null,
 ): ClassicDateTimeComponents =>
   date ?
     {
@@ -229,12 +229,9 @@ export abstract class ClassicBaseFacade<
     const isEnabled = to !== undefined
     const startDate =
       isEnabled ?
-        DateTime.fromISO(from ?? now(this.api.timezone), {
-          zone: this.api.timezone,
-        })
+        Temporal.PlainDateTime.from(from ?? now(this.api.timezone))
       : null
-    const endDate =
-      isEnabled ? DateTime.fromISO(to, { zone: this.api.timezone }) : null
+    const endDate = isEnabled ? Temporal.PlainDateTime.from(to) : null
     return this.api.updateHolidayMode({
       postData: {
         Enabled: isEnabled,
@@ -285,8 +282,8 @@ export abstract class ClassicBaseFacade<
   ): Promise<Result<ReportChartLineOptions>> {
     const resolvedHour =
       hour ??
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- setZone widens to DateTime<boolean>, so `.hour` is HourNumbers | NaN; an invalid configured zone is a user contract error
-      (DateTime.now().setZone(this.api.timezone).hour as Hour)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Temporal.Now.zonedDateTimeISO.hour is `number`; narrowing to Hour assumes a valid IANA zone (user contract)
+      (Temporal.Now.zonedDateTimeISO(this.api.timezone).hour as Hour)
     return mapResult(
       await this.api.getSignal({
         postData: { devices: this.#deviceIds, hour: resolvedHour },

@@ -1,4 +1,4 @@
-import { DateTime } from 'luxon'
+import { Temporal } from 'temporal-polyfill'
 import { Agent } from 'undici'
 
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
@@ -74,16 +74,6 @@ const DEFAULT_SYNC_INTERVAL_MINUTES = 5
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
 
-const toISODate = (dateTime: DateTime): string => {
-  const result = dateTime.toISODate()
-
-  if (result === null) {
-    throw new Error('Invalid DateTime: cannot convert to ISO date')
-  }
-
-  return result
-}
-
 const isLanguage = isKeyOf(ClassicLanguage)
 
 const formatErrors = (errors: Record<string, readonly string[]>): string =>
@@ -95,28 +85,27 @@ const parseErrorLogQuery = (
   { from, offset = 0, period = 1, to }: ClassicErrorLogQuery,
   zone: string | undefined,
 ): {
-  fromDate: DateTime
+  fromDate: Temporal.PlainDate
   period: number
-  toDate: DateTime
+  toDate: Temporal.PlainDate
 } => {
   // When `from` is set the query is pinned to that single day; offset
   // is therefore moot and ignored. Otherwise pages are stacked
   // backwards from `to` in `period`-sized windows.
-  const options = { zone: zone ?? 'local' }
   const fromDateOverride =
-    from !== undefined && from !== '' ? DateTime.fromISO(from, options) : null
+    from !== undefined && from !== '' ? Temporal.PlainDate.from(from) : null
   const toDate =
     to !== undefined && to !== '' ?
-      DateTime.fromISO(to, options)
-    : DateTime.now().setZone(options.zone)
+      Temporal.PlainDate.from(to)
+    : Temporal.Now.plainDateISO(zone)
   // A page covers `period` days; consecutive pages are separated by a
   // one-day boundary so day N is never returned twice. Each step back
   // therefore moves `period + 1` days, hence the `* (period + 1)`.
   const daysBack = fromDateOverride ? 0 : offset * (period + 1)
   return {
-    fromDate: fromDateOverride ?? toDate.minus({ days: daysBack + period }),
+    fromDate: fromDateOverride ?? toDate.subtract({ days: daysBack + period }),
     period,
-    toDate: toDate.minus({ days: daysBack }),
+    toDate: toDate.subtract({ days: daysBack }),
   }
 }
 
@@ -292,7 +281,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       query,
       this.#timezone,
     )
-    const nextToDate = fromDate.minus({ days: 1 })
+    const nextToDate = fromDate.subtract({ days: 1 })
     return mapResult(
       await this.#getErrorLog(deviceIds, fromDate, toDate),
       (errorLog) => ({
@@ -303,10 +292,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
               ErrorMessage: errorMessage,
               StartDate: startDate,
             }) => {
-              const dateTime = DateTime.fromISO(startDate, {
-                zone: this.#timezone ?? 'local',
-              })
-              if (dateTime.year === INVALID_YEAR) {
+              if (Temporal.PlainDate.from(startDate).year === INVALID_YEAR) {
                 return []
               }
               const error = errorMessage?.trim() ?? ''
@@ -316,9 +302,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
             },
           )
           .toReversed(),
-        fromDate: toISODate(fromDate),
-        nextFromDate: toISODate(nextToDate.minus({ days: period })),
-        nextToDate: toISODate(nextToDate),
+        fromDate: fromDate.toString(),
+        nextFromDate: nextToDate.subtract({ days: period }).toString(),
+        nextToDate: nextToDate.toString(),
       }),
     )
   }
@@ -711,14 +697,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   async #getErrorLog(
     deviceIds: number[],
-    fromDate: DateTime,
-    toDate: DateTime,
+    fromDate: Temporal.PlainDate,
+    toDate: Temporal.PlainDate,
   ): Promise<Result<ClassicErrorLogData[]>> {
     const result = await this.getErrorEntries({
       postData: {
         DeviceIDs: deviceIds.map((id) => toClassicDeviceId(id)),
-        FromDate: toISODate(fromDate),
-        ToDate: toISODate(toDate),
+        FromDate: fromDate.toString(),
+        ToDate: toDate.toString(),
       },
     })
     if (!result.ok) {

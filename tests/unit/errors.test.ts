@@ -1,4 +1,4 @@
-import { DateTime, Duration } from 'luxon'
+import { Temporal } from 'temporal-polyfill'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -37,14 +37,14 @@ describe.concurrent('apiError hierarchy', () => {
   })
 
   it('rateLimitError carries the retryAfter duration and unblockAt time', () => {
-    const retryAfter = Duration.fromObject({ seconds: 30 })
-    const unblockAt = DateTime.fromISO('2026-01-01T12:30:00Z')
+    const retryAfter = Temporal.Duration.from({ seconds: 30 })
+    const unblockAt = Temporal.Instant.from('2026-01-01T12:30:00Z')
     const error = new RateLimitError('throttled', { retryAfter, unblockAt })
 
     expect(error).toBeInstanceOf(RateLimitError)
     expect(error).toBeInstanceOf(APIError)
-    expect(error.retryAfter?.as('seconds')).toBe(30)
-    expect(error.unblockAt?.toISO()).toBe(unblockAt.toISO())
+    expect(error.retryAfter?.total({ unit: 'seconds' })).toBe(30)
+    expect(error.unblockAt?.toString()).toBe(unblockAt.toString())
     expect(error.name).toBe('RateLimitError')
   })
 
