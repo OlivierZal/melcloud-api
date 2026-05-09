@@ -208,6 +208,7 @@ export {
   ClassicFacadeManager,
   HomeDeviceAtaFacade,
   HomeDeviceAtwFacade,
+  HomeDeviceFacadeBase,
   HomeFacadeManager,
   hasClassicZone2,
   isClassicAtaFacade,

@@ -193,15 +193,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     id: string,
     params: { from: string; period: string; to: string },
   ): Promise<Result<HomeReportData[]>> {
-    return this.safeRequest('get', '/report/v1/comfort-graph', {
-      params: {
-        from: toReportDate(params.from),
-        period: params.period,
-        to: toReportDate(params.to),
-        unitId: id,
-      },
-      schema: HomeReportDataSchema.array(),
-    })
+    return this.#fetchReport('/report/v1/comfort-graph', id, params)
   }
 
   /**
@@ -220,14 +212,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     id: string,
     params: { from: string; interval: string; to: string },
   ): Promise<Result<HomeEnergyData>> {
-    return this.safeRequest('get', `/telemetry/telemetry/energy/${id}`, {
-      params: {
-        from: toTelemetryDate(params.from),
-        interval: params.interval,
-        measure: 'cumulative_energy_consumed_since_last_upload',
-        to: toTelemetryDate(params.to),
-      },
-      schema: HomeEnergyDataSchema,
+    return this.#fetchEnergy(id, {
+      ...params,
+      measure: 'cumulative_energy_consumed_since_last_upload',
     })
   }
 
@@ -253,14 +240,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       to: string
     },
   ): Promise<Result<HomeEnergyData>> {
-    return this.safeRequest('get', `/telemetry/telemetry/energy/${id}`, {
-      params: {
-        from: toTelemetryDate(params.from),
-        interval: params.interval,
-        measure: ATW_ENERGY_MEASURE[params.measure],
-        to: toTelemetryDate(params.to),
-      },
-      schema: HomeEnergyDataSchema,
+    return this.#fetchEnergy(id, {
+      ...params,
+      measure: ATW_ENERGY_MEASURE[params.measure],
     })
   }
 
@@ -271,9 +253,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @returns Success with the entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(id: string): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.safeRequest('get', `${ATA_UNIT_PATH}/${id}/errorlog`, {
-      schema: HomeErrorLogEntryListSchema,
-    })
+    return this.#fetchErrorLog(ATA_UNIT_PATH, id)
   }
 
   /**
@@ -284,9 +264,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   public async getErrorLogAtw(
     id: string,
   ): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.safeRequest('get', `${ATW_UNIT_PATH}/${id}/errorlog`, {
-      schema: HomeErrorLogEntryListSchema,
-    })
+    return this.#fetchErrorLog(ATW_UNIT_PATH, id)
   }
 
   /**
@@ -303,15 +281,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     id: string,
     params: { from: string; period: string; to: string },
   ): Promise<Result<HomeReportData[]>> {
-    return this.safeRequest('get', '/report/v1/internaltemperatures', {
-      params: {
-        from: toReportDate(params.from),
-        period: params.period,
-        to: toReportDate(params.to),
-        unitId: id,
-      },
-      schema: HomeReportDataSchema.array(),
-    })
+    return this.#fetchReport('/report/v1/internaltemperatures', id, params)
   }
 
   /**
@@ -365,15 +335,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     id: string,
     params: { from: string; period: string; to: string },
   ): Promise<Result<HomeReportData[]>> {
-    return this.safeRequest('get', '/report/v1/trendsummary', {
-      params: {
-        from: toReportDate(params.from),
-        period: params.period,
-        to: toReportDate(params.to),
-        unitId: id,
-      },
-      schema: HomeReportDataSchema.array(),
-    })
+    return this.#fetchReport('/report/v1/trendsummary', id, params)
   }
 
   /**
@@ -566,7 +528,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    */
   @fetchDevices({ when: 'after' })
   private async putAndSync(id: string, values: HomeAtaValues): Promise<void> {
-    await this.request('put', `${ATA_UNIT_PATH}/${id}`, { data: values })
+    await this.#putDeviceValues(ATA_UNIT_PATH, id, values)
   }
 
   /**
@@ -580,7 +542,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     id: string,
     values: HomeAtwValues,
   ): Promise<void> {
-    await this.request('put', `${ATW_UNIT_PATH}/${id}`, { data: values })
+    await this.#putDeviceValues(ATW_UNIT_PATH, id, values)
   }
 
   #clearPersistedSession(): void {
@@ -603,6 +565,80 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     return data
   }
 
+  /**
+   * Issue an energy-telemetry GET to the BFF. The two public energy
+   * variants (ATA cumulative, ATW interval consumed/produced) only
+   * differ in their `measure` query parameter; this helper centralises
+   * the URL, date-format normalisation, and schema binding.
+   * @param id - Device id.
+   * @param params - Query window plus the resolved BFF measure name.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.interval - Aggregation interval (e.g. `Hour`, `Day`).
+   * @param params.measure - Resolved BFF measure name (e.g. `interval_energy_consumed`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the telemetry bundle, or a typed failure.
+   */
+  async #fetchEnergy(
+    id: string,
+    params: { from: string; interval: string; measure: string; to: string },
+  ): Promise<Result<HomeEnergyData>> {
+    return this.safeRequest('get', `/telemetry/telemetry/energy/${id}`, {
+      params: {
+        from: toTelemetryDate(params.from),
+        interval: params.interval,
+        measure: params.measure,
+        to: toTelemetryDate(params.to),
+      },
+      schema: HomeEnergyDataSchema,
+    })
+  }
+
+  /**
+   * Issue an error-log GET against either the ATA or ATW unit path.
+   * Both endpoints share the response schema; only the URL prefix
+   * differs.
+   * @param unitPath - URL prefix (`/monitor/ataunit` or `/monitor/atwunit`).
+   * @param id - Device id.
+   * @returns Success with the entries (possibly empty), or a typed failure.
+   */
+  async #fetchErrorLog(
+    unitPath: string,
+    id: string,
+  ): Promise<Result<HomeErrorLogEntry[]>> {
+    return this.safeRequest('get', `${unitPath}/${id}/errorlog`, {
+      schema: HomeErrorLogEntryListSchema,
+    })
+  }
+
+  /**
+   * Issue a report GET (`trendsummary`, `comfort-graph`, or
+   * `internaltemperatures`) — all three endpoints accept the same
+   * `unitId` + `from`/`period`/`to` query shape and return the same
+   * dataset envelope.
+   * @param path - Report endpoint URL.
+   * @param id - Device id (sent as `unitId`).
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Aggregation period (e.g. `Daily`, `Hourly`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the report datasets, or a typed failure.
+   */
+  async #fetchReport(
+    path: string,
+    id: string,
+    params: { from: string; period: string; to: string },
+  ): Promise<Result<HomeReportData[]>> {
+    return this.safeRequest('get', path, {
+      params: {
+        from: toReportDate(params.from),
+        period: params.period,
+        to: toReportDate(params.to),
+        unitId: id,
+      },
+      schema: HomeReportDataSchema.array(),
+    })
+  }
+
   #hasPersistedSession(): boolean {
     return (
       (this.accessToken !== '' &&
@@ -610,6 +646,21 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
         !isSessionExpired(this.expiry)) ||
       this.refreshToken !== ''
     )
+  }
+
+  /**
+   * Issue a device-values PUT. Centralises the URL shape (`{unitPath}/{id}`)
+   * shared by the ATA and ATW mutation paths.
+   * @param unitPath - URL prefix (`/monitor/ataunit` or `/monitor/atwunit`).
+   * @param id - Target device id.
+   * @param values - Partial setpoint payload.
+   */
+  async #putDeviceValues(
+    unitPath: string,
+    id: string,
+    values: HomeAtaValues | HomeAtwValues,
+  ): Promise<void> {
+    await this.request('put', `${unitPath}/${id}`, { data: values })
   }
 
   /**

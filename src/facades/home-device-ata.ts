@@ -4,7 +4,6 @@ import type {
   HomeAtaDeviceCapabilities,
   HomeAtaDeviceData,
   HomeAtaValues,
-  HomeDeviceSetting,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
@@ -22,6 +21,7 @@ import {
 } from '../enum-mappings.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { clampToRange } from '../utils.ts'
+import { HomeDeviceFacadeBase } from './home-device-base.ts'
 
 interface TemperatureRange {
   max: number
@@ -55,39 +55,20 @@ const temperatureRanges = new Map<
   ['Heat', heatFanRange],
 ])
 
-const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
-  settings.find((setting) => setting.name === name)?.value ?? ''
-
 /**
  * Facade for a MELCloud Home ATA device. Provides typed access to device
- * settings and temperature clamping per operation mode before sending
- * values to the Classic API.
+ * settings and per-mode temperature clamping before forwarding updates
+ * to the BFF.
  * @category Facades
  */
-export class HomeDeviceAtaFacade {
+export class HomeDeviceAtaFacade extends HomeDeviceFacadeBase<HomeAtaDeviceData> {
   /**
    * Static capability flags and per-mode temperature bounds advertised
    * by this device.
    * @returns The capability descriptor.
    */
   public get capabilities(): HomeAtaDeviceCapabilities {
-    return this.#model.data.capabilities
-  }
-
-  /**
-   * Unique device identifier as assigned by MELCloud Home.
-   * @returns The device id.
-   */
-  public get id(): string {
-    return this.#model.id
-  }
-
-  /**
-   * User-facing display name set in the MELCloud Home app.
-   * @returns The device's display name.
-   */
-  public get name(): string {
-    return this.#model.name
+    return this.model.data.capabilities
   }
 
   /**
@@ -112,14 +93,6 @@ export class HomeDeviceAtaFacade {
    */
   public get roomTemperature(): number {
     return this.#setting('RoomTemperature')
-  }
-
-  /**
-   * Last-reported Wi-Fi signal strength of the device adapter, in dBm.
-   * @returns The RSSI value.
-   */
-  public get rssi(): number {
-    return this.#model.data.rssi
   }
 
   /**
@@ -163,10 +136,6 @@ export class HomeDeviceAtaFacade {
     return this.#setting('VaneVerticalDirection')
   }
 
-  readonly #api: HomeAPIAdapter
-
-  readonly #model: HomeDevice<HomeAtaDeviceData>
-
   /**
    * Builds a Home ATA facade backed by the given API client and
    * registry-resident device model.
@@ -174,8 +143,7 @@ export class HomeDeviceAtaFacade {
    * @param model - Backing device model, narrowed to the ATA variant.
    */
   public constructor(api: HomeAPIAdapter, model: HomeDevice<HomeAtaDeviceData>) {
-    this.#api = api
-    this.#model = model
+    super(api, model)
   }
 
   /**
@@ -191,7 +159,7 @@ export class HomeDeviceAtaFacade {
     interval: string
     to: string
   }): Promise<Result<HomeEnergyData>> {
-    return this.#api.getEnergy(this.id, params)
+    return this.api.getEnergy(this.id, params)
   }
 
   /**
@@ -199,21 +167,7 @@ export class HomeDeviceAtaFacade {
    * @returns The entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.#api.getErrorLog(this.id)
-  }
-
-  /**
-   * Fetches RSSI telemetry for this device over the given time window.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or a typed failure.
-   */
-  public async getSignal(params: {
-    from: string
-    to: string
-  }): Promise<Result<HomeEnergyData>> {
-    return this.#api.getSignal(this.id, params)
+    return this.api.getErrorLog(this.id)
   }
 
   /**
@@ -230,7 +184,7 @@ export class HomeDeviceAtaFacade {
     period: string
     to: string
   }): Promise<Result<HomeReportData[]>> {
-    return this.#api.getTemperatures(this.id, params)
+    return this.api.getTemperatures(this.id, params)
   }
 
   /**
@@ -244,7 +198,7 @@ export class HomeDeviceAtaFacade {
     if (Object.keys(values).length === 0) {
       throw new NoChangesError(this.id)
     }
-    return this.#api.updateValues(this.id, {
+    return this.api.updateValues(this.id, {
       ...values,
       ...this.#clampSetTemperature(values),
     })
@@ -277,7 +231,7 @@ export class HomeDeviceAtaFacade {
   #setting(name: string): unknown
 
   #setting(name: string): unknown {
-    const raw = getSetting(this.#model.data.settings, name)
+    const raw = this.setting(name)
     if (name === 'RoomTemperature' || name === 'SetTemperature') {
       return Number(raw)
     }

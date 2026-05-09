@@ -4,7 +4,6 @@ import type {
   HomeAtwDeviceCapabilities,
   HomeAtwDeviceData,
   HomeAtwValues,
-  HomeDeviceSetting,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
@@ -12,6 +11,7 @@ import type {
 } from '../types/index.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { clampToRange } from '../utils.ts'
+import { HomeDeviceFacadeBase } from './home-device-base.ts'
 
 interface TemperatureRange {
   max: number
@@ -28,22 +28,19 @@ const tankRange = ({
   minSetTankTemperature: min,
 }: HomeAtwDeviceCapabilities): TemperatureRange => ({ max, min })
 
-const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
-  settings.find((setting) => setting.name === name)?.value ?? ''
-
 /**
  * Facade for a MELCloud Home ATW (air-to-water) device. Provides
  * typed access to zone setpoints, tank temperature, and ATW telemetry
  * endpoints (`comfort-graph`, `internaltemperatures`, interval energy).
  * @category Facades
  */
-export class HomeDeviceAtwFacade {
+export class HomeDeviceAtwFacade extends HomeDeviceFacadeBase<HomeAtwDeviceData> {
   /**
    * Static capability flags and ranges advertised by this device.
    * @returns The capability descriptor.
    */
   public get capabilities(): HomeAtwDeviceCapabilities {
-    return this.#model.data.capabilities
+    return this.model.data.capabilities
   }
 
   /**
@@ -51,26 +48,18 @@ export class HomeDeviceAtwFacade {
    * @returns `true` when forced, `false` otherwise.
    */
   public get forcedHotWaterMode(): boolean {
-    return this.#setting('ForcedHotWaterMode') === 'True'
+    return this.setting('ForcedHotWaterMode') === 'True'
   }
 
   /**
-   * Whether the device firmware reports cooling-mode support.
-   * Distinct from {@link HomeAtwDeviceCapabilities.hasHeatZone1}/`hasHeatZone2`
-   * (which describe per-zone heat capability) — this flag mirrors the
-   * `HasCoolingMode` setting from `/context`.
+   * Whether the device firmware reports cooling-mode support. Distinct
+   * from {@link HomeAtwDeviceCapabilities.hasHeatZone1}/`hasHeatZone2`
+   * (per-zone heat capability) — this flag mirrors the `HasCoolingMode`
+   * setting from `/context`.
    * @returns `true` when the device reports cooling mode availability.
    */
   public get hasCoolingMode(): boolean {
-    return this.#setting('HasCoolingMode') === 'True'
-  }
-
-  /**
-   * Unique device identifier as assigned by MELCloud Home.
-   * @returns The device id.
-   */
-  public get id(): string {
-    return this.#model.id
+    return this.setting('HasCoolingMode') === 'True'
   }
 
   /**
@@ -78,26 +67,18 @@ export class HomeDeviceAtwFacade {
    * @returns `true` when on standby.
    */
   public get inStandbyMode(): boolean {
-    return this.#setting('InStandbyMode') === 'True'
+    return this.setting('InStandbyMode') === 'True'
   }
 
   /**
-   * User-facing display name set in the MELCloud Home app.
-   * @returns The device's display name.
-   */
-  public get name(): string {
-    return this.#model.name
-  }
-
-  /**
-   * Top-level operation mode advertised by the FTC controller.
-   * Values include `Stop` and the heat/cool modes; the SDK does not
-   * narrow further because the controller exposes other strings on
-   * some firmware revisions.
+   * Top-level operation mode advertised by the FTC controller. Values
+   * include `Stop` and the heat/cool modes; the SDK does not narrow
+   * further because the controller exposes other strings on some
+   * firmware revisions.
    * @returns The operation mode.
    */
   public get operationMode(): string {
-    return this.#setting('OperationMode')
+    return this.setting('OperationMode')
   }
 
   /**
@@ -109,7 +90,7 @@ export class HomeDeviceAtwFacade {
    * @returns The zone-1 mode.
    */
   public get operationModeZone1(): string {
-    return this.#setting('OperationModeZone1')
+    return this.setting('OperationModeZone1')
   }
 
   /**
@@ -121,7 +102,7 @@ export class HomeDeviceAtwFacade {
     if (!this.capabilities.hasZone2) {
       return null
     }
-    return this.#setting('OperationModeZone2')
+    return this.setting('OperationModeZone2')
   }
 
   /**
@@ -129,7 +110,7 @@ export class HomeDeviceAtwFacade {
    * @returns The outdoor temperature.
    */
   public get outdoorTemperature(): number {
-    return Number(this.#setting('OutdoorTemperature'))
+    return Number(this.setting('OutdoorTemperature'))
   }
 
   /**
@@ -137,7 +118,7 @@ export class HomeDeviceAtwFacade {
    * @returns `true` when on, `false` otherwise.
    */
   public get power(): boolean {
-    return this.#setting('Power') === 'True'
+    return this.setting('Power') === 'True'
   }
 
   /**
@@ -145,7 +126,7 @@ export class HomeDeviceAtwFacade {
    * @returns `true` when prohibited.
    */
   public get prohibitHotWater(): boolean {
-    return this.#setting('ProhibitHotWater') === 'True'
+    return this.setting('ProhibitHotWater') === 'True'
   }
 
   /**
@@ -153,7 +134,7 @@ export class HomeDeviceAtwFacade {
    * @returns The room temperature.
    */
   public get roomTemperatureZone1(): number {
-    return Number(this.#setting('RoomTemperatureZone1'))
+    return Number(this.setting('RoomTemperatureZone1'))
   }
 
   /**
@@ -164,15 +145,7 @@ export class HomeDeviceAtwFacade {
     if (!this.capabilities.hasZone2) {
       return null
     }
-    return Number(this.#setting('RoomTemperatureZone2'))
-  }
-
-  /**
-   * Last-reported Wi-Fi signal strength of the device adapter, in dBm.
-   * @returns The RSSI value.
-   */
-  public get rssi(): number {
-    return this.#model.data.rssi
+    return Number(this.setting('RoomTemperatureZone2'))
   }
 
   /**
@@ -180,7 +153,7 @@ export class HomeDeviceAtwFacade {
    * @returns The setpoint.
    */
   public get setTankWaterTemperature(): number {
-    return Number(this.#setting('SetTankWaterTemperature'))
+    return Number(this.setting('SetTankWaterTemperature'))
   }
 
   /**
@@ -188,7 +161,7 @@ export class HomeDeviceAtwFacade {
    * @returns The setpoint.
    */
   public get setTemperatureZone1(): number {
-    return Number(this.#setting('SetTemperatureZone1'))
+    return Number(this.setting('SetTemperatureZone1'))
   }
 
   /**
@@ -199,7 +172,7 @@ export class HomeDeviceAtwFacade {
     if (!this.capabilities.hasZone2) {
       return null
     }
-    return Number(this.#setting('SetTemperatureZone2'))
+    return Number(this.setting('SetTemperatureZone2'))
   }
 
   /**
@@ -207,12 +180,8 @@ export class HomeDeviceAtwFacade {
    * @returns The tank temperature.
    */
   public get tankWaterTemperature(): number {
-    return Number(this.#setting('TankWaterTemperature'))
+    return Number(this.setting('TankWaterTemperature'))
   }
-
-  readonly #api: HomeAPIAdapter
-
-  readonly #model: HomeDevice<HomeAtwDeviceData>
 
   /**
    * Builds a Home ATW facade backed by the given API client and
@@ -221,8 +190,7 @@ export class HomeDeviceAtwFacade {
    * @param model - Backing device model, narrowed to the ATW variant.
    */
   public constructor(api: HomeAPIAdapter, model: HomeDevice<HomeAtwDeviceData>) {
-    this.#api = api
-    this.#model = model
+    super(api, model)
   }
 
   /**
@@ -239,7 +207,7 @@ export class HomeDeviceAtwFacade {
     period: string
     to: string
   }): Promise<Result<HomeReportData[]>> {
-    return this.#api.getComfortGraph(this.id, params)
+    return this.api.getComfortGraph(this.id, params)
   }
 
   /**
@@ -257,7 +225,7 @@ export class HomeDeviceAtwFacade {
     measure: 'consumed' | 'produced'
     to: string
   }): Promise<Result<HomeEnergyData>> {
-    return this.#api.getEnergyAtw(this.id, params)
+    return this.api.getEnergyAtw(this.id, params)
   }
 
   /**
@@ -265,7 +233,7 @@ export class HomeDeviceAtwFacade {
    * @returns The entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.#api.getErrorLogAtw(this.id)
+    return this.api.getErrorLogAtw(this.id)
   }
 
   /**
@@ -282,21 +250,7 @@ export class HomeDeviceAtwFacade {
     period: string
     to: string
   }): Promise<Result<HomeReportData[]>> {
-    return this.#api.getInternalTemperatures(this.id, params)
-  }
-
-  /**
-   * Fetches RSSI telemetry for this device over the given time window.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or a typed failure.
-   */
-  public async getSignal(params: {
-    from: string
-    to: string
-  }): Promise<Result<HomeEnergyData>> {
-    return this.#api.getSignal(this.id, params)
+    return this.api.getInternalTemperatures(this.id, params)
   }
 
   /**
@@ -311,7 +265,7 @@ export class HomeDeviceAtwFacade {
     if (Object.keys(values).length === 0) {
       throw new NoChangesError(this.id)
     }
-    return this.#api.updateAtwValues(this.id, {
+    return this.api.updateAtwValues(this.id, {
       ...values,
       ...this.#clampSetpoints(values),
     })
@@ -345,9 +299,5 @@ export class HomeDeviceAtwFacade {
       )
     }
     return result
-  }
-
-  #setting(name: string): string {
-    return getSetting(this.#model.data.settings, name)
   }
 }
