@@ -14,10 +14,16 @@ export interface HomeAtaDeviceCapabilities {
   readonly hasAutomaticFanSpeed: boolean
   readonly hasAutoOperationMode: boolean
   readonly hasCoolOperationMode: boolean
+  readonly hasDemandSideControl: boolean
   readonly hasDryOperationMode: boolean
+  readonly hasEnergyConsumedMeter: boolean
+  readonly hasExtendedTemperatureRange: boolean
   readonly hasHalfDegreeIncrements: boolean
   readonly hasHeatOperationMode: boolean
+  readonly hasStandby: boolean
   readonly hasSwing: boolean
+  readonly isLegacyDevice: boolean
+  readonly isMultiSplitSystem: boolean
   readonly maxTempAutomatic: number
   readonly maxTempCoolDry: number
   readonly maxTempHeat: number
@@ -25,18 +31,22 @@ export interface HomeAtaDeviceCapabilities {
   readonly minTempCoolDry: number
   readonly minTempHeat: number
   readonly numberOfFanSpeeds: number
+  readonly supportsWideVane: boolean
 }
 
 /**
- * Wire-format MELCloud Home ATA device entry — id, display name, capabilities, current settings, and last-seen RSSI.
+ * Wire-format MELCloud Home ATA device entry — extends the device-type
+ * agnostic {@link HomeDeviceCommonData} with ATA-specific transport
+ * (`connectedInterface*`, `systemId`, `unitSettings`) and narrows
+ * `capabilities` to the ATA shape.
  * @category Types
  */
-export interface HomeAtaDeviceData {
+export interface HomeAtaDeviceData extends HomeDeviceCommonData {
   readonly capabilities: HomeAtaDeviceCapabilities
-  readonly givenDisplayName: string
-  readonly id: string
-  readonly rssi: number
-  readonly settings: HomeDeviceSetting[]
+  readonly connectedInterfaceIdentifier: string
+  readonly connectedInterfaceType: HomeDeviceConnectedInterfaceType
+  readonly systemId: string | null
+  readonly unitSettings: Readonly<Record<string, unknown>> | null
 }
 
 /**
@@ -56,12 +66,9 @@ export interface HomeAtaValues {
 
 /**
  * Static capability descriptor advertised by a MELCloud Home ATW device.
- * Index signature preserves forward compatibility for keys the SDK
- * does not yet read.
  * @category Types
  */
 export interface HomeAtwDeviceCapabilities {
-  readonly [key: string]: unknown
   readonly ftcModel: number
   readonly hasBoiler: boolean
   readonly hasDemandSideControl: boolean
@@ -92,15 +99,15 @@ export interface HomeAtwDeviceCapabilities {
 }
 
 /**
- * Wire-format MELCloud Home ATW device entry — id, display name, capabilities, current settings, and last-seen RSSI.
+ * Wire-format MELCloud Home ATW device entry — extends
+ * {@link HomeDeviceCommonData} with the ATW-specific FTC controller
+ * model and the WiFi adapter MAC address.
  * @category Types
  */
-export interface HomeAtwDeviceData {
+export interface HomeAtwDeviceData extends HomeDeviceCommonData {
   readonly capabilities: HomeAtwDeviceCapabilities
-  readonly givenDisplayName: string
-  readonly id: string
-  readonly rssi: number
-  readonly settings: HomeDeviceSetting[]
+  readonly ftcModel: string
+  readonly macAddress: string
 }
 
 /**
@@ -173,6 +180,11 @@ export interface HomeContext {
   readonly id: string
   readonly language: string
   readonly lastname: string
+  readonly numberOfBuildingsAllowed: number
+  readonly numberOfDevicesAllowed: number
+  readonly numberOfGuestDevicesAllowed: number
+  readonly numberOfGuestUsersAllowedPerUnit: number
+  readonly scenes: readonly Readonly<Record<string, unknown>>[]
 }
 
 /**
@@ -184,10 +196,63 @@ export type HomeDeviceCapabilities =
   | HomeAtwDeviceCapabilities
 
 /**
+ * Fields shared by every MELCloud Home device wrapper, regardless of
+ * connection type. ATA and ATW data interfaces extend this with their
+ * type-specific extras (`connectedInterface*`/`systemId`/`unitSettings`
+ * for ATA, `macAddress`/`ftcModel` for ATW).
+ * @category Types
+ */
+export interface HomeDeviceCommonData {
+  readonly displayIcon: string
+  readonly frostProtection: HomeFrostProtection | null
+  readonly givenDisplayName: string
+  readonly holidayMode: HomeHolidayMode | null
+  readonly id: string
+  readonly isConnected: boolean
+  readonly isInError: boolean
+  readonly overheatProtection: HomeOverheatProtection | null
+  readonly rssi: number
+  readonly schedule: readonly HomeDeviceScheduleEntry[]
+  readonly scheduleEnabled: boolean
+  readonly settings: HomeDeviceSetting[]
+  readonly timeZone: string
+}
+
+/**
+ * WiFi adapter family reported by the MELCloud Home BFF. `melCloudWiFi`
+ * tags the MAC-addressed first-gen adapters; `fourthGenWifi` tags the
+ * GUID-addressed fourth-generation adapters.
+ * @category Types
+ */
+export type HomeDeviceConnectedInterfaceType =
+  | 'fourthGenWifi'
+  | 'melCloudWiFi'
+
+/**
  * Wire-format MELCloud Home device entry; either an ATA or ATW unit.
  * @category Types
  */
 export type HomeDeviceData = HomeAtaDeviceData | HomeAtwDeviceData
+
+/**
+ * Single weekly-schedule entry attached to a MELCloud Home device.
+ * Field availability varies by device type; the SDK does not consume
+ * specific entries today, so the type captures the canonical ATA shape
+ * and leaves device-type extras off the canonical surface.
+ * @category Types
+ */
+export interface HomeDeviceScheduleEntry {
+  readonly days: readonly string[]
+  readonly enabled: boolean
+  readonly id: string
+  readonly operationMode: string
+  readonly power: boolean
+  readonly setFanSpeed?: string
+  readonly setPoint: number
+  readonly time: string
+  readonly vaneHorizontalDirection?: string
+  readonly vaneVerticalDirection?: string
+}
 
 /**
  * Single name/value setting entry on a MELCloud Home device.
@@ -237,6 +302,40 @@ export interface HomeErrorLogEntry {
 }
 
 /**
+ * Frost-protection schedule attached to a MELCloud Home device. Mirrors
+ * the wire shape from `/context`; `null` on the parent device when the
+ * feature is not configured.
+ * @category Types
+ */
+export interface HomeFrostProtection {
+  readonly active: boolean
+  readonly enabled: boolean
+  readonly max: number
+  readonly min: number
+}
+
+/**
+ * Holiday-mode descriptor attached to a MELCloud Home device. The wire
+ * shape varies by firmware; the SDK does not consume specific fields,
+ * so the type stays a structural placeholder until a use case appears.
+ * @category Types
+ */
+export type HomeHolidayMode = Readonly<Record<string, unknown>>
+
+/**
+ * Overheat-protection schedule attached to a MELCloud Home device.
+ * Mirrors the {@link HomeFrostProtection} shape; `null` on the parent
+ * device when the feature is not configured.
+ * @category Types
+ */
+export interface HomeOverheatProtection {
+  readonly active: boolean
+  readonly enabled: boolean
+  readonly max: number
+  readonly min: number
+}
+
+/**
  * Wire-format temperature/signal report from MELCloud Home — one dataset per series, each holding `(x,y)` samples.
  * @category Types
  */
@@ -247,6 +346,10 @@ export interface HomeReportData {
 
 /**
  * One named series of `(x,y)` samples in a {@link HomeReportData}.
+ * The wire format also carries chart-rendering metadata
+ * (`backgroundColor`, `borderColor`, `pointRadius`, ...); they are
+ * intentionally omitted from the canonical type since the SDK does not
+ * consume them and they belong to the BFF's frontend concerns.
  * @category Types
  */
 export interface HomeReportDataset {

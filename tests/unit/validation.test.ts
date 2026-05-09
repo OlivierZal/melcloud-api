@@ -34,11 +34,32 @@ const buildingWithDeviceType = (type: unknown): unknown => [
   },
 ]
 
-const baseHomeDevice = {
+const baseCommonDeviceFields = {
+  displayIcon: 'Office',
+  frostProtection: null,
   givenDisplayName: 'D',
+  holidayMode: null,
   id: 'd1',
+  isConnected: true,
+  isInError: false,
+  overheatProtection: null,
   rssi: -42,
+  schedule: [],
+  scheduleEnabled: false,
   settings: [],
+  timeZone: 'UTC',
+}
+const baseHomeAtaDevice = {
+  ...baseCommonDeviceFields,
+  connectedInterfaceIdentifier: 'mac',
+  connectedInterfaceType: 'fourthGenWifi',
+  systemId: null,
+  unitSettings: null,
+}
+const baseHomeAtwDevice = {
+  ...baseCommonDeviceFields,
+  ftcModel: 'ftC6',
+  macAddress: 'mac',
 }
 const baseHomeBuilding = {
   airToAirUnits: [],
@@ -56,6 +77,11 @@ const buildHomeContext = (overrides: Record<string, unknown>): unknown => ({
   id: 'u1',
   language: 'en',
   lastname: 'B',
+  numberOfBuildingsAllowed: 2,
+  numberOfDevicesAllowed: 10,
+  numberOfGuestDevicesAllowed: 10,
+  numberOfGuestUsersAllowedPerUnit: 5,
+  scenes: [],
   ...overrides,
 })
 
@@ -144,10 +170,16 @@ describe('validation/schemas', () => {
       hasAutomaticFanSpeed: true,
       hasAutoOperationMode: true,
       hasCoolOperationMode: true,
+      hasDemandSideControl: true,
       hasDryOperationMode: true,
+      hasEnergyConsumedMeter: true,
+      hasExtendedTemperatureRange: true,
       hasHalfDegreeIncrements: true,
       hasHeatOperationMode: true,
+      hasStandby: true,
       hasSwing: true,
+      isLegacyDevice: false,
+      isMultiSplitSystem: false,
       maxTempAutomatic: 31,
       maxTempCoolDry: 31,
       maxTempHeat: 31,
@@ -155,6 +187,7 @@ describe('validation/schemas', () => {
       minTempCoolDry: 16,
       minTempHeat: 10,
       numberOfFanSpeeds: 5,
+      supportsWideVane: false,
     }
 
     it('accepts a fully-populated ATA capabilities payload in airToAirUnits', () => {
@@ -165,7 +198,7 @@ describe('validation/schemas', () => {
               {
                 ...baseHomeBuilding,
                 airToAirUnits: [
-                  { ...baseHomeDevice, capabilities: validAtaCapabilities },
+                  { ...baseHomeAtaDevice, capabilities: validAtaCapabilities },
                 ],
               },
             ],
@@ -212,7 +245,7 @@ describe('validation/schemas', () => {
               {
                 ...baseHomeBuilding,
                 airToWaterUnits: [
-                  { ...baseHomeDevice, capabilities: validAtwCapabilities },
+                  { ...baseHomeAtwDevice, capabilities: validAtwCapabilities },
                 ],
               },
             ],
@@ -231,7 +264,7 @@ describe('validation/schemas', () => {
               {
                 ...baseHomeBuilding,
                 airToAirUnits: [
-                  { ...baseHomeDevice, capabilities: incomplete },
+                  { ...baseHomeAtaDevice, capabilities: incomplete },
                 ],
               },
             ],
@@ -250,7 +283,7 @@ describe('validation/schemas', () => {
               {
                 ...baseHomeBuilding,
                 airToWaterUnits: [
-                  { ...baseHomeDevice, capabilities: incomplete },
+                  { ...baseHomeAtwDevice, capabilities: incomplete },
                 ],
               },
             ],
@@ -267,7 +300,7 @@ describe('validation/schemas', () => {
               {
                 ...baseHomeBuilding,
                 airToWaterUnits: [
-                  { ...baseHomeDevice, capabilities: 'invalid' },
+                  { ...baseHomeAtwDevice, capabilities: 'invalid' },
                 ],
               },
             ],

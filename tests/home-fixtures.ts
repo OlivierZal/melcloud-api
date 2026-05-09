@@ -19,10 +19,16 @@ const defaultCapabilities: HomeAtaDeviceCapabilities = {
   hasAutomaticFanSpeed: true,
   hasAutoOperationMode: true,
   hasCoolOperationMode: true,
+  hasDemandSideControl: true,
   hasDryOperationMode: true,
+  hasEnergyConsumedMeter: true,
+  hasExtendedTemperatureRange: true,
   hasHalfDegreeIncrements: true,
   hasHeatOperationMode: true,
+  hasStandby: true,
   hasSwing: true,
+  isLegacyDevice: false,
+  isMultiSplitSystem: false,
   maxTempAutomatic: 31,
   maxTempCoolDry: 31,
   maxTempHeat: 31,
@@ -30,6 +36,7 @@ const defaultCapabilities: HomeAtaDeviceCapabilities = {
   minTempCoolDry: 16,
   minTempHeat: 10,
   numberOfFanSpeeds: 5,
+  supportsWideVane: false,
 }
 
 const homeDeviceCapabilities = (

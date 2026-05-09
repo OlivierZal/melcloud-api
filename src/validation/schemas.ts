@@ -58,19 +58,25 @@ const HomeDeviceSettingSchema = z.looseObject({
   value: z.string(),
 })
 
-// `capabilities` is structurally disjoint between ATA and ATW. We validate
-// each array against the schema for its own shape: ATA fields the SDK
-// consumes are required, ATW stays loose since no field is consumed yet.
+// Per-type capability schemas validate every documented field; the
+// schemas stay `looseObject` so MELCloud can add new keys without
+// breaking validation.
 const HomeAtaCapabilitiesSchema: z.ZodType<HomeAtaDeviceCapabilities> =
   z.looseObject({
     hasAirDirection: z.boolean(),
     hasAutomaticFanSpeed: z.boolean(),
     hasAutoOperationMode: z.boolean(),
     hasCoolOperationMode: z.boolean(),
+    hasDemandSideControl: z.boolean(),
     hasDryOperationMode: z.boolean(),
+    hasEnergyConsumedMeter: z.boolean(),
+    hasExtendedTemperatureRange: z.boolean(),
     hasHalfDegreeIncrements: z.boolean(),
     hasHeatOperationMode: z.boolean(),
+    hasStandby: z.boolean(),
     hasSwing: z.boolean(),
+    isLegacyDevice: z.boolean(),
+    isMultiSplitSystem: z.boolean(),
     maxTempAutomatic: z.number(),
     maxTempCoolDry: z.number(),
     maxTempHeat: z.number(),
@@ -78,6 +84,7 @@ const HomeAtaCapabilitiesSchema: z.ZodType<HomeAtaDeviceCapabilities> =
     minTempCoolDry: z.number(),
     minTempHeat: z.number(),
     numberOfFanSpeeds: z.number(),
+    supportsWideVane: z.boolean(),
   })
 
 const HomeAtwCapabilitiesSchema: z.ZodType<HomeAtwDeviceCapabilities> =
@@ -111,20 +118,63 @@ const HomeAtwCapabilitiesSchema: z.ZodType<HomeAtwDeviceCapabilities> =
     temperatureUnit: z.string(),
   })
 
-const HomeAtaDeviceDataSchema: z.ZodType<HomeAtaDeviceData> = z.looseObject({
-  capabilities: HomeAtaCapabilitiesSchema,
-  givenDisplayName: z.string(),
+// `frost-`, `overheat-` and `holidayMode` carry the same low-level
+// shape (active/enabled/min/max booleans + numbers) — declared once
+// and reused. `holidayMode` is left structural because the firmware
+// shape varies and the SDK does not consume it.
+const HomeProtectionSchema = z.looseObject({
+  active: z.boolean(),
+  enabled: z.boolean(),
+  max: z.number(),
+  min: z.number(),
+})
+
+const HomeDeviceScheduleEntrySchema = z.looseObject({
+  days: z.array(z.string()),
+  enabled: z.boolean(),
   id: z.string(),
+  operationMode: z.string(),
+  power: z.boolean(),
+  setFanSpeed: z.string().optional(),
+  setPoint: z.number(),
+  time: z.string(),
+  vaneHorizontalDirection: z.string().optional(),
+  vaneVerticalDirection: z.string().optional(),
+})
+
+const HomeDeviceCommonFields = {
+  displayIcon: z.string(),
+  frostProtection: HomeProtectionSchema.nullable(),
+  givenDisplayName: z.string(),
+  holidayMode: z.looseObject({}).nullable(),
+  id: z.string(),
+  isConnected: z.boolean(),
+  isInError: z.boolean(),
+  overheatProtection: HomeProtectionSchema.nullable(),
   rssi: z.number(),
+  schedule: z.array(HomeDeviceScheduleEntrySchema),
+  scheduleEnabled: z.boolean(),
   settings: z.array(HomeDeviceSettingSchema),
+  timeZone: z.string(),
+}
+
+const HomeAtaDeviceDataSchema: z.ZodType<HomeAtaDeviceData> = z.looseObject({
+  ...HomeDeviceCommonFields,
+  capabilities: HomeAtaCapabilitiesSchema,
+  connectedInterfaceIdentifier: z.string(),
+  connectedInterfaceType: z.union([
+    z.literal('fourthGenWifi'),
+    z.literal('melCloudWiFi'),
+  ]),
+  systemId: z.string().nullable(),
+  unitSettings: z.looseObject({}).nullable(),
 })
 
 const HomeAtwDeviceDataSchema: z.ZodType<HomeAtwDeviceData> = z.looseObject({
+  ...HomeDeviceCommonFields,
   capabilities: HomeAtwCapabilitiesSchema,
-  givenDisplayName: z.string(),
-  id: z.string(),
-  rssi: z.number(),
-  settings: z.array(HomeDeviceSettingSchema),
+  ftcModel: z.string(),
+  macAddress: z.string(),
 })
 
 const HomeBuildingSchema = z.looseObject({
@@ -145,6 +195,11 @@ export const HomeContextSchema: z.ZodType<HomeContext> = z.looseObject({
   id: z.string(),
   language: z.string(),
   lastname: z.string(),
+  numberOfBuildingsAllowed: z.number(),
+  numberOfDevicesAllowed: z.number(),
+  numberOfGuestDevicesAllowed: z.number(),
+  numberOfGuestUsersAllowedPerUnit: z.number(),
+  scenes: z.array(z.looseObject({})),
 })
 
 // Home telemetry / report endpoints. Responses are consumed as arrays

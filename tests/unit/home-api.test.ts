@@ -39,10 +39,16 @@ const mockAtaCapabilities = {
   hasAutomaticFanSpeed: true,
   hasAutoOperationMode: true,
   hasCoolOperationMode: true,
+  hasDemandSideControl: true,
   hasDryOperationMode: true,
+  hasEnergyConsumedMeter: true,
+  hasExtendedTemperatureRange: true,
   hasHalfDegreeIncrements: false,
   hasHeatOperationMode: true,
+  hasStandby: true,
   hasSwing: true,
+  isLegacyDevice: false,
+  isMultiSplitSystem: false,
   maxTempAutomatic: 30,
   maxTempCoolDry: 30,
   maxTempHeat: 30,
@@ -50,6 +56,7 @@ const mockAtaCapabilities = {
   minTempCoolDry: 10,
   minTempHeat: 10,
   numberOfFanSpeeds: 5,
+  supportsWideVane: false,
 }
 
 const mockAtwCapabilities = {
@@ -82,21 +89,41 @@ const mockAtwCapabilities = {
   temperatureUnit: '',
 }
 
+const commonDeviceFields = {
+  displayIcon: 'Office',
+  frostProtection: null,
+  holidayMode: null,
+  isConnected: true,
+  isInError: false,
+  overheatProtection: null,
+  schedule: [],
+  scheduleEnabled: false,
+  timeZone: 'Europe/Paris',
+} as const
+
 const mockBuilding: HomeBuilding = {
   airToAirUnits: [
     {
+      ...commonDeviceFields,
       capabilities: mockAtaCapabilities,
+      connectedInterfaceIdentifier: 'FE0000060403388D3DFFFE000000000000',
+      connectedInterfaceType: 'fourthGenWifi',
       givenDisplayName: 'Test ClassicDevice',
       id: 'device-1',
       rssi: -50,
       settings: [{ name: 'Power', value: 'True' }],
+      systemId: null,
+      unitSettings: null,
     },
   ],
   airToWaterUnits: [
     {
+      ...commonDeviceFields,
       capabilities: mockAtwCapabilities,
+      ftcModel: 'ftC6',
       givenDisplayName: 'ATW ClassicDevice',
       id: 'device-2',
+      macAddress: 'FE0000060403388D3DFFFE000000000001',
       rssi: -55,
       settings: [],
     },
@@ -115,6 +142,11 @@ const mockContext: HomeContext = {
   id: 'user-1',
   language: 'fr',
   lastname: 'User',
+  numberOfBuildingsAllowed: 2,
+  numberOfDevicesAllowed: 10,
+  numberOfGuestDevicesAllowed: 10,
+  numberOfGuestUsersAllowedPerUnit: 5,
+  scenes: [],
 }
 
 const mockEnergyData: HomeEnergyData = {

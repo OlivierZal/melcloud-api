@@ -463,6 +463,11 @@ describe('api lifecycle', () => {
       id: 'user-1',
       language: 'fr',
       lastname: 'User',
+      numberOfBuildingsAllowed: 2,
+      numberOfDevicesAllowed: 10,
+      numberOfGuestDevicesAllowed: 10,
+      numberOfGuestUsersAllowedPerUnit: 5,
+      scenes: [],
     }
 
     const mockFetch = vi.fn<typeof fetch>()
