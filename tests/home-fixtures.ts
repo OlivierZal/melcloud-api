@@ -14,7 +14,7 @@ import { mock } from './helpers.ts'
 const DEFAULT_RSSI_DBM = -50
 
 // Realistic defaults so every operation mode resolves to a non-empty range.
-const defaultCapabilities: HomeAtaDeviceCapabilities = {
+export const defaultHomeAtaCapabilities: HomeAtaDeviceCapabilities = {
   hasAirDirection: true,
   hasAutomaticFanSpeed: true,
   hasAutoOperationMode: true,
@@ -41,7 +41,10 @@ const defaultCapabilities: HomeAtaDeviceCapabilities = {
 
 const homeDeviceCapabilities = (
   overrides: Partial<HomeAtaDeviceCapabilities> = {},
-): HomeAtaDeviceCapabilities => ({ ...defaultCapabilities, ...overrides })
+): HomeAtaDeviceCapabilities => ({
+  ...defaultHomeAtaCapabilities,
+  ...overrides,
+})
 
 // Convert a `Record<string, string>` to the BFF's `{ name, value }[]`
 // shape so call sites can express settings as plain string maps.
@@ -80,7 +83,7 @@ export const typedHomeDeviceData = (
   type: HomeDeviceType = HomeDeviceType.Ata,
 ): TypedHomeDeviceData => ({ device: homeDeviceData(overrides), type })
 
-const defaultAtwCapabilities: HomeAtwDeviceCapabilities = {
+export const defaultHomeAtwCapabilities: HomeAtwDeviceCapabilities = {
   ftcModel: 3,
   hasBoiler: true,
   hasDemandSideControl: true,
@@ -122,7 +125,7 @@ export const homeAtwDeviceData = (
   overrides: HomeAtwDeviceDataOverrides = {},
 ): HomeAtwDeviceData =>
   mock<HomeAtwDeviceData>({
-    capabilities: { ...defaultAtwCapabilities, ...overrides.capabilities },
+    capabilities: { ...defaultHomeAtwCapabilities, ...overrides.capabilities },
     givenDisplayName: overrides.name ?? 'Home ATW device',
     id: overrides.id ?? 'home-atw-1',
     rssi: overrides.rssi ?? DEFAULT_RSSI_DBM,

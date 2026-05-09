@@ -865,53 +865,35 @@ describe('melcloud home API', () => {
       expect(isSuccess).toBe(false)
     })
 
-    it('getAtwEnergy maps consumed to interval_energy_consumed', async () => {
-      setupSuccessfulLogin()
-      const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
-      await api.getAtwEnergy('atw-1', {
-        from: '2026-05-01',
-        interval: 'Hour',
-        measure: 'consumed',
-        to: '2026-05-02',
-      })
+    it.each([
+      { measure: 'consumed', wireMeasure: 'interval_energy_consumed' },
+      { measure: 'produced', wireMeasure: 'interval_energy_produced' },
+    ] as const)(
+      'getAtwEnergy maps $measure to $wireMeasure',
+      async ({ measure, wireMeasure }) => {
+        setupSuccessfulLogin()
+        const api = await createApi()
+        mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
+        await api.getAtwEnergy('atw-1', {
+          from: '2026-05-01',
+          interval: 'Hour',
+          measure,
+          to: '2026-05-02',
+        })
 
-      expect(mockRequest).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          params: {
-            from: '2026-05-01 00:00',
-            interval: 'Hour',
-            measure: 'interval_energy_consumed',
-            to: '2026-05-02 00:00',
-          },
-          url: '/telemetry/telemetry/energy/atw-1',
-        }),
-      )
-    })
-
-    it('getAtwEnergy maps produced to interval_energy_produced', async () => {
-      setupSuccessfulLogin()
-      const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
-      await api.getAtwEnergy('atw-1', {
-        from: '2026-05-01',
-        interval: 'Hour',
-        measure: 'produced',
-        to: '2026-05-02',
-      })
-
-      expect(mockRequest).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          params: {
-            from: '2026-05-01 00:00',
-            interval: 'Hour',
-            measure: 'interval_energy_produced',
-            to: '2026-05-02 00:00',
-          },
-          url: '/telemetry/telemetry/energy/atw-1',
-        }),
-      )
-    })
+        expect(mockRequest).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            params: {
+              from: '2026-05-01 00:00',
+              interval: 'Hour',
+              measure: wireMeasure,
+              to: '2026-05-02 00:00',
+            },
+            url: '/telemetry/telemetry/energy/atw-1',
+          }),
+        )
+      },
+    )
 
     it('getAtwErrorLog hits /monitor/atwunit/{id}/errorlog', async () => {
       setupSuccessfulLogin()

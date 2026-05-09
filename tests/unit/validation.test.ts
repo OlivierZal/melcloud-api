@@ -10,6 +10,10 @@ import {
   HomeTokenResponseSchema,
   parseOrThrow,
 } from '../../src/validation/index.ts'
+import {
+  defaultHomeAtaCapabilities,
+  defaultHomeAtwCapabilities,
+} from '../home-fixtures.ts'
 
 const buildingWithDeviceType = (type: unknown): unknown => [
   {
@@ -164,31 +168,6 @@ describe('validation/schemas', () => {
   })
 
   describe('homeContextSchema device capabilities', () => {
-    const validAtaCapabilities = {
-      hasAirDirection: true,
-      hasAutomaticFanSpeed: true,
-      hasAutoOperationMode: true,
-      hasCoolOperationMode: true,
-      hasDemandSideControl: true,
-      hasDryOperationMode: true,
-      hasEnergyConsumedMeter: true,
-      hasExtendedTemperatureRange: true,
-      hasHalfDegreeIncrements: true,
-      hasHeatOperationMode: true,
-      hasStandby: true,
-      hasSwing: true,
-      isLegacyDevice: false,
-      isMultiSplitSystem: false,
-      maxTempAutomatic: 31,
-      maxTempCoolDry: 31,
-      maxTempHeat: 31,
-      minTempAutomatic: 16,
-      minTempCoolDry: 16,
-      minTempHeat: 10,
-      numberOfFanSpeeds: 5,
-      supportsWideVane: false,
-    }
-
     it('accepts a fully-populated ATA capabilities payload in airToAirUnits', () => {
       expect(() =>
         HomeContextSchema.parse(
@@ -197,7 +176,10 @@ describe('validation/schemas', () => {
               {
                 ...baseHomeBuilding,
                 airToAirUnits: [
-                  { ...baseHomeAtaDevice, capabilities: validAtaCapabilities },
+                  {
+                    ...baseHomeAtaDevice,
+                    capabilities: defaultHomeAtaCapabilities,
+                  },
                 ],
               },
             ],
@@ -205,36 +187,6 @@ describe('validation/schemas', () => {
         ),
       ).not.toThrow()
     })
-
-    const validAtwCapabilities = {
-      ftcModel: 3,
-      hasBoiler: true,
-      hasDemandSideControl: true,
-      hasDualRoomTemperature: false,
-      hasEstimatedEnergyConsumption: true,
-      hasEstimatedEnergyProduction: true,
-      hasHalfDegrees: true,
-      hasHeatZone1: true,
-      hasHeatZone2: false,
-      hasHotWater: true,
-      hasMeasuredEnergyConsumption: false,
-      hasMeasuredEnergyProduction: false,
-      hasThermostatZone1: true,
-      hasThermostatZone2: false,
-      hasWirelessRemote: true,
-      hasZone2: false,
-      immersionHeaterCapacity: 0,
-      maxHeatOutput: 0,
-      maxImportPower: 0,
-      maxSetTankTemperature: 60,
-      maxSetTemperature: 30,
-      minSetTankTemperature: 40,
-      minSetTemperature: 10,
-      refridgerentAddress: 0,
-      temperatureIncrement: 0.5,
-      temperatureIncrementOverride: '2',
-      temperatureUnit: '',
-    }
 
     it('accepts a fully-populated ATW capabilities payload in airToWaterUnits', () => {
       expect(() =>
@@ -244,7 +196,10 @@ describe('validation/schemas', () => {
               {
                 ...baseHomeBuilding,
                 airToWaterUnits: [
-                  { ...baseHomeAtwDevice, capabilities: validAtwCapabilities },
+                  {
+                    ...baseHomeAtwDevice,
+                    capabilities: defaultHomeAtwCapabilities,
+                  },
                 ],
               },
             ],
@@ -255,7 +210,7 @@ describe('validation/schemas', () => {
 
     it('rejects ATA capabilities missing a required field', () => {
       const incomplete = {
-        ...validAtaCapabilities,
+        ...defaultHomeAtaCapabilities,
         numberOfFanSpeeds: undefined,
       }
 
@@ -276,7 +231,7 @@ describe('validation/schemas', () => {
     })
 
     it('rejects ATW capabilities missing a required field', () => {
-      const incomplete = { ...validAtwCapabilities, ftcModel: undefined }
+      const incomplete = { ...defaultHomeAtwCapabilities, ftcModel: undefined }
 
       expect(() =>
         HomeContextSchema.parse(

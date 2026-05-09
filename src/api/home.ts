@@ -303,7 +303,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   /**
    * Fetch RSSI telemetry for a device (ATA or ATW). Same {@link Result}
-   * contract as {@link getEnergy}.
+   * contract as {@link getAtaEnergy}.
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
@@ -502,7 +502,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Core of {@link updateValues}: perform the PUT and, on success,
+   * Core of {@link updateAtaValues}: perform the PUT and, on success,
    * trigger a post-mutation registry refresh via
    * `@fetchDevices({ when: 'after' })`. Throws on PUT failure so the
    * decorator skips the sync (failed mutation → server state
