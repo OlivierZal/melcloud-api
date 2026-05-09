@@ -2,5 +2,6 @@
   "sonarlint.connectedMode.project": {
     "connectionId": "olivierzal",
     "projectKey": "OlivierZal_melcloud-api"
-  }
+  },
+  "typescript.native-preview.tsdk": "/Users/olivierzalmanski/github/melcloud-api/node_modules/@typescript/native-preview"
 }
