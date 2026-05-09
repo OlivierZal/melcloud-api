@@ -10,6 +10,10 @@ import {
   HomeTokenResponseSchema,
   parseOrThrow,
 } from '../../src/validation/index.ts'
+import {
+  defaultHomeAtaCapabilities,
+  defaultHomeAtwCapabilities,
+} from '../home-fixtures.ts'
 
 const buildingWithDeviceType = (type: unknown): unknown => [
   {
@@ -33,11 +37,32 @@ const buildingWithDeviceType = (type: unknown): unknown => [
   },
 ]
 
-const baseHomeDevice = {
+const baseCommonDeviceFields = {
+  displayIcon: 'Office',
+  frostProtection: null,
   givenDisplayName: 'D',
+  holidayMode: null,
   id: 'd1',
+  isConnected: true,
+  isInError: false,
+  overheatProtection: null,
   rssi: -42,
+  schedule: [],
+  scheduleEnabled: false,
   settings: [],
+  timeZone: 'UTC',
+}
+const baseHomeAtaDevice = {
+  ...baseCommonDeviceFields,
+  connectedInterfaceIdentifier: 'mac',
+  connectedInterfaceType: 'fourthGenWifi',
+  systemId: null,
+  unitSettings: null,
+}
+const baseHomeAtwDevice = {
+  ...baseCommonDeviceFields,
+  ftcModel: 'ftC6',
+  macAddress: 'mac',
 }
 const baseHomeBuilding = {
   airToAirUnits: [],
@@ -55,6 +80,11 @@ const buildHomeContext = (overrides: Record<string, unknown>): unknown => ({
   id: 'u1',
   language: 'en',
   lastname: 'B',
+  numberOfBuildingsAllowed: 2,
+  numberOfDevicesAllowed: 10,
+  numberOfGuestDevicesAllowed: 10,
+  numberOfGuestUsersAllowedPerUnit: 5,
+  scenes: [],
   ...overrides,
 })
 
@@ -138,38 +168,85 @@ describe('validation/schemas', () => {
   })
 
   describe('homeContextSchema device capabilities', () => {
-    it.each([
-      {
-        capabilities: {
-          hasAirDirection: true,
-          hasAutomaticFanSpeed: true,
-          hasCoolOperationMode: true,
-          numberOfFanSpeeds: 4,
-        },
-        label: 'ATA',
-      },
-      {
-        capabilities: {
-          ftcModel: 3,
-          hasBoiler: false,
-          hasHotWater: true,
-          hasZone2: false,
-        },
-        label: 'ATW',
-      },
-    ])('accepts $label-shaped capabilities', ({ capabilities }) => {
+    it('accepts a fully-populated ATA capabilities payload in airToAirUnits', () => {
       expect(() =>
         HomeContextSchema.parse(
           buildHomeContext({
             buildings: [
               {
                 ...baseHomeBuilding,
-                airToWaterUnits: [{ ...baseHomeDevice, capabilities }],
+                airToAirUnits: [
+                  {
+                    ...baseHomeAtaDevice,
+                    capabilities: defaultHomeAtaCapabilities,
+                  },
+                ],
               },
             ],
           }),
         ),
       ).not.toThrow()
+    })
+
+    it('accepts a fully-populated ATW capabilities payload in airToWaterUnits', () => {
+      expect(() =>
+        HomeContextSchema.parse(
+          buildHomeContext({
+            buildings: [
+              {
+                ...baseHomeBuilding,
+                airToWaterUnits: [
+                  {
+                    ...baseHomeAtwDevice,
+                    capabilities: defaultHomeAtwCapabilities,
+                  },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).not.toThrow()
+    })
+
+    it('rejects ATA capabilities missing a required field', () => {
+      const incomplete = {
+        ...defaultHomeAtaCapabilities,
+        numberOfFanSpeeds: undefined,
+      }
+
+      expect(() =>
+        HomeContextSchema.parse(
+          buildHomeContext({
+            buildings: [
+              {
+                ...baseHomeBuilding,
+                airToAirUnits: [
+                  { ...baseHomeAtaDevice, capabilities: incomplete },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).toThrow(/numberOfFanSpeeds/u)
+    })
+
+    it('rejects ATW capabilities missing a required field', () => {
+      const incomplete = { ...defaultHomeAtwCapabilities, ftcModel: undefined }
+
+      expect(() =>
+        HomeContextSchema.parse(
+          buildHomeContext({
+            buildings: [
+              {
+                ...baseHomeBuilding,
+                airToWaterUnits: [
+                  { ...baseHomeAtwDevice, capabilities: incomplete },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).toThrow(/ftcModel/u)
     })
 
     it('rejects non-object capabilities', () => {
@@ -179,7 +256,9 @@ describe('validation/schemas', () => {
             buildings: [
               {
                 ...baseHomeBuilding,
-                airToAirUnits: [{ ...baseHomeDevice, capabilities: 'invalid' }],
+                airToWaterUnits: [
+                  { ...baseHomeAtwDevice, capabilities: 'invalid' },
+                ],
               },
             ],
           }),

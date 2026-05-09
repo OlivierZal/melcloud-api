@@ -34,15 +34,21 @@ const cognitoLoginPage = (
   '<input type="hidden" name="cognitoAsfData" value=""/>' +
   '</form>'
 
-const mockCapabilities = {
+const mockAtaCapabilities = {
   hasAirDirection: true,
   hasAutomaticFanSpeed: true,
   hasAutoOperationMode: true,
   hasCoolOperationMode: true,
+  hasDemandSideControl: true,
   hasDryOperationMode: true,
+  hasEnergyConsumedMeter: true,
+  hasExtendedTemperatureRange: true,
   hasHalfDegreeIncrements: false,
   hasHeatOperationMode: true,
+  hasStandby: true,
   hasSwing: true,
+  isLegacyDevice: false,
+  isMultiSplitSystem: false,
   maxTempAutomatic: 30,
   maxTempCoolDry: 30,
   maxTempHeat: 30,
@@ -50,23 +56,74 @@ const mockCapabilities = {
   minTempCoolDry: 10,
   minTempHeat: 10,
   numberOfFanSpeeds: 5,
+  supportsWideVane: false,
 }
+
+const mockAtwCapabilities = {
+  ftcModel: 3,
+  hasBoiler: true,
+  hasDemandSideControl: true,
+  hasDualRoomTemperature: false,
+  hasEstimatedEnergyConsumption: true,
+  hasEstimatedEnergyProduction: true,
+  hasHalfDegrees: true,
+  hasHeatZone1: true,
+  hasHeatZone2: false,
+  hasHotWater: false,
+  hasMeasuredEnergyConsumption: false,
+  hasMeasuredEnergyProduction: false,
+  hasThermostatZone1: true,
+  hasThermostatZone2: false,
+  hasWirelessRemote: true,
+  hasZone2: false,
+  immersionHeaterCapacity: 0,
+  maxHeatOutput: 0,
+  maxImportPower: 0,
+  maxSetTankTemperature: 60,
+  maxSetTemperature: 30,
+  minSetTankTemperature: 40,
+  minSetTemperature: 10,
+  refridgerentAddress: 0,
+  temperatureIncrement: 0.5,
+  temperatureIncrementOverride: '2',
+  temperatureUnit: '',
+}
+
+const commonDeviceFields = {
+  displayIcon: 'Office',
+  frostProtection: null,
+  holidayMode: null,
+  isConnected: true,
+  isInError: false,
+  overheatProtection: null,
+  schedule: [],
+  scheduleEnabled: false,
+  timeZone: 'Europe/Paris',
+} as const
 
 const mockBuilding: HomeBuilding = {
   airToAirUnits: [
     {
-      capabilities: mockCapabilities,
+      ...commonDeviceFields,
+      capabilities: mockAtaCapabilities,
+      connectedInterfaceIdentifier: 'FE0000060403388D3DFFFE000000000000',
+      connectedInterfaceType: 'fourthGenWifi',
       givenDisplayName: 'Test ClassicDevice',
       id: 'device-1',
       rssi: -50,
       settings: [{ name: 'Power', value: 'True' }],
+      systemId: null,
+      unitSettings: null,
     },
   ],
   airToWaterUnits: [
     {
-      capabilities: mockCapabilities,
+      ...commonDeviceFields,
+      capabilities: mockAtwCapabilities,
+      ftcModel: 'ftC6',
       givenDisplayName: 'ATW ClassicDevice',
       id: 'device-2',
+      macAddress: 'FE0000060403388D3DFFFE000000000001',
       rssi: -55,
       settings: [],
     },
@@ -85,6 +142,11 @@ const mockContext: HomeContext = {
   id: 'user-1',
   language: 'fr',
   lastname: 'User',
+  numberOfBuildingsAllowed: 2,
+  numberOfDevicesAllowed: 10,
+  numberOfGuestDevicesAllowed: 10,
+  numberOfGuestUsersAllowedPerUnit: 5,
+  scenes: [],
 }
 
 const mockEnergyData: HomeEnergyData = {
@@ -520,7 +582,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      await api.updateValues('device-1', { power: true })
+      await api.updateAtaValues('device-1', { power: true })
 
       expect(onSync).toHaveBeenCalledTimes(1)
     })
@@ -553,7 +615,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const isSuccess = await api.updateValues('device-1', {
+      const isSuccess = await api.updateAtaValues('device-1', {
         operationMode: 'Heat',
         power: true,
       })
@@ -572,7 +634,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const isSuccess = await api.updateValues('device-1', { power: false })
+      const isSuccess = await api.updateAtaValues('device-1', { power: false })
 
       expect(isSuccess).toBe(false)
     })
@@ -588,7 +650,7 @@ describe('melcloud home API', () => {
       onSync.mockClear()
       mockRequest.mockClear()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const isSuccess = await api.updateValues('device-1', { power: false })
+      const isSuccess = await api.updateAtaValues('device-1', { power: false })
 
       expect(isSuccess).toBe(false)
       expect(mockRequest).toHaveBeenCalledTimes(1)
@@ -606,7 +668,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      await api.updateValues('device-1', { power: false })
+      await api.updateAtaValues('device-1', { power: false })
 
       expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
     })
@@ -623,7 +685,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const isSuccess = await api.updateValues('device-1', { power: false })
+      const isSuccess = await api.updateAtaValues('device-1', { power: false })
 
       expect(isSuccess).toBe(true)
       expect(logger.error).toHaveBeenCalledWith(
@@ -638,7 +700,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockErrorLog, {}, 200))
-      const result = await api.getErrorLog('device-1')
+      const result = await api.getAtaErrorLog('device-1')
 
       expect(result).toStrictEqual({ ok: true, value: mockErrorLog })
       expect(mockRequest).toHaveBeenLastCalledWith(
@@ -652,7 +714,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const result = await api.getErrorLog('device-1')
+      const result = await api.getAtaErrorLog('device-1')
 
       expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
     })
@@ -663,7 +725,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
-      const result = await api.getTemperatures('device-1', {
+      const result = await api.getAtaTemperatures('device-1', {
         from: '2026-03-01',
         period: 'Hourly',
         to: '2026-03-02',
@@ -687,7 +749,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const result = await api.getTemperatures('device-1', {
+      const result = await api.getAtaTemperatures('device-1', {
         from: '2026-03-01',
         period: 'Daily',
         to: '2026-03-02',
@@ -702,7 +764,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
-      const result = await api.getEnergy('device-1', {
+      const result = await api.getAtaEnergy('device-1', {
         from: '2026-03-01',
         interval: 'Hour',
         to: '2026-03-02',
@@ -726,7 +788,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const result = await api.getEnergy('device-1', {
+      const result = await api.getAtaEnergy('device-1', {
         from: '2026-03-01',
         interval: 'Day',
         to: '2026-03-02',
@@ -769,6 +831,121 @@ describe('melcloud home API', () => {
       })
 
       expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
+    })
+  })
+
+  describe('atw endpoints', () => {
+    it('updateAtwValues PUTs to /monitor/atwunit/{id}', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const isSuccess = await api.updateAtwValues('atw-1', {
+        power: false,
+        setTemperatureZone1: 20,
+      })
+
+      expect(isSuccess).toBe(true)
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { power: false, setTemperatureZone1: 20 },
+          method: 'put',
+          url: '/monitor/atwunit/atw-1',
+        }),
+      )
+    })
+
+    it('updateAtwValues returns false when the PUT throws', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      const isSuccess = await api.updateAtwValues('atw-1', { power: false })
+
+      expect(isSuccess).toBe(false)
+    })
+
+    it.each([
+      { measure: 'consumed', wireMeasure: 'interval_energy_consumed' },
+      { measure: 'produced', wireMeasure: 'interval_energy_produced' },
+    ] as const)(
+      'getAtwEnergy maps $measure to $wireMeasure',
+      async ({ measure, wireMeasure }) => {
+        setupSuccessfulLogin()
+        const api = await createApi()
+        mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
+        await api.getAtwEnergy('atw-1', {
+          from: '2026-05-01',
+          interval: 'Hour',
+          measure,
+          to: '2026-05-02',
+        })
+
+        expect(mockRequest).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            params: {
+              from: '2026-05-01 00:00',
+              interval: 'Hour',
+              measure: wireMeasure,
+              to: '2026-05-02 00:00',
+            },
+            url: '/telemetry/telemetry/energy/atw-1',
+          }),
+        )
+      },
+    )
+
+    it('getAtwErrorLog hits /monitor/atwunit/{id}/errorlog', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockErrorLog, {}, 200))
+      await api.getAtwErrorLog('atw-1')
+
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          url: '/monitor/atwunit/atw-1/errorlog',
+        }),
+      )
+    })
+
+    it('getAtwTemperatures hits /report/v1/comfort-graph with .NET-format dates', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
+      await api.getAtwTemperatures('atw-1', {
+        from: '2026-05-01',
+        period: 'Daily',
+        to: '2026-05-02',
+      })
+
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          params: {
+            from: '2026-05-01T00:00:00.0000000',
+            period: 'Daily',
+            to: '2026-05-02T00:00:00.0000000',
+            unitId: 'atw-1',
+          },
+          url: '/report/v1/comfort-graph',
+        }),
+      )
+    })
+
+    it('getAtwInternalTemperatures hits /report/v1/internaltemperatures', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
+      await api.getAtwInternalTemperatures('atw-1', {
+        from: '2026-05-01',
+        period: 'Hourly',
+        to: '2026-05-02',
+      })
+
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          url: '/report/v1/internaltemperatures',
+        }),
+      )
     })
   })
 

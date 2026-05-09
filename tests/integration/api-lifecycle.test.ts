@@ -9,6 +9,7 @@ import { HttpError } from '../../src/http/index.ts'
 import { MS_PER_HOUR } from '../../src/time-units.ts'
 import {
   type ClassicBuildingWithStructure,
+  type ClassicListDevice,
   type HomeContext,
   toClassicAreaId,
   toClassicBuildingId,
@@ -52,7 +53,7 @@ const buildingResponse: ClassicBuildingWithStructure[] = [
             {
               BuildingId: toClassicBuildingId(1),
               Devices: [
-                {
+                mock<ClassicListDevice<typeof ClassicDeviceType.Ata>>({
                   AreaID: toClassicAreaId(100),
                   BuildingID: toClassicBuildingId(1),
                   Device: classicAtaDeviceData({
@@ -63,7 +64,7 @@ const buildingResponse: ClassicBuildingWithStructure[] = [
                   DeviceName: 'AC unit',
                   FloorID: toClassicFloorId(10),
                   Type: ClassicDeviceType.Ata,
-                },
+                }),
               ],
               FloorId: 10,
               ID: 100,
@@ -463,6 +464,11 @@ describe('api lifecycle', () => {
       id: 'user-1',
       language: 'fr',
       lastname: 'User',
+      numberOfBuildingsAllowed: 2,
+      numberOfDevicesAllowed: 10,
+      numberOfGuestDevicesAllowed: 10,
+      numberOfGuestUsersAllowedPerUnit: 5,
+      scenes: [],
     }
 
     const mockFetch = vi.fn<typeof fetch>()

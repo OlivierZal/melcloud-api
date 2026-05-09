@@ -1,6 +1,8 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
+import type { HomeAtaDeviceData, HomeAtwDeviceData } from '../types/index.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
+import { HomeDeviceAtwFacade } from './home-device-atw.ts'
 
 /**
  * Lazily creates and caches Home device facade instances using a WeakMap
@@ -10,7 +12,10 @@ import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 export class HomeFacadeManager {
   readonly #api: HomeAPIAdapter
 
-  readonly #facades = new WeakMap<HomeDevice, HomeDeviceAtaFacade>()
+  readonly #facades = new WeakMap<
+    HomeDevice,
+    HomeDeviceAtaFacade | HomeDeviceAtwFacade
+  >()
 
   /**
    * Builds a facade manager bound to the given Home API client; facades
@@ -23,22 +28,33 @@ export class HomeFacadeManager {
 
   /**
    * Returns the cached facade for the given Home device, lazily creating
-   * one on first access; passing `undefined` returns `null`.
+   * one on first access. The overloads preserve type-narrowing: callers
+   * who already discriminated `instance` via `isAta()`/`isAtw()` get the
+   * matching facade type back without runtime checks.
    * @param instance - Registry device to wrap, or `undefined`.
    * @returns The facade, or `null` when no instance was supplied.
    */
-  public get(instance: HomeDevice): HomeDeviceAtaFacade
+  public get(instance: HomeDevice<HomeAtaDeviceData>): HomeDeviceAtaFacade
+  public get(instance: HomeDevice<HomeAtwDeviceData>): HomeDeviceAtwFacade
   public get(): null
-  public get(instance?: HomeDevice): HomeDeviceAtaFacade | null
-  public get(instance?: HomeDevice): HomeDeviceAtaFacade | null {
-    if (!instance) {
+  public get(
+    instance?: HomeDevice<HomeAtaDeviceData> | HomeDevice<HomeAtwDeviceData>,
+  ): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null
+  public get(
+    instance?: HomeDevice<HomeAtaDeviceData> | HomeDevice<HomeAtwDeviceData>,
+  ): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
+    if (instance === undefined) {
       return null
     }
-    let facade = this.#facades.get(instance)
-    if (!facade) {
-      facade = new HomeDeviceAtaFacade(this.#api, instance)
-      this.#facades.set(instance, facade)
+    const cached = this.#facades.get(instance)
+    if (cached !== undefined) {
+      return cached
     }
+    const facade =
+      instance.isAta() ?
+        new HomeDeviceAtaFacade(this.#api, instance)
+      : new HomeDeviceAtwFacade(this.#api, instance)
+    this.#facades.set(instance, facade)
     return facade
   }
 }

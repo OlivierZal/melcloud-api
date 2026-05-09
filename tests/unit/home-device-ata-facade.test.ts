@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
-import type { HomeDeviceCapabilities } from '../../src/types/index.ts'
+import type { HomeAtaDeviceCapabilities } from '../../src/types/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { mock } from '../helpers.ts'
@@ -9,7 +9,7 @@ import { homeDevice } from '../home-fixtures.ts'
 
 const createModel = (
   settings: Record<string, string> = {},
-  capabilities: Partial<HomeDeviceCapabilities> = {},
+  capabilities: Partial<HomeAtaDeviceCapabilities> = {},
   rssi = -50,
 ): ReturnType<typeof homeDevice> =>
   homeDevice({
@@ -22,12 +22,12 @@ const createModel = (
 
 const createApi = (): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
-    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
-    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
+    getAtaEnergy: vi.fn<HomeAPIAdapter['getAtaEnergy']>(),
+    getAtaErrorLog: vi.fn<HomeAPIAdapter['getAtaErrorLog']>(),
+    getAtaTemperatures: vi.fn<HomeAPIAdapter['getAtaTemperatures']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
-    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
-    updateValues: vi
-      .fn<HomeAPIAdapter['updateValues']>()
+    updateAtaValues: vi
+      .fn<HomeAPIAdapter['updateAtaValues']>()
       .mockResolvedValue(true),
   })
 
@@ -146,7 +146,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 5 })
 
-      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 10,
       })
     })
@@ -162,7 +162,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 35 })
 
-      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 31,
       })
     })
@@ -178,7 +178,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 10 })
 
-      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 16,
       })
     })
@@ -194,7 +194,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 10 })
 
-      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 16,
       })
     })
@@ -210,7 +210,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ operationMode: 'Cool', setTemperature: 10 })
 
-      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
         operationMode: 'Cool',
         setTemperature: 16,
       })
@@ -224,7 +224,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 21 })
 
-      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 21,
       })
     })
@@ -237,7 +237,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ power: true })
 
-      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
         power: true,
       })
     })
@@ -250,7 +250,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 5 })
 
-      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 5,
       })
     })
@@ -263,7 +263,7 @@ describe('home device ata facade', () => {
       const params = { from: '2026-03-01', interval: 'Day', to: '2026-03-02' }
       await facade.getEnergy(params)
 
-      expect(api.getEnergy).toHaveBeenCalledWith('device-1', params)
+      expect(api.getAtaEnergy).toHaveBeenCalledWith('device-1', params)
     })
 
     it('should delegate getErrorLog with device id', async () => {
@@ -271,7 +271,7 @@ describe('home device ata facade', () => {
       const facade = new HomeDeviceAtaFacade(api, createModel())
       await facade.getErrorLog()
 
-      expect(api.getErrorLog).toHaveBeenCalledWith('device-1')
+      expect(api.getAtaErrorLog).toHaveBeenCalledWith('device-1')
     })
 
     it('should delegate getSignal with device id', async () => {
@@ -289,7 +289,7 @@ describe('home device ata facade', () => {
       const params = { from: '2026-03-01', period: 'Hourly', to: '2026-03-02' }
       await facade.getTemperatures(params)
 
-      expect(api.getTemperatures).toHaveBeenCalledWith('device-1', params)
+      expect(api.getAtaTemperatures).toHaveBeenCalledWith('device-1', params)
     })
   })
 })

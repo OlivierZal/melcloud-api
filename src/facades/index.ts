@@ -25,5 +25,7 @@ export {
   isClassicAtwFacade,
   isClassicErvFacade,
 } from './classic-types.ts'
+export { HomeBaseDeviceFacade } from './home-base-device.ts'
 export { HomeDeviceAtaFacade } from './home-device-ata.ts'
+export { HomeDeviceAtwFacade } from './home-device-atw.ts'
 export { HomeFacadeManager } from './home-manager.ts'

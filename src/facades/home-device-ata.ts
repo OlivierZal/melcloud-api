@@ -1,9 +1,9 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type {
+  HomeAtaDeviceCapabilities,
+  HomeAtaDeviceData,
   HomeAtaValues,
-  HomeDeviceCapabilities,
-  HomeDeviceSetting,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
@@ -21,6 +21,7 @@ import {
 } from '../enum-mappings.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { clampToRange } from '../utils.ts'
+import { HomeBaseDeviceFacade } from './home-base-device.ts'
 
 interface TemperatureRange {
   max: number
@@ -30,16 +31,16 @@ interface TemperatureRange {
 const coolDryRange = ({
   maxTempCoolDry: max,
   minTempCoolDry: min,
-}: HomeDeviceCapabilities): TemperatureRange => ({ max, min })
+}: HomeAtaDeviceCapabilities): TemperatureRange => ({ max, min })
 
 const heatFanRange = ({
   maxTempHeat: max,
   minTempHeat: min,
-}: HomeDeviceCapabilities): TemperatureRange => ({ max, min })
+}: HomeAtaDeviceCapabilities): TemperatureRange => ({ max, min })
 
 const temperatureRanges = new Map<
   HomeOperationMode,
-  (capabilities: HomeDeviceCapabilities) => TemperatureRange
+  (capabilities: HomeAtaDeviceCapabilities) => TemperatureRange
 >([
   [
     'Automatic',
@@ -54,39 +55,20 @@ const temperatureRanges = new Map<
   ['Heat', heatFanRange],
 ])
 
-const getSetting = (settings: HomeDeviceSetting[], name: string): string =>
-  settings.find((setting) => setting.name === name)?.value ?? ''
-
 /**
  * Facade for a MELCloud Home ATA device. Provides typed access to device
- * settings and temperature clamping per operation mode before sending
- * values to the Classic API.
+ * settings and per-mode temperature clamping before forwarding updates
+ * to the BFF.
  * @category Facades
  */
-export class HomeDeviceAtaFacade {
+export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData> {
   /**
    * Static capability flags and per-mode temperature bounds advertised
    * by this device.
    * @returns The capability descriptor.
    */
-  public get capabilities(): HomeDeviceCapabilities {
-    return this.#model.data.capabilities
-  }
-
-  /**
-   * Unique device identifier as assigned by MELCloud Home.
-   * @returns The device id.
-   */
-  public get id(): string {
-    return this.#model.id
-  }
-
-  /**
-   * User-facing display name set in the MELCloud Home app.
-   * @returns The device's display name.
-   */
-  public get name(): string {
-    return this.#model.name
+  public get capabilities(): HomeAtaDeviceCapabilities {
+    return this.model.data.capabilities
   }
 
   /**
@@ -111,14 +93,6 @@ export class HomeDeviceAtaFacade {
    */
   public get roomTemperature(): number {
     return this.#setting('RoomTemperature')
-  }
-
-  /**
-   * Last-reported Wi-Fi signal strength of the device adapter, in dBm.
-   * @returns The RSSI value.
-   */
-  public get rssi(): number {
-    return this.#model.data.rssi
   }
 
   /**
@@ -162,19 +136,17 @@ export class HomeDeviceAtaFacade {
     return this.#setting('VaneVerticalDirection')
   }
 
-  readonly #api: HomeAPIAdapter
-
-  readonly #model: HomeDevice
-
   /**
    * Builds a Home ATA facade backed by the given API client and
    * registry-resident device model.
    * @param api - Home API client.
-   * @param model - Backing device model.
+   * @param model - Backing device model, narrowed to the ATA variant.
    */
-  public constructor(api: HomeAPIAdapter, model: HomeDevice) {
-    this.#api = api
-    this.#model = model
+  public constructor(
+    api: HomeAPIAdapter,
+    model: HomeDevice<HomeAtaDeviceData>,
+  ) {
+    super(api, model)
   }
 
   /**
@@ -190,7 +162,7 @@ export class HomeDeviceAtaFacade {
     interval: string
     to: string
   }): Promise<Result<HomeEnergyData>> {
-    return this.#api.getEnergy(this.id, params)
+    return this.api.getAtaEnergy(this.id, params)
   }
 
   /**
@@ -198,21 +170,7 @@ export class HomeDeviceAtaFacade {
    * @returns The entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.#api.getErrorLog(this.id)
-  }
-
-  /**
-   * Fetches RSSI telemetry for this device over the given time window.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or a typed failure.
-   */
-  public async getSignal(params: {
-    from: string
-    to: string
-  }): Promise<Result<HomeEnergyData>> {
-    return this.#api.getSignal(this.id, params)
+    return this.api.getAtaErrorLog(this.id)
   }
 
   /**
@@ -229,7 +187,7 @@ export class HomeDeviceAtaFacade {
     period: string
     to: string
   }): Promise<Result<HomeReportData[]>> {
-    return this.#api.getTemperatures(this.id, params)
+    return this.api.getAtaTemperatures(this.id, params)
   }
 
   /**
@@ -243,7 +201,7 @@ export class HomeDeviceAtaFacade {
     if (Object.keys(values).length === 0) {
       throw new NoChangesError(this.id)
     }
-    return this.#api.updateValues(this.id, {
+    return this.api.updateAtaValues(this.id, {
       ...values,
       ...this.#clampSetTemperature(values),
     })
@@ -276,7 +234,7 @@ export class HomeDeviceAtaFacade {
   #setting(name: string): unknown
 
   #setting(name: string): unknown {
-    const raw = getSetting(this.#model.data.settings, name)
+    const raw = this.setting(name)
     if (name === 'RoomTemperature' || name === 'SetTemperature') {
       return Number(raw)
     }

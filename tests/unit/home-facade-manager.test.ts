@@ -2,20 +2,21 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
+import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
 import { mock } from '../helpers.ts'
-import { homeDevice } from '../home-fixtures.ts'
+import { homeAtwDevice, homeDevice } from '../home-fixtures.ts'
 
 const createModel = (): ReturnType<typeof homeDevice> =>
   homeDevice({ id: 'device-1', name: 'Test ClassicDevice' })
 
 const createApi = (): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
-    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
-    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
+    getAtaEnergy: vi.fn<HomeAPIAdapter['getAtaEnergy']>(),
+    getAtaErrorLog: vi.fn<HomeAPIAdapter['getAtaErrorLog']>(),
+    getAtaTemperatures: vi.fn<HomeAPIAdapter['getAtaTemperatures']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
-    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
-    updateValues: vi.fn<HomeAPIAdapter['updateValues']>(),
+    updateAtaValues: vi.fn<HomeAPIAdapter['updateAtaValues']>(),
   })
 
 describe('home facade manager', () => {
@@ -25,11 +26,18 @@ describe('home facade manager', () => {
     expect(manager.get()).toBeNull()
   })
 
-  it('returns a facade for a device model', () => {
+  it('returns an ATA facade for an ATA device model', () => {
     const manager = new HomeFacadeManager(createApi())
     const facade = manager.get(createModel())
 
     expect(facade).toBeInstanceOf(HomeDeviceAtaFacade)
+  })
+
+  it('returns an ATW facade for an ATW device model', () => {
+    const manager = new HomeFacadeManager(createApi())
+    const facade = manager.get(homeAtwDevice({ id: 'atw-1' }))
+
+    expect(facade).toBeInstanceOf(HomeDeviceAtwFacade)
   })
 
   it('caches facades for the same instance', () => {

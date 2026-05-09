@@ -2,6 +2,10 @@ import { z } from 'zod'
 
 import type {
   ClassicLoginData,
+  HomeAtaDeviceCapabilities,
+  HomeAtaDeviceData,
+  HomeAtwDeviceCapabilities,
+  HomeAtwDeviceData,
   HomeContext,
   HomeEnergyData,
   HomeErrorLogEntry,
@@ -53,27 +57,128 @@ const HomeDeviceSettingSchema = z.looseObject({
   value: z.string(),
 })
 
-// `capabilities` is structurally disjoint between ATA and ATW; strict
-// validation here would reject `/context` for any mixed-fleet account.
-// The cast keeps `HomeContextSchema` assignable to `z.ZodType<HomeContext>`
-// without narrowing the public type — only the ATA facade reads these
-// fields, and only for ATA devices, so the lie is contained.
-type HomeAnyCapabilities =
-  HomeContext['buildings'][number]['airToAirUnits'][number]['capabilities']
-const HomeDeviceCapabilitiesSchema =
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- schema is deliberately broader than the static type; see comment above
-  z.looseObject({}) as unknown as z.ZodType<HomeAnyCapabilities>
-const HomeDeviceDataSchema = z.looseObject({
-  capabilities: HomeDeviceCapabilitiesSchema,
-  givenDisplayName: z.string(),
+// Per-type capability schemas validate every documented field; the
+// schemas stay `looseObject` so MELCloud can add new keys without
+// breaking validation.
+const HomeAtaCapabilitiesSchema: z.ZodType<HomeAtaDeviceCapabilities> =
+  z.looseObject({
+    hasAirDirection: z.boolean(),
+    hasAutomaticFanSpeed: z.boolean(),
+    hasAutoOperationMode: z.boolean(),
+    hasCoolOperationMode: z.boolean(),
+    hasDemandSideControl: z.boolean(),
+    hasDryOperationMode: z.boolean(),
+    hasEnergyConsumedMeter: z.boolean(),
+    hasExtendedTemperatureRange: z.boolean(),
+    hasHalfDegreeIncrements: z.boolean(),
+    hasHeatOperationMode: z.boolean(),
+    hasStandby: z.boolean(),
+    hasSwing: z.boolean(),
+    isLegacyDevice: z.boolean(),
+    isMultiSplitSystem: z.boolean(),
+    maxTempAutomatic: z.number(),
+    maxTempCoolDry: z.number(),
+    maxTempHeat: z.number(),
+    minTempAutomatic: z.number(),
+    minTempCoolDry: z.number(),
+    minTempHeat: z.number(),
+    numberOfFanSpeeds: z.number(),
+    supportsWideVane: z.boolean(),
+  })
+
+const HomeAtwCapabilitiesSchema: z.ZodType<HomeAtwDeviceCapabilities> =
+  z.looseObject({
+    ftcModel: z.number(),
+    hasBoiler: z.boolean(),
+    hasDemandSideControl: z.boolean(),
+    hasDualRoomTemperature: z.boolean(),
+    hasEstimatedEnergyConsumption: z.boolean(),
+    hasEstimatedEnergyProduction: z.boolean(),
+    hasHalfDegrees: z.boolean(),
+    hasHeatZone1: z.boolean(),
+    hasHeatZone2: z.boolean(),
+    hasHotWater: z.boolean(),
+    hasMeasuredEnergyConsumption: z.boolean(),
+    hasMeasuredEnergyProduction: z.boolean(),
+    hasThermostatZone1: z.boolean(),
+    hasThermostatZone2: z.boolean(),
+    hasWirelessRemote: z.boolean(),
+    hasZone2: z.boolean(),
+    immersionHeaterCapacity: z.number(),
+    maxHeatOutput: z.number(),
+    maxImportPower: z.number(),
+    maxSetTankTemperature: z.number(),
+    maxSetTemperature: z.number(),
+    minSetTankTemperature: z.number(),
+    minSetTemperature: z.number(),
+    refridgerentAddress: z.number(),
+    temperatureIncrement: z.number(),
+    temperatureIncrementOverride: z.string(),
+    temperatureUnit: z.string(),
+  })
+
+// `frost-`, `overheat-` and `holidayMode` carry the same low-level
+// shape (active/enabled/min/max booleans + numbers) — declared once
+// and reused. `holidayMode` is left structural because the firmware
+// shape varies and the SDK does not consume it.
+const HomeProtectionSchema = z.looseObject({
+  active: z.boolean(),
+  enabled: z.boolean(),
+  max: z.number(),
+  min: z.number(),
+})
+
+const HomeDeviceScheduleEntrySchema = z.looseObject({
+  days: z.array(z.string()),
+  enabled: z.boolean(),
   id: z.string(),
+  operationMode: z.string(),
+  power: z.boolean(),
+  setFanSpeed: z.string().optional(),
+  setPoint: z.number(),
+  time: z.string(),
+  vaneHorizontalDirection: z.string().optional(),
+  vaneVerticalDirection: z.string().optional(),
+})
+
+const HomeDeviceCommonFields = {
+  displayIcon: z.string(),
+  frostProtection: HomeProtectionSchema.nullable(),
+  givenDisplayName: z.string(),
+  holidayMode: z.looseObject({}).nullable(),
+  id: z.string(),
+  isConnected: z.boolean(),
+  isInError: z.boolean(),
+  overheatProtection: HomeProtectionSchema.nullable(),
   rssi: z.number(),
+  schedule: z.array(HomeDeviceScheduleEntrySchema),
+  scheduleEnabled: z.boolean(),
   settings: z.array(HomeDeviceSettingSchema),
+  timeZone: z.string(),
+}
+
+const HomeAtaDeviceDataSchema: z.ZodType<HomeAtaDeviceData> = z.looseObject({
+  ...HomeDeviceCommonFields,
+  capabilities: HomeAtaCapabilitiesSchema,
+  connectedInterfaceIdentifier: z.string(),
+  connectedInterfaceType: z.union([
+    z.literal('fourthGenWifi'),
+    z.literal('melCloudWiFi'),
+  ]),
+  systemId: z.string().nullable(),
+  unitSettings: z.looseObject({}).nullable(),
+})
+
+const HomeAtwDeviceDataSchema: z.ZodType<HomeAtwDeviceData> = z.looseObject({
+  ...HomeDeviceCommonFields,
+  capabilities: HomeAtwCapabilitiesSchema,
+  ftcModel: z.string(),
+  macAddress: z.string(),
 })
 
 const HomeBuildingSchema = z.looseObject({
-  airToAirUnits: z.array(HomeDeviceDataSchema),
-  airToWaterUnits: z.array(HomeDeviceDataSchema),
+  airToAirUnits: z.array(HomeAtaDeviceDataSchema),
+  airToWaterUnits: z.array(HomeAtwDeviceDataSchema),
   id: z.string(),
   name: z.string(),
   timezone: z.string(),
@@ -89,6 +194,11 @@ export const HomeContextSchema: z.ZodType<HomeContext> = z.looseObject({
   id: z.string(),
   language: z.string(),
   lastname: z.string(),
+  numberOfBuildingsAllowed: z.number(),
+  numberOfDevicesAllowed: z.number(),
+  numberOfGuestDevicesAllowed: z.number(),
+  numberOfGuestUsersAllowedPerUnit: z.number(),
+  scenes: z.array(z.looseObject({})),
 })
 
 // Home telemetry / report endpoints. Responses are consumed as arrays
@@ -138,7 +248,7 @@ export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
   reportPeriod: z.string(),
 })
 
-/** Home /monitor/ataunit/{id}/errorlog response (array of entries). */
+/** Home /monitor/{ata,atw}unit/{id}/errorlog response (array of entries). */
 export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
   z.array(
     z.looseObject({

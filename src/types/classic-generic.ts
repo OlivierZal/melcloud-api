@@ -85,13 +85,49 @@ export interface ClassicAreaZone extends BaseZone {
 
 /**
  * Wire-format building entry from `ListDevices` (without the nested `Structure`).
+ * Inherits frost-protection + holiday-mode flags from {@link ClassicZoneSettings}.
  * @category Types
  */
 export interface ClassicBuildingData extends ClassicZoneSettings {
+  readonly AccessLevel: number
+  readonly AddressLine1: string
+  readonly AddressLine2: string | null
+  readonly BuildingType: number
+  readonly City: string
+  readonly CoolingDisabled: boolean
+  readonly Country: number
+  readonly DateBuilt: string | null
+  readonly DirectAccess: boolean
+  readonly District: string | null
+  readonly EndDate: string
+  readonly Expanded: boolean
+  readonly HasGasSupply: boolean
   readonly ID: ClassicBuildingID
+  readonly iDateBuilt: number | string | null
+  readonly Latitude: number
+  readonly LinkToMELCloudHome: boolean
   readonly Location: number
+  readonly LocationLookupDate: string
+  readonly Longitude: number
+  readonly MaxTemperature: number
+  readonly MinTemperature: number
   readonly Name: string
+  readonly Owner: ClassicBuildingOwner | null
+  readonly Postcode: string
+  readonly PropertyType: number
+  readonly QuantizedCoordinates: ClassicQuantizedCoordinates
+  readonly TimeZone: number
+  readonly TimeZoneCity: number
+  readonly TimeZoneContinent: number
 }
+
+/**
+ * Owner descriptor returned by `ListDevices` building entries when the
+ * authenticated user is a guest. `null` for owned buildings — the
+ * shape itself is structural until a sample materialises in the wild.
+ * @category Types
+ */
+export type ClassicBuildingOwner = Readonly<Record<string, unknown>>
 
 /**
  * Full wire-format building from `ListDevices`, including the nested floor / area / device hierarchy.
@@ -135,6 +171,20 @@ export type ClassicDateTimeComponents = {
   readonly Second: number
   readonly Year: number
 } | null
+
+/**
+ * Per-capability permission flags carried on every `ListDevices`
+ * device wrapper. Mirrors what the BFF computes from the user's
+ * ownership / share grants for each device.
+ * @category Types
+ */
+export interface ClassicDevicePermissions {
+  readonly CanSetFanSpeed: boolean
+  readonly CanSetOperationMode: boolean
+  readonly CanSetPower: boolean
+  readonly CanSetTemperatureIncrementOverride: boolean
+  readonly CanSetVentilationMode: boolean
+}
 
 /**
  * Registry zone for an individual device.
@@ -368,6 +418,17 @@ export type ClassicOperationModeLogData = {
   Key: string
   Value: number
 }[]
+
+/**
+ * Approximate latitude/longitude bucket carried alongside `Latitude`/
+ * `Longitude` on each {@link ClassicBuildingData} entry. The BFF uses
+ * the rounded values for clustering/coarse map placement.
+ * @category Types
+ */
+export interface ClassicQuantizedCoordinates {
+  readonly Latitude: number
+  readonly Longitude: number
+}
 
 /**
  * Generic report payload (temperatures, signal, etc.) returned by the various `Report/*` endpoints.
