@@ -142,7 +142,10 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @param api - Home API client.
    * @param model - Backing device model, narrowed to the ATA variant.
    */
-  public constructor(api: HomeAPIAdapter, model: HomeDevice<HomeAtaDeviceData>) {
+  public constructor(
+    api: HomeAPIAdapter,
+    model: HomeDevice<HomeAtaDeviceData>,
+  ) {
     super(api, model)
   }
 

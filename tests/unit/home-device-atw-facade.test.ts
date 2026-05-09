@@ -18,7 +18,8 @@ const createApi = (): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
     getAtwEnergy: vi.fn<HomeAPIAdapter['getAtwEnergy']>(),
     getAtwErrorLog: vi.fn<HomeAPIAdapter['getAtwErrorLog']>(),
-    getAtwInternalTemperatures: vi.fn<HomeAPIAdapter['getAtwInternalTemperatures']>(),
+    getAtwInternalTemperatures:
+      vi.fn<HomeAPIAdapter['getAtwInternalTemperatures']>(),
     getAtwTemperatures: vi.fn<HomeAPIAdapter['getAtwTemperatures']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     updateAtwValues: vi
@@ -132,6 +133,20 @@ describe('home device atw facade', () => {
 
       expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', {
         setTemperatureZone1: 28,
+      })
+    })
+
+    it('clamps zone-2 setpoint to capability bounds before forwarding', async () => {
+      const api = createApi()
+      const facade = new HomeDeviceAtwFacade(
+        api,
+        createModel({}, { maxSetTemperature: 28, minSetTemperature: 12 }),
+      )
+
+      await facade.updateValues({ setTemperatureZone2: 5 })
+
+      expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', {
+        setTemperatureZone2: 12,
       })
     })
 

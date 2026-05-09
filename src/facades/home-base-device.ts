@@ -1,10 +1,6 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
-import type {
-  HomeDeviceData,
-  HomeEnergyData,
-  Result,
-} from '../types/index.ts'
+import type { HomeDeviceData, HomeEnergyData, Result } from '../types/index.ts'
 
 /**
  * Shared scaffolding for every Home device facade. Holds the API
@@ -23,17 +19,6 @@ import type {
  * @category Facades
  */
 export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
-  /**
-   * Last-synced wire-format payload for this device. Mirrors the
-   * `data` accessor exposed by Classic facades so consumers always
-   * have a typed escape hatch to fields the SDK does not surface
-   * through dedicated getters.
-   * @returns A read-only snapshot of the device data.
-   */
-  public get data(): Readonly<TData> {
-    return this.model.data
-  }
-
   /**
    * Unique device identifier as assigned by MELCloud Home.
    * @returns The device id.
@@ -96,8 +81,7 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
    */
   protected setting(name: string): string {
     return (
-      this.model.data.settings.find((entry) => entry.name === name)?.value ??
-      ''
+      this.model.data.settings.find((entry) => entry.name === name)?.value ?? ''
     )
   }
 }

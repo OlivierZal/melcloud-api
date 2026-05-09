@@ -856,6 +856,15 @@ describe('melcloud home API', () => {
       )
     })
 
+    it('updateAtwValues returns false when the PUT throws', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockRejectedValueOnce(new Error('network'))
+      const isSuccess = await api.updateAtwValues('atw-1', { power: false })
+
+      expect(isSuccess).toBe(false)
+    })
+
     it('getAtwEnergy maps consumed to interval_energy_consumed', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
@@ -956,7 +965,6 @@ describe('melcloud home API', () => {
         }),
       )
     })
-
   })
 
   describe('auto-sync', () => {

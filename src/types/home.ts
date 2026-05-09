@@ -224,9 +224,7 @@ export interface HomeDeviceCommonData {
  * GUID-addressed fourth-generation adapters.
  * @category Types
  */
-export type HomeDeviceConnectedInterfaceType =
-  | 'fourthGenWifi'
-  | 'melCloudWiFi'
+export type HomeDeviceConnectedInterfaceType = 'fourthGenWifi' | 'melCloudWiFi'
 
 /**
  * Wire-format MELCloud Home device entry; either an ATA or ATW unit.

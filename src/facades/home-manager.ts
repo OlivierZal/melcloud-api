@@ -1,11 +1,12 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
-import type {
-  HomeAtaDeviceData,
-  HomeAtwDeviceData,
-} from '../types/index.ts'
+import type { HomeAtaDeviceData, HomeAtwDeviceData } from '../types/index.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 import { HomeDeviceAtwFacade } from './home-device-atw.ts'
+
+type HomeDeviceVariant =
+  | HomeDevice<HomeAtaDeviceData>
+  | HomeDevice<HomeAtwDeviceData>
 
 /**
  * Lazily creates and caches Home device facade instances using a WeakMap
@@ -41,10 +42,10 @@ export class HomeFacadeManager {
   public get(instance: HomeDevice<HomeAtwDeviceData>): HomeDeviceAtwFacade
   public get(): null
   public get(
-    instance?: HomeDevice,
+    instance?: HomeDeviceVariant,
   ): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null
   public get(
-    instance?: HomeDevice,
+    instance?: HomeDeviceVariant,
   ): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
     if (instance === undefined) {
       return null
@@ -53,23 +54,11 @@ export class HomeFacadeManager {
     if (cached !== undefined) {
       return cached
     }
-    const facade = this.#build(instance)
-    if (facade === null) {
-      return null
-    }
+    const facade =
+      instance.isAta() ?
+        new HomeDeviceAtaFacade(this.#api, instance)
+      : new HomeDeviceAtwFacade(this.#api, instance)
     this.#facades.set(instance, facade)
     return facade
-  }
-
-  #build(
-    instance: HomeDevice,
-  ): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
-    if (instance.isAta()) {
-      return new HomeDeviceAtaFacade(this.#api, instance)
-    }
-    if (instance.isAtw()) {
-      return new HomeDeviceAtwFacade(this.#api, instance)
-    }
-    return null
   }
 }

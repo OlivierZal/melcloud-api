@@ -258,7 +258,6 @@ export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
     }),
   )
 
-
 // Classic /User/ListDevices returns an array of building-with-structure
 // envelopes. The registry iterates structure.Devices and expects every
 // entry to carry a Type/DeviceID/DeviceName/Device triple. Validate the

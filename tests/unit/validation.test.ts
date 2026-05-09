@@ -254,7 +254,10 @@ describe('validation/schemas', () => {
     })
 
     it('rejects ATA capabilities missing a required field', () => {
-      const incomplete = { ...validAtaCapabilities, numberOfFanSpeeds: undefined }
+      const incomplete = {
+        ...validAtaCapabilities,
+        numberOfFanSpeeds: undefined,
+      }
 
       expect(() =>
         HomeContextSchema.parse(

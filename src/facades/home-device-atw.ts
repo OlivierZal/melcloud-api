@@ -189,7 +189,10 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @param api - Home API client.
    * @param model - Backing device model, narrowed to the ATW variant.
    */
-  public constructor(api: HomeAPIAdapter, model: HomeDevice<HomeAtwDeviceData>) {
+  public constructor(
+    api: HomeAPIAdapter,
+    model: HomeDevice<HomeAtwDeviceData>,
+  ) {
     super(api, model)
   }
 
