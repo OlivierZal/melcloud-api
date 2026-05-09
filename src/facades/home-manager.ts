@@ -1,5 +1,9 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
+import type {
+  HomeAtaDeviceData,
+  HomeAtwDeviceData,
+} from '../types/index.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 import { HomeDeviceAtwFacade } from './home-device-atw.ts'
 
@@ -27,12 +31,21 @@ export class HomeFacadeManager {
 
   /**
    * Returns the cached facade for the given Home device, lazily creating
-   * one on first access. Dispatches on the device's type discriminator
-   * to construct the matching ATA or ATW facade.
+   * one on first access. The overloads preserve type-narrowing: callers
+   * who already discriminated `instance` via `isAta()`/`isAtw()` get the
+   * matching facade type back without runtime checks.
    * @param instance - Registry device to wrap, or `undefined`.
    * @returns The facade, or `null` when no instance was supplied.
    */
-  public get(instance?: HomeDevice): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
+  public get(instance: HomeDevice<HomeAtaDeviceData>): HomeDeviceAtaFacade
+  public get(instance: HomeDevice<HomeAtwDeviceData>): HomeDeviceAtwFacade
+  public get(): null
+  public get(
+    instance?: HomeDevice,
+  ): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null
+  public get(
+    instance?: HomeDevice,
+  ): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
     if (instance === undefined) {
       return null
     }

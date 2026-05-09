@@ -11,7 +11,7 @@ import type {
 } from '../types/index.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { clampToRange } from '../utils.ts'
-import { HomeDeviceFacadeBase } from './home-device-base.ts'
+import { HomeBaseDeviceFacade } from './home-base-device.ts'
 
 interface TemperatureRange {
   max: number
@@ -34,7 +34,7 @@ const tankRange = ({
  * endpoints (`comfort-graph`, `internaltemperatures`, interval energy).
  * @category Facades
  */
-export class HomeDeviceAtwFacade extends HomeDeviceFacadeBase<HomeAtwDeviceData> {
+export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData> {
   /**
    * Static capability flags and ranges advertised by this device.
    * @returns The capability descriptor.
@@ -194,23 +194,6 @@ export class HomeDeviceAtwFacade extends HomeDeviceFacadeBase<HomeAtwDeviceData>
   }
 
   /**
-   * Fetches the comfort-graph report (outside / room / set temperature)
-   * for this device over the given time window.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.period - Aggregation period (e.g. `Daily`, `Hourly`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The report datasets, or a typed failure.
-   */
-  public async getComfortGraph(params: {
-    from: string
-    period: string
-    to: string
-  }): Promise<Result<HomeReportData[]>> {
-    return this.api.getComfortGraph(this.id, params)
-  }
-
-  /**
    * Fetches interval-energy telemetry for this device.
    * @param params - Query window plus energy direction.
    * @param params.from - ISO start timestamp (inclusive).
@@ -225,7 +208,7 @@ export class HomeDeviceAtwFacade extends HomeDeviceFacadeBase<HomeAtwDeviceData>
     measure: 'consumed' | 'produced'
     to: string
   }): Promise<Result<HomeEnergyData>> {
-    return this.api.getEnergyAtw(this.id, params)
+    return this.api.getAtwEnergy(this.id, params)
   }
 
   /**
@@ -233,7 +216,7 @@ export class HomeDeviceAtwFacade extends HomeDeviceFacadeBase<HomeAtwDeviceData>
    * @returns The entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.api.getErrorLogAtw(this.id)
+    return this.api.getAtwErrorLog(this.id)
   }
 
   /**
@@ -250,7 +233,24 @@ export class HomeDeviceAtwFacade extends HomeDeviceFacadeBase<HomeAtwDeviceData>
     period: string
     to: string
   }): Promise<Result<HomeReportData[]>> {
-    return this.api.getInternalTemperatures(this.id, params)
+    return this.api.getAtwInternalTemperatures(this.id, params)
+  }
+
+  /**
+   * Fetches the comfort-graph report (outside / room / set temperature)
+   * for this device over the given time window.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Aggregation period (e.g. `Daily`, `Hourly`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns The report datasets, or a typed failure.
+   */
+  public async getTemperatures(params: {
+    from: string
+    period: string
+    to: string
+  }): Promise<Result<HomeReportData[]>> {
+    return this.api.getAtwTemperatures(this.id, params)
   }
 
   /**

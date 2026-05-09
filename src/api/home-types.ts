@@ -6,7 +6,6 @@ import type {
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
-  HomeSystemInvite,
   HomeUser,
   LoginCredentials,
   Result,
@@ -18,11 +17,15 @@ import type { BaseAPIConfig } from './types.ts'
  *
  * Mirrors the public surface of the {@link HomeAPI} class with
  * property-with-arrow syntax so facades, mocks, and tests can
- * reference methods safely (`expect(api.updateValues)`,
+ * reference methods safely (`expect(api.updateAtaValues)`,
  * `mock<HomeAPIAdapter>({...})`) without triggering `unbound-method`
  * lint — the class has real methods that carry `this`, whereas this
  * interface declares them as plain functions with no implicit
  * binding.
+ *
+ * Per-device-type endpoints follow a symmetric `<verb><Ata|Atw><Noun>`
+ * naming convention so callers never have to guess which side of the
+ * pair carries the suffix.
  * @category Configuration
  */
 export interface HomeAPIAdapter {
@@ -44,18 +47,20 @@ export interface HomeAPIAdapter {
   readonly authenticate: (credentials: LoginCredentials) => Promise<void>
   /** Cancel any pending automatic sync. */
   readonly clearSync: () => void
-  /** Fetch the comfort-graph (room/outside/setpoint) for an ATW unit. */
-  readonly getComfortGraph: (
-    id: string,
-    params: { from: string; period: string; to: string },
-  ) => Promise<Result<HomeReportData[]>>
-  /** Fetch energy consumption data for an ATA unit. */
-  readonly getEnergy: (
+  /** Fetch cumulative-energy telemetry for an ATA unit. */
+  readonly getAtaEnergy: (
     id: string,
     params: { from: string; interval: string; to: string },
   ) => Promise<Result<HomeEnergyData>>
+  /** Fetch the error log for an ATA unit. */
+  readonly getAtaErrorLog: (id: string) => Promise<Result<HomeErrorLogEntry[]>>
+  /** Fetch the trend-summary temperature report for an ATA unit. */
+  readonly getAtaTemperatures: (
+    id: string,
+    params: { from: string; period: string; to: string },
+  ) => Promise<Result<HomeReportData[]>>
   /** Fetch consumed/produced interval-energy telemetry for an ATW unit. */
-  readonly getEnergyAtw: (
+  readonly getAtwEnergy: (
     id: string,
     params: {
       from: string
@@ -64,12 +69,15 @@ export interface HomeAPIAdapter {
       to: string
     },
   ) => Promise<Result<HomeEnergyData>>
-  /** Fetch the error log for an ATA unit. */
-  readonly getErrorLog: (id: string) => Promise<Result<HomeErrorLogEntry[]>>
   /** Fetch the error log for an ATW unit. */
-  readonly getErrorLogAtw: (id: string) => Promise<Result<HomeErrorLogEntry[]>>
-  /** Fetch the internal-temperatures report (flow/return/tank) for an ATW unit. */
-  readonly getInternalTemperatures: (
+  readonly getAtwErrorLog: (id: string) => Promise<Result<HomeErrorLogEntry[]>>
+  /** Fetch the internal-temperatures report (flow/return/tank/zone) for an ATW unit. */
+  readonly getAtwInternalTemperatures: (
+    id: string,
+    params: { from: string; period: string; to: string },
+  ) => Promise<Result<HomeReportData[]>>
+  /** Fetch the comfort-graph (room/outside/setpoint) report for an ATW unit. */
+  readonly getAtwTemperatures: (
     id: string,
     params: { from: string; period: string; to: string },
   ) => Promise<Result<HomeReportData[]>>
@@ -78,13 +86,6 @@ export interface HomeAPIAdapter {
     id: string,
     params: { from: string; to: string },
   ) => Promise<Result<HomeEnergyData>>
-  /** Fetch the systems shared with the authenticated user (guest invites). */
-  readonly getSystemInvites: () => Promise<Result<HomeSystemInvite[]>>
-  /** Fetch the trend-summary report (room/set temperature) for an ATA unit. */
-  readonly getTemperatures: (
-    id: string,
-    params: { from: string; period: string; to: string },
-  ) => Promise<Result<HomeReportData[]>>
   /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
   readonly getUser: () => Promise<HomeUser | null>
   /** Whether a user is currently authenticated (session cookie valid). */
@@ -99,13 +100,16 @@ export interface HomeAPIAdapter {
   readonly resumeSession: () => Promise<boolean>
   /** Update the automatic sync interval and reschedule. Pass `false` to disable. */
   readonly setSyncInterval: (minutes: number | false) => void
+  /** Push an ATA setpoint update and refresh device data via list(). */
+  readonly updateAtaValues: (
+    id: string,
+    values: HomeAtaValues,
+  ) => Promise<boolean>
   /** Push an ATW setpoint update and refresh device data via list(). */
   readonly updateAtwValues: (
     id: string,
     values: HomeAtwValues,
   ) => Promise<boolean>
-  /** Push an ATA setpoint update and refresh device data via list(). */
-  readonly updateValues: (id: string, values: HomeAtaValues) => Promise<boolean>
 }
 
 /**

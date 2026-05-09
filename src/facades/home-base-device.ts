@@ -22,7 +22,18 @@ import type {
  * shape, telemetry endpoints) lives in the subclass.
  * @category Facades
  */
-export abstract class HomeDeviceFacadeBase<TData extends HomeDeviceData> {
+export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
+  /**
+   * Last-synced wire-format payload for this device. Mirrors the
+   * `data` accessor exposed by Classic facades so consumers always
+   * have a typed escape hatch to fields the SDK does not surface
+   * through dedicated getters.
+   * @returns A read-only snapshot of the device data.
+   */
+  public get data(): Readonly<TData> {
+    return this.model.data
+  }
+
   /**
    * Unique device identifier as assigned by MELCloud Home.
    * @returns The device id.

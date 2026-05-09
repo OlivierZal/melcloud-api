@@ -367,37 +367,6 @@ export interface HomeReportPoint {
   readonly y: number
 }
 
-/**
- * Building-level invite entry returned by `/monitor/user/systeminvites`.
- * Buildings appear in the list when their owner has shared one or more
- * systems with the authenticated user.
- * @category Types
- */
-export interface HomeSystemInvite {
-  readonly id: string
-  readonly name: string
-  readonly ownerEmail: string
-  readonly systems: HomeSystemInviteSystem[]
-}
-
-/**
- * Single shared-system entry within a {@link HomeSystemInvite}.
- * @category Types
- */
-export interface HomeSystemInviteSystem {
-  readonly id: string
-  readonly inviteAccepted: boolean
-  readonly name: string
-  readonly unitType: HomeSystemUnitType
-}
-
-/**
- * Connection-type discriminator returned by `/monitor/user/systeminvites`
- * (lowercase counterpart of {@link HomeDeviceType}).
- * @category Types
- */
-export type HomeSystemUnitType = 'ata' | 'atw'
-
 export interface HomeTokenResponse {
   readonly access_token: string
   readonly expires_in: number

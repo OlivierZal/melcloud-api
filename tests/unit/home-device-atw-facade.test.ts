@@ -16,10 +16,10 @@ const createModel = (
 
 const createApi = (): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
-    getComfortGraph: vi.fn<HomeAPIAdapter['getComfortGraph']>(),
-    getEnergyAtw: vi.fn<HomeAPIAdapter['getEnergyAtw']>(),
-    getErrorLogAtw: vi.fn<HomeAPIAdapter['getErrorLogAtw']>(),
-    getInternalTemperatures: vi.fn<HomeAPIAdapter['getInternalTemperatures']>(),
+    getAtwEnergy: vi.fn<HomeAPIAdapter['getAtwEnergy']>(),
+    getAtwErrorLog: vi.fn<HomeAPIAdapter['getAtwErrorLog']>(),
+    getAtwInternalTemperatures: vi.fn<HomeAPIAdapter['getAtwInternalTemperatures']>(),
+    getAtwTemperatures: vi.fn<HomeAPIAdapter['getAtwTemperatures']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     updateAtwValues: vi
       .fn<HomeAPIAdapter['updateAtwValues']>()
@@ -171,7 +171,7 @@ describe('home device atw facade', () => {
   })
 
   describe('telemetry passthroughs', () => {
-    it('delegates getEnergy to getEnergyAtw with the chosen measure', async () => {
+    it('delegates getEnergy to getAtwEnergy with the chosen measure', async () => {
       const api = createApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
       const params = {
@@ -183,16 +183,16 @@ describe('home device atw facade', () => {
 
       await facade.getEnergy(params)
 
-      expect(api.getEnergyAtw).toHaveBeenCalledWith('atw-1', params)
+      expect(api.getAtwEnergy).toHaveBeenCalledWith('atw-1', params)
     })
 
-    it('delegates getErrorLog to getErrorLogAtw', async () => {
+    it('delegates getErrorLog to getAtwErrorLog', async () => {
       const api = createApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       await facade.getErrorLog()
 
-      expect(api.getErrorLogAtw).toHaveBeenCalledWith('atw-1')
+      expect(api.getAtwErrorLog).toHaveBeenCalledWith('atw-1')
     })
 
     it('delegates getInternalTemperatures with passthrough params', async () => {
@@ -206,10 +206,13 @@ describe('home device atw facade', () => {
 
       await facade.getInternalTemperatures(params)
 
-      expect(api.getInternalTemperatures).toHaveBeenCalledWith('atw-1', params)
+      expect(api.getAtwInternalTemperatures).toHaveBeenCalledWith(
+        'atw-1',
+        params,
+      )
     })
 
-    it('delegates getComfortGraph with passthrough params', async () => {
+    it('delegates getTemperatures with passthrough params', async () => {
       const api = createApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
       const params = {
@@ -218,9 +221,9 @@ describe('home device atw facade', () => {
         to: '2026-05-10T00:00:00Z',
       }
 
-      await facade.getComfortGraph(params)
+      await facade.getTemperatures(params)
 
-      expect(api.getComfortGraph).toHaveBeenCalledWith('atw-1', params)
+      expect(api.getAtwTemperatures).toHaveBeenCalledWith('atw-1', params)
     })
   })
 })

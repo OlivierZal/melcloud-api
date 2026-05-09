@@ -8,7 +8,6 @@ import type {
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
-  HomeSystemInvite,
   HomeTokenResponse,
   HomeUser,
   LoginCredentials,
@@ -24,7 +23,6 @@ import {
   HomeEnergyDataSchema,
   HomeErrorLogEntryListSchema,
   HomeReportDataSchema,
-  HomeSystemInviteListSchema,
 } from '../validation/index.ts'
 import type { HomeAPIAdapter, HomeAPIConfig } from './home-types.ts'
 import { BaseAPI, normalizeUnauthorized } from './base.ts'
@@ -180,23 +178,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Fetch the comfort-graph report (outside / room / set temperature)
-   * for an ATW unit. Same {@link Result} contract as {@link getEnergy}.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.period - Aggregation period (e.g. `Daily`, `Hourly`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns Success with the report datasets, or a typed failure.
-   */
-  public async getComfortGraph(
-    id: string,
-    params: { from: string; period: string; to: string },
-  ): Promise<Result<HomeReportData[]>> {
-    return this.#fetchReport('/report/v1/comfort-graph', id, params)
-  }
-
-  /**
    * Fetch cumulative-energy telemetry for an ATA unit. Returns a
    * {@link Result} so callers can branch on the failure class
    * (`validation` for shape drift, `server` for 4xx/5xx,
@@ -208,7 +189,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @param params.to - ISO end timestamp (exclusive).
    * @returns Success with the telemetry bundle, or a typed failure.
    */
-  public async getEnergy(
+  public async getAtaEnergy(
     id: string,
     params: { from: string; interval: string; to: string },
   ): Promise<Result<HomeEnergyData>> {
@@ -216,6 +197,35 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       ...params,
       measure: 'cumulative_energy_consumed_since_last_upload',
     })
+  }
+
+  /**
+   * Fetch the error-log entries for an ATA unit. Same {@link Result}
+   * contract as {@link getAtaEnergy}.
+   * @param id - Device id.
+   * @returns Success with the entries (possibly empty), or a typed failure.
+   */
+  public async getAtaErrorLog(
+    id: string,
+  ): Promise<Result<HomeErrorLogEntry[]>> {
+    return this.#fetchErrorLog(ATA_UNIT_PATH, id)
+  }
+
+  /**
+   * Fetch a trend-summary report (temperatures, etc.) for an ATA
+   * unit. Same {@link Result} contract as {@link getAtaEnergy}.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Aggregation period (e.g. `hour`, `day`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the report datasets, or a typed failure.
+   */
+  public async getAtaTemperatures(
+    id: string,
+    params: { from: string; period: string; to: string },
+  ): Promise<Result<HomeReportData[]>> {
+    return this.#fetchReport('/report/v1/trendsummary', id, params)
   }
 
   /**
@@ -231,7 +241,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @param params.to - ISO end timestamp (exclusive).
    * @returns Success with the telemetry bundle, or a typed failure.
    */
-  public async getEnergyAtw(
+  public async getAtwEnergy(
     id: string,
     params: {
       from: string
@@ -247,21 +257,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Fetch the error-log entries for an ATA unit. Same {@link Result}
-   * contract as {@link getEnergy}.
+   * Fetch the error-log entries for an ATW unit. Mirror of {@link getAtaErrorLog}.
    * @param id - Device id.
    * @returns Success with the entries (possibly empty), or a typed failure.
    */
-  public async getErrorLog(id: string): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.#fetchErrorLog(ATA_UNIT_PATH, id)
-  }
-
-  /**
-   * Fetch the error-log entries for an ATW unit. Mirror of {@link getErrorLog}.
-   * @param id - Device id.
-   * @returns Success with the entries (possibly empty), or a typed failure.
-   */
-  public async getErrorLogAtw(
+  public async getAtwErrorLog(
     id: string,
   ): Promise<Result<HomeErrorLogEntry[]>> {
     return this.#fetchErrorLog(ATW_UNIT_PATH, id)
@@ -269,7 +269,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   /**
    * Fetch the internal-temperatures report (flow/return/tank/zone)
-   * for an ATW unit. Same {@link Result} contract as {@link getEnergy}.
+   * for an ATW unit. Same {@link Result} contract as {@link getAtaEnergy}.
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
@@ -277,11 +277,28 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @param params.to - ISO end timestamp (exclusive).
    * @returns Success with the report datasets, or a typed failure.
    */
-  public async getInternalTemperatures(
+  public async getAtwInternalTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
   ): Promise<Result<HomeReportData[]>> {
     return this.#fetchReport('/report/v1/internaltemperatures', id, params)
+  }
+
+  /**
+   * Fetch the comfort-graph report (outside / room / set temperature)
+   * for an ATW unit. Same {@link Result} contract as {@link getAtaEnergy}.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Aggregation period (e.g. `Daily`, `Hourly`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the report datasets, or a typed failure.
+   */
+  public async getAtwTemperatures(
+    id: string,
+    params: { from: string; period: string; to: string },
+  ): Promise<Result<HomeReportData[]>> {
+    return this.#fetchReport('/report/v1/comfort-graph', id, params)
   }
 
   /**
@@ -305,37 +322,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       },
       schema: HomeEnergyDataSchema,
     })
-  }
-
-  /**
-   * Fetch the systems shared with the authenticated user. The
-   * `/context` payload only carries devices the user owns or has
-   * accepted invites for; this endpoint surfaces the full invite list
-   * (per building, with the inviting owner's email) so callers can
-   * present accept/decline UI.
-   * @returns Success with the invites (possibly empty), or a typed failure.
-   */
-  public async getSystemInvites(): Promise<Result<HomeSystemInvite[]>> {
-    return this.safeRequest('get', '/monitor/user/systeminvites', {
-      schema: HomeSystemInviteListSchema,
-    })
-  }
-
-  /**
-   * Fetch a trend-summary report (temperatures, etc.) for an ATA
-   * unit. Same {@link Result} contract as {@link getEnergy}.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.period - Aggregation period (e.g. `hour`, `day`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns Success with the report datasets, or a typed failure.
-   */
-  public async getTemperatures(
-    id: string,
-    params: { from: string; period: string; to: string },
-  ): Promise<Result<HomeReportData[]>> {
-    return this.#fetchReport('/report/v1/trendsummary', id, params)
   }
 
   /**
@@ -363,8 +349,38 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
+   * Send an ATA-unit setpoint update to the BFF. On success, re-sync
+   * the registry so it reflects the server-side effect of the write
+   * (the PUT response itself does not echo device fields). On failure,
+   * skip the sync — the server state is presumed unchanged, so a
+   * re-fetch would be wasted work.
+   *
+   * Boolean surface is preserved for integrating hosts (e.g. Homey
+   * drivers) that treat transient failures as a no-op and retry on
+   * the next sync. The actual mutation + post-sync orchestration
+   * lives in `#putAtaAndSync`, where `@fetchDevices({ when: 'after' })`
+   * applies the same post-mutation-refresh contract as Classic
+   * facades — just resolved via `syncRegistry()` instead of
+   * `api.fetch()`.
+   * @param id - Target device id.
+   * @param values - Partial setpoint payload.
+   * @returns `true` when the update succeeded, `false` otherwise.
+   */
+  public async updateAtaValues(
+    id: string,
+    values: HomeAtaValues,
+  ): Promise<boolean> {
+    try {
+      await this.putAtaAndSync(id, values)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  /**
    * Send an ATW-unit setpoint update to the BFF. Mirror of
-   * {@link updateValues} for air-to-water heat pumps; same boolean
+   * {@link updateAtaValues} for air-to-water heat pumps; same boolean
    * surface and post-mutation-refresh semantics.
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
@@ -375,37 +391,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     values: HomeAtwValues,
   ): Promise<boolean> {
     try {
-      await this.putAndSyncAtw(id, values)
-      return true
-    } catch {
-      return false
-    }
-  }
-
-  /**
-   * Send an ATA-unit setpoint update to the BFF. On success, re-sync
-   * the registry so it reflects the server-side effect of the write
-   * (the PUT response itself does not echo device fields). On failure,
-   * skip the sync — the server state is presumed unchanged, so a
-   * re-fetch would be wasted work.
-   *
-   * Boolean surface is preserved for integrating hosts (e.g. Homey
-   * drivers) that treat transient failures as a no-op and retry on
-   * the next sync. The actual mutation + post-sync orchestration
-   * lives in `#putAndSync`, where `@fetchDevices({ when: 'after' })`
-   * applies the same post-mutation-refresh contract as Classic
-   * facades — just resolved via `syncRegistry()` instead of
-   * `api.fetch()`.
-   * @param id - Target device id.
-   * @param values - Partial setpoint payload.
-   * @returns `true` when the update succeeded, `false` otherwise.
-   */
-  public async updateValues(
-    id: string,
-    values: HomeAtaValues,
-  ): Promise<boolean> {
-    try {
-      await this.putAndSync(id, values)
+      await this.putAtwAndSync(id, values)
       return true
     } catch {
       return false
@@ -527,18 +513,21 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @param values - Partial setpoint payload.
    */
   @fetchDevices({ when: 'after' })
-  private async putAndSync(id: string, values: HomeAtaValues): Promise<void> {
+  private async putAtaAndSync(
+    id: string,
+    values: HomeAtaValues,
+  ): Promise<void> {
     await this.#putDeviceValues(ATA_UNIT_PATH, id, values)
   }
 
   /**
-   * ATW counterpart to {@link putAndSync}. Same post-mutation-refresh
+   * ATW counterpart to {@link putAtaAndSync}. Same post-mutation-refresh
    * contract; only the URL prefix and payload type differ.
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
    */
   @fetchDevices({ when: 'after' })
-  private async putAndSyncAtw(
+  private async putAtwAndSync(
     id: string,
     values: HomeAtwValues,
   ): Promise<void> {

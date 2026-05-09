@@ -7,7 +7,6 @@ import {
   ClassicBuildingListSchema,
   ClassicLoginDataSchema,
   HomeContextSchema,
-  HomeSystemInviteListSchema,
   HomeTokenResponseSchema,
   parseOrThrow,
 } from '../../src/validation/index.ts'
@@ -307,50 +306,6 @@ describe('validation/schemas', () => {
           }),
         ),
       ).toThrow(/capabilities/u)
-    })
-  })
-
-  describe('homeSystemInviteListSchema', () => {
-    const sampleInvite = {
-      id: 'b1',
-      name: 'Verkstan',
-      ownerEmail: 'owner@example.com',
-      systems: [
-        { id: 's1', inviteAccepted: true, name: 'Garage', unitType: 'ata' },
-      ],
-    }
-
-    it('accepts a valid invite list', () => {
-      expect(() => HomeSystemInviteListSchema.parse([sampleInvite])).not.toThrow()
-    })
-
-    it('accepts an empty list', () => {
-      expect(() => HomeSystemInviteListSchema.parse([])).not.toThrow()
-    })
-
-    it.each([
-      { label: 'ata', unitType: 'ata' },
-      { label: 'atw', unitType: 'atw' },
-    ])('accepts $label as a unitType', ({ unitType }) => {
-      expect(() =>
-        HomeSystemInviteListSchema.parse([
-          {
-            ...sampleInvite,
-            systems: [{ ...sampleInvite.systems[0], unitType }],
-          },
-        ]),
-      ).not.toThrow()
-    })
-
-    it('rejects an unknown unitType', () => {
-      expect(() =>
-        HomeSystemInviteListSchema.parse([
-          {
-            ...sampleInvite,
-            systems: [{ ...sampleInvite.systems[0], unitType: 'erv' }],
-          },
-        ]),
-      ).toThrow(/unitType/u)
     })
   })
 

@@ -21,7 +21,7 @@ import {
 } from '../enum-mappings.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { clampToRange } from '../utils.ts'
-import { HomeDeviceFacadeBase } from './home-device-base.ts'
+import { HomeBaseDeviceFacade } from './home-base-device.ts'
 
 interface TemperatureRange {
   max: number
@@ -61,7 +61,7 @@ const temperatureRanges = new Map<
  * to the BFF.
  * @category Facades
  */
-export class HomeDeviceAtaFacade extends HomeDeviceFacadeBase<HomeAtaDeviceData> {
+export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData> {
   /**
    * Static capability flags and per-mode temperature bounds advertised
    * by this device.
@@ -159,7 +159,7 @@ export class HomeDeviceAtaFacade extends HomeDeviceFacadeBase<HomeAtaDeviceData>
     interval: string
     to: string
   }): Promise<Result<HomeEnergyData>> {
-    return this.api.getEnergy(this.id, params)
+    return this.api.getAtaEnergy(this.id, params)
   }
 
   /**
@@ -167,7 +167,7 @@ export class HomeDeviceAtaFacade extends HomeDeviceFacadeBase<HomeAtaDeviceData>
    * @returns The entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.api.getErrorLog(this.id)
+    return this.api.getAtaErrorLog(this.id)
   }
 
   /**
@@ -184,7 +184,7 @@ export class HomeDeviceAtaFacade extends HomeDeviceFacadeBase<HomeAtaDeviceData>
     period: string
     to: string
   }): Promise<Result<HomeReportData[]>> {
-    return this.api.getTemperatures(this.id, params)
+    return this.api.getAtaTemperatures(this.id, params)
   }
 
   /**
@@ -198,7 +198,7 @@ export class HomeDeviceAtaFacade extends HomeDeviceFacadeBase<HomeAtaDeviceData>
     if (Object.keys(values).length === 0) {
       throw new NoChangesError(this.id)
     }
-    return this.api.updateValues(this.id, {
+    return this.api.updateAtaValues(this.id, {
       ...values,
       ...this.#clampSetTemperature(values),
     })

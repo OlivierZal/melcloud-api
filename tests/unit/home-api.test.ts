@@ -582,7 +582,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      await api.updateValues('device-1', { power: true })
+      await api.updateAtaValues('device-1', { power: true })
 
       expect(onSync).toHaveBeenCalledTimes(1)
     })
@@ -615,7 +615,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const isSuccess = await api.updateValues('device-1', {
+      const isSuccess = await api.updateAtaValues('device-1', {
         operationMode: 'Heat',
         power: true,
       })
@@ -634,7 +634,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const isSuccess = await api.updateValues('device-1', { power: false })
+      const isSuccess = await api.updateAtaValues('device-1', { power: false })
 
       expect(isSuccess).toBe(false)
     })
@@ -650,7 +650,7 @@ describe('melcloud home API', () => {
       onSync.mockClear()
       mockRequest.mockClear()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const isSuccess = await api.updateValues('device-1', { power: false })
+      const isSuccess = await api.updateAtaValues('device-1', { power: false })
 
       expect(isSuccess).toBe(false)
       expect(mockRequest).toHaveBeenCalledTimes(1)
@@ -668,7 +668,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      await api.updateValues('device-1', { power: false })
+      await api.updateAtaValues('device-1', { power: false })
 
       expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
     })
@@ -685,7 +685,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const isSuccess = await api.updateValues('device-1', { power: false })
+      const isSuccess = await api.updateAtaValues('device-1', { power: false })
 
       expect(isSuccess).toBe(true)
       expect(logger.error).toHaveBeenCalledWith(
@@ -700,7 +700,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockErrorLog, {}, 200))
-      const result = await api.getErrorLog('device-1')
+      const result = await api.getAtaErrorLog('device-1')
 
       expect(result).toStrictEqual({ ok: true, value: mockErrorLog })
       expect(mockRequest).toHaveBeenLastCalledWith(
@@ -714,7 +714,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const result = await api.getErrorLog('device-1')
+      const result = await api.getAtaErrorLog('device-1')
 
       expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
     })
@@ -725,7 +725,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
-      const result = await api.getTemperatures('device-1', {
+      const result = await api.getAtaTemperatures('device-1', {
         from: '2026-03-01',
         period: 'Hourly',
         to: '2026-03-02',
@@ -749,7 +749,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const result = await api.getTemperatures('device-1', {
+      const result = await api.getAtaTemperatures('device-1', {
         from: '2026-03-01',
         period: 'Daily',
         to: '2026-03-02',
@@ -764,7 +764,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
-      const result = await api.getEnergy('device-1', {
+      const result = await api.getAtaEnergy('device-1', {
         from: '2026-03-01',
         interval: 'Hour',
         to: '2026-03-02',
@@ -788,7 +788,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const result = await api.getEnergy('device-1', {
+      const result = await api.getAtaEnergy('device-1', {
         from: '2026-03-01',
         interval: 'Day',
         to: '2026-03-02',
@@ -856,11 +856,11 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('getEnergyAtw maps consumed to interval_energy_consumed', async () => {
+    it('getAtwEnergy maps consumed to interval_energy_consumed', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
-      await api.getEnergyAtw('atw-1', {
+      await api.getAtwEnergy('atw-1', {
         from: '2026-05-01',
         interval: 'Hour',
         measure: 'consumed',
@@ -880,11 +880,11 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('getEnergyAtw maps produced to interval_energy_produced', async () => {
+    it('getAtwEnergy maps produced to interval_energy_produced', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
-      await api.getEnergyAtw('atw-1', {
+      await api.getAtwEnergy('atw-1', {
         from: '2026-05-01',
         interval: 'Hour',
         measure: 'produced',
@@ -904,11 +904,11 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('getErrorLogAtw hits /monitor/atwunit/{id}/errorlog', async () => {
+    it('getAtwErrorLog hits /monitor/atwunit/{id}/errorlog', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockErrorLog, {}, 200))
-      await api.getErrorLogAtw('atw-1')
+      await api.getAtwErrorLog('atw-1')
 
       expect(mockRequest).toHaveBeenLastCalledWith(
         expect.objectContaining({
@@ -917,11 +917,11 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('getComfortGraph hits /report/v1/comfort-graph with .NET-format dates', async () => {
+    it('getAtwTemperatures hits /report/v1/comfort-graph with .NET-format dates', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
-      await api.getComfortGraph('atw-1', {
+      await api.getAtwTemperatures('atw-1', {
         from: '2026-05-01',
         period: 'Daily',
         to: '2026-05-02',
@@ -940,11 +940,11 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('getInternalTemperatures hits /report/v1/internaltemperatures', async () => {
+    it('getAtwInternalTemperatures hits /report/v1/internaltemperatures', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
-      await api.getInternalTemperatures('atw-1', {
+      await api.getAtwInternalTemperatures('atw-1', {
         from: '2026-05-01',
         period: 'Hourly',
         to: '2026-05-02',
@@ -957,19 +957,6 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('getSystemInvites hits /monitor/user/systeminvites', async () => {
-      setupSuccessfulLogin()
-      const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse([], {}, 200))
-      const result = await api.getSystemInvites()
-
-      expect(result).toStrictEqual({ ok: true, value: [] })
-      expect(mockRequest).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          url: '/monitor/user/systeminvites',
-        }),
-      )
-    })
   })
 
   describe('auto-sync', () => {

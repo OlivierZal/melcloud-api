@@ -10,7 +10,6 @@ import type {
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
-  HomeSystemInvite,
   HomeTokenResponse,
 } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
@@ -259,22 +258,6 @@ export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
     }),
   )
 
-/** Home /monitor/user/systeminvites response (array of building-level entries). */
-export const HomeSystemInviteListSchema: z.ZodType<HomeSystemInvite[]> = z.array(
-  z.looseObject({
-    id: z.string(),
-    name: z.string(),
-    ownerEmail: z.string(),
-    systems: z.array(
-      z.looseObject({
-        id: z.string(),
-        inviteAccepted: z.boolean(),
-        name: z.string(),
-        unitType: z.union([z.literal('ata'), z.literal('atw')]),
-      }),
-    ),
-  }),
-)
 
 // Classic /User/ListDevices returns an array of building-with-structure
 // envelopes. The registry iterates structure.Devices and expects every
