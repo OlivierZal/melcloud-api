@@ -78,7 +78,13 @@ export type {
 } from './classic-generic.ts'
 export type { LoginCredentials } from './credentials.ts'
 export type {
+  HomeAtaDeviceCapabilities,
+  HomeAtaDeviceData,
   HomeAtaValues,
+  HomeAtwDeviceCapabilities,
+  HomeAtwDeviceData,
+  HomeAtwOperationModeZone,
+  HomeAtwValues,
   HomeBuilding,
   HomeClaim,
   HomeContext,
@@ -92,6 +98,9 @@ export type {
   HomeReportData,
   HomeReportDataset,
   HomeReportPoint,
+  HomeSystemInvite,
+  HomeSystemInviteSystem,
+  HomeSystemUnitType,
   HomeTokenResponse,
   HomeUser,
 } from './home.ts'

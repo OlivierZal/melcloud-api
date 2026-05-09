@@ -1,7 +1,9 @@
 import type { TypedHomeDeviceData } from '../src/entities/home-registry.ts'
 import type {
-  HomeDeviceCapabilities,
-  HomeDeviceData,
+  HomeAtaDeviceCapabilities,
+  HomeAtaDeviceData,
+  HomeAtwDeviceCapabilities,
+  HomeAtwDeviceData,
 } from '../src/types/index.ts'
 import { HomeDeviceType } from '../src/constants.ts'
 import { HomeDevice } from '../src/entities/home-device.ts'
@@ -12,7 +14,7 @@ import { mock } from './helpers.ts'
 const DEFAULT_RSSI_DBM = -50
 
 // Realistic defaults so every operation mode resolves to a non-empty range.
-const defaultCapabilities: HomeDeviceCapabilities = {
+const defaultCapabilities: HomeAtaDeviceCapabilities = {
   hasAirDirection: true,
   hasAutomaticFanSpeed: true,
   hasAutoOperationMode: true,
@@ -31,18 +33,18 @@ const defaultCapabilities: HomeDeviceCapabilities = {
 }
 
 const homeDeviceCapabilities = (
-  overrides: Partial<HomeDeviceCapabilities> = {},
-): HomeDeviceCapabilities => ({ ...defaultCapabilities, ...overrides })
+  overrides: Partial<HomeAtaDeviceCapabilities> = {},
+): HomeAtaDeviceCapabilities => ({ ...defaultCapabilities, ...overrides })
 
 // Convert a `Record<string, string>` to the BFF's `{ name, value }[]`
 // shape so call sites can express settings as plain string maps.
 const buildSettings = (
   settings: Record<string, string>,
-): HomeDeviceData['settings'] =>
+): HomeAtaDeviceData['settings'] =>
   Object.entries(settings).map(([name, value]) => ({ name, value }))
 
 export interface HomeDeviceDataOverrides {
-  readonly capabilities?: Partial<HomeDeviceCapabilities>
+  readonly capabilities?: Partial<HomeAtaDeviceCapabilities>
   readonly id?: string
   readonly name?: string
   readonly rssi?: number
@@ -51,8 +53,8 @@ export interface HomeDeviceDataOverrides {
 
 export const homeDeviceData = (
   overrides: HomeDeviceDataOverrides = {},
-): HomeDeviceData =>
-  mock<HomeDeviceData>({
+): HomeAtaDeviceData =>
+  mock<HomeAtaDeviceData>({
     capabilities: homeDeviceCapabilities(overrides.capabilities),
     givenDisplayName: overrides.name ?? 'Home device',
     id: overrides.id ?? 'home-device-1',
@@ -63,9 +65,64 @@ export const homeDeviceData = (
 export const homeDevice = (
   overrides: HomeDeviceDataOverrides = {},
   type: HomeDeviceType = HomeDeviceType.Ata,
-): HomeDevice => new HomeDevice(homeDeviceData(overrides), type)
+): HomeDevice<HomeAtaDeviceData> =>
+  new HomeDevice(homeDeviceData(overrides), type)
 
 export const typedHomeDeviceData = (
   overrides: HomeDeviceDataOverrides = {},
   type: HomeDeviceType = HomeDeviceType.Ata,
 ): TypedHomeDeviceData => ({ device: homeDeviceData(overrides), type })
+
+const defaultAtwCapabilities: HomeAtwDeviceCapabilities = {
+  ftcModel: 3,
+  hasBoiler: true,
+  hasDemandSideControl: true,
+  hasDualRoomTemperature: false,
+  hasEstimatedEnergyConsumption: true,
+  hasEstimatedEnergyProduction: true,
+  hasHalfDegrees: true,
+  hasHeatZone1: true,
+  hasHeatZone2: false,
+  hasHotWater: true,
+  hasMeasuredEnergyConsumption: false,
+  hasMeasuredEnergyProduction: false,
+  hasThermostatZone1: true,
+  hasThermostatZone2: false,
+  hasWirelessRemote: true,
+  hasZone2: false,
+  immersionHeaterCapacity: 0,
+  maxHeatOutput: 0,
+  maxImportPower: 0,
+  maxSetTankTemperature: 60,
+  maxSetTemperature: 30,
+  minSetTankTemperature: 40,
+  minSetTemperature: 10,
+  refridgerentAddress: 0,
+  temperatureIncrement: 0.5,
+  temperatureIncrementOverride: '2',
+  temperatureUnit: '',
+}
+
+export interface HomeAtwDeviceDataOverrides {
+  readonly capabilities?: Partial<HomeAtwDeviceCapabilities>
+  readonly id?: string
+  readonly name?: string
+  readonly rssi?: number
+  readonly settings?: Record<string, string>
+}
+
+export const homeAtwDeviceData = (
+  overrides: HomeAtwDeviceDataOverrides = {},
+): HomeAtwDeviceData =>
+  mock<HomeAtwDeviceData>({
+    capabilities: { ...defaultAtwCapabilities, ...overrides.capabilities },
+    givenDisplayName: overrides.name ?? 'Home ATW device',
+    id: overrides.id ?? 'home-atw-1',
+    rssi: overrides.rssi ?? DEFAULT_RSSI_DBM,
+    settings: buildSettings(overrides.settings ?? {}),
+  })
+
+export const homeAtwDevice = (
+  overrides: HomeAtwDeviceDataOverrides = {},
+): HomeDevice<HomeAtwDeviceData> =>
+  new HomeDevice(homeAtwDeviceData(overrides), HomeDeviceType.Atw)

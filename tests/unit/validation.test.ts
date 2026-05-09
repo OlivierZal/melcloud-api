@@ -7,6 +7,7 @@ import {
   ClassicBuildingListSchema,
   ClassicLoginDataSchema,
   HomeContextSchema,
+  HomeSystemInviteListSchema,
   HomeTokenResponseSchema,
   parseOrThrow,
 } from '../../src/validation/index.ts'
@@ -138,38 +139,124 @@ describe('validation/schemas', () => {
   })
 
   describe('homeContextSchema device capabilities', () => {
-    it.each([
-      {
-        capabilities: {
-          hasAirDirection: true,
-          hasAutomaticFanSpeed: true,
-          hasCoolOperationMode: true,
-          numberOfFanSpeeds: 4,
-        },
-        label: 'ATA',
-      },
-      {
-        capabilities: {
-          ftcModel: 3,
-          hasBoiler: false,
-          hasHotWater: true,
-          hasZone2: false,
-        },
-        label: 'ATW',
-      },
-    ])('accepts $label-shaped capabilities', ({ capabilities }) => {
+    const validAtaCapabilities = {
+      hasAirDirection: true,
+      hasAutomaticFanSpeed: true,
+      hasAutoOperationMode: true,
+      hasCoolOperationMode: true,
+      hasDryOperationMode: true,
+      hasHalfDegreeIncrements: true,
+      hasHeatOperationMode: true,
+      hasSwing: true,
+      maxTempAutomatic: 31,
+      maxTempCoolDry: 31,
+      maxTempHeat: 31,
+      minTempAutomatic: 16,
+      minTempCoolDry: 16,
+      minTempHeat: 10,
+      numberOfFanSpeeds: 5,
+    }
+
+    it('accepts a fully-populated ATA capabilities payload in airToAirUnits', () => {
       expect(() =>
         HomeContextSchema.parse(
           buildHomeContext({
             buildings: [
               {
                 ...baseHomeBuilding,
-                airToWaterUnits: [{ ...baseHomeDevice, capabilities }],
+                airToAirUnits: [
+                  { ...baseHomeDevice, capabilities: validAtaCapabilities },
+                ],
               },
             ],
           }),
         ),
       ).not.toThrow()
+    })
+
+    const validAtwCapabilities = {
+      ftcModel: 3,
+      hasBoiler: true,
+      hasDemandSideControl: true,
+      hasDualRoomTemperature: false,
+      hasEstimatedEnergyConsumption: true,
+      hasEstimatedEnergyProduction: true,
+      hasHalfDegrees: true,
+      hasHeatZone1: true,
+      hasHeatZone2: false,
+      hasHotWater: true,
+      hasMeasuredEnergyConsumption: false,
+      hasMeasuredEnergyProduction: false,
+      hasThermostatZone1: true,
+      hasThermostatZone2: false,
+      hasWirelessRemote: true,
+      hasZone2: false,
+      immersionHeaterCapacity: 0,
+      maxHeatOutput: 0,
+      maxImportPower: 0,
+      maxSetTankTemperature: 60,
+      maxSetTemperature: 30,
+      minSetTankTemperature: 40,
+      minSetTemperature: 10,
+      refridgerentAddress: 0,
+      temperatureIncrement: 0.5,
+      temperatureIncrementOverride: '2',
+      temperatureUnit: '',
+    }
+
+    it('accepts a fully-populated ATW capabilities payload in airToWaterUnits', () => {
+      expect(() =>
+        HomeContextSchema.parse(
+          buildHomeContext({
+            buildings: [
+              {
+                ...baseHomeBuilding,
+                airToWaterUnits: [
+                  { ...baseHomeDevice, capabilities: validAtwCapabilities },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).not.toThrow()
+    })
+
+    it('rejects ATA capabilities missing a required field', () => {
+      const incomplete = { ...validAtaCapabilities, numberOfFanSpeeds: undefined }
+
+      expect(() =>
+        HomeContextSchema.parse(
+          buildHomeContext({
+            buildings: [
+              {
+                ...baseHomeBuilding,
+                airToAirUnits: [
+                  { ...baseHomeDevice, capabilities: incomplete },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).toThrow(/numberOfFanSpeeds/u)
+    })
+
+    it('rejects ATW capabilities missing a required field', () => {
+      const incomplete = { ...validAtwCapabilities, ftcModel: undefined }
+
+      expect(() =>
+        HomeContextSchema.parse(
+          buildHomeContext({
+            buildings: [
+              {
+                ...baseHomeBuilding,
+                airToWaterUnits: [
+                  { ...baseHomeDevice, capabilities: incomplete },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).toThrow(/ftcModel/u)
     })
 
     it('rejects non-object capabilities', () => {
@@ -179,12 +266,58 @@ describe('validation/schemas', () => {
             buildings: [
               {
                 ...baseHomeBuilding,
-                airToAirUnits: [{ ...baseHomeDevice, capabilities: 'invalid' }],
+                airToWaterUnits: [
+                  { ...baseHomeDevice, capabilities: 'invalid' },
+                ],
               },
             ],
           }),
         ),
       ).toThrow(/capabilities/u)
+    })
+  })
+
+  describe('homeSystemInviteListSchema', () => {
+    const sampleInvite = {
+      id: 'b1',
+      name: 'Verkstan',
+      ownerEmail: 'owner@example.com',
+      systems: [
+        { id: 's1', inviteAccepted: true, name: 'Garage', unitType: 'ata' },
+      ],
+    }
+
+    it('accepts a valid invite list', () => {
+      expect(() => HomeSystemInviteListSchema.parse([sampleInvite])).not.toThrow()
+    })
+
+    it('accepts an empty list', () => {
+      expect(() => HomeSystemInviteListSchema.parse([])).not.toThrow()
+    })
+
+    it.each([
+      { label: 'ata', unitType: 'ata' },
+      { label: 'atw', unitType: 'atw' },
+    ])('accepts $label as a unitType', ({ unitType }) => {
+      expect(() =>
+        HomeSystemInviteListSchema.parse([
+          {
+            ...sampleInvite,
+            systems: [{ ...sampleInvite.systems[0], unitType }],
+          },
+        ]),
+      ).not.toThrow()
+    })
+
+    it('rejects an unknown unitType', () => {
+      expect(() =>
+        HomeSystemInviteListSchema.parse([
+          {
+            ...sampleInvite,
+            systems: [{ ...sampleInvite.systems[0], unitType: 'erv' }],
+          },
+        ]),
+      ).toThrow(/unitType/u)
     })
   })
 

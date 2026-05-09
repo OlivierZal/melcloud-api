@@ -2,10 +2,15 @@ import { z } from 'zod'
 
 import type {
   ClassicLoginData,
+  HomeAtaDeviceCapabilities,
+  HomeAtaDeviceData,
+  HomeAtwDeviceCapabilities,
+  HomeAtwDeviceData,
   HomeContext,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
+  HomeSystemInvite,
   HomeTokenResponse,
 } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
@@ -53,18 +58,69 @@ const HomeDeviceSettingSchema = z.looseObject({
   value: z.string(),
 })
 
-// `capabilities` is structurally disjoint between ATA and ATW; strict
-// validation here would reject `/context` for any mixed-fleet account.
-// The cast keeps `HomeContextSchema` assignable to `z.ZodType<HomeContext>`
-// without narrowing the public type — only the ATA facade reads these
-// fields, and only for ATA devices, so the lie is contained.
-type HomeAnyCapabilities =
-  HomeContext['buildings'][number]['airToAirUnits'][number]['capabilities']
-const HomeDeviceCapabilitiesSchema =
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- schema is deliberately broader than the static type; see comment above
-  z.looseObject({}) as unknown as z.ZodType<HomeAnyCapabilities>
-const HomeDeviceDataSchema = z.looseObject({
-  capabilities: HomeDeviceCapabilitiesSchema,
+// `capabilities` is structurally disjoint between ATA and ATW. We validate
+// each array against the schema for its own shape: ATA fields the SDK
+// consumes are required, ATW stays loose since no field is consumed yet.
+const HomeAtaCapabilitiesSchema: z.ZodType<HomeAtaDeviceCapabilities> =
+  z.looseObject({
+    hasAirDirection: z.boolean(),
+    hasAutomaticFanSpeed: z.boolean(),
+    hasAutoOperationMode: z.boolean(),
+    hasCoolOperationMode: z.boolean(),
+    hasDryOperationMode: z.boolean(),
+    hasHalfDegreeIncrements: z.boolean(),
+    hasHeatOperationMode: z.boolean(),
+    hasSwing: z.boolean(),
+    maxTempAutomatic: z.number(),
+    maxTempCoolDry: z.number(),
+    maxTempHeat: z.number(),
+    minTempAutomatic: z.number(),
+    minTempCoolDry: z.number(),
+    minTempHeat: z.number(),
+    numberOfFanSpeeds: z.number(),
+  })
+
+const HomeAtwCapabilitiesSchema: z.ZodType<HomeAtwDeviceCapabilities> =
+  z.looseObject({
+    ftcModel: z.number(),
+    hasBoiler: z.boolean(),
+    hasDemandSideControl: z.boolean(),
+    hasDualRoomTemperature: z.boolean(),
+    hasEstimatedEnergyConsumption: z.boolean(),
+    hasEstimatedEnergyProduction: z.boolean(),
+    hasHalfDegrees: z.boolean(),
+    hasHeatZone1: z.boolean(),
+    hasHeatZone2: z.boolean(),
+    hasHotWater: z.boolean(),
+    hasMeasuredEnergyConsumption: z.boolean(),
+    hasMeasuredEnergyProduction: z.boolean(),
+    hasThermostatZone1: z.boolean(),
+    hasThermostatZone2: z.boolean(),
+    hasWirelessRemote: z.boolean(),
+    hasZone2: z.boolean(),
+    immersionHeaterCapacity: z.number(),
+    maxHeatOutput: z.number(),
+    maxImportPower: z.number(),
+    maxSetTankTemperature: z.number(),
+    maxSetTemperature: z.number(),
+    minSetTankTemperature: z.number(),
+    minSetTemperature: z.number(),
+    refridgerentAddress: z.number(),
+    temperatureIncrement: z.number(),
+    temperatureIncrementOverride: z.string(),
+    temperatureUnit: z.string(),
+  })
+
+const HomeAtaDeviceDataSchema: z.ZodType<HomeAtaDeviceData> = z.looseObject({
+  capabilities: HomeAtaCapabilitiesSchema,
+  givenDisplayName: z.string(),
+  id: z.string(),
+  rssi: z.number(),
+  settings: z.array(HomeDeviceSettingSchema),
+})
+
+const HomeAtwDeviceDataSchema: z.ZodType<HomeAtwDeviceData> = z.looseObject({
+  capabilities: HomeAtwCapabilitiesSchema,
   givenDisplayName: z.string(),
   id: z.string(),
   rssi: z.number(),
@@ -72,8 +128,8 @@ const HomeDeviceDataSchema = z.looseObject({
 })
 
 const HomeBuildingSchema = z.looseObject({
-  airToAirUnits: z.array(HomeDeviceDataSchema),
-  airToWaterUnits: z.array(HomeDeviceDataSchema),
+  airToAirUnits: z.array(HomeAtaDeviceDataSchema),
+  airToWaterUnits: z.array(HomeAtwDeviceDataSchema),
   id: z.string(),
   name: z.string(),
   timezone: z.string(),
@@ -138,7 +194,7 @@ export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
   reportPeriod: z.string(),
 })
 
-/** Home /monitor/ataunit/{id}/errorlog response (array of entries). */
+/** Home /monitor/{ata,atw}unit/{id}/errorlog response (array of entries). */
 export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
   z.array(
     z.looseObject({
@@ -147,6 +203,23 @@ export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
       errorMessage: z.string(),
     }),
   )
+
+/** Home /monitor/user/systeminvites response (array of building-level entries). */
+export const HomeSystemInviteListSchema: z.ZodType<HomeSystemInvite[]> = z.array(
+  z.looseObject({
+    id: z.string(),
+    name: z.string(),
+    ownerEmail: z.string(),
+    systems: z.array(
+      z.looseObject({
+        id: z.string(),
+        inviteAccepted: z.boolean(),
+        name: z.string(),
+        unitType: z.union([z.literal('ata'), z.literal('atw')]),
+      }),
+    ),
+  }),
+)
 
 // Classic /User/ListDevices returns an array of building-with-structure
 // envelopes. The registry iterates structure.Devices and expects every

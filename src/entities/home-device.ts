@@ -1,18 +1,25 @@
-import type { HomeDeviceType } from '../constants.ts'
-import type { HomeDeviceData } from '../types/index.ts'
+import type {
+  HomeAtaDeviceData,
+  HomeAtwDeviceData,
+  HomeDeviceData,
+} from '../types/index.ts'
+import { HomeDeviceType } from '../constants.ts'
 
 /**
  * Mutable wrapper around a {@link HomeDeviceData}, preserving object identity across syncs.
+ * `TData` narrows the wrapped payload to a specific connection-type variant
+ * (e.g. {@link HomeAtaDeviceData}) when callers have already discriminated on
+ * {@link HomeDevice.type}; defaults to the full union for the registry.
  * @category Entities
  */
-export class HomeDevice {
+export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
   public readonly type: HomeDeviceType
 
   /**
    * Last-synced wire-format payload for this device.
    * @returns A read-only snapshot of the device data.
    */
-  public get data(): Readonly<HomeDeviceData> {
+  public get data(): Readonly<TData> {
     return this.#data
   }
 
@@ -32,7 +39,7 @@ export class HomeDevice {
     return this.#data.givenDisplayName
   }
 
-  #data: HomeDeviceData
+  #data: TData
 
   /**
    * Builds a Home device wrapper from a wire-format {@link HomeDeviceData}
@@ -40,9 +47,27 @@ export class HomeDevice {
    * @param device - Wire-format device payload.
    * @param type - Connection-type discriminator.
    */
-  public constructor(device: HomeDeviceData, type: HomeDeviceType) {
+  public constructor(device: TData, type: HomeDeviceType) {
     this.#data = device
     this.type = type
+  }
+
+  /**
+   * Type predicate that narrows this wrapper to the ATA variant when its
+   * connection-type discriminator is {@link HomeDeviceType.Ata}.
+   * @returns `true` when the wrapped payload is an ATA device.
+   */
+  public isAta(): this is HomeDevice<HomeAtaDeviceData> {
+    return this.type === HomeDeviceType.Ata
+  }
+
+  /**
+   * Type predicate that narrows this wrapper to the ATW variant when its
+   * connection-type discriminator is {@link HomeDeviceType.Atw}.
+   * @returns `true` when the wrapped payload is an ATW device.
+   */
+  public isAtw(): this is HomeDevice<HomeAtwDeviceData> {
+    return this.type === HomeDeviceType.Atw
   }
 
   /**
@@ -50,7 +75,7 @@ export class HomeDevice {
    * preserving the wrapper's object identity.
    * @param device - Fresh wire-format device payload.
    */
-  public sync(device: HomeDeviceData): void {
+  public sync(device: TData): void {
     this.#data = device
   }
 }

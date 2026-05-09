@@ -1,8 +1,9 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type {
+  HomeAtaDeviceCapabilities,
+  HomeAtaDeviceData,
   HomeAtaValues,
-  HomeDeviceCapabilities,
   HomeDeviceSetting,
   HomeEnergyData,
   HomeErrorLogEntry,
@@ -30,16 +31,16 @@ interface TemperatureRange {
 const coolDryRange = ({
   maxTempCoolDry: max,
   minTempCoolDry: min,
-}: HomeDeviceCapabilities): TemperatureRange => ({ max, min })
+}: HomeAtaDeviceCapabilities): TemperatureRange => ({ max, min })
 
 const heatFanRange = ({
   maxTempHeat: max,
   minTempHeat: min,
-}: HomeDeviceCapabilities): TemperatureRange => ({ max, min })
+}: HomeAtaDeviceCapabilities): TemperatureRange => ({ max, min })
 
 const temperatureRanges = new Map<
   HomeOperationMode,
-  (capabilities: HomeDeviceCapabilities) => TemperatureRange
+  (capabilities: HomeAtaDeviceCapabilities) => TemperatureRange
 >([
   [
     'Automatic',
@@ -69,7 +70,7 @@ export class HomeDeviceAtaFacade {
    * by this device.
    * @returns The capability descriptor.
    */
-  public get capabilities(): HomeDeviceCapabilities {
+  public get capabilities(): HomeAtaDeviceCapabilities {
     return this.#model.data.capabilities
   }
 
@@ -164,15 +165,15 @@ export class HomeDeviceAtaFacade {
 
   readonly #api: HomeAPIAdapter
 
-  readonly #model: HomeDevice
+  readonly #model: HomeDevice<HomeAtaDeviceData>
 
   /**
    * Builds a Home ATA facade backed by the given API client and
    * registry-resident device model.
    * @param api - Home API client.
-   * @param model - Backing device model.
+   * @param model - Backing device model, narrowed to the ATA variant.
    */
-  public constructor(api: HomeAPIAdapter, model: HomeDevice) {
+  public constructor(api: HomeAPIAdapter, model: HomeDevice<HomeAtaDeviceData>) {
     this.#api = api
     this.#model = model
   }

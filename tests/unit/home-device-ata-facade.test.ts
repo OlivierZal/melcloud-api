@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
-import type { HomeDeviceCapabilities } from '../../src/types/index.ts'
+import type { HomeAtaDeviceCapabilities } from '../../src/types/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { mock } from '../helpers.ts'
@@ -9,7 +9,7 @@ import { homeDevice } from '../home-fixtures.ts'
 
 const createModel = (
   settings: Record<string, string> = {},
-  capabilities: Partial<HomeDeviceCapabilities> = {},
+  capabilities: Partial<HomeAtaDeviceCapabilities> = {},
   rssi = -50,
 ): ReturnType<typeof homeDevice> =>
   homeDevice({

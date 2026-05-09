@@ -1,6 +1,7 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
+import { HomeDeviceAtwFacade } from './home-device-atw.ts'
 
 /**
  * Lazily creates and caches Home device facade instances using a WeakMap
@@ -10,7 +11,10 @@ import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 export class HomeFacadeManager {
   readonly #api: HomeAPIAdapter
 
-  readonly #facades = new WeakMap<HomeDevice, HomeDeviceAtaFacade>()
+  readonly #facades = new WeakMap<
+    HomeDevice,
+    HomeDeviceAtaFacade | HomeDeviceAtwFacade
+  >()
 
   /**
    * Builds a facade manager bound to the given Home API client; facades
@@ -23,22 +27,36 @@ export class HomeFacadeManager {
 
   /**
    * Returns the cached facade for the given Home device, lazily creating
-   * one on first access; passing `undefined` returns `null`.
+   * one on first access. Dispatches on the device's type discriminator
+   * to construct the matching ATA or ATW facade.
    * @param instance - Registry device to wrap, or `undefined`.
    * @returns The facade, or `null` when no instance was supplied.
    */
-  public get(instance: HomeDevice): HomeDeviceAtaFacade
-  public get(): null
-  public get(instance?: HomeDevice): HomeDeviceAtaFacade | null
-  public get(instance?: HomeDevice): HomeDeviceAtaFacade | null {
-    if (!instance) {
+  public get(instance?: HomeDevice): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
+    if (instance === undefined) {
       return null
     }
-    let facade = this.#facades.get(instance)
-    if (!facade) {
-      facade = new HomeDeviceAtaFacade(this.#api, instance)
-      this.#facades.set(instance, facade)
+    const cached = this.#facades.get(instance)
+    if (cached !== undefined) {
+      return cached
     }
+    const facade = this.#build(instance)
+    if (facade === null) {
+      return null
+    }
+    this.#facades.set(instance, facade)
     return facade
+  }
+
+  #build(
+    instance: HomeDevice,
+  ): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
+    if (instance.isAta()) {
+      return new HomeDeviceAtaFacade(this.#api, instance)
+    }
+    if (instance.isAtw()) {
+      return new HomeDeviceAtwFacade(this.#api, instance)
+    }
+    return null
   }
 }

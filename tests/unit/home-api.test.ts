@@ -34,7 +34,7 @@ const cognitoLoginPage = (
   '<input type="hidden" name="cognitoAsfData" value=""/>' +
   '</form>'
 
-const mockCapabilities = {
+const mockAtaCapabilities = {
   hasAirDirection: true,
   hasAutomaticFanSpeed: true,
   hasAutoOperationMode: true,
@@ -52,10 +52,40 @@ const mockCapabilities = {
   numberOfFanSpeeds: 5,
 }
 
+const mockAtwCapabilities = {
+  ftcModel: 3,
+  hasBoiler: true,
+  hasDemandSideControl: true,
+  hasDualRoomTemperature: false,
+  hasEstimatedEnergyConsumption: true,
+  hasEstimatedEnergyProduction: true,
+  hasHalfDegrees: true,
+  hasHeatZone1: true,
+  hasHeatZone2: false,
+  hasHotWater: false,
+  hasMeasuredEnergyConsumption: false,
+  hasMeasuredEnergyProduction: false,
+  hasThermostatZone1: true,
+  hasThermostatZone2: false,
+  hasWirelessRemote: true,
+  hasZone2: false,
+  immersionHeaterCapacity: 0,
+  maxHeatOutput: 0,
+  maxImportPower: 0,
+  maxSetTankTemperature: 60,
+  maxSetTemperature: 30,
+  minSetTankTemperature: 40,
+  minSetTemperature: 10,
+  refridgerentAddress: 0,
+  temperatureIncrement: 0.5,
+  temperatureIncrementOverride: '2',
+  temperatureUnit: '',
+}
+
 const mockBuilding: HomeBuilding = {
   airToAirUnits: [
     {
-      capabilities: mockCapabilities,
+      capabilities: mockAtaCapabilities,
       givenDisplayName: 'Test ClassicDevice',
       id: 'device-1',
       rssi: -50,
@@ -64,7 +94,7 @@ const mockBuilding: HomeBuilding = {
   ],
   airToWaterUnits: [
     {
-      capabilities: mockCapabilities,
+      capabilities: mockAtwCapabilities,
       givenDisplayName: 'ATW ClassicDevice',
       id: 'device-2',
       rssi: -55,
@@ -769,6 +799,144 @@ describe('melcloud home API', () => {
       })
 
       expect(result).toMatchObject({ error: { kind: 'network' }, ok: false })
+    })
+  })
+
+  describe('atw endpoints', () => {
+    it('updateAtwValues PUTs to /monitor/atwunit/{id}', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const isSuccess = await api.updateAtwValues('atw-1', {
+        power: false,
+        setTemperatureZone1: 20,
+      })
+
+      expect(isSuccess).toBe(true)
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { power: false, setTemperatureZone1: 20 },
+          method: 'put',
+          url: '/monitor/atwunit/atw-1',
+        }),
+      )
+    })
+
+    it('getEnergyAtw maps consumed to interval_energy_consumed', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
+      await api.getEnergyAtw('atw-1', {
+        from: '2026-05-01',
+        interval: 'Hour',
+        measure: 'consumed',
+        to: '2026-05-02',
+      })
+
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          params: {
+            from: '2026-05-01 00:00',
+            interval: 'Hour',
+            measure: 'interval_energy_consumed',
+            to: '2026-05-02 00:00',
+          },
+          url: '/telemetry/telemetry/energy/atw-1',
+        }),
+      )
+    })
+
+    it('getEnergyAtw maps produced to interval_energy_produced', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
+      await api.getEnergyAtw('atw-1', {
+        from: '2026-05-01',
+        interval: 'Hour',
+        measure: 'produced',
+        to: '2026-05-02',
+      })
+
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          params: {
+            from: '2026-05-01 00:00',
+            interval: 'Hour',
+            measure: 'interval_energy_produced',
+            to: '2026-05-02 00:00',
+          },
+          url: '/telemetry/telemetry/energy/atw-1',
+        }),
+      )
+    })
+
+    it('getErrorLogAtw hits /monitor/atwunit/{id}/errorlog', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockErrorLog, {}, 200))
+      await api.getErrorLogAtw('atw-1')
+
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          url: '/monitor/atwunit/atw-1/errorlog',
+        }),
+      )
+    })
+
+    it('getComfortGraph hits /report/v1/comfort-graph with .NET-format dates', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
+      await api.getComfortGraph('atw-1', {
+        from: '2026-05-01',
+        period: 'Daily',
+        to: '2026-05-02',
+      })
+
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          params: {
+            from: '2026-05-01T00:00:00.0000000',
+            period: 'Daily',
+            to: '2026-05-02T00:00:00.0000000',
+            unitId: 'atw-1',
+          },
+          url: '/report/v1/comfort-graph',
+        }),
+      )
+    })
+
+    it('getInternalTemperatures hits /report/v1/internaltemperatures', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
+      await api.getInternalTemperatures('atw-1', {
+        from: '2026-05-01',
+        period: 'Hourly',
+        to: '2026-05-02',
+      })
+
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          url: '/report/v1/internaltemperatures',
+        }),
+      )
+    })
+
+    it('getSystemInvites hits /monitor/user/systeminvites', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse([], {}, 200))
+      const result = await api.getSystemInvites()
+
+      expect(result).toStrictEqual({ ok: true, value: [] })
+      expect(mockRequest).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          url: '/monitor/user/systeminvites',
+        }),
+      )
     })
   })
 

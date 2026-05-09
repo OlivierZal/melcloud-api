@@ -1,10 +1,12 @@
 import type { HomeRegistry } from '../entities/home-registry.ts'
 import type {
   HomeAtaValues,
+  HomeAtwValues,
   HomeBuilding,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
+  HomeSystemInvite,
   HomeUser,
   LoginCredentials,
   Result,
@@ -42,19 +44,43 @@ export interface HomeAPIAdapter {
   readonly authenticate: (credentials: LoginCredentials) => Promise<void>
   /** Cancel any pending automatic sync. */
   readonly clearSync: () => void
-  /** Fetch energy consumption data for a device. */
+  /** Fetch the comfort-graph (room/outside/setpoint) for an ATW unit. */
+  readonly getComfortGraph: (
+    id: string,
+    params: { from: string; period: string; to: string },
+  ) => Promise<Result<HomeReportData[]>>
+  /** Fetch energy consumption data for an ATA unit. */
   readonly getEnergy: (
     id: string,
     params: { from: string; interval: string; to: string },
   ) => Promise<Result<HomeEnergyData>>
-  /** Fetch the error log for a device. */
+  /** Fetch consumed/produced interval-energy telemetry for an ATW unit. */
+  readonly getEnergyAtw: (
+    id: string,
+    params: {
+      from: string
+      interval: string
+      measure: 'consumed' | 'produced'
+      to: string
+    },
+  ) => Promise<Result<HomeEnergyData>>
+  /** Fetch the error log for an ATA unit. */
   readonly getErrorLog: (id: string) => Promise<Result<HomeErrorLogEntry[]>>
+  /** Fetch the error log for an ATW unit. */
+  readonly getErrorLogAtw: (id: string) => Promise<Result<HomeErrorLogEntry[]>>
+  /** Fetch the internal-temperatures report (flow/return/tank) for an ATW unit. */
+  readonly getInternalTemperatures: (
+    id: string,
+    params: { from: string; period: string; to: string },
+  ) => Promise<Result<HomeReportData[]>>
   /** Fetch WiFi signal strength (RSSI) telemetry for a device. */
   readonly getSignal: (
     id: string,
     params: { from: string; to: string },
   ) => Promise<Result<HomeEnergyData>>
-  /** Fetch temperature trend summary for a device. */
+  /** Fetch the systems shared with the authenticated user (guest invites). */
+  readonly getSystemInvites: () => Promise<Result<HomeSystemInvite[]>>
+  /** Fetch the trend-summary report (room/set temperature) for an ATA unit. */
   readonly getTemperatures: (
     id: string,
     params: { from: string; period: string; to: string },
@@ -73,7 +99,12 @@ export interface HomeAPIAdapter {
   readonly resumeSession: () => Promise<boolean>
   /** Update the automatic sync interval and reschedule. Pass `false` to disable. */
   readonly setSyncInterval: (minutes: number | false) => void
-  /** Update device values and refresh device data via list(). */
+  /** Push an ATW setpoint update and refresh device data via list(). */
+  readonly updateAtwValues: (
+    id: string,
+    values: HomeAtwValues,
+  ) => Promise<boolean>
+  /** Push an ATA setpoint update and refresh device data via list(). */
   readonly updateValues: (id: string, values: HomeAtaValues) => Promise<boolean>
 }
 
