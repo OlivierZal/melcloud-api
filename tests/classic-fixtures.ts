@@ -39,21 +39,25 @@ import { cast, mock } from './helpers.ts'
 
 export const classicBuildingData = (
   overrides: Partial<ClassicBuildingData> = {},
-): ClassicBuildingData => ({
-  FPDefined: true,
-  FPEnabled: false,
-  FPMaxTemperature: 16,
-  FPMinTemperature: 4,
-  HMDefined: false,
-  HMEnabled: false,
-  HMEndDate: null,
-  HMStartDate: null,
-  ID: toClassicBuildingId(1),
-  Location: 10,
-  Name: 'ClassicBuilding',
-  TimeZone: 0,
-  ...overrides,
-})
+): ClassicBuildingData =>
+  // The wire shape carries 30+ fields (address, geo, owner, access,
+  // FP/HM flags); fixtures only pin the few the SDK actually reads
+  // and let `mock` leave the rest absent at runtime.
+  mock<ClassicBuildingData>({
+    FPDefined: true,
+    FPEnabled: false,
+    FPMaxTemperature: 16,
+    FPMinTemperature: 4,
+    HMDefined: false,
+    HMEnabled: false,
+    HMEndDate: null,
+    HMStartDate: null,
+    ID: toClassicBuildingId(1),
+    Location: 10,
+    Name: 'ClassicBuilding',
+    TimeZone: 0,
+    ...overrides,
+  })
 
 export const classicFloorData = (
   overrides: Partial<ClassicFloorData> = {},
@@ -197,44 +201,51 @@ const DEFAULT_ERV_DEVICE_ID = toClassicDeviceId(1002)
 // Full list-device wrappers (envelope around device data)
 // ---------------------------------------------------------------------------
 
+// ListDevice wrappers carry 50+ wire-format fields (firmware,
+// network, ownership, UI hints, permissions); fixtures pin only the
+// identity + parent-zone fields the SDK reads, then `mock` returns
+// the strict type with the rest absent at runtime.
 export const classicAtaDevice = (
   overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Ata>> = {},
-): ClassicListDeviceAny => ({
-  AreaID: DEFAULT_AREA_ID,
-  BuildingID: DEFAULT_BUILDING_ID,
-  Device: classicAtaDeviceData(),
-  DeviceID: DEFAULT_ATA_DEVICE_ID,
-  DeviceName: 'ATA ClassicDevice',
-  FloorID: DEFAULT_FLOOR_ID,
-  Type: ClassicDeviceType.Ata,
-  ...overrides,
-})
+): ClassicListDeviceAny =>
+  mock<ClassicListDevice<typeof ClassicDeviceType.Ata>>({
+    AreaID: DEFAULT_AREA_ID,
+    BuildingID: DEFAULT_BUILDING_ID,
+    Device: classicAtaDeviceData(),
+    DeviceID: DEFAULT_ATA_DEVICE_ID,
+    DeviceName: 'ATA ClassicDevice',
+    FloorID: DEFAULT_FLOOR_ID,
+    Type: ClassicDeviceType.Ata,
+    ...overrides,
+  })
 
 export const classicAtwDevice = (
   overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Atw>> = {},
-): ClassicListDeviceAny => ({
-  AreaID: DEFAULT_AREA_ID,
-  BuildingID: DEFAULT_BUILDING_ID,
-  Device: classicAtwDeviceData(),
-  DeviceID: DEFAULT_ATW_DEVICE_ID,
-  DeviceName: 'ATW ClassicDevice',
-  FloorID: DEFAULT_FLOOR_ID,
-  Type: ClassicDeviceType.Atw,
-  ...overrides,
-})
+): ClassicListDeviceAny =>
+  mock<ClassicListDevice<typeof ClassicDeviceType.Atw>>({
+    AreaID: DEFAULT_AREA_ID,
+    BuildingID: DEFAULT_BUILDING_ID,
+    Device: classicAtwDeviceData(),
+    DeviceID: DEFAULT_ATW_DEVICE_ID,
+    DeviceName: 'ATW ClassicDevice',
+    FloorID: DEFAULT_FLOOR_ID,
+    Type: ClassicDeviceType.Atw,
+    ...overrides,
+  })
 
 export const classicErvDevice = (
   overrides: Partial<ClassicListDevice<typeof ClassicDeviceType.Erv>> = {},
-): ClassicListDeviceAny => ({
-  AreaID: DEFAULT_AREA_ID,
-  BuildingID: DEFAULT_BUILDING_ID,
-  Device: classicErvDeviceData(),
-  DeviceID: DEFAULT_ERV_DEVICE_ID,
-  DeviceName: 'ERV ClassicDevice',
-  FloorID: null,
-  Type: ClassicDeviceType.Erv,
-  ...overrides,
-})
+): ClassicListDeviceAny =>
+  mock<ClassicListDevice<typeof ClassicDeviceType.Erv>>({
+    AreaID: DEFAULT_AREA_ID,
+    BuildingID: DEFAULT_BUILDING_ID,
+    Device: classicErvDeviceData(),
+    DeviceID: DEFAULT_ERV_DEVICE_ID,
+    DeviceName: 'ERV ClassicDevice',
+    FloorID: null,
+    Type: ClassicDeviceType.Erv,
+    ...overrides,
+  })
 
 // ---------------------------------------------------------------------------
 // API response fixtures

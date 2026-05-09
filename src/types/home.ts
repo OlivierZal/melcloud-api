@@ -247,9 +247,9 @@ export interface HomeDeviceScheduleEntry {
   readonly id: string
   readonly operationMode: string
   readonly power: boolean
-  readonly setFanSpeed?: string
   readonly setPoint: number
   readonly time: string
+  readonly setFanSpeed?: string
   readonly vaneHorizontalDirection?: string
   readonly vaneVerticalDirection?: string
 }

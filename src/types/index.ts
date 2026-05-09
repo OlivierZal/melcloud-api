@@ -24,6 +24,7 @@ export type {
 export type {
   ClassicBaseDevicePostData,
   ClassicBaseGetDeviceData,
+  ClassicBaseListDevice,
 } from './classic-bases.ts'
 export type {
   ClassicListDeviceDataErv,
@@ -35,9 +36,11 @@ export type {
   ClassicAreaDataAny,
   ClassicAreaZone,
   ClassicBuildingData,
+  ClassicBuildingOwner,
   ClassicBuildingWithStructure,
   ClassicBuildingZone,
   ClassicDateTimeComponents,
+  ClassicDevicePermissions,
   ClassicDeviceZone,
   ClassicEnergyData,
   ClassicEnergyPostData,
@@ -62,6 +65,7 @@ export type {
   ClassicLoginData,
   ClassicLoginPostData,
   ClassicOperationModeLogData,
+  ClassicQuantizedCoordinates,
   ClassicReportData,
   ClassicReportPostData,
   ClassicSetDeviceData,
