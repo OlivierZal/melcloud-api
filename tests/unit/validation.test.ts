@@ -6,6 +6,7 @@ import { ValidationError } from '../../src/errors/index.ts'
 import {
   ClassicBuildingListSchema,
   ClassicLoginDataSchema,
+  HomeContextSchema,
   HomeTokenResponseSchema,
   parseOrThrow,
 } from '../../src/validation/index.ts'
@@ -31,6 +32,31 @@ const buildingWithDeviceType = (type: unknown): unknown => [
     },
   },
 ]
+
+const baseHomeDevice = {
+  givenDisplayName: 'D',
+  id: 'd1',
+  rssi: -42,
+  settings: [],
+}
+const baseHomeBuilding = {
+  airToAirUnits: [],
+  airToWaterUnits: [],
+  id: 'b1',
+  name: 'B',
+  timezone: 'UTC',
+}
+const buildHomeContext = (overrides: Record<string, unknown>): unknown => ({
+  buildings: [],
+  country: 'FR',
+  email: 'a@b',
+  firstname: 'A',
+  guestBuildings: [],
+  id: 'u1',
+  language: 'en',
+  lastname: 'B',
+  ...overrides,
+})
 
 describe('validation/schemas', () => {
   describe(parseOrThrow, () => {
@@ -108,6 +134,57 @@ describe('validation/schemas', () => {
           token_type: 'Mac',
         }),
       ).toThrow(/token_type/u)
+    })
+  })
+
+  describe('homeContextSchema device capabilities', () => {
+    it.each([
+      {
+        capabilities: {
+          hasAirDirection: true,
+          hasAutomaticFanSpeed: true,
+          hasCoolOperationMode: true,
+          numberOfFanSpeeds: 4,
+        },
+        label: 'ATA',
+      },
+      {
+        capabilities: {
+          ftcModel: 3,
+          hasBoiler: false,
+          hasHotWater: true,
+          hasZone2: false,
+        },
+        label: 'ATW',
+      },
+    ])('accepts $label-shaped capabilities', ({ capabilities }) => {
+      expect(() =>
+        HomeContextSchema.parse(
+          buildHomeContext({
+            buildings: [
+              {
+                ...baseHomeBuilding,
+                airToWaterUnits: [{ ...baseHomeDevice, capabilities }],
+              },
+            ],
+          }),
+        ),
+      ).not.toThrow()
+    })
+
+    it('rejects non-object capabilities', () => {
+      expect(() =>
+        HomeContextSchema.parse(
+          buildHomeContext({
+            buildings: [
+              {
+                ...baseHomeBuilding,
+                airToAirUnits: [{ ...baseHomeDevice, capabilities: 'invalid' }],
+              },
+            ],
+          }),
+        ),
+      ).toThrow(/capabilities/u)
     })
   })
 

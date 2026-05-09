@@ -53,24 +53,16 @@ const HomeDeviceSettingSchema = z.looseObject({
   value: z.string(),
 })
 
-const HomeDeviceCapabilitiesSchema = z.looseObject({
-  hasAirDirection: z.boolean(),
-  hasAutomaticFanSpeed: z.boolean(),
-  hasAutoOperationMode: z.boolean(),
-  hasCoolOperationMode: z.boolean(),
-  hasDryOperationMode: z.boolean(),
-  hasHalfDegreeIncrements: z.boolean(),
-  hasHeatOperationMode: z.boolean(),
-  hasSwing: z.boolean(),
-  maxTempAutomatic: z.number(),
-  maxTempCoolDry: z.number(),
-  maxTempHeat: z.number(),
-  minTempAutomatic: z.number(),
-  minTempCoolDry: z.number(),
-  minTempHeat: z.number(),
-  numberOfFanSpeeds: z.number(),
-})
-
+// `capabilities` is structurally disjoint between ATA and ATW; strict
+// validation here would reject `/context` for any mixed-fleet account.
+// The cast keeps `HomeContextSchema` assignable to `z.ZodType<HomeContext>`
+// without narrowing the public type — only the ATA facade reads these
+// fields, and only for ATA devices, so the lie is contained.
+type HomeAnyCapabilities =
+  HomeContext['buildings'][number]['airToAirUnits'][number]['capabilities']
+const HomeDeviceCapabilitiesSchema =
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- schema is deliberately broader than the static type; see comment above
+  z.looseObject({}) as unknown as z.ZodType<HomeAnyCapabilities>
 const HomeDeviceDataSchema = z.looseObject({
   capabilities: HomeDeviceCapabilitiesSchema,
   givenDisplayName: z.string(),
