@@ -126,6 +126,13 @@ describe('mELCloud Classic API', () => {
     await api.notifySync({ type: undefined })
 
     expect(onSyncComplete).toHaveBeenCalledWith({ type: undefined })
+    expect(api.timezone).toBe('Europe/Paris')
+  })
+
+  it('exposes timezone as undefined when none is configured', async () => {
+    const api = await createApi()
+
+    expect(api.timezone).toBeUndefined()
   })
 
   it('accepts a disabled sync timer', async () => {

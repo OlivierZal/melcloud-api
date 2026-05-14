@@ -180,6 +180,17 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.#registry
   }
 
+  /**
+   * IANA timezone supplied via {@link ClassicAPIConfig.timezone},
+   * or `undefined` when unset. Surfaced through {@link ClassicAPIAdapter}
+   * so facades can anchor their "now" defaults to the Classic timezone
+   * rather than the host runtime timezone.
+   * @returns The configured IANA timezone identifier, or `undefined`.
+   */
+  public get timezone(): string | undefined {
+    return this.#timezone
+  }
+
   #language = 'en'
 
   readonly #registry = new ClassicRegistry()

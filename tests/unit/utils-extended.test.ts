@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import type {
   ClassicOperationModeLogData,
@@ -24,7 +24,23 @@ describe.concurrent(now, () => {
   })
 })
 
-describe.concurrent('formatLabels (via getChartLineOptions)', () => {
+// Not `describe.concurrent`: these specs mutate the module-level report
+// locale via `setReportLocale`, so concurrent execution would interleave
+// different locale values and make label assertions flaky. The `beforeEach`/
+// `afterEach` pair pins each spec to `'en'` and restores the original
+// locale on exit so the suite cannot leak into later suites either.
+describe('formatLabels (via getChartLineOptions)', () => {
+  let originalLocale: string | null = null
+
+  beforeEach(() => {
+    originalLocale = getReportLocale()
+    setReportLocale('en')
+  })
+
+  afterEach(() => {
+    setReportLocale(originalLocale)
+  })
+
   const baseReportData: ClassicReportData = {
     Data: [[1, 2]],
     FromDate: '2024-01-01',
@@ -54,7 +70,6 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   })
 
   it('formats day_of_week labels', () => {
-    setReportLocale('en')
     const data = {
       ...baseReportData,
       Labels: ['1', '2', '3'],
@@ -67,7 +82,6 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   })
 
   it('formats month labels', () => {
-    setReportLocale('en')
     const data = {
       ...baseReportData,
       Labels: ['1', '6', '12'],
@@ -81,7 +95,6 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   })
 
   it('formats month_of_year labels', () => {
-    setReportLocale('en')
     const data = {
       ...baseReportData,
       Labels: ['202401', '202412'],

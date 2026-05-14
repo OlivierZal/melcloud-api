@@ -200,10 +200,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   public async getHourlyTemperatures(
-    // Temporal.PlainTime.hour is always in [0, 23] per spec, so the
-    // narrowing to `Hour` (the 0..23 literal union) is sound.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    hour: Hour = Temporal.Now.plainTimeISO().hour as Hour,
+    hour: Hour = this.currentHour(),
   ): Promise<Result<ReportChartLineOptions>> {
     return mapResult(
       await this.api.getHourlyTemperatures({
@@ -285,9 +282,10 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   #buildReportPostData(
-    { from = DEFAULT_YEAR, to = now() }: ReportQuery = {},
+    query: ReportQuery = {},
     shouldUseExactRange = false,
   ): ClassicReportPostData {
+    const { from = DEFAULT_YEAR, to = now(this.api.timezone) } = query
     return {
       DeviceID: this.id,
       Duration: shouldUseExactRange ? getDuration({ from, to }) : undefined,
