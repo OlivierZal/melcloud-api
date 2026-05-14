@@ -591,6 +591,23 @@ describe('mELCloud Classic API', () => {
       expect(okValue(result).errors).toHaveLength(0)
     })
 
+    it('keeps entries with unparseable StartDate (no invalid-year sentinel)', async () => {
+      mockLoginAndList()
+      const api = await createApi({ password: 'pass', username: 'user' })
+      mockRequest.mockResolvedValue(
+        wrap([
+          errorEntry({
+            ErrorMessage: 'Mystery',
+            StartDate: 'not-a-real-date',
+          }),
+        ]),
+      )
+      const result = await api.getErrorLog({}, [1])
+
+      expect(okValue(result).errors).toHaveLength(1)
+      expect(okValue(result).errors[0]?.error).toBe('Mystery')
+    })
+
     it('returns validation failure when the API returns failure data', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
