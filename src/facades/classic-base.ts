@@ -1,5 +1,3 @@
-import { DateTime } from 'luxon'
-
 import type {
   ClassicAPIAdapter,
   ClassicErrorLog,
@@ -18,6 +16,7 @@ import {
   syncDevices,
 } from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
+import { Temporal } from '../temporal.ts'
 import {
   type ApiRequestError,
   type ClassicDateTimeComponents,
@@ -79,7 +78,7 @@ const TEMPERATURE_GAP = 2
 const temperatureRange = { max: 16, min: 4 }
 
 const getDateTimeComponents = (
-  date: DateTime | null,
+  date: Temporal.PlainDateTime | null,
 ): ClassicDateTimeComponents =>
   date ?
     {
@@ -227,8 +226,9 @@ export abstract class ClassicBaseFacade<
     ClassicFailureData | ClassicSuccessData
   > {
     const isEnabled = to !== undefined
-    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
-    const endDate = isEnabled ? DateTime.fromISO(to) : null
+    const startDate =
+      isEnabled ? Temporal.PlainDateTime.from(from ?? now()) : null
+    const endDate = isEnabled ? Temporal.PlainDateTime.from(to) : null
     return this.api.updateHolidayMode({
       postData: {
         Enabled: isEnabled,
@@ -275,7 +275,10 @@ export abstract class ClassicBaseFacade<
   }
 
   public async getSignalStrength(
-    hour: Hour = DateTime.now().hour,
+    // Temporal.PlainTime.hour is always in [0, 23] per spec, so the
+    // narrowing to `Hour` (the 0..23 literal union) is sound.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    hour: Hour = Temporal.Now.plainTimeISO().hour as Hour,
   ): Promise<Result<ReportChartLineOptions>> {
     return mapResult(
       await this.api.getSignal({

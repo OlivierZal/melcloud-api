@@ -28,9 +28,10 @@ export class RateLimitPolicy implements ResiliencePolicy {
   }
 
   public async run<T>(attempt: () => Promise<T>): Promise<T> {
-    // Read all three fields from one `DateTime.now()` capture so the
-    // error's `retryAfter` and `unblockAt` are mutually consistent —
-    // even when the gate re-opens between two separate getter reads.
+    // Read all three fields from one `Temporal.Now.instant()` capture
+    // so the error's `retryAfter` and `unblockAt` are mutually
+    // consistent — even when the gate re-opens between two separate
+    // getter reads.
     const { isPaused, remaining, unblockAt } = this.#gate.snapshot()
     if (isPaused) {
       throw new RateLimitError(

@@ -1,5 +1,3 @@
-import { DateTime } from 'luxon'
-
 import type {
   HomeAtaValues,
   HomeAtwValues,
@@ -17,6 +15,7 @@ import { HomeDeviceType } from '../constants.ts'
 import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
+import { Temporal } from '../temporal.ts'
 import { MS_PER_SECOND, SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
   HomeContextSchema,
@@ -45,25 +44,34 @@ const parseUser = (data: HomeContext): HomeUser => ({
   sub: data.id,
 })
 
+// Parse offset-bearing inputs (e.g. `'2026-03-01T10:00:00Z'`) as
+// absolute instants then re-project to UTC wall time; parse offset-less
+// inputs (e.g. `'2026-03-01'`, `'2026-03-01T00:00:00'`) as already-UTC
+// wall time. Anchoring on UTC prevents the host's local timezone from
+// shifting the formatted output by hours.
+const parseUTCPlainDateTime = (iso: string): Temporal.PlainDateTime => {
+  try {
+    return Temporal.Instant.from(iso)
+      .toZonedDateTimeISO('UTC')
+      .toPlainDateTime()
+  } catch {
+    return Temporal.PlainDateTime.from(iso)
+  }
+}
+
 // `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros
 // (e.g. `2026-04-19T00:00:00.0000000`). Anything shorter is silently
 // truncated to an empty window by the BFF.
-//
-// Parse with `{ zone: 'utc' }` so offset-less inputs (e.g. `'2026-03-01'`)
-// are read as UTC rather than being re-interpreted through the host's
-// local timezone — otherwise the formatted output drifts by the host's
-// current offset.
 const toReportDate = (iso: string): string =>
-  DateTime.fromISO(iso, { zone: 'utc' }).toFormat(
-    "yyyy-MM-dd'T'HH:mm:ss'.0000000'",
-  )
+  `${parseUTCPlainDateTime(iso).toString({ smallestUnit: 'second' })}.0000000`
 
 // `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
 // space and no seconds. Seconds or an ISO `T` separator produce an empty
-// payload rather than an error. Same UTC-parse rationale as
-// {@link toReportDate}.
+// payload rather than an error.
 const toTelemetryDate = (iso: string): string =>
-  DateTime.fromISO(iso, { zone: 'utc' }).toFormat('yyyy-MM-dd HH:mm')
+  parseUTCPlainDateTime(iso)
+    .toString({ smallestUnit: 'minute' })
+    .replace('T', ' ')
 
 /**
  * MELCloud Home API client using the mobile BFF at

@@ -1,5 +1,3 @@
-import { DateTime, Settings as LuxonSettings } from 'luxon'
-
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
@@ -13,6 +11,7 @@ import type {
   KeyOfClassicSetDeviceDataAtaNotInList,
 } from './types/index.ts'
 import { type ClassicDeviceType, ClassicLabelType } from './constants.ts'
+import { Temporal } from './temporal.ts'
 
 // API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
 const YEAR_MONTH_DIVISOR = 100
@@ -23,20 +22,38 @@ const MONTH_NAME_BASE_YEAR = 2024
 
 interface LabelFormatterCache {
   readonly dayOfWeek: Intl.DateTimeFormat
-  readonly locale: string | null | undefined
+  readonly locale: string | null
   readonly month: Intl.DateTimeFormat
 }
 
 let formatterCache: LabelFormatterCache | null = null
 
-// Luxon types defaultLocale as `string` but emits `null` at runtime when unset; widen at the boundary.
-const getDefaultLocale = (): string | null | undefined =>
-  LuxonSettings.defaultLocale
+// Module-level locale for report labels. Replaces Luxon's
+// `Settings.defaultLocale` global with an explicit, type-safe sink.
+// `null` means "use the runtime default" (matches the original
+// "unset" sentinel emitted by Luxon at runtime).
+let currentReportLocale: string | null = null
 
-// Tracks LuxonSettings.defaultLocale so output stays consistent with the rest
-// of the codebase's datetime formatting without re-creating Intl.DateTimeFormat per call.
+/**
+ * Set the locale used to format report chart labels (day-of-week,
+ * month names, etc.). Pass `null` to fall back to the runtime default.
+ * @param locale - BCP-47 language tag, or `null` for runtime default.
+ */
+export const setReportLocale = (locale: string | null): void => {
+  currentReportLocale = locale
+}
+
+/**
+ * Current report locale, or `null` when no explicit locale has been
+ * configured.
+ * @returns The configured locale, or `null`.
+ */
+export const getReportLocale = (): string | null => currentReportLocale
+
+// Tracks `currentReportLocale` so output stays consistent with the
+// configured locale without re-creating `Intl.DateTimeFormat` per call.
 const getLabelFormatters = (): LabelFormatterCache => {
-  const locale = getDefaultLocale()
+  const locale = currentReportLocale
   if (formatterCache !== null && formatterCache.locale === locale) {
     return formatterCache
   }
@@ -75,9 +92,17 @@ export const clampToRange = (
 
 /**
  * Get the current date/time as an ISO 8601 string without timezone offset.
+ *
+ * When a timezone is supplied, the wall-clock time is taken in that
+ * zone; otherwise the runtime's system zone is used. The returned
+ * string is the local `PlainDateTime` ISO form (no `Z`, no `+HH:MM`).
+ * @param timeZone - IANA timezone identifier, or omitted for system zone.
  * @returns The current date/time as an ISO string.
  */
-export const now = (): string => DateTime.now().toISO({ includeOffset: false })
+export const now = (timeZone?: string): string =>
+  Temporal.Now.plainDateTimeISO(timeZone).toString({
+    smallestUnit: 'millisecond',
+  })
 
 /**
  * Factory for a type guard that narrows a key to the own keys of `record`.

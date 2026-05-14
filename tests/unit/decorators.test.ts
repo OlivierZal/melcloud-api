@@ -1,4 +1,3 @@
-import { Duration } from 'luxon'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter, SyncCallback } from '../../src/api/index.ts'
@@ -26,6 +25,7 @@ import {
   RateLimitError,
 } from '../../src/errors/index.ts'
 import { HttpError } from '../../src/http/index.ts'
+import { Temporal } from '../../src/temporal.ts'
 import { cast, mock } from '../helpers.ts'
 
 const createMockFacade = (
@@ -462,7 +462,7 @@ describe(classifyError, () => {
     },
     {
       error: new RateLimitError('paused', {
-        retryAfter: Duration.fromMillis(5000),
+        retryAfter: Temporal.Duration.from({ milliseconds: 5000 }),
         unblockAt: null,
       }),
       expected: { kind: 'rate-limited', retryAfterMs: 5000 } as const,

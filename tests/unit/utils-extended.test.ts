@@ -1,4 +1,3 @@
-import { DateTime, Settings as LuxonSettings } from 'luxon'
 import { describe, expect, it } from 'vitest'
 
 import type {
@@ -6,10 +5,13 @@ import type {
   ClassicReportData,
 } from '../../src/types/index.ts'
 import { ClassicLabelType } from '../../src/constants.ts'
+import { Temporal } from '../../src/temporal.ts'
 import {
   getChartLineOptions,
   getChartPieOptions,
+  getReportLocale,
   now,
+  setReportLocale,
 } from '../../src/utils.ts'
 
 describe.concurrent(now, () => {
@@ -18,7 +20,7 @@ describe.concurrent(now, () => {
 
     expect(result).not.toContain('+')
     expect(result).not.toContain('Z')
-    expect(() => DateTime.fromISO(result)).not.toThrow()
+    expect(() => Temporal.PlainDateTime.from(result)).not.toThrow()
   })
 })
 
@@ -52,7 +54,7 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   })
 
   it('formats day_of_week labels', () => {
-    LuxonSettings.defaultLocale = 'en'
+    setReportLocale('en')
     const data = {
       ...baseReportData,
       Labels: ['1', '2', '3'],
@@ -65,7 +67,7 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   })
 
   it('formats month labels', () => {
-    LuxonSettings.defaultLocale = 'en'
+    setReportLocale('en')
     const data = {
       ...baseReportData,
       Labels: ['1', '6', '12'],
@@ -79,7 +81,7 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   })
 
   it('formats month_of_year labels', () => {
-    LuxonSettings.defaultLocale = 'en'
+    setReportLocale('en')
     const data = {
       ...baseReportData,
       Labels: ['202401', '202412'],
@@ -162,12 +164,11 @@ describe.concurrent(getChartPieOptions, () => {
   })
 })
 
-describe('formatLabels with unset defaultLocale', () => {
-  it('falls back to system locale when LuxonSettings.defaultLocale is null', () => {
-    const { defaultLocale: originalLocale } = LuxonSettings
+describe('formatLabels with unset report locale', () => {
+  it('falls back to system locale when the report locale is null', () => {
+    const originalLocale = getReportLocale()
     try {
-      // Luxon types defaultLocale as `string` but null is the unset sentinel
-      ;(LuxonSettings as { defaultLocale: string | null }).defaultLocale = null
+      setReportLocale(null)
       const data: ClassicReportData = {
         Data: [[1]],
         FromDate: '2024-01-01',
@@ -182,7 +183,7 @@ describe('formatLabels with unset defaultLocale', () => {
       expect(result.labels).toHaveLength(1)
       expect(result.labels[0]).toBeDefined()
     } finally {
-      LuxonSettings.defaultLocale = originalLocale
+      setReportLocale(originalLocale)
     }
   })
 })
