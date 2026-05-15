@@ -1,4 +1,3 @@
-import { DateTime, Settings as LuxonSettings } from 'luxon'
 import { describe, expect, it } from 'vitest'
 
 import type {
@@ -6,6 +5,7 @@ import type {
   ClassicReportData,
 } from '../../src/types/index.ts'
 import { ClassicLabelType } from '../../src/constants.ts'
+import { Temporal } from '../../src/temporal.ts'
 import {
   getChartLineOptions,
   getChartPieOptions,
@@ -18,7 +18,7 @@ describe.concurrent(now, () => {
 
     expect(result).not.toContain('+')
     expect(result).not.toContain('Z')
-    expect(() => DateTime.fromISO(result)).not.toThrow()
+    expect(() => Temporal.PlainDateTime.from(result)).not.toThrow()
   })
 })
 
@@ -35,7 +35,11 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
 
   it('passes raw labels unchanged', () => {
     const data = { ...baseReportData, Labels: ['foo', 'bar'] }
-    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'en',
+      unit: 'unit',
+    })
 
     expect(result.labels).toStrictEqual(['foo', 'bar'])
   })
@@ -46,32 +50,42 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
       Labels: ['12:00', '13:00'],
       LabelType: ClassicLabelType.time,
     }
-    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'en',
+      unit: 'unit',
+    })
 
     expect(result.labels).toStrictEqual(['12:00', '13:00'])
   })
 
   it('formats day_of_week labels', () => {
-    LuxonSettings.defaultLocale = 'en'
     const data = {
       ...baseReportData,
       Labels: ['1', '2', '3'],
       LabelType: ClassicLabelType.day_of_week,
     }
-    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'en',
+      unit: 'unit',
+    })
 
     expect(result.labels).toHaveLength(3)
     expect(result.labels[0]).toBe('Mon')
   })
 
   it('formats month labels', () => {
-    LuxonSettings.defaultLocale = 'en'
     const data = {
       ...baseReportData,
       Labels: ['1', '6', '12'],
       LabelType: ClassicLabelType.month,
     }
-    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'en',
+      unit: 'unit',
+    })
 
     expect(result.labels[0]).toBe('Jan')
     expect(result.labels[1]).toBe('Jun')
@@ -79,16 +93,35 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   })
 
   it('formats month_of_year labels', () => {
-    LuxonSettings.defaultLocale = 'en'
     const data = {
       ...baseReportData,
       Labels: ['202401', '202412'],
       LabelType: ClassicLabelType.month_of_year,
     }
-    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'en',
+      unit: 'unit',
+    })
 
     expect(result.labels[0]).toBe('Jan 2024')
     expect(result.labels[1]).toBe('Dec 2024')
+  })
+
+  it('honors a locale passed per-call', () => {
+    const data = {
+      ...baseReportData,
+      Labels: ['1', '6', '12'],
+      LabelType: ClassicLabelType.month,
+    }
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'fr',
+      unit: 'unit',
+    })
+
+    // French short month name for January is "janv.".
+    expect(result.labels[0]?.startsWith('janv')).toBe(true)
   })
 })
 
@@ -107,11 +140,10 @@ describe.concurrent(getChartLineOptions, () => {
   }
 
   it('maps data series with legend names', () => {
-    const result = getChartLineOptions(
-      classicReportData,
-      ['ClassicTemperature', 'Humidity'],
-      '°C',
-    )
+    const result = getChartLineOptions(classicReportData, {
+      legend: ['ClassicTemperature', 'Humidity'],
+      unit: '°C',
+    })
 
     expect(result.series).toHaveLength(2)
     expect(result.series[0]?.name).toBe('ClassicTemperature')
@@ -122,22 +154,20 @@ describe.concurrent(getChartLineOptions, () => {
   })
 
   it('filters out series with undefined legend entries', () => {
-    const result = getChartLineOptions(
-      classicReportData,
-      ['ClassicTemperature', undefined],
-      '°C',
-    )
+    const result = getChartLineOptions(classicReportData, {
+      legend: ['ClassicTemperature', undefined],
+      unit: '°C',
+    })
 
     expect(result.series).toHaveLength(1)
     expect(result.series[0]?.name).toBe('ClassicTemperature')
   })
 
   it('returns empty series when all legends are undefined', () => {
-    const result = getChartLineOptions(
-      classicReportData,
-      [undefined, undefined],
-      '°C',
-    )
+    const result = getChartLineOptions(classicReportData, {
+      legend: [undefined, undefined],
+      unit: '°C',
+    })
 
     expect(result.series).toHaveLength(0)
   })
@@ -162,27 +192,23 @@ describe.concurrent(getChartPieOptions, () => {
   })
 })
 
-describe('formatLabels with unset defaultLocale', () => {
-  it('falls back to system locale when LuxonSettings.defaultLocale is null', () => {
-    const { defaultLocale: originalLocale } = LuxonSettings
-    try {
-      // Luxon types defaultLocale as `string` but null is the unset sentinel
-      ;(LuxonSettings as { defaultLocale: string | null }).defaultLocale = null
-      const data: ClassicReportData = {
-        Data: [[1]],
-        FromDate: '2024-01-01',
-        Labels: ['1'],
-        LabelType: ClassicLabelType.month,
-        Points: 1,
-        Series: 1,
-        ToDate: '2024-01-02',
-      }
-      const result = getChartLineOptions(data, ['Series 1'], 'unit')
-
-      expect(result.labels).toHaveLength(1)
-      expect(result.labels[0]).toBeDefined()
-    } finally {
-      LuxonSettings.defaultLocale = originalLocale
+describe.concurrent('formatLabels with omitted locale', () => {
+  it('falls back to the runtime locale when none is supplied', () => {
+    const data: ClassicReportData = {
+      Data: [[1]],
+      FromDate: '2024-01-01',
+      Labels: ['1'],
+      LabelType: ClassicLabelType.month,
+      Points: 1,
+      Series: 1,
+      ToDate: '2024-01-02',
     }
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      unit: 'unit',
+    })
+
+    expect(result.labels).toHaveLength(1)
+    expect(result.labels[0]).toBeDefined()
   })
 })

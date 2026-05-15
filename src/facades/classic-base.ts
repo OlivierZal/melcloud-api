@@ -1,5 +1,3 @@
-import { DateTime } from 'luxon'
-
 import type {
   ClassicAPIAdapter,
   ClassicErrorLog,
@@ -18,6 +16,7 @@ import {
   syncDevices,
 } from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
+import { Temporal } from '../temporal.ts'
 import {
   type ApiRequestError,
   type ClassicDateTimeComponents,
@@ -79,7 +78,7 @@ const TEMPERATURE_GAP = 2
 const temperatureRange = { max: 16, min: 4 }
 
 const getDateTimeComponents = (
-  date: DateTime | null,
+  date: Temporal.PlainDateTime | null,
 ): ClassicDateTimeComponents =>
   date ?
     {
@@ -227,8 +226,11 @@ export abstract class ClassicBaseFacade<
     ClassicFailureData | ClassicSuccessData
   > {
     const isEnabled = to !== undefined
-    const startDate = isEnabled ? DateTime.fromISO(from ?? now()) : null
-    const endDate = isEnabled ? DateTime.fromISO(to) : null
+    const startDate =
+      isEnabled ?
+        Temporal.PlainDateTime.from(from ?? now(this.api.timezone))
+      : null
+    const endDate = isEnabled ? Temporal.PlainDateTime.from(to) : null
     return this.api.updateHolidayMode({
       postData: {
         Enabled: isEnabled,
@@ -275,13 +277,18 @@ export abstract class ClassicBaseFacade<
   }
 
   public async getSignalStrength(
-    hour: Hour = DateTime.now().hour,
+    hour: Hour = this.currentHour(),
   ): Promise<Result<ReportChartLineOptions>> {
     return mapResult(
       await this.api.getSignal({
         postData: { devices: this.#deviceIds, hour },
       }),
-      (data) => getChartLineOptions(data, this.#deviceNames, 'dBm'),
+      (data) =>
+        getChartLineOptions(data, {
+          legend: this.#deviceNames,
+          locale: this.api.locale,
+          unit: 'dBm',
+        }),
     )
   }
 
@@ -320,6 +327,21 @@ export abstract class ClassicBaseFacade<
     type,
   }: { type?: ClassicDeviceType } = {}): Promise<void> {
     await this.api.notifySync({ ids: this.#deviceIds, type })
+  }
+
+  /**
+   * Current hour in the Classic-configured timezone (falls back to the
+   * host's timezone when none was configured). Shared by the hour
+   * defaults of {@link getSignalStrength} and (device facades')
+   * `getHourlyTemperatures` so report defaults align with the Classic
+   * deployment instead of the host runtime.
+   * @returns The current hour as a valid {@link Hour}.
+   */
+  protected currentHour(): Hour {
+    // Temporal.PlainTime.hour is always in [0, 23] per spec, so the
+    // narrowing to `Hour` (the 0..23 literal union) is sound.
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+    return Temporal.Now.plainTimeISO(this.api.timezone).hour as Hour
   }
 
   async #getBaseFrostProtection(

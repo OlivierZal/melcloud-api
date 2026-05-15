@@ -1,5 +1,3 @@
-import { DateTime } from 'luxon'
-
 import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import {
   classicUpdateDevice,
@@ -13,6 +11,7 @@ import {
   isClassicDeviceOfType,
 } from '../entities/index.ts'
 import { NoChangesError } from '../errors/index.ts'
+import { Temporal } from '../temporal.ts'
 import {
   type ClassicDeviceID,
   type ClassicEnergyData,
@@ -47,16 +46,16 @@ import { ClassicBaseFacade } from './classic-base.ts'
 // Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
 
-const MS_PER_DAY = 86_400_000
-
-// Use Luxon parsing so offset-less ISO inputs are interpreted in
-// `LuxonSettings.defaultZone` (matching the Classic API's timezone contract),
-// not the host runtime timezone.
-const getDuration = ({ from, to }: Required<ReportQuery>): number =>
-  Math.ceil(
-    (DateTime.fromISO(to).toMillis() - DateTime.fromISO(from).toMillis()) /
-      MS_PER_DAY,
+// Calendar-day delta between two ISO wall-clock strings. Computed on
+// `PlainDateTime` so the result reflects the literal Y-M-D-h-m-s span
+// the Classic server uses, independent of DST in any zone.
+const getDuration = ({ from, to }: Required<ReportQuery>): number => {
+  const diff = Temporal.PlainDateTime.from(to).since(
+    Temporal.PlainDateTime.from(from),
+    { largestUnit: 'day' },
   )
+  return Math.ceil(diff.total({ unit: 'day' }))
+}
 
 /**
  * Abstract base for device-specific facades. Handles device data access, report generation,
@@ -201,14 +200,18 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   public async getHourlyTemperatures(
-    hour: Hour = DateTime.now().hour,
+    hour: Hour = this.currentHour(),
   ): Promise<Result<ReportChartLineOptions>> {
     return mapResult(
       await this.api.getHourlyTemperatures({
         postData: { device: this.id, hour },
       }),
       (data) =>
-        getChartLineOptions(data, this.internalTemperaturesLegend, '°C'),
+        getChartLineOptions(data, {
+          legend: this.internalTemperaturesLegend,
+          locale: this.api.locale,
+          unit: '°C',
+        }),
     )
   }
 
@@ -221,7 +224,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         postData: this.#buildReportPostData(query, shouldUseExactRange),
       }),
       (data) =>
-        getChartLineOptions(data, this.internalTemperaturesLegend, '°C'),
+        getChartLineOptions(data, {
+          legend: this.internalTemperaturesLegend,
+          locale: this.api.locale,
+          unit: '°C',
+        }),
     )
   }
 
@@ -248,7 +255,12 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
             ?.location,
         },
       }),
-      (data) => getChartLineOptions(data, this.temperaturesLegend, '°C'),
+      (data) =>
+        getChartLineOptions(data, {
+          legend: this.temperaturesLegend,
+          locale: this.api.locale,
+          unit: '°C',
+        }),
     )
   }
 
@@ -283,9 +295,10 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   #buildReportPostData(
-    { from = DEFAULT_YEAR, to = now() }: ReportQuery = {},
+    query: ReportQuery = {},
     shouldUseExactRange = false,
   ): ClassicReportPostData {
+    const { from = DEFAULT_YEAR, to = now(this.api.timezone) } = query
     return {
       DeviceID: this.id,
       Duration: shouldUseExactRange ? getDuration({ from, to }) : undefined,

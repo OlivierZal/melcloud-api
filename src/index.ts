@@ -230,4 +230,5 @@ export {
   HttpError,
   isHttpError,
 } from './http/index.ts'
+export { Temporal } from './temporal.ts'
 export { err, mapResult, ok } from './types/index.ts'

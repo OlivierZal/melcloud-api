@@ -64,7 +64,10 @@ export const classifyError = (error: unknown): ApiRequestError => {
   if (error instanceof RateLimitError) {
     return {
       kind: 'rate-limited',
-      retryAfterMs: error.retryAfter?.toMillis() ?? null,
+      retryAfterMs:
+        error.retryAfter === null ?
+          null
+        : error.retryAfter.total({ unit: 'millisecond' }),
     }
   }
   if (isHttpError(error)) {

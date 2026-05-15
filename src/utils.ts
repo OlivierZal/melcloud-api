@@ -1,5 +1,3 @@
-import { DateTime, Settings as LuxonSettings } from 'luxon'
-
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
@@ -13,6 +11,7 @@ import type {
   KeyOfClassicSetDeviceDataAtaNotInList,
 } from './types/index.ts'
 import { type ClassicDeviceType, ClassicLabelType } from './constants.ts'
+import { Temporal } from './temporal.ts'
 
 // API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
 const YEAR_MONTH_DIVISOR = 100
@@ -23,36 +22,35 @@ const MONTH_NAME_BASE_YEAR = 2024
 
 interface LabelFormatterCache {
   readonly dayOfWeek: Intl.DateTimeFormat
-  readonly locale: string | null | undefined
   readonly month: Intl.DateTimeFormat
 }
 
-let formatterCache: LabelFormatterCache | null = null
+// Per-locale `Intl.DateTimeFormat` cache. Keyed on the locale string
+// (or `''` for the runtime default) so repeat calls with the same
+// locale reuse the same formatter pair without re-allocating on each
+// chart-options call. Modern best practice: the locale is carried as
+// an explicit argument by each call site, never via a mutable global.
+const formatterCacheByLocale = new Map<string, LabelFormatterCache>()
 
-// Luxon types defaultLocale as `string` but emits `null` at runtime when unset; widen at the boundary.
-const getDefaultLocale = (): string | null | undefined =>
-  LuxonSettings.defaultLocale
-
-// Tracks LuxonSettings.defaultLocale so output stays consistent with the rest
-// of the codebase's datetime formatting without re-creating Intl.DateTimeFormat per call.
-const getLabelFormatters = (): LabelFormatterCache => {
-  const locale = getDefaultLocale()
-  if (formatterCache !== null && formatterCache.locale === locale) {
-    return formatterCache
+const getLabelFormatters = (
+  locale: string | undefined,
+): LabelFormatterCache => {
+  const key = locale ?? ''
+  const cached = formatterCacheByLocale.get(key)
+  if (cached !== undefined) {
+    return cached
   }
-  const base = locale ?? undefined
   const cache: LabelFormatterCache = {
-    dayOfWeek: new Intl.DateTimeFormat(base, {
+    dayOfWeek: new Intl.DateTimeFormat(locale, {
       timeZone: 'UTC',
       weekday: 'short',
     }),
-    locale,
-    month: new Intl.DateTimeFormat(base, {
+    month: new Intl.DateTimeFormat(locale, {
       month: 'short',
       timeZone: 'UTC',
     }),
   }
-  formatterCache = cache
+  formatterCacheByLocale.set(key, cache)
   return cache
 }
 
@@ -75,9 +73,17 @@ export const clampToRange = (
 
 /**
  * Get the current date/time as an ISO 8601 string without timezone offset.
+ *
+ * When a timezone is supplied, the wall-clock time is taken in that
+ * zone; otherwise the runtime's system zone is used. The returned
+ * string is the local `PlainDateTime` ISO form (no `Z`, no `+HH:MM`).
+ * @param timeZone - IANA timezone identifier, or omitted for system zone.
  * @returns The current date/time as an ISO string.
  */
-export const now = (): string => DateTime.now().toISO({ includeOffset: false })
+export const now = (timeZone?: string): string =>
+  Temporal.Now.plainDateTimeISO(timeZone).toString({
+    smallestUnit: 'millisecond',
+  })
 
 /**
  * Factory for a type guard that narrows a key to the own keys of `record`.
@@ -138,34 +144,43 @@ export const isSetDeviceDataAtaInList: (
 
 // Strategy map: transform raw API label formats into human-readable strings
 // based on report granularity (day of week, month name, year-month, etc.)
-const labelFormatters: Record<ClassicLabelType, (label: string) => string> = {
-  [ClassicLabelType.day_of_week]: (label) =>
-    getLabelFormatters().dayOfWeek.format(
-      Date.UTC(DAY_OF_WEEK_BASE_YEAR, 0, Number(label)),
-    ),
-  [ClassicLabelType.month]: (label) =>
-    getLabelFormatters().month.format(
-      Date.UTC(MONTH_NAME_BASE_YEAR, Number(label) - 1, 1),
-    ),
-  [ClassicLabelType.month_of_year]: (label) => {
-    const year = Math.floor(Number(label) / YEAR_MONTH_DIVISOR)
-    const month = (Number(label) % YEAR_MONTH_DIVISOR) - 1
+// The closure receives the resolved per-call locale so repeat calls with
+// different locales stay isolated and the cache stays consistent.
+const buildLabelFormatters = (
+  locale: string | undefined,
+): Record<ClassicLabelType, (label: string) => string> => {
+  const formatters = getLabelFormatters(locale)
+  return {
+    [ClassicLabelType.day_of_week]: (label) =>
+      formatters.dayOfWeek.format(
+        Date.UTC(DAY_OF_WEEK_BASE_YEAR, 0, Number(label)),
+      ),
+    [ClassicLabelType.month]: (label) =>
+      formatters.month.format(
+        Date.UTC(MONTH_NAME_BASE_YEAR, Number(label) - 1, 1),
+      ),
+    [ClassicLabelType.month_of_year]: (label): string => {
+      const year = Math.floor(Number(label) / YEAR_MONTH_DIVISOR)
+      const month = (Number(label) % YEAR_MONTH_DIVISOR) - 1
 
-    // Format month and year separately to preserve the "MMM yyyy" ordering
-    // across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
-    const monthName = getLabelFormatters().month.format(
-      Date.UTC(year, month, 1),
-    )
-    return `${monthName} ${String(year)}`
-  },
-  [ClassicLabelType.raw]: (label) => label,
-  [ClassicLabelType.time]: (label) => label,
+      // Format month and year separately to preserve the "MMM yyyy" ordering
+      // across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
+      const monthName = formatters.month.format(Date.UTC(year, month, 1))
+      return `${monthName} ${String(year)}`
+    },
+    [ClassicLabelType.raw]: (label) => label,
+    [ClassicLabelType.time]: (label) => label,
+  }
 }
 
 const formatLabels = (
   labels: readonly string[],
   labelType: ClassicLabelType,
-): string[] => labels.map((label) => labelFormatters[labelType](label))
+  locale: string | undefined,
+): string[] => {
+  const formatters = buildLabelFormatters(locale)
+  return labels.map((label) => formatters[labelType](label))
+}
 
 /**
  * Type-safe `Object.keys` that preserves the key type of the input object.
@@ -222,15 +237,38 @@ const getChartLineSeries = ({
     )
 
 /**
- * Transform raw API report data into structured line chart options with formatted labels.
+ * Options for {@link getChartLineOptions}. Carried as an object so
+ * `locale` stays an explicit, named, per-call argument (no global
+ * mutable locale state).
+ */
+export interface ChartLineFormatOptions {
+  /** Legend entries for each data series. */
+  readonly legend: readonly (string | undefined)[]
+  /** Unit of measurement for the data. */
+  readonly unit: string
+  /**
+   * BCP-47 locale tag for day-of-week and month-name labels. Defaults
+   * to the runtime locale when omitted.
+   */
+  readonly locale?: string
+}
+
+/**
+ * Transform raw API report data into structured line chart options
+ * with formatted labels.
+ *
+ * Per modern library conventions, this function carries no mutable
+ * locale global — the caller decides via `options.locale`.
  * @param root0 - The raw report data from the Classic API.
  * @param root0.Data - The data series arrays.
  * @param root0.FromDate - The start date of the report period.
  * @param root0.LabelType - The label format type determining how labels are parsed.
  * @param root0.Labels - The raw label strings from the Classic API.
  * @param root0.ToDate - The end date of the report period.
- * @param legend - Legend entries for each data series.
- * @param unit - The unit of measurement for the data.
+ * @param options - Legend, unit, and locale for label formatting.
+ * @param options.legend - Legend entries for each data series.
+ * @param options.locale - BCP-47 locale tag; defaults to the runtime locale when omitted.
+ * @param options.unit - Unit of measurement for the data.
  * @returns Structured line chart options.
  */
 export const getChartLineOptions = (
@@ -241,11 +279,10 @@ export const getChartLineOptions = (
     LabelType: labelType,
     ToDate: to,
   }: ClassicReportData,
-  legend: readonly (string | undefined)[],
-  unit: string,
+  { legend, locale, unit }: ChartLineFormatOptions,
 ): ReportChartLineOptions => ({
   from,
-  labels: formatLabels(labels, labelType),
+  labels: formatLabels(labels, labelType, locale),
   series: getChartLineSeries({ data, legend }),
   to,
   unit,

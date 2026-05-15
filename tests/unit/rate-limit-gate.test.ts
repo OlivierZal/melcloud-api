@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { RateLimitGate } from '../../src/resilience/rate-limit-gate.ts'
+import {
+  formatDurationHuman,
+  RateLimitGate,
+} from '../../src/resilience/rate-limit-gate.ts'
+import { Temporal } from '../../src/temporal.ts'
 
 describe(RateLimitGate, () => {
   beforeEach(() => {
@@ -27,10 +31,12 @@ describe(RateLimitGate, () => {
 
     expect(gate.isPaused).toBe(true)
     // Use Luxon's millisecond conversion, accounting for slight drift.
-    expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
-    expect(gate.remaining?.as('hours')).toBeLessThanOrEqual(2)
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeLessThanOrEqual(2)
     // Absolute unblock time is 2 hours after the fixed system time.
-    expect(gate.unblockAt?.toUTC().toISO()).toBe('2026-04-11T14:00:00.000Z')
+    expect(gate.unblockAt?.toString({ smallestUnit: 'millisecond' })).toBe(
+      '2026-04-11T14:00:00.000Z',
+    )
   })
 
   it('honors a numeric Retry-After header (seconds)', () => {
@@ -39,8 +45,8 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit(30)
 
     expect(gate.isPaused).toBe(true)
-    expect(gate.remaining?.as('seconds')).toBeGreaterThan(29)
-    expect(gate.remaining?.as('seconds')).toBeLessThanOrEqual(30)
+    expect(gate.remaining?.total({ unit: 'seconds' })).toBeGreaterThan(29)
+    expect(gate.remaining?.total({ unit: 'seconds' })).toBeLessThanOrEqual(30)
   })
 
   it('honors a string Retry-After header (seconds)', () => {
@@ -49,7 +55,7 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit('45')
 
     expect(gate.isPaused).toBe(true)
-    expect(gate.remaining?.as('seconds')).toBeGreaterThan(44)
+    expect(gate.remaining?.total({ unit: 'seconds' })).toBeGreaterThan(44)
   })
 
   it('falls back when Retry-After is non-numeric', () => {
@@ -58,7 +64,7 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit('not-a-number')
 
     expect(gate.isPaused).toBe(true)
-    expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
   })
 
   it('falls back when Retry-After is zero or negative', () => {
@@ -66,11 +72,11 @@ describe(RateLimitGate, () => {
 
     gate.recordRateLimit(0)
 
-    expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
 
     gate.recordRateLimit(-5)
 
-    expect(gate.remaining?.as('hours')).toBeGreaterThan(1.9)
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
   })
 
   it('re-opens automatically after the window elapses', () => {
@@ -96,12 +102,6 @@ describe(RateLimitGate, () => {
     expect(gate.isPaused).toBe(false)
   })
 
-  it('formatRemaining returns empty string when open', () => {
-    const gate = new RateLimitGate({ hours: 2 })
-
-    expect(gate.formatRemaining()).toBe('')
-  })
-
   it('snapshot() returns all fields consistently when paused', () => {
     const gate = new RateLimitGate({ hours: 2 })
     gate.recordRateLimit()
@@ -111,7 +111,9 @@ describe(RateLimitGate, () => {
     expect(snap.isPaused).toBe(true)
     expect(snap.remaining).not.toBeNull()
     expect(snap.unblockAt).not.toBeNull()
-    expect(snap.unblockAt?.toUTC().toISO()).toBe('2026-04-11T14:00:00.000Z')
+    expect(snap.unblockAt?.toString({ smallestUnit: 'millisecond' })).toBe(
+      '2026-04-11T14:00:00.000Z',
+    )
   })
 
   it('snapshot() returns all nulls when open', () => {
@@ -122,36 +124,6 @@ describe(RateLimitGate, () => {
     expect(snap.isPaused).toBe(false)
     expect(snap.remaining).toBeNull()
     expect(snap.unblockAt).toBeNull()
-  })
-
-  it('formatRemaining returns a human-readable duration when paused', () => {
-    const gate = new RateLimitGate({ hours: 2 })
-    gate.recordRateLimit(120)
-
-    const formatted = gate.formatRemaining()
-
-    expect(formatted).not.toBe('')
-    expect(formatted).toMatch(/minute/iu)
-  })
-
-  it('formatRemaining reports seconds for sub-minute windows', () => {
-    const gate = new RateLimitGate({ hours: 2 })
-    gate.recordRateLimit(20)
-
-    const formatted = gate.formatRemaining()
-
-    expect(formatted).toMatch(/second/iu)
-    expect(formatted).not.toMatch(/minute/iu)
-  })
-
-  it('formatRemaining reports minutes and seconds for multi-minute windows', () => {
-    const gate = new RateLimitGate({ hours: 2 })
-    gate.recordRateLimit(135)
-
-    const formatted = gate.formatRemaining()
-
-    expect(formatted).toMatch(/minute/iu)
-    expect(formatted).toMatch(/second/iu)
   })
 
   it('recordAndLog records the rate-limit and emits a formatted error', () => {
@@ -177,5 +149,43 @@ describe(RateLimitGate, () => {
     expect(error).toHaveBeenCalledWith(
       expect.stringMatching(/pausing for \d+/u),
     )
+  })
+})
+
+describe.concurrent(formatDurationHuman, () => {
+  it('renders sub-minute windows as seconds with no minute mention', () => {
+    const formatted = formatDurationHuman(
+      Temporal.Duration.from({ seconds: 20 }),
+    )
+
+    expect(formatted).toBe('20 seconds')
+  })
+
+  it('renders exact-minute windows without a seconds component', () => {
+    const formatted = formatDurationHuman(
+      Temporal.Duration.from({ seconds: 120 }),
+    )
+
+    expect(formatted).toBe('2 minutes')
+  })
+
+  it('renders multi-minute windows as "M minutes, S seconds"', () => {
+    const formatted = formatDurationHuman(
+      Temporal.Duration.from({ seconds: 135 }),
+    )
+
+    expect(formatted).toBe('2 minutes, 15 seconds')
+  })
+
+  it('renders single-unit windows with singular forms', () => {
+    expect(formatDurationHuman(Temporal.Duration.from({ seconds: 1 }))).toBe(
+      '1 second',
+    )
+    expect(formatDurationHuman(Temporal.Duration.from({ minutes: 1 }))).toBe(
+      '1 minute',
+    )
+    expect(
+      formatDurationHuman(Temporal.Duration.from({ minutes: 1, seconds: 1 })),
+    ).toBe('1 minute, 1 second')
   })
 })

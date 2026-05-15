@@ -1,6 +1,46 @@
-import { type DurationLike, DateTime, Duration } from 'luxon'
-
+import { Temporal } from '../temporal.ts'
 import { SECONDS_PER_MINUTE } from '../time-units.ts'
+
+/**
+ * Subset of `Temporal.Duration` field values accepted by
+ * {@link RateLimitGate}'s fallback configuration. Matches what callers
+ * actually need to express a rate-limit pause window.
+ */
+export interface RateLimitDurationLike {
+  readonly days?: number
+  readonly hours?: number
+  readonly minutes?: number
+  readonly seconds?: number
+}
+
+const pluralize = (count: number, unit: string): string =>
+  count === 1 ? unit : `${unit}s`
+
+/**
+ * Render a `Temporal.Duration` in English diagnostic form, with
+ * adaptive units: sub-minute windows render as seconds (e.g.
+ * `"20 seconds"`) so a short Retry-After never rounds to a misleading
+ * `"0 minutes"`; longer windows render as `"M minutes, S seconds"`.
+ *
+ * Intended for log lines and developer-facing error messages — **not**
+ * for presentation in a localized UI. Consumers that need localized
+ * output should read the underlying `Temporal.Duration` and format it
+ * with `Intl.DurationFormat` or their own i18n framework.
+ * @param duration - The duration to render.
+ * @returns The formatted, English-diagnostic string.
+ */
+export const formatDurationHuman = (duration: Temporal.Duration): string => {
+  const totalSeconds = Math.trunc(duration.total({ unit: 'seconds' }))
+  if (totalSeconds < SECONDS_PER_MINUTE) {
+    return `${String(totalSeconds)} ${pluralize(totalSeconds, 'second')}`
+  }
+  const minutes = Math.trunc(totalSeconds / SECONDS_PER_MINUTE)
+  const seconds = totalSeconds % SECONDS_PER_MINUTE
+  if (seconds === 0) {
+    return `${String(minutes)} ${pluralize(minutes, 'minute')}`
+  }
+  return `${String(minutes)} ${pluralize(minutes, 'minute')}, ${String(seconds)} ${pluralize(seconds, 'second')}`
+}
 
 /**
  * Tracks an upstream rate-limit window and lets callers check whether
@@ -17,15 +57,20 @@ export class RateLimitGate {
    * @returns `true` while the rate-limit window is active.
    */
   public get isPaused(): boolean {
-    return this.#pausedUntil > DateTime.now()
+    return (
+      Temporal.Instant.compare(this.#pausedUntil, Temporal.Now.instant()) > 0
+    )
   }
 
   /**
    * Duration remaining until the gate re-opens.
-   * @returns A Luxon Duration if paused, or `null` if the gate is open.
+   * @returns A `Temporal.Duration` if paused, or `null` if the gate is open.
    */
-  public get remaining(): Duration | null {
-    return this.isPaused ? this.#pausedUntil.diffNow() : null
+  public get remaining(): Temporal.Duration | null {
+    const now = Temporal.Now.instant()
+    return Temporal.Instant.compare(this.#pausedUntil, now) > 0 ?
+        this.#pausedUntil.since(now)
+      : null
   }
 
   /**
@@ -35,43 +80,24 @@ export class RateLimitGate {
    *
    * Callers that need both `remaining` and `unblockAt` together should
    * prefer {@link snapshot} to avoid reading each against a separate
-   * `DateTime.now()` tick (near the window boundary the pair can
-   * otherwise land on different sides of `isPaused`).
-   * @returns The unblock `DateTime` if paused, or `null` if the gate is open.
+   * `Temporal.Now.instant()` tick (near the window boundary the pair
+   * can otherwise land on different sides of `isPaused`).
+   * @returns The unblock `Temporal.Instant` if paused, or `null` if the gate is open.
    */
-  public get unblockAt(): DateTime | null {
+  public get unblockAt(): Temporal.Instant | null {
     return this.isPaused ? this.#pausedUntil : null
   }
 
-  readonly #fallback: Duration
+  readonly #fallback: Temporal.Duration
 
-  #pausedUntil: DateTime = DateTime.now()
+  #pausedUntil: Temporal.Instant = Temporal.Now.instant()
 
   /**
    * @param fallback - Duration to pause when the server doesn't provide
    *   a usable `Retry-After` header.
    */
-  public constructor(fallback: DurationLike) {
-    this.#fallback = Duration.fromDurationLike(fallback)
-  }
-
-  /**
-   * Human-readable remaining time with adaptive units. For short windows
-   * (< 1 minute) the output is in seconds (e.g. "20 seconds") so a short
-   * Retry-After doesn't get rounded into a misleading "0 minutes".
-   * Longer windows use minutes + seconds (e.g. "2 minutes, 15 seconds").
-   * Returns an empty string when the gate is open — callers can
-   * interpolate directly into log lines without checking `isPaused` first.
-   * @returns Formatted remaining duration, or `''` if the gate is open.
-   */
-  public formatRemaining(): string {
-    const { remaining } = this
-    if (remaining === null) {
-      return ''
-    }
-    return remaining.as('seconds') < SECONDS_PER_MINUTE ?
-        remaining.shiftTo('seconds').toHuman()
-      : remaining.shiftTo('minutes', 'seconds').rescale().toHuman()
+  public constructor(fallback: RateLimitDurationLike) {
+    this.#fallback = Temporal.Duration.from(fallback)
   }
 
   /**
@@ -91,9 +117,12 @@ export class RateLimitGate {
     label = '',
   ): void {
     this.recordRateLimit(retryAfterSeconds)
+    // `recordRateLimit` always advances `#pausedUntil` into the future,
+    // so the remaining duration is positive and well-defined here.
+    const duration = this.#pausedUntil.since(Temporal.Now.instant())
     const suffix = label === '' ? '' : ` ${label}`
     logger.error(
-      `Rate limited (429): pausing${suffix} for ${this.formatRemaining()}`,
+      `Rate limited (429): pausing${suffix} for ${formatDurationHuman(duration)}`,
     )
   }
 
@@ -107,33 +136,42 @@ export class RateLimitGate {
   public recordRateLimit(retryAfterSeconds?: unknown): void {
     const seconds = Number(retryAfterSeconds)
     const duration =
-      Number.isFinite(seconds) && seconds > 0 ? { seconds } : this.#fallback
-    this.#pausedUntil = DateTime.now().plus(duration)
+      Number.isFinite(seconds) && seconds > 0 ?
+        Temporal.Duration.from({ seconds })
+      : this.#fallback
+    this.#pausedUntil = Temporal.Now.instant().add(duration)
   }
 
   /** Reset the gate immediately (testing or manual unblock). */
   public reset(): void {
-    this.#pausedUntil = DateTime.now()
+    this.#pausedUntil = Temporal.Now.instant()
   }
 
   /**
-   * Atomic read of the gate's state. All three fields are computed
-   * against a single `DateTime.now()` capture, so `remaining` and
+   * Atomic read of the gate's state. All fields are computed against a
+   * single `Temporal.Now.instant()` capture, so `remaining` and
    * `unblockAt` cannot observe inconsistent "one null, one not" pairs
    * that separate getter reads might hit near the boundary.
+   *
+   * Returned as a discriminated union on `isPaused` so callers do not
+   * need to null-check `remaining` / `unblockAt` after narrowing.
    * @returns The current pause state and derived timing fields.
    */
-  public snapshot(): {
-    isPaused: boolean
-    remaining: Duration | null
-    unblockAt: DateTime | null
-  } {
-    const now = DateTime.now()
-    const isPaused = this.#pausedUntil > now
+  public snapshot():
+    | { isPaused: false; remaining: null; unblockAt: null }
+    | {
+        isPaused: true
+        remaining: Temporal.Duration
+        unblockAt: Temporal.Instant
+      } {
+    const now = Temporal.Now.instant()
+    if (Temporal.Instant.compare(this.#pausedUntil, now) <= 0) {
+      return { isPaused: false, remaining: null, unblockAt: null }
+    }
     return {
-      isPaused,
-      remaining: isPaused ? this.#pausedUntil.diff(now) : null,
-      unblockAt: isPaused ? this.#pausedUntil : null,
+      isPaused: true,
+      remaining: this.#pausedUntil.since(now),
+      unblockAt: this.#pausedUntil,
     }
   }
 }

@@ -2,7 +2,7 @@ import type { Logger } from '../api/types.ts'
 import { RateLimitError } from '../errors/index.ts'
 import { HttpStatus, isHttpError } from '../http/index.ts'
 import type { ResiliencePolicy } from './policy.ts'
-import type { RateLimitGate } from './rate-limit-gate.ts'
+import { type RateLimitGate, formatDurationHuman } from './rate-limit-gate.ts'
 
 /**
  * Rate-limit circuit breaker. Two responsibilities:
@@ -28,13 +28,18 @@ export class RateLimitPolicy implements ResiliencePolicy {
   }
 
   public async run<T>(attempt: () => Promise<T>): Promise<T> {
-    // Read all three fields from one `DateTime.now()` capture so the
-    // error's `retryAfter` and `unblockAt` are mutually consistent —
-    // even when the gate re-opens between two separate getter reads.
-    const { isPaused, remaining, unblockAt } = this.#gate.snapshot()
-    if (isPaused) {
+    // Read all three fields from one `Temporal.Now.instant()` capture
+    // so the error's `retryAfter` and `unblockAt` are mutually
+    // consistent — even when the gate re-opens between two separate
+    // getter reads.
+    const snapshot = this.#gate.snapshot()
+    if (snapshot.isPaused) {
+      // English-only diagnostic message — consumers that present this
+      // to end users should read `retryAfter` / `unblockAt` and format
+      // those structured fields with their own i18n stack.
+      const { remaining, unblockAt } = snapshot
       throw new RateLimitError(
-        `API requests are on hold for ${this.#gate.formatRemaining()}`,
+        `API requests are on hold for ${formatDurationHuman(remaining)}`,
         { retryAfter: remaining, unblockAt },
       )
     }

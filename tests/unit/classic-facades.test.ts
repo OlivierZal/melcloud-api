@@ -258,6 +258,16 @@ describe('building facade', () => {
     expect(api.getSignal).toHaveBeenCalledWith(expect.any(Object))
   })
 
+  it('defaults getSignalStrength hour to the current hour', async () => {
+    const { api, facade } = createBuildingFacade()
+    okValue(await facade.getSignalStrength())
+
+    const call = vi.mocked(api.getSignal).mock.calls[0]?.[0]
+
+    expect(call?.postData.hour).toBeGreaterThanOrEqual(0)
+    expect(call?.postData.hour).toBeLessThanOrEqual(23)
+  })
+
   it('calls getTiles without selection', async () => {
     const { facade } = createBuildingFacade()
     const value = okValue(await facade.getTiles())
@@ -776,6 +786,16 @@ describe('ata device facade', () => {
 
     expect(value).toHaveProperty('series')
     expect(api.getHourlyTemperatures).toHaveBeenCalledWith(expect.any(Object))
+  })
+
+  it('defaults hourlyTemperatures hour to the current hour', async () => {
+    const { api, facade } = createAtaFacade()
+    okValue(await facade.getHourlyTemperatures())
+
+    const call = vi.mocked(api.getHourlyTemperatures).mock.calls[0]?.[0]
+
+    expect(call?.postData.hour).toBeGreaterThanOrEqual(0)
+    expect(call?.postData.hour).toBeLessThanOrEqual(23)
   })
 
   it('calls getTiles without selection', async () => {

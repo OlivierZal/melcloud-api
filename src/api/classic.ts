@@ -1,4 +1,3 @@
-import { DateTime, Settings as LuxonSettings } from 'luxon'
 import { Agent } from 'undici'
 
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
@@ -6,6 +5,7 @@ import { setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
 import { AuthenticationError } from '../errors/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
+import { Temporal } from '../temporal.ts'
 import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
   type ClassicAreaDataAny,
@@ -74,14 +74,27 @@ const DEFAULT_SYNC_INTERVAL_MINUTES = 5
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
 
-const toISODate = (dateTime: DateTime): string => {
-  const result = dateTime.toISODate()
-
-  if (result === null) {
-    throw new Error('Invalid DateTime: cannot convert to ISO date')
+// Re-thrown with the historical "Invalid DateTime" prefix so the
+// public failure surface for `getErrorLog({ to: 'not-a-date' })` stays
+// stable across the Luxon → Temporal migration.
+const parsePlainDate = (iso: string): Temporal.PlainDate => {
+  try {
+    return Temporal.PlainDate.from(iso)
+  } catch (error) {
+    throw new Error(`Invalid DateTime: ${iso}`, { cause: error })
   }
+}
 
-  return result
+// Year extraction that mirrors the original Luxon behavior on parse
+// failure: a bad input does NOT short-circuit as "invalid year 1" — it
+// falls through and the entry is kept. Only the canonical `0001-01-01`
+// sentinel that MELCloud returns gets filtered.
+const safePlainDateYear = (iso: string): number => {
+  try {
+    return Temporal.PlainDate.from(iso).year
+  } catch {
+    return 0
+  }
 }
 
 const isLanguage = isKeyOf(ClassicLanguage)
@@ -91,31 +104,31 @@ const formatErrors = (errors: Record<string, readonly string[]>): string =>
     .map(([error, messages]) => `${error}: ${messages.join(', ')}`)
     .join('\n')
 
-const parseErrorLogQuery = ({
-  from,
-  offset = 0,
-  period = 1,
-  to,
-}: ClassicErrorLogQuery): {
-  fromDate: DateTime
+const parseErrorLogQuery = (
+  { from, offset = 0, period = 1, to }: ClassicErrorLogQuery,
+  timeZone: string | undefined,
+): {
+  fromDate: Temporal.PlainDate
   period: number
-  toDate: DateTime
+  toDate: Temporal.PlainDate
 } => {
   // When `from` is set the query is pinned to that single day; offset
   // is therefore moot and ignored. Otherwise pages are stacked
   // backwards from `to` in `period`-sized windows.
   const fromDateOverride =
-    from !== undefined && from !== '' ? DateTime.fromISO(from) : null
+    from !== undefined && from !== '' ? parsePlainDate(from) : null
   const toDate =
-    to !== undefined && to !== '' ? DateTime.fromISO(to) : DateTime.now()
+    to !== undefined && to !== '' ?
+      parsePlainDate(to)
+    : Temporal.Now.plainDateISO(timeZone)
   // A page covers `period` days; consecutive pages are separated by a
   // one-day boundary so day N is never returned twice. Each step back
   // therefore moves `period + 1` days, hence the `* (period + 1)`.
   const daysBack = fromDateOverride ? 0 : offset * (period + 1)
   return {
-    fromDate: fromDateOverride ?? toDate.minus({ days: daysBack + period }),
+    fromDate: fromDateOverride ?? toDate.subtract({ days: daysBack + period }),
     period,
-    toDate: toDate.minus({ days: daysBack }),
+    toDate: toDate.subtract({ days: daysBack }),
   }
 }
 
@@ -160,6 +173,17 @@ const collectDevices = function* collectDevices(
  */
 export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   /**
+   * BCP-47 locale supplied via {@link ClassicAPIConfig.locale}, or
+   * `undefined` when unset. Surfaced through {@link ClassicAPIAdapter}
+   * so facades thread it into `getChartLineOptions` and report labels
+   * stay consistent with the configured locale without a mutable global.
+   * @returns The configured BCP-47 locale tag, or `undefined`.
+   */
+  public get locale(): string | undefined {
+    return this.#locale
+  }
+
+  /**
    * In-memory entity registry populated by `fetch` / `list`.
    * @returns The registry instance.
    */
@@ -167,9 +191,24 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.#registry
   }
 
+  /**
+   * IANA timezone supplied via {@link ClassicAPIConfig.timezone},
+   * or `undefined` when unset. Surfaced through {@link ClassicAPIAdapter}
+   * so facades can anchor their "now" defaults to the Classic timezone
+   * rather than the host runtime timezone.
+   * @returns The configured IANA timezone identifier, or `undefined`.
+   */
+  public get timezone(): string | undefined {
+    return this.#timezone
+  }
+
   #language = 'en'
 
+  readonly #locale: string | undefined
+
   readonly #registry = new ClassicRegistry()
+
+  readonly #timezone: string | undefined
 
   @setting
   private accessor contextKey = ''
@@ -177,6 +216,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   private constructor(config: ClassicAPIConfig = {}) {
     const {
       language,
+      locale,
       password,
       shouldVerifySSL = true,
       timezone,
@@ -199,9 +239,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       rateLimitHours: DEFAULT_RETRY_HOURS,
       syncCallback: async () => this.fetch(),
     })
-    if (timezone !== undefined) {
-      LuxonSettings.defaultZone = timezone
-    }
+    this.#locale = locale
+    this.#timezone = timezone
     if (language !== undefined) {
       this.#language = language
     }
@@ -276,8 +315,11 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     query: ClassicErrorLogQuery,
     deviceIds: number[] = this.#registry.getDevices().map(({ id }) => id),
   ): Promise<Result<ClassicErrorLog>> {
-    const { fromDate, period, toDate } = parseErrorLogQuery(query)
-    const nextToDate = fromDate.minus({ days: 1 })
+    const { fromDate, period, toDate } = parseErrorLogQuery(
+      query,
+      this.#timezone,
+    )
+    const nextToDate = fromDate.subtract({ days: 1 })
     return mapResult(
       await this.#getErrorLog(deviceIds, fromDate, toDate),
       (errorLog) => ({
@@ -288,8 +330,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
               ErrorMessage: errorMessage,
               StartDate: startDate,
             }) => {
-              const dateTime = DateTime.fromISO(startDate)
-              if (dateTime.year === INVALID_YEAR) {
+              if (safePlainDateYear(startDate) === INVALID_YEAR) {
                 return []
               }
               const error = errorMessage?.trim() ?? ''
@@ -299,9 +340,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
             },
           )
           .toReversed(),
-        fromDate: toISODate(fromDate),
-        nextFromDate: toISODate(nextToDate.minus({ days: period })),
-        nextToDate: toISODate(nextToDate),
+        fromDate: fromDate.toString(),
+        nextFromDate: nextToDate.subtract({ days: period }).toString(),
+        nextToDate: nextToDate.toString(),
       }),
     )
   }
@@ -629,7 +670,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   protected override needsSessionRefresh(): boolean {
     return (
       this.contextKey === '' ||
-      isSessionExpired(this.expiry, SESSION_REFRESH_AHEAD_MS)
+      isSessionExpired(this.expiry, SESSION_REFRESH_AHEAD_MS, this.#timezone)
     )
   }
 
@@ -694,14 +735,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   async #getErrorLog(
     deviceIds: number[],
-    fromDate: DateTime,
-    toDate: DateTime,
+    fromDate: Temporal.PlainDate,
+    toDate: Temporal.PlainDate,
   ): Promise<Result<ClassicErrorLogData[]>> {
     const result = await this.getErrorEntries({
       postData: {
         DeviceIDs: deviceIds.map((id) => toClassicDeviceId(id)),
-        FromDate: toISODate(fromDate),
-        ToDate: toISODate(toDate),
+        FromDate: fromDate.toString(),
+        ToDate: toDate.toString(),
       },
     })
     if (!result.ok) {

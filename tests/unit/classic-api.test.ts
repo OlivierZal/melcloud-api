@@ -117,6 +117,7 @@ describe('mELCloud Classic API', () => {
     const api = await createApi({
       events: { onSyncComplete },
       language: 'fr',
+      locale: 'fr-FR',
       logger: createLogger(),
       shouldVerifySSL: false,
       timezone: 'Europe/Paris',
@@ -126,6 +127,15 @@ describe('mELCloud Classic API', () => {
     await api.notifySync({ type: undefined })
 
     expect(onSyncComplete).toHaveBeenCalledWith({ type: undefined })
+    expect(api.timezone).toBe('Europe/Paris')
+    expect(api.locale).toBe('fr-FR')
+  })
+
+  it('exposes timezone and locale as undefined when none is configured', async () => {
+    const api = await createApi()
+
+    expect(api.timezone).toBeUndefined()
+    expect(api.locale).toBeUndefined()
   })
 
   it('accepts a disabled sync timer', async () => {
@@ -589,6 +599,23 @@ describe('mELCloud Classic API', () => {
       const result = await api.getErrorLog({}, [1])
 
       expect(okValue(result).errors).toHaveLength(0)
+    })
+
+    it('keeps entries with unparseable StartDate (no invalid-year sentinel)', async () => {
+      mockLoginAndList()
+      const api = await createApi({ password: 'pass', username: 'user' })
+      mockRequest.mockResolvedValue(
+        wrap([
+          errorEntry({
+            ErrorMessage: 'Mystery',
+            StartDate: 'not-a-real-date',
+          }),
+        ]),
+      )
+      const result = await api.getErrorLog({}, [1])
+
+      expect(okValue(result).errors).toHaveLength(1)
+      expect(okValue(result).errors[0]?.error).toBe('Mystery')
     })
 
     it('returns validation failure when the API returns failure data', async () => {
