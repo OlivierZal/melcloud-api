@@ -16,12 +16,20 @@ export interface RateLimitDurationLike {
 const pluralize = (count: number, unit: string): string =>
   count === 1 ? unit : `${unit}s`
 
-// English "Luxon `Duration.toHuman()` style" formatter. Adaptive units:
-// sub-minute windows render as seconds; longer windows render as
-// minutes + (optional) seconds. Sticking with manual formatting (vs.
-// `Intl.DurationFormat`) keeps the output stable across runtimes and
-// preserves the format consumers may rely on.
-const formatDurationHuman = (duration: Temporal.Duration): string => {
+/**
+ * Render a `Temporal.Duration` in English diagnostic form, with
+ * adaptive units: sub-minute windows render as seconds (e.g.
+ * `"20 seconds"`) so a short Retry-After never rounds to a misleading
+ * `"0 minutes"`; longer windows render as `"M minutes, S seconds"`.
+ *
+ * Intended for log lines and developer-facing error messages — **not**
+ * for presentation in a localized UI. Consumers that need localized
+ * output should read the underlying `Temporal.Duration` and format it
+ * with `Intl.DurationFormat` or their own i18n framework.
+ * @param duration - The duration to render.
+ * @returns The formatted, English-diagnostic string.
+ */
+export const formatDurationHuman = (duration: Temporal.Duration): string => {
   const totalSeconds = Math.trunc(duration.total({ unit: 'seconds' }))
   if (totalSeconds < SECONDS_PER_MINUTE) {
     return `${String(totalSeconds)} ${pluralize(totalSeconds, 'second')}`
@@ -93,28 +101,6 @@ export class RateLimitGate {
   }
 
   /**
-   * English-only diagnostic rendering of the remaining time, intended
-   * for log lines and developer-facing error messages — **not** for
-   * presentation in a localized UI. Consumers that need localized
-   * output should read {@link remaining} (a `Temporal.Duration`) and
-   * format it with `Intl.DurationFormat` or their own i18n framework.
-   *
-   * Adaptive units: sub-minute windows render as seconds (e.g.
-   * `"20 seconds"`) so a short Retry-After never rounds to a misleading
-   * `"0 minutes"`; longer windows render as `"M minutes, S seconds"`.
-   * Returns an empty string when the gate is open — callers can
-   * interpolate directly into log lines without checking `isPaused` first.
-   * @returns Formatted remaining duration, or `''` if the gate is open.
-   */
-  public formatRemaining(): string {
-    const { remaining } = this
-    if (remaining === null) {
-      return ''
-    }
-    return formatDurationHuman(remaining)
-  }
-
-  /**
    * Convenience: record the rate-limit and emit a formatted error log
    * in one call. Centralizes the log message format so both API clients
    * stay consistent, and avoids repeating the `recordRateLimit(...)`
@@ -131,9 +117,12 @@ export class RateLimitGate {
     label = '',
   ): void {
     this.recordRateLimit(retryAfterSeconds)
+    // `recordRateLimit` always advances `#pausedUntil` into the future,
+    // so the remaining duration is positive and well-defined here.
+    const duration = this.#pausedUntil.since(Temporal.Now.instant())
     const suffix = label === '' ? '' : ` ${label}`
     logger.error(
-      `Rate limited (429): pausing${suffix} for ${this.formatRemaining()}`,
+      `Rate limited (429): pausing${suffix} for ${formatDurationHuman(duration)}`,
     )
   }
 
@@ -159,23 +148,30 @@ export class RateLimitGate {
   }
 
   /**
-   * Atomic read of the gate's state. All three fields are computed
-   * against a single `Temporal.Now.instant()` capture, so `remaining`
-   * and `unblockAt` cannot observe inconsistent "one null, one not"
-   * pairs that separate getter reads might hit near the boundary.
+   * Atomic read of the gate's state. All fields are computed against a
+   * single `Temporal.Now.instant()` capture, so `remaining` and
+   * `unblockAt` cannot observe inconsistent "one null, one not" pairs
+   * that separate getter reads might hit near the boundary.
+   *
+   * Returned as a discriminated union on `isPaused` so callers do not
+   * need to null-check `remaining` / `unblockAt` after narrowing.
    * @returns The current pause state and derived timing fields.
    */
-  public snapshot(): {
-    isPaused: boolean
-    remaining: Temporal.Duration | null
-    unblockAt: Temporal.Instant | null
-  } {
+  public snapshot():
+    | { isPaused: false; remaining: null; unblockAt: null }
+    | {
+        isPaused: true
+        remaining: Temporal.Duration
+        unblockAt: Temporal.Instant
+      } {
     const now = Temporal.Now.instant()
-    const isPaused = Temporal.Instant.compare(this.#pausedUntil, now) > 0
+    if (Temporal.Instant.compare(this.#pausedUntil, now) <= 0) {
+      return { isPaused: false, remaining: null, unblockAt: null }
+    }
     return {
-      isPaused,
-      remaining: isPaused ? this.#pausedUntil.since(now) : null,
-      unblockAt: isPaused ? this.#pausedUntil : null,
+      isPaused: true,
+      remaining: this.#pausedUntil.since(now),
+      unblockAt: this.#pausedUntil,
     }
   }
 }
