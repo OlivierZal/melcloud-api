@@ -35,5 +35,9 @@ export class DisposableTimeout implements Disposable {
       this.#timeout = undefined
       callback()
     }, ms)
+    // Background bookkeeping (auto-sync cadence, retry-guard cooldown) must
+    // never keep the Node event loop alive on its own; otherwise a script
+    // that just awaits ClassicAPI.create sits idle for ~5 minutes (#1511).
+    this.#timeout.unref()
   }
 }
