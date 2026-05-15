@@ -1,4 +1,11 @@
-/** A disposable wrapper around `setTimeout` that automatically clears the previous timeout when rescheduled. */
+/**
+ * Disposable wrapper around `setTimeout` for internal background
+ * bookkeeping (auto-sync cadence, retry-guard cooldown). Auto-clears
+ * the previous timeout when rescheduled and unrefs the underlying
+ * handle so a scheduled callback never keeps the Node event loop
+ * alive on its own — callers are still notified on the regular loop,
+ * but a script that has nothing left to do can exit immediately.
+ */
 export class DisposableTimeout implements Disposable {
   /**
    * Whether a timeout is currently scheduled and has not yet fired or been cleared.
@@ -35,9 +42,6 @@ export class DisposableTimeout implements Disposable {
       this.#timeout = undefined
       callback()
     }, ms)
-    // Background bookkeeping (auto-sync cadence, retry-guard cooldown) must
-    // never keep the Node event loop alive on its own; otherwise a script
-    // that just awaits ClassicAPI.create sits idle for ~5 minutes (#1511).
     this.#timeout.unref()
   }
 }
