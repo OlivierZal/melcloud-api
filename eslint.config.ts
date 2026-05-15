@@ -588,6 +588,17 @@ const config = defineConfig([
     },
   },
   {
+    files: ['CHANGELOG.md'],
+    rules: {
+      'markdown/no-duplicate-headings': [
+        'error',
+        {
+          checkSiblingsOnly: true,
+        },
+      ],
+    },
+  },
+  {
     // Bitfield enumeration: `EffectiveFlags` hex values are the file's
     // entire purpose. `no-magic-numbers` would flag every entry, and
     // `ignoreNumericLiteralTypes` does not cover literal types nested

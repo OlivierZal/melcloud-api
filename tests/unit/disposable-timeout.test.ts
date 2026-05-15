@@ -84,4 +84,25 @@ describe('disposable timeout', () => {
 
     expect(callback).not.toHaveBeenCalled()
   })
+
+  it('unrefs the underlying timer so it does not keep the event loop alive', () => {
+    const unrefCalls: number[] = []
+    const { setTimeout: realSetTimeout } = globalThis
+    vi.stubGlobal(
+      'setTimeout',
+      (callback: () => void, ms: number): ReturnType<typeof setTimeout> => {
+        const handle = realSetTimeout(callback, ms)
+        handle.unref = (): ReturnType<typeof setTimeout> => {
+          unrefCalls.push(1)
+          return handle
+        }
+        return handle
+      },
+    )
+    using timeout = new DisposableTimeout()
+    timeout.schedule(vi.fn<() => void>(), 1000)
+    vi.unstubAllGlobals()
+
+    expect(unrefCalls).toHaveLength(1)
+  })
 })
