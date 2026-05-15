@@ -1,11 +1,13 @@
 updates:
-  - directory: /
+  - cooldown:
+      default-days: 7
+    directory: /
     package-ecosystem: github-actions
     schedule:
       interval: weekly
-    cooldown:
+  - cooldown:
       default-days: 7
-  - directory: /
+    directory: /
     groups:
       eslint:
         patterns:
@@ -33,6 +35,4 @@ updates:
     package-ecosystem: npm
     schedule:
       interval: weekly
-    cooldown:
-      default-days: 7
 version: 2
