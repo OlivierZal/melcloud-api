@@ -590,7 +590,12 @@ const config = defineConfig([
   {
     files: ['CHANGELOG.md'],
     rules: {
-      'markdown/no-duplicate-headings': ['error', { checkSiblingsOnly: true }],
+      'markdown/no-duplicate-headings': [
+        'error',
+        {
+          checkSiblingsOnly: true,
+        },
+      ],
     },
   },
   {
