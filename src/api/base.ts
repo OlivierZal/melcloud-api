@@ -368,6 +368,13 @@ export abstract class BaseAPI implements Disposable {
 
   /**
    * Reschedules the auto-sync timer.
+   *
+   * The timer is `unref`'d, so it never keeps the Node event loop alive
+   * on its own — auto-sync still fires on cadence whenever the host
+   * application has another reason to stay running (HTTP server, other
+   * timers, open streams). Apps that must run indefinitely should
+   * provide their own keep-alive (e.g. `setInterval(() => {}, 1 << 30)`
+   * or a long-lived server) rather than relying on this timer.
    * @param minutes - Cadence in minutes; pass `false` to disable.
    */
   public setSyncInterval(minutes: number | false): void {
