@@ -572,12 +572,7 @@ const config = defineConfig([
     rules: {
       'markdown/fenced-code-meta': 'error',
       'markdown/no-bare-urls': 'error',
-      // Keep-a-Changelog repeats the same category headings ("Added",
-      // "Changed", "Fixed", …) under each version's H2 section, which
-      // is intentional structure. Scope the rule to siblings so it
-      // still catches accidental duplicates inside a single version
-      // without flagging the cross-version repetition.
-      'markdown/no-duplicate-headings': ['error', { checkSiblingsOnly: true }],
+      'markdown/no-duplicate-headings': 'error',
       'markdown/no-html': 'error',
       // Allow GitHub alert syntax (`> [!IMPORTANT]`, `> [!CAUTION]`, …).
       // It's a GitHub UI extension to GFM, not part of the GFM spec, so
@@ -590,6 +585,12 @@ const config = defineConfig([
           allowLabels: ['!CAUTION', '!IMPORTANT', '!NOTE', '!TIP', '!WARNING'],
         },
       ],
+    },
+  },
+  {
+    files: ['CHANGELOG.md'],
+    rules: {
+      'markdown/no-duplicate-headings': ['error', { checkSiblingsOnly: true }],
     },
   },
   {
