@@ -52,6 +52,14 @@ import type { BaseAPIConfig, SyncCallback } from './types.ts'
  */
 export interface ClassicAPIAdapter {
   /**
+   * BCP-47 locale tag the Classic instance was configured with
+   * (`ClassicAPIConfig.locale`), or `undefined` when unset. Facades
+   * pass this through to `getChartLineOptions` so report labels
+   * (day-of-week, month names) render in the configured locale
+   * without needing a global mutable locale.
+   */
+  readonly locale: string | undefined
+  /**
    * Notify any registered `events.onSyncComplete` observer that a sync
    * just landed. Routed through the lifecycle emitter so a misbehaving
    * observer cannot break the caller.
@@ -191,8 +199,15 @@ export interface ClassicAPIAdapter {
  * @category Configuration
  */
 export interface ClassicAPIConfig extends BaseAPIConfig {
-  /** Locale language code (e.g. `'en'`, `'fr'`). */
+  /** Upstream account language code (e.g. `'en'`, `'fr'`). */
   readonly language?: string
+  /**
+   * BCP-47 locale tag for report chart labels (day-of-week, month
+   * names). Independent of {@link language} — `language` controls
+   * upstream messages, `locale` controls how the SDK formats labels
+   * locally. Defaults to the runtime locale when unset.
+   */
+  readonly locale?: string
   /** Whether to verify SSL certificates. Defaults to `true`. */
   readonly shouldVerifySSL?: boolean
   /** IANA timezone identifier (e.g. `'Europe/Paris'`). */

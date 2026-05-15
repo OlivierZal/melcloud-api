@@ -34,6 +34,9 @@ export class RateLimitPolicy implements ResiliencePolicy {
     // getter reads.
     const { isPaused, remaining, unblockAt } = this.#gate.snapshot()
     if (isPaused) {
+      // English-only diagnostic message — consumers that present this
+      // to end users should read `retryAfter` / `unblockAt` and format
+      // those structured fields with their own i18n stack.
       throw new RateLimitError(
         `API requests are on hold for ${this.#gate.formatRemaining()}`,
         { retryAfter: remaining, unblockAt },

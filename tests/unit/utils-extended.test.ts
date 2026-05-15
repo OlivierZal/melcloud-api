@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import type {
   ClassicOperationModeLogData,
@@ -9,9 +9,7 @@ import { Temporal } from '../../src/temporal.ts'
 import {
   getChartLineOptions,
   getChartPieOptions,
-  getReportLocale,
   now,
-  setReportLocale,
 } from '../../src/utils.ts'
 
 describe.concurrent(now, () => {
@@ -24,23 +22,7 @@ describe.concurrent(now, () => {
   })
 })
 
-// Not `describe.concurrent`: these specs mutate the module-level report
-// locale via `setReportLocale`, so concurrent execution would interleave
-// different locale values and make label assertions flaky. The `beforeEach`/
-// `afterEach` pair pins each spec to `'en'` and restores the original
-// locale on exit so the suite cannot leak into later suites either.
-describe('formatLabels (via getChartLineOptions)', () => {
-  let originalLocale: string | null = null
-
-  beforeEach(() => {
-    originalLocale = getReportLocale()
-    setReportLocale('en')
-  })
-
-  afterEach(() => {
-    setReportLocale(originalLocale)
-  })
-
+describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   const baseReportData: ClassicReportData = {
     Data: [[1, 2]],
     FromDate: '2024-01-01',
@@ -53,7 +35,11 @@ describe('formatLabels (via getChartLineOptions)', () => {
 
   it('passes raw labels unchanged', () => {
     const data = { ...baseReportData, Labels: ['foo', 'bar'] }
-    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'en',
+      unit: 'unit',
+    })
 
     expect(result.labels).toStrictEqual(['foo', 'bar'])
   })
@@ -64,7 +50,11 @@ describe('formatLabels (via getChartLineOptions)', () => {
       Labels: ['12:00', '13:00'],
       LabelType: ClassicLabelType.time,
     }
-    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'en',
+      unit: 'unit',
+    })
 
     expect(result.labels).toStrictEqual(['12:00', '13:00'])
   })
@@ -75,7 +65,11 @@ describe('formatLabels (via getChartLineOptions)', () => {
       Labels: ['1', '2', '3'],
       LabelType: ClassicLabelType.day_of_week,
     }
-    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'en',
+      unit: 'unit',
+    })
 
     expect(result.labels).toHaveLength(3)
     expect(result.labels[0]).toBe('Mon')
@@ -87,7 +81,11 @@ describe('formatLabels (via getChartLineOptions)', () => {
       Labels: ['1', '6', '12'],
       LabelType: ClassicLabelType.month,
     }
-    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'en',
+      unit: 'unit',
+    })
 
     expect(result.labels[0]).toBe('Jan')
     expect(result.labels[1]).toBe('Jun')
@@ -100,10 +98,30 @@ describe('formatLabels (via getChartLineOptions)', () => {
       Labels: ['202401', '202412'],
       LabelType: ClassicLabelType.month_of_year,
     }
-    const result = getChartLineOptions(data, ['Series 1'], 'unit')
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'en',
+      unit: 'unit',
+    })
 
     expect(result.labels[0]).toBe('Jan 2024')
     expect(result.labels[1]).toBe('Dec 2024')
+  })
+
+  it('honors a locale passed per-call', () => {
+    const data = {
+      ...baseReportData,
+      Labels: ['1', '6', '12'],
+      LabelType: ClassicLabelType.month,
+    }
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      locale: 'fr',
+      unit: 'unit',
+    })
+
+    // French short month name for January is "janv.".
+    expect(result.labels[0]?.startsWith('janv')).toBe(true)
   })
 })
 
@@ -122,11 +140,10 @@ describe.concurrent(getChartLineOptions, () => {
   }
 
   it('maps data series with legend names', () => {
-    const result = getChartLineOptions(
-      classicReportData,
-      ['ClassicTemperature', 'Humidity'],
-      '°C',
-    )
+    const result = getChartLineOptions(classicReportData, {
+      legend: ['ClassicTemperature', 'Humidity'],
+      unit: '°C',
+    })
 
     expect(result.series).toHaveLength(2)
     expect(result.series[0]?.name).toBe('ClassicTemperature')
@@ -137,22 +154,20 @@ describe.concurrent(getChartLineOptions, () => {
   })
 
   it('filters out series with undefined legend entries', () => {
-    const result = getChartLineOptions(
-      classicReportData,
-      ['ClassicTemperature', undefined],
-      '°C',
-    )
+    const result = getChartLineOptions(classicReportData, {
+      legend: ['ClassicTemperature', undefined],
+      unit: '°C',
+    })
 
     expect(result.series).toHaveLength(1)
     expect(result.series[0]?.name).toBe('ClassicTemperature')
   })
 
   it('returns empty series when all legends are undefined', () => {
-    const result = getChartLineOptions(
-      classicReportData,
-      [undefined, undefined],
-      '°C',
-    )
+    const result = getChartLineOptions(classicReportData, {
+      legend: [undefined, undefined],
+      unit: '°C',
+    })
 
     expect(result.series).toHaveLength(0)
   })
@@ -177,26 +192,23 @@ describe.concurrent(getChartPieOptions, () => {
   })
 })
 
-describe('formatLabels with unset report locale', () => {
-  it('falls back to system locale when the report locale is null', () => {
-    const originalLocale = getReportLocale()
-    try {
-      setReportLocale(null)
-      const data: ClassicReportData = {
-        Data: [[1]],
-        FromDate: '2024-01-01',
-        Labels: ['1'],
-        LabelType: ClassicLabelType.month,
-        Points: 1,
-        Series: 1,
-        ToDate: '2024-01-02',
-      }
-      const result = getChartLineOptions(data, ['Series 1'], 'unit')
-
-      expect(result.labels).toHaveLength(1)
-      expect(result.labels[0]).toBeDefined()
-    } finally {
-      setReportLocale(originalLocale)
+describe.concurrent('formatLabels with omitted locale', () => {
+  it('falls back to the runtime locale when none is supplied', () => {
+    const data: ClassicReportData = {
+      Data: [[1]],
+      FromDate: '2024-01-01',
+      Labels: ['1'],
+      LabelType: ClassicLabelType.month,
+      Points: 1,
+      Series: 1,
+      ToDate: '2024-01-02',
     }
+    const result = getChartLineOptions(data, {
+      legend: ['Series 1'],
+      unit: 'unit',
+    })
+
+    expect(result.labels).toHaveLength(1)
+    expect(result.labels[0]).toBeDefined()
   })
 })

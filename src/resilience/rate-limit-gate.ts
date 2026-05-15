@@ -93,10 +93,15 @@ export class RateLimitGate {
   }
 
   /**
-   * Human-readable remaining time with adaptive units. For short windows
-   * (< 1 minute) the output is in seconds (e.g. "20 seconds") so a short
-   * Retry-After doesn't get rounded into a misleading "0 minutes".
-   * Longer windows use minutes + seconds (e.g. "2 minutes, 15 seconds").
+   * English-only diagnostic rendering of the remaining time, intended
+   * for log lines and developer-facing error messages — **not** for
+   * presentation in a localized UI. Consumers that need localized
+   * output should read {@link remaining} (a `Temporal.Duration`) and
+   * format it with `Intl.DurationFormat` or their own i18n framework.
+   *
+   * Adaptive units: sub-minute windows render as seconds (e.g.
+   * `"20 seconds"`) so a short Retry-After never rounds to a misleading
+   * `"0 minutes"`; longer windows render as `"M minutes, S seconds"`.
    * Returns an empty string when the gate is open — callers can
    * interpolate directly into log lines without checking `isPaused` first.
    * @returns Formatted remaining duration, or `''` if the gate is open.

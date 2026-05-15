@@ -173,6 +173,17 @@ const collectDevices = function* collectDevices(
  */
 export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   /**
+   * BCP-47 locale supplied via {@link ClassicAPIConfig.locale}, or
+   * `undefined` when unset. Surfaced through {@link ClassicAPIAdapter}
+   * so facades thread it into `getChartLineOptions` and report labels
+   * stay consistent with the configured locale without a mutable global.
+   * @returns The configured BCP-47 locale tag, or `undefined`.
+   */
+  public get locale(): string | undefined {
+    return this.#locale
+  }
+
+  /**
    * In-memory entity registry populated by `fetch` / `list`.
    * @returns The registry instance.
    */
@@ -193,6 +204,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   #language = 'en'
 
+  readonly #locale: string | undefined
+
   readonly #registry = new ClassicRegistry()
 
   readonly #timezone: string | undefined
@@ -203,6 +216,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   private constructor(config: ClassicAPIConfig = {}) {
     const {
       language,
+      locale,
       password,
       shouldVerifySSL = true,
       timezone,
@@ -225,6 +239,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       rateLimitHours: DEFAULT_RETRY_HOURS,
       syncCallback: async () => this.fetch(),
     })
+    this.#locale = locale
     this.#timezone = timezone
     if (language !== undefined) {
       this.#language = language

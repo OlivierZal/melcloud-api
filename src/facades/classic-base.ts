@@ -283,7 +283,12 @@ export abstract class ClassicBaseFacade<
       await this.api.getSignal({
         postData: { devices: this.#deviceIds, hour },
       }),
-      (data) => getChartLineOptions(data, this.#deviceNames, 'dBm'),
+      (data) =>
+        getChartLineOptions(data, {
+          legend: this.#deviceNames,
+          locale: this.api.locale,
+          unit: 'dBm',
+        }),
     )
   }
 

@@ -207,7 +207,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         postData: { device: this.id, hour },
       }),
       (data) =>
-        getChartLineOptions(data, this.internalTemperaturesLegend, '°C'),
+        getChartLineOptions(data, {
+          legend: this.internalTemperaturesLegend,
+          locale: this.api.locale,
+          unit: '°C',
+        }),
     )
   }
 
@@ -220,7 +224,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         postData: this.#buildReportPostData(query, shouldUseExactRange),
       }),
       (data) =>
-        getChartLineOptions(data, this.internalTemperaturesLegend, '°C'),
+        getChartLineOptions(data, {
+          legend: this.internalTemperaturesLegend,
+          locale: this.api.locale,
+          unit: '°C',
+        }),
     )
   }
 
@@ -247,7 +255,12 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
             ?.location,
         },
       }),
-      (data) => getChartLineOptions(data, this.temperaturesLegend, '°C'),
+      (data) =>
+        getChartLineOptions(data, {
+          legend: this.temperaturesLegend,
+          locale: this.api.locale,
+          unit: '°C',
+        }),
     )
   }
 

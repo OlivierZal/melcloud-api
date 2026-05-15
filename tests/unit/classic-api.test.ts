@@ -117,6 +117,7 @@ describe('mELCloud Classic API', () => {
     const api = await createApi({
       events: { onSyncComplete },
       language: 'fr',
+      locale: 'fr-FR',
       logger: createLogger(),
       shouldVerifySSL: false,
       timezone: 'Europe/Paris',
@@ -127,12 +128,14 @@ describe('mELCloud Classic API', () => {
 
     expect(onSyncComplete).toHaveBeenCalledWith({ type: undefined })
     expect(api.timezone).toBe('Europe/Paris')
+    expect(api.locale).toBe('fr-FR')
   })
 
-  it('exposes timezone as undefined when none is configured', async () => {
+  it('exposes timezone and locale as undefined when none is configured', async () => {
     const api = await createApi()
 
     expect(api.timezone).toBeUndefined()
+    expect(api.locale).toBeUndefined()
   })
 
   it('accepts a disabled sync timer', async () => {
