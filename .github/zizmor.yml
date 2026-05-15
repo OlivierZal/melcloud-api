@@ -1,0 +1,6 @@
+rules:
+  # Not applicable: we publish to GitHub Packages with the job-scoped
+  # GITHUB_TOKEN (already OIDC-based), not to npmjs.org.
+  use-trusted-publishing:
+    ignore:
+      - publish.yml
