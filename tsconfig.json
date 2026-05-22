@@ -1,5 +1,4 @@
 {
-  "include": ["src", "tests"],
   "compilerOptions": {
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -21,5 +20,6 @@
     "target": "es2025",
     "types": ["node"],
     "verbatimModuleSyntax": true
-  }
+  },
+  "include": ["src", "tests"]
 }

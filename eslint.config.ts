@@ -6,6 +6,7 @@ import { Alphabet } from 'eslint-plugin-perfectionist/alphabet'
 import { configs as ymlConfigs } from 'eslint-plugin-yml'
 import { configs as tsConfigs } from 'typescript-eslint'
 import js from '@eslint/js'
+import json from '@eslint/json'
 import markdown from '@eslint/markdown'
 import stylistic from '@stylistic/eslint-plugin'
 import vitest from '@vitest/eslint-plugin'
@@ -552,6 +553,27 @@ const config = defineConfig([
         'error',
         {
           target: 'any',
+        },
+      ],
+    },
+  },
+  {
+    extends: [json.configs.recommended],
+    files: ['**/*.json'],
+    ignores: [
+      '**/package-lock.json',
+      '**/package.json',
+      'app.json',
+      'locales/*.json',
+    ],
+    language: 'json/json',
+    rules: {
+      'json/sort-keys': [
+        'error',
+        'asc',
+        {
+          caseSensitive: true,
+          natural: true,
         },
       ],
     },
