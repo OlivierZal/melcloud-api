@@ -1,4 +1,6 @@
-const config = {
+import type { TypeDocOptions } from 'typedoc'
+
+const config: Partial<TypeDocOptions> = {
   cacheBust: true,
   categorizeByGroup: false,
   categoryOrder: [

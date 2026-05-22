@@ -57,7 +57,7 @@ const config = defineConfig([
   },
   {
     ...jsdoc({ config: 'flat/recommended-tsdoc-error' }),
-    files: ['src/**/*.{ts,js}'],
+    files: ['src/**/*.ts'],
   },
   {
     extends: [
@@ -69,12 +69,12 @@ const config = defineConfig([
       importXConfigs.typescript,
       prettier,
     ],
-    files: ['**/*.{ts,js}'],
+    files: ['**/*.ts'],
     languageOptions: {
       ecmaVersion: 'latest',
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['*.js', '*.config.ts'],
+          allowDefaultProject: ['*.config.ts'],
         },
         warnOnUnsupportedTypeScriptVersion: false,
       },
@@ -544,16 +544,7 @@ const config = defineConfig([
     },
   },
   {
-    extends: [tsConfigs.disableTypeChecked],
-    files: ['**/*.js'],
-    rules: {
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-      'import-x/named': 'error',
-    },
-  },
-  {
-    files: ['**/*.config.{ts,js}'],
+    files: ['**/*.config.ts'],
     rules: {
       '@typescript-eslint/naming-convention': 'off',
       'import-x/no-default-export': 'off',
