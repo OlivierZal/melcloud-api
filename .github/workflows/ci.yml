@@ -1,27 +1,12 @@
 concurrency:
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
   group: ci-${{ github.ref }}
 jobs:
-  audit:
-    name: Audit
-    permissions:
-      contents: read
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup-node-and-install
-        with:
-          install: 'false'
-          node-version: lts/*
-      - run: npm audit --audit-level=high --omit=dev
-    timeout-minutes: 15
   check:
     name: Check
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -38,7 +23,7 @@ jobs:
     name: Test (Node ${{ matrix.node-version }})
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:

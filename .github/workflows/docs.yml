@@ -6,7 +6,7 @@ jobs:
     name: Build docs
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -28,7 +28,7 @@ jobs:
     permissions:
       id-token: write
       pages: write
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128
