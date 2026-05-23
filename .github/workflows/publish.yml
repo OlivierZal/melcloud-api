@@ -1,5 +1,9 @@
+concurrency:
+  cancel-in-progress: false
+  group: publish
 jobs:
   publish:
+    environment: npm
     name: Publish package to GitHub Packages
     permissions:
       contents: read
@@ -17,6 +21,7 @@ jobs:
           IS_PRERELEASE: ${{ github.event.release.prerelease }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm publish ${{ github.event.release.prerelease && '--tag next' || '' }}
+    timeout-minutes: 15
 name: Publish package to GitHub Packages
 on:
   release:

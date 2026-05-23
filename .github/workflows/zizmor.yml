@@ -1,5 +1,5 @@
 concurrency:
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
   group: zizmor-${{ github.ref }}
 jobs:
   zizmor:
@@ -15,6 +15,7 @@ jobs:
           fetch-depth: 1
           persist-credentials: false
       - uses: zizmorcore/zizmor-action@b572f7b1a1c2d41efaab43d504f68d215c3cd727
+    timeout-minutes: 15
 name: Zizmor
 on:
   pull_request: {}

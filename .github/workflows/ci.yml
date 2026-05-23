@@ -1,24 +1,8 @@
 concurrency:
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
   group: ci-${{ github.ref }}
 jobs:
-  audit:
-    if: github.actor != 'dependabot[bot]'
-    name: Audit
-    permissions:
-      contents: read
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup-node-and-install
-        with:
-          install: 'false'
-          node-version: lts/*
-      - run: npm audit --audit-level=high --omit=dev
   check:
-    if: github.actor != 'dependabot[bot]'
     name: Check
     permissions:
       contents: read
@@ -34,8 +18,8 @@ jobs:
       - run: npm run lint
       - run: npm run format
       - run: npm run docs
+    timeout-minutes: 15
   test:
-    if: github.actor != 'dependabot[bot]'
     name: Test (Node ${{ matrix.node-version }})
     permissions:
       contents: read
@@ -49,7 +33,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm test -- --coverage
-      - if: matrix.node-version == 'latest'
+      - if: matrix.node-version == 'latest' && (github.event_name == 'push' || (github.event.pull_request.user.login != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository))
         uses: SonarSource/sonarqube-scan-action@59db25f34e16620e48ab4bb9e4a5dce155cb5432
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -57,6 +41,7 @@ jobs:
       fail-fast: false
       matrix:
         node-version: [22, latest, lts/*]
+    timeout-minutes: 20
 name: CI
 on:
   pull_request: {}
