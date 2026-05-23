@@ -18,6 +18,7 @@ jobs:
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
         with:
           path: docs
+    timeout-minutes: 15
   deploy:
     environment:
       name: github-pages
@@ -31,6 +32,7 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128
+    timeout-minutes: 10
 name: Generate & deploy docs
 on:
   release:
