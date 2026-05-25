@@ -6,9 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [39.0.0] - 2026-05-25
+
+### Breaking
+
+- **Replace Luxon with the Stage-4 Temporal proposal**, polyfilled via [`temporal-polyfill`](https://github.com/fullcalendar/temporal-polyfill) until Node 22 reaches EOL (April 2027). The polyfill defers to native `globalThis.Temporal` once it ships unflagged (V8 14 / Node 26+), so this change is also the on-ramp for shedding the dependency entirely later.
+  - `RateLimitError.retryAfter` is now `Temporal.Duration | null` (was Luxon `Duration | null`). Read with `retryAfter.total({ unit: 'seconds' })` (or `'milliseconds'`).
+  - `RateLimitError.unblockAt` is now `Temporal.Instant | null` (was Luxon `DateTime | null`). Read with `unblockAt.toString()` or convert with `unblockAt.toZonedDateTimeISO(zone)`.
+  - `RateLimitGate` constructor now accepts a `RateLimitDurationLike` shape (`{ days?, hours?, minutes?, seconds? }`) instead of Luxon's `DurationLike`. Existing call sites — both internal — already pass `{ hours: N }` and are unaffected.
+  - The Classic API no longer mutates `LuxonSettings.defaultZone`. The configured `timezone` is held on the instance and threaded through `isSessionExpired` and `getErrorLog` so multiple `ClassicAPI` instances with different zones now stay independent (silent fix for a latent global-state bug).
+  - The locale used to format report chart labels was previously read from `LuxonSettings.defaultLocale` (a global Luxon could see). It is now an explicit module-level setting; new exports `setReportLocale(locale)` / `getReportLocale()` from the package root replace it.
+
+  See [#1510](https://github.com/OlivierZal/melcloud-api/pull/1510) for the full migration write-up.
+
+### Added
+
+- **`Temporal` re-export from the package root** (the polyfill namespace, falling back to native when available) for consumers that want to format error fields themselves without adding a polyfill dependency of their own.
+
 ### Fixed
 
-- **Auto-sync and retry-guard timers no longer keep the Node event loop alive.** A script that just did `await ClassicAPI.create({ username, password })` (or `HomeAPI.create(...)`) and nothing else would sit idle for ~5 minutes until the auto-sync timer fired, because the internal `setTimeout` ref'd the loop. Both internal timers now call `.unref()`, matching the convention used by `undici`, `pg`, `ioredis`, `mongodb` and other modern Node clients. The auto-sync still fires on schedule whenever the host application has another reason to stay alive (HTTP server, other timers, open streams). Apps that previously relied on the auto-sync timer as an implicit keep-alive should now provide an explicit one (e.g. a long-lived server, a user-land `setInterval`, or `process.stdin.resume()` for CLIs).
+- **Auto-sync and retry-guard timers no longer keep the Node event loop alive.** A script that just did `await ClassicAPI.create({ username, password })` (or `HomeAPI.create(...)`) and nothing else would sit idle for ~5 minutes until the auto-sync timer fired, because the internal `setTimeout` ref'd the loop. Both internal timers now call `.unref()`, matching the convention used by `undici`, `pg`, `ioredis`, `mongodb` and other modern Node clients. The auto-sync still fires on schedule whenever the host application has another reason to stay alive (HTTP server, other timers, open streams). Apps that previously relied on the auto-sync timer as an implicit keep-alive should now provide an explicit one (e.g. a long-lived server, a user-land `setInterval`, or `process.stdin.resume()` for CLIs). ([#1511](https://github.com/OlivierZal/melcloud-api/issues/1511), [#1512](https://github.com/OlivierZal/melcloud-api/pull/1512))
+
+### Other
+
+- Dependency refresh: `eslint`, `typescript-eslint`, `vitest` (+ `@vitest/*`), `@types/node`, `@swc/core`, `undici`, `@typescript/native-preview`, `@eslint/markdown` to their latest minor/patch.
+
+## [38.0.2] - 2026-05-09
+
+### Fixed
+
+- **`HomeDeviceCapabilitiesSchema` enforced ATA-only fields on every device**, so any account whose `/context` carried `airToWaterUnits` failed Zod validation. The error was swallowed inside `HomeAPI.list()`, leaving `#user` null and `isAuthenticated()` falsely reporting `false` after a successful sign-in — `tryReuseSession`/`resumeSession` flapped on every reboot. Schema now requires `capabilities` to be an object but does not validate its shape; only the ATA facade reads specific fields, and only for ATA devices. ([#1503](https://github.com/OlivierZal/melcloud-api/pull/1503))
 
 ## [38.0.1] - 2026-05-01
 
@@ -98,6 +125,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/38.0.1...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/39.0.0...HEAD
+[39.0.0]: https://github.com/OlivierZal/melcloud-api/compare/38.0.2...39.0.0
+[38.0.2]: https://github.com/OlivierZal/melcloud-api/compare/38.0.1...38.0.2
 [38.0.1]: https://github.com/OlivierZal/melcloud-api/compare/38.0.0...38.0.1
 [38.0.0]: https://github.com/OlivierZal/melcloud-api/compare/37.2.1...38.0.0
