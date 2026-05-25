@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Other
 
 - Dependency refresh: `eslint`, `typescript-eslint`, `vitest` (+ `@vitest/*`), `@types/node`, `@swc/core`, `undici`, `@typescript/native-preview`, `@eslint/markdown` to their latest minor/patch.
+- **`engines.node` raised to `>=22.19.0`** to align with the floor declared by the bundled `undici@8.3.0` runtime dep (was `>=22`). Consumers on Node 22.0–22.18 should update to the latest 22.x LTS patch.
 
 ## [38.0.2] - 2026-05-09
 
