@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - `RateLimitError.unblockAt` is now `Temporal.Instant | null` (was Luxon `DateTime | null`). Read with `unblockAt.toString()` or convert with `unblockAt.toZonedDateTimeISO(zone)`.
   - `RateLimitGate` constructor now accepts a `RateLimitDurationLike` shape (`{ days?, hours?, minutes?, seconds? }`) instead of Luxon's `DurationLike`. Existing call sites — both internal — already pass `{ hours: N }` and are unaffected.
   - The Classic API no longer mutates `LuxonSettings.defaultZone`. The configured `timezone` is held on the instance and threaded through `isSessionExpired` and `getErrorLog` so multiple `ClassicAPI` instances with different zones now stay independent (silent fix for a latent global-state bug).
-  - The locale used to format report chart labels was previously read from `LuxonSettings.defaultLocale` (a global Luxon could see). It is now an explicit module-level setting; new exports `setReportLocale(locale)` / `getReportLocale()` from the package root replace it.
+  - The locale used to format report chart labels was previously read from `LuxonSettings.defaultLocale` (a global Luxon could see). It is now an explicit per-instance `locale` field on `ClassicAPIConfig` (BCP-47 tag — independent of upstream `language`), defaulting to the runtime locale when unset.
 
   See [#1510](https://github.com/OlivierZal/melcloud-api/pull/1510) for the full migration write-up.
 
