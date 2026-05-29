@@ -6,7 +6,9 @@ jobs:
     environment: npm
     name: Publish package to GitHub Packages
     permissions:
+      attestations: write
       contents: read
+      id-token: write
       packages: write
     runs-on: ubuntu-24.04
     steps:
@@ -17,10 +19,15 @@ jobs:
         with:
           registry-url: https://npm.pkg.github.com
           scope: '@olivierzal'
+      # Publish the exact tarball we attest.
+      - run: npm pack
+      - uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32
+        with:
+          subject-path: '*.tgz'
       - env:
           IS_PRERELEASE: ${{ github.event.release.prerelease }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish ${{ github.event.release.prerelease && '--tag next' || '' }}
+        run: npm publish *.tgz ${{ github.event.release.prerelease && '--tag next' || '' }}
     timeout-minutes: 15
 name: Publish package to GitHub Packages
 on:

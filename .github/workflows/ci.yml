@@ -18,6 +18,7 @@ jobs:
       - run: npm run lint
       - run: npm run format
       - run: npm run docs
+      - run: npm run lint:package
     timeout-minutes: 15
   test:
     name: Test (Node ${{ matrix.node-version }})
