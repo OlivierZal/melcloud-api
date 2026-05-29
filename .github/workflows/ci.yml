@@ -18,6 +18,11 @@ jobs:
       - run: npm run lint
       - run: npm run format
       - run: npm run docs
+      # Builds the publishable artifact (publint packs, which runs `prepare`)
+      # and lints the package.json `exports`/`types` map against the emitted
+      # dist — the one surface CI never exercised, since install uses
+      # `--ignore-scripts` and the emit only happened at publish time.
+      - run: npm run lint:package
     timeout-minutes: 15
   test:
     name: Test (Node ${{ matrix.node-version }})
