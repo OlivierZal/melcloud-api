@@ -48,7 +48,7 @@
     "format:fix": "prettier . --write",
     "lint": "node --max-old-space-size=8192 ./node_modules/eslint/bin/eslint.js .",
     "lint:fix": "npm run lint -- --fix",
-    "lint:package": "publint --strict",
+    "lint:package": "npm run build && publint --strict",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run typecheck && npm run lint && npm run format && npm run docs",
     "test": "vitest run",
