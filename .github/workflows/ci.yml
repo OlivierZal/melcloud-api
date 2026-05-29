@@ -18,12 +18,6 @@ jobs:
       - run: npm run lint
       - run: npm run format
       - run: npm run docs
-      # Build the publishable artifact and lint its package.json
-      # `exports`/`types` map against the emitted dist (the `lint:package`
-      # script builds first, since publint expects a prior build — its own
-      # `npm pack` runs with `--ignore-scripts`). Closes the one surface CI
-      # never exercised: install uses `--ignore-scripts`, so the emit
-      # previously happened only at publish time.
       - run: npm run lint:package
     timeout-minutes: 15
   test:
