@@ -6,7 +6,9 @@ jobs:
     environment: npm
     name: Publish package to GitHub Packages
     permissions:
+      attestations: write
       contents: read
+      id-token: write
       packages: write
     runs-on: ubuntu-24.04
     steps:
@@ -17,10 +19,20 @@ jobs:
         with:
           registry-url: https://npm.pkg.github.com
           scope: '@olivierzal'
+      # Pack the publishable tarball (runs `prepare`/build) so the *exact*
+      # bytes can be attested and then published unchanged.
+      - run: npm pack
+      # Sign a SLSA build-provenance attestation binding the tarball to this
+      # workflow run and commit. npm's own `--provenance` is specific to the
+      # public npm registry; this is the registry-agnostic equivalent for
+      # GitHub Packages, verifiable with `gh attestation verify`.
+      - uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
+        with:
+          subject-path: '*.tgz'
       - env:
           IS_PRERELEASE: ${{ github.event.release.prerelease }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish ${{ github.event.release.prerelease && '--tag next' || '' }}
+        run: npm publish *.tgz ${{ github.event.release.prerelease && '--tag next' || '' }}
     timeout-minutes: 15
 name: Publish package to GitHub Packages
 on:

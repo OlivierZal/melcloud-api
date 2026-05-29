@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **Build-provenance attestations on every published release.** The publish workflow now signs a [SLSA build-provenance attestation](https://docs.github.com/en/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds) (via `actions/attest-build-provenance`) that binds each published tarball to the exact workflow run and commit that produced it. Verify a downloaded package with `gh attestation verify <tarball> --repo OlivierZal/melcloud-api`. npm's own `--provenance` is specific to the public npm registry and cannot be used when publishing to GitHub Packages; GitHub Artifact Attestations are the registry-agnostic equivalent.
+
 ## [39.0.0] - 2026-05-25
 
 ### Breaking
