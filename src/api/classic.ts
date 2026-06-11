@@ -269,15 +269,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    */
   @syncDevices()
   public async fetch(): Promise<ClassicBuildingWithStructure[]> {
-    this.clearSync()
-    try {
-      return await this.#fetch()
-    } catch (error) {
-      this.logger.error('Failed to fetch devices:', error)
-      return []
-    } finally {
-      this.syncManager.planNext()
-    }
+    return this.runSyncCycle(async () => this.#fetch())
   }
 
   public async getEnergy<T extends ClassicDeviceType>({

@@ -505,6 +505,27 @@ export abstract class BaseAPI implements Disposable {
   }
 
   /**
+   * Template for the registry-refresh heartbeat shared by Classic's
+   * `fetch()` and Home's `list()`: pause the auto-sync timer, run the
+   * subclass work, log + swallow failures (a flaky heartbeat must not
+   * crash the host — the next cycle retries), and always reschedule
+   * the next sync.
+   * @param work - Subclass closure that fetches and syncs the registry.
+   * @returns The fetched entries, or an empty array on failure.
+   */
+  protected async runSyncCycle<T>(work: () => Promise<T[]>): Promise<T[]> {
+    this.clearSync()
+    try {
+      return await work()
+    } catch (error) {
+      this.logger.error('Failed to fetch devices:', error)
+      return []
+    } finally {
+      this.syncManager.planNext()
+    }
+  }
+
+  /**
    * Run a best-effort GET/POST/… request and wrap the outcome in a
    * {@link Result}. The unwrapped response body is returned on success;
    * on failure the typed {@link ApiRequestError} variant lets callers
