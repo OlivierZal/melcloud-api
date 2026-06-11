@@ -21,31 +21,41 @@ const parseDeltaSeconds = (seconds: number): Temporal.Duration | null =>
     Temporal.Duration.from({ seconds })
   : null
 
-const parseHttpDate = (value: string): Temporal.Duration | null => {
+const parseHttpDate = (
+  value: string,
+  now: Temporal.Instant,
+): Temporal.Instant | null => {
   const dateMs = Date.parse(value)
-  if (Number.isNaN(dateMs)) {
+  if (Number.isNaN(dateMs) || dateMs <= now.epochMilliseconds) {
     return null
   }
-  const milliseconds = dateMs - Date.now()
-  return milliseconds > 0 ? Temporal.Duration.from({ milliseconds }) : null
+  return Temporal.Instant.fromEpochMilliseconds(dateMs)
 }
 
-// Parse an RFC 9110 `Retry-After` value into a positive duration.
-// Delta-seconds is tried first; an HTTP-date (IMF-fixdate, handled by
-// `Date.parse`) is converted to the remaining wait from now. Returns
-// `null` for unparsable, zero, negative, or past-dated values so the
-// caller can apply its fallback window.
-const parseRetryAfter = (value: unknown): Temporal.Duration | null => {
+// Resolve an RFC 9110 `Retry-After` value into the absolute unblock
+// instant. Delta-seconds is tried first; an HTTP-date (IMF-fixdate,
+// handled by `Date.parse`) maps to that date directly. Every branch is
+// anchored on the caller's single `now` capture so the unblock time
+// cannot drift across separate clock reads. Returns `null` for
+// unparsable, zero, negative, or past-dated values so the caller can
+// apply its fallback window.
+const parseRetryAfter = (
+  value: unknown,
+  now: Temporal.Instant,
+): Temporal.Instant | null => {
   if (typeof value === 'number') {
-    return parseDeltaSeconds(value)
+    const delta = parseDeltaSeconds(value)
+    return delta === null ? null : now.add(delta)
   }
   if (typeof value !== 'string') {
     return null
   }
   const seconds = Number(value)
-  return Number.isFinite(seconds) ?
-      parseDeltaSeconds(seconds)
-    : parseHttpDate(value)
+  if (Number.isFinite(seconds)) {
+    const delta = parseDeltaSeconds(seconds)
+    return delta === null ? null : now.add(delta)
+  }
+  return parseHttpDate(value, now)
 }
 
 /**
@@ -168,9 +178,9 @@ export class RateLimitGate {
    * @param retryAfter - Header value from the 429 response.
    */
   public recordRateLimit(retryAfter?: unknown): void {
-    this.#pausedUntil = Temporal.Now.instant().add(
-      parseRetryAfter(retryAfter) ?? this.#fallback,
-    )
+    const now = Temporal.Now.instant()
+    this.#pausedUntil =
+      parseRetryAfter(retryAfter, now) ?? now.add(this.#fallback)
   }
 
   /** Reset the gate immediately (testing or manual unblock). */
