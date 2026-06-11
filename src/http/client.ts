@@ -191,7 +191,7 @@ export class HttpClient {
 
   readonly #defaultHeaders: Record<string, string>
 
-  readonly #dispatcher?: FetchDispatcher
+  readonly #dispatcher?: FetchDispatcher | undefined
 
   /**
    * Builds an HTTP client pinned to a base URL, request-timeout budget,
@@ -279,10 +279,11 @@ export class HttpClient {
       ...this.#defaultHeaders,
       ...headers,
     }
+    const body = serializeBody(data, mergedHeaders)
     const init: FetchInit = {
-      body: serializeBody(data, mergedHeaders),
       headers: mergedHeaders,
       method: method.toUpperCase(),
+      ...(body === undefined ? {} : { body }),
     }
     this.#applySignal(init, signal)
     this.#applyDispatcher(init)

@@ -9,9 +9,9 @@
 export interface LoggableRequestConfig {
   readonly data?: unknown
   readonly headers?: unknown
-  readonly method?: string
+  readonly method?: string | undefined
   readonly params?: unknown
-  readonly url?: string
+  readonly url?: string | undefined
 }
 
 // Fixed key order for consistent, readable JSON log output
@@ -88,11 +88,11 @@ const redactValue = (value: unknown): unknown => {
 export abstract class APICallLogData {
   declare public readonly dataType: string
 
-  public readonly method?: string
+  public readonly method?: string | undefined
 
   public readonly params: unknown
 
-  public readonly url?: string
+  public readonly url?: string | undefined
 
   protected constructor(config?: LoggableRequestConfig) {
     this.method = config?.method?.toUpperCase()

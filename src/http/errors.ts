@@ -4,10 +4,10 @@
  */
 export interface HttpErrorRequestConfig {
   readonly data?: unknown
-  readonly headers?: Record<string, string>
-  readonly method?: string
-  readonly params?: Record<string, unknown>
-  readonly url?: string
+  readonly headers?: Record<string, string> | undefined
+  readonly method?: string | undefined
+  readonly params?: Record<string, unknown> | undefined
+  readonly url?: string | undefined
 }
 
 /**
@@ -19,7 +19,7 @@ export interface HttpErrorRequestConfig {
  * @category HTTP
  */
 export class HttpError<T = unknown> extends Error {
-  public readonly config?: HttpErrorRequestConfig
+  public readonly config?: HttpErrorRequestConfig | undefined
 
   public readonly isHttpError = true
 

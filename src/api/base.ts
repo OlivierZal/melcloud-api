@@ -132,7 +132,7 @@ interface BaseAPIConstructorOptions {
 export abstract class BaseAPI implements Disposable {
   public readonly logger: Logger
 
-  public readonly settingManager?: SettingManager
+  public readonly settingManager?: SettingManager | undefined
 
   /**
    * Whether the upstream rate-limit gate is currently holding a pause
@@ -143,7 +143,7 @@ export abstract class BaseAPI implements Disposable {
     return this.rateLimitGate.isPaused
   }
 
-  protected readonly abortSignal?: AbortSignal
+  protected readonly abortSignal?: AbortSignal | undefined
 
   protected readonly api: HttpClient
 

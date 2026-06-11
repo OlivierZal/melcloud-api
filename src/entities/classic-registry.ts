@@ -235,7 +235,7 @@ export class ClassicRegistry {
    */
   public getBuildings({
     type,
-  }: { type?: ClassicDeviceType } = {}): ClassicBuildingZone[] {
+  }: { type?: ClassicDeviceType | undefined } = {}): ClassicBuildingZone[] {
     return [...this.#buildings.values()]
       .filter((building) => this.#hasDevices(building.id, 'building', type))
       .map((building) => ({

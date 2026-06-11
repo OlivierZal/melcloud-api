@@ -8,8 +8,8 @@ import type { DeviceType } from '../constants.ts'
  */
 interface HasNotifySync {
   readonly notifySync?: (params?: {
-    ids?: (number | string)[]
-    type?: DeviceType
+    ids?: (number | string)[] | undefined
+    type?: DeviceType | undefined
   }) => Promise<void>
 }
 

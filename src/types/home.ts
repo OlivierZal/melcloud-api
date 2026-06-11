@@ -247,9 +247,9 @@ export interface HomeDeviceScheduleEntry {
   readonly power: boolean
   readonly setPoint: number
   readonly time: string
-  readonly setFanSpeed?: string
-  readonly vaneHorizontalDirection?: string
-  readonly vaneVerticalDirection?: string
+  readonly setFanSpeed?: string | undefined
+  readonly vaneHorizontalDirection?: string | undefined
+  readonly vaneVerticalDirection?: string | undefined
 }
 
 /**
@@ -267,7 +267,7 @@ export interface HomeDeviceSetting {
  */
 export interface HomeEnergyData {
   readonly measureData: HomeEnergyMeasure[]
-  readonly deviceId?: string
+  readonly deviceId?: string | undefined
 }
 
 /**
@@ -277,7 +277,7 @@ export interface HomeEnergyData {
 export interface HomeEnergyMeasure {
   readonly type: string
   readonly values: HomeEnergyPoint[]
-  readonly deviceId?: string
+  readonly deviceId?: string | undefined
 }
 
 /**
@@ -370,8 +370,8 @@ export interface HomeTokenResponse {
   readonly expires_in: number
   readonly scope: string
   readonly token_type: 'Bearer'
-  readonly id_token?: string
-  readonly refresh_token?: string
+  readonly id_token?: string | undefined
+  readonly refresh_token?: string | undefined
 }
 
 /**

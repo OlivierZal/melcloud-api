@@ -452,7 +452,7 @@ export interface ClassicReportPostData {
   readonly DeviceID: ClassicDeviceID
   readonly FromDate: string
   readonly ToDate: string
-  readonly Duration?: number
+  readonly Duration?: number | undefined
 }
 
 /**
@@ -505,7 +505,7 @@ export interface ClassicSuccessData {
  * @category Types
  */
 export interface ClassicTemperatureLogPostData extends ClassicReportPostData {
-  readonly Location?: number
+  readonly Location?: number | undefined
 }
 
 /**
