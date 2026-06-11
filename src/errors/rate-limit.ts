@@ -14,6 +14,11 @@ import { APIError } from './base.ts'
  *   "try again at 14:30" phrasing) — read with
  *   `unblockAt.toString()` or convert via
  *   `unblockAt.toZonedDateTimeISO(zone)`.
+ *
+ * The `Result`-based getters surface the same window as the
+ * `rate-limited` variant's plain `retryAfterMs` (milliseconds) —
+ * this class is the rich `Temporal` surface, `retryAfterMs` the
+ * dependency-free one; both are derived from the same gate snapshot.
  * @category Errors
  */
 export class RateLimitError extends APIError {

@@ -57,7 +57,11 @@ const redactFormEncoded = (value: string): string | undefined => {
   }
   const params = new URLSearchParams(value)
   let hasRedacted = false
-  for (const key of params.keys()) {
+  // Snapshot the keys before mutating: `set()` collapses duplicate
+  // entries, and URLSearchParams iterators are live, so redacting a
+  // multi-valued key mid-iteration could otherwise skip the entry
+  // that shifts into the vacated slot.
+  for (const key of new Set(params.keys())) {
     if (isSensitive(key)) {
       params.set(key, REDACTED)
       hasRedacted = true

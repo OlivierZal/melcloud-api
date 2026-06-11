@@ -84,6 +84,8 @@ export const mapResult = <T, TResult>(
  * - `rate-limited`: the SDK's internal rate-limit gate refused the
  *   call. `retryAfterMs` is the remaining milliseconds on the pause,
  *   or `null` when the upstream header did not carry a duration.
+ *   This is the plain-number twin of `RateLimitError.retryAfter`
+ *   (a `Temporal.Duration`); both describe the same gate window.
  * - `validation`: Zod refused the response shape. Indicates API drift
  *   server-side; not retryable on its own — investigate.
  * - `server`: any other HTTP error from the transport.

@@ -210,6 +210,22 @@ describe('sensitive data redaction', () => {
     expect(params.get('extra')).toBe('visible')
   })
 
+  it('redacts every entry of a multi-valued sensitive key while keeping trailing pairs', () => {
+    // `URLSearchParams.set()` collapses duplicate entries while the
+    // key iterator is live; the redaction loop snapshots keys first so
+    // pairs after a duplicated sensitive key are never skipped.
+    const config = createConfig({
+      data: 'password=one&password=two&after=kept',
+    })
+    const parsed: { requestData: string } = cast(
+      JSON.parse(new APICallRequestData(config).toString()),
+    )
+    const params = new URLSearchParams(parsed.requestData)
+
+    expect(params.getAll('password')).toStrictEqual(['******'])
+    expect(params.get('after')).toBe('kept')
+  })
+
   it('passes through non-sensitive form-encoded strings unchanged', () => {
     const config = createConfig({ data: 'page=2&limit=50' })
     const parsed: { requestData: string } = cast(
