@@ -132,7 +132,7 @@ interface BaseAPIConstructorOptions {
 export abstract class BaseAPI implements Disposable {
   public readonly logger: Logger
 
-  public readonly settingManager?: SettingManager
+  public readonly settingManager?: SettingManager | undefined
 
   /**
    * Whether the upstream rate-limit gate is currently holding a pause
@@ -143,7 +143,7 @@ export abstract class BaseAPI implements Disposable {
     return this.rateLimitGate.isPaused
   }
 
-  protected readonly abortSignal?: AbortSignal
+  protected readonly abortSignal?: AbortSignal | undefined
 
   protected readonly api: HttpClient
 
@@ -502,6 +502,27 @@ export abstract class BaseAPI implements Disposable {
     return schema === undefined ? data : (
         parseOrThrow(schema, data, `${method.toUpperCase()} ${url}`)
       )
+  }
+
+  /**
+   * Template for the registry-refresh heartbeat shared by Classic's
+   * `fetch()` and Home's `list()`: pause the auto-sync timer, run the
+   * subclass work, log + swallow failures (a flaky heartbeat must not
+   * crash the host — the next cycle retries), and always reschedule
+   * the next sync.
+   * @param work - Subclass closure that fetches and syncs the registry.
+   * @returns The fetched entries, or an empty array on failure.
+   */
+  protected async runSyncCycle<T>(work: () => Promise<T[]>): Promise<T[]> {
+    this.clearSync()
+    try {
+      return await work()
+    } catch (error) {
+      this.logger.error('Failed to fetch devices:', error)
+      return []
+    } finally {
+      this.syncManager.planNext()
+    }
   }
 
   /**

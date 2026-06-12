@@ -161,8 +161,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    */
   @syncDevices()
   public async list(): Promise<HomeBuilding[]> {
-    this.clearSync()
-    try {
+    return this.runSyncCycle(async () => {
       const data = await this.#fetchContext()
       const buildings = [...data.buildings, ...data.guestBuildings]
       this.#registry.sync(
@@ -178,11 +177,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
         ]),
       )
       return buildings
-    } catch {
-      return []
-    } finally {
-      this.syncManager.planNext()
-    }
+    })
   }
 
   /**

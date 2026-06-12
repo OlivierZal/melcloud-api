@@ -9,9 +9,9 @@
 export interface LoggableRequestConfig {
   readonly data?: unknown
   readonly headers?: unknown
-  readonly method?: string
+  readonly method?: string | undefined
   readonly params?: unknown
-  readonly url?: string
+  readonly url?: string | undefined
 }
 
 // Fixed key order for consistent, readable JSON log output
@@ -57,7 +57,11 @@ const redactFormEncoded = (value: string): string | undefined => {
   }
   const params = new URLSearchParams(value)
   let hasRedacted = false
-  for (const key of params.keys()) {
+  // Snapshot the keys before mutating: `set()` collapses duplicate
+  // entries, and URLSearchParams iterators are live, so redacting a
+  // multi-valued key mid-iteration could otherwise skip the entry
+  // that shifts into the vacated slot.
+  for (const key of new Set(params.keys())) {
     if (isSensitive(key)) {
       params.set(key, REDACTED)
       hasRedacted = true
@@ -88,11 +92,11 @@ const redactValue = (value: unknown): unknown => {
 export abstract class APICallLogData {
   declare public readonly dataType: string
 
-  public readonly method?: string
+  public readonly method?: string | undefined
 
   public readonly params: unknown
 
-  public readonly url?: string
+  public readonly url?: string | undefined
 
   protected constructor(config?: LoggableRequestConfig) {
     this.method = config?.method?.toUpperCase()

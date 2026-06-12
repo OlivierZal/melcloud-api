@@ -152,8 +152,8 @@ export interface SettingManager {
  * @category Configuration
  */
 export type SyncCallback = (params?: {
-  ids?: (number | string)[]
-  type?: DeviceType
+  ids?: (number | string)[] | undefined
+  type?: DeviceType | undefined
 }) => Promise<void>
 
 /**

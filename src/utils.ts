@@ -250,7 +250,7 @@ export interface ChartLineFormatOptions {
    * BCP-47 locale tag for day-of-week and month-name labels. Defaults
    * to the runtime locale when omitted.
    */
-  readonly locale?: string
+  readonly locale?: string | undefined
 }
 
 /**

@@ -116,6 +116,35 @@ if (!result.ok) {
 const energy = result.value
 ```
 
+## Session management
+
+Both clients keep their session alive without caller involvement:
+
+- **Pre-emptive refresh** — sessions are renewed when they come within 5 minutes of expiry, so no request pays the re-authentication round-trip on its critical path.
+- **Reactive 401 recovery** — when the server rejects a credential mid-flight, the SDK re-authenticates once (Home tries the cheap refresh-token exchange first, then falls back to a full sign-in) and replays the original request. A cooldown guard prevents retry loops.
+- **Persistence** — pass a `settingManager` (a simple `get`/`set` string store) to persist tokens and credentials across restarts; without one, everything stays in memory and a new instance signs in from scratch.
+
+> [!IMPORTANT]
+> The `SettingManager` receives the access/refresh tokens **and the account password** as plain strings. You are responsible for backing it with secure storage (encrypted settings store, OS keychain, …) — do not write it to a world-readable file. The SDK redacts credentials, tokens and cookies from its own log output.
+
+```ts title="setting-manager"
+const settings = new Map<string, string>()
+const api = await HomeAPI.create({
+  settingManager: {
+    get: (key) => settings.get(key) ?? null,
+    set: (key, value) => settings.set(key, value),
+  },
+})
+```
+
+## Resilience & retries
+
+The request pipeline applies three policies, outermost first:
+
+1. **Rate-limit gate (HTTP 429)** — a 429 response pauses all requests for the `Retry-After` window (delta-seconds and HTTP-date forms are both honored), or 2 hours when the header is absent. While paused, calls fail fast with `RateLimitError` (`retryAfter`, `unblockAt`) instead of hammering the server; check `api.isRateLimited` before issuing bursts.
+2. **Auth retry (HTTP 401)** — a single re-authentication + replay, as described above.
+3. **Transient retry (GET only)** — 502/503/504 responses are retried up to 4 times with exponential backoff and jitter (1 s initial delay, 16 s cap). Mutations (`POST`/`PUT`) are **never** retried automatically: a write that may have landed server-side must not be silently duplicated. Each retry is observable through the `onRequestRetry` lifecycle event.
+
 ## Imports
 
 Exports follow a `Classic*` / `Home*` prefix convention so the target API is obvious at the call site. The `./classic` and `./home` subpaths re-export everything with the prefix stripped — a modern alternative to TypeScript's deprecated `namespace` keyword.

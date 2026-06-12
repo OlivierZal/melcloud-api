@@ -77,6 +77,46 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit(-5)
 
     expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+
+    gate.recordRateLimit('-5')
+
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+  })
+
+  it('honors a future HTTP-date Retry-After header (RFC 9110)', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+
+    // 30 minutes after the fixed system time.
+    gate.recordRateLimit('Sat, 11 Apr 2026 12:30:00 GMT')
+
+    expect(gate.isPaused).toBe(true)
+    expect(gate.unblockAt?.toString({ smallestUnit: 'millisecond' })).toBe(
+      '2026-04-11T12:30:00.000Z',
+    )
+  })
+
+  it('falls back when the HTTP-date Retry-After is in the past', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+
+    gate.recordRateLimit('Sat, 11 Apr 2026 11:00:00 GMT')
+
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+  })
+
+  it('falls back when Retry-After is a non-finite number', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+
+    gate.recordRateLimit(Number.NaN)
+
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+  })
+
+  it('falls back when Retry-After has an unsupported type', () => {
+    const gate = new RateLimitGate({ hours: 2 })
+
+    gate.recordRateLimit(['30'])
+
+    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
   })
 
   it('re-opens automatically after the window elapses', () => {

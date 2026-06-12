@@ -33,15 +33,17 @@ export interface ResiliencePolicy {
  * An empty composite is a no-op pass-through.
  */
 export class CompositePolicy implements ResiliencePolicy {
-  readonly #policies: readonly ResiliencePolicy[]
+  // Innermost-first ordering, computed once — `run` only re-wraps the
+  // attempt closure per call, never re-derives the pipeline.
+  readonly #reversedPolicies: readonly ResiliencePolicy[]
 
   public constructor(policies: readonly ResiliencePolicy[]) {
-    this.#policies = policies
+    this.#reversedPolicies = policies.toReversed()
   }
 
   public async run<T>(attempt: () => Promise<T>): Promise<T> {
     let wrapped: () => Promise<T> = attempt
-    for (const policy of [...this.#policies].toReversed()) {
+    for (const policy of this.#reversedPolicies) {
       const inner = wrapped
       const wrap = async (): Promise<T> => policy.run(inner)
       wrapped = wrap

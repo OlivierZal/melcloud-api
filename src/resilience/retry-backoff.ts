@@ -77,7 +77,7 @@ export interface RetryBackoffOptions {
    * immediately — so a cancelled caller doesn't pay for an in-flight
    * delay before the next attempt would have started.
    */
-  readonly signal?: AbortSignal
+  readonly signal?: AbortSignal | undefined
   /** Predicate deciding whether a thrown error is worth retrying. */
   readonly isRetryable: (error: unknown) => boolean
   /** Optional hook invoked before the next attempt. */
