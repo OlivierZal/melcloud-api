@@ -59,7 +59,7 @@
   "dependencies": {
     "temporal-polyfill": "^0.3.2",
     "tough-cookie": "^6.0.1",
-    "undici": "^8.3.0",
+    "undici": "^8.4.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -68,7 +68,7 @@
     "@eslint/markdown": "^8.0.2",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@swc/core": "^1.15.40",
-    "@types/node": "^25.9.1",
+    "@types/node": "^25.9.2",
     "@typescript/native-preview": "^7.0.0-dev.20260527.2",
     "@vitest/coverage-v8": "^4.1.7",
     "@vitest/eslint-plugin": "^1.6.19",
