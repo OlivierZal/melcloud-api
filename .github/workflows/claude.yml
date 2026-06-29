@@ -28,7 +28,7 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
-      - uses: anthropics/claude-code-action@4d7e1f0cd85743fdc93b1c8040ab54395da024e2
+      - uses: anthropics/claude-code-action@30544b674398ee15c84819bd87caf8a87e8c7b55
         with:
           additional_permissions: |
             actions: read
