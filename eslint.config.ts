@@ -505,12 +505,6 @@ const config = defineConfig([
       'unicorn/no-keyword-prefix': 'off',
       'unicorn/no-null': 'off',
       'unicorn/no-useless-switch-case': 'off',
-      'unicorn/prefer-export-from': [
-        'error',
-        {
-          ignoreUsedVariables: true,
-        },
-      ],
       'unicorn/prevent-abbreviations': 'off',
     },
     settings: {
