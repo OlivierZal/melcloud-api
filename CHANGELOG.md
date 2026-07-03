@@ -15,10 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Toolchain and CI hardening (practices already adopted in [OlivierZal/com.melcloud#1359](https://github.com/OlivierZal/com.melcloud/pull/1359)):
   - `tsconfig.json` now declares `"strict": true` explicitly — it is the TypeScript 6 default, but third-party tools that read the config shouldn't have to know that.
-  - The `build` script compiles with stable `tsc` instead of the `tsgo` native preview (`typecheck` stays on `tsgo`).
-  - CI runs coverage and the Sonar upload only on the Node 22 matrix leg (the `engines` floor), and the `latest` leg is `continue-on-error` so brand-new Node releases never block CI.
+  - CI runs coverage and the Sonar upload only on the current-LTS matrix leg (`lts/*` — modern yet stable, and always blocking so the quality gate cannot be skipped silently), and the `latest` leg is `continue-on-error` so brand-new Node releases never block CI.
   - The audit workflow gained the `concurrency` block every other workflow already had.
-  - Added `.nvmrc` (`22`) so `nvm use` / editor tooling picks the supported runtime.
+  - Added `.nvmrc` (`22`) so `nvm use` / editor tooling picks the supported runtime, and `/.claude/` to `.prettierignore` to match.
 
 ## [39.0.0] - 2026-05-25
 

@@ -39,13 +39,15 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       # Coverage (and the Sonar upload that consumes it) runs once, on
-      # the Node 22 leg — the `engines` floor — so quality metrics track
-      # the oldest supported runtime; other legs just run the suite.
-      - if: matrix.node-version == 22
+      # the current-LTS leg — modern yet stable, and always blocking, so
+      # the quality gate cannot be skipped silently. Other legs just run
+      # the suite, and the condition needs no update when the `engines`
+      # floor moves.
+      - if: matrix.node-version == 'lts/*'
         run: npm test -- --coverage
-      - if: matrix.node-version != 22
+      - if: matrix.node-version != 'lts/*'
         run: npm test
-      - if: matrix.node-version == 22 && (github.event_name == 'push' || (github.event.pull_request.user.login != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository))
+      - if: matrix.node-version == 'lts/*' && (github.event_name == 'push' || (github.event.pull_request.user.login != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository))
         uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
