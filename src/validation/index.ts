@@ -1,5 +1,8 @@
 export {
   ClassicBuildingListSchema,
+  ClassicEnergyDataAtaSchema,
+  ClassicEnergyDataAtwSchema,
+  ClassicEnergyDataSchema,
   ClassicLoginDataSchema,
   HomeContextSchema,
   HomeEnergyDataSchema,

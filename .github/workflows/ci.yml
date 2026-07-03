@@ -21,6 +21,11 @@ jobs:
       - run: npm run lint:package
     timeout-minutes: 15
   test:
+    # `latest` tracks brand-new Node releases; continue-on-error keeps
+    # the workflow run green when that leg breaks. The check run itself
+    # still reports failure, so keep `Test (Node latest)` out of the
+    # required status checks or it will still block merges.
+    continue-on-error: ${{ matrix.node-version == 'latest' }}
     name: Test (Node ${{ matrix.node-version }})
     permissions:
       contents: read
@@ -33,8 +38,14 @@ jobs:
       - uses: ./.github/actions/setup-node-and-install
         with:
           node-version: ${{ matrix.node-version }}
-      - run: npm test -- --coverage
-      - if: matrix.node-version == 'latest' && (github.event_name == 'push' || (github.event.pull_request.user.login != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository))
+      # Coverage (and the Sonar upload that consumes it) runs once, on
+      # the Node 22 leg — the `engines` floor — so quality metrics track
+      # the oldest supported runtime; other legs just run the suite.
+      - if: matrix.node-version == 22
+        run: npm test -- --coverage
+      - if: matrix.node-version != 22
+        run: npm test
+      - if: matrix.node-version == 22 && (github.event_name == 'push' || (github.event.pull_request.user.login != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository))
         uses: SonarSource/sonarqube-scan-action@713881670b6b3676cda39549040e2d88c70d582e
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

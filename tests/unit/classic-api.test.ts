@@ -237,6 +237,25 @@ describe('mELCloud Classic API', () => {
       ToDate: '2024-01-31',
     }
 
+    // Schema-valid ATA payload: getEnergy responses are Zod-validated,
+    // so mocking `{}` would silently reroute the call through the
+    // validation-failure branch instead of the success path.
+    const ataEnergyResponse = {
+      Auto: [0, 0.5],
+      Cooling: [0, 0.5],
+      Dry: [0, 0.5],
+      Fan: [0, 0.5],
+      Heating: [0, 0.5],
+      Other: [0, 0.5],
+      TotalAutoConsumed: 0.5,
+      TotalCoolingConsumed: 0.5,
+      TotalDryConsumed: 0.5,
+      TotalFanConsumed: 0.5,
+      TotalHeatingConsumed: 0.5,
+      TotalOtherConsumed: 0.5,
+      UsageDisclaimerPercentages: '100',
+    }
+
     it.each([
       {
         args: { postData: reportPostData },
@@ -333,6 +352,7 @@ describe('mELCloud Classic API', () => {
         wrap(
           method === 'login' ?
             { LoginData: { ContextKey: 'ctx', Expiry: '2099-01-01T00:00:00Z' } }
+          : method === 'getEnergy' ? ataEnergyResponse
           : {},
         ),
       )
@@ -341,6 +361,25 @@ describe('mELCloud Classic API', () => {
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ method: 'post', url: path }),
       )
+    })
+
+    it('returns validated energy data for a well-formed ATA payload', async () => {
+      mockLoginAndList()
+      const api = await createApi({ password: 'pass', username: 'user' })
+      mockRequest.mockResolvedValue(wrap(ataEnergyResponse))
+      const result = await api.getEnergy({ postData: cast(reportPostData) })
+
+      expect(okValue(result)).toStrictEqual(ataEnergyResponse)
+    })
+
+    it('returns a validation failure when the energy payload is malformed', async () => {
+      mockLoginAndList()
+      const api = await createApi({ password: 'pass', username: 'user' })
+      mockRequest.mockResolvedValue(wrap({ TotalHeatingConsumed: 'oops' }))
+      const result = await api.getEnergy({ postData: cast(reportPostData) })
+
+      expect(result.ok).toBe(false)
+      expect(!result.ok && result.error.kind).toBe('validation')
     })
 
     it.each([

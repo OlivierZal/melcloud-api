@@ -5,6 +5,9 @@ import { ClassicDeviceType } from '../../src/constants.ts'
 import { ValidationError } from '../../src/errors/index.ts'
 import {
   ClassicBuildingListSchema,
+  ClassicEnergyDataAtaSchema,
+  ClassicEnergyDataAtwSchema,
+  ClassicEnergyDataSchema,
   ClassicLoginDataSchema,
   HomeContextSchema,
   HomeTokenResponseSchema,
@@ -71,6 +74,31 @@ const baseHomeBuilding = {
   name: 'B',
   timezone: 'UTC',
 }
+const validClassicEnergyAta = {
+  Auto: [0, 0.5, 1],
+  Cooling: [0, 0.5, 1],
+  Dry: [0, 0.5, 1],
+  Fan: [0, 0.5, 1],
+  Heating: [0, 0.5, 1],
+  Other: [0, 0.5, 1],
+  TotalAutoConsumed: 1.5,
+  TotalCoolingConsumed: 1.5,
+  TotalDryConsumed: 1.5,
+  TotalFanConsumed: 1.5,
+  TotalHeatingConsumed: 1.5,
+  TotalOtherConsumed: 1.5,
+  UsageDisclaimerPercentages: '100, 100',
+}
+const validClassicEnergyAtw = {
+  CoP: [2.5, 3.1],
+  TotalCoolingConsumed: 0,
+  TotalCoolingProduced: 0,
+  TotalHeatingConsumed: 10.2,
+  TotalHeatingProduced: 30.4,
+  TotalHotWaterConsumed: 5.1,
+  TotalHotWaterProduced: 12.3,
+}
+
 const buildHomeContext = (overrides: Record<string, unknown>): unknown => ({
   buildings: [],
   country: 'FR',
@@ -286,6 +314,83 @@ describe('validation/schemas', () => {
       expect(() =>
         ClassicBuildingListSchema.parse(buildingWithDeviceType(value)),
       ).toThrow(/Type/u)
+    })
+  })
+
+  describe('classicEnergyDataSchemas', () => {
+    it('accepts a valid ATA energy payload', () => {
+      expect(() =>
+        ClassicEnergyDataAtaSchema.parse(validClassicEnergyAta),
+      ).not.toThrow()
+    })
+
+    it('accepts a valid ATW energy payload', () => {
+      expect(() =>
+        ClassicEnergyDataAtwSchema.parse(validClassicEnergyAtw),
+      ).not.toThrow()
+    })
+
+    it.each([
+      { label: 'missing', value: undefined },
+      { label: 'null', value: null },
+      { label: 'a string', value: '1.5' },
+      { label: 'Infinity', value: Number.POSITIVE_INFINITY },
+      { label: 'NaN', value: Number.NaN },
+    ])('rejects an ATA payload whose total is $label', ({ value }) => {
+      expect(() =>
+        ClassicEnergyDataAtaSchema.parse({
+          ...validClassicEnergyAta,
+          TotalHeatingConsumed: value,
+        }),
+      ).toThrow(/TotalHeatingConsumed/u)
+    })
+
+    it('rejects an ATA payload with a non-finite hourly entry', () => {
+      expect(() =>
+        ClassicEnergyDataAtaSchema.parse({
+          ...validClassicEnergyAta,
+          Heating: [0, Number.NaN, 1],
+        }),
+      ).toThrow(/Heating/u)
+    })
+
+    it.each([
+      { label: 'missing', value: undefined },
+      { label: 'null', value: null },
+      { label: 'a string', value: '1.5' },
+      { label: 'Infinity', value: Number.POSITIVE_INFINITY },
+      { label: 'NaN', value: Number.NaN },
+    ])('rejects an ATW payload whose total is $label', ({ value }) => {
+      expect(() =>
+        ClassicEnergyDataAtwSchema.parse({
+          ...validClassicEnergyAtw,
+          TotalHotWaterProduced: value,
+        }),
+      ).toThrow(/TotalHotWaterProduced/u)
+    })
+
+    it('rejects an ATW payload with a non-finite CoP entry', () => {
+      expect(() =>
+        ClassicEnergyDataAtwSchema.parse({
+          ...validClassicEnergyAtw,
+          CoP: [2.5, Number.NaN],
+        }),
+      ).toThrow(/CoP/u)
+    })
+
+    it('resolves the union for both device shapes', () => {
+      expect(() =>
+        ClassicEnergyDataSchema.parse(validClassicEnergyAta),
+      ).not.toThrow()
+      expect(() =>
+        ClassicEnergyDataSchema.parse(validClassicEnergyAtw),
+      ).not.toThrow()
+    })
+
+    it('rejects a payload matching neither device shape', () => {
+      expect(
+        ClassicEnergyDataSchema.safeParse({ Unrelated: true }).success,
+      ).toBe(false)
     })
   })
 })

@@ -8,7 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **Runtime validation of Classic `EnergyCost/Report` payloads.** `ClassicAPI.getEnergy` now validates the response against new Zod schemas (`ClassicEnergyDataAtaSchema`, `ClassicEnergyDataAtwSchema` and their union `ClassicEnergyDataSchema`). Every hourly bucket and total is checked to be a finite number, so a missing or non-numeric field surfaces as a `Result` failure with `kind: 'validation'` instead of propagating as a silent `NaN` through consumers' energy/power/COP arithmetic. This closes the gap on the trust boundary documented in [OlivierZal/com.melcloud#1359](https://github.com/OlivierZal/com.melcloud/pull/1359): the library is the layer responsible for validating MELCloud responses, and the Classic energy endpoint was the last consumed payload without runtime coverage.
 - **Build-provenance attestations on every published release.** The publish workflow now signs a [SLSA build-provenance attestation](https://docs.github.com/en/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds) (via `actions/attest-build-provenance`) that binds each published tarball to the exact workflow run and commit that produced it. Verify a downloaded package with `gh attestation verify <tarball> --repo OlivierZal/melcloud-api`. npm's own `--provenance` is specific to the public npm registry and cannot be used when publishing to GitHub Packages; GitHub Artifact Attestations are the registry-agnostic equivalent.
+
+### Other
+
+- Toolchain and CI hardening (practices already adopted in [OlivierZal/com.melcloud#1359](https://github.com/OlivierZal/com.melcloud/pull/1359)):
+  - `tsconfig.json` now declares `"strict": true` explicitly — it is the TypeScript 6 default, but third-party tools that read the config shouldn't have to know that.
+  - The `build` script compiles with stable `tsc` instead of the `tsgo` native preview (`typecheck` stays on `tsgo`).
+  - CI runs coverage and the Sonar upload only on the Node 22 matrix leg (the `engines` floor), and the `latest` leg is `continue-on-error` so brand-new Node releases never block CI.
+  - The audit workflow gained the `concurrency` block every other workflow already had.
+  - Added `.nvmrc` (`22`) so `nvm use` / editor tooling picks the supported runtime.
 
 ## [39.0.0] - 2026-05-25
 

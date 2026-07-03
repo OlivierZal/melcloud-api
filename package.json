@@ -42,7 +42,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsgo --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json",
     "docs": "typedoc",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
