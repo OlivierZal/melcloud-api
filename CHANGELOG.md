@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Other
 
+- Dependabot modernization (mirrors [OlivierZal/com.melcloud#1363](https://github.com/OlivierZal/com.melcloud/pull/1363)): auto-merge now squashes instead of creating merge commits (one commit per bump on `main`), all `github-actions` updates are grouped into a single weekly PR, and npm updates keep the 7-day cooldown as supply-chain protection (compromised releases are typically unpublished within days; security updates bypass the cooldown).
 - Toolchain and CI hardening (practices already adopted in [OlivierZal/com.melcloud#1359](https://github.com/OlivierZal/com.melcloud/pull/1359)):
   - `tsconfig.json` now declares `"strict": true` explicitly — it is the TypeScript 6 default, but third-party tools that read the config shouldn't have to know that.
   - CI runs coverage and the Sonar upload only on the current-LTS matrix leg (`lts/*` — modern yet stable, and always blocking so the quality gate cannot be skipped silently), and the `latest` leg is `continue-on-error` so brand-new Node releases never block CI.
