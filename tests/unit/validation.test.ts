@@ -99,6 +99,14 @@ const validClassicEnergyAtw = {
   TotalHotWaterProduced: 12.3,
 }
 
+// Drops the key entirely — unlike spreading `{ key: undefined }`, which
+// leaves a present-but-undefined property that JSON payloads never carry.
+const omitKey = (
+  payload: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> =>
+  Object.fromEntries(Object.entries(payload).filter(([name]) => name !== key))
+
 const buildHomeContext = (overrides: Record<string, unknown>): unknown => ({
   buildings: [],
   country: 'FR',
@@ -330,8 +338,16 @@ describe('validation/schemas', () => {
       ).not.toThrow()
     })
 
+    it('rejects an ATA payload missing a total', () => {
+      expect(() =>
+        ClassicEnergyDataAtaSchema.parse(
+          omitKey(validClassicEnergyAta, 'TotalHeatingConsumed'),
+        ),
+      ).toThrow(/TotalHeatingConsumed/u)
+    })
+
     it.each([
-      { label: 'missing', value: undefined },
+      { label: 'undefined', value: undefined },
       { label: 'null', value: null },
       { label: 'a string', value: '1.5' },
       { label: 'Infinity', value: Number.POSITIVE_INFINITY },
@@ -354,8 +370,16 @@ describe('validation/schemas', () => {
       ).toThrow(/Heating/u)
     })
 
+    it('rejects an ATW payload missing a total', () => {
+      expect(() =>
+        ClassicEnergyDataAtwSchema.parse(
+          omitKey(validClassicEnergyAtw, 'TotalHotWaterProduced'),
+        ),
+      ).toThrow(/TotalHotWaterProduced/u)
+    })
+
     it.each([
-      { label: 'missing', value: undefined },
+      { label: 'undefined', value: undefined },
       { label: 'null', value: null },
       { label: 'a string', value: '1.5' },
       { label: 'Infinity', value: Number.POSITIVE_INFINITY },
