@@ -1,6 +1,8 @@
 import { z } from 'zod'
 
 import type {
+  ClassicEnergyDataAta,
+  ClassicEnergyDataAtw,
   ClassicLoginData,
   HomeAtaDeviceCapabilities,
   HomeAtaDeviceData,
@@ -318,6 +320,53 @@ export const ClassicBuildingListSchema: z.ZodType<ClassicBuildingListEntry[]> =
       Structure: ClassicBuildingStructureSchema,
     }),
   )
+
+// Classic /EnergyCost/Report returns one flat numeric payload per
+// device type. Consumers feed the totals and hourly buckets straight
+// into energy/power/COP arithmetic, so a missing or non-numeric field
+// would otherwise propagate as a silent NaN instead of a traceable
+// ValidationError. `z.number()` already rejects NaN and ±Infinity, so
+// every validated field is guaranteed finite.
+
+/** Classic `/EnergyCost/Report` response for an ATA (air-to-air) device. */
+export const ClassicEnergyDataAtaSchema: z.ZodType<ClassicEnergyDataAta> =
+  z.looseObject({
+    Auto: z.array(z.number()),
+    Cooling: z.array(z.number()),
+    Dry: z.array(z.number()),
+    Fan: z.array(z.number()),
+    Heating: z.array(z.number()),
+    Other: z.array(z.number()),
+    TotalAutoConsumed: z.number(),
+    TotalCoolingConsumed: z.number(),
+    TotalDryConsumed: z.number(),
+    TotalFanConsumed: z.number(),
+    TotalHeatingConsumed: z.number(),
+    TotalOtherConsumed: z.number(),
+    UsageDisclaimerPercentages: z.string(),
+  })
+
+/** Classic `/EnergyCost/Report` response for an ATW (air-to-water) device. */
+export const ClassicEnergyDataAtwSchema: z.ZodType<ClassicEnergyDataAtw> =
+  z.looseObject({
+    CoP: z.array(z.number()),
+    TotalCoolingConsumed: z.number(),
+    TotalCoolingProduced: z.number(),
+    TotalHeatingConsumed: z.number(),
+    TotalHeatingProduced: z.number(),
+    TotalHotWaterConsumed: z.number(),
+    TotalHotWaterProduced: z.number(),
+  })
+
+/**
+ * Classic `/EnergyCost/Report` response for any energy-capable device
+ * type. ATA and ATW are the only shapes MELCloud can return (ERV maps
+ * to `energy: never` in `DeviceDataMapping`), and the two shapes are
+ * disjoint, so a plain union resolves unambiguously.
+ */
+export const ClassicEnergyDataSchema: z.ZodType<
+  ClassicEnergyDataAta | ClassicEnergyDataAtw
+> = z.union([ClassicEnergyDataAtaSchema, ClassicEnergyDataAtwSchema])
 
 /**
  * Parse `data` against `schema`; throw {@link ValidationError} on

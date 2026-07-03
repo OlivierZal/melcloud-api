@@ -48,6 +48,7 @@ import {
 import { isKeyOf } from '../utils.ts'
 import {
   ClassicBuildingListSchema,
+  ClassicEnergyDataSchema,
   ClassicLoginDataSchema,
   parseOrThrow,
 } from '../validation/index.ts'
@@ -277,10 +278,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ClassicEnergyPostData
   }): Promise<Result<ClassicEnergyData<T>>> {
+    // The generic T is erased at runtime; the ATA/ATW union schema
+    // covers every energy-capable device type (ERV has no energy data),
+    // so one runtime schema validates all reachable payloads.
     return this.safeRequest<ClassicEnergyData<T>>(
       'post',
       '/EnergyCost/Report',
-      { data: postData },
+      { data: postData, schema: ClassicEnergyDataSchema },
     )
   }
 
