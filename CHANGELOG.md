@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - `HttpError`: `new HttpError(message, response, config?)` → `new HttpError(message, { response, config?, cause? })`.
   - `RateLimitError` and `ValidationError` keep their public signatures but now forward the whole options bag to `super()`, so `cause` still lands on the standard `Error` chain — no observable behavior change.
 - **`HomeAPI`'s persisted `expiry` is now produced by `Temporal`** (`Temporal.Now.instant().add({ seconds }).toString()`) instead of `new Date(…).toISOString()`. The value remains an ISO 8601 UTC instant and is parsed by the same session-expiry reader; only the fractional-second rendering may differ (trailing zeros are trimmed). Stored sessions written by earlier versions parse unchanged.
+- **`temporal-polyfill` upgraded to its first stable major, `^1.0.1`** (was `^0.3.2`). The `Temporal.*` types are part of this library's public API (`RateLimitError.retryAfter`, `RateLimitError.unblockAt`, …), so consumers that install their own copy of the polyfill must align it to `^1` — mixing 0.x and 1.x instances would break cross-version `instanceof` checks. None of the upstream 1.0 breaking changes affect this library (ISO calendars only, no `Temporal.TimeZone`/`Temporal.Calendar` usage, ESM-only already, Node ≥ 22.19). Since v1 the polyfill also delegates to the native `Temporal` when the runtime ships one — turning the exit strategy announced in 39.0.0 into actual behavior.
 
 ### Changed
 
