@@ -25,6 +25,7 @@ const parseHttpDate = (
   value: string,
   now: Temporal.Instant,
 ): Temporal.Instant | null => {
+  // eslint-disable-next-line unicorn/prefer-temporal -- `Retry-After` HTTP-dates (IMF-fixdate) are not parsable by Temporal; `Date.parse` is the platform parser for them.
   const dateMs = Date.parse(value)
   if (Number.isNaN(dateMs) || dateMs <= now.epochMilliseconds) {
     return null

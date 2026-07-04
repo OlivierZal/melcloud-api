@@ -717,11 +717,10 @@ describe('baseAPI shared request pipeline', () => {
 // HttpError, non-HttpError) traceable in isolation.
 describe(normalizeUnauthorized, () => {
   it('wraps a 401 HttpError into AuthenticationError with original as cause', () => {
-    const http = new HttpError(
-      'Unauthorized',
-      { data: undefined, headers: {}, status: 401 },
-      { url: '/context' },
-    )
+    const http = new HttpError('Unauthorized', {
+      config: { url: '/context' },
+      response: { data: undefined, headers: {}, status: 401 },
+    })
 
     const result = normalizeUnauthorized(http)
 
@@ -730,11 +729,10 @@ describe(normalizeUnauthorized, () => {
   })
 
   it('passes non-401 HttpErrors through unchanged', () => {
-    const http = new HttpError(
-      'Server error',
-      { data: undefined, headers: {}, status: 500 },
-      { url: '/context' },
-    )
+    const http = new HttpError('Server error', {
+      config: { url: '/context' },
+      response: { data: undefined, headers: {}, status: 500 },
+    })
 
     expect(normalizeUnauthorized(http)).toBe(http)
   })

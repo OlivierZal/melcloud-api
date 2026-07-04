@@ -6,7 +6,7 @@ import type { SyncCallback } from '../../src/api/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import { HttpError } from '../../src/http/index.ts'
-import { MS_PER_HOUR } from '../../src/time-units.ts'
+import { Temporal } from '../../src/temporal.ts'
 import {
   type ClassicBuildingWithStructure,
   type ClassicListDevice,
@@ -30,11 +30,10 @@ import {
 } from '../helpers.ts'
 
 const transientError = (status: number): HttpError =>
-  new HttpError(
-    `Status ${String(status)}`,
-    { data: {}, headers: {}, status },
-    { url: '/User/ListDevices' },
-  )
+  new HttpError(`Status ${String(status)}`, {
+    config: { url: '/User/ListDevices' },
+    response: { data: {}, headers: {}, status },
+  })
 
 const buildingResponse: ClassicBuildingWithStructure[] = [
   mock<ClassicBuildingWithStructure>({
@@ -294,13 +293,14 @@ describe('api lifecycle', () => {
     mockRequest.mockImplementation(
       // eslint-disable-next-line @typescript-eslint/require-await -- vitest mockImplementation signature requires async
       async (config) =>
-        config.url === '/FrostProtection/Update' ?
-          cast({
-            data: { AttributeErrors: null, Success: true },
-            headers: {},
-            status: 200,
-          })
-        : cast({ data: buildingResponse, headers: {}, status: 200 }),
+        cast({
+          data:
+            config.url === '/FrostProtection/Update' ?
+              { AttributeErrors: null, Success: true }
+            : buildingResponse,
+          headers: {},
+          status: 200,
+        }),
     )
     onSyncComplete.mockClear()
 
@@ -365,11 +365,10 @@ describe('api lifecycle', () => {
     // `Retry-After`, so subsequent requests fail fast with
     // `RateLimitError` from the gate check — no HTTP call is issued.
     it('rate-limit 429 closes the gate and short-circuits the next request', async () => {
-      const rateLimitError = new HttpError(
-        'Status 429',
-        { data: {}, headers: { 'retry-after': '60' }, status: 429 },
-        { url: '/User/ListDevices' },
-      )
+      const rateLimitError = new HttpError('Status 429', {
+        config: { url: '/User/ListDevices' },
+        response: { data: {}, headers: { 'retry-after': '60' }, status: 429 },
+      })
       mockRequest.mockRejectedValue(rateLimitError)
       const api = await melCloudApi.create({
         syncIntervalMinutes: false,
@@ -484,7 +483,7 @@ describe('api lifecycle', () => {
     })
 
     it('reuses a valid persisted session without triggering OIDC', async () => {
-      const futureExpiry = new Date(Date.now() + MS_PER_HOUR).toISOString()
+      const futureExpiry = Temporal.Now.instant().add({ hours: 1 }).toString()
       const { settingManager } = createSettingStore({
         accessToken: 'valid',
         expiry: futureExpiry,
@@ -522,7 +521,9 @@ describe('api lifecycle', () => {
     })
 
     it('refreshes an expired access token and persists the new tokens', async () => {
-      const pastExpiry = new Date(Date.now() - MS_PER_HOUR).toISOString()
+      const pastExpiry = Temporal.Now.instant()
+        .subtract({ hours: 1 })
+        .toString()
       const { setSpy, settingManager } = createSettingStore({
         accessToken: 'expired',
         expiry: pastExpiry,

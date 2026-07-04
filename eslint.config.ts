@@ -502,10 +502,59 @@ const config = defineConfig([
       'perfectionist/sort-union-types': ['error', typeSortOptions],
       'sort-imports': 'off',
       'sort-keys': 'off',
+      // Autofix rewrites `@param url` into `@param URL`, breaking the
+      // JSDoc/TSDoc param-name matching.
+      'unicorn/comment-content': 'off',
+      // Boolean naming is already governed by
+      // `@typescript-eslint/naming-convention` (tuned prefixes, documented
+      // `device` exception); also flags UPPER_CASE boolean constants.
+      'unicorn/consistent-boolean-name': 'off',
+      // Class member order is owned by `perfectionist/sort-classes`.
+      'unicorn/consistent-class-member-order': 'off',
+      // Zod schemas and test fixtures nest calls by design.
+      'unicorn/max-nested-calls': 'off',
+      // Renamed successor of `prevent-abbreviations`; its suggestions
+      // (`error_`) also conflict with `naming-convention`'s
+      // `trailingUnderscore: 'forbid'`.
+      'unicorn/name-replacements': 'off',
+      // The project keeps standard JSDoc/TSDoc formatting (per-line `*`
+      // prefixes) consumed by eslint-plugin-jsdoc and typedoc.
+      'unicorn/no-asterisk-prefix-in-documentation-comments': 'off',
+      // `key in obj` filters on zod-parsed plain objects are type-safe;
+      // switching to Map/Set is not warranted here.
+      'unicorn/no-computed-property-existence-check': 'off',
       'unicorn/no-keyword-prefix': 'off',
+      // Prose comments are hand-wrapped deliberately.
+      'unicorn/no-manually-wrapped-comments': 'off',
+      // False-positives on `setCookie`, the value of the HTTP `Set-Cookie`
+      // header.
+      'unicorn/no-non-function-verb-prefix': 'off',
+      // `Symbol.dispose` is standard (ES2026, available in Node 22) but
+      // unknown to this rule.
+      'unicorn/no-nonstandard-builtin-properties': 'off',
       'unicorn/no-null': 'off',
+      // Decorators use explicitly typed `this`, checked by TypeScript —
+      // same rationale as `@typescript-eslint/no-invalid-this: off`.
+      'unicorn/no-this-outside-of-class': 'off',
+      // `new URL(x, base).href` is idiomatic.
+      'unicorn/no-unreadable-new-expression': 'off',
+      // Destructuring into `this.*` is required by
+      // `@typescript-eslint/prefer-destructuring`
+      // (`enforceForRenamedProperties`).
+      'unicorn/no-unreadable-object-destructuring': 'off',
       'unicorn/no-useless-switch-case': 'off',
-      'unicorn/prevent-abbreviations': 'off',
+      // Fire-and-forget `.catch()` in timer callbacks is the observability
+      // pattern; `await` is not available in those synchronous callbacks.
+      'unicorn/prefer-await': 'off',
+      // `Error.isError()` requires Node 24+; re-enable when `engines.node`
+      // ≥ 24.
+      'unicorn/prefer-error-is-error': 'off',
+      // `Uint8Array#toBase64()` requires Node 24+; re-enable when
+      // `engines.node` ≥ 24.
+      'unicorn/prefer-uint8array-base64': 'off',
+      // The default `max: 1` is stricter than the project's deliberate
+      // try blocks of complexity 2.
+      'unicorn/try-complexity': 'off',
     },
     settings: {
       perfectionist: {

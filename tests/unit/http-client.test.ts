@@ -28,11 +28,10 @@ const extractUrl = (): string => {
 
 describe('httpError', () => {
   it('carries response payload, headers, and status', () => {
-    const error = new HttpError(
-      'boom',
-      { data: { reason: 'x' }, headers: { 'x-y': 'z' }, status: 500 },
-      { method: 'GET', url: '/where' },
-    )
+    const error = new HttpError('boom', {
+      config: { method: 'GET', url: '/where' },
+      response: { data: { reason: 'x' }, headers: { 'x-y': 'z' }, status: 500 },
+    })
 
     expect(error.message).toBe('boom')
     expect(error.response.status).toBe(500)
@@ -46,9 +45,7 @@ describe('httpError', () => {
 
   it('omits config when the caller did not pass one', () => {
     const error = new HttpError('boom', {
-      data: null,
-      headers: {},
-      status: 500,
+      response: { data: null, headers: {}, status: 500 },
     })
 
     expect(error.config).toBeUndefined()
@@ -58,9 +55,7 @@ describe('httpError', () => {
 describe(isHttpError, () => {
   it('narrows HttpError instances', () => {
     const error = new HttpError('boom', {
-      data: null,
-      headers: {},
-      status: 500,
+      response: { data: null, headers: {}, status: 500 },
     })
 
     expect(isHttpError(error)).toBe(true)

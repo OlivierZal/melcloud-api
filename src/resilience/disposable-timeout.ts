@@ -19,10 +19,12 @@ export class DisposableTimeout implements Disposable {
 
   /** Cancel the current timeout if one is active. */
   public clear(): void {
-    if (this.#timeout !== undefined) {
-      clearTimeout(this.#timeout)
-      this.#timeout = undefined
+    if (this.#timeout === undefined) {
+      return
     }
+
+    clearTimeout(this.#timeout)
+    this.#timeout = undefined
   }
 
   /** Clear the timeout on disposal, preventing leaked timers. */

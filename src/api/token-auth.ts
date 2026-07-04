@@ -83,10 +83,9 @@ interface SubmitCredentialsOptions {
 const readResponseHeaders = (
   headers: Headers,
 ): Record<string, string | string[]> => {
-  const result: Record<string, string | string[]> = {}
-  for (const [key, value] of headers.entries()) {
-    result[key] = value
-  }
+  const result: Record<string, string | string[]> = Object.fromEntries(
+    headers.entries(),
+  )
   const setCookie = headers.getSetCookie()
   if (setCookie.length > 0) {
     result['set-cookie'] = setCookie
@@ -109,7 +108,7 @@ const fetchPostForm = async ({
     body,
     headers,
     method: 'POST',
-    ...(abortSignal === undefined ? {} : { signal: abortSignal }),
+    ...(abortSignal !== undefined && { signal: abortSignal }),
   })
   const responseHeaders = readResponseHeaders(response.headers)
   const text = await response.text()
@@ -136,10 +135,8 @@ const fetchRaw = async (
     headers: options.config.headers,
     method: options.method.toUpperCase(),
     redirect: 'manual',
-    ...(options.config.data === undefined ? {} : { body: options.config.data }),
-    ...(options.abortSignal === undefined ?
-      {}
-    : { signal: options.abortSignal }),
+    ...(options.config.data !== undefined && { body: options.config.data }),
+    ...(options.abortSignal !== undefined && { signal: options.abortSignal }),
   })
   const headers = readResponseHeaders(response.headers)
   const data = await response.text()
@@ -189,17 +186,17 @@ const authRequest = async ({
   const cookieHeader = await jar.getCookieString(url)
   const mergedHeaders: Record<string, string> = {
     ...config.headers,
-    ...(cookieHeader === '' ? {} : { Cookie: cookieHeader }),
+    ...(cookieHeader !== '' && { Cookie: cookieHeader }),
   }
   const response = await fetchRaw({
     config: {
       headers: mergedHeaders,
-      ...(config.data === undefined ? {} : { data: config.data }),
+      ...(config.data !== undefined && { data: config.data }),
     },
     jar,
     method,
     url,
-    ...(abortSignal === undefined ? {} : { abortSignal }),
+    ...(abortSignal !== undefined && { abortSignal }),
   })
   await storeCookies(jar, response, url)
   return response
@@ -220,7 +217,7 @@ const extractFormAction = (html: string): string | null => {
   if (encoded === undefined) {
     return null
   }
-  const action = encoded.split('&amp;').join('&')
+  const action = encoded.replaceAll('&amp;', '&')
   return action.startsWith('/') ? `${COGNITO_AUTHORITY}${action}` : action
 }
 
@@ -231,7 +228,7 @@ const extractFormAction = (html: string): string | null => {
  */
 const extractHiddenFields = (html: string): Record<string, string> =>
   Object.fromEntries(
-    [...html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu)].flatMap(([tag]) => {
+    html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu).flatMap(([tag]) => {
       const name = /name="(?<name>[^"]+)"/u.exec(tag)?.groups?.name
       const value = /value="(?<value>[^"]*)"/u.exec(tag)?.groups?.value ?? ''
       return name === undefined ? [] : [[name, value] as const]
@@ -249,7 +246,7 @@ const extractHiddenFields = (html: string): Record<string, string> =>
  */
 const extractRedirectUrl = (html: string, regex: RegExp): string | null => {
   const url = regex.exec(html)?.groups?.url
-  return url === undefined ? null : url.split('&amp;').join('&')
+  return url === undefined ? null : url.replaceAll('&amp;', '&')
 }
 
 /**
@@ -347,7 +344,7 @@ const authFollowRedirects = async ({
     jar,
     method: 'get',
     url,
-    ...(abortSignal === undefined ? {} : { abortSignal }),
+    ...(abortSignal !== undefined && { abortSignal }),
   })
   const redirectTarget = extractRedirectTarget(response, url)
   if (redirectTarget !== null) {
@@ -355,7 +352,7 @@ const authFollowRedirects = async ({
       jar,
       remaining: remaining - 1,
       url: redirectTarget,
-      ...(abortSignal === undefined ? {} : { abortSignal }),
+      ...(abortSignal !== undefined && { abortSignal }),
     })
   }
   return { data: response.data, url }
@@ -394,7 +391,7 @@ const par = async ({
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     url: `${AUTH_BASE_URL}${PAR_PATH}`,
-    ...(abortSignal === undefined ? {} : { abortSignal }),
+    ...(abortSignal !== undefined && { abortSignal }),
   })
   return parseOrThrow(HomeParResponseSchema, data, 'OIDC PAR endpoint')
     .request_uri
@@ -418,7 +415,7 @@ const submitCredentials = async ({
   const { data: html } = await authFollowRedirects({
     jar,
     url: authorizeUrl,
-    ...(abortSignal === undefined ? {} : { abortSignal }),
+    ...(abortSignal !== undefined && { abortSignal }),
   })
   const action = extractFormAction(html)
   if (action === null) {
@@ -437,7 +434,7 @@ const submitCredentials = async ({
     jar,
     method: 'post',
     url: action,
-    ...(abortSignal === undefined ? {} : { abortSignal }),
+    ...(abortSignal !== undefined && { abortSignal }),
   })
   const callbackLocation = String(submitResponse.headers.location ?? '')
   if (callbackLocation === '') {
@@ -461,7 +458,7 @@ const extractAuthorizationCode = async (
   const { url } = await authFollowRedirects({
     jar,
     url: callbackUrl,
-    ...(abortSignal === undefined ? {} : { abortSignal }),
+    ...(abortSignal !== undefined && { abortSignal }),
   })
   const code = new URL(url).searchParams.get('code')
   if (code === null) {
@@ -491,7 +488,7 @@ const tokenRequest = async ({
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     url: `${AUTH_BASE_URL}${TOKEN_PATH}`,
-    ...(abortSignal === undefined ? {} : { abortSignal }),
+    ...(abortSignal !== undefined && { abortSignal }),
   })
   return parseOrThrow(HomeTokenResponseSchema, tokens, 'OIDC token endpoint')
 }
@@ -521,7 +518,7 @@ export const performTokenAuth = async ({
 
   const requestUri = await par({
     challenge,
-    ...(abortSignal === undefined ? {} : { abortSignal }),
+    ...(abortSignal !== undefined && { abortSignal }),
   })
   const authorizeUrl = `${AUTH_BASE_URL}/connect/authorize?client_id=${CLIENT_ID}&request_uri=${encodeURIComponent(requestUri)}`
 
@@ -529,7 +526,7 @@ export const performTokenAuth = async ({
     authorizeUrl,
     credentials,
     jar,
-    ...(abortSignal === undefined ? {} : { abortSignal }),
+    ...(abortSignal !== undefined && { abortSignal }),
   })
   const code = await extractAuthorizationCode(callbackUrl, jar, abortSignal)
 
@@ -541,7 +538,7 @@ export const performTokenAuth = async ({
       grant_type: 'authorization_code',
       redirect_uri: REDIRECT_URI,
     },
-    ...(abortSignal === undefined ? {} : { abortSignal }),
+    ...(abortSignal !== undefined && { abortSignal }),
   })
 }
 
@@ -575,7 +572,7 @@ export const refreshAccessToken = async ({
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
       },
-      ...(abortSignal === undefined ? {} : { abortSignal }),
+      ...(abortSignal !== undefined && { abortSignal }),
     })
   } catch (error) {
     logger?.error('Refresh token exchange failed:', error)

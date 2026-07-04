@@ -350,8 +350,8 @@ describe('validation/schemas', () => {
       { label: 'undefined', value: undefined },
       { label: 'null', value: null },
       { label: 'a string', value: '1.5' },
-      { label: 'Infinity', value: Number.POSITIVE_INFINITY },
-      { label: 'NaN', value: Number.NaN },
+      { label: 'Infinity', value: Infinity },
+      { label: 'NaN', value: NaN },
     ])('rejects an ATA payload whose total is $label', ({ value }) => {
       expect(() =>
         ClassicEnergyDataAtaSchema.parse({
@@ -365,7 +365,7 @@ describe('validation/schemas', () => {
       expect(() =>
         ClassicEnergyDataAtaSchema.parse({
           ...validClassicEnergyAta,
-          Heating: [0, Number.NaN, 1],
+          Heating: [0, NaN, 1],
         }),
       ).toThrow(/Heating/u)
     })
@@ -382,8 +382,8 @@ describe('validation/schemas', () => {
       { label: 'undefined', value: undefined },
       { label: 'null', value: null },
       { label: 'a string', value: '1.5' },
-      { label: 'Infinity', value: Number.POSITIVE_INFINITY },
-      { label: 'NaN', value: Number.NaN },
+      { label: 'Infinity', value: Infinity },
+      { label: 'NaN', value: NaN },
     ])('rejects an ATW payload whose total is $label', ({ value }) => {
       expect(() =>
         ClassicEnergyDataAtwSchema.parse({
@@ -397,7 +397,7 @@ describe('validation/schemas', () => {
       expect(() =>
         ClassicEnergyDataAtwSchema.parse({
           ...validClassicEnergyAtw,
-          CoP: [2.5, Number.NaN],
+          CoP: [2.5, NaN],
         }),
       ).toThrow(/CoP/u)
     })

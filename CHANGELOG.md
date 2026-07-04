@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Breaking
+
+- **Error constructors now take an `options` bag as the second parameter**, aligning every custom error with the native `Error(message, options)` shape (and with `eslint-plugin-unicorn` v70's stricter `custom-error-definition`):
+  - `EntityNotFoundError`: `new EntityNotFoundError(tableName, entityId, options?)` → `new EntityNotFoundError(tableName, { entityId, cause? })`.
+  - `HttpError`: `new HttpError(message, response, config?)` → `new HttpError(message, { response, config?, cause? })`.
+  - `RateLimitError` and `ValidationError` keep their public signatures but now forward the whole options bag to `super()`, so `cause` still lands on the standard `Error` chain — no observable behavior change.
+- **`HomeAPI`'s persisted `expiry` is now produced by `Temporal`** (`Temporal.Now.instant().add({ seconds }).toString()`) instead of `new Date(…).toISOString()`. The value remains an ISO 8601 UTC instant and is parsed by the same session-expiry reader; only the fractional-second rendering may differ (trailing zeros are trimmed). Stored sessions written by earlier versions parse unchanged.
+
+### Changed
+
+- **`eslint-plugin-unicorn` 64 → 70** under the `all` preset — the plugin more than doubled (147 → 325 rules), so the whole delta was audited against the codebase (823 pre-existing violations across 29 rules):
+  - 20 new rules are disabled in `eslint.config.ts`, each with an inline rationale: naming rules that duplicate or contradict the tuned `@typescript-eslint/naming-convention` (`name-replacements` — the renamed `prevent-abbreviations` — suggests `error_`-style trailing underscores it forbids), JSDoc/TSDoc-hostile comment rules (`no-asterisk-prefix-in-documentation-comments` alone flagged 505 standard doc lines), rules conflicting with `perfectionist/sort-classes` and `@typescript-eslint/prefer-destructuring`, rules whose autofix requires Node 24+ built-ins (`Error.isError()`, `Uint8Array#toBase64()`) while `engines.node` is ≥ 22.19, and project-level false positives (`Symbol.dispose` flagged as non-standard, typed `this` in decorators, zod call-nesting depth).
+  - The rest of the delta was adopted: conditional object spreads use the logical form (`…(cond && { key })`), `NaN`/`Infinity` globals replace `Number.NaN`/`Number.POSITIVE_INFINITY` (unicorn v70 reversed its own doctrine here), iterator helpers replace spread-into-array (`map.values().toArray()`, iterator `filter`/`flatMap` chains), and the remaining `Date` usages moved to `Temporal` (chart-label epochs via `Temporal.PlainDate`, test fixtures via `Temporal.Now`/`Temporal.Instant`) — the single justified exception is `Date.parse` for RFC 9110 `Retry-After` HTTP-dates, which `Temporal` cannot parse.
+
 ### Added
 
 - **Runtime validation of Classic `EnergyCost/Report` payloads.** `ClassicAPI.getEnergy` now validates the response against new Zod schemas (`ClassicEnergyDataAtaSchema`, `ClassicEnergyDataAtwSchema` and their union `ClassicEnergyDataSchema`). Every hourly bucket and total is checked to be a finite number, so a missing or non-numeric field surfaces as a `Result` failure with `kind: 'validation'` instead of propagating as a silent `NaN` through consumers' energy/power/COP arithmetic. This closes the gap on the trust boundary documented in [OlivierZal/com.melcloud#1359](https://github.com/OlivierZal/com.melcloud/pull/1359): the library is the layer responsible for validating MELCloud responses, and the Classic energy endpoint was the last consumed payload without runtime coverage.

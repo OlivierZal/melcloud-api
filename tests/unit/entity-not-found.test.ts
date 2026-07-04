@@ -8,20 +8,20 @@ import {
 
 describe.concurrent('entityNotFoundError', () => {
   it('formats the message identically to the legacy Error', () => {
-    const error = new EntityNotFoundError('DeviceLocation', 42)
+    const error = new EntityNotFoundError('DeviceLocation', { entityId: 42 })
 
     expect(error.message).toBe('DeviceLocation with id 42 not found')
   })
 
   it('exposes tableName and entityId for programmatic handling', () => {
-    const error = new EntityNotFoundError('ClassicArea', 7)
+    const error = new EntityNotFoundError('ClassicArea', { entityId: 7 })
 
     expect(error.tableName).toBe('ClassicArea')
     expect(error.entityId).toBe(7)
   })
 
   it('is an instance of Error, APIError, and EntityNotFoundError', () => {
-    const error = new EntityNotFoundError('ClassicBuilding', 1)
+    const error = new EntityNotFoundError('ClassicBuilding', { entityId: 1 })
 
     expect(error).toBeInstanceOf(Error)
     expect(error).toBeInstanceOf(APIError)
@@ -29,20 +29,20 @@ describe.concurrent('entityNotFoundError', () => {
   })
 
   it('is detected by the isAPIError type guard', () => {
-    const error = new EntityNotFoundError('ClassicFloor', 3)
+    const error = new EntityNotFoundError('ClassicFloor', { entityId: 3 })
 
     expect(isAPIError(error)).toBe(true)
   })
 
   it('preserves the original rejection as `cause`', () => {
     const cause = new Error('upstream')
-    const error = new EntityNotFoundError('ClassicArea', 9, { cause })
+    const error = new EntityNotFoundError('ClassicArea', { cause, entityId: 9 })
 
     expect(error.cause).toBe(cause)
   })
 
   it('sets name to "EntityNotFoundError"', () => {
-    const error = new EntityNotFoundError('DeviceLocation', 1)
+    const error = new EntityNotFoundError('DeviceLocation', { entityId: 1 })
 
     expect(error.name).toBe('EntityNotFoundError')
   })

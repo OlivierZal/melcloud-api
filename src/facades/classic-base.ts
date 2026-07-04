@@ -144,7 +144,7 @@ export abstract class ClassicBaseFacade<
   protected get instance(): T {
     const instance = this.model.getById(this.id)
     if (!instance) {
-      throw new EntityNotFoundError(this.tableName, this.id)
+      throw new EntityNotFoundError(this.tableName, { entityId: this.id })
     }
     return instance
   }

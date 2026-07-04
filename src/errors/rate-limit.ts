@@ -46,8 +46,8 @@ export class RateLimitError extends APIError {
       cause?: unknown
     },
   ) {
-    const { cause, retryAfter, unblockAt } = options
-    super(message, { cause })
+    const { retryAfter, unblockAt } = options
+    super(message, options)
     this.retryAfter = retryAfter
     this.unblockAt = unblockAt
   }

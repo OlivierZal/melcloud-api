@@ -1,11 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { isSessionExpired } from '../../src/resilience/session-expiry.ts'
+import { Temporal } from '../../src/temporal.ts'
 
 describe(isSessionExpired, () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-04-11T12:00:00Z'))
+    vi.setSystemTime(
+      Temporal.Instant.from('2026-04-11T12:00:00Z').epochMilliseconds,
+    )
   })
 
   afterEach(() => {

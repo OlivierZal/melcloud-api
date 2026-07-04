@@ -9,7 +9,9 @@ import { Temporal } from '../../src/temporal.ts'
 describe(RateLimitGate, () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-04-11T12:00:00Z'))
+    vi.setSystemTime(
+      Temporal.Instant.from('2026-04-11T12:00:00Z').epochMilliseconds,
+    )
   })
 
   afterEach(() => {
@@ -106,7 +108,7 @@ describe(RateLimitGate, () => {
   it('falls back when Retry-After is a non-finite number', () => {
     const gate = new RateLimitGate({ hours: 2 })
 
-    gate.recordRateLimit(Number.NaN)
+    gate.recordRateLimit(NaN)
 
     expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
   })
