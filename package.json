@@ -57,7 +57,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "temporal-polyfill": "^0.3.2",
+    "temporal-polyfill": "^1.0.1",
     "tough-cookie": "^6.0.1",
     "undici": "^8.5.0",
     "zod": "^4.4.3"

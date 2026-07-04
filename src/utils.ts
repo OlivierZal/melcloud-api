@@ -11,7 +11,7 @@ import type {
   KeyOfClassicSetDeviceDataAtaNotInList,
 } from './types/index.ts'
 import { type ClassicDeviceType, ClassicLabelType } from './constants.ts'
-import { Temporal } from './temporal.ts'
+import { Intl, Temporal } from './temporal.ts'
 
 // API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
 const YEAR_MONTH_DIVISOR = 100
@@ -30,6 +30,9 @@ interface LabelFormatterCache {
 // locale reuse the same formatter pair without re-allocating on each
 // chart-options call. Modern best practice: the locale is carried as
 // an explicit argument by each call site, never via a mutable global.
+// The formatters come from the polyfill's Temporal-aware `Intl` and
+// consume `Temporal.PlainDate` values directly; plain types format
+// their own calendar fields, so no `timeZone` option is involved.
 const formatterCacheByLocale = new Map<string, LabelFormatterCache>()
 
 const getLabelFormatters = (
@@ -42,12 +45,10 @@ const getLabelFormatters = (
   }
   const cache: LabelFormatterCache = {
     dayOfWeek: new Intl.DateTimeFormat(locale, {
-      timeZone: 'UTC',
       weekday: 'short',
     }),
     month: new Intl.DateTimeFormat(locale, {
       month: 'short',
-      timeZone: 'UTC',
     }),
   }
   formatterCacheByLocale.set(key, cache)
@@ -142,13 +143,6 @@ export const isSetDeviceDataAtaInList: (
   key: PropertyKey,
 ) => key is keyof ClassicSetDeviceDataAtaInList = isKeyOf(fromListToSetAta)
 
-// UTC midnight of the given calendar date as epoch milliseconds — the
-// input shape `Intl.DateTimeFormat#format` accepts. Month is 1-indexed
-// (`Temporal` convention), unlike the retired `Date.UTC`.
-const utcEpochMs = (year: number, month: number, day: number): number =>
-  new Temporal.PlainDate(year, month, day).toZonedDateTime('UTC')
-    .epochMilliseconds
-
 // Strategy map: transform raw API label formats into human-readable strings
 // based on report granularity (day of week, month name, year-month, etc.)
 // The closure receives the resolved per-call locale so repeat calls with
@@ -160,11 +154,11 @@ const buildLabelFormatters = (
   return {
     [ClassicLabelType.day_of_week]: (label) =>
       formatters.dayOfWeek.format(
-        utcEpochMs(DAY_OF_WEEK_BASE_YEAR, 1, Number(label)),
+        new Temporal.PlainDate(DAY_OF_WEEK_BASE_YEAR, 1, Number(label)),
       ),
     [ClassicLabelType.month]: (label) =>
       formatters.month.format(
-        utcEpochMs(MONTH_NAME_BASE_YEAR, Number(label), 1),
+        new Temporal.PlainDate(MONTH_NAME_BASE_YEAR, Number(label), 1),
       ),
     [ClassicLabelType.month_of_year]: (label): string => {
       const year = Math.floor(Number(label) / YEAR_MONTH_DIVISOR)
@@ -172,7 +166,9 @@ const buildLabelFormatters = (
 
       // Format month and year separately to preserve the "MMM yyyy" ordering
       // across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
-      const monthName = formatters.month.format(utcEpochMs(year, month, 1))
+      const monthName = formatters.month.format(
+        new Temporal.PlainDate(year, month, 1),
+      )
       return `${monthName} ${String(year)}`
     },
     [ClassicLabelType.raw]: (label) => label,

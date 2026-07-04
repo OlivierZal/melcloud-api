@@ -11,6 +11,7 @@ import type {
 import { BaseAPI, normalizeUnauthorized } from '../../src/api/base.ts'
 import { AuthenticationError, RateLimitError } from '../../src/errors/index.ts'
 import { type HttpResponse, HttpError } from '../../src/http/index.ts'
+import { Temporal } from '../../src/temporal.ts'
 import {
   cast,
   createHttpError,
@@ -20,6 +21,7 @@ import {
   createSettingStore,
   createUnauthorizedError,
   mock,
+  mockTemporalNowInstant,
 } from '../helpers.ts'
 
 const { client: mockHttpClient, requestSpy: mockRequest } =
@@ -151,6 +153,7 @@ describe('baseAPI shared request pipeline', () => {
 
   beforeEach(() => {
     vi.useFakeTimers()
+    mockTemporalNowInstant()
     mockRequest.mockResolvedValue({
       data: {},
       headers: {},
@@ -161,6 +164,7 @@ describe('baseAPI shared request pipeline', () => {
 
   afterEach(() => {
     api[Symbol.dispose]()
+    vi.mocked(Temporal.Now.instant).mockRestore()
     vi.useRealTimers()
   })
 
