@@ -22,10 +22,14 @@
 declare module 'temporal-spec' {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- namespace merging is the only way to add the missing value declaration to temporal-spec's type-only `Intl` namespace
   namespace Intl {
-    const DateTimeFormat: new (
-      locales?: string | string[],
-      options?: globalThis.Intl.DateTimeFormatOptions,
-    ) => DateTimeFormat
+    const DateTimeFormat: Pick<
+      typeof globalThis.Intl.DateTimeFormat,
+      'supportedLocalesOf'
+    > &
+      (new (
+        locales?: string | string[],
+        options?: globalThis.Intl.DateTimeFormatOptions,
+      ) => DateTimeFormat)
   }
 }
 
