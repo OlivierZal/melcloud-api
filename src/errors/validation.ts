@@ -28,8 +28,8 @@ export class ValidationError extends APIError {
     message: string,
     options: { context: string; cause?: unknown },
   ) {
-    const { cause, context } = options
-    super(message, { cause })
+    const { context } = options
+    super(message, options)
     this.context = context
   }
 }

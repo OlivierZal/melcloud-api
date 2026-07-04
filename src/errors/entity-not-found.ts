@@ -36,15 +36,15 @@ export class EntityNotFoundError extends APIError {
    * Builds the error from the registry table and the unresolved entity id;
    * the message bakes both into a human-readable summary.
    * @param tableName - Registry table the lookup was performed against.
-   * @param entityId - Id that could not be resolved.
-   * @param options - Optional bag carrying the underlying cause.
+   * @param options - Unresolved entity id plus optional cause.
+   * @param options.entityId - Id that could not be resolved.
    * @param options.cause - Original error that triggered this one.
    */
   public constructor(
     tableName: ClassicSettingsParams['tableName'],
-    entityId: number,
-    options?: { cause?: unknown },
+    options: { entityId: number; cause?: unknown },
   ) {
+    const { entityId } = options
     super(`${tableName} with id ${String(entityId)} not found`, options)
     this.tableName = tableName
     this.entityId = entityId

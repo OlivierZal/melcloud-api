@@ -24,7 +24,7 @@ export class HomeRegistry {
    * @returns All devices.
    */
   public getAll(): HomeDevice[] {
-    return [...this.#devices.values()]
+    return this.#devices.values().toArray()
   }
 
   /**

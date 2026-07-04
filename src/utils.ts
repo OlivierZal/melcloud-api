@@ -142,6 +142,13 @@ export const isSetDeviceDataAtaInList: (
   key: PropertyKey,
 ) => key is keyof ClassicSetDeviceDataAtaInList = isKeyOf(fromListToSetAta)
 
+// UTC midnight of the given calendar date as epoch milliseconds — the
+// input shape `Intl.DateTimeFormat#format` accepts. Month is 1-indexed
+// (`Temporal` convention), unlike the retired `Date.UTC`.
+const utcEpochMs = (year: number, month: number, day: number): number =>
+  new Temporal.PlainDate(year, month, day).toZonedDateTime('UTC')
+    .epochMilliseconds
+
 // Strategy map: transform raw API label formats into human-readable strings
 // based on report granularity (day of week, month name, year-month, etc.)
 // The closure receives the resolved per-call locale so repeat calls with
@@ -153,19 +160,19 @@ const buildLabelFormatters = (
   return {
     [ClassicLabelType.day_of_week]: (label) =>
       formatters.dayOfWeek.format(
-        Date.UTC(DAY_OF_WEEK_BASE_YEAR, 0, Number(label)),
+        utcEpochMs(DAY_OF_WEEK_BASE_YEAR, 1, Number(label)),
       ),
     [ClassicLabelType.month]: (label) =>
       formatters.month.format(
-        Date.UTC(MONTH_NAME_BASE_YEAR, Number(label) - 1, 1),
+        utcEpochMs(MONTH_NAME_BASE_YEAR, Number(label), 1),
       ),
     [ClassicLabelType.month_of_year]: (label): string => {
       const year = Math.floor(Number(label) / YEAR_MONTH_DIVISOR)
-      const month = (Number(label) % YEAR_MONTH_DIVISOR) - 1
+      const month = Number(label) % YEAR_MONTH_DIVISOR
 
       // Format month and year separately to preserve the "MMM yyyy" ordering
       // across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
-      const monthName = formatters.month.format(Date.UTC(year, month, 1))
+      const monthName = formatters.month.format(utcEpochMs(year, month, 1))
       return `${monthName} ${String(year)}`
     },
     [ClassicLabelType.raw]: (label) => label,

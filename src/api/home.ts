@@ -16,7 +16,7 @@ import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
 import { HomeRegistry } from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
-import { MS_PER_SECOND, SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
+import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
   HomeContextSchema,
   HomeEnergyDataSchema,
@@ -409,9 +409,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     try {
       const tokens = await performTokenAuth({
         credentials: { password, username },
-        ...(this.abortSignal === undefined ?
-          {}
-        : { abortSignal: this.abortSignal }),
+        ...(this.abortSignal !== undefined && {
+          abortSignal: this.abortSignal,
+        }),
       })
       this.#storeTokens(tokens)
     } catch (error) {
@@ -663,9 +663,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     const tokens = await refreshAccessToken({
       logger: this.logger,
       refreshToken: this.refreshToken,
-      ...(this.abortSignal === undefined ?
-        {}
-      : { abortSignal: this.abortSignal }),
+      ...(this.abortSignal !== undefined && { abortSignal: this.abortSignal }),
     })
     if (tokens === null) {
       return false
@@ -683,7 +681,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     if (refreshToken !== undefined && refreshToken !== '') {
       this.refreshToken = refreshToken
     }
-    this.expiry = new Date(Date.now() + expiresIn * MS_PER_SECOND).toISOString()
+    this.expiry = Temporal.Now.instant().add({ seconds: expiresIn }).toString()
   }
 
   #syncContext(data: HomeContext): void {

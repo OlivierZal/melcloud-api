@@ -402,11 +402,11 @@ export abstract class BaseAPI implements Disposable {
     const requestConfig = {
       ...rest,
       headers: {
-        ...(typeof configHeaders === 'object' ? configHeaders : {}),
+        ...(typeof configHeaders === 'object' && configHeaders),
         ...this.getAuthHeaders(),
       },
       method,
-      ...(this.abortSignal === undefined ? {} : { signal: this.abortSignal }),
+      ...(this.abortSignal !== undefined && { signal: this.abortSignal }),
       url,
     }
     this.logger.log(String(new APICallRequestData(requestConfig)))

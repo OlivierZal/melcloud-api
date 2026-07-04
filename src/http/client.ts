@@ -127,10 +127,9 @@ const serializeBody = (
 // exception: `Headers` preserves it as a distinct list exposed only via
 // `getSetCookie()`, so we merge that explicitly.
 const readHeaders = (headers: Headers): Record<string, string | string[]> => {
-  const result: Record<string, string | string[]> = {}
-  for (const [key, value] of headers.entries()) {
-    result[key] = value
-  }
+  const result: Record<string, string | string[]> = Object.fromEntries(
+    headers.entries(),
+  )
   const setCookie = headers.getSetCookie()
   if (setCookie.length > 0) {
     result['set-cookie'] = setCookie
@@ -233,16 +232,22 @@ export class HttpClient {
     if (!response.ok) {
       throw new HttpError(
         `Request failed with status code ${String(response.status)}`,
-        { data: parsed, headers: responseHeaders, status: response.status },
         {
-          data: config.data,
-          headers: {
-            ...this.#defaultHeaders,
-            ...config.headers,
+          config: {
+            data: config.data,
+            headers: {
+              ...this.#defaultHeaders,
+              ...config.headers,
+            },
+            method: config.method ?? 'GET',
+            params: config.params,
+            url: config.url,
           },
-          method: config.method ?? 'GET',
-          params: config.params,
-          url: config.url,
+          response: {
+            data: parsed,
+            headers: responseHeaders,
+            status: response.status,
+          },
         },
       )
     }
@@ -283,7 +288,7 @@ export class HttpClient {
     const init: FetchInit = {
       headers: mergedHeaders,
       method: method.toUpperCase(),
-      ...(body === undefined ? {} : { body }),
+      ...(body !== undefined && { body }),
     }
     this.#applySignal(init, signal)
     this.#applyDispatcher(init)

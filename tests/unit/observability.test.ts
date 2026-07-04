@@ -247,11 +247,10 @@ describe('sensitive data redaction', () => {
 
 describe(createAPICallErrorData, () => {
   it('creates error data from response error', () => {
-    const error = new HttpError(
-      'Request failed',
-      { data: {}, headers: {}, status: 500 },
-      createConfig(),
-    )
+    const error = new HttpError('Request failed', {
+      config: createConfig(),
+      response: { data: {}, headers: {}, status: 500 },
+    })
     const data = createAPICallErrorData(error)
 
     expect(data.errorMessage).toBe('Request failed')
@@ -267,11 +266,10 @@ describe(createAPICallErrorData, () => {
   })
 
   it('serializes error data with errorMessage included', () => {
-    const error = new HttpError(
-      'Timeout',
-      { data: {}, headers: {}, status: 504 },
-      createConfig(),
-    )
+    const error = new HttpError('Timeout', {
+      config: createConfig(),
+      response: { data: {}, headers: {}, status: 504 },
+    })
     const data = createAPICallErrorData(error)
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
 

@@ -33,22 +33,28 @@ export class HttpError<T = unknown> extends Error {
    * Builds the error from the response triplet plus an optional snapshot
    * of the request that produced it.
    * @param message - Human-readable error description.
-   * @param response - Normalized response that carried the non-2xx status.
-   * @param response.data - Parsed (or raw text) response body.
-   * @param response.headers - Response headers.
-   * @param response.status - HTTP status code.
-   * @param config - Snapshot of the request that triggered the error.
+   * @param options - Response triplet plus an optional request snapshot.
+   * @param options.response - Normalized response that carried the non-2xx status.
+   * @param options.response.data - Parsed (or raw text) response body.
+   * @param options.response.headers - Response headers.
+   * @param options.response.status - HTTP status code.
+   * @param options.config - Snapshot of the request that triggered the error.
+   * @param options.cause - Original error that triggered this one.
    */
   public constructor(
     message: string,
-    response: {
-      data: T
-      headers: Record<string, string | string[]>
-      status: number
+    options: {
+      response: {
+        data: T
+        headers: Record<string, string | string[]>
+        status: number
+      }
+      cause?: unknown
+      config?: HttpErrorRequestConfig
     },
-    config?: HttpErrorRequestConfig,
   ) {
-    super(message)
+    super(message, options)
+    const { config, response } = options
     this.name = 'HttpError'
     this.response = response
     this.config = config

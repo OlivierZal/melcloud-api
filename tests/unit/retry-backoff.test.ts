@@ -13,9 +13,7 @@ const httpError = (status?: number): unknown =>
   status === undefined ?
     new Error('network failure')
   : new HttpError(`Status ${String(status)}`, {
-      data: {},
-      headers: {},
-      status,
+      response: { data: {}, headers: {}, status },
     })
 
 describe(isTransientServerError, () => {

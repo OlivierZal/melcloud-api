@@ -236,7 +236,8 @@ export class ClassicRegistry {
   public getBuildings({
     type,
   }: { type?: ClassicDeviceType | undefined } = {}): ClassicBuildingZone[] {
-    return [...this.#buildings.values()]
+    return this.#buildings
+      .values()
       .filter((building) => this.#hasDevices(building.id, 'building', type))
       .map((building) => ({
         areas: this.#buildAreaZones(
@@ -261,6 +262,7 @@ export class ClassicRegistry {
         model: 'buildings' as const,
         name: building.name,
       }))
+      .toArray()
       .toSorted(compareNames)
   }
 
@@ -269,7 +271,7 @@ export class ClassicRegistry {
    * @returns All devices.
    */
   public getDevices(): ClassicDeviceAny[] {
-    return [...this.#devices.values()]
+    return this.#devices.values().toArray()
   }
 
   /**

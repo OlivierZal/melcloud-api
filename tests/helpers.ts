@@ -191,11 +191,10 @@ export const createHttpError = ({
   method?: string
   responseHeaders?: Record<string, string>
 }): HttpError =>
-  new HttpError(
-    message,
-    { data: {}, headers: responseHeaders, status },
-    { method, url },
-  )
+  new HttpError(message, {
+    config: { method, url },
+    response: { data: {}, headers: responseHeaders, status },
+  })
 
 export const createServerError = (status: number, url = '/test'): HttpError =>
   createHttpError({ message: `Status ${String(status)}`, status, url })

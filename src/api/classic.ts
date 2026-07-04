@@ -231,11 +231,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
         // Self-signed-friendly dispatcher when the caller opts out of
         // verification (shouldVerifySSL=false). `undefined` falls back
         // to the global agent so verified TLS remains the default.
-        ...(shouldVerifySSL ?
-          {}
-        : {
-            dispatcher: new Agent({ connect: { rejectUnauthorized: false } }),
-          }),
+        ...(!shouldVerifySSL && {
+          dispatcher: new Agent({ connect: { rejectUnauthorized: false } }),
+        }),
       },
       rateLimitHours: DEFAULT_RETRY_HOURS,
       syncCallback: async () => this.fetch(),

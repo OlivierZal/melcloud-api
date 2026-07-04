@@ -10,7 +10,8 @@ import type {
   HomeReportData,
 } from '../../src/types/index.ts'
 import { HttpError } from '../../src/http/index.ts'
-import { MS_PER_HOUR, MS_PER_SECOND } from '../../src/time-units.ts'
+import { Temporal } from '../../src/temporal.ts'
+import { MS_PER_SECOND } from '../../src/time-units.ts'
 import {
   cast,
   createLogger,
@@ -289,7 +290,7 @@ const persistedSessionStore = (
 ): ReturnType<typeof createSettingStore> =>
   createSettingStore({
     accessToken: 'persisted-token',
-    expiry: new Date(Date.now() + MS_PER_HOUR).toISOString(),
+    expiry: Temporal.Now.instant().add({ hours: 1 }).toString(),
     password: 'pass',
     refreshToken: 'persisted-refresh',
     username: 'user@test.com',
@@ -297,11 +298,10 @@ const persistedSessionStore = (
   })
 
 const httpUnauthorized = (url = '/context'): HttpError =>
-  new HttpError(
-    'Unauthorized',
-    { data: undefined, headers: {}, status: 401 },
-    { url },
-  )
+  new HttpError('Unauthorized', {
+    config: { url },
+    response: { data: undefined, headers: {}, status: 401 },
+  })
 
 describe('melcloud home API', () => {
   let melCloudHomeApi: { create: typeof HomeAPI.create } = cast(null)
@@ -1652,7 +1652,7 @@ describe('melcloud home API', () => {
     })
 
     it('should wipe persisted state when rejected session has no credentials', async () => {
-      const futureExpiry = new Date(Date.now() + MS_PER_HOUR).toISOString()
+      const futureExpiry = Temporal.Now.instant().add({ hours: 1 }).toString()
       const { setSpy, settingManager } = createSettingStore({
         accessToken: 'dead-token',
         expiry: futureExpiry,
@@ -1687,7 +1687,9 @@ describe('melcloud home API', () => {
     })
 
     it('should fall back to OIDC when expiry is in the past', async () => {
-      const pastExpiry = new Date(Date.now() - MS_PER_HOUR).toISOString()
+      const pastExpiry = Temporal.Now.instant()
+        .subtract({ hours: 1 })
+        .toString()
       const { settingManager } = createSettingStore({
         accessToken: 'expired-token',
         expiry: pastExpiry,
@@ -1744,7 +1746,7 @@ describe('melcloud home API', () => {
       // doAuthenticate, whose first step is #clearPersistedSession()
       // wiping the old accessToken/refreshToken/expiry before the
       // new OIDC flow starts.
-      const futureExpiry = new Date(Date.now() + MS_PER_HOUR).toISOString()
+      const futureExpiry = Temporal.Now.instant().add({ hours: 1 }).toString()
       const { setSpy, settingManager } = createSettingStore({
         accessToken: 'old-token',
         expiry: futureExpiry,
@@ -2098,11 +2100,10 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const logger = createLogger()
       const api = await createApi({ logger })
-      const httpError = new HttpError(
-        'Request failed',
-        { data: {}, headers: {}, status: 500 },
-        { url: '/context' },
-      )
+      const httpError = new HttpError('Request failed', {
+        config: { url: '/context' },
+        response: { data: {}, headers: {}, status: 500 },
+      })
       mockRequest.mockRejectedValueOnce(httpError)
       await api.list()
 

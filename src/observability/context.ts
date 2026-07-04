@@ -56,18 +56,19 @@ const redactFormEncoded = (value: string): string | undefined => {
     return undefined
   }
   const params = new URLSearchParams(value)
-  let hasRedacted = false
-  // Snapshot the keys before mutating: `set()` collapses duplicate
-  // entries, and URLSearchParams iterators are live, so redacting a
+  // Snapshot the keys before mutating: URLSearchParams iterators are
+  // live and `set()` collapses duplicate entries, so redacting a
   // multi-valued key mid-iteration could otherwise skip the entry
-  // that shifts into the vacated slot.
-  for (const key of new Set(params.keys())) {
-    if (isSensitive(key)) {
-      params.set(key, REDACTED)
-      hasRedacted = true
-    }
+  // that shifts into the vacated slot. A multi-valued key appears
+  // several times in the snapshot; the extra `set()` calls are no-ops.
+  const keysToRedact = params
+    .keys()
+    .filter((key) => isSensitive(key))
+    .toArray()
+  for (const key of keysToRedact) {
+    params.set(key, REDACTED)
   }
-  return hasRedacted ? params.toString() : undefined
+  return keysToRedact.length > 0 ? params.toString() : undefined
 }
 
 const redactValue = (value: unknown): unknown => {

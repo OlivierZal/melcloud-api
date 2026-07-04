@@ -446,7 +446,9 @@ describe(classifyError, () => {
 
   it('returns validation for Error with name === ValidationError', () => {
     const error = new Error('shape mismatch')
-    error.name = 'ValidationError'
+    // `defineProperty` keeps the fixture a plain `Error` whose `name` merely
+    // claims to be a ValidationError — the exact shape `classifyError` sniffs.
+    Object.defineProperty(error, 'name', { value: 'ValidationError' })
 
     expect(classifyError(error)).toMatchObject({
       issue: 'shape mismatch',
@@ -477,20 +479,18 @@ describe(classifyError, () => {
       label: 'RateLimitError with null Duration → rate-limited null',
     },
     {
-      error: new HttpError(
-        'Unauthorized',
-        { data: undefined, headers: {}, status: 401 },
-        { url: '/x' },
-      ),
+      error: new HttpError('Unauthorized', {
+        config: { url: '/x' },
+        response: { data: undefined, headers: {}, status: 401 },
+      }),
       expected: { kind: 'unauthorized' } as const,
       label: '401 HttpError → unauthorized',
     },
     {
-      error: new HttpError(
-        'Server error',
-        { data: undefined, headers: {}, status: 500 },
-        { url: '/x' },
-      ),
+      error: new HttpError('Server error', {
+        config: { url: '/x' },
+        response: { data: undefined, headers: {}, status: 500 },
+      }),
       expected: { kind: 'server', status: 500 } as const,
       label: 'non-401 HttpError → server',
     },
