@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { isSessionExpired } from '../../src/resilience/session-expiry.ts'
 import { Temporal } from '../../src/temporal.ts'
+import { mockTemporalNowInstant } from '../helpers.ts'
 
 describe(isSessionExpired, () => {
   beforeEach(() => {
@@ -9,9 +10,11 @@ describe(isSessionExpired, () => {
     vi.setSystemTime(
       Temporal.Instant.from('2026-04-11T12:00:00Z').epochMilliseconds,
     )
+    mockTemporalNowInstant()
   })
 
   afterEach(() => {
+    vi.mocked(Temporal.Now.instant).mockRestore()
     vi.useRealTimers()
   })
 

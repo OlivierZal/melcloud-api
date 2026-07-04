@@ -3,10 +3,25 @@ import { type MockInstance, expect, vi } from 'vitest'
 import type { Logger, SettingManager } from '../src/api/index.ts'
 import type { Result } from '../src/types/index.ts'
 import { HttpClient, HttpError } from '../src/http/index.ts'
+import { Temporal } from '../src/temporal.ts'
 
 export function cast(value: unknown): never
 export function cast(value: unknown): unknown {
   return value
+}
+
+// `temporal-polyfill` v1 delegates to the native `Temporal` when the
+// runtime ships one (Node 26+). Native `Temporal.Now` reads the real
+// clock directly, bypassing `vi.setSystemTime` (which only patches
+// `Date`), so tests that freeze or advance time must also route
+// `Temporal.Now.instant()` through the mocked `Date.now()`. Under the
+// polyfilled implementation this spy is a behavioral no-op. Restore it
+// with `vi.mocked(Temporal.Now.instant).mockRestore()` next to
+// `vi.useRealTimers()`.
+export const mockTemporalNowInstant = (): void => {
+  vi.spyOn(Temporal.Now, 'instant').mockImplementation(() =>
+    Temporal.Instant.fromEpochMilliseconds(Date.now()),
+  )
 }
 
 // Wrap `expect.objectContaining` so call sites get a `never`-typed
