@@ -77,20 +77,24 @@ export class LifecycleEmitter {
     // and breaks the "non-throwing observer" contract this emitter
     // is meant to enforce.
     try {
-      const result = invoke()
-      if (result instanceof Promise) {
-        result.catch((error: unknown) => {
-          this.#logger.error(
-            `LifecycleEvents.${callback} callback rejected — ignoring`,
-            error,
-          )
-        })
-      }
+      this.#watchRejection(callback, invoke())
     } catch (error) {
       this.#logger.error(
         `LifecycleEvents.${callback} callback threw — ignoring`,
         error,
       )
+    }
+  }
+
+  #watchRejection(callback: string, result: unknown): void {
+    if (result instanceof Promise) {
+      // eslint-disable-next-line unicorn/prefer-await -- the observer contract is fire-and-forget: rejections are logged, never propagated
+      result.catch((error: unknown) => {
+        this.#logger.error(
+          `LifecycleEvents.${callback} callback rejected — ignoring`,
+          error,
+        )
+      })
     }
   }
 }

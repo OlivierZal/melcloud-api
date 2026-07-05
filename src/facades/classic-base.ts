@@ -80,7 +80,7 @@ const temperatureRange = { max: 16, min: 4 }
 const getDateTimeComponents = (
   date: Temporal.PlainDateTime | null,
 ): ClassicDateTimeComponents =>
-  date ?
+  date === null ? null : (
     {
       Day: date.day,
       Hour: date.hour,
@@ -89,7 +89,7 @@ const getDateTimeComponents = (
       Second: date.second,
       Year: date.year,
     }
-  : null
+  )
 
 /**
  * Abstract base for all facades. Provides common functionality for frost protection,
@@ -143,7 +143,7 @@ export abstract class ClassicBaseFacade<
 
   protected get instance(): T {
     const instance = this.model.getById(this.id)
-    if (!instance) {
+    if (instance === undefined) {
       throw new EntityNotFoundError(this.tableName, { entityId: this.id })
     }
     return instance
@@ -175,7 +175,7 @@ export abstract class ClassicBaseFacade<
   ) {
     this.api = api
     this.registry = registry
-    ;({ id: this.id } = instance)
+    this.id = instance.id
   }
 
   // Uses `@fetchDevices({ when: 'after' })` rather than `@syncDevices()`

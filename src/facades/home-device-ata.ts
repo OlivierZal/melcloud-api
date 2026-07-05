@@ -73,7 +73,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
 
   /**
    * Currently active operation mode (heat/cool/auto/dry/fan/off).
-   * @returns The operation mode.
+   * @returns One of the `HomeOperationMode` enum values.
    */
   public get operationMode(): HomeOperationMode {
     return this.#setting('OperationMode')
@@ -89,7 +89,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
 
   /**
    * Last-reported room temperature in degrees Celsius.
-   * @returns The room temperature.
+   * @returns Degrees Celsius as last reported by the device.
    */
   public get roomTemperature(): number {
     return this.#setting('RoomTemperature')
@@ -98,7 +98,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   /**
    * Currently configured fan speed. Normalised from MELCloud Home's
    * inconsistent stringified-number representation back to the enum.
-   * @returns The fan speed.
+   * @returns A `HomeFanSpeed` enum value, `auto` when unset.
    */
   public get setFanSpeed(): HomeFanSpeed {
     // MELCloud Home API inconsistency: SetFanSpeed returns a stringified
@@ -216,9 +216,9 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     }
     const mode = operationMode ?? this.operationMode
     const getRange = temperatureRanges.get(mode)
-    return getRange ?
-        { setTemperature: clampToRange(value, getRange(this.capabilities)) }
-      : { setTemperature: value }
+    return getRange === undefined ?
+        { setTemperature: value }
+      : { setTemperature: clampToRange(value, getRange(this.capabilities)) }
   }
 
   #setting(name: 'OperationMode'): HomeOperationMode

@@ -320,6 +320,10 @@ export const classicRawDevice = (
 // Mock factories
 // ---------------------------------------------------------------------------
 
+const emptyTilesResponse = (): Awaited<
+  ReturnType<ClassicAPIAdapter['getTiles']>
+> => ok(cast({ SelectedDevice: null, Tiles: [] }))
+
 export const createMockClassicApi = (
   overrides: Partial<ClassicAPIAdapter> = {},
 ): ClassicAPIAdapter =>
@@ -365,7 +369,7 @@ export const createMockClassicApi = (
     getTiles: cast(
       vi
         .fn<ClassicAPIAdapter['getTiles']>()
-        .mockResolvedValue(ok(cast({ SelectedDevice: null, Tiles: [] }))),
+        .mockResolvedValue(emptyTilesResponse()),
     ),
     getValues: vi
       .fn<ClassicAPIAdapter['getValues']>()
@@ -419,7 +423,7 @@ export function assertClassicDeviceType(
 ): void {
   if (device?.type !== type) {
     throw new Error(
-      `Expected device of type ${String(type)}, got ${device ? String(device.type) : 'undefined'}`,
+      `Expected device of type ${String(type)}, got ${device === undefined ? 'undefined' : String(device.type)}`,
     )
   }
 }

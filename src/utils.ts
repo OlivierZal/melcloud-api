@@ -61,7 +61,7 @@ const getLabelFormatters = (
  * Shared by every device facade (Classic ATA, Classic ATW, Home ATA)
  * that enforces target-temperature limits before sending updates to
  * their respective upstream APIs.
- * @param value - The value to clamp.
+ * @param value - Candidate value, possibly outside the bounds.
  * @param range - Inclusive bounds.
  * @param range.max - Upper bound (inclusive).
  * @param range.min - Lower bound (inclusive).

@@ -147,15 +147,15 @@ const fetchRaw = async (
  * Store any `Set-Cookie` headers from an OIDC response into a CookieJar.
  * @param jar - The cookie jar to populate.
  * @param response - The response containing potential Set-Cookie headers.
- * @param response.headers - The response headers.
- * @param url - The URL context for cookie storage.
+ * @param response.headers - Headers whose `set-cookie` entries get persisted.
+ * @param url - Request URL the cookies were received from; scopes them in the jar.
  */
 const storeCookies = async (
   jar: CookieJar,
   { headers }: OidcResponse,
   url: string,
 ): Promise<void> => {
-  const { 'set-cookie': setCookies } = headers
+  const setCookies = headers['set-cookie']
   if (!Array.isArray(setCookies)) {
     return
   }
@@ -168,7 +168,7 @@ const storeCookies = async (
  * Low-level request for the OIDC auth flow. Uses a transient
  * CookieJar (not the API instance) since the multi-domain redirect
  * chain (IS <-> Cognito) requires cross-domain cookie management.
- * @param options - The auth request options.
+ * @param options - Request target plus cookie-jar and abort plumbing.
  * @param options.abortSignal - Optional abort signal.
  * @param options.config - Request config with optional headers and body.
  * @param options.jar - CookieJar for cross-domain cookie management.
@@ -212,7 +212,7 @@ const authRequest = async ({
  * @returns The resolved form action URL, or `null` if not found.
  */
 const extractFormAction = (html: string): string | null => {
-  const match = /<form[^>]+action="(?<action>[^"]+)"/iu.exec(html)
+  const match = /<form[^>]+action="(?<action>[^"]+)"/iv.exec(html)
   const encoded = match?.groups?.action
   if (encoded === undefined) {
     return null
@@ -228,9 +228,9 @@ const extractFormAction = (html: string): string | null => {
  */
 const extractHiddenFields = (html: string): Record<string, string> =>
   Object.fromEntries(
-    html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu).flatMap(([tag]) => {
-      const name = /name="(?<name>[^"]+)"/u.exec(tag)?.groups?.name
-      const value = /value="(?<value>[^"]*)"/u.exec(tag)?.groups?.value ?? ''
+    html.matchAll(/<input[^>]+type="hidden"[^>]*>/giv).flatMap(([tag]) => {
+      const name = /name="(?<name>[^"]+)"/v.exec(tag)?.groups?.name
+      const value = /value="(?<value>[^"]*)"/v.exec(tag)?.groups?.value ?? ''
       return name === undefined ? [] : [[name, value] as const]
     }),
   )
@@ -257,10 +257,10 @@ const extractRedirectUrl = (html: string, regex: RegExp): string | null => {
  * @returns The redirect URL if found, or `null`.
  */
 const extractPageRedirect = (html: string): string | null =>
-  extractRedirectUrl(html, /window\.location\s*=\s*['"](?<url>[^'"]+)/u) ??
+  extractRedirectUrl(html, /window\.location\s*=\s*['"](?<url>[^'"]+)/v) ??
   extractRedirectUrl(
     html,
-    /<meta[^>]+http-equiv="refresh"[^>]+content="[^"]*url=(?<url>[^"]+)/iu,
+    /<meta[^>]+http-equiv="refresh"[^>]+content="[^"]*url=(?<url>[^"]+)/iv,
   )
 
 /**
@@ -364,7 +364,7 @@ const authFollowRedirects = async ({
 
 /**
  * Push Authorization Request — returns the opaque `request_uri`.
- * @param options - The PAR options.
+ * @param options - PKCE challenge plus abort plumbing for the PAR call.
  * @param options.challenge - The PKCE code challenge.
  * @param options.abortSignal - Optional signal to abort the request.
  * @returns The opaque PAR request URI.
@@ -445,10 +445,10 @@ const submitCredentials = async ({
 
 /**
  * Follow the callback chain and extract the authorization code.
- * @param callbackUrl - The callback URL to follow.
- * @param jar - CookieJar for the auth flow.
- * @param abortSignal - Optional abort signal.
- * @returns The authorization code.
+ * @param callbackUrl - Cognito-issued URL that starts the redirect hops.
+ * @param jar - Carries the session cookies across the redirect hops.
+ * @param abortSignal - Cancels the redirect chain mid-flight when triggered.
+ * @returns The one-time `code` query value from the final IdentityServer redirect.
  */
 const extractAuthorizationCode = async (
   callbackUrl: string,
@@ -469,7 +469,7 @@ const extractAuthorizationCode = async (
 
 /**
  * POST to the IdentityServer token endpoint and validate the response.
- * @param options - The token request options.
+ * @param options - Form parameters plus abort plumbing for the token call.
  * @param options.params - URL-encoded form parameters for the token request.
  * @param options.abortSignal - Optional signal to abort the request.
  * @returns The token response, validated by the Zod schema.
@@ -499,7 +499,7 @@ const tokenRequest = async ({
 
 /**
  * Full headless OIDC login: PAR → Cognito → token exchange.
- * @param options - The auth options.
+ * @param options - Credentials plus abort plumbing for the full login flow.
  * @param options.credentials - The user's login credentials.
  * @param options.credentials.password - The user's password.
  * @param options.credentials.username - The user's username.
@@ -549,7 +549,7 @@ export const performTokenAuth = async ({
  * reason via the optional logger so the failure mode (expired refresh
  * token vs. transient network flake vs. 5xx) stays observable. Prior
  * behaviour silently discarded all diagnostic context.
- * @param options - The refresh options.
+ * @param options - Refresh token plus logging and abort plumbing.
  * @param options.refreshToken - The user's refresh token.
  * @param options.abortSignal - Optional signal to abort the refresh.
  * @param options.logger - Optional logger; defaults to no-op.
@@ -565,15 +565,16 @@ export const refreshAccessToken = async ({
   abortSignal?: AbortSignal
   logger?: { readonly error: (...args: unknown[]) => void }
 }): Promise<HomeTokenResponse | null> => {
+  const request = {
+    params: {
+      client_id: CLIENT_ID,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    },
+    ...(abortSignal !== undefined && { abortSignal }),
+  }
   try {
-    return await tokenRequest({
-      params: {
-        client_id: CLIENT_ID,
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-      },
-      ...(abortSignal !== undefined && { abortSignal }),
-    })
+    return await tokenRequest(request)
   } catch (error) {
     logger?.error('Refresh token exchange failed:', error)
     return null

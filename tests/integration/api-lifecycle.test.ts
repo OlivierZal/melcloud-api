@@ -444,10 +444,14 @@ describe('api lifecycle', () => {
 
       expect(abortResult.ok).toBe(false)
       expect(
-        !abortResult.ok && 'cause' in abortResult.error ?
-          String(abortResult.error.cause)
+        (
+          !abortResult.ok &&
+            'cause' in abortResult.error &&
+            abortResult.error.cause instanceof Error
+        ) ?
+          abortResult.error.cause.message
         : '<unexpected success>',
-      ).toMatch(/abort/iu)
+      ).toMatch(/abort/iv)
     })
   })
 

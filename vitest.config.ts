@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import swc from 'unplugin-swc'
 
-export default defineConfig({
+const config = defineConfig({
   oxc: false,
   plugins: [
     swc.vite({
@@ -32,3 +32,5 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
   },
 })
+
+export default config

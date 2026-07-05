@@ -3,7 +3,7 @@ import { Temporal } from '../temporal.ts'
 // Detects an explicit UTC marker (`Z`) or numeric offset (`±HH:MM` /
 // `±HHMM`) after the date/time separator. Offset-less inputs need
 // zone-aware parsing; offset-bearing inputs are absolute instants.
-const OFFSET_REGEX = /[+-]\d{2}:?\d{2}$/u
+const OFFSET_REGEX = /[+\-]\d{2}:?\d{2}$/v
 
 const hasOffset = (iso: string): boolean => {
   if (!iso.includes('T')) {
@@ -13,16 +13,22 @@ const hasOffset = (iso: string): boolean => {
   return afterT.includes('Z') || OFFSET_REGEX.test(afterT)
 }
 
+const toInstant = (
+  expiry: string,
+  zone: string | undefined,
+): Temporal.Instant =>
+  hasOffset(expiry) ?
+    Temporal.Instant.from(expiry)
+  : Temporal.PlainDateTime.from(expiry)
+      .toZonedDateTime(zone ?? Temporal.Now.timeZoneId())
+      .toInstant()
+
 const parseToInstant = (
   expiry: string,
   zone: string | undefined,
 ): Temporal.Instant | null => {
   try {
-    if (hasOffset(expiry)) {
-      return Temporal.Instant.from(expiry)
-    }
-    const pdt = Temporal.PlainDateTime.from(expiry)
-    return pdt.toZonedDateTime(zone ?? Temporal.Now.timeZoneId()).toInstant()
+    return toInstant(expiry, zone)
   } catch {
     return null
   }

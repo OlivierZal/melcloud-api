@@ -96,7 +96,10 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
         [operationModeZone2, operationModeZone1]
       : [operationModeZone1, operationModeZone2]
 
-    if (primaryOperationMode?.value === undefined || !secondaryOperationMode) {
+    if (
+      primaryOperationMode?.value === undefined ||
+      secondaryOperationMode === undefined
+    ) {
       return null
     }
     return {

@@ -135,8 +135,8 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
             isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
             value,
           ])
-          .filter(([key]) => key in this.flags)
-      : dataEntries.filter(([key]) => key in this.flags)
+          .filter(([key]) => Object.hasOwn(this.flags, key))
+      : dataEntries.filter(([key]) => Object.hasOwn(this.flags, key))
     return typedFromEntries<Required<ClassicUpdateDeviceData<T>>>(entries)
   }
 
@@ -178,7 +178,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     )
 
     const flags = this.#computeFlags(typedKeys(newData))
-    if (!flags) {
+    if (flags === 0) {
       throw new NoChangesError(id)
     }
     return api.updateValues({
@@ -312,6 +312,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   #computeFlags(keys: (keyof ClassicUpdateDeviceData<T>)[]): number {
     return Number(
       keys.reduce(
+        // eslint-disable-next-line no-bitwise -- `EffectiveFlags` is a bitfield; `|` accumulates flags
         (flag, key) => flag | BigInt(this.flags[key]),
         BigInt(CLASSIC_FLAG_UNCHANGED),
       ),

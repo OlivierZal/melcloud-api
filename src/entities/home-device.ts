@@ -25,7 +25,7 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
 
   /**
    * Unique device identifier as assigned by MELCloud Home.
-   * @returns The device id.
+   * @returns The GUID string assigned by MELCloud Home.
    */
   public get id(): string {
     return this.#data.id

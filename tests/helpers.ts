@@ -92,7 +92,7 @@ export const createSettingStore = (
   settingManager: SettingManager
 } => {
   const store = new Map(Object.entries(initial))
-  const setSpy = vi.fn((key: string, value: string) => {
+  const setSpy = vi.fn<(key: string, value: string) => void>((key, value) => {
     store.set(key, value)
   })
   return {

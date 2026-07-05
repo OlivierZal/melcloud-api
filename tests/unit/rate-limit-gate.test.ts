@@ -192,7 +192,7 @@ describe(RateLimitGate, () => {
     gate.recordAndLog({ error }, 60)
 
     expect(error).toHaveBeenCalledWith(
-      expect.stringMatching(/pausing for \d+/u),
+      expect.stringMatching(/pausing for \d+/v),
     )
   })
 })

@@ -63,11 +63,11 @@ export class ClassicFacadeManager {
   public get(instance?: ClassicBuilding): ClassicBuildingFacade | null
   public get(instance?: ClassicDeviceAny): ClassicDeviceFacadeAny | null
   public get(instance?: ClassicModel): ClassicFacade | null {
-    if (!instance) {
+    if (instance === undefined) {
       return null
     }
     let facade = this.#facades.get(instance)
-    if (!facade) {
+    if (facade === undefined) {
       facade = createFacade(this.#api, this.#registry, instance)
       this.#facades.set(instance, facade)
     }

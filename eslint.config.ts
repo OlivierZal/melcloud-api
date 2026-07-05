@@ -19,10 +19,6 @@ const buildImportGroup = (selector: string): string[] =>
     (modifier) => `${modifier}-${selector}`,
   )
 
-const arrayLikeSortOptions = {
-  groups: ['literal'],
-}
-
 const typeSortOptions = {
   groups: [
     'keyword',
@@ -43,8 +39,7 @@ const typeSortOptions = {
 
 const typeLikeSortOptions = {
   groups: [
-    'required-index-signature',
-    'optional-index-signature',
+    'index-signature',
     'required-property',
     'optional-property',
     'required-method',
@@ -57,7 +52,26 @@ const config = defineConfig([
     ignores: ['coverage/', 'dist/', 'docs/', 'scripts/'],
   },
   {
-    ...jsdoc({ config: 'flat/recommended-tsdoc-error' }),
+    linterOptions: {
+      reportUnusedDisableDirectives: 'error',
+      reportUnusedInlineConfigs: 'error',
+    },
+  },
+  {
+    ...jsdoc({
+      config: 'flat/recommended-tsdoc-error',
+      rules: {
+        'jsdoc/check-template-names': 'error',
+        'jsdoc/informative-docs': 'error',
+        'jsdoc/no-bad-blocks': 'error',
+        'jsdoc/no-blank-block-descriptions': 'error',
+        'jsdoc/no-blank-blocks': 'error',
+        'jsdoc/require-description': 'error',
+        'jsdoc/require-hyphen-before-param-description': ['error', 'always'],
+        'jsdoc/require-throws': 'error',
+        'jsdoc/sort-tags': 'error',
+      },
+    }),
     files: ['src/**/*.ts'],
   },
   {
@@ -72,24 +86,25 @@ const config = defineConfig([
     ],
     files: ['**/*.ts'],
     languageOptions: {
-      ecmaVersion: 'latest',
       parserOptions: {
         projectService: {
           allowDefaultProject: ['*.config.ts'],
         },
         warnOnUnsupportedTypeScriptVersion: false,
       },
-      sourceType: 'module',
-    },
-    linterOptions: {
-      reportUnusedDisableDirectives: true,
     },
     plugins: {
       '@stylistic': stylistic,
       perfectionist,
     },
     rules: {
-      '@stylistic/multiline-comment-style': ['error', 'separate-lines'],
+      '@stylistic/multiline-comment-style': [
+        'error',
+        'separate-lines',
+        {
+          checkExclamation: true,
+        },
+      ],
       '@stylistic/quotes': [
         'error',
         'single',
@@ -157,15 +172,34 @@ const config = defineConfig([
         {
           filter: { match: false, regex: '^device$' },
           format: ['PascalCase'],
-          prefix: ['is', 'has', 'can', 'should'],
+          prefix: [
+            'are',
+            'can',
+            'did',
+            'has',
+            'have',
+            'is',
+            'requires',
+            'should',
+            'was',
+            'were',
+            'will',
+          ],
           selector: ['variable', 'parameter', 'classProperty'],
           types: ['boolean'],
         },
         // ── Parameters ───────────────────────────────────────
-        // Leading underscore for intentionally unused params.
+        // Unused parameters must wear the underscore (enforced
+        // documentation); used parameters must not.
         {
           format: ['camelCase'],
-          leadingUnderscore: 'allow',
+          leadingUnderscore: 'require',
+          modifiers: ['unused'],
+          selector: 'parameter',
+        },
+        {
+          format: ['camelCase'],
+          leadingUnderscore: 'forbid',
           selector: 'parameter',
         },
         // ── Functions & methods ──────────────────────────────
@@ -219,17 +253,24 @@ const config = defineConfig([
           selector: 'typeParameter',
         },
       ],
-      '@typescript-eslint/no-dupe-class-members': 'off',
-      '@typescript-eslint/no-explicit-any': [
+      '@typescript-eslint/no-base-to-string': [
         'error',
         {
-          ignoreRestArgs: true,
+          checkUnknown: true,
+        },
+      ],
+      '@typescript-eslint/no-dupe-class-members': 'off',
+      '@typescript-eslint/no-floating-promises': [
+        'error',
+        {
+          checkThenables: true,
         },
       ],
       '@typescript-eslint/no-invalid-this': 'off',
       '@typescript-eslint/no-magic-numbers': [
         'error',
         {
+          enforceConst: true,
           ignore: [0, 1, 2],
           ignoreEnums: true,
           ignoreNumericLiteralTypes: true,
@@ -238,6 +279,16 @@ const config = defineConfig([
         },
       ],
       '@typescript-eslint/no-redeclare': 'off',
+      '@typescript-eslint/no-shadow': [
+        'error',
+        {
+          // `allow` covers the deliberate polyfill re-exports from
+          // `src/temporal.ts`.
+          allow: ['Intl', 'Temporal'],
+          builtinGlobals: true,
+          hoist: 'all',
+        },
+      ],
       '@typescript-eslint/no-unnecessary-condition': [
         'error',
         {
@@ -258,19 +309,55 @@ const config = defineConfig([
           },
         },
       ],
+      '@typescript-eslint/only-throw-error': [
+        'error',
+        {
+          allowThrowingAny: false,
+          allowThrowingUnknown: false,
+        },
+      ],
+      // Assignment and renamed-property enforcement breeds unreadable
+      // destructuring.
       '@typescript-eslint/prefer-destructuring': [
         'error',
         {
-          array: true,
-          object: true,
+          AssignmentExpression: {
+            array: false,
+            object: false,
+          },
+          VariableDeclarator: {
+            array: true,
+            object: true,
+          },
         },
         {
           enforceForDeclarationWithTypeAnnotation: true,
-          enforceForRenamedProperties: true,
+          enforceForRenamedProperties: false,
         },
       ],
       '@typescript-eslint/prefer-readonly-parameter-types': 'off',
+      '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        {
+          allow: [],
+          allowAny: false,
+          allowArray: false,
+          allowBoolean: false,
+          allowNever: false,
+          allowNullish: false,
+          allowNumber: false,
+          allowRegExp: false,
+        },
+      ],
       '@typescript-eslint/return-await': ['error', 'in-try-catch'],
+      '@typescript-eslint/strict-boolean-expressions': [
+        'error',
+        {
+          allowNullableObject: false,
+          allowNumber: false,
+          allowString: false,
+        },
+      ],
       '@typescript-eslint/switch-exhaustiveness-check': [
         'error',
         {
@@ -279,7 +366,12 @@ const config = defineConfig([
           requireDefaultForNonUnion: true,
         },
       ],
-      '@typescript-eslint/typedef': 'off',
+      'array-callback-return': [
+        'error',
+        {
+          checkForEach: true,
+        },
+      ],
       camelcase: 'off',
       'capitalized-comments': 'off',
       curly: 'error',
@@ -287,22 +379,53 @@ const config = defineConfig([
       'import-x/first': 'error',
       'import-x/newline-after-import': 'error',
       'import-x/no-absolute-path': 'error',
-      'import-x/no-anonymous-default-export': 'error',
+      'import-x/no-anonymous-default-export': [
+        'error',
+        {
+          allowCallExpression: false,
+        },
+      ],
       'import-x/no-cycle': 'error',
       'import-x/no-default-export': 'error',
       'import-x/no-deprecated': 'error',
-      'import-x/no-duplicates': 'error',
-      'import-x/no-dynamic-require': 'error',
+      'import-x/no-duplicates': [
+        'error',
+        {
+          'prefer-inline': true,
+        },
+      ],
+      'import-x/no-dynamic-require': [
+        'error',
+        {
+          esmodule: true,
+        },
+      ],
       'import-x/no-empty-named-blocks': 'error',
-      'import-x/no-extraneous-dependencies': 'error',
+      'import-x/no-extraneous-dependencies': [
+        'error',
+        {
+          bundledDependencies: false,
+          devDependencies: ['*.config.ts', 'tests/**'],
+          includeTypes: true,
+          optionalDependencies: false,
+          peerDependencies: false,
+        },
+      ],
       'import-x/no-import-module-exports': 'error',
       'import-x/no-mutable-exports': 'error',
       'import-x/no-named-as-default': 'error',
       'import-x/no-named-as-default-member': 'error',
       'import-x/no-named-default': 'error',
+      'import-x/no-namespace': 'error',
       'import-x/no-relative-packages': 'error',
       'import-x/no-self-import': 'error',
       'import-x/no-unassigned-import': 'error',
+      'import-x/no-unresolved': [
+        'error',
+        {
+          caseSensitiveStrict: true,
+        },
+      ],
       'import-x/no-unused-modules': [
         'error',
         {
@@ -315,7 +438,7 @@ const config = defineConfig([
       'import-x/no-webpack-loader-syntax': 'error',
       'import-x/unambiguous': 'error',
       'max-lines': 'off',
-      'no-bitwise': 'off',
+      'no-cond-assign': ['error', 'always'],
       'no-continue': 'off',
       'no-else-return': [
         'error',
@@ -323,10 +446,36 @@ const config = defineConfig([
           allowElseIf: false,
         },
       ],
+      'no-extra-boolean-cast': [
+        'error',
+        {
+          enforceForInnerExpressions: true,
+        },
+      ],
+      'no-fallthrough': [
+        'error',
+        {
+          reportUnusedFallthroughComment: true,
+        },
+      ],
+      'no-irregular-whitespace': [
+        'error',
+        {
+          skipStrings: false,
+        },
+      ],
+      'no-return-assign': ['error', 'always'],
+      'no-sequences': [
+        'error',
+        {
+          allowInParentheses: false,
+        },
+      ],
       'no-ternary': 'off',
       'no-undefined': 'off',
+      'no-unexpected-multiline': 'error',
       'one-var': ['error', 'never'],
-      'perfectionist/sort-array-includes': ['error', arrayLikeSortOptions],
+      'perfectionist/sort-array-includes': 'error',
       'perfectionist/sort-classes': [
         'error',
         {
@@ -394,21 +543,16 @@ const config = defineConfig([
           newlinesInside: 1,
         },
       ],
-      'perfectionist/sort-enums': [
-        'error',
-        {
-          groups: ['unknown'],
-        },
-      ],
+      'perfectionist/sort-enums': 'error',
       'perfectionist/sort-export-attributes': 'error',
       'perfectionist/sort-exports': [
         'error',
         {
           groups: [
-            'type-export',
-            'named-export',
-            'wildcard-export',
-            'value-export',
+            'named-type-export',
+            'wildcard-type-export',
+            'named-value-export',
+            'wildcard-value-export',
           ],
           newlinesBetween: 1,
         },
@@ -419,11 +563,13 @@ const config = defineConfig([
         'error',
         {
           groups: [
-            ...buildImportGroup('side-effect'),
+            // Side-effect imports carry no specifiers, so only the bare
+            // selectors can match them.
+            'side-effect',
             {
               newlinesBetween: 1,
             },
-            ...buildImportGroup('side-effect-style'),
+            'side-effect-style',
             ...buildImportGroup('style'),
             {
               newlinesBetween: 1,
@@ -433,7 +579,6 @@ const config = defineConfig([
               newlinesBetween: 1,
             },
             ...buildImportGroup('external'),
-            ...buildImportGroup('tsconfig-path'),
             ...buildImportGroup('subpath'),
             ...buildImportGroup('internal'),
             {
@@ -447,12 +592,7 @@ const config = defineConfig([
       ],
       'perfectionist/sort-interfaces': ['error', typeLikeSortOptions],
       'perfectionist/sort-intersection-types': ['error', typeSortOptions],
-      'perfectionist/sort-maps': [
-        'error',
-        {
-          groups: ['unknown'],
-        },
-      ],
+      'perfectionist/sort-maps': 'error',
       'perfectionist/sort-modules': [
         'error',
         {
@@ -469,8 +609,7 @@ const config = defineConfig([
             ['export-interface', 'export-type'],
             'export-function',
             'export-class',
-            'export-default-enum',
-            ['export-default-interface', 'export-default-type'],
+            'export-default-interface',
             'export-default-function',
             'export-default-class',
           ],
@@ -495,75 +634,76 @@ const config = defineConfig([
         'error',
         {
           groups: ['property', 'method'],
+          partitionByComputedKey: true,
         },
       ],
-      'perfectionist/sort-sets': ['error', arrayLikeSortOptions],
+      'perfectionist/sort-sets': 'error',
       'perfectionist/sort-switch-case': 'error',
       'perfectionist/sort-union-types': ['error', typeSortOptions],
+      'prefer-regex-literals': [
+        'error',
+        {
+          disallowRedundantWrapping: true,
+        },
+      ],
+      'require-unicode-regexp': [
+        'error',
+        {
+          requireFlag: 'v',
+        },
+      ],
       'sort-imports': 'off',
       'sort-keys': 'off',
-      // Autofix rewrites `@param url` into `@param URL`, breaking the
-      // JSDoc/TSDoc param-name matching.
+      // Autofix breaks `@param` names (`url` → `URL`).
       'unicorn/comment-content': 'off',
-      // Boolean naming is already governed by
-      // `@typescript-eslint/naming-convention` (tuned prefixes, documented
-      // `device` exception); also flags UPPER_CASE boolean constants.
+      // Owned by `@typescript-eslint/naming-convention`.
       'unicorn/consistent-boolean-name': 'off',
-      // Class member order is owned by `perfectionist/sort-classes`.
+      // Owned by `perfectionist/sort-classes`.
       'unicorn/consistent-class-member-order': 'off',
-      // Zod schemas and test fixtures nest calls by design.
-      'unicorn/max-nested-calls': 'off',
-      // Renamed successor of `prevent-abbreviations`; its suggestions
-      // (`error_`) also conflict with `naming-convention`'s
-      // `trailingUnderscore: 'forbid'`.
       'unicorn/name-replacements': 'off',
-      // The project keeps standard JSDoc/TSDoc formatting (per-line `*`
-      // prefixes) consumed by eslint-plugin-jsdoc and typedoc.
+      // Standard JSDoc/TSDoc formatting.
       'unicorn/no-asterisk-prefix-in-documentation-comments': 'off',
-      // `key in obj` filters on zod-parsed plain objects are type-safe;
-      // switching to Map/Set is not warranted here.
-      'unicorn/no-computed-property-existence-check': 'off',
       'unicorn/no-keyword-prefix': 'off',
-      // Prose comments are hand-wrapped deliberately.
+      // Prose is wrapped deliberately.
       'unicorn/no-manually-wrapped-comments': 'off',
-      // False-positives on `setCookie`, the value of the HTTP `Set-Cookie`
-      // header.
-      'unicorn/no-non-function-verb-prefix': 'off',
-      // `Symbol.dispose` is standard (ES2026, available in Node 22) but
-      // unknown to this rule.
+      // Domain nouns: `Set-Cookie` header, `SetDeviceData` payload.
+      'unicorn/no-non-function-verb-prefix': [
+        'error',
+        {
+          ignore: ['^set(?:Cookies?|Data)$'],
+        },
+      ],
+      // Unaware of `Symbol.dispose`.
       'unicorn/no-nonstandard-builtin-properties': 'off',
       'unicorn/no-null': 'off',
-      // Decorators use explicitly typed `this`, checked by TypeScript —
-      // same rationale as `@typescript-eslint/no-invalid-this: off`.
-      'unicorn/no-this-outside-of-class': 'off',
       // `new URL(x, base).href` is idiomatic.
       'unicorn/no-unreadable-new-expression': 'off',
-      // Destructuring into `this.*` is required by
-      // `@typescript-eslint/prefer-destructuring`
-      // (`enforceForRenamedProperties`).
-      'unicorn/no-unreadable-object-destructuring': 'off',
       'unicorn/no-useless-switch-case': 'off',
-      // Fire-and-forget `.catch()` in timer callbacks is the observability
-      // pattern; `await` is not available in those synchronous callbacks.
-      'unicorn/prefer-await': 'off',
-      // `Error.isError()` requires Node 24+; re-enable when `engines.node`
-      // ≥ 24.
+      // Requires Node.js 24.
       'unicorn/prefer-error-is-error': 'off',
-      // `Uint8Array#toBase64()` requires Node 24+; re-enable when
-      // `engines.node` ≥ 24.
+      // Requires Node.js 24.
       'unicorn/prefer-uint8array-base64': 'off',
-      // The default `max: 1` is stricter than the project's deliberate
-      // try blocks of complexity 2.
-      'unicorn/try-complexity': 'off',
+      'use-isnan': [
+        'error',
+        {
+          enforceForIndexOf: true,
+        },
+      ],
+      'valid-typeof': [
+        'error',
+        {
+          requireStringLiterals: true,
+        },
+      ],
     },
     settings: {
       perfectionist: {
         alphabet: Alphabet.generateRecommendedAlphabet()
-          .sortByNaturalSort()
+          .sortByNaturalSort('en-US')
           .placeCharacterBefore({ characterAfter: '-', characterBefore: '/' })
           .getCharacters(),
         ignoreCase: false,
-        locales: 'en_US',
+        locales: 'en-US',
         newlinesBetween: 0,
         newlinesInside: 0,
         order: 'asc',
@@ -574,23 +714,8 @@ const config = defineConfig([
     },
   },
   {
-    files: ['**/decorators/**/*.ts'],
+    files: ['*.config.ts'],
     rules: {
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_context$',
-          enableAutofixRemoval: {
-            imports: true,
-          },
-        },
-      ],
-    },
-  },
-  {
-    files: ['**/*.config.ts'],
-    rules: {
-      '@typescript-eslint/naming-convention': 'off',
       'import-x/no-default-export': 'off',
       'import-x/prefer-default-export': [
         'error',
@@ -603,12 +728,7 @@ const config = defineConfig([
   {
     extends: [json.configs.recommended],
     files: ['**/*.json'],
-    ignores: [
-      '**/package-lock.json',
-      '**/package.json',
-      'app.json',
-      'locales/*.json',
-    ],
+    ignores: ['**/package-lock.json', '**/package.json'],
     language: 'json/json',
     rules: {
       'json/sort-keys': [
@@ -619,6 +739,7 @@ const config = defineConfig([
           natural: true,
         },
       ],
+      'json/top-level-interop': 'error',
     },
   },
   {
@@ -630,6 +751,12 @@ const config = defineConfig([
       'markdown/no-bare-urls': 'error',
       'markdown/no-duplicate-headings': 'error',
       'markdown/no-html': 'error',
+      'markdown/no-missing-atx-heading-space': [
+        'error',
+        {
+          checkClosedHeadings: true,
+        },
+      ],
       // Allow GitHub alert syntax (`> [!IMPORTANT]`, `> [!CAUTION]`, …).
       // It's a GitHub UI extension to GFM, not part of the GFM spec, so
       // the rule's parser sees the bracketed marker as a missing
@@ -639,6 +766,25 @@ const config = defineConfig([
         'error',
         {
           allowLabels: ['!CAUTION', '!IMPORTANT', '!NOTE', '!TIP', '!WARNING'],
+        },
+      ],
+      'markdown/no-missing-link-fragments': [
+        'error',
+        {
+          allowPattern: '',
+          ignoreCase: false,
+        },
+      ],
+      'markdown/no-space-in-emphasis': [
+        'error',
+        {
+          checkStrikethrough: true,
+        },
+      ],
+      'markdown/table-column-count': [
+        'error',
+        {
+          checkMissingCells: true,
         },
       ],
     },
@@ -655,6 +801,15 @@ const config = defineConfig([
     },
   },
   {
+    // Decorator targets receive an explicitly typed `this`, which
+    // TypeScript checks — the category's architecture, not a per-file
+    // incident.
+    files: ['src/decorators/**/*.ts'],
+    rules: {
+      'unicorn/no-this-outside-of-class': 'off',
+    },
+  },
+  {
     // Bitfield enumeration: `EffectiveFlags` hex values are the file's
     // entire purpose. `no-magic-numbers` would flag every entry, and
     // `ignoreNumericLiteralTypes` does not cover literal types nested
@@ -665,19 +820,48 @@ const config = defineConfig([
     },
   },
   {
-    extends: [vitest.configs.all, vitest.configs.recommended],
-    files: ['tests/**/*.test.ts', 'tests/*fixtures.ts'],
+    extends: [
+      vitest.configs.all,
+      {
+        // The `all` preset ships most rules at 'warn'; hoist to 'error'
+        // (zero-warning policy).
+        rules: Object.fromEntries(
+          Object.entries(vitest.configs.all.rules).map(([name, severity]) => [
+            name,
+            severity === 'off' ? 'off' : 'error',
+          ]),
+        ),
+      },
+    ],
+    files: ['tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
       'max-lines-per-function': 'off',
       'max-statements': 'off',
+      // Mock builders nest factories.
+      'unicorn/max-nested-calls': [
+        'error',
+        {
+          max: 4,
+        },
+      ],
       'vitest/max-expects': 'off',
-      'vitest/no-disabled-tests': 'error',
       'vitest/no-hooks': 'off',
-      'vitest/prefer-expect-assertions': 'off',
-      'vitest/prefer-hooks-in-order': 'error',
+      'vitest/prefer-expect-assertions': [
+        'error',
+        {
+          onlyFunctionsWithExpectInCallback: true,
+          onlyFunctionsWithExpectInLoop: true,
+        },
+      ],
       'vitest/require-hook': 'off',
-      'vitest/require-mock-type-parameters': 'error',
+      'vitest/require-mock-type-parameters': [
+        'error',
+        {
+          checkImportFunctions: true,
+        },
+      ],
+      'vitest/warn-todo': 'error',
     },
     settings: {
       vitest: {
@@ -694,6 +878,15 @@ const config = defineConfig([
           extension: 'yml',
         },
       ],
+      'yml/key-name-casing': [
+        'error',
+        {
+          camelCase: true,
+          'kebab-case': true,
+          SCREAMING_SNAKE_CASE: true,
+          snake_case: true,
+        },
+      ],
       'yml/require-string-key': 'error',
       'yml/sort-keys': [
         'error',
@@ -706,7 +899,19 @@ const config = defineConfig([
           pathPattern: String.raw`^(?!jobs\.\w+\.steps\[\d+\]).*$`,
         },
         {
-          order: ['id', 'name', 'if', 'uses', 'with', 'env', 'run'],
+          order: [
+            'id',
+            'name',
+            'if',
+            'continue-on-error',
+            'timeout-minutes',
+            'uses',
+            'with',
+            'env',
+            'shell',
+            'working-directory',
+            'run',
+          ],
           pathPattern: String.raw`^jobs\.\w+\.steps\[\d+\]$`,
         },
       ],
@@ -723,8 +928,18 @@ const config = defineConfig([
       ],
     },
   },
-  packageJsonConfigs.recommended,
-  packageJsonConfigs.stylistic,
+  {
+    extends: [packageJsonConfigs.recommended, packageJsonConfigs.stylistic],
+    files: ['**/package.json'],
+    rules: {
+      'package-json/require-author': 'error',
+      'package-json/require-bugs': 'error',
+      'package-json/require-engines': 'error',
+      'package-json/require-homepage': 'error',
+      'package-json/require-keywords': 'error',
+      'package-json/require-types': 'error',
+    },
+  },
 ])
 
 export default config

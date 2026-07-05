@@ -335,8 +335,9 @@ describe('baseAPI shared request pipeline', () => {
         .mockRejectedValueOnce(createServerError(503, '/data'))
 
       const promise = api.callRequest('get', '/data')
+      // eslint-disable-next-line unicorn/prefer-await -- attached to suppress unhandled-rejection while timers advance; awaited later
       promise.catch(() => {
-        // attached to suppress unhandled-rejection while timers advance
+        // intentionally empty
       })
       await vi.advanceTimersByTimeAsync(30_000)
 
@@ -732,18 +733,18 @@ describe(normalizeUnauthorized, () => {
     expect(result).toMatchObject({ cause: http })
   })
 
-  it('passes non-401 HttpErrors through unchanged', () => {
+  it('returns null for non-401 HttpErrors so callers rethrow the original', () => {
     const http = new HttpError('Server error', {
       config: { url: '/context' },
       response: { data: undefined, headers: {}, status: 500 },
     })
 
-    expect(normalizeUnauthorized(http)).toBe(http)
+    expect(normalizeUnauthorized(http)).toBeNull()
   })
 
-  it('passes non-HttpError errors through unchanged', () => {
+  it('returns null for non-HttpError errors so callers rethrow the original', () => {
     const native = new Error('network')
 
-    expect(normalizeUnauthorized(native)).toBe(native)
+    expect(normalizeUnauthorized(native)).toBeNull()
   })
 })

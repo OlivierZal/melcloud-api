@@ -79,22 +79,24 @@ export const classifyError = (error: unknown): ApiRequestError => {
 }
 
 /**
- * Narrow any error the HTTP client can surface into either an
- * {@link AuthenticationError} (for `401 Unauthorized`) or the error
- * unchanged. Subclass `doAuthenticate` implementations call this
- * helper to normalize transport-level rejections into the shared
- * domain error type — callers of {@link BaseAPI.authenticate} then
- * get a stable {@link AuthenticationError} regardless of whether the
- * underlying flow was cookie-based (Classic) or bearer-token (Home).
+ * Narrow a `401 Unauthorized` surfaced by the HTTP client into the
+ * shared {@link AuthenticationError} domain type. Subclass
+ * `doAuthenticate` implementations call this helper so callers of
+ * {@link BaseAPI.authenticate} get a stable error shape regardless of
+ * whether the underlying flow was cookie-based (Classic) or
+ * bearer-token (Home); any other rejection yields `null` and the
+ * caller rethrows its original error.
  * @param error - The error to inspect.
- * @returns An {@link AuthenticationError} if a 401 {@link HttpError}; `error` otherwise.
+ * @returns An {@link AuthenticationError} for a 401 {@link HttpError}; `null` otherwise.
  */
-export const normalizeUnauthorized = (error: unknown): unknown =>
+export const normalizeUnauthorized = (
+  error: unknown,
+): AuthenticationError | null =>
   isHttpError(error) && error.response.status === HttpStatus.Unauthorized ?
     new AuthenticationError('MELCloud rejected the credentials', {
       cause: error,
     })
-  : error
+  : null
 
 const DEFAULT_TIMEOUT_MS = 30_000
 
@@ -436,6 +438,7 @@ export abstract class BaseAPI implements Disposable {
     if (!this.needsSessionRefresh()) {
       return
     }
+    // eslint-disable-next-line unicorn/prefer-await -- single-flight memoization: the cleanup must be attached to the shared promise, not awaited here
     this.#refreshPromise ??= this.performSessionRefresh().finally(() => {
       this.#refreshPromise = null
     })
@@ -630,7 +633,7 @@ export abstract class BaseAPI implements Disposable {
 
   private resolvePersistedCredentials(): LoginCredentials | null {
     const { password, username } = this
-    if (!username || !password) {
+    if (username === '' || password === '') {
       return null
     }
     return { password, username }
