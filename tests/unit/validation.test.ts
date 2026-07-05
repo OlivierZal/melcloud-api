@@ -142,7 +142,7 @@ describe('validation/schemas', () => {
       ).toThrow(ValidationError)
       expect(() =>
         parseOrThrow(z.object({ value: z.number() }), { value: 'x' }, 'ctx'),
-      ).toThrow(/Invalid API response shape \(ctx\)/u)
+      ).toThrow(/Invalid API response shape \(ctx\)/v)
     })
   })
 
@@ -164,7 +164,7 @@ describe('validation/schemas', () => {
     it('rejects missing ContextKey', () => {
       expect(() =>
         ClassicLoginDataSchema.parse({ LoginData: { Expiry: 'x' } }),
-      ).toThrow(/ContextKey/u)
+      ).toThrow(/ContextKey/v)
     })
   })
 
@@ -188,7 +188,7 @@ describe('validation/schemas', () => {
           scope: 'openid',
           token_type: 'Bearer',
         }),
-      ).toThrow(/access_token/u)
+      ).toThrow(/access_token/v)
     })
 
     it('rejects non-Bearer token_type', () => {
@@ -199,7 +199,7 @@ describe('validation/schemas', () => {
           scope: 'openid',
           token_type: 'Mac',
         }),
-      ).toThrow(/token_type/u)
+      ).toThrow(/token_type/v)
     })
   })
 
@@ -263,7 +263,7 @@ describe('validation/schemas', () => {
             ],
           }),
         ),
-      ).toThrow(/numberOfFanSpeeds/u)
+      ).toThrow(/numberOfFanSpeeds/v)
     })
 
     it('rejects ATW capabilities missing a required field', () => {
@@ -282,7 +282,7 @@ describe('validation/schemas', () => {
             ],
           }),
         ),
-      ).toThrow(/ftcModel/u)
+      ).toThrow(/ftcModel/v)
     })
 
     it('rejects non-object capabilities', () => {
@@ -299,7 +299,7 @@ describe('validation/schemas', () => {
             ],
           }),
         ),
-      ).toThrow(/capabilities/u)
+      ).toThrow(/capabilities/v)
     })
   })
 
@@ -321,7 +321,7 @@ describe('validation/schemas', () => {
     ])('rejects unsupported device Type ($label)', ({ value }) => {
       expect(() =>
         ClassicBuildingListSchema.parse(buildingWithDeviceType(value)),
-      ).toThrow(/Type/u)
+      ).toThrow(/Type/v)
     })
   })
 
@@ -343,7 +343,7 @@ describe('validation/schemas', () => {
         ClassicEnergyDataAtaSchema.parse(
           omitKey(validClassicEnergyAta, 'TotalHeatingConsumed'),
         ),
-      ).toThrow(/TotalHeatingConsumed/u)
+      ).toThrow(/TotalHeatingConsumed/v)
     })
 
     it.each([
@@ -358,7 +358,7 @@ describe('validation/schemas', () => {
           ...validClassicEnergyAta,
           TotalHeatingConsumed: value,
         }),
-      ).toThrow(/TotalHeatingConsumed/u)
+      ).toThrow(/TotalHeatingConsumed/v)
     })
 
     it('rejects an ATA payload with a non-finite hourly entry', () => {
@@ -367,7 +367,7 @@ describe('validation/schemas', () => {
           ...validClassicEnergyAta,
           Heating: [0, NaN, 1],
         }),
-      ).toThrow(/Heating/u)
+      ).toThrow(/Heating/v)
     })
 
     it('rejects an ATW payload missing a total', () => {
@@ -375,7 +375,7 @@ describe('validation/schemas', () => {
         ClassicEnergyDataAtwSchema.parse(
           omitKey(validClassicEnergyAtw, 'TotalHotWaterProduced'),
         ),
-      ).toThrow(/TotalHotWaterProduced/u)
+      ).toThrow(/TotalHotWaterProduced/v)
     })
 
     it.each([
@@ -390,7 +390,7 @@ describe('validation/schemas', () => {
           ...validClassicEnergyAtw,
           TotalHotWaterProduced: value,
         }),
-      ).toThrow(/TotalHotWaterProduced/u)
+      ).toThrow(/TotalHotWaterProduced/v)
     })
 
     it('rejects an ATW payload with a non-finite CoP entry', () => {
@@ -399,7 +399,7 @@ describe('validation/schemas', () => {
           ...validClassicEnergyAtw,
           CoP: [2.5, NaN],
         }),
-      ).toThrow(/CoP/u)
+      ).toThrow(/CoP/v)
     })
 
     it('resolves the union for both device shapes', () => {

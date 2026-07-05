@@ -55,10 +55,10 @@ export class HomeRegistry {
     for (const { device, type } of devices) {
       activeIds.add(device.id)
       const existing = this.#devices.get(device.id)
-      if (existing) {
-        existing.sync(device)
-      } else {
+      if (existing === undefined) {
         this.#devices.set(device.id, new HomeDevice(device, type))
+      } else {
+        existing.sync(device)
       }
     }
     for (const id of this.#devices.keys()) {

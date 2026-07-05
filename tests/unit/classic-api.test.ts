@@ -926,7 +926,7 @@ describe('mELCloud Classic API', () => {
       const api = await createApi({ password: 'pass', username: 'user' })
 
       // First call returns 401, re-auth succeeds, retry succeeds
-      let isCallCount = 0
+      let callCount = 0
       mockRequest.mockImplementation(async (config) => {
         await Promise.resolve()
         if (config.url === '/Login/ClientLogin3') {
@@ -935,8 +935,8 @@ describe('mELCloud Classic API', () => {
         if (config.url === '/User/ListDevices') {
           return wrap([])
         }
-        isCallCount += 1
-        if (isCallCount === 1) {
+        callCount += 1
+        if (callCount === 1) {
           throw createHttpError({
             message: 'unauthorized',
             status: 401,

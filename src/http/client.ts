@@ -68,7 +68,7 @@ const resolveUrl = (baseURL: string, url: string | undefined): string => {
   if (url === undefined || url === '') {
     return baseURL
   }
-  if (/^https?:/iu.test(url)) {
+  if (/^https?:/iv.test(url)) {
     return url
   }
   return new URL(
@@ -96,7 +96,7 @@ const buildUrl = (
   params: Record<string, unknown> | undefined,
 ): string => {
   const fullUrl = resolveUrl(baseURL, url)
-  if (!params) {
+  if (params === undefined) {
     return fullUrl
   }
   const queryString = encodeParams(params)

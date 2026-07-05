@@ -25,6 +25,8 @@ describe.concurrent('ata list-to-set conversion', () => {
   })
 
   it('is the inverse of fromSetToListAta', () => {
+    expect.hasAssertions()
+
     for (const [key, value] of Object.entries(fromSetToListAta)) {
       expect(fromListToSetAta[value]).toBe(key)
     }
@@ -33,6 +35,8 @@ describe.concurrent('ata list-to-set conversion', () => {
 
 describe.concurrent(isSetDeviceDataAtaNotInList, () => {
   it('returns true for every key in fromSetToListAta', () => {
+    expect.hasAssertions()
+
     for (const key of Object.keys(fromSetToListAta)) {
       expect(isSetDeviceDataAtaNotInList(key)).toBe(true)
     }
@@ -48,6 +52,8 @@ describe.concurrent(isSetDeviceDataAtaNotInList, () => {
 
 describe.concurrent(isSetDeviceDataAtaInList, () => {
   it('returns true for every key in fromListToSetAta', () => {
+    expect.hasAssertions()
+
     for (const key of Object.keys(fromListToSetAta)) {
       expect(isSetDeviceDataAtaInList(key)).toBe(true)
     }

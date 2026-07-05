@@ -17,6 +17,7 @@ import {
   createLogger,
   createMockHttpClient,
   createSettingStore,
+  defined,
   matchObject,
   mockFetchResponse,
   mockResponse,
@@ -296,6 +297,9 @@ const persistedSessionStore = (
     username: 'user@test.com',
     ...overrides,
   })
+
+const isTokenEndpointCall = ([url]: Parameters<typeof fetch>): boolean =>
+  typeof url === 'string' && url.includes('/connect/token')
 
 const httpUnauthorized = (url = '/context'): HttpError =>
   new HttpError('Unauthorized', {
@@ -1045,11 +1049,7 @@ describe('melcloud home API', () => {
     it('should not re-authenticate when session is still valid', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      const {
-        mock: {
-          calls: { length: callCountAfterLogin },
-        },
-      } = mockRequest
+      const callCountAfterLogin = mockRequest.mock.calls.length
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       await api.list()
 
@@ -1202,7 +1202,7 @@ describe('melcloud home API', () => {
 
       await expect(
         api.authenticate({ password: 'pass', username: 'user@test.com' }),
-      ).rejects.toThrow(/failed with status 500/u)
+      ).rejects.toThrow(/failed with status 500/v)
     })
 
     it('should not retry on non-401 errors', async () => {
@@ -1834,11 +1834,11 @@ describe('melcloud home API', () => {
         await api.list()
 
         // Refresh token POST should include the signal
-        const refreshCall = mockFetch.mock.calls.find(
-          ([url]) => typeof url === 'string' && url.includes('/connect/token'),
+        const refreshCall = mockFetch.mock.calls.find((call) =>
+          isTokenEndpointCall(call),
         )
 
-        expect(refreshCall?.[1]).toStrictEqual(
+        expect(defined(refreshCall)[1]).toStrictEqual(
           expect.objectContaining({ signal: controller.signal }),
         )
       } finally {

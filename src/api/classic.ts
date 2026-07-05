@@ -125,7 +125,7 @@ const parseErrorLogQuery = (
   // A page covers `period` days; consecutive pages are separated by a
   // one-day boundary so day N is never returned twice. Each step back
   // therefore moves `period + 1` days, hence the `* (period + 1)`.
-  const daysBack = fromDateOverride ? 0 : offset * (period + 1)
+  const daysBack = fromDateOverride === null ? offset * (period + 1) : 0
   return {
     fromDate: fromDateOverride ?? toDate.subtract({ days: daysBack + period }),
     period,
@@ -328,9 +328,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
                 return []
               }
               const error = errorMessage?.trim() ?? ''
-              return error ?
-                  [{ date: startDate, deviceId: errorDeviceId, error }]
-                : []
+              return error === '' ?
+                  []
+                : [{ date: startDate, deviceId: errorDeviceId, error }]
             },
           )
           .toReversed(),
@@ -645,7 +645,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     }
     this.username = username
     this.password = password
-    ;({ ContextKey: this.contextKey, Expiry: this.expiry } = loginData)
+    this.contextKey = loginData.ContextKey
+    this.expiry = loginData.Expiry
   }
 
   protected getAuthHeaders(): Record<string, string> {
@@ -742,7 +743,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     if (!result.ok) {
       return result
     }
-    const { value: data } = result
+    const data = result.value
     if ('AttributeErrors' in data) {
       // Domain-level failure (server rejected the query) surfaces as a
       // synthetic `validation` variant — the call itself succeeded at

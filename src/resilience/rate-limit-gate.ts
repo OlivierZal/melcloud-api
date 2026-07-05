@@ -136,6 +136,7 @@ export class RateLimitGate {
   #pausedUntil: Temporal.Instant = Temporal.Now.instant()
 
   /**
+   * Builds a gate that opens immediately (no pause is pending).
    * @param fallback - Duration to pause when the server doesn't provide
    *   a usable `Retry-After` header.
    */

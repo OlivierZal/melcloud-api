@@ -20,7 +20,7 @@ const getDeviceFromRegistry = (
   id: number,
 ): ClassicDeviceAny => {
   const device = registry.devices.getById(id)
-  if (!device) {
+  if (device === undefined) {
     throw new Error('ClassicDevice not found in registry')
   }
   return device

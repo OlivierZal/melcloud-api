@@ -406,14 +406,14 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     username,
   }: LoginCredentials): Promise<void> {
     this.#clearPersistedSession()
+    const request = {
+      credentials: { password, username },
+      ...(this.abortSignal !== undefined && {
+        abortSignal: this.abortSignal,
+      }),
+    }
     try {
-      const tokens = await performTokenAuth({
-        credentials: { password, username },
-        ...(this.abortSignal !== undefined && {
-          abortSignal: this.abortSignal,
-        }),
-      })
-      this.#storeTokens(tokens)
+      await this.#exchangeAndStoreTokens(request)
     } catch (error) {
       // Normalize transport-level `401 Unauthorized` from the BFF
       // into the shared {@link AuthenticationError} domain type so
@@ -421,12 +421,14 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       // of the Classic `LoginData: null → AuthenticationError` path).
       // Non-401 errors (PAR failures, Cognito redirect chain issues,
       // network timeouts) propagate unchanged.
-      throw normalizeUnauthorized(error)
+      const authError = normalizeUnauthorized(error)
+      if (authError !== null) {
+        throw authError
+      }
+      throw error
     }
-    ;({ password: this.password, username: this.username } = {
-      password,
-      username,
-    })
+    this.password = password
+    this.username = username
   }
 
   protected getAuthHeaders(): Record<string, string> {
@@ -542,6 +544,13 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     this.accessToken = ''
     this.refreshToken = ''
     this.expiry = ''
+  }
+
+  async #exchangeAndStoreTokens(
+    request: Parameters<typeof performTokenAuth>[0],
+  ): Promise<void> {
+    const tokens = await performTokenAuth(request)
+    this.#storeTokens(tokens)
   }
 
   /**

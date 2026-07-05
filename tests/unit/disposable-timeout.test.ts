@@ -87,7 +87,7 @@ describe('disposable timeout', () => {
 
   it('unrefs the underlying timer so it does not keep the event loop alive', () => {
     const unrefCalls: number[] = []
-    const { setTimeout: realSetTimeout } = globalThis
+    const realSetTimeout = globalThis.setTimeout
     vi.stubGlobal(
       'setTimeout',
       (callback: () => void, ms: number): ReturnType<typeof setTimeout> => {

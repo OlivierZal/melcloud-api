@@ -213,7 +213,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   ): ClassicTemperatureDataAtw {
     return Object.fromEntries(
       this.#targetTemperatureRanges
-        .filter(([key]) => key in data)
+        .filter(([key]) => Object.hasOwn(data, key))
         .map(([key, range]) => [
           key,
           clampToRange(data[key] ?? DEFAULT_TEMPERATURE, range),

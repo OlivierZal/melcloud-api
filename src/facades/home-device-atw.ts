@@ -75,7 +75,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * include `Stop` and the heat/cool modes; the SDK does not narrow
    * further because the controller exposes other strings on some
    * firmware revisions.
-   * @returns The operation mode.
+   * @returns The raw mode string as reported by the FTC.
    */
   public get operationMode(): string {
     return this.setting('OperationMode')
@@ -107,7 +107,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
 
   /**
    * Outdoor temperature reported by the FTC, in degrees Celsius.
-   * @returns The outdoor temperature.
+   * @returns Degrees Celsius as measured at the outdoor unit.
    */
   public get outdoorTemperature(): number {
     return Number(this.setting('OutdoorTemperature'))
@@ -131,7 +131,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
 
   /**
    * Last-reported zone-1 room temperature in degrees Celsius.
-   * @returns The room temperature.
+   * @returns Degrees Celsius for the zone-1 thermostat.
    */
   public get roomTemperatureZone1(): number {
     return Number(this.setting('RoomTemperatureZone1'))
@@ -177,7 +177,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
 
   /**
    * Last-reported tank water temperature in degrees Celsius.
-   * @returns The tank temperature.
+   * @returns Degrees Celsius of the domestic hot-water tank.
    */
   public get tankWaterTemperature(): number {
     return Number(this.setting('TankWaterTemperature'))

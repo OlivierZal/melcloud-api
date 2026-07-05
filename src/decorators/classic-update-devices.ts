@@ -63,6 +63,7 @@ export const classicUpdateDevices =
   } = {}) =>
   <TArgs extends readonly unknown[]>(
     target: (...args: TArgs) => Promise<T>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the decorator protocol imposes the context parameter
     _context: ClassMethodDecoratorContext,
   ): ((...args: TArgs) => Promise<T>) =>
     async function newTarget(this: ClassicZoneFacade, ...args: TArgs) {
@@ -118,6 +119,7 @@ export const convertToListDeviceData = <T extends ClassicDeviceType>(
       allEntries.filter(
         ([key]) =>
           isUpdateDeviceData(flags, key) &&
+          // eslint-disable-next-line no-bitwise -- `EffectiveFlags` is a bitfield; `&` tests flag membership
           Boolean(BigInt(flags[key]) & effectiveFlagsBigInt),
       )
     )
@@ -142,13 +144,12 @@ const updateSingleDevice = <
   TData extends ClassicSetDeviceData<T>,
 >(
   target: (...args: TArgs) => Promise<TData>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the decorator protocol imposes the context parameter
   _context: ClassMethodDecoratorContext,
 ): ((...args: TArgs) => Promise<TData>) =>
   async function newTarget(this: ClassicDeviceFacade<T>, ...args: TArgs) {
     const data = await target.call(this, ...args)
-    const {
-      devices: [device],
-    } = this
+    const [device] = this.devices
     if (device?.type === this.type) {
       device.update(convertToListDeviceData(this, data))
     }

@@ -108,7 +108,7 @@ export abstract class APICallLogData {
   public toString(): string {
     const filtered = Object.fromEntries(
       logKeys
-        .filter((key) => key in this)
+        .filter((key) => Object.hasOwn(this, key))
         .map((key) => [
           key,
           redactValue(

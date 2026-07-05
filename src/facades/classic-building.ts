@@ -52,12 +52,9 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
     instance: ClassicModel,
   ) {
     super(api, registry, instance)
-    ;({
-      data: {
-        FPDefined: this.isFrostProtectionAtZoneLevel,
-        HMDefined: this.isHolidayModeAtZoneLevel,
-      },
-    } = this)
+    const { data } = this
+    this.isFrostProtectionAtZoneLevel = data.FPDefined
+    this.isHolidayModeAtZoneLevel = data.HMDefined
   }
 
   /**

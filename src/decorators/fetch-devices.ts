@@ -16,11 +16,11 @@ interface FetchDevicesHost {
 }
 
 const runSync = async (self: FetchDevicesHost): Promise<void> => {
-  if (self.syncRegistry) {
+  if (self.syncRegistry !== undefined) {
     await self.syncRegistry()
     return
   }
-  if (self.api) {
+  if (self.api !== undefined) {
     await self.api.fetch()
     return
   }
@@ -59,6 +59,7 @@ export const fetchDevices =
   ({ when = 'before' }: { when?: 'after' | 'before' } = {}) =>
   <TArgs extends readonly unknown[], TResult>(
     target: (...args: TArgs) => Promise<TResult>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the decorator protocol imposes the context parameter
     _context: ClassMethodDecoratorContext,
   ): ((...args: TArgs) => Promise<TResult>) =>
     async function newTarget(this: FetchDevicesHost, ...args: TArgs) {

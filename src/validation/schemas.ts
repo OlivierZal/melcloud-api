@@ -283,6 +283,7 @@ const ClassicMinimalDeviceSchema = z.looseObject({
 const ClassicFloorSchema = z.looseObject({
   Areas: z.array(
     z.looseObject({
+      // eslint-disable-next-line unicorn/max-nested-calls -- schema nesting mirrors the payload shape
       Devices: z.array(ClassicMinimalDeviceSchema),
     }),
   ),
@@ -292,6 +293,7 @@ const ClassicFloorSchema = z.looseObject({
 const ClassicBuildingStructureSchema = z.looseObject({
   Areas: z.array(
     z.looseObject({
+      // eslint-disable-next-line unicorn/max-nested-calls -- schema nesting mirrors the payload shape
       Devices: z.array(ClassicMinimalDeviceSchema),
     }),
   ),
@@ -377,6 +379,7 @@ export const ClassicEnergyDataSchema: z.ZodType<
  * @param data - Untrusted data from an upstream API response.
  * @param context - Short label surfaced in the thrown error message.
  * @returns The parsed, typed data.
+ * @throws A {@link ValidationError} whose `cause` is the underlying ZodError.
  */
 export const parseOrThrow = <T>(
   schema: z.ZodType<T>,

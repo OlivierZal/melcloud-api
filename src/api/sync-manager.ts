@@ -33,8 +33,9 @@ export class SyncManager implements Disposable {
   }
 
   public planNext(): void {
-    if (this.#interval) {
+    if (this.#interval > 0) {
       this.#timeout.schedule(() => {
+        // eslint-disable-next-line unicorn/prefer-await -- fire-and-forget inside a synchronous timer callback; rejections are logged, never propagated
         this.#syncFunction().catch((error: unknown) => {
           this.#logger.error('Auto-sync failed:', error)
         })

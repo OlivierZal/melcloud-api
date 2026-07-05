@@ -23,7 +23,7 @@ const setting = (
       return this.settingManager?.get(key) ?? target.get.call(this)
     },
     set(this: HasSettingManager, value: string): void {
-      if (this.settingManager) {
+      if (this.settingManager !== undefined) {
         this.settingManager.set(key, value)
         return
       }

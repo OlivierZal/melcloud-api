@@ -21,7 +21,7 @@ import type { HomeDeviceData, HomeEnergyData, Result } from '../types/index.ts'
 export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   /**
    * Unique device identifier as assigned by MELCloud Home.
-   * @returns The device id.
+   * @returns The GUID string assigned by MELCloud Home.
    */
   public get id(): string {
     return this.model.id

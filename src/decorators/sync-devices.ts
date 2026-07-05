@@ -33,6 +33,7 @@ export const syncDevices =
   ({ type }: { type?: DeviceType } = {}) =>
   <TArgs extends readonly unknown[], TResult>(
     target: (...args: TArgs) => Promise<TResult>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the decorator protocol imposes the context parameter
     _context: ClassMethodDecoratorContext,
   ): ((...args: TArgs) => Promise<TResult>) =>
     async function newTarget(this: HasNotifySync, ...args: TArgs) {
