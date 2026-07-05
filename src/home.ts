@@ -38,6 +38,7 @@ export {
   type HomeReportDataset as ReportDataset,
   type HomeReportPoint as ReportPoint,
   type HomeUser as User,
+  type HomeUserContext as UserContext,
   type HomeVertical as Vertical,
   HomeAPI as API,
   HomeBaseDeviceFacade as BaseDeviceFacade,

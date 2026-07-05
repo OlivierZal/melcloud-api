@@ -8,6 +8,7 @@ import type {
   HomeReportData,
   HomeTokenResponse,
   HomeUser,
+  HomeUserContext,
   LoginCredentials,
   Result,
 } from '../types/index.ts'
@@ -22,6 +23,9 @@ import {
   HomeEnergyDataSchema,
   HomeErrorLogEntryListSchema,
   HomeReportDataSchema,
+  HomeResilientContextSchema,
+  HomeUserContextSchema,
+  parseOrThrow,
 } from '../validation/index.ts'
 import type { HomeAPIAdapter, HomeAPIConfig } from './home-types.ts'
 import { BaseAPI, normalizeUnauthorized } from './base.ts'
@@ -37,7 +41,7 @@ const ATW_ENERGY_MEASURE = {
 const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 1
 
-const parseUser = (data: HomeContext): HomeUser => ({
+const parseUser = (data: HomeUserContext): HomeUser => ({
   email: data.email,
   firstName: data.firstname,
   lastName: data.lastname,
@@ -328,19 +332,22 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Validate the current session by fetching the user context.
-   * Returns `null` if the request fails (401, network error, etc.)
-   * and clears the stored user state.
+   * Refresh the user by fetching the `/context` identity. On failure
+   * the last known user is returned unchanged: transient failures and
+   * device-payload drift must not read as "logged out" — the
+   * reactive-401 path ({@link reauthenticate}) is the single owner of
+   * clearing the authentication state, so a definitive rejection has
+   * already nulled the user by the time the failure surfaces here.
    * @returns The user or `null`.
    */
   public async getUser(): Promise<HomeUser | null> {
     try {
       await this.#fetchContext()
-      return this.#user
     } catch {
-      this.#user = null
-      return null
+      // Deliberately swallowed: the request pipeline logged the
+      // failure and a real 401 has cleared the user state already.
     }
+    return this.#user
   }
 
   /**
@@ -491,6 +498,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * A valid token returns populated context; an expired one triggers
    * the request pipeline's 401-retry + refresh-token flow; anything
    * else falls through to a full authenticate.
+   *
+   * Mirrors Classic: a failed probe must NOT clear the persisted
+   * session — `list()` swallows transient failures (network not ready
+   * at boot), which are indistinguishable here from a real token
+   * rejection. Clearing is owned by {@link reauthenticate}, which only
+   * runs on a definitive 401.
    * @returns `true` when persisted tokens verified against the BFF
    * (registry populated via the same round-trip); `false` otherwise.
    */
@@ -499,11 +512,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       return false
     }
     await this.list()
-    if (this.context !== null) {
-      return true
-    }
-    this.#clearPersistedSession()
-    return false
+    // `context` gates the reuse: a `true` return promises a verified
+    // registry (see `BaseAPI.initialize`), so an identity-only success
+    // (the salvage parse failed) must fall through to the full-auth
+    // path instead of claiming the reuse completed.
+    return this.isAuthenticated() && this.context !== null
   }
 
   /**
@@ -556,13 +569,34 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   /**
    * Fetch the user context from the BFF and update local state.
    * Shared by `getUser()` and `list()`.
+   *
+   * Two-stage parse: the identity slice is validated first, so any
+   * successful `/context` round-trip marks the session authenticated —
+   * device-payload drift must degrade the registry, never the
+   * authentication state (a strict-only parse used to read as
+   * "unauthenticated" and re-open the settings login form). The full
+   * payload is then parsed strictly; on drift the failure is logged
+   * with its field paths and the salvage schema recovers everything
+   * that still validates per unit.
    * @returns The fetched home context.
    */
   async #fetchContext(): Promise<HomeContext> {
-    const data = await this.requestData('get', '/context', {
-      schema: HomeContextSchema,
-    })
-    this.#syncContext(data)
+    const raw = await this.requestData('get', '/context')
+    this.#user = parseUser(
+      parseOrThrow(HomeUserContextSchema, raw, 'GET /context'),
+    )
+    const strict = HomeContextSchema.safeParse(raw)
+    if (!strict.success) {
+      this.logger.error(
+        'Home context drifted from the strict schema; salvaging device entries:',
+        strict.error,
+      )
+    }
+    const data =
+      strict.success ?
+        strict.data
+      : parseOrThrow(HomeResilientContextSchema, raw, 'GET /context (salvage)')
+    this.#context = data
     return data
   }
 
@@ -691,10 +725,5 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       this.refreshToken = refreshToken
     }
     this.expiry = Temporal.Now.instant().add({ seconds: expiresIn }).toString()
-  }
-
-  #syncContext(data: HomeContext): void {
-    this.#context = data
-    this.#user = parseUser(data)
   }
 }

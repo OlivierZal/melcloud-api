@@ -8,11 +8,13 @@ import type {
   HomeAtaDeviceData,
   HomeAtwDeviceCapabilities,
   HomeAtwDeviceData,
+  HomeBuilding,
   HomeContext,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
   HomeTokenResponse,
+  HomeUserContext,
   Hour,
 } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
@@ -131,19 +133,6 @@ const HomeProtectionSchema = z.looseObject({
   min: z.number(),
 })
 
-const HomeDeviceScheduleEntrySchema = z.looseObject({
-  days: z.array(z.string()),
-  enabled: z.boolean(),
-  id: z.string(),
-  operationMode: z.string(),
-  power: z.boolean(),
-  setFanSpeed: z.string().optional(),
-  setPoint: z.number(),
-  time: z.string(),
-  vaneHorizontalDirection: z.string().optional(),
-  vaneVerticalDirection: z.string().optional(),
-})
-
 const HomeDeviceCommonFields = {
   displayIcon: z.string(),
   frostProtection: HomeProtectionSchema.nullable(),
@@ -154,7 +143,12 @@ const HomeDeviceCommonFields = {
   isInError: z.boolean(),
   overheatProtection: HomeProtectionSchema.nullable(),
   rssi: z.number(),
-  schedule: z.array(HomeDeviceScheduleEntrySchema),
+  // Structural like `holidayMode`: the wire shape differs between ATA
+  // and ATW units, power-off entries carry `null` for every setting
+  // field, and the SDK does not consume schedule fields. Validating
+  // the entries strictly took the whole /context down on legitimate
+  // payloads (off-schedules), which read as "unauthenticated".
+  schedule: z.array(z.looseObject({})),
   scheduleEnabled: z.boolean(),
   settings: z.array(HomeDeviceSettingSchema),
   timeZone: z.string(),
@@ -203,6 +197,72 @@ export const HomeContextSchema: z.ZodType<HomeContext> = z.looseObject({
   numberOfGuestUsersAllowedPerUnit: z.number(),
   scenes: z.array(z.looseObject({})),
 })
+
+/**
+ * Identity slice of the /context response — parsed before the full
+ * {@link HomeContextSchema} so a valid session is recognized even when
+ * the device payload drifts. Device-schema failures must degrade the
+ * registry, never the authentication state.
+ */
+export const HomeUserContextSchema: z.ZodType<HomeUserContext> = z.looseObject({
+  email: z.string(),
+  firstname: z.string(),
+  id: z.string(),
+  lastname: z.string(),
+})
+
+/**
+ * Parse an array while dropping entries that fail `schema` instead of
+ * failing the whole payload. Used by the salvage pass on `/context`:
+ * one drifted device must degrade the registry by one unit, not hide
+ * every building.
+ * @param schema - Element schema applied to each entry.
+ * @returns Schema producing only the entries that validated.
+ */
+const lenientArray = <T>(schema: z.ZodType<T>): z.ZodType<T[]> =>
+  z.array(z.unknown()).transform((entries) =>
+    entries.flatMap((entry) => {
+      const result = schema.safeParse(entry)
+      return result.success ? [result.data] : []
+    }),
+  )
+
+// Building envelopes stay strict on purpose: a malformed building
+// signals payload-level breakage where silently dropping the building
+// would unregister all of its devices — better to fail the salvage and
+// keep the registry on its last known state.
+const HomeResilientBuildingSchema: z.ZodType<HomeBuilding> = z.looseObject({
+  airToAirUnits: lenientArray(HomeAtaDeviceDataSchema),
+  airToWaterUnits: lenientArray(HomeAtwDeviceDataSchema),
+  id: z.string(),
+  name: z.string(),
+  timezone: z.string(),
+})
+
+/**
+ * Salvage variant of {@link HomeContextSchema}, applied only after the
+ * strict parse fails (the strict failure is logged with full paths).
+ * Device entries are validated one by one so a single drifted unit
+ * degrades the registry by exactly that unit, and unconsumed metadata
+ * falls back to neutral defaults instead of failing the payload.
+ */
+export const HomeResilientContextSchema: z.ZodType<HomeContext> = z.looseObject(
+  {
+    buildings: z.array(HomeResilientBuildingSchema),
+    country: z.string().catch(''),
+    email: z.string(),
+    firstname: z.string(),
+    guestBuildings: z.array(HomeResilientBuildingSchema),
+    id: z.string(),
+    language: z.string().catch(''),
+    lastname: z.string(),
+    numberOfBuildingsAllowed: z.number().catch(0),
+    numberOfDevicesAllowed: z.number().catch(0),
+    numberOfGuestDevicesAllowed: z.number().catch(0),
+    numberOfGuestUsersAllowedPerUnit: z.number().catch(0),
+    scenes: z.array(z.looseObject({})).catch([]),
+  },
+)
 
 // Home telemetry / report endpoints. Responses are consumed as arrays
 // the SDK iterates downstream, so a malformed shape would surface as
