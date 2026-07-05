@@ -63,7 +63,6 @@ export const classicUpdateDevices =
   } = {}) =>
   <TArgs extends readonly unknown[]>(
     target: (...args: TArgs) => Promise<T>,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the decorator protocol imposes the context parameter
     _context: ClassMethodDecoratorContext,
   ): ((...args: TArgs) => Promise<T>) =>
     async function newTarget(this: ClassicZoneFacade, ...args: TArgs) {
@@ -144,7 +143,6 @@ const updateSingleDevice = <
   TData extends ClassicSetDeviceData<T>,
 >(
   target: (...args: TArgs) => Promise<TData>,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the decorator protocol imposes the context parameter
   _context: ClassMethodDecoratorContext,
 ): ((...args: TArgs) => Promise<TData>) =>
   async function newTarget(this: ClassicDeviceFacade<T>, ...args: TArgs) {

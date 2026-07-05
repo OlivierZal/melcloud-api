@@ -149,7 +149,7 @@ const apiWithPersistedCredentials = (
   })
 
 describe('baseAPI shared request pipeline', () => {
-  let api: TestAPI = cast(null)
+  let api: TestAPI
 
   beforeEach(() => {
     vi.useFakeTimers()
@@ -619,7 +619,7 @@ describe('baseAPI shared request pipeline', () => {
       api.needsSessionRefreshMock.mockReturnValue(true)
       let refreshCalls = 0
       api.performSessionRefreshMock.mockImplementation(async () => {
-        refreshCalls += 1
+        refreshCalls++
         await Promise.resolve()
       })
 

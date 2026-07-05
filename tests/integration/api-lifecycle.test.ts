@@ -84,7 +84,7 @@ const { client: mockHttpClient, requestSpy: mockRequest } =
   createMockHttpClient('https://app.melcloud.com/Mitsubishi.Wifi.Client')
 
 describe('api lifecycle', () => {
-  let melCloudApi: typeof ClassicAPI = cast(null)
+  let melCloudApi: typeof ClassicAPI
 
   beforeEach(async () => {
     vi.useFakeTimers()

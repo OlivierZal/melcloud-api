@@ -76,10 +76,10 @@ const config = defineConfig([
   },
   {
     extends: [
-      js.configs.all,
-      unicorn.configs.all,
-      tsConfigs.all,
+      js.configs.recommended,
+      unicorn.configs.recommended,
       tsConfigs.strictTypeChecked,
+      tsConfigs.stylisticTypeChecked,
       importXConfigs.errors,
       importXConfigs.typescript,
       prettier,
@@ -122,7 +122,7 @@ const config = defineConfig([
           },
         },
       ],
-      '@typescript-eslint/consistent-return': 'off',
+      '@typescript-eslint/class-methods-use-this': 'error',
       '@typescript-eslint/consistent-type-assertions': [
         'error',
         {
@@ -143,7 +143,11 @@ const config = defineConfig([
           fixStyle: 'inline-type-imports',
         },
       ],
-      '@typescript-eslint/member-ordering': 'off',
+      '@typescript-eslint/default-param-last': 'error',
+      '@typescript-eslint/explicit-function-return-type': 'error',
+      '@typescript-eslint/explicit-member-accessibility': 'error',
+      '@typescript-eslint/max-params': 'error',
+      '@typescript-eslint/method-signature-style': 'error',
       '@typescript-eslint/naming-convention': [
         'error',
         // ── Catch-all ────────────────────────────────────────
@@ -259,14 +263,15 @@ const config = defineConfig([
           checkUnknown: true,
         },
       ],
-      '@typescript-eslint/no-dupe-class-members': 'off',
       '@typescript-eslint/no-floating-promises': [
         'error',
         {
           checkThenables: true,
+          // `no-void` bans the `void promise` escape; demand await/.catch.
+          ignoreVoid: false,
         },
       ],
-      '@typescript-eslint/no-invalid-this': 'off',
+      '@typescript-eslint/no-import-type-side-effects': 'error',
       '@typescript-eslint/no-magic-numbers': [
         'error',
         {
@@ -278,7 +283,6 @@ const config = defineConfig([
           ignoreTypeIndexes: true,
         },
       ],
-      '@typescript-eslint/no-redeclare': 'off',
       '@typescript-eslint/no-shadow': [
         'error',
         {
@@ -301,6 +305,8 @@ const config = defineConfig([
           checkLiteralConstAssertions: true,
         },
       ],
+      '@typescript-eslint/no-unsafe-type-assertion': 'error',
+      '@typescript-eslint/no-unused-private-class-members': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -309,6 +315,7 @@ const config = defineConfig([
           },
         },
       ],
+      '@typescript-eslint/no-useless-empty-export': 'error',
       '@typescript-eslint/only-throw-error': [
         'error',
         {
@@ -335,7 +342,9 @@ const config = defineConfig([
           enforceForRenamedProperties: false,
         },
       ],
-      '@typescript-eslint/prefer-readonly-parameter-types': 'off',
+      '@typescript-eslint/prefer-readonly': 'error',
+      '@typescript-eslint/promise-function-async': 'error',
+      '@typescript-eslint/require-array-sort-compare': 'error',
       '@typescript-eslint/restrict-template-expressions': [
         'error',
         {
@@ -358,6 +367,7 @@ const config = defineConfig([
           allowString: false,
         },
       ],
+      '@typescript-eslint/strict-void-return': 'error',
       '@typescript-eslint/switch-exhaustiveness-check': [
         'error',
         {
@@ -366,16 +376,27 @@ const config = defineConfig([
           requireDefaultForNonUnion: true,
         },
       ],
+      'accessor-pairs': 'error',
       'array-callback-return': [
         'error',
         {
           checkForEach: true,
         },
       ],
-      camelcase: 'off',
-      'capitalized-comments': 'off',
+      'arrow-body-style': 'error',
+      // Measured codebase ceiling.
+      complexity: [
+        'error',
+        {
+          max: 10,
+        },
+      ],
       curly: 'error',
-      'default-case': 'off',
+      'default-case-last': 'error',
+      eqeqeq: 'error',
+      'func-style': 'error',
+      'guard-for-in': 'error',
+      'id-length': 'error',
       'import-x/first': 'error',
       'import-x/newline-after-import': 'error',
       'import-x/no-absolute-path': 'error',
@@ -387,7 +408,6 @@ const config = defineConfig([
       ],
       'import-x/no-cycle': 'error',
       'import-x/no-default-export': 'error',
-      'import-x/no-deprecated': 'error',
       'import-x/no-duplicates': [
         'error',
         {
@@ -437,15 +457,24 @@ const config = defineConfig([
       'import-x/no-useless-path-segments': 'error',
       'import-x/no-webpack-loader-syntax': 'error',
       'import-x/unambiguous': 'error',
-      'max-lines': 'off',
-      'no-cond-assign': ['error', 'always'],
-      'no-continue': 'off',
-      'no-else-return': [
+      'max-classes-per-file': 'error',
+      // Measured codebase ceiling.
+      'max-depth': [
         'error',
         {
-          allowElseIf: false,
+          max: 3,
         },
       ],
+      'max-lines-per-function': 'error',
+      'max-statements': 'error',
+      'no-await-in-loop': 'error',
+      'no-bitwise': 'error',
+      'no-cond-assign': ['error', 'always'],
+      'no-console': 'error',
+      'no-constructor-return': 'error',
+      'no-eval': 'error',
+      'no-extend-native': 'error',
+      'no-extra-bind': 'error',
       'no-extra-boolean-cast': [
         'error',
         {
@@ -458,22 +487,56 @@ const config = defineConfig([
           reportUnusedFallthroughComment: true,
         },
       ],
+      'no-implicit-coercion': 'error',
+      'no-inline-comments': 'error',
       'no-irregular-whitespace': [
         'error',
         {
           skipStrings: false,
         },
       ],
+      'no-labels': 'error',
+      'no-lone-blocks': 'error',
+      'no-lonely-if': 'error',
+      'no-multi-assign': 'error',
+      'no-multi-str': 'error',
+      'no-new': 'error',
+      'no-new-func': 'error',
+      'no-object-constructor': 'error',
+      'no-param-reassign': 'error',
+      'no-promise-executor-return': 'error',
+      // `src/temporal.ts` is the single sanctioned polyfill entry point.
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['temporal-polyfill', 'temporal-polyfill/*'],
+              message: 'Import Temporal/Intl from src/temporal.ts instead.',
+            },
+          ],
+        },
+      ],
       'no-return-assign': ['error', 'always'],
+      'no-self-compare': 'error',
       'no-sequences': [
         'error',
         {
           allowInParentheses: false,
         },
       ],
-      'no-ternary': 'off',
-      'no-undefined': 'off',
+      'no-template-curly-in-string': 'error',
       'no-unexpected-multiline': 'error',
+      'no-unmodified-loop-condition': 'error',
+      'no-unneeded-ternary': 'error',
+      'no-unreachable-loop': 'error',
+      // Owned by `@typescript-eslint/no-unused-private-class-members`.
+      'no-unused-private-class-members': 'off',
+      'no-useless-computed-key': 'error',
+      'no-useless-rename': 'error',
+      'no-useless-return': 'error',
+      'no-void': 'error',
+      'object-shorthand': 'error',
       'one-var': ['error', 'never'],
       'perfectionist/sort-array-includes': 'error',
       'perfectionist/sort-classes': [
@@ -640,32 +703,39 @@ const config = defineConfig([
       'perfectionist/sort-sets': 'error',
       'perfectionist/sort-switch-case': 'error',
       'perfectionist/sort-union-types': ['error', typeSortOptions],
+      'prefer-arrow-callback': 'error',
+      'prefer-exponentiation-operator': 'error',
+      'prefer-named-capture-group': 'error',
+      'prefer-numeric-literals': 'error',
+      'prefer-object-has-own': 'error',
+      'prefer-object-spread': 'error',
       'prefer-regex-literals': [
         'error',
         {
           disallowRedundantWrapping: true,
         },
       ],
+      'prefer-template': 'error',
+      'require-atomic-updates': 'error',
       'require-unicode-regexp': [
         'error',
         {
           requireFlag: 'v',
         },
       ],
-      'sort-imports': 'off',
-      'sort-keys': 'off',
-      // Autofix breaks `@param` names (`url` → `URL`).
-      'unicorn/comment-content': 'off',
+      'symbol-description': 'error',
+      'unicode-bom': 'error',
       // Owned by `@typescript-eslint/naming-convention`.
       'unicorn/consistent-boolean-name': 'off',
       // Owned by `perfectionist/sort-classes`.
       'unicorn/consistent-class-member-order': 'off',
+      'unicorn/custom-error-definition': 'error',
+      // Owned by `@typescript-eslint/naming-convention`.
       'unicorn/name-replacements': 'off',
-      // Standard JSDoc/TSDoc formatting.
-      'unicorn/no-asterisk-prefix-in-documentation-comments': 'off',
-      'unicorn/no-keyword-prefix': 'off',
-      // Prose is wrapped deliberately.
-      'unicorn/no-manually-wrapped-comments': 'off',
+      // Owned by `import-x/no-anonymous-default-export`.
+      'unicorn/no-anonymous-default-export': 'off',
+      // Owned by `import-x/no-named-default`.
+      'unicorn/no-named-default': 'off',
       // Domain nouns: `Set-Cookie` header, `SetDeviceData` payload.
       'unicorn/no-non-function-verb-prefix': [
         'error',
@@ -676,13 +746,17 @@ const config = defineConfig([
       // Unaware of `Symbol.dispose`.
       'unicorn/no-nonstandard-builtin-properties': 'off',
       'unicorn/no-null': 'off',
-      // `new URL(x, base).href` is idiomatic.
-      'unicorn/no-unreadable-new-expression': 'off',
-      'unicorn/no-useless-switch-case': 'off',
-      // Requires Node.js 24.
-      'unicorn/prefer-error-is-error': 'off',
+      // Owned by `@typescript-eslint/no-unnecessary-boolean-literal-compare`.
+      'unicorn/no-unnecessary-boolean-comparison': 'off',
+      'unicorn/no-unused-properties': 'error',
+      'unicorn/prefer-dispose': 'error',
+      'unicorn/prefer-import-meta-properties': 'error',
+      // Owned by `@typescript-eslint/prefer-string-starts-ends-with`.
+      'unicorn/prefer-string-starts-ends-with': 'off',
+      'unicorn/prefer-temporal': 'error',
       // Requires Node.js 24.
       'unicorn/prefer-uint8array-base64': 'off',
+      'unicorn/try-complexity': 'error',
       'use-isnan': [
         'error',
         {
@@ -695,6 +769,7 @@ const config = defineConfig([
           requireStringLiterals: true,
         },
       ],
+      yoda: 'error',
     },
     settings: {
       perfectionist: {
@@ -757,11 +832,6 @@ const config = defineConfig([
           checkClosedHeadings: true,
         },
       ],
-      // Allow GitHub alert syntax (`> [!IMPORTANT]`, `> [!CAUTION]`, …).
-      // It's a GitHub UI extension to GFM, not part of the GFM spec, so
-      // the rule's parser sees the bracketed marker as a missing
-      // reference label. The plugin exposes `allowLabels` for exactly
-      // this case (see eslint/markdown PR #256).
       'markdown/no-missing-label-refs': [
         'error',
         {
@@ -801,11 +871,19 @@ const config = defineConfig([
     },
   },
   {
-    // Decorator targets receive an explicitly typed `this`, which
-    // TypeScript checks — the category's architecture, not a per-file
-    // incident.
+    // Decorator protocol: explicitly typed `this` (TypeScript-checked)
+    // and an imposed, unused `_context` parameter.
     files: ['src/decorators/**/*.ts'],
     rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_context$',
+          enableAutofixRemoval: {
+            imports: true,
+          },
+        },
+      ],
       'unicorn/no-this-outside-of-class': 'off',
     },
   },
@@ -820,22 +898,18 @@ const config = defineConfig([
     },
   },
   {
-    extends: [
-      vitest.configs.all,
-      {
-        // The `all` preset ships most rules at 'warn'; hoist to 'error'
-        // (zero-warning policy).
-        rules: Object.fromEntries(
-          Object.entries(vitest.configs.all.rules).map(([name, severity]) => [
-            name,
-            severity === 'off' ? 'off' : 'error',
-          ]),
-        ),
-      },
-    ],
+    files: ['src/temporal.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+  {
+    extends: [vitest.configs.recommended],
     files: ['tests/**/*.ts'],
     rules: {
       '@typescript-eslint/no-magic-numbers': 'off',
+      // Owned by `vitest/unbound-method`, the mock-aware port.
+      '@typescript-eslint/unbound-method': 'off',
       'max-lines-per-function': 'off',
       'max-statements': 'off',
       // Mock builders nest factories.
@@ -845,8 +919,47 @@ const config = defineConfig([
           max: 4,
         },
       ],
-      'vitest/max-expects': 'off',
-      'vitest/no-hooks': 'off',
+      // Without options the rule is a no-op; the suite uses `.each` exclusively.
+      'vitest/consistent-each-for': [
+        'error',
+        {
+          describe: 'each',
+          it: 'each',
+          suite: 'each',
+          test: 'each',
+        },
+      ],
+      'vitest/consistent-test-filename': 'error',
+      'vitest/consistent-test-it': [
+        'error',
+        {
+          fn: 'it',
+        },
+      ],
+      'vitest/consistent-vitest-vi': 'error',
+      'vitest/hoisted-apis-on-top': 'error',
+      'vitest/max-nested-describe': [
+        'error',
+        {
+          max: 3,
+        },
+      ],
+      'vitest/no-alias-methods': 'error',
+      'vitest/no-conditional-in-test': 'error',
+      'vitest/no-conditional-tests': 'error',
+      // The recommended preset ships this at 'warn' (zero-warning policy).
+      'vitest/no-disabled-tests': 'error',
+      'vitest/no-duplicate-hooks': 'error',
+      'vitest/no-large-snapshots': 'error',
+      'vitest/no-test-return-statement': 'error',
+      // Union of the seven per-hook `padding-around-*` rules.
+      'vitest/padding-around-all': 'error',
+      'vitest/prefer-called-times': 'error',
+      'vitest/prefer-called-with': 'error',
+      'vitest/prefer-comparison-matcher': 'error',
+      'vitest/prefer-describe-function-title': 'error',
+      'vitest/prefer-each': 'error',
+      'vitest/prefer-equality-matcher': 'error',
       'vitest/prefer-expect-assertions': [
         'error',
         {
@@ -854,13 +967,33 @@ const config = defineConfig([
           onlyFunctionsWithExpectInLoop: true,
         },
       ],
-      'vitest/require-hook': 'off',
+      'vitest/prefer-expect-resolves': 'error',
+      'vitest/prefer-expect-type-of': 'error',
+      'vitest/prefer-hooks-in-order': 'error',
+      'vitest/prefer-hooks-on-top': 'error',
+      'vitest/prefer-import-in-mock': 'error',
+      'vitest/prefer-importing-vitest-globals': 'error',
+      'vitest/prefer-lowercase-title': 'error',
+      'vitest/prefer-mock-promise-shorthand': 'error',
+      'vitest/prefer-snapshot-hint': 'error',
+      'vitest/prefer-spy-on': 'error',
+      'vitest/prefer-strict-boolean-matchers': 'error',
+      'vitest/prefer-strict-equal': 'error',
+      'vitest/prefer-to-be': 'error',
+      'vitest/prefer-to-contain': 'error',
+      'vitest/prefer-to-have-been-called-times': 'error',
+      'vitest/prefer-to-have-length': 'error',
+      'vitest/prefer-vi-mocked': 'error',
+      'vitest/require-awaited-expect-poll': 'error',
       'vitest/require-mock-type-parameters': [
         'error',
         {
           checkImportFunctions: true,
         },
       ],
+      'vitest/require-to-throw-message': 'error',
+      'vitest/require-top-level-describe': 'error',
+      'vitest/unbound-method': 'error',
       'vitest/warn-todo': 'error',
     },
     settings: {
