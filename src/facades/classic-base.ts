@@ -34,7 +34,7 @@ import {
   mapResult,
   toClassicDeviceId,
 } from '../types/index.ts'
-import { getChartLineOptions, now } from '../utils.ts'
+import { getChartLineOptions } from '../utils.ts'
 import { HourSchema, parseOrThrow } from '../validation/index.ts'
 import type {
   ClassicFacade,
@@ -231,7 +231,9 @@ export abstract class ClassicBaseFacade<
     const isEnabled = to !== undefined
     const startDate =
       isEnabled ?
-        Temporal.PlainDateTime.from(from ?? now(this.api.timezone))
+        from === undefined ?
+          Temporal.Now.plainDateTimeISO(this.api.timezone)
+        : Temporal.PlainDateTime.from(from)
       : null
     const endDate = isEnabled ? Temporal.PlainDateTime.from(to) : null
     return this.api.updateHolidayMode({

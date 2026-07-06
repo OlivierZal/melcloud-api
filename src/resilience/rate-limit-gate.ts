@@ -1,5 +1,4 @@
 import { Temporal } from '../temporal.ts'
-import { SECONDS_PER_MINUTE } from '../time-units.ts'
 
 /**
  * Subset of `Temporal.Duration` field values accepted by
@@ -73,12 +72,14 @@ const parseRetryAfter = (
  * @returns The formatted, English-diagnostic string.
  */
 export const formatDurationHuman = (duration: Temporal.Duration): string => {
-  const totalSeconds = Math.trunc(duration.total({ unit: 'seconds' }))
-  if (totalSeconds < SECONDS_PER_MINUTE) {
-    return `${String(totalSeconds)} ${pluralize(totalSeconds, 'second')}`
+  const { minutes, seconds } = duration.round({
+    largestUnit: 'minutes',
+    roundingMode: 'trunc',
+    smallestUnit: 'seconds',
+  })
+  if (minutes === 0) {
+    return `${String(seconds)} ${pluralize(seconds, 'second')}`
   }
-  const minutes = Math.trunc(totalSeconds / SECONDS_PER_MINUTE)
-  const seconds = totalSeconds % SECONDS_PER_MINUTE
   if (seconds === 0) {
     return `${String(minutes)} ${pluralize(minutes, 'minute')}`
   }

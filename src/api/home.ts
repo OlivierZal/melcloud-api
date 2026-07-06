@@ -48,26 +48,22 @@ const parseUser = (data: HomeUserContext): HomeUser => ({
   sub: data.id,
 })
 
-// Parse offset-bearing inputs (e.g. `'2026-03-01T10:00:00Z'`) as
-// absolute instants then re-project to UTC wall time; parse offset-less
-// inputs (e.g. `'2026-03-01'`, `'2026-03-01T00:00:00'`) as already-UTC
-// wall time. Anchoring on UTC prevents the host's local timezone from
-// shifting the formatted output by hours.
-const parseUTCPlainDateTime = (iso: string): Temporal.PlainDateTime => {
-  try {
-    return Temporal.Instant.from(iso)
-      .toZonedDateTimeISO('UTC')
-      .toPlainDateTime()
-  } catch {
-    return Temporal.PlainDateTime.from(iso)
-  }
-}
+// Anchor on UTC so the host's local timezone cannot shift the
+// formatted output: `offset: 'use'` keeps offset-bearing inputs
+// (e.g. `'2026-03-01T10:00:00Z'`) at their absolute instant while
+// offset-less inputs (e.g. `'2026-03-01'`) adopt UTC wall time.
+const parseUTCPlainDateTime = (iso: string): Temporal.PlainDateTime =>
+  Temporal.ZonedDateTime.from(`${iso}[UTC]`, {
+    offset: 'use',
+  }).toPlainDateTime()
 
 // `/report/v1/trendsummary` expects .NET-style ISO with 7 subsecond zeros
 // (e.g. `2026-04-19T00:00:00.0000000`). Anything shorter is silently
 // truncated to an empty window by the BFF.
 const toReportDate = (iso: string): string =>
-  `${parseUTCPlainDateTime(iso).toString({ smallestUnit: 'second' })}.0000000`
+  parseUTCPlainDateTime(iso)
+    .round({ roundingMode: 'trunc', smallestUnit: 'second' })
+    .toString({ fractionalSecondDigits: 7 })
 
 // `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
 // space and no seconds. Seconds or an ISO `T` separator produce an empty
