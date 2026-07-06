@@ -229,12 +229,11 @@ export abstract class ClassicBaseFacade<
     ClassicFailureData | ClassicSuccessData
   > {
     const isEnabled = to !== undefined
-    const startDate =
-      isEnabled ?
-        from === undefined ?
-          Temporal.Now.plainDateTimeISO(this.api.timezone)
-        : Temporal.PlainDateTime.from(from)
-      : null
+    const resolveStartDate = (): Temporal.PlainDateTime =>
+      from === undefined ?
+        Temporal.Now.plainDateTimeISO(this.api.timezone)
+      : Temporal.PlainDateTime.from(from)
+    const startDate = isEnabled ? resolveStartDate() : null
     const endDate = isEnabled ? Temporal.PlainDateTime.from(to) : null
     return this.api.updateHolidayMode({
       postData: {
