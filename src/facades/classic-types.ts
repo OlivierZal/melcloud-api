@@ -59,6 +59,8 @@ export interface ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
 
 /**
  * Facade for an individual MELCloud device with type-safe data access and control.
+ * @template T - Device type discriminator narrowing device data, update
+ * payloads, and report shapes.
  * @category Facades
  */
 export interface ClassicDeviceFacade<T extends ClassicDeviceType>

@@ -60,6 +60,8 @@ const getDuration = ({ from, to }: Required<ReportQuery>): number => {
 /**
  * Abstract base for device-specific facades. Handles device data access, report generation,
  * value updates with effective flags, and ATA key conversion between set/list formats.
+ * @template T - Device type discriminator narrowing device data, update
+ * payloads, and effective flags to the device-type-specific shapes.
  */
 export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   extends ClassicBaseFacade<ClassicDeviceAny>

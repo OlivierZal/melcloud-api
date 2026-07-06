@@ -16,7 +16,11 @@ import {
 import type { ClassicZoneFacade } from './classic-types.ts'
 import { ClassicBaseFacade } from './classic-base.ts'
 
-/** Abstract base for zone facades (building, floor, area) that support ATA group operations. */
+/**
+ * Abstract base for zone facades (building, floor, area) that support ATA group operations.
+ * @template T - Zone model class (area, building, or floor) backing this
+ * facade in the registry.
+ */
 export abstract class BaseZoneFacade<
   T extends ClassicArea | ClassicBuilding | ClassicFloor,
 >

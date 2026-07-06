@@ -9,6 +9,8 @@ import { BaseModel } from './base.ts'
 
 /**
  * Concrete device model holding mutable device data that can be partially updated after API calls.
+ * @template T - Device type discriminator narrowing the `data` payload to its
+ * device-type-specific shape.
  * @category Entities
  */
 export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {

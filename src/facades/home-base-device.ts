@@ -16,6 +16,8 @@ import type { HomeDeviceData, HomeEnergyData, Result } from '../types/index.ts'
  * The class is intentionally thin: anything that diverges between
  * ATA and ATW (operation modes, capability fields, update payload
  * shape, telemetry endpoints) lives in the subclass.
+ * @template TData - Wire-format device payload variant exposed on
+ * `model.data`, narrowed to the device-type-specific shape by each subclass.
  * @category Facades
  */
 export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
