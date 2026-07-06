@@ -59,7 +59,6 @@ export const fetchDevices =
   ({ when = 'before' }: { when?: 'after' | 'before' } = {}) =>
   <TArgs extends readonly unknown[], TResult>(
     target: (...args: TArgs) => Promise<TResult>,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the decorator protocol imposes the context parameter
     _context: ClassMethodDecoratorContext,
   ): ((...args: TArgs) => Promise<TResult>) =>
     async function newTarget(this: FetchDevicesHost, ...args: TArgs) {

@@ -78,7 +78,7 @@ const errorEntry = (
 })
 
 describe('mELCloud Classic API', () => {
-  let melCloudApi: typeof ClassicAPI = cast(null)
+  let melCloudApi: typeof ClassicAPI
 
   beforeEach(async () => {
     vi.useFakeTimers()
@@ -935,7 +935,7 @@ describe('mELCloud Classic API', () => {
         if (config.url === '/User/ListDevices') {
           return wrap([])
         }
-        callCount += 1
+        callCount++
         if (callCount === 1) {
           throw createHttpError({
             message: 'unauthorized',

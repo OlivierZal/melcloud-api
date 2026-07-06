@@ -308,7 +308,7 @@ const httpUnauthorized = (url = '/context'): HttpError =>
   })
 
 describe('melcloud home API', () => {
-  let melCloudHomeApi: { create: typeof HomeAPI.create } = cast(null)
+  let melCloudHomeApi: { create: typeof HomeAPI.create }
 
   beforeEach(async () => {
     mockRequest.mockReset()

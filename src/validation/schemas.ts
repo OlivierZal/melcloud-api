@@ -280,23 +280,17 @@ const ClassicMinimalDeviceSchema = z.looseObject({
   ]),
 })
 
+const ClassicMinimalAreaSchema = z.looseObject({
+  Devices: z.array(ClassicMinimalDeviceSchema),
+})
+
 const ClassicFloorSchema = z.looseObject({
-  Areas: z.array(
-    z.looseObject({
-      // eslint-disable-next-line unicorn/max-nested-calls -- schema nesting mirrors the payload shape
-      Devices: z.array(ClassicMinimalDeviceSchema),
-    }),
-  ),
+  Areas: z.array(ClassicMinimalAreaSchema),
   Devices: z.array(ClassicMinimalDeviceSchema),
 })
 
 const ClassicBuildingStructureSchema = z.looseObject({
-  Areas: z.array(
-    z.looseObject({
-      // eslint-disable-next-line unicorn/max-nested-calls -- schema nesting mirrors the payload shape
-      Devices: z.array(ClassicMinimalDeviceSchema),
-    }),
-  ),
+  Areas: z.array(ClassicMinimalAreaSchema),
   Devices: z.array(ClassicMinimalDeviceSchema),
   Floors: z.array(ClassicFloorSchema),
 })

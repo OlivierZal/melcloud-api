@@ -76,8 +76,7 @@ interface FacadeContext<T> {
 }
 
 const buildFacade = <TFacade, TInstance>(
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- PascalCase is the conventional shape for constructor references; the conflicting `new-cap` rule fires otherwise
-  Ctor: new (
+  ctor: new (
     api: ClassicAPIAdapter,
     registry: ClassicRegistry,
     instance: TInstance,
@@ -89,7 +88,7 @@ const buildFacade = <TFacade, TInstance>(
   const api = createMockClassicApi(apiOverrides)
   return {
     api,
-    facade: new Ctor(api, registry, resolveInstance(registry)),
+    facade: new ctor(api, registry, resolveInstance(registry)),
     registry,
   }
 }
