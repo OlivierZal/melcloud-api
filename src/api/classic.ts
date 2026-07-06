@@ -134,7 +134,7 @@ const parseErrorLogQuery = (
 }
 
 // Collect all areas from both building-level and floor-level
-const collectAreas = function* collectAreas(
+const collectAreas = function* (
   buildings: ClassicBuildingWithStructure[],
 ): Generator<ClassicAreaDataAny> {
   for (const {
@@ -148,7 +148,7 @@ const collectAreas = function* collectAreas(
 }
 
 // Collect all devices from every level of the hierarchy
-const collectDevices = function* collectDevices(
+const collectDevices = function* (
   buildings: ClassicBuildingWithStructure[],
 ): Generator<ClassicListDeviceAny> {
   for (const {

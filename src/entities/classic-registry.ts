@@ -85,7 +85,7 @@ const level = {
   great_grandchild: 3,
 }
 
-const flattenAreas = function* flattenAreas(
+const flattenAreas = function* (
   areas: readonly ClassicAreaZone[],
 ): Generator<ClassicZone> {
   for (const area of areas) {
@@ -94,7 +94,7 @@ const flattenAreas = function* flattenAreas(
   }
 }
 
-const flattenBuildings = function* flattenBuildings(
+const flattenBuildings = function* (
   buildings: readonly ClassicBuildingZone[],
 ): Generator<ClassicZone> {
   for (const building of buildings) {

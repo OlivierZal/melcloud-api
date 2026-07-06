@@ -527,7 +527,6 @@ const config = defineConfig([
         },
       ],
       'no-template-curly-in-string': 'error',
-      'no-unexpected-multiline': 'error',
       'no-unmodified-loop-condition': 'error',
       'no-unneeded-ternary': 'error',
       'no-unreachable-loop': 'error',
@@ -726,16 +725,19 @@ const config = defineConfig([
       ],
       'symbol-description': 'error',
       'unicode-bom': 'error',
-      // Owned by `@typescript-eslint/naming-convention`.
+      // Owned by `@typescript-eslint/naming-convention` for variables,
+      // parameters and class properties (identical prefix set).
       'unicorn/consistent-boolean-name': 'off',
       // Owned by `perfectionist/sort-classes`.
       'unicorn/consistent-class-member-order': 'off',
       'unicorn/custom-error-definition': 'error',
-      // Owned by `@typescript-eslint/naming-convention`.
+      // Vocabulary opt-out: the abbreviation renames it forces
+      // (`args` -> `arguments_`, ...) fight the domain naming.
       'unicorn/name-replacements': 'off',
       // Owned by `import-x/no-anonymous-default-export`.
       'unicorn/no-anonymous-default-export': 'off',
-      // Owned by `import-x/no-named-default`.
+      // Owned by `import-x/no-named-default` (imports; the export
+      // form it also covers is unused here).
       'unicorn/no-named-default': 'off',
       // Domain nouns: `Set-Cookie` header, `SetDeviceData` payload.
       'unicorn/no-non-function-verb-prefix': [
