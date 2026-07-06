@@ -49,13 +49,11 @@ const DEFAULT_YEAR = '1970-01-01'
 // Calendar-day delta between two ISO wall-clock strings. Computed on
 // `PlainDateTime` so the result reflects the literal Y-M-D-h-m-s span
 // the Classic server uses, independent of DST in any zone.
-const getDuration = ({ from, to }: Required<ReportQuery>): number => {
-  const diff = Temporal.PlainDateTime.from(to).since(
-    Temporal.PlainDateTime.from(from),
-    { largestUnit: 'day' },
-  )
-  return Math.ceil(diff.total({ unit: 'day' }))
-}
+const getDuration = ({ from, to }: Required<ReportQuery>): number =>
+  Temporal.PlainDateTime.from(to).since(Temporal.PlainDateTime.from(from), {
+    roundingMode: 'ceil',
+    smallestUnit: 'day',
+  }).days
 
 /**
  * Abstract base for device-specific facades. Handles device data access, report generation,
