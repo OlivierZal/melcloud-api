@@ -83,6 +83,18 @@ const buildingResponse: ClassicBuildingWithStructure[] = [
 const { client: mockHttpClient, requestSpy: mockRequest } =
   createMockHttpClient('https://app.melcloud.com/Mitsubishi.Wifi.Client')
 
+// Lifecycle tests start from a persisted Classic session: the reuse
+// probe (and with it the create-time initial sync these tests rely
+// on) only runs when a contextKey is persisted — an unauthenticated
+// fetch would 401 against the real API anyway.
+const persistedClassicSession = (): ReturnType<
+  typeof createSettingStore
+>['settingManager'] =>
+  createSettingStore({
+    contextKey: 'test-context-key',
+    expiry: '2099-12-31T00:00:00',
+  }).settingManager
+
 describe('api lifecycle', () => {
   let melCloudApi: typeof ClassicAPI
 
@@ -102,6 +114,7 @@ describe('api lifecycle', () => {
 
   it('creates ClassicAPI, syncs buildings, and populates the registry', async () => {
     const api = await melCloudApi.create({
+      settingManager: persistedClassicSession(),
       syncIntervalMinutes: false,
       transport: mockHttpClient,
     })
@@ -162,6 +175,7 @@ describe('api lifecycle', () => {
 
   it('facadeManager works with registry populated by ClassicAPI', async () => {
     const api = await melCloudApi.create({
+      settingManager: persistedClassicSession(),
       syncIntervalMinutes: false,
       transport: mockHttpClient,
     })
@@ -246,6 +260,7 @@ describe('api lifecycle', () => {
 
   it('re-sync replaces registry data', async () => {
     const api = await melCloudApi.create({
+      settingManager: persistedClassicSession(),
       syncIntervalMinutes: false,
       transport: mockHttpClient,
     })
@@ -266,6 +281,7 @@ describe('api lifecycle', () => {
     const onSyncComplete = vi.fn<SyncCallback>()
     await melCloudApi.create({
       events: { onSyncComplete },
+      settingManager: persistedClassicSession(),
       syncIntervalMinutes: false,
       transport: mockHttpClient,
     })
@@ -284,6 +300,7 @@ describe('api lifecycle', () => {
     const onSyncComplete = vi.fn<SyncCallback>()
     const api = await melCloudApi.create({
       events: { onSyncComplete },
+      settingManager: persistedClassicSession(),
       syncIntervalMinutes: false,
       transport: mockHttpClient,
     })
@@ -371,6 +388,7 @@ describe('api lifecycle', () => {
       })
       mockRequest.mockRejectedValue(rateLimitError)
       const api = await melCloudApi.create({
+        settingManager: persistedClassicSession(),
         syncIntervalMinutes: false,
         transport: mockHttpClient,
       })
@@ -410,6 +428,7 @@ describe('api lifecycle', () => {
       })
       const api = await melCloudApi.create({
         abortSignal: controller.signal,
+        settingManager: persistedClassicSession(),
         syncIntervalMinutes: false,
         transport: mockHttpClient,
       })

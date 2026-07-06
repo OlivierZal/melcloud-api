@@ -213,9 +213,16 @@ describe('mELCloud Classic API', () => {
       .mockImplementationOnce(async () => {
         // First call (initial create) succeeds, subsequent calls can throw
       })
+    // Persisted session so the create-time reuse probe runs the first
+    // sync and arms the auto-sync timer the test advances into.
+    const { settingManager } = createSettingStore({
+      contextKey: 'test-context-key',
+      expiry: '2099-12-31T00:00:00',
+    })
     await melCloudApi.create({
       events: { onSyncComplete },
       logger,
+      settingManager,
       syncIntervalMinutes: 1,
       transport: mockHttpClient,
     })

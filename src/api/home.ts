@@ -408,11 +408,17 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     }
   }
 
+  protected override clearPersistedSession(): void {
+    this.#user = null
+    this.accessToken = ''
+    this.refreshToken = ''
+    this.expiry = ''
+  }
+
   protected override async doAuthenticate({
     password,
     username,
   }: LoginCredentials): Promise<void> {
-    this.#clearPersistedSession()
     const request = {
       credentials: { password, username },
       ...(this.abortSignal !== undefined && {
@@ -442,6 +448,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     return this.accessToken === '' ?
         {}
       : { Authorization: `Bearer ${this.accessToken}` }
+  }
+
+  protected override hasPersistedSession(): boolean {
+    return (
+      (this.accessToken !== '' &&
+        this.expiry !== '' &&
+        !isSessionExpired(this.expiry)) ||
+      this.refreshToken !== ''
+    )
   }
 
   /**
@@ -483,40 +498,27 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     if (this.refreshToken !== '' && (await this.#refreshAccessToken())) {
       return true
     }
-    this.#clearPersistedSession()
+    this.clearPersistedSession()
     return this.resumeSession()
+  }
+
+  /**
+   * The base probe's `syncRegistry()` runs `list()`, which hits
+   * `/context` once and hydrates `context`/`user` AND the device
+   * registry in a single request; an expired token triggers the
+   * pipeline's 401-retry + refresh-token flow along the way. Success
+   * requires a parsed context on top of the identity: a `true` reuse
+   * promises a verified registry, so an identity-only round-trip
+   * (the salvage parse failed) must fall through to the full-auth
+   * path instead of claiming the reuse completed.
+   * @returns `true` when persisted tokens verified against the BFF.
+   */
+  protected override reuseSucceeded(): boolean {
+    return this.isAuthenticated() && this.context !== null
   }
 
   protected override async syncRegistry(): Promise<void> {
     await this.list()
-  }
-
-  /**
-   * Reuse a persisted Home session by issuing the standard
-   * `list()` call, which hits `/context` once and hydrates both
-   * `context`/`user` AND the device registry in a single request.
-   * A valid token returns populated context; an expired one triggers
-   * the request pipeline's 401-retry + refresh-token flow; anything
-   * else falls through to a full authenticate.
-   *
-   * Mirrors Classic: a failed probe must NOT clear the persisted
-   * session — `list()` swallows transient failures (network not ready
-   * at boot), which are indistinguishable here from a real token
-   * rejection. Clearing is owned by {@link reauthenticate}, which only
-   * runs on a definitive 401.
-   * @returns `true` when persisted tokens verified against the BFF
-   * (registry populated via the same round-trip); `false` otherwise.
-   */
-  protected override async tryReuseSession(): Promise<boolean> {
-    if (!this.#hasPersistedSession()) {
-      return false
-    }
-    await this.list()
-    // `context` gates the reuse: a `true` return promises a verified
-    // registry (see `BaseAPI.initialize`), so an identity-only success
-    // (the salvage parse failed) must fall through to the full-auth
-    // path instead of claiming the reuse completed.
-    return this.isAuthenticated() && this.context !== null
   }
 
   /**
@@ -550,13 +552,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     values: HomeAtwValues,
   ): Promise<void> {
     await this.#putDeviceValues(ATW_UNIT_PATH, id, values)
-  }
-
-  #clearPersistedSession(): void {
-    this.#user = null
-    this.accessToken = ''
-    this.refreshToken = ''
-    this.expiry = ''
   }
 
   async #exchangeAndStoreTokens(
@@ -672,15 +667,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       },
       schema: HomeReportDataSchema.array(),
     })
-  }
-
-  #hasPersistedSession(): boolean {
-    return (
-      (this.accessToken !== '' &&
-        this.expiry !== '' &&
-        !isSessionExpired(this.expiry)) ||
-      this.refreshToken !== ''
-    )
   }
 
   /**
