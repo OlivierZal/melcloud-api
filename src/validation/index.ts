@@ -10,5 +10,6 @@ export {
   HomeParResponseSchema,
   HomeReportDataSchema,
   HomeTokenResponseSchema,
+  HourSchema,
   parseOrThrow,
 } from './schemas.ts'

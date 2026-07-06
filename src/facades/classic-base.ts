@@ -35,6 +35,7 @@ import {
   toClassicDeviceId,
 } from '../types/index.ts'
 import { getChartLineOptions, now } from '../utils.ts'
+import { HourSchema, parseOrThrow } from '../validation/index.ts'
 import type {
   ClassicFacade,
   ClassicFrostProtectionQuery,
@@ -340,10 +341,11 @@ export abstract class ClassicBaseFacade<
    * @returns The current hour as a valid {@link Hour}.
    */
   protected currentHour(): Hour {
-    // Temporal.PlainTime.hour is always in [0, 23] per spec, so the
-    // narrowing to `Hour` (the 0..23 literal union) is sound.
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-    return Temporal.Now.plainTimeISO(this.api.timezone).hour as Hour
+    return parseOrThrow(
+      HourSchema,
+      Temporal.Now.plainTimeISO(this.api.timezone).hour,
+      'currentHour',
+    )
   }
 
   async #getBaseFrostProtection(
