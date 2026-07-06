@@ -95,6 +95,8 @@ const getDateTimeComponents = (
  * Abstract base for all facades. Provides common functionality for frost protection,
  * holiday mode, power control, signal strength, tiles, and error log retrieval.
  * Settings resolution falls back from zone level to device level when needed.
+ * @template T - Model class backing this facade, resolved from the registry
+ * by id.
  */
 export abstract class ClassicBaseFacade<
   T extends ClassicModel,

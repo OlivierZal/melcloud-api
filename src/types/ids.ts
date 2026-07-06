@@ -6,7 +6,11 @@
  * `ClassicBuildingID` where a `ClassicFloorID` is expected is a type error.
  */
 
-/** @internal */
+/**
+ * Nominal-typing helper: a `number` tagged with a phantom brand field.
+ * @template T - String literal naming the ID domain the brand distinguishes.
+ * @internal
+ */
 type Brand<T extends string> = number & { readonly __brand: T }
 
 /**

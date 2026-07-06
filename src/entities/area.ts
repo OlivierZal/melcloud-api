@@ -3,6 +3,8 @@ import { BaseModel } from './base.ts'
 
 /**
  * ClassicArea model representing a zone within a building or floor.
+ * @template T - Type of the area's `floorId`: a floor id (`number`) when the
+ * area belongs to a floor, or `null` when it sits directly under the building.
  * @category Entities
  */
 export class ClassicArea<

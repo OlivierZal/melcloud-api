@@ -53,7 +53,11 @@ interface FollowRedirectsOptions {
   remaining?: number
 }
 
-/** Minimal response shape surfaced internally by the OIDC flow. */
+/**
+ * Minimal response shape surfaced internally by the OIDC flow.
+ * @template T - Type of the body exposed as `data`; the flow reads bodies as
+ * text, so steps that consume the body instantiate it with `string`.
+ */
 interface OidcResponse<T = unknown> {
   readonly data: T
   readonly headers: Record<string, string | string[]>

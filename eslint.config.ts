@@ -68,6 +68,7 @@ const config = defineConfig([
         'jsdoc/no-blank-blocks': 'error',
         'jsdoc/require-description': 'error',
         'jsdoc/require-hyphen-before-param-description': ['error', 'always'],
+        'jsdoc/require-template': 'error',
         'jsdoc/require-throws': 'error',
         'jsdoc/sort-tags': 'error',
       },

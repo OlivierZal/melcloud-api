@@ -10,6 +10,9 @@ import { HomeDeviceType } from '../constants.ts'
  * `TData` narrows the wrapped payload to a specific connection-type variant
  * (e.g. {@link HomeAtaDeviceData}) when callers have already discriminated on
  * {@link HomeDevice.type}; defaults to the full union for the registry.
+ * @template TData - Wrapped wire-format payload variant: a connection-type
+ * specific shape once discriminated, or the full {@link HomeDeviceData} union
+ * by default.
  * @category Entities
  */
 export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {

@@ -196,6 +196,8 @@ export const typedKeys = <T extends Record<string, unknown>>(
 
 /**
  * Type-safe `Object.fromEntries` that returns a properly typed object.
+ * @template T - Object type assembled from the entries; each entry's value
+ * must be assignable to one of `T`'s property value types.
  * @param entries - The key-value pairs to convert into an object.
  * @returns The constructed object.
  */
