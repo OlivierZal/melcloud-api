@@ -192,8 +192,7 @@ export interface HomeContext {
  * @category Types
  */
 export type HomeDeviceCapabilities =
-  | HomeAtaDeviceCapabilities
-  | HomeAtwDeviceCapabilities
+  HomeAtaDeviceCapabilities | HomeAtwDeviceCapabilities
 
 /**
  * Fields shared by every MELCloud Home device wrapper, regardless of

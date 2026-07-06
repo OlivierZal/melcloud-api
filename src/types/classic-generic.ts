@@ -498,10 +498,7 @@ export interface ClassicSetPowerPostData {
 export interface ClassicSettingsParams {
   readonly id: number
   readonly tableName:
-    | 'ClassicArea'
-    | 'ClassicBuilding'
-    | 'ClassicFloor'
-    | 'DeviceLocation'
+    'ClassicArea' | 'ClassicBuilding' | 'ClassicFloor' | 'DeviceLocation'
 }
 
 /**
@@ -565,10 +562,7 @@ export type ClassicUpdateDeviceData<T extends ClassicDeviceType> =
  * @category Types
  */
 export type ClassicZone =
-  | ClassicAreaZone
-  | ClassicBuildingZone
-  | ClassicDeviceZone
-  | ClassicFloorZone
+  ClassicAreaZone | ClassicBuildingZone | ClassicDeviceZone | ClassicFloorZone
 
 /**
  * Inherited frost-protection + holiday-mode flags carried on every building, floor, and area record.

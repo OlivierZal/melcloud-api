@@ -50,10 +50,7 @@ type UpdatePatchKind = 'payload' | 'power'
 export const classicUpdateDevices =
   <
     T extends
-      | boolean
-      | ClassicFailureData
-      | ClassicGroupState
-      | ClassicSuccessData,
+      boolean | ClassicFailureData | ClassicGroupState | ClassicSuccessData,
   >({
     kind = 'payload',
     type,
