@@ -46,13 +46,7 @@ export type HomeOperationMode = 'Automatic' | 'Cool' | 'Dry' | 'Fan' | 'Heat'
  * @category Mappings
  */
 export type HomeVertical =
-  | 'Auto'
-  | 'Five'
-  | 'Four'
-  | 'One'
-  | 'Swing'
-  | 'Three'
-  | 'Two'
+  'Auto' | 'Five' | 'Four' | 'One' | 'Swing' | 'Three' | 'Two'
 
 /**
  * Mapping from Classic numeric fan speed to Home string value.

@@ -73,8 +73,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   >
 
   protected abstract readonly temperaturesLegend: readonly (
-    | string
-    | undefined
+    string | undefined
   )[]
 
   public abstract readonly type: T
@@ -101,8 +100,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   protected readonly holidayModeLocation = 'Devices'
 
   protected readonly internalTemperaturesLegend: readonly (
-    | string
-    | undefined
+    string | undefined
   )[] = []
 
   protected readonly tableName = 'DeviceLocation'

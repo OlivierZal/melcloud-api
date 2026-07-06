@@ -143,6 +143,4 @@ export interface ClassicUpdateDeviceDataAta extends ClassicBaseUpdateDeviceData 
  * @category Types
  */
 export type KeyOfClassicSetDeviceDataAtaNotInList =
-  | 'SetFanSpeed'
-  | 'VaneHorizontal'
-  | 'VaneVertical'
+  'SetFanSpeed' | 'VaneHorizontal' | 'VaneVertical'
