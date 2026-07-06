@@ -20,12 +20,14 @@ export interface Failure {
  * degree of freedom nothing exercises. General-purpose Result
  * libraries (neverthrow, ts-results) keep it generic because they
  * cannot assume a single domain; domain-specific SDKs lock it.
+ * @template T - Type of the parsed value carried by the success branch.
  * @category Types
  */
 export type Result<T> = Failure | Success<T>
 
 /**
  * Successful outcome carrying the parsed value.
+ * @template T - Type of the parsed value carried on `value`.
  * @category Types
  */
 export interface Success<T> {

@@ -13,6 +13,7 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
   HomeTokenResponse,
+  Hour,
 } from '../types/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import { ValidationError } from '../errors/index.ts'
@@ -259,6 +260,17 @@ export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
       errorMessage: z.string(),
     }),
   )
+
+const MAX_HOUR = 23
+
+/** Integer hour of the day in 24-hour form (0 through 23). */
+export const HourSchema: z.ZodType<Hour> = z.custom<Hour>(
+  (value) =>
+    typeof value === 'number' &&
+    Number.isSafeInteger(value) &&
+    value >= 0 &&
+    value <= MAX_HOUR,
+)
 
 // Classic /User/ListDevices returns an array of building-with-structure
 // envelopes. The registry iterates structure.Devices and expects every

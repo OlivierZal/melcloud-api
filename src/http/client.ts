@@ -52,6 +52,8 @@ export interface HttpRequestConfig {
 
 /**
  * Minimal response shape surfaced to callers.
+ * @template T - Type of the parsed body exposed as `data`, chosen by the
+ * caller of {@link HttpClient.request}.
  * @category HTTP
  */
 export interface HttpResponse<T = unknown> {

@@ -29,6 +29,8 @@ export interface ClassicBaseGetDeviceData extends ClassicBaseSetDeviceData {
  * firmware/network metadata, UI hints, and per-capability permission
  * flags. The typed `Device` payload is added on top by
  * {@link ClassicListDevice}.
+ * @template T - Device type carried in the wrapper's `Type` field; defaults
+ * to the union of every Classic device type.
  * @category Types
  */
 export interface ClassicBaseListDevice<

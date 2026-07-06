@@ -16,6 +16,8 @@ export interface HttpErrorRequestConfig {
  * `response.headers`, and `response.data` — identical to the relevant
  * surface of the previous `AxiosError` contract so retry/rate-limit logic
  * does not need to branch on the error's origin.
+ * @template T - Type of the parsed body of the failed response, exposed as
+ * `response.data`.
  * @category HTTP
  */
 export class HttpError<T = unknown> extends Error {

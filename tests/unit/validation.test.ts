@@ -11,6 +11,7 @@ import {
   ClassicLoginDataSchema,
   HomeContextSchema,
   HomeTokenResponseSchema,
+  HourSchema,
   parseOrThrow,
 } from '../../src/validation/index.ts'
 import {
@@ -143,6 +144,21 @@ describe('validation/schemas', () => {
       expect(() =>
         parseOrThrow(z.object({ value: z.number() }), { value: 'x' }, 'ctx'),
       ).toThrow(/Invalid API response shape \(ctx\)/v)
+    })
+  })
+
+  describe('hourSchema', () => {
+    it.each([0, 12, 23])('accepts the in-range hour %d', (hour) => {
+      expect(HourSchema.parse(hour)).toBe(hour)
+    })
+
+    it.each([
+      { label: 'a negative hour', value: -1 },
+      { label: 'an out-of-range hour', value: 24 },
+      { label: 'a fractional hour', value: 12.5 },
+      { label: 'a string', value: '12' },
+    ])('rejects $label', ({ value }) => {
+      expect(() => HourSchema.parse(value)).toThrow(/invalid/iv)
     })
   })
 

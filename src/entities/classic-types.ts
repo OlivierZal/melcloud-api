@@ -7,7 +7,11 @@ import type { ClassicDevice } from './classic-device.ts'
 /** Base building model providing zone settings (frost protection, holiday mode). */
 export type ClassicBaseBuilding = Pick<ClassicBuilding, 'data'>
 
-/** Base device model with type-discriminated device data. */
+/**
+ * Base device model with type-discriminated device data.
+ * @template T - Device type discriminator narrowing the `data` payload to its
+ * device-type-specific shape.
+ */
 export interface ClassicBaseDevice<T extends ClassicDeviceType> {
   readonly data: Readonly<ClassicListDeviceData<T>>
   readonly type: T

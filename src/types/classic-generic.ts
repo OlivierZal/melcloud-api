@@ -60,6 +60,9 @@ export interface BaseZone {
 
 /**
  * Wire-format area entry from `ListDevices`; `FloorId` is `null` when the area sits directly under the building, or a floor id otherwise.
+ * @template T - Type of the `FloorId` field: a floor id (`number`) when the
+ * area belongs to a floor, or `null` when it sits directly under the
+ * building.
  * @category Types
  */
 export interface ClassicAreaData<
@@ -196,6 +199,8 @@ export interface ClassicDeviceZone extends BaseZone {
 
 /**
  * Wire-format energy report payload narrowed by the device's `Type` (Ata or Atw — Erv has no energy data).
+ * @template T - Device type selecting the energy payload shape; resolves to
+ * `never` for Erv, which reports no energy data.
  * @category Types
  */
 export type ClassicEnergyData<T extends ClassicDeviceType> =
@@ -297,6 +302,8 @@ export interface ClassicFrostProtectionPostData extends ClassicFrostProtectionLo
 
 /**
  * Wire-format response body from `Device/Get`, narrowed by device type.
+ * @template T - Device type selecting which set-device data shape is merged
+ * into the response body.
  * @category Types
  */
 export type ClassicGetDeviceData<T extends ClassicDeviceType> =
@@ -357,6 +364,8 @@ export interface ClassicHolidayModeTimeZone extends ClassicHolidayModeLocation {
 
 /**
  * Wire-format `ListDevices` device entry: header (id, name, parents) plus the typed `Device` payload.
+ * @template T - Device type discriminating both the header's `Type` field and
+ * the shape of the nested `Device` payload.
  * @category Types
  */
 export interface ClassicListDevice<
@@ -376,6 +385,7 @@ export type ClassicListDeviceAny =
 
 /**
  * Wire-format `Device` payload from `ListDevices`, narrowed by device type.
+ * @template T - Device type selecting the list-device data shape.
  * @category Types
  */
 export type ClassicListDeviceData<T extends ClassicDeviceType> =
@@ -457,6 +467,7 @@ export interface ClassicReportPostData {
 
 /**
  * Wire-format response from `Device/Set{Ata,Atw,Erv}`, narrowed by device type.
+ * @template T - Device type selecting the set-device response shape.
  * @category Types
  */
 export type ClassicSetDeviceData<T extends ClassicDeviceType> =
@@ -464,6 +475,8 @@ export type ClassicSetDeviceData<T extends ClassicDeviceType> =
 
 /**
  * POST body for `Device/Set{Ata,Atw,Erv}` — base header plus every required field for the device type.
+ * @template T - Device type whose mutable fields, made required, form the
+ * body alongside the base header.
  * @category Types
  */
 export type ClassicSetDevicePostData<T extends ClassicDeviceType> =
@@ -507,6 +520,8 @@ export interface ClassicTemperatureLogPostData extends ClassicReportPostData {
 
 /**
  * Wire-format response from `Tile/Get2`; the optional `SelectedDevice` carries full device data when a device id was specified.
+ * @template T - Type of the selected device, or `null` when no device id was
+ * specified and `SelectedDevice` is `null`.
  * @category Types
  */
 export interface ClassicTilesData<T extends ClassicDeviceType | null> {
@@ -524,6 +539,8 @@ export interface ClassicTilesData<T extends ClassicDeviceType | null> {
 
 /**
  * POST body for `Tile/Get2`; conditionally requires `SelectedBuilding` + `SelectedDevice` when scoped to a single device.
+ * @template T - Type of the selected device, or `null` when the request is
+ * not scoped to a single device.
  * @category Types
  */
 export type ClassicTilesPostData<T extends ClassicDeviceType | null> = {
@@ -534,6 +551,7 @@ export type ClassicTilesPostData<T extends ClassicDeviceType | null> = {
 
 /**
  * Mutable fields for a `Device/Set{Ata,Atw,Erv}` payload, narrowed by device type.
+ * @template T - Device type selecting which fields may be mutated.
  * @category Types
  */
 export type ClassicUpdateDeviceData<T extends ClassicDeviceType> =
