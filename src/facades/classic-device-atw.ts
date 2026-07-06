@@ -19,8 +19,6 @@ import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicAtwFlags } from './classic-flags.ts'
 
-const DEFAULT_TEMPERATURE = 0
-
 const MIN_TANK_TEMPERATURE = 40
 
 const coolFlowTemperatureRange = { max: 25, min: 5 }
@@ -216,7 +214,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
         .filter(([key]) => Object.hasOwn(data, key))
         .map(([key, range]) => [
           key,
-          clampToRange(data[key] ?? DEFAULT_TEMPERATURE, range),
+          clampToRange(data[key] ?? range.min, range),
         ]),
     )
   }
