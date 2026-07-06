@@ -103,6 +103,7 @@ export type {
   HomeReportDataset,
   HomeReportPoint,
   HomeUser,
+  HomeUserContext,
   Hour,
   KeyOfClassicSetDeviceDataAtaNotInList,
   LoginCredentials,

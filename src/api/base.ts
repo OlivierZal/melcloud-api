@@ -225,11 +225,32 @@ export abstract class BaseAPI implements Disposable {
     this.#rateLimitPolicy = new RateLimitPolicy(this.rateLimitGate, this.logger)
   }
 
+  /**
+   * Subclass hook: clear every persisted session credential (tokens,
+   * context keys, expiry — whatever the API persists). Ownership is
+   * deliberately narrow: the base {@link authenticate} template wipes
+   * before an explicit login, and the reactive-401 path
+   * ({@link reauthenticate}) wipes after the server rejected the
+   * credential. Nothing else may clear — in particular the
+   * {@link tryReuseSession} probe, where a transient failure is
+   * indistinguishable from a rejection and must leave the session
+   * untouched.
+   */
+  protected abstract clearPersistedSession(): void
+
   protected abstract doAuthenticate(
     credentials: LoginCredentials,
   ): Promise<void>
 
   protected abstract getAuthHeaders(): Record<string, string>
+
+  /**
+   * Subclass hook: whether any persisted session material exists that
+   * makes the {@link tryReuseSession} probe worth attempting (e.g. a
+   * non-expired token or a refresh token). A `false` skips the probe
+   * without issuing a doomed unauthenticated request.
+   */
+  protected abstract hasPersistedSession(): boolean
 
   public abstract isAuthenticated(): boolean
 
@@ -260,18 +281,18 @@ export abstract class BaseAPI implements Disposable {
    */
   protected abstract reauthenticate(): Promise<boolean>
 
-  protected abstract syncRegistry(): Promise<void>
-
   /**
-   * Subclass hook: try to reuse a persisted session without a full
-   * re-authentication. A `true` return carries two guarantees: the
-   * instance is authenticated, and the registry has been verified
-   * against the server (typically via a credentialed request that
-   * also populates it). Returning `false` falls through to a full
-   * {@link authenticate}.
-   * @returns `true` on reuse + registry populated; `false` otherwise.
+   * Subclass hook: whether the {@link tryReuseSession} probe ended in
+   * a reusable state. A `true` promises the {@link initialize}
+   * template that the instance is authenticated and the registry has
+   * been verified against the server; success semantics differ per
+   * API (Classic keys off the persisted credential, Home additionally
+   * requires a parsed context), which is why this stays a hook while
+   * the probe skeleton lives in {@link tryReuseSession}.
    */
-  protected abstract tryReuseSession(): Promise<boolean>
+  protected abstract reuseSucceeded(): boolean
+
+  protected abstract syncRegistry(): Promise<void>
 
   /**
    * Sign in with explicit credentials. Throws
@@ -288,6 +309,9 @@ export abstract class BaseAPI implements Disposable {
    */
   public async authenticate(credentials: LoginCredentials): Promise<void> {
     this.applyCredentials(credentials.username, credentials.password)
+    // Explicit login starts from a clean slate — enforced here so no
+    // subclass can forget it (mirrors the post-auth sync below).
+    this.clearPersistedSession()
     await this.doAuthenticate(credentials)
     await this.syncRegistry()
   }
@@ -556,6 +580,27 @@ export abstract class BaseAPI implements Disposable {
       )
       return err(classifyError(error))
     }
+  }
+
+  /**
+   * Try to reuse a persisted session without a full re-authentication:
+   * skip when nothing is persisted, otherwise run one registry sync
+   * and let {@link reuseSucceeded} judge the outcome. Returning
+   * `false` falls through to a full {@link authenticate}.
+   *
+   * The probe is strictly non-destructive: `syncRegistry()` swallows
+   * transient failures, which are indistinguishable here from a token
+   * rejection, so clearing persisted state from this path would
+   * destroy valid sessions on a boot-time network blip. Clearing is
+   * owned by {@link clearPersistedSession}'s two callers only.
+   * @returns `true` on reuse + registry populated; `false` otherwise.
+   */
+  protected async tryReuseSession(): Promise<boolean> {
+    if (!this.hasPersistedSession()) {
+      return false
+    }
+    await this.syncRegistry()
+    return this.reuseSucceeded()
   }
 
   /**

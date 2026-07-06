@@ -110,6 +110,7 @@ export type {
   HomeReportPoint,
   HomeTokenResponse,
   HomeUser,
+  HomeUserContext,
 } from './home.ts'
 export type { Hour } from './hour.ts'
 

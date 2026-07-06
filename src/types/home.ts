@@ -233,23 +233,14 @@ export type HomeDeviceData = HomeAtaDeviceData | HomeAtwDeviceData
 
 /**
  * Single weekly-schedule entry attached to a MELCloud Home device.
- * Field availability varies by device type; the SDK does not consume
- * specific entries today, so the type captures the canonical ATA shape
- * and leaves device-type extras off the canonical surface.
+ * The wire shape differs between ATA and ATW units (ATW entries carry
+ * zone/tank fields instead of setpoint/vane fields), and power-off
+ * entries hold `null` for every setting field; the SDK does not
+ * consume specific fields, so the type stays a structural placeholder
+ * until a use case appears — mirroring {@link HomeHolidayMode}.
  * @category Types
  */
-export interface HomeDeviceScheduleEntry {
-  readonly days: readonly string[]
-  readonly enabled: boolean
-  readonly id: string
-  readonly operationMode: string
-  readonly power: boolean
-  readonly setPoint: number
-  readonly time: string
-  readonly setFanSpeed?: string | undefined
-  readonly vaneHorizontalDirection?: string | undefined
-  readonly vaneVerticalDirection?: string | undefined
-}
+export type HomeDeviceScheduleEntry = Readonly<Record<string, unknown>>
 
 /**
  * Single name/value setting entry on a MELCloud Home device.
@@ -382,4 +373,20 @@ export interface HomeUser {
   readonly firstName: string
   readonly lastName: string
   readonly sub: string
+}
+
+/**
+ * Identity slice of the MELCloud Home `/context` response — the four
+ * fields that establish who is signed in. Kept separate from
+ * {@link HomeContext} so session validity can be derived from any
+ * successful `/context` round-trip even when the device payload
+ * fails full validation (device-schema drift must degrade the
+ * registry, never the authentication state).
+ * @category Types
+ */
+export interface HomeUserContext {
+  readonly email: string
+  readonly firstname: string
+  readonly id: string
+  readonly lastname: string
 }

@@ -32,9 +32,13 @@ const { client: mockHttpClient, requestSpy: mockRequest } =
  * request pipeline without any Classic/Home-specific logic.
  */
 class TestAPI extends BaseAPI {
+  public readonly clearPersistedSessionMock = vi.fn<() => void>()
+
   public readonly doAuthenticateMock = vi.fn<() => Promise<void>>()
 
   public readonly getAuthHeadersMock = vi.fn<() => Record<string, string>>()
+
+  public readonly hasPersistedSessionMock = vi.fn<() => boolean>()
 
   public readonly isAuthenticatedMock = vi.fn<() => boolean>()
 
@@ -43,6 +47,8 @@ class TestAPI extends BaseAPI {
   public readonly performSessionRefreshMock = vi.fn<() => Promise<void>>()
 
   public readonly reauthenticateMock = vi.fn<() => Promise<boolean>>()
+
+  public readonly reuseSucceededMock = vi.fn<() => boolean>()
 
   public readonly syncRegistryMock = vi.fn<() => Promise<void>>()
 
@@ -68,10 +74,12 @@ class TestAPI extends BaseAPI {
       },
     )
     this.getAuthHeadersMock.mockReturnValue({})
+    this.hasPersistedSessionMock.mockReturnValue(false)
     this.isAuthenticatedMock.mockReturnValue(true)
     this.needsSessionRefreshMock.mockReturnValue(false)
     this.performSessionRefreshMock.mockResolvedValue()
     this.reauthenticateMock.mockResolvedValue(false)
+    this.reuseSucceededMock.mockReturnValue(false)
     this.doAuthenticateMock.mockResolvedValue()
     this.syncRegistryMock.mockResolvedValue()
     this.tryReuseSessionMock.mockResolvedValue(false)
@@ -104,12 +112,20 @@ class TestAPI extends BaseAPI {
     return this.isAuthenticatedMock()
   }
 
+  protected override clearPersistedSession(): void {
+    this.clearPersistedSessionMock()
+  }
+
   protected override async doAuthenticate(): Promise<void> {
     return this.doAuthenticateMock()
   }
 
   protected override getAuthHeaders(): Record<string, string> {
     return this.getAuthHeadersMock()
+  }
+
+  protected override hasPersistedSession(): boolean {
+    return this.hasPersistedSessionMock()
   }
 
   protected override needsSessionRefresh(): boolean {
@@ -122,6 +138,10 @@ class TestAPI extends BaseAPI {
 
   protected override async reauthenticate(): Promise<boolean> {
     return this.reauthenticateMock()
+  }
+
+  protected override reuseSucceeded(): boolean {
+    return this.reuseSucceededMock()
   }
 
   protected override async syncRegistry(): Promise<void> {

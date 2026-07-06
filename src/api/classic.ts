@@ -626,11 +626,15 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     })
   }
 
+  protected override clearPersistedSession(): void {
+    this.contextKey = ''
+    this.expiry = ''
+  }
+
   protected override async doAuthenticate({
     password,
     username,
   }: LoginCredentials): Promise<void> {
-    this.#clearPersistedSession()
     const { LoginData: loginData } = await this.login({
       postData: {
         AppVersion: APP_VERSION,
@@ -651,6 +655,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   protected getAuthHeaders(): Record<string, string> {
     return this.contextKey === '' ? {} : { 'X-MitsContextKey': this.contextKey }
+  }
+
+  // Expiry is deliberately not checked here: the probe's own request
+  // pipeline refreshes an expired session from stored credentials
+  // (see `reuseSucceeded`), so any persisted key is worth probing.
+  protected override hasPersistedSession(): boolean {
+    return this.contextKey !== ''
   }
 
   /**
@@ -691,30 +702,23 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.resumeSession()
   }
 
-  protected override async syncRegistry(): Promise<void> {
-    await this.fetch()
-  }
-
   /**
-   * Classic's request pipeline is auth-self-healing: a call that
-   * arrives with a stale `contextKey` 401s, triggers retry-auth via
-   * stored credentials, and succeeds on the second try. A single
-   * `fetch()` therefore covers both "valid session" and "expired
-   * session, re-auth from stored creds" in one round-trip. We report
-   * `true` iff that produced an authenticated state; otherwise the
-   * template falls through to {@link authenticate}, preserving the
-   * explicit-credentials path and leaving a consistent empty state
-   * when neither a session nor credentials are available.
-   * @returns `true` when fetch yielded an authenticated session.
+   * Classic's request pipeline is auth-self-healing: the reuse probe's
+   * `fetch()` arriving with a stale `contextKey` 401s, triggers
+   * retry-auth via stored credentials, and succeeds on the second try —
+   * one round-trip covers both "valid session" and "expired session,
+   * re-auth from stored creds". Success is therefore judged by the
+   * credential alone: a transiently-failed probe with a valid
+   * `contextKey` stays authenticated and lets the auto-sync heal the
+   * registry, instead of paying a full re-login on a boot-time blip.
+   * @returns `true` when the probe left an authenticated session.
    */
-  protected override async tryReuseSession(): Promise<boolean> {
-    await this.fetch()
+  protected override reuseSucceeded(): boolean {
     return this.isAuthenticated()
   }
 
-  #clearPersistedSession(): void {
-    this.contextKey = ''
-    this.expiry = ''
+  protected override async syncRegistry(): Promise<void> {
+    await this.fetch()
   }
 
   async #fetch(): Promise<ClassicBuildingWithStructure[]> {

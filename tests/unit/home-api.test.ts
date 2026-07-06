@@ -522,10 +522,25 @@ describe('melcloud home API', () => {
       })
     })
 
-    it('should return null on failure', async () => {
+    // A transient refresh failure must not read as "logged out": the
+    // reactive-401 path is the single owner of clearing the user, so
+    // getUser returns the last known identity unchanged.
+    it('should keep the last known user on a transient failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockRejectedValueOnce(new Error('unauthorized'))
+      mockRequest.mockRejectedValueOnce(new Error('network down'))
+      const user = await api.getUser()
+
+      expect(user).not.toBeNull()
+      expect(api.isAuthenticated()).toBe(true)
+    })
+
+    it('should return null when a definitive 401 clears the session', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      // 401 → refresh-token exchange and OIDC resume both fail (fetch
+      // queue exhausted) → reauthenticate clears the user state.
+      mockRequest.mockRejectedValueOnce(httpUnauthorized())
       const user = await api.getUser()
 
       expect(user).toBeNull()
@@ -1651,14 +1666,14 @@ describe('melcloud home API', () => {
       expect(api.isAuthenticated()).toBe(true)
     })
 
-    it('should wipe persisted state when rejected session has no credentials', async () => {
+    it('should wipe persisted state on a definitive 401 with no credentials', async () => {
       const futureExpiry = Temporal.Now.instant().add({ hours: 1 }).toString()
       const { setSpy, settingManager } = createSettingStore({
         accessToken: 'dead-token',
         expiry: futureExpiry,
         refreshToken: 'dead-refresh',
       })
-      mockRequest.mockRejectedValueOnce(new Error('401 Unauthorized'))
+      mockRequest.mockRejectedValueOnce(httpUnauthorized())
 
       const api = await createFromPersistedStore(settingManager)
 
@@ -1666,6 +1681,53 @@ describe('melcloud home API', () => {
       expect(setSpy).toHaveBeenCalledWith('accessToken', '')
       expect(setSpy).toHaveBeenCalledWith('refreshToken', '')
       expect(setSpy).toHaveBeenCalledWith('expiry', '')
+    })
+
+    // Regression guard for the boot-outage class of bug: inside
+    // `list()` a transient failure (network not ready right after an
+    // app restart) is indistinguishable from a token rejection, so the
+    // reuse probe must never wipe the persisted session — clearing is
+    // owned by the reactive-401 path. Before this fix the probe wiped
+    // on any empty context, so a network blip at boot destroyed valid
+    // tokens and the settings page demanded credentials again.
+    it('keeps the persisted session when the reuse probe fails transiently', async () => {
+      const futureExpiry = Temporal.Now.instant().add({ hours: 1 }).toString()
+      const { setSpy, settingManager } = createSettingStore({
+        accessToken: 'persisted-token',
+        expiry: futureExpiry,
+        refreshToken: 'persisted-refresh',
+      })
+      mockRequest.mockRejectedValueOnce(new Error('network down'))
+
+      const api = await createFromPersistedStore(settingManager)
+
+      expect(api.isAuthenticated()).toBe(false)
+      expect(setSpy).not.toHaveBeenCalledWith('accessToken', '')
+      expect(setSpy).not.toHaveBeenCalledWith('refreshToken', '')
+      expect(setSpy).not.toHaveBeenCalledWith('expiry', '')
+      expect(settingManager.get('accessToken')).toBe('persisted-token')
+      expect(settingManager.get('refreshToken')).toBe('persisted-refresh')
+    })
+
+    it('recovers on the next sync after a transient boot failure', async () => {
+      const futureExpiry = Temporal.Now.instant().add({ hours: 1 }).toString()
+      const { settingManager } = createSettingStore({
+        accessToken: 'persisted-token',
+        expiry: futureExpiry,
+        refreshToken: 'persisted-refresh',
+      })
+      mockRequest.mockRejectedValueOnce(new Error('network down'))
+      const api = await createFromPersistedStore(settingManager)
+
+      expect(api.isAuthenticated()).toBe(false)
+
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.list()
+
+      expect(api.isAuthenticated()).toBe(true)
+      // Recovery reused the preserved token — nothing was re-minted,
+      // which pins that the boot failure left the session untouched.
+      expect(settingManager.get('accessToken')).toBe('persisted-token')
     })
 
     it('should skip getUser when expiry is empty and no tokens', async () => {
@@ -1777,6 +1839,206 @@ describe('melcloud home API', () => {
       // First call sets '' (clear), subsequent call sets the new token
       expect(tokenCalls[0]?.[1]).toBe('')
       expect(tokenCalls.at(-1)?.[1]).toBe('test-access-token')
+    })
+  })
+
+  describe('context drift resilience', () => {
+    const validAtaUnit = {
+      ...commonDeviceFields,
+      capabilities: mockAtaCapabilities,
+      connectedInterfaceIdentifier: 'FE0000060403388D3DFFFE000000000000',
+      connectedInterfaceType: 'fourthGenWifi',
+      givenDisplayName: 'Valid ATA unit',
+      id: 'device-1',
+      rssi: -50,
+      settings: [],
+      systemId: null,
+      unitSettings: null,
+    }
+
+    // The captured production regression: power-off schedule entries
+    // carry `null` for every setting field and ATW schedules use a
+    // zone/tank shape — both used to fail the strict /context schema,
+    // which read as "unauthenticated" and re-opened the settings login
+    // form despite valid credentials.
+    it('accepts schedule entries in either device-type shape', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValueOnce(
+        mockResponse(
+          {
+            ...mockContext,
+            guestBuildings: [
+              {
+                ...mockBuilding,
+                airToAirUnits: [
+                  {
+                    ...validAtaUnit,
+                    schedule: [
+                      {
+                        days: ['saturday', 'sunday'],
+                        enabled: true,
+                        id: 'schedule-1',
+                        operationMode: null,
+                        power: false,
+                        setFanSpeed: null,
+                        setPoint: null,
+                        time: '05:00:00',
+                        vaneHorizontalDirection: null,
+                        vaneVerticalDirection: null,
+                      },
+                    ],
+                  },
+                ],
+                airToWaterUnits: [
+                  {
+                    ...mockBuilding.airToWaterUnits[0],
+                    schedule: [
+                      {
+                        days: ['saturday'],
+                        forcedHotWaterMode: null,
+                        hotWaterActive: false,
+                        id: 'schedule-2',
+                        operationModeZone1: null,
+                        operationModeZone2: null,
+                        power: false,
+                        setTankWaterTemperature: null,
+                        setTemperatureZone1: null,
+                        setTemperatureZone2: null,
+                        time: '17:00:00',
+                        zone1Active: false,
+                        zone2Active: false,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          {},
+          200,
+        ),
+      )
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+      expect(api.registry.getAll()).toHaveLength(2)
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
+    it('keeps authentication and the valid units when one unit drifts', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValueOnce(
+        mockResponse(
+          {
+            ...mockContext,
+            guestBuildings: [
+              {
+                ...mockBuilding,
+                airToAirUnits: [
+                  validAtaUnit,
+                  { ...validAtaUnit, id: 'device-3', rssi: 'weak' },
+                ],
+              },
+            ],
+          },
+          {},
+          200,
+        ),
+      )
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Home context drifted from the strict schema; salvaging device entries:',
+        expect.anything(),
+      )
+      expect(api.registry.getById('device-3')).toBeUndefined()
+      expect(api.registry.getAll()).toHaveLength(2)
+    })
+
+    it('keeps the full registry when only metadata drifts', async () => {
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValueOnce(
+        mockResponse({ ...mockContext, language: 123 }, {}, 200),
+      )
+
+      const api = await createFromPersistedStore(settingManager)
+
+      expect(api.isAuthenticated()).toBe(true)
+      expect(api.registry.getAll()).toHaveLength(2)
+      expect(api.context?.language).toBe('')
+    })
+
+    // Identity-only success: the user parses but even the salvage
+    // schema fails (building envelope drift). Authentication holds —
+    // that is the core invariant — while the reuse probe reports
+    // `false` (its `true` promises a verified registry) and the
+    // session material stays untouched for the next sync to retry.
+    it('stays authenticated without completing reuse when salvage fails', async () => {
+      const futureExpiry = Temporal.Now.instant().add({ hours: 1 }).toString()
+      const { setSpy, settingManager } = createSettingStore({
+        accessToken: 'persisted-token',
+        expiry: futureExpiry,
+        refreshToken: 'persisted-refresh',
+      })
+      mockRequest.mockResolvedValue(
+        mockResponse(
+          {
+            ...mockContext,
+            guestBuildings: [
+              {
+                airToAirUnits: [],
+                airToWaterUnits: [],
+                id: 'building-1',
+                name: 'Home',
+                // timezone missing — the building envelope stays
+                // strict on purpose, so the salvage parse fails too.
+              },
+            ],
+          },
+          {},
+          200,
+        ),
+      )
+
+      const api = await createFromPersistedStore(settingManager)
+
+      expect(api.isAuthenticated()).toBe(true)
+      expect(api.context).toBeNull()
+      expect(api.registry.getAll()).toHaveLength(0)
+      expect(setSpy).not.toHaveBeenCalledWith('accessToken', '')
+    })
+
+    it('does not authenticate when the identity slice is missing', async () => {
+      const futureExpiry = Temporal.Now.instant().add({ hours: 1 }).toString()
+      const { setSpy, settingManager } = createSettingStore({
+        accessToken: 'persisted-token',
+        expiry: futureExpiry,
+        refreshToken: 'persisted-refresh',
+      })
+      mockRequest.mockResolvedValueOnce(
+        mockResponse({ ...mockContext, id: undefined }, {}, 200),
+      )
+
+      const api = await createFromPersistedStore(settingManager)
+
+      expect(api.isAuthenticated()).toBe(false)
+      // Not a 401 — the persisted session must survive for later syncs.
+      expect(setSpy).not.toHaveBeenCalledWith('accessToken', '')
     })
   })
 
