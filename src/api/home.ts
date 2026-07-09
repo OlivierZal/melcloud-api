@@ -331,7 +331,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * Refresh the user by fetching the `/context` identity. On failure
    * the last known user is returned unchanged: transient failures and
    * device-payload drift must not read as "logged out" — the
-   * reactive-401 path ({@link reauthenticate}) is the single owner of
+   * reactive-401 path (`reauthenticate()`) is the single owner of
    * clearing the authentication state, so a definitive rejection has
    * already nulled the user by the time the failure surfaces here.
    * @returns The user or `null`.

@@ -1,6 +1,6 @@
-import type { TypeDocOptions } from 'typedoc'
-
-const config: Partial<TypeDocOptions> = {
+// @ts-check
+/** @type {Partial<import('typedoc').TypeDocOptions>} */
+const config = {
   cacheBust: true,
   categorizeByGroup: false,
   categoryOrder: [
