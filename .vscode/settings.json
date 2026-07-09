@@ -3,5 +3,5 @@
     "connectionId": "olivierzal",
     "projectKey": "OlivierZal_melcloud-api"
   },
-  "typescript.native-preview.tsdk": "/Users/olivierzalmanski/github/melcloud-api/node_modules/@typescript/native"
+  "typescript.native-preview.tsdk": "node_modules/@typescript/native"
 }
