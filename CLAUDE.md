@@ -12,9 +12,9 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   does not cover `*.config.ts` (the lint does). The tooling (typedoc,
   typescript-eslint) still resolves the separate `typescript` 6.x install.
 - `npm run format` / `npm run format:fix` — prettier.
-- `npm run docs` — typedoc. The config is `typedoc.config.mjs` (JSDoc-typed:
-  typedoc cannot load `.ts` configs and silently ignores them); validation
-  warnings fail the build.
+- `npm run docs` — typedoc. The config is `typedoc.config.js` (JSDoc-typed
+  with `@ts-check`: typedoc cannot load `.ts` configs and silently ignores
+  them); validation warnings fail the build.
 
 ## Domain gotchas
 
