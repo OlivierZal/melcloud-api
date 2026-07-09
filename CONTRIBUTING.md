@@ -21,7 +21,7 @@ npm ci
 Run the same suite that CI runs on every pull request:
 
 ```sh title="checks"
-npm run typecheck       # tsgo --noEmit
+npm run typecheck       # native tsc --noEmit
 npm run lint            # ESLint with the all + strict-type-checked configs
 npm run format          # prettier --check (run npm run format:fix to write)
 npm test                # vitest run
