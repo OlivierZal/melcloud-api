@@ -35,7 +35,7 @@ export interface HomeAPIAdapter {
    * honor an upstream 429 `Retry-After`.
    */
   readonly isRateLimited: boolean
-  /** ClassicDevice registry with stable model references across syncs. */
+  /** Home device registry with stable model references across syncs. */
   readonly registry: HomeRegistry
   /** The currently authenticated user, or `null`. */
   readonly user: HomeUser | null

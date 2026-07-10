@@ -3,7 +3,7 @@ import type { HomeDeviceData } from '../types/index.ts'
 import { HomeDevice } from './home-device.ts'
 
 /**
- * ClassicDevice with its type, as extracted from building units.
+ * Home device with its type and ownership origin, as extracted from building units.
  * @internal
  */
 export interface TypedHomeDeviceData {
