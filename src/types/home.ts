@@ -329,7 +329,7 @@ export interface HomeOverheatProtection {
  */
 export interface HomeReportData {
   readonly datasets: HomeReportDataset[]
-  readonly reportPeriod: string
+  readonly reportPeriod: number | string
 }
 
 /**

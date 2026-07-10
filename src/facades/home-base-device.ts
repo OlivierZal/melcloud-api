@@ -30,6 +30,16 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   }
 
   /**
+   * Whether this device was shared with the current account (a guest
+   * device) rather than owned. Mutations on a guest device may be
+   * rejected by the BFF, so callers can gate write UI on this flag.
+   * @returns `true` for an invited (guest) device, `false` when owned.
+   */
+  public get isInvitee(): boolean {
+    return this.model.isInvitee
+  }
+
+  /**
    * User-facing display name set in the MELCloud Home app.
    * @returns The device's display name.
    */

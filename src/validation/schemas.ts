@@ -308,7 +308,8 @@ const HomeReportDatasetSchema = z.looseObject({
 /** Home /report/v1/trendsummary response. */
 export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
   datasets: z.array(HomeReportDatasetSchema),
-  reportPeriod: z.string(),
+  // comfort-graph returns a numeric reportPeriod; internaltemperatures a string.
+  reportPeriod: z.union([z.number(), z.string()]),
 })
 
 /** Home /monitor/{ata,atw}unit/{id}/errorlog response (array of entries). */

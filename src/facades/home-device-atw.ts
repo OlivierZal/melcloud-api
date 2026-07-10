@@ -257,6 +257,19 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   /**
+   * Powers the unit on or off. This is the unit-level master power (the
+   * `Power` setting, shown as the system on/off toggle in the app),
+   * mirroring the Classic facade's `updatePower` contract and distinct
+   * from forced hot-water mode. Convenience wrapper over
+   * {@link updateValues}.
+   * @param isOn - `true` to power on, `false` to power off.
+   * @returns `true` when the update succeeded.
+   */
+  public async updatePower(isOn = true): Promise<boolean> {
+    return this.updateValues({ power: isOn })
+  }
+
+  /**
    * Pushes a partial setpoint update; throws {@link NoChangesError} when
    * `values` is empty, otherwise clamps zone setpoints to
    * `[minSetTemperature, maxSetTemperature]` and the tank setpoint to

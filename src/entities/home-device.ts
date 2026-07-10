@@ -35,6 +35,17 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
   }
 
   /**
+   * Whether this device reached the registry through a building shared
+   * with the current account (`guestBuildings`) rather than one the
+   * account owns (`buildings`). Reports the structural origin only; it
+   * does not itself assert whether guest access permits control.
+   * @returns `true` for an invited (guest) device, `false` when owned.
+   */
+  public get isInvitee(): boolean {
+    return this.#isInvitee
+  }
+
+  /**
    * User-facing display name set in the MELCloud Home app.
    * @returns The device's display name.
    */
@@ -44,14 +55,18 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
 
   #data: TData
 
+  #isInvitee: boolean
+
   /**
    * Builds a Home device wrapper from a wire-format {@link HomeDeviceData}
-   * entry tagged with its connection type (Ata or Atw).
+   * entry tagged with its connection type (Ata or Atw) and ownership origin.
    * @param device - Wire-format device payload.
    * @param type - Connection-type discriminator.
+   * @param isInvitee - `true` when sourced from a guest (shared) building.
    */
-  public constructor(device: TData, type: HomeDeviceType) {
+  public constructor(device: TData, type: HomeDeviceType, isInvitee: boolean) {
     this.#data = device
+    this.#isInvitee = isInvitee
     this.type = type
   }
 
@@ -75,10 +90,14 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
 
   /**
    * Replaces the internal data snapshot with a fresh payload while
-   * preserving the wrapper's object identity.
+   * preserving the wrapper's object identity. Ownership origin is
+   * re-applied on every sync so a share/unshare between refreshes is
+   * reflected.
    * @param device - Fresh wire-format device payload.
+   * @param isInvitee - `true` when sourced from a guest (shared) building.
    */
-  public sync(device: TData): void {
+  public sync(device: TData, isInvitee: boolean): void {
     this.#data = device
+    this.#isInvitee = isInvitee
   }
 }

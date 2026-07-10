@@ -185,6 +185,43 @@ describe('home device atw facade', () => {
     })
   })
 
+  describe('updatePower', () => {
+    it('forwards a power-only payload, defaulting to on', async () => {
+      const api = createApi()
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+
+      await facade.updatePower()
+
+      expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', { power: true })
+    })
+
+    it('powers off when passed false', async () => {
+      const api = createApi()
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+
+      await facade.updatePower(false)
+
+      expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', {
+        power: false,
+      })
+    })
+  })
+
+  describe('ownership', () => {
+    it('exposes isInvitee from the backing model', () => {
+      const owned = new HomeDeviceAtwFacade(createApi(), createModel())
+
+      expect(owned.isInvitee).toBe(false)
+
+      const guest = new HomeDeviceAtwFacade(
+        createApi(),
+        homeAtwDevice({ id: 'atw-1' }, true),
+      )
+
+      expect(guest.isInvitee).toBe(true)
+    })
+  })
+
   describe('telemetry passthroughs', () => {
     it('delegates getEnergy to getAtwEnergy with the chosen measure', async () => {
       const api = createApi()

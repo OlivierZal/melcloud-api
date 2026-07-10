@@ -75,13 +75,19 @@ export const homeDeviceData = (
 export const homeDevice = (
   overrides: HomeDeviceDataOverrides = {},
   type: HomeDeviceType = HomeDeviceType.Ata,
+  isInvitee = false,
 ): HomeDevice<HomeAtaDeviceData> =>
-  new HomeDevice(homeDeviceData(overrides), type)
+  new HomeDevice(homeDeviceData(overrides), type, isInvitee)
 
 export const typedHomeDeviceData = (
   overrides: HomeDeviceDataOverrides = {},
   type: HomeDeviceType = HomeDeviceType.Ata,
-): TypedHomeDeviceData => ({ device: homeDeviceData(overrides), type })
+  isInvitee = false,
+): TypedHomeDeviceData => ({
+  device: homeDeviceData(overrides),
+  isInvitee,
+  type,
+})
 
 export const defaultHomeAtwCapabilities: HomeAtwDeviceCapabilities = {
   ftcModel: 3,
@@ -134,5 +140,6 @@ export const homeAtwDeviceData = (
 
 export const homeAtwDevice = (
   overrides: HomeAtwDeviceDataOverrides = {},
+  isInvitee = false,
 ): HomeDevice<HomeAtwDeviceData> =>
-  new HomeDevice(homeAtwDeviceData(overrides), HomeDeviceType.Atw)
+  new HomeDevice(homeAtwDeviceData(overrides), HomeDeviceType.Atw, isInvitee)

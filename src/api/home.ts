@@ -14,7 +14,10 @@ import type {
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
-import { HomeRegistry } from '../entities/home-registry.ts'
+import {
+  type TypedHomeDeviceData,
+  HomeRegistry,
+} from '../entities/home-registry.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
 import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
@@ -38,6 +41,29 @@ const ATW_ENERGY_MEASURE = {
   consumed: 'interval_energy_consumed',
   produced: 'interval_energy_produced',
 } as const
+
+/**
+ * Flatten a building's ATA + ATW units into typed registry entries,
+ * tagging each with the caller-supplied ownership origin.
+ * @param building - Source building from `/context`.
+ * @param isInvitee - `true` for a `guestBuildings` entry, `false` when owned.
+ * @returns Typed device entries ready for {@link HomeRegistry.sync}.
+ */
+const toTypedDevices = (
+  building: HomeBuilding,
+  isInvitee: boolean,
+): TypedHomeDeviceData[] => [
+  ...building.airToAirUnits.map((device) => ({
+    device,
+    isInvitee,
+    type: HomeDeviceType.Ata,
+  })),
+  ...building.airToWaterUnits.map((device) => ({
+    device,
+    isInvitee,
+    type: HomeDeviceType.Atw,
+  })),
+]
 const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 1
 
@@ -163,20 +189,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   public async list(): Promise<HomeBuilding[]> {
     return this.runSyncCycle(async () => {
       const data = await this.#fetchContext()
-      const buildings = [...data.buildings, ...data.guestBuildings]
-      this.#registry.sync(
-        buildings.flatMap(({ airToAirUnits, airToWaterUnits }) => [
-          ...airToAirUnits.map((device) => ({
-            device,
-            type: HomeDeviceType.Ata,
-          })),
-          ...airToWaterUnits.map((device) => ({
-            device,
-            type: HomeDeviceType.Atw,
-          })),
-        ]),
-      )
-      return buildings
+      this.#registry.sync([
+        ...data.buildings.flatMap((building) =>
+          toTypedDevices(building, false),
+        ),
+        ...data.guestBuildings.flatMap((building) =>
+          toTypedDevices(building, true),
+        ),
+      ])
+      return [...data.buildings, ...data.guestBuildings]
     })
   }
 
@@ -352,6 +373,18 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    */
   public isAuthenticated(): boolean {
     return this.#user !== null
+  }
+
+  /**
+   * Whether a registered device was shared with this account (sourced
+   * from `guestBuildings`) rather than owned (`buildings`). Reflects
+   * the last {@link list} sync; returns `undefined` for an id absent
+   * from the registry.
+   * @param id - Device id.
+   * @returns `true` when invited, `false` when owned, `undefined` when unknown.
+   */
+  public isInvitee(id: string): boolean | undefined {
+    return this.#registry.getById(id)?.isInvitee
   }
 
   /**
