@@ -89,7 +89,7 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `-alpha` suffix): branch from `main`, bump, push the branch, then cut a
   prerelease release off it — which publishes under `next`:
 
-  ```sh
+  ```sh title="alpha"
   npm version 41.0.0-alpha.0 --no-git-tag-version
   gh release create v41.0.0-alpha.0 --target <branch> --prerelease
   ```
