@@ -200,6 +200,11 @@ export const typedKeys = <T extends Record<string, unknown>>(
  * update paths against plain-JS callers and TypeScript callers without
  * `exactOptionalPropertyTypes`, for whom present-`undefined` payloads
  * are representable.
+ *
+ * For plain string-keyed payload records only: like
+ * {@link typedFromEntries}, the identity-typed overload is a boundary
+ * concession — the copy is a fresh plain object, so prototypes and
+ * symbol-keyed properties are not carried over.
  * @template T - Shape of the partial payload being normalised.
  * @param values - Partial payload, possibly holding `undefined` values.
  * @returns The normalised copy.
