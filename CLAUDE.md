@@ -87,11 +87,11 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   so bump it before tagging.
 - Prerelease/alpha flow (keeps `main` on the target stable version, no
   `-alpha` suffix): branch from `main`, `npm version 41.0.0-alpha.0
-  --no-git-tag-version`, push, then `gh release create v41.0.0-alpha.0
-  --target <branch> --prerelease`. Consumers install it with
+--no-git-tag-version`, push, then `gh release create v41.0.0-alpha.0
+--target <branch> --prerelease`. Consumers install it with
   `@olivierzal/melcloud-api@next` (GitHub Packages needs `NODE_AUTH_TOKEN`).
 - Downstream `com.melcloud` (sibling repo, uses `/classic` + `/home`)
   upgrades by bumping the dep (`npm i @olivierzal/melcloud-api@<version>
-  --save-exact`) then running its `typecheck`/`lint`/`test`/`build`; open
+--save-exact`) then running its `typecheck`/`lint`/`test`/`build`; open
   the PR from that repo. A major bump's breaking surface is the CHANGELOG
   `[Unreleased]` section.
