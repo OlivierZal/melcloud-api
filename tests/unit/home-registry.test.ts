@@ -32,6 +32,22 @@ describe('home device registry', () => {
     expect(model?.name).toBe('New')
   })
 
+  it('should default ownership to not-owner and keep it across untagged syncs', () => {
+    const registry = new HomeRegistry()
+    const { device, type } = createDevice('a')
+    registry.sync([{ device, type }])
+
+    expect(registry.getById('a')?.isOwner).toBe(false)
+
+    registry.sync([{ device, isOwner: true, type }])
+
+    expect(registry.getById('a')?.isOwner).toBe(true)
+
+    registry.sync([{ device, type }])
+
+    expect(registry.getById('a')?.isOwner).toBe(true)
+  })
+
   it('should prune stale devices', () => {
     const registry = new HomeRegistry()
     registry.sync([createDevice('a'), createDevice('b')])
