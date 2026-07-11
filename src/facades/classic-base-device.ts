@@ -22,6 +22,7 @@ import {
   type ClassicTilesData,
   type ClassicUpdateDeviceData,
   type Hour,
+  type Resolved,
   type Result,
   mapResult,
 } from '../types/index.ts'
@@ -48,10 +49,8 @@ const DEFAULT_YEAR = '1970-01-01'
 
 // Calendar-day delta between two ISO wall-clock strings. Computed on
 // `PlainDateTime` so the result reflects the literal Y-M-D-h-m-s span
-// the Classic server uses, independent of DST in any zone. Takes a
-// resolved query (defaults applied), not the `| undefined`-tolerant
-// public `ReportQuery`.
-const getDuration = ({ from, to }: { from: string; to: string }): number =>
+// the Classic server uses, independent of DST in any zone.
+const getDuration = ({ from, to }: Resolved<ReportQuery>): number =>
   Temporal.PlainDateTime.from(to).since(Temporal.PlainDateTime.from(from), {
     roundingMode: 'ceil',
     smallestUnit: 'day',

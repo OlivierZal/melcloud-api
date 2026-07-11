@@ -107,8 +107,10 @@ export type {
   Hour,
   KeyOfClassicSetDeviceDataAtaNotInList,
   LoginCredentials,
+  Resolved,
   Result,
   Success,
+  UndefinedTolerant,
 } from './types/index.ts'
 
 export {

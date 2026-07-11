@@ -1,14 +1,16 @@
 import type { DeviceType } from '../constants.ts'
 import type { HttpClient } from '../http/index.ts'
+import type { LoginCredentials, UndefinedTolerant } from '../types/index.ts'
 
 /**
- * Common configuration shared by all API clients. The credential
- * fields are the optional counterpart of {@link LoginCredentials}:
- * absent and explicitly-`undefined` are equivalent (credentials can
- * also arrive later via `authenticate` or the {@link SettingManager}).
+ * Common configuration shared by all API clients. Every property —
+ * including the inherited {@link LoginCredentials} pair — may be
+ * absent or explicitly `undefined`, interchangeably: the runtime
+ * applies the same default either way (credentials can also arrive
+ * later via `authenticate` or the {@link SettingManager}).
  * @category Configuration
  */
-export interface BaseAPIConfig {
+export interface BaseAPIConfig extends UndefinedTolerant<LoginCredentials> {
   /**
    * Optional shutdown signal applied to every outgoing request.
    *
@@ -19,29 +21,25 @@ export interface BaseAPIConfig {
    * app's shutdown signal so outstanding requests don't dangle across
    * a reload.
    */
-  readonly abortSignal?: AbortSignal
+  readonly abortSignal?: AbortSignal | undefined
   /**
    * Structured-events callbacks invoked around SDK lifecycle moments.
    * Useful to plug the SDK into a host observability stack
    * (pino / winston / OpenTelemetry / custom metrics).
    */
-  readonly events?: LifecycleEvents
+  readonly events?: LifecycleEvents | undefined
   /** Custom logger. Defaults to `console`. */
-  readonly logger?: Logger
-  /** MELCloud account password. */
-  readonly password?: string | undefined
+  readonly logger?: Logger | undefined
   /** External setting manager for persisting credentials and session data. */
-  readonly settingManager?: SettingManager
+  readonly settingManager?: SettingManager | undefined
   /**
    * Auto-sync timer in minutes. `false` disables the timer entirely
    * (manual `list()` / `fetch()` only). Omit to use the subclass
    * default (1 for Home, 5 for Classic).
    */
-  readonly syncIntervalMinutes?: number | false
+  readonly syncIntervalMinutes?: number | false | undefined
   /** HTTP transport: pre-built {@link HttpClient} or build options. */
-  readonly transport?: TransportConfig
-  /** MELCloud account username (email). */
-  readonly username?: string | undefined
+  readonly transport?: TransportConfig | undefined
 }
 
 /**
@@ -57,20 +55,21 @@ export interface BaseAPIConfig {
  * @category Configuration
  */
 export interface LifecycleEvents {
+  /** Invoked after a successful HTTP response is received. */
+  readonly onRequestComplete?:
+    ((event: RequestCompleteEvent) => void) | undefined
+  /** Invoked when a request fails permanently (retries exhausted). */
+  readonly onRequestError?: ((event: RequestErrorEvent) => void) | undefined
+  /** Invoked before each backoff-scheduled retry attempt. */
+  readonly onRequestRetry?: ((event: RequestRetryEvent) => void) | undefined
+  /** Invoked when a request is dispatched for the first time. */
+  readonly onRequestStart?: ((event: RequestStartEvent) => void) | undefined
   /**
    * Invoked after each sync trigger (auto-timer or
    * `@syncDevices`-decorated mutation). Receives the device-type
    * filter and any IDs the cascade was scoped to.
    */
-  readonly onSyncComplete?: SyncCallback
-  /** Invoked after a successful HTTP response is received. */
-  readonly onRequestComplete?: (event: RequestCompleteEvent) => void
-  /** Invoked when a request fails permanently (retries exhausted). */
-  readonly onRequestError?: (event: RequestErrorEvent) => void
-  /** Invoked before each backoff-scheduled retry attempt. */
-  readonly onRequestRetry?: (event: RequestRetryEvent) => void
-  /** Invoked when a request is dispatched for the first time. */
-  readonly onRequestStart?: (event: RequestStartEvent) => void
+  readonly onSyncComplete?: SyncCallback | undefined
 }
 
 /**
@@ -177,5 +176,5 @@ export type TransportConfig =
        * it is aborted. Defaults to 30 000 ms (30 s). Pass `0` to
        * disable the timeout (not recommended).
        */
-      readonly timeoutMs?: number
+      readonly timeoutMs?: number | undefined
     }

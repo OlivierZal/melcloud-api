@@ -200,18 +200,18 @@ export interface ClassicAPIAdapter {
  */
 export interface ClassicAPIConfig extends BaseAPIConfig {
   /** Upstream account language code (e.g. `'en'`, `'fr'`). */
-  readonly language?: string
+  readonly language?: string | undefined
   /**
    * BCP-47 locale tag for report chart labels (day-of-week, month
    * names). Independent of {@link language} — `language` controls
    * upstream messages, `locale` controls how the SDK formats labels
    * locally. Defaults to the runtime locale when unset.
    */
-  readonly locale?: string
+  readonly locale?: string | undefined
   /** Whether to verify SSL certificates. Defaults to `true`. */
-  readonly shouldVerifySSL?: boolean
+  readonly shouldVerifySSL?: boolean | undefined
   /** IANA timezone identifier (e.g. `'Europe/Paris'`). */
-  readonly timezone?: string
+  readonly timezone?: string | undefined
 }
 
 /**

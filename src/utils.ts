@@ -1,6 +1,7 @@
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
+  ReportQuery,
 } from './facades/index.ts'
 import type {
   ClassicOperationModeLogData,
@@ -8,6 +9,7 @@ import type {
   ClassicSetDeviceDataAtaInList,
   ClassicUpdateDeviceData,
   KeyOfClassicSetDeviceDataAtaNotInList,
+  Resolved,
 } from './types/index.ts'
 import { type ClassicDeviceType, ClassicLabelType } from './constants.ts'
 import { Intl, Temporal } from './temporal.ts'
@@ -327,7 +329,7 @@ export const getChartLineOptions = (
  */
 export const getChartPieOptions = (
   data: ClassicOperationModeLogData,
-  { from, to }: { from: string; to: string },
+  { from, to }: Resolved<ReportQuery>,
 ): ReportChartPieOptions => ({
   from,
   labels: data.map(({ Key: label }) => label),
