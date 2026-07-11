@@ -197,7 +197,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @param values - Partial setpoint payload.
    * @returns `true` when the update succeeded.
    */
-  public async updateValues(values: HomeAtaValues): Promise<boolean> {
+  public override async updateValues(values: HomeAtaValues): Promise<boolean> {
     if (Object.keys(values).length === 0) {
       throw new NoChangesError(this.id)
     }
