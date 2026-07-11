@@ -32,10 +32,10 @@ describe('home device registry', () => {
     expect(model?.name).toBe('New')
   })
 
-  it('should default ownership to not-owner and keep it across untagged syncs', () => {
+  it('should restate ownership on every sync', () => {
     const registry = new HomeRegistry()
     const { device, type } = createDevice('a')
-    registry.sync([{ device, type }])
+    registry.sync([{ device, isOwner: false, type }])
 
     expect(registry.getById('a')?.isOwner).toBe(false)
 
@@ -43,9 +43,9 @@ describe('home device registry', () => {
 
     expect(registry.getById('a')?.isOwner).toBe(true)
 
-    registry.sync([{ device, type }])
+    registry.sync([{ device, isOwner: false, type }])
 
-    expect(registry.getById('a')?.isOwner).toBe(true)
+    expect(registry.getById('a')?.isOwner).toBe(false)
   })
 
   it('should prune stale devices', () => {

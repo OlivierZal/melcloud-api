@@ -190,10 +190,13 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     return this.runSyncCycle(async () => {
       const data = await this.#fetchContext()
       this.#registry.sync([
-        ...data.buildings.flatMap((building) => toTypedDevices(building, true)),
+        // Guest entries first: the registry upsert is last-write-wins
+        // per id, so a device duplicated across `buildings` and
+        // `guestBuildings` keeps its owned tag.
         ...data.guestBuildings.flatMap((building) =>
           toTypedDevices(building, false),
         ),
+        ...data.buildings.flatMap((building) => toTypedDevices(building, true)),
       ])
       return [...data.buildings, ...data.guestBuildings]
     })
@@ -371,18 +374,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    */
   public isAuthenticated(): boolean {
     return this.#user !== null
-  }
-
-  /**
-   * Whether this account owns a registered device (sourced from
-   * `buildings`) rather than being a guest of it (`guestBuildings`).
-   * Reflects the last {@link list} sync; returns `undefined` for an id
-   * absent from the registry.
-   * @param id - Device id.
-   * @returns `true` when owned, `false` when a guest, `undefined` when unknown.
-   */
-  public isOwner(id: string): boolean | undefined {
-    return this.#registry.getById(id)?.isOwner
   }
 
   /**

@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { HomeDeviceType } from '../../src/constants.ts'
-import { HomeDevice } from '../../src/entities/home-device.ts'
 import {
   homeAtwDevice,
   homeAtwDeviceData,
@@ -23,21 +21,12 @@ describe('home device entity', () => {
     expect(atw.isAtw()).toBe(true)
   })
 
-  it('defaults an unannotated device to not-owner', () => {
-    const device = new HomeDevice(
-      homeAtwDeviceData({ id: 'atw-1' }),
-      HomeDeviceType.Atw,
-    )
-
-    expect(device.isOwner).toBe(false)
-  })
-
-  it('keeps isOwner across a payload-only sync and updates it when passed', () => {
+  it('restates isOwner on every sync', () => {
     const owned = homeAtwDevice({ id: 'atw-1' }, true)
 
     expect(owned.isOwner).toBe(true)
 
-    owned.sync(homeAtwDeviceData({ id: 'atw-1' }))
+    owned.sync(homeAtwDeviceData({ id: 'atw-1' }), true)
 
     expect(owned.isOwner).toBe(true)
 

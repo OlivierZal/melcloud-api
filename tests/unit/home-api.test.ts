@@ -599,7 +599,6 @@ describe('melcloud home API', () => {
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       await api.list()
 
-      expect(api.isOwner('device-1')).toBe(false)
       expect(api.registry.getById('device-1')?.isOwner).toBe(false)
     })
 
@@ -609,14 +608,18 @@ describe('melcloud home API', () => {
       mockRequest.mockResolvedValueOnce(mockResponse(mockOwnedContext, {}, 200))
       await api.list()
 
-      expect(api.isOwner('device-1')).toBe(true)
+      expect(api.registry.getById('device-1')?.isOwner).toBe(true)
     })
 
-    it('returns undefined for an unknown device id', async () => {
+    it('keeps a device owned when it also appears in guestBuildings', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
+      mockRequest.mockResolvedValueOnce(
+        mockResponse({ ...mockContext, buildings: [mockBuilding] }, {}, 200),
+      )
+      await api.list()
 
-      expect(api.isOwner('nope')).toBeUndefined()
+      expect(api.registry.getById('device-1')?.isOwner).toBe(true)
     })
   })
 

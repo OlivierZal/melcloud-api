@@ -8,8 +8,8 @@ import { HomeDevice } from './home-device.ts'
  */
 export interface TypedHomeDeviceData {
   readonly device: HomeDeviceData
+  readonly isOwner: boolean
   readonly type: HomeDeviceType
-  readonly isOwner?: boolean
 }
 
 /**

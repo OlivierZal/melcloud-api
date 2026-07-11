@@ -62,11 +62,10 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
    * entry tagged with its connection type (Ata or Atw) and ownership origin.
    * @param device - Wire-format device payload.
    * @param type - Connection-type discriminator.
-   * @param isOwner - `true` when sourced from an owned building; defaults
-   * to `false` so an unannotated device is treated as a guest (the
-   * conservative, control-gating default).
+   * @param isOwner - `true` when sourced from an owned building, `false`
+   * when sourced from a guest one.
    */
-  public constructor(device: TData, type: HomeDeviceType, isOwner = false) {
+  public constructor(device: TData, type: HomeDeviceType, isOwner: boolean) {
     this.#data = device
     this.#isOwner = isOwner
     this.type = type
@@ -92,13 +91,13 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
 
   /**
    * Replaces the internal data snapshot with a fresh payload while
-   * preserving the wrapper's object identity. Ownership defaults to the
-   * current value, so a payload-only refresh leaves it untouched while a
-   * share/unshare between syncs can still be reflected by passing it.
+   * preserving the wrapper's object identity. Every sync restates the
+   * ownership origin, so a share/unshare between syncs is reflected
+   * rather than kept from a stale tag.
    * @param device - Fresh wire-format device payload.
-   * @param isOwner - Ownership origin; omit to keep the current value.
+   * @param isOwner - Ownership origin from the current sync.
    */
-  public sync(device: TData, isOwner: boolean = this.#isOwner): void {
+  public sync(device: TData, isOwner: boolean): void {
     this.#data = device
     this.#isOwner = isOwner
   }
