@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { HomeDeviceType } from '../../src/constants.ts'
+import { HomeDevice } from '../../src/entities/home-device.ts'
 import {
   homeAtwDevice,
   homeAtwDeviceData,
@@ -21,17 +23,26 @@ describe('home device entity', () => {
     expect(atw.isAtw()).toBe(true)
   })
 
-  it('defaults isInvitee to false for owned devices', () => {
-    expect(homeDevice({ id: 'ata-1' }).isInvitee).toBe(false)
+  it('defaults an unannotated device to not-owner', () => {
+    const device = new HomeDevice(
+      homeAtwDeviceData({ id: 'atw-1' }),
+      HomeDeviceType.Atw,
+    )
+
+    expect(device.isOwner).toBe(false)
   })
 
-  it('reports and re-applies isInvitee across syncs', () => {
-    const atw = homeAtwDevice({ id: 'atw-1' }, true)
+  it('keeps isOwner across a payload-only sync and updates it when passed', () => {
+    const owned = homeAtwDevice({ id: 'atw-1' }, true)
 
-    expect(atw.isInvitee).toBe(true)
+    expect(owned.isOwner).toBe(true)
 
-    atw.sync(homeAtwDeviceData({ id: 'atw-1' }), false)
+    owned.sync(homeAtwDeviceData({ id: 'atw-1' }))
 
-    expect(atw.isInvitee).toBe(false)
+    expect(owned.isOwner).toBe(true)
+
+    owned.sync(homeAtwDeviceData({ id: 'atw-1' }), false)
+
+    expect(owned.isOwner).toBe(false)
   })
 })

@@ -30,13 +30,13 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   }
 
   /**
-   * Whether this device was shared with the current account (a guest
-   * device) rather than owned. Mutations on a guest device may be
-   * rejected by the BFF, so callers can gate write UI on this flag.
-   * @returns `true` for an invited (guest) device, `false` when owned.
+   * Whether the current account owns this device rather than being a
+   * guest of it. A guest's mutations may be rejected by the BFF, so
+   * callers can gate write UI on this flag.
+   * @returns `true` when owned, `false` when shared with this account.
    */
-  public get isInvitee(): boolean {
-    return this.model.isInvitee
+  public get isOwner(): boolean {
+    return this.model.isOwner
   }
 
   /**

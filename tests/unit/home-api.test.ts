@@ -152,7 +152,7 @@ const mockContext: HomeContext = {
 }
 
 // Same devices, but owned (in `buildings`) rather than shared — so the
-// registry tags them isInvitee: false.
+// registry tags them isOwner: true.
 const mockOwnedContext: HomeContext = {
   ...mockContext,
   buildings: [mockBuilding],
@@ -593,30 +593,30 @@ describe('melcloud home API', () => {
   })
 
   describe('device ownership', () => {
-    it('tags devices from guestBuildings as invitees', async () => {
+    it('tags devices from guestBuildings as not owned', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       await api.list()
 
-      expect(api.isInvitee('device-1')).toBe(true)
-      expect(api.registry.getById('device-1')?.isInvitee).toBe(true)
+      expect(api.isOwner('device-1')).toBe(false)
+      expect(api.registry.getById('device-1')?.isOwner).toBe(false)
     })
 
-    it('tags devices from owned buildings as non-invitees', async () => {
+    it('tags devices from owned buildings as owned', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(mockResponse(mockOwnedContext, {}, 200))
       await api.list()
 
-      expect(api.isInvitee('device-1')).toBe(false)
+      expect(api.isOwner('device-1')).toBe(true)
     })
 
     it('returns undefined for an unknown device id', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
 
-      expect(api.isInvitee('nope')).toBeUndefined()
+      expect(api.isOwner('nope')).toBeUndefined()
     })
   })
 

@@ -8,8 +8,8 @@ import { HomeDevice } from './home-device.ts'
  */
 export interface TypedHomeDeviceData {
   readonly device: HomeDeviceData
-  readonly isInvitee: boolean
   readonly type: HomeDeviceType
+  readonly isOwner?: boolean
 }
 
 /**
@@ -53,13 +53,13 @@ export class HomeRegistry {
    */
   public sync(devices: TypedHomeDeviceData[]): void {
     const activeIds = new Set<string>()
-    for (const { device, isInvitee, type } of devices) {
+    for (const { device, isOwner, type } of devices) {
       activeIds.add(device.id)
       const existing = this.#devices.get(device.id)
       if (existing === undefined) {
-        this.#devices.set(device.id, new HomeDevice(device, type, isInvitee))
+        this.#devices.set(device.id, new HomeDevice(device, type, isOwner))
       } else {
-        existing.sync(device, isInvitee)
+        existing.sync(device, isOwner)
       }
     }
     for (const id of this.#devices.keys()) {

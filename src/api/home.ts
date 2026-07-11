@@ -46,21 +46,21 @@ const ATW_ENERGY_MEASURE = {
  * Flatten a building's ATA + ATW units into typed registry entries,
  * tagging each with the caller-supplied ownership origin.
  * @param building - Source building from `/context`.
- * @param isInvitee - `true` for a `guestBuildings` entry, `false` when owned.
+ * @param isOwner - `true` for a `buildings` entry, `false` for a guest one.
  * @returns Typed device entries ready for {@link HomeRegistry.sync}.
  */
 const toTypedDevices = (
   building: HomeBuilding,
-  isInvitee: boolean,
+  isOwner: boolean,
 ): TypedHomeDeviceData[] => [
   ...building.airToAirUnits.map((device) => ({
     device,
-    isInvitee,
+    isOwner,
     type: HomeDeviceType.Ata,
   })),
   ...building.airToWaterUnits.map((device) => ({
     device,
-    isInvitee,
+    isOwner,
     type: HomeDeviceType.Atw,
   })),
 ]
@@ -190,11 +190,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     return this.runSyncCycle(async () => {
       const data = await this.#fetchContext()
       this.#registry.sync([
-        ...data.buildings.flatMap((building) =>
-          toTypedDevices(building, false),
-        ),
+        ...data.buildings.flatMap((building) => toTypedDevices(building, true)),
         ...data.guestBuildings.flatMap((building) =>
-          toTypedDevices(building, true),
+          toTypedDevices(building, false),
         ),
       ])
       return [...data.buildings, ...data.guestBuildings]
@@ -376,15 +374,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Whether a registered device was shared with this account (sourced
-   * from `guestBuildings`) rather than owned (`buildings`). Reflects
-   * the last {@link list} sync; returns `undefined` for an id absent
-   * from the registry.
+   * Whether this account owns a registered device (sourced from
+   * `buildings`) rather than being a guest of it (`guestBuildings`).
+   * Reflects the last {@link list} sync; returns `undefined` for an id
+   * absent from the registry.
    * @param id - Device id.
-   * @returns `true` when invited, `false` when owned, `undefined` when unknown.
+   * @returns `true` when owned, `false` when a guest, `undefined` when unknown.
    */
-  public isInvitee(id: string): boolean | undefined {
-    return this.#registry.getById(id)?.isInvitee
+  public isOwner(id: string): boolean | undefined {
+    return this.#registry.getById(id)?.isOwner
   }
 
   /**

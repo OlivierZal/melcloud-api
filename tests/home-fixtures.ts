@@ -75,17 +75,17 @@ export const homeDeviceData = (
 export const homeDevice = (
   overrides: HomeDeviceDataOverrides = {},
   type: HomeDeviceType = HomeDeviceType.Ata,
-  isInvitee = false,
+  isOwner = true,
 ): HomeDevice<HomeAtaDeviceData> =>
-  new HomeDevice(homeDeviceData(overrides), type, isInvitee)
+  new HomeDevice(homeDeviceData(overrides), type, isOwner)
 
 export const typedHomeDeviceData = (
   overrides: HomeDeviceDataOverrides = {},
   type: HomeDeviceType = HomeDeviceType.Ata,
-  isInvitee = false,
+  isOwner = true,
 ): TypedHomeDeviceData => ({
   device: homeDeviceData(overrides),
-  isInvitee,
+  isOwner,
   type,
 })
 
@@ -140,6 +140,6 @@ export const homeAtwDeviceData = (
 
 export const homeAtwDevice = (
   overrides: HomeAtwDeviceDataOverrides = {},
-  isInvitee = false,
+  isOwner = true,
 ): HomeDevice<HomeAtwDeviceData> =>
-  new HomeDevice(homeAtwDeviceData(overrides), HomeDeviceType.Atw, isInvitee)
+  new HomeDevice(homeAtwDeviceData(overrides), HomeDeviceType.Atw, isOwner)

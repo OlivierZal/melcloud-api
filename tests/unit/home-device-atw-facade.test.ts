@@ -208,17 +208,17 @@ describe('home device atw facade', () => {
   })
 
   describe('ownership', () => {
-    it('exposes isInvitee from the backing model', () => {
+    it('exposes isOwner from the backing model', () => {
       const owned = new HomeDeviceAtwFacade(createApi(), createModel())
 
-      expect(owned.isInvitee).toBe(false)
+      expect(owned.isOwner).toBe(true)
 
       const guest = new HomeDeviceAtwFacade(
         createApi(),
-        homeAtwDevice({ id: 'atw-1' }, true),
+        homeAtwDevice({ id: 'atw-1' }, false),
       )
 
-      expect(guest.isInvitee).toBe(true)
+      expect(guest.isOwner).toBe(false)
     })
   })
 
