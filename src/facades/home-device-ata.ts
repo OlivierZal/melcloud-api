@@ -20,7 +20,7 @@ import {
   isHomeFanSpeed,
 } from '../enum-mappings.ts'
 import { NoChangesError } from '../errors/index.ts'
-import { clampToRange } from '../utils.ts'
+import { clampToRange, omitUndefined } from '../utils.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 
 interface TemperatureRange {
@@ -192,18 +192,20 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
 
   /**
    * Pushes a partial setpoint update; throws {@link NoChangesError} when
-   * `values` is empty, otherwise clamps `setTemperature` to the active
+   * `values` carries no defined value (an explicitly-`undefined` key
+   * counts as absent), otherwise clamps `setTemperature` to the active
    * mode's bounds and forwards.
    * @param values - Partial setpoint payload.
    * @returns `true` when the update succeeded.
    */
   public override async updateValues(values: HomeAtaValues): Promise<boolean> {
-    if (Object.keys(values).length === 0) {
+    const changes = omitUndefined(values)
+    if (Object.keys(changes).length === 0) {
       throw new NoChangesError(this.id)
     }
     return this.api.updateAtaValues(this.id, {
-      ...values,
-      ...this.#clampSetTemperature(values),
+      ...changes,
+      ...this.#clampSetTemperature(changes),
     })
   }
 

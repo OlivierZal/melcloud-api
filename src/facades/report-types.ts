@@ -36,7 +36,7 @@ export interface ReportChartPieOptions extends ReportChartOptions {
  */
 export interface ReportQuery {
   /** Start date in ISO 8601 format. Defaults to `'1970-01-01'`. */
-  readonly from?: string
+  readonly from?: string | undefined
   /** End date in ISO 8601 format. Defaults to now. */
-  readonly to?: string
+  readonly to?: string | undefined
 }

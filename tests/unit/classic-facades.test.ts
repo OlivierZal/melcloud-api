@@ -844,6 +844,28 @@ describe('ata device facade', () => {
     ).rejects.toThrow(new NoChangesError(1000))
   })
 
+  it('updateValues treats explicitly-undefined values as absent', async () => {
+    const { facade } = createAtaFacade()
+
+    await expect(
+      facade.updateValues(cast({ SetTemperature: undefined })),
+    ).rejects.toThrow(new NoChangesError(1000))
+  })
+
+  it('updateValues raises no flag for an undefined-valued key', async () => {
+    const { api, facade } = createAtaFacade()
+    await facade.updateValues(cast({ Power: false, SetTemperature: undefined }))
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
+
+    expect(call).toBeDefined()
+
+    expect(
+      mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>>(
+        defined(call).postData,
+      ).EffectiveFlags,
+    ).toBe(1)
+  })
+
   it('clamps target temperature to operation mode range', async () => {
     const { api, facade } = createAtaFacade()
     await facade.updateValues({ SetTemperature: 0 })
@@ -920,7 +942,7 @@ describe('atw device facade', () => {
       }),
     )
     await facade.updateValues({
-      SetTemperatureZone1: mock<{ value: number }>().value,
+      SetTemperatureZone1: cast(null),
     })
     const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
 

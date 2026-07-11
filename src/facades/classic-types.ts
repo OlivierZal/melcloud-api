@@ -145,7 +145,9 @@ export interface ClassicFacade extends Identifiable {
       device: ClassicDevice<T>,
     ) => Promise<Result<ClassicTilesData<T>>>)
   /** Trigger a sync callback for downstream consumers. */
-  readonly notifySync: (params?: { type?: ClassicDeviceType }) => Promise<void>
+  readonly notifySync: (params?: {
+    type?: ClassicDeviceType | undefined
+  }) => Promise<void>
   /** Update frost protection settings with temperature clamping. */
   readonly updateFrostProtection: (
     query: ClassicFrostProtectionQuery,
@@ -168,7 +170,7 @@ export interface ClassicFrostProtectionQuery {
   /** Minimum temperature threshold (clamped to 4–16 °C range). */
   readonly min: number
   /** Whether frost protection is enabled. Defaults to `true`. */
-  readonly isEnabled?: boolean
+  readonly isEnabled?: boolean | undefined
 }
 
 /**
@@ -177,9 +179,9 @@ export interface ClassicFrostProtectionQuery {
  */
 export interface ClassicHolidayModeQuery {
   /** Start date in ISO 8601 format. Defaults to now when `to` is provided. */
-  readonly from?: string
+  readonly from?: string | undefined
   /** End date in ISO 8601 format. Omit to disable holiday mode. */
-  readonly to?: string
+  readonly to?: string | undefined
 }
 
 /**

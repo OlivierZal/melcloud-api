@@ -22,6 +22,7 @@ import {
   type ClassicTilesData,
   type ClassicUpdateDeviceData,
   type Hour,
+  type Resolved,
   type Result,
   mapResult,
 } from '../types/index.ts'
@@ -49,7 +50,7 @@ const DEFAULT_YEAR = '1970-01-01'
 // Calendar-day delta between two ISO wall-clock strings. Computed on
 // `PlainDateTime` so the result reflects the literal Y-M-D-h-m-s span
 // the Classic server uses, independent of DST in any zone.
-const getDuration = ({ from, to }: Required<ReportQuery>): number =>
+const getDuration = ({ from, to }: Resolved<ReportQuery>): number =>
   Temporal.PlainDateTime.from(to).since(Temporal.PlainDateTime.from(from), {
     roundingMode: 'ceil',
     smallestUnit: 'day',
@@ -167,9 +168,13 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     data: Partial<ClassicUpdateDeviceData<T>>,
   ): Promise<ClassicSetDeviceData<T>> {
     const { api, id, setData: currentSetData, type } = this
+    // A present-`undefined` key counts as absent (JS callers can send
+    // one); letting it through would raise a phantom `EffectiveFlags`
+    // bit and bypass the `NoChangesError` guard.
     const newData = typedFromEntries<Partial<ClassicUpdateDeviceData<T>>>(
       Object.entries(data).filter(
         ([key, value]) =>
+          value !== undefined &&
           isUpdateDeviceData(currentSetData, key) &&
           currentSetData[key] !== value,
       ),

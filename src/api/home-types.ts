@@ -118,7 +118,7 @@ export interface HomeAPIAdapter {
  */
 export interface HomeAPIConfig extends BaseAPIConfig {
   /** Base URL of the MELCloud Home BFF server. */
-  readonly baseURL?: string
+  readonly baseURL?: string | undefined
 }
 
 /**

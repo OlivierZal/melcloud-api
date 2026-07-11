@@ -200,18 +200,18 @@ export interface ClassicAPIAdapter {
  */
 export interface ClassicAPIConfig extends BaseAPIConfig {
   /** Upstream account language code (e.g. `'en'`, `'fr'`). */
-  readonly language?: string
+  readonly language?: string | undefined
   /**
    * BCP-47 locale tag for report chart labels (day-of-week, month
    * names). Independent of {@link language} — `language` controls
    * upstream messages, `locale` controls how the SDK formats labels
    * locally. Defaults to the runtime locale when unset.
    */
-  readonly locale?: string
+  readonly locale?: string | undefined
   /** Whether to verify SSL certificates. Defaults to `true`. */
-  readonly shouldVerifySSL?: boolean
+  readonly shouldVerifySSL?: boolean | undefined
   /** IANA timezone identifier (e.g. `'Europe/Paris'`). */
-  readonly timezone?: string
+  readonly timezone?: string | undefined
 }
 
 /**
@@ -267,15 +267,15 @@ export interface ClassicErrorLogQuery {
    * single day; `offset` is ignored and `period` only shapes
    * `nextFromDate` for chained pagination.
    */
-  readonly from?: string
+  readonly from?: string | undefined
   /**
    * Page offset, in `period`-sized windows. `0` (default) is the most
    * recent window; `1` is the previous, etc. Pages are separated by a
    * one-day boundary so consecutive pages don't overlap.
    */
-  readonly offset?: number
+  readonly offset?: number | undefined
   /** Number of days per page. Defaults to `1`. */
-  readonly period?: number
+  readonly period?: number | undefined
   /** End date in ISO 8601 format. Defaults to now. */
-  readonly to?: string
+  readonly to?: string | undefined
 }
