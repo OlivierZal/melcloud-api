@@ -10,7 +10,7 @@ import type {
   Result,
 } from '../types/index.ts'
 import { NoChangesError } from '../errors/index.ts'
-import { clampToRange } from '../utils.ts'
+import { clampToRange, omitUndefined } from '../utils.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 
 interface TemperatureRange {
@@ -258,19 +258,21 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
 
   /**
    * Pushes a partial setpoint update; throws {@link NoChangesError} when
-   * `values` is empty, otherwise clamps zone setpoints to
+   * `values` carries no defined value (an explicitly-`undefined` key
+   * counts as absent), otherwise clamps zone setpoints to
    * `[minSetTemperature, maxSetTemperature]` and the tank setpoint to
    * `[minSetTankTemperature, maxSetTankTemperature]` before forwarding.
    * @param values - Partial setpoint payload.
    * @returns `true` when the update succeeded.
    */
   public override async updateValues(values: HomeAtwValues): Promise<boolean> {
-    if (Object.keys(values).length === 0) {
+    const changes = omitUndefined(values)
+    if (Object.keys(changes).length === 0) {
       throw new NoChangesError(this.id)
     }
     return this.api.updateAtwValues(this.id, {
-      ...values,
-      ...this.#clampSetpoints(values),
+      ...changes,
+      ...this.#clampSetpoints(changes),
     })
   }
 

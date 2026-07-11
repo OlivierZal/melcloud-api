@@ -329,7 +329,7 @@ export abstract class ClassicBaseFacade<
 
   public async notifySync({
     type,
-  }: { type?: ClassicDeviceType } = {}): Promise<void> {
+  }: { type?: ClassicDeviceType | undefined } = {}): Promise<void> {
     await this.api.notifySync({ ids: this.#deviceIds, type })
   }
 

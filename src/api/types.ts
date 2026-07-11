@@ -1,12 +1,14 @@
 import type { DeviceType } from '../constants.ts'
 import type { HttpClient } from '../http/index.ts'
-import type { LoginCredentials } from '../types/index.ts'
 
 /**
- * Common configuration shared by all API clients.
+ * Common configuration shared by all API clients. The credential
+ * fields are the optional counterpart of {@link LoginCredentials}:
+ * absent and explicitly-`undefined` are equivalent (credentials can
+ * also arrive later via `authenticate` or the {@link SettingManager}).
  * @category Configuration
  */
-export interface BaseAPIConfig extends Partial<LoginCredentials> {
+export interface BaseAPIConfig {
   /**
    * Optional shutdown signal applied to every outgoing request.
    *
@@ -26,6 +28,8 @@ export interface BaseAPIConfig extends Partial<LoginCredentials> {
   readonly events?: LifecycleEvents
   /** Custom logger. Defaults to `console`. */
   readonly logger?: Logger
+  /** MELCloud account password. */
+  readonly password?: string | undefined
   /** External setting manager for persisting credentials and session data. */
   readonly settingManager?: SettingManager
   /**
@@ -36,6 +40,8 @@ export interface BaseAPIConfig extends Partial<LoginCredentials> {
   readonly syncIntervalMinutes?: number | false
   /** HTTP transport: pre-built {@link HttpClient} or build options. */
   readonly transport?: TransportConfig
+  /** MELCloud account username (email). */
+  readonly username?: string | undefined
 }
 
 /**

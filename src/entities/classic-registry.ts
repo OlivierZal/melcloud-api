@@ -329,7 +329,9 @@ export class ClassicRegistry {
    * @param root0.type - Restrict to a single device type.
    * @returns Every zone (buildings, floors, areas, devices), sorted by name.
    */
-  public getZones({ type }: { type?: ClassicDeviceType } = {}): ClassicZone[] {
+  public getZones({
+    type,
+  }: { type?: ClassicDeviceType | undefined } = {}): ClassicZone[] {
     return [...flattenBuildings(this.getBuildings({ type }))].toSorted(
       compareNames,
     )

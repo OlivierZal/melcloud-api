@@ -6,6 +6,7 @@ import {
   isSetDeviceDataAtaInList,
   isSetDeviceDataAtaNotInList,
   isUpdateDeviceData,
+  omitUndefined,
   typedFromEntries,
 } from '../../src/utils.ts'
 
@@ -91,5 +92,17 @@ describe.concurrent(isUpdateDeviceData, () => {
     const key = 'NonExistent' as string
 
     expect(isUpdateDeviceData(data, key)).toBe(false)
+  })
+})
+
+describe.concurrent(omitUndefined, () => {
+  it('drops undefined-valued keys and keeps null-valued ones', () => {
+    expect(
+      omitUndefined({ fanSpeed: null, power: true, temperature: undefined }),
+    ).toStrictEqual({ fanSpeed: null, power: true })
+  })
+
+  it('returns an empty object when every value is undefined', () => {
+    expect(omitUndefined({ temperature: undefined })).toStrictEqual({})
   })
 })

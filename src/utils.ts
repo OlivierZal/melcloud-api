@@ -1,7 +1,6 @@
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
-  ReportQuery,
 } from './facades/index.ts'
 import type {
   ClassicOperationModeLogData,
@@ -195,6 +194,26 @@ export const typedKeys = <T extends Record<string, unknown>>(
 ): (string & keyof T)[] => Object.keys(object)
 
 /**
+ * Copy of `values` without the keys whose value is `undefined`, so a
+ * present-`undefined` key behaves exactly like an absent key in
+ * downstream `Object.keys` emptiness guards and diff filters. Guards
+ * update paths against plain-JS callers and TypeScript callers without
+ * `exactOptionalPropertyTypes`, for whom present-`undefined` payloads
+ * are representable.
+ * @template T - Shape of the partial payload being normalised.
+ * @param values - Partial payload, possibly holding `undefined` values.
+ * @returns The normalised copy.
+ */
+export function omitUndefined<T extends object>(values: T): T
+export function omitUndefined(
+  values: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(values).filter(([, value]) => value !== undefined),
+  )
+}
+
+/**
  * Type-safe `Object.fromEntries` that returns a properly typed object.
  * @template T - Object type assembled from the entries; each entry's value
  * must be assignable to one of `T`'s property value types.
@@ -296,14 +315,14 @@ export const getChartLineOptions = (
 /**
  * Transform operation mode log data into structured pie chart options.
  * @param data - The operation mode log entries.
- * @param root0 - The report query date range.
+ * @param root0 - The resolved report date range (defaults applied).
  * @param root0.from - The start date of the report period.
  * @param root0.to - The end date of the report period.
  * @returns Structured pie chart options.
  */
 export const getChartPieOptions = (
   data: ClassicOperationModeLogData,
-  { from, to }: Required<ReportQuery>,
+  { from, to }: { from: string; to: string },
 ): ReportChartPieOptions => ({
   from,
   labels: data.map(({ Key: label }) => label),

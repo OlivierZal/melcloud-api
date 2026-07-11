@@ -82,7 +82,7 @@ export class ClassicFacadeManager {
    * @returns The building zone tree.
    */
   public getBuildings(params?: {
-    type?: ClassicDeviceType
+    type?: ClassicDeviceType | undefined
   }): ClassicBuildingZone[] {
     return this.#registry.getBuildings(params)
   }
@@ -94,7 +94,9 @@ export class ClassicFacadeManager {
    * @param params.type - Restrict to a single device type.
    * @returns Every zone, name-sorted.
    */
-  public getZones(params?: { type?: ClassicDeviceType }): ClassicZone[] {
+  public getZones(params?: {
+    type?: ClassicDeviceType | undefined
+  }): ClassicZone[] {
     return this.#registry.getZones(params)
   }
 }

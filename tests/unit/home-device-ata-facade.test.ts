@@ -4,7 +4,7 @@ import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { HomeAtaDeviceCapabilities } from '../../src/types/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
-import { mock } from '../helpers.ts'
+import { cast, mock } from '../helpers.ts'
 import { homeDevice } from '../home-fixtures.ts'
 
 const createModel = (
@@ -131,6 +131,27 @@ describe('home device ata facade', () => {
       await expect(facade.updateValues({})).rejects.toThrow(
         new NoChangesError('device-1'),
       )
+    })
+
+    it('should treat explicitly-undefined values as absent', async () => {
+      const facade = new HomeDeviceAtaFacade(createApi(), createModel())
+
+      await expect(
+        facade.updateValues(cast({ setTemperature: undefined })),
+      ).rejects.toThrow(new NoChangesError('device-1'))
+    })
+
+    it('should drop undefined-valued keys before forwarding', async () => {
+      const api = createApi()
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      await facade.updateValues(
+        cast({ power: true, setTemperature: undefined }),
+      )
+
+      expect(vi.mocked(api.updateAtaValues).mock.lastCall?.[1]).toStrictEqual({
+        power: true,
+      })
     })
   })
 

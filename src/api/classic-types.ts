@@ -267,15 +267,15 @@ export interface ClassicErrorLogQuery {
    * single day; `offset` is ignored and `period` only shapes
    * `nextFromDate` for chained pagination.
    */
-  readonly from?: string
+  readonly from?: string | undefined
   /**
    * Page offset, in `period`-sized windows. `0` (default) is the most
    * recent window; `1` is the previous, etc. Pages are separated by a
    * one-day boundary so consecutive pages don't overlap.
    */
-  readonly offset?: number
+  readonly offset?: number | undefined
   /** Number of days per page. Defaults to `1`. */
-  readonly period?: number
+  readonly period?: number | undefined
   /** End date in ISO 8601 format. Defaults to now. */
-  readonly to?: string
+  readonly to?: string | undefined
 }
