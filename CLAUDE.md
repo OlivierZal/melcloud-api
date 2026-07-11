@@ -77,3 +77,33 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 - The docs site deploys only on release or `gh workflow run docs.yml`.
 - CI: `Test (Node latest)` is `continue-on-error` by design — keep it out
   of required status checks. Sonar coverage runs on the `lts/*` leg only.
+
+## Releasing
+
+- Publishing is release-triggered (`publish.yml`): a **published GitHub
+  Release** packs the tarball and publishes it to GitHub Packages. A
+  release marked **prerelease** publishes under the `next` dist-tag; a
+  normal one under `latest`. The version comes from
+  `package.json` at the released commit, so bump it before tagging.
+- Prerelease/alpha flow keeps `main` on the target stable version (no
+  `-alpha` suffix): branch from `main`, bump, commit, push, then cut a
+  prerelease release off that branch — which publishes under `next`. The
+  release must target the pushed branch tip, so commit the version bump
+  first (otherwise the tag lands on the un-bumped commit):
+
+  ```sh title="alpha"
+  git switch -c release/41.0.0-alpha.0
+  npm version 41.0.0-alpha.0 --no-git-tag-version
+  git commit -am 'chore(release): 41.0.0-alpha.0'
+  git push -u origin release/41.0.0-alpha.0
+  gh release create v41.0.0-alpha.0 --target release/41.0.0-alpha.0 --prerelease
+  ```
+
+  Consumers install it with `@olivierzal/melcloud-api@next` (GitHub
+  Packages needs `NODE_AUTH_TOKEN`).
+
+- Downstream `com.melcloud` (sibling repo, uses `/classic` + `/home`)
+  upgrades by pinning the dep to the new version (exact for a prerelease)
+  then running its `typecheck`/`lint`/`test`/`build`; open the PR from that
+  repo. A major bump's breaking surface is the CHANGELOG `[Unreleased]`
+  section.
