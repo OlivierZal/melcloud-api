@@ -90,6 +90,8 @@ export interface HomeAPIAdapter {
   readonly getUser: () => Promise<HomeUser | null>
   /** Whether a user is currently authenticated (session cookie valid). */
   readonly isAuthenticated: () => boolean
+  /** Ownership origin of a registered device: `true` when owned, `false` when a guest, `undefined` when the id is unknown. */
+  readonly isOwner: (id: string) => boolean | undefined
   /** Fetch all buildings and sync the device registry. */
   readonly list: () => Promise<HomeBuilding[]>
   /**

@@ -305,7 +305,7 @@ const HomeReportDatasetSchema = z.looseObject({
   label: z.string(),
 })
 
-/** Home /report/v1/trendsummary response. */
+/** Home /report/v1/{comfort-graph,internaltemperatures,trendsummary} response. */
 export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
   datasets: z.array(HomeReportDatasetSchema),
   // Shared by comfort-graph / internaltemperatures / trendsummary:
