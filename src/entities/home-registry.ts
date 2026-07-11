@@ -3,11 +3,12 @@ import type { HomeDeviceData } from '../types/index.ts'
 import { HomeDevice } from './home-device.ts'
 
 /**
- * ClassicDevice with its type, as extracted from building units.
+ * Home device with its type and ownership origin, as extracted from building units.
  * @internal
  */
 export interface TypedHomeDeviceData {
   readonly device: HomeDeviceData
+  readonly isOwner: boolean
   readonly type: HomeDeviceType
 }
 
@@ -52,13 +53,13 @@ export class HomeRegistry {
    */
   public sync(devices: TypedHomeDeviceData[]): void {
     const activeIds = new Set<string>()
-    for (const { device, type } of devices) {
+    for (const { device, isOwner, type } of devices) {
       activeIds.add(device.id)
       const existing = this.#devices.get(device.id)
       if (existing === undefined) {
-        this.#devices.set(device.id, new HomeDevice(device, type))
+        this.#devices.set(device.id, new HomeDevice(device, type, isOwner))
       } else {
-        existing.sync(device)
+        existing.sync(device, isOwner)
       }
     }
     for (const id of this.#devices.keys()) {

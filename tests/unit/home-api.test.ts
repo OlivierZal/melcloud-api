@@ -151,6 +151,14 @@ const mockContext: HomeContext = {
   scenes: [],
 }
 
+// Same devices, but owned (in `buildings`) rather than shared — so the
+// registry tags them isOwner: true.
+const mockOwnedContext: HomeContext = {
+  ...mockContext,
+  buildings: [mockBuilding],
+  guestBuildings: [],
+}
+
 const mockEnergyData: HomeEnergyData = {
   deviceId: 'device-1',
   measureData: [
@@ -166,9 +174,10 @@ const mockEnergyData: HomeEnergyData = {
 
 const mockErrorLog: HomeErrorLogEntry[] = [
   {
-    date: '2026-03-01T10:00:00Z',
+    clearedTimestamp: null,
     errorCode: 'E001',
-    errorMessage: 'Sensor failure',
+    errorReason: 'Sensor failure',
+    timestamp: '2026-03-01T10:00:00Z',
   },
 ]
 
@@ -188,6 +197,12 @@ const mockReportData: HomeReportData[] = [
     ],
     reportPeriod: 'hourly',
   },
+]
+
+// comfort-graph returns reportPeriod as a number, unlike the string that
+// internaltemperatures/trendsummary return — both must validate.
+const mockNumericReportData: HomeReportData[] = [
+  { datasets: [], reportPeriod: 0 },
 ]
 
 const mockSignalData: HomeEnergyData = {
@@ -578,6 +593,37 @@ describe('melcloud home API', () => {
     })
   })
 
+  describe('device ownership', () => {
+    it('tags devices from guestBuildings as not owned', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.list()
+
+      expect(api.registry.getById('device-1')?.isOwner).toBe(false)
+    })
+
+    it('tags devices from owned buildings as owned', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockOwnedContext, {}, 200))
+      await api.list()
+
+      expect(api.registry.getById('device-1')?.isOwner).toBe(true)
+    })
+
+    it('keeps a device owned when it also appears in guestBuildings', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(
+        mockResponse({ ...mockContext, buildings: [mockBuilding] }, {}, 200),
+      )
+      await api.list()
+
+      expect(api.registry.getById('device-1')?.isOwner).toBe(true)
+    })
+  })
+
   describe('sync callback', () => {
     it('should call onSync after list()', async () => {
       setupSuccessfulLogin()
@@ -965,6 +1011,21 @@ describe('melcloud home API', () => {
           url: '/report/v1/internaltemperatures',
         }),
       )
+    })
+
+    it('accepts a numeric reportPeriod from comfort-graph', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(
+        mockResponse(mockNumericReportData, {}, 200),
+      )
+      const result = await api.getAtwTemperatures('atw-1', {
+        from: '2026-05-01',
+        period: 'Daily',
+        to: '2026-05-02',
+      })
+
+      expect(result).toStrictEqual({ ok: true, value: mockNumericReportData })
     })
   })
 

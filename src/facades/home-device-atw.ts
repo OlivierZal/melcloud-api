@@ -264,7 +264,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @param values - Partial setpoint payload.
    * @returns `true` when the update succeeded.
    */
-  public async updateValues(values: HomeAtwValues): Promise<boolean> {
+  public override async updateValues(values: HomeAtwValues): Promise<boolean> {
     if (Object.keys(values).length === 0) {
       throw new NoChangesError(this.id)
     }

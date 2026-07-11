@@ -35,6 +35,17 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
   }
 
   /**
+   * Whether the current account owns this device (sourced from
+   * `context.buildings`) rather than being a guest of it (sourced from
+   * `context.guestBuildings`). Reports the structural origin only:
+   * `false` does not by itself prove a guest is barred from control.
+   * @returns `true` when owned, `false` when shared with this account.
+   */
+  public get isOwner(): boolean {
+    return this.#isOwner
+  }
+
+  /**
    * User-facing display name set in the MELCloud Home app.
    * @returns The device's display name.
    */
@@ -44,14 +55,19 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
 
   #data: TData
 
+  #isOwner: boolean
+
   /**
    * Builds a Home device wrapper from a wire-format {@link HomeDeviceData}
-   * entry tagged with its connection type (Ata or Atw).
+   * entry tagged with its connection type (Ata or Atw) and ownership origin.
    * @param device - Wire-format device payload.
    * @param type - Connection-type discriminator.
+   * @param isOwner - `true` when sourced from an owned building, `false`
+   * when sourced from a guest one.
    */
-  public constructor(device: TData, type: HomeDeviceType) {
+  public constructor(device: TData, type: HomeDeviceType, isOwner: boolean) {
     this.#data = device
+    this.#isOwner = isOwner
     this.type = type
   }
 
@@ -75,10 +91,14 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
 
   /**
    * Replaces the internal data snapshot with a fresh payload while
-   * preserving the wrapper's object identity.
+   * preserving the wrapper's object identity. Every sync restates the
+   * ownership origin, so a share/unshare between syncs is reflected
+   * rather than kept from a stale tag.
    * @param device - Fresh wire-format device payload.
+   * @param isOwner - Ownership origin from the current sync.
    */
-  public sync(device: TData): void {
+  public sync(device: TData, isOwner: boolean): void {
     this.#data = device
+    this.#isOwner = isOwner
   }
 }

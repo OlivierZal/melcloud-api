@@ -134,6 +134,30 @@ describe('home device ata facade', () => {
     })
   })
 
+  describe('updatePower', () => {
+    it('forwards a power-only payload, defaulting to on', async () => {
+      const api = createApi()
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      await facade.updatePower()
+
+      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+        power: true,
+      })
+    })
+
+    it('powers off when passed false', async () => {
+      const api = createApi()
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      await facade.updatePower(false)
+
+      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+        power: false,
+      })
+    })
+  })
+
   describe('temperature clamping', () => {
     it('should clamp temperature to heat range', async () => {
       const api = createApi()

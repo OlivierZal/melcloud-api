@@ -32,6 +32,22 @@ describe('home device registry', () => {
     expect(model?.name).toBe('New')
   })
 
+  it('should restate ownership on every sync', () => {
+    const registry = new HomeRegistry()
+    const { device, type } = createDevice('a')
+    registry.sync([{ device, isOwner: false, type }])
+
+    expect(registry.getById('a')?.isOwner).toBe(false)
+
+    registry.sync([{ device, isOwner: true, type }])
+
+    expect(registry.getById('a')?.isOwner).toBe(true)
+
+    registry.sync([{ device, isOwner: false, type }])
+
+    expect(registry.getById('a')?.isOwner).toBe(false)
+  })
+
   it('should prune stale devices', () => {
     const registry = new HomeRegistry()
     registry.sync([createDevice('a'), createDevice('b')])
