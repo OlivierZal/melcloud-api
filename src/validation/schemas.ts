@@ -317,9 +317,10 @@ export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
 export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
   z.array(
     z.looseObject({
-      date: z.string(),
+      clearedTimestamp: z.string().nullable(),
       errorCode: z.string(),
-      errorMessage: z.string(),
+      errorReason: z.string().nullable(),
+      timestamp: z.string(),
     }),
   )
 

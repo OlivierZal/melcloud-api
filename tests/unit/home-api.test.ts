@@ -174,9 +174,10 @@ const mockEnergyData: HomeEnergyData = {
 
 const mockErrorLog: HomeErrorLogEntry[] = [
   {
-    date: '2026-03-01T10:00:00Z',
+    clearedTimestamp: null,
     errorCode: 'E001',
-    errorMessage: 'Sensor failure',
+    errorReason: 'Sensor failure',
+    timestamp: '2026-03-01T10:00:00Z',
   },
 ]
 

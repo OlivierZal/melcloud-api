@@ -280,13 +280,17 @@ export interface HomeEnergyPoint {
 }
 
 /**
- * Single error-log entry returned by the MELCloud Home error-history endpoint.
+ * Single error-log entry returned by the MELCloud Home error-history
+ * endpoint. `errorReason` is `null` when the BFF sends no reason string
+ * for the code, and `clearedTimestamp` stays `null` while the error is
+ * uncleared.
  * @category Types
  */
 export interface HomeErrorLogEntry {
-  readonly date: string
+  readonly clearedTimestamp: string | null
   readonly errorCode: string
-  readonly errorMessage: string
+  readonly errorReason: string | null
+  readonly timestamp: string
 }
 
 /**
