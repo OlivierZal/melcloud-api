@@ -31,8 +31,9 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
 
   /**
    * Whether the current account owns this device rather than being a
-   * guest of it. A guest's mutations may be rejected by the BFF, so
-   * callers can gate write UI on this flag.
+   * guest of it. Reports the structural origin only: `false` does not
+   * by itself prove a guest is barred from control (the BFF accepts
+   * guest writes on shared units).
    * @returns `true` when owned, `false` when shared with this account.
    */
   public get isOwner(): boolean {
