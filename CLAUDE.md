@@ -33,6 +33,10 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   API keeps PascalCase canonical and lowers on write. The
   weather-compensation member is `HeatCurve`; `Curve` never existed
   (live-probed against `/monitor/atwunit`, 2026-07-12).
+- A 200 from the Home ATW PUT proves nothing by itself: the BFF binder
+  silently ignores unknown fields (a garbage key is accepted). Only a
+  `/context` readback showing the change proves a write path exists —
+  never add a `HomeAtwValues` field on acceptance alone.
 
 ## Lint doctrine
 
