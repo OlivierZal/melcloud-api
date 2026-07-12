@@ -1,5 +1,6 @@
 import type {
   HomeAtaValues,
+  HomeAtwOperationModeZone,
   HomeAtwValues,
   HomeBuilding,
   HomeContext,
@@ -37,6 +38,38 @@ import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
 const ATW_UNIT_PATH = '/monitor/atwunit'
+
+/**
+ * Wire-facing ATW payload: zone modes lowered to the camelCase form the
+ * PUT endpoint accepts.
+ */
+type HomeAtwWireValues = Omit<
+  HomeAtwValues,
+  'operationModeZone1' | 'operationModeZone2'
+> & {
+  readonly operationModeZone1?: string | null
+  readonly operationModeZone2?: string | null
+}
+
+// The BFF reports zone modes in PascalCase but its PUT endpoint only
+// accepts them in camelCase (a PascalCase value earns a bare 400) —
+// live-probed against /monitor/atwunit.
+const toWireZoneMode = (
+  mode: HomeAtwOperationModeZone | null,
+): string | null =>
+  typeof mode === 'string' ?
+    `${mode.charAt(0).toLowerCase()}${mode.slice(1)}`
+  : mode
+
+const toAtwWireValues = (values: HomeAtwValues): HomeAtwWireValues => ({
+  ...values,
+  ...('operationModeZone1' in values && {
+    operationModeZone1: toWireZoneMode(values.operationModeZone1),
+  }),
+  ...('operationModeZone2' in values && {
+    operationModeZone2: toWireZoneMode(values.operationModeZone2),
+  }),
+})
 const ATW_ENERGY_MEASURE = {
   consumed: 'interval_energy_consumed',
   produced: 'interval_energy_produced',
@@ -569,7 +602,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     id: string,
     values: HomeAtwValues,
   ): Promise<void> {
-    await this.#putDeviceValues(ATW_UNIT_PATH, id, values)
+    await this.#putDeviceValues(ATW_UNIT_PATH, id, toAtwWireValues(values))
   }
 
   async #exchangeAndStoreTokens(
@@ -697,7 +730,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   async #putDeviceValues(
     unitPath: string,
     id: string,
-    values: HomeAtaValues | HomeAtwValues,
+    values: HomeAtaValues | HomeAtwWireValues,
   ): Promise<void> {
     await this.request('put', `${unitPath}/${id}`, { data: values })
   }

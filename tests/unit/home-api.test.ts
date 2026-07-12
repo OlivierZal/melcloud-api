@@ -930,6 +930,53 @@ describe('melcloud home API', () => {
       expect(isSuccess).toBe(false)
     })
 
+    it('updateAtwValues lowers zone modes to the camelCase wire form', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const isSuccess = await api.updateAtwValues('atw-1', {
+        operationModeZone1: 'HeatCurve',
+        operationModeZone2: 'CoolFlowTemperature',
+        setTemperatureZone1: 21,
+      })
+
+      expect(isSuccess).toBe(true)
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            operationModeZone1: 'heatCurve',
+            operationModeZone2: 'coolFlowTemperature',
+            setTemperatureZone1: 21,
+          },
+          method: 'put',
+          url: '/monitor/atwunit/atw-1',
+        }),
+      )
+    })
+
+    it('updateAtwValues keeps a null zone mode as an explicit clear', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const isSuccess = await api.updateAtwValues('atw-1', {
+        operationModeZone2: null,
+        power: true,
+      })
+
+      expect(isSuccess).toBe(true)
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: { operationModeZone2: null, power: true },
+          method: 'put',
+          url: '/monitor/atwunit/atw-1',
+        }),
+      )
+    })
+
     it.each([
       { measure: 'consumed', wireMeasure: 'interval_energy_consumed' },
       { measure: 'produced', wireMeasure: 'interval_energy_produced' },

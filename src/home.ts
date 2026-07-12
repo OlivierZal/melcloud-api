@@ -13,6 +13,7 @@ export {
   type HomeAtaValues as AtaValues,
   type HomeAtwDeviceCapabilities as AtwDeviceCapabilities,
   type HomeAtwDeviceData as AtwDeviceData,
+  type HomeAtwOperationMode as AtwOperationMode,
   type HomeAtwOperationModeZone as AtwOperationModeZone,
   type HomeAtwValues as AtwValues,
   type HomeBuilding as Building,

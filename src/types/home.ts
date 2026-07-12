@@ -111,15 +111,35 @@ export interface HomeAtwDeviceData extends HomeDeviceCommonData {
 }
 
 /**
- * Per-zone operation mode accepted by the MELCloud Home ATW device-update endpoint.
- * Mirrors the FTC zone modes (room thermostat / fixed flow / weather curve, in heat or cool).
+ * Top-level FTC operation mode reported by the `OperationMode` device
+ * setting. Live-captured values so far: `Cooling` and `Stop`; the other
+ * members mirror the states the MELCloud Home app surfaces. Firmware
+ * revisions may expose further strings, so consumers should treat unknown
+ * values as unmapped rather than fail.
+ * @category Types
+ */
+export type HomeAtwOperationMode =
+  | 'Cooling'
+  | 'Defrost'
+  | 'Heating'
+  | 'HotWater'
+  | 'Idle'
+  | 'Legionella'
+  | 'Stop'
+
+/**
+ * Per-zone operation mode of a MELCloud Home ATW device, in the PascalCase
+ * form the `/context` settings report. Mirrors the FTC zone modes (room
+ * thermostat / fixed flow / weather curve, in heat or cool). The
+ * device-update endpoint only accepts these values in camelCase — the API
+ * lowers them on write, so callers always use this canonical form.
  * @category Types
  */
 export type HomeAtwOperationModeZone =
   | 'CoolFlowTemperature'
   | 'CoolRoomTemperature'
   | 'CoolThermostat'
-  | 'Curve'
+  | 'HeatCurve'
   | 'HeatFlowTemperature'
   | 'HeatRoomTemperature'
   | 'HeatThermostat'
