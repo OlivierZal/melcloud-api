@@ -27,6 +27,12 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   one-letter report keys); do not rename them to satisfy style rules.
 - `EffectiveFlags` bitfields (`src/facades/classic-flags.ts`) are the one
   sanctioned home of hex magic numbers and bitwise operators.
+- The Home ATW wire speaks two dialects: `/context` settings report zone
+  modes in PascalCase (`HeatCurve`, `CoolFlowTemperature`) but the PUT
+  endpoint only accepts camelCase and answers a bare 400 otherwise — the
+  API keeps PascalCase canonical and lowers on write. The
+  weather-compensation member is `HeatCurve`; `Curve` never existed
+  (live-probed against `/monitor/atwunit`, 2026-07-12).
 
 ## Lint doctrine
 

@@ -81,6 +81,7 @@ export type {
   HomeAtaValues,
   HomeAtwDeviceCapabilities,
   HomeAtwDeviceData,
+  HomeAtwOperationMode,
   HomeAtwOperationModeZone,
   HomeAtwValues,
   HomeBuilding,
