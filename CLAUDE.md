@@ -40,21 +40,26 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 
 ## Lint doctrine
 
-- Code adapts to the rules, never the reverse. Fix violations in code;
-  never loosen a rule, restate defaults, or add options to accommodate
-  existing code. Order of preference: refactor > `files`-scoped block for a
-  protocol-imposed shape > documented inline disable.
-- Inline disables need a `-- reason` and a widely-accepted use case
-  (bitfields, branded-type casts, parse-boundary casts, fire-and-forget
-  `.catch()`, namespace merging). Never a bare disable.
+- Code adapts to the rules, never the reverse. Never add a disable — not
+  inline, not through config options or ignore regexes: refactor until the
+  rule passes (rename the binding, drop the unused parameter, restructure
+  the seam). Existing disables are debt: remove them when touching the
+  code they guard, never replicate them.
+- The only tolerated exceptions are protocol- or rule-pair-imposed, each
+  documented with a `-- reason`: bitfield operators, branded-type and
+  parse-boundary casts, wire-imposed single-letter keys, namespace
+  merging over type-only packages, fire-and-forget `.catch()`
+  (`no-floating-promises` + `unicorn/prefer-await` leave no other form),
+  and synchronous mocks of async contracts
+  (`promise-function-async` autofixes the `Promise.resolve` escape back
+  to `async`, then `require-await` fires). The TC39 decorator `this`
+  protocol keeps the one `files`-scoped rule-off in `src/decorators/**`
+  (there is no class body to put `this` in).
 - Zero-warning policy: every enabled rule is at `error`.
 - Metric caps (`complexity`, `max-depth`, `vitest/max-nested-describe`) are
   pinned to measured codebase ceilings: exceeding one means refactor, not
   bump. Prove any stricter option with an instrumented run (zero violations)
   before adopting it.
-- `no-unused-vars` is never loosened globally; the decorator-protocol
-  `_context` parameter is the only exception, scoped in the
-  `src/decorators/**` block.
 - Config comments are sober: one short line, only for non-obvious
   constraints (ownership by another tool, ordering, Node-version gates,
   measured ceilings).

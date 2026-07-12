@@ -132,9 +132,9 @@ const readHeaders = (headers: Headers): Record<string, string | string[]> => {
   const result: Record<string, string | string[]> = Object.fromEntries(
     headers.entries(),
   )
-  const setCookie = headers.getSetCookie()
-  if (setCookie.length > 0) {
-    result['set-cookie'] = setCookie
+  const cookies = headers.getSetCookie()
+  if (cookies.length > 0) {
+    result['set-cookie'] = cookies
   }
   return result
 }

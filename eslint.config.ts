@@ -740,12 +740,7 @@ const config = defineConfig([
       // form it also covers is unused here).
       'unicorn/no-named-default': 'off',
       // Domain nouns: `Set-Cookie` header, `SetDeviceData` payload.
-      'unicorn/no-non-function-verb-prefix': [
-        'error',
-        {
-          ignore: ['^set(?:Cookies?|Data)$'],
-        },
-      ],
+      'unicorn/no-non-function-verb-prefix': ['error', {}],
       // Unaware of `Symbol.dispose`.
       'unicorn/no-nonstandard-builtin-properties': 'off',
       'unicorn/no-null': 'off',
@@ -874,25 +869,16 @@ const config = defineConfig([
     },
   },
   {
-    // Decorator protocol: explicitly typed `this` (TypeScript-checked)
-    // and an imposed, unused `_context` parameter.
+    // Bitfield enumeration: `EffectiveFlags` hex values are the file's
+    // entire purpose. `no-magic-numbers` would flag every entry, and
+    // TC39 decorator protocol: the replacement method receives the
+    // instance through `this` — there is no class body to put it in.
     files: ['src/decorators/**/*.ts'],
     rules: {
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        {
-          argsIgnorePattern: '^_context$',
-          enableAutofixRemoval: {
-            imports: true,
-          },
-        },
-      ],
       'unicorn/no-this-outside-of-class': 'off',
     },
   },
   {
-    // Bitfield enumeration: `EffectiveFlags` hex values are the file's
-    // entire purpose. `no-magic-numbers` would flag every entry, and
     // `ignoreNumericLiteralTypes` does not cover literal types nested
     // inside object type annotations (typescript-eslint rule limitation).
     files: ['src/facades/classic-flags.ts'],

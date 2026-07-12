@@ -47,7 +47,7 @@ const decorateUpdateDevices = (
   >,
   options?: { kind?: 'payload' | 'power'; type?: ClassicDeviceType },
 ): ReturnType<ReturnType<typeof classicUpdateDevices>> =>
-  classicUpdateDevices(options)(target, mock<ClassMethodDecoratorContext>())
+  classicUpdateDevices(options)(target)
 
 const ataFlags = {
   OperationMode: 0x2,
@@ -130,10 +130,7 @@ const callUpdateDevice = async (
   const target = vi
     .fn<(...args: unknown[]) => Promise<never>>()
     .mockResolvedValue(cast(setData))
-  const decorated = classicUpdateDevice()(
-    target,
-    mock<ClassMethodDecoratorContext>(),
-  )
+  const decorated = classicUpdateDevice()(target)
   return decorated.call(facade)
 }
 
@@ -151,26 +148,21 @@ const setupFetchDevices = (
   options?: Parameters<typeof fetchDevices>[0],
 ): { callOrder: string[]; invoke: () => Promise<void> } => {
   const callOrder: string[] = []
-  const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockImplementation(
-    // eslint-disable-next-line @typescript-eslint/require-await -- ClassicAPIAdapter['fetch'] is async
-    async () => {
+  const fetchMock = vi
+    .fn<ClassicAPIAdapter['fetch']>()
+    // eslint-disable-next-line @typescript-eslint/require-await -- promise-function-async autofixes sync Promise returns back to async: the pair leaves no disable-free way to satisfy an async contract synchronously
+    .mockImplementation(async () => {
       callOrder.push('fetch')
       return cast([])
-    },
-  )
+    })
   const target = vi
     .fn<(...args: unknown[]) => Promise<never>>()
-    .mockImplementation(
-      // eslint-disable-next-line @typescript-eslint/require-await -- target signature is async
-      async () => {
-        callOrder.push('target')
-        return cast('result')
-      },
-    )
-  const decorated = fetchDevices(options)(
-    target,
-    mock<ClassMethodDecoratorContext>(),
-  )
+    // eslint-disable-next-line @typescript-eslint/require-await -- promise-function-async autofixes sync Promise returns back to async: the pair leaves no disable-free way to satisfy an async contract synchronously
+    .mockImplementation(async () => {
+      callOrder.push('target')
+      return cast('result')
+    })
+  const decorated = fetchDevices(options)(target)
   const context = { api: mock<ClassicAPIAdapter>({ fetch: fetchMock }) }
   return { callOrder, invoke: async () => decorated.call(context) }
 }
@@ -204,26 +196,23 @@ describe(fetchDevices, () => {
 
   it('prefers syncRegistry() over api.fetch() when both are exposed', async () => {
     const callOrder: string[] = []
-    const syncRegistry = vi.fn<() => Promise<void>>().mockImplementation(
-      // eslint-disable-next-line @typescript-eslint/require-await -- signature is async
-      async () => {
+    const syncRegistry = vi
+      .fn<() => Promise<void>>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- promise-function-async autofixes sync Promise returns back to async: the pair leaves no disable-free way to satisfy an async contract synchronously
+      .mockImplementation(async () => {
         callOrder.push('syncRegistry')
-      },
-    )
-    const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockImplementation(
-      // eslint-disable-next-line @typescript-eslint/require-await -- signature is async
-      async () => {
+      })
+    const fetchMock = vi
+      .fn<ClassicAPIAdapter['fetch']>()
+      // eslint-disable-next-line @typescript-eslint/require-await -- promise-function-async autofixes sync Promise returns back to async: the pair leaves no disable-free way to satisfy an async contract synchronously
+      .mockImplementation(async () => {
         callOrder.push('fetch')
         return cast([])
-      },
-    )
+      })
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       .mockResolvedValue(cast('result'))
-    const decorated = fetchDevices({ when: 'after' })(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
+    const decorated = fetchDevices({ when: 'after' })(target)
     const context = {
       api: mock<ClassicAPIAdapter>({ fetch: fetchMock }),
       syncRegistry,
@@ -238,10 +227,7 @@ describe(fetchDevices, () => {
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       .mockResolvedValue(cast('result'))
-    const decorated = fetchDevices({ when: 'before' })(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
+    const decorated = fetchDevices({ when: 'before' })(target)
 
     await expect(decorated.call({})).rejects.toThrow(TypeError)
     expect(target).not.toHaveBeenCalled()
@@ -252,10 +238,7 @@ describe(fetchDevices, () => {
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       .mockResolvedValue(cast('result'))
-    const decorated = fetchDevices({ when: 'after' })(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
+    const decorated = fetchDevices({ when: 'after' })(target)
 
     await expect(
       decorated.call({
@@ -279,10 +262,7 @@ describe(fetchDevices, () => {
       error: vi.fn<(...args: unknown[]) => void>(),
       log: vi.fn<(...args: unknown[]) => void>(),
     }
-    const decorated = fetchDevices({ when: 'after' })(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
+    const decorated = fetchDevices({ when: 'after' })(target)
 
     await expect(decorated.call({ logger, syncRegistry })).resolves.toBe(
       'result',
@@ -300,7 +280,7 @@ describe(syncDevices, () => {
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       .mockResolvedValue(cast('result'))
-    const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
+    const decorated = syncDevices()(target)
     const context = { notifySync }
     const result = await decorated.call(context)
 
@@ -313,10 +293,7 @@ describe(syncDevices, () => {
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       .mockResolvedValue(cast('result'))
-    const decorated = syncDevices({ type: ClassicDeviceType.Ata })(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
+    const decorated = syncDevices({ type: ClassicDeviceType.Ata })(target)
     const context = { notifySync }
     await decorated.call(context)
 
@@ -327,7 +304,7 @@ describe(syncDevices, () => {
     const target = vi
       .fn<(...args: unknown[]) => Promise<never>>()
       .mockResolvedValue(cast('result'))
-    const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
+    const decorated = syncDevices()(target)
     const context = {}
     const result = await decorated.call(context)
 
@@ -417,10 +394,10 @@ describe(classicUpdateDevice, () => {
 
   it('skips update when devices array is empty', async () => {
     const facade = { devices: [], flags: ataFlags, type: ClassicDeviceType.Ata }
-    const setData = createAtaSetData()
-    const result = await callUpdateDevice(facade, setData)
+    const updateData = createAtaSetData()
+    const result = await callUpdateDevice(facade, updateData)
 
-    expect(result).toBe(setData)
+    expect(result).toBe(updateData)
   })
 
   it('handles CLASSIC_FLAG_UNCHANGED by including all data', async () => {
@@ -509,20 +486,15 @@ describe('decorator stacking order', () => {
     const update = vi.fn<(data: unknown) => void>().mockImplementation(() => {
       callOrder.push('update')
     })
-    const notifySync = vi.fn<SyncCallback>().mockImplementation(
-      // eslint-disable-next-line @typescript-eslint/require-await -- signature is async
-      async () => {
-        callOrder.push('notifySync')
-      },
-    )
+    // eslint-disable-next-line @typescript-eslint/require-await -- promise-function-async autofixes sync Promise returns back to async: the pair leaves no disable-free way to satisfy an async contract synchronously
+    const notifySync = vi.fn<SyncCallback>().mockImplementation(async () => {
+      callOrder.push('notifySync')
+    })
     const innerTarget = vi
       .fn<(isOn: boolean) => Promise<boolean>>()
       .mockResolvedValue(true)
-    const inner = classicUpdateDevices({ kind: 'power' })(
-      innerTarget,
-      mock<ClassMethodDecoratorContext>(),
-    )
-    const outer = syncDevices()(inner, mock<ClassMethodDecoratorContext>())
+    const inner = classicUpdateDevices({ kind: 'power' })(innerTarget)
+    const outer = syncDevices()(inner)
     const facade = {
       devices: [{ type: ClassicDeviceType.Ata, update }],
       id: 1,
@@ -543,9 +515,8 @@ describe('decorator type-filter forwarding', () => {
   it('@syncDevices forwards the configured type to notifySync', async () => {
     const notifySync = vi.fn<SyncCallback>().mockResolvedValue()
     const decorated = syncDevices({ type: ClassicDeviceType.Atw })(
-      // eslint-disable-next-line @typescript-eslint/require-await -- target is async
+      // eslint-disable-next-line @typescript-eslint/require-await -- promise-function-async autofixes sync Promise returns back to async: the pair leaves no disable-free way to satisfy an async contract synchronously
       async () => 'ok',
-      mock<ClassMethodDecoratorContext>(),
     )
 
     await decorated.call({ notifySync })

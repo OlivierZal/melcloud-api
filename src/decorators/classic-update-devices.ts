@@ -60,7 +60,6 @@ export const classicUpdateDevices =
   } = {}) =>
   <TArgs extends readonly unknown[]>(
     target: (...args: TArgs) => Promise<T>,
-    _context: ClassMethodDecoratorContext,
   ): ((...args: TArgs) => Promise<T>) =>
     async function newTarget(this: ClassicZoneFacade, ...args: TArgs) {
       const [arg] = args
@@ -140,7 +139,6 @@ const updateSingleDevice = <
   TData extends ClassicSetDeviceData<T>,
 >(
   target: (...args: TArgs) => Promise<TData>,
-  _context: ClassMethodDecoratorContext,
 ): ((...args: TArgs) => Promise<TData>) =>
   async function newTarget(this: ClassicDeviceFacade<T>, ...args: TArgs) {
     const data = await target.call(this, ...args)
