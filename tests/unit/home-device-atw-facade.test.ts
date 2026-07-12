@@ -111,6 +111,49 @@ describe('home device atw facade', () => {
       expect(facade.prohibitHotWater).toBe(false)
       expect(facade.hasCoolingMode).toBe(true)
     })
+
+    it.each([
+      {
+        expected: 'dhw',
+        label: 'forced production wins',
+        settings: { ForcedHotWaterMode: 'True', ProhibitHotWater: 'True' },
+      },
+      {
+        expected: 'prohibited',
+        label: 'prohibit flag',
+        settings: { ForcedHotWaterMode: 'False', ProhibitHotWater: 'True' },
+      },
+      {
+        expected: 'dhw',
+        label: 'active DHW production',
+        settings: { OperationMode: 'HotWater' },
+      },
+      {
+        expected: 'legionella',
+        label: 'legionella cycle',
+        settings: { OperationMode: 'Legionella' },
+      },
+      {
+        expected: 'idle',
+        label: 'any other operation mode',
+        settings: { OperationMode: 'Cooling' },
+      },
+      {
+        expected: 'idle',
+        label: 'absent operation mode',
+        settings: {},
+      },
+    ])(
+      'derives the hot-water operational state ($label)',
+      ({ expected, settings }) => {
+        const facade = new HomeDeviceAtwFacade(
+          createApi(),
+          createModel(settings),
+        )
+
+        expect(facade.hotWaterOperationalState).toBe(expected)
+      },
+    )
   })
 
   describe('updateValues', () => {

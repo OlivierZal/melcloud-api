@@ -9,6 +9,7 @@ import type {
   HomeReportData,
   Result,
 } from '../types/index.ts'
+import { ClassicOperationModeStateHotWater } from '../constants.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { clampToRange, omitUndefined } from '../utils.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
@@ -16,6 +17,15 @@ import { HomeBaseDeviceFacade } from './home-base-device.ts'
 interface TemperatureRange {
   max: number
   min: number
+}
+
+// Mirrors the Classic hot-water derivation: the FTC operation mode marks
+// active DHW production or a legionella cycle; every other mode reads idle.
+const hotWaterStateFromOperationMode: Partial<
+  Record<string, ClassicOperationModeStateHotWater>
+> = {
+  HotWater: ClassicOperationModeStateHotWater.dhw,
+  Legionella: ClassicOperationModeStateHotWater.legionella,
 }
 
 const zoneRange = ({
@@ -60,6 +70,23 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    */
   public get hasCoolingMode(): boolean {
     return this.setting('HasCoolingMode') === 'True'
+  }
+
+  /**
+   * Derived hot-water operational state, mirroring the Classic ATW
+   * facade's `hotWater.operationalState`: forced production reads `dhw`,
+   * a prohibit flag reads `prohibited`, otherwise the FTC operation mode
+   * decides between `dhw`, `legionella` and `idle`.
+   * @returns The derived hot-water state.
+   */
+  public get hotWaterOperationalState(): ClassicOperationModeStateHotWater {
+    if (this.forcedHotWaterMode) {
+      return ClassicOperationModeStateHotWater.dhw
+    }
+    return this.prohibitHotWater ?
+        ClassicOperationModeStateHotWater.prohibited
+      : (hotWaterStateFromOperationMode[this.operationMode] ??
+          ClassicOperationModeStateHotWater.idle)
   }
 
   /**
