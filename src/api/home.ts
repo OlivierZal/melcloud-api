@@ -54,19 +54,18 @@ type HomeAtwWireValues = Omit<
 // The BFF reports zone modes in PascalCase but its PUT endpoint only
 // accepts them in camelCase (a PascalCase value earns a bare 400) —
 // live-probed against /monitor/atwunit.
-const toWireZoneMode = (
-  mode: HomeAtwOperationModeZone | null,
-): string | null =>
-  typeof mode === 'string' ?
-    `${mode.charAt(0).toLowerCase()}${mode.slice(1)}`
-  : mode
+const toWireZoneMode = (mode: HomeAtwOperationModeZone): string =>
+  `${mode.charAt(0).toLowerCase()}${mode.slice(1)}`
 
+// Only string values are lowered: an explicit null (clear) passes through
+// untouched, and a present-but-undefined key (reachable from plain JS)
+// keeps the absent-key semantics JSON serialization gives it.
 const toAtwWireValues = (values: HomeAtwValues): HomeAtwWireValues => ({
   ...values,
-  ...('operationModeZone1' in values && {
+  ...(typeof values.operationModeZone1 === 'string' && {
     operationModeZone1: toWireZoneMode(values.operationModeZone1),
   }),
-  ...('operationModeZone2' in values && {
+  ...(typeof values.operationModeZone2 === 'string' && {
     operationModeZone2: toWireZoneMode(values.operationModeZone2),
   }),
 })
