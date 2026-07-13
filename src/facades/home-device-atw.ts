@@ -108,7 +108,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns `true` when forced, `false` otherwise.
    */
   public get forcedHotWaterMode(): boolean {
-    return this.setting('ForcedHotWaterMode') === 'True'
+    return this.settingBool('ForcedHotWaterMode')
   }
 
   /**
@@ -119,7 +119,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns `true` when the device reports cooling mode availability.
    */
   public get hasCoolingMode(): boolean {
-    return this.setting('HasCoolingMode') === 'True'
+    return this.settingBool('HasCoolingMode')
   }
 
   /**
@@ -144,7 +144,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns `true` when on standby.
    */
   public get inStandbyMode(): boolean {
-    return this.setting('InStandbyMode') === 'True'
+    return this.settingBool('InStandbyMode')
   }
 
   /**
@@ -179,10 +179,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The derived zone-2 state, or `null`.
    */
   public get operationalStateZone2(): ClassicOperationModeStateZone | null {
-    if (!this.capabilities.hasZone2) {
-      return null
-    }
-    return this.operationalStateZone1
+    return this.#whenZone2(this.operationalStateZone1)
   }
 
   /**
@@ -215,12 +212,9 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The zone-2 mode, or `null`.
    */
   public get operationModeZone2(): HomeAtwZoneMode | null {
-    if (!this.capabilities.hasZone2) {
-      return null
-    }
-    return (
+    return this.#whenZone2(
       zoneModeFromWire[this.setting('OperationModeZone2')] ??
-      HomeAtwZoneMode.room
+        HomeAtwZoneMode.room,
     )
   }
 
@@ -229,7 +223,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns Degrees Celsius as measured at the outdoor unit.
    */
   public get outdoorTemperature(): number {
-    return Number(this.setting('OutdoorTemperature'))
+    return this.settingNumber('OutdoorTemperature')
   }
 
   /**
@@ -237,7 +231,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns `true` when on, `false` otherwise.
    */
   public get power(): boolean {
-    return this.setting('Power') === 'True'
+    return this.settingBool('Power')
   }
 
   /**
@@ -245,7 +239,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns `true` when prohibited.
    */
   public get prohibitHotWater(): boolean {
-    return this.setting('ProhibitHotWater') === 'True'
+    return this.settingBool('ProhibitHotWater')
   }
 
   /**
@@ -253,7 +247,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns Degrees Celsius for the zone-1 thermostat.
    */
   public get roomTemperatureZone1(): number {
-    return Number(this.setting('RoomTemperatureZone1'))
+    return this.settingNumber('RoomTemperatureZone1')
   }
 
   /**
@@ -261,10 +255,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The room temperature, or `null`.
    */
   public get roomTemperatureZone2(): number | null {
-    if (!this.capabilities.hasZone2) {
-      return null
-    }
-    return Number(this.setting('RoomTemperatureZone2'))
+    return this.#whenZone2(this.settingNumber('RoomTemperatureZone2'))
   }
 
   /**
@@ -272,7 +263,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The setpoint.
    */
   public get setTankWaterTemperature(): number {
-    return Number(this.setting('SetTankWaterTemperature'))
+    return this.settingNumber('SetTankWaterTemperature')
   }
 
   /**
@@ -280,7 +271,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The setpoint.
    */
   public get setTemperatureZone1(): number {
-    return Number(this.setting('SetTemperatureZone1'))
+    return this.settingNumber('SetTemperatureZone1')
   }
 
   /**
@@ -288,10 +279,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The setpoint, or `null`.
    */
   public get setTemperatureZone2(): number | null {
-    if (!this.capabilities.hasZone2) {
-      return null
-    }
-    return Number(this.setting('SetTemperatureZone2'))
+    return this.#whenZone2(this.settingNumber('SetTemperatureZone2'))
   }
 
   /**
@@ -299,7 +287,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns Degrees Celsius of the domestic hot-water tank.
    */
   public get tankWaterTemperature(): number {
-    return Number(this.setting('TankWaterTemperature'))
+    return this.settingNumber('TankWaterTemperature')
   }
 
   /**
@@ -422,5 +410,11 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
       )
     }
     return result
+  }
+
+  // Zone-2 accessors share the single-zone null: the capability flag is
+  // the only wire signal a second zone exists.
+  #whenZone2<T>(value: T): T | null {
+    return this.capabilities.hasZone2 ? value : null
   }
 }
