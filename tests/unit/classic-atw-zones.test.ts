@@ -227,11 +227,13 @@ describe('atw device facade hot water', () => {
 
   it('returns legionella during legionella cycle', () => {
     const facade = createFacade(
-      createAtwData({ OperationMode: ClassicOperationModeState.legionella }),
+      createAtwData({
+        OperationMode: ClassicOperationModeState.legionellaPrevention,
+      }),
     )
 
     expect(facade.hotWater.operationalState).toBe(
-      ClassicOperationModeStateHotWater.legionella,
+      ClassicOperationModeStateHotWater.legionellaPrevention,
     )
   })
 

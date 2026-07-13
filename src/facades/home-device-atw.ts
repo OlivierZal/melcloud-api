@@ -31,7 +31,7 @@ const hotWaterStateFromOperationMode: Partial<
 > = {
   HotWater: ClassicOperationModeStateHotWater.dhw,
   // Live-captured 2026-07-13 during a running cycle.
-  LegionellaPrevention: ClassicOperationModeStateHotWater.legionella,
+  LegionellaPrevention: ClassicOperationModeStateHotWater.legionellaPrevention,
 }
 
 // FTC `OperationMode` normalized to the Classic state vocabulary; `Stop`
@@ -45,7 +45,7 @@ const operationalStateFromOperationMode: Partial<
   HotWater: HomeAtwOperationalState.dhw,
   Idle: HomeAtwOperationalState.idle,
   // Live-captured 2026-07-13.
-  LegionellaPrevention: HomeAtwOperationalState.legionella,
+  LegionellaPrevention: HomeAtwOperationalState.legionellaPrevention,
   Stop: HomeAtwOperationalState.idle,
 }
 
