@@ -66,6 +66,7 @@ describe('home device atw facade', () => {
       ['HotWater', 'dhw'],
       ['Idle', 'idle'],
       ['Legionella', 'legionella'],
+      ['LegionellaPrevention', 'legionella'],
       ['Stop', 'idle'],
     ])('derives the operational state %s as %s', (wire, expected) => {
       const facade = new HomeDeviceAtwFacade(

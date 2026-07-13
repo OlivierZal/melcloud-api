@@ -125,7 +125,7 @@ export type HomeAtwOperationMode =
   | 'Heating'
   | 'HotWater'
   | 'Idle'
-  | 'Legionella'
+  | 'LegionellaPrevention'
   | 'Stop'
 
 /**
