@@ -47,6 +47,18 @@ describe('home device atw facade', () => {
       expect(facade.operationModeZone1).toBe(expected)
     })
 
+    it('degrades an unknown zone-2 mode to room on a two-zone unit', () => {
+      const facade = new HomeDeviceAtwFacade(
+        createApi(),
+        createModel(
+          { OperationModeZone2: 'SomeNewFtcMode' },
+          { hasZone2: true },
+        ),
+      )
+
+      expect(facade.operationModeZone2).toBe('room')
+    })
+
     it.each([
       ['Cooling', 'cooling'],
       ['Defrost', 'defrost'],
