@@ -74,7 +74,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   /**
    * Currently active operation mode (heat/cool/auto/dry/fan/off). The
    * type documents the known vocabulary; unknown or absent wire values
-   * pass through untyped-checked (see `#enumSetting`), so exhaustive
+   * pass through unchecked (see `#enumSetting`), so exhaustive
    * switches should keep a default arm.
    * @returns One of the `HomeOperationMode` enum values.
    */
