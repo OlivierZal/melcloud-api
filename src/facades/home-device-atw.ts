@@ -11,6 +11,7 @@ import type {
 } from '../types/index.ts'
 import {
   ClassicOperationModeStateHotWater,
+  ClassicOperationModeStateZone,
   HomeAtwOperationalState,
   HomeAtwZoneMode,
 } from '../constants.ts'
@@ -29,7 +30,7 @@ const hotWaterStateFromOperationMode: Partial<
   Record<string, ClassicOperationModeStateHotWater>
 > = {
   HotWater: ClassicOperationModeStateHotWater.dhw,
-  Legionella: ClassicOperationModeStateHotWater.legionella,
+  LegionellaPrevention: ClassicOperationModeStateHotWater.legionellaPrevention,
 }
 
 // FTC `OperationMode` normalized to the Classic state vocabulary; `Stop`
@@ -42,8 +43,21 @@ const operationalStateFromOperationMode: Partial<
   Heating: HomeAtwOperationalState.heating,
   HotWater: HomeAtwOperationalState.dhw,
   Idle: HomeAtwOperationalState.idle,
-  Legionella: HomeAtwOperationalState.legionella,
+  LegionellaPrevention: HomeAtwOperationalState.legionellaPrevention,
   Stop: HomeAtwOperationalState.idle,
+}
+
+// Mirrors the Classic zone derivation minus its flag refinements: the
+// `Idle{Zone}`/`Prohibit*` inputs are absent from the Home wire, so the
+// zone state is the top-level `OperationMode` projection — the same one
+// the MELCloud Home app displays (a running legionella cycle shows the
+// zone as idle).
+const zoneStateFromOperationMode: Partial<
+  Record<string, ClassicOperationModeStateZone>
+> = {
+  Cooling: ClassicOperationModeStateZone.cooling,
+  Defrost: ClassicOperationModeStateZone.defrost,
+  Heating: ClassicOperationModeStateZone.heating,
 }
 
 // FTC zone operation modes normalized to the control basis. The external
@@ -89,7 +103,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns `true` when forced, `false` otherwise.
    */
   public get forcedHotWaterMode(): boolean {
-    return this.setting('ForcedHotWaterMode') === 'True'
+    return this.settingBool('ForcedHotWaterMode')
   }
 
   /**
@@ -100,7 +114,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns `true` when the device reports cooling mode availability.
    */
   public get hasCoolingMode(): boolean {
-    return this.setting('HasCoolingMode') === 'True'
+    return this.settingBool('HasCoolingMode')
   }
 
   /**
@@ -125,7 +139,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns `true` when on standby.
    */
   public get inStandbyMode(): boolean {
-    return this.setting('InStandbyMode') === 'True'
+    return this.settingBool('InStandbyMode')
   }
 
   /**
@@ -136,6 +150,31 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    */
   public get operationalState(): HomeAtwOperationalState | null {
     return operationalStateFromOperationMode[this.operationMode] ?? null
+  }
+
+  /**
+   * Zone-1 derived operational state: the top-level {@link operationMode}
+   * projected onto the zone (`Heating`/`Cooling`/`Defrost` map through,
+   * everything else — hot water, legionella, stop, unknown — reads
+   * `idle`), matching what the MELCloud Home app displays. The Classic
+   * flag refinements (`Idle{Zone}`, `Prohibit*`) do not exist on the
+   * Home wire, so `prohibited` is never produced.
+   * @returns The derived zone-1 state.
+   */
+  public get operationalStateZone1(): ClassicOperationModeStateZone {
+    return (
+      zoneStateFromOperationMode[this.operationMode] ??
+      ClassicOperationModeStateZone.idle
+    )
+  }
+
+  /**
+   * Zone-2 derived operational state, or `null` when the unit is
+   * single-zone. Same projection as {@link operationalStateZone1}.
+   * @returns The derived zone-2 state, or `null`.
+   */
+  public get operationalStateZone2(): ClassicOperationModeStateZone | null {
+    return this.#whenZone2(() => this.operationalStateZone1)
   }
 
   /**
@@ -168,12 +207,10 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The zone-2 mode, or `null`.
    */
   public get operationModeZone2(): HomeAtwZoneMode | null {
-    if (!this.capabilities.hasZone2) {
-      return null
-    }
-    return (
-      zoneModeFromWire[this.setting('OperationModeZone2')] ??
-      HomeAtwZoneMode.room
+    return this.#whenZone2(
+      () =>
+        zoneModeFromWire[this.setting('OperationModeZone2')] ??
+        HomeAtwZoneMode.room,
     )
   }
 
@@ -182,7 +219,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns Degrees Celsius as measured at the outdoor unit.
    */
   public get outdoorTemperature(): number {
-    return Number(this.setting('OutdoorTemperature'))
+    return this.settingNumber('OutdoorTemperature')
   }
 
   /**
@@ -190,7 +227,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns `true` when on, `false` otherwise.
    */
   public get power(): boolean {
-    return this.setting('Power') === 'True'
+    return this.settingBool('Power')
   }
 
   /**
@@ -198,7 +235,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns `true` when prohibited.
    */
   public get prohibitHotWater(): boolean {
-    return this.setting('ProhibitHotWater') === 'True'
+    return this.settingBool('ProhibitHotWater')
   }
 
   /**
@@ -206,7 +243,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns Degrees Celsius for the zone-1 thermostat.
    */
   public get roomTemperatureZone1(): number {
-    return Number(this.setting('RoomTemperatureZone1'))
+    return this.settingNumber('RoomTemperatureZone1')
   }
 
   /**
@@ -214,10 +251,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The room temperature, or `null`.
    */
   public get roomTemperatureZone2(): number | null {
-    if (!this.capabilities.hasZone2) {
-      return null
-    }
-    return Number(this.setting('RoomTemperatureZone2'))
+    return this.#whenZone2(() => this.settingNumber('RoomTemperatureZone2'))
   }
 
   /**
@@ -225,7 +259,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The setpoint.
    */
   public get setTankWaterTemperature(): number {
-    return Number(this.setting('SetTankWaterTemperature'))
+    return this.settingNumber('SetTankWaterTemperature')
   }
 
   /**
@@ -233,7 +267,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The setpoint.
    */
   public get setTemperatureZone1(): number {
-    return Number(this.setting('SetTemperatureZone1'))
+    return this.settingNumber('SetTemperatureZone1')
   }
 
   /**
@@ -241,10 +275,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The setpoint, or `null`.
    */
   public get setTemperatureZone2(): number | null {
-    if (!this.capabilities.hasZone2) {
-      return null
-    }
-    return Number(this.setting('SetTemperatureZone2'))
+    return this.#whenZone2(() => this.settingNumber('SetTemperatureZone2'))
   }
 
   /**
@@ -252,7 +283,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns Degrees Celsius of the domestic hot-water tank.
    */
   public get tankWaterTemperature(): number {
-    return Number(this.setting('TankWaterTemperature'))
+    return this.settingNumber('TankWaterTemperature')
   }
 
   /**
@@ -375,5 +406,12 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
       )
     }
     return result
+  }
+
+  // Zone-2 accessors share the single-zone null: the capability flag is
+  // the only wire signal a second zone exists. Lazy on purpose — the
+  // zone-2 settings are not even read on single-zone units.
+  #whenZone2<T>(read: () => T): T | null {
+    return this.capabilities.hasZone2 ? read() : null
   }
 }

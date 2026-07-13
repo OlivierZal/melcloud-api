@@ -182,7 +182,7 @@ export const ClassicOperationModeState = {
   heating: 2,
   idle: 0,
   /** Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank. */
-  legionella: 6,
+  legionellaPrevention: 6,
 } as const
 export type ClassicOperationModeState =
   (typeof ClassicOperationModeState)[keyof typeof ClassicOperationModeState]
@@ -196,7 +196,7 @@ export const ClassicOperationModeStateHotWater = {
   dhw: 'dhw',
   idle: 'idle',
   /** Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank. */
-  legionella: 'legionella',
+  legionellaPrevention: 'legionella',
   /** Hot water production is disabled (e.g. prohibit flag set or holiday mode active). */
   prohibited: 'prohibited',
 } as const
@@ -231,7 +231,7 @@ export const HomeAtwOperationalState = {
   heating: 'heating',
   idle: 'idle',
   /** Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank. */
-  legionella: 'legionella',
+  legionellaPrevention: 'legionella',
 } as const
 export type HomeAtwOperationalState =
   (typeof HomeAtwOperationalState)[keyof typeof HomeAtwOperationalState]

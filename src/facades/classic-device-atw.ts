@@ -29,8 +29,8 @@ const hotWaterStateMap: Partial<
   Record<ClassicOperationModeState, ClassicOperationModeStateHotWater>
 > = {
   [ClassicOperationModeState.dhw]: ClassicOperationModeStateHotWater.dhw,
-  [ClassicOperationModeState.legionella]:
-    ClassicOperationModeStateHotWater.legionella,
+  [ClassicOperationModeState.legionellaPrevention]:
+    ClassicOperationModeStateHotWater.legionellaPrevention,
 }
 
 const zoneStateMap: Partial<

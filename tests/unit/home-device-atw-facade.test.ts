@@ -65,7 +65,7 @@ describe('home device atw facade', () => {
       ['Heating', 'heating'],
       ['HotWater', 'dhw'],
       ['Idle', 'idle'],
-      ['Legionella', 'legionella'],
+      ['LegionellaPrevention', 'legionella'],
       ['Stop', 'idle'],
     ])('derives the operational state %s as %s', (wire, expected) => {
       const facade = new HomeDeviceAtwFacade(
@@ -74,6 +74,42 @@ describe('home device atw facade', () => {
       )
 
       expect(facade.operationalState).toBe(expected)
+    })
+
+    it.each([
+      ['Cooling', 'cooling'],
+      ['Defrost', 'defrost'],
+      ['Heating', 'heating'],
+      ['HotWater', 'idle'],
+      ['Idle', 'idle'],
+      ['LegionellaPrevention', 'idle'],
+      ['SomeNewFtcMode', 'idle'],
+      ['Stop', 'idle'],
+    ])('projects the zone-1 state of %s as %s', (wire, expected) => {
+      const facade = new HomeDeviceAtwFacade(
+        createApi(),
+        createModel({ OperationMode: wire }),
+      )
+
+      expect(facade.operationalStateZone1).toBe(expected)
+    })
+
+    it('mirrors the zone-1 projection on zone 2 when present', () => {
+      const facade = new HomeDeviceAtwFacade(
+        createApi(),
+        createModel({ OperationMode: 'Heating' }, { hasZone2: true }),
+      )
+
+      expect(facade.operationalStateZone2).toBe('heating')
+    })
+
+    it('reads a null zone-2 state on a single-zone unit', () => {
+      const facade = new HomeDeviceAtwFacade(
+        createApi(),
+        createModel({ OperationMode: 'Heating' }, { hasZone2: false }),
+      )
+
+      expect(facade.operationalStateZone2).toBeNull()
     })
 
     it('reads a null operational state for an unknown mode', () => {
@@ -189,7 +225,7 @@ describe('home device atw facade', () => {
       {
         expected: 'legionella',
         label: 'legionella cycle',
-        settings: { OperationMode: 'Legionella' },
+        settings: { OperationMode: 'LegionellaPrevention' },
       },
       {
         expected: 'idle',
