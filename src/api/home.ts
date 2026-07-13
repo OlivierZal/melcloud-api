@@ -1,6 +1,5 @@
 import type {
   HomeAtaValues,
-  HomeAtwOperationModeZone,
   HomeAtwValues,
   HomeBuilding,
   HomeContext,
@@ -13,7 +12,7 @@ import type {
   LoginCredentials,
   Result,
 } from '../types/index.ts'
-import { HomeDeviceType } from '../constants.ts'
+import { type HomeAtwZoneMode, HomeDeviceType } from '../constants.ts'
 import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
 import {
   type TypedHomeDeviceData,
@@ -54,8 +53,13 @@ type HomeAtwWireValues = Omit<
 // The BFF reports zone modes in PascalCase but its PUT endpoint only
 // accepts them in camelCase (a PascalCase value earns a bare 400) —
 // live-probed against /monitor/atwunit.
-const toWireZoneMode = (mode: HomeAtwOperationModeZone): string =>
-  `${mode.charAt(0).toLowerCase()}${mode.slice(1)}`
+const wireZoneModes: Record<HomeAtwZoneMode, string> = {
+  curve: 'heatCurve',
+  flow: 'heatFlowTemperature',
+  flow_cool: 'coolFlowTemperature',
+  room: 'heatRoomTemperature',
+  room_cool: 'coolRoomTemperature',
+}
 
 // Only string values are lowered: an explicit null (clear) passes through
 // untouched, and a present-but-undefined key (reachable from plain JS)
@@ -63,10 +67,10 @@ const toWireZoneMode = (mode: HomeAtwOperationModeZone): string =>
 const toAtwWireValues = (values: HomeAtwValues): HomeAtwWireValues => ({
   ...values,
   ...(typeof values.operationModeZone1 === 'string' && {
-    operationModeZone1: toWireZoneMode(values.operationModeZone1),
+    operationModeZone1: wireZoneModes[values.operationModeZone1],
   }),
   ...(typeof values.operationModeZone2 === 'string' && {
-    operationModeZone2: toWireZoneMode(values.operationModeZone2),
+    operationModeZone2: wireZoneModes[values.operationModeZone2],
   }),
 })
 const ATW_ENERGY_MEASURE = {
@@ -424,38 +428,26 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * `api.fetch()`.
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
-   * @returns `true` when the update succeeded, `false` otherwise.
    */
   public async updateAtaValues(
     id: string,
     values: HomeAtaValues,
-  ): Promise<boolean> {
-    try {
-      await this.putAtaAndSync(id, values)
-      return true
-    } catch {
-      return false
-    }
+  ): Promise<void> {
+    await this.putAtaAndSync(id, values)
   }
 
   /**
    * Send an ATW-unit setpoint update to the BFF. Mirror of
-   * {@link updateAtaValues} for air-to-water heat pumps; same boolean
-   * surface and post-mutation-refresh semantics.
+   * {@link updateAtaValues} for air-to-water heat pumps; same
+   * post-mutation-refresh semantics.
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
-   * @returns `true` when the update succeeded, `false` otherwise.
    */
   public async updateAtwValues(
     id: string,
     values: HomeAtwValues,
-  ): Promise<boolean> {
-    try {
-      await this.putAtwAndSync(id, values)
-      return true
-    } catch {
-      return false
-    }
+  ): Promise<void> {
+    await this.putAtwAndSync(id, values)
   }
 
   protected override clearPersistedSession(): void {

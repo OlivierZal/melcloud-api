@@ -101,15 +101,9 @@ export interface HomeAPIAdapter {
   /** Update the automatic sync interval and reschedule. Pass `false` to disable. */
   readonly setSyncInterval: (minutes: number | false) => void
   /** Push an ATA setpoint update and refresh device data via list(). */
-  readonly updateAtaValues: (
-    id: string,
-    values: HomeAtaValues,
-  ) => Promise<boolean>
+  readonly updateAtaValues: (id: string, values: HomeAtaValues) => Promise<void>
   /** Push an ATW setpoint update and refresh device data via list(). */
-  readonly updateAtwValues: (
-    id: string,
-    values: HomeAtwValues,
-  ) => Promise<boolean>
+  readonly updateAtwValues: (id: string, values: HomeAtwValues) => Promise<void>
 }
 
 /**

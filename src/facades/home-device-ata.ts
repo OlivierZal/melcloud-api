@@ -196,14 +196,13 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * counts as absent), otherwise clamps `setTemperature` to the active
    * mode's bounds and forwards.
    * @param values - Partial setpoint payload.
-   * @returns `true` when the update succeeded.
    */
-  public override async updateValues(values: HomeAtaValues): Promise<boolean> {
+  public override async updateValues(values: HomeAtaValues): Promise<void> {
     const changes = omitUndefined(values)
     if (Object.keys(changes).length === 0) {
       throw new NoChangesError(this.id)
     }
-    return this.api.updateAtaValues(this.id, {
+    await this.api.updateAtaValues(this.id, {
       ...changes,
       ...this.#clampSetTemperature(changes),
     })

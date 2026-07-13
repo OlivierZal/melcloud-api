@@ -24,10 +24,56 @@ const createApi = (): HomeAPIAdapter =>
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     updateAtwValues: vi
       .fn<HomeAPIAdapter['updateAtwValues']>()
-      .mockResolvedValue(true),
+      .mockResolvedValue(),
   })
 
 describe('home device atw facade', () => {
+  describe('normalized modes', () => {
+    it.each([
+      ['CoolFlowTemperature', 'flow_cool'],
+      ['CoolRoomTemperature', 'room_cool'],
+      ['CoolThermostat', 'room_cool'],
+      ['HeatCurve', 'curve'],
+      ['HeatFlowTemperature', 'flow'],
+      ['HeatRoomTemperature', 'room'],
+      ['HeatThermostat', 'room'],
+      ['SomeNewFtcMode', 'room'],
+    ])('normalizes zone mode %s to %s', (wire, expected) => {
+      const facade = new HomeDeviceAtwFacade(
+        createApi(),
+        createModel({ OperationModeZone1: wire }),
+      )
+
+      expect(facade.operationModeZone1).toBe(expected)
+    })
+
+    it.each([
+      ['Cooling', 'cooling'],
+      ['Defrost', 'defrost'],
+      ['Heating', 'heating'],
+      ['HotWater', 'dhw'],
+      ['Idle', 'idle'],
+      ['Legionella', 'legionella'],
+      ['Stop', 'idle'],
+    ])('derives the operational state %s as %s', (wire, expected) => {
+      const facade = new HomeDeviceAtwFacade(
+        createApi(),
+        createModel({ OperationMode: wire }),
+      )
+
+      expect(facade.operationalState).toBe(expected)
+    })
+
+    it('reads a null operational state for an unknown mode', () => {
+      const facade = new HomeDeviceAtwFacade(
+        createApi(),
+        createModel({ OperationMode: 'SomeNewFtcMode' }),
+      )
+
+      expect(facade.operationalState).toBeNull()
+    })
+  })
+
   describe('settings accessors', () => {
     it('reads power, standby, and operation mode from settings', () => {
       const facade = new HomeDeviceAtwFacade(
@@ -54,7 +100,7 @@ describe('home device atw facade', () => {
         }),
       )
 
-      expect(facade.operationModeZone1).toBe('HeatRoomTemperature')
+      expect(facade.operationModeZone1).toBe('room')
       expect(facade.roomTemperatureZone1).toBe(19.5)
       expect(facade.setTemperatureZone1).toBe(18)
     })
@@ -86,7 +132,7 @@ describe('home device atw facade', () => {
         ),
       )
 
-      expect(facade.operationModeZone2).toBe('CoolRoomTemperature')
+      expect(facade.operationModeZone2).toBe('room_cool')
       expect(facade.roomTemperatureZone2).toBe(22.5)
       expect(facade.setTemperatureZone2).toBe(21)
     })
@@ -237,13 +283,13 @@ describe('home device atw facade', () => {
 
       await facade.updateValues({
         forcedHotWaterMode: true,
-        operationModeZone1: 'HeatRoomTemperature',
+        operationModeZone1: 'room',
         power: false,
       })
 
       expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', {
         forcedHotWaterMode: true,
-        operationModeZone1: 'HeatRoomTemperature',
+        operationModeZone1: 'room',
         power: false,
       })
     })

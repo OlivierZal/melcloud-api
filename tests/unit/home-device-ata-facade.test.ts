@@ -28,7 +28,7 @@ const createApi = (): HomeAPIAdapter =>
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     updateAtaValues: vi
       .fn<HomeAPIAdapter['updateAtaValues']>()
-      .mockResolvedValue(true),
+      .mockResolvedValue(),
   })
 
 describe('home device ata facade', () => {
