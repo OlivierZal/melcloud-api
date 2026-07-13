@@ -76,7 +76,8 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * type documents the known vocabulary; unknown or absent wire values
    * pass through unchecked (see `#enumSetting`), so exhaustive
    * switches should keep a default arm.
-   * @returns One of the `HomeOperationMode` enum values.
+   * @returns The operation mode — a `HomeOperationMode` member for known
+   * wire values, an unchecked wire string otherwise.
    */
   public get operationMode(): HomeOperationMode {
     return this.#enumSetting('OperationMode')
