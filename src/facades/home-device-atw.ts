@@ -29,7 +29,10 @@ const hotWaterStateFromOperationMode: Partial<
   Record<string, ClassicOperationModeStateHotWater>
 > = {
   HotWater: ClassicOperationModeStateHotWater.dhw,
+  // Live-captured 2026-07-13 during a running cycle; the bare
+  // `Legionella` spelling stays as defensive tolerance.
   Legionella: ClassicOperationModeStateHotWater.legionella,
+  LegionellaPrevention: ClassicOperationModeStateHotWater.legionella,
 }
 
 // FTC `OperationMode` normalized to the Classic state vocabulary; `Stop`
@@ -42,7 +45,9 @@ const operationalStateFromOperationMode: Partial<
   Heating: HomeAtwOperationalState.heating,
   HotWater: HomeAtwOperationalState.dhw,
   Idle: HomeAtwOperationalState.idle,
+  // Live-captured 2026-07-13; the bare spelling stays as tolerance.
   Legionella: HomeAtwOperationalState.legionella,
+  LegionellaPrevention: HomeAtwOperationalState.legionella,
   Stop: HomeAtwOperationalState.idle,
 }
 
