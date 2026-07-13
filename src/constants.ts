@@ -219,6 +219,40 @@ export type ClassicOperationModeStateZone =
   (typeof ClassicOperationModeStateZone)[keyof typeof ClassicOperationModeStateZone]
 
 /**
+ * ATW top-level derived operational state (Home dialect): the FTC
+ * `OperationMode` normalized to the Classic state vocabulary.
+ * @category Constants
+ */
+export const HomeAtwOperationalState = {
+  cooling: 'cooling',
+  defrost: 'defrost',
+  /** Domestic hot water — the heat pump is currently heating the tank. */
+  dhw: 'dhw',
+  heating: 'heating',
+  idle: 'idle',
+  /** Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank. */
+  legionella: 'legionella',
+} as const
+export type HomeAtwOperationalState =
+  (typeof HomeAtwOperationalState)[keyof typeof HomeAtwOperationalState]
+
+/**
+ * ATW zone control basis (Home dialect), normalized from the FTC zone
+ * operation modes. Unknown firmware variants (including the external
+ * `*Thermostat` modes) degrade to the room modes.
+ * @category Constants
+ */
+export const HomeAtwZoneMode = {
+  curve: 'curve',
+  flow: 'flow',
+  flowCool: 'flow_cool',
+  room: 'room',
+  roomCool: 'room_cool',
+} as const
+export type HomeAtwZoneMode =
+  (typeof HomeAtwZoneMode)[keyof typeof HomeAtwZoneMode]
+
+/**
  * ATW zone operation modes controlling temperature regulation strategy.
  * @category Constants
  */

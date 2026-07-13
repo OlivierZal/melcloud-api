@@ -76,11 +76,10 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
    * payload to its device-type shape; both shapes share the `power`
    * field this base's {@link updatePower} relies on.
    * @param values - Partial update payload.
-   * @returns `true` when the update succeeded.
    */
   public abstract updateValues(values: {
     power?: boolean | null
-  }): Promise<boolean>
+  }): Promise<void>
 
   /**
    * Fetches RSSI telemetry for this device over the given time window.
@@ -99,13 +98,13 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   /**
    * Powers the unit on or off. This is the unit-level master power (the
    * `Power` setting, shown as the system on/off toggle in the app),
-   * mirroring the Classic facade's `updatePower` contract. Convenience
-   * wrapper over {@link updateValues}.
+   * defined at the base like the Classic side's `updatePower` — the
+   * contracts differ: this one resolves `void` and throws the typed
+   * transport error. Convenience wrapper over {@link updateValues}.
    * @param isOn - `true` to power on, `false` to power off.
-   * @returns `true` when the update succeeded.
    */
-  public async updatePower(isOn = true): Promise<boolean> {
-    return this.updateValues({ power: isOn })
+  public async updatePower(isOn = true): Promise<void> {
+    await this.updateValues({ power: isOn })
   }
 
   /**

@@ -9,7 +9,11 @@ import type {
   HomeReportData,
   Result,
 } from '../types/index.ts'
-import { ClassicOperationModeStateHotWater } from '../constants.ts'
+import {
+  ClassicOperationModeStateHotWater,
+  HomeAtwOperationalState,
+  HomeAtwZoneMode,
+} from '../constants.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { clampToRange, omitUndefined } from '../utils.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
@@ -26,6 +30,33 @@ const hotWaterStateFromOperationMode: Partial<
 > = {
   HotWater: ClassicOperationModeStateHotWater.dhw,
   Legionella: ClassicOperationModeStateHotWater.legionella,
+}
+
+// FTC `OperationMode` normalized to the Classic state vocabulary; `Stop`
+// reads idle and unknown firmware strings read `null` (no state).
+const operationalStateFromOperationMode: Partial<
+  Record<string, HomeAtwOperationalState>
+> = {
+  Cooling: HomeAtwOperationalState.cooling,
+  Defrost: HomeAtwOperationalState.defrost,
+  Heating: HomeAtwOperationalState.heating,
+  HotWater: HomeAtwOperationalState.dhw,
+  Idle: HomeAtwOperationalState.idle,
+  Legionella: HomeAtwOperationalState.legionella,
+  Stop: HomeAtwOperationalState.idle,
+}
+
+// FTC zone operation modes normalized to the control basis. The external
+// `*Thermostat` variants and unknown firmware strings degrade to the room
+// modes so new FTC vocabulary can never break a consumer's sync.
+const zoneModeFromWire: Partial<Record<string, HomeAtwZoneMode>> = {
+  CoolFlowTemperature: HomeAtwZoneMode.flowCool,
+  CoolRoomTemperature: HomeAtwZoneMode.roomCool,
+  CoolThermostat: HomeAtwZoneMode.roomCool,
+  HeatCurve: HomeAtwZoneMode.curve,
+  HeatFlowTemperature: HomeAtwZoneMode.flow,
+  HeatRoomTemperature: HomeAtwZoneMode.room,
+  HeatThermostat: HomeAtwZoneMode.room,
 }
 
 const zoneRange = ({
@@ -98,6 +129,16 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   /**
+   * Top-level derived operational state, the FTC {@link operationMode}
+   * normalized to the Classic state vocabulary (`Stop` reads `idle`).
+   * Unknown firmware strings read `null`.
+   * @returns The derived state, or `null` when the mode is unknown.
+   */
+  public get operationalState(): HomeAtwOperationalState | null {
+    return operationalStateFromOperationMode[this.operationMode] ?? null
+  }
+
+  /**
    * Top-level operation mode advertised by the FTC controller. Values
    * include `Stop` and the heat/cool modes; the SDK does not narrow
    * further because the controller exposes other strings on some
@@ -109,27 +150,31 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   /**
-   * Active zone-1 operation mode as advertised by the FTC (e.g.
-   * `'HeatRoomTemperature'`). Typed as `string` because the controller
-   * exposes firmware-specific variants beyond the canonical
-   * {@link HomeAtwOperationModeZone} set; callers can narrow at the
-   * use site against that union.
+   * Active zone-1 control basis, normalized from the FTC zone operation
+   * mode (`'HeatCurve'` reads `'curve'`, the external `*Thermostat`
+   * variants and unknown firmware strings degrade to the room modes).
    * @returns The zone-1 mode.
    */
-  public get operationModeZone1(): string {
-    return this.setting('OperationModeZone1')
+  public get operationModeZone1(): HomeAtwZoneMode {
+    return (
+      zoneModeFromWire[this.setting('OperationModeZone1')] ??
+      HomeAtwZoneMode.room
+    )
   }
 
   /**
-   * Active zone-2 operation mode, or `null` when the unit is single-zone.
-   * Same typing rationale as {@link operationModeZone1}.
+   * Active zone-2 control basis, or `null` when the unit is single-zone.
+   * Same normalization as {@link operationModeZone1}.
    * @returns The zone-2 mode, or `null`.
    */
-  public get operationModeZone2(): string | null {
+  public get operationModeZone2(): HomeAtwZoneMode | null {
     if (!this.capabilities.hasZone2) {
       return null
     }
-    return this.setting('OperationModeZone2')
+    return (
+      zoneModeFromWire[this.setting('OperationModeZone2')] ??
+      HomeAtwZoneMode.room
+    )
   }
 
   /**
@@ -290,14 +335,13 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * `[minSetTemperature, maxSetTemperature]` and the tank setpoint to
    * `[minSetTankTemperature, maxSetTankTemperature]` before forwarding.
    * @param values - Partial setpoint payload.
-   * @returns `true` when the update succeeded.
    */
-  public override async updateValues(values: HomeAtwValues): Promise<boolean> {
+  public override async updateValues(values: HomeAtwValues): Promise<void> {
     const changes = omitUndefined(values)
     if (Object.keys(changes).length === 0) {
       throw new NoChangesError(this.id)
     }
-    return this.api.updateAtwValues(this.id, {
+    await this.api.updateAtwValues(this.id, {
       ...changes,
       ...this.#clampSetpoints(changes),
     })

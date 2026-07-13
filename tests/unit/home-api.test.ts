@@ -674,18 +674,17 @@ describe('melcloud home API', () => {
   })
 
   describe('device control', () => {
-    it('should return true and refresh via list() on successful updateValues', async () => {
+    it('should resolve and refresh via list() on successful updateValues', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const isSuccess = await api.updateAtaValues('device-1', {
+      await api.updateAtaValues('device-1', {
         operationMode: 'Heat',
         power: true,
       })
 
-      expect(isSuccess).toBe(true)
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { operationMode: 'Heat', power: true },
@@ -695,13 +694,14 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('should return false on updateValues failure', async () => {
+    it('should propagate the updateValues failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const isSuccess = await api.updateAtaValues('device-1', { power: false })
 
-      expect(isSuccess).toBe(false)
+      await expect(
+        api.updateAtaValues('device-1', { power: false }),
+      ).rejects.toThrow('network')
     })
 
     // Post-condition contract: on a failed PUT, the server state is
@@ -715,9 +715,11 @@ describe('melcloud home API', () => {
       onSync.mockClear()
       mockRequest.mockClear()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const isSuccess = await api.updateAtaValues('device-1', { power: false })
 
-      expect(isSuccess).toBe(false)
+      await expect(
+        api.updateAtaValues('device-1', { power: false }),
+      ).rejects.toThrow('network')
+
       expect(mockRequest).toHaveBeenCalledTimes(1)
       expect(onSync).not.toHaveBeenCalled()
     })
@@ -750,9 +752,8 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const isSuccess = await api.updateAtaValues('device-1', { power: false })
+      await api.updateAtaValues('device-1', { power: false })
 
-      expect(isSuccess).toBe(true)
       expect(logger.error).toHaveBeenCalledWith(
         'LifecycleEvents.onSyncComplete callback threw — ignoring',
         expect.any(Error),
@@ -906,12 +907,11 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const isSuccess = await api.updateAtwValues('atw-1', {
+      await api.updateAtwValues('atw-1', {
         power: false,
         setTemperatureZone1: 20,
       })
 
-      expect(isSuccess).toBe(true)
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { power: false, setTemperatureZone1: 20 },
@@ -921,28 +921,28 @@ describe('melcloud home API', () => {
       )
     })
 
-    it('updateAtwValues returns false when the PUT throws', async () => {
+    it('updateAtwValues propagates the PUT failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      const isSuccess = await api.updateAtwValues('atw-1', { power: false })
 
-      expect(isSuccess).toBe(false)
+      await expect(
+        api.updateAtwValues('atw-1', { power: false }),
+      ).rejects.toThrow('network')
     })
 
-    it('updateAtwValues lowers zone modes to the camelCase wire form', async () => {
+    it('updateAtwValues maps zone modes to the camelCase wire form', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const isSuccess = await api.updateAtwValues('atw-1', {
-        operationModeZone1: 'HeatCurve',
-        operationModeZone2: 'CoolFlowTemperature',
+      await api.updateAtwValues('atw-1', {
+        operationModeZone1: 'curve',
+        operationModeZone2: 'flow_cool',
         setTemperatureZone1: 21,
       })
 
-      expect(isSuccess).toBe(true)
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           data: {
@@ -956,18 +956,28 @@ describe('melcloud home API', () => {
       )
     })
 
+    it('updateAtwValues rejects an unknown zone mode from plain JS', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      await expect(
+        api.updateAtwValues('atw-1', {
+          operationModeZone1: cast('HeatCurve'),
+        }),
+      ).rejects.toThrow('Unknown ATW zone mode: HeatCurve')
+    })
+
     it('updateAtwValues keeps a null zone mode as an explicit clear', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      const isSuccess = await api.updateAtwValues('atw-1', {
+      await api.updateAtwValues('atw-1', {
         operationModeZone2: null,
         power: true,
       })
 
-      expect(isSuccess).toBe(true)
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           data: { operationModeZone2: null, power: true },

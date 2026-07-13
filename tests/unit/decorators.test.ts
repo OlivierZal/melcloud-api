@@ -417,10 +417,10 @@ describe(classicUpdateDevice, () => {
 
   it('skips update when devices array is empty', async () => {
     const facade = { devices: [], flags: ataFlags, type: ClassicDeviceType.Ata }
-    const setData = createAtaSetData()
-    const result = await callUpdateDevice(facade, setData)
+    const updateData = createAtaSetData()
+    const result = await callUpdateDevice(facade, updateData)
 
-    expect(result).toBe(setData)
+    expect(result).toBe(updateData)
   })
 
   it('handles CLASSIC_FLAG_UNCHANGED by including all data', async () => {

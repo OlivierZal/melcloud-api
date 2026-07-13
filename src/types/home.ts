@@ -1,3 +1,4 @@
+import type { HomeAtwZoneMode } from '../constants.ts'
 import type {
   HomeFanSpeed,
   HomeHorizontal,
@@ -151,8 +152,8 @@ export type HomeAtwOperationModeZone =
 export interface HomeAtwValues {
   readonly forcedHotWaterMode?: boolean | null
   readonly hotWaterActive?: boolean | null
-  readonly operationModeZone1?: HomeAtwOperationModeZone | null
-  readonly operationModeZone2?: HomeAtwOperationModeZone | null
+  readonly operationModeZone1?: HomeAtwZoneMode | null
+  readonly operationModeZone2?: HomeAtwZoneMode | null
   readonly power?: boolean | null
   readonly setCoolFlowTemperatureZone1?: number | null
   readonly setCoolFlowTemperatureZone2?: number | null

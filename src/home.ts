@@ -42,6 +42,8 @@ export {
   type HomeUserContext as UserContext,
   type HomeVertical as Vertical,
   HomeAPI as API,
+  HomeAtwOperationalState as AtwOperationalState,
+  HomeAtwZoneMode as AtwZoneMode,
   HomeBaseDeviceFacade as BaseDeviceFacade,
   HomeDevice as Device,
   HomeDeviceAtaFacade as DeviceAtaFacade,

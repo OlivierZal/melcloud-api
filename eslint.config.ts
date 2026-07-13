@@ -739,13 +739,7 @@ const config = defineConfig([
       // Owned by `import-x/no-named-default` (imports; the export
       // form it also covers is unused here).
       'unicorn/no-named-default': 'off',
-      // Domain nouns: `Set-Cookie` header, `SetDeviceData` payload.
-      'unicorn/no-non-function-verb-prefix': [
-        'error',
-        {
-          ignore: ['^set(?:Cookies?|Data)$'],
-        },
-      ],
+      'unicorn/no-non-function-verb-prefix': 'error',
       // Unaware of `Symbol.dispose`.
       'unicorn/no-nonstandard-builtin-properties': 'off',
       'unicorn/no-null': 'off',
@@ -874,8 +868,10 @@ const config = defineConfig([
     },
   },
   {
-    // Decorator protocol: explicitly typed `this` (TypeScript-checked)
-    // and an imposed, unused `_context` parameter.
+    // TC39 decorator protocol: the replacement method receives the
+    // instance through `this` (no class body to put it in), and the
+    // `context` parameter is what pins the decorator kind at type level
+    // even when unused.
     files: ['src/decorators/**/*.ts'],
     rules: {
       '@typescript-eslint/no-unused-vars': [

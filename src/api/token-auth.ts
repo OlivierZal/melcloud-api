@@ -90,9 +90,9 @@ const readResponseHeaders = (
   const result: Record<string, string | string[]> = Object.fromEntries(
     headers.entries(),
   )
-  const setCookie = headers.getSetCookie()
-  if (setCookie.length > 0) {
-    result['set-cookie'] = setCookie
+  const cookies = headers.getSetCookie()
+  if (cookies.length > 0) {
+    result['set-cookie'] = cookies
   }
   return result
 }
@@ -159,12 +159,12 @@ const storeCookies = async (
   { headers }: OidcResponse,
   url: string,
 ): Promise<void> => {
-  const setCookies = headers['set-cookie']
-  if (!Array.isArray(setCookies)) {
+  const cookies = headers['set-cookie']
+  if (!Array.isArray(cookies)) {
     return
   }
   await Promise.allSettled(
-    setCookies.map(async (raw: string) => jar.setCookie(raw, url)),
+    cookies.map(async (raw: string) => jar.setCookie(raw, url)),
   )
 }
 
