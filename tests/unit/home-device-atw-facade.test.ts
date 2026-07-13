@@ -229,6 +229,11 @@ describe('home device atw facade', () => {
         settings: { OperationMode: 'Legionella' },
       },
       {
+        expected: 'legionella',
+        label: 'legionella cycle (observed wire spelling)',
+        settings: { OperationMode: 'LegionellaPrevention' },
+      },
+      {
         expected: 'idle',
         label: 'any other operation mode',
         settings: { OperationMode: 'Cooling' },

@@ -107,12 +107,6 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
     await this.updateValues({ power: isOn })
   }
 
-  protected setting(name: string): string {
-    return (
-      this.model.data.settings.find((entry) => entry.name === name)?.value ?? ''
-    )
-  }
-
   /**
    * Looks up a setting value by name from the device's settings array,
    * returning the empty string when the setting is absent. Subclasses
@@ -120,6 +114,12 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
    * @param name - Setting name (e.g. `'Power'`, `'OperationModeZone1'`).
    * @returns The setting value, or `''` when not present.
    */
+  protected setting(name: string): string {
+    return (
+      this.model.data.settings.find((entry) => entry.name === name)?.value ?? ''
+    )
+  }
+
   /**
    * Reads a boolean device setting (the BFF serializes them as
    * `'True'`/`'False'` strings).
