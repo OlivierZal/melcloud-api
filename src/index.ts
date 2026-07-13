@@ -157,6 +157,8 @@ export {
   ClassicVertical,
   classicCoolModes,
   classicHeatModes,
+  HomeAtwOperationalState,
+  HomeAtwZoneMode,
   HomeDeviceType,
 } from './constants.ts'
 export {
