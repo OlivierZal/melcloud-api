@@ -72,7 +72,10 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   }
 
   /**
-   * Currently active operation mode (heat/cool/auto/dry/fan/off).
+   * Currently active operation mode (heat/cool/auto/dry/fan/off). The
+   * type documents the known vocabulary; unknown or absent wire values
+   * pass through untyped-checked (see `#enumSetting`), so exhaustive
+   * switches should keep a default arm.
    * @returns One of the `HomeOperationMode` enum values.
    */
   public get operationMode(): HomeOperationMode {
@@ -121,7 +124,8 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   }
 
   /**
-   * Currently configured horizontal vane direction.
+   * Currently configured horizontal vane direction. Same pass-through
+   * contract as {@link operationMode}.
    * @returns The horizontal vane setting.
    */
   public get vaneHorizontalDirection(): HomeHorizontal {
@@ -129,7 +133,8 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   }
 
   /**
-   * Currently configured vertical vane direction.
+   * Currently configured vertical vane direction. Same pass-through
+   * contract as {@link operationMode}.
    * @returns The vertical vane setting.
    */
   public get vaneVerticalDirection(): HomeVertical {
