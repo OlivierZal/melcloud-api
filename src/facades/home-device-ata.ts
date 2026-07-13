@@ -76,7 +76,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @returns One of the `HomeOperationMode` enum values.
    */
   public get operationMode(): HomeOperationMode {
-    return this.#setting('OperationMode')
+    return this.#enumSetting('OperationMode')
   }
 
   /**
@@ -84,7 +84,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @returns `true` when on, `false` when standby.
    */
   public get power(): boolean {
-    return this.#setting('Power') === 'True'
+    return this.settingBool('Power')
   }
 
   /**
@@ -92,7 +92,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @returns Degrees Celsius as last reported by the device.
    */
   public get roomTemperature(): number {
-    return this.#setting('RoomTemperature')
+    return this.settingNumber('RoomTemperature')
   }
 
   /**
@@ -104,7 +104,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     // MELCloud Home API inconsistency: SetFanSpeed returns a stringified
     // number ("0") instead of the enum name ("Auto") like other settings.
     // Normalize via fanSpeedFromClassic, falling back to raw if already a name.
-    const raw = this.#setting('SetFanSpeed')
+    const raw = this.setting('SetFanSpeed')
     const numeric = Number(raw)
     if (raw !== '' && isClassicFanSpeed(numeric)) {
       return fanSpeedFromClassic[numeric]
@@ -117,7 +117,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @returns The setpoint temperature.
    */
   public get setTemperature(): number {
-    return this.#setting('SetTemperature')
+    return this.settingNumber('SetTemperature')
   }
 
   /**
@@ -125,7 +125,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @returns The horizontal vane setting.
    */
   public get vaneHorizontalDirection(): HomeHorizontal {
-    return this.#setting('VaneHorizontalDirection')
+    return this.#enumSetting('VaneHorizontalDirection')
   }
 
   /**
@@ -133,7 +133,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @returns The vertical vane setting.
    */
   public get vaneVerticalDirection(): HomeVertical {
-    return this.#setting('VaneVerticalDirection')
+    return this.#enumSetting('VaneVerticalDirection')
   }
 
   /**
@@ -222,23 +222,18 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
       : { setTemperature: clampToRange(value, getRange(this.capabilities)) }
   }
 
-  #setting(name: 'OperationMode'): HomeOperationMode
+  // Typed reads of the enum-backed settings. The overloads deliberately
+  // pass unknown wire values through (no validation, no degradation):
+  // the setpoint clamp falls back to no-clamp on out-of-vocabulary
+  // modes, and inventing a member here would silently clamp with the
+  // wrong range.
+  #enumSetting(name: 'OperationMode'): HomeOperationMode
 
-  #setting(name: 'Power' | 'SetFanSpeed'): string
+  #enumSetting(name: 'VaneHorizontalDirection'): HomeHorizontal
 
-  #setting(name: 'RoomTemperature' | 'SetTemperature'): number
+  #enumSetting(name: 'VaneVerticalDirection'): HomeVertical
 
-  #setting(name: 'VaneHorizontalDirection'): HomeHorizontal
-
-  #setting(name: 'VaneVerticalDirection'): HomeVertical
-
-  #setting(name: string): unknown
-
-  #setting(name: string): unknown {
-    const raw = this.setting(name)
-    if (name === 'RoomTemperature' || name === 'SetTemperature') {
-      return Number(raw)
-    }
-    return raw
+  #enumSetting(name: string): unknown {
+    return this.setting(name)
   }
 }
