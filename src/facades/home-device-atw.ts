@@ -30,7 +30,6 @@ const hotWaterStateFromOperationMode: Partial<
   Record<string, ClassicOperationModeStateHotWater>
 > = {
   HotWater: ClassicOperationModeStateHotWater.dhw,
-  // Live-captured 2026-07-13 during a running cycle.
   LegionellaPrevention: ClassicOperationModeStateHotWater.legionellaPrevention,
 }
 
@@ -44,7 +43,6 @@ const operationalStateFromOperationMode: Partial<
   Heating: HomeAtwOperationalState.heating,
   HotWater: HomeAtwOperationalState.dhw,
   Idle: HomeAtwOperationalState.idle,
-  // Live-captured 2026-07-13.
   LegionellaPrevention: HomeAtwOperationalState.legionellaPrevention,
   Stop: HomeAtwOperationalState.idle,
 }
