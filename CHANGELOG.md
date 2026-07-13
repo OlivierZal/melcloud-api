@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [41.0.0] - 2026-07-13
+
 ### Breaking
 
 - **`HomeDeviceAtwFacade.operationModeZone1`/`operationModeZone2` return the normalized `HomeAtwZoneMode` union** (`'room' | 'flow' | 'curve' | 'room_cool' | 'flow_cool'`) instead of raw FTC strings, and **`HomeAtwValues.operationModeZone1/2` accept that union** — the wire dialect (PascalCase reads, camelCase writes) is now fully encapsulated. The external `*Thermostat` variants and unknown firmware strings degrade to the room modes so new FTC vocabulary can never break a consumer's sync.
