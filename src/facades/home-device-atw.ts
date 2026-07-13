@@ -11,6 +11,7 @@ import type {
 } from '../types/index.ts'
 import {
   ClassicOperationModeStateHotWater,
+  ClassicOperationModeStateZone,
   HomeAtwOperationalState,
   HomeAtwZoneMode,
 } from '../constants.ts'
@@ -49,6 +50,19 @@ const operationalStateFromOperationMode: Partial<
   Legionella: HomeAtwOperationalState.legionella,
   LegionellaPrevention: HomeAtwOperationalState.legionella,
   Stop: HomeAtwOperationalState.idle,
+}
+
+// Mirrors the Classic zone derivation minus its flag refinements: the
+// `Idle{Zone}`/`Prohibit*` inputs are absent from the Home wire, so the
+// zone state is the top-level `OperationMode` projection — the same one
+// the MELCloud Home app displays (a running legionella cycle shows the
+// zone as idle).
+const zoneStateFromOperationMode: Partial<
+  Record<string, ClassicOperationModeStateZone>
+> = {
+  Cooling: ClassicOperationModeStateZone.cooling,
+  Defrost: ClassicOperationModeStateZone.defrost,
+  Heating: ClassicOperationModeStateZone.heating,
 }
 
 // FTC zone operation modes normalized to the control basis. The external
@@ -141,6 +155,34 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    */
   public get operationalState(): HomeAtwOperationalState | null {
     return operationalStateFromOperationMode[this.operationMode] ?? null
+  }
+
+  /**
+   * Zone-1 derived operational state: the top-level {@link operationMode}
+   * projected onto the zone (`Heating`/`Cooling`/`Defrost` map through,
+   * everything else — hot water, legionella, stop, unknown — reads
+   * `idle`), matching what the MELCloud Home app displays. The Classic
+   * flag refinements (`Idle{Zone}`, `Prohibit*`) do not exist on the
+   * Home wire, so `prohibited` is never produced.
+   * @returns The derived zone-1 state.
+   */
+  public get operationalStateZone1(): ClassicOperationModeStateZone {
+    return (
+      zoneStateFromOperationMode[this.operationMode] ??
+      ClassicOperationModeStateZone.idle
+    )
+  }
+
+  /**
+   * Zone-2 derived operational state, or `null` when the unit is
+   * single-zone. Same projection as {@link operationalStateZone1}.
+   * @returns The derived zone-2 state, or `null`.
+   */
+  public get operationalStateZone2(): ClassicOperationModeStateZone | null {
+    if (!this.capabilities.hasZone2) {
+      return null
+    }
+    return this.operationalStateZone1
   }
 
   /**
