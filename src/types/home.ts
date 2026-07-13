@@ -113,7 +113,8 @@ export interface HomeAtwDeviceData extends HomeDeviceCommonData {
 
 /**
  * Top-level FTC operation mode reported by the `OperationMode` device
- * setting. Live-captured values so far: `Cooling` and `Stop`; the other
+ * setting. Live-captured values so far: `Cooling`, `LegionellaPrevention`
+ * and `Stop`; the other
  * members mirror the states the MELCloud Home app surfaces. Firmware
  * revisions may expose further strings, so consumers should treat unknown
  * values as unmapped rather than fail.
