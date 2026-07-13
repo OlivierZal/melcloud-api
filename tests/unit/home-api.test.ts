@@ -956,6 +956,17 @@ describe('melcloud home API', () => {
       )
     })
 
+    it('updateAtwValues rejects an unknown zone mode from plain JS', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      await expect(
+        api.updateAtwValues('atw-1', {
+          operationModeZone1: cast('HeatCurve'),
+        }),
+      ).rejects.toThrow('Unknown ATW zone mode: HeatCurve')
+    })
+
     it('updateAtwValues keeps a null zone mode as an explicit clear', async () => {
       setupSuccessfulLogin()
       const api = await createApi()

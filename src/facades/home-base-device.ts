@@ -98,8 +98,9 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   /**
    * Powers the unit on or off. This is the unit-level master power (the
    * `Power` setting, shown as the system on/off toggle in the app),
-   * mirroring the Classic facade's `updatePower` contract. Convenience
-   * wrapper over {@link updateValues}.
+   * defined at the base like the Classic side's `updatePower` — the
+   * contracts differ: this one resolves `void` and throws the typed
+   * transport error. Convenience wrapper over {@link updateValues}.
    * @param isOn - `true` to power on, `false` to power off.
    */
   public async updatePower(isOn = true): Promise<void> {

@@ -64,13 +64,22 @@ const wireZoneModes: Record<HomeAtwZoneMode, string> = {
 // Only string values are lowered: an explicit null (clear) passes through
 // untouched, and a present-but-undefined key (reachable from plain JS)
 // keeps the absent-key semantics JSON serialization gives it.
+// Plain-JS callers can bypass the union type; an unknown mode must fail
+// loudly here rather than serialize as `undefined` and silently no-op.
+const toWireZoneMode = (mode: HomeAtwZoneMode): string => {
+  if (!Object.hasOwn(wireZoneModes, mode)) {
+    throw new TypeError(`Unknown ATW zone mode: ${mode}`)
+  }
+  return wireZoneModes[mode]
+}
+
 const toAtwWireValues = (values: HomeAtwValues): HomeAtwWireValues => ({
   ...values,
   ...(typeof values.operationModeZone1 === 'string' && {
-    operationModeZone1: wireZoneModes[values.operationModeZone1],
+    operationModeZone1: toWireZoneMode(values.operationModeZone1),
   }),
   ...(typeof values.operationModeZone2 === 'string' && {
-    operationModeZone2: wireZoneModes[values.operationModeZone2],
+    operationModeZone2: toWireZoneMode(values.operationModeZone2),
   }),
 })
 const ATW_ENERGY_MEASURE = {
@@ -416,16 +425,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * Send an ATA-unit setpoint update to the BFF. On success, re-sync
    * the registry so it reflects the server-side effect of the write
    * (the PUT response itself does not echo device fields). On failure,
-   * skip the sync — the server state is presumed unchanged, so a
-   * re-fetch would be wasted work.
-   *
-   * Boolean surface is preserved for integrating hosts (e.g. Homey
-   * drivers) that treat transient failures as a no-op and retry on
-   * the next sync. The actual mutation + post-sync orchestration
-   * lives in `#putAtaAndSync`, where `@fetchDevices({ when: 'after' })`
-   * applies the same post-mutation-refresh contract as Classic
-   * facades — just resolved via `syncRegistry()` instead of
-   * `api.fetch()`.
+   * the typed transport error propagates and the sync is skipped — the
+   * server state is presumed unchanged, so a re-fetch would be wasted
+   * work. The mutation + post-sync orchestration lives in
+   * `#putAtaAndSync`, where `@fetchDevices({ when: 'after' })` applies
+   * the same post-mutation-refresh contract as Classic facades — just
+   * resolved via `syncRegistry()` instead of `api.fetch()`.
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
    */
