@@ -71,7 +71,7 @@
     "@types/node": "^26.1.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitest/coverage-v8": "^4.1.9",
-    "@vitest/eslint-plugin": "^1.6.20",
+    "@vitest/eslint-plugin": "^1.6.21",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.5",
