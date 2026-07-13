@@ -52,9 +52,11 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   (`no-floating-promises` + `unicorn/prefer-await` leave no other form),
   and synchronous mocks of async contracts
   (`promise-function-async` autofixes the `Promise.resolve` escape back
-  to `async`, then `require-await` fires). The TC39 decorator `this`
-  protocol keeps the one `files`-scoped rule-off in `src/decorators/**`
-  (there is no class body to put `this` in).
+  to `async`, then `require-await` fires). The TC39 decorator
+  protocol keeps the `files`-scoped exceptions in `src/decorators/**`:
+  the `this` rule-off (there is no class body to put `this` in) and the
+  `_context` unused-parameter pattern (the context parameter pins the
+  decorator kind at type level even when unused — do not remove it).
 - Zero-warning policy: every enabled rule is at `error`.
 - Metric caps (`complexity`, `max-depth`, `vitest/max-nested-describe`) are
   pinned to measured codebase ceilings: exceeding one means refactor, not
