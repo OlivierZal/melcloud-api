@@ -179,7 +179,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The derived zone-2 state, or `null`.
    */
   public get operationalStateZone2(): ClassicOperationModeStateZone | null {
-    return this.#whenZone2(this.operationalStateZone1)
+    return this.#whenZone2(() => this.operationalStateZone1)
   }
 
   /**
@@ -213,7 +213,8 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    */
   public get operationModeZone2(): HomeAtwZoneMode | null {
     return this.#whenZone2(
-      zoneModeFromWire[this.setting('OperationModeZone2')] ??
+      () =>
+        zoneModeFromWire[this.setting('OperationModeZone2')] ??
         HomeAtwZoneMode.room,
     )
   }
@@ -255,7 +256,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The room temperature, or `null`.
    */
   public get roomTemperatureZone2(): number | null {
-    return this.#whenZone2(this.settingNumber('RoomTemperatureZone2'))
+    return this.#whenZone2(() => this.settingNumber('RoomTemperatureZone2'))
   }
 
   /**
@@ -279,7 +280,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The setpoint, or `null`.
    */
   public get setTemperatureZone2(): number | null {
-    return this.#whenZone2(this.settingNumber('SetTemperatureZone2'))
+    return this.#whenZone2(() => this.settingNumber('SetTemperatureZone2'))
   }
 
   /**
@@ -413,8 +414,9 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   // Zone-2 accessors share the single-zone null: the capability flag is
-  // the only wire signal a second zone exists.
-  #whenZone2<T>(value: T): T | null {
-    return this.capabilities.hasZone2 ? value : null
+  // the only wire signal a second zone exists. Lazy on purpose — the
+  // zone-2 settings are not even read on single-zone units.
+  #whenZone2<T>(read: () => T): T | null {
+    return this.capabilities.hasZone2 ? read() : null
   }
 }
