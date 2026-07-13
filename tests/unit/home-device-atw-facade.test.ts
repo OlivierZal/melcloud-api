@@ -65,7 +65,6 @@ describe('home device atw facade', () => {
       ['Heating', 'heating'],
       ['HotWater', 'dhw'],
       ['Idle', 'idle'],
-      ['Legionella', 'legionella'],
       ['LegionellaPrevention', 'legionella'],
       ['Stop', 'idle'],
     ])('derives the operational state %s as %s', (wire, expected) => {
@@ -226,11 +225,6 @@ describe('home device atw facade', () => {
       {
         expected: 'legionella',
         label: 'legionella cycle',
-        settings: { OperationMode: 'Legionella' },
-      },
-      {
-        expected: 'legionella',
-        label: 'legionella cycle (observed wire spelling)',
         settings: { OperationMode: 'LegionellaPrevention' },
       },
       {
