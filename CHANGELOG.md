@@ -194,7 +194,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/39.0.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/41.0.0...HEAD
+[41.0.0]: https://github.com/OlivierZal/melcloud-api/compare/39.0.0...41.0.0
 [39.0.0]: https://github.com/OlivierZal/melcloud-api/compare/38.0.2...39.0.0
 [38.0.2]: https://github.com/OlivierZal/melcloud-api/compare/38.0.1...38.0.2
 [38.0.1]: https://github.com/OlivierZal/melcloud-api/compare/38.0.0...38.0.1
