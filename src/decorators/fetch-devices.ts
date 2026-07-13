@@ -59,6 +59,7 @@ export const fetchDevices =
   ({ when = 'before' }: { when?: 'after' | 'before' } = {}) =>
   <TArgs extends readonly unknown[], TResult>(
     target: (...args: TArgs) => Promise<TResult>,
+    _context: ClassMethodDecoratorContext,
   ): ((...args: TArgs) => Promise<TResult>) =>
     async function newTarget(this: FetchDevicesHost, ...args: TArgs) {
       if (when === 'before') {
