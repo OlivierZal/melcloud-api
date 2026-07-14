@@ -190,9 +190,12 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * endpoint, so the already-synced values are reused with no wire call.
    * @returns A success result wrapping the device's group state.
    */
-  // eslint-disable-next-line @typescript-eslint/require-await -- pure projection of cached data; async only to satisfy the group contract shared with the Classic facades
+  // Pure projection of cached data; the `await Promise.resolve(...)` shape
+  // satisfies the async group contract shared with the Classic facades
+  // without an eslint disable (see `fetch` in classic-base-device.ts).
   public async getGroup(): Promise<Result<ClassicGroupState>> {
-    return ok(toClassicAtaGroupState(this))
+    const source = await Promise.resolve(this)
+    return ok(toClassicAtaGroupState(source))
   }
 
   /**
@@ -215,8 +218,9 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   /**
    * Apply a Classic group state to this device: the delta is translated to
    * the Home vocabulary and pushed through the native per-device update
-   * path. An all-null delta translates to nothing and resolves without a
-   * wire call.
+   * path. Group writes are no-op tolerant: an all-null delta translates to
+   * nothing and resolves without a wire call, and a device already matching
+   * the delta (a {@link NoChangesError} from its update) counts as success.
    * @param state - Partial Classic group state to push to the device.
    * @returns The zone-shaped success outcome once the write completes.
    */
@@ -225,7 +229,15 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   ): Promise<ClassicFailureData | ClassicSuccessData> {
     const values = toHomeAtaValues(state)
     if (Object.keys(values).length > 0) {
-      await this.updateValues(values)
+      try {
+        await this.updateValues(values)
+      } catch (error) {
+        // A device already matching the group state is fine by definition —
+        // zone group writes are no-op tolerant, so the group-of-one is too.
+        if (!(error instanceof NoChangesError)) {
+          throw error
+        }
+      }
     }
     return { AttributeErrors: null, Success: true }
   }

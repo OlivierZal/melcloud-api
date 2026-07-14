@@ -254,6 +254,32 @@ describe('home device ata facade group', () => {
     expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
     expect(api.updateAtaValues).not.toHaveBeenCalled()
   })
+
+  it('tolerates a device already matching the delta', async () => {
+    const api = createApi()
+    syncBuilding(api, [{ id: 'device-1' }])
+    const [model] = ataModels(api)
+    const facade = new HomeDeviceAtaFacade(api, mock(model))
+    vi.mocked(api.updateAtaValues).mockRejectedValueOnce(
+      new NoChangesError('device-1'),
+    )
+
+    await expect(
+      facade.updateGroupState({ SetTemperature: 23 }),
+    ).resolves.toStrictEqual({ AttributeErrors: null, Success: true })
+  })
+
+  it('propagates a real group update failure', async () => {
+    const api = createApi()
+    syncBuilding(api, [{ id: 'device-1' }])
+    const [model] = ataModels(api)
+    const facade = new HomeDeviceAtaFacade(api, mock(model))
+    vi.mocked(api.updateAtaValues).mockRejectedValue(new Error('BFF failure'))
+
+    await expect(
+      facade.updateGroupState({ SetTemperature: 23 }),
+    ).rejects.toThrow('BFF failure')
+  })
 })
 
 const buildingOf = (api: HomeAPIAdapter): HomeBuildingAtaFacade => {

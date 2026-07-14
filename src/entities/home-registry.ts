@@ -42,7 +42,8 @@ export class HomeRegistry {
 
   /**
    * Groups the devices of the given connection type by their source
-   * building, in registry order (insertion order of the latest sync).
+   * building, in registry order — stable across syncs: an upsert keeps a
+   * known device's position, new devices append.
    * @param type - Connection-type discriminator.
    * @returns One entry per building that holds at least one such device.
    */

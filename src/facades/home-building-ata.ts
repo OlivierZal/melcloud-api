@@ -93,11 +93,14 @@ export class HomeBuildingAtaFacade {
    * wire's mixed marker). No wire call — members' synced states are reused.
    * @returns A success result wrapping the aggregated group state.
    */
-  // eslint-disable-next-line @typescript-eslint/require-await -- pure aggregation of cached data; async only to satisfy the group contract shared with the Classic facades
+  // Pure aggregation of cached data; the `await Promise.resolve(...)` shape
+  // satisfies the async group contract shared with the Classic facades
+  // without an eslint disable (see `fetch` in classic-base-device.ts).
   public async getGroup(): Promise<Result<ClassicGroupState>> {
+    const members = await Promise.resolve(this.devices)
     return ok(
       aggregateClassicAtaGroupStates(
-        this.devices.map((device) =>
+        members.map((device) =>
           toClassicAtaGroupState(this.#getFacade(device)),
         ),
       ),

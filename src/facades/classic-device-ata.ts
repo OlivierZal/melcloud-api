@@ -4,6 +4,7 @@ import {
   ClassicFanSpeed,
   ClassicOperationMode,
 } from '../constants.ts'
+import { NoChangesError } from '../errors/index.ts'
 import {
   type ClassicFailureData,
   type ClassicGroupState,
@@ -71,9 +72,11 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
    * or unset fan speed reads as `null` (a group cannot hold silent).
    * @returns A success result wrapping the device's group state.
    */
-  // eslint-disable-next-line @typescript-eslint/require-await -- pure projection of cached data; async only to satisfy the zone-facade group contract the app calls on the union
+  // Pure projection of cached data; the `await Promise.resolve(...)` shape
+  // satisfies the async group contract shared with the zone facades without
+  // an eslint disable (see `fetch` in classic-base-device.ts).
   public async getGroup(): Promise<Result<ClassicGroupState>> {
-    const { data } = this
+    const { data } = await Promise.resolve(this)
     return ok({
       FanSpeed: toGroupFanSpeed(data.FanSpeed),
       OperationMode: data.OperationMode,
@@ -87,14 +90,27 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
   /**
    * Apply a group state to this device through the native per-device SetAta
    * path; null fields are the group "leave unchanged" sentinel and are
-   * dropped from the write.
+   * dropped from the write. Group writes are no-op tolerant: an all-null
+   * state resolves without a wire call, and a device already matching the
+   * state (a {@link NoChangesError} from its update) counts as success.
    * @param state - Group state to push to the device.
    * @returns The zone-shaped success outcome once the write completes.
    */
   public async updateGroupState(
     state: ClassicGroupState,
   ): Promise<ClassicFailureData | ClassicSuccessData> {
-    await this.updateValues(toUpdateData(state))
+    const values = toUpdateData(state)
+    if (Object.keys(values).length > 0) {
+      try {
+        await this.updateValues(values)
+      } catch (error) {
+        // A device already matching the group state is fine by definition —
+        // zone group writes are no-op tolerant, so the group-of-one is too.
+        if (!(error instanceof NoChangesError)) {
+          throw error
+        }
+      }
+    }
     return { AttributeErrors: null, Success: true }
   }
 

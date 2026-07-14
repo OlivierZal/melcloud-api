@@ -982,6 +982,38 @@ describe('ata device facade group', () => {
     expect(postData.Power).toBe(false)
     expect(postData.EffectiveFlags).toBe(1)
   })
+
+  it('resolves an all-null group delta without a wire call', async () => {
+    const { api, facade } = createAtaFacade()
+    const result = await facade.updateGroupState({ Power: null })
+
+    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
+    expect(api.updateValues).not.toHaveBeenCalled()
+  })
+
+  it('tolerates a device already matching the group state', async () => {
+    const { api, facade } = createAtaFacade()
+    // Power already matches the fixture, so the base update raises
+    // NoChangesError — a no-op group write must resolve as success.
+    const result = await facade.updateGroupState({ Power: true })
+
+    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
+    expect(api.updateValues).not.toHaveBeenCalled()
+  })
+
+  it('propagates a real group update failure', async () => {
+    const { facade } = createAtaFacade({
+      updateValues: cast(
+        vi
+          .fn<ClassicAPIAdapter['updateValues']>()
+          .mockRejectedValue(new Error('boom')),
+      ),
+    })
+
+    await expect(facade.updateGroupState({ Power: false })).rejects.toThrow(
+      'boom',
+    )
+  })
 })
 
 describe('atw device facade', () => {
