@@ -21,6 +21,7 @@ export {
   type ClassicBuildingZone as BuildingZone,
   type ClassicDateTimeComponents as DateTimeComponents,
   type ClassicDeviceAny as DeviceAny,
+  type ClassicDeviceAtaFacade as DeviceAtaFacade,
   type ClassicDeviceAtwFacade as DeviceAtwFacade,
   type ClassicDeviceAtwHasZone2Facade as DeviceAtwHasZone2Facade,
   type ClassicDeviceFacade as DeviceFacade,

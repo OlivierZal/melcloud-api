@@ -35,6 +35,7 @@ const config = {
     'BaseModel',
     'Brand',
     'DeviceDataMapping',
+    'HomeAtaFacadeResolver',
     'HttpErrorRequestConfig',
     'TransportConfig',
     'TypedHomeDeviceData',
@@ -43,6 +44,7 @@ const config = {
     // class. The class side carries the public surface; TypeDoc sees
     // the interface as a separate symbol and would warn otherwise.
     'ClassicBuildingFacade',
+    'ClassicDeviceAtaFacade',
     'ClassicDeviceAtwFacade',
     'ClassicDeviceAtwHasZone2Facade',
   ],

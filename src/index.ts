@@ -85,6 +85,7 @@ export type {
   HomeAtwOperationModeZone,
   HomeAtwValues,
   HomeBuilding,
+  HomeBuildingRef,
   HomeClaim,
   HomeContext,
   HomeDeviceCapabilities,
@@ -170,6 +171,7 @@ export {
 export {
   type ClassicDeviceAny,
   type ClassicModel,
+  type HomeBuildingDevices,
   ClassicArea,
   ClassicBuilding,
   ClassicDevice,
@@ -207,6 +209,7 @@ export {
 } from './errors/index.ts'
 export {
   type ClassicBuildingFacade,
+  type ClassicDeviceAtaFacade,
   type ClassicDeviceAtwFacade,
   type ClassicDeviceAtwHasZone2Facade,
   type ClassicDeviceFacade,
@@ -220,6 +223,7 @@ export {
   type ReportQuery,
   ClassicFacadeManager,
   HomeBaseDeviceFacade,
+  HomeBuildingAtaFacade,
   HomeDeviceAtaFacade,
   HomeDeviceAtwFacade,
   HomeFacadeManager,

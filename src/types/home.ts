@@ -180,6 +180,16 @@ export interface HomeBuilding {
 }
 
 /**
+ * Identity of the `/context` building (owned or guest) a registered Home
+ * device was sourced from — the account-level grouping key for devices.
+ * @category Types
+ */
+export interface HomeBuildingRef {
+  readonly id: string
+  readonly name: string
+}
+
+/**
  * Single claim entry on a MELCloud Home identity token.
  * @category Types
  */

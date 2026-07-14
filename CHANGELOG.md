@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [41.1.0] - 2026-07-14
+
+### Added
+
+- **Home account/building ATA groups.** Every registered Home device now carries its source `/context` building (`HomeDevice.building`, a `HomeBuildingRef { id, name }`, restated on every sync like `isOwner`), `HomeRegistry.getBuildingsByType(type)` groups devices per building, and the new **`HomeBuildingAtaFacade`** (via `HomeFacadeManager.getBuilding(id)`, cached per id and dropped when the building empties) speaks the same group contract as the Classic facades: `getGroup()` aggregates its members' states per field — diverging fields fold to `null`, the wire's mixed marker — and `updateGroupState()` translates the Classic delta to the Home vocabulary once and fans it out to every member (members already matching, i.e. `NoChangesError`, don't fail the group write; an all-null delta resolves without a wire call).
+- **`HomeDeviceAtaFacade` gains the same `getGroup()`/`updateGroupState()`** (a device is a group of one), so all four target kinds — Classic zone, Classic device, Home building, Home device — share one group contract in the Classic group-state dialect.
+- The Home↔Classic ATA group translation is exported: `toClassicAtaGroupState`, `toHomeAtaValues`, `aggregateClassicAtaGroupStates`, `toGroupFanSpeed` and the `HomeAtaGroupSource` slice.
+
+Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, device, isOwner, type }`) and `sync()` a required `building` — internal registry plumbing, mirroring the earlier `isOwner` threading.
+
+- **`ClassicDeviceFacade<Ata>` gains `getGroup()` and `updateGroupState()`**, exposed through the new `ClassicDeviceAtaFacade` interface that `isClassicAtaFacade` now narrows to (and which `ClassicDeviceFacadeAny` carries). MELCloud's native group endpoints only address zones (building/floor/area), so a lone ATA device emulates them as a group of one: `getGroup` projects the device's own synced state onto the group keys with no wire call — a silent or unset fan speed reads as `null`, since a group state cannot hold `silent` — and `updateGroupState` writes back through the native per-device `SetAta` path (`FanSpeed`→`SetFanSpeed`, the vane directions drop their `Direction` suffix, `null` fields are the group "leave unchanged" sentinel and are dropped). Consumers can now drive a single device through the same zone-group contract. Purely additive: the narrowed type is a superset of `ClassicDeviceFacade<Ata>`.
+
 ## [41.0.0] - 2026-07-13
 
 ### Breaking
@@ -194,7 +206,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/41.0.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/41.1.0...HEAD
+[41.1.0]: https://github.com/OlivierZal/melcloud-api/compare/41.0.0...41.1.0
 [41.0.0]: https://github.com/OlivierZal/melcloud-api/compare/39.0.0...41.0.0
 [39.0.0]: https://github.com/OlivierZal/melcloud-api/compare/38.0.2...39.0.0
 [38.0.2]: https://github.com/OlivierZal/melcloud-api/compare/38.0.1...38.0.2

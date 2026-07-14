@@ -4,6 +4,7 @@ import type {
   HomeAtaDeviceData,
   HomeAtwDeviceCapabilities,
   HomeAtwDeviceData,
+  HomeBuildingRef,
 } from '../src/types/index.ts'
 import { HomeDeviceType } from '../src/constants.ts'
 import { HomeDevice } from '../src/entities/home-device.ts'
@@ -72,21 +73,39 @@ export const homeDeviceData = (
     settings: buildSettings(overrides.settings ?? {}),
   })
 
+export const homeBuildingRef = (
+  overrides: Partial<HomeBuildingRef> = {},
+): HomeBuildingRef => ({
+  id: overrides.id ?? 'home-building-1',
+  name: overrides.name ?? 'Home Building',
+})
+
+interface HomeDeviceFixtureOptions {
+  building?: HomeBuildingRef
+  isOwner?: boolean
+}
+
+// ATA-shaped payloads carry the ATA type tag by construction; ATW entries
+// come from the dedicated creators below so fixtures stay representative.
 export const homeDevice = (
   overrides: HomeDeviceDataOverrides = {},
-  type: HomeDeviceType = HomeDeviceType.Ata,
-  isOwner = true,
+  options: HomeDeviceFixtureOptions = {},
 ): HomeDevice<HomeAtaDeviceData> =>
-  new HomeDevice(homeDeviceData(overrides), type, isOwner)
+  new HomeDevice({
+    building: options.building ?? homeBuildingRef(),
+    device: homeDeviceData(overrides),
+    isOwner: options.isOwner ?? true,
+    type: HomeDeviceType.Ata,
+  })
 
 export const typedHomeDeviceData = (
   overrides: HomeDeviceDataOverrides = {},
-  type: HomeDeviceType = HomeDeviceType.Ata,
-  isOwner = true,
+  options: HomeDeviceFixtureOptions = {},
 ): TypedHomeDeviceData => ({
+  building: options.building ?? homeBuildingRef(),
   device: homeDeviceData(overrides),
-  isOwner,
-  type,
+  isOwner: options.isOwner ?? true,
+  type: HomeDeviceType.Ata,
 })
 
 export const defaultHomeAtwCapabilities: HomeAtwDeviceCapabilities = {
@@ -141,5 +160,21 @@ export const homeAtwDeviceData = (
 export const homeAtwDevice = (
   overrides: HomeAtwDeviceDataOverrides = {},
   isOwner = true,
+  building: HomeBuildingRef = homeBuildingRef(),
 ): HomeDevice<HomeAtwDeviceData> =>
-  new HomeDevice(homeAtwDeviceData(overrides), HomeDeviceType.Atw, isOwner)
+  new HomeDevice({
+    building,
+    device: homeAtwDeviceData(overrides),
+    isOwner,
+    type: HomeDeviceType.Atw,
+  })
+
+export const typedHomeAtwDeviceData = (
+  overrides: HomeAtwDeviceDataOverrides = {},
+  options: HomeDeviceFixtureOptions = {},
+): TypedHomeDeviceData => ({
+  building: options.building ?? homeBuildingRef(),
+  device: homeAtwDeviceData(overrides),
+  isOwner: options.isOwner ?? true,
+  type: HomeDeviceType.Atw,
+})

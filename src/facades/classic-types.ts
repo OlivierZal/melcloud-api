@@ -41,6 +41,23 @@ export interface ClassicBuildingFacade
   readonly fetch: () => Promise<ClassicZoneSettings>
 }
 
+/**
+ * Facade for Air-to-Air (ATA) devices, exposing the ATA group operations on
+ * a single device by treating it as a group of one — MELCloud's native group
+ * endpoints only address zones (building/floor/area), so a device emulates
+ * them against its own state.
+ */
+export interface ClassicDeviceAtaFacade extends ClassicDeviceFacade<
+  typeof ClassicDeviceType.Ata
+> {
+  /** Read this device's current state projected as a group state. */
+  readonly getGroup: () => Promise<Result<ClassicGroupState>>
+  /** Apply a group state to this device. */
+  readonly updateGroupState: (
+    state: ClassicGroupState,
+  ) => Promise<ClassicFailureData | ClassicSuccessData>
+}
+
 /** Facade for Air-to-Water (ATW) devices with hot water and zone state access. */
 export interface ClassicDeviceAtwFacade extends ClassicDeviceFacade<
   typeof ClassicDeviceType.Atw
@@ -107,9 +124,9 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
  * @category Facades
  */
 export type ClassicDeviceFacadeAny =
+  | ClassicDeviceAtaFacade
   | ClassicDeviceAtwFacade
   | ClassicDeviceAtwHasZone2Facade
-  | ClassicDeviceFacade<typeof ClassicDeviceType.Ata>
   | ClassicDeviceFacade<typeof ClassicDeviceType.Erv>
 
 /**
@@ -205,8 +222,7 @@ export interface ClassicZoneFacade extends ClassicFacade {
  */
 export const isClassicAtaFacade = (
   facade: ClassicDeviceFacade<ClassicDeviceType>,
-): facade is ClassicDeviceFacade<typeof ClassicDeviceType.Ata> =>
-  facade.type === ClassicDeviceType.Ata
+): facade is ClassicDeviceAtaFacade => facade.type === ClassicDeviceType.Ata
 
 /**
  * Type guard that narrows a device facade to the ATW variant.

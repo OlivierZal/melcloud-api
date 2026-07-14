@@ -1,14 +1,5 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
-import type {
-  HomeAtaDeviceCapabilities,
-  HomeAtaDeviceData,
-  HomeAtaValues,
-  HomeEnergyData,
-  HomeErrorLogEntry,
-  HomeReportData,
-  Result,
-} from '../types/index.ts'
 import { ClassicFanSpeed } from '../constants.ts'
 import {
   type HomeFanSpeed,
@@ -20,7 +11,21 @@ import {
   isHomeFanSpeed,
 } from '../enum-mappings.ts'
 import { NoChangesError } from '../errors/index.ts'
+import {
+  type ClassicFailureData,
+  type ClassicGroupState,
+  type ClassicSuccessData,
+  type HomeAtaDeviceCapabilities,
+  type HomeAtaDeviceData,
+  type HomeAtaValues,
+  type HomeEnergyData,
+  type HomeErrorLogEntry,
+  type HomeReportData,
+  type Result,
+  ok,
+} from '../types/index.ts'
 import { clampToRange, omitUndefined } from '../utils.ts'
+import { toClassicAtaGroupState, toHomeAtaValues } from './home-ata-group.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 
 interface TemperatureRange {
@@ -180,6 +185,20 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   }
 
   /**
+   * Read this device's current state projected as a Classic group state,
+   * treating the device as a group of one: MELCloud Home has no group
+   * endpoint, so the already-synced values are reused with no wire call.
+   * @returns A success result wrapping the device's group state.
+   */
+  // Pure projection of cached data; the `await Promise.resolve(...)` shape
+  // satisfies the async group contract shared with the Classic facades
+  // without an eslint disable (see `fetch` in classic-base-device.ts).
+  public async getGroup(): Promise<Result<ClassicGroupState>> {
+    const source = await Promise.resolve(this)
+    return ok(toClassicAtaGroupState(source))
+  }
+
+  /**
    * Fetches the trend-summary temperature report for this device over
    * the given time window.
    * @param params - Query window.
@@ -194,6 +213,33 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     to: string
   }): Promise<Result<HomeReportData[]>> {
     return this.api.getAtaTemperatures(this.id, params)
+  }
+
+  /**
+   * Apply a Classic group state to this device: the delta is translated to
+   * the Home vocabulary and pushed through the native per-device update
+   * path. Group writes are no-op tolerant: an all-null delta translates to
+   * nothing and resolves without a wire call, and a device already matching
+   * the delta (a {@link NoChangesError} from its update) counts as success.
+   * @param state - Partial Classic group state to push to the device.
+   * @returns The zone-shaped success outcome once the write completes.
+   */
+  public async updateGroupState(
+    state: ClassicGroupState,
+  ): Promise<ClassicFailureData | ClassicSuccessData> {
+    const values = toHomeAtaValues(state)
+    if (Object.keys(values).length > 0) {
+      try {
+        await this.updateValues(values)
+      } catch (error) {
+        // A device already matching the group state is fine by definition —
+        // zone group writes are no-op tolerant, so the group-of-one is too.
+        if (!(error instanceof NoChangesError)) {
+          throw error
+        }
+      }
+    }
+    return { AttributeErrors: null, Success: true }
   }
 
   /**

@@ -5,13 +5,16 @@ import {
   type TypedHomeDeviceData,
   HomeRegistry,
 } from '../../src/entities/home-registry.ts'
-import { typedHomeDeviceData } from '../home-fixtures.ts'
+import {
+  homeBuildingRef,
+  typedHomeAtwDeviceData,
+  typedHomeDeviceData,
+} from '../home-fixtures.ts'
 
 const createDevice = (
   id: string,
   name = 'ClassicDevice',
-  type: HomeDeviceType = HomeDeviceType.Ata,
-): TypedHomeDeviceData => typedHomeDeviceData({ id, name }, type)
+): TypedHomeDeviceData => typedHomeDeviceData({ id, name })
 
 describe('home device registry', () => {
   it('should sync new devices', () => {
@@ -35,15 +38,21 @@ describe('home device registry', () => {
   it('should restate ownership on every sync', () => {
     const registry = new HomeRegistry()
     const { device, type } = createDevice('a')
-    registry.sync([{ device, isOwner: false, type }])
+    registry.sync([
+      { building: homeBuildingRef(), device, isOwner: false, type },
+    ])
 
     expect(registry.getById('a')?.isOwner).toBe(false)
 
-    registry.sync([{ device, isOwner: true, type }])
+    registry.sync([
+      { building: homeBuildingRef(), device, isOwner: true, type },
+    ])
 
     expect(registry.getById('a')?.isOwner).toBe(true)
 
-    registry.sync([{ device, isOwner: false, type }])
+    registry.sync([
+      { building: homeBuildingRef(), device, isOwner: false, type },
+    ])
 
     expect(registry.getById('a')?.isOwner).toBe(false)
   })
@@ -60,9 +69,9 @@ describe('home device registry', () => {
   it('should filter by device type', () => {
     const registry = new HomeRegistry()
     registry.sync([
-      createDevice('ata-1', 'ATA', HomeDeviceType.Ata),
-      createDevice('atw-1', 'ATW', HomeDeviceType.Atw),
-      createDevice('ata-2', 'ATA 2', HomeDeviceType.Ata),
+      createDevice('ata-1', 'ATA'),
+      typedHomeAtwDeviceData({ id: 'atw-1', name: 'ATW' }),
+      createDevice('ata-2', 'ATA 2'),
     ])
 
     expect(registry.getByType(HomeDeviceType.Ata)).toHaveLength(2)

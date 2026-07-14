@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   homeAtwDevice,
   homeAtwDeviceData,
+  homeBuildingRef,
   homeDevice,
 } from '../home-fixtures.ts'
 
@@ -26,11 +27,11 @@ describe('home device entity', () => {
 
     expect(owned.isOwner).toBe(true)
 
-    owned.sync(homeAtwDeviceData({ id: 'atw-1' }), true)
+    owned.sync(homeAtwDeviceData({ id: 'atw-1' }), true, homeBuildingRef())
 
     expect(owned.isOwner).toBe(true)
 
-    owned.sync(homeAtwDeviceData({ id: 'atw-1' }), false)
+    owned.sync(homeAtwDeviceData({ id: 'atw-1' }), false, homeBuildingRef())
 
     expect(owned.isOwner).toBe(false)
   })

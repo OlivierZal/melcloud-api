@@ -97,18 +97,23 @@ const ATW_ENERGY_MEASURE = {
 const toTypedDevices = (
   building: HomeBuilding,
   isOwner: boolean,
-): TypedHomeDeviceData[] => [
-  ...building.airToAirUnits.map((device) => ({
-    device,
-    isOwner,
-    type: HomeDeviceType.Ata,
-  })),
-  ...building.airToWaterUnits.map((device) => ({
-    device,
-    isOwner,
-    type: HomeDeviceType.Atw,
-  })),
-]
+): TypedHomeDeviceData[] => {
+  const buildingRef = { id: building.id, name: building.name }
+  return [
+    ...building.airToAirUnits.map((device) => ({
+      building: buildingRef,
+      device,
+      isOwner,
+      type: HomeDeviceType.Ata,
+    })),
+    ...building.airToWaterUnits.map((device) => ({
+      building: buildingRef,
+      device,
+      isOwner,
+      type: HomeDeviceType.Atw,
+    })),
+  ]
+}
 const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 1
 

@@ -3,8 +3,11 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ClassicAPIAdapter, SyncCallback } from '../../src/api/index.ts'
 import {
   ClassicDeviceType,
+  ClassicFanSpeed,
+  ClassicHorizontal,
   ClassicOperationMode,
   ClassicOperationModeZone,
+  ClassicVertical,
 } from '../../src/constants.ts'
 import {
   type ClassicDevice,
@@ -26,6 +29,7 @@ import {
   isClassicErvFacade,
 } from '../../src/facades/index.ts'
 import {
+  type ClassicListDeviceDataAta,
   type ClassicSetDevicePostData,
   err,
   ok,
@@ -132,6 +136,23 @@ const createAtaFacade = (
     },
     apiOverrides,
   )
+
+// A facade over a lone ATA device with tailored list data — lets the group
+// projection be exercised for fan speeds the default fixture never carries.
+const buildAtaFacade = (
+  overrides: Partial<ClassicListDeviceDataAta>,
+): ClassicDeviceAtaFacade => {
+  const registry = new ClassicRegistry()
+  registry.syncBuildings([classicBuildingData({ HMDefined: true })])
+  registry.syncFloors([classicFloorData()])
+  registry.syncAreas([classicAreaData()])
+  registry.syncDevices([
+    classicAtaDevice({ Device: classicAtaDeviceData(overrides) }),
+  ])
+  const instance = defined(registry.devices.getById(1000))
+  assertClassicDeviceType(instance, ClassicDeviceType.Ata)
+  return new ClassicDeviceAtaFacade(createMockClassicApi(), registry, instance)
+}
 
 const createAtwFacade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
@@ -895,6 +916,103 @@ describe('ata device facade', () => {
         defined(call).postData,
       ).SetTemperature,
     ).toBeLessThanOrEqual(31)
+  })
+})
+
+describe('ata device facade group', () => {
+  it('projects the device state as a group of one', async () => {
+    const { facade } = createAtaFacade()
+    const state = okValue(await facade.getGroup())
+
+    expect(state.Power).toBe(true)
+    expect(state.FanSpeed).toBe(ClassicFanSpeed.moderate)
+    expect(state.SetTemperature).toBe(24)
+    expect(state.VaneHorizontalDirection).toBe(ClassicHorizontal.auto)
+    expect(state.VaneVerticalDirection).toBe(ClassicVertical.auto)
+  })
+
+  it('maps a silent fan speed to null (a group cannot hold silent)', async () => {
+    const facade = buildAtaFacade({ FanSpeed: ClassicFanSpeed.silent })
+
+    expect(okValue(await facade.getGroup()).FanSpeed).toBeNull()
+  })
+
+  it('maps an unset fan speed to null', async () => {
+    const facade = buildAtaFacade(cast({ FanSpeed: undefined }))
+
+    expect(okValue(await facade.getGroup()).FanSpeed).toBeNull()
+  })
+
+  it('translates the group state to per-device update tags', async () => {
+    const { api, facade } = createAtaFacade()
+    const result = await facade.updateGroupState({
+      FanSpeed: ClassicFanSpeed.moderate,
+      OperationMode: ClassicOperationMode.cool,
+      Power: true,
+      SetTemperature: 20,
+      VaneHorizontalDirection: ClassicHorizontal.swing,
+      VaneVerticalDirection: ClassicVertical.swing,
+    })
+    const postData = mock<
+      ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>
+    >(defined(vi.mocked(api.updateValues).mock.lastCall?.[0]).postData)
+
+    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
+    expect(postData.SetFanSpeed).toBe(ClassicFanSpeed.moderate)
+    expect(postData.VaneHorizontal).toBe(ClassicHorizontal.swing)
+    expect(postData.VaneVertical).toBe(ClassicVertical.swing)
+  })
+
+  it('drops null group fields from the device update', async () => {
+    const { api, facade } = createAtaFacade()
+    // Power flips (the fixture is on) so the write is a real change; the
+    // null fields must leave no flag behind, so only Power's flag stands.
+    await facade.updateGroupState({
+      FanSpeed: null,
+      OperationMode: null,
+      Power: false,
+      SetTemperature: null,
+      VaneHorizontalDirection: null,
+      VaneVerticalDirection: null,
+    })
+    const postData = mock<
+      ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>
+    >(defined(vi.mocked(api.updateValues).mock.lastCall?.[0]).postData)
+
+    expect(postData.Power).toBe(false)
+    expect(postData.EffectiveFlags).toBe(1)
+  })
+
+  it('resolves an all-null group delta without a wire call', async () => {
+    const { api, facade } = createAtaFacade()
+    const result = await facade.updateGroupState({ Power: null })
+
+    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
+    expect(api.updateValues).not.toHaveBeenCalled()
+  })
+
+  it('tolerates a device already matching the group state', async () => {
+    const { api, facade } = createAtaFacade()
+    // Power already matches the fixture, so the base update raises
+    // NoChangesError — a no-op group write must resolve as success.
+    const result = await facade.updateGroupState({ Power: true })
+
+    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
+    expect(api.updateValues).not.toHaveBeenCalled()
+  })
+
+  it('propagates a real group update failure', async () => {
+    const { facade } = createAtaFacade({
+      updateValues: cast(
+        vi
+          .fn<ClassicAPIAdapter['updateValues']>()
+          .mockRejectedValue(new Error('boom')),
+      ),
+    })
+
+    await expect(facade.updateGroupState({ Power: false })).rejects.toThrow(
+      'boom',
+    )
   })
 })
 
