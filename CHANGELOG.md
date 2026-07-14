@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [41.1.0] - 2026-07-14
+
 ### Added
 
 - **Home account/building ATA groups.** Every registered Home device now carries its source `/context` building (`HomeDevice.building`, a `HomeBuildingRef { id, name }`, restated on every sync like `isOwner`), `HomeRegistry.getBuildingsByType(type)` groups devices per building, and the new **`HomeBuildingAtaFacade`** (via `HomeFacadeManager.getBuilding(id)`, cached per id and dropped when the building empties) speaks the same group contract as the Classic facades: `getGroup()` aggregates its members' states per field — diverging fields fold to `null`, the wire's mixed marker — and `updateGroupState()` translates the Classic delta to the Home vocabulary once and fans it out to every member (members already matching, i.e. `NoChangesError`, don't fail the group write; an all-null delta resolves without a wire call).
