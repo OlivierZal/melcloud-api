@@ -1,12 +1,24 @@
 import type { HomeDeviceType } from '../constants.ts'
-import type { HomeDeviceData } from '../types/index.ts'
+import type { HomeBuildingRef, HomeDeviceData } from '../types/index.ts'
 import { HomeDevice } from './home-device.ts'
 
 /**
- * Home device with its type and ownership origin, as extracted from building units.
+ * Devices of one `/context` building sharing a connection type — the
+ * account-level grouping the registry derives from its devices.
+ * @category Entities
+ */
+export interface HomeBuildingDevices {
+  readonly devices: HomeDevice[]
+  readonly id: string
+  readonly name: string
+}
+
+/**
+ * Home device with its type, ownership origin and source building, as extracted from building units.
  * @internal
  */
 export interface TypedHomeDeviceData {
+  readonly building: HomeBuildingRef
   readonly device: HomeDeviceData
   readonly isOwner: boolean
   readonly type: HomeDeviceType
@@ -26,6 +38,23 @@ export class HomeRegistry {
    */
   public getAll(): HomeDevice[] {
     return this.#devices.values().toArray()
+  }
+
+  /**
+   * Groups the devices of the given connection type by their source
+   * building, in registry order (insertion order of the latest sync).
+   * @param type - Connection-type discriminator.
+   * @returns One entry per building that holds at least one such device.
+   */
+  public getBuildingsByType(type: HomeDeviceType): HomeBuildingDevices[] {
+    const buildings = new Map<string, HomeBuildingDevices>()
+    for (const device of this.getByType(type)) {
+      const { id, name } = device.building
+      const building = buildings.get(id) ?? { devices: [], id, name }
+      building.devices.push(device)
+      buildings.set(id, building)
+    }
+    return buildings.values().toArray()
   }
 
   /**
@@ -53,19 +82,23 @@ export class HomeRegistry {
    */
   public sync(devices: TypedHomeDeviceData[]): void {
     const activeIds = new Set<string>()
-    for (const { device, isOwner, type } of devices) {
-      activeIds.add(device.id)
-      const existing = this.#devices.get(device.id)
-      if (existing === undefined) {
-        this.#devices.set(device.id, new HomeDevice(device, type, isOwner))
-      } else {
-        existing.sync(device, isOwner)
-      }
+    for (const entry of devices) {
+      activeIds.add(entry.device.id)
+      this.#upsert(entry)
     }
     for (const id of this.#devices.keys()) {
       if (!activeIds.has(id)) {
         this.#devices.delete(id)
       }
     }
+  }
+
+  #upsert(entry: TypedHomeDeviceData): void {
+    const existing = this.#devices.get(entry.device.id)
+    if (existing === undefined) {
+      this.#devices.set(entry.device.id, new HomeDevice(entry))
+      return
+    }
+    existing.sync(entry.device, entry.isOwner, entry.building)
   }
 }

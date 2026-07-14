@@ -35,6 +35,7 @@ const config = {
     'BaseModel',
     'Brand',
     'DeviceDataMapping',
+    'HomeAtaFacadeResolver',
     'HttpErrorRequestConfig',
     'TransportConfig',
     'TypedHomeDeviceData',

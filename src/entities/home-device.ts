@@ -1,6 +1,7 @@
 import type {
   HomeAtaDeviceData,
   HomeAtwDeviceData,
+  HomeBuildingRef,
   HomeDeviceData,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
@@ -17,6 +18,16 @@ import { HomeDeviceType } from '../constants.ts'
  */
 export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
   public readonly type: HomeDeviceType
+
+  /**
+   * Identity of the `/context` building this device was sourced from on
+   * the latest sync — the account-level grouping key. Restated on every
+   * sync, so a device moved between buildings follows its new home.
+   * @returns The building id and display name.
+   */
+  public get building(): HomeBuildingRef {
+    return this.#building
+  }
 
   /**
    * Last-synced wire-format payload for this device.
@@ -53,6 +64,8 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
     return this.#data.givenDisplayName
   }
 
+  #building: HomeBuildingRef
+
   #data: TData
 
   #isOwner: boolean
@@ -60,15 +73,25 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
   /**
    * Builds a Home device wrapper from a wire-format {@link HomeDeviceData}
    * entry tagged with its connection type (Ata or Atw) and ownership origin.
-   * @param device - Wire-format device payload.
-   * @param type - Connection-type discriminator.
-   * @param isOwner - `true` when sourced from an owned building, `false`
-   * when sourced from a guest one.
+   * @param entry - Wire-format device payload tagged with its connection
+   * type, ownership origin and source building.
+   * @param entry.building - Identity of the `/context` building the
+   * payload was sourced from.
+   * @param entry.device - Wire-format device payload.
+   * @param entry.isOwner - `true` when sourced from an owned building,
+   * `false` when sourced from a guest one.
+   * @param entry.type - Connection-type discriminator.
    */
-  public constructor(device: TData, type: HomeDeviceType, isOwner: boolean) {
-    this.#data = device
-    this.#isOwner = isOwner
-    this.type = type
+  public constructor(entry: {
+    building: HomeBuildingRef
+    device: TData
+    isOwner: boolean
+    type: HomeDeviceType
+  }) {
+    this.#building = entry.building
+    this.#data = entry.device
+    this.#isOwner = entry.isOwner
+    this.type = entry.type
   }
 
   /**
@@ -96,8 +119,14 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
    * rather than kept from a stale tag.
    * @param device - Fresh wire-format device payload.
    * @param isOwner - Ownership origin from the current sync.
+   * @param building - Building identity from the current sync.
    */
-  public sync(device: TData, isOwner: boolean): void {
+  public sync(
+    device: TData,
+    isOwner: boolean,
+    building: HomeBuildingRef,
+  ): void {
+    this.#building = building
     this.#data = device
     this.#isOwner = isOwner
   }

@@ -91,6 +91,7 @@ export type {
   HomeAtwOperationModeZone,
   HomeAtwValues,
   HomeBuilding,
+  HomeBuildingRef,
   HomeClaim,
   HomeContext,
   HomeDeviceCapabilities,
