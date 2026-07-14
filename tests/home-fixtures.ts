@@ -83,9 +83,10 @@ export const homeBuildingRef = (
 interface HomeDeviceFixtureOptions {
   building?: HomeBuildingRef
   isOwner?: boolean
-  type?: HomeDeviceType
 }
 
+// ATA-shaped payloads carry the ATA type tag by construction; ATW entries
+// come from the dedicated creators below so fixtures stay representative.
 export const homeDevice = (
   overrides: HomeDeviceDataOverrides = {},
   options: HomeDeviceFixtureOptions = {},
@@ -94,7 +95,7 @@ export const homeDevice = (
     building: options.building ?? homeBuildingRef(),
     device: homeDeviceData(overrides),
     isOwner: options.isOwner ?? true,
-    type: options.type ?? HomeDeviceType.Ata,
+    type: HomeDeviceType.Ata,
   })
 
 export const typedHomeDeviceData = (
@@ -104,7 +105,7 @@ export const typedHomeDeviceData = (
   building: options.building ?? homeBuildingRef(),
   device: homeDeviceData(overrides),
   isOwner: options.isOwner ?? true,
-  type: options.type ?? HomeDeviceType.Ata,
+  type: HomeDeviceType.Ata,
 })
 
 export const defaultHomeAtwCapabilities: HomeAtwDeviceCapabilities = {
@@ -167,3 +168,13 @@ export const homeAtwDevice = (
     isOwner,
     type: HomeDeviceType.Atw,
   })
+
+export const typedHomeAtwDeviceData = (
+  overrides: HomeAtwDeviceDataOverrides = {},
+  options: HomeDeviceFixtureOptions = {},
+): TypedHomeDeviceData => ({
+  building: options.building ?? homeBuildingRef(),
+  device: homeAtwDeviceData(overrides),
+  isOwner: options.isOwner ?? true,
+  type: HomeDeviceType.Atw,
+})

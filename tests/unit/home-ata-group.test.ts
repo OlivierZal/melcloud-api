@@ -23,8 +23,8 @@ import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
 import { mock, okValue } from '../helpers.ts'
 import {
-  homeAtwDevice,
   homeBuildingRef,
+  typedHomeAtwDeviceData,
   typedHomeDeviceData,
 } from '../home-fixtures.ts'
 
@@ -325,18 +325,12 @@ describe('home building ata facade', () => {
       { id: 'device-1' },
       { building: { id: 'other', name: 'Other' }, id: 'device-2' },
     ])
-    const atw = homeAtwDevice({ id: 'atw-1' })
     api.registry.sync([
       typedHomeDeviceData(
         { id: 'device-1', settings: heatState },
         { building: homeBuildingRef() },
       ),
-      {
-        building: homeBuildingRef(),
-        device: atw.data,
-        isOwner: true,
-        type: HomeDeviceType.Atw,
-      },
+      typedHomeAtwDeviceData({ id: 'atw-1' }),
     ])
     const facade = buildingOf(api)
 
