@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **Home account/building ATA groups.** Every registered Home device now carries its source `/context` building (`HomeDevice.building`, a `HomeBuildingRef { id, name }`, restated on every sync like `isOwner`), `HomeRegistry.getBuildingsByType(type)` groups devices per building, and the new **`HomeBuildingAtaFacade`** (via `HomeFacadeManager.getBuilding(id)`, cached per id and dropped when the building empties) speaks the same group contract as the Classic facades: `getGroup()` aggregates its members' states per field — diverging fields fold to `null`, the wire's mixed marker — and `updateGroupState()` translates the Classic delta to the Home vocabulary once and fans it out to every member (members already matching, i.e. `NoChangesError`, don't fail the group write; an all-null delta resolves without a wire call).
 - **`HomeDeviceAtaFacade` gains the same `getGroup()`/`updateGroupState()`** (a device is a group of one), so all four target kinds — Classic zone, Classic device, Home building, Home device — share one group contract in the Classic group-state dialect.
-- The Home↔Classic ATA group translation is exported: `toClassicAtaGroupState`, `toHomeAtaValues`, `aggregateClassicAtaGroupStates`, `toNonSilentFanSpeed` and the `HomeAtaGroupSource` slice.
+- The Home↔Classic ATA group translation is exported: `toClassicAtaGroupState`, `toHomeAtaValues`, `aggregateClassicAtaGroupStates`, `toGroupFanSpeed` and the `HomeAtaGroupSource` slice.
 
 Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, device, isOwner, type }`) and `sync()` a required `building` — internal registry plumbing, mirroring the earlier `isOwner` threading.
 
