@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **`ClassicDeviceFacade<Ata>` gains `getGroup()` and `updateGroupState()`**, exposed through the new `ClassicDeviceAtaFacade` interface that `isClassicAtaFacade` now narrows to (and which `ClassicDeviceFacadeAny` carries). MELCloud's native group endpoints only address zones (building/floor/area), so a lone ATA device emulates them as a group of one: `getGroup` projects the device's own synced state onto the group keys with no wire call — a silent or unset fan speed reads as `null`, since a group state cannot hold `silent` — and `updateGroupState` writes back through the native per-device `SetAta` path (`FanSpeed`→`SetFanSpeed`, the vane directions drop their `Direction` suffix, `null` fields are the group "leave unchanged" sentinel and are dropped). Consumers can now drive a single device through the same zone-group contract. Purely additive: the narrowed type is a superset of `ClassicDeviceFacade<Ata>`.
+
 ## [41.0.0] - 2026-07-13
 
 ### Breaking

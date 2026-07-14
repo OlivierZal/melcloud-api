@@ -207,6 +207,7 @@ export {
 } from './errors/index.ts'
 export {
   type ClassicBuildingFacade,
+  type ClassicDeviceAtaFacade,
   type ClassicDeviceAtwFacade,
   type ClassicDeviceAtwHasZone2Facade,
   type ClassicDeviceFacade,
