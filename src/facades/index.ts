@@ -29,8 +29,8 @@ export {
   type HomeAtaGroupSource,
   aggregateClassicAtaGroupStates,
   toClassicAtaGroupState,
+  toGroupFanSpeed,
   toHomeAtaValues,
-  toNonSilentFanSpeed,
 } from './home-ata-group.ts'
 export { HomeBaseDeviceFacade } from './home-base-device.ts'
 export { HomeBuildingAtaFacade } from './home-building-ata.ts'

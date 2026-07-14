@@ -53,19 +53,22 @@ export class HomeBuildingAtaFacade {
 
   /**
    * Display name of the building, as of the latest sync that still holds
-   * one of its devices; the last known name once emptied.
+   * one of its devices; the last observed name once emptied.
    * @returns The user-facing label of the account's building.
    */
   public get name(): string {
     const [device] = this.devices
-    return device === undefined ? this.#name : device.building.name
+    if (device !== undefined) {
+      this.#name = device.building.name
+    }
+    return this.#name
   }
 
   readonly #api: HomeAPIAdapter
 
   readonly #getFacade: HomeAtaFacadeResolver
 
-  readonly #name: string
+  #name: string
 
   /**
    * Builds a facade for one building's ATA group.

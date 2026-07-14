@@ -16,8 +16,8 @@ import { NoChangesError } from '../../src/errors/index.ts'
 import {
   aggregateClassicAtaGroupStates,
   toClassicAtaGroupState,
+  toGroupFanSpeed,
   toHomeAtaValues,
-  toNonSilentFanSpeed,
 } from '../../src/facades/home-ata-group.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
@@ -71,11 +71,9 @@ const ataModels = (api: HomeAPIAdapter): HomeDevice<HomeAtaDeviceData>[] =>
     .filter((device): device is HomeDevice<HomeAtaDeviceData> => device.isAta())
 
 describe('home ata group translation', () => {
-  it('degrades the silent fan speed to auto', () => {
-    expect(toNonSilentFanSpeed(ClassicFanSpeed.silent)).toBe(
-      ClassicFanSpeed.auto,
-    )
-    expect(toNonSilentFanSpeed(ClassicFanSpeed.moderate)).toBe(
+  it('maps the silent fan speed to null (a group cannot hold silent)', () => {
+    expect(toGroupFanSpeed(ClassicFanSpeed.silent)).toBeNull()
+    expect(toGroupFanSpeed(ClassicFanSpeed.moderate)).toBe(
       ClassicFanSpeed.moderate,
     )
   })
@@ -305,14 +303,20 @@ describe('home building ata facade', () => {
     ])
   })
 
-  it('keeps the last known name once the building empties', () => {
+  it('keeps the last observed name once the building empties', () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }])
     const facade = buildingOf(api)
+    syncBuilding(api, [
+      { building: { id: 'home-building-1', name: 'Renamed' }, id: 'device-1' },
+    ])
+
+    expect(facade.name).toBe('Renamed')
+
     api.registry.sync([])
 
     expect(facade.devices).toStrictEqual([])
-    expect(facade.name).toBe('Home Building')
+    expect(facade.name).toBe('Renamed')
   })
 
   it('excludes devices of other buildings and ATW units', () => {
