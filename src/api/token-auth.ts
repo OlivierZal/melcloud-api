@@ -280,8 +280,13 @@ const resolveUrl = ({
 }: {
   base: string
   location: string
-}): string =>
-  location.startsWith('http') ? location : new URL(location, base).href
+}): string => {
+  if (location.startsWith('http')) {
+    return location
+  }
+  const url = new URL(location, base)
+  return url.href
+}
 
 /**
  * Generate a PKCE challenge and verifier pair.
@@ -380,16 +385,17 @@ const par = async ({
   challenge: string
   abortSignal?: AbortSignal
 }): Promise<string> => {
+  const parameters = new URLSearchParams({
+    client_id: CLIENT_ID,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+    redirect_uri: REDIRECT_URI,
+    response_type: 'code',
+    scope: SCOPES,
+    state: randomBytes(STATE_RANDOM_BYTES).toString('base64url'),
+  })
   const { data } = await fetchPostForm({
-    body: new URLSearchParams({
-      client_id: CLIENT_ID,
-      code_challenge: challenge,
-      code_challenge_method: 'S256',
-      redirect_uri: REDIRECT_URI,
-      response_type: 'code',
-      scope: SCOPES,
-      state: randomBytes(STATE_RANDOM_BYTES).toString('base64url'),
-    }).toString(),
+    body: parameters.toString(),
     headers: {
       Authorization: AUTH_BASIC,
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -425,14 +431,15 @@ const submitCredentials = async ({
   if (action === null) {
     throw new Error('Could not find login form action')
   }
+  const form = new URLSearchParams({
+    ...extractHiddenFields(html),
+    cognitoAsfData: '',
+    password: credentials.password,
+    username: credentials.username,
+  })
   const submitResponse = await authRequest({
     config: {
-      data: new URLSearchParams({
-        ...extractHiddenFields(html),
-        cognitoAsfData: '',
-        password: credentials.password,
-        username: credentials.username,
-      }).toString(),
+      data: form.toString(),
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     },
     jar,
@@ -464,7 +471,8 @@ const extractAuthorizationCode = async (
     url: callbackUrl,
     ...(abortSignal !== undefined && { abortSignal }),
   })
-  const code = new URL(url).searchParams.get('code')
+  const { searchParams } = new URL(url)
+  const code = searchParams.get('code')
   if (code === null) {
     throw new Error('No authorization code in callback')
   }
@@ -485,8 +493,9 @@ const tokenRequest = async ({
   params: Record<string, string>
   abortSignal?: AbortSignal
 }): Promise<HomeTokenResponse> => {
+  const form = new URLSearchParams(params)
   const { data: tokens } = await fetchPostForm({
-    body: new URLSearchParams(params).toString(),
+    body: form.toString(),
     headers: {
       Authorization: AUTH_BASIC,
       'Content-Type': 'application/x-www-form-urlencoded',
