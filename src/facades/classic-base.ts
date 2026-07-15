@@ -57,7 +57,7 @@ const getWithZoneFallback = async <TResult>(
     const zoneResult = await zoneGetter()
     return zoneResult.ok ? zoneResult : deviceGetter()
   }
-  return isAtZoneLevel ? zoneGetter() : deviceGetter()
+  return (isAtZoneLevel ? zoneGetter : deviceGetter)()
 }
 
 // Mutation prep paths (`#getFrostProtectionLocation`,

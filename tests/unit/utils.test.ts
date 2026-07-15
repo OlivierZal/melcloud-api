@@ -25,8 +25,8 @@ describe.concurrent('ata list-to-set conversion', () => {
     expect(fromListToSetAta.VaneVerticalDirection).toBe('VaneVertical')
   })
 
-  it('is the inverse of fromSetToListAta', () => {
-    expect.hasAssertions()
+  it('is the inverse of fromSetToListAta', ({ expect }) => {
+    expect.assertions(3)
 
     for (const [key, value] of Object.entries(fromSetToListAta)) {
       expect(fromListToSetAta[value]).toBe(key)
@@ -35,8 +35,8 @@ describe.concurrent('ata list-to-set conversion', () => {
 })
 
 describe.concurrent(isSetDeviceDataAtaNotInList, () => {
-  it('returns true for every key in fromSetToListAta', () => {
-    expect.hasAssertions()
+  it('returns true for every key in fromSetToListAta', ({ expect }) => {
+    expect.assertions(3)
 
     for (const key of Object.keys(fromSetToListAta)) {
       expect(isSetDeviceDataAtaNotInList(key)).toBe(true)
@@ -52,8 +52,8 @@ describe.concurrent(isSetDeviceDataAtaNotInList, () => {
 })
 
 describe.concurrent(isSetDeviceDataAtaInList, () => {
-  it('returns true for every key in fromListToSetAta', () => {
-    expect.hasAssertions()
+  it('returns true for every key in fromListToSetAta', ({ expect }) => {
+    expect.assertions(3)
 
     for (const key of Object.keys(fromListToSetAta)) {
       expect(isSetDeviceDataAtaInList(key)).toBe(true)

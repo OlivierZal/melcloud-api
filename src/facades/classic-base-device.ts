@@ -127,15 +127,13 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   // to set format, then keep only the fields tracked by flags.
   protected get setData(): Required<ClassicUpdateDeviceData<T>> {
     const dataEntries = Object.entries(this.data)
-    const entries =
+    const entries = (
       this.type === ClassicDeviceType.Ata ?
-        dataEntries
-          .map(([key, value]): [string, unknown] => [
-            isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
-            value,
-          ])
-          .filter(([key]) => Object.hasOwn(this.flags, key))
-      : dataEntries.filter(([key]) => Object.hasOwn(this.flags, key))
+        dataEntries.map(([key, value]): [string, unknown] => [
+          isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
+          value,
+        ])
+      : dataEntries).filter(([key]) => Object.hasOwn(this.flags, key))
     return typedFromEntries<Required<ClassicUpdateDeviceData<T>>>(entries)
   }
 

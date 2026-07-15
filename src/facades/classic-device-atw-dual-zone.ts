@@ -97,8 +97,8 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
       : [operationModeZone1, operationModeZone2]
 
     if (
-      primaryOperationMode?.value === undefined ||
-      secondaryOperationMode === undefined
+      secondaryOperationMode === undefined ||
+      primaryOperationMode?.value === undefined
     ) {
       return null
     }
@@ -131,8 +131,8 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
       }
     }
     if (
-      roomOperationModeZones.has(primaryValue) &&
-      primaryValue === secondaryValue
+      primaryValue === secondaryValue &&
+      roomOperationModeZones.has(primaryValue)
     ) {
       secondaryValue += ROOM_FLOW_GAP
     }

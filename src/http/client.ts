@@ -73,10 +73,11 @@ const resolveUrl = (baseURL: string, url: string | undefined): string => {
   if (/^https?:/iv.test(url)) {
     return url
   }
-  return new URL(
+  const resolved = new URL(
     url.startsWith('/') ? url.slice(1) : url,
     baseURL.endsWith('/') ? baseURL : `${baseURL}/`,
-  ).href
+  )
+  return resolved.href
 }
 
 const encodeParams = (params: Record<string, unknown>): string => {

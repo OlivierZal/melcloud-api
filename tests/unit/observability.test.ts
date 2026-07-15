@@ -141,7 +141,8 @@ describe('sensitive data redaction', () => {
     const config = createConfig({
       data: { Email: 'user@example.com', Other: 'visible', Password: 's3cret' },
     })
-    const { requestData } = parseLog(new APICallRequestData(config).toString())
+    const call = new APICallRequestData(config)
+    const { requestData } = parseLog(call.toString())
 
     expect(requestData.Email).toBe('******')
     expect(requestData.Password).toBe('******')
@@ -155,7 +156,8 @@ describe('sensitive data redaction', () => {
         'X-MitsContextKey': 'abc123',
       },
     })
-    const { headers } = parseLog(new APICallRequestData(config).toString())
+    const call = new APICallRequestData(config)
+    const { headers } = parseLog(call.toString())
 
     expect(headers['X-MitsContextKey']).toBe('******')
     expect(headers['Content-Type']).toBe('application/json')
@@ -165,7 +167,8 @@ describe('sensitive data redaction', () => {
     const response = createResponse({
       headers: { 'set-cookie': ['session=abc123'], 'x-custom': 'visible' },
     })
-    const { headers } = parseLog(new APICallResponseData(response).toString())
+    const call = new APICallResponseData(response)
+    const { headers } = parseLog(call.toString())
 
     expect(headers['set-cookie']).toBe('******')
     expect(headers['x-custom']).toBe('visible')
@@ -175,7 +178,8 @@ describe('sensitive data redaction', () => {
     const config = createConfig({
       data: { password: 'p@ss', username: 'admin' },
     })
-    const { requestData } = parseLog(new APICallRequestData(config).toString())
+    const call = new APICallRequestData(config)
+    const { requestData } = parseLog(call.toString())
 
     expect(requestData.password).toBe('******')
     expect(requestData.username).toBe('******')
@@ -185,7 +189,8 @@ describe('sensitive data redaction', () => {
     const config = createConfig({
       headers: { Cookie: 'session=xyz' },
     })
-    const { headers } = parseLog(new APICallRequestData(config).toString())
+    const call = new APICallRequestData(config)
+    const { headers } = parseLog(call.toString())
 
     expect(headers.Cookie).toBe('******')
   })
@@ -199,9 +204,8 @@ describe('sensitive data redaction', () => {
     const config = createConfig({
       data: 'csrf=tok&password=s3cret&username=user%40example.com&extra=visible',
     })
-    const parsed: { requestData: string } = cast(
-      JSON.parse(new APICallRequestData(config).toString()),
-    )
+    const call = new APICallRequestData(config)
+    const parsed: { requestData: string } = cast(JSON.parse(call.toString()))
     const params = new URLSearchParams(parsed.requestData)
 
     expect(params.get('password')).toBe('******')
@@ -217,9 +221,8 @@ describe('sensitive data redaction', () => {
     const config = createConfig({
       data: 'password=one&password=two&after=kept',
     })
-    const parsed: { requestData: string } = cast(
-      JSON.parse(new APICallRequestData(config).toString()),
-    )
+    const call = new APICallRequestData(config)
+    const parsed: { requestData: string } = cast(JSON.parse(call.toString()))
     const params = new URLSearchParams(parsed.requestData)
 
     expect(params.getAll('password')).toStrictEqual(['******'])
@@ -228,18 +231,16 @@ describe('sensitive data redaction', () => {
 
   it('passes through non-sensitive form-encoded strings unchanged', () => {
     const config = createConfig({ data: 'page=2&limit=50' })
-    const parsed: { requestData: string } = cast(
-      JSON.parse(new APICallRequestData(config).toString()),
-    )
+    const call = new APICallRequestData(config)
+    const parsed: { requestData: string } = cast(JSON.parse(call.toString()))
 
     expect(parsed.requestData).toBe('page=2&limit=50')
   })
 
   it('does not mutate plain strings that happen to lack `=`', () => {
     const config = createConfig({ data: 'just a sentence' })
-    const parsed: { requestData: string } = cast(
-      JSON.parse(new APICallRequestData(config).toString()),
-    )
+    const call = new APICallRequestData(config)
+    const parsed: { requestData: string } = cast(JSON.parse(call.toString()))
 
     expect(parsed.requestData).toBe('just a sentence')
   })

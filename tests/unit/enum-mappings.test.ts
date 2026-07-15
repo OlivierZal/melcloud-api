@@ -32,8 +32,8 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
       expect(operationModeToClassic[home]).toBe(classic)
     })
 
-    it('is bidirectional for all home values', () => {
-      expect.hasAssertions()
+    it('is bidirectional for all home values', ({ expect }) => {
+      expect.assertions(5)
 
       for (const [home, classic] of Object.entries(operationModeToClassic)) {
         expect(operationModeFromClassic[classic]).toBe(home)
@@ -57,8 +57,8 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
       expect(fanSpeedFromClassic[ClassicFanSpeed.silent]).toBe('Auto')
     })
 
-    it('maps home strings back to classic values', () => {
-      expect.hasAssertions()
+    it('maps home strings back to classic values', ({ expect }) => {
+      expect.assertions(6)
 
       for (const [home, classic] of Object.entries(fanSpeedToClassic)) {
         expect(fanSpeedFromClassic[classic]).toBe(home)
@@ -100,8 +100,8 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
       expect(horizontalFromClassic[classic]).toBe(home)
     })
 
-    it('is bidirectional for all mappable values', () => {
-      expect.hasAssertions()
+    it('is bidirectional for all mappable values', ({ expect }) => {
+      expect.assertions(8)
 
       for (const [home, classic] of Object.entries(horizontalToClassic)) {
         expect(horizontalFromClassic[classic]).toBe(home)
@@ -122,8 +122,8 @@ describe.concurrent('enum mappings between Classic and Home APIs', () => {
       expect(verticalFromClassic[classic]).toBe(home)
     })
 
-    it('is bidirectional for all values', () => {
-      expect.hasAssertions()
+    it('is bidirectional for all values', ({ expect }) => {
+      expect.assertions(7)
 
       for (const [home, classic] of Object.entries(verticalToClassic)) {
         expect(verticalFromClassic[classic]).toBe(home)
