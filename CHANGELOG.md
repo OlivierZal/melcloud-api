@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Other
+
+- Claude automation workflows (mirrors [OlivierZal/com.melcloud#1409](https://github.com/OlivierZal/com.melcloud/pull/1409)): every newly opened issue is triaged automatically — existing labels applied, duplicates looked up, one diagnostic comment posted; collaborator issues that @-mention Claude keep their interactive `claude.yml` handling — and a red `CI`/`Zizmor` run on a dependabot branch triggers one auto-fix attempt that diagnoses from the failed logs, fixes on the branch, verifies the full suite, and pushes through the Claude GitHub App token so CI re-runs and the existing auto-merge completes. The `workflow_run` trigger is deliberate (dependabot-triggered runs get a read-only token and cannot reach `CLAUDE_CODE_OAUTH_TOKEN`; the dependabot actor gate doubles as the loop guard) and is ignored for `dangerous-triggers` in the zizmor config.
+
 ## [41.1.0] - 2026-07-14
 
 ### Added
