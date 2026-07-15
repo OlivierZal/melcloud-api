@@ -57,6 +57,12 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   the `this` rule-off (there is no class body to put `this` in) and the
   `_context` unused-parameter pattern (the context parameter pins the
   decorator kind at type level even when unused — do not remove it).
+- A config-level `'off'` with a one-line reason is not a disable: it
+  is the triage ledger for opt-in rules that were evaluated and
+  refused (tool-ownership overlap, platform floor, absent domain).
+  Disables suppress an adopted rule; ledger entries record a verdict —
+  re-evaluate one when its stated reason expires (target bump, new
+  tooling).
 - Zero-warning policy: every enabled rule is at `error`.
 - Metric caps (`complexity`, `max-depth`, `vitest/max-nested-describe`) are
   pinned to measured codebase ceilings: exceeding one means refactor, not
