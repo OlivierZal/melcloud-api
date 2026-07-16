@@ -174,6 +174,10 @@ export abstract class BaseAPI implements Disposable {
   // injected dependencies, not in the policy itself.
   readonly #authRetryPolicy: AuthRetryPolicy
 
+  // One event per loss episode: rearmed by any cycle observed
+  // authenticated again (including the post-auth sync of a re-login).
+  #hasEmittedAuthenticationLost = false
+
   readonly #rateLimitPolicy: RateLimitPolicy
 
   // Single in-flight refresh handle. Set when the first `ensureSession`
@@ -344,7 +348,9 @@ export abstract class BaseAPI implements Disposable {
     if (await this.tryReuseSession()) {
       return
     }
-    await this.resumeSession()
+    if (!(await this.resumeSession()) && this.#hasRecoverableState()) {
+      this.#emitAuthenticationLostOnce()
+    }
   }
 
   /**
@@ -548,7 +554,19 @@ export abstract class BaseAPI implements Disposable {
       this.logger.error('Failed to fetch devices:', error)
       return []
     } finally {
-      this.syncManager.planNext()
+      if (this.isAuthenticated()) {
+        // A live session marks any earlier loss episode as recovered.
+        this.#hasEmittedAuthenticationLost = false
+        this.syncManager.planNext()
+      } else if (this.#hasRecoverableState()) {
+        // Rescheduling would hammer the account with a doomed sign-in
+        // every cycle: stay disarmed and surface the loss instead — a
+        // successful authenticate() re-arms the sync through its
+        // enforced post-auth registry sync.
+        this.#emitAuthenticationLostOnce()
+      }
+      // Unauthenticated with nothing to recover from (e.g. the settings
+      // page probing a never-configured API) stays silent AND disarmed.
     }
   }
 
@@ -650,6 +668,24 @@ export abstract class BaseAPI implements Disposable {
       )
     }
     return new CompositePolicy(policies)
+  }
+
+  #emitAuthenticationLostOnce(): void {
+    if (this.#hasEmittedAuthenticationLost) {
+      return
+    }
+
+    this.#hasEmittedAuthenticationLost = true
+    this.events.emitAuthenticationLost()
+  }
+
+  // A loss is only a loss when there was something to restore — a
+  // persisted session or persisted credentials. Probing an API that was
+  // never configured must neither notify nor look like an expiry.
+  #hasRecoverableState(): boolean {
+    return (
+      this.hasPersistedSession() || this.resolvePersistedCredentials() !== null
+    )
   }
 
   async #runWithEvents<T>(

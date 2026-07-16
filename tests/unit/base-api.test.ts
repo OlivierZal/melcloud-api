@@ -24,6 +24,23 @@ import {
   mockTemporalNowInstant,
 } from '../helpers.ts'
 
+// Observes the auto-sync timer firing (planNext armed) — module-scoped
+// because an arrow referencing `this` inside super() arguments is
+// rejected before super binds it.
+const syncCallbackMock = vi
+  .fn<() => Promise<void>>()
+  .mockResolvedValue(undefined)
+
+// Shared work stubs for the runSyncCycle tests (outer scope per
+// unicorn/consistent-function-scoping).
+const failingWork = vi
+  .fn<() => Promise<never[]>>()
+  .mockRejectedValue(new Error('boom'))
+const successfulWork = vi.fn<() => Promise<never[]>>().mockResolvedValue([])
+const createLostSpy = (): ReturnType<
+  typeof vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>
+> => vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+
 const { client: mockHttpClient, requestSpy: mockRequest } =
   createMockHttpClient('https://test.api')
 
@@ -68,9 +85,7 @@ class TestAPI extends BaseAPI {
         defaultSyncIntervalMinutes: false,
         httpConfig: { baseURL: 'https://test.api' },
         rateLimitHours: 2,
-        syncCallback: async () => {
-          // stub: sync is exercised by tests that drive it explicitly
-        },
+        syncCallback: syncCallbackMock,
       },
     )
     this.getAuthHeadersMock.mockReturnValue({})
@@ -106,6 +121,11 @@ class TestAPI extends BaseAPI {
     config: Record<string, unknown> = {},
   ): Promise<HttpResponse<T>> {
     return this.request<T>(method, url, config)
+  }
+
+  /** Expose the protected runSyncCycle for direct testing. */
+  public async callRunSyncCycle<T>(work: () => Promise<T[]>): Promise<T[]> {
+    return this.runSyncCycle(work)
   }
 
   public override isAuthenticated(): boolean {
@@ -766,5 +786,118 @@ describe(normalizeUnauthorized, () => {
     const native = new Error('network')
 
     expect(normalizeUnauthorized(native)).toBeNull()
+  })
+})
+
+describe('authentication-lost lifecycle', () => {
+  it('disarms the auto-sync and fires once when a cycle ends unauthenticated with recoverable state', async () => {
+    vi.useFakeTimers()
+    try {
+      const onAuthenticationLost = createLostSpy()
+      const api = new TestAPI({
+        events: { onAuthenticationLost },
+        settingManager: createSettingStore({ password: 'p', username: 'u' })
+          .settingManager,
+        syncIntervalMinutes: 1,
+      })
+      api.isAuthenticatedMock.mockReturnValue(false)
+
+      await api.callRunSyncCycle(failingWork)
+      await api.callRunSyncCycle(failingWork)
+      await vi.advanceTimersByTimeAsync(120_000)
+
+      expect(onAuthenticationLost).toHaveBeenCalledTimes(1)
+      expect(syncCallbackMock).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('stays silent and disarmed when nothing was ever persisted (probing an unconfigured API)', async () => {
+    vi.useFakeTimers()
+    try {
+      const onAuthenticationLost = createLostSpy()
+      const api = new TestAPI({
+        events: { onAuthenticationLost },
+        syncIntervalMinutes: 1,
+      })
+      api.isAuthenticatedMock.mockReturnValue(false)
+
+      await api.callRunSyncCycle(failingWork)
+      await vi.advanceTimersByTimeAsync(120_000)
+
+      expect(onAuthenticationLost).not.toHaveBeenCalled()
+      expect(syncCallbackMock).not.toHaveBeenCalled()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('keeps rescheduling on a transient failure while still authenticated', async () => {
+    vi.useFakeTimers()
+    try {
+      const onAuthenticationLost = createLostSpy()
+      const api = new TestAPI({
+        events: { onAuthenticationLost },
+        syncIntervalMinutes: 1,
+      })
+
+      await api.callRunSyncCycle(failingWork)
+      await vi.advanceTimersByTimeAsync(60_000)
+
+      expect(onAuthenticationLost).not.toHaveBeenCalled()
+      expect(syncCallbackMock).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires again for a new loss episode after a recovery', async () => {
+    vi.useFakeTimers()
+    try {
+      const onAuthenticationLost = createLostSpy()
+      const api = new TestAPI({
+        events: { onAuthenticationLost },
+        settingManager: createSettingStore({ password: 'p', username: 'u' })
+          .settingManager,
+        syncIntervalMinutes: 1,
+      })
+
+      api.isAuthenticatedMock.mockReturnValue(false)
+      await api.callRunSyncCycle(failingWork)
+      api.isAuthenticatedMock.mockReturnValue(true)
+      await api.callRunSyncCycle(successfulWork)
+      api.isAuthenticatedMock.mockReturnValue(false)
+      await api.callRunSyncCycle(failingWork)
+
+      expect(onAuthenticationLost).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('fires at boot when persisted credentials cannot restore the session', async () => {
+    const onAuthenticationLost = createLostSpy()
+    const api = new TestAPI({
+      events: { onAuthenticationLost },
+      settingManager: createSettingStore({ password: 'p', username: 'u' })
+        .settingManager,
+    })
+    api.isAuthenticatedMock.mockReturnValue(false)
+    api.doAuthenticateMock.mockRejectedValue(new Error('nope'))
+
+    await api.initialize()
+
+    expect(onAuthenticationLost).toHaveBeenCalledTimes(1)
+  })
+
+  it('stays silent at boot when nothing was persisted', async () => {
+    const onAuthenticationLost = createLostSpy()
+    const api = new TestAPI({ events: { onAuthenticationLost } })
+    api.isAuthenticatedMock.mockReturnValue(false)
+
+    await api.initialize()
+
+    expect(onAuthenticationLost).not.toHaveBeenCalled()
   })
 })
