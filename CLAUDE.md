@@ -93,6 +93,15 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 
 ## Repo process
 
+- After every push, monitor the triggered pipelines to completion — the
+  PR checks after a push, the publish run after a release — and act on
+  the outcome: rerun transient infra failures (a SonarCloud 504 is not
+  a finding), fix real ones. Work is not done while its pipeline is red
+  or unwatched.
+- Every review thread (Copilot or human) must end RESOLVED: with a code
+  change when the point holds, or with a reasoned reply when it does
+  not — verify claims against sources before acting either way. Resolve
+  the thread once settled; none left dangling.
 - GitHub merge queue is impossible here: the repo is user-owned and the
   feature is org-only (verified via API — no ruleset payload enables it).
   Dependabot PRs auto-merge via `gh pr merge --auto`; the `merge_group`
