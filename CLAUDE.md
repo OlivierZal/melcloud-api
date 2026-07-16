@@ -9,6 +9,11 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 - `npm run lint` / `npm run lint:fix` — ESLint (runs with an 8 GB heap).
 - `npm test` / `npm run test:coverage` — vitest; coverage must stay at 100%.
 - `npm run typecheck` — `tsc` from `@typescript/native` (TypeScript 7);
+  The classic `typescript` devDependency stays pinned to the newest line
+  typescript-eslint supports (`~6.0.x`; its peer range excludes TS 7):
+  it exists only for typescript-eslint's type-aware linting — the real
+  compiler is `@typescript/native`. Dependabot ignores its majors; move
+  the pin when typescript-eslint announces TypeScript 7 support.
   does not cover `*.config.ts` (the lint does). The tooling (typedoc,
   typescript-eslint) still resolves the separate `typescript` 6.x install.
 - `npm run format` / `npm run format:fix` — prettier.
