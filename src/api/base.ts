@@ -3,7 +3,11 @@ import { randomUUID } from 'node:crypto'
 import type { z } from 'zod'
 
 import { setting } from '../decorators/index.ts'
-import { AuthenticationError, RateLimitError } from '../errors/index.ts'
+import {
+  AuthenticationError,
+  AuthenticationThrottledError,
+  RateLimitError,
+} from '../errors/index.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
@@ -26,6 +30,8 @@ import {
   RetryGuard,
   TransientRetryPolicy,
 } from '../resilience/index.ts'
+import { Temporal } from '../temporal.ts'
+import { MS_PER_MINUTE } from '../time-units.ts'
 import {
   type ApiRequestError,
   type LoginCredentials,
@@ -106,6 +112,16 @@ const DEFAULT_TIMEOUT_MS = 30_000
 // it is more likely to mask bugs than reflect a real product need.
 const DEFAULT_AUTH_RETRY_COOLDOWN_MS = 1000
 
+// Automatic re-login backoff after a REJECTED sign-in: MELCloud
+// throttles logins aggressively (Classic `ErrorId 6`) while staying
+// generous with requests on an existing session, so hammering the login
+// endpoint keeps a lockout alive. Transport failures do not arm it (the
+// normal retry paths handle those); an explicit `authenticate()` — the
+// user re-submitting credentials — bypasses the gate and resets it on
+// success.
+const LOGIN_BACKOFF_FAILURE_MS = 900_000
+const LOGIN_BACKOFF_THROTTLE_MS = 7_200_000
+
 /**
  * Subclass-internal options injected into the {@link BaseAPI}
  * constructor. Distinct from {@link BaseAPIConfig} (the user-facing
@@ -173,6 +189,13 @@ export abstract class BaseAPI implements Disposable {
   // state (rate-limit gate, retry guard) lives in the policy's
   // injected dependencies, not in the policy itself.
   readonly #authRetryPolicy: AuthRetryPolicy
+
+  // One event per loss episode: rearmed by any cycle observed
+  // authenticated again (including the post-auth sync of a re-login).
+  #hasEmittedAuthenticationLost = false
+
+  // Epoch-ms deadline before which automatic re-logins are refused.
+  #loginBackoffUntil: number | null = null
 
   readonly #rateLimitPolicy: RateLimitPolicy
 
@@ -312,7 +335,13 @@ export abstract class BaseAPI implements Disposable {
     // Explicit login starts from a clean slate — enforced here so no
     // subclass can forget it (mirrors the post-auth sync below).
     this.clearPersistedSession()
-    await this.doAuthenticate(credentials)
+    try {
+      await this.doAuthenticate(credentials)
+    } catch (error) {
+      this.#armLoginBackoff(error)
+      throw error
+    }
+    this.#loginBackoffUntil = null
     await this.syncRegistry()
   }
 
@@ -344,7 +373,9 @@ export abstract class BaseAPI implements Disposable {
     if (await this.tryReuseSession()) {
       return
     }
-    await this.resumeSession()
+    if (!(await this.resumeSession()) && this.#hasRecoverableState()) {
+      this.#emitAuthenticationLostOnce()
+    }
   }
 
   /**
@@ -376,6 +407,9 @@ export abstract class BaseAPI implements Disposable {
    * if the distinction matters).
    */
   public async resumeSession(): Promise<boolean> {
+    if (this.#isLoginBackedOff()) {
+      return false
+    }
     const credentials = this.resolvePersistedCredentials()
     if (credentials === null) {
       return false
@@ -548,7 +582,19 @@ export abstract class BaseAPI implements Disposable {
       this.logger.error('Failed to fetch devices:', error)
       return []
     } finally {
-      this.syncManager.planNext()
+      if (this.isAuthenticated()) {
+        // A live session marks any earlier loss episode as recovered.
+        this.#hasEmittedAuthenticationLost = false
+        this.syncManager.planNext()
+      } else if (this.#hasRecoverableState()) {
+        // Rescheduling would hammer the account with a doomed sign-in
+        // every cycle: stay disarmed and surface the loss instead — a
+        // successful authenticate() re-arms the sync through its
+        // enforced post-auth registry sync.
+        this.#emitAuthenticationLostOnce()
+      }
+      // Unauthenticated with nothing to recover from (e.g. the settings
+      // page probing a never-configured API) stays silent AND disarmed.
     }
   }
 
@@ -603,6 +649,23 @@ export abstract class BaseAPI implements Disposable {
     return this.reuseSucceeded()
   }
 
+  #armLoginBackoff(error: unknown): void {
+    if (!(error instanceof AuthenticationError)) {
+      // A transport failure is not a rejected login: the normal retry
+      // paths own those, and pausing sign-ins would mask a mere blip.
+      return
+    }
+    const backoffMs =
+      error instanceof AuthenticationThrottledError ?
+        LOGIN_BACKOFF_THROTTLE_MS
+      : LOGIN_BACKOFF_FAILURE_MS
+    this.#loginBackoffUntil =
+      Temporal.Now.instant().epochMilliseconds + backoffMs
+    this.logger.error(
+      `Automatic sign-ins paused for ${String(Math.round(backoffMs / MS_PER_MINUTE))} minutes after a rejected login`,
+    )
+  }
+
   /**
    * Build the per-request resilience pipeline. Order matters — outer
    * policies see the attempt first: rate-limit guards the entry
@@ -650,6 +713,31 @@ export abstract class BaseAPI implements Disposable {
       )
     }
     return new CompositePolicy(policies)
+  }
+
+  #emitAuthenticationLostOnce(): void {
+    if (this.#hasEmittedAuthenticationLost) {
+      return
+    }
+
+    this.#hasEmittedAuthenticationLost = true
+    this.events.emitAuthenticationLost()
+  }
+
+  // A loss is only a loss when there was something to restore — a
+  // persisted session or persisted credentials. Probing an API that was
+  // never configured must neither notify nor look like an expiry.
+  #hasRecoverableState(): boolean {
+    return (
+      this.hasPersistedSession() || this.resolvePersistedCredentials() !== null
+    )
+  }
+
+  #isLoginBackedOff(): boolean {
+    return (
+      this.#loginBackoffUntil !== null &&
+      Temporal.Now.instant().epochMilliseconds < this.#loginBackoffUntil
+    )
   }
 
   async #runWithEvents<T>(

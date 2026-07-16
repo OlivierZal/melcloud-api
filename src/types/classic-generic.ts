@@ -406,6 +406,7 @@ export interface ClassicLoginData {
     readonly ContextKey: string
     readonly Expiry: string
   } | null
+  readonly ErrorId?: number | null | undefined
 }
 
 /**

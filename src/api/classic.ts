@@ -3,7 +3,10 @@ import { Agent } from 'undici'
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
 import { setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
-import { AuthenticationError } from '../errors/index.ts'
+import {
+  AuthenticationError,
+  AuthenticationThrottledError,
+} from '../errors/index.ts'
 import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
 import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
@@ -71,6 +74,8 @@ const APP_VERSION = '1.38.4.0'
 
 const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 5
+
+const LOGIN_THROTTLE_ERROR_ID = 6
 
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
@@ -635,7 +640,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     password,
     username,
   }: LoginCredentials): Promise<void> {
-    const { LoginData: loginData } = await this.login({
+    const { ErrorId: errorId, LoginData: loginData } = await this.login({
       postData: {
         AppVersion: APP_VERSION,
         Email: username,
@@ -645,7 +650,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       },
     })
     if (loginData === null) {
-      throw new AuthenticationError('MELCloud Classic rejected the credentials')
+      // ErrorId 6 is MELCloud's login throttle (LoginStatus 6, high
+      // LoginAttempts): the credentials may be perfectly valid — asking
+      // the user to re-log would keep the lockout alive.
+      throw errorId === LOGIN_THROTTLE_ERROR_ID ?
+          new AuthenticationThrottledError(
+            'MELCloud is temporarily blocking sign-ins (too many attempts)',
+          )
+        : new AuthenticationError('MELCloud Classic rejected the credentials')
     }
     this.username = username
     this.password = password

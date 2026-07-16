@@ -18,6 +18,8 @@ import {
   type TypedHomeDeviceData,
   HomeRegistry,
 } from '../entities/home-registry.ts'
+import { AuthenticationThrottledError } from '../errors/index.ts'
+import { isHttpError } from '../http/index.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
 import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
@@ -36,6 +38,7 @@ import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
+const HTTP_TOO_MANY_REQUESTS = 429
 const ATW_UNIT_PATH = '/monitor/atwunit'
 
 /**
@@ -486,14 +489,23 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       // of the Classic `LoginData: null → AuthenticationError` path).
       // Non-401 errors (PAR failures, Cognito redirect chain issues,
       // network timeouts) propagate unchanged.
+      if (
+        isHttpError(error) &&
+        error.response.status === HTTP_TOO_MANY_REQUESTS
+      ) {
+        // The BFF/Cognito login throttle — the Home mirror of Classic's
+        // ErrorId 6. Valid credentials, blocked endpoint: back off.
+        throw new AuthenticationThrottledError(
+          'MELCloud Home is temporarily blocking sign-ins (too many attempts)',
+        )
+      }
       const authError = normalizeUnauthorized(error)
       if (authError !== null) {
         throw authError
       }
       throw error
     }
-    this.password = password
-    this.username = username
+    this.applyCredentials(username, password)
   }
 
   protected getAuthHeaders(): Record<string, string> {

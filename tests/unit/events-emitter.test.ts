@@ -107,4 +107,38 @@ describe(LifecycleEmitter, () => {
       expect.any(Error),
     )
   })
+
+  it('forwards onAuthenticationLost and tolerates its absence', () => {
+    const logger = createLogger()
+    const onAuthenticationLost =
+      vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+
+    const emitter = new LifecycleEmitter({ onAuthenticationLost }, logger)
+    const emptyEmitter = new LifecycleEmitter({}, logger)
+
+    emitter.emitAuthenticationLost()
+
+    expect(onAuthenticationLost).toHaveBeenCalledTimes(1)
+    expect(() => {
+      emptyEmitter.emitAuthenticationLost()
+    }).not.toThrow()
+    expect(logger.error).not.toHaveBeenCalled()
+  })
+
+  it('logs and swallows a throwing onAuthenticationLost callback', () => {
+    const logger = createLogger()
+    const emitter = new LifecycleEmitter(
+      {
+        onAuthenticationLost: (): void => {
+          throw new Error('observer boom')
+        },
+      },
+      logger,
+    )
+
+    expect(() => {
+      emitter.emitAuthenticationLost()
+    }).not.toThrow()
+    expect(logger.error).toHaveBeenCalledTimes(1)
+  })
 })

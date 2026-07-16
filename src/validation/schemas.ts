@@ -28,6 +28,7 @@ import { ValidationError } from '../errors/index.ts'
 /** Classic /Login/ClientLogin3 response. */
 export const ClassicLoginDataSchema: z.ZodType<ClassicLoginData> =
   z.looseObject({
+    ErrorId: z.number().nullable().optional(),
     LoginData: z
       .looseObject({
         ContextKey: z.string(),

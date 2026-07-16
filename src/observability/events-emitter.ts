@@ -25,6 +25,12 @@ export class LifecycleEmitter {
     this.#logger = logger
   }
 
+  public emitAuthenticationLost(): void {
+    this.#safeInvoke('onAuthenticationLost', () =>
+      this.#events?.onAuthenticationLost?.(),
+    )
+  }
+
   public emitComplete(event: RequestCompleteEvent): void {
     this.#safeInvoke('onRequestComplete', () =>
       this.#events?.onRequestComplete?.(event),

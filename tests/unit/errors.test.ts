@@ -92,7 +92,7 @@ describe.concurrent(isAPIError, () => {
       new RateLimitError('x', { retryAfter: null, unblockAt: null }),
     ],
     ['NetworkError', new NetworkError('x')],
-  ])('returns true for %s', (_name, error) => {
+  ])('returns true for %s', (_name, error: unknown) => {
     expect(isAPIError(error)).toBe(true)
   })
 
