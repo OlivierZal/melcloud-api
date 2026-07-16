@@ -1092,4 +1092,15 @@ describe('mELCloud Classic API', () => {
       )
     })
   })
+
+  it('classifies ErrorId 6 as a login throttle, not bad credentials', async () => {
+    const { AuthenticationThrottledError } =
+      await import('../../src/errors/index.ts')
+    mockRequest.mockResolvedValue(wrap({ ErrorId: 6, LoginData: null }))
+    const api = await createApi()
+
+    await expect(
+      api.authenticate({ password: 'p', username: 'u@test.com' }),
+    ).rejects.toThrow(AuthenticationThrottledError)
+  })
 })

@@ -9,7 +9,11 @@ import type {
   RequestStartEvent,
 } from '../../src/api/types.ts'
 import { BaseAPI, normalizeUnauthorized } from '../../src/api/base.ts'
-import { AuthenticationError, RateLimitError } from '../../src/errors/index.ts'
+import {
+  AuthenticationError,
+  AuthenticationThrottledError,
+  RateLimitError,
+} from '../../src/errors/index.ts'
 import { type HttpResponse, HttpError } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
 import {
@@ -899,5 +903,105 @@ describe('authentication-lost lifecycle', () => {
     await api.initialize()
 
     expect(onAuthenticationLost).not.toHaveBeenCalled()
+  })
+})
+
+describe('automatic login backoff', () => {
+  it('pauses automatic re-logins after a rejected sign-in and retries past the window', async () => {
+    vi.useFakeTimers()
+    mockTemporalNowInstant()
+    try {
+      const api = new TestAPI({
+        settingManager: createSettingStore({ password: 'p', username: 'u' })
+          .settingManager,
+      })
+      api.doAuthenticateMock.mockRejectedValue(new AuthenticationError('bad'))
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('bad')
+      await expect(api.resumeSession()).resolves.toBe(false)
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
+
+      vi.advanceTimersByTime(900_001)
+
+      await expect(api.resumeSession()).resolves.toBe(false)
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('widens the pause to two hours on a throttled sign-in', async () => {
+    vi.useFakeTimers()
+    mockTemporalNowInstant()
+    try {
+      const api = new TestAPI({
+        settingManager: createSettingStore({ password: 'p', username: 'u' })
+          .settingManager,
+      })
+      api.doAuthenticateMock.mockRejectedValue(
+        new AuthenticationThrottledError('locked'),
+      )
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('locked')
+
+      vi.advanceTimersByTime(900_001)
+
+      await expect(api.resumeSession()).resolves.toBe(false)
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
+
+      vi.advanceTimersByTime(6_300_000)
+
+      await expect(api.resumeSession()).resolves.toBe(false)
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not arm on transport failures', async () => {
+    const api = new TestAPI({
+      settingManager: createSettingStore({ password: 'p', username: 'u' })
+        .settingManager,
+    })
+    api.doAuthenticateMock.mockRejectedValue(new Error('socket hang up'))
+
+    await expect(
+      api.authenticate({ password: 'p', username: 'u' }),
+    ).rejects.toThrow('socket hang up')
+    await expect(api.resumeSession()).resolves.toBe(false)
+
+    expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('lets an explicit sign-in through and clears the gate on success', async () => {
+    vi.useFakeTimers()
+    mockTemporalNowInstant()
+    try {
+      const api = new TestAPI({
+        settingManager: createSettingStore({ password: 'p', username: 'u' })
+          .settingManager,
+      })
+      api.doAuthenticateMock.mockRejectedValueOnce(
+        new AuthenticationError('bad'),
+      )
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('bad')
+
+      await api.authenticate({ password: 'right', username: 'u' })
+
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
+
+      await api.resumeSession()
+
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(3)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

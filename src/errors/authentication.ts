@@ -6,5 +6,5 @@ import { APIError } from './base.ts'
  * @category Errors
  */
 export class AuthenticationError extends APIError {
-  public override readonly name = 'AuthenticationError'
+  public override readonly name: string = 'AuthenticationError'
 }

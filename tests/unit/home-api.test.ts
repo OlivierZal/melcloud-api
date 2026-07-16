@@ -2492,4 +2492,77 @@ describe('melcloud home API', () => {
       )
     })
   })
+
+  it('classifies HTTP 429 from the token exchange as a login throttle', async () => {
+    mockFetch
+      .mockResolvedValueOnce(
+        mockFetchResponse(
+          { request_uri: 'urn:ietf:params:oauth:request_uri:test' },
+          {},
+          200,
+        ),
+      )
+      .mockResolvedValueOnce(
+        mockFetchResponse(
+          '',
+          { location: `${AUTH_BASE}/connect/redirect` },
+          302,
+        ),
+      )
+      .mockResolvedValueOnce(
+        mockFetchResponse(
+          '',
+          { location: `${COGNITO}/oauth2/authorize?client_id=test` },
+          302,
+        ),
+      )
+      .mockResolvedValueOnce(
+        mockFetchResponse(
+          '',
+          { location: `${COGNITO}/login?client_id=test` },
+          302,
+        ),
+      )
+      .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+      .mockResolvedValueOnce(
+        mockFetchResponse(
+          '',
+          {
+            location:
+              'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz',
+          },
+          302,
+        ),
+      )
+      .mockResolvedValueOnce(
+        mockFetchResponse(
+          '',
+          { location: 'https://auth.melcloudhome.com/ExternalLogin/Callback' },
+          302,
+        ),
+      )
+      .mockResolvedValueOnce(
+        mockFetchResponse(
+          "<script>window.location='melcloudhome://?code=auth-code&amp;state=xyz'</script>",
+          {},
+          200,
+        ),
+      )
+      .mockRejectedValueOnce(
+        new HttpError('Too Many Requests', {
+          config: { url: '/connect/token' },
+          response: { data: undefined, headers: {}, status: 429 },
+        }),
+      )
+    const api = await melCloudHomeApi.create({
+      baseURL: BASE_URL,
+      transport: mockHttpClient,
+    })
+    const { AuthenticationThrottledError } =
+      await import('../../src/errors/index.ts')
+
+    await expect(
+      api.authenticate({ password: 'locked', username: 'u@test.com' }),
+    ).rejects.toThrow(AuthenticationThrottledError)
+  })
 })

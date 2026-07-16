@@ -1,3 +1,4 @@
+export { AuthenticationThrottledError } from './authentication-throttled.ts'
 export { AuthenticationError } from './authentication.ts'
 export { APIError, isAPIError } from './base.ts'
 export { EntityNotFoundError } from './entity-not-found.ts'
