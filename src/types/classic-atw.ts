@@ -18,7 +18,7 @@ import type { ClassicGetDeviceData } from './classic-generic.ts'
  * @category Types
  */
 export interface ClassicEnergyDataAtw {
-  readonly CoP: readonly number[]
+  readonly CoP: readonly (number | null)[]
   readonly TotalCoolingConsumed: number
   readonly TotalCoolingProduced: number
   readonly TotalHeatingConsumed: number

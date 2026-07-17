@@ -10,6 +10,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Claude automation workflows (mirrors [OlivierZal/com.melcloud#1409](https://github.com/OlivierZal/com.melcloud/pull/1409)): every newly opened issue is triaged automatically — existing labels applied, duplicates looked up, one diagnostic comment posted; collaborator issues that @-mention Claude keep their interactive `claude.yml` handling — and a red `CI`/`Zizmor` run on a dependabot branch triggers one auto-fix attempt that diagnoses from the failed logs, fixes on the branch, verifies the full suite, and pushes through the Claude GitHub App token so CI re-runs and the existing auto-merge completes. The `workflow_run` trigger is deliberate (dependabot-triggered runs get a read-only token and cannot reach `CLAUDE_CODE_OAUTH_TOKEN`; the dependabot actor gate doubles as the loop guard) and is ignored for `dangerous-triggers` in the zizmor config.
 
+## [41.2.1] - 2026-07-17
+
+### Fixed
+
+- Classic `/EnergyCost/Report` ATW payloads carry `null` CoP entries for idle periods (live payload, 2026-07-17): the schema now accepts them, so ATW energy reports validate again instead of failing since the 41.2.0 hardening. Consumers already coerce `null` to 0.
+
+## [41.2.0] - 2026-07-16
+
+### Added
+
+- `LifecycleEvents.onAuthenticationLost` — emitted once per authentication-loss episode when a sync cycle ends unauthenticated with recoverable persisted state; any authenticated cycle re-arms it.
+- `AuthenticationThrottledError`: Classic `ClientLogin3` `ErrorId 6` and Home HTTP 429 now classify as MELCloud-side login throttling.
+
+### Changed
+
+- Login backoff: after a failed credential login, `resumeSession` stops re-attempting doomed logins (15 minutes after a failure, 2 hours when throttled); refresh-token exchanges are never gated.
+
 ## [41.1.0] - 2026-07-14
 
 ### Added
@@ -210,7 +227,9 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/41.1.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/41.2.1...HEAD
+[41.2.1]: https://github.com/OlivierZal/melcloud-api/compare/41.2.0...41.2.1
+[41.2.0]: https://github.com/OlivierZal/melcloud-api/compare/41.1.0...41.2.0
 [41.1.0]: https://github.com/OlivierZal/melcloud-api/compare/41.0.0...41.1.0
 [41.0.0]: https://github.com/OlivierZal/melcloud-api/compare/39.0.0...41.0.0
 [39.0.0]: https://github.com/OlivierZal/melcloud-api/compare/38.0.2...39.0.0

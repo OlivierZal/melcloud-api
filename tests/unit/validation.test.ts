@@ -409,6 +409,15 @@ describe('validation/schemas', () => {
       ).toThrow(/TotalHotWaterProduced/v)
     })
 
+    it('accepts an ATW payload with null CoP entries (idle periods)', () => {
+      expect(
+        ClassicEnergyDataAtwSchema.parse({
+          ...validClassicEnergyAtw,
+          CoP: [null, 2.5, null],
+        }),
+      ).toStrictEqual({ ...validClassicEnergyAtw, CoP: [null, 2.5, null] })
+    })
+
     it('rejects an ATW payload with a non-finite CoP entry', () => {
       expect(() =>
         ClassicEnergyDataAtwSchema.parse({

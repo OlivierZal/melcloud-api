@@ -418,10 +418,14 @@ export const ClassicEnergyDataAtaSchema: z.ZodType<ClassicEnergyDataAta> =
     UsageDisclaimerPercentages: z.string(),
   })
 
-/** Classic `/EnergyCost/Report` response for an ATW (air-to-water) device. */
+/**
+ * Classic `/EnergyCost/Report` response for an ATW (air-to-water) device.
+ * Idle periods report `null` CoP entries (live payload, 2026-07-17) —
+ * consumers already coerce them to 0 through `Number(...)` tolerance.
+ */
 export const ClassicEnergyDataAtwSchema: z.ZodType<ClassicEnergyDataAtw> =
   z.looseObject({
-    CoP: z.array(z.number()),
+    CoP: z.array(z.number().nullable()),
     TotalCoolingConsumed: z.number(),
     TotalCoolingProduced: z.number(),
     TotalHeatingConsumed: z.number(),
