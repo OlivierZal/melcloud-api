@@ -164,7 +164,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * Fetches cumulative-energy telemetry for this device over the given time window.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (e.g. `PT1H`).
+   * @param params.interval - Aggregation interval (`Minute`, `Hour`, `Day`, `Week` or `Month`).
    * @param params.to - ISO end timestamp (exclusive).
    * @returns The telemetry bundle, or a typed failure.
    */

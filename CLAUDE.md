@@ -37,6 +37,35 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   silently ignores unknown fields (a garbage key is accepted). Only a
   `/context` readback showing the change proves a write path exists —
   never add a `HomeAtwValues` field on acceptance alone.
+- Home telemetry, live-probed 2026-07-17 (guest account — guests DO get
+  telemetry): `/telemetry/telemetry/actual/{id}` validates `measure`
+  (unknown → 400, so the vocabulary is enumerable; only `rssi` and
+  `power` — the on/off boolean history — exist), but
+  `/telemetry/telemetry/energy/{id}` does NOT: an unknown measure gets a
+  200 with empty `measureData`, indistinguishable from a real idle
+  window. Never conclude "no data" from an empty payload without
+  re-checking the measure name against a known-good one.
+- Telemetry `interval` grammar is a case-insensitive .NET enum:
+  `Minute`, `Hour`, `Day`, `Week`, `Month`; anything else → 500,
+  missing → 400 (the `PT1H` ISO style never worked). Buckets are sparse
+  (only active periods return points) and near-live at `Minute` grain
+  (~1-2 min lag observed once — reconfirm under sustained activity).
+- Telemetry units differ per measure: ATW
+  `interval_energy_consumed/produced` are kWh per bucket; the ATA
+  `cumulative_energy_consumed_since_last_upload` is Wh, delivered as
+  100 Wh quantum pulses (a `100.0` point, then a `0.0` reset marker the
+  next minute). Hour/Day server aggregation sums those pulses correctly
+  on recent windows.
+- No instantaneous power exists anywhere on the Home API: not in
+  `/context` settings (raw enumeration 2026-07-17: 11 ATA / 15 ATW
+  names, none energy-bearing — no `CurrentEnergyConsumed/Produced`
+  analog to Classic ATW's list fields), not as an `actual` measure.
+  Any Home power figure must be derived from energy buckets ÷ duration.
+- Historical telemetry windows mix semantics: May–June 2026 ATA daily
+  values are counter samples (~10^5 Wh), not consumption — bound any
+  backfill by plausibility or restrict it to recent windows. Observed
+  retention ≥ 75/91 days (ATA/ATW), possibly just device onboarding
+  age.
 
 ## Lint doctrine
 

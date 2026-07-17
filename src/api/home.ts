@@ -310,11 +310,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * Fetch interval-energy telemetry for an ATW unit. Unlike ATA's
    * `cumulative_energy_consumed_since_last_upload`, ATW exposes
    * separate `interval_energy_consumed` and `interval_energy_produced`
-   * measures (Wh per interval, not cumulative).
+   * measures (kWh per bucket, not cumulative — live-probed 2026-07-17).
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (e.g. `Hour`, `Day`).
+   * @param params.interval - Aggregation interval (`Minute`, `Hour`, `Day`, `Week` or `Month`).
    * @param params.measure - Energy direction (`'consumed'` or `'produced'`).
    * @param params.to - ISO end timestamp (exclusive).
    * @returns Success with the telemetry bundle, or a typed failure.
