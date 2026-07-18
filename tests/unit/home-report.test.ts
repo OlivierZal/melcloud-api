@@ -80,9 +80,7 @@ describe(resolveHomeReportWindow, () => {
   it('defaults to a retention-bounded window ending now', () => {
     const window = resolveHomeReportWindow(undefined, PARIS)
 
-    expect(window.to.toInstant().toString()).toBe(
-      '2026-07-18T20:00:00Z'.replace('Z', 'Z'),
-    )
+    expect(window.to.toInstant().toString()).toBe('2026-07-18T20:00:00Z')
     expect(
       window.from
         .until(window.to)
