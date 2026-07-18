@@ -1,4 +1,8 @@
-import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
+import {
+  CLASSIC_FLAG_UNCHANGED,
+  ClassicDeviceType,
+  ClassicLabelType,
+} from '../constants.ts'
 import {
   classicUpdateDevice,
   convertToListDeviceData,
@@ -25,6 +29,7 @@ import {
   type Resolved,
   type Result,
   mapResult,
+  ok,
 } from '../types/index.ts'
 import {
   fromListToSetAta,
@@ -36,7 +41,10 @@ import {
   typedFromEntries,
   typedKeys,
 } from '../utils.ts'
-import type { ClassicDeviceFacade } from './classic-types.ts'
+import type {
+  ClassicDeviceFacade,
+  ClassicEnergyReportExtract,
+} from './classic-types.ts'
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
@@ -46,6 +54,27 @@ import { ClassicBaseFacade } from './classic-base.ts'
 
 // Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
+
+const ENERGY_REPORT_UNIT = 'kWh'
+
+// ISO 8601 weekday number for Sunday.
+const ISO_SUNDAY = 7
+
+// `EnergyCost/Report` day-of-week labels are .NET 0-based (Sunday = 0)
+// while the shared formatter expects the 1-based ISO labels of the
+// `Report/*` endpoints (Monday = 1): remap Sunday and keep Monday to
+// Saturday, on which the two conventions already agree.
+const toEnergyReportLabels = (
+  labels: readonly number[],
+  labelType: ClassicLabelType,
+): string[] =>
+  labels.map((label) =>
+    String(
+      label === 0 && labelType === ClassicLabelType.day_of_week ?
+        ISO_SUNDAY
+      : label,
+    ),
+  )
 
 // Calendar-day delta between two ISO wall-clock strings. Computed on
 // `PlainDateTime` so the result reflects the literal Y-M-D-h-m-s span
@@ -95,6 +124,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public override get devices(): ClassicDeviceAny[] {
     return [this.instance]
   }
+
+  // `null` marks device types without an energy report (ERV):
+  // `getEnergyReport` then resolves an empty chart without a wire call.
+  protected readonly extractEnergyReport:
+    ((data: ClassicEnergyData<T>) => ClassicEnergyReportExtract) | null = null
 
   protected readonly frostProtectionLocation = 'DeviceIds'
 
@@ -197,6 +231,36 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   ): Promise<Result<ClassicEnergyData<T>>> {
     return this.api.getEnergy<T>({
       postData: this.#buildReportPostData(query),
+    })
+  }
+
+  public async getEnergyReport(
+    query?: ReportQuery,
+  ): Promise<Result<ReportChartLineOptions>> {
+    const { extractEnergyReport } = this
+    const postData = this.#buildReportPostData(query)
+    const { FromDate: from, ToDate: to } = postData
+    if (extractEnergyReport === null) {
+      return ok({ from, labels: [], series: [], to, unit: ENERGY_REPORT_UNIT })
+    }
+    return mapResult(await this.api.getEnergy<T>({ postData }), (data) => {
+      const { labels, labelType, series } = extractEnergyReport(data)
+      return getChartLineOptions(
+        {
+          Data: series.map(({ data: values }) => [...values]),
+          FromDate: from,
+          Labels: toEnergyReportLabels(labels, labelType),
+          LabelType: labelType,
+          Points: labels.length,
+          Series: series.length,
+          ToDate: to,
+        },
+        {
+          legend: series.map(({ name }) => name),
+          locale: this.api.locale,
+          unit: ENERGY_REPORT_UNIT,
+        },
+      )
     })
   }
 

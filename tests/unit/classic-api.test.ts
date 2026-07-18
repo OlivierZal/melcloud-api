@@ -253,6 +253,8 @@ describe('mELCloud Classic API', () => {
       Dry: [0, 0.5],
       Fan: [0, 0.5],
       Heating: [0, 0.5],
+      Labels: [0, 1],
+      LabelType: 4,
       Other: [0, 0.5],
       TotalAutoConsumed: 0.5,
       TotalCoolingConsumed: 0.5,

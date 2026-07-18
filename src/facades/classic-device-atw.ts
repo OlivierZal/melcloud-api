@@ -5,6 +5,7 @@ import {
   ClassicOperationModeStateZone,
 } from '../constants.ts'
 import {
+  type ClassicEnergyDataAtw,
   type ClassicHotWaterState,
   type ClassicListDeviceDataAtw,
   type ClassicTemperatureDataAtw,
@@ -15,6 +16,7 @@ import {
   mapResult,
 } from '../types/index.ts'
 import { clampToRange } from '../utils.ts'
+import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicAtwFlags } from './classic-flags.ts'
@@ -24,6 +26,26 @@ const MIN_TANK_TEMPERATURE = 40
 const coolFlowTemperatureRange = { max: 25, min: 5 }
 const heatFlowTemperatureRange = { max: 60, min: 25 }
 const roomTemperatureRange = { max: 30, min: 10 }
+
+// `EnergyCost/Report` energy buckets charted by `getEnergyReport`:
+// the consumed stack first, then the produced stack, in MELCloud
+// display order. `CoP` is excluded — a ratio cannot share the kWh axis.
+const energyReportBuckets = [
+  'Heating',
+  'Cooling',
+  'HotWater',
+  'ProducedHeating',
+  'ProducedCooling',
+  'ProducedHotWater',
+] as const
+
+const extractEnergyReportAtw = (
+  data: ClassicEnergyDataAtw,
+): ClassicEnergyReportExtract => ({
+  labels: data.Labels,
+  labelType: data.LabelType,
+  series: energyReportBuckets.map((name) => ({ data: data[name], name })),
+})
 
 const hotWaterStateMap: Partial<
   Record<ClassicOperationModeState, ClassicOperationModeStateHotWater>
@@ -115,6 +137,10 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   public get zone1(): ClassicZoneState {
     return this.getZoneState('Zone1')
   }
+
+  protected override readonly extractEnergyReport: (
+    data: ClassicEnergyDataAtw,
+  ) => ClassicEnergyReportExtract = extractEnergyReportAtw
 
   protected override readonly internalTemperaturesLegend: readonly string[] = [
     'FlowTemperature',

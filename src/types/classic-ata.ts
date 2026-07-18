@@ -2,6 +2,7 @@ import type {
   ClassicDeviceType,
   ClassicFanSpeed,
   ClassicHorizontal,
+  ClassicLabelType,
   ClassicNonSilentFanSpeed,
   ClassicOperationMode,
   ClassicVertical,
@@ -17,6 +18,9 @@ import type { ClassicAreaID, ClassicBuildingID, ClassicFloorID } from './ids.ts'
 
 /**
  * Energy report payload for an ATA (air-to-air) device returned by `EnergyCost/Report`.
+ * The per-mode arrays are consumption buckets aligned with `Labels`;
+ * `Labels` is numeric on this endpoint (day-of-week entries are .NET
+ * 0-based, Sunday = 0, unlike the 1-based ISO labels of `Report/*`).
  * @category Types
  */
 export interface ClassicEnergyDataAta {
@@ -25,6 +29,8 @@ export interface ClassicEnergyDataAta {
   readonly Dry: readonly number[]
   readonly Fan: readonly number[]
   readonly Heating: readonly number[]
+  readonly Labels: readonly number[]
+  readonly LabelType: ClassicLabelType
   readonly Other: readonly number[]
   readonly TotalAutoConsumed: number
   readonly TotalCoolingConsumed: number

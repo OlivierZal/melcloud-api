@@ -35,8 +35,12 @@ export interface HomeAPIAdapter {
    * honor an upstream 429 `Retry-After`.
    */
   readonly isRateLimited: boolean
+  /** BCP-47 locale tag for chart labels ({@link HomeAPIConfig.locale}). */
+  readonly locale: string | undefined
   /** Home device registry with stable model references across syncs. */
   readonly registry: HomeRegistry
+  /** IANA timezone for chart windows ({@link HomeAPIConfig.timezone}). */
+  readonly timezone: string | undefined
   /** The currently authenticated user, or `null`. */
   readonly user: HomeUser | null
   /**
@@ -113,6 +117,18 @@ export interface HomeAPIAdapter {
 export interface HomeAPIConfig extends BaseAPIConfig {
   /** Base URL of the MELCloud Home BFF server. */
   readonly baseURL?: string | undefined
+  /**
+   * BCP-47 locale tag for report chart labels (dates, times).
+   * Defaults to the runtime locale when unset.
+   */
+  readonly locale?: string | undefined
+  /**
+   * IANA timezone identifier (e.g. `'Europe/Paris'`) used to render
+   * chart labels and resolve day/hour windows. The Home wire speaks
+   * UTC wall-clock (live-probed 2026-07-18); this timezone only
+   * affects local presentation. Defaults to UTC when unset.
+   */
+  readonly timezone?: string | undefined
 }
 
 /**

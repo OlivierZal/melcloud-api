@@ -1,5 +1,6 @@
 import type {
   ClassicDeviceType,
+  ClassicLabelType,
   ClassicOperationModeState,
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
@@ -15,10 +16,20 @@ import type { ClassicGetDeviceData } from './classic-generic.ts'
 
 /**
  * Energy report payload for an ATW (air-to-water) device returned by `EnergyCost/Report`.
+ * The consumed/produced arrays are energy buckets aligned with `Labels`;
+ * `Labels` is numeric on this endpoint (live payload, 2026-07-18).
  * @category Types
  */
 export interface ClassicEnergyDataAtw {
+  readonly Cooling: readonly number[]
   readonly CoP: readonly (number | null)[]
+  readonly Heating: readonly number[]
+  readonly HotWater: readonly number[]
+  readonly Labels: readonly number[]
+  readonly LabelType: ClassicLabelType
+  readonly ProducedCooling: readonly number[]
+  readonly ProducedHeating: readonly number[]
+  readonly ProducedHotWater: readonly number[]
   readonly TotalCoolingConsumed: number
   readonly TotalCoolingProduced: number
   readonly TotalHeatingConsumed: number

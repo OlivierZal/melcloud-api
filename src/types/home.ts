@@ -360,12 +360,31 @@ export interface HomeOverheatProtection {
 }
 
 /**
+ * One time range highlighted by a Home report. On the comfort-graph a
+ * labelled annotation is an ATW operation-mode band
+ * (`REPORT.COMFORT_GRAPH.OVERLAY_KEY.<MODE>`); annotations without a
+ * `label` (internal-temperatures report) mark missing-data ranges and
+ * carry no mode information. Styling keys are omitted like on
+ * {@link HomeReportDataset}.
+ * @category Types
+ */
+export interface HomeReportAnnotation {
+  readonly xMax: string
+  readonly xMin: string
+  readonly label?: string | undefined
+}
+
+/**
  * Wire-format temperature/signal report from MELCloud Home — one dataset per series, each holding `(x,y)` samples.
  * @category Types
  */
 export interface HomeReportData {
   readonly datasets: HomeReportDataset[]
   readonly reportPeriod: number | string
+  readonly annotations?: readonly HomeReportAnnotation[] | undefined
+  readonly from?: string | undefined
+  readonly previousTriggers?: readonly HomeReportTrigger[] | undefined
+  readonly to?: string | undefined
 }
 
 /**
@@ -389,6 +408,19 @@ export interface HomeReportDataset {
 export interface HomeReportPoint {
   readonly x: string
   readonly y: number
+}
+
+/**
+ * Last sample of a series before the report window — the seed the Home
+ * UI (and the facade resampler) carries forward so sparse setpoint
+ * series do not start the window blank. `value` is `null` (with a
+ * far-future `trigger` sentinel) when the series has no prior sample.
+ * @category Types
+ */
+export interface HomeReportTrigger {
+  readonly measure: string
+  readonly trigger: string
+  readonly value: number | null
 }
 
 export interface HomeTokenResponse {

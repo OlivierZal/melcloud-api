@@ -1,4 +1,5 @@
 export type {
+  ReportChartBand,
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
@@ -16,6 +17,7 @@ export { ClassicFacadeManager } from './classic-manager.ts'
 export {
   type ClassicDeviceFacade,
   type ClassicDeviceFacadeAny,
+  type ClassicEnergyReportExtract,
   type ClassicFacade,
   type ClassicFrostProtectionQuery,
   type ClassicHolidayModeQuery,

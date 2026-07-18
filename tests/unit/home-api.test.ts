@@ -370,6 +370,25 @@ describe('melcloud home API', () => {
       })
     })
 
+    it('exposes the configured locale and timezone for chart rendering', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi({
+        locale: 'fr-FR',
+        timezone: 'Europe/Paris',
+      })
+
+      expect(api.locale).toBe('fr-FR')
+      expect(api.timezone).toBe('Europe/Paris')
+    })
+
+    it('leaves locale and timezone undefined when unconfigured', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      expect(api.locale).toBeUndefined()
+      expect(api.timezone).toBeUndefined()
+    })
+
     it('should return unauthenticated when no credentials', async () => {
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,

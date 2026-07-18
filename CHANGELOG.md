@@ -4,7 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [42.0.0] - 2026-07-18
+
+### Changed
+
+- **Breaking:** the Home device facade report methods are now chart-ready, harmonized on the Classic contracts. `getTemperatures` (ATA and ATW) and ATW `getInternalTemperatures` return `Result<ReportChartLineOptions>` instead of raw `HomeReportData[]`: irregular wire samples are resampled onto a regular grid (hourly up to seven days, daily beyond) with last-observation-carried-forward, seeded from the wire's `previousTriggers`, under Classic legend names (`room_temperature` → `RoomTemperature`, `outside_temperature` → `OutdoorTemperature`); the ATW temperature chart merges the comfort-graph and internal-temperatures reports (the Classic wire cannot) and carries the comfort-graph operation-mode spans as background `bands`. Raw access remains available on the `HomeAPI` client methods.
+
+### Added
+
+- Classic `getEnergyReport(query?)` on the ATA and ATW device facades: the `/EnergyCost/Report` bucket arrays (per-mode consumption for ATA; consumed and produced per category for ATW, `CoP` excluded as a non-kWh ratio) as `ReportChartLineOptions` in `kWh`, with the endpoint's .NET 0-based day-of-week labels remapped to the ISO 1-based convention of the shared formatter. ERV resolves an empty chart without a wire call.
+- Home ATW `getOperationModes(query?)`: the comfort-graph operation-mode annotations aggregated into Classic-shaped pie data — same mode vocabulary (`HotWater`, `Heating`, `Cooling`, `FreezeStat`, `LegionellaPrevention`), values in fractional days over the window, unannotated time as `Stop`.
+- Home ATW `getHourlyTemperatures(hour?)`: the merged temperature series over one hour of today on a minute grid, with mode bands — a superset of the Classic hourly chart, whose wire only carries the internal series.
+- Home `getSignalStrength(hour?)` (both device types): RSSI telemetry resampled on a minute grid over one hour of today, unit `dBm`.
+- Home `getEnergyReport(query?)`: daily energy chart in `kWh` — ATA scales its watt-hour cumulative measure and charts omitted idle days as `0`; ATW charts one consumed and one produced series.
+- `locale` and `timezone` on `HomeAPIConfig`, mirroring the Classic configuration: the Home wire speaks UTC wall-clock (live-probed 2026-07-18), so the timezone only anchors chart windows and label rendering.
+- `ReportChartLineOptions.bands` (additive): optional operation-mode background bands as inclusive index ranges on the label grid; absent on every Classic chart.
+- Completed wire types (live-probed): `ClassicEnergyDataAta`/`ClassicEnergyDataAtw` now carry `Labels`/`LabelType` (and the six ATW bucket arrays); `HomeReportData` now carries `annotations`, `previousTriggers`, `from` and `to`.
 
 ### Other
 
@@ -245,7 +260,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/41.3.0...HEAD
+[42.0.0]: https://github.com/OlivierZal/melcloud-api/compare/41.3.0...42.0.0
 [41.3.0]: https://github.com/OlivierZal/melcloud-api/compare/41.2.3...41.3.0
 [41.2.3]: https://github.com/OlivierZal/melcloud-api/compare/41.2.2...41.2.3
 [41.2.2]: https://github.com/OlivierZal/melcloud-api/compare/41.2.1...41.2.2
