@@ -348,7 +348,9 @@ export const withMinuteClockLabels = (
     labels: options.labels.map((label) => {
       const minute = Number(label)
       return (
-          Number.isSafeInteger(minute) && minute >= 0 && minute <= MAX_MINUTE_LABEL
+          Number.isSafeInteger(minute) &&
+            minute >= 0 &&
+            minute <= MAX_MINUTE_LABEL
         ) ?
           formatter.format(new Temporal.PlainTime(hour, minute))
         : label
