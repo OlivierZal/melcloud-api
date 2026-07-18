@@ -1536,6 +1536,82 @@ describe('melcloud home API', () => {
   })
 
   describe('form parsing', () => {
+    it('should classify a refused submission with the Cognito reason', async () => {
+      // PAR, redirect chain to the login page
+      mockFetch
+        .mockResolvedValueOnce(mockFetchResponse({ request_uri: 'urn:test' }))
+        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+        // Credential POST: re-rendered login page, no redirect
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '<p id="errorMessage" class="errorMessage">Incorrect username or password.</p>',
+            {},
+            200,
+          ),
+        )
+      const logger = createLogger()
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        password: 'pass',
+        transport: mockHttpClient,
+        username: 'user@test.com',
+      })
+
+      expect(api.isAuthenticated()).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Session resume failed:',
+        expect.objectContaining({
+          message:
+            'MELCloud Home rejected the sign-in: Incorrect username or password.',
+          name: 'AuthenticationError',
+        }),
+      )
+    })
+
+    it('should classify a code-less callback with its landing details', async () => {
+      mockFetch
+        .mockResolvedValueOnce(mockFetchResponse({ request_uri: 'urn:test' }))
+        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+        // Credential POST → redirect to the callback
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            '',
+            {
+              location:
+                'https://auth.melcloudhome.com/signin-oidc-meu?state=xyz',
+            },
+            302,
+          ),
+        )
+        // Callback chain ends without a code but with the OIDC error
+        .mockResolvedValueOnce(
+          mockFetchResponse(
+            "<script>window.location='melcloudhome://?error=access_denied&amp;error_description=Password attempts exceeded'</script>",
+            {},
+            200,
+          ),
+        )
+      const logger = createLogger()
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        password: 'pass',
+        transport: mockHttpClient,
+        username: 'user@test.com',
+      })
+
+      expect(api.isAuthenticated()).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        'Session resume failed:',
+        expect.objectContaining({
+          message:
+            'No authorization code in callback (landed on melcloudhome://; error=access_denied; Password attempts exceeded)',
+          name: 'AuthenticationError',
+        }),
+      )
+    })
+
     it('should throw when form action is missing', async () => {
       // PAR succeeds
       mockFetch.mockResolvedValueOnce(

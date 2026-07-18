@@ -487,8 +487,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       // into the shared {@link AuthenticationError} domain type so
       // callers of `authenticate()` get a stable error shape (mirror
       // of the Classic `LoginData: null → AuthenticationError` path).
-      // Non-401 errors (PAR failures, Cognito redirect chain issues,
-      // network timeouts) propagate unchanged.
+      // Cognito refusals arrive already classified from token-auth;
+      // the remaining non-401 errors (PAR failures, network timeouts)
+      // propagate unchanged.
       if (
         isHttpError(error) &&
         error.response.status === HTTP_TOO_MANY_REQUESTS
