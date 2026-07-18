@@ -34,7 +34,12 @@ import {
   mapResult,
   toClassicDeviceId,
 } from '../types/index.ts'
-import { getChartLineOptions, withMinuteClockLabels } from '../utils.ts'
+import {
+  getChartLineOptions,
+  hoursUpTo,
+  mergeHourlyChartResults,
+  withMinuteClockLabels,
+} from '../utils.ts'
 import { HourSchema, parseOrThrow } from '../validation/index.ts'
 import type {
   ClassicFacade,
@@ -281,22 +286,19 @@ export abstract class ClassicBaseFacade<
   }
 
   public async getSignalStrength(
-    hour: Hour = this.currentHour(),
+    hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    return mapResult(
-      await this.api.getSignal({
-        postData: { devices: this.#deviceIds, hour },
-      }),
-      (data) =>
-        withMinuteClockLabels(
-          getChartLineOptions(data, {
-            legend: this.#deviceNames,
-            locale: this.api.locale,
-            unit: 'dBm',
-          }),
-          { hour, locale: this.api.locale },
-        ),
+    if (hour !== undefined) {
+      return this.#fetchSignalHour(hour)
+    }
+    // No hour: the whole of today, hour by hour — the wire only speaks
+    // one-hour windows.
+    const hourly = await Promise.all(
+      hoursUpTo(this.currentHour()).map(async (hourOfDay) =>
+        this.#fetchSignalHour(hourOfDay),
+      ),
     )
+    return mergeHourlyChartResults(hourly)
   }
 
   /**
@@ -349,6 +351,23 @@ export abstract class ClassicBaseFacade<
       HourSchema,
       Temporal.Now.plainTimeISO(this.api.timezone).hour,
       'currentHour',
+    )
+  }
+
+  async #fetchSignalHour(hour: Hour): Promise<Result<ReportChartLineOptions>> {
+    return mapResult(
+      await this.api.getSignal({
+        postData: { devices: this.#deviceIds, hour },
+      }),
+      (data) =>
+        withMinuteClockLabels(
+          getChartLineOptions(data, {
+            legend: this.#deviceNames,
+            locale: this.api.locale,
+            unit: 'dBm',
+          }),
+          { hour, locale: this.api.locale },
+        ),
     )
   }
 

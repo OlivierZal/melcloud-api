@@ -26,8 +26,10 @@ import type {
 } from './report-types.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 import {
+  type HomeChartGridUnit,
   type HomeChartWindow,
   fetchHomeReportChunks,
+  resolveHomeDayWindow,
   resolveHomeHourWindow,
   resolveHomeReportWindow,
   toHomeEnergyOptions,
@@ -389,21 +391,27 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   /**
-   * Fetches the hourly temperature chart — the merged comfort-graph and
-   * internal-temperatures series over one hour of today on a minute
-   * grid, with operation-mode background bands. The Home counterpart of
-   * the Classic `getHourlyTemperatures` contract (a superset: the
-   * Classic hourly wire only carries the internal series).
-   * @param hour - Hour of today (0-23); defaults to the current hour.
+   * Fetches the fine temperature chart — the merged comfort-graph and
+   * internal-temperatures series with operation-mode background bands,
+   * over the whole of today on a five-minute grid, or over one specific
+   * hour on a minute grid. The Home counterpart of the Classic
+   * `getHourlyTemperatures` contract (a superset: the Classic hourly
+   * wire only carries the internal series).
+   * @param hour - Optional hour of today (0-23); omitted covers today.
    * @returns Structured line chart options (`°C`), or a typed failure.
    */
   public async getHourlyTemperatures(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    return this.#fetchTemperatureChart(
-      resolveHomeHourWindow(hour, this.chartTimezone),
-      'minute',
-    )
+    return hour === undefined ?
+        this.#fetchTemperatureChart(
+          resolveHomeDayWindow(this.chartTimezone),
+          'fiveMinutes',
+        )
+      : this.#fetchTemperatureChart(
+          resolveHomeHourWindow(hour, this.chartTimezone),
+          'minute',
+        )
   }
 
   /**
@@ -527,7 +535,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   // series wins the dedup and the band annotations are present.
   async #fetchTemperatureChart(
     window: HomeChartWindow,
-    gridUnit?: 'minute',
+    gridUnit?: HomeChartGridUnit,
   ): Promise<Result<ReportChartLineOptions>> {
     const [comfort, internal] = await Promise.all([
       fetchHomeReportChunks(

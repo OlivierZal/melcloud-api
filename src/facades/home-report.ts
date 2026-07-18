@@ -21,7 +21,7 @@ import type {
  * on its own time grid), so every chart is rebuilt on a regular grid.
  * @category Facades
  */
-export type HomeChartGridUnit = 'day' | 'hour' | 'minute'
+export type HomeChartGridUnit = 'day' | 'fiveMinutes' | 'hour' | 'minute'
 
 /**
  * Report window resolved to absolute instants in the display timezone.
@@ -223,6 +223,7 @@ const seriesNameOverrides: Record<string, string> = {
 
 const durationByUnit: Record<HomeChartGridUnit, Temporal.DurationLike> = {
   day: { days: 1 },
+  fiveMinutes: { minutes: 5 },
   hour: { hours: 1 },
   minute: { minutes: 1 },
 }
@@ -316,6 +317,17 @@ export const resolveHomeHourWindow = (
 }
 
 /**
+ * Resolve the window from today's midnight to now in the display
+ * timezone — what the "today" charts (fine temperatures, signal) cover.
+ * @param timezone - IANA display timezone (UTC when unset).
+ * @returns The resolved window.
+ */
+export const resolveHomeDayWindow = (timezone: string): HomeChartWindow => {
+  const now = Temporal.Now.zonedDateTimeISO(timezone)
+  return { from: now.startOfDay(), to: now }
+}
+
+/**
  * Serialize a window into the ISO instant pair consumed by the raw
  * report/telemetry endpoints.
  * @param window - Resolved chart window.
@@ -366,8 +378,11 @@ const gridLabelOptions = (
   if (unit === 'day') {
     return { day: 'numeric', month: 'short' }
   }
+  if (unit === 'fiveMinutes' || unit === 'minute') {
+    return { hour: '2-digit', minute: '2-digit' }
+  }
+  // Only the hourly unit reaches this point.
   const isMultiDay =
-    unit === 'hour' &&
     window.from.until(window.to).total({
       relativeTo: window.from,
       unit: 'days',
@@ -696,15 +711,16 @@ export const toHomeEnergyOptions = ({
  * minute grid over the requested hour.
  * @param options - Conversion inputs.
  * @param options.data - Telemetry payload (`rssi` samples).
+ * @param options.gridUnit - Grid resolution (minute by default).
  * @param options.locale - BCP-47 locale tag for axis labels.
  * @param options.name - Series name (the device display name, matching
  * the Classic signal legend).
- * @param options.window - Resolved one-hour window (in the display
- * timezone).
+ * @param options.window - Resolved window (in the display timezone).
  * @returns Structured line chart options (`dBm`).
  */
 export const toHomeSignalOptions = ({
   data,
+  gridUnit = 'minute',
   locale,
   name,
   window,
@@ -712,6 +728,7 @@ export const toHomeSignalOptions = ({
   data: HomeEnergyData
   name: string
   window: HomeChartWindow
+  gridUnit?: HomeChartGridUnit | undefined
   locale?: string | undefined
 }): ReportChartLineOptions => {
   const samples = data.measureData
@@ -721,10 +738,10 @@ export const toHomeSignalOptions = ({
       Number(point.value),
     ])
     .toSorted(([first], [second]) => first - second)
-  const grid = buildGrid(window, 'minute')
+  const grid = buildGrid(window, gridUnit)
   return {
     from: window.from.toPlainDateTime().toString(),
-    labels: formatGridLabels({ grid, locale, unit: 'minute', window }),
+    labels: formatGridLabels({ grid, locale, unit: gridUnit, window }),
     series: [{ data: resampleSeries(samples, grid), name }],
     to: window.to.toPlainDateTime().toString(),
     unit: 'dBm',

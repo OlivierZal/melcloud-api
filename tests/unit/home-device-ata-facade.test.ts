@@ -446,5 +446,30 @@ describe('home device ata facade', () => {
       expect(value.series[0]?.name).toBe('Test ClassicDevice')
       expect(value.series[0]?.data.at(-1)).toBe(-66)
     })
+
+    it('covers today on a five-minute grid when no hour is given', async () => {
+      const api = createApi()
+      vi.mocked(api.getSignal).mockResolvedValue(
+        ok({
+          measureData: [
+            {
+              type: 'rssi',
+              values: [{ time: '2026-03-01 00:02:00.000000000', value: '-70' }],
+            },
+          ],
+        }),
+      )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      const value = okValue(await facade.getSignalStrength())
+
+      // Pinned to 12:00 UTC: midnight through now, 5-minute slots.
+      expect(api.getSignal).toHaveBeenCalledWith('device-1', {
+        from: '2026-03-01T00:00:00Z',
+        to: '2026-03-01T12:00:00Z',
+      })
+      expect(value.labels).toHaveLength(145)
+      expect(value.series[0]?.data[1]).toBe(-70)
+    })
   })
 })

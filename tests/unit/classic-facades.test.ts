@@ -28,6 +28,7 @@ import {
   isClassicAtwFacade,
   isClassicErvFacade,
 } from '../../src/facades/index.ts'
+import { Temporal } from '../../src/temporal.ts'
 import {
   type ClassicListDeviceDataAta,
   type ClassicSetDevicePostData,
@@ -294,14 +295,23 @@ describe('building facade', () => {
     expect(labels).toStrictEqual(['12:00', '12:30', '12:59', 'total'])
   })
 
-  it('defaults getSignalStrength hour to the current hour', async () => {
-    const { api, facade } = createBuildingFacade()
-    okValue(await facade.getSignalStrength())
+  it('covers the whole of today hour by hour when no hour is given', async () => {
+    vi.spyOn(Temporal.Now, 'plainTimeISO').mockReturnValue(
+      new Temporal.PlainTime(2),
+    )
+    try {
+      const { api, facade } = createBuildingFacade()
+      okValue(await facade.getSignalStrength())
 
-    const call = vi.mocked(api.getSignal).mock.calls[0]?.[0]
-
-    expect(call?.postData.hour).toBeGreaterThanOrEqual(0)
-    expect(call?.postData.hour).toBeLessThanOrEqual(23)
+      expect(api.getSignal).toHaveBeenCalledTimes(3)
+      expect(
+        vi
+          .mocked(api.getSignal)
+          .mock.calls.map(([{ postData }]) => postData.hour),
+      ).toStrictEqual([0, 1, 2])
+    } finally {
+      vi.mocked(Temporal.Now.plainTimeISO).mockRestore()
+    }
   })
 
   it('calls getTiles without selection', async () => {
@@ -883,14 +893,25 @@ describe('ata device facade', () => {
     expect(labels).toStrictEqual(['09:05'])
   })
 
-  it('defaults hourlyTemperatures hour to the current hour', async () => {
-    const { api, facade } = createAtaFacade()
-    okValue(await facade.getHourlyTemperatures())
+  it('covers the whole of today hour by hour when no hour is given', async () => {
+    vi.spyOn(Temporal.Now, 'plainTimeISO').mockReturnValue(
+      new Temporal.PlainTime(1),
+    )
+    try {
+      const { api, facade } = createAtaFacade()
+      const value = okValue(await facade.getHourlyTemperatures())
 
-    const call = vi.mocked(api.getHourlyTemperatures).mock.calls[0]?.[0]
-
-    expect(call?.postData.hour).toBeGreaterThanOrEqual(0)
-    expect(call?.postData.hour).toBeLessThanOrEqual(23)
+      expect(api.getHourlyTemperatures).toHaveBeenCalledTimes(2)
+      expect(
+        vi
+          .mocked(api.getHourlyTemperatures)
+          .mock.calls.map(([{ postData }]) => postData.hour),
+      ).toStrictEqual([0, 1])
+      // Two one-label hours concatenate into a two-label day.
+      expect(value.labels).toHaveLength(2)
+    } finally {
+      vi.mocked(Temporal.Now.plainTimeISO).mockRestore()
+    }
   })
 
   it('calls getTiles without selection', async () => {

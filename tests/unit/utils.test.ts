@@ -1,14 +1,19 @@
 import { describe, expect, it } from 'vitest'
 
+import type { ReportChartLineOptions } from '../../src/facades/index.ts'
+import { ok } from '../../src/types/index.ts'
 import {
   fromListToSetAta,
   fromSetToListAta,
+  hoursUpTo,
   isSetDeviceDataAtaInList,
   isSetDeviceDataAtaNotInList,
   isUpdateDeviceData,
+  mergeHourlyChartResults,
   omitUndefined,
   typedFromEntries,
 } from '../../src/utils.ts'
+import { cast, okValue } from '../helpers.ts'
 
 describe.concurrent('ata set-to-list conversion', () => {
   it('maps set keys to list keys', () => {
@@ -104,5 +109,78 @@ describe.concurrent(omitUndefined, () => {
 
   it('returns an empty object when every value is undefined', () => {
     expect(omitUndefined({ temperature: undefined })).toStrictEqual({})
+  })
+})
+
+describe.concurrent(hoursUpTo, () => {
+  it('lists midnight through the given hour', () => {
+    expect(hoursUpTo(0)).toStrictEqual([0])
+    expect(hoursUpTo(3)).toStrictEqual([0, 1, 2, 3])
+    expect(hoursUpTo(23)).toHaveLength(24)
+  })
+})
+
+const hourOptions = (
+  labels: string[],
+  data: (number | null)[],
+): ReturnType<typeof ok<ReportChartLineOptions>> =>
+  ok({
+    from: labels[0] ?? '',
+    labels,
+    series: [{ data, name: 'Signal' }],
+    to: labels.at(-1) ?? '',
+    unit: 'dBm',
+  })
+
+describe.concurrent(mergeHourlyChartResults, () => {
+  it('concatenates consecutive hours into one chart', () => {
+    const merged = okValue(
+      mergeHourlyChartResults([
+        hourOptions(['00:00', '00:30'], [-60, -61]),
+        hourOptions(['01:00', '01:30'], [-62, null]),
+      ]),
+    )
+
+    expect(merged.labels).toStrictEqual(['00:00', '00:30', '01:00', '01:30'])
+    expect(merged.series).toStrictEqual([
+      { data: [-60, -61, -62, null], name: 'Signal' },
+    ])
+    expect(merged.from).toBe('00:00')
+    expect(merged.to).toBe('01:30')
+    expect(merged.unit).toBe('dBm')
+  })
+
+  it('propagates the first hourly failure untouched', () => {
+    const failure: ReturnType<typeof mergeHourlyChartResults> = cast({
+      ok: false,
+    })
+
+    expect(
+      mergeHourlyChartResults([hourOptions(['00:00'], [-60]), failure]),
+    ).toBe(failure)
+  })
+
+  it('pads a series absent from a later hour with nothing', () => {
+    const merged = okValue(
+      mergeHourlyChartResults([
+        hourOptions(['00:00'], [-60]),
+        ok({
+          from: '01:00',
+          labels: ['01:00'],
+          series: [],
+          to: '01:00',
+          unit: 'dBm',
+        }),
+      ]),
+    )
+
+    expect(merged.series).toStrictEqual([{ data: [-60], name: 'Signal' }])
+  })
+
+  it('resolves an empty chart for an empty day', () => {
+    const merged = okValue(mergeHourlyChartResults([]))
+
+    expect(merged.labels).toStrictEqual([])
+    expect(merged.series).toStrictEqual([])
   })
 })

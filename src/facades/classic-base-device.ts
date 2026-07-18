@@ -35,8 +35,10 @@ import {
   fromListToSetAta,
   getChartLineOptions,
   getChartPieOptions,
+  hoursUpTo,
   isSetDeviceDataAtaInList,
   isUpdateDeviceData,
+  mergeHourlyChartResults,
   now,
   typedFromEntries,
   typedKeys,
@@ -266,22 +268,19 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   public async getHourlyTemperatures(
-    hour: Hour = this.currentHour(),
+    hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    return mapResult(
-      await this.api.getHourlyTemperatures({
-        postData: { device: this.id, hour },
-      }),
-      (data) =>
-        withMinuteClockLabels(
-          getChartLineOptions(data, {
-            legend: this.internalTemperaturesLegend,
-            locale: this.api.locale,
-            unit: '°C',
-          }),
-          { hour, locale: this.api.locale },
-        ),
+    if (hour !== undefined) {
+      return this.#fetchTemperaturesHour(hour)
+    }
+    // No hour: the whole of today, hour by hour — the wire only speaks
+    // one-hour windows.
+    const hourly = await Promise.all(
+      hoursUpTo(this.currentHour()).map(async (hourOfDay) =>
+        this.#fetchTemperaturesHour(hourOfDay),
+      ),
     )
+    return mergeHourlyChartResults(hourly)
   }
 
   public async getInternalTemperatures(
@@ -385,6 +384,25 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         (flag, key) => flag | BigInt(this.flags[key]),
         BigInt(CLASSIC_FLAG_UNCHANGED),
       ),
+    )
+  }
+
+  async #fetchTemperaturesHour(
+    hour: Hour,
+  ): Promise<Result<ReportChartLineOptions>> {
+    return mapResult(
+      await this.api.getHourlyTemperatures({
+        postData: { device: this.id, hour },
+      }),
+      (data) =>
+        withMinuteClockLabels(
+          getChartLineOptions(data, {
+            legend: this.internalTemperaturesLegend,
+            locale: this.api.locale,
+            unit: '°C',
+          }),
+          { hour, locale: this.api.locale },
+        ),
     )
   }
 }
