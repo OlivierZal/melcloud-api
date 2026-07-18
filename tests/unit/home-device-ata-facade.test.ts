@@ -373,7 +373,7 @@ describe('home device ata facade', () => {
       await expect(facade.getTemperatures()).resolves.toBe(failure)
     })
 
-    it('charts the daily energy report in kWh from watt-hour buckets', async () => {
+    it('charts a multi-day energy report in daily kWh buckets', async () => {
       const api = createApi()
       vi.mocked(api.getAtaEnergy).mockResolvedValue(
         ok({
@@ -392,18 +392,51 @@ describe('home device ata facade', () => {
       const value = okValue(
         await facade.getEnergyReport({
           from: '2026-03-01T00:00:00Z',
-          to: '2026-03-02T00:00:00Z',
+          to: '2026-03-03T00:00:00Z',
         }),
       )
 
       expect(api.getAtaEnergy).toHaveBeenCalledWith('device-1', {
         from: '2026-03-01T00:00:00Z',
         interval: 'Day',
-        to: '2026-03-02T00:00:00Z',
+        to: '2026-03-03T00:00:00Z',
       })
       expect(value.unit).toBe('kWh')
       expect(value.series[0]?.name).toBe('Consumed')
       expect(value.series[0]?.data[0]).toBeCloseTo(0.571)
+    })
+
+    it('switches a one-day energy report to hourly buckets', async () => {
+      const api = createApi()
+      vi.mocked(api.getAtaEnergy).mockResolvedValue(
+        ok({
+          measureData: [
+            {
+              type: 'cumulative_energy_consumed_since_last_upload',
+              values: [
+                { time: '2026-03-01 09:00:00.000000000', value: '200.0' },
+              ],
+            },
+          ],
+        }),
+      )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      const value = okValue(
+        await facade.getEnergyReport({
+          from: '2026-03-01T00:00:00Z',
+          to: '2026-03-02T00:00:00Z',
+        }),
+      )
+
+      // One day: hourly wire buckets, matching the Classic report.
+      expect(api.getAtaEnergy).toHaveBeenCalledWith('device-1', {
+        from: '2026-03-01T00:00:00Z',
+        interval: 'Hour',
+        to: '2026-03-02T00:00:00Z',
+      })
+      expect(value.labels).toHaveLength(25)
+      expect(value.series[0]?.data[9]).toBeCloseTo(0.2)
     })
   })
 

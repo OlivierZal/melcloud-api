@@ -15,7 +15,7 @@ import {
   isClassicDeviceOfType,
 } from '../entities/index.ts'
 import { NoChangesError } from '../errors/index.ts'
-import { Temporal } from '../temporal.ts'
+import { Intl, Temporal } from '../temporal.ts'
 import {
   type ClassicDeviceID,
   type ClassicEnergyData,
@@ -63,21 +63,33 @@ const ENERGY_REPORT_UNIT = 'kWh'
 // ISO 8601 weekday number for Sunday.
 const ISO_SUNDAY = 7
 
-// `EnergyCost/Report` day-of-week labels are .NET 0-based (Sunday = 0)
-// while the shared formatter expects the 1-based ISO labels of the
-// `Report/*` endpoints (Monday = 1): remap Sunday and keep Monday to
-// Saturday, on which the two conventions already agree.
+// `EnergyCost/Report` labels need two repairs before the shared
+// formatter: day-of-week entries are .NET 0-based (Sunday = 0) while
+// `Report/*` speaks 1-based ISO (Monday = 1), and one-day reports
+// arrive as bare hour numbers (`LabelType.time`) that would render as
+// a naked `0..23` axis — format those as clock labels.
 const toEnergyReportLabels = (
   labels: readonly number[],
   labelType: ClassicLabelType,
-): string[] =>
-  labels.map((label) =>
+  locale: string | undefined,
+): string[] => {
+  if (labelType === ClassicLabelType.time) {
+    const formatter = new Intl.DateTimeFormat(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    return labels.map((label) =>
+      formatter.format(new Temporal.PlainTime(label)),
+    )
+  }
+  return labels.map((label) =>
     String(
       label === 0 && labelType === ClassicLabelType.day_of_week ?
         ISO_SUNDAY
       : label,
     ),
   )
+}
 
 // Calendar-day delta between two ISO wall-clock strings. Computed on
 // `PlainDateTime` so the result reflects the literal Y-M-D-h-m-s span
@@ -252,7 +264,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         {
           Data: series.map(({ data: values }) => [...values]),
           FromDate: from,
-          Labels: toEnergyReportLabels(labels, labelType),
+          Labels: toEnergyReportLabels(labels, labelType, this.api.locale),
           LabelType: labelType,
           Points: labels.length,
           Series: series.length,

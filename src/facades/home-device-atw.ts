@@ -32,15 +32,16 @@ import {
   resolveHomeDayWindow,
   resolveHomeHourWindow,
   resolveHomeReportWindow,
+  toHomeEnergyBucketUnit,
   toHomeEnergyOptions,
   toHomeLineOptions,
   toHomeOperationModeOptions,
   toHomeWireWindow,
 } from './home-report.ts'
 
-// Telemetry interval producing one energy bucket per UTC day; the ATW
-// interval measures already report kWh per bucket.
-const DAILY_ENERGY_INTERVAL = 'Day'
+// Telemetry intervals per bucket granularity (UTC-aligned wire
+// buckets); the ATW interval measures already report kWh per bucket.
+const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour' } as const
 
 const IDENTITY_SCALE = 1
 
@@ -356,9 +357,10 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
+    const bucketUnit = toHomeEnergyBucketUnit(window)
     const params = {
       ...toHomeWireWindow(window),
-      interval: DAILY_ENERGY_INTERVAL,
+      interval: ENERGY_INTERVALS[bucketUnit],
     }
     const [consumed, produced] = await Promise.all([
       this.api.getAtwEnergy(this.id, { ...params, measure: 'consumed' }),
@@ -372,6 +374,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     }
     return ok(
       toHomeEnergyOptions({
+        bucketUnit,
         locale: this.api.locale,
         sources: [
           { data: consumed.value, name: 'Consumed', scale: IDENTITY_SCALE },

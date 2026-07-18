@@ -848,6 +848,40 @@ describe('ata device facade', () => {
     expect(value.labels[1]).toBe('Mon')
   })
 
+  it('formats a one-day energy report with clock labels', async () => {
+    const { facade } = createAtaFacade({
+      getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
+        ok(
+          cast({
+            Auto: [0, 0],
+            Cooling: [0.2, 0.3],
+            Dry: [0, 0],
+            Fan: [0, 0],
+            Heating: [0, 0],
+            Labels: [9, 10],
+            LabelType: 0,
+            Other: [0, 0],
+            TotalAutoConsumed: 0,
+            TotalCoolingConsumed: 0.5,
+            TotalDryConsumed: 0,
+            TotalFanConsumed: 0,
+            TotalHeatingConsumed: 0,
+            TotalOtherConsumed: 0,
+            UsageDisclaimerPercentages: '100',
+          }),
+        ),
+      ),
+      locale: 'fr-FR',
+    })
+
+    const { labels } = okValue(
+      await facade.getEnergyReport({ from: '2024-01-07', to: '2024-01-08' }),
+    )
+
+    // The one-day report's bare hour numbers render as clock labels.
+    expect(labels).toStrictEqual(['09:00', '10:00'])
+  })
+
   it('calls operationModes', async () => {
     const { facade } = createAtaFacade()
     const value = okValue(await facade.getOperationModes())

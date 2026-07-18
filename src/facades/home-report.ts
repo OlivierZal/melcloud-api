@@ -317,6 +317,16 @@ export const resolveHomeHourWindow = (
 }
 
 /**
+ * Wire bucket granularity for an energy-report window: hourly on a
+ * one-day span — matching the Classic one-day report — daily beyond.
+ * @param window - Resolved chart window.
+ * @returns The telemetry interval and bucket unit.
+ */
+export const toHomeEnergyBucketUnit = (
+  window: HomeChartWindow,
+): 'day' | 'hour' => (windowDaysOf(window) <= 1 ? 'hour' : 'day')
+
+/**
  * Resolve the window from today's midnight to now in the display
  * timezone — what the "today" charts (fine temperatures, signal) cover.
  * @param timezone - IANA display timezone (UTC when unset).
@@ -638,8 +648,9 @@ export const toHomeOperationModeOptions = (
   }
 }
 
-// Energy buckets are UTC calendar days on the wire: enumerate them by
-// their literal date instead of shifting them into the display timezone.
+// Energy buckets are UTC calendar days (or hours) on the wire:
+// enumerate them by their literal timestamps instead of shifting them
+// into the display timezone.
 const buildUtcDayGrid = (window: HomeChartWindow): string[] => {
   const last = window.to.withTimeZone(WIRE_TIME_ZONE).toPlainDate()
   const days: string[] = []
@@ -648,22 +659,46 @@ const buildUtcDayGrid = (window: HomeChartWindow): string[] => {
     Temporal.PlainDate.compare(day, last) <= 0;
     day = day.add({ days: 1 })
   ) {
-    days.push(day.toString())
+    days.push(day.toPlainDateTime().toString())
   }
   return days
 }
 
-const sumEnergyByDay = (
+const toWireHour = (bound: Temporal.ZonedDateTime): Temporal.PlainDateTime =>
+  bound
+    .withTimeZone(WIRE_TIME_ZONE)
+    .toPlainDateTime()
+    .round({ roundingMode: 'floor', smallestUnit: 'hour' })
+
+const buildUtcHourGrid = (window: HomeChartWindow): string[] => {
+  const last = toWireHour(window.to)
+  const hours: string[] = []
+  for (
+    let hour = toWireHour(window.from);
+    Temporal.PlainDateTime.compare(hour, last) <= 0;
+    hour = hour.add({ hours: 1 })
+  ) {
+    hours.push(hour.toString())
+  }
+  return hours
+}
+
+const sumEnergyBySlot = (
   data: HomeEnergyData,
   scale: number,
+  bucketUnit: 'day' | 'hour',
 ): Map<string, number> => {
-  const byDay = new Map<string, number>()
+  const bySlot = new Map<string, number>()
   const points = data.measureData.flatMap((measure) => measure.values)
   for (const point of points) {
-    const day = parseWireDateTime(point.time).toPlainDate().toString()
-    byDay.set(day, (byDay.get(day) ?? 0) + Number(point.value) * scale)
+    const time = parseWireDateTime(point.time)
+    const slot = (
+      bucketUnit === 'hour' ?
+        time.round({ roundingMode: 'floor', smallestUnit: 'hour' })
+      : time.toPlainDate().toPlainDateTime()).toString()
+    bySlot.set(slot, (bySlot.get(slot) ?? 0) + Number(point.value) * scale)
   }
-  return byDay
+  return bySlot
 }
 
 /**
@@ -671,12 +706,15 @@ const sumEnergyByDay = (
  * chart options on a daily grid: one series per source, missing days
  * as `0` (the wire omits idle buckets entirely).
  * @param options - Conversion inputs.
+ * @param options.bucketUnit - Wire bucket granularity (daily by
+ * default; hourly matches the Classic one-day report).
  * @param options.locale - BCP-47 locale tag for axis labels.
  * @param options.sources - One entry per charted series.
  * @param options.window - Resolved chart window (in the display timezone).
  * @returns Structured line chart options (`kWh`).
  */
 export const toHomeEnergyOptions = ({
+  bucketUnit = 'day',
   locale,
   sources,
   window,
@@ -687,19 +725,26 @@ export const toHomeEnergyOptions = ({
     readonly scale: number
   }[]
   window: HomeChartWindow
+  bucketUnit?: 'day' | 'hour' | undefined
   locale?: string | undefined
 }): ReportChartLineOptions => {
-  const days = buildUtcDayGrid(window)
-  const formatter = new Intl.DateTimeFormat(locale, {
-    day: 'numeric',
-    month: 'short',
-  })
+  const slots = (bucketUnit === 'hour' ? buildUtcHourGrid : buildUtcDayGrid)(
+    window,
+  )
+  const formatter = new Intl.DateTimeFormat(
+    locale,
+    bucketUnit === 'hour' ?
+      { hour: '2-digit', minute: '2-digit' }
+    : { day: 'numeric', month: 'short' },
+  )
   return {
     from: window.from.toPlainDateTime().toString(),
-    labels: days.map((day) => formatter.format(Temporal.PlainDate.from(day))),
+    labels: slots.map((slot) =>
+      formatter.format(Temporal.PlainDateTime.from(slot)),
+    ),
     series: sources.map(({ data, name, scale }) => {
-      const byDay = sumEnergyByDay(data, scale)
-      return { data: days.map((day) => byDay.get(day) ?? 0), name }
+      const bySlot = sumEnergyBySlot(data, scale, bucketUnit)
+      return { data: slots.map((slot) => bySlot.get(slot) ?? 0), name }
     }),
     to: window.to.toPlainDateTime().toString(),
     unit: 'kWh',

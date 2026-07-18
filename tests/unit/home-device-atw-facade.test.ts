@@ -668,7 +668,7 @@ describe('home device atw facade', () => {
 
       const params = {
         from: '2026-05-09T00:00:00Z',
-        interval: 'Day',
+        interval: 'Hour',
         to: '2026-05-10T00:00:00Z',
       }
 
