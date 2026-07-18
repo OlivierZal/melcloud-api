@@ -8,6 +8,7 @@ import {
   AuthenticationThrottledError,
   RateLimitError,
 } from '../errors/index.ts'
+import { fireAndForget } from '../fire-and-forget.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
@@ -454,10 +455,11 @@ export abstract class BaseAPI implements Disposable {
    */
   public async start(shouldResumeInBackground = false): Promise<void> {
     if (shouldResumeInBackground) {
-      // eslint-disable-next-line unicorn/prefer-await -- fire-and-forget off the caller's critical path; rejections are logged, never propagated
-      this.initialize().catch((error: unknown) => {
-        this.logger.error('Background session resume failed:', error)
-      })
+      fireAndForget(
+        this.initialize(),
+        this.logger,
+        'Background session resume failed:',
+      )
       return
     }
     await this.initialize()
