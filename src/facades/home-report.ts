@@ -739,9 +739,19 @@ export const toHomeEnergyOptions = ({
   )
   return {
     from: window.from.toPlainDateTime().toString(),
-    labels: slots.map((slot) =>
-      formatter.format(Temporal.PlainDateTime.from(slot)),
-    ),
+    // Hour buckets render on the display clock (a 23:00 UTC bucket is
+    // the user's 01:00); day buckets keep their calendar date.
+    labels: slots.map((slot) => {
+      const wire = Temporal.PlainDateTime.from(slot)
+      return formatter.format(
+        bucketUnit === 'hour' ?
+          wire
+            .toZonedDateTime(WIRE_TIME_ZONE)
+            .withTimeZone(window.from.timeZoneId)
+            .toPlainDateTime()
+        : wire,
+      )
+    }),
     series: sources.map(({ data, name, scale }) => {
       const bySlot = sumEnergyBySlot(data, scale, bucketUnit)
       return { data: slots.map((slot) => bySlot.get(slot) ?? 0), name }
