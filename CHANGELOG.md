@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Claude automation workflows (mirrors [OlivierZal/com.melcloud#1409](https://github.com/OlivierZal/com.melcloud/pull/1409)): every newly opened issue is triaged automatically — existing labels applied, duplicates looked up, one diagnostic comment posted; collaborator issues that @-mention Claude keep their interactive `claude.yml` handling — and a red `CI`/`Zizmor` run on a dependabot branch triggers one auto-fix attempt that diagnoses from the failed logs, fixes on the branch, verifies the full suite, and pushes through the Claude GitHub App token so CI re-runs and the existing auto-merge completes. The `workflow_run` trigger is deliberate (dependabot-triggered runs get a read-only token and cannot reach `CLAUDE_CODE_OAUTH_TOKEN`; the dependabot actor gate doubles as the loop guard) and is ignored for `dangerous-triggers` in the zizmor config.
 
+## [41.2.2] - 2026-07-18
+
+### Fixed
+
+- The Classic error-log year-1 sentinel filter only recognized the wall-clock dialect: sentinels arriving as instants (`0001-01-01T00:00:00Z`, live payload) slipped through and surfaced as fake year-1 dates. Year extraction now parses both MELCloud date dialects; unparseable inputs still keep their entries (Luxon-mirroring semantics).
+
 ## [41.2.1] - 2026-07-17
 
 ### Fixed
@@ -227,7 +233,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/41.2.1...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/41.2.2...HEAD
+[41.2.2]: https://github.com/OlivierZal/melcloud-api/compare/41.2.1...41.2.2
 [41.2.1]: https://github.com/OlivierZal/melcloud-api/compare/41.2.0...41.2.1
 [41.2.0]: https://github.com/OlivierZal/melcloud-api/compare/41.1.0...41.2.0
 [41.1.0]: https://github.com/OlivierZal/melcloud-api/compare/41.0.0...41.1.0

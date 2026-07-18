@@ -647,6 +647,23 @@ describe('mELCloud Classic API', () => {
       expect(okValue(result).errors).toHaveLength(0)
     })
 
+    it('filters out the instant-dialect sentinel (live payload 2026-07-18)', async () => {
+      mockLoginAndList()
+      const api = await createApi({ password: 'pass', username: 'user' })
+      mockRequest.mockResolvedValue(
+        wrap([
+          errorEntry({
+            EndDate: '2025-09-29T20:56:00+01:00',
+            ErrorMessage: 'Unknown Error',
+            StartDate: '0001-01-01T00:00:00Z',
+          }),
+        ]),
+      )
+      const result = await api.getErrorLog({}, [1])
+
+      expect(okValue(result).errors).toHaveLength(0)
+    })
+
     it('keeps entries with unparseable StartDate (no invalid-year sentinel)', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
