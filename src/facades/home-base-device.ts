@@ -1,6 +1,18 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
-import type { HomeDeviceData, HomeEnergyData, Result } from '../types/index.ts'
+import {
+  type HomeDeviceData,
+  type HomeEnergyData,
+  type Hour,
+  type Result,
+  mapResult,
+} from '../types/index.ts'
+import type { ReportChartLineOptions } from './report-types.ts'
+import {
+  resolveHomeHourWindow,
+  toHomeSignalOptions,
+  toHomeWireWindow,
+} from './home-report.ts'
 
 /**
  * Shared scaffolding for every Home device facade. Holds the API
@@ -61,6 +73,15 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   protected readonly model: HomeDevice<TData>
 
   /**
+   * IANA timezone anchoring chart windows and labels, from the API
+   * configuration; the Home wire itself always speaks UTC wall-clock.
+   * @returns The display timezone, UTC when unconfigured.
+   */
+  protected get chartTimezone(): string {
+    return this.api.timezone ?? 'UTC'
+  }
+
+  /**
    * Builds a Home device facade backed by the given API client and
    * registry-resident device model.
    * @param api - Home API client.
@@ -93,6 +114,29 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
     to: string
   }): Promise<Result<HomeEnergyData>> {
     return this.api.getSignal(this.id, params)
+  }
+
+  /**
+   * Fetches the Wi-Fi signal chart for one hour of today, resampled on
+   * a minute grid — the Home counterpart of the Classic
+   * `getSignalStrength` contract.
+   * @param hour - Hour of today (0-23); defaults to the current hour.
+   * @returns Structured line chart options (`dBm`), or a typed failure.
+   */
+  public async getSignalStrength(
+    hour?: Hour,
+  ): Promise<Result<ReportChartLineOptions>> {
+    const window = resolveHomeHourWindow(hour, this.chartTimezone)
+    return mapResult(
+      await this.api.getSignal(this.id, toHomeWireWindow(window)),
+      (data) =>
+        toHomeSignalOptions({
+          data,
+          locale: this.api.locale,
+          name: this.name,
+          window,
+        }),
+    )
   }
 
   /**

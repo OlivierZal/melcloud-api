@@ -776,6 +776,52 @@ describe('ata device facade', () => {
     expect(api.getEnergy).toHaveBeenCalledWith(expect.any(Object))
   })
 
+  it('builds the ATA energy report with per-mode series in kWh', async () => {
+    const { api, facade } = createAtaFacade({
+      getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
+        ok(
+          cast({
+            Auto: [0, 0],
+            Cooling: [0.5, 1],
+            Dry: [0, 0],
+            Fan: [0, 0],
+            Heating: [0, 0],
+            Labels: [0, 1],
+            LabelType: 4,
+            Other: [0, 0],
+            TotalAutoConsumed: 0,
+            TotalCoolingConsumed: 1.5,
+            TotalDryConsumed: 0,
+            TotalFanConsumed: 0,
+            TotalHeatingConsumed: 0,
+            TotalOtherConsumed: 0,
+            UsageDisclaimerPercentages: '100',
+          }),
+        ),
+      ),
+      locale: 'en-US',
+    })
+
+    const value = okValue(
+      await facade.getEnergyReport({ from: '2024-01-07', to: '2024-01-08' }),
+    )
+
+    expect(api.getEnergy).toHaveBeenCalledWith(expect.any(Object))
+    expect(value.unit).toBe('kWh')
+    expect(value.series.map(({ name }) => name)).toStrictEqual([
+      'Heating',
+      'Cooling',
+      'Auto',
+      'Dry',
+      'Fan',
+      'Other',
+    ])
+    expect(value.series[1]?.data).toStrictEqual([0.5, 1])
+    // .NET day-of-week 0 (Sunday) remaps to ISO 7 before formatting.
+    expect(value.labels[0]).toBe('Sun')
+    expect(value.labels[1]).toBe('Mon')
+  })
+
   it('calls operationModes', async () => {
     const { facade } = createAtaFacade()
     const value = okValue(await facade.getOperationModes())
@@ -1021,6 +1067,51 @@ describe('atw device facade', () => {
     const { facade } = createAtwFacade()
 
     expect(facade.type).toBe(ClassicDeviceType.Atw)
+  })
+
+  it('builds the ATW energy report with consumed and produced series', async () => {
+    const { facade } = createAtwFacade({
+      getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
+        ok(
+          cast({
+            Cooling: [0, 0],
+            CoP: [2.5, null],
+            Heating: [5.1, 4.9],
+            HotWater: [2.5, 2.6],
+            Labels: [12, 13],
+            LabelType: 1,
+            ProducedCooling: [0, 0],
+            ProducedHeating: [15.2, 14.8],
+            ProducedHotWater: [6.1, 6.2],
+            TotalCoolingConsumed: 0,
+            TotalCoolingProduced: 0,
+            TotalHeatingConsumed: 10,
+            TotalHeatingProduced: 30,
+            TotalHotWaterConsumed: 5.1,
+            TotalHotWaterProduced: 12.3,
+          }),
+        ),
+      ),
+    })
+
+    const value = okValue(
+      await facade.getEnergyReport({ from: '2024-01-12', to: '2024-01-14' }),
+    )
+
+    expect(value.unit).toBe('kWh')
+    expect(value.series.map(({ name }) => name)).toStrictEqual([
+      'Heating',
+      'Cooling',
+      'HotWater',
+      'ProducedHeating',
+      'ProducedCooling',
+      'ProducedHotWater',
+    ])
+    expect(value.series[0]?.data).toStrictEqual([5.1, 4.9])
+    // `CoP` never charts: a ratio cannot share the kWh axis.
+    expect(value.series.map(({ name }) => name)).not.toContain('CoP')
+    // Raw labels pass through the day-of-month numbers untouched.
+    expect(value.labels).toStrictEqual(['12', '13'])
   })
 
   it('clamps target temperatures', async () => {
@@ -1322,6 +1413,23 @@ describe('erv device facade', () => {
     const { facade } = createErvFacade()
 
     expect(facade.type).toBe(ClassicDeviceType.Erv)
+  })
+
+  it('resolves an empty energy report without a wire call', async () => {
+    const { api, facade } = createErvFacade()
+
+    const value = okValue(
+      await facade.getEnergyReport({ from: '2024-01-01', to: '2024-01-02' }),
+    )
+
+    expect(api.getEnergy).not.toHaveBeenCalled()
+    expect(value).toStrictEqual({
+      from: '2024-01-01',
+      labels: [],
+      series: [],
+      to: '2024-01-02',
+      unit: 'kWh',
+    })
   })
 
   it('filters operation modes for ERV-specific labels', async () => {

@@ -177,11 +177,32 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
+   * BCP-47 locale supplied via {@link HomeAPIConfig.locale}, or
+   * `undefined` to fall back to the runtime locale. Drives chart label
+   * formatting in the device facades.
+   * @returns The configured BCP-47 locale tag, or `undefined`.
+   */
+  public get locale(): string | undefined {
+    return this.#locale
+  }
+
+  /**
    * In-memory device registry populated by {@link list}.
    * @returns The registry instance.
    */
   public get registry(): HomeRegistry {
     return this.#registry
+  }
+
+  /**
+   * IANA timezone supplied via {@link HomeAPIConfig.timezone},
+   * or `undefined` to fall back to UTC. The Home wire itself speaks
+   * UTC wall-clock; this timezone only anchors chart windows and
+   * label rendering in the device facades.
+   * @returns The configured IANA timezone identifier, or `undefined`.
+   */
+  public get timezone(): string | undefined {
+    return this.#timezone
   }
 
   /**
@@ -195,7 +216,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   #context: HomeContext | null = null
 
+  readonly #locale: string | undefined
+
   readonly #registry = new HomeRegistry()
+
+  readonly #timezone: string | undefined
 
   #user: HomeUser | null = null
 
@@ -206,13 +231,21 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   private accessor refreshToken = ''
 
   private constructor(config: HomeAPIConfig = {}) {
-    const { baseURL = API_BASE_URL, password, username } = config
+    const {
+      baseURL = API_BASE_URL,
+      locale,
+      password,
+      timezone,
+      username,
+    } = config
     super(config, {
       defaultSyncIntervalMinutes: DEFAULT_SYNC_INTERVAL_MINUTES,
       httpConfig: { baseURL },
       rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
       syncCallback: async () => this.list(),
     })
+    this.#locale = locale
+    this.#timezone = timezone
     this.applyCredentials(username, password)
   }
 

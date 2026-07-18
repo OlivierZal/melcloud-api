@@ -66,6 +66,30 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   backfill by plausibility or restrict it to recent windows. Observed
   retention ≥ 75/91 days (ATA/ATW), possibly just device onboarding
   age.
+- The Home wire speaks UTC wall-clock everywhere (live-probed
+  2026-07-18: the freshest report sample equals "now" in UTC): report
+  `x` samples, telemetry `time` values, and query windows alike.
+  `HomeAPIConfig.timezone` only anchors chart label rendering and
+  day/hour windows in the facades — never re-interpret wire values in
+  a local zone.
+- Home report semantics (comfort-graph / internaltemperatures /
+  trendsummary): the BFF rounds the window down to full UTC days;
+  datasets are irregular event-driven samples (each series has its own
+  time grid — the facades resample with LOCF); `previousTriggers`
+  carries the last pre-window sample per series (`value: null` with a
+  `9999-12-31` sentinel when none) and seeds the resampler;
+  comfort-graph annotations WITH a label
+  (`REPORT.COMFORT_GRAPH.OVERLAY_KEY.<MODE>`, ATW only) are
+  operation-mode bands — the same vocabulary as the Classic pie
+  (`LEGIONELLA` ↔ `LegionellaPrevention`) — while annotations WITHOUT
+  a label (internal-temperatures) mark missing-data ranges. Dataset
+  `label` fields are i18n keys, useless for display.
+- Classic `/EnergyCost/Report` returns per-bucket arrays for BOTH types
+  (ATA per-mode consumption; ATW consumed + produced per category) with
+  numeric `Labels`/`LabelType` — day-of-week labels are .NET 0-based
+  (Sunday = 0) unlike the 1-based ISO labels of `Report/*`. ATA Home
+  daily energy buckets are watt-hours and idle days are omitted
+  entirely; ATW buckets are kWh.
 
 ## Lint doctrine
 

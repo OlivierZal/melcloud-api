@@ -6,6 +6,7 @@ import {
 } from '../constants.ts'
 import { NoChangesError } from '../errors/index.ts'
 import {
+  type ClassicEnergyDataAta,
   type ClassicFailureData,
   type ClassicGroupState,
   type ClassicSuccessData,
@@ -14,6 +15,7 @@ import {
   ok,
 } from '../types/index.ts'
 import { clampToRange } from '../utils.ts'
+import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
 
@@ -48,6 +50,25 @@ const toUpdateData = (
   }),
 })
 
+// `EnergyCost/Report` consumption buckets charted by `getEnergyReport`,
+// in MELCloud display order.
+const energyReportBuckets = [
+  'Heating',
+  'Cooling',
+  'Auto',
+  'Dry',
+  'Fan',
+  'Other',
+] as const
+
+const extractEnergyReportAta = (
+  data: ClassicEnergyDataAta,
+): ClassicEnergyReportExtract => ({
+  labels: data.Labels,
+  labelType: data.LabelType,
+  series: energyReportBuckets.map((name) => ({ data: data[name], name })),
+})
+
 /**
  * Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping.
  * @category Facades
@@ -58,6 +79,10 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
   public readonly flags: typeof classicAtaFlags = classicAtaFlags
 
   public readonly type: typeof ClassicDeviceType.Ata = ClassicDeviceType.Ata
+
+  protected override readonly extractEnergyReport: (
+    data: ClassicEnergyDataAta,
+  ) => ClassicEnergyReportExtract = extractEnergyReportAta
 
   protected readonly temperaturesLegend: readonly string[] = [
     'SetTemperature',

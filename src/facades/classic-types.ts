@@ -27,7 +27,7 @@ import type {
   Hour,
   Result,
 } from '../types/index.ts'
-import { ClassicDeviceType } from '../constants.ts'
+import { type ClassicLabelType, ClassicDeviceType } from '../constants.ts'
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
@@ -90,6 +90,13 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   readonly getEnergy: (
     query: ReportQuery,
   ) => Promise<Result<ClassicEnergyData<T>>>
+  /**
+   * Fetch the energy report as line chart data (`kWh` buckets). ATA and
+   * ATW only: types without an energy report resolve an empty chart.
+   */
+  readonly getEnergyReport: (
+    query?: ReportQuery,
+  ) => Promise<Result<ReportChartLineOptions>>
   /** Fetch hourly temperature report. ATW only. */
   readonly getHourlyTemperatures: (
     hour?: Hour,
@@ -128,6 +135,21 @@ export type ClassicDeviceFacadeAny =
   | ClassicDeviceAtwFacade
   | ClassicDeviceAtwHasZone2Facade
   | ClassicDeviceFacade<typeof ClassicDeviceType.Erv>
+
+/**
+ * Chartable slice of an `EnergyCost/Report` payload, produced by the
+ * per-device-type `extractEnergyReport` hook: the bucket labels straight
+ * from the wire plus one named series per charted bucket array.
+ * @category Facades
+ */
+export interface ClassicEnergyReportExtract {
+  readonly labels: readonly number[]
+  readonly labelType: ClassicLabelType
+  readonly series: readonly {
+    readonly data: readonly number[]
+    readonly name: string
+  }[]
+}
 
 /**
  * Base facade contract shared by all facade types (building, floor, area, device).

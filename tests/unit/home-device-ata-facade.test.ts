@@ -1,11 +1,12 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
-import type { HomeAtaDeviceCapabilities } from '../../src/types/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
-import { cast, mock } from '../helpers.ts'
-import { homeDevice } from '../home-fixtures.ts'
+import { Temporal } from '../../src/temporal.ts'
+import { type HomeAtaDeviceCapabilities, ok } from '../../src/types/index.ts'
+import { cast, mock, mockTemporalNowZoned, okValue } from '../helpers.ts'
+import { homeDevice, homeReportPoint } from '../home-fixtures.ts'
 
 const createModel = (
   settings: Record<string, string> = {},
@@ -328,13 +329,122 @@ describe('home device ata facade', () => {
       expect(api.getSignal).toHaveBeenCalledWith('device-1', params)
     })
 
-    it('should delegate getTemperatures with device id', async () => {
+    it('builds the temperature chart from the trend-summary report', async () => {
       const api = createApi()
+      vi.mocked(api.getAtaTemperatures).mockResolvedValue(
+        ok([
+          {
+            datasets: [
+              {
+                data: [homeReportPoint('2026-03-01T01:00:00', 21)],
+                id: 'room_temperature',
+                label: 'ignored',
+              },
+            ],
+            reportPeriod: 'hourly',
+          },
+        ]),
+      )
       const facade = new HomeDeviceAtaFacade(api, createModel())
-      const params = { from: '2026-03-01', period: 'Hourly', to: '2026-03-02' }
-      await facade.getTemperatures(params)
 
-      expect(api.getAtaTemperatures).toHaveBeenCalledWith('device-1', params)
+      const value = okValue(
+        await facade.getTemperatures({
+          from: '2026-03-01T00:00:00Z',
+          to: '2026-03-02T00:00:00Z',
+        }),
+      )
+
+      expect(api.getAtaTemperatures).toHaveBeenCalledWith('device-1', {
+        from: '2026-03-01T00:00:00Z',
+        period: 'Hourly',
+        to: '2026-03-02T00:00:00Z',
+      })
+      expect(value.unit).toBe('°C')
+      expect(value.labels).toHaveLength(25)
+      expect(value.series[0]?.name).toBe('RoomTemperature')
+    })
+
+    it('propagates a trend-summary failure untouched', async () => {
+      const api = createApi()
+      const failure = { ok: false as const, status: 500 }
+      vi.mocked(api.getAtaTemperatures).mockResolvedValue(cast(failure))
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      await expect(facade.getTemperatures()).resolves.toBe(failure)
+    })
+
+    it('charts the daily energy report in kWh from watt-hour buckets', async () => {
+      const api = createApi()
+      vi.mocked(api.getAtaEnergy).mockResolvedValue(
+        ok({
+          measureData: [
+            {
+              type: 'cumulative_energy_consumed_since_last_upload',
+              values: [
+                { time: '2026-03-01 00:00:00.000000000', value: '571.0' },
+              ],
+            },
+          ],
+        }),
+      )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      const value = okValue(
+        await facade.getEnergyReport({
+          from: '2026-03-01T00:00:00Z',
+          to: '2026-03-02T00:00:00Z',
+        }),
+      )
+
+      expect(api.getAtaEnergy).toHaveBeenCalledWith('device-1', {
+        from: '2026-03-01T00:00:00Z',
+        interval: 'Day',
+        to: '2026-03-02T00:00:00Z',
+      })
+      expect(value.unit).toBe('kWh')
+      expect(value.series[0]?.name).toBe('Consumed')
+      expect(value.series[0]?.data[0]).toBeCloseTo(0.571)
+    })
+  })
+
+  describe('signal chart', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(
+        Temporal.Instant.from('2026-03-01T12:00:00Z').epochMilliseconds,
+      )
+      mockTemporalNowZoned()
+    })
+
+    afterEach(() => {
+      vi.mocked(Temporal.Now.zonedDateTimeISO).mockRestore()
+      vi.useRealTimers()
+    })
+
+    it('builds the signal chart over the requested hour', async () => {
+      const api = createApi()
+      vi.mocked(api.getSignal).mockResolvedValue(
+        ok({
+          measureData: [
+            {
+              type: 'rssi',
+              values: [{ time: '2026-03-01 09:05:00.000000000', value: '-66' }],
+            },
+          ],
+        }),
+      )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      const value = okValue(await facade.getSignalStrength(9))
+
+      expect(api.getSignal).toHaveBeenCalledWith('device-1', {
+        from: '2026-03-01T09:00:00Z',
+        to: '2026-03-01T10:00:00Z',
+      })
+      expect(value.unit).toBe('dBm')
+      expect(value.labels).toHaveLength(61)
+      expect(value.series[0]?.name).toBe('Test ClassicDevice')
+      expect(value.series[0]?.data.at(-1)).toBe(-66)
     })
   })
 })

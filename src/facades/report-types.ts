@@ -1,4 +1,20 @@
 /**
+ * One background band over a line chart, expressed as an inclusive
+ * `[from, to]` index range on the `labels` grid — e.g. an ATW
+ * operation-mode span. Only Home ATW temperature charts carry bands;
+ * every other chart omits the field.
+ * @category Facades
+ */
+export interface ReportChartBand {
+  /** Index of the first covered label. */
+  readonly from: number
+  /** Band name (Classic operation-mode vocabulary, e.g. `'HotWater'`). */
+  readonly label: string
+  /** Index of the last covered label. */
+  readonly to: number
+}
+
+/**
  * Line chart data with named series and a measurement unit.
  * @category Facades
  */
@@ -9,6 +25,8 @@ export interface ReportChartLineOptions extends ReportChartOptions {
   }[]
   /** Measurement unit label (e.g. `'°C'`, `'dBm'`). */
   readonly unit: string
+  /** Background bands (operation modes); absent on most charts. */
+  readonly bands?: readonly ReportChartBand[] | undefined
 }
 
 /** Base chart options with date range and formatted axis labels. */

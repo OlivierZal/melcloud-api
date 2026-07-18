@@ -17,7 +17,7 @@ import type {
   HomeUserContext,
   Hour,
 } from '../types/index.ts'
-import { ClassicDeviceType } from '../constants.ts'
+import { ClassicDeviceType, ClassicLabelType } from '../constants.ts'
 import { ValidationError } from '../errors/index.ts'
 
 // Runtime schemas for API boundaries where silent shape drift would hide
@@ -306,12 +306,32 @@ const HomeReportDatasetSchema = z.looseObject({
   label: z.string(),
 })
 
+// Labelled comfort-graph annotations are ATW operation-mode bands;
+// unlabelled ones (internal-temperatures) mark missing-data ranges.
+const HomeReportAnnotationSchema = z.looseObject({
+  label: z.string().optional(),
+  xMax: z.string(),
+  xMin: z.string(),
+})
+
+// The last pre-window sample per series; `value` is `null` (with a
+// far-future `trigger` sentinel) when the series has no prior sample.
+const HomeReportTriggerSchema = z.looseObject({
+  measure: z.string(),
+  trigger: z.string(),
+  value: z.number().nullable(),
+})
+
 /** Home /report/v1/{comfort-graph,internaltemperatures,trendsummary} response. */
 export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
+  annotations: z.array(HomeReportAnnotationSchema).optional(),
   datasets: z.array(HomeReportDatasetSchema),
+  from: z.string().optional(),
+  previousTriggers: z.array(HomeReportTriggerSchema).optional(),
   // Shared by comfort-graph / internaltemperatures / trendsummary:
   // comfort-graph returns a numeric reportPeriod, the others a string.
   reportPeriod: z.union([z.number(), z.string()]),
+  to: z.string().optional(),
 })
 
 /** Home /monitor/{ata,atw}unit/{id}/errorlog response (array of entries). */
@@ -400,6 +420,15 @@ export const ClassicBuildingListSchema: z.ZodType<ClassicBuildingListEntry[]> =
 // ValidationError. `z.number()` already rejects NaN and ±Infinity, so
 // every validated field is guaranteed finite.
 
+/** Classic `EnergyCost/Report` bucket label type (numeric on this endpoint). */
+const ClassicLabelTypeSchema = z.union([
+  z.literal(ClassicLabelType.time),
+  z.literal(ClassicLabelType.raw),
+  z.literal(ClassicLabelType.month),
+  z.literal(ClassicLabelType.month_of_year),
+  z.literal(ClassicLabelType.day_of_week),
+])
+
 /** Classic `/EnergyCost/Report` response for an ATA (air-to-air) device. */
 export const ClassicEnergyDataAtaSchema: z.ZodType<ClassicEnergyDataAta> =
   z.looseObject({
@@ -408,6 +437,8 @@ export const ClassicEnergyDataAtaSchema: z.ZodType<ClassicEnergyDataAta> =
     Dry: z.array(z.number()),
     Fan: z.array(z.number()),
     Heating: z.array(z.number()),
+    Labels: z.array(z.number()),
+    LabelType: ClassicLabelTypeSchema,
     Other: z.array(z.number()),
     TotalAutoConsumed: z.number(),
     TotalCoolingConsumed: z.number(),
@@ -422,10 +453,20 @@ export const ClassicEnergyDataAtaSchema: z.ZodType<ClassicEnergyDataAta> =
  * Classic `/EnergyCost/Report` response for an ATW (air-to-water) device.
  * Idle periods report `null` CoP entries (live payload, 2026-07-17) —
  * consumers already coerce them to 0 through `Number(...)` tolerance.
+ * The consumed/produced bucket arrays report plain zeros when idle
+ * (live payload, 2026-07-18).
  */
 export const ClassicEnergyDataAtwSchema: z.ZodType<ClassicEnergyDataAtw> =
   z.looseObject({
+    Cooling: z.array(z.number()),
     CoP: z.array(z.number().nullable()),
+    Heating: z.array(z.number()),
+    HotWater: z.array(z.number()),
+    Labels: z.array(z.number()),
+    LabelType: ClassicLabelTypeSchema,
+    ProducedCooling: z.array(z.number()),
+    ProducedHeating: z.array(z.number()),
+    ProducedHotWater: z.array(z.number()),
     TotalCoolingConsumed: z.number(),
     TotalCoolingProduced: z.number(),
     TotalHeatingConsumed: z.number(),

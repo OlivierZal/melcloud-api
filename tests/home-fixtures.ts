@@ -5,6 +5,7 @@ import type {
   HomeAtwDeviceCapabilities,
   HomeAtwDeviceData,
   HomeBuildingRef,
+  HomeReportPoint,
 } from '../src/types/index.ts'
 import { HomeDeviceType } from '../src/constants.ts'
 import { HomeDevice } from '../src/entities/home-device.ts'
@@ -177,4 +178,20 @@ export const typedHomeAtwDeviceData = (
   device: homeAtwDeviceData(overrides),
   isOwner: options.isOwner ?? true,
   type: HomeDeviceType.Atw,
+})
+
+/**
+ * One `(x, y)` report sample in the wire's single-letter point shape.
+ * @param time - Sample timestamp (UTC wall-clock ISO).
+ * @param value - Sample value.
+ * @returns The wire-shaped point.
+ */
+export const homeReportPoint = (
+  time: string,
+  value: number,
+): HomeReportPoint => ({
+  /* eslint-disable id-length -- match the wire point shape */
+  x: time,
+  y: value,
+  /* eslint-enable id-length */
 })

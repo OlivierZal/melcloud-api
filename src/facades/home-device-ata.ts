@@ -20,13 +20,30 @@ import {
   type HomeAtaValues,
   type HomeEnergyData,
   type HomeErrorLogEntry,
-  type HomeReportData,
   type Result,
+  mapResult,
   ok,
 } from '../types/index.ts'
 import { clampToRange, omitUndefined } from '../utils.ts'
+import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { toClassicAtaGroupState, toHomeAtaValues } from './home-ata-group.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
+import {
+  HOME_REPORT_PERIOD,
+  resolveHomeReportWindow,
+  toHomeEnergyOptions,
+  toHomeLineOptions,
+  toHomeWireWindow,
+} from './home-report.ts'
+
+// Telemetry interval producing one energy bucket per UTC day.
+const DAILY_ENERGY_INTERVAL = 'Day'
+
+// The ATA cumulative energy measure reports watt-hours (100 Wh pulses,
+// live-probed 2026-07-18: a daily bucket of `571.0` for ~0.57 kWh).
+const KILOWATT_HOURS_PER_WATT_HOUR = 0.001
+
+const TEMPERATURE_UNIT = '°C'
 
 interface TemperatureRange {
   max: number
@@ -177,6 +194,34 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   }
 
   /**
+   * Fetches the energy report as line chart data on a daily grid — the
+   * Home counterpart of the Classic `getEnergyReport` contract. The
+   * single ATA measure is cumulative consumption in watt-hours, scaled
+   * to `kWh`; days the wire omits (idle) chart as `0`.
+   * @param query - Optional ISO date range.
+   * @returns Structured line chart options (`kWh`), or a typed failure.
+   */
+  public async getEnergyReport(
+    query?: ReportQuery,
+  ): Promise<Result<ReportChartLineOptions>> {
+    const window = resolveHomeReportWindow(query, this.chartTimezone)
+    return mapResult(
+      await this.api.getAtaEnergy(this.id, {
+        ...toHomeWireWindow(window),
+        interval: DAILY_ENERGY_INTERVAL,
+      }),
+      (data) =>
+        toHomeEnergyOptions({
+          locale: this.api.locale,
+          sources: [
+            { data, name: 'Consumed', scale: KILOWATT_HOURS_PER_WATT_HOUR },
+          ],
+          window,
+        }),
+    )
+  }
+
+  /**
    * Fetches the error-log entries for this device.
    * @returns The entries (possibly empty), or a typed failure.
    */
@@ -199,20 +244,29 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   }
 
   /**
-   * Fetches the trend-summary temperature report for this device over
-   * the given time window.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.period - Aggregation period (e.g. `hour`, `day`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The report datasets, or a typed failure.
+   * Fetches the temperature history as line chart data (trend-summary
+   * report resampled on a regular grid) — the Home counterpart of the
+   * Classic `getTemperatures` contract.
+   * @param query - Optional ISO date range.
+   * @returns Structured line chart options (`°C`), or a typed failure.
    */
-  public async getTemperatures(params: {
-    from: string
-    period: string
-    to: string
-  }): Promise<Result<HomeReportData[]>> {
-    return this.api.getAtaTemperatures(this.id, params)
+  public async getTemperatures(
+    query?: ReportQuery,
+  ): Promise<Result<ReportChartLineOptions>> {
+    const window = resolveHomeReportWindow(query, this.chartTimezone)
+    return mapResult(
+      await this.api.getAtaTemperatures(this.id, {
+        ...toHomeWireWindow(window),
+        period: HOME_REPORT_PERIOD,
+      }),
+      (reports) =>
+        toHomeLineOptions({
+          locale: this.api.locale,
+          reports,
+          unit: TEMPERATURE_UNIT,
+          window,
+        }),
+    )
   }
 
   /**
