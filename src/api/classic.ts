@@ -91,17 +91,30 @@ const parsePlainDate = (iso: string): Temporal.PlainDate => {
   }
 }
 
-// Year extraction that mirrors the original Luxon behavior on parse
-// failure: a bad input does NOT short-circuit as "invalid year 1" — it
-// falls through and the entry is kept. Only the canonical `0001-01-01`
-// sentinel that MELCloud returns gets filtered.
-const safePlainDateYear = (iso: string): number => {
+const instantYear = (iso: string): number | null => {
+  try {
+    return Temporal.Instant.from(iso).toZonedDateTimeISO('UTC').year
+  } catch {
+    return null
+  }
+}
+
+const plainDateYear = (iso: string): number | null => {
   try {
     return Temporal.PlainDate.from(iso).year
   } catch {
-    return 0
+    return null
   }
 }
+
+// Year extraction across both MELCloud date dialects — the sentinel
+// arrives as an instant too (`0001-01-01T00:00:00Z`, live payload
+// 2026-07-18), which `PlainDate.from` rejects. Parse-failure behavior
+// still mirrors the original Luxon semantics: a bad input does NOT
+// short-circuit as "invalid year 1" — it falls through and the entry
+// is kept. Only the year-1 sentinel gets filtered.
+const safePlainDateYear = (iso: string): number =>
+  instantYear(iso) ?? plainDateYear(iso) ?? 0
 
 const isLanguage = isKeyOf(ClassicLanguage)
 
