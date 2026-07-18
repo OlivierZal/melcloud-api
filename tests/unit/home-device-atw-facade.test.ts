@@ -25,8 +25,9 @@ const energyBucket = (value: string): ReturnType<typeof ok<object>> =>
     ],
   })
 
-const createApi = (): HomeAPIAdapter =>
+const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
+    ...overrides,
     getAtwEnergy: vi.fn<HomeAPIAdapter['getAtwEnergy']>(),
     getAtwErrorLog: vi.fn<HomeAPIAdapter['getAtwErrorLog']>(),
     getAtwInternalTemperatures:
@@ -564,7 +565,8 @@ describe('home device atw facade', () => {
     })
 
     it('covers today on a five-minute grid when no hour is given', async () => {
-      const api = createApi()
+      // Pin the label locale: the runner's default is not ours.
+      const api = createApi({ locale: 'fr-FR' })
       vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
