@@ -229,7 +229,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    */
   public static async create(config?: HomeAPIConfig): Promise<HomeAPI> {
     const api = new HomeAPI(config)
-    await api.initialize()
+    await api.start(config?.shouldResumeSessionInBackground === true)
     return api
   }
 

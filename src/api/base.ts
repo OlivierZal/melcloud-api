@@ -444,6 +444,25 @@ export abstract class BaseAPI implements Disposable {
     this.#syncManager.setInterval(minutes)
   }
 
+  /**
+   * Run the initial session restore, honoring the configured mode.
+   * `initialize()` never rejects by design (probe and resume failures
+   * are swallowed and surfaced through the lifecycle events), so the
+   * background variant only needs the fire-and-forget form.
+   * @param shouldResumeInBackground - When `true`, the restore runs off
+   * the caller's critical path and `create()` resolves immediately.
+   */
+  public async start(shouldResumeInBackground = false): Promise<void> {
+    if (shouldResumeInBackground) {
+      // eslint-disable-next-line unicorn/prefer-await -- fire-and-forget off the caller's critical path; rejections are logged, never propagated
+      this.initialize().catch((error: unknown) => {
+        this.logger.error('Background session resume failed:', error)
+      })
+      return
+    }
+    await this.initialize()
+  }
+
   protected applyCredentials(username?: string, password?: string): void {
     if (username !== undefined) {
       this.username = username

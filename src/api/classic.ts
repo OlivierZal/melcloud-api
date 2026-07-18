@@ -276,7 +276,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    */
   public static async create(config?: ClassicAPIConfig): Promise<ClassicAPI> {
     const api = new ClassicAPI(config)
-    await api.initialize()
+    await api.start(config?.shouldResumeSessionInBackground === true)
     return api
   }
 

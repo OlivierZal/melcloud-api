@@ -1535,6 +1535,79 @@ describe('melcloud home API', () => {
     })
   })
 
+  describe('background session resume', () => {
+    it('should resolve create() without awaiting the session restore', async () => {
+      expect.assertions(1)
+
+      // A login chain that never resolves: create() must not depend on it.
+      mockFetch.mockReturnValue(
+        new Promise<never>(() => {
+          // pending forever
+        }),
+      )
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger: createLogger(),
+        password: 'pass',
+        shouldResumeSessionInBackground: true,
+        transport: mockHttpClient,
+        username: 'user@test.com',
+      })
+
+      expect(api.isAuthenticated()).toBe(false)
+    })
+
+    it('should complete the restore in the background', async () => {
+      expect.assertions(1)
+
+      setupSuccessfulLogin()
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger: createLogger(),
+        password: 'pass',
+        shouldResumeSessionInBackground: true,
+        transport: mockHttpClient,
+        username: 'user@test.com',
+      })
+
+      await vi.waitFor(() => {
+        if (!api.isAuthenticated()) {
+          throw new Error('session restore still pending')
+        }
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+    })
+
+    it('should log a background restore rejection without propagating', async () => {
+      expect.assertions(1)
+
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        password: 'pass',
+        transport: mockHttpClient,
+        username: 'user@test.com',
+      })
+      vi.spyOn(api, 'initialize').mockRejectedValue(new Error('boom'))
+
+      await api.start(true)
+
+      await vi.waitFor(() => {
+        if (vi.mocked(logger.error).mock.calls.length === 0) {
+          throw new Error('not logged yet')
+        }
+      })
+
+      expect(logger.error).toHaveBeenCalledWith(
+        'Background session resume failed:',
+        expect.objectContaining({ message: 'boom' }),
+      )
+    })
+  })
+
   describe('form parsing', () => {
     it('should classify a refused submission with the Cognito reason', async () => {
       // PAR, redirect chain to the login page
