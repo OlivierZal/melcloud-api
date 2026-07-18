@@ -278,6 +278,22 @@ describe('building facade', () => {
     expect(api.getSignal).toHaveBeenCalledWith(expect.any(Object))
   })
 
+  it('formats the raw minute labels as clock labels', async () => {
+    const { facade } = createBuildingFacade({
+      getSignal: vi
+        .fn<ClassicAPIAdapter['getSignal']>()
+        .mockResolvedValue(
+          ok(classicReportData({ Labels: ['0', '30', '59', 'total'] })),
+        ),
+      locale: 'fr-FR',
+    })
+
+    const { labels } = okValue(await facade.getSignalStrength(12))
+
+    // Bare minutes anchor on the requested hour; non-minutes pass through.
+    expect(labels).toStrictEqual(['12:00', '12:30', '12:59', 'total'])
+  })
+
   it('defaults getSignalStrength hour to the current hour', async () => {
     const { api, facade } = createBuildingFacade()
     okValue(await facade.getSignalStrength())
@@ -852,6 +868,19 @@ describe('ata device facade', () => {
 
     expect(value).toHaveProperty('series')
     expect(api.getHourlyTemperatures).toHaveBeenCalledWith(expect.any(Object))
+  })
+
+  it('formats the hourly temperature labels as clock labels', async () => {
+    const { facade } = createAtaFacade({
+      getHourlyTemperatures: vi
+        .fn<ClassicAPIAdapter['getHourlyTemperatures']>()
+        .mockResolvedValue(ok(classicReportData({ Labels: ['5'] }))),
+      locale: 'fr-FR',
+    })
+
+    const { labels } = okValue(await facade.getHourlyTemperatures(9))
+
+    expect(labels).toStrictEqual(['09:05'])
   })
 
   it('defaults hourlyTemperatures hour to the current hour', async () => {

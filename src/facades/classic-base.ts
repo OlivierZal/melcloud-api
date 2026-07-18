@@ -34,7 +34,7 @@ import {
   mapResult,
   toClassicDeviceId,
 } from '../types/index.ts'
-import { getChartLineOptions } from '../utils.ts'
+import { getChartLineOptions, withMinuteClockLabels } from '../utils.ts'
 import { HourSchema, parseOrThrow } from '../validation/index.ts'
 import type {
   ClassicFacade,
@@ -288,11 +288,14 @@ export abstract class ClassicBaseFacade<
         postData: { devices: this.#deviceIds, hour },
       }),
       (data) =>
-        getChartLineOptions(data, {
-          legend: this.#deviceNames,
-          locale: this.api.locale,
-          unit: 'dBm',
-        }),
+        withMinuteClockLabels(
+          getChartLineOptions(data, {
+            legend: this.#deviceNames,
+            locale: this.api.locale,
+            unit: 'dBm',
+          }),
+          { hour, locale: this.api.locale },
+        ),
     )
   }
 

@@ -40,6 +40,7 @@ import {
   now,
   typedFromEntries,
   typedKeys,
+  withMinuteClockLabels,
 } from '../utils.ts'
 import type {
   ClassicDeviceFacade,
@@ -272,11 +273,14 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         postData: { device: this.id, hour },
       }),
       (data) =>
-        getChartLineOptions(data, {
-          legend: this.internalTemperaturesLegend,
-          locale: this.api.locale,
-          unit: '°C',
-        }),
+        withMinuteClockLabels(
+          getChartLineOptions(data, {
+            legend: this.internalTemperaturesLegend,
+            locale: this.api.locale,
+            unit: '°C',
+          }),
+          { hour, locale: this.api.locale },
+        ),
     )
   }
 

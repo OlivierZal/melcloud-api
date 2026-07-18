@@ -8,6 +8,7 @@ import type {
   ClassicReportData,
   ClassicSetDeviceDataAtaInList,
   ClassicUpdateDeviceData,
+  Hour,
   KeyOfClassicSetDeviceDataAtaNotInList,
   Resolved,
 } from './types/index.ts'
@@ -318,6 +319,42 @@ export const getChartLineOptions = (
   to,
   unit,
 })
+
+// Raw minute labels of the one-hour report endpoints span this bound.
+const MAX_MINUTE_LABEL = 59
+
+/**
+ * Replace the raw minute labels (`0`-`59`) of a one-hour chart with
+ * locale-formatted clock labels anchored on `hour`: the `Report/*`
+ * hourly endpoints only carry bare minutes, which read ambiguously on
+ * an axis (and inconsistently next to the Home charts' clock labels).
+ * Non-minute labels pass through untouched.
+ * @param options - Chart options carrying raw minute labels.
+ * @param format - Label formatting inputs.
+ * @param format.hour - Hour of today the minutes belong to.
+ * @param format.locale - BCP-47 locale tag; defaults to the runtime locale.
+ * @returns The options with clock labels.
+ */
+export const withMinuteClockLabels = (
+  options: ReportChartLineOptions,
+  { hour, locale }: { hour: Hour; locale?: string | undefined },
+): ReportChartLineOptions => {
+  const formatter = new Intl.DateTimeFormat(locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  return {
+    ...options,
+    labels: options.labels.map((label) => {
+      const minute = Number(label)
+      return (
+          Number.isSafeInteger(minute) && minute >= 0 && minute <= MAX_MINUTE_LABEL
+        ) ?
+          formatter.format(new Temporal.PlainTime(hour, minute))
+        : label
+    }),
+  }
+}
 
 /**
  * Transform operation mode log data into structured pie chart options.
