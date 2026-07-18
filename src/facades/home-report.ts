@@ -1,11 +1,13 @@
-import type {
-  HomeEnergyData,
-  HomeReportAnnotation,
-  HomeReportData,
-  HomeReportPoint,
-  Hour,
-} from '../types/index.ts'
 import { Intl, Temporal } from '../temporal.ts'
+import {
+  type HomeEnergyData,
+  type HomeReportAnnotation,
+  type HomeReportData,
+  type HomeReportPoint,
+  type Hour,
+  type Result,
+  ok,
+} from '../types/index.ts'
 import type {
   ReportChartBand,
   ReportChartLineOptions,
@@ -30,8 +32,145 @@ export interface HomeChartWindow {
   readonly to: Temporal.ZonedDateTime
 }
 
-/** Aggregation period passed to the Home report endpoints. */
-export const HOME_REPORT_PERIOD = 'Hourly'
+// Report annotations degrade with the requested window, not just the
+// period: beyond ~30 days the BFF summarizes them (operation-mode
+// durations collapse — live-probed 2026-07-19: a 90-day query reported
+// LESS hot water than its own 30-day subwindow), and minute-grained
+// payloads blow the client timeout past ~7 days. Facades therefore
+// split wide windows into chunks and merge the reports.
+export const MAX_REPORT_CHUNK_DAYS = 30
+
+const windowDaysOf = (window: HomeChartWindow): number =>
+  window.from.until(window.to).total({ relativeTo: window.from, unit: 'days' })
+
+/**
+ * Aggregation period for one report request: minute-grained `Hourly`
+ * within the hourly-grid span, sampled `Weekly` beyond it (`Daily`
+ * collapses the mode annotations — live-probed 2026-07-19).
+ * @param window - Resolved chunk window.
+ * @returns The period to request.
+ */
+export const toHomeReportPeriod = (window: HomeChartWindow): string =>
+  windowDaysOf(window) > MAX_HOURLY_GRID_DAYS ? 'Weekly' : 'Hourly'
+
+/**
+ * Split a window into consecutive chunks of at most
+ * {@link MAX_REPORT_CHUNK_DAYS} days, oldest first.
+ * @param window - Resolved chart window.
+ * @returns The chunk windows (at least one).
+ */
+export const splitHomeReportWindow = (
+  window: HomeChartWindow,
+): HomeChartWindow[] => {
+  const chunks: HomeChartWindow[] = []
+  let { from } = window
+  while (Temporal.ZonedDateTime.compare(from, window.to) < 0) {
+    const next = from.add({ days: MAX_REPORT_CHUNK_DAYS })
+    const to =
+      Temporal.ZonedDateTime.compare(next, window.to) > 0 ? window.to : next
+    chunks.push({ from, to })
+    from = to
+  }
+  return chunks.length > 0 ? chunks : [window]
+}
+
+const mergeChunkDatasets = (
+  reports: readonly HomeReportData[],
+): HomeReportData['datasets'] => {
+  const pointsById = new Map<string, Map<string, HomeReportPoint>>()
+  for (const report of reports) {
+    for (const dataset of report.datasets) {
+      const points =
+        pointsById.get(dataset.id) ?? new Map<string, HomeReportPoint>()
+      for (const point of dataset.data) {
+        points.set(point.x, point)
+      }
+      pointsById.set(dataset.id, points)
+    }
+  }
+  return pointsById
+    .entries()
+    .map(([id, points]) => ({
+      data: points.values().toArray(),
+      id,
+      label: id,
+    }))
+    .toArray()
+}
+
+const mergeChunkAnnotations = (
+  reports: readonly HomeReportData[],
+): HomeReportAnnotation[] => {
+  const annotations = new Map<string, HomeReportAnnotation>()
+  for (const report of reports) {
+    const spans = report.annotations ?? []
+    for (const annotation of spans) {
+      annotations.set(
+        `${annotation.label ?? ''}|${annotation.xMin}|${annotation.xMax}`,
+        annotation,
+      )
+    }
+  }
+  return annotations.values().toArray()
+}
+
+/**
+ * Merge chunked report responses into a single report: samples
+ * concatenated per dataset id (deduplicated by timestamp), annotations
+ * deduplicated by identity (the BFF returns boundary-crossing spans in
+ * both adjacent chunks — a naive merge would double-count them), LOCF
+ * seeds from the oldest chunk.
+ * @param chunks - Report payloads, oldest chunk first.
+ * @returns A single-report array for the chart pipeline.
+ */
+export const mergeHomeReportChunks = (
+  chunks: readonly (readonly HomeReportData[])[],
+): HomeReportData[] => {
+  const reports = chunks.flat()
+  const [first] = reports
+  if (first === undefined || reports.length === 1) {
+    return [...reports]
+  }
+  return [
+    {
+      ...first,
+      annotations: mergeChunkAnnotations(reports),
+      datasets: mergeChunkDatasets(reports),
+    },
+  ]
+}
+
+/**
+ * Fetch a report over the window in chunks of at most
+ * {@link MAX_REPORT_CHUNK_DAYS} days, in parallel, and merge the
+ * responses: wide single requests time out (minute-grained payloads)
+ * or come back with summarized annotations (collapsed mode durations).
+ * @param fetch - One report request (endpoint bound by the caller).
+ * @param window - Resolved chart window.
+ * @returns The merged report, or the first chunk failure.
+ */
+export const fetchHomeReportChunks = async (
+  fetch: (params: {
+    from: string
+    period: string
+    to: string
+  }) => Promise<Result<HomeReportData[]>>,
+  window: HomeChartWindow,
+): Promise<Result<HomeReportData[]>> => {
+  const results = await Promise.all(
+    splitHomeReportWindow(window).map(async (chunk) =>
+      fetch({ ...toHomeWireWindow(chunk), period: toHomeReportPeriod(chunk) }),
+    ),
+  )
+  const values: HomeReportData[][] = []
+  for (const result of results) {
+    if (!result.ok) {
+      return result
+    }
+    values.push([...result.value])
+  }
+  return ok(mergeHomeReportChunks(values))
+}
 
 // The Home wire speaks UTC wall-clock on queries and samples alike
 // (live-probed 2026-07-18: the freshest sample equals "now" in UTC).

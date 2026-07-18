@@ -563,6 +563,54 @@ describe('home device atw facade', () => {
       expect(value.labels).toHaveLength(61)
     })
 
+    it('chunks a wide window and merges the reports', async () => {
+      const api = createApi()
+      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
+      vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+
+      const value = okValue(
+        await facade.getTemperatures({
+          from: '2026-03-01T00:00:00Z',
+          to: '2026-05-09T00:00:00Z',
+        }),
+      )
+
+      // 69 days split at the 30-day cap: three chunks per endpoint,
+      // sampled Weekly (beyond the hourly-grid span).
+      expect(api.getAtwTemperatures).toHaveBeenCalledTimes(3)
+      expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(1, 'atw-1', {
+        from: '2026-03-01T00:00:00Z',
+        period: 'Weekly',
+        to: '2026-03-31T00:00:00Z',
+      })
+      expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(3, 'atw-1', {
+        from: '2026-04-30T00:00:00Z',
+        period: 'Weekly',
+        to: '2026-05-09T00:00:00Z',
+      })
+      // Identical chunk payloads merge to one deduplicated series.
+      expect(value.series).toHaveLength(1)
+    })
+
+    it('propagates a chunk failure untouched', async () => {
+      const api = createApi()
+      const failure = { ok: false as const, status: 503 }
+      vi.mocked(api.getAtwTemperatures)
+        .mockResolvedValueOnce(ok([comfortReport]))
+        .mockResolvedValueOnce(cast(failure))
+        .mockResolvedValueOnce(ok([comfortReport]))
+      vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+
+      await expect(
+        facade.getTemperatures({
+          from: '2026-03-01T00:00:00Z',
+          to: '2026-05-09T00:00:00Z',
+        }),
+      ).resolves.toBe(failure)
+    })
+
     it('aggregates operation modes into Classic-shaped pie data', async () => {
       const api = createApi()
       vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))

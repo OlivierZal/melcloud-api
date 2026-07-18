@@ -29,7 +29,7 @@ import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { toClassicAtaGroupState, toHomeAtaValues } from './home-ata-group.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 import {
-  HOME_REPORT_PERIOD,
+  fetchHomeReportChunks,
   resolveHomeReportWindow,
   toHomeEnergyOptions,
   toHomeLineOptions,
@@ -255,10 +255,10 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   ): Promise<Result<ReportChartLineOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     return mapResult(
-      await this.api.getAtaTemperatures(this.id, {
-        ...toHomeWireWindow(window),
-        period: HOME_REPORT_PERIOD,
-      }),
+      await fetchHomeReportChunks(
+        async (params) => this.api.getAtaTemperatures(this.id, params),
+        window,
+      ),
       (reports) =>
         toHomeLineOptions({
           locale: this.api.locale,

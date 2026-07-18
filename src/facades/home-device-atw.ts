@@ -27,7 +27,7 @@ import type {
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 import {
   type HomeChartWindow,
-  HOME_REPORT_PERIOD,
+  fetchHomeReportChunks,
   resolveHomeHourWindow,
   resolveHomeReportWindow,
   toHomeEnergyOptions,
@@ -418,10 +418,10 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   ): Promise<Result<ReportChartLineOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     return mapResult(
-      await this.api.getAtwInternalTemperatures(this.id, {
-        ...toHomeWireWindow(window),
-        period: HOME_REPORT_PERIOD,
-      }),
+      await fetchHomeReportChunks(
+        async (params) => this.api.getAtwInternalTemperatures(this.id, params),
+        window,
+      ),
       (reports) =>
         toHomeLineOptions({
           locale: this.api.locale,
@@ -445,10 +445,10 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   ): Promise<Result<ReportChartPieOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     return mapResult(
-      await this.api.getAtwTemperatures(this.id, {
-        ...toHomeWireWindow(window),
-        period: HOME_REPORT_PERIOD,
-      }),
+      await fetchHomeReportChunks(
+        async (params) => this.api.getAtwTemperatures(this.id, params),
+        window,
+      ),
       (reports) => toHomeOperationModeOptions(reports, window),
     )
   }
@@ -529,13 +529,15 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     window: HomeChartWindow,
     gridUnit?: 'minute',
   ): Promise<Result<ReportChartLineOptions>> {
-    const params = {
-      ...toHomeWireWindow(window),
-      period: HOME_REPORT_PERIOD,
-    }
     const [comfort, internal] = await Promise.all([
-      this.api.getAtwTemperatures(this.id, params),
-      this.api.getAtwInternalTemperatures(this.id, params),
+      fetchHomeReportChunks(
+        async (params) => this.api.getAtwTemperatures(this.id, params),
+        window,
+      ),
+      fetchHomeReportChunks(
+        async (params) => this.api.getAtwInternalTemperatures(this.id, params),
+        window,
+      ),
     ])
     if (!comfort.ok) {
       return comfort
