@@ -3,6 +3,7 @@ import { createHash, randomBytes } from 'node:crypto'
 import { CookieJar } from 'tough-cookie'
 
 import type { HomeTokenResponse } from '../types/index.ts'
+import { AuthenticationError } from '../errors/index.ts'
 import {
   HomeParResponseSchema,
   HomeTokenResponseSchema,
@@ -407,6 +408,17 @@ const par = async ({
     .request_uri
 }
 
+// The Cognito hosted UI re-renders the login page with its reason in an
+// `errorMessage` element when it refuses a submission.
+const refusedSubmissionMessage = (html: string): string => {
+  const match =
+    /(?:id|class)="errorMessage[^"]*"[^>]*>(?<message>[^<]*)</v.exec(html)
+  const reason = match?.groups?.message?.trim() ?? ''
+  return reason === '' ?
+      'Credential submission was not redirected'
+    : `MELCloud Home rejected the sign-in: ${reason}`
+}
+
 /**
  * Navigate to the Cognito login page and submit credentials.
  * @param options - The credential submission options.
@@ -449,7 +461,10 @@ const submitCredentials = async ({
   })
   const callbackLocation = String(submitResponse.headers.location ?? '')
   if (callbackLocation === '') {
-    throw new Error('No redirect after credential submission')
+    // A re-rendered login page instead of a redirect is Cognito refusing
+    // the credentials: classified so the login backoff engages instead of
+    // hammering doomed sign-ins on every sync.
+    throw new AuthenticationError(refusedSubmissionMessage(submitResponse.data))
   }
   return resolveUrl({ base: action, location: callbackLocation })
 }
@@ -471,10 +486,22 @@ const extractAuthorizationCode = async (
     url: callbackUrl,
     ...(abortSignal !== undefined && { abortSignal }),
   })
-  const { searchParams } = new URL(url)
+  const { host, pathname, protocol, searchParams } = new URL(url)
   const code = searchParams.get('code')
   if (code === null) {
-    throw new Error('No authorization code in callback')
+    // The IdP concluded the flow without granting a code — a refusal, not
+    // a transport failure. The landing spot and the OIDC error params
+    // carry the actual reason (query values other than these never leak).
+    const oidcError = searchParams.get('error')
+    const description = searchParams.get('error_description')
+    const details = [
+      `landed on ${protocol}//${host}${pathname}`,
+      ...(oidcError === null ? [] : [`error=${oidcError}`]),
+      ...(description === null ? [] : [description]),
+    ].join('; ')
+    throw new AuthenticationError(
+      `No authorization code in callback (${details})`,
+    )
   }
   return code
 }
