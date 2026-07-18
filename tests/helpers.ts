@@ -24,6 +24,18 @@ export const mockTemporalNowInstant = (): void => {
   )
 }
 
+// Same native-`Temporal` concern as `mockTemporalNowInstant`, for the
+// zoned variant the Home chart windows are anchored on. Restore with
+// `vi.mocked(Temporal.Now.zonedDateTimeISO).mockRestore()` next to
+// `vi.useRealTimers()`.
+export const mockTemporalNowZoned = (): void => {
+  vi.spyOn(Temporal.Now, 'zonedDateTimeISO').mockImplementation((timezone) =>
+    Temporal.Instant.fromEpochMilliseconds(Date.now()).toZonedDateTimeISO(
+      timezone ?? 'UTC',
+    ),
+  )
+}
+
 // Wrap `expect.objectContaining` so call sites get a `never`-typed
 // matcher (assignable anywhere) instead of `any` — the latter trips
 // `@typescript-eslint/no-unsafe-assignment` when nested inside another

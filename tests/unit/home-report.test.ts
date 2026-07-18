@@ -12,6 +12,7 @@ import {
   toHomeWireWindow,
 } from '../../src/facades/home-report.ts'
 import { Temporal } from '../../src/temporal.ts'
+import { mockTemporalNowZoned } from '../helpers.ts'
 import { homeReportPoint } from '../home-fixtures.ts'
 
 const PARIS = 'Europe/Paris'
@@ -48,9 +49,11 @@ describe(resolveHomeReportWindow, () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.setSystemTime(Temporal.Instant.from(NOW_ISO).epochMilliseconds)
+    mockTemporalNowZoned()
   })
 
   afterEach(() => {
+    vi.mocked(Temporal.Now.zonedDateTimeISO).mockRestore()
     vi.useRealTimers()
   })
 
@@ -102,9 +105,11 @@ describe(resolveHomeHourWindow, () => {
   beforeEach(() => {
     vi.useFakeTimers()
     vi.setSystemTime(Temporal.Instant.from(NOW_ISO).epochMilliseconds)
+    mockTemporalNowZoned()
   })
 
   afterEach(() => {
+    vi.mocked(Temporal.Now.zonedDateTimeISO).mockRestore()
     vi.useRealTimers()
   })
 

@@ -5,7 +5,7 @@ import { NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { Temporal } from '../../src/temporal.ts'
 import { type HomeAtaDeviceCapabilities, ok } from '../../src/types/index.ts'
-import { cast, mock, okValue } from '../helpers.ts'
+import { cast, mock, mockTemporalNowZoned, okValue } from '../helpers.ts'
 import { homeDevice, homeReportPoint } from '../home-fixtures.ts'
 
 const createModel = (
@@ -413,9 +413,11 @@ describe('home device ata facade', () => {
       vi.setSystemTime(
         Temporal.Instant.from('2026-03-01T12:00:00Z').epochMilliseconds,
       )
+      mockTemporalNowZoned()
     })
 
     afterEach(() => {
+      vi.mocked(Temporal.Now.zonedDateTimeISO).mockRestore()
       vi.useRealTimers()
     })
 

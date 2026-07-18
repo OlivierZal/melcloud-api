@@ -1,11 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
 import { Temporal } from '../../src/temporal.ts'
 import { type HomeAtwDeviceCapabilities, ok } from '../../src/types/index.ts'
-import { cast, mock, okValue } from '../helpers.ts'
+import { cast, mock, mockTemporalNowZoned, okValue } from '../helpers.ts'
 import { homeAtwDevice, homeReportPoint } from '../home-fixtures.ts'
 
 const createModel = (
@@ -452,7 +452,16 @@ describe('home device atw facade', () => {
   })
 
   describe('temperature charts', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(
+        Temporal.Instant.from('2026-05-09T09:30:00Z').epochMilliseconds,
+      )
+      mockTemporalNowZoned()
+    })
+
     afterEach(() => {
+      vi.mocked(Temporal.Now.zonedDateTimeISO).mockRestore()
       vi.useRealTimers()
     })
 
@@ -539,10 +548,6 @@ describe('home device atw facade', () => {
     })
 
     it('builds the hourly chart on a minute grid', async () => {
-      vi.useFakeTimers()
-      vi.setSystemTime(
-        Temporal.Instant.from('2026-05-09T09:30:00Z').epochMilliseconds,
-      )
       const api = createApi()
       vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
