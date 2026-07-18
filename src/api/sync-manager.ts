@@ -1,3 +1,4 @@
+import { fireAndForget } from '../fire-and-forget.ts'
 import { DisposableTimeout } from '../resilience/index.ts'
 import { MS_PER_MINUTE } from '../time-units.ts'
 import type { Logger } from './types.ts'
@@ -35,10 +36,7 @@ export class SyncManager implements Disposable {
   public planNext(): void {
     if (this.#interval > 0) {
       this.#timeout.schedule(() => {
-        // eslint-disable-next-line unicorn/prefer-await -- fire-and-forget inside a synchronous timer callback; rejections are logged, never propagated
-        this.#syncFunction().catch((error: unknown) => {
-          this.#logger.error('Auto-sync failed:', error)
-        })
+        fireAndForget(this.#syncFunction(), this.#logger, 'Auto-sync failed:')
       }, this.#interval)
     }
   }

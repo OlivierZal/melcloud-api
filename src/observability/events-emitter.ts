@@ -7,6 +7,7 @@ import type {
   RequestStartEvent,
   SyncCallback,
 } from '../api/types.ts'
+import { fireAndForget } from '../fire-and-forget.ts'
 
 /**
  * Thin wrapper around a {@link LifecycleEvents} bundle that swallows
@@ -94,13 +95,11 @@ export class LifecycleEmitter {
 
   #watchRejection(callback: string, result: unknown): void {
     if (result instanceof Promise) {
-      // eslint-disable-next-line unicorn/prefer-await -- the observer contract is fire-and-forget: rejections are logged, never propagated
-      result.catch((error: unknown) => {
-        this.#logger.error(
-          `LifecycleEvents.${callback} callback rejected — ignoring`,
-          error,
-        )
-      })
+      fireAndForget(
+        result,
+        this.#logger,
+        `LifecycleEvents.${callback} callback rejected — ignoring`,
+      )
     }
   }
 }

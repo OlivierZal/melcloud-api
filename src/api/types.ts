@@ -33,6 +33,16 @@ export interface BaseAPIConfig extends UndefinedTolerant<LoginCredentials> {
   /** External setting manager for persisting credentials and session data. */
   readonly settingManager?: SettingManager | undefined
   /**
+   * Restore the persisted session in the background instead of awaiting
+   * it inside `create()`. Session probing and full logins can take tens
+   * of seconds on slow networks, which blows a host app's init budget
+   * (e.g. Homey's 30 s `ready` timeout). The lifecycle contract is
+   * unchanged — auto-sync arming, `onAuthenticationLost`, login
+   * backoff — it just runs off the critical path; `isAuthenticated()`
+   * may report `false` until the background restore lands.
+   */
+  readonly shouldResumeSessionInBackground?: boolean | undefined
+  /**
    * Auto-sync timer in minutes. `false` disables the timer entirely
    * (manual `list()` / `fetch()` only). Omit to use the subclass
    * default (1 for Home, 5 for Classic).

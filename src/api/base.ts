@@ -8,6 +8,7 @@ import {
   AuthenticationThrottledError,
   RateLimitError,
 } from '../errors/index.ts'
+import { fireAndForget } from '../fire-and-forget.ts'
 import {
   type HttpClientConfig,
   type HttpResponse,
@@ -442,6 +443,26 @@ export abstract class BaseAPI implements Disposable {
    */
   public setSyncInterval(minutes: number | false): void {
     this.#syncManager.setInterval(minutes)
+  }
+
+  /**
+   * Run the initial session restore, honoring the configured mode.
+   * `initialize()` never rejects by design (probe and resume failures
+   * are swallowed and surfaced through the lifecycle events), so the
+   * background variant only needs the fire-and-forget form.
+   * @param shouldResumeInBackground - When `true`, the restore runs off
+   * the caller's critical path and `create()` resolves immediately.
+   */
+  public async start(shouldResumeInBackground = false): Promise<void> {
+    if (shouldResumeInBackground) {
+      fireAndForget(
+        this.initialize(),
+        this.logger,
+        'Background session resume failed:',
+      )
+      return
+    }
+    await this.initialize()
   }
 
   protected applyCredentials(username?: string, password?: string): void {
