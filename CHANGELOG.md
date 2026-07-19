@@ -276,6 +276,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[42.0.2]: https://github.com/OlivierZal/melcloud-api/compare/42.0.1...42.0.2
 [42.0.1]: https://github.com/OlivierZal/melcloud-api/compare/42.0.0...42.0.1
 [42.0.0]: https://github.com/OlivierZal/melcloud-api/compare/41.3.0...42.0.0
 [41.3.0]: https://github.com/OlivierZal/melcloud-api/compare/41.2.3...41.3.0
