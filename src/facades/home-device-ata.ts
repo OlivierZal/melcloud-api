@@ -37,8 +37,10 @@ import {
   toHomeWireWindow,
 } from './home-report.ts'
 
-// Telemetry intervals per bucket granularity (UTC-aligned wire buckets).
-const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour' } as const
+// Telemetry intervals per display bucket granularity: local-day
+// buckets aggregate hourly wire buckets client-side (the wire's own
+// day buckets are UTC days).
+const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour', localDay: 'Hour' } as const
 
 // The ATA cumulative energy measure reports watt-hours (100 Wh pulses,
 // live-probed 2026-07-18: a daily bucket of `571.0` for ~0.57 kWh).

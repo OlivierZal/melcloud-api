@@ -21,8 +21,9 @@ const createModel = (
     settings,
   })
 
-const createApi = (): HomeAPIAdapter =>
+const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
+    ...overrides,
     getAtaEnergy: vi.fn<HomeAPIAdapter['getAtaEnergy']>(),
     getAtaErrorLog: vi.fn<HomeAPIAdapter['getAtaErrorLog']>(),
     getAtaTemperatures: vi.fn<HomeAPIAdapter['getAtaTemperatures']>(),
@@ -373,7 +374,7 @@ describe('home device ata facade', () => {
       await expect(facade.getTemperatures()).resolves.toBe(failure)
     })
 
-    it('charts a multi-day energy report in daily kWh buckets', async () => {
+    it('charts a multi-day energy report in local-day kWh buckets', async () => {
       const api = createApi()
       vi.mocked(api.getAtaEnergy).mockResolvedValue(
         ok({
@@ -396,14 +397,62 @@ describe('home device ata facade', () => {
         }),
       )
 
+      // Up to a month, day buckets aggregate hourly wire buckets per
+      // display-timezone calendar day.
       expect(api.getAtaEnergy).toHaveBeenCalledWith('device-1', {
         from: '2026-03-01T00:00:00Z',
-        interval: 'Day',
+        interval: 'Hour',
         to: '2026-03-03T00:00:00Z',
       })
       expect(value.unit).toBe('kWh')
       expect(value.series[0]?.name).toBe('Consumed')
       expect(value.series[0]?.data[0]).toBeCloseTo(0.571)
+    })
+
+    it('lands evening UTC buckets on the next local calendar day', async () => {
+      // Pin the label locale: the runner's default is not ours.
+      const api = createApi({ locale: 'fr-FR', timezone: 'Europe/Paris' })
+      vi.mocked(api.getAtaEnergy).mockResolvedValue(
+        ok({
+          measureData: [
+            {
+              type: 'cumulative_energy_consumed_since_last_upload',
+              values: [
+                // 23:30 UTC = 00:30 the next day in winter Paris time.
+                { time: '2026-03-01 23:30:00.000000000', value: '100.0' },
+              ],
+            },
+          ],
+        }),
+      )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      const value = okValue(
+        await facade.getEnergyReport({
+          from: '2026-02-28T23:00:00Z',
+          to: '2026-03-02T22:00:00Z',
+        }),
+      )
+
+      expect(value.labels).toStrictEqual(['1 mars', '2 mars'])
+      expect(value.series[0]?.data).toStrictEqual([0, 0.1])
+    })
+
+    it('keeps raw UTC day buckets beyond a month', async () => {
+      const api = createApi()
+      vi.mocked(api.getAtaEnergy).mockResolvedValue(ok({ measureData: [] }))
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      okValue(
+        await facade.getEnergyReport({
+          from: '2026-01-01T00:00:00Z',
+          to: '2026-03-01T00:00:00Z',
+        }),
+      )
+
+      expect(vi.mocked(api.getAtaEnergy).mock.calls[0]?.[1]?.interval).toBe(
+        'Day',
+      )
     })
 
     it('switches a one-day energy report to hourly buckets', async () => {
