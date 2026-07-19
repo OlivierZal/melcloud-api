@@ -119,9 +119,13 @@ const DEFAULT_AUTH_RETRY_COOLDOWN_MS = 1000
 // endpoint keeps a lockout alive. Transport failures do not arm it (the
 // normal retry paths handle those); an explicit `authenticate()` — the
 // user re-submitting credentials — bypasses the gate and resets it on
-// success.
+// success. The deadline persists through the SettingManager so host
+// restarts respect it too — field diagnostics showed four rejected
+// Cognito sign-ins within 70 seconds across app restarts, each fresh
+// instance re-attempting despite the announced pause.
 const LOGIN_BACKOFF_FAILURE_MS = 900_000
 const LOGIN_BACKOFF_THROTTLE_MS = 7_200_000
+const LOGIN_BACKOFF_SETTING_KEY = 'loginBackoffUntil'
 
 /**
  * Subclass-internal options injected into the {@link BaseAPI}
@@ -342,7 +346,7 @@ export abstract class BaseAPI implements Disposable {
       this.#armLoginBackoff(error)
       throw error
     }
-    this.#loginBackoffUntil = null
+    this.#setLoginBackoffUntil(null)
     await this.syncRegistry()
   }
 
@@ -680,8 +684,9 @@ export abstract class BaseAPI implements Disposable {
       error instanceof AuthenticationThrottledError ?
         LOGIN_BACKOFF_THROTTLE_MS
       : LOGIN_BACKOFF_FAILURE_MS
-    this.#loginBackoffUntil =
-      Temporal.Now.instant().epochMilliseconds + backoffMs
+    this.#setLoginBackoffUntil(
+      Temporal.Now.instant().epochMilliseconds + backoffMs,
+    )
     this.logger.error(
       `Automatic sign-ins paused for ${String(Math.round(backoffMs / MS_PER_MINUTE))} minutes after a rejected login`,
     )
@@ -755,10 +760,20 @@ export abstract class BaseAPI implements Disposable {
   }
 
   #isLoginBackedOff(): boolean {
-    return (
-      this.#loginBackoffUntil !== null &&
-      Temporal.Now.instant().epochMilliseconds < this.#loginBackoffUntil
-    )
+    const until = this.#loginBackoffUntil ?? this.#persistedLoginBackoffUntil()
+    return until !== null && Temporal.Now.instant().epochMilliseconds < until
+  }
+
+  // The persisted deadline covers instances created after a host
+  // restart; the in-memory field wins once this instance armed or
+  // cleared the gate itself.
+  #persistedLoginBackoffUntil(): number | null {
+    const raw = this.settingManager?.get(LOGIN_BACKOFF_SETTING_KEY) ?? ''
+    if (raw === '') {
+      return null
+    }
+    const until = Number(raw)
+    return Number.isFinite(until) ? until : null
   }
 
   async #runWithEvents<T>(
@@ -783,6 +798,16 @@ export abstract class BaseAPI implements Disposable {
       })
       throw error
     }
+  }
+
+  // `''` marks a cleared gate: the SettingManager contract has no
+  // delete operation.
+  #setLoginBackoffUntil(until: number | null): void {
+    this.#loginBackoffUntil = until
+    this.settingManager?.set(
+      LOGIN_BACKOFF_SETTING_KEY,
+      until === null ? '' : String(until),
+    )
   }
 
   private resolvePersistedCredentials(): LoginCredentials | null {
