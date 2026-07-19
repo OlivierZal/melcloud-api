@@ -932,7 +932,8 @@ describe('ata device facade', () => {
       new Temporal.PlainTime(1),
     )
     try {
-      const { api, facade } = createAtaFacade()
+      // Pin the label locale: the runner's default is not ours.
+      const { api, facade } = createAtaFacade({ locale: 'fr-FR' })
       const value = okValue(await facade.getHourlyTemperatures())
 
       expect(api.getHourlyTemperatures).toHaveBeenCalledTimes(2)
