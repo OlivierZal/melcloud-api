@@ -438,6 +438,24 @@ describe('home device ata facade', () => {
       expect(value.labels).toHaveLength(25)
       expect(value.series[0]?.data[9]).toBeCloseTo(0.2)
     })
+
+    it('keeps hourly buckets when the one-day window drifts by ms', async () => {
+      const api = createApi()
+      vi.mocked(api.getAtaEnergy).mockResolvedValue(ok({ measureData: [] }))
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      // The caller stamps `from` a beat before the library stamps `to`.
+      okValue(
+        await facade.getEnergyReport({
+          from: '2026-03-01T00:00:00Z',
+          to: '2026-03-02T00:00:00.250Z',
+        }),
+      )
+
+      expect(vi.mocked(api.getAtaEnergy).mock.calls[0]?.[1]?.interval).toBe(
+        'Hour',
+      )
+    })
   })
 
   describe('signal chart', () => {
@@ -496,13 +514,17 @@ describe('home device ata facade', () => {
 
       const value = okValue(await facade.getSignalStrength())
 
-      // Pinned to 12:00 UTC: midnight through now, 5-minute slots.
+      // Pinned to 12:00 UTC: the whole day on 5-minute slots, blank
+      // after now.
       expect(api.getSignal).toHaveBeenCalledWith('device-1', {
         from: '2026-03-01T00:00:00Z',
-        to: '2026-03-01T12:00:00Z',
+        to: '2026-03-02T00:00:00Z',
       })
-      expect(value.labels).toHaveLength(145)
+      expect(value.labels).toHaveLength(289)
       expect(value.series[0]?.data[1]).toBe(-70)
+      expect(value.series[0]?.data[144]).toBe(-70)
+      expect(value.series[0]?.data[145]).toBeNull()
+      expect(value.series[0]?.data.at(-1)).toBeNull()
     })
   })
 })

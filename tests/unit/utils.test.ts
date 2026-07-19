@@ -11,6 +11,7 @@ import {
   isUpdateDeviceData,
   mergeHourlyChartResults,
   omitUndefined,
+  padHourlyChartToMidnight,
   typedFromEntries,
 } from '../../src/utils.ts'
 import { cast, okValue } from '../helpers.ts'
@@ -182,5 +183,35 @@ describe.concurrent(mergeHourlyChartResults, () => {
 
     expect(merged.labels).toStrictEqual([])
     expect(merged.series).toStrictEqual([])
+  })
+})
+
+describe.concurrent(padHourlyChartToMidnight, () => {
+  it('pads the not-yet-elapsed hours with clock labels and blanks', () => {
+    const padded = padHourlyChartToMidnight(
+      okValue(hourOptions(['22:30'], [-60])),
+      { afterHour: 22, locale: 'fr-FR' },
+    )
+
+    expect(padded.labels).toHaveLength(61)
+    expect(padded.labels[0]).toBe('22:30')
+    expect(padded.labels[1]).toBe('23:00')
+    expect(padded.labels.at(-1)).toBe('23:59')
+    expect(padded.series).toStrictEqual([
+      {
+        data: [-60, ...Array.from({ length: 60 }, () => null)],
+        name: 'Signal',
+      },
+    ])
+  })
+
+  it('returns the chart untouched during the last hour of the day', () => {
+    const padded = padHourlyChartToMidnight(
+      okValue(hourOptions(['23:30'], [-60])),
+      { afterHour: 23, locale: 'fr-FR' },
+    )
+
+    expect(padded.labels).toStrictEqual(['23:30'])
+    expect(padded.series).toStrictEqual([{ data: [-60], name: 'Signal' }])
   })
 })

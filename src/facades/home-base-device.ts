@@ -127,14 +127,18 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   public async getSignalStrength(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    const window =
+    const { cutoff, window } =
       hour === undefined ?
         resolveHomeDayWindow(this.chartTimezone)
-      : resolveHomeHourWindow(hour, this.chartTimezone)
+      : {
+          cutoff: undefined,
+          window: resolveHomeHourWindow(hour, this.chartTimezone),
+        }
     return mapResult(
       await this.api.getSignal(this.id, toHomeWireWindow(window)),
       (data) =>
         toHomeSignalOptions({
+          cutoff,
           data,
           gridUnit: hour === undefined ? 'fiveMinutes' : 'minute',
           locale: this.api.locale,

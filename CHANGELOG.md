@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - Home report charts failed beyond ~7 days (the widget's "loading problem" on wide ranges): a single wide request either hit the 10-second client timeout (minute-grained payloads) or came back with silently summarized annotations — live-probed: a 90-day query reported _less_ hot-water time than its own 30-day subwindow. The facades now split report windows into chunks of at most 30 days, fetched in parallel with a window-fitted period (`Hourly` within seven days, `Weekly` beyond — `Daily` collapses the mode annotations), and merge the responses: samples concatenated per series, boundary-crossing mode spans deduplicated (the BFF returns them in both adjacent chunks), LOCF seeds from the oldest chunk. A 90-day operation-modes pie now resolves in a few seconds with faithful durations.
+- The day-spanning charts (Wi-Fi signal and today's temperatures) keep a full-day axis again on both API sides: the Classic hour-by-hour merge pads the not-yet-elapsed hours with blank samples, and the Home day windows now span midnight to midnight with samples blanked past now — the axis reads 00:00-24:00 all day instead of shrinking to the current hour.
+- Home 1-day energy reports bucket hourly again: the day-versus-hour threshold now tolerates the sub-second drift between the caller's `from` stamp and the facade's `to` stamp, which pushed an exact 1-day window just over the limit and collapsed it onto daily bars spanning 2 calendar days.
 
 ## [42.0.0] - 2026-07-18
 

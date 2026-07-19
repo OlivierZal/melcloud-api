@@ -40,6 +40,7 @@ import {
   isUpdateDeviceData,
   mergeHourlyChartResults,
   now,
+  padHourlyChartToMidnight,
   typedFromEntries,
   typedKeys,
   withMinuteClockLabels,
@@ -286,13 +287,20 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
       return this.#fetchTemperaturesHour(hour)
     }
     // No hour: the whole of today, hour by hour — the wire only speaks
-    // one-hour windows.
+    // one-hour windows; the not-yet-elapsed hours pad blank so the axis
+    // spans the whole day.
+    const currentHour = this.currentHour()
     const hourly = await Promise.all(
-      hoursUpTo(this.currentHour()).map(async (hourOfDay) =>
+      hoursUpTo(currentHour).map(async (hourOfDay) =>
         this.#fetchTemperaturesHour(hourOfDay),
       ),
     )
-    return mergeHourlyChartResults(hourly)
+    return mapResult(mergeHourlyChartResults(hourly), (options) =>
+      padHourlyChartToMidnight(options, {
+        afterHour: currentHour,
+        locale: this.api.locale,
+      }),
+    )
   }
 
   public async getInternalTemperatures(

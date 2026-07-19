@@ -185,6 +185,11 @@ const MAX_REPORT_SPAN_DAYS = 92
 
 const MILLISECONDS_PER_DAY = 86_400_000
 
+// A "one day" query resolves a hair over 1.0 days (the caller stamps
+// `from` a few milliseconds before the library stamps `to`), so the
+// hourly-bucket cutoff sits halfway to the next whole-day option.
+const MAX_HOURLY_ENERGY_DAYS = 1.5
+
 const MODE_OVERLAY_PREFIX = 'REPORT.COMFORT_GRAPH.OVERLAY_KEY.'
 
 // Comfort-graph overlay keys mapped onto the Classic operation-mode
@@ -324,17 +329,24 @@ export const resolveHomeHourWindow = (
  */
 export const toHomeEnergyBucketUnit = (
   window: HomeChartWindow,
-): 'day' | 'hour' => (windowDaysOf(window) <= 1 ? 'hour' : 'day')
+): 'day' | 'hour' =>
+  windowDaysOf(window) <= MAX_HOURLY_ENERGY_DAYS ? 'hour' : 'day'
 
 /**
- * Resolve the window from today's midnight to now in the display
- * timezone — what the "today" charts (fine temperatures, signal) cover.
+ * Resolve today's full-day window in the display timezone — what the
+ * "today" charts (fine temperatures, signal) cover — plus the "now"
+ * cutoff after which their grids stay blank.
  * @param timezone - IANA display timezone (UTC when unset).
- * @returns The resolved window.
+ * @returns The full-day window and the cutoff.
  */
-export const resolveHomeDayWindow = (timezone: string): HomeChartWindow => {
+export const resolveHomeDayWindow = (
+  timezone: string,
+): { cutoff: Temporal.ZonedDateTime; window: HomeChartWindow } => {
   const now = Temporal.Now.zonedDateTimeISO(timezone)
-  return { from: now.startOfDay(), to: now }
+  const from = now.startOfDay()
+  // The window spans the whole day so the axis always reads 00:00-24:00;
+  // the cutoff marks "now" — slots beyond it chart as gaps, not LOCF.
+  return { cutoff: now, window: { from, to: from.add({ days: 1 }) } }
 }
 
 /**
@@ -428,15 +440,20 @@ const toSamplePoints = (points: readonly HomeReportPoint[]): SamplePoint[] =>
     .toSorted(([first], [second]) => first - second)
 
 // Last-observation-carried-forward: each grid slot takes the freshest
-// sample at or before it, `null` before the first sample.
+// sample at or before it, `null` before the first sample and past the
+// cutoff (the not-yet-elapsed remainder of a full-day grid).
 const resampleSeries = (
   samples: readonly SamplePoint[],
   grid: readonly Temporal.ZonedDateTime[],
+  cutoffMilliseconds = Infinity,
 ): (number | null)[] => {
   let index = 0
   let last: number | null = null
   return grid.map((slot) => {
     const limit = slot.epochMilliseconds
+    if (limit > cutoffMilliseconds) {
+      return null
+    }
     for (; index < samples.length; index += 1) {
       const sample = samples[index]
       if (sample === undefined || sample[0] > limit) {
@@ -549,6 +566,8 @@ const toBands = (
  * regular grid, LOCF-resampled series under Classic legend names, and
  * operation-mode background bands from the comfort-graph annotations.
  * @param options - Conversion inputs.
+ * @param options.cutoff - Instant after which grid slots stay blank
+ * (the not-yet-elapsed remainder of a full-day window).
  * @param options.gridUnit - Grid resolution override (auto: hourly up
  * to seven days, daily beyond).
  * @param options.locale - BCP-47 locale tag for axis labels.
@@ -558,6 +577,7 @@ const toBands = (
  * @returns Structured line chart options.
  */
 export const toHomeLineOptions = ({
+  cutoff,
   gridUnit,
   locale,
   reports,
@@ -567,6 +587,7 @@ export const toHomeLineOptions = ({
   reports: readonly HomeReportData[]
   unit: string
   window: HomeChartWindow
+  cutoff?: Temporal.ZonedDateTime | undefined
   gridUnit?: HomeChartGridUnit | undefined
   locale?: string | undefined
 }): ReportChartLineOptions => {
@@ -580,7 +601,11 @@ export const toHomeLineOptions = ({
     series: mergeDatasets(reports)
       .filter(({ points }) => points.length > 0)
       .map(({ id, points }) => ({
-        data: resampleSeries(toSamplePoints(points), grid),
+        data: resampleSeries(
+          toSamplePoints(points),
+          grid,
+          cutoff?.epochMilliseconds,
+        ),
         name: toHomeSeriesName(id),
       })),
     to: window.to.toPlainDateTime().toString(),
@@ -765,6 +790,8 @@ export const toHomeEnergyOptions = ({
  * Rebuild RSSI telemetry into Classic-shaped line chart options on a
  * minute grid over the requested hour.
  * @param options - Conversion inputs.
+ * @param options.cutoff - Instant after which grid slots stay blank
+ * (the not-yet-elapsed remainder of a full-day window).
  * @param options.data - Telemetry payload (`rssi` samples).
  * @param options.gridUnit - Grid resolution (minute by default).
  * @param options.locale - BCP-47 locale tag for axis labels.
@@ -774,6 +801,7 @@ export const toHomeEnergyOptions = ({
  * @returns Structured line chart options (`dBm`).
  */
 export const toHomeSignalOptions = ({
+  cutoff,
   data,
   gridUnit = 'minute',
   locale,
@@ -783,6 +811,7 @@ export const toHomeSignalOptions = ({
   data: HomeEnergyData
   name: string
   window: HomeChartWindow
+  cutoff?: Temporal.ZonedDateTime | undefined
   gridUnit?: HomeChartGridUnit | undefined
   locale?: string | undefined
 }): ReportChartLineOptions => {
@@ -797,7 +826,9 @@ export const toHomeSignalOptions = ({
   return {
     from: window.from.toPlainDateTime().toString(),
     labels: formatGridLabels({ grid, locale, unit: gridUnit, window }),
-    series: [{ data: resampleSeries(samples, grid), name }],
+    series: [
+      { data: resampleSeries(samples, grid, cutoff?.epochMilliseconds), name },
+    ],
     to: window.to.toPlainDateTime().toString(),
     unit: 'dBm',
   }
