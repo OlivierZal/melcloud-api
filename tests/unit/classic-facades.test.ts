@@ -848,6 +848,50 @@ describe('ata device facade', () => {
     expect(value.labels[1]).toBe('Mon')
   })
 
+  it('rebuilds multi-day energy labels as dates', async () => {
+    const { facade } = createAtaFacade({
+      getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
+        ok(
+          cast({
+            Auto: [0, 0, 0, 0, 0, 0, 0],
+            Cooling: [1, 1, 1, 1, 1, 1, 1],
+            Dry: [0, 0, 0, 0, 0, 0, 0],
+            Fan: [0, 0, 0, 0, 0, 0, 0],
+            Heating: [0, 0, 0, 0, 0, 0, 0],
+            Labels: [1, 2, 3, 4, 5, 6, 0],
+            LabelType: 4,
+            Other: [0, 0, 0, 0, 0, 0, 0],
+            TotalAutoConsumed: 0,
+            TotalCoolingConsumed: 7,
+            TotalDryConsumed: 0,
+            TotalFanConsumed: 0,
+            TotalHeatingConsumed: 0,
+            TotalOtherConsumed: 0,
+            UsageDisclaimerPercentages: '100',
+          }),
+        ),
+      ),
+      locale: 'fr-FR',
+    })
+
+    const { labels } = okValue(
+      await facade.getEnergyReport({ from: '2024-01-08', to: '2024-01-15' }),
+    )
+
+    // Seven weekday buckets over seven calendar days rebuild as dates —
+    // and must never reach the day-of-week formatter again (42.0.1
+    // crashed re-parsing the rebuilt strings as day numbers).
+    expect(labels).toStrictEqual([
+      '8 janv.',
+      '9 janv.',
+      '10 janv.',
+      '11 janv.',
+      '12 janv.',
+      '13 janv.',
+      '14 janv.',
+    ])
+  })
+
   it('formats a one-day energy report with clock labels', async () => {
     const { facade } = createAtaFacade({
       getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(

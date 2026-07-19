@@ -71,7 +71,10 @@ const ISO_SUNDAY = 7
 // ATW) — when the bucket count matches the window's calendar-day span,
 // those rebuild as localized dates anchored on `from`, aligning the
 // axis with the Home energy charts; otherwise day-of-week entries get
-// the 1-based ISO repair and anything else passes through.
+// the 1-based ISO repair. Final strings return `LabelType.raw` so the
+// shared formatter passes them through — re-parsing a rebuilt date as
+// a day-of-week number throws (the 42.0.1 crash on multi-day ATA
+// reports).
 const toEnergyReportLabels = (
   labels: readonly number[],
   {
@@ -83,15 +86,18 @@ const toEnergyReportLabels = (
     window: Resolved<ReportQuery>
     locale?: string | undefined
   },
-): string[] => {
+): { labels: string[]; labelType: ClassicLabelType } => {
   if (labelType === ClassicLabelType.time) {
     const formatter = new Intl.DateTimeFormat(locale, {
       hour: '2-digit',
       minute: '2-digit',
     })
-    return labels.map((label) =>
-      formatter.format(new Temporal.PlainTime(label)),
-    )
+    return {
+      labels: labels.map((label) =>
+        formatter.format(new Temporal.PlainTime(label)),
+      ),
+      labelType: ClassicLabelType.raw,
+    }
   }
   if (labels.length === getDuration(window)) {
     const formatter = new Intl.DateTimeFormat(locale, {
@@ -99,17 +105,23 @@ const toEnergyReportLabels = (
       month: 'short',
     })
     const start = Temporal.PlainDateTime.from(window.from).toPlainDate()
-    return labels.map((_unused, index) =>
-      formatter.format(start.add({ days: index })),
-    )
+    return {
+      labels: labels.map((_unused, index) =>
+        formatter.format(start.add({ days: index })),
+      ),
+      labelType: ClassicLabelType.raw,
+    }
   }
-  return labels.map((label) =>
-    String(
-      label === 0 && labelType === ClassicLabelType.day_of_week ?
-        ISO_SUNDAY
-      : label,
+  return {
+    labels: labels.map((label) =>
+      String(
+        label === 0 && labelType === ClassicLabelType.day_of_week ?
+          ISO_SUNDAY
+        : label,
+      ),
     ),
-  )
+    labelType,
+  }
 }
 
 // Calendar-day delta between two ISO wall-clock strings. Computed on
@@ -281,16 +293,17 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     }
     return mapResult(await this.api.getEnergy<T>({ postData }), (data) => {
       const { labels, labelType, series } = extractEnergyReport(data)
+      const report = toEnergyReportLabels(labels, {
+        labelType,
+        locale: this.api.locale,
+        window: { from, to },
+      })
       return getChartLineOptions(
         {
           Data: series.map(({ data: values }) => [...values]),
           FromDate: from,
-          Labels: toEnergyReportLabels(labels, {
-            labelType,
-            locale: this.api.locale,
-            window: { from, to },
-          }),
-          LabelType: labelType,
+          Labels: report.labels,
+          LabelType: report.labelType,
           Points: labels.length,
           Series: series.length,
           ToDate: to,

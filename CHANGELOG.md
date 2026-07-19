@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [42.0.2] - 2026-07-19
+
+### Fixed
+
+- Classic ATA multi-day energy reports crashed in 42.0.1 (`RangeError: Non-finite day`): the labels rebuilt as localized dates were handed back to the shared formatter still tagged `day_of_week`, which re-parsed `"18 juil."` as a day number. Rebuilt (and clock) labels now carry `LabelType.raw`, which the formatter passes through untouched — ATW multi-day reports never crashed because their wire labels are `raw` already.
+
 ## [42.0.1] - 2026-07-19
 
 ### Fixed
