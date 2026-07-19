@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [42.0.5] - 2026-07-19
+
+### Fixed
+
+- Mode bands now chart only within the hourly grid (7 days): on the daily grid of wider windows every burst rounded up to a full-day rectangle and the stacked translucent rectangles read as one solid dark wall that matched no legend swatch (on-device 14-day symptom). The single-chunk band window also ends the on-device load lottery that had reached 21 days; wider temperature charts keep the fast Weekly sampling without annotations.
+
 ## [42.0.4] - 2026-07-19
 
 ### Fixed
@@ -289,6 +295,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[42.0.5]: https://github.com/OlivierZal/melcloud-api/compare/42.0.4...42.0.5
 [42.0.4]: https://github.com/OlivierZal/melcloud-api/compare/42.0.3...42.0.4
 [42.0.3]: https://github.com/OlivierZal/melcloud-api/compare/42.0.2...42.0.3
 [42.0.2]: https://github.com/OlivierZal/melcloud-api/compare/42.0.1...42.0.2

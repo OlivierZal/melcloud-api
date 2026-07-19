@@ -49,13 +49,15 @@ export const MAX_REPORT_CHUNK_DAYS = 30
 // the Hourly-period span.
 export const MAX_ANNOTATION_CHUNK_DAYS = 7
 
-// Each 7-day Hourly comfort-graph call costs ~9 s at the BFF whatever
-// the concurrency (probed 2026-07-19, `scripts/probe-report-load.ts`:
-// wall 9.0-9.9 s for 3, 5 and 9 parallel chunks alike), so wide
-// temperature windows outlive the widget's 10-second init budget.
-// Mode bands stay where a single batch covers the window; wider
-// temperature charts skip them and fetch fast Weekly samples instead.
-export const MAX_BAND_WINDOW_DAYS = 21
+// Mode bands only make sense on the hourly grid: a daily grid rounds
+// every burst up to a full-day rectangle and the stacked translucent
+// rectangles read as one solid dark wall (on-device 14-day symptom).
+// The cap doubles as the load budget — each 7-day Hourly comfort-graph
+// call costs ~9 s at the BFF whatever the concurrency (probed
+// 2026-07-19, `scripts/probe-report-load.ts`), so a band-bearing
+// window stays a single chunk. Wider temperature charts fetch fast
+// Weekly samples without annotations instead.
+export const MAX_BAND_WINDOW_DAYS = 7
 
 const windowDaysOf = (window: HomeChartWindow): number =>
   window.from.until(window.to).total({ relativeTo: window.from, unit: 'days' })

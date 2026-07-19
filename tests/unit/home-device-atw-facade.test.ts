@@ -619,7 +619,7 @@ describe('home device atw facade', () => {
       expect(value.series).toHaveLength(1)
     })
 
-    it('chunks a band-bearing window at the annotation cap', async () => {
+    it('drops the bands just beyond the hourly grid', async () => {
       const api = createApi()
       vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
@@ -632,15 +632,15 @@ describe('home device atw facade', () => {
         }),
       )
 
-      // 15 days fits the band budget: 7-day Hourly comfort chunks, the
-      // mode annotations chart as bands.
-      expect(api.getAtwTemperatures).toHaveBeenCalledTimes(3)
-      expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(1, 'atw-1', {
+      // 15 days renders on a daily grid, where bands inflate into a
+      // solid wall: one fast Weekly call, annotations dropped.
+      expect(api.getAtwTemperatures).toHaveBeenCalledTimes(1)
+      expect(api.getAtwTemperatures).toHaveBeenCalledWith('atw-1', {
         from: '2026-04-25T00:00:00Z',
-        period: 'Hourly',
-        to: '2026-05-02T00:00:00Z',
+        period: 'Weekly',
+        to: '2026-05-10T00:00:00Z',
       })
-      expect(value.bands).toBeDefined()
+      expect(value.bands).toBeUndefined()
     })
 
     it('propagates a chunk failure untouched', async () => {

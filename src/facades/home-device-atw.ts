@@ -552,9 +552,9 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   // with the internal-temperatures report (flow/return/tank), only the
   // window and grid resolution differ. Comfort-graph first so its tank
   // series wins the dedup and the band annotations are present. Beyond
-  // the band load budget the comfort-graph falls back to the fast
-  // Weekly chunking and the annotations are dropped — the Weekly wire
-  // truncates them anyway, and a truncated band reads as a lie.
+  // the band window (the hourly grid) the annotations are dropped —
+  // a daily grid inflates them into a solid wall, and the Weekly wire
+  // truncates them anyway.
   async #fetchTemperatureChart(
     window: HomeChartWindow,
     gridUnit?: HomeChartGridUnit,
@@ -565,7 +565,6 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
       fetchHomeReportChunks(
         async (params) => this.api.getAtwTemperatures(this.id, params),
         window,
-        shouldChartBands ? MAX_ANNOTATION_CHUNK_DAYS : undefined,
       ),
       fetchHomeReportChunks(
         async (params) => this.api.getAtwInternalTemperatures(this.id, params),
