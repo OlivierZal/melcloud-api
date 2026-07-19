@@ -531,6 +531,38 @@ describe('mELCloud Classic API', () => {
 
       expect(api.registry.devices.getById(42)?.name).toBe('Populated')
     })
+
+    it('empties the device registry and de-authenticates on logOut', async () => {
+      const building = classicBuildingWithStructure({
+        Structure: {
+          Areas: [],
+          Devices: [
+            classicRawDevice({ DeviceID: 42, DeviceName: 'Populated' }),
+          ],
+          Floors: [],
+        },
+      })
+      mockRequest.mockImplementation(async (config) => {
+        await Promise.resolve()
+        if (config.url === '/Login/ClientLogin3') {
+          return loginResponse()
+        }
+        if (config.url === '/User/ListDevices') {
+          return wrap([building])
+        }
+        return wrap({})
+      })
+      const api = await createApi()
+      await api.authenticate({ password: 'pass', username: 'user' })
+
+      expect(api.isAuthenticated()).toBe(true)
+
+      api.logOut()
+
+      expect(api.registry.getDevices()).toHaveLength(0)
+      expect(api.registry.buildings.getById(1)).toBeUndefined()
+      expect(api.isAuthenticated()).toBe(false)
+    })
   })
 
   describe('language settings', () => {

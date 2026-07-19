@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [42.1.0] - 2026-07-19
+
+### Added
+
+- Public `logOut()` on the API clients — the inverse of `authenticate()`. In one owned, tested place it clears the persisted session (tokens/context/expiry), the stored username/password and the automatic-login backoff, stops the auto-sync timer, and empties the device/building registry, so `isAuthenticated()` reads `false` and no stale devices linger — identically on Classic and Home. User-initiated, so it neither arms the login backoff nor emits `onAuthenticationLost`. Downstream hosts should call this instead of deleting the SDK's persisted setting keys directly (which drifted per API: Classic de-authed immediately on the live `contextKey` read, while Home kept an in-memory `#user` until a later request happened to 401).
+
 ## [42.0.6] - 2026-07-19
 
 ### Fixed
@@ -301,6 +307,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[42.1.0]: https://github.com/OlivierZal/melcloud-api/compare/42.0.6...42.1.0
 [42.0.6]: https://github.com/OlivierZal/melcloud-api/compare/42.0.5...42.0.6
 [42.0.5]: https://github.com/OlivierZal/melcloud-api/compare/42.0.4...42.0.5
 [42.0.4]: https://github.com/OlivierZal/melcloud-api/compare/42.0.3...42.0.4

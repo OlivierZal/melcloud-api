@@ -503,6 +503,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     this.expiry = ''
   }
 
+  protected override clearRegistry(): void {
+    this.#registry.sync([])
+  }
+
   protected override async doAuthenticate({
     password,
     username,
