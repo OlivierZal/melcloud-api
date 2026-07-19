@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [42.0.4] - 2026-07-19
+
+### Fixed
+
+- The Home ATW temperature chart stopped loading at 30 days and wider: each 7-day `Hourly` comfort-graph call costs ~9 seconds at the BFF regardless of concurrency (probed via `scripts/probe-report-load.ts`: wall 9.0-9.9 s for 3, 5 and 9 parallel chunks alike), so windows needing several batches outlive the widget's 10-second budget. Mode bands now chart up to 21 days (one batch); wider temperature windows fall back to the fast Weekly sampling with the annotations dropped — the Weekly wire truncates them anyway.
+- Chunk batches widened from 6 to 16 parallel requests (the BFF absorbs at least 10 with no wall-clock penalty), keeping a 90-day operation-modes pie on a single ~10-second batch, and the pie now drops each chunk's minute-grained sample payload before merging (it only reads the annotations), sparing the host's constrained heap.
+
 ## [42.0.3] - 2026-07-19
 
 ### Fixed
@@ -282,6 +289,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[42.0.4]: https://github.com/OlivierZal/melcloud-api/compare/42.0.3...42.0.4
 [42.0.3]: https://github.com/OlivierZal/melcloud-api/compare/42.0.2...42.0.3
 [42.0.2]: https://github.com/OlivierZal/melcloud-api/compare/42.0.1...42.0.2
 [42.0.1]: https://github.com/OlivierZal/melcloud-api/compare/42.0.0...42.0.1

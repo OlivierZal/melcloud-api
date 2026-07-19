@@ -600,32 +600,47 @@ describe('home device atw facade', () => {
         }),
       )
 
-      // 69 days: the annotation-bearing comfort-graph chunks at the
-      // 7-day cap (Weekly truncates the mode annotations), Hourly
-      // period throughout; the internal report keeps the 30-day cap.
-      expect(api.getAtwTemperatures).toHaveBeenCalledTimes(10)
+      // 69 days sits beyond the band load budget: the comfort-graph
+      // falls back to the fast 30-day Weekly chunking and the
+      // truncated annotations are dropped instead of charted.
+      expect(api.getAtwTemperatures).toHaveBeenCalledTimes(3)
       expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(1, 'atw-1', {
         from: '2026-03-01T00:00:00Z',
-        period: 'Hourly',
-        to: '2026-03-08T00:00:00Z',
+        period: 'Weekly',
+        to: '2026-03-31T00:00:00Z',
       })
-      expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(10, 'atw-1', {
-        from: '2026-05-03T00:00:00Z',
-        period: 'Hourly',
+      expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(3, 'atw-1', {
+        from: '2026-04-30T00:00:00Z',
+        period: 'Weekly',
         to: '2026-05-09T00:00:00Z',
       })
-      expect(api.getAtwInternalTemperatures).toHaveBeenCalledTimes(3)
-      expect(api.getAtwInternalTemperatures).toHaveBeenNthCalledWith(
-        1,
-        'atw-1',
-        {
-          from: '2026-03-01T00:00:00Z',
-          period: 'Weekly',
-          to: '2026-03-31T00:00:00Z',
-        },
-      )
+      expect(value.bands).toBeUndefined()
       // Identical chunk payloads merge to one deduplicated series.
       expect(value.series).toHaveLength(1)
+    })
+
+    it('chunks a band-bearing window at the annotation cap', async () => {
+      const api = createApi()
+      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
+      vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+
+      const value = okValue(
+        await facade.getTemperatures({
+          from: '2026-04-25T00:00:00Z',
+          to: '2026-05-10T00:00:00Z',
+        }),
+      )
+
+      // 15 days fits the band budget: 7-day Hourly comfort chunks, the
+      // mode annotations chart as bands.
+      expect(api.getAtwTemperatures).toHaveBeenCalledTimes(3)
+      expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(1, 'atw-1', {
+        from: '2026-04-25T00:00:00Z',
+        period: 'Hourly',
+        to: '2026-05-02T00:00:00Z',
+      })
+      expect(value.bands).toBeDefined()
     })
 
     it('propagates a chunk failure untouched', async () => {

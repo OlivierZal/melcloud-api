@@ -49,8 +49,25 @@ export const MAX_REPORT_CHUNK_DAYS = 30
 // the Hourly-period span.
 export const MAX_ANNOTATION_CHUNK_DAYS = 7
 
+// Each 7-day Hourly comfort-graph call costs ~9 s at the BFF whatever
+// the concurrency (probed 2026-07-19, `scripts/probe-report-load.ts`:
+// wall 9.0-9.9 s for 3, 5 and 9 parallel chunks alike), so wide
+// temperature windows outlive the widget's 10-second init budget.
+// Mode bands stay where a single batch covers the window; wider
+// temperature charts skip them and fetch fast Weekly samples instead.
+export const MAX_BAND_WINDOW_DAYS = 21
+
 const windowDaysOf = (window: HomeChartWindow): number =>
   window.from.until(window.to).total({ relativeTo: window.from, unit: 'days' })
+
+/**
+ * Whether a temperature-chart window is narrow enough to carry the
+ * operation-mode bands (see {@link MAX_BAND_WINDOW_DAYS}).
+ * @param window - Resolved chart window.
+ * @returns `true` when the bands fit the load budget.
+ */
+export const shouldChartHomeBands = (window: HomeChartWindow): boolean =>
+  windowDaysOf(window) <= MAX_BAND_WINDOW_DAYS
 
 /**
  * Aggregation period for one report request: minute-grained `Hourly`
@@ -153,10 +170,13 @@ export const mergeHomeReportChunks = (
 }
 
 // A year at the 7-day annotation cap is 53 requests — too many for
-// one parallel burst. Batches run this many chunks at a time; the
-// recursive shape (over a loop) keeps the batch sequencing loop-free,
-// and a failed batch short-circuits the remainder.
-const MAX_PARALLEL_CHUNKS = 6
+// one parallel burst — but batches must stay wide: the BFF absorbs at
+// least 10 parallel report calls with no wall-clock penalty (probed
+// 2026-07-19, `scripts/probe-report-load.ts`) while every extra batch
+// costs ~9 s. Batches run this many chunks at a time; the recursive
+// shape (over a loop) keeps the batch sequencing loop-free, and a
+// failed batch short-circuits the remainder.
+const MAX_PARALLEL_CHUNKS = 16
 
 const fetchChunkBatches = async (
   fetch: (chunk: HomeChartWindow) => Promise<Result<HomeReportData[]>>,
