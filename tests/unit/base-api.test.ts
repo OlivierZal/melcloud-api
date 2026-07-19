@@ -977,6 +977,81 @@ describe('automatic login backoff', () => {
     expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
   })
 
+  it('honours a persisted pause on a fresh instance', async () => {
+    vi.useFakeTimers()
+    mockTemporalNowInstant()
+    try {
+      const { settingManager } = createSettingStore({
+        password: 'p',
+        username: 'u',
+      })
+      const first = new TestAPI({ settingManager })
+      first.doAuthenticateMock.mockRejectedValue(new AuthenticationError('bad'))
+
+      await expect(
+        first.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('bad')
+
+      // A host restart creates a fresh instance over the same store:
+      // the persisted deadline keeps gating automatic sign-ins.
+      const second = new TestAPI({ settingManager })
+
+      await expect(second.resumeSession()).resolves.toBe(false)
+      expect(second.doAuthenticateMock).not.toHaveBeenCalled()
+
+      // Past the deadline the fresh instance signs in again (its
+      // default mock accepts the credentials).
+      vi.advanceTimersByTime(900_001)
+
+      await expect(second.resumeSession()).resolves.toBe(true)
+      expect(second.doAuthenticateMock).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('ignores a corrupt persisted pause value', async () => {
+    const api = new TestAPI({
+      settingManager: createSettingStore({
+        loginBackoffUntil: 'garbage',
+        password: 'p',
+        username: 'u',
+      }).settingManager,
+    })
+
+    await expect(api.resumeSession()).resolves.toBe(true)
+
+    expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('clears the persisted pause on a successful explicit sign-in', async () => {
+    vi.useFakeTimers()
+    mockTemporalNowInstant()
+    try {
+      const { settingManager } = createSettingStore({
+        password: 'p',
+        username: 'u',
+      })
+      const first = new TestAPI({ settingManager })
+      first.doAuthenticateMock.mockRejectedValueOnce(
+        new AuthenticationError('bad'),
+      )
+
+      await expect(
+        first.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('bad')
+
+      await first.authenticate({ password: 'right', username: 'u' })
+
+      const second = new TestAPI({ settingManager })
+      await second.resumeSession()
+
+      expect(second.doAuthenticateMock).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('lets an explicit sign-in through and clears the gate on success', async () => {
     vi.useFakeTimers()
     mockTemporalNowInstant()

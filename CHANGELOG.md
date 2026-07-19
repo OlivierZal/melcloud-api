@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [42.0.6] - 2026-07-19
+
+### Fixed
+
+- The automatic login backoff now persists its deadline through the `SettingManager`: it lived in memory only, so every host restart re-attempted a rejected sign-in immediately — field diagnostics showed four rejected Cognito sign-ins within 70 seconds across app restarts, each freshly created instance re-attempting despite the announced 15-minute pause (MELCloud throttles logins aggressively, so the hammering keeps a lockout alive). An explicit `authenticate()` — the user re-submitting credentials — still bypasses the gate and clears the persisted deadline on success; a corrupt persisted value reads as "no pause".
+
 ## [42.0.5] - 2026-07-19
 
 ### Fixed
@@ -295,6 +301,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[42.0.6]: https://github.com/OlivierZal/melcloud-api/compare/42.0.5...42.0.6
 [42.0.5]: https://github.com/OlivierZal/melcloud-api/compare/42.0.4...42.0.5
 [42.0.4]: https://github.com/OlivierZal/melcloud-api/compare/42.0.3...42.0.4
 [42.0.3]: https://github.com/OlivierZal/melcloud-api/compare/42.0.2...42.0.3
