@@ -25,8 +25,9 @@ const energyBucket = (value: string): ReturnType<typeof ok<object>> =>
     ],
   })
 
-const createApi = (): HomeAPIAdapter =>
+const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
+    ...overrides,
     getAtwEnergy: vi.fn<HomeAPIAdapter['getAtwEnergy']>(),
     getAtwErrorLog: vi.fn<HomeAPIAdapter['getAtwErrorLog']>(),
     getAtwInternalTemperatures:
@@ -547,13 +548,13 @@ describe('home device atw facade', () => {
       await expect(facade.getHourlyTemperatures(9)).resolves.toBe(failure)
     })
 
-    it('builds the hourly chart on a minute grid', async () => {
+    it('builds one specific hour on a minute grid', async () => {
       const api = createApi()
       vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
-      const value = okValue(await facade.getHourlyTemperatures())
+      const value = okValue(await facade.getHourlyTemperatures(9))
 
       expect(api.getAtwTemperatures).toHaveBeenCalledWith('atw-1', {
         from: '2026-05-09T09:00:00Z',
@@ -561,6 +562,73 @@ describe('home device atw facade', () => {
         to: '2026-05-09T10:00:00Z',
       })
       expect(value.labels).toHaveLength(61)
+    })
+
+    it('covers today on a five-minute grid when no hour is given', async () => {
+      // Pin the label locale: the runner's default is not ours.
+      const api = createApi({ locale: 'fr-FR' })
+      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
+      vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+
+      const value = okValue(await facade.getHourlyTemperatures())
+
+      // Pinned to 09:30 UTC: midnight through now, 5-minute slots.
+      expect(api.getAtwTemperatures).toHaveBeenCalledWith('atw-1', {
+        from: '2026-05-09T00:00:00Z',
+        period: 'Hourly',
+        to: '2026-05-09T09:30:00Z',
+      })
+      expect(value.labels).toHaveLength(115)
+      expect(value.labels[0]).toBe('00:00')
+    })
+
+    it('chunks a wide window and merges the reports', async () => {
+      const api = createApi()
+      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
+      vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+
+      const value = okValue(
+        await facade.getTemperatures({
+          from: '2026-03-01T00:00:00Z',
+          to: '2026-05-09T00:00:00Z',
+        }),
+      )
+
+      // 69 days split at the 30-day cap: three chunks per endpoint,
+      // sampled Weekly (beyond the hourly-grid span).
+      expect(api.getAtwTemperatures).toHaveBeenCalledTimes(3)
+      expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(1, 'atw-1', {
+        from: '2026-03-01T00:00:00Z',
+        period: 'Weekly',
+        to: '2026-03-31T00:00:00Z',
+      })
+      expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(3, 'atw-1', {
+        from: '2026-04-30T00:00:00Z',
+        period: 'Weekly',
+        to: '2026-05-09T00:00:00Z',
+      })
+      // Identical chunk payloads merge to one deduplicated series.
+      expect(value.series).toHaveLength(1)
+    })
+
+    it('propagates a chunk failure untouched', async () => {
+      const api = createApi()
+      const failure = { ok: false as const, status: 503 }
+      vi.mocked(api.getAtwTemperatures)
+        .mockResolvedValueOnce(ok([comfortReport]))
+        .mockResolvedValueOnce(cast(failure))
+        .mockResolvedValueOnce(ok([comfortReport]))
+      vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+
+      await expect(
+        facade.getTemperatures({
+          from: '2026-03-01T00:00:00Z',
+          to: '2026-05-09T00:00:00Z',
+        }),
+      ).resolves.toBe(failure)
     })
 
     it('aggregates operation modes into Classic-shaped pie data', async () => {
@@ -600,7 +668,7 @@ describe('home device atw facade', () => {
 
       const params = {
         from: '2026-05-09T00:00:00Z',
-        interval: 'Day',
+        interval: 'Hour',
         to: '2026-05-10T00:00:00Z',
       }
 

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [42.0.1] - 2026-07-19
+
+### Fixed
+
+- Home report charts failed beyond ~7 days (the widget's "loading problem" on wide ranges): a single wide request either hit the 10-second client timeout (minute-grained payloads) or came back with silently summarized annotations — live-probed: a 90-day query reported _less_ hot-water time than its own 30-day subwindow. The facades now split report windows into chunks of at most 30 days, fetched in parallel with a window-fitted period (`Hourly` within seven days, `Weekly` beyond — `Daily` collapses the mode annotations), and merge the responses: samples concatenated per series, boundary-crossing mode spans deduplicated (the BFF returns them in both adjacent chunks), LOCF seeds from the oldest chunk. A 90-day operation-modes pie now resolves in a few seconds with faithful durations.
+
 ## [42.0.0] - 2026-07-18
 
 ### Changed
@@ -260,6 +266,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[42.0.1]: https://github.com/OlivierZal/melcloud-api/compare/42.0.0...42.0.1
 [42.0.0]: https://github.com/OlivierZal/melcloud-api/compare/41.3.0...42.0.0
 [41.3.0]: https://github.com/OlivierZal/melcloud-api/compare/41.2.3...41.3.0
 [41.2.3]: https://github.com/OlivierZal/melcloud-api/compare/41.2.2...41.2.3

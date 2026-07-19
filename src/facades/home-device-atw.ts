@@ -26,19 +26,22 @@ import type {
 } from './report-types.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 import {
+  type HomeChartGridUnit,
   type HomeChartWindow,
-  HOME_REPORT_PERIOD,
+  fetchHomeReportChunks,
+  resolveHomeDayWindow,
   resolveHomeHourWindow,
   resolveHomeReportWindow,
+  toHomeEnergyBucketUnit,
   toHomeEnergyOptions,
   toHomeLineOptions,
   toHomeOperationModeOptions,
   toHomeWireWindow,
 } from './home-report.ts'
 
-// Telemetry interval producing one energy bucket per UTC day; the ATW
-// interval measures already report kWh per bucket.
-const DAILY_ENERGY_INTERVAL = 'Day'
+// Telemetry intervals per bucket granularity (UTC-aligned wire
+// buckets); the ATW interval measures already report kWh per bucket.
+const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour' } as const
 
 const IDENTITY_SCALE = 1
 
@@ -354,9 +357,10 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
+    const bucketUnit = toHomeEnergyBucketUnit(window)
     const params = {
       ...toHomeWireWindow(window),
-      interval: DAILY_ENERGY_INTERVAL,
+      interval: ENERGY_INTERVALS[bucketUnit],
     }
     const [consumed, produced] = await Promise.all([
       this.api.getAtwEnergy(this.id, { ...params, measure: 'consumed' }),
@@ -370,6 +374,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     }
     return ok(
       toHomeEnergyOptions({
+        bucketUnit,
         locale: this.api.locale,
         sources: [
           { data: consumed.value, name: 'Consumed', scale: IDENTITY_SCALE },
@@ -389,21 +394,27 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   /**
-   * Fetches the hourly temperature chart — the merged comfort-graph and
-   * internal-temperatures series over one hour of today on a minute
-   * grid, with operation-mode background bands. The Home counterpart of
-   * the Classic `getHourlyTemperatures` contract (a superset: the
-   * Classic hourly wire only carries the internal series).
-   * @param hour - Hour of today (0-23); defaults to the current hour.
+   * Fetches the fine temperature chart — the merged comfort-graph and
+   * internal-temperatures series with operation-mode background bands,
+   * over the whole of today on a five-minute grid, or over one specific
+   * hour on a minute grid. The Home counterpart of the Classic
+   * `getHourlyTemperatures` contract (a superset: the Classic hourly
+   * wire only carries the internal series).
+   * @param hour - Optional hour of today (0-23); omitted covers today.
    * @returns Structured line chart options (`°C`), or a typed failure.
    */
   public async getHourlyTemperatures(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    return this.#fetchTemperatureChart(
-      resolveHomeHourWindow(hour, this.chartTimezone),
-      'minute',
-    )
+    return hour === undefined ?
+        this.#fetchTemperatureChart(
+          resolveHomeDayWindow(this.chartTimezone),
+          'fiveMinutes',
+        )
+      : this.#fetchTemperatureChart(
+          resolveHomeHourWindow(hour, this.chartTimezone),
+          'minute',
+        )
   }
 
   /**
@@ -418,10 +429,10 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   ): Promise<Result<ReportChartLineOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     return mapResult(
-      await this.api.getAtwInternalTemperatures(this.id, {
-        ...toHomeWireWindow(window),
-        period: HOME_REPORT_PERIOD,
-      }),
+      await fetchHomeReportChunks(
+        async (params) => this.api.getAtwInternalTemperatures(this.id, params),
+        window,
+      ),
       (reports) =>
         toHomeLineOptions({
           locale: this.api.locale,
@@ -445,10 +456,10 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   ): Promise<Result<ReportChartPieOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     return mapResult(
-      await this.api.getAtwTemperatures(this.id, {
-        ...toHomeWireWindow(window),
-        period: HOME_REPORT_PERIOD,
-      }),
+      await fetchHomeReportChunks(
+        async (params) => this.api.getAtwTemperatures(this.id, params),
+        window,
+      ),
       (reports) => toHomeOperationModeOptions(reports, window),
     )
   }
@@ -527,15 +538,17 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   // series wins the dedup and the band annotations are present.
   async #fetchTemperatureChart(
     window: HomeChartWindow,
-    gridUnit?: 'minute',
+    gridUnit?: HomeChartGridUnit,
   ): Promise<Result<ReportChartLineOptions>> {
-    const params = {
-      ...toHomeWireWindow(window),
-      period: HOME_REPORT_PERIOD,
-    }
     const [comfort, internal] = await Promise.all([
-      this.api.getAtwTemperatures(this.id, params),
-      this.api.getAtwInternalTemperatures(this.id, params),
+      fetchHomeReportChunks(
+        async (params) => this.api.getAtwTemperatures(this.id, params),
+        window,
+      ),
+      fetchHomeReportChunks(
+        async (params) => this.api.getAtwInternalTemperatures(this.id, params),
+        window,
+      ),
     ])
     if (!comfort.ok) {
       return comfort

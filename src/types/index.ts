@@ -116,9 +116,9 @@ export type {
   HomeUser,
   HomeUserContext,
 } from './home.ts'
-export type { Hour } from './hour.ts'
 export type { Resolved, UndefinedTolerant } from './utility.ts'
 
+export { type Hour, HOURS } from './hour.ts'
 export {
   type ClassicAreaID,
   type ClassicBuildingID,

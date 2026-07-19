@@ -2,11 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HomeReportData } from '../../src/types/index.ts'
 import {
+  mergeHomeReportChunks,
   resolveHomeHourWindow,
   resolveHomeReportWindow,
+  splitHomeReportWindow,
   toHomeEnergyOptions,
   toHomeLineOptions,
   toHomeOperationModeOptions,
+  toHomeReportPeriod,
   toHomeSeriesName,
   toHomeSignalOptions,
   toHomeWireWindow,
@@ -126,6 +129,163 @@ describe(resolveHomeHourWindow, () => {
     expect(window.from.toString()).toBe(
       '2026-07-18T22:00:00+02:00[Europe/Paris]',
     )
+  })
+})
+
+describe.concurrent(splitHomeReportWindow, () => {
+  it('keeps a window within the chunk cap whole', () => {
+    const window = resolveHomeReportWindow(
+      { from: '2026-06-18T00:00:00', to: '2026-07-18T00:00:00' },
+      'UTC',
+    )
+
+    expect(splitHomeReportWindow(window)).toStrictEqual([window])
+  })
+
+  it('splits a wide window into contiguous 30-day chunks', () => {
+    const window = resolveHomeReportWindow(
+      { from: '2026-04-19T00:00:00', to: '2026-07-18T00:00:00' },
+      'UTC',
+    )
+
+    const chunks = splitHomeReportWindow(window)
+
+    expect(
+      chunks.map(({ from, to }) => [
+        from.toPlainDateTime().toString(),
+        to.toPlainDateTime().toString(),
+      ]),
+    ).toStrictEqual([
+      ['2026-04-19T00:00:00', '2026-05-19T00:00:00'],
+      ['2026-05-19T00:00:00', '2026-06-18T00:00:00'],
+      ['2026-06-18T00:00:00', '2026-07-18T00:00:00'],
+    ])
+  })
+
+  it('clips the last chunk to the window end', () => {
+    const window = resolveHomeReportWindow(
+      { from: '2026-06-13T00:00:00', to: '2026-07-18T00:00:00' },
+      'UTC',
+    )
+
+    const chunks = splitHomeReportWindow(window)
+
+    expect(chunks).toHaveLength(2)
+    expect(chunks[1]?.to.toPlainDateTime().toString()).toBe(
+      '2026-07-18T00:00:00',
+    )
+  })
+})
+
+describe.concurrent(toHomeReportPeriod, () => {
+  it('falls back to the whole window when it is empty', () => {
+    const window = resolveHomeReportWindow(
+      { from: '2026-07-18T00:00:00', to: '2026-07-18T00:00:00' },
+      'UTC',
+    )
+
+    expect(splitHomeReportWindow(window)).toStrictEqual([window])
+  })
+
+  it.each([
+    { expected: 'Hourly', from: '2026-07-11T00:00:00' },
+    { expected: 'Weekly', from: '2026-07-10T00:00:00' },
+  ])('requests $expected from $from', ({ expected, from }) => {
+    const window = resolveHomeReportWindow(
+      { from, to: '2026-07-18T00:00:00' },
+      'UTC',
+    )
+
+    expect(toHomeReportPeriod(window)).toBe(expected)
+  })
+})
+
+describe.concurrent(mergeHomeReportChunks, () => {
+  it('passes a single chunk through untouched', () => {
+    const single = [report()]
+
+    expect(mergeHomeReportChunks([single])).toStrictEqual(single)
+  })
+
+  it('concatenates samples per id and deduplicates boundary spans', () => {
+    const boundarySpan = {
+      label: `${OVERLAY_PREFIX}HOT_WATER`,
+      xMax: '2026-07-01T01:00:00',
+      xMin: '2026-06-30T23:00:00',
+    }
+    const merged = mergeHomeReportChunks([
+      [
+        report({
+          annotations: [boundarySpan],
+          datasets: [
+            {
+              data: [
+                homeReportPoint('2026-06-30T12:00:00', 20),
+                homeReportPoint('2026-06-30T23:59:00', 21),
+              ],
+              id: 'room_temperature',
+              label: 'first',
+            },
+          ],
+          previousTriggers: [
+            {
+              measure: 'room_temperature',
+              trigger: '2026-06-29T00:00:00',
+              value: 19,
+            },
+          ],
+        }),
+      ],
+      [
+        report({
+          // The BFF returns the same boundary-crossing span to both
+          // adjacent chunks: it must merge to ONE annotation.
+          annotations: [boundarySpan],
+          datasets: [
+            {
+              data: [
+                homeReportPoint('2026-06-30T23:59:00', 21),
+                homeReportPoint('2026-07-01T12:00:00', 22),
+              ],
+              id: 'room_temperature',
+              label: 'second',
+            },
+          ],
+        }),
+      ],
+    ])
+
+    expect(merged).toHaveLength(1)
+
+    const [result] = merged
+
+    expect(result?.annotations).toStrictEqual([boundarySpan])
+    expect(result?.datasets).toHaveLength(1)
+    expect(result?.datasets[0]?.data).toStrictEqual([
+      homeReportPoint('2026-06-30T12:00:00', 20),
+      homeReportPoint('2026-06-30T23:59:00', 21),
+      homeReportPoint('2026-07-01T12:00:00', 22),
+    ])
+    // LOCF seeds come from the oldest chunk.
+    expect(result?.previousTriggers).toStrictEqual([
+      {
+        measure: 'room_temperature',
+        trigger: '2026-06-29T00:00:00',
+        value: 19,
+      },
+    ])
+  })
+
+  it('keeps unlabelled missing-data spans distinct while merging', () => {
+    const grey = { xMax: '2026-07-01T02:00:00', xMin: '2026-07-01T01:00:00' }
+    const merged = mergeHomeReportChunks([
+      [report({ annotations: [grey] })],
+      [report({ annotations: [grey] })],
+      // A chunk with no annotations key at all contributes nothing.
+      [report()],
+    ])
+
+    expect(merged[0]?.annotations).toStrictEqual([grey])
   })
 })
 

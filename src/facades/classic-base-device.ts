@@ -15,7 +15,7 @@ import {
   isClassicDeviceOfType,
 } from '../entities/index.ts'
 import { NoChangesError } from '../errors/index.ts'
-import { Temporal } from '../temporal.ts'
+import { Intl, Temporal } from '../temporal.ts'
 import {
   type ClassicDeviceID,
   type ClassicEnergyData,
@@ -35,11 +35,14 @@ import {
   fromListToSetAta,
   getChartLineOptions,
   getChartPieOptions,
+  hoursUpTo,
   isSetDeviceDataAtaInList,
   isUpdateDeviceData,
+  mergeHourlyChartResults,
   now,
   typedFromEntries,
   typedKeys,
+  withMinuteClockLabels,
 } from '../utils.ts'
 import type {
   ClassicDeviceFacade,
@@ -60,21 +63,33 @@ const ENERGY_REPORT_UNIT = 'kWh'
 // ISO 8601 weekday number for Sunday.
 const ISO_SUNDAY = 7
 
-// `EnergyCost/Report` day-of-week labels are .NET 0-based (Sunday = 0)
-// while the shared formatter expects the 1-based ISO labels of the
-// `Report/*` endpoints (Monday = 1): remap Sunday and keep Monday to
-// Saturday, on which the two conventions already agree.
+// `EnergyCost/Report` labels need two repairs before the shared
+// formatter: day-of-week entries are .NET 0-based (Sunday = 0) while
+// `Report/*` speaks 1-based ISO (Monday = 1), and one-day reports
+// arrive as bare hour numbers (`LabelType.time`) that would render as
+// a naked `0..23` axis — format those as clock labels.
 const toEnergyReportLabels = (
   labels: readonly number[],
   labelType: ClassicLabelType,
-): string[] =>
-  labels.map((label) =>
+  locale: string | undefined,
+): string[] => {
+  if (labelType === ClassicLabelType.time) {
+    const formatter = new Intl.DateTimeFormat(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    return labels.map((label) =>
+      formatter.format(new Temporal.PlainTime(label)),
+    )
+  }
+  return labels.map((label) =>
     String(
       label === 0 && labelType === ClassicLabelType.day_of_week ?
         ISO_SUNDAY
       : label,
     ),
   )
+}
 
 // Calendar-day delta between two ISO wall-clock strings. Computed on
 // `PlainDateTime` so the result reflects the literal Y-M-D-h-m-s span
@@ -249,7 +264,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         {
           Data: series.map(({ data: values }) => [...values]),
           FromDate: from,
-          Labels: toEnergyReportLabels(labels, labelType),
+          Labels: toEnergyReportLabels(labels, labelType, this.api.locale),
           LabelType: labelType,
           Points: labels.length,
           Series: series.length,
@@ -265,19 +280,19 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   public async getHourlyTemperatures(
-    hour: Hour = this.currentHour(),
+    hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    return mapResult(
-      await this.api.getHourlyTemperatures({
-        postData: { device: this.id, hour },
-      }),
-      (data) =>
-        getChartLineOptions(data, {
-          legend: this.internalTemperaturesLegend,
-          locale: this.api.locale,
-          unit: '°C',
-        }),
+    if (hour !== undefined) {
+      return this.#fetchTemperaturesHour(hour)
+    }
+    // No hour: the whole of today, hour by hour — the wire only speaks
+    // one-hour windows.
+    const hourly = await Promise.all(
+      hoursUpTo(this.currentHour()).map(async (hourOfDay) =>
+        this.#fetchTemperaturesHour(hourOfDay),
+      ),
     )
+    return mergeHourlyChartResults(hourly)
   }
 
   public async getInternalTemperatures(
@@ -381,6 +396,25 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         (flag, key) => flag | BigInt(this.flags[key]),
         BigInt(CLASSIC_FLAG_UNCHANGED),
       ),
+    )
+  }
+
+  async #fetchTemperaturesHour(
+    hour: Hour,
+  ): Promise<Result<ReportChartLineOptions>> {
+    return mapResult(
+      await this.api.getHourlyTemperatures({
+        postData: { device: this.id, hour },
+      }),
+      (data) =>
+        withMinuteClockLabels(
+          getChartLineOptions(data, {
+            legend: this.internalTemperaturesLegend,
+            locale: this.api.locale,
+            unit: '°C',
+          }),
+          { hour, locale: this.api.locale },
+        ),
     )
   }
 }

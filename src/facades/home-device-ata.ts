@@ -29,15 +29,16 @@ import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { toClassicAtaGroupState, toHomeAtaValues } from './home-ata-group.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 import {
-  HOME_REPORT_PERIOD,
+  fetchHomeReportChunks,
   resolveHomeReportWindow,
+  toHomeEnergyBucketUnit,
   toHomeEnergyOptions,
   toHomeLineOptions,
   toHomeWireWindow,
 } from './home-report.ts'
 
-// Telemetry interval producing one energy bucket per UTC day.
-const DAILY_ENERGY_INTERVAL = 'Day'
+// Telemetry intervals per bucket granularity (UTC-aligned wire buckets).
+const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour' } as const
 
 // The ATA cumulative energy measure reports watt-hours (100 Wh pulses,
 // live-probed 2026-07-18: a daily bucket of `571.0` for ~0.57 kWh).
@@ -205,13 +206,15 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
+    const bucketUnit = toHomeEnergyBucketUnit(window)
     return mapResult(
       await this.api.getAtaEnergy(this.id, {
         ...toHomeWireWindow(window),
-        interval: DAILY_ENERGY_INTERVAL,
+        interval: ENERGY_INTERVALS[bucketUnit],
       }),
       (data) =>
         toHomeEnergyOptions({
+          bucketUnit,
           locale: this.api.locale,
           sources: [
             { data, name: 'Consumed', scale: KILOWATT_HOURS_PER_WATT_HOUR },
@@ -255,10 +258,10 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   ): Promise<Result<ReportChartLineOptions>> {
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     return mapResult(
-      await this.api.getAtaTemperatures(this.id, {
-        ...toHomeWireWindow(window),
-        period: HOME_REPORT_PERIOD,
-      }),
+      await fetchHomeReportChunks(
+        async (params) => this.api.getAtaTemperatures(this.id, params),
+        window,
+      ),
       (reports) =>
         toHomeLineOptions({
           locale: this.api.locale,

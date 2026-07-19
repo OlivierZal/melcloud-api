@@ -9,6 +9,7 @@ import {
 } from '../types/index.ts'
 import type { ReportChartLineOptions } from './report-types.ts'
 import {
+  resolveHomeDayWindow,
   resolveHomeHourWindow,
   toHomeSignalOptions,
   toHomeWireWindow,
@@ -117,21 +118,25 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   }
 
   /**
-   * Fetches the Wi-Fi signal chart for one hour of today, resampled on
-   * a minute grid — the Home counterpart of the Classic
-   * `getSignalStrength` contract.
-   * @param hour - Hour of today (0-23); defaults to the current hour.
+   * Fetches the Wi-Fi signal chart — the whole of today on a
+   * five-minute grid, or one specific hour on a minute grid. The Home
+   * counterpart of the Classic `getSignalStrength` contract.
+   * @param hour - Optional hour of today (0-23); omitted covers today.
    * @returns Structured line chart options (`dBm`), or a typed failure.
    */
   public async getSignalStrength(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    const window = resolveHomeHourWindow(hour, this.chartTimezone)
+    const window =
+      hour === undefined ?
+        resolveHomeDayWindow(this.chartTimezone)
+      : resolveHomeHourWindow(hour, this.chartTimezone)
     return mapResult(
       await this.api.getSignal(this.id, toHomeWireWindow(window)),
       (data) =>
         toHomeSignalOptions({
           data,
+          gridUnit: hour === undefined ? 'fiveMinutes' : 'minute',
           locale: this.api.locale,
           name: this.name,
           window,

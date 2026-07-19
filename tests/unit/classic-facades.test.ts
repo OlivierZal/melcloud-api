@@ -28,6 +28,7 @@ import {
   isClassicAtwFacade,
   isClassicErvFacade,
 } from '../../src/facades/index.ts'
+import { Temporal } from '../../src/temporal.ts'
 import {
   type ClassicListDeviceDataAta,
   type ClassicSetDevicePostData,
@@ -278,14 +279,39 @@ describe('building facade', () => {
     expect(api.getSignal).toHaveBeenCalledWith(expect.any(Object))
   })
 
-  it('defaults getSignalStrength hour to the current hour', async () => {
-    const { api, facade } = createBuildingFacade()
-    okValue(await facade.getSignalStrength())
+  it('formats the raw minute labels as clock labels', async () => {
+    const { facade } = createBuildingFacade({
+      getSignal: vi
+        .fn<ClassicAPIAdapter['getSignal']>()
+        .mockResolvedValue(
+          ok(classicReportData({ Labels: ['0', '30', '59', 'total'] })),
+        ),
+      locale: 'fr-FR',
+    })
 
-    const call = vi.mocked(api.getSignal).mock.calls[0]?.[0]
+    const { labels } = okValue(await facade.getSignalStrength(12))
 
-    expect(call?.postData.hour).toBeGreaterThanOrEqual(0)
-    expect(call?.postData.hour).toBeLessThanOrEqual(23)
+    // Bare minutes anchor on the requested hour; non-minutes pass through.
+    expect(labels).toStrictEqual(['12:00', '12:30', '12:59', 'total'])
+  })
+
+  it('covers the whole of today hour by hour when no hour is given', async () => {
+    vi.spyOn(Temporal.Now, 'plainTimeISO').mockReturnValue(
+      new Temporal.PlainTime(2),
+    )
+    try {
+      const { api, facade } = createBuildingFacade()
+      okValue(await facade.getSignalStrength())
+
+      expect(api.getSignal).toHaveBeenCalledTimes(3)
+      expect(
+        vi
+          .mocked(api.getSignal)
+          .mock.calls.map(([{ postData }]) => postData.hour),
+      ).toStrictEqual([0, 1, 2])
+    } finally {
+      vi.mocked(Temporal.Now.plainTimeISO).mockRestore()
+    }
   })
 
   it('calls getTiles without selection', async () => {
@@ -822,6 +848,40 @@ describe('ata device facade', () => {
     expect(value.labels[1]).toBe('Mon')
   })
 
+  it('formats a one-day energy report with clock labels', async () => {
+    const { facade } = createAtaFacade({
+      getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
+        ok(
+          cast({
+            Auto: [0, 0],
+            Cooling: [0.2, 0.3],
+            Dry: [0, 0],
+            Fan: [0, 0],
+            Heating: [0, 0],
+            Labels: [9, 10],
+            LabelType: 0,
+            Other: [0, 0],
+            TotalAutoConsumed: 0,
+            TotalCoolingConsumed: 0.5,
+            TotalDryConsumed: 0,
+            TotalFanConsumed: 0,
+            TotalHeatingConsumed: 0,
+            TotalOtherConsumed: 0,
+            UsageDisclaimerPercentages: '100',
+          }),
+        ),
+      ),
+      locale: 'fr-FR',
+    })
+
+    const { labels } = okValue(
+      await facade.getEnergyReport({ from: '2024-01-07', to: '2024-01-08' }),
+    )
+
+    // The one-day report's bare hour numbers render as clock labels.
+    expect(labels).toStrictEqual(['09:00', '10:00'])
+  })
+
   it('calls operationModes', async () => {
     const { facade } = createAtaFacade()
     const value = okValue(await facade.getOperationModes())
@@ -854,14 +914,38 @@ describe('ata device facade', () => {
     expect(api.getHourlyTemperatures).toHaveBeenCalledWith(expect.any(Object))
   })
 
-  it('defaults hourlyTemperatures hour to the current hour', async () => {
-    const { api, facade } = createAtaFacade()
-    okValue(await facade.getHourlyTemperatures())
+  it('formats the hourly temperature labels as clock labels', async () => {
+    const { facade } = createAtaFacade({
+      getHourlyTemperatures: vi
+        .fn<ClassicAPIAdapter['getHourlyTemperatures']>()
+        .mockResolvedValue(ok(classicReportData({ Labels: ['5'] }))),
+      locale: 'fr-FR',
+    })
 
-    const call = vi.mocked(api.getHourlyTemperatures).mock.calls[0]?.[0]
+    const { labels } = okValue(await facade.getHourlyTemperatures(9))
 
-    expect(call?.postData.hour).toBeGreaterThanOrEqual(0)
-    expect(call?.postData.hour).toBeLessThanOrEqual(23)
+    expect(labels).toStrictEqual(['09:05'])
+  })
+
+  it('covers the whole of today hour by hour when no hour is given', async () => {
+    vi.spyOn(Temporal.Now, 'plainTimeISO').mockReturnValue(
+      new Temporal.PlainTime(1),
+    )
+    try {
+      const { api, facade } = createAtaFacade()
+      const value = okValue(await facade.getHourlyTemperatures())
+
+      expect(api.getHourlyTemperatures).toHaveBeenCalledTimes(2)
+      expect(
+        vi
+          .mocked(api.getHourlyTemperatures)
+          .mock.calls.map(([{ postData }]) => postData.hour),
+      ).toStrictEqual([0, 1])
+      // Two one-label hours concatenate into a two-label day.
+      expect(value.labels).toHaveLength(2)
+    } finally {
+      vi.mocked(Temporal.Now.plainTimeISO).mockRestore()
+    }
   })
 
   it('calls getTiles without selection', async () => {

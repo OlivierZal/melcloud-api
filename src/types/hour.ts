@@ -27,3 +27,18 @@ export type Hour =
   | 7
   | 8
   | 9
+
+const LAST_HOUR = 23
+
+const isHour = (value: number): value is Hour =>
+  Number.isSafeInteger(value) && value >= 0 && value <= LAST_HOUR
+
+/**
+ * Every {@link Hour} in chronological order — the fan-out base for
+ * day-spanning hourly charts.
+ * @category Types
+ */
+export const HOURS: readonly Hour[] = Array.from(
+  { length: LAST_HOUR + 1 },
+  (_unused, index) => index,
+).filter((value) => isHour(value))
