@@ -99,20 +99,27 @@ export const createMockHttpClient = (
 
 export const createSettingStore = (
   initial: Record<string, string> = {},
+  { hasUnset = false }: { hasUnset?: boolean } = {},
 ): {
   setSpy: ReturnType<typeof vi.fn<(key: string, value: string) => void>>
   settingManager: SettingManager
+  unsetSpy: ReturnType<typeof vi.fn<(key: string) => void>>
 } => {
   const store = new Map(Object.entries(initial))
   const setSpy = vi.fn<(key: string, value: string) => void>((key, value) => {
     store.set(key, value)
+  })
+  const unsetSpy = vi.fn<(key: string) => void>((key) => {
+    store.delete(key)
   })
   return {
     setSpy,
     settingManager: {
       set: setSpy,
       get: (key: string) => store.get(key) ?? null,
+      ...(hasUnset && { unset: unsetSpy }),
     },
+    unsetSpy,
   }
 }
 

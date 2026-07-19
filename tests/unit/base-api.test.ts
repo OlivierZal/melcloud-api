@@ -1141,4 +1141,25 @@ describe('logOut', () => {
       vi.useRealTimers()
     }
   })
+
+  it('deletes the keys outright when the host delegates unset', () => {
+    const { settingManager, unsetSpy } = createSettingStore(
+      {
+        loginBackoffUntil: '123',
+        password: 'p',
+        username: 'u',
+      },
+      { hasUnset: true },
+    )
+    const api = new TestAPI({ settingManager })
+
+    api.logOut()
+
+    // Absent, not an empty string, and routed through `unset`.
+    expect(settingManager.get('username')).toBeNull()
+    expect(settingManager.get('password')).toBeNull()
+    expect(settingManager.get('loginBackoffUntil')).toBeNull()
+    expect(unsetSpy).toHaveBeenCalledWith('username')
+    expect(unsetSpy).toHaveBeenCalledWith('loginBackoffUntil')
+  })
 })

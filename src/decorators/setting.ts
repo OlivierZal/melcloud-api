@@ -23,8 +23,19 @@ const setting = (
       return this.settingManager?.get(key) ?? target.get.call(this)
     },
     set(this: HasSettingManager, value: string): void {
-      if (this.settingManager !== undefined) {
-        this.settingManager.set(key, value)
+      const { settingManager } = this
+      if (settingManager !== undefined) {
+        // An empty string is the cleared sentinel for every persisted
+        // field (credentials, tokens, context key, expiry): delete the
+        // key outright when the host delegates `unset`, so a logout
+        // leaves no empty leftovers. `get` falls back to the accessor's
+        // own `''` default when the key is absent, so this reads back
+        // identically.
+        if (value === '' && settingManager.unset !== undefined) {
+          settingManager.unset(key)
+        } else {
+          settingManager.set(key, value)
+        }
         return
       }
       target.set.call(this, value)

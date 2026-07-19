@@ -828,11 +828,20 @@ export abstract class BaseAPI implements Disposable {
     }
   }
 
-  // `''` marks a cleared gate: the SettingManager contract has no
-  // delete operation.
+  // Clearing the gate deletes the key when the host delegates `unset`,
+  // else stores `''` — `#persistedLoginBackoffUntil` reads both as "no
+  // pause".
   #setLoginBackoffUntil(until: number | null): void {
     this.#loginBackoffUntil = until
-    this.settingManager?.set(
+    const { settingManager } = this
+    if (settingManager === undefined) {
+      return
+    }
+    if (until === null && settingManager.unset !== undefined) {
+      settingManager.unset(LOGIN_BACKOFF_SETTING_KEY)
+      return
+    }
+    settingManager.set(
       LOGIN_BACKOFF_SETTING_KEY,
       until === null ? '' : String(until),
     )

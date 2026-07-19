@@ -170,6 +170,12 @@ export interface SettingManager {
   readonly get: (key: string) => string | null | undefined
   /** Store a setting value by key. */
   readonly set: (key: string, value: string) => void
+  /**
+   * Delete a setting key. Optional: when a host does not provide it, the
+   * SDK clears by storing an empty string instead, which reads back as
+   * absent all the same.
+   */
+  readonly unset?: (key: string) => void
 }
 
 /**
