@@ -30,6 +30,7 @@ import {
   type HomeChartGridUnit,
   type HomeChartWindow,
   fetchHomeReportChunks,
+  MAX_ANNOTATION_CHUNK_DAYS,
   resolveHomeDayWindow,
   resolveHomeHourWindow,
   resolveHomeReportWindow,
@@ -465,6 +466,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
       await fetchHomeReportChunks(
         async (params) => this.api.getAtwTemperatures(this.id, params),
         window,
+        MAX_ANNOTATION_CHUNK_DAYS,
       ),
       (reports) => toHomeOperationModeOptions(reports, window),
     )
@@ -551,6 +553,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
       fetchHomeReportChunks(
         async (params) => this.api.getAtwTemperatures(this.id, params),
         window,
+        MAX_ANNOTATION_CHUNK_DAYS,
       ),
       fetchHomeReportChunks(
         async (params) => this.api.getAtwInternalTemperatures(this.id, params),

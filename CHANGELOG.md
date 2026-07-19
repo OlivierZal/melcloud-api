@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [42.0.3] - 2026-07-19
+
+### Fixed
+
+- Home ATW mode bands and operation-mode durations vanished beyond the first ~week of windows wider than 7 days: the BFF truncates the labeled comfort-graph annotations at period `Weekly` (live-probed via `scripts/probe-weekly-annotations.ts`: a 21-day Weekly query carried spans through day 6 only — exactly the on-device symptom — while the same window in 7-day `Hourly` chunks covered it fully). The annotation consumers (temperature-chart bands, operation-modes pie) now chunk at 7 days so every request stays on the faithful `Hourly` period; chunk fan-outs run in batches of 6 requests (a year is 53 chunks) with a failed batch short-circuiting the rest.
+
 ## [42.0.2] - 2026-07-19
 
 ### Fixed
@@ -276,6 +282,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[42.0.3]: https://github.com/OlivierZal/melcloud-api/compare/42.0.2...42.0.3
 [42.0.2]: https://github.com/OlivierZal/melcloud-api/compare/42.0.1...42.0.2
 [42.0.1]: https://github.com/OlivierZal/melcloud-api/compare/42.0.0...42.0.1
 [42.0.0]: https://github.com/OlivierZal/melcloud-api/compare/41.3.0...42.0.0
