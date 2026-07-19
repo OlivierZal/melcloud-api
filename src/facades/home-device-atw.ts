@@ -40,9 +40,11 @@ import {
   toHomeWireWindow,
 } from './home-report.ts'
 
-// Telemetry intervals per bucket granularity (UTC-aligned wire
-// buckets); the ATW interval measures already report kWh per bucket.
-const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour' } as const
+// Telemetry intervals per display bucket granularity — local-day
+// buckets aggregate hourly wire buckets client-side (the wire's own
+// day buckets are UTC days); the ATW interval measures already report
+// kWh per bucket.
+const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour', localDay: 'Hour' } as const
 
 const IDENTITY_SCALE = 1
 

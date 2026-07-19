@@ -1158,6 +1158,7 @@ describe('atw device facade', () => {
   })
 
   it('builds the ATW energy report with consumed and produced series', async () => {
+    // Pin the label locale: the runner's default is not ours.
     const { facade } = createAtwFacade({
       getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
         ok(
@@ -1180,6 +1181,7 @@ describe('atw device facade', () => {
           }),
         ),
       ),
+      locale: 'fr-FR',
     })
 
     const value = okValue(
@@ -1198,8 +1200,9 @@ describe('atw device facade', () => {
     expect(value.series[0]?.data).toStrictEqual([5.1, 4.9])
     // `CoP` never charts: a ratio cannot share the kWh axis.
     expect(value.series.map(({ name }) => name)).not.toContain('CoP')
-    // Raw labels pass through the day-of-month numbers untouched.
-    expect(value.labels).toStrictEqual(['12', '13'])
+    // Two buckets over two calendar days: the raw day-of-month labels
+    // rebuild as localized dates anchored on `from`.
+    expect(value.labels).toStrictEqual(['12 janv.', '13 janv.'])
   })
 
   it('clamps target temperatures', async () => {

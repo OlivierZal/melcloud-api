@@ -64,15 +64,25 @@ const ENERGY_REPORT_UNIT = 'kWh'
 // ISO 8601 weekday number for Sunday.
 const ISO_SUNDAY = 7
 
-// `EnergyCost/Report` labels need two repairs before the shared
-// formatter: day-of-week entries are .NET 0-based (Sunday = 0) while
-// `Report/*` speaks 1-based ISO (Monday = 1), and one-day reports
-// arrive as bare hour numbers (`LabelType.time`) that would render as
-// a naked `0..23` axis — format those as clock labels.
+// `EnergyCost/Report` labels need repairs before the shared formatter:
+// one-day reports arrive as bare hour numbers (`LabelType.time`) that
+// format as clock labels, and multi-day buckets carry vendor-dependent
+// day labels (0-based .NET weekdays for ATA, raw days of month for
+// ATW) — when the bucket count matches the window's calendar-day span,
+// those rebuild as localized dates anchored on `from`, aligning the
+// axis with the Home energy charts; otherwise day-of-week entries get
+// the 1-based ISO repair and anything else passes through.
 const toEnergyReportLabels = (
   labels: readonly number[],
-  labelType: ClassicLabelType,
-  locale: string | undefined,
+  {
+    labelType,
+    locale,
+    window,
+  }: {
+    labelType: ClassicLabelType
+    window: Resolved<ReportQuery>
+    locale?: string | undefined
+  },
 ): string[] => {
   if (labelType === ClassicLabelType.time) {
     const formatter = new Intl.DateTimeFormat(locale, {
@@ -81,6 +91,16 @@ const toEnergyReportLabels = (
     })
     return labels.map((label) =>
       formatter.format(new Temporal.PlainTime(label)),
+    )
+  }
+  if (labels.length === getDuration(window)) {
+    const formatter = new Intl.DateTimeFormat(locale, {
+      day: 'numeric',
+      month: 'short',
+    })
+    const start = Temporal.PlainDateTime.from(window.from).toPlainDate()
+    return labels.map((_unused, index) =>
+      formatter.format(start.add({ days: index })),
     )
   }
   return labels.map((label) =>
@@ -265,7 +285,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         {
           Data: series.map(({ data: values }) => [...values]),
           FromDate: from,
-          Labels: toEnergyReportLabels(labels, labelType, this.api.locale),
+          Labels: toEnergyReportLabels(labels, {
+            labelType,
+            locale: this.api.locale,
+            window: { from, to },
+          }),
           LabelType: labelType,
           Points: labels.length,
           Series: series.length,
