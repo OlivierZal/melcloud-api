@@ -1,5 +1,6 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
+import type { Temporal } from '../temporal.ts'
 import {
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
@@ -406,15 +407,18 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   public async getHourlyTemperatures(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    return hour === undefined ?
-        this.#fetchTemperatureChart(
-          resolveHomeDayWindow(this.chartTimezone),
-          'fiveMinutes',
-        )
-      : this.#fetchTemperatureChart(
-          resolveHomeHourWindow(hour, this.chartTimezone),
-          'minute',
-        )
+    const { cutoff, window } =
+      hour === undefined ?
+        resolveHomeDayWindow(this.chartTimezone)
+      : {
+          cutoff: undefined,
+          window: resolveHomeHourWindow(hour, this.chartTimezone),
+        }
+    return this.#fetchTemperatureChart(
+      window,
+      hour === undefined ? 'fiveMinutes' : 'minute',
+      cutoff,
+    )
   }
 
   /**
@@ -539,6 +543,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   async #fetchTemperatureChart(
     window: HomeChartWindow,
     gridUnit?: HomeChartGridUnit,
+    cutoff?: Temporal.ZonedDateTime,
   ): Promise<Result<ReportChartLineOptions>> {
     const [comfort, internal] = await Promise.all([
       fetchHomeReportChunks(
@@ -559,6 +564,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     return ok(
       toHomeLineOptions({
         ...(gridUnit !== undefined && { gridUnit }),
+        cutoff,
         locale: this.api.locale,
         reports: [...comfort.value, ...internal.value],
         unit: TEMPERATURE_UNIT,

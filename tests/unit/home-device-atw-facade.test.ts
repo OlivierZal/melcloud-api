@@ -573,14 +573,18 @@ describe('home device atw facade', () => {
 
       const value = okValue(await facade.getHourlyTemperatures())
 
-      // Pinned to 09:30 UTC: midnight through now, 5-minute slots.
+      // Pinned to 09:30 UTC: the whole day on 5-minute slots, blank
+      // after now.
       expect(api.getAtwTemperatures).toHaveBeenCalledWith('atw-1', {
         from: '2026-05-09T00:00:00Z',
         period: 'Hourly',
-        to: '2026-05-09T09:30:00Z',
+        to: '2026-05-10T00:00:00Z',
       })
-      expect(value.labels).toHaveLength(115)
+      expect(value.labels).toHaveLength(289)
       expect(value.labels[0]).toBe('00:00')
+      // LOCF holds through now (09:30 = slot 114), blank afterwards.
+      expect(value.series[0]?.data[114]).toBe(25)
+      expect(value.series[0]?.data[115]).toBeNull()
     })
 
     it('chunks a wide window and merges the reports', async () => {

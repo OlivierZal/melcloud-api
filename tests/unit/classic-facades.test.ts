@@ -932,7 +932,8 @@ describe('ata device facade', () => {
       new Temporal.PlainTime(1),
     )
     try {
-      const { api, facade } = createAtaFacade()
+      // Pin the label locale: the runner's default is not ours.
+      const { api, facade } = createAtaFacade({ locale: 'fr-FR' })
       const value = okValue(await facade.getHourlyTemperatures())
 
       expect(api.getHourlyTemperatures).toHaveBeenCalledTimes(2)
@@ -941,8 +942,11 @@ describe('ata device facade', () => {
           .mocked(api.getHourlyTemperatures)
           .mock.calls.map(([{ postData }]) => postData.hour),
       ).toStrictEqual([0, 1])
-      // Two one-label hours concatenate into a two-label day.
-      expect(value.labels).toHaveLength(2)
+      // Two one-label hours concatenate, then hours 2-23 pad blank
+      // minutes so the axis spans the whole day.
+      expect(value.labels).toHaveLength(2 + 22 * 60)
+      expect(value.labels[2]).toBe('02:00')
+      expect(value.labels.at(-1)).toBe('23:59')
     } finally {
       vi.mocked(Temporal.Now.plainTimeISO).mockRestore()
     }

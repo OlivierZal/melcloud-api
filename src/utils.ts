@@ -409,6 +409,40 @@ export const withMinuteClockLabels = (
 }
 
 /**
+ * Extend a merged day chart to midnight: the not-yet-elapsed hours get
+ * their clock labels with blank samples, so the axis always spans the
+ * whole day (parity with the Home full-day charts).
+ * @param options - Merged chart covering midnight up to `afterHour`.
+ * @param format - Padding inputs.
+ * @param format.afterHour - Last hour the chart already covers.
+ * @param format.locale - BCP-47 locale tag; defaults to the runtime locale.
+ * @returns The options padded to a full-day axis.
+ */
+export const padHourlyChartToMidnight = (
+  options: ReportChartLineOptions,
+  { afterHour, locale }: { afterHour: Hour; locale?: string | undefined },
+): ReportChartLineOptions => {
+  const formatter = new Intl.DateTimeFormat(locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+  const padLabels = HOURS.filter((hourOfDay) => hourOfDay > afterHour).flatMap(
+    (hourOfDay) =>
+      Array.from({ length: MAX_MINUTE_LABEL + 1 }, (_unused, minute) =>
+        formatter.format(new Temporal.PlainTime(hourOfDay, minute)),
+      ),
+  )
+  return {
+    ...options,
+    labels: [...options.labels, ...padLabels],
+    series: options.series.map((series) => ({
+      ...series,
+      data: [...series.data, ...padLabels.map(() => null)],
+    })),
+  }
+}
+
+/**
  * Transform operation mode log data into structured pie chart options.
  * @param data - The operation mode log entries.
  * @param root0 - The resolved report date range (defaults applied).

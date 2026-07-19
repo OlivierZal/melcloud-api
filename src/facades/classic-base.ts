@@ -38,6 +38,7 @@ import {
   getChartLineOptions,
   hoursUpTo,
   mergeHourlyChartResults,
+  padHourlyChartToMidnight,
   withMinuteClockLabels,
 } from '../utils.ts'
 import { HourSchema, parseOrThrow } from '../validation/index.ts'
@@ -292,13 +293,20 @@ export abstract class ClassicBaseFacade<
       return this.#fetchSignalHour(hour)
     }
     // No hour: the whole of today, hour by hour — the wire only speaks
-    // one-hour windows.
+    // one-hour windows; the not-yet-elapsed hours pad blank so the axis
+    // spans the whole day.
+    const currentHour = this.currentHour()
     const hourly = await Promise.all(
-      hoursUpTo(this.currentHour()).map(async (hourOfDay) =>
+      hoursUpTo(currentHour).map(async (hourOfDay) =>
         this.#fetchSignalHour(hourOfDay),
       ),
     )
-    return mergeHourlyChartResults(hourly)
+    return mapResult(mergeHourlyChartResults(hourly), (options) =>
+      padHourlyChartToMidnight(options, {
+        afterHour: currentHour,
+        locale: this.api.locale,
+      }),
+    )
   }
 
   /**
