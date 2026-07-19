@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- Home ATW mode bands and operation-mode durations vanished beyond the first ~week of windows wider than 7 days: the BFF truncates the labeled comfort-graph annotations at period `Weekly` (live-probed via `scripts/probe-weekly-annotations.ts`: a 21-day Weekly query carried spans through day ~6 only — exactly the on-device symptom — while the same window in 7-day `Hourly` chunks covered it fully). The annotation consumers (temperature-chart bands, operation-modes pie) now chunk at 7 days so every request stays on the faithful `Hourly` period; chunk fan-outs run in batches of 6 requests (a year is 53 chunks) with a failed batch short-circuiting the rest.
+- Home ATW mode bands and operation-mode durations vanished beyond the first ~week of windows wider than 7 days: the BFF truncates the labeled comfort-graph annotations at period `Weekly` (live-probed via `scripts/probe-weekly-annotations.ts`: a 21-day Weekly query carried spans through day 6 only — exactly the on-device symptom — while the same window in 7-day `Hourly` chunks covered it fully). The annotation consumers (temperature-chart bands, operation-modes pie) now chunk at 7 days so every request stays on the faithful `Hourly` period; chunk fan-outs run in batches of 6 requests (a year is 53 chunks) with a failed batch short-circuiting the rest.
 
 ## [42.0.2] - 2026-07-19
 
