@@ -34,6 +34,7 @@ import {
   resolveHomeDayWindow,
   resolveHomeHourWindow,
   resolveHomeReportWindow,
+  shouldChartHomeBands,
   toHomeEnergyBucketUnit,
   toHomeEnergyOptions,
   toHomeLineOptions,
@@ -464,7 +465,14 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     return mapResult(
       await fetchHomeReportChunks(
-        async (params) => this.api.getAtwTemperatures(this.id, params),
+        async (params) =>
+          mapResult(
+            await this.api.getAtwTemperatures(this.id, params),
+            // The pie only reads the annotations: drop each chunk's
+            // minute-grained sample payload before the merge piles
+            // them up on the host's constrained heap.
+            (reports) => reports.map((report) => ({ ...report, datasets: [] })),
+          ),
         window,
         MAX_ANNOTATION_CHUNK_DAYS,
       ),
@@ -543,17 +551,21 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   // both merge the comfort-graph (room/set/outside + mode annotations)
   // with the internal-temperatures report (flow/return/tank), only the
   // window and grid resolution differ. Comfort-graph first so its tank
-  // series wins the dedup and the band annotations are present.
+  // series wins the dedup and the band annotations are present. Beyond
+  // the band load budget the comfort-graph falls back to the fast
+  // Weekly chunking and the annotations are dropped — the Weekly wire
+  // truncates them anyway, and a truncated band reads as a lie.
   async #fetchTemperatureChart(
     window: HomeChartWindow,
     gridUnit?: HomeChartGridUnit,
     cutoff?: Temporal.ZonedDateTime,
   ): Promise<Result<ReportChartLineOptions>> {
+    const shouldChartBands = shouldChartHomeBands(window)
     const [comfort, internal] = await Promise.all([
       fetchHomeReportChunks(
         async (params) => this.api.getAtwTemperatures(this.id, params),
         window,
-        MAX_ANNOTATION_CHUNK_DAYS,
+        shouldChartBands ? MAX_ANNOTATION_CHUNK_DAYS : undefined,
       ),
       fetchHomeReportChunks(
         async (params) => this.api.getAtwInternalTemperatures(this.id, params),
@@ -566,12 +578,16 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     if (!internal.ok) {
       return internal
     }
+    const reports = [...comfort.value, ...internal.value]
     return ok(
       toHomeLineOptions({
         ...(gridUnit !== undefined && { gridUnit }),
         cutoff,
         locale: this.api.locale,
-        reports: [...comfort.value, ...internal.value],
+        reports:
+          shouldChartBands ? reports : (
+            reports.map((report) => ({ ...report, annotations: [] }))
+          ),
         unit: TEMPERATURE_UNIT,
         window,
       }),
