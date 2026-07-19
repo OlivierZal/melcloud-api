@@ -602,6 +602,21 @@ describe('melcloud home API', () => {
       expect(api.context?.language).toBe('fr')
     })
 
+    it('empties the device registry and de-authenticates on logOut', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.list()
+
+      expect(api.registry.getById('device-1')).toBeDefined()
+      expect(api.isAuthenticated()).toBe(true)
+
+      api.logOut()
+
+      expect(api.registry.getAll()).toHaveLength(0)
+      expect(api.isAuthenticated()).toBe(false)
+    })
+
     it('should return empty array on failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()

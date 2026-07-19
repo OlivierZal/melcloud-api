@@ -649,6 +649,13 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     this.expiry = ''
   }
 
+  protected override clearRegistry(): void {
+    this.#registry.syncDevices([])
+    this.#registry.syncAreas([])
+    this.#registry.syncFloors([])
+    this.#registry.syncBuildings([])
+  }
+
   protected override async doAuthenticate({
     password,
     username,

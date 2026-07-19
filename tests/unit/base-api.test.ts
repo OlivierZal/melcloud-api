@@ -55,6 +55,8 @@ const { client: mockHttpClient, requestSpy: mockRequest } =
 class TestAPI extends BaseAPI {
   public readonly clearPersistedSessionMock = vi.fn<() => void>()
 
+  public readonly clearRegistryMock = vi.fn<() => void>()
+
   public readonly doAuthenticateMock = vi.fn<() => Promise<void>>()
 
   public readonly getAuthHeadersMock = vi.fn<() => Record<string, string>>()
@@ -138,6 +140,10 @@ class TestAPI extends BaseAPI {
 
   protected override clearPersistedSession(): void {
     this.clearPersistedSessionMock()
+  }
+
+  protected override clearRegistry(): void {
+    this.clearRegistryMock()
   }
 
   protected override async doAuthenticate(): Promise<void> {
@@ -1075,6 +1081,62 @@ describe('automatic login backoff', () => {
       await api.resumeSession()
 
       expect(api.doAuthenticateMock).toHaveBeenCalledTimes(3)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
+describe('logOut', () => {
+  it('clears session, credentials, backoff and registry', () => {
+    const { settingManager } = createSettingStore({
+      loginBackoffUntil: '123',
+      password: 'p',
+      username: 'u',
+    })
+    const api = new TestAPI({ settingManager })
+
+    api.logOut()
+
+    expect(api.clearPersistedSessionMock).toHaveBeenCalledTimes(1)
+    expect(api.clearRegistryMock).toHaveBeenCalledTimes(1)
+    expect(settingManager.get('username')).toBe('')
+    expect(settingManager.get('password')).toBe('')
+    expect(settingManager.get('loginBackoffUntil')).toBe('')
+  })
+
+  it('leaves nothing to resume — a later resumeSession is a no-op', async () => {
+    const { settingManager } = createSettingStore({
+      password: 'p',
+      username: 'u',
+    })
+    const api = new TestAPI({ settingManager })
+
+    api.logOut()
+
+    await expect(api.resumeSession()).resolves.toBe(false)
+    expect(api.doAuthenticateMock).not.toHaveBeenCalled()
+  })
+
+  it('clears a backoff armed by a rejected sign-in', async () => {
+    vi.useFakeTimers()
+    mockTemporalNowInstant()
+    try {
+      const { settingManager } = createSettingStore({
+        password: 'p',
+        username: 'u',
+      })
+      const api = new TestAPI({ settingManager })
+      api.doAuthenticateMock.mockRejectedValueOnce(new AuthenticationError('x'))
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('x')
+      expect(settingManager.get('loginBackoffUntil')).not.toBe('')
+
+      api.logOut()
+
+      expect(settingManager.get('loginBackoffUntil')).toBe('')
     } finally {
       vi.useRealTimers()
     }

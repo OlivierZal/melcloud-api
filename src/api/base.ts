@@ -257,14 +257,22 @@ export abstract class BaseAPI implements Disposable {
    * Subclass hook: clear every persisted session credential (tokens,
    * context keys, expiry — whatever the API persists). Ownership is
    * deliberately narrow: the base {@link authenticate} template wipes
-   * before an explicit login, and the reactive-401 path
+   * before an explicit login, the reactive-401 path
    * ({@link reauthenticate}) wipes after the server rejected the
-   * credential. Nothing else may clear — in particular the
-   * {@link tryReuseSession} probe, where a transient failure is
-   * indistinguishable from a rejection and must leave the session
-   * untouched.
+   * credential, and {@link logOut} wipes on an explicit sign-out.
+   * Nothing else may clear — in particular the {@link tryReuseSession}
+   * probe, where a transient failure is indistinguishable from a
+   * rejection and must leave the session untouched.
    */
   protected abstract clearPersistedSession(): void
+
+  /**
+   * Subclass hook: empty the device/building registry so a logged-out
+   * instance exposes no stale devices. Implemented by syncing the
+   * registry collections with empty data (the upsert + prune removes
+   * every entry).
+   */
+  protected abstract clearRegistry(): void
 
   protected abstract doAuthenticate(
     credentials: LoginCredentials,
@@ -381,6 +389,26 @@ export abstract class BaseAPI implements Disposable {
     if (!(await this.resumeSession()) && this.#hasRecoverableState()) {
       this.#emitAuthenticationLostOnce()
     }
+  }
+
+  /**
+   * Log out: the inverse of {@link authenticate}. Clears the persisted
+   * session (tokens/context/expiry), the stored username/password and
+   * the automatic-login backoff, stops the auto-sync timer, and empties
+   * the registry — so {@link isAuthenticated} reads `false` and no
+   * stale devices linger, identically on Classic and Home.
+   *
+   * User-initiated, so unlike a rejected sign-in it neither arms the
+   * backoff nor emits `onAuthenticationLost`. A subsequent
+   * {@link authenticate} is the only way back in.
+   */
+  public logOut(): void {
+    this.clearPersistedSession()
+    this.username = ''
+    this.password = ''
+    this.#setLoginBackoffUntil(null)
+    this.clearSync()
+    this.clearRegistry()
   }
 
   /**
