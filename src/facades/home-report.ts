@@ -40,6 +40,15 @@ export interface HomeChartWindow {
 // split wide windows into chunks and merge the reports.
 export const MAX_REPORT_CHUNK_DAYS = 30
 
+// Worse for the labeled mode annotations: at period `Weekly` the BFF
+// truncates them to roughly the first two weeks of the window
+// (live-probed 2026-07-19 via `scripts/probe-weekly-annotations.ts`:
+// a 21-day Weekly query carried spans through day ~6 only, while the
+// same window in 7-day Hourly chunks covered it fully). Annotation
+// consumers (mode bands, operation-mode durations) therefore chunk at
+// the Hourly-period span.
+export const MAX_ANNOTATION_CHUNK_DAYS = 7
+
 const windowDaysOf = (window: HomeChartWindow): number =>
   window.from.until(window.to).total({ relativeTo: window.from, unit: 'days' })
 
@@ -54,18 +63,21 @@ export const toHomeReportPeriod = (window: HomeChartWindow): string =>
   windowDaysOf(window) > MAX_HOURLY_GRID_DAYS ? 'Weekly' : 'Hourly'
 
 /**
- * Split a window into consecutive chunks of at most
- * {@link MAX_REPORT_CHUNK_DAYS} days, oldest first.
+ * Split a window into consecutive chunks of at most `chunkDays` days,
+ * oldest first.
  * @param window - Resolved chart window.
+ * @param chunkDays - Chunk span cap ({@link MAX_REPORT_CHUNK_DAYS} by
+ * default; {@link MAX_ANNOTATION_CHUNK_DAYS} for annotation consumers).
  * @returns The chunk windows (at least one).
  */
 export const splitHomeReportWindow = (
   window: HomeChartWindow,
+  chunkDays: number = MAX_REPORT_CHUNK_DAYS,
 ): HomeChartWindow[] => {
   const chunks: HomeChartWindow[] = []
   let { from } = window
   while (Temporal.ZonedDateTime.compare(from, window.to) < 0) {
-    const next = from.add({ days: MAX_REPORT_CHUNK_DAYS })
+    const next = from.add({ days: chunkDays })
     const to =
       Temporal.ZonedDateTime.compare(next, window.to) > 0 ? window.to : next
     chunks.push({ from, to })
@@ -140,13 +152,41 @@ export const mergeHomeReportChunks = (
   ]
 }
 
+// A year at the 7-day annotation cap is 53 requests — too many for
+// one parallel burst. Batches run this many chunks at a time; the
+// recursive shape (over a loop) keeps the batch sequencing loop-free,
+// and a failed batch short-circuits the remainder.
+const MAX_PARALLEL_CHUNKS = 6
+
+const fetchChunkBatches = async (
+  fetch: (chunk: HomeChartWindow) => Promise<Result<HomeReportData[]>>,
+  chunks: readonly HomeChartWindow[],
+): Promise<Result<HomeReportData[]>[]> => {
+  if (chunks.length === 0) {
+    return []
+  }
+  const batch = await Promise.all(
+    chunks.slice(0, MAX_PARALLEL_CHUNKS).map(async (chunk) => fetch(chunk)),
+  )
+  if (batch.some((result) => !result.ok)) {
+    return batch
+  }
+  return [
+    ...batch,
+    ...(await fetchChunkBatches(fetch, chunks.slice(MAX_PARALLEL_CHUNKS))),
+  ]
+}
+
 /**
- * Fetch a report over the window in chunks of at most
- * {@link MAX_REPORT_CHUNK_DAYS} days, in parallel, and merge the
- * responses: wide single requests time out (minute-grained payloads)
- * or come back with summarized annotations (collapsed mode durations).
+ * Fetch a report over the window in chunks of at most `chunkDays`
+ * days, batched in parallel, and merge the responses: wide single
+ * requests time out (minute-grained payloads) or come back with
+ * summarized annotations (collapsed mode durations).
  * @param fetch - One report request (endpoint bound by the caller).
  * @param window - Resolved chart window.
+ * @param chunkDays - Chunk span cap ({@link MAX_REPORT_CHUNK_DAYS} by
+ * default; {@link MAX_ANNOTATION_CHUNK_DAYS} keeps every chunk on the
+ * `Hourly` period, whose annotations are faithful).
  * @returns The merged report, or the first chunk failure.
  */
 export const fetchHomeReportChunks = async (
@@ -156,11 +196,12 @@ export const fetchHomeReportChunks = async (
     to: string
   }) => Promise<Result<HomeReportData[]>>,
   window: HomeChartWindow,
+  chunkDays?: number,
 ): Promise<Result<HomeReportData[]>> => {
-  const results = await Promise.all(
-    splitHomeReportWindow(window).map(async (chunk) =>
+  const results = await fetchChunkBatches(
+    async (chunk) =>
       fetch({ ...toHomeWireWindow(chunk), period: toHomeReportPeriod(chunk) }),
-    ),
+    splitHomeReportWindow(window, chunkDays),
   )
   const values: HomeReportData[][] = []
   for (const result of results) {
