@@ -90,7 +90,7 @@
     "typedoc-plugin-coverage": "^4.0.3",
     "typedoc-plugin-mdn-links": "^5.1.1",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.64.0",
+    "typescript-eslint": "^8.65.0",
     "unplugin-swc": "^1.5.9",
     "vitest": "^4.1.7"
   },
