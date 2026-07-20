@@ -125,6 +125,23 @@ describe(LifecycleEmitter, () => {
     expect(logger.error).not.toHaveBeenCalled()
   })
 
+  it('forwards onAuthenticationRestored and tolerates its absence', () => {
+    const logger = createLogger()
+    const onAuthenticationRestored =
+      vi.fn<NonNullable<LifecycleEvents['onAuthenticationRestored']>>()
+
+    const emitter = new LifecycleEmitter({ onAuthenticationRestored }, logger)
+    const emptyEmitter = new LifecycleEmitter({}, logger)
+
+    emitter.emitAuthenticationRestored()
+
+    expect(onAuthenticationRestored).toHaveBeenCalledTimes(1)
+    expect(() => {
+      emptyEmitter.emitAuthenticationRestored()
+    }).not.toThrow()
+    expect(logger.error).not.toHaveBeenCalled()
+  })
+
   it('logs and swallows a throwing onAuthenticationLost callback', () => {
     const logger = createLogger()
     const emitter = new LifecycleEmitter(

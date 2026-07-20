@@ -75,6 +75,13 @@ export interface LifecycleEvents {
    * logging back in — re-arms it. Fires once per loss episode.
    */
   readonly onAuthenticationLost?: (() => void) | undefined
+  /**
+   * Fires when a sync cycle ends authenticated after an
+   * `onAuthenticationLost` episode — the user logged back in or a
+   * retry recovered the session. Fires once per loss episode, so the
+   * two events always alternate.
+   */
+  readonly onAuthenticationRestored?: (() => void) | undefined
   /** Invoked after a successful HTTP response is received. */
   readonly onRequestComplete?:
     ((event: RequestCompleteEvent) => void) | undefined

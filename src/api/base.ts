@@ -831,6 +831,17 @@ export abstract class BaseAPI implements Disposable {
     )
   }
 
+  // A live session marks any earlier loss episode as recovered —
+  // announced once per episode, so the two events always alternate.
+  #markLossRecovered(): void {
+    if (!this.#hasEmittedAuthenticationLost) {
+      return
+    }
+
+    this.#hasEmittedAuthenticationLost = false
+    this.events.emitAuthenticationRestored()
+  }
+
   async #runWithEvents<T>(
     context: { correlationId: string; method: string; url: string },
     runner: () => Promise<HttpResponse<T>>,
@@ -875,8 +886,7 @@ export abstract class BaseAPI implements Disposable {
       return
     }
     if (this.isAuthenticated()) {
-      // A live session marks any earlier loss episode as recovered.
-      this.#hasEmittedAuthenticationLost = false
+      this.#markLossRecovered()
       this.syncManager.planNext()
       return
     }
