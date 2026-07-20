@@ -44,6 +44,9 @@ const successfulWork = vi.fn<() => Promise<never[]>>().mockResolvedValue([])
 const createLostSpy = (): ReturnType<
   typeof vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>
 > => vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+const createRestoredSpy = (): ReturnType<
+  typeof vi.fn<NonNullable<LifecycleEvents['onAuthenticationRestored']>>
+> => vi.fn<NonNullable<LifecycleEvents['onAuthenticationRestored']>>()
 
 const { client: mockHttpClient, requestSpy: mockRequest } =
   createMockHttpClient('https://test.api')
@@ -885,6 +888,37 @@ describe('authentication-lost lifecycle', () => {
       await api.callRunSyncCycle(failingWork)
 
       expect(onAuthenticationLost).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('announces the recovery once per loss episode, never without one', async () => {
+    vi.useFakeTimers()
+    try {
+      const onAuthenticationRestored = createRestoredSpy()
+      const api = new TestAPI({
+        events: {
+          onAuthenticationLost: createLostSpy(),
+          onAuthenticationRestored,
+        },
+        settingManager: createSettingStore({ password: 'p', username: 'u' })
+          .settingManager,
+        syncIntervalMinutes: 1,
+      })
+
+      // Authenticated settles without a preceding loss stay silent.
+      await api.callRunSyncCycle(successfulWork)
+
+      expect(onAuthenticationRestored).not.toHaveBeenCalled()
+
+      api.isAuthenticatedMock.mockReturnValue(false)
+      await api.callRunSyncCycle(failingWork)
+      api.isAuthenticatedMock.mockReturnValue(true)
+      await api.callRunSyncCycle(successfulWork)
+      await api.callRunSyncCycle(successfulWork)
+
+      expect(onAuthenticationRestored).toHaveBeenCalledTimes(1)
     } finally {
       vi.useRealTimers()
     }

@@ -32,6 +32,12 @@ export class LifecycleEmitter {
     )
   }
 
+  public emitAuthenticationRestored(): void {
+    this.#safeInvoke('onAuthenticationRestored', () =>
+      this.#events?.onAuthenticationRestored?.(),
+    )
+  }
+
   public emitComplete(event: RequestCompleteEvent): void {
     this.#safeInvoke('onRequestComplete', () =>
       this.#events?.onRequestComplete?.(event),

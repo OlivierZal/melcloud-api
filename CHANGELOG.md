@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [42.5.0] - 2026-07-20
+
+### Added
+
+- New `LifecycleEvents.onAuthenticationRestored` callback: fires when a sync cycle ends authenticated after an `onAuthenticationLost` episode — the user logged back in or a retry recovered the session. Fires once per loss episode, so the two events always alternate; hosts can surface a "signed in again" confirmation to mirror the loss notification.
+
 ## [42.4.0] - 2026-07-20
 
 ### Added
@@ -334,6 +340,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[42.5.0]: https://github.com/OlivierZal/melcloud-api/compare/42.4.0...42.5.0
 [42.4.0]: https://github.com/OlivierZal/melcloud-api/compare/42.3.0...42.4.0
 [42.3.0]: https://github.com/OlivierZal/melcloud-api/compare/42.2.0...42.3.0
 [42.2.0]: https://github.com/OlivierZal/melcloud-api/compare/42.1.0...42.2.0
