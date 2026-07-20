@@ -253,6 +253,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
           dispatcher: new Agent({ connect: { rejectUnauthorized: false } }),
         }),
       },
+      logLabel: '[Classic]',
       rateLimitHours: DEFAULT_RETRY_HOURS,
       syncCallback: async () => this.fetch(),
     })

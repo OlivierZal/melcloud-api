@@ -90,6 +90,7 @@ class TestAPI extends BaseAPI {
       {
         defaultSyncIntervalMinutes: false,
         httpConfig: { baseURL: 'https://test.api' },
+        logLabel: '[Test]',
         rateLimitHours: 2,
         syncCallback: syncCallbackMock,
       },
@@ -503,7 +504,7 @@ describe('baseAPI shared request pipeline', () => {
         'Status 500',
       )
 
-      expect(logger.error).toHaveBeenCalledWith(expect.any(String))
+      expect(logger.error).toHaveBeenCalledWith('[Test]', expect.any(String))
     })
 
     it('does not log non-HTTP errors via logError', async () => {
@@ -635,6 +636,7 @@ describe('baseAPI shared request pipeline', () => {
 
       expect(isResumed).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Test]',
         'Session resume failed:',
         expect.any(Error),
       )
@@ -735,6 +737,7 @@ describe('baseAPI shared request pipeline', () => {
 
       await expect(api.notifySync({ type: undefined })).resolves.toBeUndefined()
       expect(logger.error).toHaveBeenCalledWith(
+        '[Test]',
         expect.stringContaining('onSyncComplete'),
         expect.any(Error),
       )
@@ -758,6 +761,7 @@ describe('baseAPI shared request pipeline', () => {
       await Promise.resolve()
 
       expect(logger.error).toHaveBeenCalledWith(
+        '[Test]',
         expect.stringContaining('onSyncComplete'),
         expect.any(Error),
       )
