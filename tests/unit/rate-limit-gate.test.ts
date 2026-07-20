@@ -111,7 +111,7 @@ describe(RateLimitGate, () => {
   it('falls back when Retry-After is a non-finite number', () => {
     const gate = new RateLimitGate({ hours: 2 })
 
-    gate.recordRateLimit(NaN)
+    gate.recordRateLimit(Number.NaN)
 
     expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
   })
