@@ -1,7 +1,6 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import { HomeDeviceType } from '../constants.ts'
-import { NoChangesError } from '../errors/index.ts'
 import {
   type ClassicFailureData,
   type ClassicGroupState,
@@ -15,6 +14,7 @@ import {
   aggregateClassicAtaGroupStates,
   toClassicAtaGroupState,
   toHomeAtaValues,
+  tolerateNoChanges,
 } from './home-ata-group.ts'
 
 /**
@@ -113,8 +113,8 @@ export class HomeBuildingAtaFacade {
   /**
    * Apply a Classic group state to every member device. The delta is
    * translated to the Home vocabulary once, then fanned out; members
-   * already matching it (a {@link NoChangesError} from their update) are
-   * fine by definition and do not fail the group write.
+   * already matching it are fine by definition and do not fail the
+   * group write ({@link tolerateNoChanges}).
    * @param state - Partial Classic group state to push to the members.
    * @returns The zone-shaped success outcome once every write settled.
    */
@@ -124,15 +124,11 @@ export class HomeBuildingAtaFacade {
     const values = toHomeAtaValues(state)
     if (Object.keys(values).length > 0) {
       await Promise.all(
-        this.devices.map(async (device) => {
-          try {
-            await this.#getFacade(device).updateValues(values)
-          } catch (error) {
-            if (!(error instanceof NoChangesError)) {
-              throw error
-            }
-          }
-        }),
+        this.devices.map(async (device) =>
+          tolerateNoChanges(async () =>
+            this.#getFacade(device).updateValues(values),
+          ),
+        ),
       )
     }
     return { AttributeErrors: null, Success: true }

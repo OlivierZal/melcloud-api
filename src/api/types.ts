@@ -66,11 +66,6 @@ export interface BaseAPIConfig extends UndefinedTolerant<LoginCredentials> {
  */
 export interface LifecycleEvents {
   /**
-   * Invoked after each sync trigger (auto-timer or
-   * `@syncDevices`-decorated mutation). Receives the device-type
-   * filter and any IDs the cascade was scoped to.
-   */
-  /**
    * Fires when a previously-available session is definitively lost:
    * the boot-time restore found persisted state but could not sign
    * in, or a sync cycle ended unauthenticated after the 401-recovery
@@ -89,6 +84,11 @@ export interface LifecycleEvents {
   readonly onRequestRetry?: ((event: RequestRetryEvent) => void) | undefined
   /** Invoked when a request is dispatched for the first time. */
   readonly onRequestStart?: ((event: RequestStartEvent) => void) | undefined
+  /**
+   * Invoked after each sync trigger (auto-timer or
+   * `@syncDevices`-decorated mutation). Receives the device-type
+   * filter and any IDs the cascade was scoped to.
+   */
   readonly onSyncComplete?: SyncCallback | undefined
 }
 

@@ -10,6 +10,8 @@ export const MS_PER_SECOND = 1000
 export const MS_PER_MINUTE = 60_000
 /** Number of milliseconds in one hour. */
 export const MS_PER_HOUR = 3_600_000
+/** Number of milliseconds in one day. */
+export const MS_PER_DAY = 86_400_000
 
 const SESSION_REFRESH_AHEAD_MINUTES = 5
 

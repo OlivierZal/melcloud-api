@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [42.3.0] - 2026-07-20
+
+### Fixed
+
+- Home sign-in refusals now classify correctly: the OIDC helper raises real `HttpError`s on non-2xx PAR/token responses, so a MELCloud Home HTTP 429 arms the 2-hour login-throttle pause (it previously surfaced as a plain `Error` and kept hammering the throttled endpoint) and transport-level 401s normalize to `AuthenticationError`.
+- `logOut()` now clears the cached Home `/context` payload, as the `context` getter always documented — a signed-out client no longer exposes the previous account's buildings and devices.
+- `logOut()` wins over async work it overlapped: a background session resume or sync cycle that completes after a sign-out can no longer resurrect the session (re-persisted tokens, repopulated registry, re-armed timer). The stale completion is detected and its state discarded.
+- Classic report queries accept Z- and offset-suffixed ISO timestamps (`new Date().toISOString()` output): instants are lowered to wall-clock in the display timezone, mirroring the Home facades, instead of throwing an uncaught `RangeError`.
+
+### Changed
+
+- The login-backoff deadline persists through the `@setting` accessor like every other persisted field (same key, data-compatible), dropping the hand-rolled get/set/unset plumbing.
+- Internal dedup: the no-op-tolerant group-write block, the day-grid enumeration, the energy interval table and the day-in-milliseconds constant each live in one place now; redundant credential re-stores in both `doAuthenticate` hooks removed.
+
 ## [42.2.0] - 2026-07-19
 
 ### Added
@@ -313,6 +327,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[42.3.0]: https://github.com/OlivierZal/melcloud-api/compare/42.2.0...42.3.0
 [42.2.0]: https://github.com/OlivierZal/melcloud-api/compare/42.1.0...42.2.0
 [42.1.0]: https://github.com/OlivierZal/melcloud-api/compare/42.0.6...42.1.0
 [42.0.6]: https://github.com/OlivierZal/melcloud-api/compare/42.0.5...42.0.6

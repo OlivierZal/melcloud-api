@@ -1162,4 +1162,32 @@ describe('logOut', () => {
     expect(unsetSpy).toHaveBeenCalledWith('username')
     expect(unsetSpy).toHaveBeenCalledWith('loginBackoffUntil')
   })
+
+  it('discards a sign-in that was in flight when logOut ran', async () => {
+    const { settingManager } = createSettingStore()
+    const api = new TestAPI({ settingManager })
+    // The sign-in round-trip resolves only after the user signed out.
+    const loginGate: PromiseWithResolvers<void> = Promise.withResolvers()
+    api.doAuthenticateMock.mockImplementationOnce(async () => loginGate.promise)
+    const login = api.authenticate({ password: 'p', username: 'u' })
+    api.logOut()
+    loginGate.resolve()
+    await login
+
+    // The explicit sign-out wins: the login's stored credentials are
+    // discarded and the post-auth registry sync never runs.
+    expect(settingManager.get('username') ?? '').toBe('')
+    expect(settingManager.get('password') ?? '').toBe('')
+    expect(api.syncRegistryMock).not.toHaveBeenCalled()
+  })
+
+  it('runs the post-auth sync when no logOut intervened', async () => {
+    const { settingManager } = createSettingStore()
+    const api = new TestAPI({ settingManager })
+
+    await api.authenticate({ password: 'p', username: 'u' })
+
+    expect(settingManager.get('username')).toBe('u')
+    expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
+  })
 })

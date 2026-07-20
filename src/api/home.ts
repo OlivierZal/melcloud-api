@@ -19,7 +19,7 @@ import {
   HomeRegistry,
 } from '../entities/home-registry.ts'
 import { AuthenticationThrottledError } from '../errors/index.ts'
-import { isHttpError } from '../http/index.ts'
+import { HttpStatus, isHttpError } from '../http/index.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
 import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
@@ -38,7 +38,6 @@ import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
-const HTTP_TOO_MANY_REQUESTS = 429
 const ATW_UNIT_PATH = '/monitor/atwunit'
 
 /**
@@ -498,6 +497,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   protected override clearPersistedSession(): void {
     this.#user = null
+    // The context getter promises "cleared on session invalidation":
+    // without this, a logged-out client keeps exposing the previous
+    // account's buildings and devices.
+    this.#context = null
     this.accessToken = ''
     this.refreshToken = ''
     this.expiry = ''
@@ -529,7 +532,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       // propagate unchanged.
       if (
         isHttpError(error) &&
-        error.response.status === HTTP_TOO_MANY_REQUESTS
+        error.response.status === HttpStatus.TooManyRequests
       ) {
         // The BFF/Cognito login throttle — the Home mirror of Classic's
         // ErrorId 6. Valid credentials, blocked endpoint: back off.
@@ -543,7 +546,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       }
       throw error
     }
-    this.applyCredentials(username, password)
   }
 
   protected getAuthHeaders(): Record<string, string> {

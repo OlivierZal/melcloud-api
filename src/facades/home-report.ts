@@ -1,4 +1,5 @@
 import { Intl, Temporal } from '../temporal.ts'
+import { MS_PER_DAY } from '../time-units.ts'
 import {
   type HomeEnergyData,
   type HomeReportAnnotation,
@@ -38,7 +39,7 @@ export interface HomeChartWindow {
 // LESS hot water than its own 30-day subwindow), and minute-grained
 // payloads blow the client timeout past ~7 days. Facades therefore
 // split wide windows into chunks and merge the reports.
-export const MAX_REPORT_CHUNK_DAYS = 30
+const MAX_REPORT_CHUNK_DAYS = 30
 
 // Worse for the labeled mode annotations: at period `Weekly` the BFF
 // truncates them to roughly the first two weeks of the window
@@ -57,7 +58,7 @@ export const MAX_ANNOTATION_CHUNK_DAYS = 7
 // 2026-07-19, `scripts/probe-report-load.ts`), so a band-bearing
 // window stays a single chunk. Wider temperature charts fetch fast
 // Weekly samples without annotations instead.
-export const MAX_BAND_WINDOW_DAYS = 7
+const MAX_BAND_WINDOW_DAYS = 7
 
 const windowDaysOf = (window: HomeChartWindow): number =>
   window.from.until(window.to).total({ relativeTo: window.from, unit: 'days' })
@@ -246,8 +247,6 @@ const MAX_HOURLY_GRID_DAYS = 7
 // Classic-style epoch default cannot produce a multi-year grid.
 const MAX_REPORT_SPAN_DAYS = 92
 
-const MILLISECONDS_PER_DAY = 86_400_000
-
 // A "one day" query resolves a hair over 1.0 days (the caller stamps
 // `from` a few milliseconds before the library stamps `to`), so the
 // hourly-bucket cutoff sits halfway to the next whole-day option.
@@ -413,6 +412,21 @@ export const toHomeEnergyBucketUnit = (
   return days <= MAX_LOCAL_DAY_ENERGY_DAYS ? 'localDay' : 'day'
 }
 
+// Local-day buckets are aggregated client-side from hourly wire
+// buckets, so they request `Hour` too.
+const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour', localDay: 'Hour' } as const
+
+/**
+ * Wire `interval` value for a display bucket unit — the request-side
+ * companion of {@link toHomeEnergyBucketUnit}.
+ * @param bucketUnit - Display bucket unit.
+ * @returns The telemetry `interval` to request.
+ */
+export const toHomeEnergyInterval = (
+  bucketUnit: HomeEnergyBucketUnit,
+): (typeof ENERGY_INTERVALS)[HomeEnergyBucketUnit] =>
+  ENERGY_INTERVALS[bucketUnit]
+
 /**
  * Resolve today's full-day window in the display timezone — what the
  * "today" charts (fine temperatures, signal) cover — plus the "now"
@@ -444,13 +458,7 @@ export const toHomeWireWindow = (
 })
 
 const chooseGridUnit = (window: HomeChartWindow): HomeChartGridUnit =>
-  (
-    window.from
-      .until(window.to)
-      .total({ relativeTo: window.from, unit: 'days' }) > MAX_HOURLY_GRID_DAYS
-  ) ?
-    'day'
-  : 'hour'
+  windowDaysOf(window) > MAX_HOURLY_GRID_DAYS ? 'day' : 'hour'
 
 const buildGrid = (
   window: HomeChartWindow,
@@ -485,12 +493,7 @@ const gridLabelOptions = (
     return { hour: '2-digit', minute: '2-digit' }
   }
   // Only the hourly unit reaches this point.
-  const isMultiDay =
-    window.from.until(window.to).total({
-      relativeTo: window.from,
-      unit: 'days',
-    }) > 1
-  return isMultiDay ?
+  return windowDaysOf(window) > 1 ?
       { day: 'numeric', hour: '2-digit', minute: '2-digit', month: 'short' }
     : { hour: '2-digit', minute: '2-digit' }
 }
@@ -715,10 +718,7 @@ const sumModeDurations = (
     )
     if (max > min) {
       const mode = toModeName(annotation.label)
-      durations.set(
-        mode,
-        (durations.get(mode) ?? 0) + (max - min) / MILLISECONDS_PER_DAY,
-      )
+      durations.set(mode, (durations.get(mode) ?? 0) + (max - min) / MS_PER_DAY)
     }
   }
   return durations
@@ -738,8 +738,7 @@ export const toHomeOperationModeOptions = (
 ): ReportChartPieOptions => {
   const durations = sumModeDurations(reports, window)
   const windowDays =
-    (window.to.epochMilliseconds - window.from.epochMilliseconds) /
-    MILLISECONDS_PER_DAY
+    (window.to.epochMilliseconds - window.from.epochMilliseconds) / MS_PER_DAY
   const active = durations.values().reduce((sum, value) => sum + value, 0)
   durations.set(IDLE_MODE_NAME, Math.max(0, windowDays - active))
   const labels = [
@@ -754,36 +753,36 @@ export const toHomeOperationModeOptions = (
   }
 }
 
-// Energy buckets are UTC calendar days (or hours) on the wire:
-// enumerate them by their literal timestamps instead of shifting them
-// into the display timezone.
-const buildUtcDayGrid = (window: HomeChartWindow): string[] => {
-  const last = window.to.withTimeZone(WIRE_TIME_ZONE).toPlainDate()
-  const days: string[] = []
+const enumerateDays = (
+  first: Temporal.PlainDate,
+  last: Temporal.PlainDate,
+): Temporal.PlainDate[] => {
+  const days: Temporal.PlainDate[] = []
   for (
-    let day = window.from.withTimeZone(WIRE_TIME_ZONE).toPlainDate();
+    let day = first;
     Temporal.PlainDate.compare(day, last) <= 0;
     day = day.add({ days: 1 })
   ) {
-    days.push(day.toPlainDateTime().toString())
+    days.push(day)
   }
   return days
 }
 
+// Energy buckets are UTC calendar days (or hours) on the wire:
+// enumerate them by their literal timestamps instead of shifting them
+// into the display timezone.
+const buildUtcDayGrid = (window: HomeChartWindow): string[] =>
+  enumerateDays(
+    window.from.withTimeZone(WIRE_TIME_ZONE).toPlainDate(),
+    window.to.withTimeZone(WIRE_TIME_ZONE).toPlainDate(),
+  ).map((day) => day.toPlainDateTime().toString())
+
 // Local-day buckets enumerate the calendar days of the display
 // timezone the window spans (its bounds already live in that zone).
-const buildLocalDayGrid = (window: HomeChartWindow): string[] => {
-  const last = window.to.toPlainDate()
-  const days: string[] = []
-  for (
-    let day = window.from.toPlainDate();
-    Temporal.PlainDate.compare(day, last) <= 0;
-    day = day.add({ days: 1 })
-  ) {
-    days.push(day.toString())
-  }
-  return days
-}
+const buildLocalDayGrid = (window: HomeChartWindow): string[] =>
+  enumerateDays(window.from.toPlainDate(), window.to.toPlainDate()).map((day) =>
+    day.toString(),
+  )
 
 const toWireHour = (bound: Temporal.ZonedDateTime): Temporal.PlainDateTime =>
   bound

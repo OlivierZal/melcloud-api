@@ -51,7 +51,7 @@ import {
   classicReportData,
   createMockClassicApi,
 } from '../classic-fixtures.ts'
-import { cast, defined, mock, okValue } from '../helpers.ts'
+import { cast, defined, matchObject, mock, okValue } from '../helpers.ts'
 
 type DeviceModelAta = ClassicDevice<typeof ClassicDeviceType.Ata>
 
@@ -890,6 +890,49 @@ describe('ata device facade', () => {
       '13 janv.',
       '14 janv.',
     ])
+  })
+
+  it('lowers Z-suffixed report bounds to wall-clock in the display timezone', async () => {
+    const getEnergy = vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
+      ok(
+        cast({
+          Auto: [0, 0],
+          Cooling: [0.5, 1],
+          Dry: [0, 0],
+          Fan: [0, 0],
+          Heating: [0, 0],
+          Labels: [0, 1],
+          LabelType: 0,
+          Other: [0, 0],
+          TotalAutoConsumed: 0,
+          TotalCoolingConsumed: 1.5,
+          TotalDryConsumed: 0,
+          TotalFanConsumed: 0,
+          TotalHeatingConsumed: 0,
+          TotalOtherConsumed: 0,
+          UsageDisclaimerPercentages: '100',
+        }),
+      ),
+    )
+    const { facade } = createAtaFacade({
+      getEnergy,
+      timezone: 'Europe/Paris',
+    })
+
+    // `new Date().toISOString()` output must not crash the Temporal
+    // Plain parsing — the instants lower to Paris wall-clock instead.
+    const result = await facade.getEnergyReport({
+      from: '2024-01-07T23:30:00.000Z',
+      to: '2024-01-08T23:30:00.000Z',
+    })
+
+    expect(result.ok).toBe(true)
+    expect(getEnergy).toHaveBeenCalledWith({
+      postData: matchObject({
+        FromDate: '2024-01-08T00:30:00',
+        ToDate: '2024-01-09T00:30:00',
+      }),
+    })
   })
 
   it('formats a one-day energy report with clock labels', async () => {

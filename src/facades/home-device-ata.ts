@@ -26,21 +26,21 @@ import {
 } from '../types/index.ts'
 import { clampToRange, omitUndefined } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
-import { toClassicAtaGroupState, toHomeAtaValues } from './home-ata-group.ts'
+import {
+  toClassicAtaGroupState,
+  toHomeAtaValues,
+  tolerateNoChanges,
+} from './home-ata-group.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 import {
   fetchHomeReportChunks,
   resolveHomeReportWindow,
   toHomeEnergyBucketUnit,
+  toHomeEnergyInterval,
   toHomeEnergyOptions,
   toHomeLineOptions,
   toHomeWireWindow,
 } from './home-report.ts'
-
-// Telemetry intervals per display bucket granularity: local-day
-// buckets aggregate hourly wire buckets client-side (the wire's own
-// day buckets are UTC days).
-const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour', localDay: 'Hour' } as const
 
 // The ATA cumulative energy measure reports watt-hours (100 Wh pulses,
 // live-probed 2026-07-18: a daily bucket of `571.0` for ~0.57 kWh).
@@ -212,7 +212,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     return mapResult(
       await this.api.getAtaEnergy(this.id, {
         ...toHomeWireWindow(window),
-        interval: ENERGY_INTERVALS[bucketUnit],
+        interval: toHomeEnergyInterval(bucketUnit),
       }),
       (data) =>
         toHomeEnergyOptions({
@@ -288,15 +288,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   ): Promise<ClassicFailureData | ClassicSuccessData> {
     const values = toHomeAtaValues(state)
     if (Object.keys(values).length > 0) {
-      try {
-        await this.updateValues(values)
-      } catch (error) {
-        // A device already matching the group state is fine by definition —
-        // zone group writes are no-op tolerant, so the group-of-one is too.
-        if (!(error instanceof NoChangesError)) {
-          throw error
-        }
-      }
+      await tolerateNoChanges(async () => this.updateValues(values))
     }
     return { AttributeErrors: null, Success: true }
   }
