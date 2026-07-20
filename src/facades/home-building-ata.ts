@@ -113,8 +113,8 @@ export class HomeBuildingAtaFacade {
   /**
    * Apply a Classic group state to every member device. The delta is
    * translated to the Home vocabulary once, then fanned out; members
-   * already matching it are fine by definition and do not fail the
-   * group write ({@link tolerateNoChanges}).
+   * already matching it (a tolerated `NoChangesError` from their
+   * update) are fine by definition and do not fail the group write.
    * @param state - Partial Classic group state to push to the members.
    * @returns The zone-shaped success outcome once every write settled.
    */

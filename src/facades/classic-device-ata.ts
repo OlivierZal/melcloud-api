@@ -117,7 +117,8 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
    * path; null fields are the group "leave unchanged" sentinel and are
    * dropped from the write. Group writes are no-op tolerant: an all-null
    * state resolves without a wire call, and a device already matching the
-   * state counts as success ({@link tolerateNoChanges}).
+   * state (a tolerated `NoChangesError` from its update) counts as
+   * success.
    * @param state - Group state to push to the device.
    * @returns The zone-shaped success outcome once the write completes.
    */
