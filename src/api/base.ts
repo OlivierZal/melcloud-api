@@ -125,7 +125,6 @@ const DEFAULT_AUTH_RETRY_COOLDOWN_MS = 1000
 // instance re-attempting despite the announced pause.
 const LOGIN_BACKOFF_FAILURE_MS = 900_000
 const LOGIN_BACKOFF_THROTTLE_MS = 7_200_000
-const LOGIN_BACKOFF_SETTING_KEY = 'loginBackoffUntil'
 
 /**
  * Subclass-internal options injected into the {@link BaseAPI}
@@ -179,6 +178,12 @@ export abstract class BaseAPI implements Disposable {
   @setting
   protected accessor expiry = ''
 
+  // Epoch-ms deadline before which automatic re-logins are refused;
+  // `''` means no pause. Persisted like the credentials so the gate
+  // survives a host restart.
+  @setting
+  protected accessor loginBackoffUntil = ''
+
   @setting
   protected accessor password = ''
 
@@ -199,8 +204,11 @@ export abstract class BaseAPI implements Disposable {
   // authenticated again (including the post-auth sync of a re-login).
   #hasEmittedAuthenticationLost = false
 
-  // Epoch-ms deadline before which automatic re-logins are refused.
-  #loginBackoffUntil: number | null = null
+  // Bumped by every logOut so async work that was in flight when the
+  // user signed out (a background resume, a sync cycle) can detect the
+  // sign-out on completion and discard what it stored — the explicit
+  // sign-out always wins over work it overlapped.
+  #logOutEpoch = 0
 
   readonly #rateLimitPolicy: RateLimitPolicy
 
@@ -344,6 +352,7 @@ export abstract class BaseAPI implements Disposable {
    * @throws {AuthenticationError} when credentials are rejected.
    */
   public async authenticate(credentials: LoginCredentials): Promise<void> {
+    const epoch = this.#logOutEpoch
     this.applyCredentials(credentials.username, credentials.password)
     // Explicit login starts from a clean slate — enforced here so no
     // subclass can forget it (mirrors the post-auth sync below).
@@ -354,8 +363,7 @@ export abstract class BaseAPI implements Disposable {
       this.#armLoginBackoff(error)
       throw error
     }
-    this.#setLoginBackoffUntil(null)
-    await this.syncRegistry()
+    await this.#finishLogin(epoch)
   }
 
   /** Cancels any pending auto-sync timer; subsequent `setSyncInterval` or `fetch` calls re-arm it. */
@@ -403,6 +411,7 @@ export abstract class BaseAPI implements Disposable {
    * {@link authenticate} is the only way back in.
    */
   public logOut(): void {
+    this.#logOutEpoch += 1
     this.clearPersistedSession()
     this.username = ''
     this.password = ''
@@ -628,6 +637,7 @@ export abstract class BaseAPI implements Disposable {
    * @returns The fetched entries, or an empty array on failure.
    */
   protected async runSyncCycle<T>(work: () => Promise<T[]>): Promise<T[]> {
+    const epoch = this.#logOutEpoch
     this.clearSync()
     try {
       return await work()
@@ -635,19 +645,7 @@ export abstract class BaseAPI implements Disposable {
       this.logger.error('Failed to fetch devices:', error)
       return []
     } finally {
-      if (this.isAuthenticated()) {
-        // A live session marks any earlier loss episode as recovered.
-        this.#hasEmittedAuthenticationLost = false
-        this.syncManager.planNext()
-      } else if (this.#hasRecoverableState()) {
-        // Rescheduling would hammer the account with a doomed sign-in
-        // every cycle: stay disarmed and surface the loss instead — a
-        // successful authenticate() re-arms the sync through its
-        // enforced post-auth registry sync.
-        this.#emitAuthenticationLostOnce()
-      }
-      // Unauthenticated with nothing to recover from (e.g. the settings
-      // page probing a never-configured API) stays silent AND disarmed.
+      this.#settleSyncCycle(epoch)
     }
   }
 
@@ -778,6 +776,22 @@ export abstract class BaseAPI implements Disposable {
     this.events.emitAuthenticationLost()
   }
 
+  // Post-`doAuthenticate` epilogue, split on the logOut epoch: a
+  // logOut that landed while the sign-in round-trip was in flight
+  // (e.g. the user signed out during a background resume) wins —
+  // discard what the login just stored and stay signed out. Otherwise
+  // clear the backoff gate and run the enforced post-auth sync.
+  async #finishLogin(epoch: number): Promise<void> {
+    if (this.#logOutEpoch !== epoch) {
+      this.clearPersistedSession()
+      this.username = ''
+      this.password = ''
+      return
+    }
+    this.#setLoginBackoffUntil(null)
+    await this.syncRegistry()
+  }
+
   // A loss is only a loss when there was something to restore — a
   // persisted session or persisted credentials. Probing an API that was
   // never configured must neither notify nor look like an expiry.
@@ -787,21 +801,17 @@ export abstract class BaseAPI implements Disposable {
     )
   }
 
+  // A corrupt persisted value reads as "no pause" — never lock the
+  // user out on bad data.
   #isLoginBackedOff(): boolean {
-    const until = this.#loginBackoffUntil ?? this.#persistedLoginBackoffUntil()
-    return until !== null && Temporal.Now.instant().epochMilliseconds < until
-  }
-
-  // The persisted deadline covers instances created after a host
-  // restart; the in-memory field wins once this instance armed or
-  // cleared the gate itself.
-  #persistedLoginBackoffUntil(): number | null {
-    const raw = this.settingManager?.get(LOGIN_BACKOFF_SETTING_KEY) ?? ''
+    const raw = this.loginBackoffUntil
     if (raw === '') {
-      return null
+      return false
     }
     const until = Number(raw)
-    return Number.isFinite(until) ? until : null
+    return (
+      Number.isFinite(until) && Temporal.Now.instant().epochMilliseconds < until
+    )
   }
 
   async #runWithEvents<T>(
@@ -828,23 +838,38 @@ export abstract class BaseAPI implements Disposable {
     }
   }
 
-  // Clearing the gate deletes the key when the host delegates `unset`,
-  // else stores `''` — `#persistedLoginBackoffUntil` reads both as "no
-  // pause".
+  // `''` is the cleared sentinel: the `@setting` accessor persists the
+  // value and deletes the key outright when the host delegates `unset`.
   #setLoginBackoffUntil(until: number | null): void {
-    this.#loginBackoffUntil = until
-    const { settingManager } = this
-    if (settingManager === undefined) {
+    this.loginBackoffUntil = until === null ? '' : String(until)
+  }
+
+  // Sync-cycle epilogue, split on the logOut epoch. A logOut that
+  // landed while the cycle was in flight: its request completed with
+  // the pre-sign-out session and repopulated the registry (and, on
+  // Home, the user/context) — re-run the wipe so the sign-out sticks,
+  // and leave the timer disarmed. Unauthenticated with nothing to
+  // recover from (e.g. the settings page probing a never-configured
+  // API) stays silent AND disarmed.
+  #settleSyncCycle(epoch: number): void {
+    if (this.#logOutEpoch !== epoch) {
+      this.clearPersistedSession()
+      this.clearRegistry()
       return
     }
-    if (until === null && settingManager.unset !== undefined) {
-      settingManager.unset(LOGIN_BACKOFF_SETTING_KEY)
+    if (this.isAuthenticated()) {
+      // A live session marks any earlier loss episode as recovered.
+      this.#hasEmittedAuthenticationLost = false
+      this.syncManager.planNext()
       return
     }
-    settingManager.set(
-      LOGIN_BACKOFF_SETTING_KEY,
-      until === null ? '' : String(until),
-    )
+    if (this.#hasRecoverableState()) {
+      // Rescheduling would hammer the account with a doomed sign-in
+      // every cycle: stay disarmed and surface the loss instead — a
+      // successful authenticate() re-arms the sync through its
+      // enforced post-auth registry sync.
+      this.#emitAuthenticationLostOnce()
+    }
   }
 
   private resolvePersistedCredentials(): LoginCredentials | null {

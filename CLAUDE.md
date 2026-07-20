@@ -25,8 +25,11 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   assume all auth failures surface as 401 `HttpError`.
 - Wire-format types mirror the MELCloud APIs verbatim (PascalCase fields,
   one-letter report keys); do not rename them to satisfy style rules.
-- `EffectiveFlags` bitfields (`src/facades/classic-flags.ts`) are the one
-  sanctioned home of hex magic numbers and bitwise operators.
+- `EffectiveFlags` bitfields: `src/facades/classic-flags.ts` is the one
+  sanctioned home of hex magic numbers (files-scoped `no-magic-numbers`
+  off); the two bitfield operators live behind documented inline
+  `no-bitwise` disables at their use sites (`classic-update-devices.ts`
+  flag test, `classic-base-device.ts` flag accumulation).
 - The Home ATW wire speaks two dialects: `/context` settings report zone
   modes in PascalCase (`HeatCurve`, `CoolFlowTemperature`) but the PUT
   endpoint only accepts camelCase and answers a bare 400 otherwise — the

@@ -9,7 +9,7 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../../src/types/index.ts'
-import { HttpError } from '../../src/http/index.ts'
+import { type HttpResponse, HttpError } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
 import { MS_PER_SECOND } from '../../src/time-units.ts'
 import {
@@ -22,6 +22,7 @@ import {
   mockFetchResponse,
   mockResponse,
 } from '../helpers.ts'
+import { homeReportPoint } from '../home-fixtures.ts'
 
 const BASE_URL = 'https://melcloudhome.com'
 const COGNITO = 'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
@@ -186,10 +187,8 @@ const mockReportData: HomeReportData[] = [
     datasets: [
       {
         data: [
-          /* eslint-disable id-length -- match the wire format produced by the BFF */
-          { x: '2026-03-01T00:00:00', y: 20.5 },
-          { x: '2026-03-01T01:00:00', y: 21 },
-          /* eslint-enable id-length */
+          homeReportPoint('2026-03-01T00:00:00', 20.5),
+          homeReportPoint('2026-03-01T01:00:00', 21),
         ],
         id: 'room_temperature',
         label: 'Room ClassicTemperature',
@@ -610,11 +609,40 @@ describe('melcloud home API', () => {
 
       expect(api.registry.getById('device-1')).toBeDefined()
       expect(api.isAuthenticated()).toBe(true)
+      expect(api.context).not.toBeNull()
 
       api.logOut()
 
       expect(api.registry.getAll()).toHaveLength(0)
       expect(api.isAuthenticated()).toBe(false)
+      // The previous account's buildings/devices must not linger.
+      expect(api.context).toBeNull()
+    })
+
+    it('discards a sync cycle that was in flight when logOut ran', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      // The /context fetch resolves only after the user signed out; the
+      // in-flight gate guarantees the request really started before the
+      // sign-out runs.
+      const contextGate: PromiseWithResolvers<HttpResponse> =
+        Promise.withResolvers()
+      const inFlightGate: PromiseWithResolvers<void> = Promise.withResolvers()
+      mockRequest.mockImplementationOnce(async () => {
+        inFlightGate.resolve()
+        return contextGate.promise
+      })
+      const listPromise = api.list()
+      await inFlightGate.promise
+      api.logOut()
+      contextGate.resolve(mockResponse(mockContext, {}, 200))
+      await listPromise
+
+      // The completing cycle repopulated user/context/registry with the
+      // pre-sign-out session; the epoch guard re-runs the wipe.
+      expect(api.isAuthenticated()).toBe(false)
+      expect(api.context).toBeNull()
+      expect(api.registry.getAll()).toHaveLength(0)
     })
 
     it('should return empty array on failure', async () => {
@@ -2731,12 +2759,9 @@ describe('melcloud home API', () => {
           200,
         ),
       )
-      .mockRejectedValueOnce(
-        new HttpError('Too Many Requests', {
-          config: { url: '/connect/token' },
-          response: { data: undefined, headers: {}, status: 429 },
-        }),
-      )
+      // The token exchange answers a real 429 — fetchPostForm raises it
+      // as an HttpError, the shape doAuthenticate classifies.
+      .mockResolvedValueOnce(mockFetchResponse('rate limited', {}, 429))
     const api = await melCloudHomeApi.create({
       baseURL: BASE_URL,
       transport: mockHttpClient,

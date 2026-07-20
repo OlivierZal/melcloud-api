@@ -133,6 +133,23 @@ const getDuration = ({ from, to }: Resolved<ReportQuery>): number =>
     smallestUnit: 'day',
   }).days
 
+// Query dates carrying an offset (`Z`, `+02:00`) pin an absolute
+// instant, lowered here to wall-clock in the display timezone — the
+// only dialect the Classic wire and the Temporal Plain types accept.
+// Zoneless strings pass through as the literal local datetimes callers
+// already feed. Mirrors the Home facades' query tolerance so the same
+// `new Date().toISOString()` output works against both APIs.
+const toWallClock = (iso: string, timezone = 'UTC'): string => {
+  try {
+    return Temporal.Instant.from(iso)
+      .toZonedDateTimeISO(timezone)
+      .toPlainDateTime()
+      .toString()
+  } catch {
+    return iso
+  }
+}
+
 /**
  * Abstract base for device-specific facades. Handles device data access, report generation,
  * value updates with effective flags, and ATA key conversion between set/list formats.
@@ -424,11 +441,16 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     shouldUseExactRange = false,
   ): ClassicReportPostData {
     const { from = DEFAULT_YEAR, to = now(this.api.timezone) } = query
+    const fromDate = toWallClock(from, this.api.timezone)
+    const toDate = toWallClock(to, this.api.timezone)
     return {
       DeviceID: this.id,
-      Duration: shouldUseExactRange ? getDuration({ from, to }) : undefined,
-      FromDate: from,
-      ToDate: to,
+      Duration:
+        shouldUseExactRange ?
+          getDuration({ from: fromDate, to: toDate })
+        : undefined,
+      FromDate: fromDate,
+      ToDate: toDate,
     }
   }
 

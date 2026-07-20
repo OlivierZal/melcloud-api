@@ -18,6 +18,7 @@ import {
   verticalFromClassic,
   verticalToClassic,
 } from '../enum-mappings.ts'
+import { NoChangesError } from '../errors/index.ts'
 
 /**
  * The facade slice the Classic group-state projection reads. Structural so
@@ -135,3 +136,22 @@ export const toHomeAtaValues = (state: ClassicGroupState): HomeAtaValues => ({
     vaneVerticalDirection: verticalFromClassic[state.VaneVerticalDirection],
   }),
 })
+
+/**
+ * Run a group-member update, counting a {@link NoChangesError} as
+ * success: a device already matching the group state is fine by
+ * definition, so zone group writes — and the group-of-one emulation —
+ * are no-op tolerant.
+ * @param update - The member update to run.
+ */
+export const tolerateNoChanges = async (
+  update: () => Promise<unknown>,
+): Promise<void> => {
+  try {
+    await update()
+  } catch (error) {
+    if (!(error instanceof NoChangesError)) {
+      throw error
+    }
+  }
+}

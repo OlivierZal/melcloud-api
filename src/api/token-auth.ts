@@ -4,6 +4,7 @@ import { CookieJar } from 'tough-cookie'
 
 import type { HomeTokenResponse } from '../types/index.ts'
 import { AuthenticationError } from '../errors/index.ts'
+import { HttpError } from '../http/index.ts'
 import {
   HomeParResponseSchema,
   HomeTokenResponseSchema,
@@ -102,7 +103,9 @@ const readResponseHeaders = (
 // targets (PAR, token exchange) always return JSON; parse
 // unconditionally and throw on non-2xx. Each caller is responsible
 // for narrowing the returned `unknown` (PAR via a local guard, token
-// exchange via a Zod schema).
+// exchange via a Zod schema). Non-2xx throws HttpError — not a plain
+// Error — so doAuthenticate's status classification (429 throttle,
+// 401 normalization) sees real server refusals from these endpoints.
 const fetchPostForm = async ({
   abortSignal,
   body,
@@ -118,8 +121,16 @@ const fetchPostForm = async ({
   const responseHeaders = readResponseHeaders(response.headers)
   const text = await response.text()
   if (!response.ok) {
-    throw new Error(
+    throw new HttpError(
       `Request to ${url} failed with status ${String(response.status)}`,
+      {
+        config: { method: 'POST', url },
+        response: {
+          data: text,
+          headers: responseHeaders,
+          status: response.status,
+        },
+      },
     )
   }
   return {

@@ -4,7 +4,6 @@ import {
   ClassicFanSpeed,
   ClassicOperationMode,
 } from '../constants.ts'
-import { NoChangesError } from '../errors/index.ts'
 import {
   type ClassicEnergyDataAta,
   type ClassicFailureData,
@@ -18,6 +17,7 @@ import { clampToRange } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
+import { tolerateNoChanges } from './home-ata-group.ts'
 
 const isSet = <T>(value: T | null | undefined): value is T =>
   value !== null && value !== undefined
@@ -117,7 +117,8 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
    * path; null fields are the group "leave unchanged" sentinel and are
    * dropped from the write. Group writes are no-op tolerant: an all-null
    * state resolves without a wire call, and a device already matching the
-   * state (a {@link NoChangesError} from its update) counts as success.
+   * state (a tolerated `NoChangesError` from its update) counts as
+   * success.
    * @param state - Group state to push to the device.
    * @returns The zone-shaped success outcome once the write completes.
    */
@@ -126,15 +127,7 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
   ): Promise<ClassicFailureData | ClassicSuccessData> {
     const values = toUpdateData(state)
     if (Object.keys(values).length > 0) {
-      try {
-        await this.updateValues(values)
-      } catch (error) {
-        // A device already matching the group state is fine by definition —
-        // zone group writes are no-op tolerant, so the group-of-one is too.
-        if (!(error instanceof NoChangesError)) {
-          throw error
-        }
-      }
+      await tolerateNoChanges(async () => this.updateValues(values))
     }
     return { AttributeErrors: null, Success: true }
   }

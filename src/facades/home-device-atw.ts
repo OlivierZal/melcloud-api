@@ -36,6 +36,7 @@ import {
   resolveHomeReportWindow,
   shouldChartHomeBands,
   toHomeEnergyBucketUnit,
+  toHomeEnergyInterval,
   toHomeEnergyOptions,
   toHomeLineOptions,
   toHomeOperationModeOptions,
@@ -46,8 +47,6 @@ import {
 // buckets aggregate hourly wire buckets client-side (the wire's own
 // day buckets are UTC days); the ATW interval measures already report
 // kWh per bucket.
-const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour', localDay: 'Hour' } as const
-
 const IDENTITY_SCALE = 1
 
 const TEMPERATURE_UNIT = '°C'
@@ -365,7 +364,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     const bucketUnit = toHomeEnergyBucketUnit(window)
     const params = {
       ...toHomeWireWindow(window),
-      interval: ENERGY_INTERVALS[bucketUnit],
+      interval: toHomeEnergyInterval(bucketUnit),
     }
     const [consumed, produced] = await Promise.all([
       this.api.getAtwEnergy(this.id, { ...params, measure: 'consumed' }),
