@@ -138,11 +138,27 @@ interface BaseAPIConstructorOptions {
   defaultSyncIntervalMinutes: number | false
   /** Subclass-fixed HTTP defaults (baseURL, optional dispatcher). */
   httpConfig: Omit<HttpClientConfig, 'timeout'>
+  /**
+   * Label prefixed to every log line (e.g. `[Classic]`): the two
+   * clients emit identically-worded lifecycle logs ("Session resume
+   * failed", "Automatic sign-ins paused"), so a host running both
+   * could not tell which account a diagnostics report was about.
+   */
+  logLabel: string
   /** Sliding-window length the rate-limit gate observes. */
   rateLimitHours: number
   /** Sync runner the auto-timer drives. */
   syncCallback: () => Promise<unknown>
 }
+
+const labelLogger = (logger: Logger, label: string): Logger => ({
+  error: (...data: unknown[]): void => {
+    logger.error(label, ...data)
+  },
+  log: (...data: unknown[]): void => {
+    logger.log(label, ...data)
+  },
+})
 
 /**
  * Shared infrastructure for MELCloud API clients.
@@ -233,14 +249,15 @@ export abstract class BaseAPI implements Disposable {
     {
       defaultSyncIntervalMinutes,
       httpConfig,
+      logLabel,
       rateLimitHours,
       syncCallback,
     }: BaseAPIConstructorOptions,
   ) {
     this.abortSignal = abortSignal
-    this.logger = logger
+    this.logger = labelLogger(logger, logLabel)
     this.settingManager = settingManager
-    this.events = new LifecycleEmitter(events, logger)
+    this.events = new LifecycleEmitter(events, this.logger)
     this.rateLimitGate = new RateLimitGate({ hours: rateLimitHours })
     this.retryGuard = new RetryGuard(DEFAULT_AUTH_RETRY_COOLDOWN_MS)
     this.api =

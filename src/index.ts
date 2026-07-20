@@ -202,6 +202,7 @@ export {
 export {
   APIError,
   AuthenticationError,
+  AuthenticationThrottledError,
   EntityNotFoundError,
   isAPIError,
   NetworkError,

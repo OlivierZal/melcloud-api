@@ -534,6 +534,7 @@ describe('melcloud home API', () => {
 
       expect(isResumed).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Session resume failed:',
         expect.any(Error),
       )
@@ -817,6 +818,7 @@ describe('melcloud home API', () => {
       await api.updateAtaValues('device-1', { power: false })
 
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'LifecycleEvents.onSyncComplete callback threw — ignoring',
         expect.any(Error),
       )
@@ -1366,6 +1368,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Session resume failed:',
         expect.any(Error),
       )
@@ -1449,6 +1452,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Session resume failed:',
         matchObject({
           message: cast(expect.stringContaining('Too many redirects')),
@@ -1664,6 +1668,7 @@ describe('melcloud home API', () => {
       })
 
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Background session resume failed:',
         expect.objectContaining({ message: 'boom' }),
       )
@@ -1695,6 +1700,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Session resume failed:',
         expect.objectContaining({
           message:
@@ -1738,6 +1744,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Session resume failed:',
         expect.objectContaining({
           message:
@@ -1767,6 +1774,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Session resume failed:',
         expect.any(Error),
       )
@@ -1920,6 +1928,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Session resume failed:',
         expect.any(Error),
       )
@@ -1948,6 +1957,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Session resume failed:',
         expect.any(Error),
       )
@@ -2292,6 +2302,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(true)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Home context drifted from the strict schema; salvaging device entries:',
         expect.anything(),
       )
@@ -2523,6 +2534,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Session resume failed:',
         expect.any(Error),
       )
@@ -2566,6 +2578,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         'Session resume failed:',
         expect.any(Error),
       )
@@ -2676,7 +2689,9 @@ describe('melcloud home API', () => {
         mock: { calls },
       } = vi.mocked(logger.log)
 
-      const messages = calls.map(([message]) => String(message))
+      // The API label rides as the first argument; the structured
+      // payload follows.
+      const messages = calls.map((call) => call.map(String).join(' '))
 
       expect(messages.length).toBeGreaterThan(0)
       expect(messages.some((message) => message.includes('API request'))).toBe(
@@ -2699,6 +2714,7 @@ describe('melcloud home API', () => {
       await api.list()
 
       expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
         expect.stringContaining('Request failed'),
       )
     })

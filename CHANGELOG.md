@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [42.4.0] - 2026-07-20
+
+### Added
+
+- Every log line is now prefixed with the emitting client's label (`[Classic]` / `[Home]`): the two clients emit identically-worded lifecycle logs ("Session resume failed", "Automatic sign-ins paused"), so a host running both could not tell which account a diagnostics report was about.
+- `AuthenticationThrottledError` is re-exported from the package root (it was only reachable through the internal errors module), so consumers can `instanceof` the login throttle instead of matching the error name.
+
 ## [42.3.0] - 2026-07-20
 
 ### Fixed
@@ -327,6 +334,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[42.4.0]: https://github.com/OlivierZal/melcloud-api/compare/42.3.0...42.4.0
 [42.3.0]: https://github.com/OlivierZal/melcloud-api/compare/42.2.0...42.3.0
 [42.2.0]: https://github.com/OlivierZal/melcloud-api/compare/42.1.0...42.2.0
 [42.1.0]: https://github.com/OlivierZal/melcloud-api/compare/42.0.6...42.1.0

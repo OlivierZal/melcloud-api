@@ -232,6 +232,7 @@ describe('mELCloud Classic API', () => {
     await vi.advanceTimersByTimeAsync(60_000)
 
     expect(logger.error).toHaveBeenCalledWith(
+      '[Classic]',
       'LifecycleEvents.onSyncComplete callback threw — ignoring',
       expect.any(Error),
     )
@@ -497,6 +498,7 @@ describe('mELCloud Classic API', () => {
       expect(isResumed).toBe(false)
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
+        '[Classic]',
         'Session resume failed:',
         expect.any(AuthenticationError),
       )

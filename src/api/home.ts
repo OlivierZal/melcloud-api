@@ -240,6 +240,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     super(config, {
       defaultSyncIntervalMinutes: DEFAULT_SYNC_INTERVAL_MINUTES,
       httpConfig: { baseURL },
+      logLabel: '[Home]',
       rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
       syncCallback: async () => this.list(),
     })
