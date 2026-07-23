@@ -45,6 +45,8 @@ type UpdatePatchKind = 'payload' | 'power'
  * @param root0.type - Optional device type to filter which devices
  * are updated. When omitted, every device in the facade is patched.
  * @returns A method decorator that updates device models after execution.
+ * @throws {@link NoChangesError} from the wrapped method when it is called
+ * with an empty-object payload carrying no fields to apply.
  * @category Decorators
  */
 export const classicUpdateDevices =

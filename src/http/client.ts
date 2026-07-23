@@ -217,10 +217,10 @@ export class HttpClient {
   }
 
   /**
-   * Issues an HTTP request and returns the normalized response; non-2xx
-   * statuses throw {@link HttpError}.
+   * Issues an HTTP request and returns the normalized response.
    * @param config - Per-request configuration.
    * @returns The normalized `{ data, status, headers }` triple.
+   * @throws {@link HttpError} when the response status is non-2xx.
    */
   public async request<T = unknown>(
     config: HttpRequestConfig,

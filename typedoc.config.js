@@ -1,4 +1,5 @@
 // @ts-check
+
 /** @type {Partial<import('typedoc').TypeDocOptions>} */
 const config = {
   cacheBust: true,

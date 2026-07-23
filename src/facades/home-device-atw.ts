@@ -498,12 +498,13 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   /**
-   * Pushes a partial setpoint update; throws {@link NoChangesError} when
-   * `values` carries no defined value (an explicitly-`undefined` key
-   * counts as absent), otherwise clamps zone setpoints to
+   * Pushes a partial setpoint update; rejects when `values` carries no
+   * defined value (an explicitly-`undefined` key counts as absent),
+   * otherwise clamps zone setpoints to
    * `[minSetTemperature, maxSetTemperature]` and the tank setpoint to
    * `[minSetTankTemperature, maxSetTankTemperature]` before forwarding.
    * @param values - Partial setpoint payload.
+   * @throws {@link NoChangesError} when `values` carries no defined value.
    */
   public override async updateValues(values: HomeAtwValues): Promise<void> {
     const changes = omitUndefined(values)

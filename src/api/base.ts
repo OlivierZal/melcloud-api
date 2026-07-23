@@ -356,17 +356,16 @@ export abstract class BaseAPI implements Disposable {
   protected abstract syncRegistry(): Promise<void>
 
   /**
-   * Sign in with explicit credentials. Throws
-   * {@link AuthenticationError} on rejection (Classic `ClientLogin3`
-   * returning `LoginData: null`, Home BFF returning 401, etc.).
-   * Successful return guarantees the registry reflects server state
-   * — the post-auth sync is enforced here so subclasses cannot
-   * forget it.
+   * Sign in with explicit credentials. The server refuses them in
+   * protocol-specific ways (Classic `ClientLogin3` returning
+   * `LoginData: null`, Home BFF returning 401, etc.). Successful
+   * return guarantees the registry reflects server state — the
+   * post-auth sync is enforced here so subclasses cannot forget it.
    *
    * Use {@link resumeSession} for a best-effort restore from
    * persisted credentials that logs + swallows errors.
    * @param credentials - Explicit username/password.
-   * @throws {AuthenticationError} when credentials are rejected.
+   * @throws {@link AuthenticationError} when the server refuses the credentials.
    */
   public async authenticate(credentials: LoginCredentials): Promise<void> {
     const epoch = this.#logOutEpoch
