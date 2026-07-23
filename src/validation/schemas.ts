@@ -123,10 +123,9 @@ const HomeAtwCapabilitiesSchema: z.ZodType<HomeAtwDeviceCapabilities> =
     temperatureUnit: z.string(),
   })
 
-// `frost-`, `overheat-` and `holidayMode` carry the same low-level
-// shape (active/enabled/min/max booleans + numbers) — declared once
-// and reused. `holidayMode` is left structural because the firmware
-// shape varies and the SDK does not consume it.
+// `frostProtection`/`overheatProtection` share one shape (active/enabled
+// + min/max); `holidayMode` carries active/enabled plus a start/end
+// window. Both are consumed by the SDK now, so both are validated.
 const HomeProtectionSchema = z.looseObject({
   active: z.boolean(),
   enabled: z.boolean(),
@@ -134,11 +133,18 @@ const HomeProtectionSchema = z.looseObject({
   min: z.number(),
 })
 
+const HomeHolidayModeSchema = z.looseObject({
+  active: z.boolean(),
+  enabled: z.boolean(),
+  endDate: z.string(),
+  startDate: z.string(),
+})
+
 const HomeDeviceCommonFields = {
   displayIcon: z.string(),
   frostProtection: HomeProtectionSchema.nullable(),
   givenDisplayName: z.string(),
-  holidayMode: z.looseObject({}).nullable(),
+  holidayMode: HomeHolidayModeSchema.nullable(),
   id: z.string(),
   isConnected: z.boolean(),
   isInError: z.boolean(),

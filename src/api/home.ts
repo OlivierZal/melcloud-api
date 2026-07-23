@@ -5,6 +5,8 @@ import type {
   HomeContext,
   HomeEnergyData,
   HomeErrorLogEntry,
+  HomeFrostProtectionPostData,
+  HomeHolidayModePostData,
   HomeReportData,
   HomeTokenResponse,
   HomeUser,
@@ -39,6 +41,8 @@ import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
 const ATW_UNIT_PATH = '/monitor/atwunit'
+const FROST_PROTECTION_PATH = '/monitor/protection/frost'
+const HOLIDAY_MODE_PATH = '/monitor/holidaymode'
 
 /**
  * Wire-facing ATW payload: zone modes lowered to the camelCase form the
@@ -286,6 +290,32 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       ])
       return [...data.buildings, ...data.guestBuildings]
     })
+  }
+
+  /**
+   * Batch frost-protection write for a set of devices (grouped by type in
+   * `postData.units`), then refresh `/context`. One request scopes to a
+   * single account's devices.
+   * @param postData - Bounds, on/off flag, and target device ids.
+   */
+  @fetchDevices({ when: 'after' })
+  public async updateFrostProtection(
+    postData: HomeFrostProtectionPostData,
+  ): Promise<void> {
+    await this.requestData('post', FROST_PROTECTION_PATH, { data: postData })
+  }
+
+  /**
+   * Batch holiday-mode write for a set of devices (grouped by type in
+   * `postData.units`), then refresh `/context`. Mirror of
+   * {@link updateFrostProtection}; only the window fields and path differ.
+   * @param postData - Window bounds, on/off flag, and target device ids.
+   */
+  @fetchDevices({ when: 'after' })
+  public async updateHolidayMode(
+    postData: HomeHolidayModePostData,
+  ): Promise<void> {
+    await this.requestData('post', HOLIDAY_MODE_PATH, { data: postData })
   }
 
   /**

@@ -5,6 +5,8 @@ import type {
   HomeAtwDeviceCapabilities,
   HomeAtwDeviceData,
   HomeBuildingRef,
+  HomeFrostProtection,
+  HomeHolidayMode,
   HomeReportPoint,
 } from '../src/types/index.ts'
 import { HomeDeviceType } from '../src/constants.ts'
@@ -57,6 +59,8 @@ const buildSettings = (
 
 export interface HomeDeviceDataOverrides {
   readonly capabilities?: Partial<HomeAtaDeviceCapabilities>
+  readonly frostProtection?: HomeFrostProtection | null
+  readonly holidayMode?: HomeHolidayMode | null
   readonly id?: string
   readonly name?: string
   readonly rssi?: number
@@ -68,7 +72,9 @@ export const homeDeviceData = (
 ): HomeAtaDeviceData =>
   mock<HomeAtaDeviceData>({
     capabilities: homeDeviceCapabilities(overrides.capabilities),
+    frostProtection: overrides.frostProtection ?? null,
     givenDisplayName: overrides.name ?? 'Home device',
+    holidayMode: overrides.holidayMode ?? null,
     id: overrides.id ?? 'home-device-1',
     rssi: overrides.rssi ?? DEFAULT_RSSI_DBM,
     settings: buildSettings(overrides.settings ?? {}),

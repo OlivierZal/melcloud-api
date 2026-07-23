@@ -3,6 +3,8 @@ import type { HomeDevice } from '../entities/home-device.ts'
 import {
   type HomeDeviceData,
   type HomeEnergyData,
+  type HomeFrostProtection,
+  type HomeHolidayMode,
   type Hour,
   type Result,
   mapResult,
@@ -34,6 +36,22 @@ import {
  * @category Facades
  */
 export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
+  /**
+   * Current frost-protection settings, or `null` when not configured.
+   * @returns The frost-protection descriptor from `/context`.
+   */
+  public get frostProtection(): HomeFrostProtection | null {
+    return this.model.data.frostProtection
+  }
+
+  /**
+   * Current holiday-mode window, or `null` when not configured.
+   * @returns The holiday-mode descriptor from `/context`.
+   */
+  public get holidayMode(): HomeHolidayMode | null {
+    return this.model.data.holidayMode
+  }
+
   /**
    * Unique device identifier as assigned by MELCloud Home.
    * @returns The GUID string assigned by MELCloud Home.

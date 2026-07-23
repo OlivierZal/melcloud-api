@@ -5,6 +5,8 @@ import type {
   HomeBuilding,
   HomeEnergyData,
   HomeErrorLogEntry,
+  HomeFrostProtectionPostData,
+  HomeHolidayModePostData,
   HomeReportData,
   HomeUser,
   LoginCredentials,
@@ -108,6 +110,14 @@ export interface HomeAPIAdapter {
   readonly updateAtaValues: (id: string, values: HomeAtaValues) => Promise<void>
   /** Push an ATW setpoint update and refresh device data via list(). */
   readonly updateAtwValues: (id: string, values: HomeAtwValues) => Promise<void>
+  /** Batch frost-protection write (device ids grouped in `units`), then refresh. */
+  readonly updateFrostProtection: (
+    postData: HomeFrostProtectionPostData,
+  ) => Promise<void>
+  /** Batch holiday-mode write (device ids grouped in `units`), then refresh. */
+  readonly updateHolidayMode: (
+    postData: HomeHolidayModePostData,
+  ) => Promise<void>
 }
 
 /**

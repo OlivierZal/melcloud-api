@@ -339,12 +339,42 @@ export interface HomeFrostProtection {
 }
 
 /**
- * Holiday-mode descriptor attached to a MELCloud Home device. The wire
- * shape varies by firmware; the SDK does not consume specific fields,
- * so the type stays a structural placeholder until a use case appears.
+ * POST body for `/monitor/protection/frost` — the new bounds and on/off
+ * flag plus the batch of target device ids.
  * @category Types
  */
-export type HomeHolidayMode = Readonly<Record<string, unknown>>
+export interface HomeFrostProtectionPostData {
+  readonly enabled: boolean
+  readonly max: number
+  readonly min: number
+  readonly units: HomeProtectionUnits
+}
+
+/**
+ * Holiday-mode descriptor attached to a MELCloud Home device. Mirrors the
+ * `/context` wire shape; `null` on the parent device when the feature is
+ * not configured. `active` is read-only status (the window is currently
+ * in effect); only `enabled`/`startDate`/`endDate` are settable.
+ * @category Types
+ */
+export interface HomeHolidayMode {
+  readonly active: boolean
+  readonly enabled: boolean
+  readonly endDate: string
+  readonly startDate: string
+}
+
+/**
+ * POST body for `/monitor/holidaymode` — the window bounds and on/off flag
+ * plus the batch of target device ids.
+ * @category Types
+ */
+export interface HomeHolidayModePostData {
+  readonly enabled: boolean
+  readonly endDate: string
+  readonly startDate: string
+  readonly units: HomeProtectionUnits
+}
 
 /**
  * Overheat-protection schedule attached to a MELCloud Home device.
@@ -357,6 +387,17 @@ export interface HomeOverheatProtection {
   readonly enabled: boolean
   readonly max: number
   readonly min: number
+}
+
+/**
+ * Device ids grouped by type, targeting a batch Home protection write
+ * (`/monitor/protection/frost`, `/monitor/holidaymode`). Wire-verbatim
+ * uppercase keys; one request scopes to a single account's devices.
+ * @category Types
+ */
+export interface HomeProtectionUnits {
+  readonly ATA?: readonly string[]
+  readonly ATW?: readonly string[]
 }
 
 /**

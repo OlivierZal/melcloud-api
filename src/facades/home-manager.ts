@@ -1,7 +1,12 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
-import type { HomeAtaDeviceData, HomeAtwDeviceData } from '../types/index.ts'
+import type {
+  HomeAtaDeviceData,
+  HomeAtwDeviceData,
+  HomeProtectionUnits,
+} from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
+import { clampFrostProtection } from '../frost-protection.ts'
 import { HomeBuildingAtaFacade } from './home-building-ata.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 import { HomeDeviceAtwFacade } from './home-device-atw.ts'
@@ -89,5 +94,71 @@ export class HomeFacadeManager {
     )
     this.#buildings.set(id, facade)
     return facade
+  }
+
+  /**
+   * Batch frost-protection update for the given Home devices: groups them
+   * by type, clamps the bounds into range, and issues one API write. All
+   * ids must belong to this manager's account.
+   * @param deviceIds - Target device ids.
+   * @param root0 - The new frost-protection settings.
+   * @param root0.isEnabled - Whether frost protection is on.
+   * @param root0.max - Upper bound, in °C (clamped to [6, 16]).
+   * @param root0.min - Lower bound, in °C (clamped to [4, 14]).
+   */
+  public async updateFrostProtection(
+    deviceIds: readonly string[],
+    { isEnabled, max, min }: { isEnabled: boolean; max: number; min: number },
+  ): Promise<void> {
+    await this.#api.updateFrostProtection({
+      enabled: isEnabled,
+      ...clampFrostProtection(min, max),
+      units: this.#toUnits(deviceIds),
+    })
+  }
+
+  /**
+   * Batch holiday-mode update for the given Home devices: groups them by
+   * type and issues one API write. Mirror of {@link updateFrostProtection}
+   * for the holiday window. All ids must belong to this manager's account.
+   * @param deviceIds - Target device ids.
+   * @param root0 - The new holiday-mode window.
+   * @param root0.endDate - Window end, ISO local date-time.
+   * @param root0.isEnabled - Whether holiday mode is on.
+   * @param root0.startDate - Window start, ISO local date-time.
+   */
+  public async updateHolidayMode(
+    deviceIds: readonly string[],
+    {
+      endDate,
+      isEnabled,
+      startDate,
+    }: { endDate: string; isEnabled: boolean; startDate: string },
+  ): Promise<void> {
+    await this.#api.updateHolidayMode({
+      enabled: isEnabled,
+      endDate,
+      startDate,
+      units: this.#toUnits(deviceIds),
+    })
+  }
+
+  // Split device ids into the wire's per-type buckets, skipping ids the
+  // registry does not know (a device from another account or a stale id).
+  #toUnits(deviceIds: readonly string[]): HomeProtectionUnits {
+    const ata: string[] = []
+    const atw: string[] = []
+    for (const id of deviceIds) {
+      const device = this.#api.registry.getById(id)
+      if (device?.isAta() === true) {
+        ata.push(id)
+      } else if (device?.isAtw() === true) {
+        atw.push(id)
+      }
+    }
+    return {
+      ...(ata.length > 0 && { ATA: ata }),
+      ...(atw.length > 0 && { ATW: atw }),
+    }
   }
 }
