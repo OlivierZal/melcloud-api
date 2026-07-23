@@ -332,10 +332,10 @@ export interface HomeErrorLogEntry {
  * @category Types
  */
 export interface HomeFrostProtection {
-  readonly active: boolean
   readonly enabled: boolean
   readonly max: number
   readonly min: number
+  readonly active?: boolean | undefined
 }
 
 /**
@@ -358,10 +358,10 @@ export interface HomeFrostProtectionPostData {
  * @category Types
  */
 export interface HomeHolidayMode {
-  readonly active: boolean
   readonly enabled: boolean
   readonly endDate: string
   readonly startDate: string
+  readonly active?: boolean | undefined
 }
 
 /**
@@ -383,10 +383,10 @@ export interface HomeHolidayModePostData {
  * @category Types
  */
 export interface HomeOverheatProtection {
-  readonly active: boolean
   readonly enabled: boolean
   readonly max: number
   readonly min: number
+  readonly active?: boolean | undefined
 }
 
 /**

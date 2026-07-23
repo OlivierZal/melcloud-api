@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [43.0.1] - 2026-07-23
+
+### Fixed
+
+- Home `/context` no longer drifts from the strict schema when a unit reports frost/overheat protection or holiday mode without the runtime `active` flag (observed on live guest ATW units). `active` is now optional on `HomeFrostProtection`, `HomeOverheatProtection`, and `HomeHolidayMode`; previously the strict parse failed on every sync and fell back to the salvage schema, dropping that unit's protection data and logging a `ZodError` each cycle.
+
 ## [43.0.0] - 2026-07-23
 
 ### Changed
@@ -352,6 +358,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[43.0.1]: https://github.com/OlivierZal/melcloud-api/compare/43.0.0...43.0.1
 [43.0.0]: https://github.com/OlivierZal/melcloud-api/compare/42.6.0...43.0.0
 [42.6.0]: https://github.com/OlivierZal/melcloud-api/compare/42.5.0...42.6.0
 [42.5.0]: https://github.com/OlivierZal/melcloud-api/compare/42.4.0...42.5.0
