@@ -772,7 +772,12 @@ describe('melcloud home API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: { enabled: true, max: 12, min: 6, units: { ATA: ['device-1'] } },
+          data: {
+            enabled: true,
+            max: 12,
+            min: 6,
+            units: { ATA: ['device-1'] },
+          },
           method: 'post',
           url: '/monitor/protection/frost',
         }),
