@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [43.1.0] - 2026-07-23
+
+### Added
+
+- `ClassicFacadeManager.getZones` / `ClassicRegistry.getZones` now stamp each flattened zone with its owning building's display name — the new `ClassicFlatZone` (`ClassicZone & { buildingName }`) return type — so a flat picker (e.g. a Flow autocomplete with no tree) can tell same-named zones on different buildings apart. `buildingName` equals the zone's own name for a building zone.
+
 ## [43.0.1] - 2026-07-23
 
 ### Fixed
@@ -358,6 +364,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[43.1.0]: https://github.com/OlivierZal/melcloud-api/compare/43.0.1...43.1.0
 [43.0.1]: https://github.com/OlivierZal/melcloud-api/compare/43.0.0...43.0.1
 [43.0.0]: https://github.com/OlivierZal/melcloud-api/compare/42.6.0...43.0.0
 [42.6.0]: https://github.com/OlivierZal/melcloud-api/compare/42.5.0...42.6.0

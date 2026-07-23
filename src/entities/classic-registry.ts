@@ -7,11 +7,11 @@ import {
   type ClassicBuildingID,
   type ClassicBuildingZone,
   type ClassicDeviceZone,
+  type ClassicFlatZone,
   type ClassicFloorData,
   type ClassicFloorID,
   type ClassicFloorZone,
   type ClassicListDeviceAny,
-  type ClassicZone,
   toClassicAreaId,
   toClassicBuildingId,
   toClassicFloorId,
@@ -85,26 +85,37 @@ const level = {
   great_grandchild: 3,
 }
 
+const stampDevices = function* (
+  devices: readonly ClassicDeviceZone[],
+  buildingName: string,
+): Generator<ClassicFlatZone> {
+  for (const device of devices) {
+    yield { ...device, buildingName }
+  }
+}
+
 const flattenAreas = function* (
   areas: readonly ClassicAreaZone[],
-): Generator<ClassicZone> {
+  buildingName: string,
+): Generator<ClassicFlatZone> {
   for (const area of areas) {
-    yield area
-    yield* area.devices
+    yield { ...area, buildingName }
+    yield* stampDevices(area.devices, buildingName)
   }
 }
 
 const flattenBuildings = function* (
   buildings: readonly ClassicBuildingZone[],
-): Generator<ClassicZone> {
+): Generator<ClassicFlatZone> {
   for (const building of buildings) {
-    yield building
-    yield* building.devices
-    yield* flattenAreas(building.areas)
+    const { name: buildingName } = building
+    yield { ...building, buildingName }
+    yield* stampDevices(building.devices, buildingName)
+    yield* flattenAreas(building.areas, buildingName)
     for (const floor of building.floors) {
-      yield floor
-      yield* floor.devices
-      yield* flattenAreas(floor.areas)
+      yield { ...floor, buildingName }
+      yield* stampDevices(floor.devices, buildingName)
+      yield* flattenAreas(floor.areas, buildingName)
     }
   }
 }
@@ -331,7 +342,7 @@ export class ClassicRegistry {
    */
   public getZones({
     type,
-  }: { type?: ClassicDeviceType | undefined } = {}): ClassicZone[] {
+  }: { type?: ClassicDeviceType | undefined } = {}): ClassicFlatZone[] {
     return [...flattenBuildings(this.getBuildings({ type }))].toSorted(
       compareNames,
     )

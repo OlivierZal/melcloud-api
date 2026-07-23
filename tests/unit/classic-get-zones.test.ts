@@ -221,6 +221,22 @@ describe('zone retrieval', () => {
     expect(models).toContainEqual({ model: 'devices', name: 'AC unit' })
   })
 
+  it('stamps each zone with its owning building name', () => {
+    const byName = new Map(
+      createSyncedRegistry()
+        .getZones()
+        .map((zone) => [zone.name, zone.buildingName]),
+    )
+
+    // A building zone carries its own name; its descendants carry the
+    // building's, so a flat picker can tell same-named zones apart.
+    expect(byName.get('Bravo')).toBe('Bravo')
+    expect(byName.get('Alpha')).toBe('Alpha')
+    expect(byName.get('AC unit')).toBe('Bravo')
+    expect(byName.get('Salon')).toBe('Bravo')
+    expect(byName.get('Studio')).toBe('Alpha')
+  })
+
   it('returns empty list when no devices match', () => {
     expect(
       createSyncedRegistry().getZones({ type: ClassicDeviceType.Erv }),

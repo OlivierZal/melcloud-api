@@ -249,6 +249,15 @@ export interface ClassicFailureData {
 }
 
 /**
+ * A flattened registry zone stamped with its owning building's display
+ * name, so a flat picker (e.g. a Flow autocomplete with no tree) can tell
+ * same-named zones on different buildings apart. `buildingName` equals the
+ * zone's own name for a building zone.
+ * @category Types
+ */
+export type ClassicFlatZone = ClassicZone & { readonly buildingName: string }
+
+/**
  * Wire-format floor entry from `ListDevices`.
  * @category Types
  */

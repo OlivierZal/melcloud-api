@@ -39,6 +39,7 @@ export {
   type ClassicErrorLogQuery as ErrorLogQuery,
   type ClassicFacade as Facade,
   type ClassicFailureData as FailureData,
+  type ClassicFlatZone as FlatZone,
   type ClassicFloorData as FloorData,
   type ClassicFloorID as FloorID,
   type ClassicFloorZone as FloorZone,
