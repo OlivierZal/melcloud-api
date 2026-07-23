@@ -10,6 +10,7 @@ import type {
   ClassicModel,
   ClassicRegistry,
 } from '../entities/index.ts'
+import type { HolidayModeUpdate } from '../holiday-mode.ts'
 import {
   classicUpdateDevices,
   fetchDevices,
@@ -46,7 +47,6 @@ import { HourSchema, parseOrThrow } from '../validation/index.ts'
 import type {
   ClassicFacade,
   ClassicFrostProtectionQuery,
-  ClassicHolidayModeQuery,
 } from './classic-types.ts'
 import type { ReportChartLineOptions } from './report-types.ts'
 
@@ -213,24 +213,20 @@ export abstract class ClassicBaseFacade<
 
   @fetchDevices({ when: 'after' })
   public async updateHolidayMode({
-    from,
-    to,
-  }: ClassicHolidayModeQuery = {}): Promise<
-    ClassicFailureData | ClassicSuccessData
-  > {
-    const isEnabled = to !== undefined
-    const resolveStartDate = (): Temporal.PlainDateTime =>
-      from === undefined ?
-        Temporal.Now.plainDateTimeISO(this.api.timezone)
-      : Temporal.PlainDateTime.from(from)
-    const startDate = isEnabled ? resolveStartDate() : null
-    const endDate = isEnabled ? Temporal.PlainDateTime.from(to) : null
+    endDate,
+    isEnabled,
+    startDate,
+  }: HolidayModeUpdate): Promise<ClassicFailureData | ClassicSuccessData> {
+    // Parse the window before the location fetch so malformed dates throw
+    // ahead of any I/O; dates are cleared when disabling.
+    const start = isEnabled ? Temporal.PlainDateTime.from(startDate) : null
+    const end = isEnabled ? Temporal.PlainDateTime.from(endDate) : null
     return this.api.updateHolidayMode({
       postData: {
         Enabled: isEnabled,
-        EndDate: getDateTimeComponents(endDate),
+        EndDate: getDateTimeComponents(end),
         HMTimeZones: await this.#getHolidayModeLocation(),
-        StartDate: getDateTimeComponents(startDate),
+        StartDate: getDateTimeComponents(start),
       },
     })
   }

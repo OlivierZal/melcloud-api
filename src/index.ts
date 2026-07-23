@@ -1,3 +1,4 @@
+export type { HolidayModeUpdate } from './holiday-mode.ts'
 export type {
   ApiRequestError,
   ClassicAreaData,
@@ -222,7 +223,6 @@ export {
   type ClassicDeviceFacadeAny,
   type ClassicFacade,
   type ClassicFrostProtectionQuery,
-  type ClassicHolidayModeQuery,
   type ClassicZoneFacade,
   type ReportChartBand,
   type ReportChartLineOptions,

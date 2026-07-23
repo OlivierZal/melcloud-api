@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [43.0.0] - 2026-07-23
+
+### Changed
+
+- **Breaking:** unified the holiday-mode write contract across the Classic and Home APIs. `ClassicFacade.updateHolidayMode` and `HomeFacadeManager.updateHolidayMode` now both take the shared `HolidayModeUpdate` shape `{ isEnabled, startDate, endDate }` (ISO 8601 wall-clock), replacing the Classic-only `ClassicHolidayModeQuery` `{ from?, to? }` presence-encoding. `isEnabled` is now explicit rather than inferred from the presence of `to`; `startDate`/`endDate` are ignored when disabling. Callers pass the full window — the start is no longer defaulted to "now" (the Home API carries no timezone context to anchor such a default, and unifying the contract means one caller-supplied window drives both sides). `ClassicHolidayModeQuery` and its `/classic` alias `HolidayModeQuery` are removed; import `HolidayModeUpdate` from the package root.
+
 ## [42.6.0] - 2026-07-23
 
 ### Added
@@ -346,6 +352,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[43.0.0]: https://github.com/OlivierZal/melcloud-api/compare/42.6.0...43.0.0
 [42.6.0]: https://github.com/OlivierZal/melcloud-api/compare/42.5.0...42.6.0
 [42.5.0]: https://github.com/OlivierZal/melcloud-api/compare/42.4.0...42.5.0
 [42.4.0]: https://github.com/OlivierZal/melcloud-api/compare/42.3.0...42.4.0

@@ -1,5 +1,6 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
+import type { HolidayModeUpdate } from '../holiday-mode.ts'
 import type {
   HomeAtaDeviceData,
   HomeAtwDeviceData,
@@ -123,17 +124,13 @@ export class HomeFacadeManager {
    * for the holiday window. All ids must belong to this manager's account.
    * @param deviceIds - Target device ids.
    * @param root0 - The new holiday-mode window.
-   * @param root0.endDate - Window end, ISO local date-time.
+   * @param root0.endDate - Window end, ISO 8601 wall-clock.
    * @param root0.isEnabled - Whether holiday mode is on.
-   * @param root0.startDate - Window start, ISO local date-time.
+   * @param root0.startDate - Window start, ISO 8601 wall-clock.
    */
   public async updateHolidayMode(
     deviceIds: readonly string[],
-    {
-      endDate,
-      isEnabled,
-      startDate,
-    }: { endDate: string; isEnabled: boolean; startDate: string },
+    { endDate, isEnabled, startDate }: HolidayModeUpdate,
   ): Promise<void> {
     await this.#api.updateHolidayMode({
       enabled: isEnabled,
