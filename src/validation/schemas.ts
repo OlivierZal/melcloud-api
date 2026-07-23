@@ -127,14 +127,17 @@ const HomeAtwCapabilitiesSchema: z.ZodType<HomeAtwDeviceCapabilities> =
 // + min/max); `holidayMode` carries active/enabled plus a start/end
 // window. Both are consumed by the SDK now, so both are validated.
 const HomeProtectionSchema = z.looseObject({
-  active: z.boolean(),
+  // `active` (is it currently kicking in) is absent on some units — live
+  // ATW guests omit it — so it is optional; `enabled`/`min`/`max` are the
+  // configuration and are always present.
+  active: z.boolean().optional(),
   enabled: z.boolean(),
   max: z.number(),
   min: z.number(),
 })
 
 const HomeHolidayModeSchema = z.looseObject({
-  active: z.boolean(),
+  active: z.boolean().optional(),
   enabled: z.boolean(),
   endDate: z.string(),
   startDate: z.string(),

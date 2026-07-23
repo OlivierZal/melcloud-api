@@ -270,6 +270,34 @@ describe('validation/schemas', () => {
       ).not.toThrow()
     })
 
+    it('accepts a unit whose frostProtection/holidayMode omit the optional active flag', () => {
+      // Live guest ATW units report the protection config without the
+      // runtime `active` flag; the strict schema must not drift on that.
+      expect(() =>
+        HomeContextSchema.parse(
+          buildHomeContext({
+            guestBuildings: [
+              {
+                ...baseHomeBuilding,
+                airToWaterUnits: [
+                  {
+                    ...baseHomeAtwDevice,
+                    capabilities: defaultHomeAtwCapabilities,
+                    frostProtection: { enabled: false, max: 12, min: 6 },
+                    holidayMode: {
+                      enabled: false,
+                      endDate: '2026-08-05T00:00:00',
+                      startDate: '2026-08-01T00:00:00',
+                    },
+                  },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).not.toThrow()
+    })
+
     it('rejects ATA capabilities missing a required field', () => {
       const incomplete = {
         ...defaultHomeAtaCapabilities,
