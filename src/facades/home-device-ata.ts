@@ -294,11 +294,12 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   }
 
   /**
-   * Pushes a partial setpoint update; throws {@link NoChangesError} when
-   * `values` carries no defined value (an explicitly-`undefined` key
-   * counts as absent), otherwise clamps `setTemperature` to the active
-   * mode's bounds and forwards.
+   * Pushes a partial setpoint update; rejects when `values` carries no
+   * defined value (an explicitly-`undefined` key counts as absent),
+   * otherwise clamps `setTemperature` to the active mode's bounds and
+   * forwards.
    * @param values - Partial setpoint payload.
+   * @throws {@link NoChangesError} when `values` carries no defined value.
    */
   public override async updateValues(values: HomeAtaValues): Promise<void> {
     const changes = omitUndefined(values)

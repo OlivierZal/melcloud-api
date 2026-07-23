@@ -143,6 +143,8 @@ export const toHomeAtaValues = (state: ClassicGroupState): HomeAtaValues => ({
  * definition, so zone group writes — and the group-of-one emulation —
  * are no-op tolerant.
  * @param update - The member update to run.
+ * @throws {@link Error} the reason `update` rejects with, unless it is a
+ *   {@link NoChangesError} (which counts as success).
  */
 export const tolerateNoChanges = async (
   update: () => Promise<unknown>,
