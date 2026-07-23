@@ -24,6 +24,7 @@ export type {
   ClassicErrorLogData,
   ClassicErrorLogPostData,
   ClassicFailureData,
+  ClassicFlatZone,
   ClassicFloorData,
   ClassicFloorID,
   ClassicFloorZone,

@@ -9,7 +9,7 @@ import type {
   ClassicModel,
   ClassicRegistry,
 } from '../entities/index.ts'
-import type { ClassicBuildingZone, ClassicZone } from '../types/index.ts'
+import type { ClassicBuildingZone, ClassicFlatZone } from '../types/index.ts'
 import type {
   ClassicBuildingFacade,
   ClassicDeviceFacade,
@@ -96,7 +96,7 @@ export class ClassicFacadeManager {
    */
   public getZones(params?: {
     type?: ClassicDeviceType | undefined
-  }): ClassicZone[] {
+  }): ClassicFlatZone[] {
     return this.#registry.getZones(params)
   }
 }
