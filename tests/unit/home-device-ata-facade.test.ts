@@ -34,6 +34,35 @@ const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
   })
 
 describe('home device ata facade', () => {
+  describe('protection accessors', () => {
+    it('exposes frost protection and holiday mode from context', () => {
+      const frostProtection = { active: false, enabled: true, max: 12, min: 6 }
+      const holidayMode = {
+        active: false,
+        enabled: true,
+        endDate: '2026-08-05T00:00:00',
+        startDate: '2026-08-01T00:00:00',
+      }
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        homeDevice({ frostProtection, holidayMode, id: 'device-1' }),
+      )
+
+      expect(facade.frostProtection).toStrictEqual(frostProtection)
+      expect(facade.holidayMode).toStrictEqual(holidayMode)
+    })
+
+    it('returns null when protection is not configured', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        homeDevice({ id: 'device-1' }),
+      )
+
+      expect(facade.frostProtection).toBeNull()
+      expect(facade.holidayMode).toBeNull()
+    })
+  })
+
   describe('settings accessors', () => {
     it('should read operation mode from settings', () => {
       const facade = new HomeDeviceAtaFacade(

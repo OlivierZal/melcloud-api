@@ -757,6 +757,60 @@ describe('melcloud home API', () => {
       )
     })
 
+    it('should post a batch frost-protection write and refresh', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.updateFrostProtection({
+        enabled: true,
+        max: 12,
+        min: 6,
+        units: { ATA: ['device-1'] },
+      })
+
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            enabled: true,
+            max: 12,
+            min: 6,
+            units: { ATA: ['device-1'] },
+          },
+          method: 'post',
+          url: '/monitor/protection/frost',
+        }),
+      )
+    })
+
+    it('should post a batch holiday-mode write and refresh', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.updateHolidayMode({
+        enabled: false,
+        endDate: '2026-08-05T00:00:00',
+        startDate: '2026-08-01T00:00:00',
+        units: { ATW: ['device-2'] },
+      })
+
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            enabled: false,
+            endDate: '2026-08-05T00:00:00',
+            startDate: '2026-08-01T00:00:00',
+            units: { ATW: ['device-2'] },
+          },
+          method: 'post',
+          url: '/monitor/holidaymode',
+        }),
+      )
+    })
+
     it('should propagate the updateValues failure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()

@@ -16,6 +16,7 @@ import {
   syncDevices,
 } from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
+import { clampFrostProtection } from '../frost-protection.ts'
 import { Temporal } from '../temporal.ts'
 import {
   type ApiRequestError,
@@ -78,11 +79,6 @@ const throwLocationError = (error: ApiRequestError): never => {
   }
   throw new Error(`Could not resolve location: ${error.kind}`)
 }
-
-// Minimum 2°C gap between min and max to prevent invalid frost protection ranges
-const TEMPERATURE_GAP = 2
-
-const temperatureRange = { max: 16, min: 4 }
 
 const getDateTimeComponents = (
   date: Temporal.PlainDateTime | null,
@@ -204,19 +200,7 @@ export abstract class ClassicBaseFacade<
   }: ClassicFrostProtectionQuery): Promise<
     ClassicFailureData | ClassicSuccessData
   > {
-    // Clamp to [4°C, 16°C], ensure minimum gap, then re-enforce gap
-    // in case the adjustment pushed max out of bounds
-    const newMin = Math.max(
-      temperatureRange.min,
-      Math.min(min, temperatureRange.max - TEMPERATURE_GAP),
-    )
-    let newMax = Math.min(
-      temperatureRange.max,
-      Math.max(max, temperatureRange.min + TEMPERATURE_GAP),
-    )
-    if (newMax - newMin < TEMPERATURE_GAP) {
-      newMax = newMin + TEMPERATURE_GAP
-    }
+    const { max: newMax, min: newMin } = clampFrostProtection(min, max)
     return this.api.updateFrostProtection({
       postData: {
         Enabled: isEnabled,
