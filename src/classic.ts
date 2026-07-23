@@ -54,7 +54,6 @@ export {
   type ClassicHolidayModeData as HolidayModeData,
   type ClassicHolidayModeLocation as HolidayModeLocation,
   type ClassicHolidayModePostData as HolidayModePostData,
-  type ClassicHolidayModeQuery as HolidayModeQuery,
   type ClassicHolidayModeTimeZone as HolidayModeTimeZone,
   type ClassicHotWaterState as HotWaterState,
   type ClassicListDevice as ListDevice,

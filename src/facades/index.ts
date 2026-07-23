@@ -20,7 +20,6 @@ export {
   type ClassicEnergyReportExtract,
   type ClassicFacade,
   type ClassicFrostProtectionQuery,
-  type ClassicHolidayModeQuery,
   type ClassicZoneFacade,
   hasClassicZone2,
   isClassicAtaFacade,

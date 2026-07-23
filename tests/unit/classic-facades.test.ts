@@ -408,22 +408,30 @@ describe('building facade holiday mode', () => {
     const { facade } = createBuildingFacade()
     await facade.getHolidayMode()
     const result = await facade.updateHolidayMode({
-      from: '2024-06-01',
-      to: '2024-06-15',
+      endDate: '2024-06-15',
+      isEnabled: true,
+      startDate: '2024-06-01',
     })
 
     expect(result).toHaveProperty('Success')
   })
 
-  it('disables holiday mode when no to date', async () => {
+  it('disables holiday mode and ignores the window dates', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getHolidayMode()
-    await facade.updateHolidayMode({})
+    await facade.updateHolidayMode({
+      endDate: '2024-06-15',
+      isEnabled: false,
+      startDate: '2024-06-01',
+    })
     const call = vi.mocked(api.updateHolidayMode).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
 
     expect(defined(call).postData.Enabled).toBe(false)
+    // Dates are cleared to null on the wire when disabling.
+    expect(defined(call).postData.StartDate).toBeNull()
+    expect(defined(call).postData.EndDate).toBeNull()
   })
 })
 
@@ -458,7 +466,11 @@ describe('facade write methods refresh registry', () => {
     const { api, facade } = createBuildingFacade()
     await facade.getHolidayMode()
     vi.mocked(api.fetch).mockClear()
-    await facade.updateHolidayMode({ from: '2024-06-01', to: '2024-06-15' })
+    await facade.updateHolidayMode({
+      endDate: '2024-06-15',
+      isEnabled: true,
+      startDate: '2024-06-01',
+    })
 
     expect(api.fetch).toHaveBeenCalledTimes(1)
   })
@@ -674,7 +686,11 @@ describe('base facade holiday mode with device fallback', () => {
       )
       .mockResolvedValue(ok(classicHolidayModeResponse()))
     const { api, facade } = createAreaFacade({ getHolidayMode: hmMock })
-    await facade.updateHolidayMode({ to: '2024-12-31' })
+    await facade.updateHolidayMode({
+      endDate: '2024-12-31',
+      isEnabled: true,
+      startDate: '2024-01-01',
+    })
     const call = vi.mocked(api.updateHolidayMode).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
@@ -689,9 +705,13 @@ describe('base facade holiday mode with device fallback', () => {
       .mockResolvedValue(err({ cause, kind: 'network' as const }))
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
 
-    await expect(facade.updateHolidayMode({ to: '2024-12-31' })).rejects.toBe(
-      cause,
-    )
+    await expect(
+      facade.updateHolidayMode({
+        endDate: '2024-12-31',
+        isEnabled: true,
+        startDate: '2024-01-01',
+      }),
+    ).rejects.toBe(cause)
   })
 })
 

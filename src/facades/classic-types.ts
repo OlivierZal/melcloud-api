@@ -9,6 +9,7 @@ import type {
   ClassicDeviceAny,
 } from '../entities/classic-types.ts'
 import type { Identifiable } from '../entities/types.ts'
+import type { HolidayModeUpdate } from '../holiday-mode.ts'
 import type {
   ClassicEnergyData,
   ClassicFailureData,
@@ -193,7 +194,7 @@ export interface ClassicFacade extends Identifiable {
   ) => Promise<ClassicFailureData | ClassicSuccessData>
   /** Enable or disable holiday mode. */
   readonly updateHolidayMode: (
-    query: ClassicHolidayModeQuery,
+    query: HolidayModeUpdate,
   ) => Promise<ClassicFailureData | ClassicSuccessData>
   /** Turn all devices in this facade on or off. */
   readonly updatePower: (value?: boolean) => Promise<boolean>
@@ -210,17 +211,6 @@ export interface ClassicFrostProtectionQuery {
   readonly min: number
   /** Whether frost protection is enabled. Defaults to `true`. */
   readonly isEnabled?: boolean | undefined
-}
-
-/**
- * Parameters for enabling or disabling holiday mode.
- * @category Facades
- */
-export interface ClassicHolidayModeQuery {
-  /** Start date in ISO 8601 format. Defaults to now when `to` is provided. */
-  readonly from?: string | undefined
-  /** End date in ISO 8601 format. Omit to disable holiday mode. */
-  readonly to?: string | undefined
 }
 
 /**

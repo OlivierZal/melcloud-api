@@ -68,9 +68,9 @@ export interface ClassicAPIAdapter {
   /**
    * IANA timezone identifier the Classic instance was configured with
    * (`ClassicAPIConfig.timezone`), or `undefined` when unset. Facades
-   * use this to anchor "now"-derived defaults (`updateHolidayMode`
-   * fallback, `getSignalStrength` / `getHourlyTemperatures` hour) to
-   * the Classic timezone instead of the host runtime timezone.
+   * use this to anchor "now"-derived defaults (`getSignalStrength` /
+   * `getHourlyTemperatures` hour) to the Classic timezone instead of the
+   * host runtime timezone.
    */
   readonly timezone: string | undefined
   /** Fetch all buildings and sync the model registry. */
