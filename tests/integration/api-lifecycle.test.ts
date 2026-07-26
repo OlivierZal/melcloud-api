@@ -198,7 +198,6 @@ describe('api lifecycle', () => {
 
     expect(api.registry.getDevices()).toHaveLength(0)
 
-    // Simulate authentication returning login data, then fetch returns buildings
     mockRequest.mockImplementation(async (config) => {
       await Promise.resolve()
       if (config.url === '/Login/ClientLogin3') {
@@ -251,7 +250,6 @@ describe('api lifecycle', () => {
 
     await api.authenticate({ password: 'secret', username: 'me@test.com' })
 
-    // Verify credentials were persisted
     expect(setSpy).toHaveBeenCalledWith('username', 'me@test.com')
     expect(setSpy).toHaveBeenCalledWith('password', 'secret')
     expect(setSpy).toHaveBeenCalledWith('contextKey', 'ctx-abc')

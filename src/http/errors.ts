@@ -13,9 +13,7 @@ export interface HttpErrorRequestConfig {
 /**
  * Thrown by {@link HttpClient} whenever an upstream response has a non-2xx
  * status. The shape mirrors what downstream code needs: `response.status`,
- * `response.headers`, and `response.data` — identical to the relevant
- * surface of the previous `AxiosError` contract so retry/rate-limit logic
- * does not need to branch on the error's origin.
+ * `response.headers`, and `response.data`.
  * @template T - Type of the parsed body of the failed response, exposed as
  * `response.data`.
  * @category HTTP

@@ -185,9 +185,7 @@ export const classicErvDeviceData = (
   })
 
 // ---------------------------------------------------------------------------
-// Default fixture IDs — named constants so the numeric literals don't
-// trigger `@typescript-eslint/no-magic-numbers` outside the vitest
-// override (this file is a helper, not a `.test.ts`).
+// Default fixture IDs
 // ---------------------------------------------------------------------------
 
 const DEFAULT_AREA_ID = toClassicAreaId(100)

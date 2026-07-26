@@ -1,10 +1,6 @@
 import { HttpError } from './errors.ts'
 
-// `fetch()` in Node 22+ accepts `dispatcher` (undici-specific). We import
-// the type from undici-types (the copy bundled with @types/node that
-// Node's `fetch()` declaration uses) so passing a dispatcher
-// instantiated from the `undici` runtime package remains structurally
-// compatible with what fetch expects.
+// `fetch()` in Node 22+ accepts `dispatcher` (undici-specific).
 type FetchBody = NonNullable<FetchInit['body']>
 
 // `Dispatcher` is defined both in the `undici` npm package and in
@@ -36,9 +32,6 @@ export interface HttpClientConfig {
 
 /**
  * Configuration accepted by {@link HttpClient.request}.
- *
- * Intentionally mirrors the subset of the Axios request config that the
- * library relied on, so call sites migrate verbatim.
  * @category HTTP
  */
 export interface HttpRequestConfig {
@@ -140,11 +133,11 @@ const readHeaders = (headers: Headers): Record<string, string | string[]> => {
   return result
 }
 
-// Try JSON first, fall back to text. Axios auto-parses bodies by default —
-// content-type from upstream can be absent or a JSON variant the strict
-// `application/json` substring misses (e.g. `text/json`, `application/problem+json`).
-// Matching on parseability keeps those callers working without a content-type
-// allowlist that drifts with every new server flavour.
+// Try JSON first, fall back to text: content-type from upstream can be
+// absent or a JSON variant a strict `application/json` substring check
+// misses (e.g. `text/json`, `application/problem+json`). Matching on
+// parseability avoids a content-type allowlist that drifts with every
+// new server flavour.
 const parseBody = async (response: Response): Promise<unknown> => {
   if (
     response.status === NULL_BODY_STATUS ||

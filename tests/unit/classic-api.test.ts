@@ -955,7 +955,6 @@ describe('mELCloud Classic API', () => {
       mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
       await api.getValues({ params: { buildingId: 1, id: 1 } })
 
-      // Should NOT have called login
       expect(mockRequest).not.toHaveBeenCalledWith(
         expect.objectContaining({ url: '/Login/ClientLogin3' }),
       )

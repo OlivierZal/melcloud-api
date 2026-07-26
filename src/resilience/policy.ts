@@ -4,9 +4,7 @@
  * Each policy owns exactly one concern (rate-limiting, auth retry,
  * transient-error retry…) and wraps the caller's `attempt` with its
  * own semantics. Policies are **composed** via {@link CompositePolicy}
- * to build the request pipeline declaratively, replacing the prior
- * inline `makeRequestAttempt` chain whose stages were tangled across
- * `BaseAPI.request`, `makeRequestAttempt`, and `runWithEvents`.
+ * to build the request pipeline declaratively.
  *
  * Implementations MUST:
  * - run the caller's `attempt` at most once per `run` invocation per

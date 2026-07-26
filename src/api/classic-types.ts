@@ -45,9 +45,8 @@ import type { BaseAPIConfig, SyncCallback } from './types.ts'
  *
  * Every method returns the unwrapped payload (no `{ data }` wrapper).
  * Transport metadata (status, headers) lives inside the SDK on
- * `request<T>()`; consumers don't see it. This is the resource-focused
- * convention (Stripe, Linear) — applied uniformly across both Classic
- * and Home so the public surface is symmetric.
+ * `request<T>()`; consumers don't see it. Applied uniformly across
+ * both Classic and Home so the public surface is symmetric.
  * @category Configuration
  */
 export interface ClassicAPIAdapter {

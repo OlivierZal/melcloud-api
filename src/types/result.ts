@@ -17,9 +17,7 @@ export interface Failure {
  * The error type is fixed to {@link ApiRequestError} rather than
  * generic: every call site in the SDK fails through the same
  * classification pipeline, so a `<TError>` parameter would be a
- * degree of freedom nothing exercises. General-purpose Result
- * libraries (neverthrow, ts-results) keep it generic because they
- * cannot assume a single domain; domain-specific SDKs lock it.
+ * degree of freedom nothing exercises.
  * @template T - Type of the parsed value carried by the success branch.
  * @category Types
  */
@@ -56,8 +54,7 @@ export const err = (error: ApiRequestError): Failure => ({
 
 /**
  * Transform the success branch of a {@link Result} while passing the
- * failure branch through unchanged. The standard "functor map" operation
- * from neverthrow / ts-results / oxide; lets callers compose
+ * failure branch through unchanged. Lets callers compose
  * Result-returning calls with synchronous transforms (e.g.
  * `mapResult(await api.getEnergy(...), getChartLineOptions)`) without
  * unwrapping then re-wrapping by hand.

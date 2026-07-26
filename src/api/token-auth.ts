@@ -11,10 +11,6 @@ import {
   parseOrThrow,
 } from '../validation/index.ts'
 
-// ------------------------------------------------------------------
-//  Constants
-// ------------------------------------------------------------------
-
 const CLIENT_ID = 'homemobile'
 const REDIRECT_URI = 'melcloudhome://'
 const SCOPES = 'openid profile email offline_access IdentityServerApi'
@@ -30,10 +26,6 @@ const PKCE_RANDOM_BYTES = 32
 const STATE_RANDOM_BYTES = 16
 const REDIRECT_STATUS_MIN = 300
 const REDIRECT_STATUS_MAX = 400
-
-// ------------------------------------------------------------------
-//  Types
-// ------------------------------------------------------------------
 
 /** Options for {@link authRequest}. */
 interface AuthRequestOptions {
@@ -81,10 +73,6 @@ interface SubmitCredentialsOptions {
   jar: CookieJar
   abortSignal?: AbortSignal
 }
-
-// ------------------------------------------------------------------
-//  HTTP transport (fetch-based)
-// ------------------------------------------------------------------
 
 const readResponseHeaders = (
   headers: Headers,
@@ -218,10 +206,6 @@ const authRequest = async ({
   return response
 }
 
-// ------------------------------------------------------------------
-//  Helpers
-// ------------------------------------------------------------------
-
 /**
  * Extract the `action` attribute from the first `<form>` element in an HTML string.
  * @param html - Raw HTML string from the login page.
@@ -310,10 +294,6 @@ const generatePKCE = (): { challenge: string; verifier: string } => {
   return { challenge, verifier }
 }
 
-// ------------------------------------------------------------------
-//  Redirect-following
-// ------------------------------------------------------------------
-
 /**
  * Extract the redirect target from an HTTP or JS redirect response.
  * @param response - The raw HTTP response.
@@ -379,10 +359,6 @@ const authFollowRedirects = async ({
   }
   return { data: response.data, url }
 }
-
-// ------------------------------------------------------------------
-//  Auth flow steps
-// ------------------------------------------------------------------
 
 /**
  * Push Authorization Request — returns the opaque `request_uri`.
@@ -547,10 +523,6 @@ const tokenRequest = async ({
   return parseOrThrow(HomeTokenResponseSchema, tokens, 'OIDC token endpoint')
 }
 
-// ------------------------------------------------------------------
-//  Public surface
-// ------------------------------------------------------------------
-
 /**
  * Full headless OIDC login: PAR → Cognito → token exchange.
  * @param options - Credentials plus abort plumbing for the full login flow.
@@ -601,8 +573,7 @@ export const performTokenAuth = async ({
  * on **any** failure so the caller can fall through to a full re-auth
  * without threading an exception up the stack — but logs the error
  * reason via the optional logger so the failure mode (expired refresh
- * token vs. transient network flake vs. 5xx) stays observable. Prior
- * behaviour silently discarded all diagnostic context.
+ * token vs. transient network flake vs. 5xx) stays observable.
  * @param options - Refresh token plus logging and abort plumbing.
  * @param options.refreshToken - The user's refresh token.
  * @param options.abortSignal - Optional signal to abort the refresh.
