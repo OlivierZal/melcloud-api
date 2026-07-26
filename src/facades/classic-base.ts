@@ -52,9 +52,6 @@ import type { ReportChartLineOptions } from './report-types.ts'
 
 // Settings can be defined at zone or device level. Try zone first;
 // if unsupported, fall back to device level and cache the result.
-// Result-aware fallback: a `!ok` zone result triggers the device-level
-// retry, mirroring the previous try/catch semantic without losing the
-// typed-failure surface for the final outcome.
 const getWithZoneFallback = async <TResult>(
   isAtZoneLevel: boolean | null,
   zoneGetter: () => Promise<Result<TResult>>,

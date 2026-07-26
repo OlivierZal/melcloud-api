@@ -10,10 +10,6 @@ import { isKeyOf } from './utils.ts'
 
 // Bidirectional mapping tables between classic API numeric enums
 // and Home API string values.
-//
-// Classic → Home: used by ClassicAtaAdapter to normalize output.
-// Home → Classic: used by ClassicAtaAdapter to convert normalized input
-// back to the classic API format.
 
 /**
  * Home API fan speed string values.

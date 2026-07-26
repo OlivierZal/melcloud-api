@@ -108,9 +108,8 @@ export const normalizeUnauthorized = (
 const DEFAULT_TIMEOUT_MS = 30_000
 
 // Cool-down between consecutive auth-retry consumptions on the same
-// RetryGuard. Hardcoded because no caller has ever needed to tune it
-// — every Classic + Home flow uses the same 1 s value, and adjusting
-// it is more likely to mask bugs than reflect a real product need.
+// RetryGuard. Deliberately not configurable: adjusting it is more
+// likely to mask bugs than reflect a real product need.
 const DEFAULT_AUTH_RETRY_COOLDOWN_MS = 1000
 
 // Automatic re-login backoff after a REJECTED sign-in: MELCloud

@@ -203,8 +203,7 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
 
   /**
    * Reads a numeric device setting (the BFF serializes numbers as
-   * strings). An absent setting reads `0` (`Number('')`), matching the
-   * pre-helper behavior of every call site.
+   * strings). An absent setting reads `0` (`Number('')`).
    * @param name - Setting name (e.g. `'RoomTemperatureZone1'`).
    * @returns The wire string parsed as a number, `0` when absent.
    */

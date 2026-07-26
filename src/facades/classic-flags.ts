@@ -4,10 +4,8 @@ import type { ClassicUpdateDeviceData } from '../types/index.ts'
 // MELCloud EffectiveFlags bitfield values — each bit tells the Classic
 // API which fields in an update payload should actually be applied.
 //
-// Centralised here (not on each facade) so:
-//   - all magic hex constants live in a single table,
-//   - comparing bit assignments across device types is possible at a glance,
-//   - new device types or new fields are added by extending one map.
+// Centralised here (not on each facade): the single sanctioned home of
+// the flag hex constants, comparable across device types at a glance.
 //
 // Each map carries a literal-typed annotation so callers see the exact
 // bit value at type level (e.g. `classicAtaFlags.Power: 0x1`, not

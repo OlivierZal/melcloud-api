@@ -405,7 +405,6 @@ describe('baseAPI shared request pipeline', () => {
         'Status 500',
       )
 
-      // Only one call, no retry
       expect(mockRequest).toHaveBeenCalledTimes(1)
     })
 
@@ -532,7 +531,8 @@ describe('baseAPI shared request pipeline', () => {
         status: 200,
       })
 
-      // Pass a non-object headers value (e.g. a string) to cover line 160
+      // Pass a non-object headers value (e.g. a string) to cover the
+      // non-object branch of dispatch's headers merge
       await api.callDispatch('get', '/data', {
         headers: cast('not-an-object'),
       })
@@ -602,10 +602,7 @@ describe('baseAPI shared request pipeline', () => {
   // the best-effort restore entry — it logs and swallows. This
   // describe block pins the observable difference between the two
   // so future refactors cannot collapse them back into a dual-mode
-  // function. Subsumes the former `initialize() → runs doAuthenticate
-  // + syncRegistry when credentials are persisted` test: the
-  // persisted-credentials path is now exercised at its natural unit
-  // (resumeSession) rather than through initialize's indirection.
+  // function.
   describe('authenticate() vs resumeSession() contract', () => {
     it('authenticate() throws when doAuthenticate rejects', async () => {
       api.doAuthenticateMock.mockRejectedValueOnce(new Error('rejected'))

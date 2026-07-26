@@ -27,9 +27,6 @@ import {
  * - `'power'`: specialisation for power-toggle methods whose argument
  *   is a bare `boolean` rather than an object. The boolean is wrapped
  *   into `{ Power: bool }` before the propagation step.
- *
- * Replacing the former `String(context.name) === 'updatePower'`
- * heuristic: a silent rename is no longer a latent bug.
  * @internal
  */
 type UpdatePatchKind = 'payload' | 'power'

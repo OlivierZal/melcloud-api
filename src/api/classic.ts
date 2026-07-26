@@ -82,7 +82,7 @@ const INVALID_YEAR = 1
 
 // Re-thrown with the historical "Invalid DateTime" prefix so the
 // public failure surface for `getErrorLog({ to: 'not-a-date' })` stays
-// stable across the Luxon → Temporal migration.
+// stable.
 const parsePlainDate = (iso: string): Temporal.PlainDate => {
   try {
     return Temporal.PlainDate.from(iso)
@@ -109,8 +109,7 @@ const plainDateYear = (iso: string): number | null => {
 
 // Year extraction across both MELCloud date dialects — the sentinel
 // arrives as an instant too (`0001-01-01T00:00:00Z`, live payload
-// 2026-07-18), which `PlainDate.from` rejects. Parse-failure behavior
-// still mirrors the original Luxon semantics: a bad input does NOT
+// 2026-07-18), which `PlainDate.from` rejects. A bad input does NOT
 // short-circuit as "invalid year 1" — it falls through and the entry
 // is kept. Only the year-1 sentinel gets filtered.
 const safePlainDateYear = (iso: string): number =>

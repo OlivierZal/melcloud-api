@@ -104,5 +104,5 @@ describe(createFacade, () => {
     )
   })
 
-  // Unsupported model types are now a compile-time error via exhaustive modelKind switch
+  // Unsupported model types are a compile-time error via exhaustive modelKind switch
 })

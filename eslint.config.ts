@@ -49,9 +49,8 @@ const typeLikeSortOptions = {
 
 const config = defineConfig([
   {
-    // `scripts/` holds one-shot wire probes committed as dated evidence
-    // artifacts (cited from CLAUDE.md), not shipped code — they stay
-    // outside the lint scope by decision, like the build outputs.
+    // `scripts/` holds gitignored one-shot wire probes, not shipped
+    // code — outside the lint scope by decision, like the build outputs.
     ignores: ['coverage/', 'dist/', 'docs/', 'scripts/'],
   },
   {
@@ -851,7 +850,7 @@ const config = defineConfig([
   {
     files: ['*.config.ts'],
     rules: {
-      // Config loaders (eslint, vitest, typedoc) consume default exports.
+      // Config loaders (eslint, vitest, prettier) consume default exports.
       'import-x/no-default-export': 'off',
       'import-x/prefer-default-export': [
         'error',
@@ -938,10 +937,8 @@ const config = defineConfig([
     },
   },
   {
-    // TC39 decorator protocol: the replacement method receives the
-    // instance through `this` (no class body to put it in), and the
-    // `context` parameter is what pins the decorator kind at type level
-    // even when unused.
+    // TC39 decorator protocol: the `context` parameter pins the
+    // decorator kind at type level even when unused.
     files: ['src/decorators/**/*.ts'],
     rules: {
       '@typescript-eslint/no-unused-vars': [

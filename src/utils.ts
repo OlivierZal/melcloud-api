@@ -33,11 +33,10 @@ interface LabelFormatterCache {
 // Per-locale `Intl.DateTimeFormat` cache. Keyed on the locale string
 // (or `''` for the runtime default) so repeat calls with the same
 // locale reuse the same formatter pair without re-allocating on each
-// chart-options call. Modern best practice: the locale is carried as
-// an explicit argument by each call site, never via a mutable global.
-// The formatters come from the polyfill's Temporal-aware `Intl` and
-// consume `Temporal.PlainDate` values directly; plain types format
-// their own calendar fields, so no `timeZone` option is involved.
+// chart-options call. The formatters come from the polyfill's
+// Temporal-aware `Intl` and consume `Temporal.PlainDate` values
+// directly; plain types format their own calendar fields, so no
+// `timeZone` option is involved.
 const formatterCacheByLocale = new Map<string, LabelFormatterCache>()
 
 const getLabelFormatters = (
@@ -291,9 +290,6 @@ export interface ChartLineFormatOptions {
 /**
  * Transform raw API report data into structured line chart options
  * with formatted labels.
- *
- * Per modern library conventions, this function carries no mutable
- * locale global — the caller decides via `options.locale`.
  * @param root0 - The raw report data from the Classic API.
  * @param root0.Data - The data series arrays.
  * @param root0.FromDate - The start date of the report period.

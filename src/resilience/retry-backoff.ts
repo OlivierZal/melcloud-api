@@ -152,8 +152,6 @@ export const withRetryBackoff = async <T>(
   // Recursive shape (over a loop) makes the sequential nature of each
   // attempt structural: every retry strictly awaits the previous
   // attempt's settlement and the backoff delay before the next call.
-  // Also gives the function a single, type-checked exit — no need for
-  // an unreachable post-loop throw.
   const attempt = async (number: number): Promise<T> => {
     try {
       return await operation()
