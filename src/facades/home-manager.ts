@@ -60,9 +60,8 @@ export class HomeFacadeManager {
     if (cached !== undefined) {
       return cached
     }
-    const facade =
-      instance.isAta() ?
-        new HomeDeviceAtaFacade(this.#api, instance)
+    const facade = instance.isAta()
+      ? new HomeDeviceAtaFacade(this.#api, instance)
       : new HomeDeviceAtwFacade(this.#api, instance)
     this.#facades.set(instance, facade)
     return facade

@@ -115,9 +115,9 @@ const toEnergyReportLabels = (
   return {
     labels: labels.map((label) =>
       String(
-        label === 0 && labelType === ClassicLabelType.day_of_week ?
-          ISO_SUNDAY
-        : label,
+        label === 0 && labelType === ClassicLabelType.day_of_week
+          ? ISO_SUNDAY
+          : label,
       ),
     ),
     labelType,
@@ -227,12 +227,13 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   protected get setData(): Required<ClassicUpdateDeviceData<T>> {
     const dataEntries = Object.entries(this.data)
     const entries = (
-      this.type === ClassicDeviceType.Ata ?
-        dataEntries.map(([key, value]): [string, unknown] => [
-          isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
-          value,
-        ])
-      : dataEntries).filter(([key]) => Object.hasOwn(this.flags, key))
+      this.type === ClassicDeviceType.Ata
+        ? dataEntries.map(([key, value]): [string, unknown] => [
+            isSetDeviceDataAtaInList(key) ? fromListToSetAta[key] : key,
+            value,
+          ])
+        : dataEntries
+    ).filter(([key]) => Object.hasOwn(this.flags, key))
     return typedFromEntries<Required<ClassicUpdateDeviceData<T>>>(entries)
   }
 
@@ -445,9 +446,8 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     const toDate = toWallClock(to, this.api.timezone)
     return {
       DeviceID: this.id,
-      Duration:
-        shouldUseExactRange ?
-          getDuration({ from: fromDate, to: toDate })
+      Duration: shouldUseExactRange
+        ? getDuration({ from: fromDate, to: toDate })
         : undefined,
       FromDate: fromDate,
       ToDate: toDate,

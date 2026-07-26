@@ -36,8 +36,8 @@ const createDeviceFacade = (
     return new ClassicDeviceAtaFacade(api, registry, device)
   }
   if (isClassicDeviceOfType(device, ClassicDeviceType.Atw)) {
-    return device.data.HasZone2 ?
-        new ClassicDeviceAtwHasZone2Facade(api, registry, device)
+    return device.data.HasZone2
+      ? new ClassicDeviceAtwHasZone2Facade(api, registry, device)
       : new ClassicDeviceAtwFacade(api, registry, device)
   }
   return new ClassicDeviceErvFacade(api, registry, device)

@@ -92,9 +92,9 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
     // Whichever zone was explicitly changed becomes the primary; the other
     // is automatically adjusted to maintain consistency
     const [primaryOperationMode, secondaryOperationMode] =
-      operationModeZone1?.value === undefined ?
-        [operationModeZone2, operationModeZone1]
-      : [operationModeZone1, operationModeZone2]
+      operationModeZone1?.value === undefined
+        ? [operationModeZone2, operationModeZone1]
+        : [operationModeZone1, operationModeZone2]
 
     if (
       secondaryOperationMode === undefined ||
@@ -123,9 +123,9 @@ export class ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
     if (this.data.CanCool) {
       if (primaryValue > ClassicOperationModeZone.curve) {
         secondaryValue =
-          secondaryValue === ClassicOperationModeZone.curve ?
-            ClassicOperationModeZone.room_cool
-          : secondaryValue + HEAT_COOL_GAP
+          secondaryValue === ClassicOperationModeZone.curve
+            ? ClassicOperationModeZone.room_cool
+            : secondaryValue + HEAT_COOL_GAP
       } else if (secondaryValue > ClassicOperationModeZone.curve) {
         secondaryValue -= HEAT_COOL_GAP
       }

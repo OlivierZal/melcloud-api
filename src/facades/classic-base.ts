@@ -83,16 +83,16 @@ const throwLocationError = (error: ApiRequestError): never => {
 const getDateTimeComponents = (
   date: Temporal.PlainDateTime | null,
 ): ClassicDateTimeComponents =>
-  date === null ? null : (
-    {
-      Day: date.day,
-      Hour: date.hour,
-      Minute: date.minute,
-      Month: date.month,
-      Second: date.second,
-      Year: date.year,
-    }
-  )
+  date === null
+    ? null
+    : {
+        Day: date.day,
+        Hour: date.hour,
+        Minute: date.minute,
+        Month: date.month,
+        Second: date.second,
+        Year: date.year,
+      }
 
 /**
  * Abstract base for all facades. Provides common functionality for frost protection,
@@ -405,8 +405,8 @@ export abstract class ClassicBaseFacade<
         throwLocationError(result.error)
       }
     }
-    return this.isFrostProtectionAtZoneLevel === true ?
-        { [this.frostProtectionLocation]: [this.id] }
+    return this.isFrostProtectionAtZoneLevel === true
+      ? { [this.frostProtectionLocation]: [this.id] }
       : { DeviceIds: this.#deviceIds }
   }
 
@@ -417,8 +417,8 @@ export abstract class ClassicBaseFacade<
         throwLocationError(result.error)
       }
     }
-    return this.isHolidayModeAtZoneLevel === true ?
-        [{ [this.holidayModeLocation]: [this.id] }]
+    return this.isHolidayModeAtZoneLevel === true
+      ? [{ [this.holidayModeLocation]: [this.id] }]
       : [{ Devices: this.#deviceIds }]
   }
 

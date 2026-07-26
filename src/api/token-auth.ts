@@ -332,9 +332,9 @@ const extractRedirectTarget = (
     return resolveUrl({ base: currentUrl, location })
   }
   const jsRedirect = extractPageRedirect(response.data)
-  return jsRedirect === null ? null : (
-      resolveUrl({ base: currentUrl, location: jsRedirect })
-    )
+  return jsRedirect === null
+    ? null
+    : resolveUrl({ base: currentUrl, location: jsRedirect })
 }
 
 /**
@@ -426,8 +426,8 @@ const refusedSubmissionMessage = (html: string): string => {
   const match =
     /(?:id|class)="errorMessage[^"]*"[^>]*>(?<message>[^<]*)</v.exec(html)
   const reason = match?.groups?.message?.trim() ?? ''
-  return reason === '' ?
-      'Credential submission was not redirected'
+  return reason === ''
+    ? 'Credential submission was not redirected'
     : `MELCloud Home rejected the sign-in: ${reason}`
 }
 

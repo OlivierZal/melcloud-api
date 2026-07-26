@@ -360,10 +360,16 @@ describe('mELCloud Classic API', () => {
       const api = await createApi({ password: 'pass', username: 'user' })
       mockRequest.mockResolvedValue(
         wrap(
-          method === 'login' ?
-            { LoginData: { ContextKey: 'ctx', Expiry: '2099-01-01T00:00:00Z' } }
-          : method === 'getEnergy' ? ataEnergyResponse
-          : {},
+          method === 'login'
+            ? {
+                LoginData: {
+                  ContextKey: 'ctx',
+                  Expiry: '2099-01-01T00:00:00Z',
+                },
+              }
+            : method === 'getEnergy'
+              ? ataEnergyResponse
+              : {},
         ),
       )
       await api[method](cast(args))

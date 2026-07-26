@@ -75,17 +75,17 @@ export const classicUpdateDevices =
       }
       const data = await target.call(this, ...args)
       const newData =
-        kind === 'power' ?
-          { Power: arg }
-        : Object.fromEntries(
-            Object.entries(arg ?? data).filter(
-              ([, value]) => value !== undefined && value !== null,
-            ),
-          )
+        kind === 'power'
+          ? { Power: arg }
+          : Object.fromEntries(
+              Object.entries(arg ?? data).filter(
+                ([, value]) => value !== undefined && value !== null,
+              ),
+            )
       const targetDevices =
-        type === undefined ?
-          this.devices
-        : this.devices.filter(({ type: deviceType }) => deviceType === type)
+        type === undefined
+          ? this.devices
+          : this.devices.filter(({ type: deviceType }) => deviceType === type)
       for (const device of targetDevices) {
         device.update(newData)
       }
@@ -113,22 +113,22 @@ export const convertToListDeviceData = <T extends ClassicDeviceType>(
   const effectiveFlagsBigInt =
     effectiveFlags === CLASSIC_FLAG_UNCHANGED ? null : BigInt(effectiveFlags)
   const entries =
-    effectiveFlagsBigInt === null ? allEntries : (
-      allEntries.filter(
-        ([key]) =>
-          isUpdateDeviceData(flags, key) &&
-          // eslint-disable-next-line no-bitwise -- `EffectiveFlags` is a bitfield; `&` tests flag membership
-          Boolean(BigInt(flags[key]) & effectiveFlagsBigInt),
-      )
-    )
+    effectiveFlagsBigInt === null
+      ? allEntries
+      : allEntries.filter(
+          ([key]) =>
+            isUpdateDeviceData(flags, key) &&
+            // eslint-disable-next-line no-bitwise -- `EffectiveFlags` is a bitfield; `&` tests flag membership
+            Boolean(BigInt(flags[key]) & effectiveFlagsBigInt),
+        )
   return typedFromEntries<Partial<ClassicListDeviceData<T>>>(
-    type === ClassicDeviceType.Ata ?
-      entries.map(([key, value]) =>
-        isSetDeviceDataAtaNotInList(key) ?
-          [fromSetToListAta[key], value]
-        : [key, value],
-      )
-    : entries,
+    type === ClassicDeviceType.Ata
+      ? entries.map(([key, value]) =>
+          isSetDeviceDataAtaNotInList(key)
+            ? [fromSetToListAta[key], value]
+            : [key, value],
+        )
+      : entries,
   )
 }
 

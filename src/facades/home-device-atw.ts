@@ -160,8 +160,8 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     if (this.forcedHotWaterMode) {
       return ClassicOperationModeStateHotWater.dhw
     }
-    return this.prohibitHotWater ?
-        ClassicOperationModeStateHotWater.prohibited
+    return this.prohibitHotWater
+      ? ClassicOperationModeStateHotWater.prohibited
       : (hotWaterStateFromOperationMode[this.operationMode] ??
           ClassicOperationModeStateHotWater.idle)
   }
@@ -411,12 +411,12 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
     const { cutoff, window } =
-      hour === undefined ?
-        resolveHomeDayWindow(this.chartTimezone)
-      : {
-          cutoff: undefined,
-          window: resolveHomeHourWindow(hour, this.chartTimezone),
-        }
+      hour === undefined
+        ? resolveHomeDayWindow(this.chartTimezone)
+        : {
+            cutoff: undefined,
+            window: resolveHomeHourWindow(hour, this.chartTimezone),
+          }
     return this.#fetchTemperatureChart(
       window,
       hour === undefined ? 'fiveMinutes' : 'minute',
@@ -583,10 +583,9 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
         ...(gridUnit !== undefined && { gridUnit }),
         cutoff,
         locale: this.api.locale,
-        reports:
-          shouldChartBands ? reports : (
-            reports.map((report) => ({ ...report, annotations: [] }))
-          ),
+        reports: shouldChartBands
+          ? reports
+          : reports.map((report) => ({ ...report, annotations: [] })),
         unit: TEMPERATURE_UNIT,
         window,
       }),

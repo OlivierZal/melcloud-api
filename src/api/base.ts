@@ -72,14 +72,14 @@ export const classifyError = (error: unknown): ApiRequestError => {
     return {
       kind: 'rate-limited',
       retryAfterMs:
-        error.retryAfter === null ?
-          null
-        : error.retryAfter.total({ unit: 'millisecond' }),
+        error.retryAfter === null
+          ? null
+          : error.retryAfter.total({ unit: 'millisecond' }),
     }
   }
   if (isHttpError(error)) {
-    return error.response.status === HttpStatus.Unauthorized ?
-        { cause: error, kind: 'unauthorized' }
+    return error.response.status === HttpStatus.Unauthorized
+      ? { cause: error, kind: 'unauthorized' }
       : { cause: error, kind: 'server', status: error.response.status }
   }
   return { cause: error, kind: 'network' }
@@ -99,11 +99,11 @@ export const classifyError = (error: unknown): ApiRequestError => {
 export const normalizeUnauthorized = (
   error: unknown,
 ): AuthenticationError | null =>
-  isHttpError(error) && error.response.status === HttpStatus.Unauthorized ?
-    new AuthenticationError('MELCloud rejected the credentials', {
-      cause: error,
-    })
-  : null
+  isHttpError(error) && error.response.status === HttpStatus.Unauthorized
+    ? new AuthenticationError('MELCloud rejected the credentials', {
+        cause: error,
+      })
+    : null
 
 const DEFAULT_TIMEOUT_MS = 30_000
 
@@ -261,12 +261,12 @@ export abstract class BaseAPI implements Disposable {
     this.rateLimitGate = new RateLimitGate({ hours: rateLimitHours })
     this.retryGuard = new RetryGuard(DEFAULT_AUTH_RETRY_COOLDOWN_MS)
     this.api =
-      transport instanceof HttpClient ? transport : (
-        new HttpClient({
-          ...httpConfig,
-          timeout: transport?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-        })
-      )
+      transport instanceof HttpClient
+        ? transport
+        : new HttpClient({
+            ...httpConfig,
+            timeout: transport?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+          })
     this.#syncManager = new SyncManager(
       syncCallback,
       logger,
@@ -638,9 +638,9 @@ export abstract class BaseAPI implements Disposable {
   ): Promise<T> {
     const { schema, ...config } = options
     const { data } = await this.request<T>(method, url, config)
-    return schema === undefined ? data : (
-        parseOrThrow(schema, data, `${method.toUpperCase()} ${url}`)
-      )
+    return schema === undefined
+      ? data
+      : parseOrThrow(schema, data, `${method.toUpperCase()} ${url}`)
   }
 
   /**
@@ -723,9 +723,9 @@ export abstract class BaseAPI implements Disposable {
       return
     }
     const backoffMs =
-      error instanceof AuthenticationThrottledError ?
-        LOGIN_BACKOFF_THROTTLE_MS
-      : LOGIN_BACKOFF_FAILURE_MS
+      error instanceof AuthenticationThrottledError
+        ? LOGIN_BACKOFF_THROTTLE_MS
+        : LOGIN_BACKOFF_FAILURE_MS
     this.#setLoginBackoffUntil(
       Temporal.Now.instant().epochMilliseconds + backoffMs,
     )

@@ -311,9 +311,9 @@ describe('api lifecycle', () => {
     mockRequest.mockImplementation(async (config) =>
       cast({
         data:
-          config.url === '/FrostProtection/Update' ?
-            { AttributeErrors: null, Success: true }
-          : buildingResponse,
+          config.url === '/FrostProtection/Update'
+            ? { AttributeErrors: null, Success: true }
+            : buildingResponse,
         headers: {},
         status: 200,
       }),
@@ -462,13 +462,11 @@ describe('api lifecycle', () => {
 
       expect(abortResult.ok).toBe(false)
       expect(
-        (
-          !abortResult.ok &&
-            'cause' in abortResult.error &&
-            abortResult.error.cause instanceof Error
-        ) ?
-          abortResult.error.cause.message
-        : '<unexpected success>',
+        !abortResult.ok &&
+          'cause' in abortResult.error &&
+          abortResult.error.cause instanceof Error
+          ? abortResult.error.cause.message
+          : '<unexpected success>',
       ).toMatch(/abort/iv)
     })
   })

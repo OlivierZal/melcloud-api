@@ -28,9 +28,9 @@ const isSet = <T>(value: T | null | undefined): value is T =>
 const toGroupFanSpeed = (
   fanSpeed: ClassicFanSpeed | undefined,
 ): ClassicNonSilentFanSpeed | null =>
-  fanSpeed === undefined || fanSpeed === ClassicFanSpeed.silent ?
-    null
-  : fanSpeed
+  fanSpeed === undefined || fanSpeed === ClassicFanSpeed.silent
+    ? null
+    : fanSpeed
 
 // Group-state keys map onto the per-device update tags (`FanSpeed` →
 // `SetFanSpeed`, the vane directions lose their `Direction` suffix); the

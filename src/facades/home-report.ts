@@ -352,9 +352,9 @@ export const resolveHomeReportWindow = (
   timezone: string,
 ): HomeChartWindow => {
   const to =
-    query?.to === undefined ?
-      Temporal.Now.zonedDateTimeISO(timezone)
-    : parseQueryDate(query.to, timezone)
+    query?.to === undefined
+      ? Temporal.Now.zonedDateTimeISO(timezone)
+      : parseQueryDate(query.to, timezone)
   const earliest = to.subtract({ days: MAX_REPORT_SPAN_DAYS })
   const from =
     query?.from === undefined ? earliest : parseQueryDate(query.from, timezone)
@@ -493,8 +493,8 @@ const gridLabelOptions = (
     return { hour: '2-digit', minute: '2-digit' }
   }
   // Only the hourly unit reaches this point.
-  return windowDaysOf(window) > 1 ?
-      { day: 'numeric', hour: '2-digit', minute: '2-digit', month: 'short' }
+  return windowDaysOf(window) > 1
+    ? { day: 'numeric', hour: '2-digit', minute: '2-digit', month: 'short' }
     : { hour: '2-digit', minute: '2-digit' }
 }
 
@@ -862,9 +862,8 @@ const toEnergySlotLabel = (
       .toPlainDateTime()
   }
   return (
-    bucketUnit === 'localDay' ?
-      Temporal.PlainDate
-    : Temporal.PlainDateTime).from(slot)
+    bucketUnit === 'localDay' ? Temporal.PlainDate : Temporal.PlainDateTime
+  ).from(slot)
 }
 
 const energyGridBuilders: Record<
@@ -908,9 +907,9 @@ export const toHomeEnergyOptions = ({
   const slots = energyGridBuilders[bucketUnit](window)
   const formatter = new Intl.DateTimeFormat(
     locale,
-    bucketUnit === 'hour' ?
-      { hour: '2-digit', minute: '2-digit' }
-    : { day: 'numeric', month: 'short' },
+    bucketUnit === 'hour'
+      ? { hour: '2-digit', minute: '2-digit' }
+      : { day: 'numeric', month: 'short' },
   )
   return {
     from: window.from.toPlainDateTime().toString(),
