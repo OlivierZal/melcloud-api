@@ -10,11 +10,11 @@ const ALWAYS_RETRYABLE = (): boolean => true
 const NEVER_RETRYABLE = (): boolean => false
 
 const httpError = (status?: number): unknown =>
-  status === undefined ?
-    new Error('network failure')
-  : new HttpError(`Status ${String(status)}`, {
-      response: { data: {}, headers: {}, status },
-    })
+  status === undefined
+    ? new Error('network failure')
+    : new HttpError(`Status ${String(status)}`, {
+        response: { data: {}, headers: {}, status },
+      })
 
 describe(isTransientServerError, () => {
   it.each([502, 503, 504])('returns true for HTTP %i', (status) => {

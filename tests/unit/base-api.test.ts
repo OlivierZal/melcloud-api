@@ -87,9 +87,9 @@ class TestAPI extends BaseAPI {
     }: { shouldUseDefaultTransport?: boolean } = {},
   ) {
     super(
-      shouldUseDefaultTransport ? config : (
-        { transport: mockHttpClient, ...config }
-      ),
+      shouldUseDefaultTransport
+        ? config
+        : { transport: mockHttpClient, ...config },
       {
         defaultSyncIntervalMinutes: false,
         httpConfig: { baseURL: 'https://test.api' },

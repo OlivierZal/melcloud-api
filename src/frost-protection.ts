@@ -32,9 +32,9 @@ export const clampFrostProtection = (
   )
   return {
     max:
-      clampedMax - clampedMin < FROST_PROTECTION_GAP ?
-        clampedMin + FROST_PROTECTION_GAP
-      : clampedMax,
+      clampedMax - clampedMin < FROST_PROTECTION_GAP
+        ? clampedMin + FROST_PROTECTION_GAP
+        : clampedMax,
     min: clampedMin,
   }
 }

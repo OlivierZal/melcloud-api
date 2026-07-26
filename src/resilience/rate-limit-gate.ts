@@ -16,9 +16,9 @@ const pluralize = (count: number, unit: string): string =>
   count === 1 ? unit : `${unit}s`
 
 const parseDeltaSeconds = (seconds: number): Temporal.Duration | null =>
-  Number.isFinite(seconds) && seconds > 0 ?
-    Temporal.Duration.from({ seconds })
-  : null
+  Number.isFinite(seconds) && seconds > 0
+    ? Temporal.Duration.from({ seconds })
+    : null
 
 const parseHttpDate = (
   value: string,
@@ -112,8 +112,8 @@ export class RateLimitGate {
    */
   public get remaining(): Temporal.Duration | null {
     const now = Temporal.Now.instant()
-    return Temporal.Instant.compare(this.#pausedUntil, now) > 0 ?
-        this.#pausedUntil.since(now)
+    return Temporal.Instant.compare(this.#pausedUntil, now) > 0
+      ? this.#pausedUntil.since(now)
       : null
   }
 

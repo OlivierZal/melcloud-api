@@ -106,8 +106,8 @@ const buildUrl = (
   if (queryString === '') {
     return fullUrl
   }
-  return fullUrl.includes('?') ?
-      `${fullUrl}&${queryString}`
+  return fullUrl.includes('?')
+    ? `${fullUrl}&${queryString}`
     : `${fullUrl}?${queryString}`
 }
 

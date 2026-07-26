@@ -140,9 +140,9 @@ const buildDeviceZones = (
   type?: ClassicDeviceType,
 ): ClassicDeviceZone[] => {
   const filtered =
-    type === undefined ? devices : (
-      devices.filter(({ type: deviceType }) => deviceType === type)
-    )
+    type === undefined
+      ? devices
+      : devices.filter(({ type: deviceType }) => deviceType === type)
   return filtered
     .map(({ areaId, floorId, id, name }) => ({
       id,
@@ -491,8 +491,8 @@ export class ClassicRegistry {
     if (zone === 'area') {
       return this.getDevicesByAreaId(toClassicAreaId(id))
     }
-    return zone === 'building' ?
-        this.getDevicesByBuildingId(toClassicBuildingId(id))
+    return zone === 'building'
+      ? this.getDevicesByBuildingId(toClassicBuildingId(id))
       : this.getDevicesByFloorId(toClassicFloorId(id))
   }
 
@@ -502,8 +502,8 @@ export class ClassicRegistry {
     type?: ClassicDeviceType,
   ): boolean {
     const devices = this.#getDevicesByZone(id, zone)
-    return type === undefined ?
-        devices.length > 0
+    return type === undefined
+      ? devices.length > 0
       : devices.some(({ type: deviceType }) => deviceType === type)
   }
 }

@@ -535,8 +535,9 @@ export interface ClassicTemperatureLogPostData extends ClassicReportPostData {
  * @category Types
  */
 export interface ClassicTilesData<T extends ClassicDeviceType | null> {
-  readonly SelectedDevice: T extends ClassicDeviceType ? ClassicGetDeviceData<T>
-  : null
+  readonly SelectedDevice: T extends ClassicDeviceType
+    ? ClassicGetDeviceData<T>
+    : null
   readonly Tiles: readonly {
     readonly Device: number
     readonly Offline: boolean
@@ -555,9 +556,9 @@ export interface ClassicTilesData<T extends ClassicDeviceType | null> {
  */
 export type ClassicTilesPostData<T extends ClassicDeviceType | null> = {
   readonly DeviceIDs: number | readonly number[]
-} & (T extends ClassicDeviceType ?
-  { readonly SelectedBuilding: number; readonly SelectedDevice: number }
-: { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })
+} & (T extends ClassicDeviceType
+  ? { readonly SelectedBuilding: number; readonly SelectedDevice: number }
+  : { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })
 
 /**
  * Mutable fields for a `Device/Set{Ata,Atw,Erv}` payload, narrowed by device type.

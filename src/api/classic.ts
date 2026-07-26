@@ -137,9 +137,9 @@ const parseErrorLogQuery = (
   const fromDateOverride =
     from !== undefined && from !== '' ? parsePlainDate(from) : null
   const toDate =
-    to !== undefined && to !== '' ?
-      parsePlainDate(to)
-    : Temporal.Now.plainDateISO(timeZone)
+    to !== undefined && to !== ''
+      ? parsePlainDate(to)
+      : Temporal.Now.plainDateISO(timeZone)
   // A page covers `period` days; consecutive pages are separated by a
   // one-day boundary so day N is never returned twice. Each step back
   // therefore moves `period + 1` days, hence the `* (period + 1)`.
@@ -347,8 +347,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
                 return []
               }
               const error = errorMessage?.trim() ?? ''
-              return error === '' ?
-                  []
+              return error === ''
+                ? []
                 : [{ date: startDate, deviceId: errorDeviceId, error }]
             },
           )
@@ -674,8 +674,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       // ErrorId 6 is MELCloud's login throttle (LoginStatus 6, high
       // LoginAttempts): the credentials may be perfectly valid — asking
       // the user to re-log would keep the lockout alive.
-      throw errorId === LOGIN_THROTTLE_ERROR_ID ?
-          new AuthenticationThrottledError(
+      throw errorId === LOGIN_THROTTLE_ERROR_ID
+        ? new AuthenticationThrottledError(
             'MELCloud is temporarily blocking sign-ins (too many attempts)',
           )
         : new AuthenticationError('MELCloud Classic rejected the credentials')

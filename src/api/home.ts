@@ -580,8 +580,8 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   protected getAuthHeaders(): Record<string, string> {
-    return this.accessToken === '' ?
-        {}
+    return this.accessToken === ''
+      ? {}
       : { Authorization: `Bearer ${this.accessToken}` }
   }
 
@@ -722,9 +722,8 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
         strict.error,
       )
     }
-    const data =
-      strict.success ?
-        strict.data
+    const data = strict.success
+      ? strict.data
       : parseOrThrow(HomeResilientContextSchema, raw, 'GET /context (salvage)')
     this.#context = data
     return data

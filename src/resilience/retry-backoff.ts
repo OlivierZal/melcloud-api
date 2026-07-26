@@ -89,9 +89,9 @@ export interface RetryBackoffOptions {
 // to an Error so Promise rejections always satisfy
 // `prefer-promise-reject-errors` and downstream `instanceof Error` checks.
 const toAbortReason = (signal: AbortSignal): Error =>
-  signal.reason instanceof Error ?
-    signal.reason
-  : new Error(String(signal.reason))
+  signal.reason instanceof Error
+    ? signal.reason
+    : new Error(String(signal.reason))
 
 // Wrapper over `setTimeout` that surfaces the caller's `signal` as a
 // rejection mid-wait. We use the global `setTimeout` (rather than

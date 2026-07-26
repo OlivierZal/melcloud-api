@@ -69,8 +69,8 @@ const getHotWaterOperationalState = (
   if (data.ForcedHotWaterMode) {
     return ClassicOperationModeStateHotWater.dhw
   }
-  return data.ProhibitHotWater ?
-      ClassicOperationModeStateHotWater.prohibited
+  return data.ProhibitHotWater
+    ? ClassicOperationModeStateHotWater.prohibited
     : (hotWaterStateMap[data.OperationMode] ??
         ClassicOperationModeStateHotWater.idle)
 }
@@ -85,8 +85,8 @@ const getZoneOperationalState = (
   ) {
     return ClassicOperationModeStateZone.prohibited
   }
-  return data[`Idle${zone}`] ?
-      ClassicOperationModeStateZone.idle
+  return data[`Idle${zone}`]
+    ? ClassicOperationModeStateZone.idle
     : (zoneStateMap[data.OperationMode] ?? ClassicOperationModeStateZone.idle)
 }
 

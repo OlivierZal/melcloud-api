@@ -321,8 +321,8 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     }
     const mode = operationMode ?? this.operationMode
     const getRange = temperatureRanges.get(mode)
-    return getRange === undefined ?
-        { setTemperature: value }
+    return getRange === undefined
+      ? { setTemperature: value }
       : { setTemperature: clampToRange(value, getRange(this.capabilities)) }
   }
 
