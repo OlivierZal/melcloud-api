@@ -67,7 +67,7 @@
     "@eslint/json": "^2.0.1",
     "@eslint/markdown": "^8.0.3",
     "@stylistic/eslint-plugin": "^5.10.0",
-    "@swc/core": "^1.15.43",
+    "@swc/core": "^1.15.46",
     "@types/node": "^26.1.1",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitest/coverage-v8": "^4.1.10",
