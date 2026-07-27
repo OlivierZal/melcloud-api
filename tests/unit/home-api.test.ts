@@ -784,6 +784,33 @@ describe('melcloud home API', () => {
       )
     })
 
+    it('should post a batch overheat-protection write and refresh', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      mockRequest
+        .mockResolvedValueOnce(mockResponse('', {}, 200))
+        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.updateOverheatProtection({
+        enabled: true,
+        max: 37,
+        min: 35,
+        units: { ATA: ['device-1'] },
+      })
+
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            enabled: true,
+            max: 37,
+            min: 35,
+            units: { ATA: ['device-1'] },
+          },
+          method: 'post',
+          url: '/monitor/protection/overheat',
+        }),
+      )
+    })
+
     it('should post a batch holiday-mode write and refresh', async () => {
       setupSuccessfulLogin()
       const api = await createApi()

@@ -7,6 +7,7 @@ import type {
   HomeErrorLogEntry,
   HomeFrostProtectionPostData,
   HomeHolidayModePostData,
+  HomeOverheatProtectionPostData,
   HomeReportData,
   HomeUser,
   LoginCredentials,
@@ -117,6 +118,10 @@ export interface HomeAPIAdapter {
   /** Batch holiday-mode write (device ids grouped in `units`), then refresh. */
   readonly updateHolidayMode: (
     postData: HomeHolidayModePostData,
+  ) => Promise<void>
+  /** Batch overheat-protection write (ATA-only feature), then refresh. */
+  readonly updateOverheatProtection: (
+    postData: HomeOverheatProtectionPostData,
   ) => Promise<void>
 }
 

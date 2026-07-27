@@ -17,7 +17,7 @@ import {
   syncDevices,
 } from '../decorators/index.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
-import { clampFrostProtection } from '../frost-protection.ts'
+import { clampFrostProtection } from '../protection.ts'
 import { Temporal } from '../temporal.ts'
 import {
   type ApiRequestError,

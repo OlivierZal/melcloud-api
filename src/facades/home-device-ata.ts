@@ -20,6 +20,7 @@ import {
   type HomeAtaValues,
   type HomeEnergyData,
   type HomeErrorLogEntry,
+  type HomeOverheatProtection,
   type Result,
   mapResult,
   ok,
@@ -106,6 +107,17 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    */
   public get operationMode(): HomeOperationMode {
     return this.#enumSetting('OperationMode')
+  }
+
+  /**
+   * Current overheat-protection settings, or `null` when not configured.
+   * ATA-only: the base facade does not expose it because the official
+   * app never offers the feature on ATW units (their `/context` field
+   * stays `null`).
+   * @returns The overheat-protection descriptor from `/context`.
+   */
+  public get overheatProtection(): HomeOverheatProtection | null {
+    return this.model.data.overheatProtection
   }
 
   /**

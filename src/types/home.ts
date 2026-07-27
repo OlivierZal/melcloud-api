@@ -390,6 +390,19 @@ export interface HomeOverheatProtection {
 }
 
 /**
+ * POST body for `/monitor/protection/overheat` — the new bounds and
+ * on/off flag plus the batch of target device ids. The feature is
+ * ATA-only: the official app never sends ATW ids.
+ * @category Types
+ */
+export interface HomeOverheatProtectionPostData {
+  readonly enabled: boolean
+  readonly max: number
+  readonly min: number
+  readonly units: HomeProtectionUnits
+}
+
+/**
  * Device ids grouped by type, targeting a batch Home protection write
  * (`/monitor/protection/frost`, `/monitor/holidaymode`). Wire-verbatim
  * uppercase keys; one request scopes to a single account's devices.

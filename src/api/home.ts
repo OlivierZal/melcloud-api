@@ -7,6 +7,7 @@ import type {
   HomeErrorLogEntry,
   HomeFrostProtectionPostData,
   HomeHolidayModePostData,
+  HomeOverheatProtectionPostData,
   HomeReportData,
   HomeTokenResponse,
   HomeUser,
@@ -43,6 +44,7 @@ const ATA_UNIT_PATH = '/monitor/ataunit'
 const ATW_UNIT_PATH = '/monitor/atwunit'
 const FROST_PROTECTION_PATH = '/monitor/protection/frost'
 const HOLIDAY_MODE_PATH = '/monitor/holidaymode'
+const OVERHEAT_PROTECTION_PATH = '/monitor/protection/overheat'
 
 /**
  * Wire-facing ATW payload: zone modes lowered to the camelCase form the
@@ -316,6 +318,22 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     postData: HomeHolidayModePostData,
   ): Promise<void> {
     await this.requestData('post', HOLIDAY_MODE_PATH, { data: postData })
+  }
+
+  /**
+   * Batch overheat-protection write for a set of ATA devices, then
+   * refresh `/context`. Mirror of {@link updateFrostProtection}; the
+   * feature is ATA-only (live-captured 2026-07-27: the official app
+   * posts `units.ATA` exclusively).
+   * @param postData - Bounds, on/off flag, and target ATA device ids.
+   */
+  @fetchDevices({ when: 'after' })
+  public async updateOverheatProtection(
+    postData: HomeOverheatProtectionPostData,
+  ): Promise<void> {
+    await this.requestData('post', OVERHEAT_PROTECTION_PATH, {
+      data: postData,
+    })
   }
 
   /**

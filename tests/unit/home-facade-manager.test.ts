@@ -90,6 +90,57 @@ describe('home facade manager', () => {
     })
   })
 
+  it('batches overheat protection to the ATA ids only, clamped', async () => {
+    const devicesById = new Map<string, HomeDevice>([
+      ['atw-1', homeAtwDevice({ id: 'atw-1' })],
+      ['device-1', createModel()],
+    ])
+    const api = mock<HomeAPIAdapter>({
+      registry: mock<HomeRegistry>({
+        getById: vi.fn<HomeRegistry['getById']>((id) => devicesById.get(id)),
+      }),
+      updateOverheatProtection:
+        vi.fn<HomeAPIAdapter['updateOverheatProtection']>(),
+    })
+    const manager = new HomeFacadeManager(api)
+
+    await manager.updateOverheatProtection(['device-1', 'atw-1', 'unknown'], {
+      isEnabled: true,
+      max: 45,
+      min: 20,
+    })
+
+    // Clamped (20 -> 31, 45 -> 40); the ATW and unknown ids are dropped —
+    // the feature is ATA-only.
+    expect(api.updateOverheatProtection).toHaveBeenCalledWith({
+      enabled: true,
+      max: 40,
+      min: 31,
+      units: { ATA: ['device-1'] },
+    })
+  })
+
+  it('skips the overheat write when no ATA id remains', async () => {
+    const api = mock<HomeAPIAdapter>({
+      registry: mock<HomeRegistry>({
+        getById: vi.fn<HomeRegistry['getById']>(() =>
+          homeAtwDevice({ id: 'atw-1' }),
+        ),
+      }),
+      updateOverheatProtection:
+        vi.fn<HomeAPIAdapter['updateOverheatProtection']>(),
+    })
+    const manager = new HomeFacadeManager(api)
+
+    await manager.updateOverheatProtection(['atw-1'], {
+      isEnabled: true,
+      max: 37,
+      min: 35,
+    })
+
+    expect(api.updateOverheatProtection).not.toHaveBeenCalled()
+  })
+
   it('batches holiday mode by device type', async () => {
     const api = mock<HomeAPIAdapter>({
       registry: mock<HomeRegistry>({
