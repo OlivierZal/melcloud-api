@@ -7,6 +7,7 @@ import type {
   HomeBuildingRef,
   HomeFrostProtection,
   HomeHolidayMode,
+  HomeOverheatProtection,
   HomeReportPoint,
 } from '../src/types/index.ts'
 import { HomeDeviceType } from '../src/constants.ts'
@@ -63,6 +64,7 @@ export interface HomeDeviceDataOverrides {
   readonly holidayMode?: HomeHolidayMode | null
   readonly id?: string
   readonly name?: string
+  readonly overheatProtection?: HomeOverheatProtection | null
   readonly rssi?: number
   readonly settings?: Record<string, string>
 }
@@ -76,6 +78,7 @@ export const homeDeviceData = (
     givenDisplayName: overrides.name ?? 'Home device',
     holidayMode: overrides.holidayMode ?? null,
     id: overrides.id ?? 'home-device-1',
+    overheatProtection: overrides.overheatProtection ?? null,
     rssi: overrides.rssi ?? DEFAULT_RSSI_DBM,
     settings: buildSettings(overrides.settings ?? {}),
   })

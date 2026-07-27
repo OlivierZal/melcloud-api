@@ -7,7 +7,7 @@ import type {
   HomeProtectionUnits,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
-import { clampFrostProtection } from '../frost-protection.ts'
+import { clampFrostProtection, clampOverheatProtection } from '../protection.ts'
 import { HomeBuildingAtaFacade } from './home-building-ata.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 import { HomeDeviceAtwFacade } from './home-device-atw.ts'
@@ -136,6 +136,33 @@ export class HomeFacadeManager {
       endDate,
       startDate,
       units: this.#toUnits(deviceIds),
+    })
+  }
+
+  /**
+   * Batch overheat-protection update for the given Home devices: keeps
+   * only the ATA ids (the feature is ATA-only — the official app never
+   * sends ATW ids), clamps the bounds into range, and issues one API
+   * write when at least one ATA id remains. All ids must belong to this
+   * manager's account.
+   * @param deviceIds - Target device ids (non-ATA ids are dropped).
+   * @param root0 - The new overheat-protection settings.
+   * @param root0.isEnabled - Whether overheat protection is on.
+   * @param root0.max - Upper bound, in °C (clamped to [33, 40]).
+   * @param root0.min - Lower bound, in °C (clamped to [31, 38]).
+   */
+  public async updateOverheatProtection(
+    deviceIds: readonly string[],
+    { isEnabled, max, min }: { isEnabled: boolean; max: number; min: number },
+  ): Promise<void> {
+    const { ATA: ata } = this.#toUnits(deviceIds)
+    if (ata === undefined) {
+      return
+    }
+    await this.#api.updateOverheatProtection({
+      enabled: isEnabled,
+      ...clampOverheatProtection(min, max),
+      units: { ATA: ata },
     })
   }
 

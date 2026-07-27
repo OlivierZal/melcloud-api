@@ -43,13 +43,25 @@ describe('home device ata facade', () => {
         endDate: '2026-08-05T00:00:00',
         startDate: '2026-08-01T00:00:00',
       }
+      const overheatProtection = {
+        active: false,
+        enabled: true,
+        max: 37,
+        min: 35,
+      }
       const facade = new HomeDeviceAtaFacade(
         createApi(),
-        homeDevice({ frostProtection, holidayMode, id: 'device-1' }),
+        homeDevice({
+          frostProtection,
+          holidayMode,
+          id: 'device-1',
+          overheatProtection,
+        }),
       )
 
       expect(facade.frostProtection).toStrictEqual(frostProtection)
       expect(facade.holidayMode).toStrictEqual(holidayMode)
+      expect(facade.overheatProtection).toStrictEqual(overheatProtection)
     })
 
     it('returns null when protection is not configured', () => {
@@ -60,6 +72,7 @@ describe('home device ata facade', () => {
 
       expect(facade.frostProtection).toBeNull()
       expect(facade.holidayMode).toBeNull()
+      expect(facade.overheatProtection).toBeNull()
     })
   })
 

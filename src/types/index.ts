@@ -110,6 +110,7 @@ export type {
   HomeHolidayMode,
   HomeHolidayModePostData,
   HomeOverheatProtection,
+  HomeOverheatProtectionPostData,
   HomeProtectionUnits,
   HomeReportAnnotation,
   HomeReportData,
