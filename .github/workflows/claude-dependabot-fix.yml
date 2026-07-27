@@ -24,7 +24,7 @@ jobs:
       pull-requests: read
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -32,7 +32,7 @@ jobs:
       - uses: ./.github/actions/setup-node-and-install
         with:
           node-version: lts/*
-      - uses: anthropics/claude-code-action@e90deca47693f9457b72f2b53c17d7c445a87342
+      - uses: anthropics/claude-code-action@b76a0776ae74036e77cd11018083743453d7ad35
         with:
           additional_permissions: |
             actions: read
