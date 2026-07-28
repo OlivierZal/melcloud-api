@@ -35,4 +35,25 @@ describe('home device entity', () => {
 
     expect(owned.isOwner).toBe(false)
   })
+
+  it('tracks the start of a disconnection streak across syncs', () => {
+    const device = homeDevice({ id: 'ata-1', isConnected: false })
+    const start = device.disconnectedSince
+
+    expect(start).not.toBeNull()
+
+    device.sync({ ...device.data, isConnected: false }, true, homeBuildingRef())
+
+    expect(device.disconnectedSince).toBe(start)
+
+    device.sync({ ...device.data, isConnected: true }, true, homeBuildingRef())
+
+    expect(device.disconnectedSince).toBeNull()
+  })
+
+  it('starts with no disconnection streak while connected', () => {
+    const device = homeDevice({ id: 'ata-2' })
+
+    expect(device.disconnectedSince).toBeNull()
+  })
 })

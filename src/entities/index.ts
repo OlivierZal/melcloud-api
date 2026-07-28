@@ -15,3 +15,4 @@ export {
 export { ClassicFloor } from './floor.ts'
 export { HomeDevice } from './home-device.ts'
 export { type HomeBuildingDevices, HomeRegistry } from './home-registry.ts'
+export { STALE_COMMUNICATION_HOURS } from './types.ts'

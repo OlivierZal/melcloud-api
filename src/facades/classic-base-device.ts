@@ -13,6 +13,7 @@ import {
   type ClassicDeviceAny,
   ClassicDevice,
   isClassicDeviceOfType,
+  STALE_COMMUNICATION_HOURS,
 } from '../entities/index.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { Intl, Temporal } from '../temporal.ts'
@@ -63,17 +64,6 @@ const ENERGY_REPORT_UNIT = 'kWh'
 
 // ISO 8601 weekday number for Sunday.
 const ISO_SUNDAY = 7
-
-// Day-scale by design: `LastTimeStamp` is building-local wall clock
-// (±14 h of worldwide skew) and the `Offline` flag flaps on healthy
-// units (live-probed 2026-07-28), so no finer threshold is trustworthy.
-// The staleness anchor is deliberately UTC, not `api.timezone`: UTC
-// bounds a healthy unit's apparent staleness at +14 h for ANY
-// Homey/building timezone pair, while a configured-zone anchor could
-// reach 26 h cross-zone (e.g. UTC+13 host, UTC-11 building) and wrongly
-// flag a live unit — accuracy of the "24 h" wording is traded for a
-// hard no-false-positive bound.
-const STALE_COMMUNICATION_HOURS = 24
 
 // `EnergyCost/Report` labels need repairs before the shared formatter:
 // one-day reports arrive as bare hour numbers (`LabelType.time`) that
@@ -203,10 +193,15 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   /**
    * Whether MELCloud can still deliver writes to the unit: it
-   * communicated within the last 24 hours. The `Offline` flag is not
-   * usable (it flaps on healthy units) and `LastTimeStamp` is
-   * building-local wall clock, so only day-scale staleness is
-   * trustworthy; an unparsable or future-skewed value reads available.
+   * communicated within roughly the last day. The `Offline` flag is not
+   * usable (a ~2-4 min staleness boolean that flaps on healthy units)
+   * and `LastTimeStamp` is building-local wall clock, so only day-scale
+   * staleness is trustworthy; an unparsable or future-skewed value
+   * reads available. The staleness anchor is deliberately UTC, not
+   * `api.timezone`: UTC bounds a healthy unit's apparent staleness at
+   * +14 h for ANY host/building timezone pair, while a configured-zone
+   * anchor could reach 26 h cross-zone (e.g. UTC+13 host, UTC-11
+   * building) and wrongly flag a live unit.
    * @returns `false` after a day without communication.
    */
   public get isAvailable(): boolean {
