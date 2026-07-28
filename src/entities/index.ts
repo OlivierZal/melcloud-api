@@ -1,3 +1,4 @@
+export type { AvailabilityAware, Identifiable } from './types.ts'
 export { ClassicArea } from './area.ts'
 export { ClassicBuilding } from './building.ts'
 export { ClassicDevice } from './classic-device.ts'
@@ -13,4 +14,3 @@ export {
 export { ClassicFloor } from './floor.ts'
 export { HomeDevice } from './home-device.ts'
 export { type HomeBuildingDevices, HomeRegistry } from './home-registry.ts'
-export type { AvailabilityAware, Identifiable } from './types.ts'
