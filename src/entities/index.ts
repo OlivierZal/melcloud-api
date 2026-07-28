@@ -1,4 +1,5 @@
 export type { AvailabilityAware, Identifiable } from './types.ts'
+
 export { ClassicArea } from './area.ts'
 export { ClassicBuilding } from './building.ts'
 export { ClassicDevice } from './classic-device.ts'
