@@ -93,8 +93,10 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   minute apart). The trustworthy signal is `LastTimeStamp` staleness,
   but it speaks building-local wall clock, not UTC (09:33 read at
   07:35 UTC in a UTC+2 building): worldwide skew reaches ±14 h, so only
-  day-scale thresholds are safe. Never map either signal to anything
-  blocking (com.melcloud #1479/#1481).
+  day-scale thresholds are safe. The device facades encapsulate this as
+  the cross-dialect `isAvailable` contract (Classic: 24 h staleness;
+  Home: the `/context` `isConnected` flag) — consumers must never map
+  the raw `Offline` flag to anything (com.melcloud #1479/#1481).
 - Classic `/EnergyCost/Report` returns per-bucket arrays for BOTH types
   (ATA per-mode consumption; ATW consumed + produced per category) with
   numeric `Labels`/`LabelType` — day-of-week labels are .NET 0-based

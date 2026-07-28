@@ -4,11 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [43.4.0] - 2026-07-28
+## [44.0.0] - 2026-07-28
+
+### Changed
+
+- **Breaking:** the Home facade getter `isConnected` (introduced in 43.3.0) is replaced by a cross-dialect availability contract: every device facade — Classic and Home — now exposes `isAvailable` (the `AvailabilityAware` interface), `true` while MELCloud can still deliver writes to the unit. Home derives it from the `/context` `isConnected` flag; Classic from `LastTimeStamp` staleness with a 24-hour threshold — the `Offline` flag flaps minute-to-minute on healthy units (live-probed 2026-07-28), and the timestamp is building-local wall clock (±14 h of worldwide skew), so only day-scale staleness is trustworthy. An unparsable or future-skewed timestamp reads available.
 
 ### Added
 
-- Classic list device data now types `LastTimeStamp` (already on the wire) — the only trustworthy reachability signal: the list `Offline` flag flaps minute-to-minute on healthy units (live-probed 2026-07-28). The value is building-local wall clock, not UTC, so worldwide skew reaches ±14 h: compare it with day-scale thresholds only.
+- Classic list device data now types `LastTimeStamp` (already on the wire), the signal behind Classic `isAvailable`.
 
 ## [43.3.0] - 2026-07-28
 
@@ -383,7 +387,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[43.4.0]: https://github.com/OlivierZal/melcloud-api/compare/43.3.0...43.4.0
+[44.0.0]: https://github.com/OlivierZal/melcloud-api/compare/43.3.0...44.0.0
 [43.3.0]: https://github.com/OlivierZal/melcloud-api/compare/43.2.0...43.3.0
 [43.2.0]: https://github.com/OlivierZal/melcloud-api/compare/43.1.0...43.2.0
 [43.1.0]: https://github.com/OlivierZal/melcloud-api/compare/43.0.1...43.1.0

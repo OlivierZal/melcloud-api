@@ -1,5 +1,6 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
+import type { AvailabilityAware } from '../entities/types.ts'
 import {
   type HomeDeviceData,
   type HomeEnergyData,
@@ -35,7 +36,9 @@ import {
  * `model.data`, narrowed to the device-type-specific shape by each subclass.
  * @category Facades
  */
-export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
+export abstract class HomeBaseDeviceFacade<
+  TData extends HomeDeviceData,
+> implements AvailabilityAware {
   /**
    * Current frost-protection settings, or `null` when not configured.
    * @returns The frost-protection descriptor from `/context`.
@@ -61,12 +64,12 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   }
 
   /**
-   * Whether MELCloud currently reports the unit as reachable. `false`
+   * Whether MELCloud can still deliver writes to the unit. `false`
    * means the wifi adapter lost its link to the cloud: writes are
    * accepted but never delivered, and readings go stale.
    * @returns The `/context` connectivity flag.
    */
-  public get isConnected(): boolean {
+  public get isAvailable(): boolean {
     return this.model.data.isConnected
   }
 
