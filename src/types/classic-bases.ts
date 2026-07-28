@@ -92,6 +92,7 @@ export interface ClassicBaseListDeviceData extends Omit<
   ClassicBaseGetDeviceData,
   keyof ClassicTransientDeviceData
 > {
+  readonly LastTimeStamp: string
   readonly WifiSignalStrength: number
 }
 
