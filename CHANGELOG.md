@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [45.0.1] - 2026-07-28
+
+### Fixed
+
+- Classic `isAvailable` no longer swallows `EntityNotFoundError`: the registry lookup moved outside the guard that tolerates an unparsable timestamp, so a pruned id propagates like it already did on the Home facade instead of reading as reachable. A consumer that syncs availability before touching device data was calling `setAvailable()` on a vanished device.
+
+## [45.0.0] - 2026-07-28
+
+### Changed
+
+- **Breaking — one settings vocabulary:** `ProtectionUpdate`/`ProtectionState` (frost and overheat) and `HolidayModeState` join `HolidayModeUpdate` as the cross-dialect contracts. Classic maps its `FP*`/`HM*` wire fields (`*Defined: false` surfaces as `null`); the Home getters map their camelCase `/context` descriptors. `ClassicFrostProtectionQuery` is replaced by `ProtectionUpdate` (`isEnabled` now explicit).
+- **Breaking — one mutation outcome:** every facade mutation resolves `Promise<void>` and throws typed errors. Classic converts its `Success`/`AttributeErrors` wire union through the new `UpdateRejectedError` (carrying `attributeErrors`), including the power endpoint's bare-boolean acknowledgment; the Home and device-level group writes drop their faked success envelopes; `updatePower` drops its unread boolean echo. Building group writes settle every member and bundle concurrent failures into an `AggregateError`.
+- **Breaking — one registry vocabulary:** `HomeRegistry.getAll` → `getDevices`, `getByType` → `getDevicesByType` (with Classic's narrowing overloads), `getBuildingsByType(type)` → `getBuildings({ type? })` (optional type merges both connection types; name-sorted), `sync` → `syncDevices`.
+- **Breaking — manager parity:** `HomeFacadeManager` gains `getBuildings({ type? })`, `getZones({ type? })` (the flattened picker list, `HomeFlatZone`) and `getById(id)`; `ClassicFacadeManager` gains `getById(kind, id)` and its constructor takes `(api)` only — `ClassicAPIAdapter` now declares the `registry` it always had.
+- **Breaking — one wire-method vocabulary on Home:** `updateAtaValues`/`updateAtwValues` → `updateValues`, `getAtaEnergy`/`getAtwEnergy` → `getEnergy`, `getAtaErrorLog`/`getAtwErrorLog` → `getErrorLog`, `getAtaTemperatures`/`getAtwTemperatures` → `getTemperatures`; the registry model's connection type routes the wire path. Reads fold an unknown id into the new `not-found` `ApiRequestError` variant (a cold open may query before the first fetch); writes throw `EntityNotFoundError`. `getAtwInternalTemperatures` stays ATW-only.
+- **Breaking — one heartbeat name:** Home `list()` → `fetch()` (same sync-the-registry contract as Classic); Classic's raw no-registry `list()` is now private, and its low-level `login()` is protected behind `authenticate()`.
+- **Breaking — facade identity parity:** Home device facades expose a literal-typed `type`, the `HomeDeviceFacadeAny` union and `isHomeAtaFacade`/`isHomeAtwFacade` guards; Classic device facades gain the `power` and `rssi` getters; `Identifiable` is generic (`Identifiable<TId>`, default `number`) and the Home facades implement `Identifiable<string>`; `ClassicDevice` gains `isAta()`/`isAtw()`/`isErv()`.
+- **Breaking:** Home device facades resolve their model by id through the registry on every access instead of pinning the wrapper captured at construction — a pinned wrapper froze its data once the registry was rebuilt (logout/login), leaving a healed unit unavailable until restart. Accessors throw `EntityNotFoundError` (widened to Home GUID ids); the new `exists` getter is the non-throwing probe.
+
+### Added
+
+- `BaseAPIAdapter` — the session/infrastructure surface both dialect adapters extend, declaring the members consumers already used (`logOut`, and Classic's whole session half); `BaseAPISettings` declares the shared persisted material including the previously undeclared `loginBackoffUntil`; `ensureAuthenticated()` runs a sync check plus one best-effort `resumeSession` probe.
+
+## [44.1.0] - 2026-07-28
+
+### Changed
+
+- Home `isAvailable` now applies the same day-scale persistence as Classic: the unit reads unavailable only after 24 hours of continuous `isConnected: false` (`HomeDevice.disconnectedSince` tracks the streak, in-memory). The flag's negative side is unproven — its live-probed record is 12/12 `true` on healthy units — and the persistence window makes a Classic-`Offline`-style tight-threshold boolean harmless, since such a flag never stays `false` through a report cycle. The shared threshold is exported as `STALE_COMMUNICATION_HOURS`.
+
 ## [44.0.0] - 2026-07-28
 
 ### Changed
@@ -391,6 +420,9 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[45.0.1]: https://github.com/OlivierZal/melcloud-api/compare/45.0.0...45.0.1
+[45.0.0]: https://github.com/OlivierZal/melcloud-api/compare/44.1.0...45.0.0
+[44.1.0]: https://github.com/OlivierZal/melcloud-api/compare/44.0.0...44.1.0
 [44.0.0]: https://github.com/OlivierZal/melcloud-api/compare/43.3.0...44.0.0
 [43.3.0]: https://github.com/OlivierZal/melcloud-api/compare/43.2.0...43.3.0
 [43.2.0]: https://github.com/OlivierZal/melcloud-api/compare/43.1.0...43.2.0

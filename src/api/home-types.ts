@@ -68,8 +68,6 @@ export interface HomeAPIAdapter extends BaseAPIAdapter {
   ) => Promise<Result<HomeReportData[]>>
   /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
   readonly getUser: () => Promise<HomeUser | null>
-  /** Whether a user is currently authenticated (session cookie valid). */
-  /** Update the automatic sync interval and reschedule. Pass `false` to disable. */
   /** Batch frost-protection write (device ids grouped in `units`), then refresh. */
   readonly updateFrostProtection: (
     postData: HomeFrostProtectionPostData,

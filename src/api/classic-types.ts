@@ -57,13 +57,6 @@ import type {
  */
 export interface ClassicAPIAdapter extends BaseAPIAdapter {
   /**
-   * BCP-47 locale tag the Classic instance was configured with
-   * (`ClassicAPIConfig.locale`), or `undefined` when unset. Facades
-   * pass this through to `getChartLineOptions` so report labels
-   * (day-of-week, month names) render in the configured locale
-   * without needing a global mutable locale.
-   */
-  /**
    * Notify any registered `events.onSyncComplete` observer that a sync
    * just landed. Routed through the lifecycle emitter so a misbehaving
    * observer cannot break the caller.
@@ -71,13 +64,6 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
   readonly notifySync: SyncCallback
   /** Classic model registry synced by the fetch cycle. */
   readonly registry: ClassicRegistry
-  /**
-   * IANA timezone identifier the Classic instance was configured with
-   * (`ClassicAPIConfig.timezone`), or `undefined` when unset. Facades
-   * use this to anchor "now"-derived defaults (`getSignalStrength` /
-   * `getHourlyTemperatures` hour) to the Classic timezone instead of the
-   * host runtime timezone.
-   */
   /** Fetch all buildings and sync the model registry. */
   readonly fetch: () => Promise<ClassicBuildingWithStructure[]>
   /** Fetch energy consumption report. Supported by ATA and ATW devices. */

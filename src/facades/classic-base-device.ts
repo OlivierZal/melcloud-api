@@ -205,10 +205,15 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
    * @returns `false` after a day without communication.
    */
   public get isAvailable(): boolean {
+    // The registry lookup stays OUTSIDE the guard: a pruned id must
+    // propagate as EntityNotFoundError like the Home facade does, or a
+    // vanished device would read as reachable. Only the wall-clock parse
+    // is guarded.
+    const { LastTimeStamp: lastTimestamp } = this.data
     try {
       return (
         Temporal.Now.plainDateTimeISO('UTC')
-          .since(Temporal.PlainDateTime.from(this.data.LastTimeStamp))
+          .since(Temporal.PlainDateTime.from(lastTimestamp))
           .total('hours') <= STALE_COMMUNICATION_HOURS
       )
     } catch {

@@ -1533,6 +1533,25 @@ describe('device facade availability', () => {
     expect(facade.isAvailable).toBe(false)
   })
 
+  it('propagates a pruned registry id instead of reading available', () => {
+    const registry = new ClassicRegistry()
+    registry.syncBuildings([classicBuildingData({ HMDefined: true })])
+    registry.syncFloors([classicFloorData()])
+    registry.syncAreas([classicAreaData()])
+    registry.syncDevices([classicAtaDevice()])
+    const instance = defined(registry.devices.getById(1000))
+    assertClassicDeviceType(instance, ClassicDeviceType.Ata)
+    const facade = new ClassicDeviceAtaFacade(
+      createMockClassicApi(),
+      registry,
+      instance,
+    )
+
+    registry.syncDevices([])
+
+    expect(() => facade.isAvailable).toThrow(EntityNotFoundError)
+  })
+
   it('errs on the available side for an unparsable timestamp', () => {
     const facade = buildAtaFacade({ LastTimeStamp: 'garbage' })
 
