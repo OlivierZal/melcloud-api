@@ -15,8 +15,12 @@ export interface AvailabilityAware {
   readonly isAvailable: boolean
 }
 
-/** Base identifiable entity with numeric ID and display name. */
-export interface Identifiable {
-  readonly id: number
+/**
+ * Base identifiable contract: an id (numeric on Classic, GUID string on
+ * Home) and a display name.
+ * @template TId - Identifier type; defaults to Classic's numeric ids.
+ */
+export interface Identifiable<TId extends number | string = number> {
+  readonly id: TId
   readonly name: string
 }

@@ -498,27 +498,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   /**
-   * Low-level POST to `/Login/ClientLogin3`. Prefer {@link authenticate},
-   * which adds credential fallback, persists the resulting
-   * `contextKey`/`expiry`, and is triggered automatically on 401.
-   * @param root0 - Destructured options.
-   * @param root0.postData - Login credentials + app version + language.
-   * @returns The raw login payload, Zod-validated.
-   */
-  public async login({
-    postData,
-  }: {
-    postData: ClassicLoginPostData
-  }): Promise<ClassicLoginData> {
-    const { data } = await this.dispatch<ClassicLoginData>(
-      'post',
-      '/Login/ClientLogin3',
-      { data: postData },
-    )
-    return parseOrThrow(ClassicLoginDataSchema, data, 'ClientLogin3')
-  }
-
-  /**
    * Update frost protection settings for a zone.
    *
    * The response is discriminated: on success returns
@@ -674,6 +653,28 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   // (see `reuseSucceeded`), so any persisted key is worth probing.
   protected override hasPersistedSession(): boolean {
     return this.contextKey !== ''
+  }
+
+  /**
+   * Low-level POST to `/Login/ClientLogin3` — internal to the
+   * authentication flow: {@link authenticate} is the cross-dialect
+   * entry, adding credential fallback, persistence of the resulting
+   * `contextKey`/`expiry`, and the automatic 401 retry.
+   * @param root0 - Destructured options.
+   * @param root0.postData - Login credentials + app version + language.
+   * @returns The raw login payload, Zod-validated.
+   */
+  protected async login({
+    postData,
+  }: {
+    postData: ClassicLoginPostData
+  }): Promise<ClassicLoginData> {
+    const { data } = await this.dispatch<ClassicLoginData>(
+      'post',
+      '/Login/ClientLogin3',
+      { data: postData },
+    )
+    return parseOrThrow(ClassicLoginDataSchema, data, 'ClientLogin3')
   }
 
   /**

@@ -2,6 +2,7 @@ import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type { Temporal } from '../temporal.ts'
 import {
+  type HomeDeviceType,
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
   HomeAtwOperationalState,
@@ -122,6 +123,8 @@ const tankRange = ({
  * @category Facades
  */
 export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData> {
+  declare public readonly type: typeof HomeDeviceType.Atw
+
   /**
    * Static capability flags and ranges advertised by this device.
    * @returns The capability descriptor.

@@ -80,6 +80,10 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   extends AvailabilityAware, ClassicBaseDevice<T>, ClassicFacade {
   /** Bitfield flags mapping each updatable property to its effective flag value. */
   readonly flags: Record<keyof ClassicUpdateDeviceData<T>, number>
+  /** Whether the unit is powered on. */
+  readonly power: boolean
+  /** Last-reported Wi-Fi signal strength, in dBm. */
+  readonly rssi: number
   /** Fetch the latest device data after syncing. */
   readonly fetch: () => Promise<Readonly<ClassicListDeviceData<T>>>
   /** Fetch energy consumption report. ATA and ATW only. */

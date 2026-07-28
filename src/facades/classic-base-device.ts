@@ -216,6 +216,24 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     }
   }
 
+  /**
+   * Whether the unit is powered on — the Classic counterpart of the
+   * Home facade's getter.
+   * @returns `true` when on, `false` when standby.
+   */
+  public get power(): boolean {
+    return this.data.Power
+  }
+
+  /**
+   * Last-reported Wi-Fi signal strength of the device adapter, in dBm —
+   * the Classic counterpart of the Home facade's getter.
+   * @returns The RSSI value.
+   */
+  public get rssi(): number {
+    return this.data.WifiSignalStrength
+  }
+
   // `null` marks device types without an energy report (ERV):
   // `getEnergyReport` then resolves an empty chart without a wire call.
   protected readonly extractEnergyReport:

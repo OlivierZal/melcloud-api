@@ -1,7 +1,7 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type { ProtectionState } from '../protection.ts'
-import { ClassicFanSpeed } from '../constants.ts'
+import { type HomeDeviceType, ClassicFanSpeed } from '../constants.ts'
 import {
   type HomeFanSpeed,
   type HomeHorizontal,
@@ -89,6 +89,8 @@ const temperatureRanges = new Map<
  * @category Facades
  */
 export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData> {
+  declare public readonly type: typeof HomeDeviceType.Ata
+
   /**
    * Static capability flags and per-mode temperature bounds advertised
    * by this device.

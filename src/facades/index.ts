@@ -37,3 +37,8 @@ export { HomeBuildingAtaFacade } from './home-building-ata.ts'
 export { HomeDeviceAtaFacade } from './home-device-ata.ts'
 export { HomeDeviceAtwFacade } from './home-device-atw.ts'
 export { HomeFacadeManager } from './home-manager.ts'
+export {
+  type HomeDeviceFacadeAny,
+  isHomeAtaFacade,
+  isHomeAtwFacade,
+} from './home-types.ts'

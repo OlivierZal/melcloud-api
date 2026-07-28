@@ -1,9 +1,11 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
+import type { HomeDeviceType } from '../constants.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type { HolidayModeState } from '../holiday-mode.ts'
 import type { ProtectionState } from '../protection.ts'
 import {
   type AvailabilityAware,
+  type Identifiable,
   STALE_COMMUNICATION_HOURS,
 } from '../entities/types.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
@@ -72,9 +74,16 @@ const toHolidayModeState = (
  * `model.data`, narrowed to the device-type-specific shape by each subclass.
  * @category Facades
  */
-export abstract class HomeBaseDeviceFacade<
-  TData extends HomeDeviceData,
-> implements AvailabilityAware {
+export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
+  implements AvailabilityAware, Identifiable<string>
+{
+  /**
+   * Connection-type discriminator, captured at construction (a physical
+   * device never changes type) so it stays readable on a pruned id —
+   * the Home counterpart of the Classic facades' `type`.
+   */
+  public readonly type: HomeDeviceType
+
   /**
    * Whether the underlying device still exists in the registry.
    * Non-throwing introspection mirroring the Classic facades' `exists`:
@@ -198,6 +207,7 @@ export abstract class HomeBaseDeviceFacade<
   protected constructor(api: HomeAPIAdapter, model: HomeDevice<TData>) {
     this.api = api
     this.#id = model.id
+    this.type = model.type
   }
 
   /**

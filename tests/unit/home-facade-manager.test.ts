@@ -7,7 +7,12 @@ import { HomeDeviceType } from '../../src/constants.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
-import { cast, mock } from '../helpers.ts'
+import {
+  type HomeDeviceFacadeAny,
+  isHomeAtaFacade,
+  isHomeAtwFacade,
+} from '../../src/facades/home-types.ts'
+import { cast, defined, mock } from '../helpers.ts'
 import {
   homeAtwDevice,
   homeDevice,
@@ -75,6 +80,21 @@ describe('home facade manager', () => {
     expect(manager.getById('by-id-ata')).toBe(manager.get(ata))
     expect(manager.getById('by-id-atw')).toBe(manager.get(atw))
     expect(manager.getById('missing')).toBeNull()
+  })
+
+  it('exposes the connection type and narrows via the facade guards', () => {
+    const manager = new HomeFacadeManager(createApi())
+    const facades: HomeDeviceFacadeAny[] = [
+      manager.get(homeDevice({ id: 'guard-ata' })),
+      manager.get(homeAtwDevice({ id: 'guard-atw' })),
+    ]
+    const ata = defined(facades[0])
+    const atw = defined(facades[1])
+
+    expect(ata.type).toBe(HomeDeviceType.Ata)
+    expect(isHomeAtaFacade(ata)).toBe(true)
+    expect(isHomeAtwFacade(ata)).toBe(false)
+    expect(isHomeAtwFacade(atw)).toBe(true)
   })
 
   it('returns null for a model of an unknown connection type', () => {

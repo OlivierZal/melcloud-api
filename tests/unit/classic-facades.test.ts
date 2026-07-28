@@ -817,6 +817,13 @@ describe('ata device facade', () => {
     expect(facade.type).toBe(ClassicDeviceType.Ata)
   })
 
+  it('exposes the semantic power and rssi getters', () => {
+    const { facade } = createAtaFacade()
+
+    expect(facade.power).toBe(true)
+    expect(facade.rssi).toBe(-50)
+  })
+
   it('returns self as devices array', () => {
     const { facade } = createAtaFacade()
 

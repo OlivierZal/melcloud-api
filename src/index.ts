@@ -186,6 +186,7 @@ export {
   type ClassicDeviceAny,
   type ClassicModel,
   type HomeBuildingDevices,
+  type Identifiable,
   ClassicArea,
   ClassicBuilding,
   ClassicDevice,
@@ -233,6 +234,7 @@ export {
   type ClassicDeviceFacadeAny,
   type ClassicFacade,
   type ClassicZoneFacade,
+  type HomeDeviceFacadeAny,
   type ReportChartBand,
   type ReportChartLineOptions,
   type ReportChartPieOptions,
@@ -247,6 +249,8 @@ export {
   isClassicAtaFacade,
   isClassicAtwFacade,
   isClassicErvFacade,
+  isHomeAtaFacade,
+  isHomeAtwFacade,
 } from './facades/index.ts'
 export {
   type HttpClientConfig,
