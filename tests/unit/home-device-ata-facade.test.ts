@@ -64,6 +64,15 @@ describe('home device ata facade', () => {
       expect(facade.overheatProtection).toStrictEqual(overheatProtection)
     })
 
+    it('exposes the connectivity flag from context', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        homeDevice({ id: 'device-1', isConnected: false }),
+      )
+
+      expect(facade.isConnected).toBe(false)
+    })
+
     it('returns null when protection is not configured', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
