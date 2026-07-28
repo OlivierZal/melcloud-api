@@ -171,7 +171,10 @@ export const defaultHomeAtwCapabilities: HomeAtwDeviceCapabilities = {
 
 export interface HomeAtwDeviceDataOverrides {
   readonly capabilities?: Partial<HomeAtwDeviceCapabilities>
+  readonly frostProtection?: HomeFrostProtection | null
+  readonly holidayMode?: HomeHolidayMode | null
   readonly id?: string
+  readonly isConnected?: boolean
   readonly name?: string
   readonly rssi?: number
   readonly settings?: Record<string, string>
@@ -182,8 +185,14 @@ export const homeAtwDeviceData = (
 ): HomeAtwDeviceData =>
   mock<HomeAtwDeviceData>({
     capabilities: { ...defaultHomeAtwCapabilities, ...overrides.capabilities },
+    // The wire always carries these keys (the schema requires them,
+    // nullable but present), so the fixture must too: an absent key is a
+    // shape the BFF cannot produce and the salvage pass would drop.
+    frostProtection: overrides.frostProtection ?? null,
     givenDisplayName: overrides.name ?? 'Home ATW device',
+    holidayMode: overrides.holidayMode ?? null,
     id: overrides.id ?? 'home-atw-1',
+    isConnected: overrides.isConnected ?? true,
     rssi: overrides.rssi ?? DEFAULT_RSSI_DBM,
     settings: buildSettings(overrides.settings ?? {}),
   })
