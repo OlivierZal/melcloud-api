@@ -1,6 +1,7 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
-import { ClassicFanSpeed } from '../constants.ts'
+import type { ProtectionState } from '../protection.ts'
+import { type HomeDeviceType, ClassicFanSpeed } from '../constants.ts'
 import {
   type HomeFanSpeed,
   type HomeHorizontal,
@@ -12,15 +13,12 @@ import {
 } from '../enum-mappings.ts'
 import { NoChangesError } from '../errors/index.ts'
 import {
-  type ClassicFailureData,
   type ClassicGroupState,
-  type ClassicSuccessData,
   type HomeAtaDeviceCapabilities,
   type HomeAtaDeviceData,
   type HomeAtaValues,
   type HomeEnergyData,
   type HomeErrorLogEntry,
-  type HomeOverheatProtection,
   type Result,
   mapResult,
   ok,
@@ -32,7 +30,10 @@ import {
   toHomeAtaValues,
   tolerateNoChanges,
 } from './home-ata-group.ts'
-import { HomeBaseDeviceFacade } from './home-base-device.ts'
+import {
+  HomeBaseDeviceFacade,
+  toHomeProtectionState,
+} from './home-base-device.ts'
 import {
   fetchHomeReportChunks,
   resolveHomeReportWindow,
@@ -88,6 +89,8 @@ const temperatureRanges = new Map<
  * @category Facades
  */
 export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData> {
+  declare public readonly type: typeof HomeDeviceType.Ata
+
   /**
    * Static capability flags and per-mode temperature bounds advertised
    * by this device.
@@ -114,10 +117,10 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * ATA-only: the base facade does not expose it because the official
    * app never offers the feature on ATW units (their `/context` field
    * stays `null`).
-   * @returns The overheat-protection descriptor from `/context`.
+   * @returns The cross-dialect protection state from `/context`.
    */
-  public get overheatProtection(): HomeOverheatProtection | null {
-    return this.model.data.overheatProtection
+  public get overheatProtection(): ProtectionState | null {
+    return toHomeProtectionState(this.model.data.overheatProtection)
   }
 
   /**
@@ -205,7 +208,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     interval: string
     to: string
   }): Promise<Result<HomeEnergyData>> {
-    return this.api.getAtaEnergy(this.id, params)
+    return this.api.getEnergy(this.id, params)
   }
 
   /**
@@ -222,7 +225,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     const bucketUnit = toHomeEnergyBucketUnit(window)
     return mapResult(
-      await this.api.getAtaEnergy(this.id, {
+      await this.api.getEnergy(this.id, {
         ...toHomeWireWindow(window),
         interval: toHomeEnergyInterval(bucketUnit),
       }),
@@ -243,7 +246,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @returns The entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.api.getAtaErrorLog(this.id)
+    return this.api.getErrorLog(this.id)
   }
 
   /**
@@ -273,7 +276,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     return mapResult(
       await fetchHomeReportChunks(
-        async (params) => this.api.getAtaTemperatures(this.id, params),
+        async (params) => this.api.getTemperatures(this.id, params),
         window,
       ),
       (reports) =>
@@ -295,14 +298,11 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @param state - Partial Classic group state to push to the device.
    * @returns The zone-shaped success outcome once the write completes.
    */
-  public async updateGroupState(
-    state: ClassicGroupState,
-  ): Promise<ClassicFailureData | ClassicSuccessData> {
+  public async updateGroupState(state: ClassicGroupState): Promise<void> {
     const values = toHomeAtaValues(state)
     if (Object.keys(values).length > 0) {
       await tolerateNoChanges(async () => this.updateValues(values))
     }
-    return { AttributeErrors: null, Success: true }
   }
 
   /**
@@ -318,7 +318,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     if (Object.keys(changes).length === 0) {
       throw new NoChangesError(this.id)
     }
-    await this.api.updateAtaValues(this.id, {
+    await this.api.updateValues(this.id, {
       ...changes,
       ...this.#clampSetTemperature(changes),
     })

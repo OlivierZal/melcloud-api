@@ -425,11 +425,11 @@ describe('mELCloud Classic API', () => {
       )
     })
 
-    it('calls list', async () => {
+    it('fetch hits ListDevices', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
       mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
-      await api.list()
+      await api.fetch()
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ method: 'get', url: '/User/ListDevices' }),
@@ -846,15 +846,10 @@ describe('mELCloud Classic API', () => {
     it('does not set context key header for login path', async () => {
       const api = await createApi()
       mockRequest.mockResolvedValue(wrap({ LoginData: null }))
-      await api.login({
-        postData: {
-          AppVersion: '1.0',
-          Email: 'u',
-          Language: 0,
-          Password: 'p',
-          Persist: true,
-        },
-      })
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('MELCloud Classic rejected the credentials')
 
       // Login goes through #dispatch which sends empty headers when contextKey is ''
       expect(mockRequest).toHaveBeenCalledWith(

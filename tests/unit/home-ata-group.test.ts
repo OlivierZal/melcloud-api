@@ -41,9 +41,7 @@ const createApi = (): HomeAPIAdapter => {
   const registry = new HomeRegistry()
   return mock<HomeAPIAdapter>({
     registry,
-    updateAtaValues: vi
-      .fn<HomeAPIAdapter['updateAtaValues']>()
-      .mockResolvedValue(),
+    updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
   })
 }
 
@@ -55,7 +53,7 @@ const syncBuilding = (
     settings?: Record<string, string>
   }[],
 ): void => {
-  api.registry.sync(
+  api.registry.syncDevices(
     entries.map(({ building = homeBuildingRef(), id, settings = {} }) =>
       typedHomeDeviceData(
         { id, settings: { ...heatState, ...settings } },
@@ -67,7 +65,7 @@ const syncBuilding = (
 
 const ataModels = (api: HomeAPIAdapter): HomeDevice<HomeAtaDeviceData>[] =>
   api.registry
-    .getByType(HomeDeviceType.Ata)
+    .getDevicesByType(HomeDeviceType.Ata)
     .filter((device): device is HomeDevice<HomeAtaDeviceData> => device.isAta())
 
 describe('home ata group translation', () => {
@@ -231,12 +229,11 @@ describe('home device ata facade group', () => {
     const [model] = ataModels(api)
     const facade = new HomeDeviceAtaFacade(api, mock(model))
 
-    const result = await facade.updateGroupState({
+    await facade.updateGroupState({
       OperationMode: ClassicOperationMode.cool,
     })
 
-    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
-    expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+    expect(api.updateValues).toHaveBeenCalledWith('device-1', {
       operationMode: 'Cool',
     })
   })
@@ -247,10 +244,9 @@ describe('home device ata facade group', () => {
     const [model] = ataModels(api)
     const facade = new HomeDeviceAtaFacade(api, mock(model))
 
-    const result = await facade.updateGroupState({ Power: null })
+    await facade.updateGroupState({ Power: null })
 
-    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
-    expect(api.updateAtaValues).not.toHaveBeenCalled()
+    expect(api.updateValues).not.toHaveBeenCalled()
   })
 
   it('tolerates a device already matching the delta', async () => {
@@ -258,13 +254,13 @@ describe('home device ata facade group', () => {
     syncBuilding(api, [{ id: 'device-1' }])
     const [model] = ataModels(api)
     const facade = new HomeDeviceAtaFacade(api, mock(model))
-    vi.mocked(api.updateAtaValues).mockRejectedValueOnce(
+    vi.mocked(api.updateValues).mockRejectedValueOnce(
       new NoChangesError('device-1'),
     )
 
     await expect(
       facade.updateGroupState({ SetTemperature: 23 }),
-    ).resolves.toStrictEqual({ AttributeErrors: null, Success: true })
+    ).resolves.toBeUndefined()
   })
 
   it('propagates a real group update failure', async () => {
@@ -272,7 +268,7 @@ describe('home device ata facade group', () => {
     syncBuilding(api, [{ id: 'device-1' }])
     const [model] = ataModels(api)
     const facade = new HomeDeviceAtaFacade(api, mock(model))
-    vi.mocked(api.updateAtaValues).mockRejectedValue(new Error('BFF failure'))
+    vi.mocked(api.updateValues).mockRejectedValue(new Error('BFF failure'))
 
     await expect(
       facade.updateGroupState({ SetTemperature: 23 }),
@@ -313,7 +309,7 @@ describe('home building ata facade', () => {
 
     expect(facade.name).toBe('Renamed')
 
-    api.registry.sync([])
+    api.registry.syncDevices([])
 
     expect(facade.devices).toStrictEqual([])
     expect(facade.name).toBe('Renamed')
@@ -325,7 +321,7 @@ describe('home building ata facade', () => {
       { id: 'device-1' },
       { building: { id: 'other', name: 'Other' }, id: 'device-2' },
     ])
-    api.registry.sync([
+    api.registry.syncDevices([
       typedHomeDeviceData(
         { id: 'device-1', settings: heatState },
         { building: homeBuildingRef() },
@@ -374,14 +370,13 @@ describe('home building ata facade', () => {
     syncBuilding(api, [{ id: 'device-1' }, { id: 'device-2' }])
     const facade = buildingOf(api)
 
-    const result = await facade.updateGroupState({ SetTemperature: 23 })
+    await facade.updateGroupState({ SetTemperature: 23 })
 
-    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
-    expect(api.updateAtaValues).toHaveBeenCalledTimes(2)
-    expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+    expect(api.updateValues).toHaveBeenCalledTimes(2)
+    expect(api.updateValues).toHaveBeenCalledWith('device-1', {
       setTemperature: 23,
     })
-    expect(api.updateAtaValues).toHaveBeenCalledWith('device-2', {
+    expect(api.updateValues).toHaveBeenCalledWith('device-2', {
       setTemperature: 23,
     })
   })
@@ -389,20 +384,44 @@ describe('home building ata facade', () => {
   it('tolerates members already matching the delta', async () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }, { id: 'device-2' }])
-    vi.mocked(api.updateAtaValues).mockRejectedValueOnce(
+    vi.mocked(api.updateValues).mockRejectedValueOnce(
       new NoChangesError('device-1'),
     )
     const facade = buildingOf(api)
 
     await expect(
       facade.updateGroupState({ SetTemperature: 23 }),
-    ).resolves.toStrictEqual({ AttributeErrors: null, Success: true })
+    ).resolves.toBeUndefined()
+  })
+
+  it('wraps a non-Error member rejection before rethrowing', async () => {
+    const api = createApi()
+    syncBuilding(api, [{ id: 'device-1' }])
+    vi.mocked(api.updateValues).mockRejectedValueOnce('raw refusal')
+    const facade = buildingOf(api)
+
+    await expect(
+      facade.updateGroupState({ SetTemperature: 23 }),
+    ).rejects.toThrow('"raw refusal"')
+  })
+
+  it('bundles concurrent member failures into an AggregateError', async () => {
+    const api = createApi()
+    syncBuilding(api, [{ id: 'device-1' }, { id: 'device-2' }])
+    vi.mocked(api.updateValues)
+      .mockRejectedValueOnce(new Error('boom-1'))
+      .mockRejectedValueOnce(new Error('boom-2'))
+    const facade = buildingOf(api)
+
+    await expect(
+      facade.updateGroupState({ SetTemperature: 23 }),
+    ).rejects.toThrow(AggregateError)
   })
 
   it('propagates a member update failure', async () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }])
-    vi.mocked(api.updateAtaValues).mockRejectedValue(new Error('BFF failure'))
+    vi.mocked(api.updateValues).mockRejectedValue(new Error('BFF failure'))
     const facade = buildingOf(api)
 
     await expect(
@@ -417,7 +436,7 @@ describe('home building ata facade', () => {
 
     await facade.updateGroupState({})
 
-    expect(api.updateAtaValues).not.toHaveBeenCalled()
+    expect(api.updateValues).not.toHaveBeenCalled()
   })
 })
 
@@ -444,7 +463,7 @@ describe('home facade manager buildings', () => {
     syncBuilding(api, [{ id: 'device-1' }])
     const manager = new HomeFacadeManager(api)
     const facade = manager.getBuilding('home-building-1')
-    api.registry.sync([])
+    api.registry.syncDevices([])
 
     expect(facade).not.toBeNull()
     expect(manager.getBuilding('home-building-1')).toBeNull()
@@ -454,7 +473,7 @@ describe('home facade manager buildings', () => {
 describe('home registry buildings', () => {
   it('groups devices of a type by their source building', () => {
     const registry = new HomeRegistry()
-    registry.sync([
+    registry.syncDevices([
       typedHomeDeviceData({ id: 'a' }, { building: { id: 'b1', name: 'One' } }),
       typedHomeDeviceData({ id: 'b' }, { building: { id: 'b2', name: 'Two' } }),
       typedHomeDeviceData({ id: 'c' }, { building: { id: 'b1', name: 'One' } }),
@@ -462,7 +481,7 @@ describe('home registry buildings', () => {
 
     expect(
       registry
-        .getBuildingsByType(HomeDeviceType.Ata)
+        .getBuildings({ type: HomeDeviceType.Ata })
         .map(({ devices, id, name }) => ({
           id,
           ids: devices.map((device) => device.id),
@@ -476,13 +495,13 @@ describe('home registry buildings', () => {
 
   it('restates the building on every sync', () => {
     const registry = new HomeRegistry()
-    registry.sync([
+    registry.syncDevices([
       typedHomeDeviceData({ id: 'a' }, { building: { id: 'b1', name: 'One' } }),
     ])
 
     expect(registry.getById('a')?.building.id).toBe('b1')
 
-    registry.sync([
+    registry.syncDevices([
       typedHomeDeviceData({ id: 'a' }, { building: { id: 'b2', name: 'Two' } }),
     ])
 

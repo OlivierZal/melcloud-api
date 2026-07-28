@@ -49,7 +49,7 @@ const runSync = async (self: FetchDevicesHost): Promise<void> => {
  *   error cannot mask the landed mutation.
  *
  * Refresh path is resolved structurally via the `FetchDevicesHost`
- * shape (the host must expose `fetch()` or `registry.sync()`).
+ * shape (the host must expose `fetch()` or `registry.syncDevices()`).
  * @param root0 - Options object.
  * @param root0.when - Whether to refresh before or after the call.
  * @returns A method decorator.

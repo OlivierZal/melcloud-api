@@ -2,6 +2,7 @@ import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type { Temporal } from '../temporal.ts'
 import {
+  type HomeDeviceType,
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
   HomeAtwOperationalState,
@@ -122,6 +123,8 @@ const tankRange = ({
  * @category Facades
  */
 export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData> {
+  declare public readonly type: typeof HomeDeviceType.Atw
+
   /**
    * Static capability flags and ranges advertised by this device.
    * @returns The capability descriptor.
@@ -346,7 +349,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     measure: 'consumed' | 'produced'
     to: string
   }): Promise<Result<HomeEnergyData>> {
-    return this.api.getAtwEnergy(this.id, params)
+    return this.api.getEnergy(this.id, params)
   }
 
   /**
@@ -367,8 +370,8 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
       interval: toHomeEnergyInterval(bucketUnit),
     }
     const [consumed, produced] = await Promise.all([
-      this.api.getAtwEnergy(this.id, { ...params, measure: 'consumed' }),
-      this.api.getAtwEnergy(this.id, { ...params, measure: 'produced' }),
+      this.api.getEnergy(this.id, { ...params, measure: 'consumed' }),
+      this.api.getEnergy(this.id, { ...params, measure: 'produced' }),
     ])
     if (!consumed.ok) {
       return consumed
@@ -394,7 +397,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.api.getAtwErrorLog(this.id)
+    return this.api.getErrorLog(this.id)
   }
 
   /**
@@ -466,7 +469,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
       await fetchHomeReportChunks(
         async (params) =>
           mapResult(
-            await this.api.getAtwTemperatures(this.id, params),
+            await this.api.getTemperatures(this.id, params),
             // The pie only reads the annotations: drop each chunk's
             // minute-grained sample payload before the merge piles
             // them up on the host's constrained heap.
@@ -511,7 +514,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     if (Object.keys(changes).length === 0) {
       throw new NoChangesError(this.id)
     }
-    await this.api.updateAtwValues(this.id, {
+    await this.api.updateValues(this.id, {
       ...changes,
       ...this.#clampSetpoints(changes),
     })
@@ -563,7 +566,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     const shouldChartBands = shouldChartHomeBands(window)
     const [comfort, internal] = await Promise.all([
       fetchHomeReportChunks(
-        async (params) => this.api.getAtwTemperatures(this.id, params),
+        async (params) => this.api.getTemperatures(this.id, params),
         window,
       ),
       fetchHomeReportChunks(

@@ -3,22 +3,33 @@ import { describe, expect, it, vi } from 'vitest'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { HomeDevice } from '../../src/entities/home-device.ts'
 import type { HomeRegistry } from '../../src/entities/home-registry.ts'
+import { HomeDeviceType } from '../../src/constants.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
-import { mock } from '../helpers.ts'
-import { homeAtwDevice, homeDevice } from '../home-fixtures.ts'
+import {
+  type HomeDeviceFacadeAny,
+  isHomeAtaFacade,
+  isHomeAtwFacade,
+} from '../../src/facades/home-types.ts'
+import { cast, defined, mock } from '../helpers.ts'
+import {
+  homeAtwDevice,
+  homeDevice,
+  homeTestRegistry,
+} from '../home-fixtures.ts'
 
 const createModel = (): ReturnType<typeof homeDevice> =>
   homeDevice({ id: 'device-1', name: 'Test ClassicDevice' })
 
 const createApi = (): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
-    getAtaEnergy: vi.fn<HomeAPIAdapter['getAtaEnergy']>(),
-    getAtaErrorLog: vi.fn<HomeAPIAdapter['getAtaErrorLog']>(),
-    getAtaTemperatures: vi.fn<HomeAPIAdapter['getAtaTemperatures']>(),
+    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
+    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
-    updateAtaValues: vi.fn<HomeAPIAdapter['updateAtaValues']>(),
+    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
+    registry: cast(homeTestRegistry),
+    updateValues: vi.fn<HomeAPIAdapter['updateValues']>(),
   })
 
 describe('home facade manager', () => {
@@ -59,6 +70,56 @@ describe('home facade manager', () => {
     })
 
     expect(manager.get(model1)).not.toBe(manager.get(model2))
+  })
+
+  it('resolves a device facade by id and null for an unknown id', () => {
+    const manager = new HomeFacadeManager(createApi())
+    const ata = homeDevice({ id: 'by-id-ata' })
+    const atw = homeAtwDevice({ id: 'by-id-atw' })
+
+    expect(manager.getById('by-id-ata')).toBe(manager.get(ata))
+    expect(manager.getById('by-id-atw')).toBe(manager.get(atw))
+    expect(manager.getById('missing')).toBeNull()
+  })
+
+  it('exposes the connection type and narrows via the facade guards', () => {
+    const manager = new HomeFacadeManager(createApi())
+    const facades: HomeDeviceFacadeAny[] = [
+      manager.get(homeDevice({ id: 'guard-ata' })),
+      manager.get(homeAtwDevice({ id: 'guard-atw' })),
+    ]
+    const ata = defined(facades[0])
+    const atw = defined(facades[1])
+
+    expect(ata.type).toBe(HomeDeviceType.Ata)
+    expect(isHomeAtaFacade(ata)).toBe(true)
+    expect(isHomeAtwFacade(ata)).toBe(false)
+    expect(isHomeAtwFacade(atw)).toBe(true)
+  })
+
+  it('returns null for a model of an unknown connection type', () => {
+    const manager = new HomeFacadeManager(createApi())
+    const rogue = homeDevice({ id: 'rogue' })
+    Object.defineProperty(rogue, 'type', { value: 'unknown' })
+
+    expect(manager.getById('rogue')).toBeNull()
+  })
+
+  it('delegates getBuildings and getZones to the registry', () => {
+    const registry = {
+      getBuildings: vi.fn<HomeRegistry['getBuildings']>().mockReturnValue([]),
+      getZones: vi.fn<HomeRegistry['getZones']>().mockReturnValue([]),
+    }
+    const manager = new HomeFacadeManager(
+      mock<HomeAPIAdapter>({ registry: cast(registry) }),
+    )
+
+    expect(manager.getBuildings({ type: HomeDeviceType.Ata })).toStrictEqual([])
+    expect(manager.getZones()).toStrictEqual([])
+    expect(registry.getBuildings).toHaveBeenCalledWith({
+      type: HomeDeviceType.Ata,
+    })
+    expect(registry.getZones).toHaveBeenCalledWith(undefined)
   })
 
   it('batches frost protection by device type, clamped and enabled-mapped', async () => {

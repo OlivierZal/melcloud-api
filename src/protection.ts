@@ -9,6 +9,37 @@
 /** Minimum gap required between min and max, in °C (both features). */
 export const PROTECTION_GAP = 2
 
+/**
+ * Last-known protection settings — the cross-dialect read twin of
+ * {@link ProtectionUpdate}. Classic maps its `FP*` wire fields onto it,
+ * Home its camelCase `/context` descriptor; `null` upstream marks the
+ * feature as never configured.
+ * @category Facades
+ */
+export interface ProtectionState {
+  /** Whether the protection is on. */
+  readonly isEnabled: boolean
+  /** Upper temperature bound, in °C. */
+  readonly max: number
+  /** Lower temperature bound, in °C. */
+  readonly min: number
+}
+
+/**
+ * A protection update to apply — the write contract shared by frost
+ * (Classic and Home) and overheat (Home ATA) protection, clamped by the
+ * sibling helpers before it reaches the wire.
+ * @category Facades
+ */
+export interface ProtectionUpdate {
+  /** Whether the protection is on. */
+  readonly isEnabled: boolean
+  /** Requested upper bound, in °C. */
+  readonly max: number
+  /** Requested lower bound, in °C. */
+  readonly min: number
+}
+
 /** Absolute frost-protection min/max the units accept, in °C. */
 export const FROST_PROTECTION_RANGE = { max: 16, min: 4 }
 

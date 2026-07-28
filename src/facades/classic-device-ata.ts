@@ -6,9 +6,7 @@ import {
 } from '../constants.ts'
 import {
   type ClassicEnergyDataAta,
-  type ClassicFailureData,
   type ClassicGroupState,
-  type ClassicSuccessData,
   type ClassicUpdateDeviceDataAta,
   type Result,
   ok,
@@ -122,14 +120,11 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
    * @param state - Group state to push to the device.
    * @returns The zone-shaped success outcome once the write completes.
    */
-  public async updateGroupState(
-    state: ClassicGroupState,
-  ): Promise<ClassicFailureData | ClassicSuccessData> {
+  public async updateGroupState(state: ClassicGroupState): Promise<void> {
     const values = toUpdateData(state)
     if (Object.keys(values).length > 0) {
       await tolerateNoChanges(async () => this.updateValues(values))
     }
-    return { AttributeErrors: null, Success: true }
   }
 
   // Clamp SetTemperature to the valid range for the current or requested

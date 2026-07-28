@@ -12,7 +12,9 @@ export type {
   HomeAPISettings,
 } from './home-types.ts'
 export type {
+  BaseAPIAdapter,
   BaseAPIConfig,
+  BaseAPISettings,
   LifecycleEvents,
   Logger,
   RequestCompleteEvent,

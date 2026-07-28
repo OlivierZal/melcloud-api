@@ -123,8 +123,8 @@ const createContext = (): {
     devices,
     floors,
   })
-  const api = createMockClassicApi()
-  const manager = new ClassicFacadeManager(api, registry)
+  const api = createMockClassicApi({ registry })
+  const manager = new ClassicFacadeManager(api)
   return { api, manager, registry }
 }
 
@@ -328,7 +328,7 @@ describe('registry + facade manager integration', () => {
     ])
     registry.syncDevices([defined(devices[3])])
 
-    const manager = new ClassicFacadeManager(createMockClassicApi(), registry)
+    const manager = new ClassicFacadeManager(createMockClassicApi({ registry }))
     const facade = manager.get(defined(registry.buildings.getById(2)))
 
     expect(facade.devices).toHaveLength(1)

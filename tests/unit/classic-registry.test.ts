@@ -277,3 +277,16 @@ describe(isClassicDeviceOfType, () => {
     expect(isClassicDeviceOfType(device, ClassicDeviceType.Atw)).toBe(false)
   })
 })
+
+describe('classic device type predicates', () => {
+  it('discriminates via isAta()/isAtw()/isErv()', () => {
+    const registry = new ClassicRegistry()
+    registry.syncBuildings([classicBuildingData()])
+    registry.syncDevices([classicAtaDevice()])
+    const device = defined(registry.devices.getById(1000))
+
+    expect(device.isAta()).toBe(true)
+    expect(device.isAtw()).toBe(false)
+    expect(device.isErv()).toBe(false)
+  })
+})

@@ -133,6 +133,9 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
    * preserving the wrapper's object identity. Every sync restates the
    * ownership origin, so a share/unshare between syncs is reflected
    * rather than kept from a stale tag.
+   *
+   * Registry-internal by contract (the Home mirror of Classic's
+   * non-exported `syncDevice`): consumers read, the registry writes.
    * @param device - Fresh wire-format device payload.
    * @param isOwner - Ownership origin from the current sync.
    * @param building - Building identity from the current sync.

@@ -1,7 +1,11 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
+import type { HomeDeviceType } from '../constants.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
+import type { HolidayModeState } from '../holiday-mode.ts'
+import type { ProtectionState } from '../protection.ts'
 import {
   type AvailabilityAware,
+  type Identifiable,
   STALE_COMMUNICATION_HOURS,
 } from '../entities/types.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
@@ -11,6 +15,7 @@ import {
   type HomeEnergyData,
   type HomeFrostProtection,
   type HomeHolidayMode,
+  type HomeOverheatProtection,
   type Hour,
   type Result,
   mapResult,
@@ -22,6 +27,34 @@ import {
   toHomeSignalOptions,
   toHomeWireWindow,
 } from './home-report.ts'
+
+/**
+ * Maps a Home `/context` protection descriptor onto the cross-dialect
+ * read state; `null` (never configured) passes through.
+ * @param protection - Wire descriptor, or `null`.
+ * @returns The neutral protection state, or `null`.
+ */
+export const toHomeProtectionState = (
+  protection: HomeFrostProtection | HomeOverheatProtection | null,
+): ProtectionState | null =>
+  protection === null
+    ? null
+    : {
+        isEnabled: protection.enabled,
+        max: protection.max,
+        min: protection.min,
+      }
+
+const toHolidayModeState = (
+  holidayMode: HomeHolidayMode | null,
+): HolidayModeState | null =>
+  holidayMode === null
+    ? null
+    : {
+        endDate: holidayMode.endDate,
+        isEnabled: holidayMode.enabled,
+        startDate: holidayMode.startDate,
+      }
 
 /**
  * Shared scaffolding for every Home device facade. Holds the API
@@ -41,9 +74,16 @@ import {
  * `model.data`, narrowed to the device-type-specific shape by each subclass.
  * @category Facades
  */
-export abstract class HomeBaseDeviceFacade<
-  TData extends HomeDeviceData,
-> implements AvailabilityAware {
+export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
+  implements AvailabilityAware, Identifiable<string>
+{
+  /**
+   * Connection-type discriminator, captured at construction (a physical
+   * device never changes type) so it stays readable on a pruned id —
+   * the Home counterpart of the Classic facades' `type`.
+   */
+  public readonly type: HomeDeviceType
+
   /**
    * Whether the underlying device still exists in the registry.
    * Non-throwing introspection mirroring the Classic facades' `exists`:
@@ -57,18 +97,18 @@ export abstract class HomeBaseDeviceFacade<
 
   /**
    * Current frost-protection settings, or `null` when not configured.
-   * @returns The frost-protection descriptor from `/context`.
+   * @returns The cross-dialect protection state from `/context`.
    */
-  public get frostProtection(): HomeFrostProtection | null {
-    return this.model.data.frostProtection
+  public get frostProtection(): ProtectionState | null {
+    return toHomeProtectionState(this.model.data.frostProtection)
   }
 
   /**
    * Current holiday-mode window, or `null` when not configured.
-   * @returns The holiday-mode descriptor from `/context`.
+   * @returns The cross-dialect holiday-mode state from `/context`.
    */
-  public get holidayMode(): HomeHolidayMode | null {
-    return this.model.data.holidayMode
+  public get holidayMode(): HolidayModeState | null {
+    return toHolidayModeState(this.model.data.holidayMode)
   }
 
   /**
@@ -167,6 +207,7 @@ export abstract class HomeBaseDeviceFacade<
   protected constructor(api: HomeAPIAdapter, model: HomeDevice<TData>) {
     this.api = api
     this.#id = model.id
+    this.type = model.type
   }
 
   /**

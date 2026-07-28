@@ -3,11 +3,8 @@ import type {
   ClassicZoneFacade,
 } from '../facades/index.ts'
 import type {
-  ClassicFailureData,
-  ClassicGroupState,
   ClassicListDeviceData,
   ClassicSetDeviceData,
-  ClassicSuccessData,
 } from '../types/index.ts'
 import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import { NoChangesError } from '../errors/index.ts'
@@ -47,10 +44,7 @@ type UpdatePatchKind = 'payload' | 'power'
  * @category Decorators
  */
 export const classicUpdateDevices =
-  <
-    T extends
-      boolean | ClassicFailureData | ClassicGroupState | ClassicSuccessData,
-  >({
+  ({
     kind = 'payload',
     type,
   }: {
@@ -58,9 +52,9 @@ export const classicUpdateDevices =
     type?: ClassicDeviceType
   } = {}) =>
   <TArgs extends readonly unknown[]>(
-    target: (...args: TArgs) => Promise<T>,
+    target: (...args: TArgs) => Promise<void>,
     _context: ClassMethodDecoratorContext,
-  ): ((...args: TArgs) => Promise<T>) =>
+  ): ((...args: TArgs) => Promise<void>) =>
     async function newTarget(this: ClassicZoneFacade, ...args: TArgs) {
       const [arg] = args
       if (
@@ -70,12 +64,15 @@ export const classicUpdateDevices =
       ) {
         throw new NoChangesError(this.id)
       }
-      const data = await target.call(this, ...args)
+      await target.call(this, ...args)
+      // The facades default an omitted `isOn` to `true` inside the method
+      // body, invisible here — mirror it, or a no-arg updatePower() would
+      // smear `Power: undefined` over every registry model.
       const newData =
         kind === 'power'
-          ? { Power: arg }
+          ? { Power: arg ?? true }
           : Object.fromEntries(
-              Object.entries(arg ?? data).filter(
+              Object.entries(arg ?? {}).filter(
                 ([, value]) => value !== undefined && value !== null,
               ),
             )
@@ -86,7 +83,6 @@ export const classicUpdateDevices =
       for (const device of targetDevices) {
         device.update(newData)
       }
-      return data
     }
 
 /**

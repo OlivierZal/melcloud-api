@@ -95,6 +95,7 @@ export const mapResult = <T, TResult>(
  * @category Types
  */
 export type ApiRequestError =
+  | { readonly entityId: number | string; readonly kind: 'not-found' }
   | {
       readonly issue: string
       readonly kind: 'validation'

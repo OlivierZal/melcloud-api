@@ -1,13 +1,19 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
+import type { HomeBuildingDevices } from '../entities/home-registry.ts'
 import type { HolidayModeUpdate } from '../holiday-mode.ts'
 import type {
   HomeAtaDeviceData,
   HomeAtwDeviceData,
+  HomeFlatZone,
   HomeProtectionUnits,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
-import { clampFrostProtection, clampOverheatProtection } from '../protection.ts'
+import {
+  type ProtectionUpdate,
+  clampFrostProtection,
+  clampOverheatProtection,
+} from '../protection.ts'
 import { HomeBuildingAtaFacade } from './home-building-ata.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 import { HomeDeviceAtwFacade } from './home-device-atw.ts'
@@ -77,7 +83,7 @@ export class HomeFacadeManager {
    */
   public getBuilding(id: string): HomeBuildingAtaFacade | null {
     const model = this.#api.registry
-      .getByType(HomeDeviceType.Ata)
+      .getDevicesByType(HomeDeviceType.Ata)
       .find((device) => device.building.id === id)
     if (model === undefined) {
       this.#buildings.delete(id)
@@ -97,6 +103,51 @@ export class HomeFacadeManager {
   }
 
   /**
+   * Groups registry devices by building — the Home counterpart of the
+   * Classic manager's `getBuildings`.
+   * @param params - Optional filter.
+   * @param params.type - Connection-type discriminator; omitted merges
+   * both connection types per building.
+   * @returns One name-sorted entry per building.
+   */
+  public getBuildings(params?: {
+    type?: HomeDeviceType | undefined
+  }): HomeBuildingDevices[] {
+    return this.#api.registry.getBuildings(params)
+  }
+
+  /**
+   * Resolves a device facade by id — the by-id twin of {@link get}.
+   * @param id - Device identifier.
+   * @returns The facade, or `null` when the id is unknown.
+   */
+  public getById(id: string): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
+    const model = this.#api.registry.getById(id)
+    if (model === undefined) {
+      return null
+    }
+    if (model.isAta()) {
+      return this.get(model)
+    }
+    return model.isAtw() ? this.get(model) : null
+  }
+
+  /**
+   * Flattens the registry into the picker zone list (grouped:
+   * name-sorted buildings each followed by their own name-sorted
+   * devices; Classic's `getZones` sorts its flat list globally).
+   * @param params - Optional filter.
+   * @param params.type - Connection-type discriminator; omitted covers
+   * both connection types.
+   * @returns The flattened zone nodes.
+   */
+  public getZones(params?: {
+    type?: HomeDeviceType | undefined
+  }): HomeFlatZone[] {
+    return this.#api.registry.getZones(params)
+  }
+
+  /**
    * Batch frost-protection update for the given Home devices: groups them
    * by type, clamps the bounds into range, and issues one API write. All
    * ids must belong to this manager's account.
@@ -108,7 +159,7 @@ export class HomeFacadeManager {
    */
   public async updateFrostProtection(
     deviceIds: readonly string[],
-    { isEnabled, max, min }: { isEnabled: boolean; max: number; min: number },
+    { isEnabled, max, min }: ProtectionUpdate,
   ): Promise<void> {
     await this.#api.updateFrostProtection({
       enabled: isEnabled,
@@ -153,7 +204,7 @@ export class HomeFacadeManager {
    */
   public async updateOverheatProtection(
     deviceIds: readonly string[],
-    { isEnabled, max, min }: { isEnabled: boolean; max: number; min: number },
+    { isEnabled, max, min }: ProtectionUpdate,
   ): Promise<void> {
     const { ATA: ata } = this.#toUnits(deviceIds)
     if (ata === undefined) {

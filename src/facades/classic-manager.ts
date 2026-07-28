@@ -32,14 +32,15 @@ export class ClassicFacadeManager {
   readonly #registry: ClassicRegistry
 
   /**
-   * Builds a facade manager bound to the given API client and registry;
-   * facades it returns share these references.
+   * Builds a facade manager bound to the given API client; facades it
+   * returns share this reference, and the backing registry is the
+   * client's own — a caller can no longer pair a manager with a foreign
+   * registry.
    * @param api - Classic API client.
-   * @param registry - Backing registry.
    */
-  public constructor(api: ClassicAPIAdapter, registry: ClassicRegistry) {
+  public constructor(api: ClassicAPIAdapter) {
     this.#api = api
-    this.#registry = registry
+    this.#registry = api.registry
   }
 
   /**
@@ -62,6 +63,7 @@ export class ClassicFacadeManager {
   public get(instance?: ClassicArea | ClassicFloor): ClassicZoneFacade | null
   public get(instance?: ClassicBuilding): ClassicBuildingFacade | null
   public get(instance?: ClassicDeviceAny): ClassicDeviceFacadeAny | null
+  public get(instance?: ClassicModel): ClassicFacade | null
   public get(instance?: ClassicModel): ClassicFacade | null {
     if (instance === undefined) {
       return null
@@ -85,6 +87,28 @@ export class ClassicFacadeManager {
     type?: ClassicDeviceType | undefined
   }): ClassicBuildingZone[] {
     return this.#registry.getBuildings(params)
+  }
+
+  /**
+   * Resolves a facade by registry collection and id — the by-id twin of
+   * {@link get}, using the same collection vocabulary as the registry's
+   * namespaced accessors.
+   * @param kind - Registry collection to look in.
+   * @param id - Entity identifier.
+   * @returns The facade, or `null` when the id is unknown.
+   */
+  public getById(kind: 'areas' | 'floors', id: number): ClassicZoneFacade | null
+  public getById(kind: 'buildings', id: number): ClassicBuildingFacade | null
+  public getById(kind: 'devices', id: number): ClassicDeviceFacadeAny | null
+  public getById(
+    kind: 'areas' | 'buildings' | 'devices' | 'floors',
+    id: number,
+  ): ClassicFacade | null
+  public getById(
+    kind: 'areas' | 'buildings' | 'devices' | 'floors',
+    id: number,
+  ): ClassicFacade | null {
+    return this.get(this.#registry[kind].getById(id))
   }
 
   /**

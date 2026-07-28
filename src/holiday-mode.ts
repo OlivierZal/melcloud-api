@@ -5,6 +5,22 @@
  */
 
 /**
+ * Last-known holiday-mode window — the cross-dialect read twin of
+ * {@link HolidayModeUpdate}. Classic maps its `HM*` wire fields onto it,
+ * Home its camelCase `/context` descriptor; a `null` date is a window
+ * bound the wire left unset.
+ * @category Facades
+ */
+export interface HolidayModeState {
+  /** Window end (ISO 8601 wall clock), when set. */
+  readonly endDate: string | null
+  /** Whether holiday mode is on. */
+  readonly isEnabled: boolean
+  /** Window start (ISO 8601 wall clock), when set. */
+  readonly startDate: string | null
+}
+
+/**
  * A holiday-mode window to apply. `startDate`/`endDate` are ISO 8601
  * wall-clock strings; both are ignored when `isEnabled` is `false`. The
  * start is always explicit (the Home API carries no timezone context to

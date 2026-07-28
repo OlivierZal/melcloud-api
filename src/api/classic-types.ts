@@ -1,4 +1,5 @@
 import type { ClassicDeviceType } from '../constants.ts'
+import type { ClassicRegistry } from '../entities/classic-registry.ts'
 import type {
   ClassicBuildingWithStructure,
   ClassicEnergyData,
@@ -29,7 +30,12 @@ import type {
   Hour,
   Result,
 } from '../types/index.ts'
-import type { BaseAPIConfig, SyncCallback } from './types.ts'
+import type {
+  BaseAPIAdapter,
+  BaseAPIConfig,
+  BaseAPISettings,
+  SyncCallback,
+} from './types.ts'
 
 /**
  * Low-level API adapter exposing all MELCloud HTTP endpoints.
@@ -49,7 +55,7 @@ import type { BaseAPIConfig, SyncCallback } from './types.ts'
  * both Classic and Home so the public surface is symmetric.
  * @category Configuration
  */
-export interface ClassicAPIAdapter {
+export interface ClassicAPIAdapter extends BaseAPIAdapter {
   /**
    * BCP-47 locale tag the Classic instance was configured with
    * (`ClassicAPIConfig.locale`), or `undefined` when unset. Facades
@@ -57,13 +63,14 @@ export interface ClassicAPIAdapter {
    * (day-of-week, month names) render in the configured locale
    * without needing a global mutable locale.
    */
-  readonly locale: string | undefined
   /**
    * Notify any registered `events.onSyncComplete` observer that a sync
    * just landed. Routed through the lifecycle emitter so a misbehaving
    * observer cannot break the caller.
    */
   readonly notifySync: SyncCallback
+  /** Classic model registry synced by the fetch cycle. */
+  readonly registry: ClassicRegistry
   /**
    * IANA timezone identifier the Classic instance was configured with
    * (`ClassicAPIConfig.timezone`), or `undefined` when unset. Facades
@@ -71,7 +78,6 @@ export interface ClassicAPIAdapter {
    * `getHourlyTemperatures` hour) to the Classic timezone instead of the
    * host runtime timezone.
    */
-  readonly timezone: string | undefined
   /** Fetch all buildings and sync the model registry. */
   readonly fetch: () => Promise<ClassicBuildingWithStructure[]>
   /** Fetch energy consumption report. Supported by ATA and ATW devices. */
@@ -217,15 +223,9 @@ export interface ClassicAPIConfig extends BaseAPIConfig {
  * Persistent settings managed by the Classic API for session authentication.
  * @category Configuration
  */
-export interface ClassicAPISettings {
+export interface ClassicAPISettings extends BaseAPISettings {
   /** MELCloud session context key. */
   readonly contextKey?: string | null
-  /** Session expiry timestamp in ISO 8601 format. */
-  readonly expiry?: string | null
-  /** MELCloud account password. */
-  readonly password?: string | null
-  /** MELCloud account username (email). */
-  readonly username?: string | null
 }
 
 /**

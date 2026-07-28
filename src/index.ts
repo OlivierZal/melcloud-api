@@ -1,4 +1,4 @@
-export type { HolidayModeUpdate } from './holiday-mode.ts'
+export type { HolidayModeState, HolidayModeUpdate } from './holiday-mode.ts'
 export type {
   ApiRequestError,
   ClassicAreaData,
@@ -88,6 +88,7 @@ export type {
   HomeAtwValues,
   HomeBuilding,
   HomeBuildingRef,
+  HomeBuildingZone,
   HomeClaim,
   HomeContext,
   HomeDeviceCapabilities,
@@ -96,10 +97,12 @@ export type {
   HomeDeviceData,
   HomeDeviceScheduleEntry,
   HomeDeviceSetting,
+  HomeDeviceZone,
   HomeEnergyData,
   HomeEnergyMeasure,
   HomeEnergyPoint,
   HomeErrorLogEntry,
+  HomeFlatZone,
   HomeFrostProtection,
   HomeFrostProtectionPostData,
   HomeHolidayMode,
@@ -124,7 +127,9 @@ export type {
 } from './types/index.ts'
 
 export {
+  type BaseAPIAdapter,
   type BaseAPIConfig,
+  type BaseAPISettings,
   type ClassicAPIAdapter,
   type ClassicAPIConfig,
   type ClassicAPISettings,
@@ -181,6 +186,7 @@ export {
   type ClassicDeviceAny,
   type ClassicModel,
   type HomeBuildingDevices,
+  type Identifiable,
   ClassicArea,
   ClassicBuilding,
   ClassicDevice,
@@ -216,6 +222,7 @@ export {
   NetworkError,
   NoChangesError,
   RateLimitError,
+  UpdateRejectedError,
   ValidationError,
 } from './errors/index.ts'
 export {
@@ -226,8 +233,8 @@ export {
   type ClassicDeviceFacade,
   type ClassicDeviceFacadeAny,
   type ClassicFacade,
-  type ClassicFrostProtectionQuery,
   type ClassicZoneFacade,
+  type HomeDeviceFacadeAny,
   type ReportChartBand,
   type ReportChartLineOptions,
   type ReportChartPieOptions,
@@ -242,6 +249,8 @@ export {
   isClassicAtaFacade,
   isClassicAtwFacade,
   isClassicErvFacade,
+  isHomeAtaFacade,
+  isHomeAtwFacade,
 } from './facades/index.ts'
 export {
   type HttpClientConfig,
@@ -251,5 +260,14 @@ export {
   HttpError,
   isHttpError,
 } from './http/index.ts'
+export {
+  type ProtectionState,
+  type ProtectionUpdate,
+  clampFrostProtection,
+  clampOverheatProtection,
+  FROST_PROTECTION_RANGE,
+  OVERHEAT_PROTECTION_RANGE,
+  PROTECTION_GAP,
+} from './protection.ts'
 export { Temporal } from './temporal.ts'
 export { err, mapResult, ok } from './types/index.ts'
