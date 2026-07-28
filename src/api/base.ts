@@ -387,6 +387,21 @@ export abstract class BaseAPI implements Disposable {
   }
 
   /**
+   * Sync check first; when it reads `false`, one best-effort
+   * {@link resumeSession} probe, then a re-check — the lazy self-heal
+   * consumers otherwise hand-roll (a valid persisted Home token reads
+   * unauthenticated until a context fetch has run).
+   * @returns `true` when a session is usable afterwards.
+   */
+  public async ensureAuthenticated(): Promise<boolean> {
+    if (this.isAuthenticated()) {
+      return true
+    }
+    await this.resumeSession()
+    return this.isAuthenticated()
+  }
+
+  /**
    * Post-construction lifecycle hook. Every subclass `create()`
    * factory must delegate to this method — it is the sole path that
    * guarantees the #1281-class invariant at instance-creation time:

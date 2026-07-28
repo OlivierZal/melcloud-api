@@ -10,6 +10,44 @@ import type { LoginCredentials, UndefinedTolerant } from '../types/index.ts'
  * later via `authenticate` or the {@link SettingManager}).
  * @category Configuration
  */
+/**
+ * Session and infrastructure surface shared by both dialects' API
+ * adapters — the cross-dialect base a consumer can program against
+ * without knowing which wire it talks to.
+ * @category API
+ */
+export interface BaseAPIAdapter {
+  /** Whether the client is currently inside a server rate-limit backoff. */
+  readonly isRateLimited: boolean
+  /** BCP-47 locale tag the instance was configured with, or `undefined`. */
+  readonly locale: string | undefined
+  /** IANA timezone the instance was configured with, or `undefined`. */
+  readonly timezone: string | undefined
+  /** Sign in with explicit credentials; throws on rejection. */
+  readonly authenticate: (credentials: LoginCredentials) => Promise<void>
+  /** Cancel any pending automatic sync. */
+  readonly clearSync: () => void
+  /**
+   * Sync check first; when it reads `false`, one best-effort
+   * {@link resumeSession} probe, then a re-check — the lazy self-heal
+   * consumers otherwise hand-roll (a valid persisted Home token reads
+   * unauthenticated until a context fetch has run).
+   */
+  readonly ensureAuthenticated: () => Promise<boolean>
+  /** Whether a session is currently usable, from local state alone. */
+  readonly isAuthenticated: () => boolean
+  /** Explicit sign-out: clears the persisted session material. */
+  readonly logOut: () => void
+  /**
+   * Best-effort session restore from persisted credentials. Never
+   * throws — returns `false` when no credentials are persisted or
+   * sign-in fails (logged via the SDK logger).
+   */
+  readonly resumeSession: () => Promise<boolean>
+  /** Update the automatic sync interval and reschedule. Pass `false` to disable. */
+  readonly setSyncInterval: (minutes: number | false) => void
+}
+
 export interface BaseAPIConfig extends UndefinedTolerant<LoginCredentials> {
   /**
    * Optional shutdown signal applied to every outgoing request.
@@ -50,6 +88,24 @@ export interface BaseAPIConfig extends UndefinedTolerant<LoginCredentials> {
   readonly syncIntervalMinutes?: number | false | undefined
   /** HTTP transport: pre-built {@link HttpClient} or build options. */
   readonly transport?: TransportConfig | undefined
+}
+
+/**
+ * Session material both dialects persist through the host's
+ * {@link SettingManager}: credentials, expiry, and the login-backoff
+ * gate (previously undeclared — a host clearing every declared key
+ * left the backoff behind).
+ * @category API
+ */
+export interface BaseAPISettings {
+  /** Session expiry timestamp in ISO 8601 format. */
+  readonly expiry?: string | null
+  /** Epoch-ms deadline before which automatic re-logins are refused. */
+  readonly loginBackoffUntil?: string | null
+  /** Account password. */
+  readonly password?: string | null
+  /** Account username (email). */
+  readonly username?: string | null
 }
 
 /**

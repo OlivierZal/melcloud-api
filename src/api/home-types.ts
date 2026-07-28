@@ -10,10 +10,9 @@ import type {
   HomeOverheatProtectionPostData,
   HomeReportData,
   HomeUser,
-  LoginCredentials,
   Result,
 } from '../types/index.ts'
-import type { BaseAPIConfig } from './types.ts'
+import type { BaseAPIAdapter, BaseAPIConfig, BaseAPISettings } from './types.ts'
 
 /**
  * Injectable contract for the MELCloud Home API client.
@@ -31,19 +30,16 @@ import type { BaseAPIConfig } from './types.ts'
  * pair carries the suffix.
  * @category Configuration
  */
-export interface HomeAPIAdapter {
+export interface HomeAPIAdapter extends BaseAPIAdapter {
   /**
    * Whether the upstream rate-limit gate is currently holding a pause
    * window. `true` means the SDK is intentionally failing fast to
    * honor an upstream 429 `Retry-After`.
    */
-  readonly isRateLimited: boolean
   /** BCP-47 locale tag for chart labels ({@link HomeAPIConfig.locale}). */
-  readonly locale: string | undefined
   /** Home device registry with stable model references across syncs. */
   readonly registry: HomeRegistry
   /** IANA timezone for chart windows ({@link HomeAPIConfig.timezone}). */
-  readonly timezone: string | undefined
   /** The currently authenticated user, or `null`. */
   readonly user: HomeUser | null
   /**
@@ -51,9 +47,7 @@ export interface HomeAPIAdapter {
    * on rejection. For best-effort restore from persisted credentials,
    * use {@link resumeSession} instead.
    */
-  readonly authenticate: (credentials: LoginCredentials) => Promise<void>
   /** Cancel any pending automatic sync. */
-  readonly clearSync: () => void
   /** Fetch all buildings and sync the device registry — the heartbeat, mirroring Classic `fetch()`. */
   readonly fetch: () => Promise<HomeBuilding[]>
   /** Fetch the internal-temperatures report (flow/return/tank/zone) for an ATW unit. */
@@ -86,15 +80,7 @@ export interface HomeAPIAdapter {
   /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
   readonly getUser: () => Promise<HomeUser | null>
   /** Whether a user is currently authenticated (session cookie valid). */
-  readonly isAuthenticated: () => boolean
-  /**
-   * Best-effort session restore from persisted credentials. Never
-   * throws — returns `false` when no credentials are persisted or
-   * sign-in fails (logged via the SDK logger).
-   */
-  readonly resumeSession: () => Promise<boolean>
   /** Update the automatic sync interval and reschedule. Pass `false` to disable. */
-  readonly setSyncInterval: (minutes: number | false) => void
   /** Batch frost-protection write (device ids grouped in `units`), then refresh. */
   readonly updateFrostProtection: (
     postData: HomeFrostProtectionPostData,
@@ -139,15 +125,9 @@ export interface HomeAPIConfig extends BaseAPIConfig {
  * Persistent settings managed by the Home API for session authentication.
  * @category Configuration
  */
-export interface HomeAPISettings {
+export interface HomeAPISettings extends BaseAPISettings {
   /** IdentityServer access token (Bearer). */
   readonly accessToken?: string | null
-  /** Session expiry timestamp in ISO 8601 format. */
-  readonly expiry?: string | null
-  /** MELCloud Home account password. */
-  readonly password?: string | null
   /** IdentityServer refresh token. */
   readonly refreshToken?: string | null
-  /** MELCloud Home account username (email). */
-  readonly username?: string | null
 }

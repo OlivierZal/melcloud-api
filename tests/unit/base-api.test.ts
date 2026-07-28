@@ -1122,6 +1122,34 @@ describe('automatic login backoff', () => {
   })
 })
 
+describe('ensureAuthenticated', () => {
+  it('returns true from local state alone without a restore probe', async () => {
+    const api = new TestAPI()
+    api.isAuthenticatedMock.mockReturnValue(true)
+
+    await expect(api.ensureAuthenticated()).resolves.toBe(true)
+
+    expect(api.hasPersistedSessionMock).not.toHaveBeenCalled()
+  })
+
+  it('runs one best-effort restore probe when unauthenticated', async () => {
+    const api = new TestAPI()
+    api.isAuthenticatedMock.mockReturnValueOnce(false).mockReturnValue(true)
+    api.hasPersistedSessionMock.mockReturnValue(true)
+    api.tryReuseSessionMock.mockResolvedValue(true)
+    api.reuseSucceededMock.mockReturnValue(true)
+
+    await expect(api.ensureAuthenticated()).resolves.toBe(true)
+  })
+
+  it('stays false when the restore probe cannot help', async () => {
+    const api = new TestAPI()
+    api.isAuthenticatedMock.mockReturnValue(false)
+
+    await expect(api.ensureAuthenticated()).resolves.toBe(false)
+  })
+})
+
 describe('logOut', () => {
   it('clears session, credentials, backoff and registry', () => {
     const { settingManager } = createSettingStore({

@@ -127,7 +127,9 @@ export type {
 } from './types/index.ts'
 
 export {
+  type BaseAPIAdapter,
   type BaseAPIConfig,
+  type BaseAPISettings,
   type ClassicAPIAdapter,
   type ClassicAPIConfig,
   type ClassicAPISettings,
