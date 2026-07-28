@@ -6,7 +6,11 @@ import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
 import { Temporal } from '../../src/temporal.ts'
 import { type HomeAtwDeviceCapabilities, ok } from '../../src/types/index.ts'
 import { cast, mock, mockTemporalNowZoned, okValue } from '../helpers.ts'
-import { homeAtwDevice, homeReportPoint } from '../home-fixtures.ts'
+import {
+  homeAtwDevice,
+  homeReportPoint,
+  homeTestRegistry,
+} from '../home-fixtures.ts'
 
 const createModel = (
   settings: Record<string, string> = {},
@@ -34,6 +38,7 @@ const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
       vi.fn<HomeAPIAdapter['getAtwInternalTemperatures']>(),
     getAtwTemperatures: vi.fn<HomeAPIAdapter['getAtwTemperatures']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
+    registry: cast(homeTestRegistry),
     updateAtwValues: vi
       .fn<HomeAPIAdapter['updateAtwValues']>()
       .mockResolvedValue(),

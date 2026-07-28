@@ -1,5 +1,7 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
+import type { AvailabilityAware } from '../entities/types.ts'
+import { EntityNotFoundError } from '../errors/index.ts'
 import {
   type HomeDeviceData,
   type HomeEnergyData,
@@ -35,7 +37,20 @@ import {
  * `model.data`, narrowed to the device-type-specific shape by each subclass.
  * @category Facades
  */
-export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
+export abstract class HomeBaseDeviceFacade<
+  TData extends HomeDeviceData,
+> implements AvailabilityAware {
+  /**
+   * Whether the underlying device still exists in the registry.
+   * Non-throwing introspection mirroring the Classic facades' `exists`:
+   * a consumer holding a cached facade can detect staleness without a
+   * try/catch.
+   * @returns `true` while the registry still resolves the id.
+   */
+  public get exists(): boolean {
+    return this.api.registry.getById(this.#id) !== undefined
+  }
+
   /**
    * Current frost-protection settings, or `null` when not configured.
    * @returns The frost-protection descriptor from `/context`.
@@ -57,16 +72,16 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
    * @returns The GUID string assigned by MELCloud Home.
    */
   public get id(): string {
-    return this.model.id
+    return this.#id
   }
 
   /**
-   * Whether MELCloud currently reports the unit as reachable. `false`
+   * Whether MELCloud can still deliver writes to the unit. `false`
    * means the wifi adapter lost its link to the cloud: writes are
    * accepted but never delivered, and readings go stale.
    * @returns The `/context` connectivity flag.
    */
-  public get isConnected(): boolean {
+  public get isAvailable(): boolean {
     return this.model.data.isConnected
   }
 
@@ -99,8 +114,6 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
 
   protected readonly api: HomeAPIAdapter
 
-  protected readonly model: HomeDevice<TData>
-
   /**
    * IANA timezone anchoring chart windows and labels, from the API
    * configuration; the Home wire itself always speaks UTC wall-clock.
@@ -111,14 +124,35 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   }
 
   /**
+   * Registry-resident model resolved by id on every access, so a
+   * long-lived facade never reads a pruned wrapper's frozen snapshot
+   * (a logout/login cycle rebuilds the registry with new wrappers —
+   * a pinned reference froze `isConnected` and kept a healed unit
+   * unavailable forever).
+   * @returns The current model for this facade's id.
+   * @throws EntityNotFoundError when the registry no longer holds the id.
+   */
+  protected get model(): HomeDevice<TData> {
+    const model = this.api.registry.getById(this.#id)
+    if (model === undefined) {
+      throw new EntityNotFoundError('Device', { entityId: this.#id })
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the id was minted from a TData-shaped model and a physical device never changes type
+    return model as HomeDevice<TData>
+  }
+
+  readonly #id: string
+
+  /**
    * Builds a Home device facade backed by the given API client and
-   * registry-resident device model.
+   * registry-resident device model. Only the model's id is retained:
+   * every later access re-resolves through the registry.
    * @param api - Home API client.
    * @param model - Backing device model, narrowed to a specific variant.
    */
   protected constructor(api: HomeAPIAdapter, model: HomeDevice<TData>) {
     this.api = api
-    this.model = model
+    this.#id = model.id
   }
 
   /**

@@ -97,18 +97,37 @@ interface HomeDeviceFixtureOptions {
   isOwner?: boolean
 }
 
+// Facades resolve their model by id through `api.registry` on every
+// access, so device fixtures self-register here and test API mocks
+// plug this in as their registry (last-created wins per id, matching
+// the facade-under-test's own device).
+const registeredHomeDevices = new Map<string, HomeDevice>()
+
+export const homeTestRegistry = {
+  delete: (id: string): boolean => registeredHomeDevices.delete(id),
+  getById: (id: string): HomeDevice | undefined =>
+    registeredHomeDevices.get(id),
+}
+
+const registerHomeDevice = <T extends HomeDevice>(device: T): T => {
+  registeredHomeDevices.set(device.id, device)
+  return device
+}
+
 // ATA-shaped payloads carry the ATA type tag by construction; ATW entries
 // come from the dedicated creators below so fixtures stay representative.
 export const homeDevice = (
   overrides: HomeDeviceDataOverrides = {},
   options: HomeDeviceFixtureOptions = {},
 ): HomeDevice<HomeAtaDeviceData> =>
-  new HomeDevice({
-    building: options.building ?? homeBuildingRef(),
-    device: homeDeviceData(overrides),
-    isOwner: options.isOwner ?? true,
-    type: HomeDeviceType.Ata,
-  })
+  registerHomeDevice(
+    new HomeDevice({
+      building: options.building ?? homeBuildingRef(),
+      device: homeDeviceData(overrides),
+      isOwner: options.isOwner ?? true,
+      type: HomeDeviceType.Ata,
+    }),
+  )
 
 export const typedHomeDeviceData = (
   overrides: HomeDeviceDataOverrides = {},
@@ -174,12 +193,14 @@ export const homeAtwDevice = (
   isOwner = true,
   building: HomeBuildingRef = homeBuildingRef(),
 ): HomeDevice<HomeAtwDeviceData> =>
-  new HomeDevice({
-    building,
-    device: homeAtwDeviceData(overrides),
-    isOwner,
-    type: HomeDeviceType.Atw,
-  })
+  registerHomeDevice(
+    new HomeDevice({
+      building,
+      device: homeAtwDeviceData(overrides),
+      isOwner,
+      type: HomeDeviceType.Atw,
+    }),
+  )
 
 export const typedHomeAtwDeviceData = (
   overrides: HomeAtwDeviceDataOverrides = {},

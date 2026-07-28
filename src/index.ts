@@ -177,6 +177,7 @@ export {
   syncDevices,
 } from './decorators/index.ts'
 export {
+  type AvailabilityAware,
   type ClassicDeviceAny,
   type ClassicModel,
   type HomeBuildingDevices,

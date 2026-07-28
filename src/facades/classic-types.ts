@@ -8,7 +8,7 @@ import type {
   ClassicBaseDevice,
   ClassicDeviceAny,
 } from '../entities/classic-types.ts'
-import type { Identifiable } from '../entities/types.ts'
+import type { AvailabilityAware, Identifiable } from '../entities/types.ts'
 import type { HolidayModeUpdate } from '../holiday-mode.ts'
 import type {
   ClassicEnergyData,
@@ -82,7 +82,7 @@ export interface ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
  * @category Facades
  */
 export interface ClassicDeviceFacade<T extends ClassicDeviceType>
-  extends ClassicBaseDevice<T>, ClassicFacade {
+  extends AvailabilityAware, ClassicBaseDevice<T>, ClassicFacade {
   /** Bitfield flags mapping each updatable property to its effective flag value. */
   readonly flags: Record<keyof ClassicUpdateDeviceData<T>, number>
   /** Fetch the latest device data after syncing. */

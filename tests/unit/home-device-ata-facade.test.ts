@@ -1,12 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
-import { NoChangesError } from '../../src/errors/index.ts'
+import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { Temporal } from '../../src/temporal.ts'
 import { type HomeAtaDeviceCapabilities, ok } from '../../src/types/index.ts'
 import { cast, mock, mockTemporalNowZoned, okValue } from '../helpers.ts'
-import { homeDevice, homeReportPoint } from '../home-fixtures.ts'
+import {
+  homeDevice,
+  homeReportPoint,
+  homeTestRegistry,
+} from '../home-fixtures.ts'
 
 const createModel = (
   settings: Record<string, string> = {},
@@ -28,6 +32,7 @@ const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
     getAtaErrorLog: vi.fn<HomeAPIAdapter['getAtaErrorLog']>(),
     getAtaTemperatures: vi.fn<HomeAPIAdapter['getAtaTemperatures']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
+    registry: cast(homeTestRegistry),
     updateAtaValues: vi
       .fn<HomeAPIAdapter['updateAtaValues']>()
       .mockResolvedValue(),
@@ -64,13 +69,38 @@ describe('home device ata facade', () => {
       expect(facade.overheatProtection).toStrictEqual(overheatProtection)
     })
 
-    it('exposes the connectivity flag from context', () => {
+    it('exposes availability from the context connectivity flag', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
         homeDevice({ id: 'device-1', isConnected: false }),
       )
 
-      expect(facade.isConnected).toBe(false)
+      expect(facade.isAvailable).toBe(false)
+    })
+
+    it('resolves the registry model by id, never a pinned snapshot', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        homeDevice({ id: 'device-1', isConnected: false }),
+      )
+      homeDevice({ id: 'device-1', isConnected: true })
+
+      expect(facade.isAvailable).toBe(true)
+    })
+
+    it('reports existence and throws once the registry drops the id', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        homeDevice({ id: 'device-gone' }),
+      )
+
+      expect(facade.exists).toBe(true)
+
+      homeTestRegistry.delete('device-gone')
+
+      expect(facade.exists).toBe(false)
+      expect(facade.id).toBe('device-gone')
+      expect(() => facade.isAvailable).toThrow(EntityNotFoundError)
     })
 
     it('returns null when protection is not configured', () => {

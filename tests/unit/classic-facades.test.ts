@@ -1473,6 +1473,38 @@ describe('atw device facade with zone 2', () => {
   })
 })
 
+describe('device facade availability', () => {
+  it('is available when the unit communicated recently', () => {
+    const facade = buildAtaFacade({
+      LastTimeStamp: Temporal.Now.plainDateTimeISO('UTC').toString(),
+    })
+
+    expect(facade.isAvailable).toBe(true)
+  })
+
+  it('is unavailable after a day without communication', () => {
+    const facade = buildAtaFacade({ LastTimeStamp: '2020-01-01T00:00:00' })
+
+    expect(facade.isAvailable).toBe(false)
+  })
+
+  it('errs on the available side for an unparsable timestamp', () => {
+    const facade = buildAtaFacade({ LastTimeStamp: 'garbage' })
+
+    expect(facade.isAvailable).toBe(true)
+  })
+
+  it('errs on the available side for a future-skewed timestamp', () => {
+    const facade = buildAtaFacade({
+      LastTimeStamp: Temporal.Now.plainDateTimeISO('UTC')
+        .add({ hours: 13 })
+        .toString(),
+    })
+
+    expect(facade.isAvailable).toBe(true)
+  })
+})
+
 describe('device type guards', () => {
   it.each([
     {
