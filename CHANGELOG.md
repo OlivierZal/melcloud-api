@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [45.0.2] - 2026-07-28
+
+### Fixed
+
+- `ensureAuthenticated()` no longer signs the user out while probing. It went straight to `resumeSession()`, which routes through `authenticate()` and wipes the persisted session _before_ re-logging in — so a session that was merely unexercised (a boot-time context fetch that lost the network reads unauthenticated while a valid refresh token sits in storage) was destroyed by the probe meant to restore it, and a failing re-login then left the account signed out. The probe is now a non-destructive registry sync, with `resumeSession()` kept as the fallback.
+
 ## [45.0.1] - 2026-07-28
 
 ### Fixed
@@ -420,6 +426,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[45.0.2]: https://github.com/OlivierZal/melcloud-api/compare/45.0.1...45.0.2
 [45.0.1]: https://github.com/OlivierZal/melcloud-api/compare/45.0.0...45.0.1
 [45.0.0]: https://github.com/OlivierZal/melcloud-api/compare/44.1.0...45.0.0
 [44.1.0]: https://github.com/OlivierZal/melcloud-api/compare/44.0.0...44.1.0

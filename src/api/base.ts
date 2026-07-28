@@ -387,15 +387,30 @@ export abstract class BaseAPI implements Disposable {
   }
 
   /**
-   * Sync check first; when it reads `false`, one best-effort
-   * {@link resumeSession} probe, then a re-check — the lazy self-heal
-   * consumers otherwise hand-roll (a valid persisted Home token reads
-   * unauthenticated until a context fetch has run).
+   * Sync check first; when it reads `false`, a NON-DESTRUCTIVE probe —
+   * one registry sync, which exercises the persisted session without
+   * touching it — and only if that still leaves us unauthenticated, the
+   * best-effort {@link resumeSession} fallback. The order matters:
+   * `resumeSession` goes through {@link authenticate}, which wipes the
+   * persisted session before re-logging in, so probing with it first
+   * would sign out a user whose tokens were merely unexercised (a
+   * boot-time context fetch that lost the network reads unauthenticated
+   * while a perfectly valid refresh token sits in storage).
    * @returns `true` when a session is usable afterwards.
    */
   public async ensureAuthenticated(): Promise<boolean> {
     if (this.isAuthenticated()) {
       return true
+    }
+    if (this.hasPersistedSession()) {
+      try {
+        await this.syncRegistry()
+      } catch (error) {
+        this.logger.error('Session probe failed:', error)
+      }
+      if (this.isAuthenticated()) {
+        return true
+      }
     }
     await this.resumeSession()
     return this.isAuthenticated()

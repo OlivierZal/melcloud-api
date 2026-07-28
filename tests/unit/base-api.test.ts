@@ -1132,14 +1132,40 @@ describe('ensureAuthenticated', () => {
     expect(api.hasPersistedSessionMock).not.toHaveBeenCalled()
   })
 
-  it('runs one best-effort restore probe when unauthenticated', async () => {
+  it('probes with a registry sync, never a destructive re-login', async () => {
     const api = new TestAPI()
     api.isAuthenticatedMock.mockReturnValueOnce(false).mockReturnValue(true)
     api.hasPersistedSessionMock.mockReturnValue(true)
-    api.tryReuseSessionMock.mockResolvedValue(true)
-    api.reuseSucceededMock.mockReturnValue(true)
 
     await expect(api.ensureAuthenticated()).resolves.toBe(true)
+
+    // The decisive assertion: authenticate() wipes the persisted session
+    // before logging in, so a session that is merely unexercised must be
+    // restored by the sync alone.
+    expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
+    expect(api.doAuthenticateMock).not.toHaveBeenCalled()
+    expect(api.clearPersistedSessionMock).not.toHaveBeenCalled()
+  })
+
+  it('tolerates a throwing probe and falls back to the restore', async () => {
+    const api = new TestAPI()
+    api.isAuthenticatedMock.mockReturnValue(false)
+    api.hasPersistedSessionMock.mockReturnValue(true)
+    api.syncRegistryMock.mockRejectedValue(new Error('offline'))
+
+    await expect(api.ensureAuthenticated()).resolves.toBe(false)
+
+    expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('skips the probe when nothing is persisted', async () => {
+    const api = new TestAPI()
+    api.isAuthenticatedMock.mockReturnValue(false)
+    api.hasPersistedSessionMock.mockReturnValue(false)
+
+    await expect(api.ensureAuthenticated()).resolves.toBe(false)
+
+    expect(api.syncRegistryMock).not.toHaveBeenCalled()
   })
 
   it('stays false when the restore probe cannot help', async () => {
