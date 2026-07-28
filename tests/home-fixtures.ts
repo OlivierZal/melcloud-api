@@ -63,6 +63,7 @@ export interface HomeDeviceDataOverrides {
   readonly frostProtection?: HomeFrostProtection | null
   readonly holidayMode?: HomeHolidayMode | null
   readonly id?: string
+  readonly isConnected?: boolean
   readonly name?: string
   readonly overheatProtection?: HomeOverheatProtection | null
   readonly rssi?: number
@@ -78,6 +79,7 @@ export const homeDeviceData = (
     givenDisplayName: overrides.name ?? 'Home device',
     holidayMode: overrides.holidayMode ?? null,
     id: overrides.id ?? 'home-device-1',
+    isConnected: overrides.isConnected ?? true,
     overheatProtection: overrides.overheatProtection ?? null,
     rssi: overrides.rssi ?? DEFAULT_RSSI_DBM,
     settings: buildSettings(overrides.settings ?? {}),

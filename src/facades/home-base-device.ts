@@ -61,6 +61,16 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData> {
   }
 
   /**
+   * Whether MELCloud currently reports the unit as reachable. `false`
+   * means the wifi adapter lost its link to the cloud: writes are
+   * accepted but never delivered, and readings go stale.
+   * @returns The `/context` connectivity flag.
+   */
+  public get isConnected(): boolean {
+    return this.model.data.isConnected
+  }
+
+  /**
    * Whether the current account owns this device rather than being a
    * guest of it. Reports the structural origin only: `false` does not
    * by itself prove a guest is barred from control (the BFF accepts
