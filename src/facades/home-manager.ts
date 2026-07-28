@@ -81,7 +81,7 @@ export class HomeFacadeManager {
    */
   public getBuilding(id: string): HomeBuildingAtaFacade | null {
     const model = this.#api.registry
-      .getByType(HomeDeviceType.Ata)
+      .getDevicesByType(HomeDeviceType.Ata)
       .find((device) => device.building.id === id)
     if (model === undefined) {
       this.#buildings.delete(id)

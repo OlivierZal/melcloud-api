@@ -42,7 +42,7 @@ export class HomeBuildingAtaFacade {
    */
   public get devices(): HomeDevice<HomeAtaDeviceData>[] {
     return this.#api.registry
-      .getByType(HomeDeviceType.Ata)
+      .getDevicesByType(HomeDeviceType.Ata)
       .filter(
         (device): device is HomeDevice<HomeAtaDeviceData> =>
           device.isAta() && device.building.id === this.id,

@@ -521,7 +521,7 @@ describe('melcloud home API', () => {
       expect(isResumed).toBe(true)
       expect(api.isAuthenticated()).toBe(true)
       expect(api.user).not.toBeNull()
-      expect(api.registry.getAll().length).toBeGreaterThan(0)
+      expect(api.registry.getDevices().length).toBeGreaterThan(0)
     })
 
     it('returns false + logs when persisted credentials are rejected', async () => {
@@ -614,7 +614,7 @@ describe('melcloud home API', () => {
 
       api.logOut()
 
-      expect(api.registry.getAll()).toHaveLength(0)
+      expect(api.registry.getDevices()).toHaveLength(0)
       expect(api.isAuthenticated()).toBe(false)
       // The previous account's buildings/devices must not linger.
       expect(api.context).toBeNull()
@@ -643,7 +643,7 @@ describe('melcloud home API', () => {
       // pre-sign-out session; the epoch guard re-runs the wipe.
       expect(api.isAuthenticated()).toBe(false)
       expect(api.context).toBeNull()
-      expect(api.registry.getAll()).toHaveLength(0)
+      expect(api.registry.getDevices()).toHaveLength(0)
     })
 
     it('should return empty array on failure', async () => {
@@ -731,7 +731,7 @@ describe('melcloud home API', () => {
       const api = await createApi()
 
       expect(
-        api.registry.getAll().map(({ id }: { id: string }) => id),
+        api.registry.getDevices().map(({ id }: { id: string }) => id),
       ).toContain(mockBuilding.airToAirUnits[0]?.id)
     })
   })
@@ -2072,7 +2072,7 @@ describe('melcloud home API', () => {
 
         const api = await createFromPersistedStore(settingManager)
 
-        expect(api.registry.getAll().length).toBeGreaterThan(0)
+        expect(api.registry.getDevices().length).toBeGreaterThan(0)
       })
     })
 
@@ -2348,7 +2348,7 @@ describe('melcloud home API', () => {
       })
 
       expect(api.isAuthenticated()).toBe(true)
-      expect(api.registry.getAll()).toHaveLength(2)
+      expect(api.registry.getDevices()).toHaveLength(2)
       expect(logger.error).not.toHaveBeenCalled()
     })
 
@@ -2388,7 +2388,7 @@ describe('melcloud home API', () => {
         expect.anything(),
       )
       expect(api.registry.getById('device-3')).toBeUndefined()
-      expect(api.registry.getAll()).toHaveLength(2)
+      expect(api.registry.getDevices()).toHaveLength(2)
     })
 
     it('keeps the full registry when only metadata drifts', async () => {
@@ -2400,7 +2400,7 @@ describe('melcloud home API', () => {
       const api = await createFromPersistedStore(settingManager)
 
       expect(api.isAuthenticated()).toBe(true)
-      expect(api.registry.getAll()).toHaveLength(2)
+      expect(api.registry.getDevices()).toHaveLength(2)
       expect(api.context?.language).toBe('')
     })
 
@@ -2440,7 +2440,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(true)
       expect(api.context).toBeNull()
-      expect(api.registry.getAll()).toHaveLength(0)
+      expect(api.registry.getDevices()).toHaveLength(0)
       expect(setSpy).not.toHaveBeenCalledWith('accessToken', '')
     })
 

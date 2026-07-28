@@ -281,7 +281,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   public async list(): Promise<HomeBuilding[]> {
     return this.runSyncCycle(async () => {
       const data = await this.#fetchContext()
-      this.#registry.sync([
+      this.#registry.syncDevices([
         // Guest entries first: the registry upsert is last-write-wins
         // per id, so a device duplicated across `buildings` and
         // `guestBuildings` keeps its owned tag.
@@ -556,7 +556,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   protected override clearRegistry(): void {
-    this.#registry.sync([])
+    this.#registry.syncDevices([])
   }
 
   protected override async doAuthenticate({

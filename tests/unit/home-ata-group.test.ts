@@ -55,7 +55,7 @@ const syncBuilding = (
     settings?: Record<string, string>
   }[],
 ): void => {
-  api.registry.sync(
+  api.registry.syncDevices(
     entries.map(({ building = homeBuildingRef(), id, settings = {} }) =>
       typedHomeDeviceData(
         { id, settings: { ...heatState, ...settings } },
@@ -67,7 +67,7 @@ const syncBuilding = (
 
 const ataModels = (api: HomeAPIAdapter): HomeDevice<HomeAtaDeviceData>[] =>
   api.registry
-    .getByType(HomeDeviceType.Ata)
+    .getDevicesByType(HomeDeviceType.Ata)
     .filter((device): device is HomeDevice<HomeAtaDeviceData> => device.isAta())
 
 describe('home ata group translation', () => {
@@ -311,7 +311,7 @@ describe('home building ata facade', () => {
 
     expect(facade.name).toBe('Renamed')
 
-    api.registry.sync([])
+    api.registry.syncDevices([])
 
     expect(facade.devices).toStrictEqual([])
     expect(facade.name).toBe('Renamed')
@@ -323,7 +323,7 @@ describe('home building ata facade', () => {
       { id: 'device-1' },
       { building: { id: 'other', name: 'Other' }, id: 'device-2' },
     ])
-    api.registry.sync([
+    api.registry.syncDevices([
       typedHomeDeviceData(
         { id: 'device-1', settings: heatState },
         { building: homeBuildingRef() },
@@ -441,7 +441,7 @@ describe('home facade manager buildings', () => {
     syncBuilding(api, [{ id: 'device-1' }])
     const manager = new HomeFacadeManager(api)
     const facade = manager.getBuilding('home-building-1')
-    api.registry.sync([])
+    api.registry.syncDevices([])
 
     expect(facade).not.toBeNull()
     expect(manager.getBuilding('home-building-1')).toBeNull()
@@ -451,7 +451,7 @@ describe('home facade manager buildings', () => {
 describe('home registry buildings', () => {
   it('groups devices of a type by their source building', () => {
     const registry = new HomeRegistry()
-    registry.sync([
+    registry.syncDevices([
       typedHomeDeviceData({ id: 'a' }, { building: { id: 'b1', name: 'One' } }),
       typedHomeDeviceData({ id: 'b' }, { building: { id: 'b2', name: 'Two' } }),
       typedHomeDeviceData({ id: 'c' }, { building: { id: 'b1', name: 'One' } }),
@@ -459,7 +459,7 @@ describe('home registry buildings', () => {
 
     expect(
       registry
-        .getBuildingsByType(HomeDeviceType.Ata)
+        .getBuildings({ type: HomeDeviceType.Ata })
         .map(({ devices, id, name }) => ({
           id,
           ids: devices.map((device) => device.id),
@@ -473,13 +473,13 @@ describe('home registry buildings', () => {
 
   it('restates the building on every sync', () => {
     const registry = new HomeRegistry()
-    registry.sync([
+    registry.syncDevices([
       typedHomeDeviceData({ id: 'a' }, { building: { id: 'b1', name: 'One' } }),
     ])
 
     expect(registry.getById('a')?.building.id).toBe('b1')
 
-    registry.sync([
+    registry.syncDevices([
       typedHomeDeviceData({ id: 'a' }, { building: { id: 'b2', name: 'Two' } }),
     ])
 
