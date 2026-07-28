@@ -32,16 +32,14 @@ const energyBucket = (value: string): ReturnType<typeof ok<object>> =>
 const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
     ...overrides,
-    getAtwEnergy: vi.fn<HomeAPIAdapter['getAtwEnergy']>(),
-    getAtwErrorLog: vi.fn<HomeAPIAdapter['getAtwErrorLog']>(),
     getAtwInternalTemperatures:
       vi.fn<HomeAPIAdapter['getAtwInternalTemperatures']>(),
-    getAtwTemperatures: vi.fn<HomeAPIAdapter['getAtwTemperatures']>(),
+    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
+    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
+    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
     registry: cast(homeTestRegistry),
-    updateAtwValues: vi
-      .fn<HomeAPIAdapter['updateAtwValues']>()
-      .mockResolvedValue(),
+    updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
   })
 
 describe('home device atw facade', () => {
@@ -292,7 +290,7 @@ describe('home device atw facade', () => {
         cast({ power: false, setTemperatureZone1: undefined }),
       )
 
-      expect(vi.mocked(api.updateAtwValues).mock.lastCall?.[1]).toStrictEqual({
+      expect(vi.mocked(api.updateValues).mock.lastCall?.[1]).toStrictEqual({
         power: false,
       })
     })
@@ -306,7 +304,7 @@ describe('home device atw facade', () => {
 
       await facade.updateValues({ setTemperatureZone1: 60 })
 
-      expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('atw-1', {
         setTemperatureZone1: 28,
       })
     })
@@ -320,7 +318,7 @@ describe('home device atw facade', () => {
 
       await facade.updateValues({ setTemperatureZone2: 5 })
 
-      expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('atw-1', {
         setTemperatureZone2: 12,
       })
     })
@@ -337,7 +335,7 @@ describe('home device atw facade', () => {
 
       await facade.updateValues({ setTankWaterTemperature: 10 })
 
-      expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('atw-1', {
         setTankWaterTemperature: 35,
       })
     })
@@ -352,7 +350,7 @@ describe('home device atw facade', () => {
         power: false,
       })
 
-      expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('atw-1', {
         forcedHotWaterMode: true,
         operationModeZone1: 'room',
         power: false,
@@ -367,7 +365,7 @@ describe('home device atw facade', () => {
 
       await facade.updatePower()
 
-      expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', { power: true })
+      expect(api.updateValues).toHaveBeenCalledWith('atw-1', { power: true })
     })
 
     it('powers off when passed false', async () => {
@@ -376,7 +374,7 @@ describe('home device atw facade', () => {
 
       await facade.updatePower(false)
 
-      expect(api.updateAtwValues).toHaveBeenCalledWith('atw-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('atw-1', {
         power: false,
       })
     })
@@ -398,7 +396,7 @@ describe('home device atw facade', () => {
   })
 
   describe('telemetry passthroughs', () => {
-    it('delegates getEnergy to getAtwEnergy with the chosen measure', async () => {
+    it('delegates getEnergy to getEnergy with the chosen measure', async () => {
       const api = createApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
       const params = {
@@ -410,16 +408,16 @@ describe('home device atw facade', () => {
 
       await facade.getEnergy(params)
 
-      expect(api.getAtwEnergy).toHaveBeenCalledWith('atw-1', params)
+      expect(api.getEnergy).toHaveBeenCalledWith('atw-1', params)
     })
 
-    it('delegates getErrorLog to getAtwErrorLog', async () => {
+    it('delegates getErrorLog to getErrorLog', async () => {
       const api = createApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       await facade.getErrorLog()
 
-      expect(api.getAtwErrorLog).toHaveBeenCalledWith('atw-1')
+      expect(api.getErrorLog).toHaveBeenCalledWith('atw-1')
     })
 
     it('builds the internal-temperatures chart from its report', async () => {
@@ -502,7 +500,7 @@ describe('home device atw facade', () => {
 
     it('merges comfort and internal series with mode bands', async () => {
       const api = createApi()
-      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
+      vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(
         ok([internalReport]),
       )
@@ -521,7 +519,7 @@ describe('home device atw facade', () => {
         to: '2026-05-10T00:00:00Z',
       }
 
-      expect(api.getAtwTemperatures).toHaveBeenCalledWith('atw-1', params)
+      expect(api.getTemperatures).toHaveBeenCalledWith('atw-1', params)
       expect(api.getAtwInternalTemperatures).toHaveBeenCalledWith(
         'atw-1',
         params,
@@ -536,7 +534,7 @@ describe('home device atw facade', () => {
     it('propagates a comfort-graph failure untouched', async () => {
       const api = createApi()
       const failure = { ok: false as const, status: 500 }
-      vi.mocked(api.getAtwTemperatures).mockResolvedValue(cast(failure))
+      vi.mocked(api.getTemperatures).mockResolvedValue(cast(failure))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
@@ -546,7 +544,7 @@ describe('home device atw facade', () => {
     it('propagates an internal-temperatures failure untouched', async () => {
       const api = createApi()
       const failure = { ok: false as const, status: 500 }
-      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([]))
+      vi.mocked(api.getTemperatures).mockResolvedValue(ok([]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(cast(failure))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
@@ -555,13 +553,13 @@ describe('home device atw facade', () => {
 
     it('builds one specific hour on a minute grid', async () => {
       const api = createApi()
-      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
+      vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       const value = okValue(await facade.getHourlyTemperatures(9))
 
-      expect(api.getAtwTemperatures).toHaveBeenCalledWith('atw-1', {
+      expect(api.getTemperatures).toHaveBeenCalledWith('atw-1', {
         from: '2026-05-09T09:00:00Z',
         period: 'Hourly',
         to: '2026-05-09T10:00:00Z',
@@ -572,7 +570,7 @@ describe('home device atw facade', () => {
     it('covers today on a five-minute grid when no hour is given', async () => {
       // Pin the label locale: the runner's default is not ours.
       const api = createApi({ locale: 'fr-FR' })
-      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
+      vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
@@ -580,7 +578,7 @@ describe('home device atw facade', () => {
 
       // Pinned to 09:30 UTC: the whole day on 5-minute slots, blank
       // after now.
-      expect(api.getAtwTemperatures).toHaveBeenCalledWith('atw-1', {
+      expect(api.getTemperatures).toHaveBeenCalledWith('atw-1', {
         from: '2026-05-09T00:00:00Z',
         period: 'Hourly',
         to: '2026-05-10T00:00:00Z',
@@ -594,7 +592,7 @@ describe('home device atw facade', () => {
 
     it('chunks a wide window and merges the reports', async () => {
       const api = createApi()
-      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
+      vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
@@ -608,13 +606,13 @@ describe('home device atw facade', () => {
       // 69 days sits beyond the band load budget: the comfort-graph
       // falls back to the fast 30-day Weekly chunking and the
       // truncated annotations are dropped instead of charted.
-      expect(api.getAtwTemperatures).toHaveBeenCalledTimes(3)
-      expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(1, 'atw-1', {
+      expect(api.getTemperatures).toHaveBeenCalledTimes(3)
+      expect(api.getTemperatures).toHaveBeenNthCalledWith(1, 'atw-1', {
         from: '2026-03-01T00:00:00Z',
         period: 'Weekly',
         to: '2026-03-31T00:00:00Z',
       })
-      expect(api.getAtwTemperatures).toHaveBeenNthCalledWith(3, 'atw-1', {
+      expect(api.getTemperatures).toHaveBeenNthCalledWith(3, 'atw-1', {
         from: '2026-04-30T00:00:00Z',
         period: 'Weekly',
         to: '2026-05-09T00:00:00Z',
@@ -626,7 +624,7 @@ describe('home device atw facade', () => {
 
     it('drops the bands just beyond the hourly grid', async () => {
       const api = createApi()
-      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
+      vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
@@ -639,8 +637,8 @@ describe('home device atw facade', () => {
 
       // 15 days renders on a daily grid, where bands inflate into a
       // solid wall: one fast Weekly call, annotations dropped.
-      expect(api.getAtwTemperatures).toHaveBeenCalledTimes(1)
-      expect(api.getAtwTemperatures).toHaveBeenCalledWith('atw-1', {
+      expect(api.getTemperatures).toHaveBeenCalledTimes(1)
+      expect(api.getTemperatures).toHaveBeenCalledWith('atw-1', {
         from: '2026-04-25T00:00:00Z',
         period: 'Weekly',
         to: '2026-05-10T00:00:00Z',
@@ -651,7 +649,7 @@ describe('home device atw facade', () => {
     it('propagates a chunk failure untouched', async () => {
       const api = createApi()
       const failure = { ok: false as const, status: 503 }
-      vi.mocked(api.getAtwTemperatures)
+      vi.mocked(api.getTemperatures)
         .mockResolvedValueOnce(ok([comfortReport]))
         .mockResolvedValueOnce(cast(failure))
         .mockResolvedValue(ok([comfortReport]))
@@ -668,7 +666,7 @@ describe('home device atw facade', () => {
 
     it('aggregates operation modes into Classic-shaped pie data', async () => {
       const api = createApi()
-      vi.mocked(api.getAtwTemperatures).mockResolvedValue(ok([comfortReport]))
+      vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       const value = okValue(
@@ -689,7 +687,7 @@ describe('home device atw facade', () => {
   describe('energy report', () => {
     it('charts consumed and produced daily series in kWh', async () => {
       const api = createApi()
-      vi.mocked(api.getAtwEnergy)
+      vi.mocked(api.getEnergy)
         .mockResolvedValueOnce(cast(energyBucket('2.5')))
         .mockResolvedValueOnce(cast(energyBucket('13.5')))
       const facade = new HomeDeviceAtwFacade(api, createModel())
@@ -707,11 +705,11 @@ describe('home device atw facade', () => {
         to: '2026-05-10T00:00:00Z',
       }
 
-      expect(api.getAtwEnergy).toHaveBeenNthCalledWith(1, 'atw-1', {
+      expect(api.getEnergy).toHaveBeenNthCalledWith(1, 'atw-1', {
         ...params,
         measure: 'consumed',
       })
-      expect(api.getAtwEnergy).toHaveBeenNthCalledWith(2, 'atw-1', {
+      expect(api.getEnergy).toHaveBeenNthCalledWith(2, 'atw-1', {
         ...params,
         measure: 'produced',
       })
@@ -727,7 +725,7 @@ describe('home device atw facade', () => {
     it('propagates the first energy failure untouched', async () => {
       const api = createApi()
       const failure = { ok: false as const, status: 429 }
-      vi.mocked(api.getAtwEnergy)
+      vi.mocked(api.getEnergy)
         .mockResolvedValueOnce(cast(failure))
         .mockResolvedValueOnce(cast(energyBucket('1.0')))
       const facade = new HomeDeviceAtwFacade(api, createModel())
@@ -738,7 +736,7 @@ describe('home device atw facade', () => {
     it('propagates a produced-side failure untouched', async () => {
       const api = createApi()
       const failure = { ok: false as const, status: 502 }
-      vi.mocked(api.getAtwEnergy)
+      vi.mocked(api.getEnergy)
         .mockResolvedValueOnce(cast(energyBucket('1.0')))
         .mockResolvedValueOnce(cast(failure))
       const facade = new HomeDeviceAtwFacade(api, createModel())

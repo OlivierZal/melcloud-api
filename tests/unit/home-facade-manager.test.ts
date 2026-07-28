@@ -19,12 +19,12 @@ const createModel = (): ReturnType<typeof homeDevice> =>
 
 const createApi = (): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
-    getAtaEnergy: vi.fn<HomeAPIAdapter['getAtaEnergy']>(),
-    getAtaErrorLog: vi.fn<HomeAPIAdapter['getAtaErrorLog']>(),
-    getAtaTemperatures: vi.fn<HomeAPIAdapter['getAtaTemperatures']>(),
+    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
+    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
+    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
     registry: cast(homeTestRegistry),
-    updateAtaValues: vi.fn<HomeAPIAdapter['updateAtaValues']>(),
+    updateValues: vi.fn<HomeAPIAdapter['updateValues']>(),
   })
 
 describe('home facade manager', () => {

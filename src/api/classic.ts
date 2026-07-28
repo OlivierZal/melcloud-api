@@ -498,26 +498,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   /**
-   * Fetches the raw `ListDevices` payload (validated against the
-   * envelope schema) without touching the registry.
-   * @returns The full building hierarchy.
-   */
-  public async list(): Promise<ClassicBuildingWithStructure[]> {
-    const data = await this.requestData<ClassicBuildingWithStructure[]>(
-      'get',
-      '/User/ListDevices',
-    )
-    // Zod validates the envelope + the minimal device header (Type,
-    // DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
-    // its compile-time contract. The schema's inferred type is a
-    // strict subset, so we run it as a side-effect check rather than
-    // through `requestData`'s schema option (which would substitute
-    // the narrower inferred type).
-    parseOrThrow(ClassicBuildingListSchema, data, 'ListDevices')
-    return data
-  }
-
-  /**
    * Low-level POST to `/Login/ClientLogin3`. Prefer {@link authenticate},
    * which adds credential fallback, persists the resulting
    * `contextKey`/`expiry`, and is triggered automatically on 401.
@@ -754,7 +734,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   async #fetch(): Promise<ClassicBuildingWithStructure[]> {
-    const data = await this.list()
+    const data = await this.#list()
     this.#registry.syncBuildings(data)
     this.#registry.syncFloors(
       data.flatMap(({ Structure: { Floors: floors } }) => floors),
@@ -792,5 +772,26 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   #getLanguageCode(language: string = this.#language): ClassicLanguage {
     return isLanguage(language) ? ClassicLanguage[language] : ClassicLanguage.en
+  }
+
+  /**
+   * Fetches the raw `ListDevices` payload (validated against the
+   * envelope schema) without touching the registry — internal to the
+   * fetch cycle: `fetch()` is the public heartbeat on both dialects.
+   * @returns The full building hierarchy.
+   */
+  async #list(): Promise<ClassicBuildingWithStructure[]> {
+    const data = await this.requestData<ClassicBuildingWithStructure[]>(
+      'get',
+      '/User/ListDevices',
+    )
+    // Zod validates the envelope + the minimal device header (Type,
+    // DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
+    // its compile-time contract. The schema's inferred type is a
+    // strict subset, so we run it as a side-effect check rather than
+    // through `requestData`'s schema option (which would substitute
+    // the narrower inferred type).
+    parseOrThrow(ClassicBuildingListSchema, data, 'ListDevices')
+    return data
   }
 }

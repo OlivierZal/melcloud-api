@@ -206,7 +206,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     interval: string
     to: string
   }): Promise<Result<HomeEnergyData>> {
-    return this.api.getAtaEnergy(this.id, params)
+    return this.api.getEnergy(this.id, params)
   }
 
   /**
@@ -223,7 +223,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     const bucketUnit = toHomeEnergyBucketUnit(window)
     return mapResult(
-      await this.api.getAtaEnergy(this.id, {
+      await this.api.getEnergy(this.id, {
         ...toHomeWireWindow(window),
         interval: toHomeEnergyInterval(bucketUnit),
       }),
@@ -244,7 +244,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * @returns The entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.api.getAtaErrorLog(this.id)
+    return this.api.getErrorLog(this.id)
   }
 
   /**
@@ -274,7 +274,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     const window = resolveHomeReportWindow(query, this.chartTimezone)
     return mapResult(
       await fetchHomeReportChunks(
-        async (params) => this.api.getAtaTemperatures(this.id, params),
+        async (params) => this.api.getTemperatures(this.id, params),
         window,
       ),
       (reports) =>
@@ -316,7 +316,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     if (Object.keys(changes).length === 0) {
       throw new NoChangesError(this.id)
     }
-    await this.api.updateAtaValues(this.id, {
+    await this.api.updateValues(this.id, {
       ...changes,
       ...this.#clampSetTemperature(changes),
     })

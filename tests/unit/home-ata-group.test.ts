@@ -41,9 +41,7 @@ const createApi = (): HomeAPIAdapter => {
   const registry = new HomeRegistry()
   return mock<HomeAPIAdapter>({
     registry,
-    updateAtaValues: vi
-      .fn<HomeAPIAdapter['updateAtaValues']>()
-      .mockResolvedValue(),
+    updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
   })
 }
 
@@ -235,7 +233,7 @@ describe('home device ata facade group', () => {
       OperationMode: ClassicOperationMode.cool,
     })
 
-    expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+    expect(api.updateValues).toHaveBeenCalledWith('device-1', {
       operationMode: 'Cool',
     })
   })
@@ -248,7 +246,7 @@ describe('home device ata facade group', () => {
 
     await facade.updateGroupState({ Power: null })
 
-    expect(api.updateAtaValues).not.toHaveBeenCalled()
+    expect(api.updateValues).not.toHaveBeenCalled()
   })
 
   it('tolerates a device already matching the delta', async () => {
@@ -256,7 +254,7 @@ describe('home device ata facade group', () => {
     syncBuilding(api, [{ id: 'device-1' }])
     const [model] = ataModels(api)
     const facade = new HomeDeviceAtaFacade(api, mock(model))
-    vi.mocked(api.updateAtaValues).mockRejectedValueOnce(
+    vi.mocked(api.updateValues).mockRejectedValueOnce(
       new NoChangesError('device-1'),
     )
 
@@ -270,7 +268,7 @@ describe('home device ata facade group', () => {
     syncBuilding(api, [{ id: 'device-1' }])
     const [model] = ataModels(api)
     const facade = new HomeDeviceAtaFacade(api, mock(model))
-    vi.mocked(api.updateAtaValues).mockRejectedValue(new Error('BFF failure'))
+    vi.mocked(api.updateValues).mockRejectedValue(new Error('BFF failure'))
 
     await expect(
       facade.updateGroupState({ SetTemperature: 23 }),
@@ -374,11 +372,11 @@ describe('home building ata facade', () => {
 
     await facade.updateGroupState({ SetTemperature: 23 })
 
-    expect(api.updateAtaValues).toHaveBeenCalledTimes(2)
-    expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+    expect(api.updateValues).toHaveBeenCalledTimes(2)
+    expect(api.updateValues).toHaveBeenCalledWith('device-1', {
       setTemperature: 23,
     })
-    expect(api.updateAtaValues).toHaveBeenCalledWith('device-2', {
+    expect(api.updateValues).toHaveBeenCalledWith('device-2', {
       setTemperature: 23,
     })
   })
@@ -386,7 +384,7 @@ describe('home building ata facade', () => {
   it('tolerates members already matching the delta', async () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }, { id: 'device-2' }])
-    vi.mocked(api.updateAtaValues).mockRejectedValueOnce(
+    vi.mocked(api.updateValues).mockRejectedValueOnce(
       new NoChangesError('device-1'),
     )
     const facade = buildingOf(api)
@@ -399,7 +397,7 @@ describe('home building ata facade', () => {
   it('propagates a member update failure', async () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }])
-    vi.mocked(api.updateAtaValues).mockRejectedValue(new Error('BFF failure'))
+    vi.mocked(api.updateValues).mockRejectedValue(new Error('BFF failure'))
     const facade = buildingOf(api)
 
     await expect(
@@ -414,7 +412,7 @@ describe('home building ata facade', () => {
 
     await facade.updateGroupState({})
 
-    expect(api.updateAtaValues).not.toHaveBeenCalled()
+    expect(api.updateValues).not.toHaveBeenCalled()
   })
 })
 

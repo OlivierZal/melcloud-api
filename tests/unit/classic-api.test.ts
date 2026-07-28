@@ -425,11 +425,11 @@ describe('mELCloud Classic API', () => {
       )
     })
 
-    it('calls list', async () => {
+    it('fetch hits ListDevices', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
       mockRequest.mockResolvedValue({ data: [], headers: {}, status: 200 })
-      await api.list()
+      await api.fetch()
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ method: 'get', url: '/User/ListDevices' }),

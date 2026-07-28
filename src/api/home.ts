@@ -1,3 +1,4 @@
+import type { HomeDevice } from '../entities/home-device.ts'
 import type {
   HomeAtaValues,
   HomeAtwValues,
@@ -21,7 +22,10 @@ import {
   type TypedHomeDeviceData,
   HomeRegistry,
 } from '../entities/home-registry.ts'
-import { AuthenticationThrottledError } from '../errors/index.ts'
+import {
+  AuthenticationThrottledError,
+  EntityNotFoundError,
+} from '../errors/index.ts'
 import { HttpStatus, isHttpError } from '../http/index.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
@@ -174,7 +178,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   /**
    * Latest `/context` payload from the BFF, or `null` before the
    * first successful call. Populated by {@link authenticate} and
-   * {@link list}; cleared on session invalidation.
+   * {@link fetch}; cleared on session invalidation.
    * @returns The cached context, or `null`.
    */
   public get context(): HomeContext | null {
@@ -192,7 +196,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * In-memory device registry populated by {@link list}.
+   * In-memory device registry populated by {@link fetch}.
    * @returns The registry instance.
    */
   public get registry(): HomeRegistry {
@@ -248,7 +252,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       httpConfig: { baseURL },
       logLabel: '[Home]',
       rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
-      syncCallback: async () => this.list(),
+      syncCallback: async () => this.fetch(),
     })
     this.#locale = locale
     this.#timezone = timezone
@@ -274,11 +278,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   /**
    * Fetch all buildings (owned + guest), sync the device registry,
-   * and schedule the next auto-sync.
+   * and schedule the next auto-sync — the same heartbeat contract as
+   * the Classic `fetch()`.
    * @returns All buildings or an empty array on failure.
    */
   @syncDevices()
-  public async list(): Promise<HomeBuilding[]> {
+  public async fetch(): Promise<HomeBuilding[]> {
     return this.runSyncCycle(async () => {
       const data = await this.#fetchContext()
       this.#registry.syncDevices([
@@ -337,98 +342,8 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Fetch cumulative-energy telemetry for an ATA unit. Returns a
-   * {@link Result} so callers can branch on the failure class
-   * (`validation` for shape drift, `server` for 4xx/5xx,
-   * `unauthorized` for token rejection, `rate-limited`, `network`).
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (e.g. `PT1H`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns Success with the telemetry bundle, or a typed failure.
-   */
-  public async getAtaEnergy(
-    id: string,
-    params: { from: string; interval: string; to: string },
-  ): Promise<Result<HomeEnergyData>> {
-    return this.#fetchEnergy(id, {
-      ...params,
-      measure: 'cumulative_energy_consumed_since_last_upload',
-    })
-  }
-
-  /**
-   * Fetch the error-log entries for an ATA unit. Same {@link Result}
-   * contract as {@link getAtaEnergy}.
-   * @param id - Device id.
-   * @returns Success with the entries (possibly empty), or a typed failure.
-   */
-  public async getAtaErrorLog(
-    id: string,
-  ): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.#fetchErrorLog(ATA_UNIT_PATH, id)
-  }
-
-  /**
-   * Fetch a trend-summary report (temperatures, etc.) for an ATA
-   * unit. Same {@link Result} contract as {@link getAtaEnergy}.
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.period - Aggregation period (e.g. `hour`, `day`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns Success with the report datasets, or a typed failure.
-   */
-  public async getAtaTemperatures(
-    id: string,
-    params: { from: string; period: string; to: string },
-  ): Promise<Result<HomeReportData[]>> {
-    return this.#fetchReport('/report/v1/trendsummary', id, params)
-  }
-
-  /**
-   * Fetch interval-energy telemetry for an ATW unit. Unlike ATA's
-   * `cumulative_energy_consumed_since_last_upload`, ATW exposes
-   * separate `interval_energy_consumed` and `interval_energy_produced`
-   * measures (kWh per bucket, not cumulative — live-probed 2026-07-17).
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (`Minute`, `Hour`, `Day`, `Week` or `Month`).
-   * @param params.measure - Energy direction (`'consumed'` or `'produced'`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns Success with the telemetry bundle, or a typed failure.
-   */
-  public async getAtwEnergy(
-    id: string,
-    params: {
-      from: string
-      interval: string
-      measure: 'consumed' | 'produced'
-      to: string
-    },
-  ): Promise<Result<HomeEnergyData>> {
-    return this.#fetchEnergy(id, {
-      ...params,
-      measure: ATW_ENERGY_MEASURE[params.measure],
-    })
-  }
-
-  /**
-   * Fetch the error-log entries for an ATW unit. Mirror of {@link getAtaErrorLog}.
-   * @param id - Device id.
-   * @returns Success with the entries (possibly empty), or a typed failure.
-   */
-  public async getAtwErrorLog(
-    id: string,
-  ): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.#fetchErrorLog(ATW_UNIT_PATH, id)
-  }
-
-  /**
    * Fetch the internal-temperatures report (flow/return/tank/zone)
-   * for an ATW unit. Same {@link Result} contract as {@link getAtaEnergy}.
+   * for an ATW unit. Same {@link Result} contract as {@link getEnergy}.
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
@@ -444,25 +359,60 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Fetch the comfort-graph report (outside / room / set temperature)
-   * for an ATW unit. Same {@link Result} contract as {@link getAtaEnergy}.
+   * Fetch energy telemetry for a unit; the registry model's connection
+   * type selects the measure family — ATA's single cumulative
+   * consumption counter, or ATW's interval consumed/produced measures
+   * (kWh per bucket, live-probed 2026-07-17). Returns a {@link Result}
+   * so callers can branch on the failure class (`validation` for shape
+   * drift, `server` for 4xx/5xx, `unauthorized` for token rejection,
+   * `rate-limited`, `network`).
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
-   * @param params.period - Aggregation period (e.g. `Daily`, `Hourly`).
+   * @param params.interval - Aggregation interval (`Minute`, `Hour`, `Day`, `Week` or `Month`).
+   * @param params.measure - Energy direction (`'consumed'` or
+   * `'produced'`); ATW only, where it defaults to `'consumed'` — the
+   * ATA counter is consumption by definition.
    * @param params.to - ISO end timestamp (exclusive).
-   * @returns Success with the report datasets, or a typed failure.
+   * @returns Success with the telemetry bundle, or a typed failure.
+   * @throws EntityNotFoundError when the registry does not hold the id.
    */
-  public async getAtwTemperatures(
+  public async getEnergy(
     id: string,
-    params: { from: string; period: string; to: string },
-  ): Promise<Result<HomeReportData[]>> {
-    return this.#fetchReport('/report/v1/comfort-graph', id, params)
+    params: {
+      from: string
+      interval: string
+      to: string
+      measure?: 'consumed' | 'produced'
+    },
+  ): Promise<Result<HomeEnergyData>> {
+    const { measure, ...window } = params
+    return this.#fetchEnergy(id, {
+      ...window,
+      measure: this.#modelFor(id).isAta()
+        ? 'cumulative_energy_consumed_since_last_upload'
+        : ATW_ENERGY_MEASURE[measure ?? 'consumed'],
+    })
+  }
+
+  /**
+   * Fetch the error-log entries for a unit; the registry model's
+   * connection type selects the unit path. Same {@link Result} contract
+   * as {@link getEnergy}.
+   * @param id - Device id.
+   * @returns Success with the entries (possibly empty), or a typed failure.
+   * @throws EntityNotFoundError when the registry does not hold the id.
+   */
+  public async getErrorLog(id: string): Promise<Result<HomeErrorLogEntry[]>> {
+    return this.#fetchErrorLog(
+      this.#modelFor(id).isAta() ? ATA_UNIT_PATH : ATW_UNIT_PATH,
+      id,
+    )
   }
 
   /**
    * Fetch RSSI telemetry for a device (ATA or ATW). Same {@link Result}
-   * contract as {@link getAtaEnergy}.
+   * contract as {@link getEnergy}.
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
@@ -481,6 +431,32 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       },
       schema: HomeEnergyDataSchema,
     })
+  }
+
+  /**
+   * Fetch the temperature report for a unit; the registry model's
+   * connection type selects the endpoint — ATA's trend summary or
+   * ATW's comfort graph (outside / room / set temperature). Same
+   * {@link Result} contract as {@link getEnergy}.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Aggregation period (e.g. `hour`, `day`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the report datasets, or a typed failure.
+   * @throws EntityNotFoundError when the registry does not hold the id.
+   */
+  public async getTemperatures(
+    id: string,
+    params: { from: string; period: string; to: string },
+  ): Promise<Result<HomeReportData[]>> {
+    return this.#fetchReport(
+      this.#modelFor(id).isAta()
+        ? '/report/v1/trendsummary'
+        : '/report/v1/comfort-graph',
+      id,
+      params,
+    )
   }
 
   /**
@@ -511,36 +487,30 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Send an ATA-unit setpoint update to the BFF. On success, re-sync
-   * the registry so it reflects the server-side effect of the write
-   * (the PUT response itself does not echo device fields). On failure,
-   * the typed transport error propagates and the sync is skipped — the
+   * Send a unit setpoint update to the BFF; the registry model's
+   * connection type selects the wire path. On success, re-sync the
+   * registry so it reflects the server-side effect of the write (the
+   * PUT response itself does not echo device fields). On failure, the
+   * typed transport error propagates and the sync is skipped — the
    * server state is presumed unchanged, so a re-fetch would be wasted
    * work. The mutation + post-sync orchestration lives in
-   * `#putAtaAndSync`, where `@fetchDevices({ when: 'after' })` applies
-   * the same post-mutation-refresh contract as Classic facades — just
-   * resolved via `syncRegistry()` instead of `api.fetch()`.
+   * `#putAtaAndSync`/`#putAtwAndSync`, where
+   * `@fetchDevices({ when: 'after' })` applies the same
+   * post-mutation-refresh contract as Classic facades — just resolved
+   * via `syncRegistry()` instead of `api.fetch()`.
    * @param id - Target device id.
-   * @param values - Partial setpoint payload.
+   * @param values - Partial setpoint payload matching the unit's
+   * connection type.
+   * @throws EntityNotFoundError when the registry does not hold the id.
    */
-  public async updateAtaValues(
+  public async updateValues(
     id: string,
-    values: HomeAtaValues,
+    values: HomeAtaValues | HomeAtwValues,
   ): Promise<void> {
-    await this.putAtaAndSync(id, values)
-  }
-
-  /**
-   * Send an ATW-unit setpoint update to the BFF. Mirror of
-   * {@link updateAtaValues} for air-to-water heat pumps; same
-   * post-mutation-refresh semantics.
-   * @param id - Target device id.
-   * @param values - Partial setpoint payload.
-   */
-  public async updateAtwValues(
-    id: string,
-    values: HomeAtwValues,
-  ): Promise<void> {
+    if (this.#modelFor(id).isAta()) {
+      await this.putAtaAndSync(id, values)
+      return
+    }
     await this.putAtwAndSync(id, values)
   }
 
@@ -656,7 +626,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * The base probe's `syncRegistry()` runs `list()`, which hits
+   * The base probe's `syncRegistry()` runs `fetch()`, which hits
    * `/context` once and hydrates `context`/`user` AND the device
    * registry in a single request; an expired token triggers the
    * pipeline's 401-retry + refresh-token flow along the way. Success
@@ -671,11 +641,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   protected override async syncRegistry(): Promise<void> {
-    await this.list()
+    await this.fetch()
   }
 
   /**
-   * Core of {@link updateAtaValues}: perform the PUT and, on success,
+   * Core of {@link updateValues}: perform the PUT and, on success,
    * trigger a post-mutation registry refresh via
    * `@fetchDevices({ when: 'after' })`. Throws on PUT failure so the
    * decorator skips the sync (failed mutation → server state
@@ -819,6 +789,16 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       },
       schema: HomeReportDataSchema.array(),
     })
+  }
+
+  // Per-unit endpoints differ by connection type; the registry is the
+  // routing truth for an id the caller addresses blindly.
+  #modelFor(id: string): HomeDevice {
+    const model = this.#registry.getById(id)
+    if (model === undefined) {
+      throw new EntityNotFoundError('Device', { entityId: id })
+    }
+    return model
   }
 
   /**

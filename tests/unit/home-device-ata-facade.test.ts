@@ -28,14 +28,12 @@ const createModel = (
 const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
   mock<HomeAPIAdapter>({
     ...overrides,
-    getAtaEnergy: vi.fn<HomeAPIAdapter['getAtaEnergy']>(),
-    getAtaErrorLog: vi.fn<HomeAPIAdapter['getAtaErrorLog']>(),
-    getAtaTemperatures: vi.fn<HomeAPIAdapter['getAtaTemperatures']>(),
+    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
+    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
+    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
     registry: cast(homeTestRegistry),
-    updateAtaValues: vi
-      .fn<HomeAPIAdapter['updateAtaValues']>()
-      .mockResolvedValue(),
+    updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
   })
 
 describe('home device ata facade', () => {
@@ -261,7 +259,7 @@ describe('home device ata facade', () => {
         cast({ power: true, setTemperature: undefined }),
       )
 
-      expect(vi.mocked(api.updateAtaValues).mock.lastCall?.[1]).toStrictEqual({
+      expect(vi.mocked(api.updateValues).mock.lastCall?.[1]).toStrictEqual({
         power: true,
       })
     })
@@ -274,7 +272,7 @@ describe('home device ata facade', () => {
 
       await facade.updatePower()
 
-      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         power: true,
       })
     })
@@ -285,7 +283,7 @@ describe('home device ata facade', () => {
 
       await facade.updatePower(false)
 
-      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         power: false,
       })
     })
@@ -303,7 +301,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 5 })
 
-      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 10,
       })
     })
@@ -319,7 +317,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 35 })
 
-      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 31,
       })
     })
@@ -335,7 +333,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 10 })
 
-      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 16,
       })
     })
@@ -351,7 +349,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 10 })
 
-      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 16,
       })
     })
@@ -367,7 +365,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ operationMode: 'Cool', setTemperature: 10 })
 
-      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         operationMode: 'Cool',
         setTemperature: 16,
       })
@@ -381,7 +379,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 21 })
 
-      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 21,
       })
     })
@@ -394,7 +392,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ power: true })
 
-      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         power: true,
       })
     })
@@ -407,7 +405,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ setTemperature: 5 })
 
-      expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
         setTemperature: 5,
       })
     })
@@ -420,7 +418,7 @@ describe('home device ata facade', () => {
       const params = { from: '2026-03-01', interval: 'Day', to: '2026-03-02' }
       await facade.getEnergy(params)
 
-      expect(api.getAtaEnergy).toHaveBeenCalledWith('device-1', params)
+      expect(api.getEnergy).toHaveBeenCalledWith('device-1', params)
     })
 
     it('should delegate getErrorLog with device id', async () => {
@@ -428,7 +426,7 @@ describe('home device ata facade', () => {
       const facade = new HomeDeviceAtaFacade(api, createModel())
       await facade.getErrorLog()
 
-      expect(api.getAtaErrorLog).toHaveBeenCalledWith('device-1')
+      expect(api.getErrorLog).toHaveBeenCalledWith('device-1')
     })
 
     it('should delegate getSignal with device id', async () => {
@@ -442,7 +440,7 @@ describe('home device ata facade', () => {
 
     it('builds the temperature chart from the trend-summary report', async () => {
       const api = createApi()
-      vi.mocked(api.getAtaTemperatures).mockResolvedValue(
+      vi.mocked(api.getTemperatures).mockResolvedValue(
         ok([
           {
             datasets: [
@@ -465,7 +463,7 @@ describe('home device ata facade', () => {
         }),
       )
 
-      expect(api.getAtaTemperatures).toHaveBeenCalledWith('device-1', {
+      expect(api.getTemperatures).toHaveBeenCalledWith('device-1', {
         from: '2026-03-01T00:00:00Z',
         period: 'Hourly',
         to: '2026-03-02T00:00:00Z',
@@ -478,7 +476,7 @@ describe('home device ata facade', () => {
     it('propagates a trend-summary failure untouched', async () => {
       const api = createApi()
       const failure = { ok: false as const, status: 500 }
-      vi.mocked(api.getAtaTemperatures).mockResolvedValue(cast(failure))
+      vi.mocked(api.getTemperatures).mockResolvedValue(cast(failure))
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
       await expect(facade.getTemperatures()).resolves.toBe(failure)
@@ -486,7 +484,7 @@ describe('home device ata facade', () => {
 
     it('charts a multi-day energy report in local-day kWh buckets', async () => {
       const api = createApi()
-      vi.mocked(api.getAtaEnergy).mockResolvedValue(
+      vi.mocked(api.getEnergy).mockResolvedValue(
         ok({
           measureData: [
             {
@@ -509,7 +507,7 @@ describe('home device ata facade', () => {
 
       // Up to a month, day buckets aggregate hourly wire buckets per
       // display-timezone calendar day.
-      expect(api.getAtaEnergy).toHaveBeenCalledWith('device-1', {
+      expect(api.getEnergy).toHaveBeenCalledWith('device-1', {
         from: '2026-03-01T00:00:00Z',
         interval: 'Hour',
         to: '2026-03-03T00:00:00Z',
@@ -522,7 +520,7 @@ describe('home device ata facade', () => {
     it('lands evening UTC buckets on the next local calendar day', async () => {
       // Pin the label locale: the runner's default is not ours.
       const api = createApi({ locale: 'fr-FR', timezone: 'Europe/Paris' })
-      vi.mocked(api.getAtaEnergy).mockResolvedValue(
+      vi.mocked(api.getEnergy).mockResolvedValue(
         ok({
           measureData: [
             {
@@ -550,7 +548,7 @@ describe('home device ata facade', () => {
 
     it('keeps raw UTC day buckets beyond a month', async () => {
       const api = createApi()
-      vi.mocked(api.getAtaEnergy).mockResolvedValue(ok({ measureData: [] }))
+      vi.mocked(api.getEnergy).mockResolvedValue(ok({ measureData: [] }))
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
       okValue(
@@ -560,14 +558,12 @@ describe('home device ata facade', () => {
         }),
       )
 
-      expect(vi.mocked(api.getAtaEnergy).mock.calls[0]?.[1]?.interval).toBe(
-        'Day',
-      )
+      expect(vi.mocked(api.getEnergy).mock.calls[0]?.[1]?.interval).toBe('Day')
     })
 
     it('switches a one-day energy report to hourly buckets', async () => {
       const api = createApi()
-      vi.mocked(api.getAtaEnergy).mockResolvedValue(
+      vi.mocked(api.getEnergy).mockResolvedValue(
         ok({
           measureData: [
             {
@@ -589,7 +585,7 @@ describe('home device ata facade', () => {
       )
 
       // One day: hourly wire buckets, matching the Classic report.
-      expect(api.getAtaEnergy).toHaveBeenCalledWith('device-1', {
+      expect(api.getEnergy).toHaveBeenCalledWith('device-1', {
         from: '2026-03-01T00:00:00Z',
         interval: 'Hour',
         to: '2026-03-02T00:00:00Z',
@@ -600,7 +596,7 @@ describe('home device ata facade', () => {
 
     it('keeps hourly buckets when the one-day window drifts by ms', async () => {
       const api = createApi()
-      vi.mocked(api.getAtaEnergy).mockResolvedValue(ok({ measureData: [] }))
+      vi.mocked(api.getEnergy).mockResolvedValue(ok({ measureData: [] }))
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
       // The caller stamps `from` a beat before the library stamps `to`.
@@ -611,9 +607,7 @@ describe('home device ata facade', () => {
         }),
       )
 
-      expect(vi.mocked(api.getAtaEnergy).mock.calls[0]?.[1]?.interval).toBe(
-        'Hour',
-      )
+      expect(vi.mocked(api.getEnergy).mock.calls[0]?.[1]?.interval).toBe('Hour')
     })
   })
 
