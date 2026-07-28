@@ -15,6 +15,11 @@ import {
   tolerateNoChanges,
 } from './home-ata-group.ts'
 
+// `allSettled` reasons are `unknown`; non-Error rejections (possible
+// from plain-JS callers) wrap so the throw sites stay Error-typed.
+const toError = (reason: unknown): Error =>
+  reason instanceof Error ? reason : new Error(JSON.stringify(reason))
+
 /**
  * Resolves the cached ATA device facade for a registry model — supplied by
  * the facade manager so building facades reuse its per-device cache.
@@ -114,17 +119,35 @@ export class HomeBuildingAtaFacade {
    * already matching it (a tolerated `NoChangesError` from their
    * update) are fine by definition and do not fail the group write.
    * @param state - Partial Classic group state to push to the members.
+   * @throws The single member failure, or an `AggregateError` bundling
+   * every member failure when more than one PUT rejects.
    */
   public async updateGroupState(state: ClassicGroupState): Promise<void> {
     const values = toHomeAtaValues(state)
-    if (Object.keys(values).length > 0) {
-      await Promise.all(
-        this.devices.map(async (device) =>
-          tolerateNoChanges(async () =>
-            this.#getFacade(device).updateValues(values),
-          ),
+    if (Object.keys(values).length === 0) {
+      return
+    }
+    const outcomes = await Promise.allSettled(
+      this.devices.map(async (device) =>
+        tolerateNoChanges(async () =>
+          this.#getFacade(device).updateValues(values),
         ),
+      ),
+    )
+    const failures = outcomes
+      .filter(
+        (outcome): outcome is PromiseRejectedResult =>
+          outcome.status === 'rejected',
       )
+      .map(({ reason }) => toError(reason))
+    const [firstFailure] = failures
+    if (firstFailure !== undefined && failures.length === 1) {
+      throw firstFailure
+    }
+    // The thrown error is the group write's only outcome channel:
+    // keep every member failure instead of the first to settle.
+    if (failures.length > 1) {
+      throw new AggregateError(failures, 'Group update failed on members')
     }
   }
 }

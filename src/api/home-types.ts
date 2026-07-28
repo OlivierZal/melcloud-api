@@ -19,35 +19,24 @@ import type { BaseAPIAdapter, BaseAPIConfig, BaseAPISettings } from './types.ts'
  *
  * Mirrors the public surface of the {@link HomeAPI} class with
  * property-with-arrow syntax so facades, mocks, and tests can
- * reference methods safely (`expect(api.updateAtaValues)`,
+ * reference methods safely (`expect(api.updateValues)`,
  * `mock<HomeAPIAdapter>({...})`) without triggering `unbound-method`
  * lint — the class has real methods that carry `this`, whereas this
  * interface declares them as plain functions with no implicit
  * binding.
  *
- * Per-device-type endpoints follow a symmetric `<verb><Ata|Atw><Noun>`
- * naming convention so callers never have to guess which side of the
- * pair carries the suffix.
+ * Per-unit endpoints share one verb per concept (`updateValues`,
+ * `getEnergy`, `getErrorLog`, `getTemperatures`); the registry model's
+ * connection type routes the wire path, so callers never pick an
+ * ATA/ATW variant — `getAtwInternalTemperatures` is the one
+ * deliberate exception (no ATA counterpart exists).
  * @category Configuration
  */
 export interface HomeAPIAdapter extends BaseAPIAdapter {
-  /**
-   * Whether the upstream rate-limit gate is currently holding a pause
-   * window. `true` means the SDK is intentionally failing fast to
-   * honor an upstream 429 `Retry-After`.
-   */
-  /** BCP-47 locale tag for chart labels ({@link HomeAPIConfig.locale}). */
   /** Home device registry with stable model references across syncs. */
   readonly registry: HomeRegistry
-  /** IANA timezone for chart windows ({@link HomeAPIConfig.timezone}). */
   /** The currently authenticated user, or `null`. */
   readonly user: HomeUser | null
-  /**
-   * Sign in with explicit credentials. Throws `AuthenticationError`
-   * on rejection. For best-effort restore from persisted credentials,
-   * use {@link resumeSession} instead.
-   */
-  /** Cancel any pending automatic sync. */
   /** Fetch all buildings and sync the device registry — the heartbeat, mirroring Classic `fetch()`. */
   readonly fetch: () => Promise<HomeBuilding[]>
   /** Fetch the internal-temperatures report (flow/return/tank/zone) for an ATW unit. */

@@ -65,9 +65,12 @@ export const classicUpdateDevices =
         throw new NoChangesError(this.id)
       }
       await target.call(this, ...args)
+      // The facades default an omitted `isOn` to `true` inside the method
+      // body, invisible here — mirror it, or a no-arg updatePower() would
+      // smear `Power: undefined` over every registry model.
       const newData =
         kind === 'power'
-          ? { Power: arg }
+          ? { Power: arg ?? true }
           : Object.fromEntries(
               Object.entries(arg ?? {}).filter(
                 ([, value]) => value !== undefined && value !== null,

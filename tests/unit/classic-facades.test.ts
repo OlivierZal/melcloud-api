@@ -268,6 +268,16 @@ describe('building facade', () => {
     expect(api.updatePower).toHaveBeenCalledWith(expect.any(Object))
   })
 
+  it('folds a false power acknowledgment into UpdateRejectedError', async () => {
+    const { facade } = createBuildingFacade({
+      updatePower: vi
+        .fn<ClassicAPIAdapter['updatePower']>()
+        .mockResolvedValue(false),
+    })
+
+    await expect(facade.updatePower(true)).rejects.toThrow(UpdateRejectedError)
+  })
+
   it('calls getErrorLog', async () => {
     const { facade } = createBuildingFacade()
 
@@ -534,7 +544,7 @@ describe('building facade group', () => {
     expect(!result.ok && result.error.kind).toBe('network')
   })
 
-  it('throws when updateGroupState API fails', async () => {
+  it('propagates an updateGroupState transport failure untouched', async () => {
     const { facade } = createBuildingFacade({
       updateGroupState: vi
         .fn<ClassicAPIAdapter['updateGroupState']>()
@@ -542,7 +552,7 @@ describe('building facade group', () => {
     })
 
     await expect(facade.updateGroupState({ Power: true })).rejects.toThrow(
-      'No air-to-air device found',
+      'fail',
     )
   })
 })

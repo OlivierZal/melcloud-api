@@ -394,6 +394,30 @@ describe('home building ata facade', () => {
     ).resolves.toBeUndefined()
   })
 
+  it('wraps a non-Error member rejection before rethrowing', async () => {
+    const api = createApi()
+    syncBuilding(api, [{ id: 'device-1' }])
+    vi.mocked(api.updateValues).mockRejectedValueOnce('raw refusal')
+    const facade = buildingOf(api)
+
+    await expect(
+      facade.updateGroupState({ SetTemperature: 23 }),
+    ).rejects.toThrow('"raw refusal"')
+  })
+
+  it('bundles concurrent member failures into an AggregateError', async () => {
+    const api = createApi()
+    syncBuilding(api, [{ id: 'device-1' }, { id: 'device-2' }])
+    vi.mocked(api.updateValues)
+      .mockRejectedValueOnce(new Error('boom-1'))
+      .mockRejectedValueOnce(new Error('boom-2'))
+    const facade = buildingOf(api)
+
+    await expect(
+      facade.updateGroupState({ SetTemperature: 23 }),
+    ).rejects.toThrow(AggregateError)
+  })
+
   it('propagates a member update failure', async () => {
     const api = createApi()
     syncBuilding(api, [{ id: 'device-1' }])

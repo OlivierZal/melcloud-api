@@ -1047,11 +1047,47 @@ describe('melcloud home API', () => {
   })
 
   describe('registry routing', () => {
-    it('throws EntityNotFoundError for an id the registry does not hold', async () => {
+    it('folds an unknown id into the not-found Result variant', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
 
-      await expect(api.getErrorLog('ghost')).rejects.toThrow(
+      await expect(api.getErrorLog('ghost')).resolves.toStrictEqual({
+        error: { entityId: 'ghost', kind: 'not-found' },
+        ok: false,
+      })
+    })
+
+    it('folds an unknown id into not-found on the other Result methods', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      await expect(
+        api.getEnergy('ghost', {
+          from: '2026-05-01',
+          interval: 'Hour',
+          to: '2026-05-02',
+        }),
+      ).resolves.toStrictEqual({
+        error: { entityId: 'ghost', kind: 'not-found' },
+        ok: false,
+      })
+      await expect(
+        api.getTemperatures('ghost', {
+          from: '2026-05-01',
+          period: 'Daily',
+          to: '2026-05-02',
+        }),
+      ).resolves.toStrictEqual({
+        error: { entityId: 'ghost', kind: 'not-found' },
+        ok: false,
+      })
+    })
+
+    it('throws EntityNotFoundError from a write to an unknown id', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+
+      await expect(api.updateValues('ghost', { power: true })).rejects.toThrow(
         EntityNotFoundError,
       )
     })

@@ -343,6 +343,15 @@ describe(classicUpdateDevices, () => {
     expect(updateAtw).not.toHaveBeenCalled()
   })
 
+  it('defaults an omitted power arg to true, mirroring the facades', async () => {
+    const update = vi.fn<(data: unknown) => void>()
+    const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])
+    const decorated = decorateUpdateDevices(resolveVoid, { kind: 'power' })
+    await decorated.call(facade)
+
+    expect(update).toHaveBeenCalledWith({ Power: true })
+  })
+
   it('wraps a boolean arg into { Power } when kind is power', async () => {
     const update = vi.fn<(data: unknown) => void>()
     const facade = createMockFacade([{ type: ClassicDeviceType.Ata, update }])

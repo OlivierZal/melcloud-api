@@ -5,7 +5,7 @@ import type {
 } from '../entities/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
-import { assertUpdateAccepted, UpdateRejectedError } from '../errors/index.ts'
+import { assertUpdateAccepted } from '../errors/index.ts'
 import {
   type ClassicGroupState,
   type ClassicSetGroupPostData,
@@ -31,21 +31,14 @@ export abstract class BaseZoneFacade<
   @syncDevices({ type: ClassicDeviceType.Ata })
   @classicUpdateDevices({ type: ClassicDeviceType.Ata })
   public async updateGroupState(state: ClassicGroupState): Promise<void> {
-    try {
-      assertUpdateAccepted(
-        await this.api.updateGroupState({
-          postData: {
-            Specification: { [this.groupSpecificationKey]: this.id },
-            State: state,
-          },
-        }),
-      )
-    } catch (error) {
-      if (error instanceof UpdateRejectedError) {
-        throw error
-      }
-      throw new Error('No air-to-air device found', { cause: error })
-    }
+    assertUpdateAccepted(
+      await this.api.updateGroupState({
+        postData: {
+          Specification: { [this.groupSpecificationKey]: this.id },
+          State: state,
+        },
+      }),
+    )
   }
 
   public async getGroup(): Promise<Result<ClassicGroupState>> {

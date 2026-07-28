@@ -133,8 +133,9 @@ export class HomeFacadeManager {
   }
 
   /**
-   * Flattens the registry into the picker zone list — the Home
-   * counterpart of the Classic manager's `getZones`.
+   * Flattens the registry into the picker zone list (grouped:
+   * name-sorted buildings each followed by their own name-sorted
+   * devices; Classic's `getZones` sorts its flat list globally).
    * @param params - Optional filter.
    * @param params.type - Connection-type discriminator; omitted covers
    * both connection types.

@@ -104,8 +104,10 @@ export class HomeRegistry {
 
   /**
    * Flattens the registry into the picker zone list: name-sorted
-   * buildings, each followed by its name-sorted devices — the Home
-   * counterpart of the Classic registry's `getZones`.
+   * buildings, each followed by its own name-sorted devices — the
+   * grouped shape the consumer's Home picker established. Classic's
+   * `getZones` differs by design: it sorts its flat list globally, so
+   * children detach from their parents there.
    * @param params - Optional filter.
    * @param params.type - Connection-type discriminator; omitted covers
    * both connection types.

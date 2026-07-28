@@ -16,7 +16,11 @@ import {
   fetchDevices,
   syncDevices,
 } from '../decorators/index.ts'
-import { assertUpdateAccepted, EntityNotFoundError } from '../errors/index.ts'
+import {
+  assertUpdateAccepted,
+  EntityNotFoundError,
+  UpdateRejectedError,
+} from '../errors/index.ts'
 import {
   type ProtectionState,
   type ProtectionUpdate,
@@ -256,12 +260,21 @@ export abstract class ClassicBaseFacade<
   @syncDevices()
   @classicUpdateDevices({ kind: 'power' })
   public async updatePower(isOn = true): Promise<void> {
-    await this.api.updatePower({
-      postData: {
-        DeviceIds: this.#deviceIds.map((id) => toClassicDeviceId(id)),
-        Power: isOn,
-      },
-    })
+    // The power endpoint acks with a bare boolean instead of the
+    // Success/AttributeErrors envelope; a `false` folds into the same
+    // rejection contract as every other mutation.
+    if (
+      !(await this.api.updatePower({
+        postData: {
+          DeviceIds: this.#deviceIds.map((id) => toClassicDeviceId(id)),
+          Power: isOn,
+        },
+      }))
+    ) {
+      throw new UpdateRejectedError({
+        Power: ['MELCloud declined the power command'],
+      })
+    }
   }
 
   public async getErrorLog(

@@ -1,21 +1,4 @@
 import type { HomeDevice } from '../entities/home-device.ts'
-import type {
-  HomeAtaValues,
-  HomeAtwValues,
-  HomeBuilding,
-  HomeContext,
-  HomeEnergyData,
-  HomeErrorLogEntry,
-  HomeFrostProtectionPostData,
-  HomeHolidayModePostData,
-  HomeOverheatProtectionPostData,
-  HomeReportData,
-  HomeTokenResponse,
-  HomeUser,
-  HomeUserContext,
-  LoginCredentials,
-  Result,
-} from '../types/index.ts'
 import { type HomeAtwZoneMode, HomeDeviceType } from '../constants.ts'
 import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
 import {
@@ -30,6 +13,24 @@ import { HttpStatus, isHttpError } from '../http/index.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
 import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
+import {
+  type HomeAtaValues,
+  type HomeAtwValues,
+  type HomeBuilding,
+  type HomeContext,
+  type HomeEnergyData,
+  type HomeErrorLogEntry,
+  type HomeFrostProtectionPostData,
+  type HomeHolidayModePostData,
+  type HomeOverheatProtectionPostData,
+  type HomeReportData,
+  type HomeTokenResponse,
+  type HomeUser,
+  type HomeUserContext,
+  type LoginCredentials,
+  type Result,
+  err,
+} from '../types/index.ts'
 import {
   HomeContextSchema,
   HomeEnergyDataSchema,
@@ -374,8 +375,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * `'produced'`); ATW only, where it defaults to `'consumed'` — the
    * ATA counter is consumption by definition.
    * @param params.to - ISO end timestamp (exclusive).
+   * A `measure` passed for an ATA id is ignored — the ATA counter is
+   * consumption by definition. An id the registry does not hold folds
+   * into the `not-found` Result variant (the Result contract never
+   * throws for it — a cold open may query before the first fetch).
    * @returns Success with the telemetry bundle, or a typed failure.
-   * @throws EntityNotFoundError when the registry does not hold the id.
    */
   public async getEnergy(
     id: string,
@@ -386,10 +390,14 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       measure?: 'consumed' | 'produced'
     },
   ): Promise<Result<HomeEnergyData>> {
+    const model = this.#registry.getById(id)
+    if (model === undefined) {
+      return err({ entityId: id, kind: 'not-found' })
+    }
     const { measure, ...window } = params
     return this.#fetchEnergy(id, {
       ...window,
-      measure: this.#modelFor(id).isAta()
+      measure: model.isAta()
         ? 'cumulative_energy_consumed_since_last_upload'
         : ATW_ENERGY_MEASURE[measure ?? 'consumed'],
     })
@@ -400,12 +408,16 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * connection type selects the unit path. Same {@link Result} contract
    * as {@link getEnergy}.
    * @param id - Device id.
+   * An unknown id folds into the `not-found` Result variant.
    * @returns Success with the entries (possibly empty), or a typed failure.
-   * @throws EntityNotFoundError when the registry does not hold the id.
    */
   public async getErrorLog(id: string): Promise<Result<HomeErrorLogEntry[]>> {
+    const model = this.#registry.getById(id)
+    if (model === undefined) {
+      return err({ entityId: id, kind: 'not-found' })
+    }
     return this.#fetchErrorLog(
-      this.#modelFor(id).isAta() ? ATA_UNIT_PATH : ATW_UNIT_PATH,
+      model.isAta() ? ATA_UNIT_PATH : ATW_UNIT_PATH,
       id,
     )
   }
@@ -443,17 +455,19 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @param params.from - ISO start timestamp (inclusive).
    * @param params.period - Aggregation period (e.g. `hour`, `day`).
    * @param params.to - ISO end timestamp (exclusive).
+   * An unknown id folds into the `not-found` Result variant.
    * @returns Success with the report datasets, or a typed failure.
-   * @throws EntityNotFoundError when the registry does not hold the id.
    */
   public async getTemperatures(
     id: string,
     params: { from: string; period: string; to: string },
   ): Promise<Result<HomeReportData[]>> {
+    const model = this.#registry.getById(id)
+    if (model === undefined) {
+      return err({ entityId: id, kind: 'not-found' })
+    }
     return this.#fetchReport(
-      this.#modelFor(id).isAta()
-        ? '/report/v1/trendsummary'
-        : '/report/v1/comfort-graph',
+      model.isAta() ? '/report/v1/trendsummary' : '/report/v1/comfort-graph',
       id,
       params,
     )
@@ -500,7 +514,8 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * via `syncRegistry()` instead of `api.fetch()`.
    * @param id - Target device id.
    * @param values - Partial setpoint payload matching the unit's
-   * connection type.
+   * connection type — the shape is the caller's contract: the BFF
+   * binder silently drops keys the routed unit does not know.
    * @throws EntityNotFoundError when the registry does not hold the id.
    */
   public async updateValues(
