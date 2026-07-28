@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **Breaking:** the Home facade getter `isConnected` (introduced in 43.3.0) is replaced by a cross-dialect availability contract: every device facade — Classic and Home — now exposes `isAvailable` (the `AvailabilityAware` interface), `true` while MELCloud can still deliver writes to the unit. Home derives it from the `/context` `isConnected` flag; Classic from `LastTimeStamp` staleness with a 24-hour threshold — the `Offline` flag flaps minute-to-minute on healthy units (live-probed 2026-07-28), and the timestamp is building-local wall clock (±14 h of worldwide skew), so only day-scale staleness is trustworthy. An unparsable or future-skewed timestamp reads available.
 
+### Fixed
+
+- **Breaking:** Home device facades now resolve their model by id through the registry on every access, mirroring the Classic facades, instead of pinning the wrapper captured at construction. A pinned wrapper froze its data forever once the registry was rebuilt (logout/login, transient prune) — a cached facade could then report a healed unit unavailable until app restart. Accessors throw `EntityNotFoundError` (whose `entityId`/`tableName` widen to accept Home GUID strings and `'Device'`) when the id is gone, and the new `exists` getter offers the same non-throwing staleness probe as Classic.
+
 ### Added
 
 - Classic list device data now types `LastTimeStamp` (already on the wire), the signal behind Classic `isAvailable`.

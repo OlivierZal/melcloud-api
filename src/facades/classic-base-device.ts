@@ -67,6 +67,12 @@ const ISO_SUNDAY = 7
 // Day-scale by design: `LastTimeStamp` is building-local wall clock
 // (±14 h of worldwide skew) and the `Offline` flag flaps on healthy
 // units (live-probed 2026-07-28), so no finer threshold is trustworthy.
+// The staleness anchor is deliberately UTC, not `api.timezone`: UTC
+// bounds a healthy unit's apparent staleness at +14 h for ANY
+// Homey/building timezone pair, while a configured-zone anchor could
+// reach 26 h cross-zone (e.g. UTC+13 host, UTC-11 building) and wrongly
+// flag a live unit — accuracy of the "24 h" wording is traded for a
+// hard no-false-positive bound.
 const STALE_COMMUNICATION_HOURS = 24
 
 // `EnergyCost/Report` labels need repairs before the shared formatter:

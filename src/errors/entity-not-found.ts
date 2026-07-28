@@ -24,13 +24,13 @@ import { APIError } from './base.ts'
  * @category Errors
  */
 export class EntityNotFoundError extends APIError {
-  /** Id that could not be resolved in the registry. */
-  public readonly entityId: number
+  /** Id that could not be resolved in the registry — a number for Classic, a GUID string for Home. */
+  public readonly entityId: number | string
 
   public override readonly name = 'EntityNotFoundError'
 
-  /** Registry table the lookup was performed against (e.g. `'DeviceLocation'`). */
-  public readonly tableName: ClassicSettingsParams['tableName']
+  /** Registry table the lookup was performed against (e.g. `'DeviceLocation'`), or `'Device'` for the Home registry. */
+  public readonly tableName: 'Device' | ClassicSettingsParams['tableName']
 
   /**
    * Builds the error from the registry table and the unresolved entity id;
@@ -41,8 +41,8 @@ export class EntityNotFoundError extends APIError {
    * @param options.cause - Original error that triggered this one.
    */
   public constructor(
-    tableName: ClassicSettingsParams['tableName'],
-    options: { entityId: number; cause?: unknown },
+    tableName: 'Device' | ClassicSettingsParams['tableName'],
+    options: { entityId: number | string; cause?: unknown },
   ) {
     const { entityId } = options
     super(`${tableName} with id ${String(entityId)} not found`, options)
