@@ -5,6 +5,7 @@ import type {
   HomeDeviceData,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
+import { Temporal } from '../temporal.ts'
 
 /**
  * Mutable wrapper around a {@link HomeDeviceData}, preserving object identity across syncs.
@@ -38,6 +39,18 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
   }
 
   /**
+   * First instant (UTC) since which every sync has reported the unit
+   * disconnected, or `null` while it reads connected. In-memory only: a
+   * fresh wrapper (new registry after a re-login, host restart)
+   * restarts the clock — deliberately conservative for the availability
+   * hysteresis.
+   * @returns The start of the current disconnection streak, if any.
+   */
+  public get disconnectedSince(): Temporal.PlainDateTime | null {
+    return this.#disconnectedSince
+  }
+
+  /**
    * Unique device identifier as assigned by MELCloud Home.
    * @returns The GUID string assigned by MELCloud Home.
    */
@@ -68,6 +81,8 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
 
   #data: TData
 
+  #disconnectedSince: Temporal.PlainDateTime | null = null
+
   #isOwner: boolean
 
   /**
@@ -92,6 +107,7 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
     this.#data = entry.device
     this.#isOwner = entry.isOwner
     this.type = entry.type
+    this.#trackConnectivity()
   }
 
   /**
@@ -129,5 +145,16 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
     this.#building = building
     this.#data = device
     this.#isOwner = isOwner
+    this.#trackConnectivity()
+  }
+
+  // A connected sync resets the streak; a disconnected one only stamps
+  // its start, so the timestamp marks the oldest uninterrupted `false`.
+  #trackConnectivity(): void {
+    if (this.#data.isConnected) {
+      this.#disconnectedSince = null
+    } else {
+      this.#disconnectedSince ??= Temporal.Now.plainDateTimeISO('UTC')
+    }
   }
 }

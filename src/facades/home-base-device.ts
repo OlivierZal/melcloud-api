@@ -1,7 +1,11 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
-import type { AvailabilityAware } from '../entities/types.ts'
+import {
+  type AvailabilityAware,
+  STALE_COMMUNICATION_HOURS,
+} from '../entities/types.ts'
 import { EntityNotFoundError } from '../errors/index.ts'
+import { Temporal } from '../temporal.ts'
 import {
   type HomeDeviceData,
   type HomeEnergyData,
@@ -78,11 +82,21 @@ export abstract class HomeBaseDeviceFacade<
   /**
    * Whether MELCloud can still deliver writes to the unit. `false`
    * means the wifi adapter lost its link to the cloud: writes are
-   * accepted but never delivered, and readings go stale.
-   * @returns The `/context` connectivity flag.
+   * accepted but never delivered, and readings go stale. The
+   * `/context` `isConnected` flag only counts once it has read `false`
+   * for a full day: its negative side is unproven, and the persistence
+   * window makes a Classic-`Offline`-style tight-threshold boolean
+   * harmless (such a flag never stays `false` through a report cycle).
+   * @returns `false` after a day of continuous disconnection.
    */
   public get isAvailable(): boolean {
-    return this.model.data.isConnected
+    const { disconnectedSince } = this.model
+    return (
+      disconnectedSince === null ||
+      Temporal.Now.plainDateTimeISO('UTC')
+        .since(disconnectedSince)
+        .total('hours') <= STALE_COMMUNICATION_HOURS
+    )
   }
 
   /**

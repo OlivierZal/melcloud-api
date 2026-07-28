@@ -69,13 +69,30 @@ describe('home device ata facade', () => {
       expect(facade.overheatProtection).toStrictEqual(overheatProtection)
     })
 
-    it('exposes availability from the context connectivity flag', () => {
+    it('keeps a freshly disconnected unit available within the persistence window', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
         homeDevice({ id: 'device-1', isConnected: false }),
       )
 
+      expect(facade.isAvailable).toBe(true)
+    })
+
+    it('reports the unit unavailable after a day of continuous disconnection, then clears on reconnect', () => {
+      const device = homeDevice({ id: 'device-1', isConnected: false })
+      const facade = new HomeDeviceAtaFacade(createApi(), device)
+      const later = Temporal.Now.plainDateTimeISO('UTC').add({ hours: 25 })
+      const spy = vi
+        .spyOn(Temporal.Now, 'plainDateTimeISO')
+        .mockReturnValue(later)
+
       expect(facade.isAvailable).toBe(false)
+
+      device.sync({ ...device.data, isConnected: true }, true, device.building)
+
+      expect(facade.isAvailable).toBe(true)
+
+      spy.mockRestore()
     })
 
     it('resolves the registry model by id, never a pinned snapshot', () => {

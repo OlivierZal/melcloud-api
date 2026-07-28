@@ -189,6 +189,7 @@ export {
   HomeDevice,
   HomeRegistry,
   isClassicDeviceOfType,
+  STALE_COMMUNICATION_HOURS,
 } from './entities/index.ts'
 export {
   type HomeFanSpeed,
