@@ -87,6 +87,14 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   (`LEGIONELLA` ↔ `LegionellaPrevention`) — while annotations WITHOUT
   a label (internal-temperatures) mark missing-data ranges. Dataset
   `label` fields are i18n keys, useless for display.
+- Classic reachability: the list `Offline` flag is garbage — live-probed
+  2026-07-28, it flaps minute-to-minute on healthy units (9 of 13 alive
+  devices flagged offline, membership changing between two runs one
+  minute apart). The trustworthy signal is `LastTimeStamp` staleness,
+  but it speaks building-local wall clock, not UTC (09:33 read at
+  07:35 UTC in a UTC+2 building): worldwide skew reaches ±14 h, so only
+  day-scale thresholds are safe. Never map either signal to anything
+  blocking (com.melcloud #1479/#1481).
 - Classic `/EnergyCost/Report` returns per-bucket arrays for BOTH types
   (ATA per-mode consumption; ATW consumed + produced per category) with
   numeric `Labels`/`LabelType` — day-of-week labels are .NET 0-based
