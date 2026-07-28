@@ -10,26 +10,28 @@ import type {
   ClassicModel,
   ClassicRegistry,
 } from '../entities/index.ts'
-import type { HolidayModeUpdate } from '../holiday-mode.ts'
+import type { HolidayModeState, HolidayModeUpdate } from '../holiday-mode.ts'
 import {
   classicUpdateDevices,
   fetchDevices,
   syncDevices,
 } from '../decorators/index.ts'
-import { EntityNotFoundError } from '../errors/index.ts'
-import { clampFrostProtection } from '../protection.ts'
+import { assertUpdateAccepted, EntityNotFoundError } from '../errors/index.ts'
+import {
+  type ProtectionState,
+  type ProtectionUpdate,
+  clampFrostProtection,
+} from '../protection.ts'
 import { Temporal } from '../temporal.ts'
 import {
   type ApiRequestError,
   type ClassicDateTimeComponents,
-  type ClassicFailureData,
   type ClassicFrostProtectionData,
   type ClassicFrostProtectionLocation,
   type ClassicHolidayModeData,
   type ClassicHolidayModeLocation,
   type ClassicHolidayModeTimeZone,
   type ClassicSettingsParams,
-  type ClassicSuccessData,
   type ClassicTilesData,
   type Hour,
   type Result,
@@ -44,11 +46,32 @@ import {
   withMinuteClockLabels,
 } from '../utils.ts'
 import { HourSchema, parseOrThrow } from '../validation/index.ts'
-import type {
-  ClassicFacade,
-  ClassicFrostProtectionQuery,
-} from './classic-types.ts'
+import type { ClassicFacade } from './classic-types.ts'
 import type { ReportChartLineOptions } from './report-types.ts'
+
+// Wire-to-contract read mappers: `*Defined: false` marks a feature the
+// account never configured, surfaced as `null` on the neutral state.
+const toProtectionState = (
+  data: ClassicFrostProtectionData,
+): ProtectionState | null =>
+  data.FPDefined
+    ? {
+        isEnabled: data.FPEnabled,
+        max: data.FPMaxTemperature,
+        min: data.FPMinTemperature,
+      }
+    : null
+
+const toHolidayModeState = (
+  data: ClassicHolidayModeData,
+): HolidayModeState | null =>
+  data.HMDefined
+    ? {
+        endDate: data.HMEndDate,
+        isEnabled: data.HMEnabled,
+        startDate: data.HMStartDate,
+      }
+    : null
 
 // Settings can be defined at zone or device level. Try zone first;
 // if unsupported, fall back to device level and cache the result.
@@ -191,21 +214,21 @@ export abstract class ClassicBaseFacade<
   // applies to updateHolidayMode below.
   @fetchDevices({ when: 'after' })
   public async updateFrostProtection({
-    isEnabled = true,
+    isEnabled,
     max,
     min,
-  }: ClassicFrostProtectionQuery): Promise<
-    ClassicFailureData | ClassicSuccessData
-  > {
+  }: ProtectionUpdate): Promise<void> {
     const { max: newMax, min: newMin } = clampFrostProtection(min, max)
-    return this.api.updateFrostProtection({
-      postData: {
-        Enabled: isEnabled,
-        MaximumTemperature: newMax,
-        MinimumTemperature: newMin,
-        ...(await this.#getFrostProtectionLocation()),
-      },
-    })
+    assertUpdateAccepted(
+      await this.api.updateFrostProtection({
+        postData: {
+          Enabled: isEnabled,
+          MaximumTemperature: newMax,
+          MinimumTemperature: newMin,
+          ...(await this.#getFrostProtectionLocation()),
+        },
+      }),
+    )
   }
 
   @fetchDevices({ when: 'after' })
@@ -213,25 +236,27 @@ export abstract class ClassicBaseFacade<
     endDate,
     isEnabled,
     startDate,
-  }: HolidayModeUpdate): Promise<ClassicFailureData | ClassicSuccessData> {
+  }: HolidayModeUpdate): Promise<void> {
     // Parse the window before the location fetch so malformed dates throw
     // ahead of any I/O; dates are cleared when disabling.
     const start = isEnabled ? Temporal.PlainDateTime.from(startDate) : null
     const end = isEnabled ? Temporal.PlainDateTime.from(endDate) : null
-    return this.api.updateHolidayMode({
-      postData: {
-        Enabled: isEnabled,
-        EndDate: getDateTimeComponents(end),
-        HMTimeZones: await this.#getHolidayModeLocation(),
-        StartDate: getDateTimeComponents(start),
-      },
-    })
+    assertUpdateAccepted(
+      await this.api.updateHolidayMode({
+        postData: {
+          Enabled: isEnabled,
+          EndDate: getDateTimeComponents(end),
+          HMTimeZones: await this.#getHolidayModeLocation(),
+          StartDate: getDateTimeComponents(start),
+        },
+      }),
+    )
   }
 
   @syncDevices()
   @classicUpdateDevices({ kind: 'power' })
-  public async updatePower(isOn = true): Promise<boolean> {
-    return this.api.updatePower({
+  public async updatePower(isOn = true): Promise<void> {
+    await this.api.updatePower({
       postData: {
         DeviceIds: this.#deviceIds.map((id) => toClassicDeviceId(id)),
         Power: isOn,
@@ -245,21 +270,25 @@ export abstract class ClassicBaseFacade<
     return this.api.getErrorLog(query, this.#deviceIds)
   }
 
-  public async getFrostProtection(): Promise<
-    Result<ClassicFrostProtectionData>
-  > {
-    return getWithZoneFallback(
-      this.isFrostProtectionAtZoneLevel,
-      async () => this.#getZoneFrostProtection(),
-      async () => this.#getDevicesFrostProtection(),
+  public async getFrostProtection(): Promise<Result<ProtectionState | null>> {
+    return mapResult(
+      await getWithZoneFallback(
+        this.isFrostProtectionAtZoneLevel,
+        async () => this.#getZoneFrostProtection(),
+        async () => this.#getDevicesFrostProtection(),
+      ),
+      toProtectionState,
     )
   }
 
-  public async getHolidayMode(): Promise<Result<ClassicHolidayModeData>> {
-    return getWithZoneFallback(
-      this.isHolidayModeAtZoneLevel,
-      async () => this.#getZoneHolidayMode(),
-      async () => this.#getDevicesHolidayMode(),
+  public async getHolidayMode(): Promise<Result<HolidayModeState | null>> {
+    return mapResult(
+      await getWithZoneFallback(
+        this.isHolidayModeAtZoneLevel,
+        async () => this.#getZoneHolidayMode(),
+        async () => this.#getDevicesHolidayMode(),
+      ),
+      toHolidayModeState,
     )
   }
 

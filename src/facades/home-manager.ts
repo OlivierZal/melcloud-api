@@ -7,7 +7,11 @@ import type {
   HomeProtectionUnits,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
-import { clampFrostProtection, clampOverheatProtection } from '../protection.ts'
+import {
+  type ProtectionUpdate,
+  clampFrostProtection,
+  clampOverheatProtection,
+} from '../protection.ts'
 import { HomeBuildingAtaFacade } from './home-building-ata.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 import { HomeDeviceAtwFacade } from './home-device-atw.ts'
@@ -108,7 +112,7 @@ export class HomeFacadeManager {
    */
   public async updateFrostProtection(
     deviceIds: readonly string[],
-    { isEnabled, max, min }: { isEnabled: boolean; max: number; min: number },
+    { isEnabled, max, min }: ProtectionUpdate,
   ): Promise<void> {
     await this.#api.updateFrostProtection({
       enabled: isEnabled,
@@ -153,7 +157,7 @@ export class HomeFacadeManager {
    */
   public async updateOverheatProtection(
     deviceIds: readonly string[],
-    { isEnabled, max, min }: { isEnabled: boolean; max: number; min: number },
+    { isEnabled, max, min }: ProtectionUpdate,
   ): Promise<void> {
     const { ATA: ata } = this.#toUnits(deviceIds)
     if (ata === undefined) {

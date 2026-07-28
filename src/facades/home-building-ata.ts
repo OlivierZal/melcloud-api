@@ -2,9 +2,7 @@ import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import { HomeDeviceType } from '../constants.ts'
 import {
-  type ClassicFailureData,
   type ClassicGroupState,
-  type ClassicSuccessData,
   type HomeAtaDeviceData,
   type Result,
   ok,
@@ -116,11 +114,8 @@ export class HomeBuildingAtaFacade {
    * already matching it (a tolerated `NoChangesError` from their
    * update) are fine by definition and do not fail the group write.
    * @param state - Partial Classic group state to push to the members.
-   * @returns The zone-shaped success outcome once every write settled.
    */
-  public async updateGroupState(
-    state: ClassicGroupState,
-  ): Promise<ClassicFailureData | ClassicSuccessData> {
+  public async updateGroupState(state: ClassicGroupState): Promise<void> {
     const values = toHomeAtaValues(state)
     if (Object.keys(values).length > 0) {
       await Promise.all(
@@ -131,6 +126,5 @@ export class HomeBuildingAtaFacade {
         ),
       )
     }
-    return { AttributeErrors: null, Success: true }
   }
 }

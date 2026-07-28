@@ -1,4 +1,4 @@
-export type { HolidayModeUpdate } from './holiday-mode.ts'
+export type { HolidayModeState, HolidayModeUpdate } from './holiday-mode.ts'
 export type {
   ApiRequestError,
   ClassicAreaData,
@@ -216,6 +216,7 @@ export {
   NetworkError,
   NoChangesError,
   RateLimitError,
+  UpdateRejectedError,
   ValidationError,
 } from './errors/index.ts'
 export {
@@ -226,7 +227,6 @@ export {
   type ClassicDeviceFacade,
   type ClassicDeviceFacadeAny,
   type ClassicFacade,
-  type ClassicFrostProtectionQuery,
   type ClassicZoneFacade,
   type ReportChartBand,
   type ReportChartLineOptions,
@@ -251,5 +251,14 @@ export {
   HttpError,
   isHttpError,
 } from './http/index.ts'
+export {
+  type ProtectionState,
+  type ProtectionUpdate,
+  clampFrostProtection,
+  clampOverheatProtection,
+  FROST_PROTECTION_RANGE,
+  OVERHEAT_PROTECTION_RANGE,
+  PROTECTION_GAP,
+} from './protection.ts'
 export { Temporal } from './temporal.ts'
 export { err, mapResult, ok } from './types/index.ts'

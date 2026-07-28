@@ -46,7 +46,6 @@ export {
   type ClassicFrostProtectionData as FrostProtectionData,
   type ClassicFrostProtectionLocation as FrostProtectionLocation,
   type ClassicFrostProtectionPostData as FrostProtectionPostData,
-  type ClassicFrostProtectionQuery as FrostProtectionQuery,
   type ClassicGetDeviceData as GetDeviceData,
   type ClassicGetDeviceDataParams as GetDeviceDataParams,
   type ClassicGetGroupData as GetGroupData,

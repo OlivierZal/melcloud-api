@@ -64,9 +64,21 @@ describe('home device ata facade', () => {
         }),
       )
 
-      expect(facade.frostProtection).toStrictEqual(frostProtection)
-      expect(facade.holidayMode).toStrictEqual(holidayMode)
-      expect(facade.overheatProtection).toStrictEqual(overheatProtection)
+      expect(facade.frostProtection).toStrictEqual({
+        isEnabled: true,
+        max: 12,
+        min: 6,
+      })
+      expect(facade.holidayMode).toStrictEqual({
+        endDate: '2026-08-05T00:00:00',
+        isEnabled: true,
+        startDate: '2026-08-01T00:00:00',
+      })
+      expect(facade.overheatProtection).toStrictEqual({
+        isEnabled: true,
+        max: 37,
+        min: 35,
+      })
     })
 
     it('keeps a freshly disconnected unit available within the persistence window', () => {

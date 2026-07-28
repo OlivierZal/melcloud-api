@@ -231,11 +231,10 @@ describe('home device ata facade group', () => {
     const [model] = ataModels(api)
     const facade = new HomeDeviceAtaFacade(api, mock(model))
 
-    const result = await facade.updateGroupState({
+    await facade.updateGroupState({
       OperationMode: ClassicOperationMode.cool,
     })
 
-    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
     expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
       operationMode: 'Cool',
     })
@@ -247,9 +246,8 @@ describe('home device ata facade group', () => {
     const [model] = ataModels(api)
     const facade = new HomeDeviceAtaFacade(api, mock(model))
 
-    const result = await facade.updateGroupState({ Power: null })
+    await facade.updateGroupState({ Power: null })
 
-    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
     expect(api.updateAtaValues).not.toHaveBeenCalled()
   })
 
@@ -264,7 +262,7 @@ describe('home device ata facade group', () => {
 
     await expect(
       facade.updateGroupState({ SetTemperature: 23 }),
-    ).resolves.toStrictEqual({ AttributeErrors: null, Success: true })
+    ).resolves.toBeUndefined()
   })
 
   it('propagates a real group update failure', async () => {
@@ -374,9 +372,8 @@ describe('home building ata facade', () => {
     syncBuilding(api, [{ id: 'device-1' }, { id: 'device-2' }])
     const facade = buildingOf(api)
 
-    const result = await facade.updateGroupState({ SetTemperature: 23 })
+    await facade.updateGroupState({ SetTemperature: 23 })
 
-    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
     expect(api.updateAtaValues).toHaveBeenCalledTimes(2)
     expect(api.updateAtaValues).toHaveBeenCalledWith('device-1', {
       setTemperature: 23,
@@ -396,7 +393,7 @@ describe('home building ata facade', () => {
 
     await expect(
       facade.updateGroupState({ SetTemperature: 23 }),
-    ).resolves.toStrictEqual({ AttributeErrors: null, Success: true })
+    ).resolves.toBeUndefined()
   })
 
   it('propagates a member update failure', async () => {

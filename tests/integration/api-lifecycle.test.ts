@@ -318,7 +318,7 @@ describe('api lifecycle', () => {
     )
     onSyncComplete.mockClear()
 
-    await building.updateFrostProtection({ max: 14, min: 6 })
+    await building.updateFrostProtection({ isEnabled: true, max: 14, min: 6 })
 
     expect(onSyncComplete).toHaveBeenCalledWith(expect.objectContaining({}))
   })

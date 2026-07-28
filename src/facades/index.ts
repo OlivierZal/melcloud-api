@@ -19,7 +19,6 @@ export {
   type ClassicDeviceFacadeAny,
   type ClassicEnergyReportExtract,
   type ClassicFacade,
-  type ClassicFrostProtectionQuery,
   type ClassicZoneFacade,
   hasClassicZone2,
   isClassicAtaFacade,

@@ -13,7 +13,11 @@ import {
   type ClassicDevice,
   ClassicRegistry,
 } from '../../src/entities/index.ts'
-import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
+import {
+  EntityNotFoundError,
+  NoChangesError,
+  UpdateRejectedError,
+} from '../../src/errors/index.ts'
 import {
   type ClassicDeviceFacade,
   ClassicAreaFacade,
@@ -259,9 +263,8 @@ describe('building facade', () => {
 
   it('calls updatePower', async () => {
     const { api, facade } = createBuildingFacade()
-    const isPowered = await facade.updatePower(true)
+    await facade.updatePower(true)
 
-    expect(isPowered).toBe(true)
     expect(api.updatePower).toHaveBeenCalledWith(expect.any(Object))
   })
 
@@ -344,27 +347,52 @@ describe('building facade frost protection', () => {
     const { api, facade } = createBuildingFacade()
     const value = okValue(await facade.getFrostProtection())
 
-    expect(value).toHaveProperty('FPDefined')
+    expect(value).toHaveProperty('isEnabled')
     expect(api.getFrostProtection).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('sets frost protection', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
-    const result = await facade.updateFrostProtection({
+    await facade.updateFrostProtection({
       isEnabled: true,
       max: 14,
       min: 6,
     })
 
-    expect(result).toHaveProperty('Success')
     expect(api.updateFrostProtection).toHaveBeenCalledWith(expect.any(Object))
+  })
+
+  it('throws UpdateRejectedError when the wire rejects the settings', async () => {
+    const { api, facade } = createBuildingFacade()
+    await facade.getFrostProtection()
+    vi.mocked(api.updateFrostProtection).mockResolvedValue({
+      AttributeErrors: { MinTemperature: ['Too low'] },
+      Success: false,
+    })
+
+    await expect(
+      facade.updateFrostProtection({ isEnabled: true, max: 14, min: 6 }),
+    ).rejects.toThrow(UpdateRejectedError)
+  })
+
+  it('rethrows a wire rejection from updateGroupState untouched', async () => {
+    const { api, facade } = createBuildingFacade()
+    vi.mocked(api.updateGroupState).mockResolvedValue({
+      AttributeErrors: { Power: ['nope'] },
+      Success: false,
+    })
+
+    await expect(facade.updateGroupState({ Power: true })).rejects.toThrow(
+      UpdateRejectedError,
+    )
   })
 
   it('clamps frost protection temperatures', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
     await facade.updateFrostProtection({
+      isEnabled: true,
       max: 2,
       min: 1,
     })
@@ -382,6 +410,7 @@ describe('building facade frost protection', () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
     await facade.updateFrostProtection({
+      isEnabled: true,
       max: 15,
       min: 14,
     })
@@ -401,19 +430,19 @@ describe('building facade holiday mode', () => {
     const { facade } = createBuildingFacade()
     const value = okValue(await facade.getHolidayMode())
 
-    expect(value).toHaveProperty('HMDefined')
+    expect(value).toHaveProperty('isEnabled')
   })
 
   it('sets holiday mode with dates', async () => {
-    const { facade } = createBuildingFacade()
+    const { api, facade } = createBuildingFacade()
     await facade.getHolidayMode()
-    const result = await facade.updateHolidayMode({
+    await facade.updateHolidayMode({
       endDate: '2024-06-15',
       isEnabled: true,
       startDate: '2024-06-01',
     })
 
-    expect(result).toHaveProperty('Success')
+    expect(api.updateHolidayMode).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('disables holiday mode and ignores the window dates', async () => {
@@ -485,10 +514,10 @@ describe('building facade group', () => {
   })
 
   it('calls updateGroupState', async () => {
-    const { facade } = createBuildingFacade()
-    const result = await facade.updateGroupState({ Power: true })
+    const { api, facade } = createBuildingFacade()
+    await facade.updateGroupState({ Power: true })
 
-    expect(result).toHaveProperty('Success')
+    expect(api.updateGroupState).toHaveBeenCalledWith(expect.any(Object))
   })
 
   it('propagates network failure when group API fails', async () => {
@@ -555,11 +584,13 @@ describe('base facade frost protection fallback', () => {
       .mockResolvedValueOnce(
         err({ cause: new Error('zone not found'), kind: 'network' as const }),
       )
-      .mockResolvedValue(ok(classicFrostProtectionResponse()))
+      .mockResolvedValue(
+        ok(classicFrostProtectionResponse({ FPDefined: true })),
+      )
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
     const value = okValue(await facade.getFrostProtection())
 
-    expect(value).toHaveProperty('FPDefined')
+    expect(value).toHaveProperty('isEnabled')
     expect(fpMock).toHaveBeenCalledTimes(2)
   })
 
@@ -600,11 +631,11 @@ describe('base facade holiday mode fallback', () => {
       .mockResolvedValueOnce(
         err({ cause: new Error('zone not found'), kind: 'network' as const }),
       )
-      .mockResolvedValue(ok(classicHolidayModeResponse()))
+      .mockResolvedValue(ok(classicHolidayModeResponse({ HMDefined: true })))
     const { facade } = createAreaFacade({ getHolidayMode: hmMock })
     const value = okValue(await facade.getHolidayMode())
 
-    expect(value).toHaveProperty('HMDefined')
+    expect(value).toHaveProperty('isEnabled')
     expect(hmMock).toHaveBeenCalledTimes(2)
   })
 
@@ -645,7 +676,7 @@ describe('base facade frost protection with device fallback', () => {
       )
       .mockResolvedValue(ok(classicFrostProtectionResponse()))
     const { api, facade } = createAreaFacade({ getFrostProtection: fpMock })
-    await facade.updateFrostProtection({ max: 14, min: 6 })
+    await facade.updateFrostProtection({ isEnabled: true, max: 14, min: 6 })
     const call = vi.mocked(api.updateFrostProtection).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
@@ -661,7 +692,7 @@ describe('base facade frost protection with device fallback', () => {
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
 
     await expect(
-      facade.updateFrostProtection({ max: 14, min: 6 }),
+      facade.updateFrostProtection({ isEnabled: true, max: 14, min: 6 }),
     ).rejects.toBe(cause)
   })
 
@@ -672,7 +703,7 @@ describe('base facade frost protection with device fallback', () => {
     const { facade } = createAreaFacade({ getFrostProtection: fpMock })
 
     await expect(
-      facade.updateFrostProtection({ max: 14, min: 6 }),
+      facade.updateFrostProtection({ isEnabled: true, max: 14, min: 6 }),
     ).rejects.toThrow('Could not resolve location: rate-limited')
   })
 })
@@ -1186,7 +1217,7 @@ describe('ata device facade group', () => {
 
   it('translates the group state to per-device update tags', async () => {
     const { api, facade } = createAtaFacade()
-    const result = await facade.updateGroupState({
+    await facade.updateGroupState({
       FanSpeed: ClassicFanSpeed.moderate,
       OperationMode: ClassicOperationMode.cool,
       Power: true,
@@ -1198,7 +1229,6 @@ describe('ata device facade group', () => {
       ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>
     >(defined(vi.mocked(api.updateValues).mock.lastCall?.[0]).postData)
 
-    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
     expect(postData.SetFanSpeed).toBe(ClassicFanSpeed.moderate)
     expect(postData.VaneHorizontal).toBe(ClassicHorizontal.swing)
     expect(postData.VaneVertical).toBe(ClassicVertical.swing)
@@ -1226,9 +1256,8 @@ describe('ata device facade group', () => {
 
   it('resolves an all-null group delta without a wire call', async () => {
     const { api, facade } = createAtaFacade()
-    const result = await facade.updateGroupState({ Power: null })
+    await facade.updateGroupState({ Power: null })
 
-    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
     expect(api.updateValues).not.toHaveBeenCalled()
   })
 
@@ -1236,9 +1265,8 @@ describe('ata device facade group', () => {
     const { api, facade } = createAtaFacade()
     // Power already matches the fixture, so the base update raises
     // NoChangesError — a no-op group write must resolve as success.
-    const result = await facade.updateGroupState({ Power: true })
+    await facade.updateGroupState({ Power: true })
 
-    expect(result).toStrictEqual({ AttributeErrors: null, Success: true })
     expect(api.updateValues).not.toHaveBeenCalled()
   })
 

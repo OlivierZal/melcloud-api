@@ -9,18 +9,15 @@ import type {
   ClassicDeviceAny,
 } from '../entities/classic-types.ts'
 import type { AvailabilityAware, Identifiable } from '../entities/types.ts'
-import type { HolidayModeUpdate } from '../holiday-mode.ts'
+import type { HolidayModeState, HolidayModeUpdate } from '../holiday-mode.ts'
+import type { ProtectionState, ProtectionUpdate } from '../protection.ts'
 import type {
   ClassicEnergyData,
-  ClassicFailureData,
-  ClassicFrostProtectionData,
   ClassicGetDeviceData,
   ClassicGroupState,
-  ClassicHolidayModeData,
   ClassicHotWaterState,
   ClassicListDeviceData,
   ClassicSetDeviceData,
-  ClassicSuccessData,
   ClassicTilesData,
   ClassicUpdateDeviceData,
   ClassicZoneSettings,
@@ -54,9 +51,7 @@ export interface ClassicDeviceAtaFacade extends ClassicDeviceFacade<
   /** Read this device's current state projected as a group state. */
   readonly getGroup: () => Promise<Result<ClassicGroupState>>
   /** Apply a group state to this device. */
-  readonly updateGroupState: (
-    state: ClassicGroupState,
-  ) => Promise<ClassicFailureData | ClassicSuccessData>
+  readonly updateGroupState: (state: ClassicGroupState) => Promise<void>
 }
 
 /** Facade for Air-to-Water (ATW) devices with hot water and zone state access. */
@@ -169,10 +164,10 @@ export interface ClassicFacade extends Identifiable {
   readonly getErrorLog: (
     query: ClassicErrorLogQuery,
   ) => Promise<Result<ClassicErrorLog>>
-  /** Get the current frost protection settings. */
-  readonly getFrostProtection: () => Promise<Result<ClassicFrostProtectionData>>
-  /** Get the current holiday mode settings. */
-  readonly getHolidayMode: () => Promise<Result<ClassicHolidayModeData>>
+  /** Get the current frost protection settings, `null` when never configured. */
+  readonly getFrostProtection: () => Promise<Result<ProtectionState | null>>
+  /** Get the current holiday mode settings, `null` when never configured. */
+  readonly getHolidayMode: () => Promise<Result<HolidayModeState | null>>
   /** Fetch WiFi signal strength report as line chart data. */
   readonly getSignalStrength: (
     hour?: Hour,
@@ -189,28 +184,11 @@ export interface ClassicFacade extends Identifiable {
     type?: ClassicDeviceType | undefined
   }) => Promise<void>
   /** Update frost protection settings with temperature clamping. */
-  readonly updateFrostProtection: (
-    query: ClassicFrostProtectionQuery,
-  ) => Promise<ClassicFailureData | ClassicSuccessData>
+  readonly updateFrostProtection: (update: ProtectionUpdate) => Promise<void>
   /** Enable or disable holiday mode. */
-  readonly updateHolidayMode: (
-    query: HolidayModeUpdate,
-  ) => Promise<ClassicFailureData | ClassicSuccessData>
+  readonly updateHolidayMode: (update: HolidayModeUpdate) => Promise<void>
   /** Turn all devices in this facade on or off. */
-  readonly updatePower: (value?: boolean) => Promise<boolean>
-}
-
-/**
- * Parameters for configuring frost protection temperature bounds.
- * @category Facades
- */
-export interface ClassicFrostProtectionQuery {
-  /** Maximum temperature threshold (clamped to 4–16 °C range). */
-  readonly max: number
-  /** Minimum temperature threshold (clamped to 4–16 °C range). */
-  readonly min: number
-  /** Whether frost protection is enabled. Defaults to `true`. */
-  readonly isEnabled?: boolean | undefined
+  readonly updatePower: (value?: boolean) => Promise<void>
 }
 
 /**
@@ -221,9 +199,7 @@ export interface ClassicZoneFacade extends ClassicFacade {
   /** Get the current group state for all ATA devices. */
   readonly getGroup: () => Promise<Result<ClassicGroupState>>
   /** Update the group state for all ATA devices. */
-  readonly updateGroupState: (
-    state: ClassicGroupState,
-  ) => Promise<ClassicFailureData | ClassicSuccessData>
+  readonly updateGroupState: (state: ClassicGroupState) => Promise<void>
 }
 
 /**

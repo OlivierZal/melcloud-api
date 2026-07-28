@@ -5,11 +5,10 @@ import type {
 } from '../entities/index.ts'
 import { ClassicDeviceType } from '../constants.ts'
 import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
+import { assertUpdateAccepted, UpdateRejectedError } from '../errors/index.ts'
 import {
-  type ClassicFailureData,
   type ClassicGroupState,
   type ClassicSetGroupPostData,
-  type ClassicSuccessData,
   type Result,
   mapResult,
 } from '../types/index.ts'
@@ -31,17 +30,20 @@ export abstract class BaseZoneFacade<
 
   @syncDevices({ type: ClassicDeviceType.Ata })
   @classicUpdateDevices({ type: ClassicDeviceType.Ata })
-  public async updateGroupState(
-    state: ClassicGroupState,
-  ): Promise<ClassicFailureData | ClassicSuccessData> {
+  public async updateGroupState(state: ClassicGroupState): Promise<void> {
     try {
-      return await this.api.updateGroupState({
-        postData: {
-          Specification: { [this.groupSpecificationKey]: this.id },
-          State: state,
-        },
-      })
+      assertUpdateAccepted(
+        await this.api.updateGroupState({
+          postData: {
+            Specification: { [this.groupSpecificationKey]: this.id },
+            State: state,
+          },
+        }),
+      )
     } catch (error) {
+      if (error instanceof UpdateRejectedError) {
+        throw error
+      }
       throw new Error('No air-to-air device found', { cause: error })
     }
   }

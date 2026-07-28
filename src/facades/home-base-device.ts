@@ -1,5 +1,7 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
+import type { HolidayModeState } from '../holiday-mode.ts'
+import type { ProtectionState } from '../protection.ts'
 import {
   type AvailabilityAware,
   STALE_COMMUNICATION_HOURS,
@@ -11,6 +13,7 @@ import {
   type HomeEnergyData,
   type HomeFrostProtection,
   type HomeHolidayMode,
+  type HomeOverheatProtection,
   type Hour,
   type Result,
   mapResult,
@@ -22,6 +25,34 @@ import {
   toHomeSignalOptions,
   toHomeWireWindow,
 } from './home-report.ts'
+
+/**
+ * Maps a Home `/context` protection descriptor onto the cross-dialect
+ * read state; `null` (never configured) passes through.
+ * @param protection - Wire descriptor, or `null`.
+ * @returns The neutral protection state, or `null`.
+ */
+export const toHomeProtectionState = (
+  protection: HomeFrostProtection | HomeOverheatProtection | null,
+): ProtectionState | null =>
+  protection === null
+    ? null
+    : {
+        isEnabled: protection.enabled,
+        max: protection.max,
+        min: protection.min,
+      }
+
+const toHolidayModeState = (
+  holidayMode: HomeHolidayMode | null,
+): HolidayModeState | null =>
+  holidayMode === null
+    ? null
+    : {
+        endDate: holidayMode.endDate,
+        isEnabled: holidayMode.enabled,
+        startDate: holidayMode.startDate,
+      }
 
 /**
  * Shared scaffolding for every Home device facade. Holds the API
@@ -57,18 +88,18 @@ export abstract class HomeBaseDeviceFacade<
 
   /**
    * Current frost-protection settings, or `null` when not configured.
-   * @returns The frost-protection descriptor from `/context`.
+   * @returns The cross-dialect protection state from `/context`.
    */
-  public get frostProtection(): HomeFrostProtection | null {
-    return this.model.data.frostProtection
+  public get frostProtection(): ProtectionState | null {
+    return toHomeProtectionState(this.model.data.frostProtection)
   }
 
   /**
    * Current holiday-mode window, or `null` when not configured.
-   * @returns The holiday-mode descriptor from `/context`.
+   * @returns The cross-dialect holiday-mode state from `/context`.
    */
-  public get holidayMode(): HomeHolidayMode | null {
-    return this.model.data.holidayMode
+  public get holidayMode(): HolidayModeState | null {
+    return toHolidayModeState(this.model.data.holidayMode)
   }
 
   /**
