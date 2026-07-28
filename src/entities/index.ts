@@ -13,4 +13,4 @@ export {
 export { ClassicFloor } from './floor.ts'
 export { HomeDevice } from './home-device.ts'
 export { type HomeBuildingDevices, HomeRegistry } from './home-registry.ts'
-export { type Identifiable } from './types.ts'
+export { type AvailabilityAware, type Identifiable } from './types.ts'
