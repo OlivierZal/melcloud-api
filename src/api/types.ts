@@ -3,14 +3,6 @@ import type { HttpClient } from '../http/index.ts'
 import type { LoginCredentials, UndefinedTolerant } from '../types/index.ts'
 
 /**
- * Common configuration shared by all API clients. Every property —
- * including the inherited {@link LoginCredentials} pair — may be
- * absent or explicitly `undefined`, interchangeably: the runtime
- * applies the same default either way (credentials can also arrive
- * later via `authenticate` or the {@link SettingManager}).
- * @category Configuration
- */
-/**
  * Session and infrastructure surface shared by both dialects' API
  * adapters — the cross-dialect base a consumer can program against
  * without knowing which wire it talks to.
@@ -48,6 +40,14 @@ export interface BaseAPIAdapter {
   readonly setSyncInterval: (minutes: number | false) => void
 }
 
+/**
+ * Common configuration shared by all API clients. Every property —
+ * including the inherited {@link LoginCredentials} pair — may be
+ * absent or explicitly `undefined`, interchangeably: the runtime
+ * applies the same default either way (credentials can also arrive
+ * later via `authenticate` or the {@link SettingManager}).
+ * @category Configuration
+ */
 export interface BaseAPIConfig extends UndefinedTolerant<LoginCredentials> {
   /**
    * Optional shutdown signal applied to every outgoing request.
