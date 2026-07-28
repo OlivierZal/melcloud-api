@@ -190,6 +190,20 @@ export interface HomeBuildingRef {
 }
 
 /**
+ * Building node of the flattened Home zone list — the Home counterpart of
+ * the Classic registry's flat zone vocabulary, using the picker model
+ * tags the consumer app established (`homeBuildings`/`homeDevices`).
+ * @category Types
+ */
+export interface HomeBuildingZone {
+  readonly buildingName: string
+  readonly id: string
+  readonly level: 0
+  readonly model: 'homeBuildings'
+  readonly name: string
+}
+
+/**
  * Single claim entry on a MELCloud Home identity token.
  * @category Types
  */
@@ -284,6 +298,20 @@ export interface HomeDeviceSetting {
 }
 
 /**
+ * Device node of the flattened Home zone list. `deviceType` keeps the
+ * consumer app's short connection tags (`ata`/`atw`).
+ * @category Types
+ */
+export interface HomeDeviceZone {
+  readonly buildingName: string
+  readonly deviceType: 'ata' | 'atw'
+  readonly id: string
+  readonly level: 1
+  readonly model: 'homeDevices'
+  readonly name: string
+}
+
+/**
  * Wire-format energy response from MELCloud Home — one or more measure series per device.
  * @category Types
  */
@@ -324,6 +352,13 @@ export interface HomeErrorLogEntry {
   readonly errorReason: string | null
   readonly timestamp: string
 }
+
+/**
+ * Node union of the flattened Home zone list, name-sorted buildings each
+ * followed by their name-sorted devices.
+ * @category Types
+ */
+export type HomeFlatZone = HomeBuildingZone | HomeDeviceZone
 
 /**
  * Frost-protection schedule attached to a MELCloud Home device. Mirrors

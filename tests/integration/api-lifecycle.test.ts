@@ -179,7 +179,7 @@ describe('api lifecycle', () => {
       syncIntervalMinutes: false,
       transport: mockHttpClient,
     })
-    const manager = new ClassicFacadeManager(api, api.registry)
+    const manager = new ClassicFacadeManager(api)
 
     const building = defined(api.registry.buildings.getById(1))
     const facade = manager.get(building)
@@ -302,7 +302,7 @@ describe('api lifecycle', () => {
       syncIntervalMinutes: false,
       transport: mockHttpClient,
     })
-    const manager = new ClassicFacadeManager(api, api.registry)
+    const manager = new ClassicFacadeManager(api)
     const building = manager.get(defined(api.registry.buildings.getById(1)))
 
     // eslint-disable-next-line @typescript-eslint/require-await -- promise-function-async autofixes sync Promise returns back to async: the pair leaves no disable-free way to satisfy an async contract synchronously

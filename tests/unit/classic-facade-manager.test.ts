@@ -21,14 +21,22 @@ const createManagerWithRegistry = (): {
   registry.syncFloors([classicFloorData()])
   registry.syncAreas([classicAreaData()])
   registry.syncDevices([classicAtaDevice()])
-  const manager = new ClassicFacadeManager(createMockClassicApi(), registry)
+  const manager = new ClassicFacadeManager(createMockClassicApi({ registry }))
   return { manager, registry }
 }
 
 describe('facade manager', () => {
+  it('resolves facades by collection and id', () => {
+    const { manager, registry } = createManagerWithRegistry()
+    const device = registry.devices.getById(1000)
+
+    expect(manager.getById('devices', 1000)).toBe(manager.get(device))
+    expect(manager.getById('devices', 424_242)).toBeNull()
+  })
+
   it('returns null when no instance is provided', () => {
     const registry = new ClassicRegistry()
-    const manager = new ClassicFacadeManager(createMockClassicApi(), registry)
+    const manager = new ClassicFacadeManager(createMockClassicApi({ registry }))
 
     expect(manager.get()).toBeNull()
   })

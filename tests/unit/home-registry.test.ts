@@ -88,6 +88,38 @@ describe('home device registry', () => {
     expect(buildings[1]?.devices).toHaveLength(2)
   })
 
+  it('flattens buildings and devices into the picker zone list', () => {
+    const registry = new HomeRegistry()
+    registry.syncDevices([
+      typedHomeDeviceData(
+        { id: 'ata-1', name: 'Zulu' },
+        { building: homeBuildingRef({ id: 'b-1', name: 'Alpha' }) },
+      ),
+      typedHomeAtwDeviceData(
+        { id: 'atw-1', name: 'Echo' },
+        { building: homeBuildingRef({ id: 'b-1', name: 'Alpha' }) },
+      ),
+    ])
+    const zones = registry.getZones()
+
+    expect(zones.map(({ id }) => id)).toStrictEqual(['b-1', 'atw-1', 'ata-1'])
+    expect(zones[0]).toStrictEqual({
+      buildingName: 'Alpha',
+      id: 'b-1',
+      level: 0,
+      model: 'homeBuildings',
+      name: 'Alpha',
+    })
+    expect(zones[2]).toStrictEqual({
+      buildingName: 'Alpha',
+      deviceType: 'ata',
+      id: 'ata-1',
+      level: 1,
+      model: 'homeDevices',
+      name: 'Zulu',
+    })
+  })
+
   it('should filter by device type', () => {
     const registry = new HomeRegistry()
     registry.syncDevices([

@@ -4,6 +4,8 @@ import type {
   HomeAtwDeviceData,
   HomeBuildingRef,
   HomeDeviceData,
+  HomeDeviceZone,
+  HomeFlatZone,
 } from '../types/index.ts'
 import { HomeDevice } from './home-device.ts'
 
@@ -48,7 +50,7 @@ export class HomeRegistry {
    * @returns One entry per building that holds at least one such device.
    */
   public getBuildings(
-    params: { type?: HomeDeviceType } = {},
+    params: { type?: HomeDeviceType | undefined } = {},
   ): HomeBuildingDevices[] {
     const { type } = params
     const buildings = new Map<string, HomeBuildingDevices>()
@@ -98,6 +100,35 @@ export class HomeRegistry {
   public getDevicesByType(type: HomeDeviceType): HomeDevice[]
   public getDevicesByType(type: HomeDeviceType): HomeDevice[] {
     return this.getDevices().filter((model) => model.type === type)
+  }
+
+  /**
+   * Flattens the registry into the picker zone list: name-sorted
+   * buildings, each followed by its name-sorted devices — the Home
+   * counterpart of the Classic registry's `getZones`.
+   * @param params - Optional filter.
+   * @param params.type - Connection-type discriminator; omitted covers
+   * both connection types.
+   * @returns The flattened zone nodes.
+   */
+  public getZones(
+    params: { type?: HomeDeviceType | undefined } = {},
+  ): HomeFlatZone[] {
+    return this.getBuildings(params).flatMap(
+      ({ devices, id, name }): HomeFlatZone[] => [
+        { buildingName: name, id, level: 0, model: 'homeBuildings', name },
+        ...devices
+          .map((device): HomeDeviceZone => ({
+            buildingName: name,
+            deviceType: device.isAta() ? 'ata' : 'atw',
+            id: device.id,
+            level: 1,
+            model: 'homeDevices',
+            name: device.name,
+          }))
+          .toSorted((left, right) => left.name.localeCompare(right.name)),
+      ],
+    )
   }
 
   /**

@@ -1,9 +1,11 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
+import type { HomeBuildingDevices } from '../entities/home-registry.ts'
 import type { HolidayModeUpdate } from '../holiday-mode.ts'
 import type {
   HomeAtaDeviceData,
   HomeAtwDeviceData,
+  HomeFlatZone,
   HomeProtectionUnits,
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
@@ -98,6 +100,50 @@ export class HomeFacadeManager {
     )
     this.#buildings.set(id, facade)
     return facade
+  }
+
+  /**
+   * Groups registry devices by building — the Home counterpart of the
+   * Classic manager's `getBuildings`.
+   * @param params - Optional filter.
+   * @param params.type - Connection-type discriminator; omitted merges
+   * both connection types per building.
+   * @returns One name-sorted entry per building.
+   */
+  public getBuildings(params?: {
+    type?: HomeDeviceType | undefined
+  }): HomeBuildingDevices[] {
+    return this.#api.registry.getBuildings(params)
+  }
+
+  /**
+   * Resolves a device facade by id — the by-id twin of {@link get}.
+   * @param id - Device identifier.
+   * @returns The facade, or `null` when the id is unknown.
+   */
+  public getById(id: string): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
+    const model = this.#api.registry.getById(id)
+    if (model === undefined) {
+      return null
+    }
+    if (model.isAta()) {
+      return this.get(model)
+    }
+    return model.isAtw() ? this.get(model) : null
+  }
+
+  /**
+   * Flattens the registry into the picker zone list — the Home
+   * counterpart of the Classic manager's `getZones`.
+   * @param params - Optional filter.
+   * @param params.type - Connection-type discriminator; omitted covers
+   * both connection types.
+   * @returns The flattened zone nodes.
+   */
+  public getZones(params?: {
+    type?: HomeDeviceType | undefined
+  }): HomeFlatZone[] {
+    return this.#api.registry.getZones(params)
   }
 
   /**

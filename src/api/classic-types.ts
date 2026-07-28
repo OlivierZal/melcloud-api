@@ -1,4 +1,5 @@
 import type { ClassicDeviceType } from '../constants.ts'
+import type { ClassicRegistry } from '../entities/classic-registry.ts'
 import type {
   ClassicBuildingWithStructure,
   ClassicEnergyData,
@@ -64,6 +65,8 @@ export interface ClassicAPIAdapter {
    * observer cannot break the caller.
    */
   readonly notifySync: SyncCallback
+  /** Classic model registry synced by the fetch cycle. */
+  readonly registry: ClassicRegistry
   /**
    * IANA timezone identifier the Classic instance was configured with
    * (`ClassicAPIConfig.timezone`), or `undefined` when unset. Facades
