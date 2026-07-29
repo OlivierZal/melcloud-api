@@ -126,6 +126,28 @@ const LOGIN_BACKOFF_FAILURE_MS = 900_000
 const LOGIN_BACKOFF_THROTTLE_MS = 7_200_000
 
 /**
+ * How long to hold sign-ins after a throttle rejection. The server's own
+ * countdown wins when it announced one — waiting past it is downtime the
+ * upstream never asked for, and a field report showed exactly that: a
+ * 60-minute lockout answered with a 120-minute pause, leaving a heat
+ * pump uncontrollable for the extra hour. The constant stays the cap and
+ * the fallback, so an absent or absurd window cannot shorten the pause
+ * below what a blind caller would have waited.
+ * @param error - The throttle rejection that is arming the backoff.
+ * @returns Milliseconds to hold automatic sign-ins.
+ */
+const throttleBackoffMs = (error: AuthenticationThrottledError): number => {
+  const { retryAfter } = error
+  if (retryAfter === null) {
+    return LOGIN_BACKOFF_THROTTLE_MS
+  }
+  return Math.min(
+    retryAfter.total({ unit: 'milliseconds' }),
+    LOGIN_BACKOFF_THROTTLE_MS,
+  )
+}
+
+/**
  * Subclass-internal options injected into the {@link BaseAPI}
  * constructor. Distinct from {@link BaseAPIConfig} (the user-facing
  * surface) — these capture **what the subclass knows** that the user
@@ -753,7 +775,7 @@ export abstract class BaseAPI implements Disposable {
     }
     const backoffMs =
       error instanceof AuthenticationThrottledError
-        ? LOGIN_BACKOFF_THROTTLE_MS
+        ? throttleBackoffMs(error)
         : LOGIN_BACKOFF_FAILURE_MS
     this.#setLoginBackoffUntil(
       Temporal.Now.instant().epochMilliseconds + backoffMs,

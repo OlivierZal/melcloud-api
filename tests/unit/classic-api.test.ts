@@ -1156,4 +1156,37 @@ describe('mELCloud Classic API', () => {
       api.authenticate({ password: 'p', username: 'u@test.com' }),
     ).rejects.toThrow(AuthenticationThrottledError)
   })
+
+  it('carries the announced lockout from LoginMinutes', async () => {
+    mockRequest.mockResolvedValue(
+      wrap({ ErrorId: 6, LoginData: null, LoginMinutes: 60 }),
+    )
+    const api = await createApi()
+
+    await expect(
+      api.authenticate({ password: 'p', username: 'u@test.com' }),
+    ).rejects.toMatchObject({
+      retryAfter: expect.objectContaining({ minutes: 60 }) as unknown,
+    })
+  })
+
+  it.each([
+    { announced: undefined, label: 'absent' },
+    { announced: null, label: 'null' },
+    { announced: 0, label: 'zero' },
+    // The endpoint sent -10033 in the field: a sentinel, not a window.
+    { announced: -10_033, label: 'negative' },
+  ])(
+    'announces no window when LoginMinutes is $label',
+    async ({ announced }) => {
+      mockRequest.mockResolvedValue(
+        wrap({ ErrorId: 6, LoginData: null, LoginMinutes: announced }),
+      )
+      const api = await createApi()
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u@test.com' }),
+      ).rejects.toMatchObject({ retryAfter: null })
+    },
+  )
 })

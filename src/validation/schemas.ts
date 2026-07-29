@@ -35,6 +35,7 @@ export const ClassicLoginDataSchema: z.ZodType<ClassicLoginData> =
         Expiry: z.string(),
       })
       .nullable(),
+    LoginMinutes: z.number().nullable().optional(),
   })
 
 /** Home OIDC /connect/par response. */
