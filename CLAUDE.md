@@ -167,6 +167,16 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 
 ## Repo process
 
+- The PR title IS the commit that lands: `squash_merge_commit_title` is
+  `PR_TITLE`, so the title is the single source (under the former
+  `COMMIT_OR_PR_TITLE`, a one-commit PR silently took its commit subject
+  instead). It must follow Conventional Commits, which the required
+  `PR title` check enforces (`.github/workflows/pr-title.yml`,
+  byte-identical in the five repos) — default type set, no scope
+  allowlist, and no `subjectPattern`: subjects legitimately open on a
+  proper noun. Dependabot's prefixes are pinned to `build(deps)` /
+  `build(deps-dev)` rather than inferred, which is what had this repo
+  land `Build(deps): Bump …` where the apps landed lowercase.
 - After every push, monitor the triggered pipelines to completion — the
   PR checks after a push, the publish run after a release — and act on
   the outcome: rerun transient infra failures (a SonarCloud 504 is not
