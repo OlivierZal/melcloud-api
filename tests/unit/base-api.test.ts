@@ -982,7 +982,7 @@ describe('automatic login backoff', () => {
           .settingManager,
       })
       api.doAuthenticateMock.mockRejectedValue(
-        new AuthenticationThrottledError('locked', { retryAfter: null }),
+        new AuthenticationThrottledError('locked'),
       )
 
       await expect(

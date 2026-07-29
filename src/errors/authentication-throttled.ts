@@ -22,19 +22,19 @@ export class AuthenticationThrottledError extends AuthenticationError {
   public readonly retryAfter: Temporal.Duration | null
 
   /**
-   * Builds the error from the message and the announced window.
+   * Builds the error from the message and, when the upstream announced
+   * one, the window it asks the caller to wait.
    * @param message - Human-readable error description.
-   * @param options - Throttle window metadata plus optional cause.
+   * @param options - Optional throttle window metadata plus cause.
    * @param options.retryAfter - `Temporal.Duration` the server asks the
-   * caller to wait, or `null` when it announced none.
+   * caller to wait; omit or pass `null` when it announced none.
    * @param options.cause - Original error that triggered this one.
    */
   public constructor(
     message: string,
-    options: { retryAfter: Temporal.Duration | null; cause?: unknown },
+    options?: { cause?: unknown; retryAfter?: Temporal.Duration | null },
   ) {
-    const { retryAfter } = options
     super(message, options)
-    this.retryAfter = retryAfter
+    this.retryAfter = options?.retryAfter ?? null
   }
 }
