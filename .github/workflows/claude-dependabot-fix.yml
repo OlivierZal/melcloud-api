@@ -32,7 +32,7 @@ jobs:
       - uses: ./.github/actions/setup-node-and-install
         with:
           node-version: lts/*
-      - uses: anthropics/claude-code-action@b76a0776ae74036e77cd11018083743453d7ad35
+      - uses: anthropics/claude-code-action@44423bdec74b97d67543eb16c110546762c110b2
         with:
           additional_permissions: |
             actions: read
