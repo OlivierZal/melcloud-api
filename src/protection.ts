@@ -29,6 +29,12 @@ export interface ProtectionState {
  * A protection update to apply — the write contract shared by frost
  * (Classic and Home) and overheat (Home ATA) protection, clamped by the
  * sibling helpers before it reaches the wire.
+ *
+ * Structurally identical to {@link ProtectionState} today, and kept
+ * separate on purpose: the read twin gains whatever the wire starts
+ * reporting, the write twin only what the units accept. Its holiday
+ * counterparts already diverge that way — {@link HolidayModeState}
+ * nulls a bound the wire left unset, where its update requires both.
  * @category Facades
  */
 export interface ProtectionUpdate {
