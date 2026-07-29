@@ -416,6 +416,13 @@ export interface ClassicLoginData {
     readonly Expiry: string
   } | null
   readonly ErrorId?: number | null | undefined
+  /**
+   * Minutes MELCloud will keep refusing sign-ins, sent alongside a
+   * throttle rejection (`ErrorId 6`) and counting down between
+   * attempts. Absent, null or non-positive when the response carries
+   * no such window.
+   */
+  readonly LoginMinutes?: number | null | undefined
 }
 
 /**

@@ -619,7 +619,11 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     password,
     username,
   }: LoginCredentials): Promise<void> {
-    const { ErrorId: errorId, LoginData: loginData } = await this.login({
+    const {
+      ErrorId: errorId,
+      LoginData: loginData,
+      LoginMinutes: loginMinutes,
+    } = await this.login({
       postData: {
         AppVersion: APP_VERSION,
         Email: username,
@@ -631,10 +635,19 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     if (loginData === null) {
       // ErrorId 6 is MELCloud's login throttle (LoginStatus 6, high
       // LoginAttempts): the credentials may be perfectly valid — asking
-      // the user to re-log would keep the lockout alive.
+      // the user to re-log would keep the lockout alive. The lockout it
+      // still has to run is in LoginMinutes, counting down between
+      // attempts; a non-positive value is one of the sentinels the
+      // endpoint sends when it announces no window at all.
       throw errorId === LOGIN_THROTTLE_ERROR_ID
         ? new AuthenticationThrottledError(
             'MELCloud is temporarily blocking sign-ins (too many attempts)',
+            {
+              retryAfter:
+                typeof loginMinutes === 'number' && loginMinutes > 0
+                  ? Temporal.Duration.from({ minutes: loginMinutes })
+                  : null,
+            },
           )
         : new AuthenticationError('MELCloud Classic rejected the credentials')
     }

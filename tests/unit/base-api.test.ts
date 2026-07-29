@@ -982,7 +982,7 @@ describe('automatic login backoff', () => {
           .settingManager,
       })
       api.doAuthenticateMock.mockRejectedValue(
-        new AuthenticationThrottledError('locked'),
+        new AuthenticationThrottledError('locked', { retryAfter: null }),
       )
 
       await expect(
@@ -995,6 +995,67 @@ describe('automatic login backoff', () => {
       expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
 
       vi.advanceTimersByTime(6_300_000)
+
+      await expect(api.resumeSession()).resolves.toBe(false)
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('honours the announced window instead of the two-hour default', async () => {
+    vi.useFakeTimers()
+    mockTemporalNowInstant()
+    try {
+      const api = new TestAPI({
+        settingManager: createSettingStore({ password: 'p', username: 'u' })
+          .settingManager,
+      })
+      api.doAuthenticateMock.mockRejectedValue(
+        new AuthenticationThrottledError('locked', {
+          retryAfter: Temporal.Duration.from({ minutes: 60 }),
+        }),
+      )
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('locked')
+
+      // Still held a minute short of the announced hour…
+      vi.advanceTimersByTime(3_540_000)
+
+      await expect(api.resumeSession()).resolves.toBe(false)
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
+
+      // …and released at it, an hour before the blind default would.
+      vi.advanceTimersByTime(60_001)
+
+      await expect(api.resumeSession()).resolves.toBe(false)
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('caps an announced window at the two-hour default', async () => {
+    vi.useFakeTimers()
+    mockTemporalNowInstant()
+    try {
+      const api = new TestAPI({
+        settingManager: createSettingStore({ password: 'p', username: 'u' })
+          .settingManager,
+      })
+      api.doAuthenticateMock.mockRejectedValue(
+        new AuthenticationThrottledError('locked', {
+          retryAfter: Temporal.Duration.from({ hours: 48 }),
+        }),
+      )
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('locked')
+
+      vi.advanceTimersByTime(7_200_001)
 
       await expect(api.resumeSession()).resolves.toBe(false)
       expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
