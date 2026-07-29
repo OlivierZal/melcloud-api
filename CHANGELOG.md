@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [45.1.0] - 2026-07-29
+
+### Fixed
+
+- **The sign-in backoff now waits the lockout MELCloud announces, instead of a flat two hours.** `ClientLogin3` counts the remaining lockout down in `LoginMinutes` on every throttle rejection (`ErrorId 6`), and the schema parsed neither it nor `LoginStatus`. A user report showed a 60-minute lockout answered with a 120-minute pause — an extra hour of a heat pump nobody could control, asked for by nothing. The two-hour constant is now the cap and the fallback: an absent window (the Home 429 carries none) or an absurd one cannot shorten the pause below what a blind caller would have waited, and a non-positive `LoginMinutes` reads as "none announced" (the endpoint sends sentinels such as `-10033`).
+
+### Added
+
+- **`AuthenticationThrottledError.retryAfter`** — the window the server announced, as a `Temporal.Duration`, mirroring `RateLimitError.retryAfter` so a consumer can phrase "try again in N minutes" without parsing the message. `null` when the upstream announced none. The constructor's options bag stays optional, so existing `new AuthenticationThrottledError(message)` call sites are unaffected.
+- `ClassicLoginData.LoginMinutes`, typed and validated alongside the fields the login flow already consumed.
+
 ## [45.0.2] - 2026-07-28
 
 ### Fixed
@@ -426,6 +437,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[45.1.0]: https://github.com/OlivierZal/melcloud-api/compare/45.0.2...45.1.0
 [45.0.2]: https://github.com/OlivierZal/melcloud-api/compare/45.0.1...45.0.2
 [45.0.1]: https://github.com/OlivierZal/melcloud-api/compare/45.0.0...45.0.1
 [45.0.0]: https://github.com/OlivierZal/melcloud-api/compare/44.1.0...45.0.0

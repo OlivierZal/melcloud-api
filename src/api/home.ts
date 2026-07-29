@@ -570,11 +570,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       ) {
         // The BFF/Cognito login throttle — the Home mirror of Classic's
         // ErrorId 6. Valid credentials, blocked endpoint: back off. The
-        // 429 carries no window this layer reads, so the caller keeps
-        // its own conservative pause.
+        // 429 carries no window this layer reads, so the error announces
+        // none and the caller keeps its own conservative pause.
         throw new AuthenticationThrottledError(
           'MELCloud Home is temporarily blocking sign-ins (too many attempts)',
-          { retryAfter: null },
         )
       }
       const authError = normalizeUnauthorized(error)
