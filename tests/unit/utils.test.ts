@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ReportChartLineOptions } from '../../src/facades/index.ts'
-import { ok } from '../../src/types/index.ts'
+import { err, ok } from '../../src/types/index.ts'
 import {
   fromListToSetAta,
   fromSetToListAta,
@@ -14,7 +14,7 @@ import {
   padHourlyChartToMidnight,
   typedFromEntries,
 } from '../../src/utils.ts'
-import { cast, okValue } from '../helpers.ts'
+import { okValue } from '../helpers.ts'
 
 describe.concurrent('ata set-to-list conversion', () => {
   it('maps set keys to list keys', () => {
@@ -152,9 +152,7 @@ describe.concurrent(mergeHourlyChartResults, () => {
   })
 
   it('propagates the first hourly failure untouched', () => {
-    const failure: ReturnType<typeof mergeHourlyChartResults> = cast({
-      ok: false,
-    })
+    const failure = err({ cause: new Error('fail'), kind: 'network' })
 
     expect(
       mergeHourlyChartResults([hourOptions(['00:00'], [-60]), failure]),

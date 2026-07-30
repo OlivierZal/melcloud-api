@@ -1,6 +1,10 @@
 import { vi } from 'vitest'
 
-import type { ClassicAPIAdapter, SyncCallback } from '../src/api/index.ts'
+import type {
+  ClassicAPIAdapter,
+  ClassicErrorLog,
+  SyncCallback,
+} from '../src/api/index.ts'
 import {
   ClassicDeviceType,
   ClassicLabelType,
@@ -25,6 +29,9 @@ import {
   type ClassicListDeviceDataErv,
   type ClassicReportData,
   type ClassicSetDeviceDataAta,
+  type ClassicTilesData,
+  type ClassicTilesPostData,
+  type Result,
   ok,
   toClassicAreaId,
   toClassicBuildingId,
@@ -303,6 +310,10 @@ export const classicBuildingWithStructure = (
 export const classicRawDevice = (
   overrides: Record<string, unknown> = {},
 ): ClassicListDeviceAny =>
+  // Raw on purpose: this models the wire payload BEFORE branding and
+  // validation, so its ids are plain numbers and `Device` is empty. A
+  // typed factory rightly rejects it — `cast` is the deliberate
+  // off-shape entry point.
   cast({
     AreaID: null,
     BuildingID: 1,
@@ -318,9 +329,15 @@ export const classicRawDevice = (
 // Mock factories
 // ---------------------------------------------------------------------------
 
-const emptyTilesResponse = (): Awaited<
-  ReturnType<ClassicAPIAdapter['getTiles']>
-> => ok(cast({ SelectedDevice: null, Tiles: [] }))
+// The whole-building form (`SelectedDevice: null`), which is what
+// `ClassicTilesData<null>` means. Declaring it through
+// `ReturnType<getTiles>` resolved to the LAST overload — the
+// device-scoped one — so the type said "a device response" while the
+// value was a building response, and an assertion hid the mismatch. The
+// caller's `cast` is a separate concession: an overloaded function cannot
+// be satisfied by one `vi.fn`.
+const emptyTilesResponse = (): Result<ClassicTilesData<null>> =>
+  ok(mock<ClassicTilesData<null>>({ SelectedDevice: null, Tiles: [] }))
 
 export const createMockClassicApi = (
   overrides: Partial<ClassicAPIAdapter> = {},
@@ -335,17 +352,18 @@ export const createMockClassicApi = (
       .mockResolvedValue(ok([])),
     getErrorLog: vi
       .fn<ClassicAPIAdapter['getErrorLog']>()
-      .mockResolvedValue(ok(cast({ errors: [] }))),
+      .mockResolvedValue(ok(mock<ClassicErrorLog>({ errors: [] }))),
     getFrostProtection: vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockResolvedValue(
         ok(classicFrostProtectionResponse({ FPDefined: true })),
       ),
-    getGroup: vi
-      .fn<ClassicAPIAdapter['getGroup']>()
-      .mockResolvedValue(
-        ok(cast({ Data: { Group: { State: { Power: true } } } })),
-      ),
+    getGroup: vi.fn<ClassicAPIAdapter['getGroup']>().mockResolvedValue(
+      // `Partial<T>` is shallow, so a typed factory here would need one
+      // nested factory per wire level to assert the single field this
+      // skeleton exists for.
+      ok(cast({ Data: { Group: { State: { Power: true } } } })),
+    ),
     getHolidayMode: vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockResolvedValue(ok(classicHolidayModeResponse({ HMDefined: true }))),
@@ -364,9 +382,16 @@ export const createMockClassicApi = (
     getTemperatures: vi
       .fn<ClassicAPIAdapter['getTemperatures']>()
       .mockResolvedValue(ok(classicReportData())),
+    // Typed on the whole-building overload, which is the form the default
+    // response models; the outer `cast` is the unavoidable part — one
+    // `vi.fn` cannot satisfy an overloaded signature.
     getTiles: cast(
       vi
-        .fn<ClassicAPIAdapter['getTiles']>()
+        .fn<
+          (args: {
+            postData: ClassicTilesPostData<null>
+          }) => Promise<Result<ClassicTilesData<null>>>
+        >()
         .mockResolvedValue(emptyTilesResponse()),
     ),
     getValues: vi

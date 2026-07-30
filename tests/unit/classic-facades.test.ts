@@ -34,7 +34,10 @@ import {
 } from '../../src/facades/index.ts'
 import { Temporal } from '../../src/temporal.ts'
 import {
+  type ClassicEnergyDataAta,
+  type ClassicEnergyDataAtw,
   type ClassicListDeviceDataAta,
+  type ClassicSetDeviceDataAtw,
   type ClassicSetDevicePostData,
   err,
   ok,
@@ -190,7 +193,7 @@ const atwSetValuesResponse = (
 ): Partial<ClassicAPIAdapter> => ({
   updateValues: cast(
     vi.fn<ClassicAPIAdapter['updateValues']>().mockResolvedValue(
-      cast({
+      mock<ClassicSetDeviceDataAtw>({
         DeviceType: ClassicDeviceType.Atw,
         EffectiveFlags: 0x1,
         ForcedHotWaterMode: false,
@@ -874,7 +877,7 @@ describe('ata device facade', () => {
     const { api, facade } = createAtaFacade({
       getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
         ok(
-          cast({
+          mock<ClassicEnergyDataAta>({
             Auto: [0, 0],
             Cooling: [0.5, 1],
             Dry: [0, 0],
@@ -920,7 +923,7 @@ describe('ata device facade', () => {
     const { facade } = createAtaFacade({
       getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
         ok(
-          cast({
+          mock<ClassicEnergyDataAta>({
             Auto: [0, 0, 0, 0, 0, 0, 0],
             Cooling: [1, 1, 1, 1, 1, 1, 1],
             Dry: [0, 0, 0, 0, 0, 0, 0],
@@ -963,7 +966,7 @@ describe('ata device facade', () => {
   it('lowers Z-suffixed report bounds to wall-clock in the display timezone', async () => {
     const getEnergy = vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
       ok(
-        cast({
+        mock<ClassicEnergyDataAta>({
           Auto: [0, 0],
           Cooling: [0.5, 1],
           Dry: [0, 0],
@@ -1007,7 +1010,7 @@ describe('ata device facade', () => {
     const { facade } = createAtaFacade({
       getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
         ok(
-          cast({
+          mock<ClassicEnergyDataAta>({
             Auto: [0, 0],
             Cooling: [0.2, 0.3],
             Dry: [0, 0],
@@ -1314,7 +1317,7 @@ describe('atw device facade', () => {
     const { facade } = createAtwFacade({
       getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
         ok(
-          cast({
+          mock<ClassicEnergyDataAtw>({
             Cooling: [0, 0],
             CoP: [2.5, null],
             Heating: [5.1, 4.9],
