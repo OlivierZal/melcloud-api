@@ -5,7 +5,7 @@ import type { HomeAPI } from '../../src/api/home.ts'
 import type { SyncCallback } from '../../src/api/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
-import { HttpError } from '../../src/http/index.ts'
+import { type HttpResponse, HttpError } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
 import {
   type ClassicBuildingWithStructure,
@@ -21,7 +21,6 @@ import {
   classicBuildingData,
 } from '../classic-fixtures.ts'
 import {
-  cast,
   createMockHttpClient,
   createSettingStore,
   defined,
@@ -307,7 +306,7 @@ describe('api lifecycle', () => {
 
     // eslint-disable-next-line @typescript-eslint/require-await -- promise-function-async autofixes sync Promise returns back to async: the pair leaves no disable-free way to satisfy an async contract synchronously
     mockRequest.mockImplementation(async (config) =>
-      cast({
+      mock<HttpResponse>({
         data:
           config.url === '/FrostProtection/Update'
             ? { AttributeErrors: null, Success: true }
