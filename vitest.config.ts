@@ -1,7 +1,7 @@
-import { defineConfig } from 'vitest/config'
+import { type ViteUserConfig, defineConfig } from 'vitest/config'
 import swc from 'unplugin-swc'
 
-const config = defineConfig({
+const config: ViteUserConfig = defineConfig({
   oxc: false,
   plugins: [
     swc.vite({

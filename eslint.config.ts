@@ -1,4 +1,4 @@
-import { defineConfig } from 'eslint/config'
+import { type Config, defineConfig } from 'eslint/config'
 import { flatConfigs as importXConfigs } from 'eslint-plugin-import-x'
 import { jsdoc } from 'eslint-plugin-jsdoc'
 import { configs as packageJsonConfigs } from 'eslint-plugin-package-json'
@@ -47,7 +47,7 @@ const typeLikeSortOptions = {
   ],
 }
 
-const config = defineConfig([
+const config: Config[] = defineConfig([
   {
     // `scripts/` holds gitignored one-shot wire probes, not shipped
     // code — outside the lint scope by decision, like the build outputs.
@@ -97,9 +97,7 @@ const config = defineConfig([
     files: ['**/*.ts'],
     languageOptions: {
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ['*.config.ts'],
-        },
+        projectService: true,
         warnOnUnsupportedTypeScriptVersion: false,
       },
     },
