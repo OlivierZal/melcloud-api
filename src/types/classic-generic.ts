@@ -21,8 +21,14 @@ import type {
   ClassicSetDeviceDataErv,
   ClassicUpdateDeviceDataErv,
 } from './classic-erv.ts'
-import type { Hour } from './hour.ts'
 import type { ClassicBuildingID, ClassicDeviceID } from './ids.ts'
+
+/** Common shape shared by every Classic zone variant returned from the registry — id, hierarchy depth, display name. */
+interface BaseZone {
+  readonly id: number
+  readonly level: number
+  readonly name: string
+}
 
 /**
  * Central mapping from device type to its associated data types.
@@ -49,13 +55,6 @@ interface DeviceDataMapping {
     set: ClassicSetDeviceDataErv
     update: ClassicUpdateDeviceDataErv
   }
-}
-
-/** Common shape shared by every Classic zone variant returned from the registry — id, hierarchy depth, display name. */
-export interface BaseZone {
-  readonly id: number
-  readonly level: number
-  readonly name: string
 }
 
 /**
@@ -590,9 +589,3 @@ export interface ClassicZoneSettings
   extends
     ClassicFrostProtectionData,
     Omit<ClassicHolidayModeData, 'EndDate' | 'StartDate'> {}
-
-/** POST body for the hourly temperature / signal endpoints — multiple devices for a fixed hour-of-day. */
-export interface HourlyReportPostData {
-  readonly devices: number[]
-  readonly hour: Hour
-}

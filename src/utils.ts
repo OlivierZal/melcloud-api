@@ -275,7 +275,7 @@ const getChartLineSeries = ({
  * `locale` stays an explicit, named, per-call argument (no global
  * mutable locale state).
  */
-export interface ChartLineFormatOptions {
+interface ChartLineFormatOptions {
   /** Legend entries for each data series. */
   readonly legend: readonly (string | undefined)[]
   /** Unit of measurement for the data. */

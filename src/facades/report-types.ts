@@ -1,3 +1,13 @@
+/** Base chart options with date range and formatted axis labels. */
+interface ReportChartOptions {
+  /** Start date of the report period. */
+  readonly from: string
+  /** Formatted axis labels (dates, months, etc.). */
+  readonly labels: readonly string[]
+  /** End date of the report period. */
+  readonly to: string
+}
+
 /**
  * One background band over a line chart, expressed as an inclusive
  * `[from, to]` index range on the `labels` grid — e.g. an ATW
@@ -27,16 +37,6 @@ export interface ReportChartLineOptions extends ReportChartOptions {
   readonly unit: string
   /** Background bands (operation modes); absent on most charts. */
   readonly bands?: readonly ReportChartBand[] | undefined
-}
-
-/** Base chart options with date range and formatted axis labels. */
-export interface ReportChartOptions {
-  /** Start date of the report period. */
-  readonly from: string
-  /** Formatted axis labels (dates, months, etc.). */
-  readonly labels: readonly string[]
-  /** End date of the report period. */
-  readonly to: string
 }
 
 /**

@@ -389,7 +389,7 @@ export const resolveHomeHourWindow = (
 }
 
 /** Display bucket granularity of the Home energy charts. */
-export type HomeEnergyBucketUnit = 'day' | 'hour' | 'localDay'
+type HomeEnergyBucketUnit = 'day' | 'hour' | 'localDay'
 
 /**
  * Display bucket granularity for an energy-report window: hourly on a

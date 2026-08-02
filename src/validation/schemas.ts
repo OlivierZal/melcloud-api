@@ -402,7 +402,7 @@ const ClassicBuildingStructureSchema = z.looseObject({
 })
 
 /** Minimal shape the {@link ClassicBuildingListSchema} guarantees on success. */
-export interface ClassicBuildingListEntry {
+interface ClassicBuildingListEntry {
   readonly ID: number
   readonly Name: string
   readonly Structure: unknown
