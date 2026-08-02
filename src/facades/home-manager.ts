@@ -14,6 +14,7 @@ import {
   clampFrostProtection,
   clampOverheatProtection,
 } from '../protection.ts'
+import type { HomeDeviceFacadeAny } from './home-types.ts'
 import { HomeBuildingAtaFacade } from './home-building-ata.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 import { HomeDeviceAtwFacade } from './home-device-atw.ts'
@@ -28,10 +29,7 @@ export class HomeFacadeManager {
 
   readonly #buildings = new Map<string, HomeBuildingAtaFacade>()
 
-  readonly #facades = new WeakMap<
-    HomeDevice,
-    HomeDeviceAtaFacade | HomeDeviceAtwFacade
-  >()
+  readonly #facades = new WeakMap<HomeDevice, HomeDeviceFacadeAny>()
 
   /**
    * Builds a facade manager bound to the given Home API client; facades
@@ -55,10 +53,10 @@ export class HomeFacadeManager {
   public get(): null
   public get(
     instance?: HomeDevice<HomeAtaDeviceData> | HomeDevice<HomeAtwDeviceData>,
-  ): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null
+  ): HomeDeviceFacadeAny | null
   public get(
     instance?: HomeDevice<HomeAtaDeviceData> | HomeDevice<HomeAtwDeviceData>,
-  ): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
+  ): HomeDeviceFacadeAny | null {
     if (instance === undefined) {
       return null
     }
@@ -121,7 +119,7 @@ export class HomeFacadeManager {
    * @param id - Device identifier.
    * @returns The facade, or `null` when the id is unknown.
    */
-  public getById(id: string): HomeDeviceAtaFacade | HomeDeviceAtwFacade | null {
+  public getById(id: string): HomeDeviceFacadeAny | null {
     const model = this.#api.registry.getById(id)
     if (model === undefined) {
       return null
