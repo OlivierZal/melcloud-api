@@ -64,6 +64,17 @@ describe('api call request data', () => {
     expect(data.headers).toBeUndefined()
   })
 
+  it('redacts sensitive keys nested in array payloads', () => {
+    const data = new APICallRequestData(
+      createConfig({ data: [{ password: 'secret', safe: 'ok' }] }),
+    )
+    const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
+
+    expect(parsed.requestData).toStrictEqual([
+      { password: '******', safe: 'ok' },
+    ])
+  })
+
   it('serializes to JSON with logKeys', () => {
     const data = new APICallRequestData(createConfig())
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
