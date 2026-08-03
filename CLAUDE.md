@@ -201,6 +201,15 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 
 ## Releasing
 
+- Publishing is not done until the consumer adopts: com.melcloud pins this
+  library EXACTLY (no caret — a `^` is what silently held a published
+  auth fix back for six days, 2026-08). Every release therefore ends
+  with an adoption PR in com.melcloud bumping the exact pin; nothing reaches
+  users otherwise.
+- `SECURITY.md` names no version numbers by design ("only the latest
+  published release") — nothing to bump there on release, and nothing
+  that can drift.
+
 - Publishing is release-triggered (`publish.yml`): a **published GitHub
   Release** packs the tarball and publishes it to GitHub Packages. A
   release marked **prerelease** publishes under the `next` dist-tag; a
