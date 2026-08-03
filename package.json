@@ -59,7 +59,7 @@
   "dependencies": {
     "temporal-polyfill": "^1.0.1",
     "tough-cookie": "^6.0.2",
-    "undici": "^8.8.0",
+    "undici": "^8.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -85,7 +85,7 @@
     "jsonc-eslint-parser": "^3.1.0",
     "prettier": "^3.9.6",
     "prettier-plugin-packagejson": "^3.0.2",
-    "publint": "^0.3.21",
+    "publint": "^0.3.22",
     "typedoc": "^0.28.20",
     "typedoc-plugin-coverage": "^4.0.3",
     "typedoc-plugin-mdn-links": "^5.1.1",
