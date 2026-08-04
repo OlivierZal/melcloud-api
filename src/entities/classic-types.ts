@@ -4,7 +4,9 @@ import type { BaseModel } from './base.ts'
 import type { ClassicBuilding } from './building.ts'
 import type { ClassicDevice } from './classic-device.ts'
 
-/** Base building model providing zone settings (frost protection, holiday mode). */
+/**
+ * Base building model providing zone settings (frost protection, holiday mode).
+ */
 export type ClassicBaseBuilding = Pick<ClassicBuilding, 'data'>
 
 /**
@@ -44,5 +46,7 @@ export const isClassicDeviceOfType = <T extends ClassicDeviceType>(
  */
 export type ClassicDeviceAny = ClassicDevice<ClassicDeviceType>
 
-/** ClassicModel kind discriminants for polymorphic dispatch without instanceof. */
+/**
+ * ClassicModel kind discriminants for polymorphic dispatch without instanceof.
+ */
 export type ClassicModelKind = 'area' | 'building' | 'device' | 'floor'

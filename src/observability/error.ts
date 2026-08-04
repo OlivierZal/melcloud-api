@@ -3,7 +3,9 @@ import type { APICallLogData } from './context.ts'
 import { APICallRequestData } from './request.ts'
 import { APICallResponseData } from './response.ts'
 
-/** Log data extended with the error message from a failed API call. */
+/**
+ * Log data extended with the error message from a failed API call.
+ */
 interface APICallLogDataWithErrorMessage extends APICallLogData {
   readonly errorMessage: string
 }

@@ -25,7 +25,9 @@ import { ValidationError } from '../errors/index.ts'
 // actually consumes fields from — the wire format carries many more
 // keys that the compile-time types already document.
 
-/** Classic /Login/ClientLogin3 response. */
+/**
+ * Classic /Login/ClientLogin3 response.
+ */
 export const ClassicLoginDataSchema: z.ZodType<ClassicLoginData> =
   z.looseObject({
     ErrorId: z.number().nullable().optional(),
@@ -38,13 +40,17 @@ export const ClassicLoginDataSchema: z.ZodType<ClassicLoginData> =
     LoginMinutes: z.number().nullable().optional(),
   })
 
-/** Home OIDC /connect/par response. */
+/**
+ * Home OIDC /connect/par response.
+ */
 export const HomeParResponseSchema: z.ZodType<{ request_uri: string }> =
   z.looseObject({
     request_uri: z.string().min(1),
   })
 
-/** Home OIDC /connect/token response. */
+/**
+ * Home OIDC /connect/token response.
+ */
 export const HomeTokenResponseSchema: z.ZodType<HomeTokenResponse> =
   z.looseObject({
     access_token: z.string().min(1),
@@ -192,7 +198,9 @@ const HomeBuildingSchema = z.looseObject({
   timezone: z.string(),
 })
 
-/** Home BFF /context response. */
+/**
+ * Home BFF /context response.
+ */
 export const HomeContextSchema: z.ZodType<HomeContext> = z.looseObject({
   buildings: z.array(HomeBuildingSchema),
   country: z.string(),
@@ -332,7 +340,9 @@ const HomeReportTriggerSchema = z.looseObject({
   value: z.number().nullable(),
 })
 
-/** Home /report/v1/{comfort-graph,internaltemperatures,trendsummary} response. */
+/**
+ * Home /report/v1/{comfort-graph,internaltemperatures,trendsummary} response.
+ */
 export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
   annotations: z.array(HomeReportAnnotationSchema).optional(),
   datasets: z.array(HomeReportDatasetSchema),
@@ -344,7 +354,9 @@ export const HomeReportDataSchema: z.ZodType<HomeReportData> = z.looseObject({
   to: z.string().optional(),
 })
 
-/** Home /monitor/{ata,atw}unit/{id}/errorlog response (array of entries). */
+/**
+ * Home /monitor/{ata,atw}unit/{id}/errorlog response (array of entries).
+ */
 export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
   z.array(
     z.looseObject({
@@ -357,7 +369,9 @@ export const HomeErrorLogEntryListSchema: z.ZodType<HomeErrorLogEntry[]> =
 
 const MAX_HOUR = 23
 
-/** Integer hour of the day in 24-hour form (0 through 23). */
+/**
+ * Integer hour of the day in 24-hour form (0 through 23).
+ */
 export const HourSchema: z.ZodType<Hour> = z.custom<Hour>(
   (value) =>
     typeof value === 'number' &&
@@ -401,7 +415,9 @@ const ClassicBuildingStructureSchema = z.looseObject({
   Floors: z.array(ClassicFloorSchema),
 })
 
-/** Minimal shape the {@link ClassicBuildingListSchema} guarantees on success. */
+/**
+ * Minimal shape the {@link ClassicBuildingListSchema} guarantees on success.
+ */
 interface ClassicBuildingListEntry {
   readonly ID: number
   readonly Name: string
@@ -430,7 +446,9 @@ export const ClassicBuildingListSchema: z.ZodType<ClassicBuildingListEntry[]> =
 // ValidationError. `z.number()` already rejects NaN and ±Infinity, so
 // every validated field is guaranteed finite.
 
-/** Classic `EnergyCost/Report` bucket label type (numeric on this endpoint). */
+/**
+ * Classic `EnergyCost/Report` bucket label type (numeric on this endpoint).
+ */
 const ClassicLabelTypeSchema = z.union([
   z.literal(ClassicLabelType.time),
   z.literal(ClassicLabelType.raw),
@@ -439,7 +457,9 @@ const ClassicLabelTypeSchema = z.union([
   z.literal(ClassicLabelType.day_of_week),
 ])
 
-/** Classic `/EnergyCost/Report` response for an ATA (air-to-air) device. */
+/**
+ * Classic `/EnergyCost/Report` response for an ATA (air-to-air) device.
+ */
 export const ClassicEnergyDataAtaSchema: z.ZodType<ClassicEnergyDataAta> =
   z.looseObject({
     Auto: z.array(z.number()),

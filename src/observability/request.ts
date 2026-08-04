@@ -1,6 +1,8 @@
 import { type LoggableRequestConfig, APICallLogData } from './context.ts'
 
-/** Structured log data for an outgoing API request. */
+/**
+ * Structured log data for an outgoing API request.
+ */
 export class APICallRequestData extends APICallLogData {
   public override readonly dataType = 'API request'
 

@@ -155,9 +155,13 @@ const throttleBackoffMs = (error: AuthenticationThrottledError): number => {
  * the sync runner closure).
  */
 interface BaseAPIConstructorOptions {
-  /** Subclass default for {@link BaseAPIConfig.syncIntervalMinutes}. */
+  /**
+   * Subclass default for {@link BaseAPIConfig.syncIntervalMinutes}.
+   */
   defaultSyncIntervalMinutes: number | false
-  /** Subclass-fixed HTTP defaults (baseURL, optional dispatcher). */
+  /**
+   * Subclass-fixed HTTP defaults (baseURL, optional dispatcher).
+   */
   httpConfig: Omit<HttpClientConfig, 'timeout'>
   /**
    * Label prefixed to every log line (e.g. `[Classic]`): the two
@@ -166,9 +170,13 @@ interface BaseAPIConstructorOptions {
    * could not tell which account a diagnostics report was about.
    */
   logLabel: string
-  /** Sliding-window length the rate-limit gate observes. */
+  /**
+   * Sliding-window length the rate-limit gate observes.
+   */
   rateLimitHours: number
-  /** Sync runner the auto-timer drives. */
+  /**
+   * Sync runner the auto-timer drives.
+   */
   syncCallback: () => Promise<unknown>
 }
 
@@ -403,7 +411,9 @@ export abstract class BaseAPI implements Disposable {
     await this.#finishLogin(epoch)
   }
 
-  /** Cancels any pending auto-sync timer; subsequent `setSyncInterval` or `fetch` calls re-arm it. */
+  /**
+   * Cancels any pending auto-sync timer; subsequent `setSyncInterval` or `fetch` calls re-arm it.
+   */
   public clearSync(): void {
     this.#syncManager.clear()
   }
@@ -532,7 +542,9 @@ export abstract class BaseAPI implements Disposable {
     }
   }
 
-  /** Releases the auto-sync timer and any retry-guard timers; the instance must not be reused after disposal. */
+  /**
+   * Releases the auto-sync timer and any retry-guard timers; the instance must not be reused after disposal.
+   */
   public [Symbol.dispose](): void {
     this.#syncManager[Symbol.dispose]()
     this.retryGuard[Symbol.dispose]()

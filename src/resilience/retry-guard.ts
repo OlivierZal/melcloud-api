@@ -25,7 +25,9 @@ export class RetryGuard implements Disposable {
     this.#delay = delayMs
   }
 
-  /** Cancel the current retry window on disposal, preventing leaked timers. */
+  /**
+   * Cancel the current retry window on disposal, preventing leaked timers.
+   */
   public [Symbol.dispose](): void {
     this.#timeout[Symbol.dispose]()
   }

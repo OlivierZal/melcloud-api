@@ -186,7 +186,9 @@ export class RateLimitGate {
       parseRetryAfter(retryAfter, now) ?? now.add(this.#fallback)
   }
 
-  /** Reset the gate immediately (testing or manual unblock). */
+  /**
+   * Reset the gate immediately (testing or manual unblock).
+   */
   public reset(): void {
     this.#pausedUntil = Temporal.Now.instant()
   }

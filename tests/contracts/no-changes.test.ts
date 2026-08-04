@@ -41,9 +41,13 @@ const CASES: readonly { readonly kind: NoOpKind; readonly label: string }[] = [
  * count belongs to that attempt alone.
  */
 interface Attempt {
-  /** How many times the write reached the wire. */
+  /**
+   * How many times the write reached the wire.
+   */
   readonly wireCalls: () => number
-  /** Performs the write. */
+  /**
+   * Performs the write.
+   */
   readonly write: () => Promise<unknown>
 }
 

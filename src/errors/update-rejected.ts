@@ -9,7 +9,9 @@ import { APIError } from './base.ts'
  * @category Errors
  */
 export class UpdateRejectedError extends APIError {
-  /** Per-attribute rejection messages as reported by the wire. */
+  /**
+   * Per-attribute rejection messages as reported by the wire.
+   */
   public readonly attributeErrors: Record<string, readonly string[]>
 
   public override readonly name = 'UpdateRejectedError'

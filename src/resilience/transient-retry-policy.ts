@@ -5,7 +5,9 @@ import {
   withRetryBackoff,
 } from './retry-backoff.ts'
 
-/** Callback surface for per-retry instrumentation. */
+/**
+ * Callback surface for per-retry instrumentation.
+ */
 export interface RetryTelemetry {
   readonly onRetry: (attempt: number, error: unknown, delayMs: number) => void
 }

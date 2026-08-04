@@ -101,7 +101,9 @@ export const isKeyOf =
   (key: PropertyKey): key is keyof T =>
     Object.hasOwn(record, key)
 
-/** Maps ATA set-command keys to their corresponding list-data keys. */
+/**
+ * Maps ATA set-command keys to their corresponding list-data keys.
+ */
 export const fromSetToListAta: {
   readonly SetFanSpeed: 'FanSpeed'
   readonly VaneHorizontal: 'VaneHorizontalDirection'
@@ -124,7 +126,9 @@ export const isSetDeviceDataAtaNotInList: (
   key: PropertyKey,
 ) => key is KeyOfClassicSetDeviceDataAtaNotInList = isKeyOf(fromSetToListAta)
 
-/** Maps ATA list-data keys to their corresponding set-command keys. */
+/**
+ * Maps ATA list-data keys to their corresponding set-command keys.
+ */
 export const fromListToSetAta: {
   readonly FanSpeed: 'SetFanSpeed'
   readonly VaneHorizontalDirection: 'VaneHorizontal'
@@ -276,9 +280,13 @@ const getChartLineSeries = ({
  * mutable locale state).
  */
 interface ChartLineFormatOptions {
-  /** Legend entries for each data series. */
+  /**
+   * Legend entries for each data series.
+   */
   readonly legend: readonly (string | undefined)[]
-  /** Unit of measurement for the data. */
+  /**
+   * Unit of measurement for the data.
+   */
   readonly unit: string
   /**
    * BCP-47 locale tag for day-of-week and month-name labels. Defaults

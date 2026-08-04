@@ -1,7 +1,9 @@
 import type { HttpResponse } from '../http/index.ts'
 import { type LoggableRequestConfig, APICallLogData } from './context.ts'
 
-/** Structured log data for an API response. */
+/**
+ * Structured log data for an API response.
+ */
 export class APICallResponseData extends APICallLogData {
   public override readonly dataType = 'API response'
 

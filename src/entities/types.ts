@@ -10,7 +10,9 @@
  */
 export const STALE_COMMUNICATION_HOURS = 24
 
-/** Cross-dialect reachability contract: `true` while MELCloud can deliver writes to the unit. */
+/**
+ * Cross-dialect reachability contract: `true` while MELCloud can deliver writes to the unit.
+ */
 export interface AvailabilityAware {
   readonly isAvailable: boolean
 }

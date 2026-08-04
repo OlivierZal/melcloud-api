@@ -110,7 +110,9 @@ class TestAPI extends BaseAPI {
     this.tryReuseSessionMock.mockResolvedValue(false)
   }
 
-  /** Expose the protected dispatch for direct testing. */
+  /**
+   * Expose the protected dispatch for direct testing.
+   */
   public async callDispatch<T = unknown>(
     method: string,
     url: string,
@@ -119,12 +121,16 @@ class TestAPI extends BaseAPI {
     return this.dispatch<T>(method, url, config)
   }
 
-  /** Expose the protected ensureSession for direct testing. */
+  /**
+   * Expose the protected ensureSession for direct testing.
+   */
   public async callEnsureSession(): Promise<void> {
     return this.ensureSession()
   }
 
-  /** Expose the protected request for testing. */
+  /**
+   * Expose the protected request for testing.
+   */
   public async callRequest<T = unknown>(
     method: string,
     url: string,
@@ -133,7 +139,9 @@ class TestAPI extends BaseAPI {
     return this.request<T>(method, url, config)
   }
 
-  /** Expose the protected runSyncCycle for direct testing. */
+  /**
+   * Expose the protected runSyncCycle for direct testing.
+   */
   public async callRunSyncCycle<T>(work: () => Promise<T[]>): Promise<T[]> {
     return this.runSyncCycle(work)
   }

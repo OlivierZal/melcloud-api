@@ -23,7 +23,9 @@ import type {
 } from './classic-erv.ts'
 import type { ClassicBuildingID, ClassicDeviceID } from './ids.ts'
 
-/** Common shape shared by every Classic zone variant returned from the registry — id, hierarchy depth, display name. */
+/**
+ * Common shape shared by every Classic zone variant returned from the registry — id, hierarchy depth, display name.
+ */
 interface BaseZone {
   readonly id: number
   readonly level: number

@@ -33,18 +33,28 @@ import type { BaseAPIAdapter, BaseAPIConfig, BaseAPISettings } from './types.ts'
  * @category Configuration
  */
 export interface HomeAPIAdapter extends BaseAPIAdapter {
-  /** Home device registry with stable model references across syncs. */
+  /**
+   * Home device registry with stable model references across syncs.
+   */
   readonly registry: HomeRegistry
-  /** The currently authenticated user, or `null`. */
+  /**
+   * The currently authenticated user, or `null`.
+   */
   readonly user: HomeUser | null
-  /** Fetch all buildings and sync the device registry — the heartbeat, mirroring Classic `fetch()`. */
+  /**
+   * Fetch all buildings and sync the device registry — the heartbeat, mirroring Classic `fetch()`.
+   */
   readonly fetch: () => Promise<HomeBuilding[]>
-  /** Fetch the internal-temperatures report (flow/return/tank/zone) for an ATW unit. */
+  /**
+   * Fetch the internal-temperatures report (flow/return/tank/zone) for an ATW unit.
+   */
   readonly getAtwInternalTemperatures: (
     id: string,
     params: { from: string; period: string; to: string },
   ) => Promise<Result<HomeReportData[]>>
-  /** Fetch energy telemetry for a unit; the registry's connection type selects the measure family. */
+  /**
+   * Fetch energy telemetry for a unit; the registry's connection type selects the measure family.
+   */
   readonly getEnergy: (
     id: string,
     params: {
@@ -54,33 +64,49 @@ export interface HomeAPIAdapter extends BaseAPIAdapter {
       measure?: 'consumed' | 'produced'
     },
   ) => Promise<Result<HomeEnergyData>>
-  /** Fetch the error log for a unit; the registry's connection type selects the unit path. */
+  /**
+   * Fetch the error log for a unit; the registry's connection type selects the unit path.
+   */
   readonly getErrorLog: (id: string) => Promise<Result<HomeErrorLogEntry[]>>
-  /** Fetch WiFi signal strength (RSSI) telemetry for a device. */
+  /**
+   * Fetch WiFi signal strength (RSSI) telemetry for a device.
+   */
   readonly getSignal: (
     id: string,
     params: { from: string; to: string },
   ) => Promise<Result<HomeEnergyData>>
-  /** Fetch the temperature report for a unit; the registry's connection type selects the endpoint. */
+  /**
+   * Fetch the temperature report for a unit; the registry's connection type selects the endpoint.
+   */
   readonly getTemperatures: (
     id: string,
     params: { from: string; period: string; to: string },
   ) => Promise<Result<HomeReportData[]>>
-  /** Fetch the current user's claims from the BFF. Returns `null` on failure. */
+  /**
+   * Fetch the current user's claims from the BFF. Returns `null` on failure.
+   */
   readonly getUser: () => Promise<HomeUser | null>
-  /** Batch frost-protection write (device ids grouped in `units`), then refresh. */
+  /**
+   * Batch frost-protection write (device ids grouped in `units`), then refresh.
+   */
   readonly updateFrostProtection: (
     postData: HomeFrostProtectionPostData,
   ) => Promise<void>
-  /** Batch holiday-mode write (device ids grouped in `units`), then refresh. */
+  /**
+   * Batch holiday-mode write (device ids grouped in `units`), then refresh.
+   */
   readonly updateHolidayMode: (
     postData: HomeHolidayModePostData,
   ) => Promise<void>
-  /** Batch overheat-protection write (ATA-only feature), then refresh. */
+  /**
+   * Batch overheat-protection write (ATA-only feature), then refresh.
+   */
   readonly updateOverheatProtection: (
     postData: HomeOverheatProtectionPostData,
   ) => Promise<void>
-  /** Push a setpoint update (wire path from the registry's connection type), then refresh. */
+  /**
+   * Push a setpoint update (wire path from the registry's connection type), then refresh.
+   */
   readonly updateValues: (
     id: string,
     values: HomeAtaValues | HomeAtwValues,
@@ -92,7 +118,9 @@ export interface HomeAPIAdapter extends BaseAPIAdapter {
  * @category Configuration
  */
 export interface HomeAPIConfig extends BaseAPIConfig {
-  /** Base URL of the MELCloud Home BFF server. */
+  /**
+   * Base URL of the MELCloud Home BFF server.
+   */
   readonly baseURL?: string | undefined
   /**
    * BCP-47 locale tag for report chart labels (dates, times).
@@ -113,8 +141,12 @@ export interface HomeAPIConfig extends BaseAPIConfig {
  * @category Configuration
  */
 export interface HomeAPISettings extends BaseAPISettings {
-  /** IdentityServer access token (Bearer). */
+  /**
+   * IdentityServer access token (Bearer).
+   */
   readonly accessToken?: string | null
-  /** IdentityServer refresh token. */
+  /**
+   * IdentityServer refresh token.
+   */
   readonly refreshToken?: string | null
 }

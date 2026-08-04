@@ -61,15 +61,25 @@ export const DEFAULT_TRANSIENT_RETRY_OPTIONS: Pick<
   maxRetries: 4,
 }
 
-/** Options for {@link withRetryBackoff}. */
+/**
+ * Options for {@link withRetryBackoff}.
+ */
 export interface RetryBackoffOptions {
-  /** Initial delay in milliseconds before the first retry. */
+  /**
+   * Initial delay in milliseconds before the first retry.
+   */
   readonly initialDelayMs: number
-  /** Jitter ratio applied to each computed delay (`0..1`). */
+  /**
+   * Jitter ratio applied to each computed delay (`0..1`).
+   */
   readonly jitterRatio: number
-  /** Upper bound on the backoff delay. */
+  /**
+   * Upper bound on the backoff delay.
+   */
   readonly maxDelayMs: number
-  /** Maximum retry attempts after the initial try (0 disables retries). */
+  /**
+   * Maximum retry attempts after the initial try (0 disables retries).
+   */
   readonly maxRetries: number
   /**
    * Optional abort signal. When fired during a backoff sleep, the
@@ -78,9 +88,13 @@ export interface RetryBackoffOptions {
    * delay before the next attempt would have started.
    */
   readonly signal?: AbortSignal | undefined
-  /** Predicate deciding whether a thrown error is worth retrying. */
+  /**
+   * Predicate deciding whether a thrown error is worth retrying.
+   */
   readonly isRetryable: (error: unknown) => boolean
-  /** Optional hook invoked before the next attempt. */
+  /**
+   * Optional hook invoked before the next attempt.
+   */
   readonly onRetry?: (attempt: number, error: unknown, delayMs: number) => void
 }
 
