@@ -57,7 +57,7 @@
     "typecheck": "node ./node_modules/@typescript/native/bin/tsc --noEmit"
   },
   "dependencies": {
-    "temporal-polyfill": "^1.0.1",
+    "temporal-polyfill": "^1.0.3",
     "tough-cookie": "^6.0.2",
     "undici": "^8.9.0",
     "zod": "^4.4.3"
