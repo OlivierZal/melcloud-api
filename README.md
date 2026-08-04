@@ -10,7 +10,7 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=alert_status)](https://sonarcloud.io/dashboard?id=OlivierZal_melcloud-api)
 [![Test coverage](https://sonarcloud.io/api/project_badges/measure?project=OlivierZal_melcloud-api&metric=coverage)](https://sonarcloud.io/component_measures?id=OlivierZal_melcloud-api&metric=coverage)
-[![Docs coverage](https://olivierzal.github.io/melcloud-api/coverage.svg?v=2)](https://olivierzal.github.io/melcloud-api/)
+[![Docs coverage](https://olivierzal.github.io/melcloud-api/coverage.svg)](https://olivierzal.github.io/melcloud-api/)
 
 ## Features
 
@@ -18,6 +18,7 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 - **Two APIs, one client** — Classic and Home behind consistent ergonomics; pick what your account uses.
 - **Ata / Atw / Erv support** — air conditioners, heat pumps with hot water, and energy-recovery ventilation units.
 - **Resilient by default** — auto-retry on transient failures, rate-limit awareness, pre-emptive session refresh.
+- **Validated boundaries** — Zod schemas guard every consumed payload, so upstream shape drift surfaces as a typed `ValidationError` instead of a deep `undefined` crash.
 - **Typed failures** — telemetry, reports and error-log getters return `Result<T>` so callers branch on `network` / `unauthorized` / `rate-limited` / `validation` / `server` / `not-found` instead of catching generic exceptions.
 - **Tree-shakable** — `sideEffects: false` plus `/classic`, `/home` and `/constants` subpath exports for namespace-style imports.
 
