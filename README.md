@@ -18,12 +18,12 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 - **Two APIs, one client** — Classic and Home behind consistent ergonomics; pick what your account uses.
 - **Ata / Atw / Erv support** — air conditioners, heat pumps with hot water, and energy-recovery ventilation units.
 - **Resilient by default** — auto-retry on transient failures, rate-limit awareness, pre-emptive session refresh.
-- **Typed failures** — telemetry, reports and error-log getters return `Result<T>` so callers branch on `network` / `unauthorized` / `rate-limited` / `validation` / `server` instead of catching generic exceptions.
+- **Typed failures** — telemetry, reports and error-log getters return `Result<T>` so callers branch on `network` / `unauthorized` / `rate-limited` / `validation` / `server` / `not-found` instead of catching generic exceptions.
 - **Tree-shakable** — `sideEffects: false` plus `/classic`, `/home` and `/constants` subpath exports for namespace-style imports.
 
 ## Requirements
 
-- Node.js >= 22
+- Node.js >= 22.19
 - A valid MELCloud or MELCloud Home account
 - For installing the package: a GitHub personal access token with the `read:packages` scope
 
@@ -96,7 +96,7 @@ if (device !== undefined) {
 
 ## Error handling
 
-Best-effort getters (telemetry, reports, error logs, settings reads) return a `Result<T>` so callers can branch on the failure class — `network`, `unauthorized`, `rate-limited`, `validation`, or `server`. Mutations (`update*`, `updatePower`) keep their throw-on-failure contract.
+Best-effort getters (telemetry, reports, error logs, settings reads) return a `Result<T>` so callers can branch on the failure class — `network`, `unauthorized`, `rate-limited`, `validation`, `server`, or `not-found`. Mutations (`update*`, `updatePower`) keep their throw-on-failure contract.
 
 ```ts title="result"
 const result = await facade.getEnergy({ from: '2024-01-01', to: '2024-12-31' })
