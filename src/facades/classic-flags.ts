@@ -13,7 +13,9 @@ import type { ClassicUpdateDeviceData } from '../types/index.ts'
 // `ClassicUpdateDeviceData<T>` so adding a field without a flag (or a
 // flag without a field) fails to type-check.
 
-/** `EffectiveFlags` bitfield values for ATA update payloads — one bit per updatable field. */
+/**
+ * `EffectiveFlags` bitfield values for ATA update payloads — one bit per updatable field.
+ */
 export const classicAtaFlags: {
   readonly OperationMode: 0x2
   readonly Power: 0x1
@@ -32,7 +34,9 @@ export const classicAtaFlags: {
   Record<keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Ata>, number>
 >
 
-/** `EffectiveFlags` bitfield values for ATW update payloads — one bit per updatable field. */
+/**
+ * `EffectiveFlags` bitfield values for ATW update payloads — one bit per updatable field.
+ */
 export const classicAtwFlags: {
   readonly ForcedHotWaterMode: 0x1_00_00
   readonly OperationModeZone1: 0x8
@@ -61,7 +65,9 @@ export const classicAtwFlags: {
   Record<keyof ClassicUpdateDeviceData<typeof ClassicDeviceType.Atw>, number>
 >
 
-/** `EffectiveFlags` bitfield values for ERV update payloads — one bit per updatable field. */
+/**
+ * `EffectiveFlags` bitfield values for ERV update payloads — one bit per updatable field.
+ */
 export const classicErvFlags: {
   readonly Power: 0x1
   readonly SetFanSpeed: 0x8

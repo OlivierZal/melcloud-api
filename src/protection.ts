@@ -6,7 +6,9 @@
  * @module
  */
 
-/** Minimum gap required between min and max, in °C (both features). */
+/**
+ * Minimum gap required between min and max, in °C (both features).
+ */
 export const PROTECTION_GAP = 2
 
 /**
@@ -17,11 +19,17 @@ export const PROTECTION_GAP = 2
  * @category Facades
  */
 export interface ProtectionState {
-  /** Whether the protection is on. */
+  /**
+   * Whether the protection is on.
+   */
   readonly isEnabled: boolean
-  /** Upper temperature bound, in °C. */
+  /**
+   * Upper temperature bound, in °C.
+   */
   readonly max: number
-  /** Lower temperature bound, in °C. */
+  /**
+   * Lower temperature bound, in °C.
+   */
   readonly min: number
 }
 
@@ -38,18 +46,28 @@ export interface ProtectionState {
  * @category Facades
  */
 export interface ProtectionUpdate {
-  /** Whether the protection is on. */
+  /**
+   * Whether the protection is on.
+   */
   readonly isEnabled: boolean
-  /** Requested upper bound, in °C. */
+  /**
+   * Requested upper bound, in °C.
+   */
   readonly max: number
-  /** Requested lower bound, in °C. */
+  /**
+   * Requested lower bound, in °C.
+   */
   readonly min: number
 }
 
-/** Absolute frost-protection min/max the units accept, in °C. */
+/**
+ * Absolute frost-protection min/max the units accept, in °C.
+ */
 export const FROST_PROTECTION_RANGE = { max: 16, min: 4 }
 
-/** Absolute overheat-protection min/max the units accept, in °C. */
+/**
+ * Absolute overheat-protection min/max the units accept, in °C.
+ */
 export const OVERHEAT_PROTECTION_RANGE = { max: 40, min: 31 }
 
 const clampProtection = (

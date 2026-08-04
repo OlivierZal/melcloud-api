@@ -388,7 +388,9 @@ export const resolveHomeHourWindow = (
   return { from, to: from.add({ hours: 1 }) }
 }
 
-/** Display bucket granularity of the Home energy charts. */
+/**
+ * Display bucket granularity of the Home energy charts.
+ */
 type HomeEnergyBucketUnit = 'day' | 'hour' | 'localDay'
 
 /**

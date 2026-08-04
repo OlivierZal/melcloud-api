@@ -20,7 +20,9 @@ import { APIError } from './base.ts'
  * @category Errors
  */
 export class NoChangesError extends APIError {
-  /** Id of the entity the update targeted (device, zone, building, etc.). */
+  /**
+   * Id of the entity the update targeted (device, zone, building, etc.).
+   */
   public readonly entityId: number | string
 
   public override readonly name = 'NoChangesError'

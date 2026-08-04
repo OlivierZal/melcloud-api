@@ -749,6 +749,7 @@ const config: Config[] = defineConfig([
       'unicorn/custom-error-definition': 'error',
       // Owned by `@typescript-eslint/naming-convention`.
       'unicorn/id-match': 'off',
+      'unicorn/iteration-fallback-style': 'error',
       // Vocabulary opt-out: the abbreviation renames it forces
       // (`args` -> `arguments_`, ...) fight the domain naming.
       'unicorn/name-replacements': 'off',
@@ -952,9 +953,6 @@ const config: Config[] = defineConfig([
       // decorator protocol rebinds `this` at call time, which an arrow
       // cannot receive.
       'unicorn/consistent-function-style': 'off',
-      // Replacement accessors/methods receive `this` through the
-      // decorator protocol — there is no class body to put it in.
-      'unicorn/no-this-outside-of-class': 'off',
     },
   },
   {

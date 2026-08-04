@@ -9,15 +9,25 @@ import type { LoginCredentials, UndefinedTolerant } from '../types/index.ts'
  * @category API
  */
 export interface BaseAPIAdapter {
-  /** Whether the client is currently inside a server rate-limit backoff. */
+  /**
+   * Whether the client is currently inside a server rate-limit backoff.
+   */
   readonly isRateLimited: boolean
-  /** BCP-47 locale tag the instance was configured with, or `undefined`. */
+  /**
+   * BCP-47 locale tag the instance was configured with, or `undefined`.
+   */
   readonly locale: string | undefined
-  /** IANA timezone the instance was configured with, or `undefined`. */
+  /**
+   * IANA timezone the instance was configured with, or `undefined`.
+   */
   readonly timezone: string | undefined
-  /** Sign in with explicit credentials; throws on rejection. */
+  /**
+   * Sign in with explicit credentials; throws on rejection.
+   */
   readonly authenticate: (credentials: LoginCredentials) => Promise<void>
-  /** Cancel any pending automatic sync. */
+  /**
+   * Cancel any pending automatic sync.
+   */
   readonly clearSync: () => void
   /**
    * Sync check first; when it reads `false`, one best-effort
@@ -26,9 +36,13 @@ export interface BaseAPIAdapter {
    * unauthenticated until a context fetch has run).
    */
   readonly ensureAuthenticated: () => Promise<boolean>
-  /** Whether a session is currently usable, from local state alone. */
+  /**
+   * Whether a session is currently usable, from local state alone.
+   */
   readonly isAuthenticated: () => boolean
-  /** Explicit sign-out: clears the persisted session material. */
+  /**
+   * Explicit sign-out: clears the persisted session material.
+   */
   readonly logOut: () => void
   /**
    * Best-effort session restore from persisted credentials. Never
@@ -36,7 +50,9 @@ export interface BaseAPIAdapter {
    * sign-in fails (logged via the SDK logger).
    */
   readonly resumeSession: () => Promise<boolean>
-  /** Update the automatic sync interval and reschedule. Pass `false` to disable. */
+  /**
+   * Update the automatic sync interval and reschedule. Pass `false` to disable.
+   */
   readonly setSyncInterval: (minutes: number | false) => void
 }
 
@@ -66,9 +82,13 @@ export interface BaseAPIConfig extends UndefinedTolerant<LoginCredentials> {
    * (pino / winston / OpenTelemetry / custom metrics).
    */
   readonly events?: LifecycleEvents | undefined
-  /** Custom logger. Defaults to `console`. */
+  /**
+   * Custom logger. Defaults to `console`.
+   */
   readonly logger?: Logger | undefined
-  /** External setting manager for persisting credentials and session data. */
+  /**
+   * External setting manager for persisting credentials and session data.
+   */
   readonly settingManager?: SettingManager | undefined
   /**
    * Restore the persisted session in the background instead of awaiting
@@ -86,7 +106,9 @@ export interface BaseAPIConfig extends UndefinedTolerant<LoginCredentials> {
    * default (1 for Home, 5 for Classic).
    */
   readonly syncIntervalMinutes?: number | false | undefined
-  /** HTTP transport: pre-built {@link HttpClient} or build options. */
+  /**
+   * HTTP transport: pre-built {@link HttpClient} or build options.
+   */
   readonly transport?: TransportConfig | undefined
 }
 
@@ -98,13 +120,21 @@ export interface BaseAPIConfig extends UndefinedTolerant<LoginCredentials> {
  * @category API
  */
 export interface BaseAPISettings {
-  /** Session expiry timestamp in ISO 8601 format. */
+  /**
+   * Session expiry timestamp in ISO 8601 format.
+   */
   readonly expiry?: string | null
-  /** Epoch-ms deadline before which automatic re-logins are refused. */
+  /**
+   * Epoch-ms deadline before which automatic re-logins are refused.
+   */
   readonly loginBackoffUntil?: string | null
-  /** Account password. */
+  /**
+   * Account password.
+   */
   readonly password?: string | null
-  /** Account username (email). */
+  /**
+   * Account username (email).
+   */
   readonly username?: string | null
 }
 
@@ -138,14 +168,22 @@ export interface LifecycleEvents {
    * two events always alternate.
    */
   readonly onAuthenticationRestored?: (() => void) | undefined
-  /** Invoked after a successful HTTP response is received. */
+  /**
+   * Invoked after a successful HTTP response is received.
+   */
   readonly onRequestComplete?:
     ((event: RequestCompleteEvent) => void) | undefined
-  /** Invoked when a request fails permanently (retries exhausted). */
+  /**
+   * Invoked when a request fails permanently (retries exhausted).
+   */
   readonly onRequestError?: ((event: RequestErrorEvent) => void) | undefined
-  /** Invoked before each backoff-scheduled retry attempt. */
+  /**
+   * Invoked before each backoff-scheduled retry attempt.
+   */
   readonly onRequestRetry?: ((event: RequestRetryEvent) => void) | undefined
-  /** Invoked when a request is dispatched for the first time. */
+  /**
+   * Invoked when a request is dispatched for the first time.
+   */
   readonly onRequestStart?: ((event: RequestStartEvent) => void) | undefined
   /**
    * Invoked after each sync trigger (auto-timer or
@@ -160,9 +198,13 @@ export interface LifecycleEvents {
  * @category Configuration
  */
 export interface Logger {
-  /** Log error messages. */
+  /**
+   * Log error messages.
+   */
   readonly error: Console['error']
-  /** Log informational messages. */
+  /**
+   * Log informational messages.
+   */
   readonly log: Console['log']
 }
 
@@ -171,9 +213,13 @@ export interface Logger {
  * @category Configuration
  */
 export interface RequestCompleteEvent extends RequestLifecycleContext {
-  /** Elapsed time in milliseconds, including any retry delays. */
+  /**
+   * Elapsed time in milliseconds, including any retry delays.
+   */
   readonly durationMs: number
-  /** Final HTTP status code returned by the upstream server. */
+  /**
+   * Final HTTP status code returned by the upstream server.
+   */
   readonly status: number
 }
 
@@ -182,9 +228,13 @@ export interface RequestCompleteEvent extends RequestLifecycleContext {
  * @category Configuration
  */
 export interface RequestErrorEvent extends RequestLifecycleContext {
-  /** Elapsed time in milliseconds, including any retry delays. */
+  /**
+   * Elapsed time in milliseconds, including any retry delays.
+   */
   readonly durationMs: number
-  /** The terminal error thrown by the request. */
+  /**
+   * The terminal error thrown by the request.
+   */
   readonly error: unknown
 }
 
@@ -197,11 +247,17 @@ export interface RequestErrorEvent extends RequestLifecycleContext {
  * @category Configuration
  */
 export interface RequestLifecycleContext {
-  /** Unique request identifier (UUID v4). */
+  /**
+   * Unique request identifier (UUID v4).
+   */
   readonly correlationId: string
-  /** HTTP method, uppercase. */
+  /**
+   * HTTP method, uppercase.
+   */
   readonly method: string
-  /** Request URL (possibly relative to the client's baseURL). */
+  /**
+   * Request URL (possibly relative to the client's baseURL).
+   */
   readonly url: string
 }
 
@@ -210,11 +266,17 @@ export interface RequestLifecycleContext {
  * @category Configuration
  */
 export interface RequestRetryEvent extends RequestLifecycleContext {
-  /** 1-based retry attempt number (1 = first retry, not the initial try). */
+  /**
+   * 1-based retry attempt number (1 = first retry, not the initial try).
+   */
   readonly attempt: number
-  /** Backoff delay in milliseconds before this retry fires. */
+  /**
+   * Backoff delay in milliseconds before this retry fires.
+   */
   readonly delayMs: number
-  /** The error that triggered the retry. */
+  /**
+   * The error that triggered the retry.
+   */
   readonly error: unknown
 }
 
@@ -229,9 +291,13 @@ export type RequestStartEvent = RequestLifecycleContext
  * @category Configuration
  */
 export interface SettingManager {
-  /** Retrieve a setting value by key. Returns the stored value, or `null`/`undefined` if absent. */
+  /**
+   * Retrieve a setting value by key. Returns the stored value, or `null`/`undefined` if absent.
+   */
   readonly get: (key: string) => string | null | undefined
-  /** Store a setting value by key. */
+  /**
+   * Store a setting value by key.
+   */
   readonly set: (key: string, value: string) => void
   /**
    * Delete a setting key. Optional: when a host does not provide it, the

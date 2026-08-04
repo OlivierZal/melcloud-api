@@ -71,11 +71,15 @@ export const fanSpeedToClassic: Record<HomeFanSpeed, ClassicFanSpeed> = {
   Two: ClassicFanSpeed.slow,
 }
 
-/** Type guard: `value` is a valid Classic fan speed numeric value. */
+/**
+ * Type guard: `value` is a valid Classic fan speed numeric value.
+ */
 export const isClassicFanSpeed: (key: PropertyKey) => key is ClassicFanSpeed =
   isKeyOf(fanSpeedFromClassic)
 
-/** Type guard: `value` is a valid Home fan speed string. */
+/**
+ * Type guard: `value` is a valid Home fan speed string.
+ */
 export const isHomeFanSpeed: (key: PropertyKey) => key is HomeFanSpeed =
   isKeyOf(fanSpeedToClassic)
 

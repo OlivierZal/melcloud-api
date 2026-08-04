@@ -24,12 +24,16 @@ import { APIError } from './base.ts'
  * @category Errors
  */
 export class EntityNotFoundError extends APIError {
-  /** Id that could not be resolved in the registry — a number for Classic, a GUID string for Home. */
+  /**
+   * Id that could not be resolved in the registry — a number for Classic, a GUID string for Home.
+   */
   public readonly entityId: number | string
 
   public override readonly name = 'EntityNotFoundError'
 
-  /** Registry table the lookup was performed against (e.g. `'DeviceLocation'`), or `'Device'` for the Home registry. */
+  /**
+   * Registry table the lookup was performed against (e.g. `'DeviceLocation'`), or `'Device'` for the Home registry.
+   */
   public readonly tableName: 'Device' | ClassicSettingsParams['tableName']
 
   /**

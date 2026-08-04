@@ -12,11 +12,17 @@
  * @category Facades
  */
 export interface HolidayModeState {
-  /** Window end (ISO 8601 wall clock), when set. */
+  /**
+   * Window end (ISO 8601 wall clock), when set.
+   */
   readonly endDate: string | null
-  /** Whether holiday mode is on. */
+  /**
+   * Whether holiday mode is on.
+   */
   readonly isEnabled: boolean
-  /** Window start (ISO 8601 wall clock), when set. */
+  /**
+   * Window start (ISO 8601 wall clock), when set.
+   */
   readonly startDate: string | null
 }
 
@@ -28,10 +34,16 @@ export interface HolidayModeState {
  * @category Facades
  */
 export interface HolidayModeUpdate {
-  /** Window end (ISO 8601). Ignored when `isEnabled` is `false`. */
+  /**
+   * Window end (ISO 8601). Ignored when `isEnabled` is `false`.
+   */
   readonly endDate: string
-  /** Whether holiday mode is on. */
+  /**
+   * Whether holiday mode is on.
+   */
   readonly isEnabled: boolean
-  /** Window start (ISO 8601). Ignored when `isEnabled` is `false`. */
+  /**
+   * Window start (ISO 8601). Ignored when `isEnabled` is `false`.
+   */
   readonly startDate: string
 }

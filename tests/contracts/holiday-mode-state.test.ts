@@ -21,7 +21,9 @@ import {
   homeTestRegistry,
 } from '../home-fixtures.ts'
 
-/** A window both dialects can carry: the wire's date fields are never null. */
+/**
+ * A window both dialects can carry: the wire's date fields are never null.
+ */
 interface BoundedWindow extends HolidayModeState {
   readonly endDate: string
   readonly startDate: string

@@ -27,7 +27,9 @@ const STATE_RANDOM_BYTES = 16
 const REDIRECT_STATUS_MIN = 300
 const REDIRECT_STATUS_MAX = 400
 
-/** Options for {@link authRequest}. */
+/**
+ * Options for {@link authRequest}.
+ */
 interface AuthRequestOptions {
   config: {
     headers: Record<string, string>
@@ -39,7 +41,9 @@ interface AuthRequestOptions {
   abortSignal?: AbortSignal
 }
 
-/** Options for {@link authFollowRedirects}. */
+/**
+ * Options for {@link authFollowRedirects}.
+ */
 interface FollowRedirectsOptions {
   jar: CookieJar
   url: string
@@ -58,7 +62,9 @@ interface OidcResponse<T = unknown> {
   readonly status: number
 }
 
-/** Inputs for {@link fetchPostForm}. */
+/**
+ * Inputs for {@link fetchPostForm}.
+ */
 interface PostFormOptions {
   body: string
   headers: Record<string, string>
@@ -66,7 +72,9 @@ interface PostFormOptions {
   abortSignal?: AbortSignal
 }
 
-/** Options for {@link submitCredentials}. */
+/**
+ * Options for {@link submitCredentials}.
+ */
 interface SubmitCredentialsOptions {
   authorizeUrl: string
   credentials: { password: string; username: string }

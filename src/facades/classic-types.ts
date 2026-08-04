@@ -32,10 +32,14 @@ import type {
   ReportQuery,
 } from './report-types.ts'
 
-/** Facade for a MELCloud building, combining zone settings with super device operations. */
+/**
+ * Facade for a MELCloud building, combining zone settings with super device operations.
+ */
 export interface ClassicBuildingFacade
   extends ClassicBaseBuilding, ClassicZoneFacade {
-  /** Fetch the latest building zone settings after syncing devices. */
+  /**
+   * Fetch the latest building zone settings after syncing devices.
+   */
   readonly fetch: () => Promise<ClassicZoneSettings>
 }
 
@@ -48,25 +52,39 @@ export interface ClassicBuildingFacade
 export interface ClassicDeviceAtaFacade extends ClassicDeviceFacade<
   typeof ClassicDeviceType.Ata
 > {
-  /** Read this device's current state projected as a group state. */
+  /**
+   * Read this device's current state projected as a group state.
+   */
   readonly getGroup: () => Promise<Result<ClassicGroupState>>
-  /** Apply a group state to this device. */
+  /**
+   * Apply a group state to this device.
+   */
   readonly updateGroupState: (state: ClassicGroupState) => Promise<void>
 }
 
-/** Facade for Air-to-Water (ATW) devices with hot water and zone state access. */
+/**
+ * Facade for Air-to-Water (ATW) devices with hot water and zone state access.
+ */
 export interface ClassicDeviceAtwFacade extends ClassicDeviceFacade<
   typeof ClassicDeviceType.Atw
 > {
-  /** Current hot water state. */
+  /**
+   * Current hot water state.
+   */
   readonly hotWater: ClassicHotWaterState
-  /** Current zone 1 state. */
+  /**
+   * Current zone 1 state.
+   */
   readonly zone1: ClassicZoneState
 }
 
-/** Facade for ATW devices with two heating/cooling zones. */
+/**
+ * Facade for ATW devices with two heating/cooling zones.
+ */
 export interface ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
-  /** Current zone 2 state. */
+  /**
+   * Current zone 2 state.
+   */
   readonly zone2: ClassicZoneState
 }
 
@@ -78,15 +96,25 @@ export interface ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
  */
 export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   extends AvailabilityAware, ClassicBaseDevice<T>, ClassicFacade {
-  /** Bitfield flags mapping each updatable property to its effective flag value. */
+  /**
+   * Bitfield flags mapping each updatable property to its effective flag value.
+   */
   readonly flags: Record<keyof ClassicUpdateDeviceData<T>, number>
-  /** Whether the unit is powered on. */
+  /**
+   * Whether the unit is powered on.
+   */
   readonly power: boolean
-  /** Last-reported Wi-Fi signal strength, in dBm. */
+  /**
+   * Last-reported Wi-Fi signal strength, in dBm.
+   */
   readonly rssi: number
-  /** Fetch the latest device data after syncing. */
+  /**
+   * Fetch the latest device data after syncing.
+   */
   readonly fetch: () => Promise<Readonly<ClassicListDeviceData<T>>>
-  /** Fetch energy consumption report. ATA and ATW only. */
+  /**
+   * Fetch energy consumption report. ATA and ATW only.
+   */
   readonly getEnergy: (
     query: ReportQuery,
   ) => Promise<Result<ClassicEnergyData<T>>>
@@ -97,30 +125,44 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   readonly getEnergyReport: (
     query?: ReportQuery,
   ) => Promise<Result<ReportChartLineOptions>>
-  /** Fetch hourly temperature report. ATW only. */
+  /**
+   * Fetch hourly temperature report. ATW only.
+   */
   readonly getHourlyTemperatures: (
     hour?: Hour,
   ) => Promise<Result<ReportChartLineOptions>>
-  /** Fetch internal temperature report. ATW only. */
+  /**
+   * Fetch internal temperature report. ATW only.
+   */
   readonly getInternalTemperatures: (
     query: ReportQuery,
   ) => Promise<Result<ReportChartLineOptions>>
-  /** Fetch operation mode usage as pie chart data. */
+  /**
+   * Fetch operation mode usage as pie chart data.
+   */
   readonly getOperationModes: (
     query: ReportQuery,
   ) => Promise<Result<ReportChartPieOptions>>
-  /** Fetch temperature history as line chart data. */
+  /**
+   * Fetch temperature history as line chart data.
+   */
   readonly getTemperatures: (
     query: ReportQuery,
   ) => Promise<Result<ReportChartLineOptions>>
-  /** Fetch tile overview data, optionally selecting a specific device. */
+  /**
+   * Fetch tile overview data, optionally selecting a specific device.
+   */
   readonly getTiles: ((
     device: true | ClassicDeviceAny,
   ) => Promise<Result<ClassicTilesData<T>>>) &
     ((device?: false) => Promise<Result<ClassicTilesData<null>>>)
-  /** Fetch current device values from the Classic API. */
+  /**
+   * Fetch current device values from the Classic API.
+   */
   readonly getValues: () => Promise<Result<ClassicGetDeviceData<T>>>
-  /** Send updated device values, clamping temperatures to valid ranges. */
+  /**
+   * Send updated device values, clamping temperatures to valid ranges.
+   */
   readonly updateValues: (
     data: ClassicUpdateDeviceData<T>,
   ) => Promise<ClassicSetDeviceData<T>>
@@ -156,7 +198,9 @@ export interface ClassicEnergyReportExtract {
  * @category Facades
  */
 export interface ClassicFacade extends Identifiable {
-  /** All devices managed by this facade. */
+  /**
+   * All devices managed by this facade.
+   */
   readonly devices: readonly ClassicDeviceAny[]
   /**
    * Whether the underlying entity still exists in the registry.
@@ -164,34 +208,52 @@ export interface ClassicFacade extends Identifiable {
    * throwing counterpart surfaced by other accessors.
    */
   readonly exists: boolean
-  /** Retrieve the error log for all devices in this facade. */
+  /**
+   * Retrieve the error log for all devices in this facade.
+   */
   readonly getErrorLog: (
     query: ClassicErrorLogQuery,
   ) => Promise<Result<ClassicErrorLog>>
-  /** Get the current frost protection settings, `null` when never configured. */
+  /**
+   * Get the current frost protection settings, `null` when never configured.
+   */
   readonly getFrostProtection: () => Promise<Result<ProtectionState | null>>
-  /** Get the current holiday mode settings, `null` when never configured. */
+  /**
+   * Get the current holiday mode settings, `null` when never configured.
+   */
   readonly getHolidayMode: () => Promise<Result<HolidayModeState | null>>
-  /** Fetch WiFi signal strength report as line chart data. */
+  /**
+   * Fetch WiFi signal strength report as line chart data.
+   */
   readonly getSignalStrength: (
     hour?: Hour,
   ) => Promise<Result<ReportChartLineOptions>>
-  /** Fetch tile overview data, optionally selecting a specific device. */
+  /**
+   * Fetch tile overview data, optionally selecting a specific device.
+   */
   readonly getTiles: ((
     device?: false,
   ) => Promise<Result<ClassicTilesData<null>>>) &
     (<T extends ClassicDeviceType>(
       device: ClassicDevice<T>,
     ) => Promise<Result<ClassicTilesData<T>>>)
-  /** Trigger a sync callback for downstream consumers. */
+  /**
+   * Trigger a sync callback for downstream consumers.
+   */
   readonly notifySync: (params?: {
     type?: ClassicDeviceType | undefined
   }) => Promise<void>
-  /** Update frost protection settings with temperature clamping. */
+  /**
+   * Update frost protection settings with temperature clamping.
+   */
   readonly updateFrostProtection: (update: ProtectionUpdate) => Promise<void>
-  /** Enable or disable holiday mode. */
+  /**
+   * Enable or disable holiday mode.
+   */
   readonly updateHolidayMode: (update: HolidayModeUpdate) => Promise<void>
-  /** Turn all devices in this facade on or off. */
+  /**
+   * Turn all devices in this facade on or off.
+   */
   readonly updatePower: (value?: boolean) => Promise<void>
 }
 
@@ -200,9 +262,13 @@ export interface ClassicFacade extends Identifiable {
  * @category Facades
  */
 export interface ClassicZoneFacade extends ClassicFacade {
-  /** Get the current group state for all ATA devices. */
+  /**
+   * Get the current group state for all ATA devices.
+   */
   readonly getGroup: () => Promise<Result<ClassicGroupState>>
-  /** Update the group state for all ATA devices. */
+  /**
+   * Update the group state for all ATA devices.
+   */
   readonly updateGroupState: (state: ClassicGroupState) => Promise<void>
 }
 

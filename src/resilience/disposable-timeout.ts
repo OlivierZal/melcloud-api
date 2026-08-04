@@ -17,7 +17,9 @@ export class DisposableTimeout implements Disposable {
 
   #timeout?: ReturnType<typeof setTimeout> | undefined
 
-  /** Cancel the current timeout if one is active. */
+  /**
+   * Cancel the current timeout if one is active.
+   */
   public clear(): void {
     if (this.#timeout === undefined) {
       return
@@ -27,7 +29,9 @@ export class DisposableTimeout implements Disposable {
     this.#timeout = undefined
   }
 
-  /** Clear the timeout on disposal, preventing leaked timers. */
+  /**
+   * Clear the timeout on disposal, preventing leaked timers.
+   */
   public [Symbol.dispose](): void {
     this.clear()
   }

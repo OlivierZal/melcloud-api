@@ -62,17 +62,25 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
    * observer cannot break the caller.
    */
   readonly notifySync: SyncCallback
-  /** Classic model registry synced by the fetch cycle. */
+  /**
+   * Classic model registry synced by the fetch cycle.
+   */
   readonly registry: ClassicRegistry
-  /** Fetch all buildings and sync the model registry. */
+  /**
+   * Fetch all buildings and sync the model registry.
+   */
   readonly fetch: () => Promise<ClassicBuildingWithStructure[]>
-  /** Fetch energy consumption report. Supported by ATA and ATW devices. */
+  /**
+   * Fetch energy consumption report. Supported by ATA and ATW devices.
+   */
   readonly getEnergy: <T extends ClassicDeviceType>({
     postData,
   }: {
     postData: ClassicEnergyPostData
   }) => Promise<Result<ClassicEnergyData<T>>>
-  /** Fetch raw error log entries from the Classic API. */
+  /**
+   * Fetch raw error log entries from the Classic API.
+   */
   readonly getErrorEntries: ({
     postData,
   }: {
@@ -86,55 +94,73 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
     query: ClassicErrorLogQuery,
     deviceIds: number[],
   ) => Promise<Result<ClassicErrorLog>>
-  /** Get frost protection settings for a building, floor, area, or device. */
+  /**
+   * Get frost protection settings for a building, floor, area, or device.
+   */
   readonly getFrostProtection: ({
     params,
   }: {
     params: ClassicSettingsParams
   }) => Promise<Result<ClassicFrostProtectionData>>
-  /** Fetch ATA device group state. ATA only. */
+  /**
+   * Fetch ATA device group state. ATA only.
+   */
   readonly getGroup: ({
     postData,
   }: {
     postData: ClassicGetGroupPostData
   }) => Promise<Result<ClassicGetGroupData>>
-  /** Get holiday mode settings for a building, floor, area, or device. */
+  /**
+   * Get holiday mode settings for a building, floor, area, or device.
+   */
   readonly getHolidayMode: ({
     params,
   }: {
     params: ClassicSettingsParams
   }) => Promise<Result<ClassicHolidayModeData>>
-  /** Fetch hourly temperature report. ATW only. */
+  /**
+   * Fetch hourly temperature report. ATW only.
+   */
   readonly getHourlyTemperatures: ({
     postData,
   }: {
     postData: { device: number; hour: Hour }
   }) => Promise<Result<ClassicReportData>>
-  /** Fetch internal temperature report. ATW only. */
+  /**
+   * Fetch internal temperature report. ATW only.
+   */
   readonly getInternalTemperatures: ({
     postData,
   }: {
     postData: ClassicReportPostData
   }) => Promise<Result<ClassicReportData>>
-  /** Fetch operation mode log data for charting. */
+  /**
+   * Fetch operation mode log data for charting.
+   */
   readonly getOperationModes: ({
     postData,
   }: {
     postData: ClassicReportPostData
   }) => Promise<Result<ClassicOperationModeLogData>>
-  /** Fetch WiFi signal strength report. */
+  /**
+   * Fetch WiFi signal strength report.
+   */
   readonly getSignal: ({
     postData,
   }: {
     postData: { devices: number | number[]; hour: Hour }
   }) => Promise<Result<ClassicReportData>>
-  /** Fetch temperature log data. */
+  /**
+   * Fetch temperature log data.
+   */
   readonly getTemperatures: ({
     postData,
   }: {
     postData: ClassicTemperatureLogPostData
   }) => Promise<Result<ClassicReportData>>
-  /** Fetch tile data for device overview. */
+  /**
+   * Fetch tile data for device overview.
+   */
   readonly getTiles: (({
     postData,
   }: {
@@ -145,37 +171,49 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
     }: {
       postData: ClassicTilesPostData<T>
     }) => Promise<Result<ClassicTilesData<T>>>)
-  /** Fetch current device data by device and building ID. */
+  /**
+   * Fetch current device data by device and building ID.
+   */
   readonly getValues: <T extends ClassicDeviceType>({
     params,
   }: {
     params: ClassicGetDeviceDataParams
   }) => Promise<Result<ClassicGetDeviceData<T>>>
-  /** Update frost protection settings. */
+  /**
+   * Update frost protection settings.
+   */
   readonly updateFrostProtection: ({
     postData,
   }: {
     postData: ClassicFrostProtectionPostData
   }) => Promise<ClassicFailureData | ClassicSuccessData>
-  /** Update ATA device group state. ATA only. */
+  /**
+   * Update ATA device group state. ATA only.
+   */
   readonly updateGroupState: ({
     postData,
   }: {
     postData: ClassicSetGroupPostData
   }) => Promise<ClassicFailureData | ClassicSuccessData>
-  /** Update holiday mode settings. */
+  /**
+   * Update holiday mode settings.
+   */
   readonly updateHolidayMode: ({
     postData,
   }: {
     postData: ClassicHolidayModePostData
   }) => Promise<ClassicFailureData | ClassicSuccessData>
-  /** Turn devices on or off. */
+  /**
+   * Turn devices on or off.
+   */
   readonly updatePower: ({
     postData,
   }: {
     postData: ClassicSetPowerPostData
   }) => Promise<boolean>
-  /** Send updated device values to the Classic API. */
+  /**
+   * Send updated device values to the Classic API.
+   */
   readonly updateValues: <T extends ClassicDeviceType>({
     postData,
     type,
@@ -190,7 +228,9 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
  * @category Configuration
  */
 export interface ClassicAPIConfig extends BaseAPIConfig {
-  /** Upstream account language code (e.g. `'en'`, `'fr'`). */
+  /**
+   * Upstream account language code (e.g. `'en'`, `'fr'`).
+   */
   readonly language?: string | undefined
   /**
    * BCP-47 locale tag for report chart labels (day-of-week, month
@@ -199,9 +239,13 @@ export interface ClassicAPIConfig extends BaseAPIConfig {
    * locally. Defaults to the runtime locale when unset.
    */
   readonly locale?: string | undefined
-  /** Whether to verify SSL certificates. Defaults to `true`. */
+  /**
+   * Whether to verify SSL certificates. Defaults to `true`.
+   */
   readonly shouldVerifySSL?: boolean | undefined
-  /** IANA timezone identifier (e.g. `'Europe/Paris'`). */
+  /**
+   * IANA timezone identifier (e.g. `'Europe/Paris'`).
+   */
   readonly timezone?: string | undefined
 }
 
@@ -210,7 +254,9 @@ export interface ClassicAPIConfig extends BaseAPIConfig {
  * @category Configuration
  */
 export interface ClassicAPISettings extends BaseAPISettings {
-  /** MELCloud session context key. */
+  /**
+   * MELCloud session context key.
+   */
   readonly contextKey?: string | null
 }
 
@@ -219,11 +265,17 @@ export interface ClassicAPISettings extends BaseAPISettings {
  * @category Configuration
  */
 export interface ClassicErrorDetails {
-  /** ISO 8601 date of the error occurrence. */
+  /**
+   * ISO 8601 date of the error occurrence.
+   */
   readonly date: string
-  /** Numeric ID of the device that reported the error. */
+  /**
+   * Numeric ID of the device that reported the error.
+   */
   readonly deviceId: number
-  /** Error message text. */
+  /**
+   * Error message text.
+   */
   readonly error: string
 }
 
@@ -232,13 +284,21 @@ export interface ClassicErrorDetails {
  * @category Configuration
  */
 export interface ClassicErrorLog {
-  /** List of error entries, sorted in reverse chronological order. */
+  /**
+   * List of error entries, sorted in reverse chronological order.
+   */
   readonly errors: readonly ClassicErrorDetails[]
-  /** ISO date string for the queried period start. */
+  /**
+   * ISO date string for the queried period start.
+   */
   readonly fromDate: string
-  /** ISO date string for the next page's start date. */
+  /**
+   * ISO date string for the next page's start date.
+   */
   readonly nextFromDate: string
-  /** ISO date string for the next page's end date. */
+  /**
+   * ISO date string for the next page's end date.
+   */
   readonly nextToDate: string
 }
 
@@ -259,8 +319,12 @@ export interface ClassicErrorLogQuery {
    * one-day boundary so consecutive pages don't overlap.
    */
   readonly offset?: number | undefined
-  /** Number of days per page. Defaults to `1`. */
+  /**
+   * Number of days per page. Defaults to `1`.
+   */
   readonly period?: number | undefined
-  /** End date in ISO 8601 format. Defaults to now. */
+  /**
+   * End date in ISO 8601 format. Defaults to now.
+   */
   readonly to?: string | undefined
 }

@@ -1,10 +1,18 @@
-/** Base chart options with date range and formatted axis labels. */
+/**
+ * Base chart options with date range and formatted axis labels.
+ */
 interface ReportChartOptions {
-  /** Start date of the report period. */
+  /**
+   * Start date of the report period.
+   */
   readonly from: string
-  /** Formatted axis labels (dates, months, etc.). */
+  /**
+   * Formatted axis labels (dates, months, etc.).
+   */
   readonly labels: readonly string[]
-  /** End date of the report period. */
+  /**
+   * End date of the report period.
+   */
   readonly to: string
 }
 
@@ -16,11 +24,17 @@ interface ReportChartOptions {
  * @category Facades
  */
 export interface ReportChartBand {
-  /** Index of the first covered label. */
+  /**
+   * Index of the first covered label.
+   */
   readonly from: number
-  /** Band name (Classic operation-mode vocabulary, e.g. `'HotWater'`). */
+  /**
+   * Band name (Classic operation-mode vocabulary, e.g. `'HotWater'`).
+   */
   readonly label: string
-  /** Index of the last covered label. */
+  /**
+   * Index of the last covered label.
+   */
   readonly to: number
 }
 
@@ -33,9 +47,13 @@ export interface ReportChartLineOptions extends ReportChartOptions {
     readonly data: (number | null)[]
     readonly name: string
   }[]
-  /** Measurement unit label (e.g. `'°C'`, `'dBm'`). */
+  /**
+   * Measurement unit label (e.g. `'°C'`, `'dBm'`).
+   */
   readonly unit: string
-  /** Background bands (operation modes); absent on most charts. */
+  /**
+   * Background bands (operation modes); absent on most charts.
+   */
   readonly bands?: readonly ReportChartBand[] | undefined
 }
 
@@ -44,7 +62,9 @@ export interface ReportChartLineOptions extends ReportChartOptions {
  * @category Facades
  */
 export interface ReportChartPieOptions extends ReportChartOptions {
-  /** Numeric values for each pie segment. */
+  /**
+   * Numeric values for each pie segment.
+   */
   readonly series: number[]
 }
 
@@ -53,8 +73,12 @@ export interface ReportChartPieOptions extends ReportChartOptions {
  * @category Facades
  */
 export interface ReportQuery {
-  /** Start date in ISO 8601 format. Defaults to `'1970-01-01'`. */
+  /**
+   * Start date in ISO 8601 format. Defaults to `'1970-01-01'`.
+   */
   readonly from?: string | undefined
-  /** End date in ISO 8601 format. Defaults to now. */
+  /**
+   * End date in ISO 8601 format. Defaults to now.
+   */
   readonly to?: string | undefined
 }

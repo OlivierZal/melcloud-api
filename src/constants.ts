@@ -3,11 +3,17 @@
  * @category Constants
  */
 export const ClassicDeviceType = {
-  /** Air-to-Air (ATA) heat pump. */
+  /**
+   * Air-to-Air (ATA) heat pump.
+   */
   Ata: 0,
-  /** Air-to-Water (ATW) heat pump. */
+  /**
+   * Air-to-Water (ATW) heat pump.
+   */
   Atw: 1,
-  /** Energy Recovery Ventilation (ERV) unit. */
+  /**
+   * Energy Recovery Ventilation (ERV) unit.
+   */
   Erv: 3,
 } as const
 export type ClassicDeviceType =
@@ -18,9 +24,13 @@ export type ClassicDeviceType =
  * @category Constants
  */
 export const HomeDeviceType = {
-  /** Air-to-Air (ATA) heat pump. */
+  /**
+   * Air-to-Air (ATA) heat pump.
+   */
   Ata: 'airToAir',
-  /** Air-to-Water (ATW) heat pump. */
+  /**
+   * Air-to-Water (ATW) heat pump.
+   */
   Atw: 'airToWater',
 } as const
 
@@ -177,11 +187,15 @@ export const classicHeatModes: ReadonlySet<ClassicOperationMode> = new Set([
 export const ClassicOperationModeState = {
   cooling: 3,
   defrost: 5,
-  /** Domestic hot water — the heat pump is currently heating the tank. */
+  /**
+   * Domestic hot water — the heat pump is currently heating the tank.
+   */
   dhw: 1,
   heating: 2,
   idle: 0,
-  /** Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank. */
+  /**
+   * Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank.
+   */
   legionellaPrevention: 6,
 } as const
 export type ClassicOperationModeState =
@@ -192,12 +206,18 @@ export type ClassicOperationModeState =
  * @category Constants
  */
 export const ClassicOperationModeStateHotWater = {
-  /** Domestic hot water — the heat pump is currently heating the tank. */
+  /**
+   * Domestic hot water — the heat pump is currently heating the tank.
+   */
   dhw: 'dhw',
   idle: 'idle',
-  /** Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank. */
+  /**
+   * Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank.
+   */
   legionellaPrevention: 'legionella',
-  /** Hot water production is disabled (e.g. prohibit flag set or holiday mode active). */
+  /**
+   * Hot water production is disabled (e.g. prohibit flag set or holiday mode active).
+   */
   prohibited: 'prohibited',
 } as const
 export type ClassicOperationModeStateHotWater =
@@ -212,7 +232,9 @@ export const ClassicOperationModeStateZone = {
   defrost: 'defrost',
   heating: 'heating',
   idle: 'idle',
-  /** Zone regulation is disabled (e.g. prohibit flag set or holiday mode active). */
+  /**
+   * Zone regulation is disabled (e.g. prohibit flag set or holiday mode active).
+   */
   prohibited: 'prohibited',
 } as const
 export type ClassicOperationModeStateZone =
@@ -226,11 +248,15 @@ export type ClassicOperationModeStateZone =
 export const HomeAtwOperationalState = {
   cooling: 'cooling',
   defrost: 'defrost',
-  /** Domestic hot water — the heat pump is currently heating the tank. */
+  /**
+   * Domestic hot water — the heat pump is currently heating the tank.
+   */
   dhw: 'dhw',
   heating: 'heating',
   idle: 'idle',
-  /** Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank. */
+  /**
+   * Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank.
+   */
   legionellaPrevention: 'legionella',
 } as const
 export type HomeAtwOperationalState =
@@ -257,15 +283,25 @@ export type HomeAtwZoneMode =
  * @category Constants
  */
 export const ClassicOperationModeZone = {
-  /** ClassicTemperature curve-based regulation. */
+  /**
+   * ClassicTemperature curve-based regulation.
+   */
   curve: 2,
-  /** Fixed flow temperature. */
+  /**
+   * Fixed flow temperature.
+   */
   flow: 1,
-  /** Fixed flow temperature with cooling. */
+  /**
+   * Fixed flow temperature with cooling.
+   */
   flow_cool: 4,
-  /** Room thermostat regulation. */
+  /**
+   * Room thermostat regulation.
+   */
   room: 0,
-  /** Room thermostat regulation with cooling. */
+  /**
+   * Room thermostat regulation with cooling.
+   */
   room_cool: 3,
 } as const
 export type ClassicOperationModeZone =
@@ -276,11 +312,17 @@ export type ClassicOperationModeZone =
  * @category Constants
  */
 export const ClassicTemperature = {
-  /** Minimum target temperature when the device is in a cooling-capable mode. */
+  /**
+   * Minimum target temperature when the device is in a cooling-capable mode.
+   */
   cooling_min: 16,
-  /** Maximum target temperature across all modes. */
+  /**
+   * Maximum target temperature across all modes.
+   */
   max: 31,
-  /** Minimum target temperature in heating/auto/dry/fan modes. */
+  /**
+   * Minimum target temperature in heating/auto/dry/fan modes.
+   */
   min: 10,
 } as const
 export type ClassicTemperature =
@@ -292,9 +334,13 @@ export type ClassicTemperature =
  */
 export const ClassicVentilationMode = {
   auto: 2,
-  /** Outside air flows straight through without passing the heat exchanger (free-cooling). */
+  /**
+   * Outside air flows straight through without passing the heat exchanger (free-cooling).
+   */
   bypass: 1,
-  /** Outside air passes through the heat exchanger to recover energy from extract air. */
+  /**
+   * Outside air passes through the heat exchanger to recover energy from extract air.
+   */
   recovery: 0,
 } as const
 export type ClassicVentilationMode =
