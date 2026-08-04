@@ -167,12 +167,12 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 
 ## Repo process
 
-- Companion docs are part of a change's definition of done: a PR that
-  changes behavior, API surface, requirements or process must update
-  the affected companion files (README.md, CONTRIBUTING.md,
-  SECURITY.md, CLAUDE.md) in the same PR, never in a later sweep — the 2026-08
-  README audit caught exactly the drift this prevents (a shipped Home
-  ATW driver absent from its README, a stale `Result` kind list).
+- Companion docs are part of a change's definition of done: whenever a
+  PR changes behavior, API surface, requirements or process, the same
+  PR updates the affected companion files (README.md, CONTRIBUTING.md,
+  SECURITY.md, CLAUDE.md) — never a later sweep; the 2026-08 README
+  audit caught exactly the drift this prevents (a shipped Home ATW
+  driver absent from its README, a stale `Result` kind list).
 
 - The PR title IS the commit that lands: `squash_merge_commit_title` is
   `PR_TITLE`, so the title is the single source (under the former
