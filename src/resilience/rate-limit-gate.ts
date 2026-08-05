@@ -106,32 +106,6 @@ export class RateLimitGate {
     )
   }
 
-  /**
-   * Duration remaining until the gate re-opens.
-   * @returns A `Temporal.Duration` if paused, or `null` if the gate is open.
-   */
-  public get remaining(): Temporal.Duration | null {
-    const now = Temporal.Now.instant()
-    return Temporal.Instant.compare(this.#pausedUntil, now) > 0
-      ? this.#pausedUntil.since(now)
-      : null
-  }
-
-  /**
-   * Absolute moment at which the gate re-opens. Use alongside
-   * {@link remaining} when consumers want to render an "at HH:MM"
-   * message rather than a relative duration.
-   *
-   * Callers that need both `remaining` and `unblockAt` together should
-   * prefer {@link snapshot} to avoid reading each against a separate
-   * `Temporal.Now.instant()` tick (near the window boundary the pair
-   * can otherwise land on different sides of `isPaused`).
-   * @returns The unblock `Temporal.Instant` if paused, or `null` if the gate is open.
-   */
-  public get unblockAt(): Temporal.Instant | null {
-    return this.isPaused ? this.#pausedUntil : null
-  }
-
   readonly #fallback: Temporal.Duration
 
   #pausedUntil: Temporal.Instant = Temporal.Now.instant()
@@ -153,21 +127,17 @@ export class RateLimitGate {
    * @param logger - Logger used to emit the error line.
    * @param logger.error - Error-level log sink.
    * @param retryAfter - Header value from the 429 response (delta-seconds or HTTP-date).
-   * @param label - Short noun describing what was rate-limited
-   *   (e.g. `'list operations'`, `''` for a generic "pausing for ..." line).
    */
   public recordAndLog(
     logger: { error: (...data: unknown[]) => void },
     retryAfter: unknown,
-    label = '',
   ): void {
     this.recordRateLimit(retryAfter)
     // `recordRateLimit` always advances `#pausedUntil` into the future,
     // so the remaining duration is positive and well-defined here.
     const duration = this.#pausedUntil.since(Temporal.Now.instant())
-    const suffix = label === '' ? '' : ` ${label}`
     logger.error(
-      `Rate limited (429): pausing${suffix} for ${formatDurationHuman(duration)}`,
+      `Rate limited (429): pausing for ${formatDurationHuman(duration)}`,
     )
   }
 
@@ -184,13 +154,6 @@ export class RateLimitGate {
     const now = Temporal.Now.instant()
     this.#pausedUntil =
       parseRetryAfter(retryAfter, now) ?? now.add(this.#fallback)
-  }
-
-  /**
-   * Reset the gate immediately (testing or manual unblock).
-   */
-  public reset(): void {
-    this.#pausedUntil = Temporal.Now.instant()
   }
 
   /**

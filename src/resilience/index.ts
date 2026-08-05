@@ -45,16 +45,4 @@ export {
   type RetryTelemetry,
   TransientRetryPolicy,
 } from './transient-retry-policy.ts'
-export {
-  APIError,
-  AuthenticationError,
-  isAPIError,
-  NetworkError,
-  RateLimitError,
-} from '../errors/index.ts'
-export {
-  toClassicAreaId,
-  toClassicBuildingId,
-  toClassicDeviceId,
-  toClassicFloorId,
-} from '../types/ids.ts'
+export { toClassicDeviceId } from '../types/ids.ts'

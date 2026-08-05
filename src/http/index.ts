@@ -4,6 +4,6 @@ export type {
   HttpResponse,
 } from './client.ts'
 
-export { HttpClient } from './client.ts'
+export { HttpClient, readHeaders } from './client.ts'
 export { HttpError, isHttpError } from './errors.ts'
 export { HttpStatus } from './status.ts'

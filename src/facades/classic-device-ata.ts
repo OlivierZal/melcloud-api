@@ -1,9 +1,4 @@
-import {
-  type ClassicNonSilentFanSpeed,
-  ClassicDeviceType,
-  ClassicFanSpeed,
-  ClassicOperationMode,
-} from '../constants.ts'
+import { ClassicDeviceType, ClassicOperationMode } from '../constants.ts'
 import {
   type ClassicEnergyDataAta,
   type ClassicGroupState,
@@ -15,20 +10,10 @@ import { clampToRange } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
-import { tolerateNoChanges } from './home-ata-group.ts'
+import { toGroupFanSpeed, tolerateNoChanges } from './home-ata-group.ts'
 
 const isSet = <T>(value: T | null | undefined): value is T =>
   value !== null && value !== undefined
-
-// A group state cannot express `silent` (its fan speed is non-silent only),
-// so a silent or unset device fan reads as `null` — the "leave unchanged"
-// sentinel — rather than being forced onto a group speed.
-const toGroupFanSpeed = (
-  fanSpeed: ClassicFanSpeed | undefined,
-): ClassicNonSilentFanSpeed | null =>
-  fanSpeed === undefined || fanSpeed === ClassicFanSpeed.silent
-    ? null
-    : fanSpeed
 
 // Group-state keys map onto the per-device update tags (`FanSpeed` →
 // `SetFanSpeed`, the vane directions lose their `Direction` suffix); the

@@ -4,7 +4,7 @@ import { CookieJar } from 'tough-cookie'
 
 import type { HomeTokenResponse } from '../types/index.ts'
 import { AuthenticationError } from '../errors/index.ts'
-import { HttpError } from '../http/index.ts'
+import { type HttpResponse, HttpError, readHeaders } from '../http/index.ts'
 import {
   HomeParResponseSchema,
   HomeTokenResponseSchema,
@@ -49,17 +49,6 @@ interface FollowRedirectsOptions {
 }
 
 /**
- * Minimal response shape surfaced internally by the OIDC flow.
- * @template T - Type of the body exposed as `data`; the flow reads bodies as
- * text, so steps that consume the body instantiate it with `string`.
- */
-interface OidcResponse<T = unknown> {
-  readonly data: T
-  readonly headers: Record<string, string | string[]>
-  readonly status: number
-}
-
-/**
  * Inputs for {@link fetchPostForm}.
  */
 interface PostFormOptions {
@@ -79,19 +68,6 @@ interface SubmitCredentialsOptions {
   abortSignal?: AbortSignal
 }
 
-const readResponseHeaders = (
-  headers: Headers,
-): Record<string, string | string[]> => {
-  const result: Record<string, string | string[]> = Object.fromEntries(
-    headers.entries(),
-  )
-  const cookies = headers.getSetCookie()
-  if (cookies.length > 0) {
-    result['set-cookie'] = cookies
-  }
-  return result
-}
-
 // Small POST-form helper for the OIDC flow. The two endpoints it
 // targets (PAR, token exchange) always return JSON; parse
 // unconditionally and throw on non-2xx. Each caller is responsible
@@ -104,14 +80,14 @@ const fetchPostForm = async ({
   body,
   headers,
   url,
-}: PostFormOptions): Promise<OidcResponse> => {
+}: PostFormOptions): Promise<HttpResponse> => {
   const response = await fetch(url, {
     body,
     headers,
     method: 'POST',
     ...(abortSignal !== undefined && { signal: abortSignal }),
   })
-  const responseHeaders = readResponseHeaders(response.headers)
+  const responseHeaders = readHeaders(response.headers)
   const text = await response.text()
   if (!response.ok) {
     throw new HttpError(
@@ -139,7 +115,7 @@ const fetchPostForm = async ({
 // therefore do not throw.
 const fetchRaw = async (
   options: AuthRequestOptions,
-): Promise<OidcResponse<string>> => {
+): Promise<HttpResponse<string>> => {
   const response = await fetch(options.url, {
     headers: options.config.headers,
     method: options.method.toUpperCase(),
@@ -147,7 +123,7 @@ const fetchRaw = async (
     ...(options.config.data !== undefined && { body: options.config.data }),
     ...(options.abortSignal !== undefined && { signal: options.abortSignal }),
   })
-  const headers = readResponseHeaders(response.headers)
+  const headers = readHeaders(response.headers)
   const data = await response.text()
   return { data, headers, status: response.status }
 }
@@ -161,7 +137,7 @@ const fetchRaw = async (
  */
 const storeCookies = async (
   jar: CookieJar,
-  { headers }: OidcResponse,
+  { headers }: HttpResponse,
   url: string,
 ): Promise<void> => {
   const cookies = headers['set-cookie']
@@ -183,7 +159,7 @@ const storeCookies = async (
  * @param options.jar - CookieJar for cross-domain cookie management.
  * @param options.method - HTTP method.
  * @param options.url - Target URL.
- * @returns The raw HTTP response as an {@link OidcResponse}.
+ * @returns The raw HTTP response as an {@link HttpResponse}.
  */
 const authRequest = async ({
   abortSignal,
@@ -191,7 +167,7 @@ const authRequest = async ({
   jar,
   method,
   url,
-}: AuthRequestOptions): Promise<OidcResponse<string>> => {
+}: AuthRequestOptions): Promise<HttpResponse<string>> => {
   const cookieHeader = await jar.getCookieString(url)
   const mergedHeaders: Record<string, string> = {
     ...config.headers,
@@ -306,7 +282,7 @@ const generatePKCE = (): { challenge: string; verifier: string } => {
  * @returns The resolved redirect URL, or `null` if no redirect was detected.
  */
 const extractRedirectTarget = (
-  response: OidcResponse<string>,
+  response: HttpResponse<string>,
   currentUrl: string,
 ): string | null => {
   if (

@@ -50,13 +50,14 @@ const allEqual = <T>(values: readonly (T | null)[]): T | null => {
  * A group state cannot express `silent` (its fan speed is non-silent only),
  * so a silent fan reads as `null` — the "leave unchanged" sentinel —
  * mirroring the Classic device facade's own projection of silent.
- * @param speed - Classic fan speed, possibly silent.
- * @returns The group-expressible fan speed, or `null` for silent.
+ * @param speed - Classic fan speed, possibly silent or unset.
+ * @returns The group-expressible fan speed, or `null` for silent or
+ * unset — the "leave unchanged" sentinel.
  */
 export const toGroupFanSpeed = (
-  speed: ClassicFanSpeedType,
+  speed: ClassicFanSpeedType | undefined,
 ): ClassicNonSilentFanSpeed | null =>
-  speed === ClassicFanSpeed.silent ? null : speed
+  speed === undefined || speed === ClassicFanSpeed.silent ? null : speed
 
 /**
  * Projects a Home ATA device's current values onto the Classic group-state

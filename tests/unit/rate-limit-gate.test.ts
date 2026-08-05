@@ -25,8 +25,8 @@ describe(RateLimitGate, () => {
     const gate = new RateLimitGate({ hours: 1 })
 
     expect(gate.isPaused).toBe(false)
-    expect(gate.remaining).toBeNull()
-    expect(gate.unblockAt).toBeNull()
+    expect(gate.snapshot().remaining).toBeNull()
+    expect(gate.snapshot().unblockAt).toBeNull()
   })
 
   it('closes for the full fallback duration when no Retry-After is provided', () => {
@@ -35,13 +35,18 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit()
 
     expect(gate.isPaused).toBe(true)
-    // Use Luxon's millisecond conversion, accounting for slight drift.
-    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
-    expect(gate.remaining?.total({ unit: 'hours' })).toBeLessThanOrEqual(2)
-    // Absolute unblock time is 2 hours after the fixed system time.
-    expect(gate.unblockAt?.toString({ smallestUnit: 'millisecond' })).toBe(
-      '2026-04-11T14:00:00.000Z',
+    // Temporal duration totals, with a margin for the tick between
+    // recording and reading.
+    expect(gate.snapshot().remaining?.total({ unit: 'hours' })).toBeGreaterThan(
+      1.9,
     )
+    expect(
+      gate.snapshot().remaining?.total({ unit: 'hours' }),
+    ).toBeLessThanOrEqual(2)
+    // Absolute unblock time is 2 hours after the fixed system time.
+    expect(
+      gate.snapshot().unblockAt?.toString({ smallestUnit: 'millisecond' }),
+    ).toBe('2026-04-11T14:00:00.000Z')
   })
 
   it('honors a numeric Retry-After header (seconds)', () => {
@@ -50,8 +55,12 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit(30)
 
     expect(gate.isPaused).toBe(true)
-    expect(gate.remaining?.total({ unit: 'seconds' })).toBeGreaterThan(29)
-    expect(gate.remaining?.total({ unit: 'seconds' })).toBeLessThanOrEqual(30)
+    expect(
+      gate.snapshot().remaining?.total({ unit: 'seconds' }),
+    ).toBeGreaterThan(29)
+    expect(
+      gate.snapshot().remaining?.total({ unit: 'seconds' }),
+    ).toBeLessThanOrEqual(30)
   })
 
   it('honors a string Retry-After header (seconds)', () => {
@@ -60,7 +69,9 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit('45')
 
     expect(gate.isPaused).toBe(true)
-    expect(gate.remaining?.total({ unit: 'seconds' })).toBeGreaterThan(44)
+    expect(
+      gate.snapshot().remaining?.total({ unit: 'seconds' }),
+    ).toBeGreaterThan(44)
   })
 
   it('falls back when Retry-After is non-numeric', () => {
@@ -69,7 +80,9 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit('not-a-number')
 
     expect(gate.isPaused).toBe(true)
-    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+    expect(gate.snapshot().remaining?.total({ unit: 'hours' })).toBeGreaterThan(
+      1.9,
+    )
   })
 
   it('falls back when Retry-After is zero or negative', () => {
@@ -77,15 +90,21 @@ describe(RateLimitGate, () => {
 
     gate.recordRateLimit(0)
 
-    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+    expect(gate.snapshot().remaining?.total({ unit: 'hours' })).toBeGreaterThan(
+      1.9,
+    )
 
     gate.recordRateLimit(-5)
 
-    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+    expect(gate.snapshot().remaining?.total({ unit: 'hours' })).toBeGreaterThan(
+      1.9,
+    )
 
     gate.recordRateLimit('-5')
 
-    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+    expect(gate.snapshot().remaining?.total({ unit: 'hours' })).toBeGreaterThan(
+      1.9,
+    )
   })
 
   it('honors a future HTTP-date Retry-After header (RFC 9110)', () => {
@@ -95,9 +114,9 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit('Sat, 11 Apr 2026 12:30:00 GMT')
 
     expect(gate.isPaused).toBe(true)
-    expect(gate.unblockAt?.toString({ smallestUnit: 'millisecond' })).toBe(
-      '2026-04-11T12:30:00.000Z',
-    )
+    expect(
+      gate.snapshot().unblockAt?.toString({ smallestUnit: 'millisecond' }),
+    ).toBe('2026-04-11T12:30:00.000Z')
   })
 
   it('falls back when the HTTP-date Retry-After is in the past', () => {
@@ -105,7 +124,9 @@ describe(RateLimitGate, () => {
 
     gate.recordRateLimit('Sat, 11 Apr 2026 11:00:00 GMT')
 
-    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+    expect(gate.snapshot().remaining?.total({ unit: 'hours' })).toBeGreaterThan(
+      1.9,
+    )
   })
 
   it('falls back when Retry-After is a non-finite number', () => {
@@ -113,7 +134,9 @@ describe(RateLimitGate, () => {
 
     gate.recordRateLimit(Number.NaN)
 
-    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+    expect(gate.snapshot().remaining?.total({ unit: 'hours' })).toBeGreaterThan(
+      1.9,
+    )
   })
 
   it('falls back when Retry-After has an unsupported type', () => {
@@ -121,7 +144,9 @@ describe(RateLimitGate, () => {
 
     gate.recordRateLimit(['30'])
 
-    expect(gate.remaining?.total({ unit: 'hours' })).toBeGreaterThan(1.9)
+    expect(gate.snapshot().remaining?.total({ unit: 'hours' })).toBeGreaterThan(
+      1.9,
+    )
   })
 
   it('re-opens automatically after the window elapses', () => {
@@ -133,18 +158,7 @@ describe(RateLimitGate, () => {
     vi.advanceTimersByTime(11 * 1000)
 
     expect(gate.isPaused).toBe(false)
-    expect(gate.remaining).toBeNull()
-  })
-
-  it('reset() immediately re-opens the gate', () => {
-    const gate = new RateLimitGate({ hours: 2 })
-    gate.recordRateLimit(3600)
-
-    expect(gate.isPaused).toBe(true)
-
-    gate.reset()
-
-    expect(gate.isPaused).toBe(false)
+    expect(gate.snapshot().remaining).toBeNull()
   })
 
   it('snapshot() returns all fields consistently when paused', () => {
@@ -175,25 +189,14 @@ describe(RateLimitGate, () => {
     const gate = new RateLimitGate({ hours: 2 })
     const error = vi.fn<(...data: unknown[]) => void>()
 
-    gate.recordAndLog({ error }, 60, 'list operations')
+    gate.recordAndLog({ error }, 60)
 
     expect(gate.isPaused).toBe(true)
     expect(error).toHaveBeenCalledTimes(1)
     expect(error).toHaveBeenCalledWith(
-      expect.stringContaining('pausing list operations for'),
-    )
-    expect(error).toHaveBeenCalledWith(expect.stringContaining('429'))
-  })
-
-  it('recordAndLog omits the label suffix when none is provided', () => {
-    const gate = new RateLimitGate({ hours: 2 })
-    const error = vi.fn<(...data: unknown[]) => void>()
-
-    gate.recordAndLog({ error }, 60)
-
-    expect(error).toHaveBeenCalledWith(
       expect.stringMatching(/pausing for \d+/v),
     )
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('429'))
   })
 })
 
