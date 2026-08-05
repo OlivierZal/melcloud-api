@@ -1,4 +1,5 @@
 import { ClassicDeviceType, ClassicOperationMode } from '../constants.ts'
+import { tolerateNoChanges } from '../errors/index.ts'
 import {
   type ClassicEnergyDataAta,
   type ClassicGroupState,
@@ -6,14 +7,11 @@ import {
   type Result,
   ok,
 } from '../types/index.ts'
-import { clampToRange } from '../utils.ts'
+import { clampToRange, isValue } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import { BaseDeviceFacade } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
-import { toGroupFanSpeed, tolerateNoChanges } from './home-ata-group.ts'
-
-const isSet = <T>(value: T | null | undefined): value is T =>
-  value !== null && value !== undefined
+import { toGroupFanSpeed } from './home-ata-group.ts'
 
 // Group-state keys map onto the per-device update tags (`FanSpeed` →
 // `SetFanSpeed`, the vane directions lose their `Direction` suffix); the
@@ -21,14 +19,16 @@ const isSet = <T>(value: T | null | undefined): value is T =>
 const toUpdateData = (
   state: ClassicGroupState,
 ): ClassicUpdateDeviceDataAta => ({
-  ...(isSet(state.FanSpeed) && { SetFanSpeed: state.FanSpeed }),
-  ...(isSet(state.OperationMode) && { OperationMode: state.OperationMode }),
-  ...(isSet(state.Power) && { Power: state.Power }),
-  ...(isSet(state.SetTemperature) && { SetTemperature: state.SetTemperature }),
-  ...(isSet(state.VaneHorizontalDirection) && {
+  ...(isValue(state.FanSpeed) && { SetFanSpeed: state.FanSpeed }),
+  ...(isValue(state.OperationMode) && { OperationMode: state.OperationMode }),
+  ...(isValue(state.Power) && { Power: state.Power }),
+  ...(isValue(state.SetTemperature) && {
+    SetTemperature: state.SetTemperature,
+  }),
+  ...(isValue(state.VaneHorizontalDirection) && {
     VaneHorizontal: state.VaneHorizontalDirection,
   }),
-  ...(isSet(state.VaneVerticalDirection) && {
+  ...(isValue(state.VaneVerticalDirection) && {
     VaneVertical: state.VaneVerticalDirection,
   }),
 })

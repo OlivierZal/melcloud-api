@@ -1,10 +1,10 @@
+import type { ClassicDeviceType } from '../constants.ts'
 import type {
   ClassicListDevice,
   ClassicListDeviceAny,
   ClassicListDeviceData,
   ClassicListDeviceDataAny,
 } from '../types/index.ts'
-import { ClassicDeviceType } from '../constants.ts'
 import { BaseModel } from './base.ts'
 
 /**
@@ -61,31 +61,6 @@ export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
     this.buildingId = buildingId
     this.floorId = floorId
     this.#data = data
-  }
-
-  /**
-   * Type predicate that narrows this model to the ATA variant — the
-   * Classic counterpart of the Home model's `isAta()`.
-   * @returns `true` when the device is air-to-air.
-   */
-  public isAta(): this is ClassicDevice<typeof ClassicDeviceType.Ata> {
-    return this.type === ClassicDeviceType.Ata
-  }
-
-  /**
-   * Type predicate that narrows this model to the ATW variant.
-   * @returns `true` when the device is air-to-water.
-   */
-  public isAtw(): this is ClassicDevice<typeof ClassicDeviceType.Atw> {
-    return this.type === ClassicDeviceType.Atw
-  }
-
-  /**
-   * Type predicate that narrows this model to the ERV variant.
-   * @returns `true` when the device is a ventilation unit.
-   */
-  public isErv(): this is ClassicDevice<typeof ClassicDeviceType.Erv> {
-    return this.type === ClassicDeviceType.Erv
   }
 
   /**

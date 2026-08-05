@@ -70,7 +70,7 @@ export interface HomeDeviceDataOverrides {
   readonly settings?: Record<string, string>
 }
 
-export const homeDeviceData = (
+const homeDeviceData = (
   overrides: HomeDeviceDataOverrides = {},
 ): HomeAtaDeviceData =>
   mock<HomeAtaDeviceData>({

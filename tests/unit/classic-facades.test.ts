@@ -18,13 +18,13 @@ import {
   NoChangesError,
   UpdateRejectedError,
 } from '../../src/errors/index.ts'
+import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
+import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
+import { ClassicDeviceAtwHasZone2Facade } from '../../src/facades/classic-device-atw-dual-zone.ts'
+import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
 import {
   type ClassicDeviceFacade,
   ClassicAreaFacade,
-  ClassicBuildingFacade,
-  ClassicDeviceAtaFacade,
-  ClassicDeviceAtwFacade,
-  ClassicDeviceAtwHasZone2Facade,
   ClassicDeviceErvFacade,
   ClassicFloorFacade,
   hasClassicZone2,

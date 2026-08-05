@@ -41,13 +41,6 @@ const config = {
     'TransportConfig',
     'TypedHomeDeviceData',
     'UpdatePatchKind',
-    // Facade declaration-merged interfaces sharing a name with their
-    // class. The class side carries the public surface; TypeDoc sees
-    // the interface as a separate symbol and would warn otherwise.
-    'ClassicBuildingFacade',
-    'ClassicDeviceAtaFacade',
-    'ClassicDeviceAtwFacade',
-    'ClassicDeviceAtwHasZone2Facade',
   ],
   markdownLinkExternal: true,
   name: 'MELCloud & MELCloud Home API for Node.js',

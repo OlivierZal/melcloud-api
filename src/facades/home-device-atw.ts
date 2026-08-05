@@ -44,12 +44,6 @@ import {
   toHomeWireWindow,
 } from './home-report.ts'
 
-// Telemetry intervals per display bucket granularity — local-day
-// buckets aggregate hourly wire buckets client-side (the wire's own
-// day buckets are UTC days); the ATW interval measures already report
-// kWh per bucket.
-const IDENTITY_SCALE = 1
-
 const TEMPERATURE_UNIT = '°C'
 
 interface TemperatureRange {
@@ -384,8 +378,8 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
         bucketUnit,
         locale: this.api.locale,
         sources: [
-          { data: consumed.value, name: 'Consumed', scale: IDENTITY_SCALE },
-          { data: produced.value, name: 'Produced', scale: IDENTITY_SCALE },
+          { data: consumed.value, name: 'Consumed' },
+          { data: produced.value, name: 'Produced' },
         ],
         window,
       }),

@@ -98,6 +98,16 @@ export const isKeyOf =
     Object.hasOwn(record, key)
 
 /**
+ * Type guard that narrows away `null` and `undefined` — the group
+ * state's "leave unchanged" sentinel and an absent field alike.
+ * @template T - Type of the present value.
+ * @param value - The value to test.
+ * @returns Whether the value is present (neither `null` nor `undefined`).
+ */
+export const isValue = <T>(value: T | null | undefined): value is T =>
+  value !== null && value !== undefined
+
+/**
  * Maps ATA set-command keys to their corresponding list-data keys.
  */
 export const fromSetToListAta: {

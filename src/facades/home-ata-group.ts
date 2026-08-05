@@ -18,7 +18,7 @@ import {
   verticalFromClassic,
   verticalToClassic,
 } from '../enum-mappings.ts'
-import { NoChangesError } from '../errors/index.ts'
+import { isValue } from '../utils.ts'
 
 /**
  * The facade slice the Classic group-state projection reads. Structural so
@@ -33,9 +33,6 @@ export interface HomeAtaGroupSource {
   readonly vaneHorizontalDirection: HomeHorizontal
   readonly vaneVerticalDirection: HomeVertical
 }
-
-const isValue = <T>(value: T | null | undefined): value is T =>
-  value !== null && value !== undefined
 
 // The first value when every entry strictly equals it, `null` otherwise
 // (including the empty case) — the per-field divergence fold of a group
@@ -137,24 +134,3 @@ export const toHomeAtaValues = (state: ClassicGroupState): HomeAtaValues => ({
     vaneVerticalDirection: verticalFromClassic[state.VaneVerticalDirection],
   }),
 })
-
-/**
- * Run a group-member update, counting a {@link NoChangesError} as
- * success: a device already matching the group state is fine by
- * definition, so zone group writes — and the group-of-one emulation —
- * are no-op tolerant.
- * @param update - The member update to run.
- * @throws {@link Error} the reason `update` rejects with, unless it is a
- *   {@link NoChangesError} (which counts as success).
- */
-export const tolerateNoChanges = async (
-  update: () => Promise<unknown>,
-): Promise<void> => {
-  try {
-    await update()
-  } catch (error) {
-    if (!(error instanceof NoChangesError)) {
-      throw error
-    }
-  }
-}

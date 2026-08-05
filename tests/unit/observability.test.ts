@@ -75,6 +75,19 @@ describe('api call request data', () => {
     ])
   })
 
+  it('redacts sensitive keys nested in object payloads', () => {
+    const data = new APICallRequestData(
+      createConfig({
+        data: { body: { nested: { password: 'secret' }, safe: 'ok' } },
+      }),
+    )
+    const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
+
+    expect(parsed.requestData).toStrictEqual({
+      body: { nested: { password: '******' }, safe: 'ok' },
+    })
+  })
+
   it('serializes to JSON with logKeys', () => {
     const data = new APICallRequestData(createConfig())
     const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))

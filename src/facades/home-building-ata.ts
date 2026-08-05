@@ -1,6 +1,7 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import { HomeDeviceType } from '../constants.ts'
+import { tolerateNoChanges } from '../errors/index.ts'
 import {
   type ClassicGroupState,
   type HomeAtaDeviceData,
@@ -12,7 +13,6 @@ import {
   aggregateClassicAtaGroupStates,
   toClassicAtaGroupState,
   toHomeAtaValues,
-  tolerateNoChanges,
 } from './home-ata-group.ts'
 
 // `allSettled` reasons are `unknown`; non-Error rejections (possible

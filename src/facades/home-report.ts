@@ -882,7 +882,8 @@ const energyGridBuilders: Record<
  * default; `localDay` sums hourly wire buckets per calendar day of the
  * display timezone; `hour` matches the Classic one-day report).
  * @param options.locale - BCP-47 locale tag for axis labels.
- * @param options.sources - One entry per charted series.
+ * @param options.sources - One entry per charted series; `scale`
+ * converts wire units to kWh and defaults to `1` (already kWh).
  * @param options.window - Resolved chart window (in the display timezone).
  * @returns Structured line chart options (`kWh`).
  */
@@ -895,7 +896,7 @@ export const toHomeEnergyOptions = ({
   sources: readonly {
     readonly data: HomeEnergyData
     readonly name: string
-    readonly scale: number
+    readonly scale?: number
   }[]
   window: HomeChartWindow
   bucketUnit?: HomeEnergyBucketUnit | undefined
@@ -914,7 +915,7 @@ export const toHomeEnergyOptions = ({
     labels: slots.map((slot) =>
       formatter.format(toEnergySlotLabel(slot, bucketUnit, timezone)),
     ),
-    series: sources.map(({ data, name, scale }) => {
+    series: sources.map(({ data, name, scale = 1 }) => {
       const bySlot = sumEnergyBySlot(data, { bucketUnit, scale, timezone })
       return { data: slots.map((slot) => bySlot.get(slot) ?? 0), name }
     }),
