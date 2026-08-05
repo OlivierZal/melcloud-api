@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - `/home` barrel: the missing `DeviceFacadeAny`, `isAtaFacade`/`isAtwFacade` guards, `FrostProtectionPostData`, `HolidayModePostData`, `OverheatProtectionPostData`, `ProtectionUnits`, `ReportAnnotation`, `ReportTrigger`, and the dialect-neutral `fetchDevices`/`syncDevices` decorators.
 - `/classic` barrel: the missing `BaseListDevice`, `BuildingOwner`, `DevicePermissions` and `QuantizedCoordinates` types.
+- Root barrel: `HttpStatus`, `HttpErrorRequestConfig` and `TransportConfig` — reachable from public members (`HttpError.config`, `BaseAPIConfig.transport`, `error.response.status` narrowing), so consumers can now name them.
 
 ### Fixed
 

@@ -111,6 +111,7 @@ if (!result.ok) {
       break
     default:
       // network / server / validation — log and skip
+      break
   }
   return
 }

@@ -148,6 +148,7 @@ export {
   type RequestStartEvent,
   type SettingManager,
   type SyncCallback,
+  type TransportConfig,
   ClassicAPI,
   HomeAPI,
 } from './api/index.ts'
@@ -253,10 +254,12 @@ export {
 } from './facades/index.ts'
 export {
   type HttpClientConfig,
+  type HttpErrorRequestConfig,
   type HttpRequestConfig,
   type HttpResponse,
   HttpClient,
   HttpError,
+  HttpStatus,
   isHttpError,
 } from './http/index.ts'
 export {
