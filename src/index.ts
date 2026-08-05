@@ -219,7 +219,6 @@ export {
   AuthenticationThrottledError,
   EntityNotFoundError,
   isAPIError,
-  NetworkError,
   NoChangesError,
   RateLimitError,
   UpdateRejectedError,

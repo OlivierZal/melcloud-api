@@ -5,8 +5,6 @@ import { ClassicDeviceType } from '../../src/constants.ts'
 import { ValidationError } from '../../src/errors/index.ts'
 import {
   ClassicBuildingListSchema,
-  ClassicEnergyDataAtaSchema,
-  ClassicEnergyDataAtwSchema,
   ClassicEnergyDataSchema,
   ClassicLoginDataSchema,
   HomeContextSchema,
@@ -14,6 +12,10 @@ import {
   HourSchema,
   parseOrThrow,
 } from '../../src/validation/index.ts'
+import {
+  ClassicEnergyDataAtaSchema,
+  ClassicEnergyDataAtwSchema,
+} from '../../src/validation/schemas.ts'
 import {
   defaultHomeAtaCapabilities,
   defaultHomeAtwCapabilities,

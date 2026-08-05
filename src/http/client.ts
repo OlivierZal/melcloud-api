@@ -122,7 +122,9 @@ const serializeBody = (
 // comma-joined string, so iterating once is enough. `set-cookie` is the
 // exception: `Headers` preserves it as a distinct list exposed only via
 // `getSetCookie()`, so we merge that explicitly.
-const readHeaders = (headers: Headers): Record<string, string | string[]> => {
+export const readHeaders = (
+  headers: Headers,
+): Record<string, string | string[]> => {
   const result: Record<string, string | string[]> = Object.fromEntries(
     headers.entries(),
   )

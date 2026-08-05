@@ -4,7 +4,6 @@ import {
   APIError,
   AuthenticationError,
   isAPIError,
-  NetworkError,
   RateLimitError,
   ValidationError,
 } from '../../src/errors/index.ts'
@@ -19,21 +18,6 @@ describe.concurrent('apiError hierarchy', () => {
     expect(error).toBeInstanceOf(Error)
     expect(error.message).toBe('bad creds')
     expect(error.name).toBe('AuthenticationError')
-  })
-
-  it('networkError inherits the hierarchy', () => {
-    const error = new NetworkError('connection refused')
-
-    expect(error).toBeInstanceOf(NetworkError)
-    expect(error).toBeInstanceOf(APIError)
-    expect(error.name).toBe('NetworkError')
-  })
-
-  it('preserves the original rejection as `cause`', () => {
-    const cause = new Error('upstream')
-    const error = new NetworkError('wrapped', { cause })
-
-    expect(error.cause).toBe(cause)
   })
 
   it('rateLimitError carries the retryAfter duration and unblockAt time', () => {
@@ -91,7 +75,6 @@ describe.concurrent(isAPIError, () => {
       'RateLimitError',
       new RateLimitError('x', { retryAfter: null, unblockAt: null }),
     ],
-    ['NetworkError', new NetworkError('x')],
   ])('returns true for %s', (_name, error: unknown) => {
     expect(isAPIError(error)).toBe(true)
   })

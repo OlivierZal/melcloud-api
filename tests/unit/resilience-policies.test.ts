@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { RateLimitError } from '../../src/errors/index.ts'
 import {
   type ResiliencePolicy,
   AuthRetryPolicy,
   CompositePolicy,
-  RateLimitError,
   RateLimitGate,
   RateLimitPolicy,
   RetryGuard,

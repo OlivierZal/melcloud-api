@@ -21,7 +21,7 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 - Classic auth failure is NOT a 401: `/Login/ClientLogin3` answers HTTP 201
   with `{ LoginData: null }` on rejected credentials. `doAuthenticate`
   throws `AuthenticationError` on that shape; the 401 wrapping in
-  `toAuthFailure` exists for the Home API's OIDC/token-expiry flows. Never
+  `normalizeUnauthorized` exists for the Home API's OIDC/token-expiry flows. Never
   assume all auth failures surface as 401 `HttpError`.
 - Wire-format types mirror the MELCloud APIs verbatim (PascalCase fields,
   one-letter report keys); do not rename them to satisfy style rules.
