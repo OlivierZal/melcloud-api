@@ -110,7 +110,8 @@ if (!result.ok) {
       // re-authenticate before retrying
       break
     default:
-    // network / server / validation — log and skip
+      // network / server / validation — log and skip
+      break
   }
   return
 }
