@@ -35,7 +35,13 @@ export const classicAtaFlags: {
 >
 
 /**
- * `EffectiveFlags` bitfield values for ATW update payloads — one bit per updatable field.
+ * `EffectiveFlags` bitfield values for ATW update payloads — one bit per
+ * updatable field, except the four flow-temperature setpoints, which
+ * share a single wire bit (verified against the live wire): MELCloud
+ * acknowledges any of them with the same flag, and the tank setpoint's
+ * flag carries that bit too. A bitwise membership test therefore
+ * matches the whole group together — harmless, since the patched
+ * values all come from the same response.
  */
 export const classicAtwFlags: {
   readonly ForcedHotWaterMode: 0x1_00_00
