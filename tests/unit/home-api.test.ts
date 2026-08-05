@@ -281,9 +281,7 @@ const setupSuccessfulLogin = (): void => {
     .mockResolvedValueOnce(
       mockFetchResponse(
         '',
-        {
-          location: 'https://auth.melcloudhome.com/ExternalLogin/Callback',
-        },
+        { location: 'https://auth.melcloudhome.com/ExternalLogin/Callback' },
         302,
       ),
     )
@@ -372,10 +370,7 @@ describe('melcloud home API', () => {
 
     it('exposes the configured locale and timezone for chart rendering', async () => {
       setupSuccessfulLogin()
-      const api = await createApi({
-        locale: 'fr-FR',
-        timezone: 'Europe/Paris',
-      })
+      const api = await createApi({ locale: 'fr-FR', timezone: 'Europe/Paris' })
 
       expect(api.locale).toBe('fr-FR')
       expect(api.timezone).toBe('Europe/Paris')
@@ -495,10 +490,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       setupSuccessfulLogin()
-      await api.authenticate({
-        password: 'new-pass',
-        username: 'new@test.com',
-      })
+      await api.authenticate({ password: 'new-pass', username: 'new@test.com' })
 
       expect(api.isAuthenticated()).toBe(true)
     })
@@ -744,10 +736,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      await api.updateValues('device-1', {
-        operationMode: 'Heat',
-        power: true,
-      })
+      await api.updateValues('device-1', { operationMode: 'Heat', power: true })
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -916,9 +905,7 @@ describe('melcloud home API', () => {
 
       expect(result).toStrictEqual({ ok: true, value: mockErrorLog })
       expect(mockRequest).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          url: '/monitor/ataunit/device-1/errorlog',
-        }),
+        expect.objectContaining({ url: '/monitor/ataunit/device-1/errorlog' }),
       )
     })
 
@@ -1101,10 +1088,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      await api.updateValues('atw-1', {
-        power: false,
-        setTemperatureZone1: 20,
-      })
+      await api.updateValues('atw-1', { power: false, setTemperatureZone1: 20 })
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1158,9 +1142,7 @@ describe('melcloud home API', () => {
       api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
 
       await expect(
-        api.updateValues('atw-1', {
-          operationModeZone1: cast('HeatCurve'),
-        }),
+        api.updateValues('atw-1', { operationModeZone1: cast('HeatCurve') }),
       ).rejects.toThrow('Unknown ATW zone mode: HeatCurve')
     })
 
@@ -1171,10 +1153,7 @@ describe('melcloud home API', () => {
       mockRequest
         .mockResolvedValueOnce(mockResponse('', {}, 200))
         .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
-      await api.updateValues('atw-1', {
-        operationModeZone2: null,
-        power: true,
-      })
+      await api.updateValues('atw-1', { operationModeZone2: null, power: true })
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1247,9 +1226,7 @@ describe('melcloud home API', () => {
       await api.getErrorLog('atw-1')
 
       expect(mockRequest).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          url: '/monitor/atwunit/atw-1/errorlog',
-        }),
+        expect.objectContaining({ url: '/monitor/atwunit/atw-1/errorlog' }),
       )
     })
 
@@ -1289,9 +1266,7 @@ describe('melcloud home API', () => {
       })
 
       expect(mockRequest).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          url: '/report/v1/internaltemperatures',
-        }),
+        expect.objectContaining({ url: '/report/v1/internaltemperatures' }),
       )
     })
 
@@ -2328,10 +2303,7 @@ describe('melcloud home API', () => {
 
       // Now explicitly authenticate → clears old tokens first
       setupSuccessfulLogin()
-      await api.authenticate({
-        password: 'new-pass',
-        username: 'new@test.com',
-      })
+      await api.authenticate({ password: 'new-pass', username: 'new@test.com' })
 
       const tokenCalls = setSpy.mock.calls.filter(
         ([key]) => key === 'accessToken',

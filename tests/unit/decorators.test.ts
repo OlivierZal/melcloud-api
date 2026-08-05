@@ -29,10 +29,7 @@ const createMockFacade = (
 ): {
   devices: { type: ClassicDeviceType; update: ReturnType<typeof vi.fn> }[]
   id: number
-} => ({
-  devices,
-  id,
-})
+} => ({ devices, id })
 
 const decorateUpdateDevices = (
   target: (...args: unknown[]) => Promise<void>,
@@ -49,11 +46,7 @@ const ataFlags = {
   VaneVertical: 0x10,
 }
 
-const ervFlags = {
-  Power: 0x1,
-  SetFanSpeed: 0x8,
-  VentilationMode: 0x4,
-}
+const ervFlags = { Power: 0x1, SetFanSpeed: 0x8, VentilationMode: 0x4 }
 
 const createAtaSetData = (
   overrides: Partial<ClassicSetDeviceDataAta> = {},
@@ -155,11 +148,7 @@ const setupFetchDevices = (
 
 describe(fetchDevices, () => {
   it.each([
-    {
-      first: 'fetch' as const,
-      label: 'default (before)',
-      options: undefined,
-    },
+    { first: 'fetch' as const, label: 'default (before)', options: undefined },
     {
       first: 'fetch' as const,
       label: 'when=before',

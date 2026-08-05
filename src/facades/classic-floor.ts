@@ -21,9 +21,7 @@ export class ClassicFloorFacade extends BaseZoneFacade<ClassicFloor> {
 
   protected readonly tableName = 'ClassicFloor'
 
-  protected get model(): {
-    getById: (id: number) => ClassicFloor | undefined
-  } {
+  protected get model(): { getById: (id: number) => ClassicFloor | undefined } {
     return this.registry.floors
   }
 }

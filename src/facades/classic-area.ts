@@ -21,9 +21,7 @@ export class ClassicAreaFacade extends BaseZoneFacade<ClassicArea> {
 
   protected readonly tableName = 'ClassicArea'
 
-  protected get model(): {
-    getById: (id: number) => ClassicArea | undefined
-  } {
+  protected get model(): { getById: (id: number) => ClassicArea | undefined } {
     return this.registry.areas
   }
 }

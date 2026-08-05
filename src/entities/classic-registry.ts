@@ -78,12 +78,7 @@ const syncDeviceModel = (
 const createDeviceModel = (device: ClassicListDeviceAny): ClassicDeviceAny =>
   new ClassicDevice(device)
 
-const level = {
-  building: 0,
-  child: 1,
-  grandchild: 2,
-  great_grandchild: 3,
-}
+const level = { building: 0, child: 1, grandchild: 2, great_grandchild: 3 }
 
 const stampDevices = function* (
   devices: readonly ClassicDeviceZone[],

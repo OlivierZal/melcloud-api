@@ -216,11 +216,7 @@ describe('baseAPI shared request pipeline', () => {
   beforeEach(() => {
     vi.useFakeTimers()
     mockTemporalNowInstant()
-    mockRequest.mockResolvedValue({
-      data: {},
-      headers: {},
-      status: 200,
-    })
+    mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
     api = new TestAPI()
   })
 
@@ -431,16 +427,9 @@ describe('baseAPI shared request pipeline', () => {
     it('emits onRequestStart and onRequestComplete pair', async () => {
       const onRequestStart = vi.fn<(event: RequestStartEvent) => void>()
       const onRequestComplete = vi.fn<(event: RequestCompleteEvent) => void>()
-      const events: LifecycleEvents = {
-        onRequestComplete,
-        onRequestStart,
-      }
+      const events: LifecycleEvents = { onRequestComplete, onRequestStart }
       api = new TestAPI({ events })
-      mockRequest.mockResolvedValue({
-        data: {},
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
 
       await api.callRequest('get', '/data')
 
@@ -533,36 +522,22 @@ describe('baseAPI shared request pipeline', () => {
   describe('dispatch with non-object headers', () => {
     it('handles non-object headers value gracefully', async () => {
       api.getAuthHeadersMock.mockReturnValue({ 'X-Auth': 'tok' })
-      mockRequest.mockResolvedValue({
-        data: {},
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
 
       // Pass a non-object headers value (e.g. a string) to cover the
       // non-object branch of dispatch's headers merge
-      await api.callDispatch('get', '/data', {
-        headers: cast('not-an-object'),
-      })
+      await api.callDispatch('get', '/data', { headers: cast('not-an-object') })
 
       expect(mockRequest).toHaveBeenCalledWith(
-        expect.objectContaining({
-          headers: { 'X-Auth': 'tok' },
-        }),
+        expect.objectContaining({ headers: { 'X-Auth': 'tok' } }),
       )
     })
 
     it('merges object headers with auth headers', async () => {
       api.getAuthHeadersMock.mockReturnValue({ 'X-Auth': 'tok' })
-      mockRequest.mockResolvedValue({
-        data: {},
-        headers: {},
-        status: 200,
-      })
+      mockRequest.mockResolvedValue({ data: {}, headers: {}, status: 200 })
 
-      await api.callDispatch('get', '/data', {
-        headers: { 'X-Custom': 'val' },
-      })
+      await api.callDispatch('get', '/data', { headers: { 'X-Custom': 'val' } })
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1302,11 +1277,7 @@ describe('logOut', () => {
 
   it('deletes the keys outright when the host delegates unset', () => {
     const { settingManager, unsetSpy } = createSettingStore(
-      {
-        loginBackoffUntil: '123',
-        password: 'p',
-        username: 'u',
-      },
+      { loginBackoffUntil: '123', password: 'p', username: 'u' },
       { hasUnset: true },
     )
     const api = new TestAPI({ settingManager })

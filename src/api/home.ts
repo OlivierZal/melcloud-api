@@ -337,9 +337,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   public async updateOverheatProtection(
     postData: HomeOverheatProtectionPostData,
   ): Promise<void> {
-    await this.requestData('post', OVERHEAT_PROTECTION_PATH, {
-      data: postData,
-    })
+    await this.requestData('post', OVERHEAT_PROTECTION_PATH, { data: postData })
   }
 
   /**
@@ -550,9 +548,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }: LoginCredentials): Promise<void> {
     const request = {
       credentials: { password, username },
-      ...(this.abortSignal !== undefined && {
-        abortSignal: this.abortSignal,
-      }),
+      ...(this.abortSignal !== undefined && { abortSignal: this.abortSignal }),
     }
     try {
       await this.#exchangeAndStoreTokens(request)

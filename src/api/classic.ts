@@ -546,9 +546,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }: {
     postData: ClassicHolidayModePostData
   }): Promise<ClassicFailureData | ClassicSuccessData> {
-    return this.requestData('post', '/HolidayMode/Update', {
-      data: postData,
-    })
+    return this.requestData('post', '/HolidayMode/Update', { data: postData })
   }
 
   /**

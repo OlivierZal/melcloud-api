@@ -344,9 +344,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public async getEnergy(
     query?: ReportQuery,
   ): Promise<Result<ClassicEnergyData<T>>> {
-    return this.api.getEnergy<T>({
-      postData: this.#buildReportPostData(query),
-    })
+    return this.api.getEnergy<T>({ postData: this.#buildReportPostData(query) })
   }
 
   public async getEnergyReport(

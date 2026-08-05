@@ -47,10 +47,7 @@ export const ok = <T>(value: T): Success<T> => ({ ok: true, value })
  * @returns A `{ ok: false, error }` failure outcome.
  * @category Types
  */
-export const err = (error: ApiRequestError): Failure => ({
-  error,
-  ok: false,
-})
+export const err = (error: ApiRequestError): Failure => ({ error, ok: false })
 
 /**
  * Transform the success branch of a {@link Result} while passing the

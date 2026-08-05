@@ -229,9 +229,7 @@ describe('home device ata facade group', () => {
     const [model] = ataModels(api)
     const facade = new HomeDeviceAtaFacade(api, mock(model))
 
-    await facade.updateGroupState({
-      OperationMode: ClassicOperationMode.cool,
-    })
+    await facade.updateGroupState({ OperationMode: ClassicOperationMode.cool })
 
     expect(api.updateValues).toHaveBeenCalledWith('device-1', {
       operationMode: 'Cool',

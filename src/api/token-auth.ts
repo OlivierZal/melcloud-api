@@ -31,10 +31,7 @@ const REDIRECT_STATUS_MAX = 400
  * Options for {@link authRequest}.
  */
 interface AuthRequestOptions {
-  config: {
-    headers: Record<string, string>
-    data?: string
-  }
+  config: { headers: Record<string, string>; data?: string }
   jar: CookieJar
   method: string
   url: string

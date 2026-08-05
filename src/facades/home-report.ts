@@ -122,11 +122,7 @@ const mergeChunkDatasets = (
   }
   return pointsById
     .entries()
-    .map(([id, points]) => ({
-      data: points.values().toArray(),
-      id,
-      label: id,
-    }))
+    .map(([id, points]) => ({ data: points.values().toArray(), id, label: id }))
     .toArray()
 }
 

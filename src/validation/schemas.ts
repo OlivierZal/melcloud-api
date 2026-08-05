@@ -32,10 +32,7 @@ export const ClassicLoginDataSchema: z.ZodType<ClassicLoginData> =
   z.looseObject({
     ErrorId: z.number().nullable().optional(),
     LoginData: z
-      .looseObject({
-        ContextKey: z.string(),
-        Expiry: z.string(),
-      })
+      .looseObject({ ContextKey: z.string(), Expiry: z.string() })
       .nullable(),
     LoginMinutes: z.number().nullable().optional(),
   })
@@ -44,9 +41,7 @@ export const ClassicLoginDataSchema: z.ZodType<ClassicLoginData> =
  * Home OIDC /connect/par response.
  */
 export const HomeParResponseSchema: z.ZodType<{ request_uri: string }> =
-  z.looseObject({
-    request_uri: z.string().min(1),
-  })
+  z.looseObject({ request_uri: z.string().min(1) })
 
 /**
  * Home OIDC /connect/token response.

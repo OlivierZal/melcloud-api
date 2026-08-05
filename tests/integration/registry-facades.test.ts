@@ -265,10 +265,7 @@ describe('registry + facade manager integration', () => {
     await facade.updatePower(false)
 
     expect(api.updatePower).toHaveBeenCalledWith({
-      postData: {
-        DeviceIds: [1001, 1002, 1003],
-        Power: false,
-      },
+      postData: { DeviceIds: [1001, 1002, 1003], Power: false },
     })
   })
 
