@@ -9,10 +9,8 @@ import {
   ClassicOperationModeZone,
 } from '../../src/constants.ts'
 import { ClassicRegistry } from '../../src/entities/index.ts'
-import {
-  ClassicDeviceAtwFacade,
-  ClassicDeviceAtwHasZone2Facade,
-} from '../../src/facades/index.ts'
+import { ClassicDeviceAtwHasZone2Facade } from '../../src/facades/classic-device-atw-dual-zone.ts'
+import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
 import {
   assertClassicDeviceType,
   classicAtwDevice,

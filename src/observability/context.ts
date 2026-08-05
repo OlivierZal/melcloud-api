@@ -84,7 +84,7 @@ const redactValue = (value: unknown): unknown => {
   return Object.fromEntries(
     Object.entries(value).map(([key, property]) => [
       key,
-      isSensitive(key) ? REDACTED : property,
+      isSensitive(key) ? REDACTED : redactValue(property),
     ]),
   )
 }

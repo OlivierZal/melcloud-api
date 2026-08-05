@@ -30,6 +30,7 @@ import {
   type LoginCredentials,
   type Result,
   err,
+  ok,
 } from '../types/index.ts'
 import {
   HomeContextSchema,
@@ -388,14 +389,14 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       measure?: 'consumed' | 'produced'
     },
   ): Promise<Result<HomeEnergyData>> {
-    const model = this.#registry.getById(id)
-    if (model === undefined) {
-      return err({ entityId: id, kind: 'not-found' })
+    const model = this.#modelResultFor(id)
+    if (!model.ok) {
+      return model
     }
     const { measure, ...window } = params
     return this.#fetchEnergy(id, {
       ...window,
-      measure: model.isAta()
+      measure: model.value.isAta()
         ? 'cumulative_energy_consumed_since_last_upload'
         : ATW_ENERGY_MEASURE[measure ?? 'consumed'],
     })
@@ -410,12 +411,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @returns Success with the entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(id: string): Promise<Result<HomeErrorLogEntry[]>> {
-    const model = this.#registry.getById(id)
-    if (model === undefined) {
-      return err({ entityId: id, kind: 'not-found' })
+    const model = this.#modelResultFor(id)
+    if (!model.ok) {
+      return model
     }
     return this.#fetchErrorLog(
-      model.isAta() ? ATA_UNIT_PATH : ATW_UNIT_PATH,
+      model.value.isAta() ? ATA_UNIT_PATH : ATW_UNIT_PATH,
       id,
     )
   }
@@ -460,12 +461,14 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     id: string,
     params: { from: string; period: string; to: string },
   ): Promise<Result<HomeReportData[]>> {
-    const model = this.#registry.getById(id)
-    if (model === undefined) {
-      return err({ entityId: id, kind: 'not-found' })
+    const model = this.#modelResultFor(id)
+    if (!model.ok) {
+      return model
     }
     return this.#fetchReport(
-      model.isAta() ? '/report/v1/trendsummary' : '/report/v1/comfort-graph',
+      model.value.isAta()
+        ? '/report/v1/trendsummary'
+        : '/report/v1/comfort-graph',
       id,
       params,
     )
@@ -812,6 +815,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       throw new EntityNotFoundError('Device', { entityId: id })
     }
     return model
+  }
+
+  // Non-throwing twin of `#modelFor` for the Result-returning read
+  // paths: an unknown id folds into the `not-found` variant.
+  #modelResultFor(id: string): Result<HomeDevice> {
+    const model = this.#registry.getById(id)
+    return model === undefined
+      ? err({ entityId: id, kind: 'not-found' })
+      : ok(model)
   }
 
   /**

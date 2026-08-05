@@ -16,19 +16,19 @@ const roomOperationModeZones: ReadonlySet<ClassicOperationModeZone> = new Set([
   ClassicOperationModeZone.room,
   ClassicOperationModeZone.room_cool,
 ])
-const operationModeZoneByValue: ReadonlyMap<number, ClassicOperationModeZone> =
-  new Map(
-    Object.values(ClassicOperationModeZone).map((value) => [value, value]),
-  )
+const operationModeZoneValues: ReadonlySet<number> = new Set(
+  Object.values(ClassicOperationModeZone),
+)
+
+const isOperationModeZone = (
+  value: number,
+): value is ClassicOperationModeZone => operationModeZoneValues.has(value)
 
 const toOperationModeZone = (value: number): ClassicOperationModeZone => {
-  const mode = operationModeZoneByValue.get(value)
-
-  if (mode === undefined) {
+  if (!isOperationModeZone(value)) {
     throw new Error(`Invalid ClassicOperationModeZone: ${String(value)}`)
   }
-
-  return mode
+  return value
 }
 
 /**

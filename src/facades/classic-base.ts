@@ -306,23 +306,9 @@ export abstract class ClassicBaseFacade<
   public async getSignalStrength(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    if (hour !== undefined) {
-      return this.#fetchSignalHour(hour)
-    }
-    // No hour: the whole of today, hour by hour — the wire only speaks
-    // one-hour windows; the not-yet-elapsed hours pad blank so the axis
-    // spans the whole day.
-    const currentHour = this.currentHour()
-    const hourly = await Promise.all(
-      hoursUpTo(currentHour).map(async (hourOfDay) =>
-        this.#fetchSignalHour(hourOfDay),
-      ),
-    )
-    return mapResult(mergeHourlyChartResults(hourly), (options) =>
-      padHourlyChartToMidnight(options, {
-        afterHour: currentHour,
-        locale: this.api.locale,
-      }),
+    return this.fetchHourlyDayChart(
+      async (hourOfDay) => this.#fetchSignalHour(hourOfDay),
+      hour,
     )
   }
 
@@ -376,6 +362,36 @@ export abstract class ClassicBaseFacade<
       HourSchema,
       Temporal.Now.plainTimeISO(this.api.timezone).hour,
       'currentHour',
+    )
+  }
+
+  /**
+   * Hour-by-hour fan-out shared by the hourly report defaults
+   * ({@link getSignalStrength} and the device facades'
+   * `getHourlyTemperatures`): a given hour fetches that single window;
+   * no hour walks the whole of today — the wire only speaks one-hour
+   * windows — and the not-yet-elapsed hours pad blank so the axis
+   * spans the whole day.
+   * @param fetchHour - Fetches one one-hour window.
+   * @param hour - Optional single hour to fetch.
+   * @returns Merged chart options for the requested window(s).
+   */
+  protected async fetchHourlyDayChart(
+    fetchHour: (hour: Hour) => Promise<Result<ReportChartLineOptions>>,
+    hour?: Hour,
+  ): Promise<Result<ReportChartLineOptions>> {
+    if (hour !== undefined) {
+      return fetchHour(hour)
+    }
+    const currentHour = this.currentHour()
+    const hourly = await Promise.all(
+      hoursUpTo(currentHour).map(async (hourOfDay) => fetchHour(hourOfDay)),
+    )
+    return mapResult(mergeHourlyChartResults(hourly), (options) =>
+      padHourlyChartToMidnight(options, {
+        afterHour: currentHour,
+        locale: this.api.locale,
+      }),
     )
   }
 

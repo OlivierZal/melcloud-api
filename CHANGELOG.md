@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Breaking:** the published facade type names `ClassicBuildingFacade`, `ClassicDeviceAtaFacade`, `ClassicDeviceAtwFacade` and `ClassicDeviceAtwHasZone2Facade` now resolve to the interfaces the SDK actually returns (from `ClassicFacadeManager.get` and the `isClassic*Facade` guards), not the implementation classes — annotating a narrowed facade with a published name now typechecks. The classes are no longer published; facades are obtained through the manager.
+- `toHomeEnergyOptions` sources take an optional `scale` (defaults to `1` for measures already in kWh).
+
+### Removed
+
+- **Breaking:** `NetworkError` — the `Result` `network` variant carries transport failures (#1677).
+- **Breaking:** `ClassicDevice.isAta()`/`.isAtw()`/`.isErv()` — narrow with `isClassicDeviceOfType(device, type)` or query `registry.getDevicesByType(type)`; the predicates had no remaining callers.
+
+### Added
+
+- `/home` barrel: the missing `DeviceFacadeAny`, `isAtaFacade`/`isAtwFacade` guards, `FrostProtectionPostData`, `HolidayModePostData`, `OverheatProtectionPostData`, `ProtectionUnits`, `ReportAnnotation`, `ReportTrigger`, and the dialect-neutral `fetchDevices`/`syncDevices` decorators.
+- `/classic` barrel: the missing `BaseListDevice`, `BuildingOwner`, `DevicePermissions` and `QuantizedCoordinates` types.
+
+### Fixed
+
+- Log redaction now recurses into nested objects: a sensitive key one level down (`{ body: { password } }`) was logged verbatim, while the same payload nested in an array was redacted.
+- The retry backoff detaches its abort listener once a wait completes: a long-lived `abortSignal` (the documented Homey shutdown-signal use) no longer accumulates one listener per retried request.
+
 ## [45.1.0] - 2026-07-29
 
 ### Fixed
@@ -437,6 +459,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[unreleased]: https://github.com/OlivierZal/melcloud-api/compare/45.1.0...HEAD
 [45.1.0]: https://github.com/OlivierZal/melcloud-api/compare/45.0.2...45.1.0
 [45.0.2]: https://github.com/OlivierZal/melcloud-api/compare/45.0.1...45.0.2
 [45.0.1]: https://github.com/OlivierZal/melcloud-api/compare/45.0.0...45.0.1

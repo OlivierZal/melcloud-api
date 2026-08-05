@@ -112,20 +112,28 @@ const toAbortReason = (signal: AbortSignal): Error =>
 // `node:timers/promises.setTimeout`, which already accepts `{ signal }`)
 // so `vi.useFakeTimers()` keeps mocking the wait — the promises-based
 // timer isn't part of the default fake-timers surface in vitest v4.
+// The abort listener is detached once the wait settles: the signal is
+// typically long-lived (a Homey shutdown signal outliving every retry),
+// so a listener left behind per sleep would accumulate for its lifetime.
 const sleep = async (ms: number, signal?: AbortSignal): Promise<void> => {
-  if (signal?.aborted === true) {
+  if (signal === undefined) {
+    return new Promise<void>((resolve) => {
+      setTimeout(resolve, ms)
+    })
+  }
+  if (signal.aborted) {
     throw toAbortReason(signal)
   }
   return new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(resolve, ms)
-    signal?.addEventListener(
-      'abort',
-      () => {
-        clearTimeout(timer)
-        reject(toAbortReason(signal))
-      },
-      { once: true },
-    )
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+    const onAbort = (): void => {
+      clearTimeout(timer)
+      reject(toAbortReason(signal))
+    }
+    signal.addEventListener('abort', onAbort, { once: true })
   })
 }
 

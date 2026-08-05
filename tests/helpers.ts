@@ -135,21 +135,9 @@ export const mockResponse = (
   status: number
 } => ({ data, headers, status })
 
-// The Response constructor rejects a non-null body on the "null body"
-// statuses defined in the Fetch spec. Listed explicitly so mocked
-// fetches can model those responses without hitting the guard.
-const HTTP_SWITCHING_PROTOCOLS = 101
-const HTTP_EARLY_HINTS = 103
+// The Response constructor rejects a non-null body on the Fetch spec's
+// "null body" statuses; 204 is the only one the suite produces.
 const HTTP_NO_CONTENT = 204
-const HTTP_RESET_CONTENT = 205
-const HTTP_NOT_MODIFIED = 304
-const NULL_BODY_STATUSES: ReadonlySet<number> = new Set([
-  HTTP_EARLY_HINTS,
-  HTTP_NO_CONTENT,
-  HTTP_NOT_MODIFIED,
-  HTTP_RESET_CONTENT,
-  HTTP_SWITCHING_PROTOCOLS,
-])
 
 const buildMockHeaders = (
   headers: Record<string, string | string[]>,
@@ -199,10 +187,10 @@ export const mockFetchResponse = (
   ) {
     responseHeaders.set('content-type', 'application/json')
   }
-  return new Response(
-    NULL_BODY_STATUSES.has(status) ? null : serializeBody(body),
-    { headers: responseHeaders, status },
-  )
+  return new Response(status === HTTP_NO_CONTENT ? null : serializeBody(body), {
+    headers: responseHeaders,
+    status,
+  })
 }
 
 export const createHttpError = ({

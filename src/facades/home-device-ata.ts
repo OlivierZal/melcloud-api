@@ -11,7 +11,7 @@ import {
   isClassicFanSpeed,
   isHomeFanSpeed,
 } from '../enum-mappings.ts'
-import { NoChangesError } from '../errors/index.ts'
+import { NoChangesError, tolerateNoChanges } from '../errors/index.ts'
 import {
   type ClassicGroupState,
   type HomeAtaDeviceCapabilities,
@@ -25,11 +25,7 @@ import {
 } from '../types/index.ts'
 import { clampToRange, omitUndefined } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
-import {
-  toClassicAtaGroupState,
-  toHomeAtaValues,
-  tolerateNoChanges,
-} from './home-ata-group.ts'
+import { toClassicAtaGroupState, toHomeAtaValues } from './home-ata-group.ts'
 import {
   HomeBaseDeviceFacade,
   toHomeProtectionState,

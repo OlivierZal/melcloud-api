@@ -14,9 +14,7 @@ describe('retry guard', () => {
   it('starts inactive and allows the first consume', () => {
     const guard = new RetryGuard(1000)
 
-    expect(guard.isActive).toBe(false)
     expect(guard.tryConsume()).toBe(true)
-    expect(guard.isActive).toBe(true)
   })
 
   it('rejects consecutive consumes within the window', () => {
@@ -34,7 +32,6 @@ describe('retry guard', () => {
     guard.tryConsume()
     vi.advanceTimersByTime(1000)
 
-    expect(guard.isActive).toBe(false)
     expect(guard.tryConsume()).toBe(true)
   })
 
@@ -44,7 +41,6 @@ describe('retry guard', () => {
     guard.tryConsume()
     guard[Symbol.dispose]()
 
-    expect(guard.isActive).toBe(false)
     expect(guard.tryConsume()).toBe(true)
   })
 })

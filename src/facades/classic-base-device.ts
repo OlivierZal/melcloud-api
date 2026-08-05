@@ -36,12 +36,9 @@ import {
   fromListToSetAta,
   getChartLineOptions,
   getChartPieOptions,
-  hoursUpTo,
   isSetDeviceDataAtaInList,
   isUpdateDeviceData,
-  mergeHourlyChartResults,
   now,
-  padHourlyChartToMidnight,
   typedFromEntries,
   typedKeys,
   withMinuteClockLabels,
@@ -385,23 +382,9 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public async getHourlyTemperatures(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    if (hour !== undefined) {
-      return this.#fetchTemperaturesHour(hour)
-    }
-    // No hour: the whole of today, hour by hour — the wire only speaks
-    // one-hour windows; the not-yet-elapsed hours pad blank so the axis
-    // spans the whole day.
-    const currentHour = this.currentHour()
-    const hourly = await Promise.all(
-      hoursUpTo(currentHour).map(async (hourOfDay) =>
-        this.#fetchTemperaturesHour(hourOfDay),
-      ),
-    )
-    return mapResult(mergeHourlyChartResults(hourly), (options) =>
-      padHourlyChartToMidnight(options, {
-        afterHour: currentHour,
-        locale: this.api.locale,
-      }),
+    return this.fetchHourlyDayChart(
+      async (hourOfDay) => this.#fetchTemperaturesHour(hourOfDay),
+      hour,
     )
   }
 

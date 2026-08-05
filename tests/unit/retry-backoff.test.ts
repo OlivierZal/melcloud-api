@@ -1,3 +1,5 @@
+import { getEventListeners } from 'node:events'
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HttpError } from '../../src/http/index.ts'
@@ -291,6 +293,28 @@ describe(withRetryBackoff, () => {
     ).rejects.toThrow('pre-cancelled')
     // First attempt ran, sleep refused to start, no second attempt.
     expect(op).toHaveBeenCalledTimes(1)
+  })
+
+  it('detaches the abort listener once the backoff sleep completes', async () => {
+    const controller = new AbortController()
+    const op = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValue('ok')
+
+    const promise = withRetryBackoff(op, {
+      initialDelayMs: 1000,
+      isRetryable: ALWAYS_RETRYABLE,
+      jitterRatio: 0,
+      maxDelayMs: 1000,
+      maxRetries: 3,
+      signal: controller.signal,
+    })
+    await vi.advanceTimersByTimeAsync(1000)
+
+    await expect(promise).resolves.toBe('ok')
+    // A long-lived signal must not accumulate one listener per retry.
+    expect(getEventListeners(controller.signal, 'abort')).toHaveLength(0)
   })
 
   it('passes the error and attempt number to onRetry', async () => {
