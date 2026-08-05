@@ -31,14 +31,17 @@ const config = {
   hostedBaseUrl: 'https://olivierzal.github.io/melcloud-api/',
   includeVersion: true,
   intentionallyNotExported: [
-    // Internal infrastructure leaked through public type signatures
-    // (also tagged `@internal` in source).
+    // Type-level machinery behind published aliases — consumers name
+    // the alias (`ClassicModel`, the branded ids, the per-type data
+    // aliases), never the helper; the id brand stays unnameable so ids
+    // cannot be minted outside the SDK.
     'BaseModel',
     'Brand',
     'DeviceDataMapping',
+    // Parameters of SDK-internal wiring (facade construction, registry
+    // sync, the update decorator) that consumers never call; tagged
+    // `@internal` in source.
     'HomeAtaFacadeResolver',
-    'HttpErrorRequestConfig',
-    'TransportConfig',
     'TypedHomeDeviceData',
     'UpdatePatchKind',
   ],

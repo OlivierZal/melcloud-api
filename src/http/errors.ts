@@ -1,6 +1,6 @@
 /**
  * Snapshot of the request that triggered an {@link HttpError}.
- * @internal
+ * @category HTTP
  */
 export interface HttpErrorRequestConfig {
   readonly data?: unknown

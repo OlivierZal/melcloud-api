@@ -24,6 +24,7 @@ export type {
   RequestStartEvent,
   SettingManager,
   SyncCallback,
+  TransportConfig,
 } from './types.ts'
 
 export { BaseAPI } from './base.ts'
