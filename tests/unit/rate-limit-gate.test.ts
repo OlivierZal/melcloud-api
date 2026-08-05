@@ -35,7 +35,8 @@ describe(RateLimitGate, () => {
     gate.recordRateLimit()
 
     expect(gate.isPaused).toBe(true)
-    // Use Luxon's millisecond conversion, accounting for slight drift.
+    // Temporal duration totals, with a margin for the tick between
+    // recording and reading.
     expect(gate.snapshot().remaining?.total({ unit: 'hours' })).toBeGreaterThan(
       1.9,
     )
