@@ -132,9 +132,7 @@ export abstract class ClassicBaseFacade<
 
   protected abstract readonly holidayModeLocation: keyof ClassicHolidayModeLocation
 
-  protected abstract readonly model: {
-    getById: (id: number) => T | undefined
-  }
+  protected abstract readonly model: { getById: (id: number) => T | undefined }
 
   protected abstract readonly tableName: ClassicSettingsParams['tableName']
 
@@ -469,9 +467,6 @@ export abstract class ClassicBaseFacade<
   }
 
   async #getZoneHolidayMode(): Promise<Result<ClassicHolidayModeData>> {
-    return this.#getBaseHolidayMode({
-      id: this.id,
-      tableName: this.tableName,
-    })
+    return this.#getBaseHolidayMode({ id: this.id, tableName: this.tableName })
   }
 }

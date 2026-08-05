@@ -140,16 +140,18 @@ describe('api lifecycle', () => {
     // Captures building → floor → area → device hierarchy shape
     // without being brittle on device-data fields.
     expect(
-      api.registry.getBuildings().map(({ floors, name }) => ({
-        floors: floors.map(({ areas, name: floorName }) => ({
-          areas: areas.map(({ devices, name: areaName }) => ({
-            devices: devices.map(({ name: deviceName }) => deviceName),
-            name: areaName,
+      api.registry
+        .getBuildings()
+        .map(({ floors, name }) => ({
+          floors: floors.map(({ areas, name: floorName }) => ({
+            areas: areas.map(({ devices, name: areaName }) => ({
+              devices: devices.map(({ name: deviceName }) => deviceName),
+              name: areaName,
+            })),
+            name: floorName,
           })),
-          name: floorName,
+          name,
         })),
-        name,
-      })),
     ).toMatchInlineSnapshot(`
       [
         {
@@ -202,10 +204,7 @@ describe('api lifecycle', () => {
       if (config.url === '/Login/ClientLogin3') {
         return {
           data: {
-            LoginData: {
-              ContextKey: 'ctx-123',
-              Expiry: '2099-12-31T00:00:00',
-            },
+            LoginData: { ContextKey: 'ctx-123', Expiry: '2099-12-31T00:00:00' },
           },
           headers: {},
           status: 200,
@@ -229,10 +228,7 @@ describe('api lifecycle', () => {
       if (config.url === '/Login/ClientLogin3') {
         return {
           data: {
-            LoginData: {
-              ContextKey: 'ctx-abc',
-              Expiry: '2099-12-31T00:00:00',
-            },
+            LoginData: { ContextKey: 'ctx-abc', Expiry: '2099-12-31T00:00:00' },
           },
           headers: {},
           status: 200,

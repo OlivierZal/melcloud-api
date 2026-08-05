@@ -192,27 +192,29 @@ const atwSetValuesResponse = (
   overrides: Record<string, unknown> = {},
 ): Partial<ClassicAPIAdapter> => ({
   updateValues: cast(
-    vi.fn<ClassicAPIAdapter['updateValues']>().mockResolvedValue(
-      mock<ClassicSetDeviceDataAtw>({
-        DeviceType: ClassicDeviceType.Atw,
-        EffectiveFlags: 0x1,
-        ForcedHotWaterMode: false,
-        LastCommunication: '',
-        NextCommunication: '',
-        Offline: false,
-        OperationModeZone1: 0,
-        OperationModeZone2: 0,
-        Power: true,
-        SetCoolFlowTemperatureZone1: 20,
-        SetCoolFlowTemperatureZone2: 20,
-        SetHeatFlowTemperatureZone1: 40,
-        SetHeatFlowTemperatureZone2: 40,
-        SetTankWaterTemperature: 50,
-        SetTemperatureZone1: 22,
-        SetTemperatureZone2: 22,
-        ...overrides,
-      }),
-    ),
+    vi
+      .fn<ClassicAPIAdapter['updateValues']>()
+      .mockResolvedValue(
+        mock<ClassicSetDeviceDataAtw>({
+          DeviceType: ClassicDeviceType.Atw,
+          EffectiveFlags: 0x1,
+          ForcedHotWaterMode: false,
+          LastCommunication: '',
+          NextCommunication: '',
+          Offline: false,
+          OperationModeZone1: 0,
+          OperationModeZone2: 0,
+          Power: true,
+          SetCoolFlowTemperatureZone1: 20,
+          SetCoolFlowTemperatureZone2: 20,
+          SetHeatFlowTemperatureZone1: 40,
+          SetHeatFlowTemperatureZone2: 40,
+          SetTankWaterTemperature: 50,
+          SetTemperatureZone1: 22,
+          SetTemperatureZone2: 22,
+          ...overrides,
+        }),
+      ),
   ),
 })
 
@@ -367,11 +369,7 @@ describe('building facade frost protection', () => {
   it('sets frost protection', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
-    await facade.updateFrostProtection({
-      isEnabled: true,
-      max: 14,
-      min: 6,
-    })
+    await facade.updateFrostProtection({ isEnabled: true, max: 14, min: 6 })
 
     expect(api.updateFrostProtection).toHaveBeenCalledWith(expect.any(Object))
   })
@@ -404,11 +402,7 @@ describe('building facade frost protection', () => {
   it('clamps frost protection temperatures', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
-    await facade.updateFrostProtection({
-      isEnabled: true,
-      max: 2,
-      min: 1,
-    })
+    await facade.updateFrostProtection({ isEnabled: true, max: 2, min: 1 })
     const call = vi.mocked(api.updateFrostProtection).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
@@ -422,11 +416,7 @@ describe('building facade frost protection', () => {
   it('enforces minimum gap between min and max temperatures', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
-    await facade.updateFrostProtection({
-      isEnabled: true,
-      max: 15,
-      min: 14,
-    })
+    await facade.updateFrostProtection({ isEnabled: true, max: 15, min: 14 })
     const call = vi.mocked(api.updateFrostProtection).mock.lastCall?.[0]
 
     expect(call).toBeDefined()
@@ -875,27 +865,29 @@ describe('ata device facade', () => {
 
   it('builds the ATA energy report with per-mode series in kWh', async () => {
     const { api, facade } = createAtaFacade({
-      getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
-        ok(
-          mock<ClassicEnergyDataAta>({
-            Auto: [0, 0],
-            Cooling: [0.5, 1],
-            Dry: [0, 0],
-            Fan: [0, 0],
-            Heating: [0, 0],
-            Labels: [0, 1],
-            LabelType: 4,
-            Other: [0, 0],
-            TotalAutoConsumed: 0,
-            TotalCoolingConsumed: 1.5,
-            TotalDryConsumed: 0,
-            TotalFanConsumed: 0,
-            TotalHeatingConsumed: 0,
-            TotalOtherConsumed: 0,
-            UsageDisclaimerPercentages: '100',
-          }),
+      getEnergy: vi
+        .fn<ClassicAPIAdapter['getEnergy']>()
+        .mockResolvedValue(
+          ok(
+            mock<ClassicEnergyDataAta>({
+              Auto: [0, 0],
+              Cooling: [0.5, 1],
+              Dry: [0, 0],
+              Fan: [0, 0],
+              Heating: [0, 0],
+              Labels: [0, 1],
+              LabelType: 4,
+              Other: [0, 0],
+              TotalAutoConsumed: 0,
+              TotalCoolingConsumed: 1.5,
+              TotalDryConsumed: 0,
+              TotalFanConsumed: 0,
+              TotalHeatingConsumed: 0,
+              TotalOtherConsumed: 0,
+              UsageDisclaimerPercentages: '100',
+            }),
+          ),
         ),
-      ),
       locale: 'en-US',
     })
 
@@ -921,27 +913,29 @@ describe('ata device facade', () => {
 
   it('rebuilds multi-day energy labels as dates', async () => {
     const { facade } = createAtaFacade({
-      getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
-        ok(
-          mock<ClassicEnergyDataAta>({
-            Auto: [0, 0, 0, 0, 0, 0, 0],
-            Cooling: [1, 1, 1, 1, 1, 1, 1],
-            Dry: [0, 0, 0, 0, 0, 0, 0],
-            Fan: [0, 0, 0, 0, 0, 0, 0],
-            Heating: [0, 0, 0, 0, 0, 0, 0],
-            Labels: [1, 2, 3, 4, 5, 6, 0],
-            LabelType: 4,
-            Other: [0, 0, 0, 0, 0, 0, 0],
-            TotalAutoConsumed: 0,
-            TotalCoolingConsumed: 7,
-            TotalDryConsumed: 0,
-            TotalFanConsumed: 0,
-            TotalHeatingConsumed: 0,
-            TotalOtherConsumed: 0,
-            UsageDisclaimerPercentages: '100',
-          }),
+      getEnergy: vi
+        .fn<ClassicAPIAdapter['getEnergy']>()
+        .mockResolvedValue(
+          ok(
+            mock<ClassicEnergyDataAta>({
+              Auto: [0, 0, 0, 0, 0, 0, 0],
+              Cooling: [1, 1, 1, 1, 1, 1, 1],
+              Dry: [0, 0, 0, 0, 0, 0, 0],
+              Fan: [0, 0, 0, 0, 0, 0, 0],
+              Heating: [0, 0, 0, 0, 0, 0, 0],
+              Labels: [1, 2, 3, 4, 5, 6, 0],
+              LabelType: 4,
+              Other: [0, 0, 0, 0, 0, 0, 0],
+              TotalAutoConsumed: 0,
+              TotalCoolingConsumed: 7,
+              TotalDryConsumed: 0,
+              TotalFanConsumed: 0,
+              TotalHeatingConsumed: 0,
+              TotalOtherConsumed: 0,
+              UsageDisclaimerPercentages: '100',
+            }),
+          ),
         ),
-      ),
       locale: 'fr-FR',
     })
 
@@ -964,31 +958,30 @@ describe('ata device facade', () => {
   })
 
   it('lowers Z-suffixed report bounds to wall-clock in the display timezone', async () => {
-    const getEnergy = vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
-      ok(
-        mock<ClassicEnergyDataAta>({
-          Auto: [0, 0],
-          Cooling: [0.5, 1],
-          Dry: [0, 0],
-          Fan: [0, 0],
-          Heating: [0, 0],
-          Labels: [0, 1],
-          LabelType: 0,
-          Other: [0, 0],
-          TotalAutoConsumed: 0,
-          TotalCoolingConsumed: 1.5,
-          TotalDryConsumed: 0,
-          TotalFanConsumed: 0,
-          TotalHeatingConsumed: 0,
-          TotalOtherConsumed: 0,
-          UsageDisclaimerPercentages: '100',
-        }),
-      ),
-    )
-    const { facade } = createAtaFacade({
-      getEnergy,
-      timezone: 'Europe/Paris',
-    })
+    const getEnergy = vi
+      .fn<ClassicAPIAdapter['getEnergy']>()
+      .mockResolvedValue(
+        ok(
+          mock<ClassicEnergyDataAta>({
+            Auto: [0, 0],
+            Cooling: [0.5, 1],
+            Dry: [0, 0],
+            Fan: [0, 0],
+            Heating: [0, 0],
+            Labels: [0, 1],
+            LabelType: 0,
+            Other: [0, 0],
+            TotalAutoConsumed: 0,
+            TotalCoolingConsumed: 1.5,
+            TotalDryConsumed: 0,
+            TotalFanConsumed: 0,
+            TotalHeatingConsumed: 0,
+            TotalOtherConsumed: 0,
+            UsageDisclaimerPercentages: '100',
+          }),
+        ),
+      )
+    const { facade } = createAtaFacade({ getEnergy, timezone: 'Europe/Paris' })
 
     // `new Date().toISOString()` output must not crash the Temporal
     // Plain parsing — the instants lower to Paris wall-clock instead.
@@ -1008,27 +1001,29 @@ describe('ata device facade', () => {
 
   it('formats a one-day energy report with clock labels', async () => {
     const { facade } = createAtaFacade({
-      getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
-        ok(
-          mock<ClassicEnergyDataAta>({
-            Auto: [0, 0],
-            Cooling: [0.2, 0.3],
-            Dry: [0, 0],
-            Fan: [0, 0],
-            Heating: [0, 0],
-            Labels: [9, 10],
-            LabelType: 0,
-            Other: [0, 0],
-            TotalAutoConsumed: 0,
-            TotalCoolingConsumed: 0.5,
-            TotalDryConsumed: 0,
-            TotalFanConsumed: 0,
-            TotalHeatingConsumed: 0,
-            TotalOtherConsumed: 0,
-            UsageDisclaimerPercentages: '100',
-          }),
+      getEnergy: vi
+        .fn<ClassicAPIAdapter['getEnergy']>()
+        .mockResolvedValue(
+          ok(
+            mock<ClassicEnergyDataAta>({
+              Auto: [0, 0],
+              Cooling: [0.2, 0.3],
+              Dry: [0, 0],
+              Fan: [0, 0],
+              Heating: [0, 0],
+              Labels: [9, 10],
+              LabelType: 0,
+              Other: [0, 0],
+              TotalAutoConsumed: 0,
+              TotalCoolingConsumed: 0.5,
+              TotalDryConsumed: 0,
+              TotalFanConsumed: 0,
+              TotalHeatingConsumed: 0,
+              TotalOtherConsumed: 0,
+              UsageDisclaimerPercentages: '100',
+            }),
+          ),
         ),
-      ),
       locale: 'fr-FR',
     })
 
@@ -1315,27 +1310,29 @@ describe('atw device facade', () => {
   it('builds the ATW energy report with consumed and produced series', async () => {
     // Pin the label locale: the runner's default is not ours.
     const { facade } = createAtwFacade({
-      getEnergy: vi.fn<ClassicAPIAdapter['getEnergy']>().mockResolvedValue(
-        ok(
-          mock<ClassicEnergyDataAtw>({
-            Cooling: [0, 0],
-            CoP: [2.5, null],
-            Heating: [5.1, 4.9],
-            HotWater: [2.5, 2.6],
-            Labels: [12, 13],
-            LabelType: 1,
-            ProducedCooling: [0, 0],
-            ProducedHeating: [15.2, 14.8],
-            ProducedHotWater: [6.1, 6.2],
-            TotalCoolingConsumed: 0,
-            TotalCoolingProduced: 0,
-            TotalHeatingConsumed: 10,
-            TotalHeatingProduced: 30,
-            TotalHotWaterConsumed: 5.1,
-            TotalHotWaterProduced: 12.3,
-          }),
+      getEnergy: vi
+        .fn<ClassicAPIAdapter['getEnergy']>()
+        .mockResolvedValue(
+          ok(
+            mock<ClassicEnergyDataAtw>({
+              Cooling: [0, 0],
+              CoP: [2.5, null],
+              Heating: [5.1, 4.9],
+              HotWater: [2.5, 2.6],
+              Labels: [12, 13],
+              LabelType: 1,
+              ProducedCooling: [0, 0],
+              ProducedHeating: [15.2, 14.8],
+              ProducedHotWater: [6.1, 6.2],
+              TotalCoolingConsumed: 0,
+              TotalCoolingProduced: 0,
+              TotalHeatingConsumed: 10,
+              TotalHeatingProduced: 30,
+              TotalHotWaterConsumed: 5.1,
+              TotalHotWaterProduced: 12.3,
+            }),
+          ),
         ),
-      ),
       locale: 'fr-FR',
     })
 
@@ -1396,9 +1393,7 @@ describe('atw device facade', () => {
         SetTemperatureZone2: 10,
       }),
     )
-    await facade.updateValues({
-      SetTemperatureZone1: cast(null),
-    })
+    await facade.updateValues({ SetTemperatureZone1: cast(null) })
     const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
 
     expect(call).toBeDefined()

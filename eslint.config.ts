@@ -101,34 +101,22 @@ const config: Config[] = defineConfig([
         warnOnUnsupportedTypeScriptVersion: false,
       },
     },
-    plugins: {
-      '@stylistic': stylistic,
-      perfectionist,
-    },
+    plugins: { '@stylistic': stylistic, perfectionist },
     rules: {
       '@stylistic/multiline-comment-style': [
         'error',
         'separate-lines',
-        {
-          checkExclamation: true,
-        },
+        { checkExclamation: true },
       ],
       '@stylistic/quotes': [
         'error',
         'single',
-        {
-          allowTemplateLiterals: 'never',
-          avoidEscape: true,
-        },
+        { allowTemplateLiterals: 'never', avoidEscape: true },
       ],
       '@stylistic/spaced-comment': [
         'error',
         'always',
-        {
-          block: {
-            balanced: true,
-          },
-        },
+        { block: { balanced: true } },
       ],
       '@typescript-eslint/class-methods-use-this': 'error',
       '@typescript-eslint/consistent-type-assertions': [
@@ -141,15 +129,11 @@ const config: Config[] = defineConfig([
       ],
       '@typescript-eslint/consistent-type-exports': [
         'error',
-        {
-          fixMixedExportsWithInlineTypeSpecifier: true,
-        },
+        { fixMixedExportsWithInlineTypeSpecifier: true },
       ],
       '@typescript-eslint/consistent-type-imports': [
         'error',
-        {
-          fixStyle: 'inline-type-imports',
-        },
+        { fixStyle: 'inline-type-imports' },
       ],
       '@typescript-eslint/default-param-last': 'error',
       '@typescript-eslint/explicit-function-return-type': 'error',
@@ -173,11 +157,7 @@ const config: Config[] = defineConfig([
           selector: 'variable',
         },
         // Destructured — we don't control external shapes (API responses, libs).
-        {
-          format: null,
-          modifiers: ['destructured'],
-          selector: 'variable',
-        },
+        { format: null, modifiers: ['destructured'], selector: 'variable' },
         // ── Booleans (variables, parameters, class properties) ──
         // Semantic prefixes make intent obvious at the call site.
         // `device` is excluded: its type includes `false` as a sentinel but it is not a boolean flag.
@@ -248,29 +228,14 @@ const config: Config[] = defineConfig([
           selector: 'classProperty',
         },
         // ── Imports ──────────────────────────────────────────
-        {
-          format: ['camelCase', 'PascalCase'],
-          selector: 'import',
-        },
+        { format: ['camelCase', 'PascalCase'], selector: 'import' },
         // ── Types, interfaces, classes, enums ────────────────
-        {
-          format: ['PascalCase'],
-          selector: 'typeLike',
-        },
+        { format: ['PascalCase'], selector: 'typeLike' },
         // ── Type parameters (generics) ───────────────────────
         // T-prefix: T, TKey, TValue, TResult — universal TS convention.
-        {
-          format: ['PascalCase'],
-          prefix: ['T'],
-          selector: 'typeParameter',
-        },
+        { format: ['PascalCase'], prefix: ['T'], selector: 'typeParameter' },
       ],
-      '@typescript-eslint/no-base-to-string': [
-        'error',
-        {
-          checkUnknown: true,
-        },
-      ],
+      '@typescript-eslint/no-base-to-string': ['error', { checkUnknown: true }],
       '@typescript-eslint/no-floating-promises': [
         'error',
         {
@@ -303,47 +268,30 @@ const config: Config[] = defineConfig([
       ],
       '@typescript-eslint/no-unnecessary-condition': [
         'error',
-        {
-          checkTypePredicates: true,
-        },
+        { checkTypePredicates: true },
       ],
       '@typescript-eslint/no-unnecessary-type-assertion': [
         'error',
-        {
-          checkLiteralConstAssertions: true,
-        },
+        { checkLiteralConstAssertions: true },
       ],
       '@typescript-eslint/no-unsafe-type-assertion': 'error',
       '@typescript-eslint/no-unused-private-class-members': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
-        {
-          enableAutofixRemoval: {
-            imports: true,
-          },
-        },
+        { enableAutofixRemoval: { imports: true } },
       ],
       '@typescript-eslint/no-useless-empty-export': 'error',
       '@typescript-eslint/only-throw-error': [
         'error',
-        {
-          allowThrowingAny: false,
-          allowThrowingUnknown: false,
-        },
+        { allowThrowingAny: false, allowThrowingUnknown: false },
       ],
       // Assignment and renamed-property enforcement breeds unreadable
       // destructuring.
       '@typescript-eslint/prefer-destructuring': [
         'error',
         {
-          AssignmentExpression: {
-            array: false,
-            object: false,
-          },
-          VariableDeclarator: {
-            array: true,
-            object: true,
-          },
+          AssignmentExpression: { array: false, object: false },
+          VariableDeclarator: { array: true, object: true },
         },
         {
           enforceForDeclarationWithTypeAnnotation: true,
@@ -369,11 +317,7 @@ const config: Config[] = defineConfig([
       '@typescript-eslint/return-await': ['error', 'in-try-catch'],
       '@typescript-eslint/strict-boolean-expressions': [
         'error',
-        {
-          allowNullableObject: false,
-          allowNumber: false,
-          allowString: false,
-        },
+        { allowNullableObject: false, allowNumber: false, allowString: false },
       ],
       '@typescript-eslint/strict-void-return': 'error',
       '@typescript-eslint/switch-exhaustiveness-check': [
@@ -385,20 +329,10 @@ const config: Config[] = defineConfig([
         },
       ],
       'accessor-pairs': 'error',
-      'array-callback-return': [
-        'error',
-        {
-          checkForEach: true,
-        },
-      ],
+      'array-callback-return': ['error', { checkForEach: true }],
       'arrow-body-style': 'error',
       // Measured codebase ceiling.
-      complexity: [
-        'error',
-        {
-          max: 10,
-        },
-      ],
+      complexity: ['error', { max: 10 }],
       curly: 'error',
       'default-case-last': 'error',
       eqeqeq: 'error',
@@ -410,24 +344,12 @@ const config: Config[] = defineConfig([
       'import-x/no-absolute-path': 'error',
       'import-x/no-anonymous-default-export': [
         'error',
-        {
-          allowCallExpression: false,
-        },
+        { allowCallExpression: false },
       ],
       'import-x/no-cycle': 'error',
       'import-x/no-default-export': 'error',
-      'import-x/no-duplicates': [
-        'error',
-        {
-          'prefer-inline': true,
-        },
-      ],
-      'import-x/no-dynamic-require': [
-        'error',
-        {
-          esmodule: true,
-        },
-      ],
+      'import-x/no-duplicates': ['error', { 'prefer-inline': true }],
+      'import-x/no-dynamic-require': ['error', { esmodule: true }],
       'import-x/no-empty-named-blocks': 'error',
       'import-x/no-extraneous-dependencies': [
         'error',
@@ -448,12 +370,7 @@ const config: Config[] = defineConfig([
       'import-x/no-relative-packages': 'error',
       'import-x/no-self-import': 'error',
       'import-x/no-unassigned-import': 'error',
-      'import-x/no-unresolved': [
-        'error',
-        {
-          caseSensitiveStrict: true,
-        },
-      ],
+      'import-x/no-unresolved': ['error', { caseSensitiveStrict: true }],
       'import-x/no-unused-modules': [
         'error',
         {
@@ -467,12 +384,7 @@ const config: Config[] = defineConfig([
       'import-x/unambiguous': 'error',
       'max-classes-per-file': 'error',
       // Measured codebase ceiling.
-      'max-depth': [
-        'error',
-        {
-          max: 3,
-        },
-      ],
+      'max-depth': ['error', { max: 3 }],
       'max-lines-per-function': 'error',
       'max-statements': 'error',
       'no-await-in-loop': 'error',
@@ -483,26 +395,11 @@ const config: Config[] = defineConfig([
       'no-eval': 'error',
       'no-extend-native': 'error',
       'no-extra-bind': 'error',
-      'no-extra-boolean-cast': [
-        'error',
-        {
-          enforceForInnerExpressions: true,
-        },
-      ],
-      'no-fallthrough': [
-        'error',
-        {
-          reportUnusedFallthroughComment: true,
-        },
-      ],
+      'no-extra-boolean-cast': ['error', { enforceForInnerExpressions: true }],
+      'no-fallthrough': ['error', { reportUnusedFallthroughComment: true }],
       'no-implicit-coercion': 'error',
       'no-inline-comments': 'error',
-      'no-irregular-whitespace': [
-        'error',
-        {
-          skipStrings: false,
-        },
-      ],
+      'no-irregular-whitespace': ['error', { skipStrings: false }],
       'no-labels': 'error',
       'no-lone-blocks': 'error',
       'no-lonely-if': 'error',
@@ -527,12 +424,7 @@ const config: Config[] = defineConfig([
       ],
       'no-return-assign': ['error', 'always'],
       'no-self-compare': 'error',
-      'no-sequences': [
-        'error',
-        {
-          allowInParentheses: false,
-        },
-      ],
+      'no-sequences': ['error', { allowInParentheses: false }],
       'no-template-curly-in-string': 'error',
       'no-unmodified-loop-condition': 'error',
       'no-unneeded-ternary': 'error',
@@ -636,24 +528,16 @@ const config: Config[] = defineConfig([
             // Side-effect imports carry no specifiers, so only the bare
             // selectors can match them.
             'side-effect',
-            {
-              newlinesBetween: 1,
-            },
+            { newlinesBetween: 1 },
             'side-effect-style',
             ...buildImportGroup('style'),
-            {
-              newlinesBetween: 1,
-            },
+            { newlinesBetween: 1 },
             ...buildImportGroup('builtin'),
-            {
-              newlinesBetween: 1,
-            },
+            { newlinesBetween: 1 },
             ...buildImportGroup('external'),
             ...buildImportGroup('subpath'),
             ...buildImportGroup('internal'),
-            {
-              newlinesBetween: 1,
-            },
+            { newlinesBetween: 1 },
             ...buildImportGroup('parent'),
             ...buildImportGroup('sibling'),
             ...buildImportGroup('index'),
@@ -689,23 +573,16 @@ const config: Config[] = defineConfig([
       ],
       'perfectionist/sort-named-exports': [
         'error',
-        {
-          groups: ['type-export', 'value-export'],
-        },
+        { groups: ['type-export', 'value-export'] },
       ],
       'perfectionist/sort-named-imports': [
         'error',
-        {
-          groups: ['type-import', 'value-import'],
-        },
+        { groups: ['type-import', 'value-import'] },
       ],
       'perfectionist/sort-object-types': ['error', typeLikeSortOptions],
       'perfectionist/sort-objects': [
         'error',
-        {
-          groups: ['property', 'method'],
-          partitionByComputedKey: true,
-        },
+        { groups: ['property', 'method'], partitionByComputedKey: true },
       ],
       'perfectionist/sort-sets': 'error',
       'perfectionist/sort-switch-case': 'error',
@@ -716,20 +593,10 @@ const config: Config[] = defineConfig([
       'prefer-numeric-literals': 'error',
       'prefer-object-has-own': 'error',
       'prefer-object-spread': 'error',
-      'prefer-regex-literals': [
-        'error',
-        {
-          disallowRedundantWrapping: true,
-        },
-      ],
+      'prefer-regex-literals': ['error', { disallowRedundantWrapping: true }],
       'prefer-template': 'error',
       'require-atomic-updates': 'error',
-      'require-unicode-regexp': [
-        'error',
-        {
-          requireFlag: 'v',
-        },
-      ],
+      'require-unicode-regexp': ['error', { requireFlag: 'v' }],
       'symbol-description': 'error',
       'unicode-bom': 'error',
       // Config-driven comment vocabulary with no invariant to encode.
@@ -742,9 +609,7 @@ const config: Config[] = defineConfig([
       'unicorn/consistent-destructuring': 'error',
       'unicorn/consistent-function-style': [
         'error',
-        {
-          default: 'arrow-function',
-        },
+        { default: 'arrow-function' },
       ],
       'unicorn/custom-error-definition': 'error',
       // Owned by `@typescript-eslint/naming-convention`.
@@ -790,20 +655,10 @@ const config: Config[] = defineConfig([
       'unicorn/prefer-iterator-concat': 'off',
       // Stricter than the v72 default: varying-base member accesses stay
       // reported so the shared shape is factored out.
-      'unicorn/prefer-minimal-ternary': [
-        'error',
-        {
-          checkVaryingBase: true,
-        },
-      ],
+      'unicorn/prefer-minimal-ternary': ['error', { checkVaryingBase: true }],
       // Stricter than the v72 default (see
       // `prefer-global-number-constants` above).
-      'unicorn/prefer-number-properties': [
-        'error',
-        {
-          checkNaN: true,
-        },
-      ],
+      'unicorn/prefer-number-properties': ['error', { checkNaN: true }],
       // Requires Node.js 24 (`RegExp.escape`).
       'unicorn/prefer-regexp-escape': 'off',
       'unicorn/prefer-short-arrow-method': 'error',
@@ -815,18 +670,8 @@ const config: Config[] = defineConfig([
       // Config-driven string vocabulary with no invariant to encode.
       'unicorn/string-content': 'off',
       'unicorn/try-complexity': 'error',
-      'use-isnan': [
-        'error',
-        {
-          enforceForIndexOf: true,
-        },
-      ],
-      'valid-typeof': [
-        'error',
-        {
-          requireStringLiterals: true,
-        },
-      ],
+      'use-isnan': ['error', { enforceForIndexOf: true }],
+      'valid-typeof': ['error', { requireStringLiterals: true }],
       yoda: 'error',
     },
     settings: {
@@ -851,12 +696,7 @@ const config: Config[] = defineConfig([
     rules: {
       // Config loaders (eslint, vitest, prettier) consume default exports.
       'import-x/no-default-export': 'off',
-      'import-x/prefer-default-export': [
-        'error',
-        {
-          target: 'any',
-        },
-      ],
+      'import-x/prefer-default-export': ['error', { target: 'any' }],
     },
   },
   {
@@ -868,10 +708,7 @@ const config: Config[] = defineConfig([
       'json/sort-keys': [
         'error',
         'asc',
-        {
-          caseSensitive: true,
-          natural: true,
-        },
+        { caseSensitive: true, natural: true },
       ],
       'json/top-level-interop': 'error',
     },
@@ -880,9 +717,7 @@ const config: Config[] = defineConfig([
     extends: [markdown.configs.recommended],
     files: ['**/*.md'],
     language: 'markdown/gfm',
-    plugins: {
-      unicorn,
-    },
+    plugins: { unicorn },
     rules: {
       'markdown/fenced-code-meta': 'error',
       'markdown/no-bare-urls': 'error',
@@ -890,9 +725,7 @@ const config: Config[] = defineConfig([
       'markdown/no-html': 'error',
       'markdown/no-missing-atx-heading-space': [
         'error',
-        {
-          checkClosedHeadings: true,
-        },
+        { checkClosedHeadings: true },
       ],
       'markdown/no-missing-label-refs': [
         'error',
@@ -902,23 +735,10 @@ const config: Config[] = defineConfig([
       ],
       'markdown/no-missing-link-fragments': [
         'error',
-        {
-          allowPattern: '',
-          ignoreCase: false,
-        },
+        { allowPattern: '', ignoreCase: false },
       ],
-      'markdown/no-space-in-emphasis': [
-        'error',
-        {
-          checkStrikethrough: true,
-        },
-      ],
-      'markdown/table-column-count': [
-        'error',
-        {
-          checkMissingCells: true,
-        },
-      ],
+      'markdown/no-space-in-emphasis': ['error', { checkStrikethrough: true }],
+      'markdown/table-column-count': ['error', { checkMissingCells: true }],
       'unicorn/expiring-todo-comments': 'error',
       'unicorn/no-empty-file': 'error',
       'unicorn/no-missing-local-resource': 'error',
@@ -927,12 +747,7 @@ const config: Config[] = defineConfig([
   {
     files: ['CHANGELOG.md'],
     rules: {
-      'markdown/no-duplicate-headings': [
-        'error',
-        {
-          checkSiblingsOnly: true,
-        },
-      ],
+      'markdown/no-duplicate-headings': ['error', { checkSiblingsOnly: true }],
     },
   },
   {
@@ -944,9 +759,7 @@ const config: Config[] = defineConfig([
         'error',
         {
           argsIgnorePattern: '^_context$',
-          enableAutofixRemoval: {
-            imports: true,
-          },
+          enableAutofixRemoval: { imports: true },
         },
       ],
       // The replacement methods must be `function` expressions: the
@@ -961,9 +774,7 @@ const config: Config[] = defineConfig([
     // `ignoreNumericLiteralTypes` does not cover literal types nested
     // inside object type annotations (typescript-eslint rule limitation).
     files: ['src/facades/classic-flags.ts'],
-    rules: {
-      '@typescript-eslint/no-magic-numbers': 'off',
-    },
+    rules: { '@typescript-eslint/no-magic-numbers': 'off' },
   },
   {
     files: ['src/temporal.ts'],
@@ -984,10 +795,7 @@ const config: Config[] = defineConfig([
       // module import by design.
       '@typescript-eslint/no-shadow': [
         'error',
-        {
-          allow: ['expect', 'Intl', 'Temporal'],
-          builtinGlobals: true,
-        },
+        { allow: ['expect', 'Intl', 'Temporal'], builtinGlobals: true },
       ],
       // Owned by `vitest/unbound-method`, the mock-aware port.
       '@typescript-eslint/unbound-method': 'off',
@@ -996,37 +804,17 @@ const config: Config[] = defineConfig([
       'max-lines-per-function': 'off',
       'max-statements': 'off',
       // Mock builders nest factories.
-      'unicorn/max-nested-calls': [
-        'error',
-        {
-          max: 4,
-        },
-      ],
+      'unicorn/max-nested-calls': ['error', { max: 4 }],
       // Without options the rule is a no-op; the suite uses `.each` exclusively.
       'vitest/consistent-each-for': [
         'error',
-        {
-          describe: 'each',
-          it: 'each',
-          suite: 'each',
-          test: 'each',
-        },
+        { describe: 'each', it: 'each', suite: 'each', test: 'each' },
       ],
       'vitest/consistent-test-filename': 'error',
-      'vitest/consistent-test-it': [
-        'error',
-        {
-          fn: 'it',
-        },
-      ],
+      'vitest/consistent-test-it': ['error', { fn: 'it' }],
       'vitest/consistent-vitest-vi': 'error',
       'vitest/hoisted-apis-on-top': 'error',
-      'vitest/max-nested-describe': [
-        'error',
-        {
-          max: 3,
-        },
-      ],
+      'vitest/max-nested-describe': ['error', { max: 3 }],
       'vitest/no-alias-methods': 'error',
       'vitest/no-conditional-in-test': 'error',
       'vitest/no-conditional-tests': 'error',
@@ -1071,20 +859,14 @@ const config: Config[] = defineConfig([
       'vitest/require-awaited-expect-poll': 'error',
       'vitest/require-mock-type-parameters': [
         'error',
-        {
-          checkImportFunctions: true,
-        },
+        { checkImportFunctions: true },
       ],
       'vitest/require-to-throw-message': 'error',
       'vitest/require-top-level-describe': 'error',
       'vitest/unbound-method': 'error',
       'vitest/warn-todo': 'error',
     },
-    settings: {
-      vitest: {
-        typecheck: true,
-      },
-    },
+    settings: { vitest: { typecheck: true } },
   },
   {
     // Scoped: without `files`, this block applied to every file and
@@ -1092,12 +874,7 @@ const config: Config[] = defineConfig([
     extends: [ymlConfigs.standard, ymlConfigs.prettier],
     files: ['**/*.{yaml,yml}'],
     rules: {
-      'yml/file-extension': [
-        'error',
-        {
-          extension: 'yml',
-        },
-      ],
+      'yml/file-extension': ['error', { extension: 'yml' }],
       'yml/key-name-casing': [
         'error',
         {
@@ -1111,11 +888,7 @@ const config: Config[] = defineConfig([
       'yml/sort-keys': [
         'error',
         {
-          order: {
-            caseSensitive: true,
-            natural: true,
-            type: 'asc',
-          },
+          order: { caseSensitive: true, natural: true, type: 'asc' },
           pathPattern: String.raw`^(?!jobs\.\w+\.steps\[\d+\]).*$`,
         },
         {
@@ -1138,11 +911,7 @@ const config: Config[] = defineConfig([
       'yml/sort-sequence-values': [
         'error',
         {
-          order: {
-            caseSensitive: true,
-            natural: true,
-            type: 'asc',
-          },
+          order: { caseSensitive: true, natural: true, type: 'asc' },
           pathPattern: '^.*$',
         },
       ],

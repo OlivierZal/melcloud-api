@@ -89,10 +89,7 @@ export function mock(value: unknown = {}): unknown {
  */
 export const createMockHttpClient = (
   baseURL: string,
-): {
-  client: HttpClient
-  requestSpy: MockInstance<HttpClient['request']>
-} => {
+): { client: HttpClient; requestSpy: MockInstance<HttpClient['request']> } => {
   const client = new HttpClient({ baseURL, timeout: 30_000 })
   return { client, requestSpy: vi.spyOn(client, 'request') }
 }
@@ -136,11 +133,7 @@ export const mockResponse = (
   data: unknown
   headers: Record<string, string | string[]>
   status: number
-} => ({
-  data,
-  headers,
-  status,
-})
+} => ({ data, headers, status })
 
 // The Response constructor rejects a non-null body on the "null body"
 // statuses defined in the Fetch spec. Listed explicitly so mocked

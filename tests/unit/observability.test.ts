@@ -142,10 +142,8 @@ describe('api call response data', () => {
 
 const parseLog = (
   value: string,
-): {
-  headers: Record<string, unknown>
-  requestData: Record<string, unknown>
-} => cast(JSON.parse(value))
+): { headers: Record<string, unknown>; requestData: Record<string, unknown> } =>
+  cast(JSON.parse(value))
 
 describe('sensitive data redaction', () => {
   it('redacts credentials in request data', () => {
@@ -197,9 +195,7 @@ describe('sensitive data redaction', () => {
   })
 
   it('redacts Cookie header in request data', () => {
-    const config = createConfig({
-      headers: { Cookie: 'session=xyz' },
-    })
+    const config = createConfig({ headers: { Cookie: 'session=xyz' } })
     const call = new APICallRequestData(config)
     const { headers } = parseLog(call.toString())
 

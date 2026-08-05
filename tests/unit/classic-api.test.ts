@@ -449,10 +449,7 @@ describe('mELCloud Classic API', () => {
         await api.updateValues({
           postData: mock<
             ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>
-          >({
-            DeviceID: toClassicDeviceId(1),
-            EffectiveFlags: 1,
-          }),
+          >({ DeviceID: toClassicDeviceId(1), EffectiveFlags: 1 }),
           type,
         })
 
@@ -711,10 +708,7 @@ describe('mELCloud Classic API', () => {
       const api = await createApi({ password: 'pass', username: 'user' })
       mockRequest.mockResolvedValue(
         wrap([
-          errorEntry({
-            ErrorMessage: 'Mystery',
-            StartDate: 'not-a-real-date',
-          }),
+          errorEntry({ ErrorMessage: 'Mystery', StartDate: 'not-a-real-date' }),
         ]),
       )
       const result = await api.getErrorLog({}, [1])
@@ -836,9 +830,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          headers: matchObject({
-            'X-MitsContextKey': 'my-ctx',
-          }),
+          headers: matchObject({ 'X-MitsContextKey': 'my-ctx' }),
         }),
       )
     })
@@ -853,10 +845,7 @@ describe('mELCloud Classic API', () => {
 
       // Login goes through #dispatch which sends empty headers when contextKey is ''
       expect(mockRequest).toHaveBeenCalledWith(
-        expect.objectContaining({
-          headers: {},
-          url: '/Login/ClientLogin3',
-        }),
+        expect.objectContaining({ headers: {}, url: '/Login/ClientLogin3' }),
       )
     })
 
@@ -876,9 +865,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          headers: matchObject({
-            'X-MitsContextKey': 'newest',
-          }),
+          headers: matchObject({ 'X-MitsContextKey': 'newest' }),
           url: '/Device/Get',
         }),
       )
@@ -899,18 +886,13 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: matchObject({
-            Email: 'user',
-            Password: 'pass',
-          }),
+          data: matchObject({ Email: 'user', Password: 'pass' }),
           url: '/Login/ClientLogin3',
         }),
       )
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          headers: matchObject({
-            'X-MitsContextKey': 'fresh',
-          }),
+          headers: matchObject({ 'X-MitsContextKey': 'fresh' }),
           url: '/Device/Get',
         }),
       )
@@ -935,9 +917,7 @@ describe('mELCloud Classic API', () => {
       )
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          headers: matchObject({
-            'X-MitsContextKey': 'fresh',
-          }),
+          headers: matchObject({ 'X-MitsContextKey': 'fresh' }),
         }),
       )
     })
@@ -956,9 +936,7 @@ describe('mELCloud Classic API', () => {
 
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          headers: matchObject({
-            'X-MitsContextKey': 'valid',
-          }),
+          headers: matchObject({ 'X-MitsContextKey': 'valid' }),
         }),
       )
     })
@@ -1005,9 +983,7 @@ describe('mELCloud Classic API', () => {
         }
         return wrap({ value: 'retried' })
       })
-      const result = await api.getValues({
-        params: { buildingId: 1, id: 1 },
-      })
+      const result = await api.getValues({ params: { buildingId: 1, id: 1 } })
 
       expect(okValue(result)).toStrictEqual({ value: 'retried' })
     })
@@ -1032,9 +1008,7 @@ describe('mELCloud Classic API', () => {
         })
       })
 
-      const result = await api.getValues({
-        params: { buildingId: 1, id: 1 },
-      })
+      const result = await api.getValues({ params: { buildingId: 1, id: 1 } })
 
       expect(result.ok).toBe(false)
       expect(!result.ok && result.error.kind).toBe('unauthorized')
@@ -1051,9 +1025,7 @@ describe('mELCloud Classic API', () => {
       // An error with no response — e.g. network/TLS failure
       mockRequest.mockRejectedValueOnce(new Error('connect ECONNREFUSED'))
 
-      const result = await api.getValues({
-        params: { buildingId: 1, id: 1 },
-      })
+      const result = await api.getValues({ params: { buildingId: 1, id: 1 } })
 
       expect(result.ok).toBe(false)
       expect(!result.ok && result.error.kind).toBe('network')

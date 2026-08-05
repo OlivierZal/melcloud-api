@@ -37,11 +37,7 @@ const createAtwRegistry = (data: ClassicListDeviceDataAtw): ClassicRegistry => {
     classicBuildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
   ])
   registry.syncDevices([
-    classicAtwDevice({
-      AreaID: null,
-      Device: data,
-      FloorID: null,
-    }),
+    classicAtwDevice({ AreaID: null, Device: data, FloorID: null }),
   ])
   return registry
 }

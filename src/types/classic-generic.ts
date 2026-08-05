@@ -442,10 +442,7 @@ export interface ClassicLoginPostData {
  * Operation-mode breakdown returned by `Report/GetOperationModeLog2` — one `{Key,Value}` entry per mode.
  * @category Types
  */
-export type ClassicOperationModeLogData = {
-  Key: string
-  Value: number
-}[]
+export type ClassicOperationModeLogData = { Key: string; Value: number }[]
 
 /**
  * Approximate latitude/longitude bucket carried alongside `Latitude`/

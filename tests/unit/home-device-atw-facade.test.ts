@@ -247,11 +247,7 @@ describe('home device atw facade', () => {
         label: 'any other operation mode',
         settings: { OperationMode: 'Cooling' },
       },
-      {
-        expected: 'idle',
-        label: 'absent operation mode',
-        settings: {},
-      },
+      { expected: 'idle', label: 'absent operation mode', settings: {} },
     ])(
       'derives the hot-water operational state ($label)',
       ({ expected, settings }) => {
@@ -374,9 +370,7 @@ describe('home device atw facade', () => {
 
       await facade.updatePower(false)
 
-      expect(api.updateValues).toHaveBeenCalledWith('atw-1', {
-        power: false,
-      })
+      expect(api.updateValues).toHaveBeenCalledWith('atw-1', { power: false })
     })
   })
 

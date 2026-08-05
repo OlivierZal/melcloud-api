@@ -48,12 +48,8 @@ const getLabelFormatters = (
     return cached
   }
   const cache: LabelFormatterCache = {
-    dayOfWeek: new Intl.DateTimeFormat(locale, {
-      weekday: 'short',
-    }),
-    month: new Intl.DateTimeFormat(locale, {
-      month: 'short',
-    }),
+    dayOfWeek: new Intl.DateTimeFormat(locale, { weekday: 'short' }),
+    month: new Intl.DateTimeFormat(locale, { month: 'short' }),
   }
   formatterCacheByLocale.set(key, cache)
   return cache

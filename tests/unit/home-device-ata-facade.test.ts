@@ -164,10 +164,7 @@ describe('home device ata facade', () => {
     it('should read temperatures as numbers', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
-        createModel({
-          RoomTemperature: '21.5',
-          SetTemperature: '20',
-        }),
+        createModel({ RoomTemperature: '21.5', SetTemperature: '20' }),
       )
 
       expect(facade.roomTemperature).toBe(21.5)
@@ -272,9 +269,7 @@ describe('home device ata facade', () => {
 
       await facade.updatePower()
 
-      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
-        power: true,
-      })
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', { power: true })
     })
 
     it('powers off when passed false', async () => {
@@ -392,9 +387,7 @@ describe('home device ata facade', () => {
       )
       await facade.updateValues({ power: true })
 
-      expect(api.updateValues).toHaveBeenCalledWith('device-1', {
-        power: true,
-      })
+      expect(api.updateValues).toHaveBeenCalledWith('device-1', { power: true })
     })
 
     it('should pass through temperature for unknown operation mode', async () => {

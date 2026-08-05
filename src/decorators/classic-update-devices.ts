@@ -47,10 +47,7 @@ export const classicUpdateDevices =
   ({
     kind = 'payload',
     type,
-  }: {
-    kind?: UpdatePatchKind
-    type?: ClassicDeviceType
-  } = {}) =>
+  }: { kind?: UpdatePatchKind; type?: ClassicDeviceType } = {}) =>
   <TArgs extends readonly unknown[]>(
     target: (...args: TArgs) => Promise<void>,
     _context: ClassMethodDecoratorContext,

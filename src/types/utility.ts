@@ -8,9 +8,7 @@
  * @template T - Input shape whose optional properties admit `undefined`.
  * @category Types
  */
-export type Resolved<T> = {
-  [K in keyof T]-?: Exclude<T[K], undefined>
-}
+export type Resolved<T> = { [K in keyof T]-?: Exclude<T[K], undefined> }
 
 /**
  * Optional form of `T` whose properties may also be explicitly
@@ -21,6 +19,4 @@ export type Resolved<T> = {
  * @template T - Exact shape being widened into a tolerant input.
  * @category Types
  */
-export type UndefinedTolerant<T> = {
-  [K in keyof T]?: T[K] | undefined
-}
+export type UndefinedTolerant<T> = { [K in keyof T]?: T[K] | undefined }

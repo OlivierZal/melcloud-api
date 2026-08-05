@@ -411,23 +411,25 @@ export const createMockClassicApi = (
       .fn<ClassicAPIAdapter['updatePower']>()
       .mockResolvedValue(true),
     updateValues: cast(
-      vi.fn<ClassicAPIAdapter['updateValues']>().mockResolvedValue(
-        mock<ClassicSetDeviceDataAta>({
-          DeviceType: ClassicDeviceType.Ata,
-          EffectiveFlags: 0x1,
-          LastCommunication: '',
-          NextCommunication: '',
-          NumberOfFanSpeeds: 5,
-          Offline: false,
-          OperationMode: ClassicOperationMode.heat,
-          Power: true,
-          RoomTemperature: 22,
-          SetFanSpeed: 3,
-          SetTemperature: 24,
-          VaneHorizontal: 0,
-          VaneVertical: 0,
-        }),
-      ),
+      vi
+        .fn<ClassicAPIAdapter['updateValues']>()
+        .mockResolvedValue(
+          mock<ClassicSetDeviceDataAta>({
+            DeviceType: ClassicDeviceType.Ata,
+            EffectiveFlags: 0x1,
+            LastCommunication: '',
+            NextCommunication: '',
+            NumberOfFanSpeeds: 5,
+            Offline: false,
+            OperationMode: ClassicOperationMode.heat,
+            Power: true,
+            RoomTemperature: 22,
+            SetFanSpeed: 3,
+            SetTemperature: 24,
+            VaneHorizontal: 0,
+            VaneVertical: 0,
+          }),
+        ),
     ),
     ...overrides,
   })

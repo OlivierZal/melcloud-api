@@ -231,10 +231,7 @@ export class HttpClient {
         {
           config: {
             data: config.data,
-            headers: {
-              ...this.#defaultHeaders,
-              ...config.headers,
-            },
+            headers: { ...this.#defaultHeaders, ...config.headers },
             method: config.method ?? 'GET',
             params: config.params,
             url: config.url,
