@@ -310,9 +310,10 @@ export abstract class BaseAPI implements Disposable {
   /**
    * Subclass hook: clear every persisted session credential (tokens,
    * context keys, expiry — whatever the API persists). Ownership is
-   * deliberately narrow: the base {@link authenticate} template wipes
-   * before an explicit login, the reactive-401 path
-   * ({@link reauthenticate}) wipes after the server rejected the
+   * deliberately narrow: {@link doAuthenticate} wipes on a SUCCESSFUL
+   * explicit login just before storing the fresh artifacts (so a failed
+   * attempt leaves the previous session untouched), the reactive-401
+   * path ({@link reauthenticate}) wipes after the server rejected the
    * credential, and {@link logOut} wipes on an explicit sign-out.
    * Nothing else may clear — in particular the {@link tryReuseSession}
    * probe, where a transient failure is indistinguishable from a
