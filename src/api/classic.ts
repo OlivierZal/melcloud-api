@@ -649,8 +649,11 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
           )
         : new AuthenticationError('MELCloud Classic rejected the credentials')
     }
-    // Credentials are already persisted by `authenticate` before this
-    // hook runs; only the session artifacts are stored here.
+    // Wholesale session replacement (the `doAuthenticate` contract):
+    // wipe before storing so no artifact of a previous session
+    // survives; `authenticate` persists the accepted credentials after
+    // this hook returns.
+    this.clearPersistedSession()
     this.contextKey = loginData.ContextKey
     this.expiry = loginData.Expiry
   }

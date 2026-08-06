@@ -328,6 +328,14 @@ export abstract class BaseAPI implements Disposable {
    */
   protected abstract clearRegistry(): void
 
+  /**
+   * Subclass hook: one protocol-specific sign-in round-trip. On
+   * success it must replace the persisted session WHOLESALE — wipe via
+   * {@link clearPersistedSession} before storing the fresh artifacts —
+   * so nothing from a previous account (a context, a refresh token the
+   * response happens to omit) survives an accepted login. On failure
+   * it must leave every store untouched and throw.
+   */
   protected abstract doAuthenticate(
     credentials: LoginCredentials,
   ): Promise<void>
@@ -393,21 +401,26 @@ export abstract class BaseAPI implements Disposable {
    *
    * Use {@link resumeSession} for a best-effort restore from
    * persisted credentials that logs + swallows errors.
+   *
+   * Credentials are persisted only once the server accepts them: a
+   * rejected attempt leaves the stored pair and any live session
+   * untouched (the backoff still arms and the error still surfaces).
    * @param credentials - Explicit username/password.
    * @throws {@link AuthenticationError} when the server refuses the credentials.
    */
   public async authenticate(credentials: LoginCredentials): Promise<void> {
     const epoch = this.#logOutEpoch
-    this.applyCredentials(credentials.username, credentials.password)
-    // Explicit login starts from a clean slate — enforced here so no
-    // subclass can forget it (mirrors the post-auth sync below).
-    this.clearPersistedSession()
     try {
       await this.doAuthenticate(credentials)
     } catch (error) {
       this.#armLoginBackoff(error)
       throw error
     }
+    // Only a server-accepted pair reaches the settings store: writing
+    // it earlier would let a mistyped attempt overwrite working
+    // credentials. The session store needs no touch here — the
+    // `doAuthenticate` contract replaces it wholesale on success.
+    this.applyCredentials(credentials.username, credentials.password)
     await this.#finishLogin(epoch)
   }
 
@@ -423,11 +436,12 @@ export abstract class BaseAPI implements Disposable {
    * one registry sync, which exercises the persisted session without
    * touching it — and only if that still leaves us unauthenticated, the
    * best-effort {@link resumeSession} fallback. The order matters:
-   * `resumeSession` goes through {@link authenticate}, which wipes the
-   * persisted session before re-logging in, so probing with it first
-   * would sign out a user whose tokens were merely unexercised (a
-   * boot-time context fetch that lost the network reads unauthenticated
-   * while a perfectly valid refresh token sits in storage).
+   * `resumeSession` runs a full sign-in, which spends a real login
+   * attempt (server-side throttle counters, the local backoff on a
+   * rejection) and replaces a session that may have been merely
+   * unexercised (a boot-time context fetch that lost the network reads
+   * unauthenticated while a perfectly valid refresh token sits in
+   * storage).
    * @returns `true` when a session is usable afterwards.
    */
   public async ensureAuthenticated(): Promise<boolean> {

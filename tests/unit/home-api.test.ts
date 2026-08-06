@@ -471,7 +471,7 @@ describe('melcloud home API', () => {
       ).rejects.toThrow(AuthenticationError)
     })
 
-    it('should clear user state on re-authentication', async () => {
+    it('should keep the user state when a re-authentication attempt fails', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
 
@@ -483,7 +483,10 @@ describe('melcloud home API', () => {
         api.authenticate({ password: 'wrong', username: 'u@t.com' }),
       ).rejects.toThrow('network')
 
-      expect(api.user).toBeNull()
+      // Nothing is persisted or cleared before the server verdict, so
+      // a failed attempt leaves the live session and its context whole.
+      expect(api.user).not.toBeNull()
+      expect(api.isAuthenticated()).toBe(true)
     })
 
     it('should re-authenticate with new credentials', async () => {
@@ -535,6 +538,20 @@ describe('melcloud home API', () => {
   })
 
   describe('user retrieval', () => {
+    // The Home mirror of Classic's "no context key header for login
+    // path": an instance with no session at all dispatches bare.
+    it('should send no bearer header before any session exists', async () => {
+      const { settingManager } = createSettingStore({})
+      const api = await createFromPersistedStore(settingManager)
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+      await api.getUser()
+
+      expect(mockRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ headers: {}, url: '/context' }),
+      )
+    })
+
     it('should return the user on success', async () => {
       setupSuccessfulLogin()
       const api = await createApi()

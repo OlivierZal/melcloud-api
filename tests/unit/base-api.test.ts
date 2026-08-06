@@ -1183,9 +1183,9 @@ describe('ensureAuthenticated', () => {
 
     await expect(api.ensureAuthenticated()).resolves.toBe(true)
 
-    // The decisive assertion: authenticate() wipes the persisted session
-    // before logging in, so a session that is merely unexercised must be
-    // restored by the sync alone.
+    // The decisive assertion: a full sign-in spends a real login
+    // attempt and replaces the persisted session, so a session that is
+    // merely unexercised must be restored by the sync alone.
     expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
     expect(api.doAuthenticateMock).not.toHaveBeenCalled()
     expect(api.clearPersistedSessionMock).not.toHaveBeenCalled()
