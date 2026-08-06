@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { z } from 'zod'
 
 import { HttpError } from '../../src/http/index.ts'
 import {
@@ -6,7 +7,22 @@ import {
   APICallResponseData,
   createAPICallErrorData,
 } from '../../src/observability/index.ts'
-import { cast } from '../helpers.ts'
+import { defined } from '../helpers.ts'
+
+// `JSON.parse` returns `any`; the suite funnels every log line through
+// zod — the same boundary discipline the library applies to wire
+// payloads — so no parse site needs a cast.
+const jsonRecord = z.record(z.string(), z.unknown())
+
+const parseRecord = (value: string): Record<string, unknown> => {
+  const raw: unknown = JSON.parse(value)
+  return jsonRecord.parse(raw)
+}
+
+const parseRequestData = (value: string): string => {
+  const raw: unknown = JSON.parse(value)
+  return z.object({ requestData: z.string() }).parse(raw).requestData
+}
 
 interface TestRequestConfig {
   data?: unknown
@@ -68,7 +84,7 @@ describe('api call request data', () => {
     const data = new APICallRequestData(
       createConfig({ data: [{ password: 'secret', safe: 'ok' }] }),
     )
-    const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
+    const parsed = parseRecord(data.toString())
 
     expect(parsed.requestData).toStrictEqual([
       { password: '******', safe: 'ok' },
@@ -81,7 +97,7 @@ describe('api call request data', () => {
         data: { body: { nested: { password: 'secret' }, safe: 'ok' } },
       }),
     )
-    const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
+    const parsed = parseRecord(data.toString())
 
     expect(parsed.requestData).toStrictEqual({
       body: { nested: { password: '******' }, safe: 'ok' },
@@ -90,7 +106,7 @@ describe('api call request data', () => {
 
   it('serializes to JSON with logKeys', () => {
     const data = new APICallRequestData(createConfig())
-    const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
+    const parsed = parseRecord(data.toString())
 
     expect(parsed.dataType).toBe('API request')
     expect(parsed.method).toBe('POST')
@@ -142,7 +158,7 @@ describe('api call response data', () => {
 
   it('serializes to JSON with logKeys', () => {
     const data = new APICallResponseData(createResponse(), createConfig())
-    const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
+    const parsed = parseRecord(data.toString())
 
     expect(parsed.dataType).toBe('API response')
     expect(parsed.method).toBe('POST')
@@ -153,10 +169,18 @@ describe('api call response data', () => {
   })
 })
 
-const parseLog = (
-  value: string,
-): { headers: Record<string, unknown>; requestData: Record<string, unknown> } =>
-  cast(JSON.parse(value))
+// Request lines carry `requestData`, response lines `headers` — the
+// schema mirrors that division honestly and each site asserts the half
+// it reads is present.
+const logShape = z.object({
+  headers: jsonRecord.optional(),
+  requestData: jsonRecord.optional(),
+})
+
+const parseLog = (value: string): z.infer<typeof logShape> => {
+  const raw: unknown = JSON.parse(value)
+  return logShape.parse(raw)
+}
 
 describe('sensitive data redaction', () => {
   it('redacts credentials in request data', () => {
@@ -164,7 +188,7 @@ describe('sensitive data redaction', () => {
       data: { Email: 'user@example.com', Other: 'visible', Password: 's3cret' },
     })
     const call = new APICallRequestData(config)
-    const { requestData } = parseLog(call.toString())
+    const requestData = defined(parseLog(call.toString()).requestData)
 
     expect(requestData.Email).toBe('******')
     expect(requestData.Password).toBe('******')
@@ -179,7 +203,7 @@ describe('sensitive data redaction', () => {
       },
     })
     const call = new APICallRequestData(config)
-    const { headers } = parseLog(call.toString())
+    const headers = defined(parseLog(call.toString()).headers)
 
     expect(headers['X-MitsContextKey']).toBe('******')
     expect(headers['Content-Type']).toBe('application/json')
@@ -190,7 +214,7 @@ describe('sensitive data redaction', () => {
       headers: { 'set-cookie': ['session=abc123'], 'x-custom': 'visible' },
     })
     const call = new APICallResponseData(response)
-    const { headers } = parseLog(call.toString())
+    const headers = defined(parseLog(call.toString()).headers)
 
     expect(headers['set-cookie']).toBe('******')
     expect(headers['x-custom']).toBe('visible')
@@ -201,7 +225,7 @@ describe('sensitive data redaction', () => {
       data: { password: 'p@ss', username: 'admin' },
     })
     const call = new APICallRequestData(config)
-    const { requestData } = parseLog(call.toString())
+    const requestData = defined(parseLog(call.toString()).requestData)
 
     expect(requestData.password).toBe('******')
     expect(requestData.username).toBe('******')
@@ -210,7 +234,7 @@ describe('sensitive data redaction', () => {
   it('redacts Cookie header in request data', () => {
     const config = createConfig({ headers: { Cookie: 'session=xyz' } })
     const call = new APICallRequestData(config)
-    const { headers } = parseLog(call.toString())
+    const headers = defined(parseLog(call.toString()).headers)
 
     expect(headers.Cookie).toBe('******')
   })
@@ -225,8 +249,7 @@ describe('sensitive data redaction', () => {
       data: 'csrf=tok&password=s3cret&username=user%40example.com&extra=visible',
     })
     const call = new APICallRequestData(config)
-    const parsed: { requestData: string } = cast(JSON.parse(call.toString()))
-    const params = new URLSearchParams(parsed.requestData)
+    const params = new URLSearchParams(parseRequestData(call.toString()))
 
     expect(params.get('password')).toBe('******')
     expect(params.get('username')).toBe('******')
@@ -242,8 +265,7 @@ describe('sensitive data redaction', () => {
       data: 'password=one&password=two&after=kept',
     })
     const call = new APICallRequestData(config)
-    const parsed: { requestData: string } = cast(JSON.parse(call.toString()))
-    const params = new URLSearchParams(parsed.requestData)
+    const params = new URLSearchParams(parseRequestData(call.toString()))
 
     expect(params.getAll('password')).toStrictEqual(['******'])
     expect(params.get('after')).toBe('kept')
@@ -252,17 +274,15 @@ describe('sensitive data redaction', () => {
   it('passes through non-sensitive form-encoded strings unchanged', () => {
     const config = createConfig({ data: 'page=2&limit=50' })
     const call = new APICallRequestData(config)
-    const parsed: { requestData: string } = cast(JSON.parse(call.toString()))
 
-    expect(parsed.requestData).toBe('page=2&limit=50')
+    expect(parseRequestData(call.toString())).toBe('page=2&limit=50')
   })
 
   it('does not mutate plain strings that happen to lack `=`', () => {
     const config = createConfig({ data: 'just a sentence' })
     const call = new APICallRequestData(config)
-    const parsed: { requestData: string } = cast(JSON.parse(call.toString()))
 
-    expect(parsed.requestData).toBe('just a sentence')
+    expect(parseRequestData(call.toString())).toBe('just a sentence')
   })
 })
 
@@ -292,7 +312,7 @@ describe(createAPICallErrorData, () => {
       response: { data: {}, headers: {}, status: 504 },
     })
     const data = createAPICallErrorData(error)
-    const parsed: Record<string, unknown> = cast(JSON.parse(data.toString()))
+    const parsed = parseRecord(data.toString())
 
     expect(parsed.errorMessage).toBe('Timeout')
   })

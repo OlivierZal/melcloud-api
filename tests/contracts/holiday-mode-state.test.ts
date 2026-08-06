@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
@@ -14,11 +14,12 @@ import {
   classicHolidayModeResponse,
   createMockClassicApi,
 } from '../classic-fixtures.ts'
-import { cast, defined, mock, okValue } from '../helpers.ts'
+import { defined, mock, okValue } from '../helpers.ts'
 import {
   homeAtwDevice,
   homeDevice,
   homeTestRegistry,
+  resetHomeDevices,
 } from '../home-fixtures.ts'
 
 /**
@@ -72,6 +73,8 @@ const describeHolidayModeStateContract = (
   ) => HolidayModeState | Promise<HolidayModeState | null> | null,
 ): void => {
   describe(`holidayModeState — ${name}`, () => {
+    beforeEach(resetHomeDevices)
+
     it.each(CASES)('round-trips a $label unchanged', async ({ state }) => {
       await expect(Promise.resolve(read(state))).resolves.toStrictEqual(state)
     })
@@ -112,7 +115,7 @@ describeHolidayModeStateContract('Classic zone', async (state) =>
 )
 
 const homeApi = (): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({ registry: cast(homeTestRegistry) })
+  mock<HomeAPIAdapter>({ registry: homeTestRegistry })
 
 const toHomeWire = (
   state: BoundedWindow | null,

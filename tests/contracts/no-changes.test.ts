@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
@@ -16,7 +16,11 @@ import {
   createMockClassicApi,
 } from '../classic-fixtures.ts'
 import { cast, defined, mock } from '../helpers.ts'
-import { homeDevice, homeTestRegistry } from '../home-fixtures.ts'
+import {
+  homeDevice,
+  homeTestRegistry,
+  resetHomeDevices,
+} from '../home-fixtures.ts'
 
 // `updateValues` answers one question on both dialects — is there
 // anything to send? — and must answer it *before* the wire. A
@@ -63,6 +67,8 @@ const describeNoChangesContract = (
   attempt: (kind: 'realChange' | NoOpKind) => Attempt,
 ): void => {
   describe(`updateValues — ${name}`, () => {
+    beforeEach(resetHomeDevices)
+
     it.each(CASES)('refuses $label with NoChangesError', async ({ kind }) => {
       await expect(attempt(kind).write()).rejects.toThrow(NoChangesError)
     })
@@ -128,10 +134,7 @@ describeNoChangesContract('Home ATA device', (kind) => {
   const updateValues = vi
     .fn<HomeAPIAdapter['updateValues']>()
     .mockResolvedValue()
-  const api = mock<HomeAPIAdapter>({
-    registry: cast(homeTestRegistry),
-    updateValues,
-  })
+  const api = mock<HomeAPIAdapter>({ registry: homeTestRegistry, updateValues })
   const facade = new HomeDeviceAtaFacade(
     api,
     homeDevice({ id: `contract-no-changes-${kind}` }),

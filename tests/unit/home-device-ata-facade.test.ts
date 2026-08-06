@@ -10,6 +10,8 @@ import {
   homeDevice,
   homeReportPoint,
   homeTestRegistry,
+  pruneHomeDevice,
+  resetHomeDevices,
 } from '../home-fixtures.ts'
 
 const createModel = (
@@ -32,11 +34,13 @@ const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
     getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
-    registry: cast(homeTestRegistry),
+    registry: homeTestRegistry,
     updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
   })
 
 describe('home device ata facade', () => {
+  beforeEach(resetHomeDevices)
+
   describe('protection accessors', () => {
     it('exposes frost protection and holiday mode from context', () => {
       const frostProtection = { active: false, enabled: true, max: 12, min: 6 }
@@ -123,7 +127,7 @@ describe('home device ata facade', () => {
 
       expect(facade.exists).toBe(true)
 
-      homeTestRegistry.delete('device-gone')
+      pruneHomeDevice('device-gone')
 
       expect(facade.exists).toBe(false)
       expect(facade.id).toBe('device-gone')

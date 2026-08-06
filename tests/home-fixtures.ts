@@ -1,4 +1,7 @@
-import type { TypedHomeDeviceData } from '../src/entities/home-registry.ts'
+import type {
+  HomeRegistry,
+  TypedHomeDeviceData,
+} from '../src/entities/home-registry.ts'
 import type {
   HomeAtaDeviceCapabilities,
   HomeAtaDeviceData,
@@ -12,7 +15,7 @@ import type {
 } from '../src/types/index.ts'
 import { HomeDeviceType } from '../src/constants.ts'
 import { HomeDevice } from '../src/entities/home-device.ts'
-import { mock } from './helpers.ts'
+import { cast, mock } from './helpers.ts'
 
 // Mid-range RSSI so derived signal-quality assertions land in a
 // predictable band without special-casing weak/strong values.
@@ -103,11 +106,30 @@ interface HomeDeviceFixtureOptions {
 // the facade-under-test's own device).
 const registeredHomeDevices = new Map<string, HomeDevice>()
 
-export const homeTestRegistry = {
-  delete: (id: string): boolean => registeredHomeDevices.delete(id),
+// Vitest isolates module state per FILE; within a file, entries would
+// otherwise accumulate across tests and an id reused by a later test
+// could resolve an earlier test's device. Every consumer builds its
+// devices inside test bodies and opens its describe with
+// `beforeEach(resetHomeDevices)`, keeping each test's registrations to
+// itself.
+export const resetHomeDevices = (): void => {
+  registeredHomeDevices.clear()
+}
+
+// Fixture-side control: drop a registered device so availability tests
+// can model a pruned id — pruning is the fixture's affair, not part of
+// the registry surface the facades consume.
+export const pruneHomeDevice = (id: string): boolean =>
+  registeredHomeDevices.delete(id)
+
+// The double implements exactly the resolution slice the facades under
+// test exercise (`getById`); the `cast` is this module's single
+// widening boundary to the adapter's `HomeRegistry` — extend the
+// double rather than widening a call site.
+export const homeTestRegistry: HomeRegistry = cast({
   getById: (id: string): HomeDevice | undefined =>
     registeredHomeDevices.get(id),
-}
+})
 
 const registerHomeDevice = <T extends HomeDevice>(device: T): T => {
   registeredHomeDevices.set(device.id, device)
