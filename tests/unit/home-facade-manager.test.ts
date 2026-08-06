@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { HomeDevice } from '../../src/entities/home-device.ts'
@@ -17,6 +17,7 @@ import {
   homeAtwDevice,
   homeDevice,
   homeTestRegistry,
+  resetHomeDevices,
 } from '../home-fixtures.ts'
 
 const createModel = (): ReturnType<typeof homeDevice> =>
@@ -28,11 +29,13 @@ const createApi = (): HomeAPIAdapter =>
     getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
-    registry: cast(homeTestRegistry),
+    registry: homeTestRegistry,
     updateValues: vi.fn<HomeAPIAdapter['updateValues']>(),
   })
 
 describe('home facade manager', () => {
+  beforeEach(resetHomeDevices)
+
   it('returns null when no instance is provided', () => {
     const manager = new HomeFacadeManager(createApi())
 

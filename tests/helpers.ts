@@ -5,6 +5,13 @@ import type { Result } from '../src/types/index.ts'
 import { HttpClient, HttpError } from '../src/http/index.ts'
 import { Temporal } from '../src/temporal.ts'
 
+// Deliberate type-breach boundary — and the suite's only one: call
+// sites hand over values the compiled types rightly refuse (wire
+// payloads carrying fields the schema forbids, partial doubles
+// standing in for rich wire records) because that refusal is the
+// behavior under test. Prefer an honest shape where one exists
+// (`mock`, a typed `vi.fn` signature, a zod parse); reach for `cast`
+// only when the type error is the point.
 export function cast(value: unknown): never
 export function cast(value: unknown): unknown {
   return value

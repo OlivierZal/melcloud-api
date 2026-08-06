@@ -10,6 +10,7 @@ import {
   homeAtwDevice,
   homeReportPoint,
   homeTestRegistry,
+  resetHomeDevices,
 } from '../home-fixtures.ts'
 
 const createModel = (
@@ -38,11 +39,13 @@ const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
     getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
-    registry: cast(homeTestRegistry),
+    registry: homeTestRegistry,
     updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
   })
 
 describe('home device atw facade', () => {
+  beforeEach(resetHomeDevices)
+
   describe('normalized modes', () => {
     it.each([
       ['CoolFlowTemperature', 'flow_cool'],

@@ -129,15 +129,13 @@ const setupFetchDevices = (
   options?: Parameters<typeof fetchDevices>[0],
 ): {
   fetchMock: ReturnType<typeof vi.fn<ClassicAPIAdapter['fetch']>>
-  target: ReturnType<typeof vi.fn<(...args: unknown[]) => Promise<never>>>
-  invoke: () => Promise<void>
+  target: ReturnType<typeof vi.fn<(...args: unknown[]) => Promise<unknown>>>
+  invoke: () => Promise<unknown>
 } => {
-  const fetchMock = vi
-    .fn<ClassicAPIAdapter['fetch']>()
-    .mockResolvedValue(cast([]))
+  const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockResolvedValue([])
   const target = vi
-    .fn<(...args: unknown[]) => Promise<never>>()
-    .mockResolvedValue(cast('result'))
+    .fn<(...args: unknown[]) => Promise<unknown>>()
+    .mockResolvedValue('result')
   const decorated = fetchDevices(options)(
     target,
     mock<ClassMethodDecoratorContext>(),
@@ -176,12 +174,10 @@ describe(fetchDevices, () => {
 
   it('prefers syncRegistry() over api.fetch() when both are exposed', async () => {
     const syncRegistry = vi.fn<() => Promise<void>>().mockResolvedValue()
-    const fetchMock = vi
-      .fn<ClassicAPIAdapter['fetch']>()
-      .mockResolvedValue(cast([]))
+    const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockResolvedValue([])
     const target = vi
-      .fn<(...args: unknown[]) => Promise<never>>()
-      .mockResolvedValue(cast('result'))
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockResolvedValue('result')
     const decorated = fetchDevices({ when: 'after' })(
       target,
       mock<ClassMethodDecoratorContext>(),
@@ -198,8 +194,8 @@ describe(fetchDevices, () => {
 
   it('throws TypeError when host exposes neither syncRegistry nor api.fetch (when=before)', async () => {
     const target = vi
-      .fn<(...args: unknown[]) => Promise<never>>()
-      .mockResolvedValue(cast('result'))
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockResolvedValue('result')
     const decorated = fetchDevices({ when: 'before' })(
       target,
       mock<ClassMethodDecoratorContext>(),
@@ -212,8 +208,8 @@ describe(fetchDevices, () => {
   it('logs and swallows when host exposes neither (when=after)', async () => {
     const logError = vi.fn<(...args: unknown[]) => void>()
     const target = vi
-      .fn<(...args: unknown[]) => Promise<never>>()
-      .mockResolvedValue(cast('result'))
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockResolvedValue('result')
     const decorated = fetchDevices({ when: 'after' })(
       target,
       mock<ClassMethodDecoratorContext>(),
@@ -232,8 +228,8 @@ describe(fetchDevices, () => {
 
   it('logs via logger.error when when=after and sync throws', async () => {
     const target = vi
-      .fn<(...args: unknown[]) => Promise<never>>()
-      .mockResolvedValue(cast('result'))
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockResolvedValue('result')
     const syncRegistry = vi
       .fn<() => Promise<void>>()
       .mockRejectedValue(new Error('sync boom'))
@@ -260,8 +256,8 @@ describe(syncDevices, () => {
   it('calls notifySync after the target method', async () => {
     const notifySync = vi.fn<SyncCallback>().mockResolvedValue()
     const target = vi
-      .fn<(...args: unknown[]) => Promise<never>>()
-      .mockResolvedValue(cast('result'))
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockResolvedValue('result')
     const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
     const context = { notifySync }
     const result = await decorated.call(context)
@@ -273,8 +269,8 @@ describe(syncDevices, () => {
   it('passes type to notifySync', async () => {
     const notifySync = vi.fn<SyncCallback>().mockResolvedValue()
     const target = vi
-      .fn<(...args: unknown[]) => Promise<never>>()
-      .mockResolvedValue(cast('result'))
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockResolvedValue('result')
     const decorated = syncDevices({ type: ClassicDeviceType.Ata })(
       target,
       mock<ClassMethodDecoratorContext>(),
@@ -287,8 +283,8 @@ describe(syncDevices, () => {
 
   it('works when notifySync is undefined', async () => {
     const target = vi
-      .fn<(...args: unknown[]) => Promise<never>>()
-      .mockResolvedValue(cast('result'))
+      .fn<(...args: unknown[]) => Promise<unknown>>()
+      .mockResolvedValue('result')
     const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
     const context = {}
     const result = await decorated.call(context)

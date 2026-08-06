@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
@@ -16,8 +16,13 @@ import {
   classicFloorData,
   createMockClassicApi,
 } from '../classic-fixtures.ts'
-import { cast, defined, mock } from '../helpers.ts'
-import { homeDevice, homeTestRegistry } from '../home-fixtures.ts'
+import { defined, mock } from '../helpers.ts'
+import {
+  homeDevice,
+  homeTestRegistry,
+  pruneHomeDevice,
+  resetHomeDevices,
+} from '../home-fixtures.ts'
 
 // `isAvailable` answers one question on both dialects — has this unit
 // gone quiet for longer than the stale window? — from two different
@@ -52,6 +57,8 @@ const describeIsAvailableContract = (
   readPruned: () => boolean,
 ): void => {
   describe(`isAvailable — ${name}`, () => {
+    beforeEach(resetHomeDevices)
+
     it.each(CASES)(
       'reads a unit $label as isAvailable=$isAvailable',
       ({ isAvailable, silentHours }) => {
@@ -105,7 +112,7 @@ describeIsAvailableContract(
 )
 
 const homeApi = (): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({ registry: cast(homeTestRegistry) })
+  mock<HomeAPIAdapter>({ registry: homeTestRegistry })
 
 // Home expresses silence as a disconnection streak, so the clock is
 // moved rather than the payload; `isConnected` stays true for a unit
@@ -138,7 +145,7 @@ describeIsAvailableContract(
       homeApi(),
       homeDevice({ id: 'contract-available-pruned' }),
     )
-    homeTestRegistry.delete('contract-available-pruned')
+    pruneHomeDevice('contract-available-pruned')
     return facade.isAvailable
   },
 )

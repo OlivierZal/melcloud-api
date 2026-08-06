@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
@@ -14,11 +14,12 @@ import {
   classicFrostProtectionResponse,
   createMockClassicApi,
 } from '../classic-fixtures.ts'
-import { cast, defined, mock, okValue } from '../helpers.ts'
+import { defined, mock, okValue } from '../helpers.ts'
 import {
   homeAtwDevice,
   homeDevice,
   homeTestRegistry,
+  resetHomeDevices,
 } from '../home-fixtures.ts'
 
 // The neutral protection state is the same contract on both dialects, so
@@ -50,6 +51,8 @@ const describeProtectionStateContract = (
   ) => Promise<ProtectionState | null> | ProtectionState | null,
 ): void => {
   describe(`protectionState — ${name}`, () => {
+    beforeEach(resetHomeDevices)
+
     it.each(CASES)('round-trips a $label unchanged', async ({ state }) => {
       await expect(Promise.resolve(read(state))).resolves.toStrictEqual(state)
     })
@@ -87,7 +90,7 @@ describeProtectionStateContract('Classic zone', async (state) => {
 })
 
 const homeApi = (): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({ registry: cast(homeTestRegistry) })
+  mock<HomeAPIAdapter>({ registry: homeTestRegistry })
 
 const toHomeWire = (
   state: ProtectionState | null,
@@ -115,6 +118,8 @@ describeProtectionStateContract('Home ATW device', (state) => {
 })
 
 describe('protectionState — overheat shares the shape', () => {
+  beforeEach(resetHomeDevices)
+
   it('reads the overheat descriptor through the same contract', () => {
     const state = { isEnabled: true, max: 37, min: 35 }
     const facade = new HomeDeviceAtaFacade(
