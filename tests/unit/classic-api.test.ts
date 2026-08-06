@@ -499,7 +499,9 @@ describe('mELCloud Classic API', () => {
       const isResumed = await api.resumeSession()
 
       expect(isResumed).toBe(false)
-      expect(api.isAuthenticated()).toBe(false)
+      // The failed attempt leaves the live session standing: nothing
+      // is cleared before the server verdict.
+      expect(api.isAuthenticated()).toBe(true)
       expect(logger.error).toHaveBeenCalledWith(
         '[Classic]',
         'Session resume failed:',
@@ -941,10 +943,12 @@ describe('mELCloud Classic API', () => {
       )
     })
 
-    it('clears persisted session when server rejects login', async () => {
+    it('keeps the stored credentials and session when the server rejects a login', async () => {
       const { setSpy, settingManager } = createSettingStore({
         contextKey: 'old-ctx',
         expiry: '2030-12-31T00:00:00',
+        password: 'good-pass',
+        username: 'good-user',
       })
       mockLoginAndList()
       const api = await createApi({ settingManager })
@@ -952,11 +956,33 @@ describe('mELCloud Classic API', () => {
       mockRequest.mockResolvedValueOnce(wrap({ LoginData: null }))
 
       await expect(
-        api.authenticate({ password: 'wrong', username: 'user' }),
+        api.authenticate({ password: 'wrong', username: 'typo-user' }),
       ).rejects.toThrow(AuthenticationError)
 
-      expect(setSpy).toHaveBeenCalledWith('contextKey', '')
-      expect(setSpy).toHaveBeenCalledWith('expiry', '')
+      // A mistyped attempt must neither overwrite the working stored
+      // pair nor wipe the live session — only the backoff persists.
+      expect(settingManager.get('username')).toBe('good-user')
+      expect(settingManager.get('password')).toBe('good-pass')
+      expect(settingManager.get('contextKey')).toBe('old-ctx')
+      expect(setSpy).not.toHaveBeenCalledWith('contextKey', '')
+      expect(setSpy).not.toHaveBeenCalledWith('expiry', '')
+    })
+
+    it('persists the accepted credentials and replaces the session on success', async () => {
+      const { settingManager } = createSettingStore({
+        contextKey: 'old-ctx',
+        expiry: '2020-01-01T00:00:00',
+        password: 'old-pass',
+        username: 'old-user',
+      })
+      mockLoginAndList('new-ctx', '2030-12-31T00:00:00')
+      const api = await createApi({ settingManager })
+
+      await api.authenticate({ password: 'new-pass', username: 'new-user' })
+
+      expect(settingManager.get('username')).toBe('new-user')
+      expect(settingManager.get('password')).toBe('new-pass')
+      expect(settingManager.get('contextKey')).toBe('new-ctx')
     })
 
     it('retries with re-authentication on 401', async () => {

@@ -697,6 +697,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     request: Parameters<typeof performTokenAuth>[0],
   ): Promise<void> {
     const tokens = await performTokenAuth(request)
+    // Wholesale session replacement (the `doAuthenticate` contract):
+    // wipe before storing so nothing from a previous account survives —
+    // the stale context/user, or a refresh token `#storeTokens` keeps
+    // when the response omits one. The refresh path must NOT wipe: a
+    // renewal extends the same session.
+    this.clearPersistedSession()
     this.#storeTokens(tokens)
   }
 
