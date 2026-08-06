@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [46.0.0] - 2026-08-06
 
 ### Changed
 
@@ -460,7 +460,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[unreleased]: https://github.com/OlivierZal/melcloud-api/compare/45.1.0...HEAD
+[46.0.0]: https://github.com/OlivierZal/melcloud-api/compare/45.1.0...46.0.0
 [45.1.0]: https://github.com/OlivierZal/melcloud-api/compare/45.0.2...45.1.0
 [45.0.2]: https://github.com/OlivierZal/melcloud-api/compare/45.0.1...45.0.2
 [45.0.1]: https://github.com/OlivierZal/melcloud-api/compare/45.0.0...45.0.1
