@@ -193,11 +193,17 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   change when the point holds, or with a reasoned reply when it does
   not — verify claims against sources before acting either way. Resolve
   the thread once settled; none left dangling.
-- SonarCloud must be spotless for a PR to merge: quality gate green,
-  zero open issues on its analysis, and 100 % coverage (within the
-  exclusions `sonar-project.properties` declares). A Sonar finding is
-  handled like a lint error — the code adapts, or the divergence is
-  settled as a documented verdict — never merged over.
+- SonarCloud must be spotless for a PR to merge — and the quality gate
+  passing is necessary, NOT sufficient: the free-tier gate tolerates
+  3 % duplication on new code, lets code smells through, and cannot be
+  customized, so the real bar is ours, held in review. That bar is
+  zero on BOTH windows — new code and overall alike: zero open issues
+  of every kind (bugs, code smells, vulnerabilities) across the whole
+  project, 0 % duplicated lines across the whole codebase, and 100 %
+  coverage (within the exclusions `sonar-project.properties`
+  declares). A Sonar finding is handled like a lint error — the code
+  adapts (duplication refactors into a shared module), or the
+  divergence is settled as a documented verdict — never merged over.
 - GitHub merge queue is impossible here: the repo is user-owned and the
   feature is org-only (verified via API — no ruleset payload enables it).
   Dependabot PRs auto-merge via `gh pr merge --auto`; the `merge_group`
