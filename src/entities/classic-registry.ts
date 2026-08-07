@@ -78,7 +78,7 @@ const syncDeviceModel = (
 const createDeviceModel = (device: ClassicListDeviceAny): ClassicDeviceAny =>
   new ClassicDevice(device)
 
-const level = { building: 0, child: 1, grandchild: 2, great_grandchild: 3 }
+const level = { building: 0, child: 1, grandchild: 2, greatGrandchild: 3 }
 
 const stampDevices = function* (
   devices: readonly ClassicDeviceZone[],
@@ -125,7 +125,7 @@ const getDeviceLevel = (
   floorId: number | null,
 ): number => {
   if (areaId !== null && floorId !== null) {
-    return level.great_grandchild
+    return level.greatGrandchild
   }
   return areaId !== null || floorId !== null ? level.grandchild : level.child
 }
