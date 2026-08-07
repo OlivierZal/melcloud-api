@@ -166,7 +166,7 @@ const buildLabelFormatters = (
 ): Record<ClassicLabelType, (label: string) => string> => {
   const formatters = getLabelFormatters(locale)
   return {
-    [ClassicLabelType.day_of_week]: (label) =>
+    [ClassicLabelType.dayOfWeek]: (label) =>
       formatters.dayOfWeek.format(
         new Temporal.PlainDate(DAY_OF_WEEK_BASE_YEAR, 1, Number(label)),
       ),
@@ -174,7 +174,7 @@ const buildLabelFormatters = (
       formatters.month.format(
         new Temporal.PlainDate(MONTH_NAME_BASE_YEAR, Number(label), 1),
       ),
-    [ClassicLabelType.month_of_year]: (label): string => {
+    [ClassicLabelType.monthOfYear]: (label): string => {
       const year = Math.floor(Number(label) / YEAR_MONTH_DIVISOR)
       const month = Number(label) % YEAR_MONTH_DIVISOR
 

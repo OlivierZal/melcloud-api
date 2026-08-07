@@ -59,11 +59,11 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
     expect(result.labels).toStrictEqual(['12:00', '13:00'])
   })
 
-  it('formats day_of_week labels', () => {
+  it('formats dayOfWeek labels', () => {
     const data = {
       ...baseReportData,
       Labels: ['1', '2', '3'],
-      LabelType: ClassicLabelType.day_of_week,
+      LabelType: ClassicLabelType.dayOfWeek,
     }
     const result = getChartLineOptions(data, {
       legend: ['Series 1'],
@@ -92,11 +92,11 @@ describe.concurrent('formatLabels (via getChartLineOptions)', () => {
     expect(result.labels[2]).toBe('Dec')
   })
 
-  it('formats month_of_year labels', () => {
+  it('formats monthOfYear labels', () => {
     const data = {
       ...baseReportData,
       Labels: ['202401', '202412'],
-      LabelType: ClassicLabelType.month_of_year,
+      LabelType: ClassicLabelType.monthOfYear,
     }
     const result = getChartLineOptions(data, {
       legend: ['Series 1'],

@@ -448,8 +448,8 @@ const ClassicLabelTypeSchema = z.union([
   z.literal(ClassicLabelType.time),
   z.literal(ClassicLabelType.raw),
   z.literal(ClassicLabelType.month),
-  z.literal(ClassicLabelType.month_of_year),
-  z.literal(ClassicLabelType.day_of_week),
+  z.literal(ClassicLabelType.monthOfYear),
+  z.literal(ClassicLabelType.dayOfWeek),
 ])
 
 /**

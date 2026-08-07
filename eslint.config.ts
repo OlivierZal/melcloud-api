@@ -16,17 +16,6 @@ const config: Config[] = defineConfig([
         format: null,
         selector: 'typeProperty',
       },
-      // Constant names of ours that predate the strict core and sit on
-      // the published surface: renaming them breaks consumers, so it is
-      // decided as its own release.
-      {
-        filter: {
-          match: true,
-          regex: '^(cooling_min|day_of_week|month_of_year)$',
-        },
-        format: null,
-        selector: 'objectLiteralProperty',
-      },
       // MELCloud Classic names every field in PascalCase, and the Home
       // report keys its series in UPPER_SNAKE (`HOT_WATER`); both are
       // read and written verbatim. Header names carry hyphens and stay

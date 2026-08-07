@@ -103,9 +103,9 @@ export type ClassicHorizontal =
  * @category Constants
  */
 export const ClassicLabelType = {
-  day_of_week: 4,
+  dayOfWeek: 4,
   month: 2,
-  month_of_year: 3,
+  monthOfYear: 3,
   raw: 1,
   time: 0,
 } as const
@@ -315,7 +315,7 @@ export const ClassicTemperature = {
   /**
    * Minimum target temperature when the device is in a cooling-capable mode.
    */
-  cooling_min: 16,
+  coolingMin: 16,
   /**
    * Maximum target temperature across all modes.
    */
