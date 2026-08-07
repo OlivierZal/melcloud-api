@@ -113,7 +113,7 @@ const toEnergyReportLabels = (
   return {
     labels: labels.map((label) =>
       String(
-        label === 0 && labelType === ClassicLabelType.day_of_week
+        label === 0 && labelType === ClassicLabelType.dayOfWeek
           ? ISO_SUNDAY
           : label,
       ),
