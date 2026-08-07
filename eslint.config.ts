@@ -16,6 +16,36 @@ const config: Config[] = defineConfig([
         format: null,
         selector: 'typeProperty',
       },
+      // Constant names of ours that predate the strict core and sit on
+      // the published surface: renaming them breaks consumers, so it is
+      // decided as its own release.
+      {
+        filter: {
+          match: true,
+          regex: '^(cooling_min|day_of_week|month_of_year)$',
+        },
+        format: null,
+        selector: 'objectLiteralProperty',
+      },
+      // MELCloud Classic names every field in PascalCase, and the Home
+      // report keys its series in UPPER_SNAKE (`HOT_WATER`); both are
+      // read and written verbatim. Header names carry hyphens and stay
+      // with the quoted-key exemption instead.
+      {
+        filter: { match: true, regex: '^[A-Z][A-Za-z0-9_]*$' },
+        format: ['PascalCase', 'UPPER_CASE'],
+        selector: ['objectLiteralProperty', 'typeProperty'],
+      },
+      // Three snake_case vocabularies meet here, none of them ours: the
+      // OAuth 2.0/PKCE parameters (`grant_type`, `code_verifier`), the
+      // Home wire fields (`outside_temperature`), and the Homey
+      // capability enum values the app passes straight through
+      // (`very_fast`, `flow_cool`).
+      {
+        filter: { match: true, regex: '^[a-z][a-z0-9]*(_[a-z0-9]+)+$' },
+        format: null,
+        selector: ['objectLiteralProperty', 'typeProperty'],
+      },
     ],
   }),
   {
