@@ -18,6 +18,9 @@ jobs:
       - uses: ./.github/actions/setup-node-and-install
         with:
           cache: none
+          # The install pulls @olivierzal/configs from GitHub Packages,
+          # which requires auth even for read.
+          npm-token: ${{ secrets.GITHUB_TOKEN }}
           registry-url: https://npm.pkg.github.com
           scope: '@olivierzal'
       # Publish the exact tarball we attest.

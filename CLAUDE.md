@@ -104,6 +104,28 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   daily energy buckets are watt-hours and idle days are omitted
   entirely; ATW buckets are kWh.
 
+## Tooling boundary (@olivierzal/configs)
+
+The shared tooling lives in `@olivierzal/configs` (exact pin): the
+eslint `library` preset (plugins are the package's dependencies — no
+plugin devDeps here), the prettier config (`"prettier"` key in
+package.json, no local file), the `tsconfig/library` base, `typedocBase`
+and the vitest `swcPlugin`. The overlays keep ONLY per-repo verdicts:
+the lint ignores (`scripts/`), the `__brand` `wireNamingEntries` splice,
+the `classic-flags.ts` no-magic-numbers ledger, tsconfig
+`outDir`/`include`, and the typedoc identity (name, links,
+`intentionallyNotExported`). Do not re-declare family policy locally —
+a rule evaluation or version bump happens in configs, adoption is a
+reviewed pin bump. Never extend `tsconfig/library-build`: its
+`rootDir`/`include` resolve against the base file inside node_modules
+(same trap the configs README documents for `outDir`) — extend
+`tsconfig/library` and keep those keys local. The CI/audit/claude/zizmor
+workflows are stubs calling the family reusables in OlivierZal/configs,
+pinned `@<sha> # vX.Y.Z`; `publish.yml` and `docs.yml` stay local (no
+reusable exists), so the composite action stays too — and both installs
+pass `npm-token` (the configs dependency lives on GitHub Packages,
+where even reads need auth).
+
 ## Lint doctrine
 
 - Code adapts to the rules, never the reverse. Never add a disable — not
