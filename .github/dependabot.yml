@@ -13,6 +13,13 @@ updates:
       actions:
         patterns:
           - '*'
+    # One version covers both @olivierzal/configs channels, and only the
+    # npm one is driven here: a workflow-ref bump on its own would face
+    # the pin check against an npm pin that has not moved, and each of
+    # the two pull requests would block the other. The npm bump carries
+    # the refs along instead.
+    ignore:
+      - dependency-name: OlivierZal/configs
     package-ecosystem: github-actions
     schedule:
       interval: weekly
