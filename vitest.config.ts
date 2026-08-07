@@ -1,17 +1,9 @@
+import { swcPlugin } from '@olivierzal/configs/vitest-swc'
 import { type ViteUserConfig, defineConfig } from 'vitest/config'
-import swc from 'unplugin-swc'
 
 const config: ViteUserConfig = defineConfig({
   oxc: false,
-  plugins: [
-    swc.vite({
-      jsc: {
-        parser: { decorators: true, syntax: 'typescript' },
-        target: 'es2024',
-        transform: { decoratorVersion: '2022-03' },
-      },
-    }),
-  ],
+  plugins: [swcPlugin],
   test: {
     clearMocks: true,
     coverage: {

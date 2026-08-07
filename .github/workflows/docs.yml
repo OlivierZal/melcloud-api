@@ -6,12 +6,17 @@ jobs:
     name: Build docs
     permissions:
       contents: read
+      packages: read
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+      # The install pulls @olivierzal/configs from GitHub Packages,
+      # which requires auth even for read.
       - uses: ./.github/actions/setup-node-and-install
+        with:
+          npm-token: ${{ secrets.GITHUB_TOKEN }}
       - run: npm run build
       - run: npm run docs
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
