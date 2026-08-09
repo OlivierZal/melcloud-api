@@ -63,6 +63,14 @@ const config: Config[] = defineConfig([
     files: ['src/facades/classic-flags.ts'],
     rules: { '@typescript-eslint/no-magic-numbers': 'off' },
   },
+  {
+    // Shipped regexes stay on the `u` flag: the es2024 `v` flag is a
+    // parse-time SyntaxError on Homey Pro 2016-2019 (Node < 20), which
+    // killed the consuming app at boot (2026-08 crash report). The full
+    // node device-floor policy is pending an installed-base measurement.
+    files: ['src/**/*.ts'],
+    rules: { 'require-unicode-regexp': ['error', { requireFlag: 'u' }] },
+  },
 ])
 
 export default config
