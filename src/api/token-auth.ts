@@ -193,7 +193,7 @@ const authRequest = async ({
  * @returns The resolved form action URL, or `null` if not found.
  */
 const extractFormAction = (html: string): string | null => {
-  const match = /<form[^>]+action="(?<action>[^"]+)"/iv.exec(html)
+  const match = /<form[^>]+action="(?<action>[^"]+)"/iu.exec(html)
   const encoded = match?.groups?.action
   if (encoded === undefined) {
     return null
@@ -209,9 +209,9 @@ const extractFormAction = (html: string): string | null => {
  */
 const extractHiddenFields = (html: string): Record<string, string> =>
   Object.fromEntries(
-    html.matchAll(/<input[^>]+type="hidden"[^>]*>/giv).flatMap(([tag]) => {
-      const name = /name="(?<name>[^"]+)"/v.exec(tag)?.groups?.name
-      const value = /value="(?<value>[^"]*)"/v.exec(tag)?.groups?.value ?? ''
+    html.matchAll(/<input[^>]+type="hidden"[^>]*>/giu).flatMap(([tag]) => {
+      const name = /name="(?<name>[^"]+)"/u.exec(tag)?.groups?.name
+      const value = /value="(?<value>[^"]*)"/u.exec(tag)?.groups?.value ?? ''
       return name === undefined ? [] : [[name, value] as const]
     }),
   )
@@ -238,10 +238,10 @@ const extractRedirectUrl = (html: string, regex: RegExp): string | null => {
  * @returns The redirect URL if found, or `null`.
  */
 const extractPageRedirect = (html: string): string | null =>
-  extractRedirectUrl(html, /window\.location\s*=\s*['"](?<url>[^'"]+)/v) ??
+  extractRedirectUrl(html, /window\.location\s*=\s*['"](?<url>[^'"]+)/u) ??
   extractRedirectUrl(
     html,
-    /<meta[^>]+http-equiv="refresh"[^>]+content="[^"]*url=(?<url>[^"]+)/iv,
+    /<meta[^>]+http-equiv="refresh"[^>]+content="[^"]*url=(?<url>[^"]+)/iu,
   )
 
 /**
@@ -381,7 +381,7 @@ const par = async ({
 // `errorMessage` element when it refuses a submission.
 const refusedSubmissionMessage = (html: string): string => {
   const match =
-    /(?:id|class)="errorMessage[^"]*"[^>]*>(?<message>[^<]*)</v.exec(html)
+    /(?:id|class)="errorMessage[^"]*"[^>]*>(?<message>[^<]*)</u.exec(html)
   const reason = match?.groups?.message?.trim() ?? ''
   return reason === ''
     ? 'Credential submission was not redirected'
