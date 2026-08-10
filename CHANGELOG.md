@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [48.2.0] - 2026-08-11
+
+### Added
+
+- **Every flat module the root barrel re-exports now has its own subpath** — `/enum-mappings`, `/holiday-mode`, `/temperature-range` and `/temporal` join `/constants` and `/protection`. The root barrel cannot load in a browser bundle (it reaches the HTTP stack, whose `node:` builtins esbuild cannot resolve), so anything published only through it — including the shared `rangeForHomeMode`/`rangeForClassicMode` setpoint resolvers — was unreachable from a webview however browser-safe the module itself was (measured: `temperature-range` bundles to ~2 kB once addressed directly, esbuild pruning the unreached neighbours). The criterion is recorded and held by a test: subpaths mirror the barrel's flat re-exports one-to-one, so a future module cannot silently miss its path. Strictly additive — nothing is removed and no existing import changes.
+- **`./package.json` is exposed through the export map**, so tooling that reads package metadata resolves it instead of being blocked by the map.
+- **The browser-reachable closure now holds the es2023 webview floor** under lint and a closure-recomputing test: the modules the subpaths open to phone webviews are guaranteed to stay loadable on the engines those webviews run.
+
+### Fixed
+
+- **`build` purges `dist` before emitting**, so a module deleted from `src` can no longer survive as a stale compiled file and ship in a locally packed tarball — CI's fresh checkout made that safety circumstantial, not guaranteed.
+
 ## [48.1.0] - 2026-08-10
 
 ### Added
@@ -498,6 +510,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[48.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.1.0...v48.2.0
 [48.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.0.0...v48.1.0
 [48.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v47.1.1...v48.0.0
 [47.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v47.1.0...v47.1.1
