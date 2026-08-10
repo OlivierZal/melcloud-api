@@ -64,7 +64,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@olivierzal/configs": "1.10.0",
+    "@olivierzal/configs": "1.10.1",
     "@types/node": "^26.1.2",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitest/coverage-v8": "^4.1.10",
