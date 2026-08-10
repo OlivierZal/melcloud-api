@@ -1,5 +1,22 @@
+import { webviewFloorBlock } from '@olivierzal/configs/eslint'
 import { library } from '@olivierzal/configs/eslint/library'
 import { type Config, defineConfig } from 'eslint/config'
+
+// The browser-reachable closure: the flat subpath modules of the
+// export map plus their value-import closure (`utils.ts`, reached via
+// `enum-mappings.ts`). These are the modules the consuming apps bundle
+// into phone webviews, so the full es2023 API floor applies — not just
+// the `u`-flag step-down below. `tests/unit/webview-floor.test.ts`
+// recomputes the closure and fails when this list drifts from it.
+const WEBVIEW_FLOOR_FILES = [
+  'src/constants.ts',
+  'src/enum-mappings.ts',
+  'src/holiday-mode.ts',
+  'src/protection.ts',
+  'src/temperature-range.ts',
+  'src/temporal.ts',
+  'src/utils.ts',
+]
 
 const config: Config[] = defineConfig([
   {
@@ -64,6 +81,7 @@ const config: Config[] = defineConfig([
     files: ['src/facades/classic-flags.ts'],
     rules: { '@typescript-eslint/no-magic-numbers': 'off' },
   },
+  webviewFloorBlock(WEBVIEW_FLOOR_FILES),
   {
     // Shipped regexes stay on the `u` flag: the consuming apps bundle
     // this package INTO their phone webviews — `/constants` is imported
