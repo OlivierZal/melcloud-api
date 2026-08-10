@@ -131,10 +131,7 @@ where even reads need auth).
 - Shipped regexes stay on the `u` flag — the es2024 `v` flag is a
   parse-time SyntaxError on Homey Pro 2016-2019 (Node < 20) and killed
   the consuming app at boot (2026-08 crash report). The overlay pins
-  `require-unicode-regexp` to `u`; the complete node device-floor
-  decision (post-Node-18 APIs) is pending an installed-base
-  measurement — do not widen shipped code to newer runtime APIs
-  meanwhile.
+  `require-unicode-regexp` to `u`.
 
 - Code adapts to the rules, never the reverse. Never add a disable — not
   inline, not through config options or ignore regexes: refactor until the
