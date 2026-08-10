@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [48.1.0] - 2026-08-10
+
+### Added
+
+- **`/protection` subpath export**, so a browser bundle can read the published protection bounds instead of copying them. `FROST_PROTECTION_RANGE`, `OVERHEAT_PROTECTION_RANGE` and `PROTECTION_GAP` were reachable only through the root barrel, which pulls in the HTTP stack: bundling a _value_ from it for the browser fails on `undici`'s `node:` builtins (measured: 118 resolution errors), so a consuming webview copied the numbers into its own source instead. `dist/protection.js` imports nothing, so the new path bundles to 78 bytes with the three values inlined and the clamping helpers tree-shaken away. Strictly additive: nothing is removed and no existing import changes.
+
 ## [48.0.0] - 2026-08-10
 
 ### Changed
@@ -492,6 +498,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[48.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.0.0...v48.1.0
 [48.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v47.1.1...v48.0.0
 [47.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v47.1.0...v47.1.1
 [47.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v47.0.1...v47.1.0

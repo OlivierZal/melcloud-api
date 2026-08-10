@@ -137,9 +137,9 @@ where even reads need auth).
 
 - Shipped regexes stay on the `u` flag, and the reason is PERMANENT,
   not the firmware gap that first surfaced it: the consuming apps
-  bundle this package into their PHONE WEBVIEWS. `/constants` is
-  imported for values, not types, and esbuild inlines them —
-  `coolingMin:16` sits in com.melcloud's shipped widget bundle — so
+  bundle this package into their PHONE WEBVIEWS. `/constants` and
+  `/protection` are imported for values, not types, and esbuild inlines
+  them — `coolingMin:16` sits in com.melcloud's shipped widget bundle — so
   every `src` module is a candidate for a WebKit engine that rejects
   the es2024 `v` flag at parse time. No Homey update lifts that floor.
   Scoping the rule to the reachable subset would drift with every
@@ -200,6 +200,13 @@ where even reads need auth).
   fine for consts, types, and schemas.
 - `src/temporal.ts` is the only sanctioned `temporal-polyfill` entry point
   (enforced by `no-restricted-imports`).
+- A public module that imports nothing earns its own subpath in the
+  `exports` map (`/constants`, `/protection`). The root barrel reaches
+  the HTTP stack, so a browser bundler resolving a VALUE through it
+  fails on `undici`'s `node:` builtins (measured: 118 errors) — a
+  consumer that cannot reach a published constant copies it instead,
+  which is the drift these subpaths exist to prevent. Keep such modules
+  import-free; adding one edge closes the path silently.
 - Tests import vitest APIs explicitly (no globals) and use `it` inside
   `describe`, `.each` for tables, `describe(fn)` function titles.
   Boolean names take a semantic prefix (`is`, `has`, `should`…); `device`
