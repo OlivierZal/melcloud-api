@@ -1,3 +1,6 @@
+// Byte-identical twin shared by melcloud-api and heatzy-api. The
+// deferred `api-core` extraction leaves no mechanism to link them:
+// the two repos have no dependency, so edit both or neither.
 // Re-export of `temporal-polyfill` as the single Temporal entry point
 // for the rest of the codebase. Node 22 (the minimum supported runtime)
 // does not yet ship native `Temporal`; the polyfill stays bundled
