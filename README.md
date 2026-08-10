@@ -20,7 +20,7 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 - **Resilient by default** — auto-retry on transient failures, rate-limit awareness, pre-emptive session refresh.
 - **Validated boundaries** — Zod schemas guard every consumed payload, so upstream shape drift surfaces as a typed `ValidationError` instead of a deep `undefined` crash.
 - **Typed failures** — telemetry, reports and error-log getters return `Result<T>` so callers branch on `network` / `unauthorized` / `rate-limited` / `validation` / `server` / `not-found` instead of catching generic exceptions.
-- **Tree-shakable** — `sideEffects: false` plus `/classic`, `/home` and `/constants` subpath exports for namespace-style imports.
+- **Tree-shakable** — `sideEffects: false` plus `/classic`, `/home`, `/constants` and `/protection` subpath exports for namespace-style imports. The last two are dependency-free leaves, so a browser bundle can import their values; the root barrel reaches the HTTP stack and is Node-only.
 
 ## Requirements
 
@@ -169,9 +169,16 @@ const b: Home.AtaValues = ...
 
 // Shared enum-like constants (e.g. CLASSIC_FLAG_UNCHANGED, HomeDeviceType)
 import { ClassicDeviceType, HomeDeviceType } from '@olivierzal/melcloud-api/constants'
+
+// Protection bounds and clamping (frost, overheat)
+import { FROST_PROTECTION_RANGE } from '@olivierzal/melcloud-api/protection'
 ```
 
-Available subpaths: `/classic`, `/home`, `/constants`.
+Available subpaths: `/classic`, `/home`, `/constants`, `/protection`.
+
+`/constants` and `/protection` import nothing, so a browser bundler resolves
+them without reaching the Node-only HTTP stack that the root barrel pulls in —
+the path to take when a webview needs a published value rather than a copy.
 
 ## Documentation
 

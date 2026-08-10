@@ -34,6 +34,10 @@
     "./home": {
       "types": "./dist/home.d.ts",
       "default": "./dist/home.js"
+    },
+    "./protection": {
+      "types": "./dist/protection.d.ts",
+      "default": "./dist/protection.js"
     }
   },
   "types": "dist/index.d.ts",
