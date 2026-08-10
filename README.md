@@ -24,7 +24,7 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 
 ## Requirements
 
-- Node.js >= 22.19.0
+- Node.js >= 22.20.0
 - A valid MELCloud or MELCloud Home account
 - For installing the package: a GitHub personal access token with the `read:packages` scope
 
