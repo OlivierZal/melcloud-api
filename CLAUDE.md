@@ -103,6 +103,13 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   (Sunday = 0) unlike the 1-based ISO labels of `Report/*`. ATA Home
   daily energy buckets are watt-hours and idle days are omitted
   entirely; ATW buckets are kWh.
+- Setpoint-increment fields exist on BOTH wires — Home `hasHalfDegrees`
+  (ATA and ATW capabilities) and Classic
+  `CanSetTemperatureIncrementOverride` (a device PERMISSION, never a
+  step declaration) — and are deliberately neither exposed by the
+  facades nor consumed: Homey does not derive a capability's step from
+  them, so a reading would reach no actionable consumer. Their absence
+  from the public surface is a verdict, not a gap.
 
 ## Tooling boundary (@olivierzal/configs)
 
