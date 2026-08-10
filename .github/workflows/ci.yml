@@ -12,7 +12,6 @@ jobs:
       run-lint-package: true
 name: CI
 on:
-  merge_group: {}
   pull_request: {}
   push:
     branches: [main]
