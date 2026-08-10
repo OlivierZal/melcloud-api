@@ -13,6 +13,11 @@ import {
 } from '../enum-mappings.ts'
 import { NoChangesError, tolerateNoChanges } from '../errors/index.ts'
 import {
+  type AtaTemperatureBounds,
+  type TemperatureRange,
+  rangeForHomeMode,
+} from '../temperature-range.ts'
+import {
   type ClassicGroupState,
   type HomeAtaDeviceCapabilities,
   type HomeAtaDeviceData,
@@ -46,37 +51,24 @@ const KILOWATT_HOURS_PER_WATT_HOUR = 0.001
 
 const TEMPERATURE_UNIT = '°C'
 
-interface TemperatureRange {
-  max: number
-  min: number
-}
+// Half-degree units advertise it; the rest step by a whole degree.
+const HALF_DEGREE_STEP = 0.5
+const WHOLE_DEGREE_STEP = 1
 
-const coolDryRange = ({
-  maxTempCoolDry: max,
-  minTempCoolDry: min,
-}: HomeAtaDeviceCapabilities): TemperatureRange => ({ max, min })
-
-const heatFanRange = ({
-  maxTempHeat: max,
-  minTempHeat: min,
-}: HomeAtaDeviceCapabilities): TemperatureRange => ({ max, min })
-
-const temperatureRanges = new Map<
-  HomeOperationMode,
-  (capabilities: HomeAtaDeviceCapabilities) => TemperatureRange
->([
-  [
-    'Automatic',
-    ({ maxTempAutomatic: max, minTempAutomatic: min }): TemperatureRange => ({
-      max,
-      min,
-    }),
-  ],
-  ['Cool', coolDryRange],
-  ['Dry', coolDryRange],
-  ['Fan', heatFanRange],
-  ['Heat', heatFanRange],
-])
+// The dialect extractor: Home spells the three advertised pairs in
+// camelCase, and the shared module resolves modes onto them.
+const toBounds = ({
+  maxTempAutomatic,
+  maxTempCoolDry,
+  maxTempHeat,
+  minTempAutomatic,
+  minTempCoolDry,
+  minTempHeat,
+}: HomeAtaDeviceCapabilities): AtaTemperatureBounds => ({
+  automatic: { max: maxTempAutomatic, min: minTempAutomatic },
+  coolDry: { max: maxTempCoolDry, min: minTempCoolDry },
+  heatFan: { max: maxTempHeat, min: minTempHeat },
+})
 
 /**
  * Facade for a MELCloud Home ATA device. Provides typed access to device
@@ -158,6 +150,17 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    */
   public get setTemperature(): number {
     return this.settingNumber('SetTemperature')
+  }
+
+  /**
+   * Setpoint granularity in °C, from the unit's advertised
+   * half-degree capability.
+   * @returns `0.5` on half-degree units, `1` otherwise.
+   */
+  public get temperatureStep(): number {
+    return this.capabilities.hasHalfDegreeIncrements
+      ? HALF_DEGREE_STEP
+      : WHOLE_DEGREE_STEP
   }
 
   /**
@@ -260,6 +263,19 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   }
 
   /**
+   * Setpoint bounds enforced for an operation mode — the cross-dialect
+   * read: a caller needs no knowledge of which API backs the device.
+   * @param mode - Operation mode to resolve; defaults to the active one.
+   * @returns The interval, or `null` for a mode outside the known
+   * vocabulary (the setpoint then goes unclamped).
+   */
+  public getTemperatureRange(
+    mode: HomeOperationMode = this.operationMode,
+  ): TemperatureRange | null {
+    return rangeForHomeMode(toBounds(this.capabilities), mode)
+  }
+
+  /**
    * Fetches the temperature history as line chart data (trend-summary
    * report resampled on a regular grid) — the Home counterpart of the
    * Classic `getTemperatures` contract.
@@ -327,11 +343,10 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     if (value === undefined || value === null) {
       return {}
     }
-    const mode = operationMode ?? this.operationMode
-    const getRange = temperatureRanges.get(mode)
-    return getRange === undefined
-      ? { setTemperature: value }
-      : { setTemperature: clampToRange(value, getRange(this.capabilities)) }
+    const range = this.getTemperatureRange(operationMode ?? this.operationMode)
+    return {
+      setTemperature: range === null ? value : clampToRange(value, range),
+    }
   }
 
   // Typed reads of the enum-backed settings. The overloads deliberately

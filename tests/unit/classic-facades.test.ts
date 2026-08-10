@@ -1188,6 +1188,34 @@ describe('ata device facade', () => {
     ).toBeGreaterThanOrEqual(10)
   })
 
+  it('passes the setpoint through for an unknown operation mode', async () => {
+    const { api, facade } = createAtaFacade()
+    await facade.updateValues(cast({ OperationMode: 99, SetTemperature: 50 }))
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
+
+    expect(call).toBeDefined()
+
+    expect(
+      mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>>(
+        defined(call).postData,
+      ).SetTemperature,
+    ).toBe(50)
+  })
+
+  it('reads the per-mode range from the device bounds', () => {
+    const { facade } = createAtaFacade()
+
+    expect(facade.getTemperatureRange(ClassicOperationMode.heat)).toStrictEqual(
+      { max: 31, min: 10 },
+    )
+
+    expect(facade.getTemperatureRange(ClassicOperationMode.cool)).toStrictEqual(
+      { max: 31, min: 16 },
+    )
+
+    expect(facade.getTemperatureRange(cast(99))).toBeNull()
+  })
+
   it('handles temperature clamping with operation mode change', async () => {
     const { api, facade } = createAtaFacade()
     await facade.updateValues({

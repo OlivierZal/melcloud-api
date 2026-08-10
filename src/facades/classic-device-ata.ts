@@ -1,5 +1,10 @@
-import { ClassicDeviceType, ClassicOperationMode } from '../constants.ts'
+import { type ClassicOperationMode, ClassicDeviceType } from '../constants.ts'
 import { tolerateNoChanges } from '../errors/index.ts'
+import {
+  type AtaTemperatureBounds,
+  type TemperatureRange,
+  rangeForClassicMode,
+} from '../temperature-range.ts'
 import {
   type ClassicEnergyDataAta,
   type ClassicGroupState,
@@ -73,6 +78,26 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
     'OutdoorTemperature',
   ]
 
+  // The dialect extractor: Classic spells the three advertised pairs in
+  // PascalCase, and the shared module resolves modes onto them.
+  get #bounds(): AtaTemperatureBounds {
+    const {
+      data: {
+        MaxTempAutomatic,
+        MaxTempCoolDry,
+        MaxTempHeat,
+        MinTempAutomatic,
+        MinTempCoolDry,
+        MinTempHeat,
+      },
+    } = this
+    return {
+      automatic: { max: MaxTempAutomatic, min: MinTempAutomatic },
+      coolDry: { max: MaxTempCoolDry, min: MinTempCoolDry },
+      heatFan: { max: MaxTempHeat, min: MinTempHeat },
+    }
+  }
+
   /**
    * Read this device's current state projected as a group state, treating
    * the device as a group of one: MELCloud's group endpoints only address
@@ -93,6 +118,19 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
       VaneHorizontalDirection: data.VaneHorizontalDirection,
       VaneVerticalDirection: data.VaneVerticalDirection,
     })
+  }
+
+  /**
+   * Setpoint bounds enforced for an operation mode — the cross-dialect
+   * read: a caller needs no knowledge of which API backs the device.
+   * @param mode - Operation mode to resolve; defaults to the active one.
+   * @returns The interval, or `null` for a mode outside the known
+   * vocabulary (the setpoint then goes unclamped).
+   */
+  public getTemperatureRange(
+    mode: ClassicOperationMode = this.setData.OperationMode,
+  ): TemperatureRange | null {
+    return rangeForClassicMode(this.#bounds, mode)
   }
 
   /**
@@ -130,45 +168,9 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
     if (value === undefined) {
       return {}
     }
-    const range = this.#getTargetTemperatureRange(operationMode)
-    return { SetTemperature: clampToRange(value, range) }
-  }
-
-  #getTargetTemperatureRange(operationMode = this.setData.OperationMode): {
-    max: number
-    min: number
-  } {
-    const {
-      data: {
-        MaxTempAutomatic: maxTemperatureAutomatic,
-        MaxTempCoolDry: maxTemperatureCoolDry,
-        MaxTempHeat: maxTemperatureHeatFan,
-        MinTempAutomatic: minTemperatureAutomatic,
-        MinTempCoolDry: minTemperatureCoolDry,
-        MinTempHeat: minTemperatureHeatFan,
-      },
-    } = this
+    const range = this.getTemperatureRange(operationMode)
     return {
-      [ClassicOperationMode.auto]: {
-        max: maxTemperatureAutomatic,
-        min: minTemperatureAutomatic,
-      },
-      [ClassicOperationMode.cool]: {
-        max: maxTemperatureCoolDry,
-        min: minTemperatureCoolDry,
-      },
-      [ClassicOperationMode.dry]: {
-        max: maxTemperatureCoolDry,
-        min: minTemperatureCoolDry,
-      },
-      [ClassicOperationMode.fan]: {
-        max: maxTemperatureHeatFan,
-        min: minTemperatureHeatFan,
-      },
-      [ClassicOperationMode.heat]: {
-        max: maxTemperatureHeatFan,
-        min: minTemperatureHeatFan,
-      },
-    }[operationMode]
+      SetTemperature: range === null ? value : clampToRange(value, range),
+    }
   }
 }

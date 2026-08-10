@@ -271,5 +271,11 @@ export {
   OVERHEAT_PROTECTION_RANGE,
   PROTECTION_GAP,
 } from './protection.ts'
+export {
+  type AtaTemperatureBounds,
+  type TemperatureRange,
+  rangeForClassicMode,
+  rangeForHomeMode,
+} from './temperature-range.ts'
 export { Temporal } from './temporal.ts'
 export { err, mapResult, ok } from './types/index.ts'
