@@ -31,13 +31,30 @@
       "types": "./dist/constants.d.ts",
       "default": "./dist/constants.js"
     },
+    "./enum-mappings": {
+      "types": "./dist/enum-mappings.d.ts",
+      "default": "./dist/enum-mappings.js"
+    },
+    "./holiday-mode": {
+      "types": "./dist/holiday-mode.d.ts",
+      "default": "./dist/holiday-mode.js"
+    },
     "./home": {
       "types": "./dist/home.d.ts",
       "default": "./dist/home.js"
     },
+    "./package.json": "./package.json",
     "./protection": {
       "types": "./dist/protection.d.ts",
       "default": "./dist/protection.js"
+    },
+    "./temperature-range": {
+      "types": "./dist/temperature-range.d.ts",
+      "default": "./dist/temperature-range.js"
+    },
+    "./temporal": {
+      "types": "./dist/temporal.d.ts",
+      "default": "./dist/temporal.js"
     }
   },
   "types": "dist/index.d.ts",

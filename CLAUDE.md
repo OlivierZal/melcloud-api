@@ -205,13 +205,25 @@ where even reads need auth).
   fine for consts, types, and schemas.
 - `src/temporal.ts` is the only sanctioned `temporal-polyfill` entry point
   (enforced by `no-restricted-imports`).
-- A public module that imports nothing earns its own subpath in the
-  `exports` map (`/constants`, `/protection`). The root barrel reaches
-  the HTTP stack, so a browser bundler resolving a VALUE through it
-  fails on `undici`'s `node:` builtins (measured: 118 errors) — a
-  consumer that cannot reach a published constant copies it instead,
-  which is the drift these subpaths exist to prevent. Keep such modules
-  import-free; adding one edge closes the path silently.
+- Every FLAT module the root barrel re-exports earns its own subpath in
+  the `exports` map, and `tests/unit/export-map.test.ts` holds that 1:1.
+  The barrel reaches the HTTP stack, so a browser bundler resolving a
+  VALUE through it fails on `undici`'s `node:` builtins (measured: 118
+  errors); a consumer that cannot reach a published symbol copies it
+  instead, which is the drift these subpaths exist to prevent — and the
+  copy surfaces only later, at the cost of a release plus an adoption
+  round everywhere, which is what the missing `/protection` cost. A
+  subpath does NOT widen the API: the barrel already exports those
+  symbols, so it only restores reach where the barrel cannot load. The
+  criterion is the EMITTED closure, not the absence of edges —
+  `/temperature-range` reaches `utils` yet bundles to 2 052 B because
+  esbuild shakes out what no export touches. What forecloses a subpath
+  is reaching the HTTP stack, never importing a sibling. Directory
+  barrels (`errors/`, `types/`, `http/`…) are exempt by verdict, not by
+  oversight: they are grouped surfaces rather than leaves, and none has
+  been needed from a browser — the test pins their set so a new one
+  forces that decision. `./package.json` is published too: an `exports`
+  map otherwise hides the manifest from the tooling that reads it.
 - Tests import vitest APIs explicitly (no globals) and use `it` inside
   `describe`, `.each` for tables, `describe(fn)` function titles.
   Boolean names take a semantic prefix (`is`, `has`, `should`…); `device`
