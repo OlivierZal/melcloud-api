@@ -65,9 +65,9 @@ const config: Config[] = defineConfig([
   },
   {
     // Shipped regexes stay on the `u` flag: the es2024 `v` flag is a
-    // parse-time SyntaxError on Homey Pro 2016-2019 (Node < 20), which
-    // killed the consuming app at boot (2026-08 crash report). The full
-    // node device-floor policy is pending an installed-base measurement.
+    // parse-time SyntaxError on older Homey Pro (2016-2019) firmware
+    // (pre-Node-20 runtime) — it killed the consuming app at boot
+    // there (2026-08 crash report).
     files: ['src/**/*.ts'],
     rules: { 'require-unicode-regexp': ['error', { requireFlag: 'u' }] },
   },
