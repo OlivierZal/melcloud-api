@@ -149,7 +149,13 @@ where even reads need auth).
   the es2024 `v` flag at parse time. No Homey update lifts that floor.
   Scoping the rule to the reachable subset would drift with every
   import change, so the overlay pins `require-unicode-regexp` to `u`
-  across all of `src`.
+  across all of `src`. The FULL es2023 floor (`webviewFloorBlock` —
+  no `Object.groupBy`/`Map.groupBy`, no iterator helpers) applies on
+  top of that to the browser-reachable closure alone: the flat subpath
+  modules plus their value-import closure, held against drift by
+  `tests/unit/webview-floor.test.ts`, which recomputes the closure and
+  fails in both directions. Node-only layers (facades, entities, HTTP,
+  observability) keep the modern-API freedom the device Node allows.
 
 - Code adapts to the rules, never the reverse. Never add a disable — not
   inline, not through config options or ignore regexes: refactor until the
