@@ -50,6 +50,7 @@ const config: Config[] = defineConfig([
       'src/enum-mappings.ts',
       'src/facades/**/*.ts',
       'src/http/**/*.ts',
+      'src/temperature-range.ts',
       'src/types/**/*.ts',
       'src/utils.ts',
       'src/validation/**/*.ts',

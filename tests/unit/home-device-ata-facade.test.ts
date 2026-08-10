@@ -288,6 +288,59 @@ describe('home device ata facade', () => {
     })
   })
 
+  describe('temperature range and step', () => {
+    it('should read the per-mode range from the device capabilities', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        createModel(
+          { OperationMode: 'Heat' },
+          { maxTempHeat: 31, minTempHeat: 10 },
+        ),
+      )
+
+      expect(facade.getTemperatureRange()).toStrictEqual({ max: 31, min: 10 })
+
+      expect(facade.getTemperatureRange('Cool')).toStrictEqual({
+        max: 31,
+        min: 16,
+      })
+
+      expect(facade.getTemperatureRange(cast('Unknown'))).toBeNull()
+    })
+
+    // Mutation guard: the range follows the dialect fixture, so a bound
+    // changed at the source changes what consumers render.
+    it('should follow the advertised bounds', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        createModel(
+          { OperationMode: 'Heat' },
+          { maxTempHeat: 28, minTempHeat: 12 },
+        ),
+      )
+
+      expect(facade.getTemperatureRange()).toStrictEqual({ max: 28, min: 12 })
+    })
+
+    it('should step by a half degree when the unit advertises it', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        createModel({}, { hasHalfDegreeIncrements: true }),
+      )
+
+      expect(facade.temperatureStep).toBe(0.5)
+    })
+
+    it('should step by a whole degree otherwise', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        createModel({}, { hasHalfDegreeIncrements: false }),
+      )
+
+      expect(facade.temperatureStep).toBe(1)
+    })
+  })
+
   describe('temperature clamping', () => {
     it('should clamp temperature to heat range', async () => {
       const api = createApi()
