@@ -17,7 +17,7 @@ jobs:
       pull-requests: read
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-    uses: OlivierZal/configs/.github/workflows/reusable-claude-dependabot-fix.yml@262b014bfa89bca8ff1bf8799b50a95f8552b3f2 # v1.6.0
+    uses: OlivierZal/configs/.github/workflows/reusable-claude-dependabot-fix.yml@347191e7498bdc6fcd9907963f0fa6e7b2f55f4b # v1.10.1
     with:
       repo-guidance: >-
         Twin discipline: several source and test files here are
