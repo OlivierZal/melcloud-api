@@ -10,6 +10,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **Breaking:** `engines.node` raised to `>=22.20.0` (was `>=22.19.0`). The floor now states the measured device fleet rather than the requirement of a bundled dependency: every up-to-date Homey Pro runs Node 22.20 (Early 2019) or 22.23 (2023), measured on-device 2026-08, so 22.19 was a number nothing executed. `undici`'s own `>=22.19.0` stays satisfied — the floor remains the highest of the dependency floors and the fleet floor. Nothing changes at runtime (`engines` is advisory absent `engine-strict`), but the package no longer claims support for Node 22.0–22.19.x.
 
+## [47.1.1] - 2026-08-10
+
+### Fixed
+
+- **`getTemperatureRange` is now declared on the `ClassicDeviceAtaFacade` interface**, not only on the class behind it. Since 46.0.0 the published facade names resolve to the interfaces the manager returns, so a method absent from the interface is invisible to consumers however faithfully the class implements it — the Home side declared it, the Classic side did not, and calling it through a Classic ATA facade failed to typecheck. The signature mirrors the class exactly; no runtime behaviour changes.
+
+## [47.1.0] - 2026-08-10
+
+### Added
+
+- **Per-mode ATA setpoint bounds, resolved identically whichever API backs the device.** `getTemperatureRange(mode?)` on the ATA facades answers the interval a unit enforces for an operation mode, defaulting to the active one, and returns `null` for a mode outside the known vocabulary — an unrecognised wire value passes through unclamped rather than borrowing another mode's bounds. Both dialects advertise the same three intervals and differ only in field spelling, so each facade supplies its own bounds and a single shared table resolves them.
+- `TemperatureRange` and `AtaTemperatureBounds` types, plus the `rangeForHomeMode` and `rangeForClassicMode` resolvers, exported from the root barrel for callers who hold bounds directly.
+
+## [47.0.1] - 2026-08-10
+
+### Fixed
+
+- **The library parses again on Homey Pro (2016–2019) running older firmware.** Three regexes in the token-authentication flow and one in the HTTP client carried the `v` flag, which is an ES2024 addition: the pre-Node-20 engine on those firmwares rejects it at _parse_ time, so importing the library threw `SyntaxError: Invalid regular expression flags` and took the host app down at boot before any code ran. All shipped regexes now use `u`, which is equivalent for these patterns — none uses the set notation `v` exists for — and a lint rule holds the constraint.
+
+## [47.0.0] - 2026-08-07
+
+### Changed
+
+- **Breaking:** the snake_case members of two published constants are now camelCase — `ClassicLabelType.day_of_week` → `dayOfWeek`, `ClassicLabelType.month_of_year` → `monthOfYear`, and `ClassicTemperature.cooling_min` → `coolingMin`. These names are the library's own, not the wire's: **every numeric value is unchanged**, so no request or response shape moves and only source references need updating.
+
 ## [46.0.1] - 2026-08-06
 
 ### Fixed
@@ -55,11 +80,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - `ensureAuthenticated()` no longer signs the user out while probing. It went straight to `resumeSession()`, which routes through `authenticate()` and wipes the persisted session _before_ re-logging in — so a session that was merely unexercised (a boot-time context fetch that lost the network reads unauthenticated while a valid refresh token sits in storage) was destroyed by the probe meant to restore it, and a failing re-login then left the account signed out. The probe is now a non-destructive registry sync, with `resumeSession()` kept as the fallback.
-
-## [45.0.1] - 2026-07-28
-
-### Fixed
-
 - Classic `isAvailable` no longer swallows `EntityNotFoundError`: the registry lookup moved outside the guard that tolerates an unparsable timestamp, so a pruned id propagates like it already did on the Home facade instead of reading as reachable. A consumer that syncs availability before touching device data was calling `setAvailable()` on a vanished device.
 
 ## [45.0.0] - 2026-07-28
@@ -473,40 +493,43 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
 [48.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v47.1.1...v48.0.0
-[46.0.1]: https://github.com/OlivierZal/melcloud-api/compare/46.0.0...46.0.1
-[46.0.0]: https://github.com/OlivierZal/melcloud-api/compare/45.1.0...46.0.0
-[45.1.0]: https://github.com/OlivierZal/melcloud-api/compare/45.0.2...45.1.0
-[45.0.2]: https://github.com/OlivierZal/melcloud-api/compare/45.0.1...45.0.2
-[45.0.1]: https://github.com/OlivierZal/melcloud-api/compare/45.0.0...45.0.1
-[45.0.0]: https://github.com/OlivierZal/melcloud-api/compare/44.1.0...45.0.0
-[44.1.0]: https://github.com/OlivierZal/melcloud-api/compare/44.0.0...44.1.0
-[44.0.0]: https://github.com/OlivierZal/melcloud-api/compare/43.3.0...44.0.0
-[43.3.0]: https://github.com/OlivierZal/melcloud-api/compare/43.2.0...43.3.0
-[43.2.0]: https://github.com/OlivierZal/melcloud-api/compare/43.1.0...43.2.0
-[43.1.0]: https://github.com/OlivierZal/melcloud-api/compare/43.0.1...43.1.0
-[43.0.1]: https://github.com/OlivierZal/melcloud-api/compare/43.0.0...43.0.1
-[43.0.0]: https://github.com/OlivierZal/melcloud-api/compare/42.6.0...43.0.0
-[42.6.0]: https://github.com/OlivierZal/melcloud-api/compare/42.5.0...42.6.0
-[42.5.0]: https://github.com/OlivierZal/melcloud-api/compare/42.4.0...42.5.0
-[42.4.0]: https://github.com/OlivierZal/melcloud-api/compare/42.3.0...42.4.0
-[42.3.0]: https://github.com/OlivierZal/melcloud-api/compare/42.2.0...42.3.0
-[42.2.0]: https://github.com/OlivierZal/melcloud-api/compare/42.1.0...42.2.0
-[42.1.0]: https://github.com/OlivierZal/melcloud-api/compare/42.0.6...42.1.0
-[42.0.6]: https://github.com/OlivierZal/melcloud-api/compare/42.0.5...42.0.6
-[42.0.5]: https://github.com/OlivierZal/melcloud-api/compare/42.0.4...42.0.5
-[42.0.4]: https://github.com/OlivierZal/melcloud-api/compare/42.0.3...42.0.4
-[42.0.3]: https://github.com/OlivierZal/melcloud-api/compare/42.0.2...42.0.3
-[42.0.2]: https://github.com/OlivierZal/melcloud-api/compare/42.0.1...42.0.2
-[42.0.1]: https://github.com/OlivierZal/melcloud-api/compare/42.0.0...42.0.1
-[42.0.0]: https://github.com/OlivierZal/melcloud-api/compare/41.3.0...42.0.0
-[41.3.0]: https://github.com/OlivierZal/melcloud-api/compare/41.2.3...41.3.0
-[41.2.3]: https://github.com/OlivierZal/melcloud-api/compare/41.2.2...41.2.3
-[41.2.2]: https://github.com/OlivierZal/melcloud-api/compare/41.2.1...41.2.2
-[41.2.1]: https://github.com/OlivierZal/melcloud-api/compare/41.2.0...41.2.1
-[41.2.0]: https://github.com/OlivierZal/melcloud-api/compare/41.1.0...41.2.0
-[41.1.0]: https://github.com/OlivierZal/melcloud-api/compare/41.0.0...41.1.0
-[41.0.0]: https://github.com/OlivierZal/melcloud-api/compare/39.0.0...41.0.0
-[39.0.0]: https://github.com/OlivierZal/melcloud-api/compare/38.0.2...39.0.0
-[38.0.2]: https://github.com/OlivierZal/melcloud-api/compare/38.0.1...38.0.2
-[38.0.1]: https://github.com/OlivierZal/melcloud-api/compare/38.0.0...38.0.1
-[38.0.0]: https://github.com/OlivierZal/melcloud-api/compare/37.2.1...38.0.0
+[47.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v47.1.0...v47.1.1
+[47.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v47.0.1...v47.1.0
+[47.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v47.0.0...v47.0.1
+[47.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v46.0.1...v47.0.0
+[46.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v46.0.0...v46.0.1
+[46.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v45.1.0...v46.0.0
+[45.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v45.0.2...v45.1.0
+[45.0.2]: https://github.com/OlivierZal/melcloud-api/compare/v45.0.0...v45.0.2
+[45.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v44.1.0...v45.0.0
+[44.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v44.0.0...v44.1.0
+[44.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v43.3.0...v44.0.0
+[43.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v43.2.0...v43.3.0
+[43.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v43.1.0...v43.2.0
+[43.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v43.0.1...v43.1.0
+[43.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v43.0.0...v43.0.1
+[43.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v42.6.0...v43.0.0
+[42.6.0]: https://github.com/OlivierZal/melcloud-api/compare/v42.5.0...v42.6.0
+[42.5.0]: https://github.com/OlivierZal/melcloud-api/compare/v42.4.0...v42.5.0
+[42.4.0]: https://github.com/OlivierZal/melcloud-api/compare/v42.3.0...v42.4.0
+[42.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v42.2.0...v42.3.0
+[42.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v42.1.0...v42.2.0
+[42.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v42.0.6...v42.1.0
+[42.0.6]: https://github.com/OlivierZal/melcloud-api/compare/v42.0.5...v42.0.6
+[42.0.5]: https://github.com/OlivierZal/melcloud-api/compare/v42.0.4...v42.0.5
+[42.0.4]: https://github.com/OlivierZal/melcloud-api/compare/v42.0.3...v42.0.4
+[42.0.3]: https://github.com/OlivierZal/melcloud-api/compare/v42.0.2...v42.0.3
+[42.0.2]: https://github.com/OlivierZal/melcloud-api/compare/v42.0.1...v42.0.2
+[42.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v42.0.0...v42.0.1
+[42.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v41.3.0...v42.0.0
+[41.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v41.2.3...v41.3.0
+[41.2.3]: https://github.com/OlivierZal/melcloud-api/compare/v41.2.2...v41.2.3
+[41.2.2]: https://github.com/OlivierZal/melcloud-api/compare/v41.2.1...v41.2.2
+[41.2.1]: https://github.com/OlivierZal/melcloud-api/compare/v41.2.0...v41.2.1
+[41.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v41.1.0...v41.2.0
+[41.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v41.0.0...v41.1.0
+[41.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v39.0.0...v41.0.0
+[39.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v38.0.2...v39.0.0
+[38.0.2]: https://github.com/OlivierZal/melcloud-api/compare/v38.0.1...v38.0.2
+[38.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v38.0.0...v38.0.1
+[38.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v37.2.1...v38.0.0
