@@ -135,10 +135,16 @@ where even reads need auth).
 
 ## Lint doctrine
 
-- Shipped regexes stay on the `u` flag — the es2024 `v` flag is a
-  parse-time SyntaxError on Homey Pro 2016-2019 (Node < 20) and killed
-  the consuming app at boot (2026-08 crash report). The overlay pins
-  `require-unicode-regexp` to `u`.
+- Shipped regexes stay on the `u` flag, and the reason is PERMANENT,
+  not the firmware gap that first surfaced it: the consuming apps
+  bundle this package into their PHONE WEBVIEWS. `/constants` is
+  imported for values, not types, and esbuild inlines them —
+  `coolingMin:16` sits in com.melcloud's shipped widget bundle — so
+  every `src` module is a candidate for a WebKit engine that rejects
+  the es2024 `v` flag at parse time. No Homey update lifts that floor.
+  Scoping the rule to the reachable subset would drift with every
+  import change, so the overlay pins `require-unicode-regexp` to `u`
+  across all of `src`.
 
 - Code adapts to the rules, never the reverse. Never add a disable — not
   inline, not through config options or ignore regexes: refactor until the
