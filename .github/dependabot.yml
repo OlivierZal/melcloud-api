@@ -1,3 +1,8 @@
+registries:
+  npm-github:
+    token: ${{ secrets.MY_GITHUB_PERSONAL_TOKEN }}
+    type: npm-registry
+    url: https://npm.pkg.github.com
 updates:
   # Both ecosystems share the `build(deps)` type: it keeps every bump under
   # one `git log --grep` and leaves `ci` to mean hand-written CI changes.
@@ -54,6 +59,8 @@ updates:
           - '@vitest/*'
           - vitest
     package-ecosystem: npm
+    registries:
+      - npm-github
     schedule:
       interval: weekly
 version: 2
