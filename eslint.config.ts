@@ -65,10 +65,13 @@ const config: Config[] = defineConfig([
     rules: { '@typescript-eslint/no-magic-numbers': 'off' },
   },
   {
-    // Shipped regexes stay on the `u` flag: the es2024 `v` flag is a
-    // parse-time SyntaxError on older Homey Pro (2016-2019) firmware
-    // (pre-Node-20 runtime) — it killed the consuming app at boot
-    // there (2026-08 crash report).
+    // Shipped regexes stay on the `u` flag: the consuming apps bundle
+    // this package INTO their phone webviews — `/constants` is imported
+    // for values, and esbuild inlines them (`coolingMin:16` is in the
+    // shipped widget bundle) — and those WebKit engines reject the
+    // es2024 `v` flag at parse time. Scoping to the reachable subset is
+    // unmaintainable, so all of `src` holds the floor. Unlike the
+    // firmware gap that first surfaced this, no update lifts it.
     files: ['src/**/*.ts'],
     rules: { 'require-unicode-regexp': ['error', { requireFlag: 'u' }] },
   },
