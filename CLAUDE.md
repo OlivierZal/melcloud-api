@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Typed Node.js client for the MELCloud (Classic) and MELCloud Home APIs.
-ESM only, Node >= 22.19, published to GitHub Packages. `erasableSyntaxOnly`
+ESM only, Node >= 22.20, published to GitHub Packages. `erasableSyntaxOnly`
 is on: no runtime enums, no parameter properties, no runtime namespaces.
 
 ## Commands
