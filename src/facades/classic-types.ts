@@ -11,6 +11,7 @@ import type {
 import type { AvailabilityAware, Identifiable } from '../entities/types.ts'
 import type { HolidayModeState, HolidayModeUpdate } from '../holiday-mode.ts'
 import type { ProtectionState, ProtectionUpdate } from '../protection.ts'
+import type { TemperatureRange } from '../temperature-range.ts'
 import type {
   ClassicEnergyData,
   ClassicGetDeviceData,
@@ -25,7 +26,11 @@ import type {
   Hour,
   Result,
 } from '../types/index.ts'
-import { type ClassicLabelType, ClassicDeviceType } from '../constants.ts'
+import {
+  type ClassicLabelType,
+  type ClassicOperationMode,
+  ClassicDeviceType,
+} from '../constants.ts'
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
@@ -56,6 +61,16 @@ export interface ClassicDeviceAtaFacade extends ClassicDeviceFacade<
    * Read this device's current state projected as a group state.
    */
   readonly getGroup: () => Promise<Result<ClassicGroupState>>
+  /**
+   * Setpoint bounds enforced for an operation mode — the cross-dialect
+   * read: a caller needs no knowledge of which API backs the device.
+   * @param mode - Operation mode to resolve; defaults to the active one.
+   * @returns The interval, or `null` for a mode outside the known
+   * vocabulary (the setpoint then goes unclamped).
+   */
+  readonly getTemperatureRange: (
+    mode?: ClassicOperationMode,
+  ) => TemperatureRange | null
   /**
    * Apply a group state to this device.
    */
