@@ -11,6 +11,11 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 - `npm run typecheck` — `tsc` from `@typescript/native` (TypeScript 7);
   does not cover `*.config.ts` (the lint does). The tooling (typedoc,
   typescript-eslint) still resolves the separate `typescript` 6.x install.
+- `npm run build` — purges `dist` before emitting, because `tsc` overwrites
+  but never deletes: a module renamed or removed in `src` would otherwise
+  survive in `dist`, and `files` ships that directory, so `prepare` would
+  pack the fossil. The purge is inline rather than a `prebuild` hook so it
+  cannot be skipped with `--ignore-scripts`.
 - `npm run format` / `npm run format:fix` — prettier.
 - `npm run docs` — typedoc. The config is `typedoc.config.js` (JSDoc-typed
   with `@ts-check`: typedoc cannot load `.ts` configs and silently ignores
