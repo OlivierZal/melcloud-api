@@ -46,7 +46,7 @@
     "src"
   ],
   "scripts": {
-    "build": "node ./node_modules/@typescript/native/bin/tsc --project tsconfig.build.json",
+    "build": "rm -rf dist && node ./node_modules/@typescript/native/bin/tsc --project tsconfig.build.json",
     "docs": "typedoc",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
