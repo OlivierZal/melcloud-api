@@ -263,10 +263,12 @@ where even reads need auth).
   declares). A Sonar finding is handled like a lint error — the code
   adapts (duplication refactors into a shared module), or the
   divergence is settled as a documented verdict — never merged over.
-- GitHub merge queue is impossible here: the repo is user-owned and the
-  feature is org-only (verified via API — no ruleset payload enables it).
-  Dependabot PRs auto-merge via `gh pr merge --auto`; the `merge_group`
-  triggers in the workflows are inert but harmless.
+- GitHub merge queue is impossible here: the feature is gated on
+  ORGANISATION ownership and this repo is user-owned (verified 2026-08
+  against the docs source). The workflows therefore declare no
+  `merge_group` trigger — an event that cannot fire needs no handling,
+  and "inert but harmless" is not a reason to keep configuration.
+  Dependabot PRs auto-merge via `gh pr merge --auto`.
 - The docs site deploys only on release or `gh workflow run docs.yml`.
 - CI: `Test (Node latest)` is `continue-on-error` by design — keep it out
   of required status checks. Sonar coverage runs on the `lts/*` leg only.
