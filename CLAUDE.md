@@ -140,13 +140,19 @@ where even reads need auth).
 
 ## Lint doctrine
 
-- Shipped regexes stay on the `u` flag, and the reason is PERMANENT,
-  not the firmware gap that first surfaced it: the consuming apps
-  bundle this package into their PHONE WEBVIEWS. `/constants` and
-  `/protection` are imported for values, not types, and esbuild inlines
-  them — `coolingMin:16` sits in com.melcloud's shipped widget bundle — so
-  every `src` module is a candidate for a WebKit engine that rejects
-  the es2024 `v` flag at parse time. No Homey update lifts that floor.
+- Shipped regexes stay on the `u` flag, and the reason outlives the
+  firmware gap that first surfaced it: the consuming apps bundle this
+  package into their PHONE WEBVIEWS. `/constants` and `/protection`
+  are imported for values, not types, and esbuild inlines them —
+  `coolingMin:16` sits in com.melcloud's shipped widget bundle — so
+  every `src` module is a candidate for the worst webview engine the
+  Homey mobile app admits: iOS 16.4's WebKit (its App Store minimum,
+  read 2026-08-11), which predates the `v` flag. Under the apps'
+  sub-es2024 esbuild target an escaped `v` literal ships as a
+  `new RegExp` call and throws at runtime inside the feature that
+  runs it — the parse-time crash of incident 45.x was this library's
+  tsc output on device Node, a different path. No Homey update lifts
+  that floor; the App Store minimum reaching 17.4 re-opens es2024.
   Scoping the rule to the reachable subset would drift with every
   import change, so the overlay pins `require-unicode-regexp` to `u`
   across all of `src`. The FULL es2023 floor (`webviewFloorBlock` —
