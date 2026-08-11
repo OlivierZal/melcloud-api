@@ -86,10 +86,12 @@ const config: Config[] = defineConfig([
     // Shipped regexes stay on the `u` flag: the consuming apps bundle
     // this package INTO their phone webviews — `/constants` is imported
     // for values, and esbuild inlines them (`coolingMin:16` is in the
-    // shipped widget bundle) — and those WebKit engines reject the
-    // es2024 `v` flag at parse time. Scoping to the reachable subset is
-    // unmaintainable, so all of `src` holds the floor. Unlike the
-    // firmware gap that first surfaced this, no update lifts it.
+    // shipped widget bundle) — and the worst engine the Homey app
+    // admits, iOS 16.4's WebKit (App Store minimum, 2026-08-11),
+    // predates the `v` flag: an escapee ships as `new RegExp` under
+    // the apps' esbuild target and throws at runtime. Scoping to the
+    // reachable subset is unmaintainable, so all of `src` holds the
+    // floor until the App Store minimum reaches 17.4.
     files: ['src/**/*.ts'],
     rules: { 'require-unicode-regexp': ['error', { requireFlag: 'u' }] },
   },
