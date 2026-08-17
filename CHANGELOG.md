@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [49.0.0] - 2026-08-18
+
+### Fixed
+
+- **Holiday-mode windows are no longer shifted by the caller's UTC offset** ([com.melcloud#1593](https://github.com/OlivierZal/com.melcloud/issues/1593)). Both MELCloud wires store holiday-mode datetimes as UTC wall clock, but the facades passed the caller's wall clock through verbatim in both directions — so every window landed late by the caller's offset on write (+1 h in BST, +2 h in CEST) and displayed early by the same amount on read. The Classic write, the Home batch write and both dialects' reads now project between the caller's clock and UTC at the facade boundary. A projection existed once (`7ba6364f`, 2023) and was lost in a 2024 refactor; the contract tests that pinned the buggy verbatim round-trip now pin the projection, across both DST offsets.
+
+### Changed
+
+- **BREAKING — the holiday-mode contract now names its timezone.** `HolidayModeUpdate` and `HolidayModeState` datetimes are wall clock in the API's configured `timezone` (`ClassicAPIConfig.timezone` / `HomeAPIConfig.timezone`), falling back to the host's zone when unset. Any consumer that compensated for the missing projection by passing pre-converted UTC must stop: pass local wall clock and let the facade project. Consumers that passed local wall clock all along (the intended reading) need no change and simply start getting correct behavior.
+- New internal projection helpers `toUtcWallClock` / `toZonedWallClock` carry the boundary conversion: writes throw on malformed input before any I/O; reads pass unparseable values through verbatim, so a bad wire value cannot take a sync down. DST-gap wall clocks resolve per Temporal's `'compatible'` disambiguation.
+
 ## [48.2.0] - 2026-08-11
 
 ### Added
@@ -510,6 +521,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[49.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.2.0...v49.0.0
 [48.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.1.0...v48.2.0
 [48.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.0.0...v48.1.0
 [48.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v47.1.1...v48.0.0

@@ -220,10 +220,38 @@ describe('home facade manager', () => {
       startDate: '2026-08-01T00:00:00',
     })
 
+    // A disabled window's dates are ignored by the wire and pass
+    // through unprojected — no conversion may fail a disable.
     expect(api.updateHolidayMode).toHaveBeenCalledWith({
       enabled: false,
       endDate: '2026-08-05T00:00:00',
       startDate: '2026-08-01T00:00:00',
+      units: { ATA: ['device-1'] },
+    })
+  })
+})
+
+describe('holiday-mode write projection', () => {
+  it("projects an enabled window from the caller's clock onto UTC", async () => {
+    const api = mock<HomeAPIAdapter>({
+      registry: homeTestRegistry,
+      timezone: 'Europe/Paris',
+      updateHolidayMode: vi.fn<HomeAPIAdapter['updateHolidayMode']>(),
+    })
+    const manager = new HomeFacadeManager(api)
+
+    // Paris summer wall clock (UTC+2): midnight locally is 22:00 UTC
+    // the previous day.
+    await manager.updateHolidayMode(['device-1'], {
+      endDate: '2026-08-05T00:00',
+      isEnabled: true,
+      startDate: '2026-08-01T00:00',
+    })
+
+    expect(api.updateHolidayMode).toHaveBeenCalledWith({
+      enabled: true,
+      endDate: '2026-08-04T22:00:00',
+      startDate: '2026-07-31T22:00:00',
       units: { ATA: ['device-1'] },
     })
   })

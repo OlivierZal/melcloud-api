@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { ReportChartLineOptions } from '../../src/facades/index.ts'
+import { Temporal } from '../../src/temporal.ts'
 import { err, ok } from '../../src/types/index.ts'
 import {
   fromListToSetAta,
@@ -12,6 +13,8 @@ import {
   mergeHourlyChartResults,
   omitUndefined,
   padHourlyChartToMidnight,
+  toUtcWallClock,
+  toZonedWallClock,
   typedFromEntries,
 } from '../../src/utils.ts'
 import { okValue } from '../helpers.ts'
@@ -211,5 +214,64 @@ describe.concurrent(padHourlyChartToMidnight, () => {
 
     expect(padded.labels).toStrictEqual(['23:30'])
     expect(padded.series).toStrictEqual([{ data: [-60], name: 'Signal' }])
+  })
+})
+
+// The wall-clock projections are the holiday-mode contract's floor: the
+// caller speaks its own zone, the wires store UTC. The pair must be
+// exact inverses outside DST transitions, and each direction carries
+// its own failure posture — a write throws before I/O, a read passes
+// verbatim rather than taking a sync down.
+describe('wall-clock projections', () => {
+  it('projects a summer wall clock onto UTC and back', () => {
+    const utc = toUtcWallClock('2026-07-10T20:30', 'Europe/Paris')
+
+    expect(utc.toString()).toBe('2026-07-10T18:30:00')
+    expect(toZonedWallClock(utc.toString(), 'Europe/Paris')).toBe(
+      '2026-07-10T20:30:00',
+    )
+  })
+
+  it('projects a winter wall clock with the winter offset', () => {
+    expect(toUtcWallClock('2026-03-01T09:15', 'Europe/Paris').toString()).toBe(
+      '2026-03-01T08:15:00',
+    )
+  })
+
+  it('resolves a DST-gap wall clock per compatible disambiguation', () => {
+    // 02:30 does not exist on 2026-03-29 in Paris: the clock jumps
+    // 02:00 -> 03:00, and 'compatible' shifts forward.
+    expect(toUtcWallClock('2026-03-29T02:30', 'Europe/Paris').toString()).toBe(
+      '2026-03-29T01:30:00',
+    )
+  })
+
+  it('falls back to the host zone when none is given', () => {
+    const zone = Temporal.Now.timeZoneId()
+
+    expect(toUtcWallClock('2026-07-10T20:30').toString()).toBe(
+      Temporal.PlainDateTime.from('2026-07-10T20:30')
+        .toZonedDateTime(zone)
+        .withTimeZone('UTC')
+        .toPlainDateTime()
+        .toString(),
+    )
+    expect(toZonedWallClock('2026-07-10T18:30')).toBe(
+      Temporal.PlainDateTime.from('2026-07-10T18:30')
+        .toZonedDateTime('UTC')
+        .withTimeZone(zone)
+        .toPlainDateTime()
+        .toString(),
+    )
+  })
+
+  it('throws on a malformed write-side datetime', () => {
+    expect(() => toUtcWallClock('not-a-date', 'Europe/Paris')).toThrow(
+      RangeError,
+    )
+  })
+
+  it('passes a malformed read-side datetime through verbatim', () => {
+    expect(toZonedWallClock('not-a-date', 'Europe/Paris')).toBe('not-a-date')
   })
 })

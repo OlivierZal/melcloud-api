@@ -30,18 +30,32 @@ interface BoundedWindow extends HolidayModeState {
   readonly startDate: string
 }
 
-// The neutral holiday state is the same contract on both dialects, so the
-// clauses live here once and every implementation answers them. Start and
-// end are deliberately far apart and ordered: a start/end swap has to
-// change the result.
+// Both wires store UTC wall clock while the contract speaks the
+// caller's (`api.timezone`, pinned here so no host zone can leak in).
+const CONTRACT_TIMEZONE = 'Europe/Paris'
+
+// The neutral holiday state is the same contract on both dialects, so
+// the clauses live here once and every implementation answers them.
+// Each case is a wire/state PAIR: the wire side is what the API
+// serves (UTC), the state side the same instants on the caller's
+// clock. The windows straddle the DST switch — a winter bound (+1) and
+// a summer bound (+2) in one case — so a projection that hardcodes
+// either offset has to change the result; start and end stay far apart
+// and ordered, so a swap has to as well.
 const CASES: readonly {
   readonly label: string
   readonly state: BoundedWindow | null
+  readonly wire: BoundedWindow | null
 }[] = [
   {
-    label: 'enabled window',
+    label: 'enabled window straddling the DST switch',
     state: {
-      endDate: '2026-03-10T18:30:00',
+      endDate: '2026-04-10T20:30:00',
+      isEnabled: true,
+      startDate: '2026-03-01T09:15:00',
+    },
+    wire: {
+      endDate: '2026-04-10T18:30:00',
       isEnabled: true,
       startDate: '2026-03-01T08:15:00',
     },
@@ -49,12 +63,17 @@ const CASES: readonly {
   {
     label: 'disabled window',
     state: {
-      endDate: '2026-04-20T21:45:00',
+      endDate: '2026-11-20T22:45:00',
       isEnabled: false,
-      startDate: '2026-04-05T06:20:00',
+      startDate: '2026-07-05T08:20:00',
+    },
+    wire: {
+      endDate: '2026-11-20T21:45:00',
+      isEnabled: false,
+      startDate: '2026-07-05T06:20:00',
     },
   },
-  { label: 'never configured', state: null },
+  { label: 'never configured', state: null, wire: null },
 ]
 
 /**
@@ -69,15 +88,18 @@ const CASES: readonly {
 const describeHolidayModeStateContract = (
   name: string,
   read: (
-    state: BoundedWindow | null,
+    wire: BoundedWindow | null,
   ) => HolidayModeState | Promise<HolidayModeState | null> | null,
 ): void => {
   describe(`holidayModeState — ${name}`, () => {
     beforeEach(resetHomeDevices)
 
-    it.each(CASES)('round-trips a $label unchanged', async ({ state }) => {
-      await expect(Promise.resolve(read(state))).resolves.toStrictEqual(state)
-    })
+    it.each(CASES)(
+      "projects a $label from the wire's UTC onto the caller's clock",
+      async ({ state, wire }) => {
+        await expect(Promise.resolve(read(wire))).resolves.toStrictEqual(state)
+      },
+    )
   })
 }
 
@@ -91,6 +113,7 @@ const classicFacade = (
     getHolidayMode: vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockResolvedValue(ok(classicHolidayModeResponse(data))),
+    timezone: CONTRACT_TIMEZONE,
   })
   return new ClassicBuildingFacade(
     api,
@@ -99,49 +122,52 @@ const classicFacade = (
   )
 }
 
-describeHolidayModeStateContract('Classic zone', async (state) =>
+describeHolidayModeStateContract('Classic zone', async (wire) =>
   okValue(
     await classicFacade(
-      state === null
+      wire === null
         ? { HMDefined: false }
         : {
             HMDefined: true,
-            HMEnabled: state.isEnabled,
-            HMEndDate: state.endDate,
-            HMStartDate: state.startDate,
+            HMEnabled: wire.isEnabled,
+            HMEndDate: wire.endDate,
+            HMStartDate: wire.startDate,
           },
     ).getHolidayMode(),
   ),
 )
 
 const homeApi = (): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({ registry: homeTestRegistry })
+  mock<HomeAPIAdapter>({
+    registry: homeTestRegistry,
+    timezone: CONTRACT_TIMEZONE,
+  })
 
 const toHomeWire = (
-  state: BoundedWindow | null,
+  wire: BoundedWindow | null,
 ): { enabled: boolean; endDate: string; startDate: string } | null =>
-  state === null
+  wire === null
     ? null
     : {
-        enabled: state.isEnabled,
-        endDate: state.endDate,
-        startDate: state.startDate,
+        enabled: wire.isEnabled,
+        endDate: wire.endDate,
+        startDate: wire.startDate,
       }
 
-describeHolidayModeStateContract('Home ATA device', (state) => {
+describeHolidayModeStateContract('Home ATA device', (wire) => {
   const facade = new HomeDeviceAtaFacade(
     homeApi(),
-    homeDevice({ holidayMode: toHomeWire(state), id: 'contract-ata' }),
+    homeDevice({ holidayMode: toHomeWire(wire), id: 'contract-ata' }),
   )
   return facade.holidayMode
 })
 
 // The ATW facade inherits the getter; asserting it here keeps the pair
 // from drifting apart the way the protection getter once could.
-describeHolidayModeStateContract('Home ATW device', (state) => {
+describeHolidayModeStateContract('Home ATW device', (wire) => {
   const facade = new HomeDeviceAtwFacade(
     homeApi(),
-    homeAtwDevice({ holidayMode: toHomeWire(state), id: 'contract-atw' }),
+    homeAtwDevice({ holidayMode: toHomeWire(wire), id: 'contract-atw' }),
   )
   return facade.holidayMode
 })
@@ -155,7 +181,7 @@ describe('holidayModeState — Classic-only wire shapes', () => {
       classicFacade({
         HMDefined: true,
         HMEnabled: true,
-        HMEndDate: '2026-05-12T23:00:00',
+        HMEndDate: '2026-05-12T21:00:00',
         HMStartDate: null,
       }).getHolidayMode(),
     ).resolves.toStrictEqual({
@@ -173,8 +199,8 @@ describe('holidayModeState — Classic-only wire shapes', () => {
       classicFacade({
         HMDefined: true,
         HMEnabled: false,
-        HMEndDate: '2026-06-02T12:00:00',
-        HMStartDate: '2026-06-01T09:00:00',
+        HMEndDate: '2026-06-02T10:00:00',
+        HMStartDate: '2026-06-01T07:00:00',
       }).getHolidayMode(),
     ).resolves.toStrictEqual({
       ok: true,

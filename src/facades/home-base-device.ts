@@ -20,6 +20,7 @@ import {
   type Result,
   mapResult,
 } from '../types/index.ts'
+import { toZonedWallClock } from '../utils.ts'
 import type { ReportChartLineOptions } from './report-types.ts'
 import {
   resolveHomeDayWindow,
@@ -45,15 +46,18 @@ export const toHomeProtectionState = (
         min: protection.min,
       }
 
+// The Home wire speaks UTC wall clock everywhere (live-probed; see
+// CLAUDE.md): both bounds come back projected onto the caller's clock.
 const toHolidayModeState = (
   holidayMode: HomeHolidayMode | null,
+  timeZone?: string,
 ): HolidayModeState | null =>
   holidayMode === null
     ? null
     : {
-        endDate: holidayMode.endDate,
+        endDate: toZonedWallClock(holidayMode.endDate, timeZone),
         isEnabled: holidayMode.enabled,
-        startDate: holidayMode.startDate,
+        startDate: toZonedWallClock(holidayMode.startDate, timeZone),
       }
 
 /**
@@ -108,7 +112,7 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * @returns The cross-dialect holiday-mode state from `/context`.
    */
   public get holidayMode(): HolidayModeState | null {
-    return toHolidayModeState(this.model.data.holidayMode)
+    return toHolidayModeState(this.model.data.holidayMode, this.api.timezone)
   }
 
   /**
