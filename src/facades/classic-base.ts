@@ -47,6 +47,8 @@ import {
   hoursUpTo,
   mergeHourlyChartResults,
   padHourlyChartToMidnight,
+  toUtcWallClock,
+  toZonedWallClock,
   withMinuteClockLabels,
 } from '../utils.ts'
 import { HourSchema, parseOrThrow } from '../validation/index.ts'
@@ -66,14 +68,24 @@ const toProtectionState = (
       }
     : null
 
+// The wire stores UTC wall clock (its `TimeZone` field is a location
+// list, not a projection): both bounds come back projected onto the
+// caller's clock, `null` staying the wire's unset marker.
 const toHolidayModeState = (
   data: ClassicHolidayModeData,
+  timeZone?: string,
 ): HolidayModeState | null =>
   data.HMDefined
     ? {
-        endDate: data.HMEndDate,
+        endDate:
+          data.HMEndDate === null
+            ? null
+            : toZonedWallClock(data.HMEndDate, timeZone),
         isEnabled: data.HMEnabled,
-        startDate: data.HMStartDate,
+        startDate:
+          data.HMStartDate === null
+            ? null
+            : toZonedWallClock(data.HMStartDate, timeZone),
       }
     : null
 
@@ -239,10 +251,15 @@ export abstract class ClassicBaseFacade<
     isEnabled,
     startDate,
   }: HolidayModeUpdate): Promise<void> {
-    // Parse the window before the location fetch so malformed dates throw
-    // ahead of any I/O; dates are cleared when disabling.
-    const start = isEnabled ? Temporal.PlainDateTime.from(startDate) : null
-    const end = isEnabled ? Temporal.PlainDateTime.from(endDate) : null
+    // Project the window before the location fetch so malformed dates
+    // throw ahead of any I/O; dates are cleared when disabling. The
+    // caller speaks its own wall clock (`api.timezone`), the wire
+    // stores UTC — the projection this path once had (7ba6364f) and
+    // lost (b7286303), stranding every window by the caller's offset.
+    const start = isEnabled
+      ? toUtcWallClock(startDate, this.api.timezone)
+      : null
+    const end = isEnabled ? toUtcWallClock(endDate, this.api.timezone) : null
     assertUpdateAccepted(
       await this.api.updateHolidayMode({
         postData: {
@@ -299,7 +316,7 @@ export abstract class ClassicBaseFacade<
         async () => this.#getZoneHolidayMode(),
         async () => this.#getDevicesHolidayMode(),
       ),
-      toHolidayModeState,
+      (data) => toHolidayModeState(data, this.api.timezone),
     )
   }
 

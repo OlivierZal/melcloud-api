@@ -44,11 +44,13 @@ describe('home device ata facade', () => {
   describe('protection accessors', () => {
     it('exposes frost protection and holiday mode from context', () => {
       const frostProtection = { active: false, enabled: true, max: 12, min: 6 }
+      // The wire's UTC wall clock; the facade projects it onto the
+      // caller's timezone.
       const holidayMode = {
         active: false,
         enabled: true,
-        endDate: '2026-08-05T00:00:00',
-        startDate: '2026-08-01T00:00:00',
+        endDate: '2026-08-04T22:00:00',
+        startDate: '2026-07-31T22:00:00',
       }
       const overheatProtection = {
         active: false,
@@ -57,7 +59,7 @@ describe('home device ata facade', () => {
         min: 35,
       }
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createApi({ timezone: 'Europe/Paris' }),
         homeDevice({
           frostProtection,
           holidayMode,

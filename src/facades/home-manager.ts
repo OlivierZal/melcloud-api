@@ -14,6 +14,7 @@ import {
   clampFrostProtection,
   clampOverheatProtection,
 } from '../protection.ts'
+import { toUtcWallClock } from '../utils.ts'
 import type { HomeDeviceFacadeAny } from './home-types.ts'
 import { HomeBuildingAtaFacade } from './home-building-ata.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
@@ -180,10 +181,17 @@ export class HomeFacadeManager {
     deviceIds: readonly string[],
     { endDate, isEnabled, startDate }: HolidayModeUpdate,
   ): Promise<void> {
+    // The caller speaks its own wall clock, the wire stores UTC (see
+    // CLAUDE.md, live-probed); a disabled window's dates are ignored
+    // and pass through unprojected.
     await this.#api.updateHolidayMode({
       enabled: isEnabled,
-      endDate,
-      startDate,
+      endDate: isEnabled
+        ? toUtcWallClock(endDate, this.#api.timezone).toString()
+        : endDate,
+      startDate: isEnabled
+        ? toUtcWallClock(startDate, this.#api.timezone).toString()
+        : startDate,
       units: this.#toUnits(deviceIds),
     })
   }

@@ -87,6 +87,50 @@ export const now = (timeZone?: string): string =>
   })
 
 /**
+ * Projects a caller-local wall-clock datetime onto the UTC wall clock
+ * the MELCloud wires store. Counterpart of {@link toZonedWallClock}.
+ * Malformed input throws, so a write fails before any I/O; a local time
+ * a DST transition skips or repeats resolves per Temporal's default
+ * disambiguation (`'compatible'`).
+ * @param local - Zoneless ISO 8601 datetime, read as wall clock in
+ * `timeZone`.
+ * @param timeZone - IANA timezone the wall clock belongs to; the host's
+ * zone when omitted.
+ * @returns The same instant's UTC wall clock.
+ */
+export const toUtcWallClock = (
+  local: string,
+  timeZone?: string,
+): Temporal.PlainDateTime =>
+  Temporal.PlainDateTime.from(local)
+    .toZonedDateTime(timeZone ?? Temporal.Now.timeZoneId())
+    .withTimeZone('UTC')
+    .toPlainDateTime()
+
+/**
+ * Projects a UTC wall-clock datetime from the MELCloud wires onto the
+ * caller's wall clock. Counterpart of {@link toUtcWallClock}. An
+ * unparseable value passes through verbatim — the same tolerance the
+ * report query dates get: a read must never take a sync down.
+ * @param utc - Zoneless ISO 8601 datetime, read as wall clock in UTC.
+ * @param timeZone - IANA timezone to project into; the host's zone when
+ * omitted.
+ * @returns The same instant's wall clock in `timeZone`.
+ */
+export const toZonedWallClock = (utc: string, timeZone?: string): string => {
+  const zone = timeZone ?? Temporal.Now.timeZoneId()
+  try {
+    return Temporal.PlainDateTime.from(utc)
+      .toZonedDateTime('UTC')
+      .withTimeZone(zone)
+      .toPlainDateTime()
+      .toString()
+  } catch {
+    return utc
+  }
+}
+
+/**
  * Factory for a type guard that narrows a key to the own keys of `record`.
  * Uses `Object.hasOwn` so prototype-chain pollution cannot produce false positives.
  * @param record - The record whose keys the returned guard recognises.

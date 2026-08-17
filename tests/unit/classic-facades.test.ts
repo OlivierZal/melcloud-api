@@ -436,16 +436,36 @@ describe('building facade holiday mode', () => {
     expect(value).toHaveProperty('isEnabled')
   })
 
-  it('sets holiday mode with dates', async () => {
-    const { api, facade } = createBuildingFacade()
+  it('projects the window onto UTC components on the wire', async () => {
+    const { api, facade } = createBuildingFacade({ timezone: 'Europe/Paris' })
     await facade.getHolidayMode()
+    // Paris summer wall clock (UTC+2): midnight locally is 22:00 UTC
+    // the previous day — a projection that drops the zone cannot pass.
     await facade.updateHolidayMode({
-      endDate: '2024-06-15',
+      endDate: '2024-06-15T00:00',
       isEnabled: true,
-      startDate: '2024-06-01',
+      startDate: '2024-06-01T00:00',
     })
+    const call = vi.mocked(api.updateHolidayMode).mock.lastCall?.[0]
 
-    expect(api.updateHolidayMode).toHaveBeenCalledWith(expect.any(Object))
+    expect(call).toBeDefined()
+
+    expect(defined(call).postData.StartDate).toStrictEqual({
+      Day: 31,
+      Hour: 22,
+      Minute: 0,
+      Month: 5,
+      Second: 0,
+      Year: 2024,
+    })
+    expect(defined(call).postData.EndDate).toStrictEqual({
+      Day: 14,
+      Hour: 22,
+      Minute: 0,
+      Month: 6,
+      Second: 0,
+      Year: 2024,
+    })
   })
 
   it('disables holiday mode and ignores the window dates', async () => {
