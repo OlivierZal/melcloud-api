@@ -18,7 +18,7 @@ import {
   verticalFromClassic,
   verticalToClassic,
 } from '../enum-mappings.ts'
-import { isValue } from '../utils.ts'
+import { allEqual, isValue } from '../utils.ts'
 
 /**
  * The facade slice the Classic group-state projection reads. Structural so
@@ -32,15 +32,6 @@ export interface HomeAtaGroupSource {
   readonly setTemperature: number
   readonly vaneHorizontalDirection: HomeHorizontal
   readonly vaneVerticalDirection: HomeVertical
-}
-
-// The first value when every entry strictly equals it, `null` otherwise
-// (including the empty case) — the per-field divergence fold of a group
-// state. `null` IS the wire's mixed marker: consumers coerce a null
-// operation mode to the MIXED sentinel themselves (`Number(null)` is `0`).
-const allEqual = <T>(values: readonly (T | null)[]): T | null => {
-  const [first = null] = values
-  return values.every((value) => value === first) ? first : null
 }
 
 /**

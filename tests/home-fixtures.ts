@@ -215,6 +215,7 @@ export const homeAtwDeviceData = (
     holidayMode: overrides.holidayMode ?? null,
     id: overrides.id ?? 'home-atw-1',
     isConnected: overrides.isConnected ?? true,
+    overheatProtection: null,
     rssi: overrides.rssi ?? DEFAULT_RSSI_DBM,
     settings: buildSettings(overrides.settings ?? {}),
   })

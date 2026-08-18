@@ -197,6 +197,18 @@ export interface HomeBuildingRef {
  */
 export interface HomeBuildingZone {
   readonly buildingName: string
+  /**
+   * Whether the building holds at least one air-to-air unit — the flag
+   * gating per-building overheat protection without a positional scan
+   * of the flat list.
+   */
+  readonly hasAta: boolean
+  /**
+   * Whether the building holds at least one air-to-water unit — with
+   * {@link hasAta}, what a consumer needs to qualify a mixed building's
+   * bulk-write scope.
+   */
+  readonly hasAtw: boolean
   readonly id: string
   readonly level: 0
   readonly model: 'homeBuildings'

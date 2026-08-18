@@ -1,6 +1,11 @@
 import type { ClassicDeviceType } from '../constants.ts'
 import type { ClassicRegistry } from '../entities/classic-registry.ts'
 import type {
+  ErrorLogEntry,
+  ErrorLogPage,
+  ErrorLogQuery,
+} from '../error-log.ts'
+import type {
   ClassicBuildingWithStructure,
   ClassicEnergyData,
   ClassicEnergyPostData,
@@ -261,70 +266,38 @@ export interface ClassicAPISettings extends BaseAPISettings {
 }
 
 /**
- * A single error entry from the device error log.
+ * Parsed error log — the cross-dialect {@link ErrorLogPage} with the
+ * Classic-precise entries: neutral shape, reverse chronological order,
+ * plus the chained window bounds.
  * @category Configuration
  */
-export interface ClassicErrorDetails {
+export interface ClassicErrorLog extends ErrorLogPage {
   /**
-   * ISO 8601 date of the error occurrence.
+   * The page's entries, sorted in reverse chronological order.
    */
-  readonly date: string
+  readonly entries: readonly ClassicErrorLogEntry[]
+}
+
+/**
+ * One Classic error-log entry: the cross-dialect {@link ErrorLogEntry}
+ * kept precise — the Classic wire always carries a numeric device id
+ * and a message text, so neither loosens to the neutral optionality.
+ * @category Configuration
+ */
+export interface ClassicErrorLogEntry extends ErrorLogEntry {
   /**
    * Numeric ID of the device that reported the error.
    */
   readonly deviceId: number
   /**
-   * Error message text.
+   * Error message text (empty or null wire messages are filtered out).
    */
-  readonly error: string
+  readonly message: string
 }
 
 /**
- * Parsed error log with pagination support.
+ * Query parameters for paginating the error log — the cross-dialect
+ * {@link ErrorLogQuery}.
  * @category Configuration
  */
-export interface ClassicErrorLog {
-  /**
-   * List of error entries, sorted in reverse chronological order.
-   */
-  readonly errors: readonly ClassicErrorDetails[]
-  /**
-   * ISO date string for the queried period start.
-   */
-  readonly fromDate: string
-  /**
-   * ISO date string for the next page's start date.
-   */
-  readonly nextFromDate: string
-  /**
-   * ISO date string for the next page's end date.
-   */
-  readonly nextToDate: string
-}
-
-/**
- * Query parameters for paginating the error log.
- * @category Configuration
- */
-export interface ClassicErrorLogQuery {
-  /**
-   * Start date in ISO 8601 format. When set, the query is pinned to that
-   * single day; `offset` is ignored and `period` only shapes
-   * `nextFromDate` for chained pagination.
-   */
-  readonly from?: string | undefined
-  /**
-   * Page offset, in `period`-sized windows. `0` (default) is the most
-   * recent window; `1` is the previous, etc. Pages are separated by a
-   * one-day boundary so consecutive pages don't overlap.
-   */
-  readonly offset?: number | undefined
-  /**
-   * Number of days per page. Defaults to `1`.
-   */
-  readonly period?: number | undefined
-  /**
-   * End date in ISO 8601 format. Defaults to now.
-   */
-  readonly to?: string | undefined
-}
+export type ClassicErrorLogQuery = ErrorLogQuery

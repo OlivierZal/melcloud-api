@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { HomeDevice } from '../../src/entities/home-device.ts'
-import type { HomeBuildingAtaFacade } from '../../src/facades/home-building-ata.ts'
+import type { HomeBuildingFacade } from '../../src/facades/home-building.ts'
 import type { HomeAtaDeviceData } from '../../src/types/index.ts'
 import {
   ClassicFanSpeed,
@@ -274,7 +274,7 @@ describe('home device ata facade group', () => {
   })
 })
 
-const buildingOf = (api: HomeAPIAdapter): HomeBuildingAtaFacade => {
+const buildingOf = (api: HomeAPIAdapter): HomeBuildingFacade => {
   const manager = new HomeFacadeManager(api)
   const facade = manager.getBuilding('home-building-1')
   if (facade === null) {
@@ -313,7 +313,7 @@ describe('home building ata facade', () => {
     expect(facade.name).toBe('Renamed')
   })
 
-  it('excludes devices of other buildings and ATW units', () => {
+  it('holds both connection types but groups only the ATA members', async () => {
     const api = createApi()
     syncBuilding(api, [
       { id: 'device-1' },
@@ -324,11 +324,17 @@ describe('home building ata facade', () => {
         { id: 'device-1', settings: heatState },
         { building: homeBuildingRef() },
       ),
-      typedHomeAtwDeviceData({ id: 'atw-1' }),
+      typedHomeAtwDeviceData({ id: 'atw-1' }, { building: homeBuildingRef() }),
     ])
     const facade = buildingOf(api)
 
-    expect(facade.devices.map(({ id }) => id)).toStrictEqual(['device-1'])
+    expect(facade.devices.map(({ id }) => id)).toStrictEqual([
+      'device-1',
+      'atw-1',
+    ])
+    expect(okValue(await facade.getGroup()).OperationMode).toBe(
+      ClassicOperationMode.heat,
+    )
   })
 
   it('aggregates agreeing members into their shared state', async () => {

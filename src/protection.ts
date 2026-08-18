@@ -3,13 +3,36 @@
  * (Home ATA only), each enforced identically by the official UIs.
  * Clamping lives here so a direct SDK/flow call cannot escape the bounds
  * the UIs guarantee.
- * @module
  */
+
+import { allEqual } from './utils.ts'
 
 /**
  * Minimum gap required between min and max, in °C (both features).
  */
 export const PROTECTION_GAP = 2
+
+/**
+ * Per-member fold of protection states across a multi-device target:
+ * each field carries the value every member shares, `null` on
+ * divergence — including the divergence between configured and
+ * never-configured members, whose absent flag folds as `false`.
+ * @category Facades
+ */
+export interface AggregatedProtectionState {
+  /**
+   * Whether the protection is on everywhere, `null` when mixed.
+   */
+  readonly isEnabled: boolean | null
+  /**
+   * Shared upper bound, in °C; `null` when mixed or unconfigured.
+   */
+  readonly max: number | null
+  /**
+   * Shared lower bound, in °C; `null` when mixed or unconfigured.
+   */
+  readonly min: number | null
+}
 
 /**
  * Last-known protection settings — the cross-dialect read twin of
@@ -117,3 +140,18 @@ export const clampOverheatProtection = (
   max: number,
 ): { max: number; min: number } =>
   clampProtection(min, max, OVERHEAT_PROTECTION_RANGE)
+
+/**
+ * Folds per-member protection states into the aggregate a multi-device
+ * target answers: a never-configured member reads as disabled, and any
+ * per-field divergence folds to `null` (the mixed marker).
+ * @param states - One state (or `null`) per member.
+ * @returns The aggregated state.
+ */
+export const aggregateProtectionStates = (
+  states: readonly (ProtectionState | null)[],
+): AggregatedProtectionState => ({
+  isEnabled: allEqual(states.map((state) => state?.isEnabled ?? false)),
+  max: allEqual(states.map((state) => state?.max ?? null)),
+  min: allEqual(states.map((state) => state?.min ?? null)),
+})

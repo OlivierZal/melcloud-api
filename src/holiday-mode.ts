@@ -9,8 +9,30 @@
  * is the point: the unnamed contract is how a projection got lost once
  * and stranded every window by the caller's UTC offset (the ±1 h of
  * com.melcloud#1593).
- * @module
  */
+import { allEqual } from './utils.ts'
+
+/**
+ * Per-member fold of holiday-mode states across a multi-device target:
+ * each field carries the value every member shares, `null` on
+ * divergence — a never-configured member's absent flag folds as
+ * `false`, its absent bounds as `null`.
+ * @category Facades
+ */
+export interface AggregatedHolidayModeState {
+  /**
+   * Shared window end, `null` when mixed or unset.
+   */
+  readonly endDate: string | null
+  /**
+   * Whether holiday mode is on everywhere, `null` when mixed.
+   */
+  readonly isEnabled: boolean | null
+  /**
+   * Shared window start, `null` when mixed or unset.
+   */
+  readonly startDate: string | null
+}
 
 /**
  * Last-known holiday-mode window — the cross-dialect read twin of
@@ -59,3 +81,19 @@ export interface HolidayModeUpdate {
    */
   readonly startDate: string
 }
+
+/**
+ * Folds per-member holiday-mode states into the aggregate a
+ * multi-device target answers: a never-configured member reads as
+ * disabled with unset bounds, and any per-field divergence folds to
+ * `null` (the mixed marker).
+ * @param states - One state (or `null`) per member.
+ * @returns The aggregated state.
+ */
+export const aggregateHolidayModeStates = (
+  states: readonly (HolidayModeState | null)[],
+): AggregatedHolidayModeState => ({
+  endDate: allEqual(states.map((state) => state?.endDate ?? null)),
+  isEnabled: allEqual(states.map((state) => state?.isEnabled ?? false)),
+  startDate: allEqual(states.map((state) => state?.startDate ?? null)),
+})

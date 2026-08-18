@@ -154,22 +154,22 @@ const toHomeWire = (
         startDate: wire.startDate,
       }
 
-describeHolidayModeStateContract('Home ATA device', (wire) => {
+describeHolidayModeStateContract('Home ATA device', async (wire) => {
   const facade = new HomeDeviceAtaFacade(
     homeApi(),
     homeDevice({ holidayMode: toHomeWire(wire), id: 'contract-ata' }),
   )
-  return facade.holidayMode
+  return okValue(await facade.getHolidayMode())
 })
 
-// The ATW facade inherits the getter; asserting it here keeps the pair
+// The ATW facade inherits the method; asserting it here keeps the pair
 // from drifting apart the way the protection getter once could.
-describeHolidayModeStateContract('Home ATW device', (wire) => {
+describeHolidayModeStateContract('Home ATW device', async (wire) => {
   const facade = new HomeDeviceAtwFacade(
     homeApi(),
     homeAtwDevice({ holidayMode: toHomeWire(wire), id: 'contract-atw' }),
   )
-  return facade.holidayMode
+  return okValue(await facade.getHolidayMode())
 })
 
 // Only Classic can express these: its `HM*` bounds are independently

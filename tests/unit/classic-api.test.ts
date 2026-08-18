@@ -667,8 +667,8 @@ describe('mELCloud Classic API', () => {
 
       const value = okValue(result)
 
-      expect(value.errors).toHaveLength(1)
-      expect(value.errors[0]?.error).toBe('Some error')
+      expect(value.entries).toHaveLength(1)
+      expect(value.entries[0]?.message).toBe('Some error')
     })
 
     it('filters out entries with invalid year', async () => {
@@ -685,7 +685,7 @@ describe('mELCloud Classic API', () => {
       )
       const result = await api.getErrorLog({}, [1])
 
-      expect(okValue(result).errors).toHaveLength(0)
+      expect(okValue(result).entries).toHaveLength(0)
     })
 
     it('filters out the instant-dialect sentinel (live payload 2026-07-18)', async () => {
@@ -702,7 +702,7 @@ describe('mELCloud Classic API', () => {
       )
       const result = await api.getErrorLog({}, [1])
 
-      expect(okValue(result).errors).toHaveLength(0)
+      expect(okValue(result).entries).toHaveLength(0)
     })
 
     it('keeps entries with unparseable StartDate (no invalid-year sentinel)', async () => {
@@ -715,8 +715,8 @@ describe('mELCloud Classic API', () => {
       )
       const result = await api.getErrorLog({}, [1])
 
-      expect(okValue(result).errors).toHaveLength(1)
-      expect(okValue(result).errors[0]?.error).toBe('Mystery')
+      expect(okValue(result).entries).toHaveLength(1)
+      expect(okValue(result).entries[0]?.message).toBe('Mystery')
     })
 
     it('returns validation failure when the API returns failure data', async () => {
@@ -778,7 +778,7 @@ describe('mELCloud Classic API', () => {
       })
       const result = await api.getErrorLog({})
 
-      expect(okValue(result)).toHaveProperty('errors')
+      expect(okValue(result)).toHaveProperty('entries')
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           data: matchObject({ DeviceIDs: [42] }),
@@ -793,7 +793,7 @@ describe('mELCloud Classic API', () => {
       mockRequest.mockResolvedValue(wrap([errorEntry({ ErrorMessage: null })]))
       const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
 
-      expect(okValue(result).errors).toHaveLength(0)
+      expect(okValue(result).entries).toHaveLength(0)
     })
 
     it('throws on invalid date in query', async () => {

@@ -1,4 +1,3 @@
-export type { HolidayModeState, HolidayModeUpdate } from './holiday-mode.ts'
 export type {
   ApiRequestError,
   ClassicAreaData,
@@ -134,8 +133,8 @@ export {
   type ClassicAPIAdapter,
   type ClassicAPIConfig,
   type ClassicAPISettings,
-  type ClassicErrorDetails,
   type ClassicErrorLog,
+  type ClassicErrorLogEntry,
   type ClassicErrorLogQuery,
   type HomeAPIAdapter,
   type HomeAPIConfig,
@@ -218,6 +217,13 @@ export {
   verticalToClassic,
 } from './enum-mappings.ts'
 export {
+  type ErrorLogEntry,
+  type ErrorLogPage,
+  type ErrorLogQuery,
+  type ErrorLogWindow,
+  resolveErrorLogWindow,
+} from './error-log.ts'
+export {
   APIError,
   AuthenticationError,
   AuthenticationThrottledError,
@@ -246,7 +252,7 @@ export {
   type ReportQuery,
   ClassicFacadeManager,
   HomeBaseDeviceFacade,
-  HomeBuildingAtaFacade,
+  HomeBuildingFacade,
   HomeDeviceAtaFacade,
   HomeDeviceAtwFacade,
   HomeFacadeManager,
@@ -258,6 +264,12 @@ export {
   isHomeAtwFacade,
 } from './facades/index.ts'
 export {
+  type AggregatedHolidayModeState,
+  type HolidayModeState,
+  type HolidayModeUpdate,
+  aggregateHolidayModeStates,
+} from './holiday-mode.ts'
+export {
   type HttpClientConfig,
   type HttpErrorRequestConfig,
   type HttpRequestConfig,
@@ -268,8 +280,10 @@ export {
   isHttpError,
 } from './http/index.ts'
 export {
+  type AggregatedProtectionState,
   type ProtectionState,
   type ProtectionUpdate,
+  aggregateProtectionStates,
   clampFrostProtection,
   clampOverheatProtection,
   FROST_PROTECTION_RANGE,

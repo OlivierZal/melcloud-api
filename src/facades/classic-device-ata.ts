@@ -1,4 +1,8 @@
 import { type ClassicOperationMode, ClassicDeviceType } from '../constants.ts'
+import {
+  type HomeOperationMode,
+  operationModeToClassic,
+} from '../enum-mappings.ts'
 import { tolerateNoChanges } from '../errors/index.ts'
 import {
   type AtaTemperatureBounds,
@@ -120,9 +124,12 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
    * vocabulary (the setpoint then goes unclamped).
    */
   public getTemperatureRange(
-    mode: ClassicOperationMode = this.setData.OperationMode,
+    mode: ClassicOperationMode | HomeOperationMode = this.setData.OperationMode,
   ): TemperatureRange | null {
-    return rangeForClassicMode(this.#bounds, mode)
+    return rangeForClassicMode(
+      this.#bounds,
+      typeof mode === 'number' ? mode : operationModeToClassic[mode],
+    )
   }
 
   /**

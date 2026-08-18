@@ -2,8 +2,8 @@ export type {
   ClassicAPIAdapter,
   ClassicAPIConfig,
   ClassicAPISettings,
-  ClassicErrorDetails,
   ClassicErrorLog,
+  ClassicErrorLogEntry,
   ClassicErrorLogQuery,
 } from './classic-types.ts'
 export type {

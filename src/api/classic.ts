@@ -3,6 +3,7 @@ import { Agent } from 'undici'
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
 import { setting, syncDevices } from '../decorators/index.ts'
 import { ClassicRegistry } from '../entities/index.ts'
+import { resolveErrorLogWindow } from '../error-log.ts'
 import {
   AuthenticationError,
   AuthenticationThrottledError,
@@ -80,17 +81,6 @@ const LOGIN_THROTTLE_ERROR_ID = 6
 // MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
 const INVALID_YEAR = 1
 
-// Re-thrown with the historical "Invalid DateTime" prefix so the
-// public failure surface for `getErrorLog({ to: 'not-a-date' })` stays
-// stable.
-const parsePlainDate = (iso: string): Temporal.PlainDate => {
-  try {
-    return Temporal.PlainDate.from(iso)
-  } catch (error) {
-    throw new Error(`Invalid DateTime: ${iso}`, { cause: error })
-  }
-}
-
 const instantYear = (iso: string): number | null => {
   try {
     return Temporal.Instant.from(iso).toZonedDateTimeISO('UTC').year
@@ -121,34 +111,6 @@ const formatErrors = (errors: Record<string, readonly string[]>): string =>
   Object.entries(errors)
     .map(([error, messages]) => `${error}: ${messages.join(', ')}`)
     .join('\n')
-
-const parseErrorLogQuery = (
-  { from, offset = 0, period = 1, to }: ClassicErrorLogQuery,
-  timeZone: string | undefined,
-): {
-  fromDate: Temporal.PlainDate
-  period: number
-  toDate: Temporal.PlainDate
-} => {
-  // When `from` is set the query is pinned to that single day; offset
-  // is therefore moot and ignored. Otherwise pages are stacked
-  // backwards from `to` in `period`-sized windows.
-  const fromDateOverride =
-    from !== undefined && from !== '' ? parsePlainDate(from) : null
-  const toDate =
-    to !== undefined && to !== ''
-      ? parsePlainDate(to)
-      : Temporal.Now.plainDateISO(timeZone)
-  // A page covers `period` days; consecutive pages are separated by a
-  // one-day boundary so day N is never returned twice. Each step back
-  // therefore moves `period + 1` days, hence the `* (period + 1)`.
-  const daysBack = fromDateOverride === null ? offset * (period + 1) : 0
-  return {
-    fromDate: fromDateOverride ?? toDate.subtract({ days: daysBack + period }),
-    period,
-    toDate: toDate.subtract({ days: daysBack }),
-  }
-}
 
 // Collect all areas from both building-level and floor-level
 const collectAreas = function* (
@@ -327,15 +289,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     query: ClassicErrorLogQuery,
     deviceIds: number[] = this.#registry.getDevices().map(({ id }) => id),
   ): Promise<Result<ClassicErrorLog>> {
-    const { fromDate, period, toDate } = parseErrorLogQuery(
-      query,
-      this.#timezone,
-    )
-    const nextToDate = fromDate.subtract({ days: 1 })
+    const { fromDate, nextFromDate, nextToDate, toDate } =
+      resolveErrorLogWindow(query, this.#timezone)
     return mapResult(
-      await this.#getErrorLog(deviceIds, fromDate, toDate),
+      await this.#getErrorLog(
+        deviceIds,
+        Temporal.PlainDate.from(fromDate),
+        Temporal.PlainDate.from(toDate),
+      ),
       (errorLog) => ({
-        errors: errorLog
+        entries: errorLog
           .flatMap(
             ({
               DeviceId: errorDeviceId,
@@ -345,16 +308,16 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
               if (safePlainDateYear(startDate) === INVALID_YEAR) {
                 return []
               }
-              const error = errorMessage?.trim() ?? ''
-              return error === ''
+              const message = errorMessage?.trim() ?? ''
+              return message === ''
                 ? []
-                : [{ date: startDate, deviceId: errorDeviceId, error }]
+                : [{ at: startDate, deviceId: errorDeviceId, message }]
             },
           )
           .toReversed(),
-        fromDate: fromDate.toString(),
-        nextFromDate: nextToDate.subtract({ days: period }).toString(),
-        nextToDate: nextToDate.toString(),
+        fromDate,
+        nextFromDate,
+        nextToDate,
       }),
     )
   }
