@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [49.1.0] - 2026-08-18
+
+### Added
+
+- **Contract kernels for the two remaining de-facto cross-dialect contracts** — signal strength and energy report. `getSignalStrength` answers the same chart shape in dBm on every dialect (Classic's hour-by-hour zone fan-out and Home's five-minute single fetch are mechanics, not contract), and `getEnergyReport` answers the same chart shape in kWh on every dialect and type that has an energy wire. The holiday-mode write asymmetry on a disabled window is now pinned too: neither dialect projects the ignored bounds (Classic clears them to null components, Home forwards them untouched), so a malformed leftover date can no longer fail a disable on either side.
+
+### Fixed
+
+- **Classic report reads no longer touch the wire for device types whose report does not exist.** `getInternalTemperatures` and `getHourlyTemperatures` on ATA and ERV devices used to make a real `Report/GetInternalTemperatures` call only to render zero series (the wire is ATW-only, as the interface docs always said); they now resolve an empty chart without any I/O, driven by the same per-type descriptor idiom as the energy extractor (`internalTemperaturesLegend`, empty = the report does not exist for this type). ERV `getEnergy` — typed `never` since the beginning — now throws `No energy report exists for this device type` before any I/O instead of firing a request whose answer nothing could consume.
+
+### Changed
+
+- **The Classic report surface no longer leaks `shouldUseExactRange`.** The device classes took a second boolean parameter the published interfaces never declared; the classes now match the interfaces (`getInternalTemperatures(query?)`, `getOperationModes(query?)`, `getTemperatures(query?)`), the internal exact-range choice being each method's own. The published interface parameters are now optional, matching the classes — a widening, so existing callers compile unchanged.
+
 ## [49.0.0] - 2026-08-18
 
 ### Fixed
@@ -521,6 +535,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[49.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.0.0...v49.1.0
 [49.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.2.0...v49.0.0
 [48.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.1.0...v48.2.0
 [48.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.0.0...v48.1.0

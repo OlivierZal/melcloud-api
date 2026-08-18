@@ -29,10 +29,9 @@ export class ClassicDeviceErvFacade extends BaseDeviceFacade<
 
   public override async getOperationModes(
     query?: ReportQuery,
-    shouldUseExactRange = true,
   ): Promise<Result<ReportChartPieOptions>> {
     return mapResult(
-      await super.getOperationModes(query, shouldUseExactRange),
+      await super.getOperationModes(query),
       ({ labels, series, ...options }) => {
         // Filter labels and series together to keep indices in sync
         const filtered = labels

@@ -59,6 +59,17 @@ const DEFAULT_YEAR = '1970-01-01'
 
 const ENERGY_REPORT_UNIT = 'kWh'
 
+const emptyTemperatureChart = ({
+  FromDate: from,
+  ToDate: to,
+}: ClassicReportPostData): ReportChartLineOptions => ({
+  from,
+  labels: [],
+  series: [],
+  to,
+  unit: '°C',
+})
+
 // ISO 8601 weekday number for Sunday.
 const ISO_SUNDAY = 7
 
@@ -341,6 +352,13 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public async getEnergy(
     query?: ReportQuery,
   ): Promise<Result<ClassicEnergyData<T>>> {
+    // The same per-type hook that empties `getEnergyReport` refuses the
+    // raw read: `ClassicEnergyData<Erv>` is `never`, so no caller could
+    // use a success anyway, and the wire request it used to fire could
+    // only come back as an error dressed up as transport trouble.
+    if (this.extractEnergyReport === null) {
+      throw new TypeError('No energy report exists for this device type')
+    }
     return this.api.getEnergy<T>({ postData: this.#buildReportPostData(query) })
   }
 
@@ -382,6 +400,9 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public async getHourlyTemperatures(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
+    if (this.internalTemperaturesLegend.length === 0) {
+      return ok(emptyTemperatureChart(this.#buildReportPostData()))
+    }
     return this.fetchHourlyDayChart(
       async (hourOfDay) => this.#fetchTemperaturesHour(hourOfDay),
       hour,
@@ -390,12 +411,16 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   public async getInternalTemperatures(
     query?: ReportQuery,
-    shouldUseExactRange = true,
   ): Promise<Result<ReportChartLineOptions>> {
+    const postData = this.#buildReportPostData(query, true)
+    // An empty legend marks a type the report does not exist for (the
+    // docs say ATW only): the wire call used to fire anyway and every
+    // series was masked away after — an expensive spelling of "nothing".
+    if (this.internalTemperaturesLegend.length === 0) {
+      return ok(emptyTemperatureChart(postData))
+    }
     return mapResult(
-      await this.api.getInternalTemperatures({
-        postData: this.#buildReportPostData(query, shouldUseExactRange),
-      }),
+      await this.api.getInternalTemperatures({ postData }),
       (data) =>
         getChartLineOptions(data, {
           legend: this.internalTemperaturesLegend,
@@ -407,9 +432,8 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   public async getOperationModes(
     query?: ReportQuery,
-    shouldUseExactRange = true,
   ): Promise<Result<ReportChartPieOptions>> {
-    const postData = this.#buildReportPostData(query, shouldUseExactRange)
+    const postData = this.#buildReportPostData(query, true)
     const dateRange = { from: postData.FromDate, to: postData.ToDate }
     return mapResult(await this.api.getOperationModes({ postData }), (data) =>
       getChartPieOptions(data, dateRange),
@@ -418,12 +442,11 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   public async getTemperatures(
     query?: ReportQuery,
-    shouldUseExactRange = true,
   ): Promise<Result<ReportChartLineOptions>> {
     return mapResult(
       await this.api.getTemperatures({
         postData: {
-          ...this.#buildReportPostData(query, shouldUseExactRange),
+          ...this.#buildReportPostData(query, true),
           Location: this.registry.buildings.getById(this.device.buildingId)
             ?.location,
         },
