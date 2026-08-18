@@ -102,6 +102,7 @@ export type {
   HomeDeviceData,
   HomeDeviceScheduleEntry,
   HomeDeviceSetting,
+  HomeDeviceValues,
   HomeDeviceZone,
   HomeEnergyData,
   HomeEnergyMeasure,

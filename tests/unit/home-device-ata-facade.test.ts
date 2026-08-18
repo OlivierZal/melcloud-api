@@ -167,6 +167,15 @@ describe('home device ata facade', () => {
       expect(facade.power).toBe(true)
     })
 
+    it('should read standby as boolean', () => {
+      const facade = new HomeDeviceAtaFacade(
+        createApi(),
+        createModel({ InStandbyMode: 'True', Power: 'True' }),
+      )
+
+      expect(facade.inStandbyMode).toBe(true)
+    })
+
     it('should read temperatures as numbers', () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),

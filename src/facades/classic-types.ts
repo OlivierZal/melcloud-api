@@ -104,6 +104,16 @@ export interface ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
 }
 
 /**
+ * Facade for Energy Recovery Ventilation (ERV) devices — exactly the
+ * generic device surface: the ERV ventilation-mode filtering refines
+ * behavior, not shape, so the published name exists for symmetry with
+ * the other device types.
+ */
+export type ClassicDeviceErvFacade = ClassicDeviceFacade<
+  typeof ClassicDeviceType.Erv
+>
+
+/**
  * Facade for an individual MELCloud device with type-safe data access and control.
  * @template T - Device type discriminator narrowing device data, update
  * payloads, and report shapes.
@@ -191,7 +201,7 @@ export type ClassicDeviceFacadeAny =
   | ClassicDeviceAtaFacade
   | ClassicDeviceAtwFacade
   | ClassicDeviceAtwHasZone2Facade
-  | ClassicDeviceFacade<typeof ClassicDeviceType.Erv>
+  | ClassicDeviceErvFacade
 
 /**
  * Chartable slice of an `EnergyCost/Report` payload, produced by the

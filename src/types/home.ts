@@ -298,6 +298,13 @@ export interface HomeDeviceSetting {
 }
 
 /**
+ * Mutable device state accepted by the MELCloud Home device-update
+ * endpoint — the ATA or ATW shape.
+ * @category Types
+ */
+export type HomeDeviceValues = HomeAtaValues | HomeAtwValues
+
+/**
  * Device node of the flattened Home zone list. `deviceType` keeps the
  * consumer app's short connection tags (`ata`/`atw`).
  * @category Types

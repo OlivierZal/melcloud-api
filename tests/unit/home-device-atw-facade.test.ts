@@ -156,6 +156,15 @@ describe('home device atw facade', () => {
       expect(facade.operationMode).toBe('Stop')
     })
 
+    it('reads the setpoint step from the advertised increment', () => {
+      const facade = new HomeDeviceAtwFacade(
+        createApi(),
+        createModel({}, { temperatureIncrement: 0.5 }),
+      )
+
+      expect(facade.temperatureStep).toBe(0.5)
+    })
+
     it('reads zone-1 temperatures and setpoint as numbers', () => {
       const facade = new HomeDeviceAtwFacade(
         createApi(),

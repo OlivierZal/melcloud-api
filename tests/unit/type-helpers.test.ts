@@ -1,6 +1,13 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
 
+import type { HomeEnergyQuery } from '../../src/facades/home-base-device.ts'
+import type { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
+import type { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
 import {
+  type HomeAtaDeviceData,
+  type HomeAtaValues,
+  type HomeAtwDeviceData,
+  type HomeAtwValues,
   type Resolved,
   type UndefinedTolerant,
   err,
@@ -68,6 +75,36 @@ describe('resolved', () => {
     expectTypeOf<
       Resolved<{ interval?: number | null | undefined }>
     >().toEqualTypeOf<{ interval: number | null }>()
+  })
+})
+
+// The conditional is the SOLE compile-time enforcement of the ATW
+// measure requirement (the adapter beneath takes `measure?` and defaults
+// it), and the bivariant subclass overrides are what keep the update
+// payloads per-type: a silent degradation of either would leave every
+// runtime test green, so both contracts are pinned at the type level.
+describe('home per-type facade contracts', () => {
+  it('requires the energy direction on ATW and refuses it on ATA', () => {
+    expectTypeOf<HomeEnergyQuery<HomeAtwDeviceData>>().toEqualTypeOf<{
+      from: string
+      interval: string
+      measure: 'consumed' | 'produced'
+      to: string
+    }>()
+    expectTypeOf<HomeEnergyQuery<HomeAtaDeviceData>>().toEqualTypeOf<{
+      from: string
+      interval: string
+      to: string
+    }>()
+  })
+
+  it('narrows each facade updateValues to its own payload', () => {
+    expectTypeOf<
+      Parameters<HomeDeviceAtaFacade['updateValues']>[0]
+    >().toEqualTypeOf<HomeAtaValues>()
+    expectTypeOf<
+      Parameters<HomeDeviceAtwFacade['updateValues']>[0]
+    >().toEqualTypeOf<HomeAtwValues>()
   })
 })
 

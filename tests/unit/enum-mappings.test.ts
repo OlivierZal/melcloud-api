@@ -4,9 +4,13 @@ import {
   ClassicFanSpeed,
   ClassicHorizontal,
   ClassicOperationMode,
+  ClassicOperationModeZone,
   ClassicVertical,
+  HomeAtwZoneMode,
 } from '../../src/constants.ts'
 import {
+  atwZoneModeFromClassic,
+  atwZoneModeToClassic,
   fanSpeedFromClassic,
   fanSpeedToClassic,
   horizontalFromClassic,
@@ -20,6 +24,27 @@ import {
 } from '../../src/enum-mappings.ts'
 
 describe.concurrent('enum mappings between Classic and Home APIs', () => {
+  describe('atw zone mode', () => {
+    it.each([
+      [ClassicOperationModeZone.room, HomeAtwZoneMode.room],
+      [ClassicOperationModeZone.flow, HomeAtwZoneMode.flow],
+      [ClassicOperationModeZone.curve, HomeAtwZoneMode.curve],
+      [ClassicOperationModeZone.room_cool, HomeAtwZoneMode.roomCool],
+      [ClassicOperationModeZone.flow_cool, HomeAtwZoneMode.flowCool],
+    ] as const)('maps Classic %i → Home %s', (classic, home) => {
+      expect(atwZoneModeFromClassic[classic]).toBe(home)
+      expect(atwZoneModeToClassic[home]).toBe(classic)
+    })
+
+    it('is bidirectional for all home values', ({ expect }) => {
+      expect.assertions(5)
+
+      for (const [home, classic] of Object.entries(atwZoneModeToClassic)) {
+        expect(atwZoneModeFromClassic[classic]).toBe(home)
+      }
+    })
+  })
+
   describe('operation mode', () => {
     it.each([
       [ClassicOperationMode.heat, 'Heat'],

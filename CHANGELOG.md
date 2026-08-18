@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [49.2.0] - 2026-08-18
+
+### Added
+
+- **The `ClassicOperationModeZone` ↔ `HomeAtwZoneMode` bijection** (`atwZoneModeFromClassic` / `atwZoneModeToClassic` on the `/enum-mappings` subpath): the two vocabularies name the same five FTC control bases, and the mapping now exists in one place instead of waiting to be hand-rolled by a consumer — the prerequisite for a future shared ATW state.
+- **New readable surface**: `inStandbyMode` on every Home device facade (the ATW getter, hoisted; ATA units report the same setting and gain the read), and `temperatureStep` on the Home ATW facade (the FTC's advertised `temperatureIncrement`, the ATW counterpart of the ATA derivation from `hasHalfDegreeIncrements`).
+- **`HomeDeviceValues`** names the ATA-or-ATW update payload the device-update endpoint accepts, and **`HomeEnergyQuery`** names the per-type energy-telemetry query (`measure` required on ATW, absent on ATA) — both shapes are now pinned by type-level tests.
+- **`ClassicDeviceErvFacade` is published** — the one device type whose facade had no published name. It is exactly `ClassicDeviceFacade<typeof ClassicDeviceType.Erv>` (the ERV ventilation-mode filtering refines behavior, not shape); `ClassicDeviceFacadeAny` now spells its ERV member through it.
+
+### Changed
+
+- **The Home device base now carries everything the types share.** `capabilities` (narrowed per type through `TData`), `power`, `inStandbyMode`, `getEnergy`, `getErrorLog`, the constructor and the `updateValues` pipeline (omit-undefined → `NoChangesError` → per-type setpoint clamp → push) moved from the ATA/ATW facades into `HomeBaseDeviceFacade`; the subclasses keep only their genuine divergences (setpoint vocabulary, report merging) behind the protected `clampValues` hook — declared OPTIONAL on the base (the optional-method mirror of the Classic `extractEnergyReport` null hook), so a type with no bounds to enforce declares nothing and no existing subclass of the published base breaks. Every member remains reachable on the facade classes with a compatible signature — the move is inheritance, not removal. One deliberate looseness to know about: a reference typed `HomeBaseDeviceFacade<HomeDeviceData>` (the "any home device" supertype) accepts the union shapes on `updateValues` and `getEnergy`; the concrete facade types keep the narrow per-type contracts, which the new type-level tests pin.
+- **The two Classic energy extractors collapsed into one factory** (`makeEnergyExtract(buckets)`): the ATA and ATW hooks were the same function modulo their bucket tuple, and now say so.
+
 ## [49.1.0] - 2026-08-18
 
 ### Added
@@ -535,6 +549,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[49.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.1.0...v49.2.0
 [49.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.0.0...v49.1.0
 [49.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.2.0...v49.0.0
 [48.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.1.0...v48.2.0

@@ -1,8 +1,7 @@
 import type { HomeRegistry } from '../entities/home-registry.ts'
 import type {
-  HomeAtaValues,
-  HomeAtwValues,
   HomeBuilding,
+  HomeDeviceValues,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeFrostProtectionPostData,
@@ -107,10 +106,7 @@ export interface HomeAPIAdapter extends BaseAPIAdapter {
   /**
    * Push a setpoint update (wire path from the registry's connection type), then refresh.
    */
-  readonly updateValues: (
-    id: string,
-    values: HomeAtaValues | HomeAtwValues,
-  ) => Promise<void>
+  readonly updateValues: (id: string, values: HomeDeviceValues) => Promise<void>
 }
 
 /**

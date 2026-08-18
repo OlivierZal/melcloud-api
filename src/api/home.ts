@@ -18,6 +18,7 @@ import {
   type HomeAtwValues,
   type HomeBuilding,
   type HomeContext,
+  type HomeDeviceValues,
   type HomeEnergyData,
   type HomeErrorLogEntry,
   type HomeFrostProtectionPostData,
@@ -521,7 +522,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    */
   public async updateValues(
     id: string,
-    values: HomeAtaValues | HomeAtwValues,
+    values: HomeDeviceValues,
   ): Promise<void> {
     if (this.#modelFor(id).isAta()) {
       await this.putAtaAndSync(id, values)
