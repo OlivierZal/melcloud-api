@@ -1,3 +1,4 @@
+export type { AtwHotWaterState, AtwZoneState } from './atw-state.ts'
 export type {
   ApiRequestError,
   ClassicAreaData,
@@ -77,6 +78,7 @@ export type {
   ClassicZoneSettings,
   ClassicZoneState,
   Failure,
+  FlatZone,
   HomeAtaDeviceCapabilities,
   HomeAtaDeviceData,
   HomeAtaValues,
@@ -238,7 +240,6 @@ export {
   type ClassicBuildingFacade,
   type ClassicDeviceAtaFacade,
   type ClassicDeviceAtwFacade,
-  type ClassicDeviceAtwHasZone2Facade,
   type ClassicDeviceErvFacade,
   type ClassicDeviceFacade,
   type ClassicDeviceFacadeAny,
@@ -256,7 +257,6 @@ export {
   HomeDeviceAtaFacade,
   HomeDeviceAtwFacade,
   HomeFacadeManager,
-  hasClassicZone2,
   isClassicAtaFacade,
   isClassicAtwFacade,
   isClassicErvFacade,

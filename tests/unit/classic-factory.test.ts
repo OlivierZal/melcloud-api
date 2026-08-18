@@ -73,7 +73,7 @@ describe(createFacade, () => {
     expect(facade.id).toBe(1001)
   })
 
-  it('creates a ClassicDeviceAtwHasZone2Facade for ATW devices with zone2', () => {
+  it('creates the one ATW facade for dual-zone devices too', () => {
     const registry = new ClassicRegistry()
     registry.syncDevices([
       classicAtwDevice({ Device: classicAtwDeviceData({ HasZone2: true }) }),

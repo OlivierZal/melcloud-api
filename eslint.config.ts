@@ -9,6 +9,7 @@ import { type Config, defineConfig } from 'eslint/config'
 // the `u`-flag step-down below. `tests/unit/webview-floor.test.ts`
 // recomputes the closure and fails when this list drifts from it.
 const WEBVIEW_FLOOR_FILES = [
+  'src/atw-state.ts',
   'src/constants.ts',
   'src/enum-mappings.ts',
   'src/error-log.ts',

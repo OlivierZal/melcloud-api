@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [51.0.0] - 2026-08-18
+
+### Changed
+
+- **BREAKING — a second ATW zone is a capability, not a type.** `ClassicDeviceAtwHasZone2Facade` (class and published interface) and the `hasClassicZone2` guard are gone: the one `ClassicDeviceAtwFacade` answers `zone2: ClassicZoneState | null` (`null` on a single-zone unit), matching the Home facade's `hasZone2`-keyed nullable reads — the shape both dialects share. The dual-zone write coupling and the dual-zone chart legends stay, keyed on the unit's own `HasZone2` (a physical property, bound at construction). The two legend orders — whose tank pair deliberately diverges between variants (inherited wire order) — are now codified and test-pinned instead of implicit. Migration: replace `hasClassicZone2(facade)` with `facade.zone2 !== null`, and any `ClassicDeviceAtwHasZone2Facade` annotation with `ClassicDeviceAtwFacade`.
+- **BREAKING — the ATW state speaks one cross-dialect vocabulary.** The new `/atw-state` subpath publishes `AtwZoneState` and `AtwHotWaterState`: the zone/hot-water snapshots BOTH dialects answer through the same `zone1`/`zone2`/`hotWater` reads. The Home ATW facade gains those reads; the Classic shapes stay precise through extensions (`ClassicZoneState`/`ClassicHotWaterState` keep boolean flags, the eco flag and the reported tank maximum) while the neutral fields the Home wire cannot produce are nullable (`null` = this wire cannot say). One migration note inside the Classic shape: `ClassicZoneState.operationMode` now speaks the shared STRING vocabulary (`HomeAtwZoneMode` — the Classic member names, the Home wire-normalized values and the consumer capability ids are one vocabulary); the numeric wire form projects through the total bijection at the facade boundary. Wire types (`OperationModeZone1/2` fields, update payloads) are untouched.
+
+### Added
+
+- **`FlatZone`** — the cross-dialect picker-node union (`ClassicFlatZone | HomeFlatZone`), so a consumer's zone picker speaks one published type; the `model` tags discriminate and the option-value convention stays `<model>_<id>`, split at the first underscore.
+- Contract kernel `tests/contracts/atw-state.test.ts` (shared snapshots + the per-dialect precision quarantines), and pins for both ATW legend orders.
+
 ## [50.0.0] - 2026-08-18
 
 ### Changed
@@ -565,6 +577,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[51.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v50.0.0...v51.0.0
 [50.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.2.0...v50.0.0
 [49.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.1.0...v49.2.0
 [49.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.0.0...v49.1.0

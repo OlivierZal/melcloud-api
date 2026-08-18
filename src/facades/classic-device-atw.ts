@@ -3,11 +3,15 @@ import {
   ClassicOperationModeState,
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
+  ClassicOperationModeZone,
+  HomeAtwZoneMode,
 } from '../constants.ts'
+import { atwZoneModeFromClassic } from '../enum-mappings.ts'
 import {
   type ClassicEnergyDataAtw,
   type ClassicHotWaterState,
   type ClassicListDeviceDataAtw,
+  type ClassicOperationModeZoneDataAtw,
   type ClassicTemperatureDataAtw,
   type ClassicUpdateDeviceDataAtw,
   type ClassicZoneAtw,
@@ -22,6 +26,39 @@ import { BaseDeviceFacade, makeEnergyExtract } from './classic-base-device.ts'
 import { classicAtwFlags } from './classic-flags.ts'
 
 const MIN_TANK_TEMPERATURE = 40
+
+// The wire is typed but never runtime-validated (the envelope schema
+// leaves per-type payloads loose), so an out-of-vocabulary zone-mode
+// number must degrade to the room basis like the Home dialect's
+// unknown FTC strings — new vocabulary can never break a consumer's
+// sync. The widened view is what makes the fallback expressible.
+const zoneModeFromWireNumber: Partial<Record<number, HomeAtwZoneMode>> =
+  atwZoneModeFromClassic
+
+// Operation modes follow a pattern: room (0) vs flow (1), with cool variants
+// offset by 3. These gaps let us auto-adjust zone 2 when zone 1 changes.
+const HEAT_COOL_GAP =
+  ClassicOperationModeZone.room_cool - ClassicOperationModeZone.room
+const ROOM_FLOW_GAP =
+  ClassicOperationModeZone.flow - ClassicOperationModeZone.room
+const roomOperationModeZones: ReadonlySet<ClassicOperationModeZone> = new Set([
+  ClassicOperationModeZone.room,
+  ClassicOperationModeZone.room_cool,
+])
+const operationModeZoneValues: ReadonlySet<number> = new Set(
+  Object.values(ClassicOperationModeZone),
+)
+
+const isOperationModeZone = (
+  value: number,
+): value is ClassicOperationModeZone => operationModeZoneValues.has(value)
+
+const toOperationModeZone = (value: number): ClassicOperationModeZone => {
+  if (!isOperationModeZone(value)) {
+    throw new Error(`Invalid ClassicOperationModeZone: ${String(value)}`)
+  }
+  return value
+}
 
 const coolFlowTemperatureRange = { max: 25, min: 5 }
 const heatFlowTemperatureRange = { max: 60, min: 25 }
@@ -130,27 +167,70 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     return this.getZoneState('Zone1')
   }
 
+  /**
+   * Operation, hot-water and temperature state for Zone 2, or `null`
+   * on a single-zone unit — the capability shape both dialects share
+   * (`HasZone2` here, the Home `hasZone2` capability there); a second
+   * zone is a nullable read, never a distinct published type.
+   * @returns The Zone 2 state snapshot, or `null`.
+   */
+  public get zone2(): ClassicZoneState | null {
+    return this.data.HasZone2 ? this.getZoneState('Zone2') : null
+  }
+
   protected override readonly extractEnergyReport: (
     data: ClassicEnergyDataAtw,
   ) => ClassicEnergyReportExtract = makeEnergyExtract(energyReportBuckets)
 
-  protected override readonly internalTemperaturesLegend: readonly string[] = [
-    'FlowTemperature',
-    'FlowTemperatureBoiler',
-    'ReturnTemperature',
-    'ReturnTemperatureBoiler',
-    'SetTankWaterTemperature',
-    'TankWaterTemperature',
-    'MixingTankWaterTemperature',
-  ]
+  // The legends are POSITIONAL wire contracts (series index N carries
+  // the name at index N), so each variant pins its own order — and the
+  // two variants deliberately diverge on the tank pair (Set-then-actual
+  // on single-zone, actual-then-Set on dual-zone): inherited wire
+  // order, observed since the first chart support, codified rather
+  // than "fixed". `HasZone2` is a physical property, fixed for the
+  // unit's lifetime, so the choice binds at construction.
+  protected override readonly internalTemperaturesLegend: readonly string[] =
+    this.data.HasZone2
+      ? [
+          'FlowTemperature',
+          'FlowTemperatureBoiler',
+          'FlowTemperatureZone1',
+          'FlowTemperatureZone2',
+          'ReturnTemperature',
+          'ReturnTemperatureBoiler',
+          'ReturnTemperatureZone1',
+          'ReturnTemperatureZone2',
+          'SetTankWaterTemperature',
+          'TankWaterTemperature',
+          'MixingTankWaterTemperature',
+        ]
+      : [
+          'FlowTemperature',
+          'FlowTemperatureBoiler',
+          'ReturnTemperature',
+          'ReturnTemperatureBoiler',
+          'SetTankWaterTemperature',
+          'TankWaterTemperature',
+          'MixingTankWaterTemperature',
+        ]
 
-  protected readonly temperaturesLegend: readonly string[] = [
-    'SetTemperatureZone1',
-    'RoomTemperatureZone1',
-    'OutdoorTemperature',
-    'SetTankWaterTemperature',
-    'TankWaterTemperature',
-  ]
+  protected readonly temperaturesLegend: readonly string[] = this.data.HasZone2
+    ? [
+        'SetTemperatureZone1',
+        'RoomTemperatureZone1',
+        'SetTemperatureZone2',
+        'RoomTemperatureZone2',
+        'OutdoorTemperature',
+        'TankWaterTemperature',
+        'SetTankWaterTemperature',
+      ]
+    : [
+        'SetTemperatureZone1',
+        'RoomTemperatureZone1',
+        'OutdoorTemperature',
+        'SetTankWaterTemperature',
+        'TankWaterTemperature',
+      ]
 
   get #targetTemperatureRanges(): [
     keyof ClassicTemperatureDataAtw,
@@ -204,7 +284,12 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
       isInCoolMode: data[`${zone}InCoolMode`],
       isInHeatMode: data[`${zone}InHeatMode`],
       operationalState: getZoneOperationalState(data, zone),
-      operationMode: data[`OperationMode${zone}`],
+      // The wire speaks numbers; the cross-dialect state speaks the
+      // shared string vocabulary — the total bijection projects, and an
+      // out-of-vocabulary number degrades to the room basis.
+      operationMode:
+        zoneModeFromWireNumber[data[`OperationMode${zone}`]] ??
+        HomeAtwZoneMode.room,
       roomTemperature: data[`RoomTemperature${zone}`],
       setTemperature: data[`SetTemperature${zone}`],
     }
@@ -216,6 +301,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     return super.prepareUpdateData({
       ...data,
       ...this.#clampTargetTemperatures(data),
+      ...(this.data.HasZone2 && this.#coupleOperationModes(data)),
     })
   }
 
@@ -230,5 +316,66 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
           clampToRange(data[key] ?? range.min, range),
         ]),
     )
+  }
+
+  #coupleOperationModes(
+    data: Partial<ClassicUpdateDeviceDataAtw>,
+  ): ClassicOperationModeZoneDataAtw | null {
+    const [operationModeZone1, operationModeZone2]: {
+      key: keyof ClassicOperationModeZoneDataAtw
+      value?: ClassicOperationModeZone | undefined
+    }[] = [
+      { key: 'OperationModeZone1', value: data.OperationModeZone1 },
+      { key: 'OperationModeZone2', value: data.OperationModeZone2 },
+    ]
+
+    // Whichever zone was explicitly changed becomes the primary; the other
+    // is automatically adjusted to maintain consistency
+    const [primaryOperationMode, secondaryOperationMode] =
+      operationModeZone1?.value === undefined
+        ? [operationModeZone2, operationModeZone1]
+        : [operationModeZone1, operationModeZone2]
+
+    if (
+      secondaryOperationMode === undefined ||
+      primaryOperationMode?.value === undefined
+    ) {
+      return null
+    }
+    return {
+      [primaryOperationMode.key]: primaryOperationMode.value,
+      [secondaryOperationMode.key]: this.#getSecondaryOperationMode(
+        secondaryOperationMode.key,
+        primaryOperationMode.value,
+        secondaryOperationMode.value,
+      ),
+    }
+  }
+
+  #getSecondaryOperationMode(
+    secondaryKey: keyof ClassicOperationModeZoneDataAtw,
+    primaryValue: ClassicOperationModeZone,
+    value?: ClassicOperationModeZone,
+  ): ClassicOperationModeZone {
+    // Keep zone 2's cool/heat status in sync with zone 1, and prevent
+    // both zones from using the same room-based mode (must be room vs flow)
+    let secondaryValue: number = value ?? this.data[secondaryKey]
+    if (this.data.CanCool) {
+      if (primaryValue > ClassicOperationModeZone.curve) {
+        secondaryValue =
+          secondaryValue === ClassicOperationModeZone.curve
+            ? ClassicOperationModeZone.room_cool
+            : secondaryValue + HEAT_COOL_GAP
+      } else if (secondaryValue > ClassicOperationModeZone.curve) {
+        secondaryValue -= HEAT_COOL_GAP
+      }
+    }
+    if (
+      primaryValue === secondaryValue &&
+      roomOperationModeZones.has(primaryValue)
+    ) {
+      secondaryValue += ROOM_FLOW_GAP
+    }
+    return toOperationModeZone(secondaryValue)
   }
 }

@@ -14,7 +14,6 @@
 import type { ClassicDeviceType } from '../../src/constants.ts'
 import type { ClassicBuildingFacade as BuildingClass } from '../../src/facades/classic-building.ts'
 import type { ClassicDeviceAtaFacade as AtaClass } from '../../src/facades/classic-device-ata.ts'
-import type { ClassicDeviceAtwHasZone2Facade as Zone2Class } from '../../src/facades/classic-device-atw-dual-zone.ts'
 import type { ClassicDeviceAtwFacade as AtwClass } from '../../src/facades/classic-device-atw.ts'
 import type { ClassicDeviceErvFacade as ErvClass } from '../../src/facades/classic-device-erv.ts'
 import type {
@@ -22,7 +21,6 @@ import type {
   ClassicDeviceAtwFacade as AtwInterface,
   ClassicBuildingFacade as BuildingInterface,
   ClassicDeviceFacade,
-  ClassicDeviceAtwHasZone2Facade as Zone2Interface,
 } from '../../src/facades/classic-types.ts'
 
 /**
@@ -61,8 +59,4 @@ export type ErvSurface = NothingUnpublished<
     ErvClass,
     ClassicDeviceFacade<typeof ClassicDeviceType.Erv>
   >
->
-
-export type Zone2Surface = NothingUnpublished<
-  UnpublishedMembers<Zone2Class, Zone2Interface>
 >

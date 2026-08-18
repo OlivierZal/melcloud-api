@@ -7,9 +7,9 @@ import {
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
   ClassicOperationModeZone,
+  HomeAtwZoneMode,
 } from '../../src/constants.ts'
 import { ClassicRegistry } from '../../src/entities/index.ts'
-import { ClassicDeviceAtwHasZone2Facade } from '../../src/facades/classic-device-atw-dual-zone.ts'
 import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
 import {
   assertClassicDeviceType,
@@ -18,6 +18,7 @@ import {
   classicBuildingData,
   createMockClassicApi,
 } from '../classic-fixtures.ts'
+import { cast, defined } from '../helpers.ts'
 
 const createAtwData = (
   overrides: Partial<ClassicListDeviceDataAtw> = {},
@@ -51,11 +52,11 @@ const createFacade = (
 
 const createZone2Facade = (
   data: ClassicListDeviceDataAtw = createAtwData({ HasZone2: true }),
-): ClassicDeviceAtwHasZone2Facade => {
+): ClassicDeviceAtwFacade => {
   const registry = createAtwRegistry(data)
   const device = registry.devices.getById(1001)
   assertClassicDeviceType(device, ClassicDeviceType.Atw)
-  return new ClassicDeviceAtwHasZone2Facade(mockApi, registry, device)
+  return new ClassicDeviceAtwFacade(mockApi, registry, device)
 }
 
 describe('atw device facade zone 1', () => {
@@ -63,7 +64,7 @@ describe('atw device facade zone 1', () => {
     const facade = createFacade()
     const { zone1 } = facade
 
-    expect(zone1.operationMode).toBe(ClassicOperationModeZone.room)
+    expect(zone1.operationMode).toBe(HomeAtwZoneMode.room)
     expect(zone1.roomTemperature).toBe(21)
     expect(zone1.setTemperature).toBe(22)
     expect(zone1.isIdle).toBe(false)
@@ -242,12 +243,33 @@ describe('atw device facade hot water', () => {
   })
 })
 
+describe('atw zone-mode projection', () => {
+  it('projects every wire number onto its string twin, per zone', () => {
+    const facade = createZone2Facade(
+      createAtwData({
+        HasZone2: true,
+        OperationModeZone1: ClassicOperationModeZone.flow_cool,
+        OperationModeZone2: ClassicOperationModeZone.curve,
+      }),
+    )
+
+    expect(facade.zone1.operationMode).toBe(HomeAtwZoneMode.flowCool)
+    expect(defined(facade.zone2).operationMode).toBe(HomeAtwZoneMode.curve)
+  })
+
+  it('degrades an out-of-vocabulary wire number to the room basis', () => {
+    const facade = createFacade(createAtwData({ OperationModeZone1: cast(99) }))
+
+    expect(facade.zone1.operationMode).toBe(HomeAtwZoneMode.room)
+  })
+})
+
 describe('atw device facade zone 2', () => {
   it('returns zone2 state', () => {
     const facade = createZone2Facade()
-    const { zone2 } = facade
+    const zone2 = defined(facade.zone2)
 
-    expect(zone2.operationMode).toBe(ClassicOperationModeZone.room)
+    expect(zone2.operationMode).toBe(HomeAtwZoneMode.room)
     expect(zone2.roomTemperature).toBe(19)
     expect(zone2.setTemperature).toBe(20)
   })
@@ -261,7 +283,7 @@ describe('atw device facade zone 2', () => {
       }),
     )
 
-    expect(facade.zone2.operationalState).toBe(
+    expect(defined(facade.zone2).operationalState).toBe(
       ClassicOperationModeStateZone.heating,
     )
   })
@@ -276,7 +298,7 @@ describe('atw device facade zone 2', () => {
       }),
     )
 
-    expect(facade.zone2.operationalState).toBe(
+    expect(defined(facade.zone2).operationalState).toBe(
       ClassicOperationModeStateZone.prohibited,
     )
   })

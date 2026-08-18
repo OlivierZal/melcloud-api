@@ -10,7 +10,6 @@ import type { ClassicDeviceFacadeAny, ClassicFacade } from './classic-types.ts'
 import { ClassicAreaFacade } from './classic-area.ts'
 import { ClassicBuildingFacade } from './classic-building.ts'
 import { ClassicDeviceAtaFacade } from './classic-device-ata.ts'
-import { ClassicDeviceAtwHasZone2Facade } from './classic-device-atw-dual-zone.ts'
 import { ClassicDeviceAtwFacade } from './classic-device-atw.ts'
 import { ClassicDeviceErvFacade } from './classic-device-erv.ts'
 import { ClassicFloorFacade } from './classic-floor.ts'
@@ -36,9 +35,7 @@ const createDeviceFacade = (
     return new ClassicDeviceAtaFacade(api, registry, device)
   }
   if (isClassicDeviceOfType(device, ClassicDeviceType.Atw)) {
-    return device.data.HasZone2
-      ? new ClassicDeviceAtwHasZone2Facade(api, registry, device)
-      : new ClassicDeviceAtwFacade(api, registry, device)
+    return new ClassicDeviceAtwFacade(api, registry, device)
   }
   return new ClassicDeviceErvFacade(api, registry, device)
 }

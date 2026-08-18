@@ -20,14 +20,12 @@ import {
 } from '../../src/errors/index.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
-import { ClassicDeviceAtwHasZone2Facade } from '../../src/facades/classic-device-atw-dual-zone.ts'
 import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
 import { ClassicDeviceErvFacade } from '../../src/facades/classic-device-erv.ts'
 import {
   type ClassicDeviceFacade,
   ClassicAreaFacade,
   ClassicFloorFacade,
-  hasClassicZone2,
   isClassicAtaFacade,
   isClassicAtwFacade,
   isClassicErvFacade,
@@ -223,7 +221,7 @@ const createZone2Facade = (
   apiOverrides?: Partial<ClassicAPIAdapter>,
 ): {
   api: ClassicAPIAdapter
-  facade: ClassicDeviceAtwHasZone2Facade
+  facade: ClassicDeviceAtwFacade
   registry: ClassicRegistry
 } => {
   const registry = new ClassicRegistry()
@@ -240,7 +238,7 @@ const createZone2Facade = (
   assertClassicDeviceType(instance, ClassicDeviceType.Atw)
   return {
     api,
-    facade: new ClassicDeviceAtwHasZone2Facade(api, registry, instance),
+    facade: new ClassicDeviceAtwFacade(api, registry, instance),
     registry,
   }
 }
@@ -1090,6 +1088,63 @@ describe('ata device facade', () => {
     expect(api.getInternalTemperatures).not.toHaveBeenCalled()
   })
 
+  // The legends are positional wire contracts, and the two ATW variants
+  // deliberately diverge on the tank pair (Set-then-actual on
+  // single-zone, actual-then-Set on dual-zone) — inherited wire order,
+  // codified here so a well-meant "fix" fails instead of shipping.
+  it('pins the single-zone internal legend order', async () => {
+    const { facade } = createAtwFacade({
+      getInternalTemperatures: vi
+        .fn<ClassicAPIAdapter['getInternalTemperatures']>()
+        .mockResolvedValue(
+          ok(classicReportData({ Data: [[1], [2], [3], [4], [5], [6], [7]] })),
+        ),
+    })
+    const value = okValue(await facade.getInternalTemperatures())
+
+    expect(value.series.map(({ name }) => name)).toStrictEqual([
+      'FlowTemperature',
+      'FlowTemperatureBoiler',
+      'ReturnTemperature',
+      'ReturnTemperatureBoiler',
+      'SetTankWaterTemperature',
+      'TankWaterTemperature',
+      'MixingTankWaterTemperature',
+    ])
+  })
+
+  it('pins the dual-zone internal legend order', async () => {
+    const { facade } = createZone2Facade(
+      {},
+      {
+        getInternalTemperatures: vi
+          .fn<ClassicAPIAdapter['getInternalTemperatures']>()
+          .mockResolvedValue(
+            ok(
+              classicReportData({
+                Data: [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11]],
+              }),
+            ),
+          ),
+      },
+    )
+    const value = okValue(await facade.getInternalTemperatures())
+
+    expect(value.series.map(({ name }) => name)).toStrictEqual([
+      'FlowTemperature',
+      'FlowTemperatureBoiler',
+      'FlowTemperatureZone1',
+      'FlowTemperatureZone2',
+      'ReturnTemperature',
+      'ReturnTemperatureBoiler',
+      'ReturnTemperatureZone1',
+      'ReturnTemperatureZone2',
+      'SetTankWaterTemperature',
+      'TankWaterTemperature',
+      'MixingTankWaterTemperature',
+    ])
+  })
+
   it('calls hourlyTemperatures on the type that has them', async () => {
     const { api, facade } = createAtwFacade()
     const value = okValue(await facade.getHourlyTemperatures(12))
@@ -1523,7 +1578,13 @@ describe('atw device facade with zone 2', () => {
       OperationModeZone1: ClassicOperationModeZone.flow,
     })
 
-    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
+    const postData = mock<
+      ClassicSetDevicePostData<typeof ClassicDeviceType.Atw>
+    >(defined(call).postData)
+
+    expect(postData.OperationModeZone1).toBe(ClassicOperationModeZone.flow)
+    expect(postData.OperationModeZone2).toBe(ClassicOperationModeZone.room)
   })
 
   it('adjusts secondary zone when primary changes to cool mode', async () => {
@@ -1539,7 +1600,13 @@ describe('atw device facade with zone 2', () => {
       OperationModeZone1: ClassicOperationModeZone.room_cool,
     })
 
-    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
+    const postData = mock<
+      ClassicSetDevicePostData<typeof ClassicDeviceType.Atw>
+    >(defined(call).postData)
+
+    expect(postData.OperationModeZone1).toBe(ClassicOperationModeZone.room_cool)
+    expect(postData.OperationModeZone2).toBe(ClassicOperationModeZone.flow_cool)
   })
 
   it('adjusts secondary zone down from cool when primary is not cool', async () => {
@@ -1559,7 +1626,13 @@ describe('atw device facade with zone 2', () => {
       OperationModeZone1: ClassicOperationModeZone.room,
     })
 
-    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
+    const postData = mock<
+      ClassicSetDevicePostData<typeof ClassicDeviceType.Atw>
+    >(defined(call).postData)
+
+    expect(postData.OperationModeZone1).toBe(ClassicOperationModeZone.room)
+    expect(postData.OperationModeZone2).toBe(ClassicOperationModeZone.flow)
   })
 
   it('adjusts secondary when both zones change', async () => {
@@ -1575,7 +1648,49 @@ describe('atw device facade with zone 2', () => {
       OperationModeZone2: ClassicOperationModeZone.flow,
     })
 
-    expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
+    const postData = mock<
+      ClassicSetDevicePostData<typeof ClassicDeviceType.Atw>
+    >(defined(call).postData)
+
+    expect(postData.OperationModeZone1).toBe(ClassicOperationModeZone.room)
+    expect(postData.OperationModeZone2).toBe(ClassicOperationModeZone.flow)
+  })
+
+  it('does not couple the second zone on a single-zone unit', async () => {
+    const registry = new ClassicRegistry()
+    registry.syncBuildings([classicBuildingData({ HMDefined: true })])
+    registry.syncDevices([
+      classicAtwDevice({
+        Device: classicAtwDeviceData({
+          HasZone2: false,
+          OperationModeZone1: ClassicOperationModeZone.flow,
+        }),
+      }),
+    ])
+    const api = createMockClassicApi(
+      atwSetValuesResponse({
+        EffectiveFlags: 0x8,
+        OperationModeZone1: ClassicOperationModeZone.room,
+      }),
+    )
+    const facade = new ClassicDeviceAtwFacade(
+      api,
+      registry,
+      defined(registry.devices.getById(1001)),
+    )
+    await facade.updateValues({
+      OperationModeZone1: ClassicOperationModeZone.room,
+    })
+
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
+    const postData = mock<
+      ClassicSetDevicePostData<typeof ClassicDeviceType.Atw>
+    >(defined(call).postData)
+
+    // The base merge carries the CURRENT zone-2 mode through; a
+    // regression of the HasZone2 gate would couple room -> flow here.
+    expect(postData.OperationModeZone2).toBe(ClassicOperationModeZone.room)
   })
 
   it('throws on invalid secondary operation mode zone value', async () => {
@@ -1681,17 +1796,17 @@ describe('device type guards', () => {
   )
 })
 
-describe(hasClassicZone2, () => {
-  it('returns true for zone2 facade', () => {
+describe('zone2 as a capability', () => {
+  it('answers the zone-2 snapshot on a dual-zone unit', () => {
     const { facade } = createZone2Facade()
 
-    expect(hasClassicZone2(facade)).toBe(true)
+    expect(facade.zone2).not.toBeNull()
   })
 
-  it('returns false for non-zone2 facade', () => {
+  it('answers null on a single-zone unit', () => {
     const { facade } = createAtwFacade()
 
-    expect(hasClassicZone2(facade)).toBe(false)
+    expect(facade.zone2).toBeNull()
   })
 })
 

@@ -82,6 +82,7 @@ export type {
   ClassicZoneSettings,
 } from './classic-generic.ts'
 export type { LoginCredentials } from './credentials.ts'
+export type { FlatZone } from './flat-zone.ts'
 export type {
   HomeAtaDeviceCapabilities,
   HomeAtaDeviceData,

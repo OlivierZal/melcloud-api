@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "50.0.0",
+  "version": "51.0.0",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",
@@ -22,6 +22,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./atw-state": {
+      "types": "./dist/atw-state.d.ts",
+      "default": "./dist/atw-state.js"
     },
     "./classic": {
       "types": "./dist/classic.d.ts",

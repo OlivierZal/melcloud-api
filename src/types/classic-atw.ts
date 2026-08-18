@@ -1,9 +1,8 @@
+import type { AtwHotWaterState, AtwZoneState } from '../atw-state.ts'
 import type {
   ClassicDeviceType,
   ClassicLabelType,
   ClassicOperationModeState,
-  ClassicOperationModeStateHotWater,
-  ClassicOperationModeStateZone,
   ClassicOperationModeZone,
 } from '../constants.ts'
 import type {
@@ -39,17 +38,20 @@ export interface ClassicEnergyDataAtw {
 }
 
 /**
- * ATW hot water state derived from device data.
+ * ATW hot water state derived from device data — the cross-dialect
+ * {@link AtwHotWaterState} kept precise: the Classic wire always
+ * carries the eco flag and the reported tank maximum.
  * @category Types
  */
-export interface ClassicHotWaterState {
+export interface ClassicHotWaterState extends AtwHotWaterState {
+  /**
+   * Whether eco hot-water mode is on.
+   */
   readonly isEcoHotWater: boolean
-  readonly isForcedMode: boolean
-  readonly isProhibited: boolean
+  /**
+   * Reported tank maximum, in °C.
+   */
   readonly maxTankTemperature: number
-  readonly operationalState: ClassicOperationModeStateHotWater
-  readonly setTankWaterTemperature: number
-  readonly tankWaterTemperature: number
 }
 
 /**
@@ -155,17 +157,31 @@ export interface ClassicUpdateDeviceDataAtw
 export type ClassicZoneAtw = 'Zone1' | 'Zone2'
 
 /**
- * Aggregated heating/cooling state for one zone of an ATW device, derived from `ListDevices` data.
+ * Aggregated heating/cooling state for one zone of an ATW device,
+ * derived from `ListDevices` data — the cross-dialect
+ * {@link AtwZoneState} kept precise: the Classic wire always carries
+ * the flag refinements the Home wire lacks.
  * @category Types
  */
-export interface ClassicZoneState {
+export interface ClassicZoneState extends AtwZoneState {
+  /**
+   * Whether cooling is prohibited on the zone.
+   */
   readonly isCoolingProhibited: boolean
+  /**
+   * Whether heating is prohibited on the zone.
+   */
   readonly isHeatingProhibited: boolean
+  /**
+   * Whether the zone reports idle.
+   */
   readonly isIdle: boolean
+  /**
+   * Whether the zone is in a cooling mode.
+   */
   readonly isInCoolMode: boolean
+  /**
+   * Whether the zone is in a heating mode.
+   */
   readonly isInHeatMode: boolean
-  readonly operationalState: ClassicOperationModeStateZone
-  readonly operationMode: ClassicOperationModeZone
-  readonly roomTemperature: number
-  readonly setTemperature: number
 }
