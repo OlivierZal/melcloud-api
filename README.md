@@ -174,9 +174,9 @@ import { ClassicDeviceType, HomeDeviceType } from '@olivierzal/melcloud-api/cons
 import { FROST_PROTECTION_RANGE } from '@olivierzal/melcloud-api/protection'
 ```
 
-Available subpaths: `/classic`, `/home`, `/constants`, `/enum-mappings`,
-`/error-log`, `/holiday-mode`, `/protection`, `/temperature-range`,
-`/temporal`.
+Available subpaths: `/classic`, `/home`, `/atw-state`, `/constants`,
+`/enum-mappings`, `/error-log`, `/holiday-mode`, `/protection`,
+`/temperature-range`, `/temporal`.
 
 The flat subpaths (everything but `/classic` and `/home`) stay inside the
 browser-safe closure — none of them reaches the Node-only HTTP stack the

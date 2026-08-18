@@ -1,3 +1,4 @@
+import type { AtwHotWaterState, AtwZoneState } from '../atw-state.ts'
 import type { Temporal } from '../temporal.ts'
 import {
   type HomeDeviceType,
@@ -129,6 +130,24 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    */
   public get hasCoolingMode(): boolean {
     return this.settingBool('HasCoolingMode')
+  }
+
+  /**
+   * Hot-water snapshot in the cross-dialect vocabulary — the same
+   * `hotWater` read the Classic facade answers; the fields this wire
+   * cannot say (`isEcoHotWater`, `maxTankTemperature`) read `null`.
+   * @returns The hot-water snapshot.
+   */
+  public get hotWater(): AtwHotWaterState {
+    return {
+      isEcoHotWater: null,
+      isForcedMode: this.forcedHotWaterMode,
+      isProhibited: this.prohibitHotWater,
+      maxTankTemperature: null,
+      operationalState: this.hotWaterOperationalState,
+      setTankWaterTemperature: this.setTankWaterTemperature,
+      tankWaterTemperature: this.tankWaterTemperature,
+    }
   }
 
   /**
@@ -292,6 +311,25 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    */
   public get temperatureStep(): number {
     return this.capabilities.temperatureIncrement
+  }
+
+  /**
+   * Zone-1 snapshot in the cross-dialect vocabulary — the same `zone1`
+   * read the Classic facade answers; the flag refinements this wire
+   * cannot say read `null`.
+   * @returns The Zone 1 state snapshot.
+   */
+  public get zone1(): AtwZoneState {
+    return this.#zoneState('Zone1')
+  }
+
+  /**
+   * Zone-2 snapshot, or `null` on a single-zone unit — the nullable
+   * capability shape both dialects share.
+   * @returns The Zone 2 state snapshot, or `null`.
+   */
+  public get zone2(): AtwZoneState | null {
+    return this.#whenZone2(() => this.#zoneState('Zone2'))
   }
 
   /**
@@ -516,5 +554,24 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   // zone-2 settings are not even read on single-zone units.
   #whenZone2<T>(read: () => T): T | null {
     return this.capabilities.hasZone2 ? read() : null
+  }
+
+  // The cross-dialect zone snapshot: flags null (absent from this
+  // wire), the operational state the shared top-level projection, the
+  // control basis from the zone's own setting.
+  #zoneState(zone: 'Zone1' | 'Zone2'): AtwZoneState {
+    return {
+      isCoolingProhibited: null,
+      isHeatingProhibited: null,
+      isIdle: null,
+      isInCoolMode: null,
+      isInHeatMode: null,
+      operationalState: this.operationalStateZone1,
+      operationMode:
+        zoneModeFromWire[this.setting(`OperationMode${zone}`)] ??
+        HomeAtwZoneMode.room,
+      roomTemperature: this.settingNumber(`RoomTemperature${zone}`),
+      setTemperature: this.settingNumber(`SetTemperature${zone}`),
+    }
   }
 }

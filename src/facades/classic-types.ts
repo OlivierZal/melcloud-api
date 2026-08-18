@@ -92,16 +92,10 @@ export interface ClassicDeviceAtwFacade extends ClassicDeviceFacade<
    * Current zone 1 state.
    */
   readonly zone1: ClassicZoneState
-}
-
-/**
- * Facade for ATW devices with two heating/cooling zones.
- */
-export interface ClassicDeviceAtwHasZone2Facade extends ClassicDeviceAtwFacade {
   /**
-   * Current zone 2 state.
+   * Current zone 2 state, or `null` on a single-zone unit.
    */
-  readonly zone2: ClassicZoneState
+  readonly zone2: ClassicZoneState | null
 }
 
 /**
@@ -199,10 +193,7 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
  * @category Facades
  */
 export type ClassicDeviceFacadeAny =
-  | ClassicDeviceAtaFacade
-  | ClassicDeviceAtwFacade
-  | ClassicDeviceAtwHasZone2Facade
-  | ClassicDeviceErvFacade
+  ClassicDeviceAtaFacade | ClassicDeviceAtwFacade | ClassicDeviceErvFacade
 
 /**
  * Chartable slice of an `EnergyCost/Report` payload, produced by the
@@ -329,14 +320,3 @@ export const isClassicErvFacade = (
   facade: ClassicDeviceFacade<ClassicDeviceType>,
 ): facade is ClassicDeviceFacade<typeof ClassicDeviceType.Erv> =>
   facade.type === ClassicDeviceType.Erv
-
-/**
- * Type guard that narrows an ATW facade to the zone 2 variant.
- * Allows consumers to safely access `zone2` without type assertions.
- * @param facade - The ATW device facade to check.
- * @returns Whether the facade supports zone 2.
- * @category Facades
- */
-export const hasClassicZone2 = (
-  facade: ClassicDeviceAtwFacade,
-): facade is ClassicDeviceAtwHasZone2Facade => 'zone2' in facade

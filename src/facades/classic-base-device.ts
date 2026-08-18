@@ -277,6 +277,8 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   protected readonly holidayModeLocation = 'Devices'
 
+  // `[]` marks device types without an internal-temperatures report:
+  // the readers then resolve an empty chart without a wire call.
   protected readonly internalTemperaturesLegend: readonly (
     string | undefined
   )[] = []

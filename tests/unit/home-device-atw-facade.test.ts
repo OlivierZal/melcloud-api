@@ -160,6 +160,31 @@ describe('home device atw facade', () => {
       expect(facade.operationMode).toBe('Stop')
     })
 
+    it('reads each zone snapshot off its own settings', () => {
+      const facade = new HomeDeviceAtwFacade(
+        createApi(),
+        createModel(
+          {
+            OperationModeZone1: 'HeatRoomTemperature',
+            OperationModeZone2: 'CoolRoomTemperature',
+            RoomTemperatureZone1: '21',
+            RoomTemperatureZone2: '19',
+            SetTemperatureZone1: '22',
+            SetTemperatureZone2: '20',
+          },
+          { hasZone2: true },
+        ),
+      )
+      const { zone2 } = facade
+
+      expect(facade.zone1.operationMode).toBe('room')
+      expect(facade.zone1.roomTemperature).toBe(21)
+      expect(facade.zone1.setTemperature).toBe(22)
+      expect(zone2?.operationMode).toBe('room_cool')
+      expect(zone2?.roomTemperature).toBe(19)
+      expect(zone2?.setTemperature).toBe(20)
+    })
+
     it('reads the setpoint step from the advertised increment', () => {
       const facade = new HomeDeviceAtwFacade(
         createApi(),
