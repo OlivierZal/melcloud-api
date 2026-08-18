@@ -182,23 +182,18 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
    * Fetches both the external (building) and internal (tank/boiler)
    * temperature reports and merges them into a single chart series.
    * @param query - Optional report time window.
-   * @param shouldUseExactRange - Whether to clamp the query to its exact bounds.
    * @returns The merged chart options, or a typed failure.
    */
   // ATW reports both external (building) and internal (tank/boiler)
   // temperatures — merge them into a single chart
   public override async getTemperatures(
     query?: ReportQuery,
-    shouldUseExactRange = true,
   ): Promise<Result<ReportChartLineOptions>> {
-    const temperatures = await super.getTemperatures(query, shouldUseExactRange)
+    const temperatures = await super.getTemperatures(query)
     if (!temperatures.ok) {
       return temperatures
     }
-    const internal = await this.getInternalTemperatures(
-      query,
-      shouldUseExactRange,
-    )
+    const internal = await this.getInternalTemperatures(query)
     return mapResult(internal, ({ series: internalTemperaturesSeries }) => ({
       ...temperatures.value,
       series: mergeSeries(

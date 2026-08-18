@@ -150,19 +150,19 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
    * Fetch internal temperature report. ATW only.
    */
   readonly getInternalTemperatures: (
-    query: ReportQuery,
+    query?: ReportQuery,
   ) => Promise<Result<ReportChartLineOptions>>
   /**
    * Fetch operation mode usage as pie chart data.
    */
   readonly getOperationModes: (
-    query: ReportQuery,
+    query?: ReportQuery,
   ) => Promise<Result<ReportChartPieOptions>>
   /**
    * Fetch temperature history as line chart data.
    */
   readonly getTemperatures: (
-    query: ReportQuery,
+    query?: ReportQuery,
   ) => Promise<Result<ReportChartLineOptions>>
   /**
    * Fetch tile overview data, optionally selecting a specific device.

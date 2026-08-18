@@ -1071,24 +1071,43 @@ describe('ata device facade', () => {
     expect(api.getTemperatures).toHaveBeenCalledWith(expect.any(Object))
   })
 
-  it('calls internalTemperatures', async () => {
-    const { api, facade } = createAtaFacade()
+  it('calls internalTemperatures on the type that has them', async () => {
+    const { api, facade } = createAtwFacade()
     const value = okValue(await facade.getInternalTemperatures())
 
     expect(value).toHaveProperty('series')
     expect(api.getInternalTemperatures).toHaveBeenCalledWith(expect.any(Object))
   })
 
-  it('calls hourlyTemperatures', async () => {
+  // The docs say ATW only, and they now mean it: the wire call used to
+  // fire anyway and every series was masked away after.
+  it('answers internalTemperatures without the wire on a type without them', async () => {
     const { api, facade } = createAtaFacade()
+    const value = okValue(await facade.getInternalTemperatures())
+
+    expect(value.series).toStrictEqual([])
+    expect(value.labels).toStrictEqual([])
+    expect(api.getInternalTemperatures).not.toHaveBeenCalled()
+  })
+
+  it('calls hourlyTemperatures on the type that has them', async () => {
+    const { api, facade } = createAtwFacade()
     const value = okValue(await facade.getHourlyTemperatures(12))
 
     expect(value).toHaveProperty('series')
     expect(api.getHourlyTemperatures).toHaveBeenCalledWith(expect.any(Object))
   })
 
+  it('answers hourlyTemperatures without the wire on a type without them', async () => {
+    const { api, facade } = createAtaFacade()
+    const value = okValue(await facade.getHourlyTemperatures(12))
+
+    expect(value.series).toStrictEqual([])
+    expect(api.getHourlyTemperatures).not.toHaveBeenCalled()
+  })
+
   it('formats the hourly temperature labels as clock labels', async () => {
-    const { facade } = createAtaFacade({
+    const { facade } = createAtwFacade({
       getHourlyTemperatures: vi
         .fn<ClassicAPIAdapter['getHourlyTemperatures']>()
         .mockResolvedValue(ok(classicReportData({ Labels: ['5'] }))),
@@ -1106,7 +1125,7 @@ describe('ata device facade', () => {
     )
     try {
       // Pin the label locale: the runner's default is not ours.
-      const { api, facade } = createAtaFacade({ locale: 'fr-FR' })
+      const { api, facade } = createAtwFacade({ locale: 'fr-FR' })
       const value = okValue(await facade.getHourlyTemperatures())
 
       expect(api.getHourlyTemperatures).toHaveBeenCalledTimes(2)
