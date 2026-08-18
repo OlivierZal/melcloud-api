@@ -8,26 +8,59 @@ import {
   type Identifiable,
   STALE_COMMUNICATION_HOURS,
 } from '../entities/types.ts'
-import { EntityNotFoundError } from '../errors/index.ts'
+import { EntityNotFoundError, NoChangesError } from '../errors/index.ts'
 import { Temporal } from '../temporal.ts'
 import {
+  type HomeAtwDeviceData,
   type HomeDeviceData,
+  type HomeDeviceValues,
   type HomeEnergyData,
+  type HomeErrorLogEntry,
   type HomeFrostProtection,
   type HomeHolidayMode,
   type HomeOverheatProtection,
+  type HomeReportData,
   type Hour,
   type Result,
   mapResult,
 } from '../types/index.ts'
-import { toZonedWallClock } from '../utils.ts'
-import type { ReportChartLineOptions } from './report-types.ts'
+import { omitUndefined, toZonedWallClock } from '../utils.ts'
+import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import {
+  fetchHomeReportChunks,
   resolveHomeDayWindow,
   resolveHomeHourWindow,
+  resolveHomeReportWindow,
+  toHomeLineOptions,
   toHomeSignalOptions,
   toHomeWireWindow,
 } from './home-report.ts'
+
+/**
+ * Chart unit of every Home temperature report.
+ */
+export const TEMPERATURE_UNIT = '°C'
+
+/**
+ * Per-type energy-telemetry query: the ATW interval measures split
+ * consumed and produced (`measure` selects the direction, and only
+ * exists there), while ATA has a single cumulative measure and no
+ * direction to pick. `from` is inclusive, `to` exclusive (ISO
+ * timestamps); `interval` speaks the wire's .NET enum — `Minute`,
+ * `Hour`, `Day`, `Week` or `Month`.
+ * @template TData - Wire-format device payload variant selecting the
+ * query shape.
+ * @category Facades
+ */
+export type HomeEnergyQuery<TData extends HomeDeviceData> =
+  TData extends HomeAtwDeviceData
+    ? {
+        from: string
+        interval: string
+        measure: 'consumed' | 'produced'
+        to: string
+      }
+    : { from: string; interval: string; to: string }
 
 /**
  * Maps a Home `/context` protection descriptor onto the cross-dialect
@@ -71,9 +104,11 @@ const toHolidayModeState = (
  * for {@link HomeDeviceAtaFacade}) so subclasses see the device-type
  * specific shape on `model.data` without unsafe casts.
  *
- * The class is intentionally thin: anything that diverges between
- * ATA and ATW (operation modes, capability fields, update payload
- * shape, telemetry endpoints) lives in the subclass.
+ * The base carries everything the types share — identity, availability,
+ * capabilities, power/standby, the telemetry passthroughs and the
+ * update pipeline; only what genuinely diverges between ATA and ATW
+ * (operation modes, setpoint vocabulary, report merging) lives in the
+ * subclass, reached through hooks like `clampValues`.
  * @template TData - Wire-format device payload variant exposed on
  * `model.data`, narrowed to the device-type-specific shape by each subclass.
  * @category Facades
@@ -87,6 +122,15 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * the Home counterpart of the Classic facades' `type`.
    */
   public readonly type: HomeDeviceType
+
+  /**
+   * Static capability flags and ranges advertised by this device,
+   * narrowed to the device-type shape by `TData`.
+   * @returns The capability descriptor.
+   */
+  public get capabilities(): TData['capabilities'] {
+    return this.model.data.capabilities
+  }
 
   /**
    * Whether the underlying device still exists in the registry.
@@ -121,6 +165,14 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    */
   public get id(): string {
     return this.#id
+  }
+
+  /**
+   * Whether the unit is in standby (powered, but idle).
+   * @returns `true` when on standby.
+   */
+  public get inStandbyMode(): boolean {
+    return this.settingBool('InStandbyMode')
   }
 
   /**
@@ -160,6 +212,15 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    */
   public get name(): string {
     return this.model.name
+  }
+
+  /**
+   * Whether the unit is powered on. Independent of standby: a unit in
+   * standby is powered but idle.
+   * @returns `true` when on, `false` when off.
+   */
+  public get power(): boolean {
+    return this.settingBool('Power')
   }
 
   /**
@@ -208,21 +269,35 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * @param api - Home API client.
    * @param model - Backing device model, narrowed to a specific variant.
    */
-  protected constructor(api: HomeAPIAdapter, model: HomeDevice<TData>) {
+  public constructor(api: HomeAPIAdapter, model: HomeDevice<TData>) {
     this.api = api
     this.#id = model.id
     this.type = model.type
   }
 
   /**
-   * Pushes a partial update to the device. Each subclass narrows the
-   * payload to its device-type shape; both shapes share the `power`
-   * field this base's {@link updatePower} relies on.
-   * @param values - Partial update payload.
+   * Fetches energy telemetry for this device over the given time
+   * window — cumulative consumption on ATA units, one interval-measure
+   * direction on ATW units (`measure` selects consumed or produced
+   * there, and only there). See {@link HomeEnergyQuery} for the window
+   * and interval semantics.
+   * @param params - Query window and interval, plus the energy
+   * direction on ATW.
+   * @returns The telemetry bundle, or a typed failure.
    */
-  public abstract updateValues(values: {
-    power?: boolean | null
-  }): Promise<void>
+  public async getEnergy(
+    params: HomeEnergyQuery<TData>,
+  ): Promise<Result<HomeEnergyData>> {
+    return this.api.getEnergy(this.id, params)
+  }
+
+  /**
+   * Fetches the error-log entries for this device.
+   * @returns The entries (possibly empty), or a typed failure.
+   */
+  public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
+    return this.api.getErrorLog(this.id)
+  }
 
   /**
    * Fetches RSSI telemetry for this device over the given time window.
@@ -279,6 +354,66 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    */
   public async updatePower(isOn = true): Promise<void> {
     await this.updateValues({ power: isOn })
+  }
+
+  /**
+   * Pushes a partial update to the device; rejects when `values`
+   * carries no defined value (an explicitly-`undefined` key counts as
+   * absent), otherwise overlays the per-type `clampValues` hook's
+   * clamped setpoints and forwards. Each subclass narrows the payload
+   * to its device-type shape.
+   * @param values - Partial update payload.
+   * @throws NoChangesError when `values` carries no defined value.
+   */
+  public async updateValues(values: HomeDeviceValues): Promise<void> {
+    const changes = omitUndefined(values)
+    if (Object.keys(changes).length === 0) {
+      throw new NoChangesError(this.id)
+    }
+    await this.api.updateValues(this.id, {
+      ...changes,
+      ...this.clampValues?.(changes),
+    })
+  }
+
+  /**
+   * Per-type setpoint clamp: maps the defined setpoint fields of an
+   * update onto their clamped values, leaving every other field alone.
+   * Left undeclared by a type with no bounds to enforce — the pipeline
+   * then forwards the changes untouched (the optional-hook mirror of
+   * the Classic side's `extractEnergyReport` null hook).
+   * @param changes - Defined update fields.
+   * @returns The clamped setpoint fields to overlay on the update.
+   */
+  protected clampValues?(changes: HomeDeviceValues): Partial<HomeDeviceValues>
+
+  /**
+   * Shared single-source chart pipeline: resolves the query window,
+   * fetches the report in wire-sized chunks, and resamples the
+   * irregular samples onto a regular grid as `°C` line-chart options.
+   * @param fetchChunks - Wire read for one window chunk.
+   * @param query - Optional ISO date range.
+   * @returns Structured line chart options (`°C`), or a typed failure.
+   */
+  protected async fetchResampledChart(
+    fetchChunks: (params: {
+      from: string
+      period: string
+      to: string
+    }) => Promise<Result<HomeReportData[]>>,
+    query?: ReportQuery,
+  ): Promise<Result<ReportChartLineOptions>> {
+    const window = resolveHomeReportWindow(query, this.chartTimezone)
+    return mapResult(
+      await fetchHomeReportChunks(fetchChunks, window),
+      (reports) =>
+        toHomeLineOptions({
+          locale: this.api.locale,
+          reports,
+          unit: TEMPERATURE_UNIT,
+          window,
+        }),
+    )
   }
 
   /**

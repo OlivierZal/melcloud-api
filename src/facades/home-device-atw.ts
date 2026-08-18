@@ -1,5 +1,3 @@
-import type { HomeAPIAdapter } from '../api/index.ts'
-import type { HomeDevice } from '../entities/home-device.ts'
 import type { Temporal } from '../temporal.ts'
 import {
   type HomeDeviceType,
@@ -8,25 +6,22 @@ import {
   HomeAtwOperationalState,
   HomeAtwZoneMode,
 } from '../constants.ts'
-import { NoChangesError } from '../errors/index.ts'
 import {
   type HomeAtwDeviceCapabilities,
   type HomeAtwDeviceData,
   type HomeAtwValues,
-  type HomeEnergyData,
-  type HomeErrorLogEntry,
   type Hour,
   type Result,
   mapResult,
   ok,
 } from '../types/index.ts'
-import { clampToRange, omitUndefined } from '../utils.ts'
+import { clampToRange } from '../utils.ts'
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
 } from './report-types.ts'
-import { HomeBaseDeviceFacade } from './home-base-device.ts'
+import { HomeBaseDeviceFacade, TEMPERATURE_UNIT } from './home-base-device.ts'
 import {
   type HomeChartGridUnit,
   type HomeChartWindow,
@@ -43,8 +38,6 @@ import {
   toHomeOperationModeOptions,
   toHomeWireWindow,
 } from './home-report.ts'
-
-const TEMPERATURE_UNIT = '°C'
 
 interface TemperatureRange {
   max: number
@@ -120,14 +113,6 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   declare public readonly type: typeof HomeDeviceType.Atw
 
   /**
-   * Static capability flags and ranges advertised by this device.
-   * @returns The capability descriptor.
-   */
-  public get capabilities(): HomeAtwDeviceCapabilities {
-    return this.model.data.capabilities
-  }
-
-  /**
    * Whether the unit is forcing hot-water generation.
    * @returns `true` when forced, `false` otherwise.
    */
@@ -161,14 +146,6 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
       ? ClassicOperationModeStateHotWater.prohibited
       : (hotWaterStateFromOperationMode[this.operationMode] ??
           ClassicOperationModeStateHotWater.idle)
-  }
-
-  /**
-   * Whether the unit is in standby (powered, but idle).
-   * @returns `true` when on standby.
-   */
-  public get inStandbyMode(): boolean {
-    return this.settingBool('InStandbyMode')
   }
 
   /**
@@ -252,14 +229,6 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   /**
-   * Whether the unit is powered on.
-   * @returns `true` when on, `false` otherwise.
-   */
-  public get power(): boolean {
-    return this.settingBool('Power')
-  }
-
-  /**
    * Whether hot-water generation is currently inhibited.
    * @returns `true` when prohibited.
    */
@@ -316,34 +285,13 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   /**
-   * Builds a Home ATW facade backed by the given API client and
-   * registry-resident device model.
-   * @param api - Home API client.
-   * @param model - Backing device model, narrowed to the ATW variant.
+   * Setpoint granularity in °C, straight from the FTC's advertised
+   * increment — the ATW counterpart of the ATA derivation from
+   * `hasHalfDegreeIncrements`.
+   * @returns The advertised increment (typically `0.5` or `1`).
    */
-  public constructor(
-    api: HomeAPIAdapter,
-    model: HomeDevice<HomeAtwDeviceData>,
-  ) {
-    super(api, model)
-  }
-
-  /**
-   * Fetches interval-energy telemetry for this device.
-   * @param params - Query window plus energy direction.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (e.g. `Hour`, `Day`).
-   * @param params.measure - Energy direction (`'consumed'` or `'produced'`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or a typed failure.
-   */
-  public async getEnergy(params: {
-    from: string
-    interval: string
-    measure: 'consumed' | 'produced'
-    to: string
-  }): Promise<Result<HomeEnergyData>> {
-    return this.api.getEnergy(this.id, params)
+  public get temperatureStep(): number {
+    return this.capabilities.temperatureIncrement
   }
 
   /**
@@ -387,14 +335,6 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   /**
-   * Fetches the error-log entries for this device.
-   * @returns The entries (possibly empty), or a typed failure.
-   */
-  public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.api.getErrorLog(this.id)
-  }
-
-  /**
    * Fetches the fine temperature chart — the merged comfort-graph and
    * internal-temperatures series with operation-mode background bands,
    * over the whole of today on a five-minute grid, or over one specific
@@ -431,19 +371,9 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   public async getInternalTemperatures(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
-    const window = resolveHomeReportWindow(query, this.chartTimezone)
-    return mapResult(
-      await fetchHomeReportChunks(
-        async (params) => this.api.getAtwInternalTemperatures(this.id, params),
-        window,
-      ),
-      (reports) =>
-        toHomeLineOptions({
-          locale: this.api.locale,
-          reports,
-          unit: TEMPERATURE_UNIT,
-          window,
-        }),
+    return this.fetchResampledChart(
+      async (params) => this.api.getAtwInternalTemperatures(this.id, params),
+      query,
     )
   }
 
@@ -495,26 +425,18 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   }
 
   /**
-   * Pushes a partial setpoint update; rejects when `values` carries no
-   * defined value (an explicitly-`undefined` key counts as absent),
-   * otherwise clamps zone setpoints to
+   * Pushes a partial ATW setpoint update — the base pipeline narrowed
+   * to the ATW payload, with zone setpoints clamped to
    * `[minSetTemperature, maxSetTemperature]` and the tank setpoint to
-   * `[minSetTankTemperature, maxSetTankTemperature]` before forwarding.
+   * `[minSetTankTemperature, maxSetTankTemperature]`.
    * @param values - Partial setpoint payload.
-   * @throws {@link NoChangesError} when `values` carries no defined value.
+   * @throws NoChangesError when `values` carries no defined value.
    */
   public override async updateValues(values: HomeAtwValues): Promise<void> {
-    const changes = omitUndefined(values)
-    if (Object.keys(changes).length === 0) {
-      throw new NoChangesError(this.id)
-    }
-    await this.api.updateValues(this.id, {
-      ...changes,
-      ...this.#clampSetpoints(changes),
-    })
+    await super.updateValues(values)
   }
 
-  #clampSetpoints({
+  protected override clampValues({
     setTankWaterTemperature: tank,
     setTemperatureZone1: zone1,
     setTemperatureZone2: zone2,

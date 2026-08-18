@@ -18,7 +18,7 @@ import {
 import { clampToRange } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
-import { BaseDeviceFacade } from './classic-base-device.ts'
+import { BaseDeviceFacade, makeEnergyExtract } from './classic-base-device.ts'
 import { classicAtwFlags } from './classic-flags.ts'
 
 const MIN_TANK_TEMPERATURE = 40
@@ -38,14 +38,6 @@ const energyReportBuckets = [
   'ProducedCooling',
   'ProducedHotWater',
 ] as const
-
-const extractEnergyReportAtw = (
-  data: ClassicEnergyDataAtw,
-): ClassicEnergyReportExtract => ({
-  labels: data.Labels,
-  labelType: data.LabelType,
-  series: energyReportBuckets.map((name) => ({ data: data[name], name })),
-})
 
 const hotWaterStateMap: Partial<
   Record<ClassicOperationModeState, ClassicOperationModeStateHotWater>
@@ -140,7 +132,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
 
   protected override readonly extractEnergyReport: (
     data: ClassicEnergyDataAtw,
-  ) => ClassicEnergyReportExtract = extractEnergyReportAtw
+  ) => ClassicEnergyReportExtract = makeEnergyExtract(energyReportBuckets)
 
   protected override readonly internalTemperaturesLegend: readonly string[] = [
     'FlowTemperature',

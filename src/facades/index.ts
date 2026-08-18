@@ -6,7 +6,6 @@ export type {
 } from './report-types.ts'
 
 export { ClassicAreaFacade } from './classic-area.ts'
-export { ClassicDeviceErvFacade } from './classic-device-erv.ts'
 export { createFacade } from './classic-factory.ts'
 export { ClassicFloorFacade } from './classic-floor.ts'
 export { ClassicFacadeManager } from './classic-manager.ts'
@@ -19,6 +18,7 @@ export {
   type ClassicDeviceAtaFacade,
   type ClassicDeviceAtwFacade,
   type ClassicDeviceAtwHasZone2Facade,
+  type ClassicDeviceErvFacade,
   type ClassicDeviceFacade,
   type ClassicDeviceFacadeAny,
   type ClassicEnergyReportExtract,
@@ -36,7 +36,10 @@ export {
   toGroupFanSpeed,
   toHomeAtaValues,
 } from './home-ata-group.ts'
-export { HomeBaseDeviceFacade } from './home-base-device.ts'
+export {
+  type HomeEnergyQuery,
+  HomeBaseDeviceFacade,
+} from './home-base-device.ts'
 export { HomeBuildingAtaFacade } from './home-building-ata.ts'
 export { HomeDeviceAtaFacade } from './home-device-ata.ts'
 export { HomeDeviceAtwFacade } from './home-device-atw.ts'

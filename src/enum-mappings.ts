@@ -3,7 +3,9 @@ import {
   ClassicFanSpeed,
   ClassicHorizontal,
   ClassicOperationMode,
+  ClassicOperationModeZone,
   ClassicVertical,
+  HomeAtwZoneMode,
   HomeDeviceType,
 } from './constants.ts'
 import { isKeyOf } from './utils.ts'
@@ -43,6 +45,39 @@ export type HomeOperationMode = 'Automatic' | 'Cool' | 'Dry' | 'Fan' | 'Heat'
  */
 export type HomeVertical =
   'Auto' | 'Five' | 'Four' | 'One' | 'Swing' | 'Three' | 'Two'
+
+/**
+ * Mapping from Classic numeric ATW zone operation mode to the Home zone
+ * mode — a total bijection: the two vocabularies name the same five FTC
+ * control bases.
+ * @category Mappings
+ */
+export const atwZoneModeFromClassic: Record<
+  ClassicOperationModeZone,
+  HomeAtwZoneMode
+> = {
+  [ClassicOperationModeZone.curve]: HomeAtwZoneMode.curve,
+  [ClassicOperationModeZone.flow]: HomeAtwZoneMode.flow,
+  [ClassicOperationModeZone.flow_cool]: HomeAtwZoneMode.flowCool,
+  [ClassicOperationModeZone.room]: HomeAtwZoneMode.room,
+  [ClassicOperationModeZone.room_cool]: HomeAtwZoneMode.roomCool,
+}
+
+/**
+ * Mapping from Home ATW zone mode to the Classic numeric zone operation
+ * mode — the inverse of {@link atwZoneModeFromClassic}.
+ * @category Mappings
+ */
+export const atwZoneModeToClassic: Record<
+  HomeAtwZoneMode,
+  ClassicOperationModeZone
+> = {
+  [HomeAtwZoneMode.curve]: ClassicOperationModeZone.curve,
+  [HomeAtwZoneMode.flow]: ClassicOperationModeZone.flow,
+  [HomeAtwZoneMode.flowCool]: ClassicOperationModeZone.flow_cool,
+  [HomeAtwZoneMode.room]: ClassicOperationModeZone.room,
+  [HomeAtwZoneMode.roomCool]: ClassicOperationModeZone.room_cool,
+}
 
 /**
  * Mapping from Classic numeric fan speed to Home string value.

@@ -14,7 +14,7 @@ import {
 } from '../types/index.ts'
 import { clampToRange, isValue } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
-import { BaseDeviceFacade } from './classic-base-device.ts'
+import { BaseDeviceFacade, makeEnergyExtract } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
 import { toGroupFanSpeed } from './home-ata-group.ts'
 
@@ -49,14 +49,6 @@ const energyReportBuckets = [
   'Other',
 ] as const
 
-const extractEnergyReportAta = (
-  data: ClassicEnergyDataAta,
-): ClassicEnergyReportExtract => ({
-  labels: data.Labels,
-  labelType: data.LabelType,
-  series: energyReportBuckets.map((name) => ({ data: data[name], name })),
-})
-
 /**
  * Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping.
  * @category Facades
@@ -70,7 +62,7 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
 
   protected override readonly extractEnergyReport: (
     data: ClassicEnergyDataAta,
-  ) => ClassicEnergyReportExtract = extractEnergyReportAta
+  ) => ClassicEnergyReportExtract = makeEnergyExtract(energyReportBuckets)
 
   protected readonly temperaturesLegend: readonly string[] = [
     'SetTemperature',

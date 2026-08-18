@@ -26,6 +26,7 @@ export {
   type ClassicDeviceAtaFacade as DeviceAtaFacade,
   type ClassicDeviceAtwFacade as DeviceAtwFacade,
   type ClassicDeviceAtwHasZone2Facade as DeviceAtwHasZone2Facade,
+  type ClassicDeviceErvFacade as DeviceErvFacade,
   type ClassicDeviceFacade as DeviceFacade,
   type ClassicDeviceFacadeAny as DeviceFacadeAny,
   type ClassicDeviceID as DeviceID,

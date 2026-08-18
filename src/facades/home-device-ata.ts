@@ -1,5 +1,3 @@
-import type { HomeAPIAdapter } from '../api/index.ts'
-import type { HomeDevice } from '../entities/home-device.ts'
 import type { ProtectionState } from '../protection.ts'
 import { type HomeDeviceType, ClassicFanSpeed } from '../constants.ts'
 import {
@@ -11,7 +9,7 @@ import {
   isClassicFanSpeed,
   isHomeFanSpeed,
 } from '../enum-mappings.ts'
-import { NoChangesError, tolerateNoChanges } from '../errors/index.ts'
+import { tolerateNoChanges } from '../errors/index.ts'
 import {
   type AtaTemperatureBounds,
   type TemperatureRange,
@@ -22,13 +20,11 @@ import {
   type HomeAtaDeviceCapabilities,
   type HomeAtaDeviceData,
   type HomeAtaValues,
-  type HomeEnergyData,
-  type HomeErrorLogEntry,
   type Result,
   mapResult,
   ok,
 } from '../types/index.ts'
-import { clampToRange, omitUndefined } from '../utils.ts'
+import { clampToRange } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { toClassicAtaGroupState, toHomeAtaValues } from './home-ata-group.ts'
 import {
@@ -36,20 +32,16 @@ import {
   toHomeProtectionState,
 } from './home-base-device.ts'
 import {
-  fetchHomeReportChunks,
   resolveHomeReportWindow,
   toHomeEnergyBucketUnit,
   toHomeEnergyInterval,
   toHomeEnergyOptions,
-  toHomeLineOptions,
   toHomeWireWindow,
 } from './home-report.ts'
 
 // The ATA cumulative energy measure reports watt-hours (100 Wh pulses,
 // live-probed 2026-07-18: a daily bucket of `571.0` for ~0.57 kWh).
 const KILOWATT_HOURS_PER_WATT_HOUR = 0.001
-
-const TEMPERATURE_UNIT = '°C'
 
 // Half-degree units advertise it; the rest step by a whole degree.
 const HALF_DEGREE_STEP = 0.5
@@ -80,15 +72,6 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   declare public readonly type: typeof HomeDeviceType.Ata
 
   /**
-   * Static capability flags and per-mode temperature bounds advertised
-   * by this device.
-   * @returns The capability descriptor.
-   */
-  public get capabilities(): HomeAtaDeviceCapabilities {
-    return this.model.data.capabilities
-  }
-
-  /**
    * Currently active operation mode (heat/cool/auto/dry/fan/off). The
    * type documents the known vocabulary; unknown or absent wire values
    * pass through unchecked (see `#enumSetting`), so exhaustive
@@ -109,14 +92,6 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    */
   public get overheatProtection(): ProtectionState | null {
     return toHomeProtectionState(this.model.data.overheatProtection)
-  }
-
-  /**
-   * Whether the unit is powered on.
-   * @returns `true` when on, `false` when standby.
-   */
-  public get power(): boolean {
-    return this.settingBool('Power')
   }
 
   /**
@@ -182,35 +157,6 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   }
 
   /**
-   * Builds a Home ATA facade backed by the given API client and
-   * registry-resident device model.
-   * @param api - Home API client.
-   * @param model - Backing device model, narrowed to the ATA variant.
-   */
-  public constructor(
-    api: HomeAPIAdapter,
-    model: HomeDevice<HomeAtaDeviceData>,
-  ) {
-    super(api, model)
-  }
-
-  /**
-   * Fetches cumulative-energy telemetry for this device over the given time window.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (`Minute`, `Hour`, `Day`, `Week` or `Month`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns The telemetry bundle, or a typed failure.
-   */
-  public async getEnergy(params: {
-    from: string
-    interval: string
-    to: string
-  }): Promise<Result<HomeEnergyData>> {
-    return this.api.getEnergy(this.id, params)
-  }
-
-  /**
    * Fetches the energy report as line chart data on a daily grid — the
    * Home counterpart of the Classic `getEnergyReport` contract. The
    * single ATA measure is cumulative consumption in watt-hours, scaled
@@ -238,14 +184,6 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
           window,
         }),
     )
-  }
-
-  /**
-   * Fetches the error-log entries for this device.
-   * @returns The entries (possibly empty), or a typed failure.
-   */
-  public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.api.getErrorLog(this.id)
   }
 
   /**
@@ -285,19 +223,9 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   public async getTemperatures(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
-    const window = resolveHomeReportWindow(query, this.chartTimezone)
-    return mapResult(
-      await fetchHomeReportChunks(
-        async (params) => this.api.getTemperatures(this.id, params),
-        window,
-      ),
-      (reports) =>
-        toHomeLineOptions({
-          locale: this.api.locale,
-          reports,
-          unit: TEMPERATURE_UNIT,
-          window,
-        }),
+    return this.fetchResampledChart(
+      async (params) => this.api.getTemperatures(this.id, params),
+      query,
     )
   }
 
@@ -306,7 +234,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * the Home vocabulary and pushed through the native per-device update
    * path. Group writes are no-op tolerant: an all-null delta translates to
    * nothing and resolves without a wire call, and a device already matching
-   * the delta (a {@link NoChangesError} from its update) counts as success.
+   * the delta (a `NoChangesError` from its update) counts as success.
    * @param state - Partial Classic group state to push to the device.
    * @returns The zone-shaped success outcome once the write completes.
    */
@@ -318,25 +246,17 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   }
 
   /**
-   * Pushes a partial setpoint update; rejects when `values` carries no
-   * defined value (an explicitly-`undefined` key counts as absent),
-   * otherwise clamps `setTemperature` to the active mode's bounds and
-   * forwards.
+   * Pushes a partial ATA setpoint update — the base pipeline narrowed
+   * to the ATA payload, with `setTemperature` clamped to the active
+   * mode's bounds.
    * @param values - Partial setpoint payload.
-   * @throws {@link NoChangesError} when `values` carries no defined value.
+   * @throws NoChangesError when `values` carries no defined value.
    */
   public override async updateValues(values: HomeAtaValues): Promise<void> {
-    const changes = omitUndefined(values)
-    if (Object.keys(changes).length === 0) {
-      throw new NoChangesError(this.id)
-    }
-    await this.api.updateValues(this.id, {
-      ...changes,
-      ...this.#clampSetTemperature(changes),
-    })
+    await super.updateValues(values)
   }
 
-  #clampSetTemperature({
+  protected override clampValues({
     operationMode,
     setTemperature: value,
   }: HomeAtaValues): { setTemperature?: number } {

@@ -22,10 +22,10 @@ import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
 import { ClassicDeviceAtwHasZone2Facade } from '../../src/facades/classic-device-atw-dual-zone.ts'
 import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
+import { ClassicDeviceErvFacade } from '../../src/facades/classic-device-erv.ts'
 import {
   type ClassicDeviceFacade,
   ClassicAreaFacade,
-  ClassicDeviceErvFacade,
   ClassicFloorFacade,
   hasClassicZone2,
   isClassicAtaFacade,

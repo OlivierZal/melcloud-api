@@ -59,6 +59,27 @@ const DEFAULT_YEAR = '1970-01-01'
 
 const ENERGY_REPORT_UNIT = 'kWh'
 
+/**
+ * Builds a per-type `extractEnergyReport` hook from the bucket names the
+ * device type charts, in MELCloud display order: labels and label type
+ * come straight from the wire, one named series per bucket array.
+ * @template TBucket - Charted bucket key union of the energy payload.
+ * @param buckets - Bucket names in display order.
+ * @returns The extractor closing over the buckets.
+ */
+export const makeEnergyExtract =
+  <TBucket extends string>(buckets: readonly TBucket[]) =>
+  (
+    data: Readonly<Record<TBucket, readonly number[]>> & {
+      readonly Labels: readonly number[]
+      readonly LabelType: ClassicLabelType
+    },
+  ): ClassicEnergyReportExtract => ({
+    labels: data.Labels,
+    labelType: data.LabelType,
+    series: buckets.map((name) => ({ data: data[name], name })),
+  })
+
 const emptyTemperatureChart = ({
   FromDate: from,
   ToDate: to,
