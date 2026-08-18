@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
-import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { ProtectionState } from '../../src/protection.ts'
-import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
@@ -13,12 +11,13 @@ import {
   classicBuildingData,
   classicFrostProtectionResponse,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined, mock, okValue } from '../helpers.ts'
+import { defined, okValue } from '../helpers.ts'
 import {
+  createMockHomeApi,
   homeAtwDevice,
   homeDevice,
-  homeTestRegistry,
   resetHomeDevices,
 } from '../home-fixtures.ts'
 
@@ -58,9 +57,10 @@ const describeProtectionStateContract = (
 }
 
 describeProtectionStateContract('Classic zone', async (state) => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData()])
-  registry.syncDevices([classicAtaDevice()])
+  const registry = populatedClassicRegistry({
+    buildings: [classicBuildingData()],
+    devices: [classicAtaDevice()],
+  })
   const api = createMockClassicApi({
     getFrostProtection: vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
@@ -87,9 +87,6 @@ describeProtectionStateContract('Classic zone', async (state) => {
   return okValue(await facade.getFrostProtection())
 })
 
-const homeApi = (): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({ registry: homeTestRegistry })
-
 const toHomeWire = (
   state: ProtectionState | null,
 ): { enabled: boolean; max: number; min: number } | null =>
@@ -99,7 +96,7 @@ const toHomeWire = (
 
 describeProtectionStateContract('Home ATA device', async (state) => {
   const facade = new HomeDeviceAtaFacade(
-    homeApi(),
+    createMockHomeApi(),
     homeDevice({ frostProtection: toHomeWire(state), id: 'contract-ata' }),
   )
   return okValue(await facade.getFrostProtection())
@@ -109,7 +106,7 @@ describeProtectionStateContract('Home ATA device', async (state) => {
 // coverage gate was satisfied by the ATA path alone.
 describeProtectionStateContract('Home ATW device', async (state) => {
   const facade = new HomeDeviceAtwFacade(
-    homeApi(),
+    createMockHomeApi(),
     homeAtwDevice({ frostProtection: toHomeWire(state), id: 'contract-atw' }),
   )
   return okValue(await facade.getFrostProtection())
@@ -121,7 +118,7 @@ describe('protectionState — overheat shares the shape', () => {
   it('reads the overheat descriptor through the same contract', async () => {
     const state = { isEnabled: true, max: 37, min: 35 }
     const facade = new HomeDeviceAtaFacade(
-      homeApi(),
+      createMockHomeApi(),
       homeDevice({
         id: 'contract-overheat',
         overheatProtection: toHomeWire(state),
@@ -135,7 +132,7 @@ describe('protectionState — overheat shares the shape', () => {
 
   it('answers null on an ATW unit without a type guard', async () => {
     const facade = new HomeDeviceAtwFacade(
-      homeApi(),
+      createMockHomeApi(),
       homeAtwDevice({ id: 'contract-overheat-atw' }),
     )
 
@@ -149,9 +146,10 @@ describe('protectionState — overheat shares the shape', () => {
 // off": Home has no *Defined flag, so `null` is its only absence marker.
 describe('protectionState — Classic *Defined semantics', () => {
   it('reads a configured-but-disabled window as a real state, not null', async () => {
-    const registry = new ClassicRegistry()
-    registry.syncBuildings([classicBuildingData()])
-    registry.syncDevices([classicAtaDevice()])
+    const registry = populatedClassicRegistry({
+      buildings: [classicBuildingData()],
+      devices: [classicAtaDevice()],
+    })
     const api = createMockClassicApi({
       getFrostProtection: vi
         .fn<ClassicAPIAdapter['getFrostProtection']>()

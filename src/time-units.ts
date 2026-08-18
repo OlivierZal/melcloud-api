@@ -5,10 +5,6 @@
  */
 
 /**
- * Number of milliseconds in one second.
- */
-export const MS_PER_SECOND = 1000
-/**
  * Number of milliseconds in one minute.
  */
 export const MS_PER_MINUTE = 60_000

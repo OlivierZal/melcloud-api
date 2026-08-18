@@ -1,16 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import { ClassicOperationMode } from '../../src/constants.ts'
 import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { Temporal } from '../../src/temporal.ts'
 import { type HomeAtaDeviceCapabilities, ok } from '../../src/types/index.ts'
-import { cast, mock, mockTemporalNowZoned, okValue } from '../helpers.ts'
+import { cast, mockTemporalNowZoned, okValue } from '../helpers.ts'
 import {
+  createMockHomeApi,
   homeDevice,
+  homeEnergyEnvelope,
   homeReportPoint,
-  homeTestRegistry,
   pruneHomeDevice,
   resetHomeDevices,
 } from '../home-fixtures.ts'
@@ -28,71 +28,13 @@ const createModel = (
     settings,
   })
 
-const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({
-    ...overrides,
-    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
-    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
-    getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
-    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
-    registry: homeTestRegistry,
-    updateFrostProtection: vi.fn<HomeAPIAdapter['updateFrostProtection']>(),
-    updateHolidayMode: vi.fn<HomeAPIAdapter['updateHolidayMode']>(),
-    updateOverheatProtection:
-      vi.fn<HomeAPIAdapter['updateOverheatProtection']>(),
-    updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
-  })
-
 describe('home device ata facade', () => {
   beforeEach(resetHomeDevices)
 
   describe('protection accessors', () => {
-    it('exposes frost protection and holiday mode from context', async () => {
-      const frostProtection = { active: false, enabled: true, max: 12, min: 6 }
-      // The wire's UTC wall clock; the facade projects it onto the
-      // caller's timezone.
-      const holidayMode = {
-        active: false,
-        enabled: true,
-        endDate: '2026-08-04T22:00:00',
-        startDate: '2026-07-31T22:00:00',
-      }
-      const overheatProtection = {
-        active: false,
-        enabled: true,
-        max: 37,
-        min: 35,
-      }
-      const facade = new HomeDeviceAtaFacade(
-        createApi({ timezone: 'Europe/Paris' }),
-        homeDevice({
-          frostProtection,
-          holidayMode,
-          id: 'device-1',
-          overheatProtection,
-        }),
-      )
-
-      expect(okValue(await facade.getFrostProtection())).toStrictEqual({
-        isEnabled: true,
-        max: 12,
-        min: 6,
-      })
-      expect(okValue(await facade.getHolidayMode())).toStrictEqual({
-        endDate: '2026-08-05T00:00:00',
-        isEnabled: true,
-        startDate: '2026-08-01T00:00:00',
-      })
-      expect(okValue(await facade.getOverheatProtection())).toStrictEqual({
-        isEnabled: true,
-        max: 37,
-        min: 35,
-      })
-    })
-
     it('keeps a freshly disconnected unit available within the persistence window', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         homeDevice({ id: 'device-1', isConnected: false }),
       )
 
@@ -101,7 +43,7 @@ describe('home device ata facade', () => {
 
     it('reports the unit unavailable after a day of continuous disconnection, then clears on reconnect', () => {
       const device = homeDevice({ id: 'device-1', isConnected: false })
-      const facade = new HomeDeviceAtaFacade(createApi(), device)
+      const facade = new HomeDeviceAtaFacade(createMockHomeApi(), device)
       const later = Temporal.Now.plainDateTimeISO('UTC').add({ hours: 25 })
       const spy = vi
         .spyOn(Temporal.Now, 'plainDateTimeISO')
@@ -118,7 +60,7 @@ describe('home device ata facade', () => {
 
     it('resolves the registry model by id, never a pinned snapshot', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         homeDevice({ id: 'device-1', isConnected: false }),
       )
       homeDevice({ id: 'device-1', isConnected: true })
@@ -128,7 +70,7 @@ describe('home device ata facade', () => {
 
     it('reports existence and throws once the registry drops the id', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         homeDevice({ id: 'device-gone' }),
       )
 
@@ -143,7 +85,7 @@ describe('home device ata facade', () => {
 
     it('returns null when protection is not configured', async () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         homeDevice({ id: 'device-1' }),
       )
 
@@ -156,7 +98,7 @@ describe('home device ata facade', () => {
   describe('settings accessors', () => {
     it('should read operation mode from settings', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ OperationMode: 'Heat' }),
       )
 
@@ -165,7 +107,7 @@ describe('home device ata facade', () => {
 
     it('should read power as boolean', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ Power: 'True' }),
       )
 
@@ -174,7 +116,7 @@ describe('home device ata facade', () => {
 
     it('should read standby as boolean', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ InStandbyMode: 'True', Power: 'True' }),
       )
 
@@ -183,7 +125,7 @@ describe('home device ata facade', () => {
 
     it('should read temperatures as numbers', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ RoomTemperature: '21.5', SetTemperature: '20' }),
       )
 
@@ -193,7 +135,7 @@ describe('home device ata facade', () => {
 
     it('should read fan speed and vane directions from settings', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({
           SetFanSpeed: 'Auto',
           VaneHorizontalDirection: 'Centre',
@@ -208,7 +150,7 @@ describe('home device ata facade', () => {
 
     it('should normalize numeric fan speed string from Home API', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ SetFanSpeed: '0' }),
       )
 
@@ -217,7 +159,7 @@ describe('home device ata facade', () => {
 
     it('should read rssi from device data', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({}, {}, -42),
       )
 
@@ -225,7 +167,7 @@ describe('home device ata facade', () => {
     })
 
     it('should return defaults for missing settings', () => {
-      const facade = new HomeDeviceAtaFacade(createApi(), createModel())
+      const facade = new HomeDeviceAtaFacade(createMockHomeApi(), createModel())
 
       expect(facade.operationMode).toBe('')
       expect(facade.power).toBe(false)
@@ -236,14 +178,14 @@ describe('home device ata facade', () => {
     })
 
     it('should read device name', () => {
-      const facade = new HomeDeviceAtaFacade(createApi(), createModel())
+      const facade = new HomeDeviceAtaFacade(createMockHomeApi(), createModel())
 
       expect(facade.name).toBe('Test ClassicDevice')
     })
 
     it('should expose device capabilities', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({}, { minTempHeat: 8 }),
       )
 
@@ -253,7 +195,7 @@ describe('home device ata facade', () => {
 
   describe('updateValues validation', () => {
     it('should throw on empty values', async () => {
-      const facade = new HomeDeviceAtaFacade(createApi(), createModel())
+      const facade = new HomeDeviceAtaFacade(createMockHomeApi(), createModel())
 
       await expect(facade.updateValues({})).rejects.toThrow(
         new NoChangesError('device-1'),
@@ -261,7 +203,7 @@ describe('home device ata facade', () => {
     })
 
     it('should treat explicitly-undefined values as absent', async () => {
-      const facade = new HomeDeviceAtaFacade(createApi(), createModel())
+      const facade = new HomeDeviceAtaFacade(createMockHomeApi(), createModel())
 
       await expect(
         facade.updateValues(cast({ setTemperature: undefined })),
@@ -269,7 +211,7 @@ describe('home device ata facade', () => {
     })
 
     it('should drop undefined-valued keys before forwarding', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
       await facade.updateValues(
@@ -284,7 +226,7 @@ describe('home device ata facade', () => {
 
   describe('updatePower', () => {
     it('forwards a power-only payload, defaulting to on', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
       await facade.updatePower()
@@ -293,7 +235,7 @@ describe('home device ata facade', () => {
     })
 
     it('powers off when passed false', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
       await facade.updatePower(false)
@@ -307,7 +249,7 @@ describe('home device ata facade', () => {
   describe('temperature range and step', () => {
     it('should read the per-mode range from the device capabilities', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel(
           { OperationMode: 'Heat' },
           { maxTempHeat: 31, minTempHeat: 10 },
@@ -336,7 +278,7 @@ describe('home device ata facade', () => {
     // changed at the source changes what consumers render.
     it('should follow the advertised bounds', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel(
           { OperationMode: 'Heat' },
           { maxTempHeat: 28, minTempHeat: 12 },
@@ -348,7 +290,7 @@ describe('home device ata facade', () => {
 
     it('should step by a half degree when the unit advertises it', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({}, { hasHalfDegreeIncrements: true }),
       )
 
@@ -357,7 +299,7 @@ describe('home device ata facade', () => {
 
     it('should step by a whole degree otherwise', () => {
       const facade = new HomeDeviceAtaFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({}, { hasHalfDegreeIncrements: false }),
       )
 
@@ -367,7 +309,7 @@ describe('home device ata facade', () => {
 
   describe('temperature clamping', () => {
     it('should clamp temperature to heat range', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(
         api,
         createModel(
@@ -383,7 +325,7 @@ describe('home device ata facade', () => {
     })
 
     it('should clamp temperature to cool range', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(
         api,
         createModel(
@@ -399,7 +341,7 @@ describe('home device ata facade', () => {
     })
 
     it('should clamp temperature to automatic range', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(
         api,
         createModel(
@@ -415,7 +357,7 @@ describe('home device ata facade', () => {
     })
 
     it('should clamp temperature to dry range', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(
         api,
         createModel(
@@ -431,7 +373,7 @@ describe('home device ata facade', () => {
     })
 
     it('should use requested operation mode for clamping when changing both', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(
         api,
         createModel(
@@ -448,7 +390,7 @@ describe('home device ata facade', () => {
     })
 
     it('should pass through temperature when no clamping needed', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(
         api,
         createModel({ OperationMode: 'Heat' }),
@@ -461,7 +403,7 @@ describe('home device ata facade', () => {
     })
 
     it('should not modify values without temperature', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(
         api,
         createModel({ OperationMode: 'Heat' }),
@@ -472,7 +414,7 @@ describe('home device ata facade', () => {
     })
 
     it('should pass through temperature for unknown operation mode', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(
         api,
         createModel({ OperationMode: '' }),
@@ -487,7 +429,7 @@ describe('home device ata facade', () => {
 
   describe('api delegation', () => {
     it('should delegate getEnergy with device id', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(api, createModel())
       const params = { from: '2026-03-01', interval: 'Day', to: '2026-03-02' }
       await facade.getEnergy(params)
@@ -496,7 +438,7 @@ describe('home device ata facade', () => {
     })
 
     it('delegates the protection writes with its own ATA unit bucket', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
       await facade.updateFrostProtection({ isEnabled: true, max: 20, min: 2 })
@@ -533,7 +475,7 @@ describe('home device ata facade', () => {
     })
 
     it('should delegate getErrorLog and project the neutral entries', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getErrorLog).mockResolvedValue(
         ok([
           {
@@ -559,7 +501,7 @@ describe('home device ata facade', () => {
     })
 
     it('should delegate getSignal with device id', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(api, createModel())
       const params = { from: '2026-03-01', to: '2026-03-02' }
       await facade.getSignal(params)
@@ -568,7 +510,7 @@ describe('home device ata facade', () => {
     })
 
     it('builds the temperature chart from the trend-summary report', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getTemperatures).mockResolvedValue(
         ok([
           {
@@ -603,7 +545,7 @@ describe('home device ata facade', () => {
     })
 
     it('propagates a trend-summary failure untouched', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const failure = { ok: false as const, status: 500 }
       vi.mocked(api.getTemperatures).mockResolvedValue(cast(failure))
       const facade = new HomeDeviceAtaFacade(api, createModel())
@@ -612,18 +554,13 @@ describe('home device ata facade', () => {
     })
 
     it('charts a multi-day energy report in local-day kWh buckets', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getEnergy).mockResolvedValue(
-        ok({
-          measureData: [
-            {
-              type: 'cumulative_energy_consumed_since_last_upload',
-              values: [
-                { time: '2026-03-01 00:00:00.000000000', value: '571.0' },
-              ],
-            },
-          ],
-        }),
+        ok(
+          homeEnergyEnvelope('cumulative_energy_consumed_since_last_upload', [
+            { time: '2026-03-01 00:00:00.000000000', value: '571.0' },
+          ]),
+        ),
       )
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
@@ -648,19 +585,17 @@ describe('home device ata facade', () => {
 
     it('lands evening UTC buckets on the next local calendar day', async () => {
       // Pin the label locale: the runner's default is not ours.
-      const api = createApi({ locale: 'fr-FR', timezone: 'Europe/Paris' })
+      const api = createMockHomeApi({
+        locale: 'fr-FR',
+        timezone: 'Europe/Paris',
+      })
       vi.mocked(api.getEnergy).mockResolvedValue(
-        ok({
-          measureData: [
-            {
-              type: 'cumulative_energy_consumed_since_last_upload',
-              values: [
-                // 23:30 UTC = 00:30 the next day in winter Paris time.
-                { time: '2026-03-01 23:30:00.000000000', value: '100.0' },
-              ],
-            },
-          ],
-        }),
+        ok(
+          homeEnergyEnvelope('cumulative_energy_consumed_since_last_upload', [
+            // 23:30 UTC = 00:30 the next day in winter Paris time.
+            { time: '2026-03-01 23:30:00.000000000', value: '100.0' },
+          ]),
+        ),
       )
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
@@ -676,7 +611,7 @@ describe('home device ata facade', () => {
     })
 
     it('keeps raw UTC day buckets beyond a month', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getEnergy).mockResolvedValue(ok({ measureData: [] }))
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
@@ -691,18 +626,13 @@ describe('home device ata facade', () => {
     })
 
     it('switches a one-day energy report to hourly buckets', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getEnergy).mockResolvedValue(
-        ok({
-          measureData: [
-            {
-              type: 'cumulative_energy_consumed_since_last_upload',
-              values: [
-                { time: '2026-03-01 09:00:00.000000000', value: '200.0' },
-              ],
-            },
-          ],
-        }),
+        ok(
+          homeEnergyEnvelope('cumulative_energy_consumed_since_last_upload', [
+            { time: '2026-03-01 09:00:00.000000000', value: '200.0' },
+          ]),
+        ),
       )
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
@@ -724,7 +654,7 @@ describe('home device ata facade', () => {
     })
 
     it('keeps hourly buckets when the one-day window drifts by ms', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getEnergy).mockResolvedValue(ok({ measureData: [] }))
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
@@ -755,16 +685,13 @@ describe('home device ata facade', () => {
     })
 
     it('builds the signal chart over the requested hour', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getSignal).mockResolvedValue(
-        ok({
-          measureData: [
-            {
-              type: 'rssi',
-              values: [{ time: '2026-03-01 09:05:00.000000000', value: '-66' }],
-            },
-          ],
-        }),
+        ok(
+          homeEnergyEnvelope('rssi', [
+            { time: '2026-03-01 09:05:00.000000000', value: '-66' },
+          ]),
+        ),
       )
       const facade = new HomeDeviceAtaFacade(api, createModel())
 
@@ -781,16 +708,13 @@ describe('home device ata facade', () => {
     })
 
     it('covers today on a five-minute grid when no hour is given', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getSignal).mockResolvedValue(
-        ok({
-          measureData: [
-            {
-              type: 'rssi',
-              values: [{ time: '2026-03-01 00:02:00.000000000', value: '-70' }],
-            },
-          ],
-        }),
+        ok(
+          homeEnergyEnvelope('rssi', [
+            { time: '2026-03-01 00:02:00.000000000', value: '-70' },
+          ]),
+        ),
       )
       const facade = new HomeDeviceAtaFacade(api, createModel())
 

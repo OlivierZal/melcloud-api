@@ -1,3 +1,6 @@
+import { vi } from 'vitest'
+
+import type { HomeAPIAdapter } from '../src/api/home-types.ts'
 import type {
   HomeRegistry,
   TypedHomeDeviceData,
@@ -8,6 +11,8 @@ import type {
   HomeAtwDeviceCapabilities,
   HomeAtwDeviceData,
   HomeBuildingRef,
+  HomeEnergyData,
+  HomeEnergyPoint,
   HomeFrostProtection,
   HomeHolidayMode,
   HomeOverheatProtection,
@@ -259,3 +264,37 @@ export const homeReportPoint = (
   y: value,
   /* eslint-enable id-length */
 })
+
+/**
+ * Wrap one measure series into the telemetry wire envelope
+ * (`{ measureData: [{ type, values }] }`) shared by the energy and
+ * signal endpoints.
+ * @param type - Wire measure name (e.g. `rssi`, `interval_energy_consumed`).
+ * @param values - Time-stamped wire samples of the series.
+ * @returns The wire-shaped envelope.
+ */
+export const homeEnergyEnvelope = (
+  type: string,
+  values: readonly HomeEnergyPoint[],
+): HomeEnergyData => ({ measureData: [{ type, values: [...values] }] })
+
+// Every adapter call stubbed and the shared test registry plugged in;
+// overrides spread last so call sites can replace any of them.
+export const createMockHomeApi = (
+  overrides: Partial<HomeAPIAdapter> = {},
+): HomeAPIAdapter =>
+  mock<HomeAPIAdapter>({
+    getAtwInternalTemperatures:
+      vi.fn<HomeAPIAdapter['getAtwInternalTemperatures']>(),
+    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
+    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
+    getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
+    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
+    registry: homeTestRegistry,
+    updateFrostProtection: vi.fn<HomeAPIAdapter['updateFrostProtection']>(),
+    updateHolidayMode: vi.fn<HomeAPIAdapter['updateHolidayMode']>(),
+    updateOverheatProtection:
+      vi.fn<HomeAPIAdapter['updateOverheatProtection']>(),
+    updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
+    ...overrides,
+  })

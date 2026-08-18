@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
+import type { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
-import { ClassicRegistry } from '../../src/entities/index.ts'
 import { EntityNotFoundError } from '../../src/errors/index.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
@@ -15,11 +14,12 @@ import {
   classicBuildingData,
   classicFloorData,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined, mock } from '../helpers.ts'
+import { defined } from '../helpers.ts'
 import {
+  createMockHomeApi,
   homeDevice,
-  homeTestRegistry,
   pruneHomeDevice,
   resetHomeDevices,
 } from '../home-fixtures.ts'
@@ -75,10 +75,11 @@ const describeIsAvailableContract = (
 const now = (): Temporal.PlainDateTime => Temporal.Now.plainDateTimeISO('UTC')
 
 const classicRegistry = (): ClassicRegistry => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData()])
-  registry.syncFloors([classicFloorData()])
-  registry.syncAreas([classicAreaData()])
+  const registry = populatedClassicRegistry({
+    areas: [classicAreaData()],
+    buildings: [classicBuildingData()],
+    floors: [classicFloorData()],
+  })
   return registry
 }
 
@@ -111,9 +112,6 @@ describeIsAvailableContract(
   },
 )
 
-const homeApi = (): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({ registry: homeTestRegistry })
-
 // Home expresses silence as a disconnection streak, so the clock is
 // moved rather than the payload; `isConnected` stays true for a unit
 // heard from just now.
@@ -121,7 +119,7 @@ describeIsAvailableContract(
   'Home device',
   (silentHours) => {
     const facade = new HomeDeviceAtaFacade(
-      homeApi(),
+      createMockHomeApi(),
       homeDevice({
         id: `contract-available-${String(silentHours)}`,
         isConnected: silentHours === 0,
@@ -142,7 +140,7 @@ describeIsAvailableContract(
   },
   () => {
     const facade = new HomeDeviceAtaFacade(
-      homeApi(),
+      createMockHomeApi(),
       homeDevice({ id: 'contract-available-pruned' }),
     )
     pruneHomeDevice('contract-available-pruned')

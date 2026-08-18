@@ -302,11 +302,4 @@ describe('atw device facade zone 2', () => {
       ClassicOperationModeStateZone.prohibited,
     )
   })
-
-  it('also exposes zone1 and hotWater', () => {
-    const facade = createZone2Facade()
-
-    expect(facade.zone1.roomTemperature).toBe(21)
-    expect(facade.hotWater.tankWaterTemperature).toBe(48)
-  })
 })

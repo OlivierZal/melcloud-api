@@ -28,7 +28,7 @@ import {
   mapResult,
   ok,
 } from '../types/index.ts'
-import { clampToRange } from '../utils.ts'
+import { clampToRange, resolved } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { toClassicAtaGroupState, toHomeAtaValues } from './home-ata-group.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
@@ -182,11 +182,8 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * endpoint, so the already-synced values are reused with no wire call.
    * @returns A success result wrapping the device's group state.
    */
-  // Pure projection of cached data; the `await Promise.resolve(...)` shape
-  // satisfies the async group contract shared with the Classic facades
-  // without an eslint disable (see `fetch` in classic-base-device.ts).
   public async getGroup(): Promise<Result<ClassicGroupState>> {
-    const source = await Promise.resolve(this)
+    const source = await resolved(this)
     return ok(toClassicAtaGroupState(source))
   }
 

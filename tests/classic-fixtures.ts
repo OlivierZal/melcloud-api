@@ -459,22 +459,22 @@ export function assertClassicDeviceType(
  * `new ClassicRegistry() + syncBuildings + syncFloors + syncAreas + syncDevices`
  * pattern found in multiple test files.
  * @param data - Flat arrays of buildings, floors, areas, and devices.
- * @param data.areas - ClassicArea rows to sync.
- * @param data.buildings - ClassicBuilding rows to sync.
- * @param data.devices - ClassicDevice rows to sync.
- * @param data.floors - ClassicFloor rows to sync.
+ * @param data.areas - ClassicArea rows to sync (none when omitted).
+ * @param data.buildings - ClassicBuilding rows to sync (none when omitted).
+ * @param data.devices - ClassicDevice rows to sync (none when omitted).
+ * @param data.floors - ClassicFloor rows to sync (none when omitted).
  * @returns A fully synced `ClassicRegistry` instance.
  */
 export const populatedClassicRegistry = ({
-  areas,
-  buildings,
-  devices,
-  floors,
+  areas = [],
+  buildings = [],
+  devices = [],
+  floors = [],
 }: {
-  areas: ClassicAreaDataAny[]
-  buildings: ClassicBuildingData[]
-  devices: ClassicListDeviceAny[]
-  floors: ClassicFloorData[]
+  areas?: ClassicAreaDataAny[]
+  buildings?: ClassicBuildingData[]
+  devices?: ClassicListDeviceAny[]
+  floors?: ClassicFloorData[]
 }): ClassicRegistry => {
   const registry = new ClassicRegistry()
   registry.syncBuildings(buildings)

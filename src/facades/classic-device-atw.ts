@@ -164,7 +164,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
    * @returns The Zone 1 state snapshot.
    */
   public get zone1(): ClassicZoneState {
-    return this.getZoneState('Zone1')
+    return this.#zoneState('Zone1')
   }
 
   /**
@@ -175,7 +175,7 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
    * @returns The Zone 2 state snapshot, or `null`.
    */
   public get zone2(): ClassicZoneState | null {
-    return this.data.HasZone2 ? this.getZoneState('Zone2') : null
+    return this.data.HasZone2 ? this.#zoneState('Zone2') : null
   }
 
   protected override readonly extractEnergyReport: (
@@ -275,26 +275,6 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     }))
   }
 
-  protected getZoneState(zone: ClassicZoneAtw): ClassicZoneState {
-    const { data } = this
-    return {
-      isCoolingProhibited: data[`ProhibitCooling${zone}`],
-      isHeatingProhibited: data[`ProhibitHeating${zone}`],
-      isIdle: data[`Idle${zone}`],
-      isInCoolMode: data[`${zone}InCoolMode`],
-      isInHeatMode: data[`${zone}InHeatMode`],
-      operationalState: getZoneOperationalState(data, zone),
-      // The wire speaks numbers; the cross-dialect state speaks the
-      // shared string vocabulary — the total bijection projects, and an
-      // out-of-vocabulary number degrades to the room basis.
-      operationMode:
-        zoneModeFromWireNumber[data[`OperationMode${zone}`]] ??
-        HomeAtwZoneMode.room,
-      roomTemperature: data[`RoomTemperature${zone}`],
-      setTemperature: data[`SetTemperature${zone}`],
-    }
-  }
-
   protected override prepareUpdateData(
     data: Partial<ClassicUpdateDeviceDataAtw>,
   ): Required<ClassicUpdateDeviceDataAtw> {
@@ -321,25 +301,21 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
   #coupleOperationModes(
     data: Partial<ClassicUpdateDeviceDataAtw>,
   ): ClassicOperationModeZoneDataAtw | null {
-    const [operationModeZone1, operationModeZone2]: {
-      key: keyof ClassicOperationModeZoneDataAtw
-      value?: ClassicOperationModeZone | undefined
-    }[] = [
-      { key: 'OperationModeZone1', value: data.OperationModeZone1 },
-      { key: 'OperationModeZone2', value: data.OperationModeZone2 },
-    ]
+    const zone1 = {
+      key: 'OperationModeZone1',
+      value: data.OperationModeZone1,
+    } as const
+    const zone2 = {
+      key: 'OperationModeZone2',
+      value: data.OperationModeZone2,
+    } as const
 
     // Whichever zone was explicitly changed becomes the primary; the other
     // is automatically adjusted to maintain consistency
     const [primaryOperationMode, secondaryOperationMode] =
-      operationModeZone1?.value === undefined
-        ? [operationModeZone2, operationModeZone1]
-        : [operationModeZone1, operationModeZone2]
+      zone1.value === undefined ? [zone2, zone1] : [zone1, zone2]
 
-    if (
-      secondaryOperationMode === undefined ||
-      primaryOperationMode?.value === undefined
-    ) {
+    if (primaryOperationMode.value === undefined) {
       return null
     }
     return {
@@ -377,5 +353,25 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
       secondaryValue += ROOM_FLOW_GAP
     }
     return toOperationModeZone(secondaryValue)
+  }
+
+  #zoneState(zone: ClassicZoneAtw): ClassicZoneState {
+    const { data } = this
+    return {
+      isCoolingProhibited: data[`ProhibitCooling${zone}`],
+      isHeatingProhibited: data[`ProhibitHeating${zone}`],
+      isIdle: data[`Idle${zone}`],
+      isInCoolMode: data[`${zone}InCoolMode`],
+      isInHeatMode: data[`${zone}InHeatMode`],
+      operationalState: getZoneOperationalState(data, zone),
+      // The wire speaks numbers; the cross-dialect state speaks the
+      // shared string vocabulary — the total bijection projects, and an
+      // out-of-vocabulary number degrades to the room basis.
+      operationMode:
+        zoneModeFromWireNumber[data[`OperationMode${zone}`]] ??
+        HomeAtwZoneMode.room,
+      roomTemperature: data[`RoomTemperature${zone}`],
+      setTemperature: data[`SetTemperature${zone}`],
+    }
   }
 }

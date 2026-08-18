@@ -23,6 +23,7 @@ import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
 import { mock, okValue } from '../helpers.ts'
 import {
+  createMockHomeApi,
   homeBuildingRef,
   typedHomeAtwDeviceData,
   typedHomeDeviceData,
@@ -37,13 +38,10 @@ const heatState = {
   VaneVerticalDirection: 'Auto',
 }
 
-const createApi = (): HomeAPIAdapter => {
-  const registry = new HomeRegistry()
-  return mock<HomeAPIAdapter>({
-    registry,
-    updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
-  })
-}
+// A private registry per api double: group tests sync whole buildings
+// and must not leak devices into the shared test registry.
+const createApi = (): HomeAPIAdapter =>
+  createMockHomeApi({ registry: new HomeRegistry() })
 
 const syncBuilding = (
   api: HomeAPIAdapter,

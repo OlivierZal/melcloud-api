@@ -18,6 +18,7 @@ import {
   type Result,
   ok,
 } from '../types/index.ts'
+import { resolved } from '../utils.ts'
 import type { HomeDeviceAtaFacade } from './home-device-ata.ts'
 import {
   aggregateClassicAtaGroupStates,
@@ -32,6 +33,7 @@ import {
   pushHomeFrostProtection,
   pushHomeHolidayMode,
   pushHomeOverheatProtection,
+  toHomeProtectionUnits,
 } from './home-protection.ts'
 
 // `allSettled` reasons are `unknown`; non-Error rejections (possible
@@ -109,19 +111,10 @@ export class HomeBuildingFacade {
   }
 
   get #memberUnits(): HomeProtectionUnits {
-    const ata: string[] = []
-    const atw: string[] = []
-    for (const device of this.devices) {
-      if (device.isAta()) {
-        ata.push(device.id)
-      } else {
-        atw.push(device.id)
-      }
-    }
-    return {
-      ...(ata.length > 0 && { ATA: ata }),
-      ...(atw.length > 0 && { ATW: atw }),
-    }
+    return toHomeProtectionUnits(
+      this.#api,
+      this.devices.map(({ id }) => id),
+    )
   }
 
   /**
@@ -150,13 +143,10 @@ export class HomeBuildingFacade {
    * No wire call — the synced `/context` states are reused.
    * @returns A success result wrapping the aggregated state.
    */
-  // Pure aggregation of cached data; the `await Promise.resolve(...)`
-  // shape satisfies the cross-dialect async contract without an eslint
-  // disable (see `getGroup`).
   public async getFrostProtection(): Promise<
     Result<AggregatedProtectionState>
   > {
-    const members = await Promise.resolve(this.devices)
+    const members = await resolved(this.devices)
     return ok(
       aggregateProtectionStates(
         members.map(({ data }) => toHomeProtectionState(data.frostProtection)),
@@ -172,7 +162,7 @@ export class HomeBuildingFacade {
    * @returns A success result wrapping the aggregated group state.
    */
   public async getGroup(): Promise<Result<ClassicGroupState>> {
-    const members = await Promise.resolve(this.#ataDevices)
+    const members = await resolved(this.#ataDevices)
     return ok(
       aggregateClassicAtaGroupStates(
         members.map((device) =>
@@ -189,7 +179,7 @@ export class HomeBuildingFacade {
    * @returns A success result wrapping the aggregated state.
    */
   public async getHolidayMode(): Promise<Result<AggregatedHolidayModeState>> {
-    const members = await Promise.resolve(this.devices)
+    const members = await resolved(this.devices)
     return ok(
       aggregateHolidayModeStates(
         members.map(({ data }) =>
@@ -208,7 +198,7 @@ export class HomeBuildingFacade {
   public async getOverheatProtection(): Promise<
     Result<AggregatedProtectionState>
   > {
-    const members = await Promise.resolve(this.#ataDevices)
+    const members = await resolved(this.#ataDevices)
     return ok(
       aggregateProtectionStates(
         members.map(({ data }) =>

@@ -356,14 +356,6 @@ describe('building facade', () => {
 })
 
 describe('building facade frost protection', () => {
-  it('gets frost protection with defined settings', async () => {
-    const { api, facade } = createBuildingFacade()
-    const value = okValue(await facade.getFrostProtection())
-
-    expect(value).toHaveProperty('isEnabled')
-    expect(api.getFrostProtection).toHaveBeenCalledWith(expect.any(Object))
-  })
-
   it('sets frost protection', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.getFrostProtection()
@@ -427,13 +419,6 @@ describe('building facade frost protection', () => {
 })
 
 describe('building facade holiday mode', () => {
-  it('gets holiday mode', async () => {
-    const { facade } = createBuildingFacade()
-    const value = okValue(await facade.getHolidayMode())
-
-    expect(value).toHaveProperty('isEnabled')
-  })
-
   it('projects the window onto UTC components on the wire', async () => {
     const { api, facade } = createBuildingFacade({ timezone: 'Europe/Paris' })
     await facade.getHolidayMode()
@@ -464,24 +449,6 @@ describe('building facade holiday mode', () => {
       Second: 0,
       Year: 2024,
     })
-  })
-
-  it('disables holiday mode and ignores the window dates', async () => {
-    const { api, facade } = createBuildingFacade()
-    await facade.getHolidayMode()
-    await facade.updateHolidayMode({
-      endDate: '2024-06-15',
-      isEnabled: false,
-      startDate: '2024-06-01',
-    })
-    const call = vi.mocked(api.updateHolidayMode).mock.lastCall?.[0]
-
-    expect(call).toBeDefined()
-
-    expect(defined(call).postData.Enabled).toBe(false)
-    // Dates are cleared to null on the wire when disabling.
-    expect(defined(call).postData.StartDate).toBeNull()
-    expect(defined(call).postData.EndDate).toBeNull()
   })
 })
 
@@ -1246,14 +1213,6 @@ describe('ata device facade', () => {
     ).rejects.toThrow(new NoChangesError(1000))
   })
 
-  it('updateValues treats explicitly-undefined values as absent', async () => {
-    const { facade } = createAtaFacade()
-
-    await expect(
-      facade.updateValues(cast({ SetTemperature: undefined })),
-    ).rejects.toThrow(new NoChangesError(1000))
-  })
-
   it('updateValues raises no flag for an undefined-valued key', async () => {
     const { api, facade } = createAtaFacade()
     await facade.updateValues(cast({ Power: false, SetTemperature: undefined }))
@@ -1708,39 +1667,6 @@ describe('atw device facade with zone 2', () => {
 })
 
 describe('device facade availability', () => {
-  it('is available when the unit communicated recently', () => {
-    const facade = buildAtaFacade({
-      LastTimeStamp: Temporal.Now.plainDateTimeISO('UTC').toString(),
-    })
-
-    expect(facade.isAvailable).toBe(true)
-  })
-
-  it('is unavailable after a day without communication', () => {
-    const facade = buildAtaFacade({ LastTimeStamp: '2020-01-01T00:00:00' })
-
-    expect(facade.isAvailable).toBe(false)
-  })
-
-  it('propagates a pruned registry id instead of reading available', () => {
-    const registry = new ClassicRegistry()
-    registry.syncBuildings([classicBuildingData({ HMDefined: true })])
-    registry.syncFloors([classicFloorData()])
-    registry.syncAreas([classicAreaData()])
-    registry.syncDevices([classicAtaDevice()])
-    const instance = defined(registry.devices.getById(1000))
-    assertClassicDeviceType(instance, ClassicDeviceType.Ata)
-    const facade = new ClassicDeviceAtaFacade(
-      createMockClassicApi(),
-      registry,
-      instance,
-    )
-
-    registry.syncDevices([])
-
-    expect(() => facade.isAvailable).toThrow(EntityNotFoundError)
-  })
-
   it('errs on the available side for an unparsable timestamp', () => {
     const facade = buildAtaFacade({ LastTimeStamp: 'garbage' })
 
@@ -1794,20 +1720,6 @@ describe('device type guards', () => {
       expect(guard(nonMatching)).toBe(false)
     },
   )
-})
-
-describe('zone2 as a capability', () => {
-  it('answers the zone-2 snapshot on a dual-zone unit', () => {
-    const { facade } = createZone2Facade()
-
-    expect(facade.zone2).not.toBeNull()
-  })
-
-  it('answers null on a single-zone unit', () => {
-    const { facade } = createAtwFacade()
-
-    expect(facade.zone2).toBeNull()
-  })
 })
 
 describe('base device facade tiles', () => {

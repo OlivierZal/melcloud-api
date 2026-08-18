@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
-import { ClassicRegistry } from '../../src/entities/index.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
@@ -14,11 +13,12 @@ import {
   classicBuildingData,
   classicFloorData,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { cast, defined, mock } from '../helpers.ts'
+import { cast, defined } from '../helpers.ts'
 import {
+  createMockHomeApi,
   homeDevice,
-  homeTestRegistry,
   resetHomeDevices,
 } from '../home-fixtures.ts'
 
@@ -107,10 +107,11 @@ const CLASSIC_VALUES = {
 } as const
 
 describeNoChangesContract('Classic ATA device', (kind) => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData()])
-  registry.syncFloors([classicFloorData()])
-  registry.syncAreas([classicAreaData()])
+  const registry = populatedClassicRegistry({
+    areas: [classicAreaData()],
+    buildings: [classicBuildingData()],
+    floors: [classicFloorData()],
+  })
   const device = classicAtaDevice()
   registry.syncDevices([device])
   const instance = defined(registry.devices.getById(device.DeviceID))
@@ -134,7 +135,7 @@ describeNoChangesContract('Home ATA device', (kind) => {
   const updateValues = vi
     .fn<HomeAPIAdapter['updateValues']>()
     .mockResolvedValue()
-  const api = mock<HomeAPIAdapter>({ registry: homeTestRegistry, updateValues })
+  const api = createMockHomeApi({ updateValues })
   const facade = new HomeDeviceAtaFacade(
     api,
     homeDevice({ id: `contract-no-changes-${kind}` }),
@@ -150,10 +151,11 @@ describeNoChangesContract('Home ATA device', (kind) => {
 // rather than a contract one.
 describe('updateValues — Classic state comparison', () => {
   it('refuses a value already in the synced state', async () => {
-    const registry = new ClassicRegistry()
-    registry.syncBuildings([classicBuildingData()])
-    registry.syncFloors([classicFloorData()])
-    registry.syncAreas([classicAreaData()])
+    const registry = populatedClassicRegistry({
+      areas: [classicAreaData()],
+      buildings: [classicBuildingData()],
+      floors: [classicFloorData()],
+    })
     const device = classicAtaDevice()
     registry.syncDevices([device])
     const instance = defined(registry.devices.getById(device.DeviceID))

@@ -16,7 +16,7 @@ import {
 } from '../../src/facades/home-report.ts'
 import { Temporal } from '../../src/temporal.ts'
 import { mockTemporalNowZoned } from '../helpers.ts'
-import { homeReportPoint } from '../home-fixtures.ts'
+import { homeEnergyEnvelope, homeReportPoint } from '../home-fixtures.ts'
 
 const PARIS = 'Europe/Paris'
 
@@ -638,17 +638,13 @@ describe.concurrent(toHomeEnergyOptions, () => {
     const options = toHomeEnergyOptions({
       sources: [
         {
-          data: {
-            measureData: [
-              {
-                type: 'cumulative_energy_consumed_since_last_upload',
-                values: [
-                  { time: '2026-07-15 00:00:00.000000000', value: '0.0' },
-                  { time: '2026-07-17 00:00:00.000000000', value: '571.0' },
-                ],
-              },
+          data: homeEnergyEnvelope(
+            'cumulative_energy_consumed_since_last_upload',
+            [
+              { time: '2026-07-15 00:00:00.000000000', value: '0.0' },
+              { time: '2026-07-17 00:00:00.000000000', value: '571.0' },
             ],
-          },
+          ),
           name: 'Consumed',
           scale: 0.001,
         },
@@ -677,12 +673,12 @@ describe.concurrent(toHomeEnergyOptions, () => {
     const options = toHomeEnergyOptions({
       sources: [
         {
-          data: { measureData: [{ type: 'consumed', values: [bucket] }] },
+          data: homeEnergyEnvelope('consumed', [bucket]),
           name: 'Consumed',
           scale: 1,
         },
         {
-          data: { measureData: [{ type: 'produced', values: [bucket] }] },
+          data: homeEnergyEnvelope('produced', [bucket]),
           name: 'Produced',
           scale: 1,
         },
@@ -704,17 +700,10 @@ describe.concurrent(toHomeSignalOptions, () => {
       'UTC',
     )
     const options = toHomeSignalOptions({
-      data: {
-        measureData: [
-          {
-            type: 'rssi',
-            values: [
-              { time: '2026-07-17 08:58:00.000000000', value: '-70' },
-              { time: '2026-07-17 09:30:30.000000000', value: '-66' },
-            ],
-          },
-        ],
-      },
+      data: homeEnergyEnvelope('rssi', [
+        { time: '2026-07-17 08:58:00.000000000', value: '-70' },
+        { time: '2026-07-17 09:30:30.000000000', value: '-66' },
+      ]),
       name: 'Garage',
       window: { from: window.from, to: window.to },
     })

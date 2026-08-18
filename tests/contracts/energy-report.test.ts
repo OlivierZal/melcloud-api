@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
+import type { ClassicRegistry } from '../../src/entities/index.ts'
 import type { ReportChartLineOptions } from '../../src/facades/report-types.ts'
-import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
 import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
 import { ClassicDeviceErvFacade } from '../../src/facades/classic-device-erv.ts'
@@ -16,12 +16,14 @@ import {
   classicBuildingData,
   classicErvDevice,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { cast, defined, mock, okValue } from '../helpers.ts'
+import { cast, defined, okValue } from '../helpers.ts'
 import {
+  createMockHomeApi,
   homeAtwDevice,
   homeDevice,
-  homeTestRegistry,
+  homeEnergyEnvelope,
 } from '../home-fixtures.ts'
 
 // The one window every dialect is asked about: explicit bounds, so no
@@ -29,13 +31,10 @@ import {
 const WINDOW = { from: '2026-03-01T00:00:00Z', to: '2026-03-03T00:00:00Z' }
 
 const classicRegistry = (): ClassicRegistry => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData()])
-  registry.syncDevices([
-    classicAtaDevice(),
-    classicAtwDevice(),
-    classicErvDevice(),
-  ])
+  const registry = populatedClassicRegistry({
+    buildings: [classicBuildingData()],
+    devices: [classicAtaDevice(), classicAtwDevice(), classicErvDevice()],
+  })
   return registry
 }
 
@@ -112,22 +111,19 @@ const homeEnergyValues = [
   { time: '2026-03-02 06:00:00.000000000', value: '229.0' },
 ]
 
+const homeAtaEnergyResponse = ok(
+  homeEnergyEnvelope(
+    'cumulative_energy_consumed_since_last_upload',
+    homeEnergyValues,
+  ),
+)
+
 describeEnergyReportContract('Home ATA device', async () => {
   const facade = new HomeDeviceAtaFacade(
-    mock<HomeAPIAdapter>({
+    createMockHomeApi({
       getEnergy: vi
         .fn<HomeAPIAdapter['getEnergy']>()
-        .mockResolvedValue(
-          ok({
-            measureData: [
-              {
-                type: 'cumulative_energy_consumed_since_last_upload',
-                values: homeEnergyValues,
-              },
-            ],
-          }),
-        ),
-      registry: homeTestRegistry,
+        .mockResolvedValue(homeAtaEnergyResponse),
       timezone: 'UTC',
     }),
     homeDevice({ id: 'contract-energy-ata' }),
@@ -137,7 +133,7 @@ describeEnergyReportContract('Home ATA device', async () => {
 
 describeEnergyReportContract('Home ATW device', async () => {
   const facade = new HomeDeviceAtwFacade(
-    mock<HomeAPIAdapter>({
+    createMockHomeApi({
       getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>().mockResolvedValue(
         ok({
           measureData: [
@@ -146,7 +142,6 @@ describeEnergyReportContract('Home ATW device', async () => {
           ],
         }),
       ),
-      registry: homeTestRegistry,
       timezone: 'UTC',
     }),
     homeAtwDevice({ id: 'contract-energy-atw' }),

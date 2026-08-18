@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [51.0.1] - 2026-08-18
+
+### Changed
+
+- Post-wave cleanup sweep, no public-surface change. Internal factorings: the Classic energy report chart is built in one pass from the neutral extract (no intermediate re-shaping); the Home "today or one hour" chart window (day-on-five-minutes with a "now" cutoff vs hour-on-minutes) resolves in ONE shared helper for the signal and hourly-temperature reads; the ATW dual-zone write coupling drops guards its own construction already proves; the building member-unit fold rides the shared `toHomeProtectionUnits`; the recurring `await Promise.resolve(…)` rule-pair escape is one named `resolved` helper carrying the single documented disable. Docs: README examples fixed to the current constructor and typed device reads; doc categories align the neutral contract modules (`/atw-state`, `/error-log`) with the protection/holiday precedent. Tests: kernel-duplicated cases deleted (the contract kernels are the one home of cross-dialect clauses), registry/API mock scaffolding unified on shared fixtures.
+
 ## [51.0.0] - 2026-08-18
 
 ### Changed
@@ -577,6 +583,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[51.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v51.0.0...v51.0.1
 [51.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v50.0.0...v51.0.0
 [50.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.2.0...v50.0.0
 [49.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.1.0...v49.2.0

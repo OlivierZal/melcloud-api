@@ -4,8 +4,9 @@ import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { HomeBuildingFacade } from '../../src/facades/home-building.ts'
 import { HomeRegistry } from '../../src/entities/home-registry.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
-import { mock, okValue } from '../helpers.ts'
+import { okValue } from '../helpers.ts'
 import {
+  createMockHomeApi,
   homeBuildingRef,
   typedHomeAtwDeviceData,
   typedHomeDeviceData,
@@ -19,16 +20,10 @@ const HOLIDAY = {
   startDate: '2026-07-31T22:00:00',
 }
 
+// A private registry per api double: these tests sync whole buildings
+// and must not leak devices into the shared test registry.
 const createApi = (): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({
-    registry: new HomeRegistry(),
-    timezone: 'Europe/Paris',
-    updateFrostProtection: vi.fn<HomeAPIAdapter['updateFrostProtection']>(),
-    updateHolidayMode: vi.fn<HomeAPIAdapter['updateHolidayMode']>(),
-    updateOverheatProtection:
-      vi.fn<HomeAPIAdapter['updateOverheatProtection']>(),
-    updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
-  })
+  createMockHomeApi({ registry: new HomeRegistry(), timezone: 'Europe/Paris' })
 
 const syncMixedBuilding = (
   api: HomeAPIAdapter,

@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { ReportChartLineOptions } from '../../src/facades/report-types.ts'
-import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { Temporal } from '../../src/temporal.ts'
@@ -13,18 +12,24 @@ import {
   classicBuildingData,
   classicReportData,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined, mock, mockTemporalNowZoned, okValue } from '../helpers.ts'
-import { homeDevice, homeTestRegistry } from '../home-fixtures.ts'
+import { defined, mockTemporalNowZoned, okValue } from '../helpers.ts'
+import {
+  createMockHomeApi,
+  homeDevice,
+  homeEnergyEnvelope,
+} from '../home-fixtures.ts'
 
 // Both dialects are asked about the same pinned moment, so neither the
 // host clock nor its timezone can shape the answer.
 const NOW = '2026-03-01T12:00:00Z'
 
 const classicSignalFacade = (): ClassicBuildingFacade => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData()])
-  registry.syncDevices([classicAtaDevice()])
+  const registry = populatedClassicRegistry({
+    buildings: [classicBuildingData()],
+    devices: [classicAtaDevice()],
+  })
   const api = createMockClassicApi({
     getSignal: vi
       .fn<ClassicAPIAdapter['getSignal']>()
@@ -38,20 +43,16 @@ const classicSignalFacade = (): ClassicBuildingFacade => {
 }
 
 const homeSignalFacade = (): HomeDeviceAtaFacade => {
-  const api = mock<HomeAPIAdapter>({
+  const api = createMockHomeApi({
     getSignal: vi
       .fn<HomeAPIAdapter['getSignal']>()
       .mockResolvedValue(
-        ok({
-          measureData: [
-            {
-              type: 'rssi',
-              values: [{ time: '2026-03-01 12:05:00.000000000', value: '-66' }],
-            },
-          ],
-        }),
+        ok(
+          homeEnergyEnvelope('rssi', [
+            { time: '2026-03-01 12:05:00.000000000', value: '-66' },
+          ]),
+        ),
       ),
-    registry: homeTestRegistry,
     timezone: 'UTC',
   })
   return new HomeDeviceAtaFacade(api, homeDevice({ id: 'contract-signal' }))

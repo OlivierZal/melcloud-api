@@ -269,7 +269,7 @@ export interface ClassicAPISettings extends BaseAPISettings {
  * Parsed error log — the cross-dialect {@link ErrorLogPage} with the
  * Classic-precise entries: neutral shape, reverse chronological order,
  * plus the chained window bounds.
- * @category Configuration
+ * @category Types
  */
 export interface ClassicErrorLog extends ErrorLogPage {
   /**
@@ -282,7 +282,7 @@ export interface ClassicErrorLog extends ErrorLogPage {
  * One Classic error-log entry: the cross-dialect {@link ErrorLogEntry}
  * kept precise — the Classic wire always carries a numeric device id
  * and a message text, so neither loosens to the neutral optionality.
- * @category Configuration
+ * @category Types
  */
 export interface ClassicErrorLogEntry extends ErrorLogEntry {
   /**
@@ -298,6 +298,6 @@ export interface ClassicErrorLogEntry extends ErrorLogEntry {
 /**
  * Query parameters for paginating the error log — the cross-dialect
  * {@link ErrorLogQuery}.
- * @category Configuration
+ * @category Types
  */
 export type ClassicErrorLogQuery = ErrorLogQuery

@@ -26,7 +26,7 @@ import {
   mapResult,
   ok,
 } from '../types/index.ts'
-import { omitUndefined, toZonedWallClock } from '../utils.ts'
+import { omitUndefined, resolved, toZonedWallClock } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import {
   pushHomeFrostProtection,
@@ -35,8 +35,7 @@ import {
 } from './home-protection.ts'
 import {
   fetchHomeReportChunks,
-  resolveHomeDayWindow,
-  resolveHomeHourWindow,
+  resolveHomeFineWindow,
   resolveHomeReportWindow,
   toHomeLineOptions,
   toHomeSignalOptions,
@@ -340,11 +339,8 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * from the synced `/context` model, no wire call.
    * @returns The protection state, or `null` when never configured.
    */
-  // Pure projection of cached data; the `await Promise.resolve(...)`
-  // shape satisfies the cross-dialect async contract without an eslint
-  // disable (see `getGroup` in home-device-ata.ts).
   public async getFrostProtection(): Promise<Result<ProtectionState | null>> {
-    const { data } = await Promise.resolve(this.model)
+    const { data } = await resolved(this.model)
     return ok(toHomeProtectionState(data.frostProtection))
   }
 
@@ -356,7 +352,7 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * @returns The holiday-mode state, or `null` when never configured.
    */
   public async getHolidayMode(): Promise<Result<HolidayModeState | null>> {
-    const { data } = await Promise.resolve(this.model)
+    const { data } = await resolved(this.model)
     return ok(toHolidayModeState(data.holidayMode, this.api.timezone))
   }
 
@@ -370,7 +366,7 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
   public async getOverheatProtection(): Promise<
     Result<ProtectionState | null>
   > {
-    const { data } = await Promise.resolve(this.model)
+    const { data } = await resolved(this.model)
     return ok(toHomeProtectionState(data.overheatProtection))
   }
 
@@ -398,20 +394,17 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
   public async getSignalStrength(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    const { cutoff, window } =
-      hour === undefined
-        ? resolveHomeDayWindow(this.chartTimezone)
-        : {
-            cutoff: undefined,
-            window: resolveHomeHourWindow(hour, this.chartTimezone),
-          }
+    const { cutoff, gridUnit, window } = resolveHomeFineWindow(
+      hour,
+      this.chartTimezone,
+    )
     return mapResult(
       await this.api.getSignal(this.id, toHomeWireWindow(window)),
       (data) =>
         toHomeSignalOptions({
           cutoff,
           data,
-          gridUnit: hour === undefined ? 'fiveMinutes' : 'minute',
+          gridUnit,
           locale: this.api.locale,
           name: this.name,
           window,

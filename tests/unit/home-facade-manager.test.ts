@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { HomeDevice } from '../../src/entities/home-device.ts'
 import type { HomeRegistry } from '../../src/entities/home-registry.ts'
 import { HomeDeviceType } from '../../src/constants.ts'
@@ -14,57 +13,47 @@ import {
 } from '../../src/facades/home-types.ts'
 import { cast, defined, mock } from '../helpers.ts'
 import {
+  createMockHomeApi,
   homeAtwDevice,
   homeDevice,
-  homeTestRegistry,
   resetHomeDevices,
 } from '../home-fixtures.ts'
 
 const createModel = (): ReturnType<typeof homeDevice> =>
   homeDevice({ id: 'device-1', name: 'Test ClassicDevice' })
 
-const createApi = (): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({
-    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
-    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
-    getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
-    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
-    registry: homeTestRegistry,
-    updateValues: vi.fn<HomeAPIAdapter['updateValues']>(),
-  })
-
 describe('home facade manager', () => {
   beforeEach(resetHomeDevices)
 
   it('returns null when no instance is provided', () => {
-    const manager = new HomeFacadeManager(createApi())
+    const manager = new HomeFacadeManager(createMockHomeApi())
 
     expect(manager.get()).toBeNull()
   })
 
   it('returns an ATA facade for an ATA device model', () => {
-    const manager = new HomeFacadeManager(createApi())
+    const manager = new HomeFacadeManager(createMockHomeApi())
     const facade = manager.get(createModel())
 
     expect(facade).toBeInstanceOf(HomeDeviceAtaFacade)
   })
 
   it('returns an ATW facade for an ATW device model', () => {
-    const manager = new HomeFacadeManager(createApi())
+    const manager = new HomeFacadeManager(createMockHomeApi())
     const facade = manager.get(homeAtwDevice({ id: 'atw-1' }))
 
     expect(facade).toBeInstanceOf(HomeDeviceAtwFacade)
   })
 
   it('caches facades for the same instance', () => {
-    const manager = new HomeFacadeManager(createApi())
+    const manager = new HomeFacadeManager(createMockHomeApi())
     const model = createModel()
 
     expect(manager.get(model)).toBe(manager.get(model))
   })
 
   it('returns different facades for different instances', () => {
-    const manager = new HomeFacadeManager(createApi())
+    const manager = new HomeFacadeManager(createMockHomeApi())
     const model1 = createModel()
     const model2 = homeDevice({
       id: 'device-2',
@@ -76,7 +65,7 @@ describe('home facade manager', () => {
   })
 
   it('resolves a device facade by id and null for an unknown id', () => {
-    const manager = new HomeFacadeManager(createApi())
+    const manager = new HomeFacadeManager(createMockHomeApi())
     const ata = homeDevice({ id: 'by-id-ata' })
     const atw = homeAtwDevice({ id: 'by-id-atw' })
 
@@ -86,7 +75,7 @@ describe('home facade manager', () => {
   })
 
   it('exposes the connection type and narrows via the facade guards', () => {
-    const manager = new HomeFacadeManager(createApi())
+    const manager = new HomeFacadeManager(createMockHomeApi())
     const facades: HomeDeviceFacadeAny[] = [
       manager.get(homeDevice({ id: 'guard-ata' })),
       manager.get(homeAtwDevice({ id: 'guard-atw' })),
@@ -101,7 +90,7 @@ describe('home facade manager', () => {
   })
 
   it('returns null for a model of an unknown connection type', () => {
-    const manager = new HomeFacadeManager(createApi())
+    const manager = new HomeFacadeManager(createMockHomeApi())
     const rogue = homeDevice({ id: 'rogue' })
     Object.defineProperty(rogue, 'type', { value: 'unknown' })
 
@@ -114,7 +103,7 @@ describe('home facade manager', () => {
       getZones: vi.fn<HomeRegistry['getZones']>().mockReturnValue([]),
     }
     const manager = new HomeFacadeManager(
-      mock<HomeAPIAdapter>({ registry: cast(registry) }),
+      createMockHomeApi({ registry: cast(registry) }),
     )
 
     expect(manager.getBuildings({ type: HomeDeviceType.Ata })).toStrictEqual([])
@@ -130,11 +119,10 @@ describe('home facade manager', () => {
       ['atw-1', homeAtwDevice({ id: 'atw-1' })],
       ['device-1', createModel()],
     ])
-    const api = mock<HomeAPIAdapter>({
+    const api = createMockHomeApi({
       registry: mock<HomeRegistry>({
         getById: vi.fn<HomeRegistry['getById']>((id) => devicesById.get(id)),
       }),
-      updateFrostProtection: vi.fn<HomeAPIAdapter['updateFrostProtection']>(),
     })
     const manager = new HomeFacadeManager(api)
 
@@ -159,12 +147,10 @@ describe('home facade manager', () => {
       ['atw-1', homeAtwDevice({ id: 'atw-1' })],
       ['device-1', createModel()],
     ])
-    const api = mock<HomeAPIAdapter>({
+    const api = createMockHomeApi({
       registry: mock<HomeRegistry>({
         getById: vi.fn<HomeRegistry['getById']>((id) => devicesById.get(id)),
       }),
-      updateOverheatProtection:
-        vi.fn<HomeAPIAdapter['updateOverheatProtection']>(),
     })
     const manager = new HomeFacadeManager(api)
 
@@ -185,14 +171,12 @@ describe('home facade manager', () => {
   })
 
   it('skips the overheat write when no ATA id remains', async () => {
-    const api = mock<HomeAPIAdapter>({
+    const api = createMockHomeApi({
       registry: mock<HomeRegistry>({
         getById: vi.fn<HomeRegistry['getById']>(() =>
           homeAtwDevice({ id: 'atw-1' }),
         ),
       }),
-      updateOverheatProtection:
-        vi.fn<HomeAPIAdapter['updateOverheatProtection']>(),
     })
     const manager = new HomeFacadeManager(api)
 
@@ -206,11 +190,10 @@ describe('home facade manager', () => {
   })
 
   it('batches holiday mode by device type', async () => {
-    const api = mock<HomeAPIAdapter>({
+    const api = createMockHomeApi({
       registry: mock<HomeRegistry>({
         getById: vi.fn<HomeRegistry['getById']>(() => createModel()),
       }),
-      updateHolidayMode: vi.fn<HomeAPIAdapter['updateHolidayMode']>(),
     })
     const manager = new HomeFacadeManager(api)
 
@@ -233,11 +216,7 @@ describe('home facade manager', () => {
 
 describe('holiday-mode write projection', () => {
   it("projects an enabled window from the caller's clock onto UTC", async () => {
-    const api = mock<HomeAPIAdapter>({
-      registry: homeTestRegistry,
-      timezone: 'Europe/Paris',
-      updateHolidayMode: vi.fn<HomeAPIAdapter['updateHolidayMode']>(),
-    })
+    const api = createMockHomeApi({ timezone: 'Europe/Paris' })
     const manager = new HomeFacadeManager(api)
 
     // Paris summer wall clock (UTC+2): midnight locally is 22:00 UTC

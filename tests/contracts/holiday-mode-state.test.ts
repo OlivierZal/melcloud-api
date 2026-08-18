@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { HolidayModeState } from '../../src/holiday-mode.ts'
-import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
@@ -13,12 +12,13 @@ import {
   classicBuildingData,
   classicHolidayModeResponse,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined, mock, okValue } from '../helpers.ts'
+import { defined, okValue } from '../helpers.ts'
 import {
+  createMockHomeApi,
   homeAtwDevice,
   homeDevice,
-  homeTestRegistry,
   resetHomeDevices,
 } from '../home-fixtures.ts'
 
@@ -106,9 +106,10 @@ const describeHolidayModeStateContract = (
 const classicFacade = (
   data: Parameters<typeof classicHolidayModeResponse>[0],
 ): ClassicBuildingFacade => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData()])
-  registry.syncDevices([classicAtaDevice()])
+  const registry = populatedClassicRegistry({
+    buildings: [classicBuildingData()],
+    devices: [classicAtaDevice()],
+  })
   const api = createMockClassicApi({
     getHolidayMode: vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
@@ -138,10 +139,7 @@ describeHolidayModeStateContract('Classic zone', async (wire) =>
 )
 
 const homeApi = (): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({
-    registry: homeTestRegistry,
-    timezone: CONTRACT_TIMEZONE,
-  })
+  createMockHomeApi({ timezone: CONTRACT_TIMEZONE })
 
 const toHomeWire = (
   wire: BoundedWindow | null,
