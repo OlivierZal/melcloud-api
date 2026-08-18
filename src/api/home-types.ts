@@ -11,7 +11,12 @@ import type {
   HomeUser,
   Result,
 } from '../types/index.ts'
-import type { BaseAPIAdapter, BaseAPIConfig, BaseAPISettings } from './types.ts'
+import type {
+  BaseAPIAdapter,
+  BaseAPIConfig,
+  BaseAPISettings,
+  SyncCallback,
+} from './types.ts'
 
 /**
  * Injectable contract for the MELCloud Home API client.
@@ -32,6 +37,11 @@ import type { BaseAPIAdapter, BaseAPIConfig, BaseAPISettings } from './types.ts'
  * @category Configuration
  */
 export interface HomeAPIAdapter extends BaseAPIAdapter {
+  /**
+   * Emit the sync-complete event — the hook the `@syncDevices`-style
+   * decorators call after a mutation; mirrors the Classic adapter.
+   */
+  readonly notifySync: SyncCallback
   /**
    * Home device registry with stable model references across syncs.
    */

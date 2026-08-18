@@ -9,6 +9,7 @@ import type {
   ClassicDeviceAny,
 } from '../entities/classic-types.ts'
 import type { AvailabilityAware, Identifiable } from '../entities/types.ts'
+import type { HomeOperationMode } from '../enum-mappings.ts'
 import type { HolidayModeState, HolidayModeUpdate } from '../holiday-mode.ts'
 import type { ProtectionState, ProtectionUpdate } from '../protection.ts'
 import type { TemperatureRange } from '../temperature-range.ts'
@@ -69,7 +70,7 @@ export interface ClassicDeviceAtaFacade extends ClassicDeviceFacade<
    * vocabulary (the setpoint then goes unclamped).
    */
   readonly getTemperatureRange: (
-    mode?: ClassicOperationMode,
+    mode?: ClassicOperationMode | HomeOperationMode,
   ) => TemperatureRange | null
   /**
    * Apply a group state to this device.

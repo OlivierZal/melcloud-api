@@ -1,5 +1,8 @@
-import type { ProtectionState } from '../protection.ts'
-import { type HomeDeviceType, ClassicFanSpeed } from '../constants.ts'
+import {
+  type ClassicOperationMode,
+  type HomeDeviceType,
+  ClassicFanSpeed,
+} from '../constants.ts'
 import {
   type HomeFanSpeed,
   type HomeHorizontal,
@@ -8,6 +11,7 @@ import {
   fanSpeedFromClassic,
   isClassicFanSpeed,
   isHomeFanSpeed,
+  operationModeFromClassic,
 } from '../enum-mappings.ts'
 import { tolerateNoChanges } from '../errors/index.ts'
 import {
@@ -27,10 +31,7 @@ import {
 import { clampToRange } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { toClassicAtaGroupState, toHomeAtaValues } from './home-ata-group.ts'
-import {
-  HomeBaseDeviceFacade,
-  toHomeProtectionState,
-} from './home-base-device.ts'
+import { HomeBaseDeviceFacade } from './home-base-device.ts'
 import {
   resolveHomeReportWindow,
   toHomeEnergyBucketUnit,
@@ -81,17 +82,6 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    */
   public get operationMode(): HomeOperationMode {
     return this.#enumSetting('OperationMode')
-  }
-
-  /**
-   * Current overheat-protection settings, or `null` when not configured.
-   * ATA-only: the base facade does not expose it because the official
-   * app never offers the feature on ATW units (their `/context` field
-   * stays `null`).
-   * @returns The cross-dialect protection state from `/context`.
-   */
-  public get overheatProtection(): ProtectionState | null {
-    return toHomeProtectionState(this.model.data.overheatProtection)
   }
 
   /**
@@ -208,9 +198,12 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * vocabulary (the setpoint then goes unclamped).
    */
   public getTemperatureRange(
-    mode: HomeOperationMode = this.operationMode,
+    mode: ClassicOperationMode | HomeOperationMode = this.operationMode,
   ): TemperatureRange | null {
-    return rangeForHomeMode(toBounds(this.capabilities), mode)
+    return rangeForHomeMode(
+      toBounds(this.capabilities),
+      typeof mode === 'number' ? operationModeFromClassic[mode] : mode,
+    )
   }
 
   /**

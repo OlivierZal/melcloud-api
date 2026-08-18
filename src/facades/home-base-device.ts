@@ -1,8 +1,9 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
-import type { HomeDeviceType } from '../constants.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
-import type { HolidayModeState } from '../holiday-mode.ts'
-import type { ProtectionState } from '../protection.ts'
+import type { ErrorLogEntry } from '../error-log.ts'
+import type { HolidayModeState, HolidayModeUpdate } from '../holiday-mode.ts'
+import type { ProtectionState, ProtectionUpdate } from '../protection.ts'
+import { HomeDeviceType } from '../constants.ts'
 import {
   type AvailabilityAware,
   type Identifiable,
@@ -15,17 +16,23 @@ import {
   type HomeDeviceData,
   type HomeDeviceValues,
   type HomeEnergyData,
-  type HomeErrorLogEntry,
   type HomeFrostProtection,
   type HomeHolidayMode,
   type HomeOverheatProtection,
+  type HomeProtectionUnits,
   type HomeReportData,
   type Hour,
   type Result,
   mapResult,
+  ok,
 } from '../types/index.ts'
 import { omitUndefined, toZonedWallClock } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
+import {
+  pushHomeFrostProtection,
+  pushHomeHolidayMode,
+  pushHomeOverheatProtection,
+} from './home-protection.ts'
 import {
   fetchHomeReportChunks,
   resolveHomeDayWindow,
@@ -79,9 +86,16 @@ export const toHomeProtectionState = (
         min: protection.min,
       }
 
-// The Home wire speaks UTC wall clock everywhere (live-probed; see
-// CLAUDE.md): both bounds come back projected onto the caller's clock.
-const toHolidayModeState = (
+/**
+ * Maps a Home `/context` holiday descriptor onto the cross-dialect read
+ * state; `null` (never configured) passes through. The Home wire speaks
+ * UTC wall clock everywhere (live-probed; see CLAUDE.md): both bounds
+ * come back projected onto the caller's clock.
+ * @param holidayMode - Wire descriptor, or `null`.
+ * @param timeZone - The caller's IANA timezone; host zone when omitted.
+ * @returns The neutral holiday-mode state, or `null`.
+ */
+export const toHolidayModeState = (
   holidayMode: HomeHolidayMode | null,
   timeZone?: string,
 ): HolidayModeState | null =>
@@ -141,22 +155,6 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    */
   public get exists(): boolean {
     return this.api.registry.getById(this.#id) !== undefined
-  }
-
-  /**
-   * Current frost-protection settings, or `null` when not configured.
-   * @returns The cross-dialect protection state from `/context`.
-   */
-  public get frostProtection(): ProtectionState | null {
-    return toHomeProtectionState(this.model.data.frostProtection)
-  }
-
-  /**
-   * Current holiday-mode window, or `null` when not configured.
-   * @returns The cross-dialect holiday-mode state from `/context`.
-   */
-  public get holidayMode(): HolidayModeState | null {
-    return toHolidayModeState(this.model.data.holidayMode, this.api.timezone)
   }
 
   /**
@@ -231,6 +229,15 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
     return this.model.data.rssi
   }
 
+  /**
+   * Whether this device can hold an overheat protection — the feature
+   * is ATA-only (the official app never offers it on ATW units).
+   * @returns `true` on ATA devices.
+   */
+  public get supportsOverheat(): boolean {
+    return this.type === HomeDeviceType.Ata
+  }
+
   protected readonly api: HomeAPIAdapter
 
   /**
@@ -258,6 +265,16 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the id was minted from a TData-shaped model and a physical device never changes type
     return model as HomeDevice<TData>
+  }
+
+  /**
+   * This device as a wire unit bucket, keyed by its connection type.
+   * @returns The single-id bucket the batch endpoints accept.
+   */
+  protected get ownUnits(): HomeProtectionUnits {
+    return this.type === HomeDeviceType.Ata
+      ? { ATA: [this.id] }
+      : { ATW: [this.id] }
   }
 
   readonly #id: string
@@ -292,11 +309,69 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
   }
 
   /**
-   * Fetches the error-log entries for this device.
-   * @returns The entries (possibly empty), or a typed failure.
+   * Fetches the error-log entries for this device, projected onto the
+   * cross-dialect shape: `errorCode` maps to `code`, `errorReason` to
+   * `message` when present, `clearedTimestamp` to `clearedAt` when
+   * cleared. The raw wire entries stay available on the API client.
+   * @returns The neutral entries (possibly empty), or a typed failure.
    */
-  public async getErrorLog(): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.api.getErrorLog(this.id)
+  public async getErrorLog(): Promise<Result<ErrorLogEntry[]>> {
+    return mapResult(await this.api.getErrorLog(this.id), (entries) =>
+      entries.map(
+        ({
+          clearedTimestamp,
+          errorCode,
+          errorReason,
+          timestamp,
+        }): ErrorLogEntry => ({
+          at: timestamp,
+          code: errorCode,
+          deviceId: this.id,
+          ...(clearedTimestamp !== null && { clearedAt: clearedTimestamp }),
+          ...(errorReason !== null && { message: errorReason }),
+        }),
+      ),
+    )
+  }
+
+  /**
+   * Reads the current frost-protection settings — the cross-dialect
+   * async contract shared with the Classic facades; the answer comes
+   * from the synced `/context` model, no wire call.
+   * @returns The protection state, or `null` when never configured.
+   */
+  // Pure projection of cached data; the `await Promise.resolve(...)`
+  // shape satisfies the cross-dialect async contract without an eslint
+  // disable (see `getGroup` in home-device-ata.ts).
+  public async getFrostProtection(): Promise<Result<ProtectionState | null>> {
+    const { data } = await Promise.resolve(this.model)
+    return ok(toHomeProtectionState(data.frostProtection))
+  }
+
+  /**
+   * Reads the current holiday-mode window — the cross-dialect async
+   * contract shared with the Classic facades; the answer comes from the
+   * synced `/context` model, no wire call, both bounds projected onto
+   * the caller's clock.
+   * @returns The holiday-mode state, or `null` when never configured.
+   */
+  public async getHolidayMode(): Promise<Result<HolidayModeState | null>> {
+    const { data } = await Promise.resolve(this.model)
+    return ok(toHolidayModeState(data.holidayMode, this.api.timezone))
+  }
+
+  /**
+   * Reads the current overheat-protection settings. The wire carries
+   * the field on both types but only ATA units ever hold one (see
+   * {@link supportsOverheat}): ATW units answer `null` like a
+   * never-configured ATA unit — no type guard needed.
+   * @returns The protection state, or `null` when never configured.
+   */
+  public async getOverheatProtection(): Promise<
+    Result<ProtectionState | null>
+  > {
+    const { data } = await Promise.resolve(this.model)
+    return ok(toHomeProtectionState(data.overheatProtection))
   }
 
   /**
@@ -342,6 +417,37 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
           window,
         }),
     )
+  }
+
+  /**
+   * Updates this device's frost protection — the cross-dialect write
+   * contract shared with the Classic facades, bounds clamped into range.
+   * @param update - The new frost-protection settings.
+   */
+  public async updateFrostProtection(update: ProtectionUpdate): Promise<void> {
+    await pushHomeFrostProtection(this.api, this.ownUnits, update)
+  }
+
+  /**
+   * Updates this device's holiday-mode window — the cross-dialect write
+   * contract shared with the Classic facades; an enabled window's
+   * bounds are projected from the caller's clock onto the wire's UTC.
+   * @param update - The new holiday-mode window.
+   */
+  public async updateHolidayMode(update: HolidayModeUpdate): Promise<void> {
+    await pushHomeHolidayMode(this.api, this.ownUnits, update)
+  }
+
+  /**
+   * Updates this device's overheat protection. ATA-only on the wire:
+   * on an ATW unit the write resolves without any wire call (the same
+   * silent drop the batch write applies to ATW ids).
+   * @param update - The new overheat-protection settings.
+   */
+  public async updateOverheatProtection(
+    update: ProtectionUpdate,
+  ): Promise<void> {
+    await pushHomeOverheatProtection(this.api, this.ownUnits, update)
   }
 
   /**

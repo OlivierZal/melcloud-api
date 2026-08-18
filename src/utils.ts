@@ -253,6 +253,19 @@ export const typedKeys = <T extends Record<string, unknown>>(
 ): (string & keyof T)[] => Object.keys(object)
 
 /**
+ * The first value when every entry strictly equals it, `null` otherwise
+ * (including the empty case) — the per-field divergence fold of an
+ * aggregate: `null` is the mixed marker.
+ * @template T - Folded value type.
+ * @param values - Per-member values, `null` marking an absent one.
+ * @returns The shared value, or `null` on divergence or emptiness.
+ */
+export const allEqual = <T>(values: readonly (T | null)[]): T | null => {
+  const [first = null] = values
+  return values.every((value) => value === first) ? first : null
+}
+
+/**
  * Copy of `values` without the keys whose value is `undefined`, so a
  * present-`undefined` key behaves exactly like an absent key in
  * downstream `Object.keys` emptiness guards and diff filters. Guards

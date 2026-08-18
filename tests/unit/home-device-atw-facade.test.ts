@@ -40,6 +40,10 @@ const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
     registry: homeTestRegistry,
+    updateFrostProtection: vi.fn<HomeAPIAdapter['updateFrostProtection']>(),
+    updateHolidayMode: vi.fn<HomeAPIAdapter['updateHolidayMode']>(),
+    updateOverheatProtection:
+      vi.fn<HomeAPIAdapter['updateOverheatProtection']>(),
     updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
   })
 
@@ -417,13 +421,51 @@ describe('home device atw facade', () => {
       expect(api.getEnergy).toHaveBeenCalledWith('atw-1', params)
     })
 
-    it('delegates getErrorLog to getErrorLog', async () => {
+    it('delegates the protection writes with its own ATW unit bucket', async () => {
       const api = createApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
-      await facade.getErrorLog()
+      await facade.updateFrostProtection({ isEnabled: true, max: 12, min: 6 })
+      await facade.updateOverheatProtection({
+        isEnabled: true,
+        max: 37,
+        min: 35,
+      })
+
+      expect(api.updateFrostProtection).toHaveBeenCalledWith({
+        enabled: true,
+        max: 12,
+        min: 6,
+        units: { ATW: ['atw-1'] },
+      })
+      expect(api.updateOverheatProtection).not.toHaveBeenCalled()
+      expect(facade.supportsOverheat).toBe(false)
+    })
+
+    it('delegates getErrorLog and projects the neutral entries', async () => {
+      const api = createApi()
+      vi.mocked(api.getErrorLog).mockResolvedValue(
+        ok([
+          {
+            clearedTimestamp: '2026-03-02T08:00:00Z',
+            errorCode: 'E9',
+            errorReason: null,
+            timestamp: '2026-03-01T06:00:00Z',
+          },
+        ]),
+      )
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+      const value = okValue(await facade.getErrorLog())
 
       expect(api.getErrorLog).toHaveBeenCalledWith('atw-1')
+      expect(value).toStrictEqual([
+        {
+          at: '2026-03-01T06:00:00Z',
+          clearedAt: '2026-03-02T08:00:00Z',
+          code: 'E9',
+          deviceId: 'atw-1',
+        },
+      ])
     })
 
     it('builds the internal-temperatures chart from its report', async () => {

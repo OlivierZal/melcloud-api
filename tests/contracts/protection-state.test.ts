@@ -36,25 +36,23 @@ const CASES: readonly {
 ]
 
 /**
- * Runs the {@link ProtectionState} read contract against one dialect.
- * The read may be synchronous or not — that difference is real (Home
- * serves it from the synced `/context`, Classic fetches) and is not
- * part of the contract under test.
+ * Runs the {@link ProtectionState} read contract against one dialect:
+ * both answer the SAME async method (Home serves it from the synced
+ * `/context` without a wire call, Classic fetches — a mechanic, not
+ * the contract).
  * @param name - Implementation label used in the test titles.
  * @param read - Encodes the neutral state into that dialect's wire shape
  * and reads it back through the real facade.
  */
 const describeProtectionStateContract = (
   name: string,
-  read: (
-    state: ProtectionState | null,
-  ) => Promise<ProtectionState | null> | ProtectionState | null,
+  read: (state: ProtectionState | null) => Promise<ProtectionState | null>,
 ): void => {
   describe(`protectionState — ${name}`, () => {
     beforeEach(resetHomeDevices)
 
     it.each(CASES)('round-trips a $label unchanged', async ({ state }) => {
-      await expect(Promise.resolve(read(state))).resolves.toStrictEqual(state)
+      await expect(read(state)).resolves.toStrictEqual(state)
     })
   })
 }
@@ -99,28 +97,28 @@ const toHomeWire = (
     ? null
     : { enabled: state.isEnabled, max: state.max, min: state.min }
 
-describeProtectionStateContract('Home ATA device', (state) => {
+describeProtectionStateContract('Home ATA device', async (state) => {
   const facade = new HomeDeviceAtaFacade(
     homeApi(),
     homeDevice({ frostProtection: toHomeWire(state), id: 'contract-ata' }),
   )
-  return facade.frostProtection
+  return okValue(await facade.getFrostProtection())
 })
 
-// The ATW facade inherits the getter and was never exercised for it: the
+// The ATW facade inherits the method and was never exercised for it: the
 // coverage gate was satisfied by the ATA path alone.
-describeProtectionStateContract('Home ATW device', (state) => {
+describeProtectionStateContract('Home ATW device', async (state) => {
   const facade = new HomeDeviceAtwFacade(
     homeApi(),
     homeAtwDevice({ frostProtection: toHomeWire(state), id: 'contract-atw' }),
   )
-  return facade.frostProtection
+  return okValue(await facade.getFrostProtection())
 })
 
 describe('protectionState — overheat shares the shape', () => {
   beforeEach(resetHomeDevices)
 
-  it('reads the overheat descriptor through the same contract', () => {
+  it('reads the overheat descriptor through the same contract', async () => {
     const state = { isEnabled: true, max: 37, min: 35 }
     const facade = new HomeDeviceAtaFacade(
       homeApi(),
@@ -130,7 +128,20 @@ describe('protectionState — overheat shares the shape', () => {
       }),
     )
 
-    expect(facade.overheatProtection).toStrictEqual(state)
+    await expect(facade.getOverheatProtection()).resolves.toStrictEqual(
+      ok(state),
+    )
+  })
+
+  it('answers null on an ATW unit without a type guard', async () => {
+    const facade = new HomeDeviceAtwFacade(
+      homeApi(),
+      homeAtwDevice({ id: 'contract-overheat-atw' }),
+    )
+
+    await expect(facade.getOverheatProtection()).resolves.toStrictEqual(
+      ok(null),
+    )
   })
 })
 

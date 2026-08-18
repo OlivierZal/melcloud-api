@@ -1,24 +1,24 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
+import type { HomeDeviceType } from '../constants.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import type { HomeBuildingDevices } from '../entities/home-registry.ts'
 import type { HolidayModeUpdate } from '../holiday-mode.ts'
+import type { ProtectionUpdate } from '../protection.ts'
 import type {
   HomeAtaDeviceData,
   HomeAtwDeviceData,
   HomeFlatZone,
-  HomeProtectionUnits,
 } from '../types/index.ts'
-import { HomeDeviceType } from '../constants.ts'
-import {
-  type ProtectionUpdate,
-  clampFrostProtection,
-  clampOverheatProtection,
-} from '../protection.ts'
-import { toUtcWallClock } from '../utils.ts'
 import type { HomeDeviceFacadeAny } from './home-types.ts'
-import { HomeBuildingAtaFacade } from './home-building-ata.ts'
+import { HomeBuildingFacade } from './home-building.ts'
 import { HomeDeviceAtaFacade } from './home-device-ata.ts'
 import { HomeDeviceAtwFacade } from './home-device-atw.ts'
+import {
+  pushHomeFrostProtection,
+  pushHomeHolidayMode,
+  pushHomeOverheatProtection,
+  toHomeProtectionUnits,
+} from './home-protection.ts'
 
 /**
  * Lazily creates and caches Home device facade instances using a WeakMap
@@ -28,7 +28,7 @@ import { HomeDeviceAtwFacade } from './home-device-atw.ts'
 export class HomeFacadeManager {
   readonly #api: HomeAPIAdapter
 
-  readonly #buildings = new Map<string, HomeBuildingAtaFacade>()
+  readonly #buildings = new Map<string, HomeBuildingFacade>()
 
   readonly #facades = new WeakMap<HomeDevice, HomeDeviceFacadeAny>()
 
@@ -73,16 +73,18 @@ export class HomeFacadeManager {
   }
 
   /**
-   * Returns the cached ATA group facade for the given `/context` building,
-   * lazily creating one on first access. Resolves to `null` while the
-   * registry holds no ATA device of that building (unknown id, or a
-   * building emptied by a sync) — stale cache entries are dropped.
+   * Returns the cached building facade for the given `/context`
+   * building, lazily creating one on first access. Any registered
+   * device of the building resolves it, whatever its connection type;
+   * `null` only for an unknown id or a building emptied by a sync —
+   * stale cache entries are dropped.
    * @param id - Identifier of the `/context` building.
-   * @returns The building facade, or `null`.
+   * @returns The building facade, or `null` when no registered device
+   * belongs to the building.
    */
-  public getBuilding(id: string): HomeBuildingAtaFacade | null {
+  public getBuilding(id: string): HomeBuildingFacade | null {
     const model = this.#api.registry
-      .getDevicesByType(HomeDeviceType.Ata)
+      .getDevices()
       .find((device) => device.building.id === id)
     if (model === undefined) {
       this.#buildings.delete(id)
@@ -92,10 +94,8 @@ export class HomeFacadeManager {
     if (cached !== undefined) {
       return cached
     }
-    const facade = new HomeBuildingAtaFacade(
-      this.#api,
-      model.building,
-      (member) => this.get(member),
+    const facade = new HomeBuildingFacade(this.#api, model.building, (member) =>
+      this.get(member),
     )
     this.#buildings.set(id, facade)
     return facade
@@ -151,20 +151,17 @@ export class HomeFacadeManager {
    * by type, clamps the bounds into range, and issues one API write. All
    * ids must belong to this manager's account.
    * @param deviceIds - Target device ids.
-   * @param root0 - The new frost-protection settings.
-   * @param root0.isEnabled - Whether frost protection is on.
-   * @param root0.max - Upper bound, in °C (clamped to [6, 16]).
-   * @param root0.min - Lower bound, in °C (clamped to [4, 14]).
+   * @param update - The new frost-protection settings.
    */
   public async updateFrostProtection(
     deviceIds: readonly string[],
-    { isEnabled, max, min }: ProtectionUpdate,
+    update: ProtectionUpdate,
   ): Promise<void> {
-    await this.#api.updateFrostProtection({
-      enabled: isEnabled,
-      ...clampFrostProtection(min, max),
-      units: this.#toUnits(deviceIds),
-    })
+    await pushHomeFrostProtection(
+      this.#api,
+      toHomeProtectionUnits(this.#api, deviceIds),
+      update,
+    )
   }
 
   /**
@@ -172,28 +169,17 @@ export class HomeFacadeManager {
    * type and issues one API write. Mirror of {@link updateFrostProtection}
    * for the holiday window. All ids must belong to this manager's account.
    * @param deviceIds - Target device ids.
-   * @param root0 - The new holiday-mode window.
-   * @param root0.endDate - Window end, ISO 8601 wall-clock.
-   * @param root0.isEnabled - Whether holiday mode is on.
-   * @param root0.startDate - Window start, ISO 8601 wall-clock.
+   * @param update - The new holiday-mode window.
    */
   public async updateHolidayMode(
     deviceIds: readonly string[],
-    { endDate, isEnabled, startDate }: HolidayModeUpdate,
+    update: HolidayModeUpdate,
   ): Promise<void> {
-    // The caller speaks its own wall clock, the wire stores UTC (see
-    // CLAUDE.md, live-probed); a disabled window's dates are ignored
-    // and pass through unprojected.
-    await this.#api.updateHolidayMode({
-      enabled: isEnabled,
-      endDate: isEnabled
-        ? toUtcWallClock(endDate, this.#api.timezone).toString()
-        : endDate,
-      startDate: isEnabled
-        ? toUtcWallClock(startDate, this.#api.timezone).toString()
-        : startDate,
-      units: this.#toUnits(deviceIds),
-    })
+    await pushHomeHolidayMode(
+      this.#api,
+      toHomeProtectionUnits(this.#api, deviceIds),
+      update,
+    )
   }
 
   /**
@@ -203,42 +189,16 @@ export class HomeFacadeManager {
    * write when at least one ATA id remains. All ids must belong to this
    * manager's account.
    * @param deviceIds - Target device ids (non-ATA ids are dropped).
-   * @param root0 - The new overheat-protection settings.
-   * @param root0.isEnabled - Whether overheat protection is on.
-   * @param root0.max - Upper bound, in °C (clamped to [33, 40]).
-   * @param root0.min - Lower bound, in °C (clamped to [31, 38]).
+   * @param update - The new overheat-protection settings.
    */
   public async updateOverheatProtection(
     deviceIds: readonly string[],
-    { isEnabled, max, min }: ProtectionUpdate,
+    update: ProtectionUpdate,
   ): Promise<void> {
-    const { ATA: ata } = this.#toUnits(deviceIds)
-    if (ata === undefined) {
-      return
-    }
-    await this.#api.updateOverheatProtection({
-      enabled: isEnabled,
-      ...clampOverheatProtection(min, max),
-      units: { ATA: ata },
-    })
-  }
-
-  // Split device ids into the wire's per-type buckets, skipping ids the
-  // registry does not know (a device from another account or a stale id).
-  #toUnits(deviceIds: readonly string[]): HomeProtectionUnits {
-    const ata: string[] = []
-    const atw: string[] = []
-    for (const id of deviceIds) {
-      const device = this.#api.registry.getById(id)
-      if (device?.isAta() === true) {
-        ata.push(id)
-      } else if (device?.isAtw() === true) {
-        atw.push(id)
-      }
-    }
-    return {
-      ...(ata.length > 0 && { ATA: ata }),
-      ...(atw.length > 0 && { ATW: atw }),
-    }
+    await pushHomeOverheatProtection(
+      this.#api,
+      toHomeProtectionUnits(this.#api, deviceIds),
+      update,
+    )
   }
 }

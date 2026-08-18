@@ -40,7 +40,7 @@ export {
   type HomeEnergyQuery,
   HomeBaseDeviceFacade,
 } from './home-base-device.ts'
-export { HomeBuildingAtaFacade } from './home-building-ata.ts'
+export { HomeBuildingFacade } from './home-building.ts'
 export { HomeDeviceAtaFacade } from './home-device-ata.ts'
 export { HomeDeviceAtwFacade } from './home-device-atw.ts'
 export { HomeFacadeManager } from './home-manager.ts'

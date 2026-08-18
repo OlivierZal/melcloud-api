@@ -20,7 +20,7 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 - **Resilient by default** — auto-retry on transient failures, rate-limit awareness, pre-emptive session refresh.
 - **Validated boundaries** — Zod schemas guard every consumed payload, so upstream shape drift surfaces as a typed `ValidationError` instead of a deep `undefined` crash.
 - **Typed failures** — telemetry, reports and error-log getters return `Result<T>` so callers branch on `network` / `unauthorized` / `rate-limited` / `validation` / `server` / `not-found` instead of catching generic exceptions.
-- **Tree-shakable** — `sideEffects: false` plus `/classic`, `/home`, `/constants` and `/protection` subpath exports for namespace-style imports. The last two are dependency-free leaves, so a browser bundle can import their values; the root barrel reaches the HTTP stack and is Node-only.
+- **Tree-shakable** — `sideEffects: false` plus namespace-style subpath exports (`/classic`, `/home`) and one flat subpath per browser-safe contract module. The flat subpaths never reach the HTTP stack, so a browser bundle can import their values; the root barrel does and is Node-only.
 
 ## Requirements
 
@@ -174,11 +174,14 @@ import { ClassicDeviceType, HomeDeviceType } from '@olivierzal/melcloud-api/cons
 import { FROST_PROTECTION_RANGE } from '@olivierzal/melcloud-api/protection'
 ```
 
-Available subpaths: `/classic`, `/home`, `/constants`, `/protection`.
+Available subpaths: `/classic`, `/home`, `/constants`, `/enum-mappings`,
+`/error-log`, `/holiday-mode`, `/protection`, `/temperature-range`,
+`/temporal`.
 
-`/constants` and `/protection` import nothing, so a browser bundler resolves
-them without reaching the Node-only HTTP stack that the root barrel pulls in —
-the path to take when a webview needs a published value rather than a copy.
+The flat subpaths (everything but `/classic` and `/home`) stay inside the
+browser-safe closure — none of them reaches the Node-only HTTP stack the
+root barrel pulls in — so a browser bundler resolves them cleanly: the
+path to take when a webview needs a published value rather than a copy.
 
 ## Documentation
 

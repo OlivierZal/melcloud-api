@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "49.2.0",
+  "version": "50.0.0",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",
@@ -34,6 +34,10 @@
     "./enum-mappings": {
       "types": "./dist/enum-mappings.d.ts",
       "default": "./dist/enum-mappings.js"
+    },
+    "./error-log": {
+      "types": "./dist/error-log.d.ts",
+      "default": "./dist/error-log.js"
     },
     "./holiday-mode": {
       "types": "./dist/holiday-mode.d.ts",

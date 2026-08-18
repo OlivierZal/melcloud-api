@@ -116,9 +116,31 @@ export class HomeRegistry {
   public getZones(
     params: { type?: HomeDeviceType | undefined } = {},
   ): HomeFlatZone[] {
+    // The membership flags state the building's FULL membership, never
+    // the filtered view's: a consumer reads them to scope a building
+    // batch write, which always touches every member.
+    const allDevices = this.getDevices()
+    const ataBuildingIds = new Set(
+      allDevices
+        .filter((device) => device.isAta())
+        .map((device) => device.building.id),
+    )
+    const atwBuildingIds = new Set(
+      allDevices
+        .filter((device) => device.isAtw())
+        .map((device) => device.building.id),
+    )
     return this.getBuildings(params).flatMap(
       ({ devices, id, name }): HomeFlatZone[] => [
-        { buildingName: name, id, level: 0, model: 'homeBuildings', name },
+        {
+          buildingName: name,
+          hasAta: ataBuildingIds.has(id),
+          hasAtw: atwBuildingIds.has(id),
+          id,
+          level: 0,
+          model: 'homeBuildings',
+          name,
+        },
         ...devices
           .map((device): HomeDeviceZone => ({
             buildingName: name,

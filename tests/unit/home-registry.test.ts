@@ -105,11 +105,20 @@ describe('home device registry', () => {
     expect(zones.map(({ id }) => id)).toStrictEqual(['b-1', 'atw-1', 'ata-1'])
     expect(zones[0]).toStrictEqual({
       buildingName: 'Alpha',
+      hasAta: true,
+      hasAtw: true,
       id: 'b-1',
       level: 0,
       model: 'homeBuildings',
       name: 'Alpha',
     })
+
+    // The membership flags state the building's FULL membership, never
+    // the filtered view's: a type-filtered picker still learns that a
+    // bulk write on the mixed building would touch the other family.
+    const [filtered] = registry.getZones({ type: HomeDeviceType.Ata })
+
+    expect(filtered).toMatchObject({ hasAta: true, hasAtw: true })
     expect(zones[2]).toStrictEqual({
       buildingName: 'Alpha',
       deviceType: 'ata',

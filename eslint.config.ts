@@ -11,6 +11,7 @@ import { type Config, defineConfig } from 'eslint/config'
 const WEBVIEW_FLOOR_FILES = [
   'src/constants.ts',
   'src/enum-mappings.ts',
+  'src/error-log.ts',
   'src/holiday-mode.ts',
   'src/protection.ts',
   'src/temperature-range.ts',

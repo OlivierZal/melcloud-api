@@ -352,7 +352,7 @@ export const createMockClassicApi = (
       .mockResolvedValue(ok([])),
     getErrorLog: vi
       .fn<ClassicAPIAdapter['getErrorLog']>()
-      .mockResolvedValue(ok(mock<ClassicErrorLog>({ errors: [] }))),
+      .mockResolvedValue(ok(mock<ClassicErrorLog>({ entries: [] }))),
     getFrostProtection: vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockResolvedValue(

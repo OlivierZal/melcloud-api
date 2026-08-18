@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [50.0.0] - 2026-08-18
+
+### Changed
+
+- **BREAKING — the error log speaks one cross-dialect vocabulary.** The new `/error-log` subpath publishes `ErrorLogEntry` (`at`/`deviceId` on every dialect, `message` when the wire carries a text, `code`/`clearedAt` where it has them — Home), the Classic page wrapper `ErrorLogPage` (`entries` + the chained window bounds) and the pure window arithmetic `resolveErrorLogWindow(query, timeZone?)` — the exact tiling the Classic API applies, published so a consumer paging without a Classic session tiles identical windows instead of re-deriving them. Migration: Classic pages rename `errors` → `entries` and each entry's `date`/`error` → `at`/`message` (`ClassicErrorDetails` is gone; `ClassicErrorLogQuery` aliases the neutral query, while `ClassicErrorLog`/`ClassicErrorLogEntry` stay PRECISE — a Classic entry keeps `deviceId: number` and a required `message`, so no numeric sink or message read loosens); the Home facade `getErrorLog()` now answers neutral entries (`timestamp`/`errorCode`/`errorReason`/`clearedTimestamp` → `at`/`code`/`message`/`clearedAt`, the facade's own id as `deviceId`) — the raw wire entries stay on `HomeAPI.getErrorLog`, reachable at the root as `HomeErrorLogEntry`; the `/home` subpath's `ErrorLogEntry` alias now names the NEUTRAL shape its facades return, no longer the raw wire one.
+- **BREAKING — Home protection and holiday reads are the same async methods Classic answers.** The Home device facades' sync getters `frostProtection`, `holidayMode` and the ATA-only `overheatProtection` are replaced by `getFrostProtection()`, `getHolidayMode()` and `getOverheatProtection()` returning `Promise<Result<… | null>>` — same names and shapes as the Classic facades, answered from the synced `/context` without a wire call. `getOverheatProtection` lives on the base: an ATW unit answers `null` like a never-configured ATA unit, so the last consumer type-guard dies; the new `supportsOverheat` getter says which targets can hold one.
+- **BREAKING — `HomeBuildingAtaFacade` grew into `HomeBuildingFacade`.** The building facade now holds BOTH connection types (`devices` covers ATA and ATW; `HomeFacadeManager.getBuilding` resolves for any building with a registered device, ATW-only included) and carries the per-target settings surface: aggregated `getFrostProtection`/`getHolidayMode`/`getOverheatProtection` (per-field folds — `AggregatedProtectionState`/`AggregatedHolidayModeState`, `null` the mixed marker, published with their `aggregate*States` folds), batch `updateFrostProtection`/`updateHolidayMode`/`updateOverheatProtection`, and a fan-out `updatePower`. The ATA group contract (`getGroup`/`updateGroupState`) is unchanged and keeps covering the ATA members only.
+
+### Added
+
+- **Per-device Home protection writes**: `updateFrostProtection`, `updateHolidayMode` and `updateOverheatProtection` on every Home device facade (single-unit batches; the overheat write on an ATW unit resolves without a wire call, mirroring the batch semantics) — the Classic facades' write surface, now uniform across dialects.
+- **`HomeBuildingZone.hasAta`/`hasAtw`** on the flattened zone list, so a consumer no longer positionally scans the flat list to learn a building's connection-type membership. The flags state the building's FULL membership even under a type-filtered `getZones` view — a batch write always touches every member, so a filtered view must not misreport the scope. Required fields on a published interface: code CONSTRUCTING zone nodes must add them (readers are unaffected).
+- **`getTemperatureRange` takes either dialect's mode** on both ATA facades — the total `operationMode` bijection resolves a Classic numeric mode on the Home facade and a Home string on the Classic one.
+- **`HomeAPIAdapter.notifySync`** — the sync hook `HomeAPI` always had, now visible through the adapter contract like on the Classic side. Note: a REQUIRED member on a published contract — hand-rolled adapter implementations (tests' mocks aside) must add it, which is part of why this release is a major.
+- Contract kernel `tests/contracts/error-log.test.ts`; the protection and holiday-mode kernels now ask both dialects the SAME method.
+
 ## [49.2.0] - 2026-08-18
 
 ### Added
@@ -549,6 +565,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[50.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.2.0...v50.0.0
 [49.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.1.0...v49.2.0
 [49.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v49.0.0...v49.1.0
 [49.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v48.2.0...v49.0.0

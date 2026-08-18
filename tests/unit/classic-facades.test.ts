@@ -286,7 +286,7 @@ describe('building facade', () => {
   it('calls getErrorLog', async () => {
     const { facade } = createBuildingFacade()
 
-    expect(okValue(await facade.getErrorLog({}))).toStrictEqual({ errors: [] })
+    expect(okValue(await facade.getErrorLog({}))).toStrictEqual({ entries: [] })
   })
 
   it('calls getSignalStrength', async () => {
@@ -1251,6 +1251,15 @@ describe('ata device facade', () => {
     expect(facade.getTemperatureRange(ClassicOperationMode.cool)).toStrictEqual(
       { max: 31, min: 16 },
     )
+
+    // The cross-dialect widening: a Home mode string resolves through
+    // the total bijection to the same range as its Classic twin, and an
+    // out-of-vocabulary string degrades to no-clamp like a bad number.
+    expect(facade.getTemperatureRange('Cool')).toStrictEqual({
+      max: 31,
+      min: 16,
+    })
+    expect(facade.getTemperatureRange(cast('Unknown'))).toBeNull()
 
     expect(facade.getTemperatureRange(cast(99))).toBeNull()
   })

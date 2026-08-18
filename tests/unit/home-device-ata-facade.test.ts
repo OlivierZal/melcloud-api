@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
+import { ClassicOperationMode } from '../../src/constants.ts'
 import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { Temporal } from '../../src/temporal.ts'
@@ -35,6 +36,10 @@ const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
     getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
     getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
     registry: homeTestRegistry,
+    updateFrostProtection: vi.fn<HomeAPIAdapter['updateFrostProtection']>(),
+    updateHolidayMode: vi.fn<HomeAPIAdapter['updateHolidayMode']>(),
+    updateOverheatProtection:
+      vi.fn<HomeAPIAdapter['updateOverheatProtection']>(),
     updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
   })
 
@@ -42,7 +47,7 @@ describe('home device ata facade', () => {
   beforeEach(resetHomeDevices)
 
   describe('protection accessors', () => {
-    it('exposes frost protection and holiday mode from context', () => {
+    it('exposes frost protection and holiday mode from context', async () => {
       const frostProtection = { active: false, enabled: true, max: 12, min: 6 }
       // The wire's UTC wall clock; the facade projects it onto the
       // caller's timezone.
@@ -68,17 +73,17 @@ describe('home device ata facade', () => {
         }),
       )
 
-      expect(facade.frostProtection).toStrictEqual({
+      expect(okValue(await facade.getFrostProtection())).toStrictEqual({
         isEnabled: true,
         max: 12,
         min: 6,
       })
-      expect(facade.holidayMode).toStrictEqual({
+      expect(okValue(await facade.getHolidayMode())).toStrictEqual({
         endDate: '2026-08-05T00:00:00',
         isEnabled: true,
         startDate: '2026-08-01T00:00:00',
       })
-      expect(facade.overheatProtection).toStrictEqual({
+      expect(okValue(await facade.getOverheatProtection())).toStrictEqual({
         isEnabled: true,
         max: 37,
         min: 35,
@@ -136,15 +141,15 @@ describe('home device ata facade', () => {
       expect(() => facade.isAvailable).toThrow(EntityNotFoundError)
     })
 
-    it('returns null when protection is not configured', () => {
+    it('returns null when protection is not configured', async () => {
       const facade = new HomeDeviceAtaFacade(
         createApi(),
         homeDevice({ id: 'device-1' }),
       )
 
-      expect(facade.frostProtection).toBeNull()
-      expect(facade.holidayMode).toBeNull()
-      expect(facade.overheatProtection).toBeNull()
+      expect(okValue(await facade.getFrostProtection())).toBeNull()
+      expect(okValue(await facade.getHolidayMode())).toBeNull()
+      expect(okValue(await facade.getOverheatProtection())).toBeNull()
     })
   })
 
@@ -316,6 +321,14 @@ describe('home device ata facade', () => {
         min: 16,
       })
 
+      // The cross-dialect widening: a Classic numeric mode resolves
+      // through the total bijection to the same range as its Home twin,
+      // and an out-of-vocabulary number degrades to no-clamp.
+      expect(
+        facade.getTemperatureRange(ClassicOperationMode.cool),
+      ).toStrictEqual({ max: 31, min: 16 })
+      expect(facade.getTemperatureRange(cast(99))).toBeNull()
+
       expect(facade.getTemperatureRange(cast('Unknown'))).toBeNull()
     })
 
@@ -482,12 +495,67 @@ describe('home device ata facade', () => {
       expect(api.getEnergy).toHaveBeenCalledWith('device-1', params)
     })
 
-    it('should delegate getErrorLog with device id', async () => {
+    it('delegates the protection writes with its own ATA unit bucket', async () => {
       const api = createApi()
       const facade = new HomeDeviceAtaFacade(api, createModel())
-      await facade.getErrorLog()
+
+      await facade.updateFrostProtection({ isEnabled: true, max: 20, min: 2 })
+      await facade.updateHolidayMode({
+        endDate: '2026-08-05T00:00:00',
+        isEnabled: false,
+        startDate: '2026-08-01T00:00:00',
+      })
+      await facade.updateOverheatProtection({
+        isEnabled: true,
+        max: 37,
+        min: 35,
+      })
+
+      expect(api.updateFrostProtection).toHaveBeenCalledWith({
+        enabled: true,
+        max: 16,
+        min: 4,
+        units: { ATA: ['device-1'] },
+      })
+      expect(api.updateHolidayMode).toHaveBeenCalledWith({
+        enabled: false,
+        endDate: '2026-08-05T00:00:00',
+        startDate: '2026-08-01T00:00:00',
+        units: { ATA: ['device-1'] },
+      })
+      expect(api.updateOverheatProtection).toHaveBeenCalledWith({
+        enabled: true,
+        max: 37,
+        min: 35,
+        units: { ATA: ['device-1'] },
+      })
+      expect(facade.supportsOverheat).toBe(true)
+    })
+
+    it('should delegate getErrorLog and project the neutral entries', async () => {
+      const api = createApi()
+      vi.mocked(api.getErrorLog).mockResolvedValue(
+        ok([
+          {
+            clearedTimestamp: null,
+            errorCode: 'E202',
+            errorReason: 'Communication error',
+            timestamp: '2026-03-01T06:00:00Z',
+          },
+        ]),
+      )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+      const value = okValue(await facade.getErrorLog())
 
       expect(api.getErrorLog).toHaveBeenCalledWith('device-1')
+      expect(value).toStrictEqual([
+        {
+          at: '2026-03-01T06:00:00Z',
+          code: 'E202',
+          deviceId: 'device-1',
+          message: 'Communication error',
+        },
+      ])
     })
 
     it('should delegate getSignal with device id', async () => {
