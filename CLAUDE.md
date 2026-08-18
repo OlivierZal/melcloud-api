@@ -9,8 +9,11 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 - `npm run lint` / `npm run lint:fix` — ESLint (runs with an 8 GB heap).
 - `npm test` / `npm run test:coverage` — vitest; coverage must stay at 100%.
 - `npm run typecheck` — `tsc` from `@typescript/native` (TypeScript 7);
-  does not cover `*.config.ts` (the lint does). The tooling (typedoc,
-  typescript-eslint) still resolves the separate `typescript` 6.x install.
+  does not cover `*.config.ts` (the lint does). Official 6/7 side-by-side
+  layout: the `typescript` name aliases `@typescript/typescript6` (the
+  TS6 JS API) for the tools that import it (typedoc, typescript-eslint),
+  while `@typescript/native` is the native 7.x compiler running typecheck
+  and build — until TS 7.1 ships its programmatic API.
 - `npm run build` — purges `dist` before emitting, because `tsc` overwrites
   but never deletes: a module renamed or removed in `src` would otherwise
   survive in `dist`, and `files` ships that directory, so `prepare` would
