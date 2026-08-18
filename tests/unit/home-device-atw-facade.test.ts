@@ -1,15 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
-import { NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
 import { Temporal } from '../../src/temporal.ts'
-import { type HomeAtwDeviceCapabilities, ok } from '../../src/types/index.ts'
-import { cast, mock, mockTemporalNowZoned, okValue } from '../helpers.ts'
 import {
+  type HomeAtwDeviceCapabilities,
+  type HomeEnergyData,
+  type Result,
+  ok,
+} from '../../src/types/index.ts'
+import { cast, mockTemporalNowZoned, okValue } from '../helpers.ts'
+import {
+  createMockHomeApi,
   homeAtwDevice,
+  homeEnergyEnvelope,
   homeReportPoint,
-  homeTestRegistry,
   resetHomeDevices,
 } from '../home-fixtures.ts'
 
@@ -20,32 +24,14 @@ const createModel = (
 ): ReturnType<typeof homeAtwDevice> =>
   homeAtwDevice({ capabilities, id: 'atw-1', name: 'Test ATW', rssi, settings })
 
-const energyBucket = (value: string): ReturnType<typeof ok<object>> =>
-  ok({
-    measureData: [
-      {
-        type: 'interval_energy',
-        values: [{ time: '2026-05-09 00:00:00.000000000', value }],
-      },
-    ],
-  })
-
-const createApi = (overrides: Partial<HomeAPIAdapter> = {}): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({
-    ...overrides,
-    getAtwInternalTemperatures:
-      vi.fn<HomeAPIAdapter['getAtwInternalTemperatures']>(),
-    getEnergy: vi.fn<HomeAPIAdapter['getEnergy']>(),
-    getErrorLog: vi.fn<HomeAPIAdapter['getErrorLog']>(),
-    getSignal: vi.fn<HomeAPIAdapter['getSignal']>(),
-    getTemperatures: vi.fn<HomeAPIAdapter['getTemperatures']>(),
-    registry: homeTestRegistry,
-    updateFrostProtection: vi.fn<HomeAPIAdapter['updateFrostProtection']>(),
-    updateHolidayMode: vi.fn<HomeAPIAdapter['updateHolidayMode']>(),
-    updateOverheatProtection:
-      vi.fn<HomeAPIAdapter['updateOverheatProtection']>(),
-    updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
-  })
+// One pinned-time bucket per response: the consumed/produced split is
+// carried by the request's `measure` param, not the envelope.
+const energyBucket = (value: string): Result<HomeEnergyData> =>
+  ok(
+    homeEnergyEnvelope('interval_energy', [
+      { time: '2026-05-09 00:00:00.000000000', value },
+    ]),
+  )
 
 describe('home device atw facade', () => {
   beforeEach(resetHomeDevices)
@@ -62,7 +48,7 @@ describe('home device atw facade', () => {
       ['SomeNewFtcMode', 'room'],
     ])('normalizes zone mode %s to %s', (wire, expected) => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ OperationModeZone1: wire }),
       )
 
@@ -71,7 +57,7 @@ describe('home device atw facade', () => {
 
     it('degrades an unknown zone-2 mode to room on a two-zone unit', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel(
           { OperationModeZone2: 'SomeNewFtcMode' },
           { hasZone2: true },
@@ -91,7 +77,7 @@ describe('home device atw facade', () => {
       ['Stop', 'idle'],
     ])('derives the operational state %s as %s', (wire, expected) => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ OperationMode: wire }),
       )
 
@@ -109,7 +95,7 @@ describe('home device atw facade', () => {
       ['Stop', 'idle'],
     ])('projects the zone-1 state of %s as %s', (wire, expected) => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ OperationMode: wire }),
       )
 
@@ -118,7 +104,7 @@ describe('home device atw facade', () => {
 
     it('mirrors the zone-1 projection on zone 2 when present', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ OperationMode: 'Heating' }, { hasZone2: true }),
       )
 
@@ -127,7 +113,7 @@ describe('home device atw facade', () => {
 
     it('reads a null zone-2 state on a single-zone unit', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ OperationMode: 'Heating' }, { hasZone2: false }),
       )
 
@@ -136,7 +122,7 @@ describe('home device atw facade', () => {
 
     it('reads a null operational state for an unknown mode', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({ OperationMode: 'SomeNewFtcMode' }),
       )
 
@@ -147,7 +133,7 @@ describe('home device atw facade', () => {
   describe('settings accessors', () => {
     it('reads power, standby, and operation mode from settings', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({
           InStandbyMode: 'False',
           OperationMode: 'Stop',
@@ -162,7 +148,7 @@ describe('home device atw facade', () => {
 
     it('reads each zone snapshot off its own settings', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel(
           {
             OperationModeZone1: 'HeatRoomTemperature',
@@ -187,7 +173,7 @@ describe('home device atw facade', () => {
 
     it('reads the setpoint step from the advertised increment', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({}, { temperatureIncrement: 0.5 }),
       )
 
@@ -196,7 +182,7 @@ describe('home device atw facade', () => {
 
     it('reads zone-1 temperatures and setpoint as numbers', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({
           OperationModeZone1: 'HeatRoomTemperature',
           RoomTemperatureZone1: '19.5',
@@ -211,7 +197,7 @@ describe('home device atw facade', () => {
 
     it('returns null for zone-2 accessors when capabilities.hasZone2 is false', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel(
           { RoomTemperatureZone2: '20', SetTemperatureZone2: '21' },
           { hasZone2: false },
@@ -225,7 +211,7 @@ describe('home device atw facade', () => {
 
     it('exposes zone-2 accessors when capabilities.hasZone2 is true', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel(
           {
             OperationModeZone2: 'CoolRoomTemperature',
@@ -243,7 +229,7 @@ describe('home device atw facade', () => {
 
     it('reads tank, outdoor, and hot-water flags', () => {
       const facade = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         createModel({
           ForcedHotWaterMode: 'True',
           HasCoolingMode: 'True',
@@ -293,7 +279,7 @@ describe('home device atw facade', () => {
       'derives the hot-water operational state ($label)',
       ({ expected, settings }) => {
         const facade = new HomeDeviceAtwFacade(
-          createApi(),
+          createMockHomeApi(),
           createModel(settings),
         )
 
@@ -303,24 +289,8 @@ describe('home device atw facade', () => {
   })
 
   describe('updateValues', () => {
-    it('throws NoChangesError when values is empty', async () => {
-      const facade = new HomeDeviceAtwFacade(createApi(), createModel())
-
-      await expect(facade.updateValues({})).rejects.toBeInstanceOf(
-        NoChangesError,
-      )
-    })
-
-    it('treats explicitly-undefined values as absent', async () => {
-      const facade = new HomeDeviceAtwFacade(createApi(), createModel())
-
-      await expect(
-        facade.updateValues(cast({ setTemperatureZone1: undefined })),
-      ).rejects.toBeInstanceOf(NoChangesError)
-    })
-
     it('drops undefined-valued keys before forwarding', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       await facade.updateValues(
@@ -333,7 +303,7 @@ describe('home device atw facade', () => {
     })
 
     it('clamps zone-1 setpoint to capability bounds before forwarding', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(
         api,
         createModel({}, { maxSetTemperature: 28, minSetTemperature: 12 }),
@@ -347,7 +317,7 @@ describe('home device atw facade', () => {
     })
 
     it('clamps zone-2 setpoint to capability bounds before forwarding', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(
         api,
         createModel({}, { maxSetTemperature: 28, minSetTemperature: 12 }),
@@ -361,7 +331,7 @@ describe('home device atw facade', () => {
     })
 
     it('clamps tank setpoint to tank-temperature bounds', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(
         api,
         createModel(
@@ -378,7 +348,7 @@ describe('home device atw facade', () => {
     })
 
     it('forwards non-temperature fields unchanged', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       await facade.updateValues({
@@ -397,7 +367,7 @@ describe('home device atw facade', () => {
 
   describe('updatePower', () => {
     it('forwards a power-only payload, defaulting to on', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       await facade.updatePower()
@@ -406,7 +376,7 @@ describe('home device atw facade', () => {
     })
 
     it('powers off when passed false', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       await facade.updatePower(false)
@@ -417,12 +387,12 @@ describe('home device atw facade', () => {
 
   describe('ownership', () => {
     it('exposes isOwner from the backing model', () => {
-      const owned = new HomeDeviceAtwFacade(createApi(), createModel())
+      const owned = new HomeDeviceAtwFacade(createMockHomeApi(), createModel())
 
       expect(owned.isOwner).toBe(true)
 
       const guest = new HomeDeviceAtwFacade(
-        createApi(),
+        createMockHomeApi(),
         homeAtwDevice({ id: 'atw-1' }, false),
       )
 
@@ -432,7 +402,7 @@ describe('home device atw facade', () => {
 
   describe('telemetry passthroughs', () => {
     it('delegates getEnergy to getEnergy with the chosen measure', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
       const params = {
         from: '2026-05-01T00:00:00Z',
@@ -447,7 +417,7 @@ describe('home device atw facade', () => {
     })
 
     it('delegates the protection writes with its own ATW unit bucket', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       await facade.updateFrostProtection({ isEnabled: true, max: 12, min: 6 })
@@ -468,7 +438,7 @@ describe('home device atw facade', () => {
     })
 
     it('delegates getErrorLog and projects the neutral entries', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getErrorLog).mockResolvedValue(
         ok([
           {
@@ -494,7 +464,7 @@ describe('home device atw facade', () => {
     })
 
     it('builds the internal-temperatures chart from its report', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(
         ok([
           {
@@ -572,7 +542,7 @@ describe('home device atw facade', () => {
     }
 
     it('merges comfort and internal series with mode bands', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(
         ok([internalReport]),
@@ -605,7 +575,7 @@ describe('home device atw facade', () => {
     })
 
     it('propagates a comfort-graph failure untouched', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const failure = { ok: false as const, status: 500 }
       vi.mocked(api.getTemperatures).mockResolvedValue(cast(failure))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
@@ -615,7 +585,7 @@ describe('home device atw facade', () => {
     })
 
     it('propagates an internal-temperatures failure untouched', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const failure = { ok: false as const, status: 500 }
       vi.mocked(api.getTemperatures).mockResolvedValue(ok([]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(cast(failure))
@@ -625,7 +595,7 @@ describe('home device atw facade', () => {
     })
 
     it('builds one specific hour on a minute grid', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
@@ -642,7 +612,7 @@ describe('home device atw facade', () => {
 
     it('covers today on a five-minute grid when no hour is given', async () => {
       // Pin the label locale: the runner's default is not ours.
-      const api = createApi({ locale: 'fr-FR' })
+      const api = createMockHomeApi({ locale: 'fr-FR' })
       vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
@@ -664,7 +634,7 @@ describe('home device atw facade', () => {
     })
 
     it('chunks a wide window and merges the reports', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
@@ -696,7 +666,7 @@ describe('home device atw facade', () => {
     })
 
     it('drops the bands just beyond the hourly grid', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       vi.mocked(api.getAtwInternalTemperatures).mockResolvedValue(ok([]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
@@ -720,7 +690,7 @@ describe('home device atw facade', () => {
     })
 
     it('propagates a chunk failure untouched', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const failure = { ok: false as const, status: 503 }
       vi.mocked(api.getTemperatures)
         .mockResolvedValueOnce(ok([comfortReport]))
@@ -738,7 +708,7 @@ describe('home device atw facade', () => {
     })
 
     it('aggregates operation modes into Classic-shaped pie data', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getTemperatures).mockResolvedValue(ok([comfortReport]))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
@@ -759,10 +729,10 @@ describe('home device atw facade', () => {
 
   describe('energy report', () => {
     it('charts consumed and produced daily series in kWh', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       vi.mocked(api.getEnergy)
-        .mockResolvedValueOnce(cast(energyBucket('2.5')))
-        .mockResolvedValueOnce(cast(energyBucket('13.5')))
+        .mockResolvedValueOnce(energyBucket('2.5'))
+        .mockResolvedValueOnce(energyBucket('13.5'))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       const value = okValue(
@@ -796,21 +766,21 @@ describe('home device atw facade', () => {
     })
 
     it('propagates the first energy failure untouched', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const failure = { ok: false as const, status: 429 }
       vi.mocked(api.getEnergy)
         .mockResolvedValueOnce(cast(failure))
-        .mockResolvedValueOnce(cast(energyBucket('1.0')))
+        .mockResolvedValueOnce(energyBucket('1.0'))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 
       await expect(facade.getEnergyReport()).resolves.toBe(failure)
     })
 
     it('propagates a produced-side failure untouched', async () => {
-      const api = createApi()
+      const api = createMockHomeApi()
       const failure = { ok: false as const, status: 502 }
       vi.mocked(api.getEnergy)
-        .mockResolvedValueOnce(cast(energyBucket('1.0')))
+        .mockResolvedValueOnce(energyBucket('1.0'))
         .mockResolvedValueOnce(cast(failure))
       const facade = new HomeDeviceAtwFacade(api, createModel())
 

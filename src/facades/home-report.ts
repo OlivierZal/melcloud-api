@@ -443,6 +443,31 @@ export const resolveHomeDayWindow = (
 }
 
 /**
+ * Resolve the fine "today or one hour" window shared by the signal and
+ * hourly-temperature charts: today's full day on a five-minute grid
+ * with the "now" cutoff, or the given hour on a minute grid with no
+ * cutoff.
+ * @param hour - Hour of today (0-23); omitted covers today.
+ * @param timezone - IANA display timezone (UTC when unset).
+ * @returns The resolved window, its grid unit, and the optional cutoff.
+ */
+export const resolveHomeFineWindow = (
+  hour: Hour | undefined,
+  timezone: string,
+): {
+  cutoff: Temporal.ZonedDateTime | undefined
+  gridUnit: HomeChartGridUnit
+  window: HomeChartWindow
+} =>
+  hour === undefined
+    ? { ...resolveHomeDayWindow(timezone), gridUnit: 'fiveMinutes' }
+    : {
+        cutoff: undefined,
+        gridUnit: 'minute',
+        window: resolveHomeHourWindow(hour, timezone),
+      }
+
+/**
  * Serialize a window into the ISO instant pair consumed by the raw
  * report/telemetry endpoints.
  * @param window - Resolved chart window.

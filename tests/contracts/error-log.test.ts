@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { ErrorLogEntry } from '../../src/error-log.ts'
-import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
@@ -12,12 +11,13 @@ import {
   classicAtaDevice,
   classicBuildingData,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined, mock, okValue } from '../helpers.ts'
+import { defined, okValue } from '../helpers.ts'
 import {
+  createMockHomeApi,
   homeAtwDevice,
   homeDevice,
-  homeTestRegistry,
 } from '../home-fixtures.ts'
 
 // One neutral entry shape on every dialect: `at` and `deviceId` always,
@@ -46,9 +46,10 @@ const describeErrorLogContract = (
 }
 
 describeErrorLogContract('Classic ATA device', async () => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData()])
-  registry.syncDevices([classicAtaDevice()])
+  const registry = populatedClassicRegistry({
+    buildings: [classicBuildingData()],
+    devices: [classicAtaDevice()],
+  })
   const api = createMockClassicApi({
     getErrorLog: vi
       .fn<ClassicAPIAdapter['getErrorLog']>()
@@ -93,7 +94,7 @@ describeErrorLogContract('Home ATW device', async () => {
 })
 
 const homeErrorApi = (): HomeAPIAdapter =>
-  mock<HomeAPIAdapter>({
+  createMockHomeApi({
     getErrorLog: vi
       .fn<HomeAPIAdapter['getErrorLog']>()
       .mockResolvedValue(
@@ -106,5 +107,4 @@ const homeErrorApi = (): HomeAPIAdapter =>
           },
         ]),
       ),
-    registry: homeTestRegistry,
   })

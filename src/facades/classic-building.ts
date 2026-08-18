@@ -7,6 +7,7 @@ import type {
 } from '../entities/index.ts'
 import type { ClassicBuildingID, ClassicZoneSettings } from '../types/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
+import { resolved } from '../utils.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 
 /**
@@ -62,10 +63,9 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
    * current zone settings (frost-protection + holiday-mode flags).
    * @returns The building's zone settings.
    */
-  // See `BaseDeviceFacade.fetch` for the rationale on this shape.
   @fetchDevices()
   public async fetch(): Promise<ClassicZoneSettings> {
-    const data = await Promise.resolve(this.data)
+    const data = await resolved(this.data)
     return data
   }
 }

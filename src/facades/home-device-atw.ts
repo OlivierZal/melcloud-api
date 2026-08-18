@@ -28,8 +28,7 @@ import {
   type HomeChartWindow,
   fetchHomeReportChunks,
   MAX_ANNOTATION_CHUNK_DAYS,
-  resolveHomeDayWindow,
-  resolveHomeHourWindow,
+  resolveHomeFineWindow,
   resolveHomeReportWindow,
   shouldChartHomeBands,
   toHomeEnergyBucketUnit,
@@ -220,10 +219,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The zone-1 mode.
    */
   public get operationModeZone1(): HomeAtwZoneMode {
-    return (
-      zoneModeFromWire[this.setting('OperationModeZone1')] ??
-      HomeAtwZoneMode.room
-    )
+    return this.#zoneMode('Zone1')
   }
 
   /**
@@ -232,11 +228,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * @returns The zone-2 mode, or `null`.
    */
   public get operationModeZone2(): HomeAtwZoneMode | null {
-    return this.#whenZone2(
-      () =>
-        zoneModeFromWire[this.setting('OperationModeZone2')] ??
-        HomeAtwZoneMode.room,
-    )
+    return this.#whenZone2(() => this.#zoneMode('Zone2'))
   }
 
   /**
@@ -385,18 +377,11 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   public async getHourlyTemperatures(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    const { cutoff, window } =
-      hour === undefined
-        ? resolveHomeDayWindow(this.chartTimezone)
-        : {
-            cutoff: undefined,
-            window: resolveHomeHourWindow(hour, this.chartTimezone),
-          }
-    return this.#fetchTemperatureChart(
-      window,
-      hour === undefined ? 'fiveMinutes' : 'minute',
-      cutoff,
+    const { cutoff, gridUnit, window } = resolveHomeFineWindow(
+      hour,
+      this.chartTimezone,
     )
+    return this.#fetchTemperatureChart(window, gridUnit, cutoff)
   }
 
   /**
@@ -559,6 +544,16 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
   // The cross-dialect zone snapshot: flags null (absent from this
   // wire), the operational state the shared top-level projection, the
   // control basis from the zone's own setting.
+  // The zone's control basis, wire-normalized: the external
+  // `*Thermostat` variants and unknown firmware strings degrade to the
+  // room modes so new FTC vocabulary can never break a consumer's sync.
+  #zoneMode(zone: 'Zone1' | 'Zone2'): HomeAtwZoneMode {
+    return (
+      zoneModeFromWire[this.setting(`OperationMode${zone}`)] ??
+      HomeAtwZoneMode.room
+    )
+  }
+
   #zoneState(zone: 'Zone1' | 'Zone2'): AtwZoneState {
     return {
       isCoolingProhibited: null,
@@ -567,9 +562,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
       isInCoolMode: null,
       isInHeatMode: null,
       operationalState: this.operationalStateZone1,
-      operationMode:
-        zoneModeFromWire[this.setting(`OperationMode${zone}`)] ??
-        HomeAtwZoneMode.room,
+      operationMode: this.#zoneMode(zone),
       roomTemperature: this.settingNumber(`RoomTemperature${zone}`),
       setTemperature: this.settingNumber(`SetTemperature${zone}`),
     }

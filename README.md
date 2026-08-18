@@ -58,7 +58,7 @@ const api = await ClassicAPI.create({
   password: 'password',
 })
 
-const manager = new ClassicFacadeManager(api, api.registry)
+const manager = new ClassicFacadeManager(api)
 
 // Browse the device hierarchy
 for (const zone of manager.getZones()) {
@@ -76,7 +76,11 @@ if (device !== undefined) {
 ### MELCloud Home
 
 ```ts title="home"
-import { HomeAPI, HomeFacadeManager } from '@olivierzal/melcloud-api'
+import {
+  HomeAPI,
+  HomeDeviceType,
+  HomeFacadeManager,
+} from '@olivierzal/melcloud-api'
 
 const api = await HomeAPI.create({
   username: 'user@example.com',
@@ -86,8 +90,8 @@ const api = await HomeAPI.create({
 await api.list()
 const manager = new HomeFacadeManager(api)
 
-// Interact with a device through its facade
-const [device] = api.registry.getAll()
+// Interact with a device through its type-narrowed facade
+const [device] = api.registry.getDevicesByType(HomeDeviceType.Ata)
 if (device !== undefined) {
   const facade = manager.get(device)
   console.log(facade.name, facade.operationMode, facade.setTemperature)

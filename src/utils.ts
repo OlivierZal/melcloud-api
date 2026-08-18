@@ -234,7 +234,7 @@ const buildLabelFormatters = (
   }
 }
 
-const formatLabels = (
+export const formatLabels = (
   labels: readonly string[],
   labelType: ClassicLabelType,
   locale: string | undefined,
@@ -251,6 +251,17 @@ const formatLabels = (
 export const typedKeys = <T extends Record<string, unknown>>(
   object: T,
 ): (string & keyof T)[] => Object.keys(object)
+
+/**
+ * Identity through the microtask queue — the await target that lets a
+ * method answer an async cross-dialect contract from synchronously
+ * available data.
+ * @template T - Resolved value type.
+ * @param value - The synchronously available value.
+ * @returns The value, once resolved.
+ */
+// eslint-disable-next-line @typescript-eslint/promise-function-async -- the async spelling would then trip require-await (no await inside): the rule pair leaves no disable-free form, and this one named escape spares one at every call site
+export const resolved = <T>(value: T): Promise<T> => Promise.resolve(value)
 
 /**
  * The first value when every entry strictly equals it, `null` otherwise

@@ -16,7 +16,7 @@ import {
   type Result,
   ok,
 } from '../types/index.ts'
-import { clampToRange, isValue } from '../utils.ts'
+import { clampToRange, isValue, resolved } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import { BaseDeviceFacade, makeEnergyExtract } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
@@ -101,11 +101,8 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
    * or unset fan speed reads as `null` (a group cannot hold silent).
    * @returns A success result wrapping the device's group state.
    */
-  // Pure projection of cached data; the `await Promise.resolve(...)` shape
-  // satisfies the async group contract shared with the zone facades without
-  // an eslint disable (see `fetch` in classic-base-device.ts).
   public async getGroup(): Promise<Result<ClassicGroupState>> {
-    const { data } = await Promise.resolve(this)
+    const { data } = await resolved(this)
     return ok({
       FanSpeed: toGroupFanSpeed(data.FanSpeed),
       OperationMode: data.OperationMode,

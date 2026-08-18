@@ -14,7 +14,7 @@ import type {
 
 /**
  * Hot-water snapshot of an ATW unit in the cross-dialect vocabulary.
- * @category Types
+ * @category Facades
  */
 export interface AtwHotWaterState {
   /**
@@ -57,7 +57,7 @@ export interface AtwHotWaterState {
  * Classic member names, the Home wire-normalized values and the
  * consumer capability ids are one vocabulary; the Classic facade
  * projects its numeric wire form through the total bijection.
- * @category Types
+ * @category Facades
  */
 export interface AtwZoneState {
   /**

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
 import type { AtwHotWaterState, AtwZoneState } from '../../src/atw-state.ts'
 import {
   ClassicOperationModeState,
@@ -8,7 +7,6 @@ import {
   ClassicOperationModeStateZone,
   HomeAtwZoneMode,
 } from '../../src/constants.ts'
-import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
 import {
@@ -16,9 +14,10 @@ import {
   classicAtwDeviceData,
   classicBuildingData,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined, mock } from '../helpers.ts'
-import { homeAtwDevice, homeTestRegistry } from '../home-fixtures.ts'
+import { defined } from '../helpers.ts'
+import { createMockHomeApi, homeAtwDevice } from '../home-fixtures.ts'
 
 // One ATW state vocabulary on both dialects: the same zone1/zone2/
 // hotWater reads, the same string zone-mode vocabulary, the same
@@ -54,18 +53,19 @@ const describeAtwStateContract = (
 }
 
 describeAtwStateContract('Classic ATW device', () => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData()])
-  registry.syncDevices([
-    classicAtwDevice({
-      Device: classicAtwDeviceData({
-        HasZone2: true,
-        IdleZone1: false,
-        OperationMode: ClassicOperationModeState.heating,
-        Zone1InHeatMode: true,
+  const registry = populatedClassicRegistry({
+    buildings: [classicBuildingData()],
+    devices: [
+      classicAtwDevice({
+        Device: classicAtwDeviceData({
+          HasZone2: true,
+          IdleZone1: false,
+          OperationMode: ClassicOperationModeState.heating,
+          Zone1InHeatMode: true,
+        }),
       }),
-    }),
-  ])
+    ],
+  })
   const facade = new ClassicDeviceAtwFacade(
     createMockClassicApi(),
     registry,
@@ -76,7 +76,7 @@ describeAtwStateContract('Classic ATW device', () => {
 
 describeAtwStateContract('Home ATW device', () => {
   const facade = new HomeDeviceAtwFacade(
-    mock<HomeAPIAdapter>({ registry: homeTestRegistry }),
+    createMockHomeApi(),
     homeAtwDevice({
       capabilities: { hasZone2: true },
       id: 'contract-atw-state',
@@ -94,17 +94,18 @@ describeAtwStateContract('Home ATW device', () => {
 // Only Classic can express these: the wire flag refinements.
 describe('atwState — Classic flag precision', () => {
   it('keeps the flags boolean and can answer prohibited', () => {
-    const registry = new ClassicRegistry()
-    registry.syncBuildings([classicBuildingData()])
-    registry.syncDevices([
-      classicAtwDevice({
-        Device: classicAtwDeviceData({
-          OperationMode: ClassicOperationModeState.heating,
-          ProhibitHeatingZone1: true,
-          Zone1InHeatMode: true,
+    const registry = populatedClassicRegistry({
+      buildings: [classicBuildingData()],
+      devices: [
+        classicAtwDevice({
+          Device: classicAtwDeviceData({
+            OperationMode: ClassicOperationModeState.heating,
+            ProhibitHeatingZone1: true,
+            Zone1InHeatMode: true,
+          }),
         }),
-      }),
-    ])
+      ],
+    })
     const facade = new ClassicDeviceAtwFacade(
       createMockClassicApi(),
       registry,
@@ -124,7 +125,7 @@ describe('atwState — Classic flag precision', () => {
 describe('atwState — Home null precision', () => {
   it('reads null for every flag the wire cannot say', () => {
     const facade = new HomeDeviceAtwFacade(
-      mock<HomeAPIAdapter>({ registry: homeTestRegistry }),
+      createMockHomeApi(),
       homeAtwDevice({ id: 'contract-atw-nulls' }),
     )
 

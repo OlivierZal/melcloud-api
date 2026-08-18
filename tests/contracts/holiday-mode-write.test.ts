@@ -2,16 +2,16 @@ import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
-import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
 import {
   classicAtaDevice,
   classicBuildingData,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined, mock } from '../helpers.ts'
-import { homeDevice, homeTestRegistry } from '../home-fixtures.ts'
+import { defined } from '../helpers.ts'
+import { createMockHomeApi, homeDevice } from '../home-fixtures.ts'
 
 // The write-side twin of the holiday-mode read contract: a DISABLED
 // window's dates are ignored by both wires, so neither dialect may
@@ -27,9 +27,10 @@ describe('holidayMode write — disabled window', () => {
   }
 
   it('classic clears the bounds without projecting them', async () => {
-    const registry = new ClassicRegistry()
-    registry.syncBuildings([classicBuildingData()])
-    registry.syncDevices([classicAtaDevice()])
+    const registry = populatedClassicRegistry({
+      buildings: [classicBuildingData()],
+      devices: [classicAtaDevice()],
+    })
     const updateHolidayMode = vi
       .fn<ClassicAPIAdapter['updateHolidayMode']>()
       .mockResolvedValue({ AttributeErrors: null, Success: true })
@@ -60,11 +61,7 @@ describe('holidayMode write — disabled window', () => {
       .fn<HomeAPIAdapter['updateHolidayMode']>()
       .mockResolvedValue()
     const manager = new HomeFacadeManager(
-      mock<HomeAPIAdapter>({
-        registry: homeTestRegistry,
-        timezone: 'Europe/Paris',
-        updateHolidayMode,
-      }),
+      createMockHomeApi({ timezone: 'Europe/Paris', updateHolidayMode }),
     )
 
     await manager.updateHolidayMode(['device-1'], DISABLE)

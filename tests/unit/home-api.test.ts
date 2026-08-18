@@ -12,7 +12,6 @@ import type {
 import { EntityNotFoundError } from '../../src/errors/index.ts'
 import { type HttpResponse, HttpError } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
-import { MS_PER_SECOND } from '../../src/time-units.ts'
 import {
   cast,
   createLogger,
@@ -22,8 +21,11 @@ import {
   matchObject,
   mockFetchResponse,
   mockResponse,
+  mockTemporalNowInstant,
 } from '../helpers.ts'
 import { homeReportPoint, typedHomeAtwDeviceData } from '../home-fixtures.ts'
+
+const MS_PER_SECOND = 1000
 
 const BASE_URL = 'https://melcloudhome.com'
 const COGNITO = 'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
@@ -1367,6 +1369,7 @@ describe('melcloud home API', () => {
   describe('session expiry', () => {
     it('should re-authenticate when session is expired', async () => {
       vi.useFakeTimers()
+      mockTemporalNowInstant()
       try {
         setupSuccessfulLogin()
 
@@ -2536,6 +2539,7 @@ describe('melcloud home API', () => {
   describe('token refresh', () => {
     it('should refresh access token when expired instead of full re-auth', async () => {
       vi.useFakeTimers()
+      mockTemporalNowInstant()
       try {
         setupSuccessfulLogin()
         const api = await createApi({ syncIntervalMinutes: false })
@@ -2561,12 +2565,14 @@ describe('melcloud home API', () => {
           expect.any(Object),
         )
       } finally {
+        vi.mocked(Temporal.Now.instant).mockRestore()
         vi.useRealTimers()
       }
     })
 
     it('should pass AbortSignal to refresh token request', async () => {
       vi.useFakeTimers()
+      mockTemporalNowInstant()
       try {
         const controller = new AbortController()
         setupSuccessfulLogin()
@@ -2601,6 +2607,7 @@ describe('melcloud home API', () => {
 
     it('should fall back to full OIDC when token refresh fails', async () => {
       vi.useFakeTimers()
+      mockTemporalNowInstant()
       try {
         setupSuccessfulLogin()
         const api = await createApi({ syncIntervalMinutes: false })
@@ -2645,6 +2652,7 @@ describe('melcloud home API', () => {
   describe('token response without refresh_token', () => {
     it('should not overwrite refresh token when response omits it', async () => {
       vi.useFakeTimers()
+      mockTemporalNowInstant()
       try {
         setupSuccessfulLogin()
         const api = await createApi({ syncIntervalMinutes: false })
@@ -2666,6 +2674,7 @@ describe('melcloud home API', () => {
 
         expect(buildings).toStrictEqual([mockBuilding])
       } finally {
+        vi.mocked(Temporal.Now.instant).mockRestore()
         vi.useRealTimers()
       }
     })

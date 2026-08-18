@@ -12,7 +12,7 @@ import { Temporal } from './temporal.ts'
  * `deviceId` exist on every dialect; `message` when the wire carries a
  * text (always on Classic, when a reason exists on Home); `code` and
  * `clearedAt` only where the wire has them (Home).
- * @category Types
+ * @category Facades
  */
 export interface ErrorLogEntry {
   /**
@@ -44,7 +44,7 @@ export interface ErrorLogEntry {
  * window bounds driving the next page (feed `nextFromDate` and
  * `nextToDate` back as `from` and `to`). The Home wire has no window —
  * Home reads answer bare entries.
- * @category Types
+ * @category Facades
  */
 export interface ErrorLogPage {
   /**
@@ -70,7 +70,7 @@ export interface ErrorLogPage {
  * (`offset` is then moot); otherwise pages stack backwards from `to`
  * (defaulting to today) in `period`-day windows, `offset` counting the
  * steps back.
- * @category Types
+ * @category Facades
  */
 export interface ErrorLogQuery {
   /**
@@ -99,7 +99,7 @@ export interface ErrorLogQuery {
 /**
  * The page window an {@link ErrorLogQuery} denotes, as ISO dates:
  * the resolved bounds plus the chained next-page bounds.
- * @category Types
+ * @category Facades
  */
 export interface ErrorLogWindow {
   /**

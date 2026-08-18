@@ -33,12 +33,14 @@ import {
   ok,
 } from '../types/index.ts'
 import {
+  formatLabels,
   fromListToSetAta,
   getChartLineOptions,
   getChartPieOptions,
   isSetDeviceDataAtaInList,
   isUpdateDeviceData,
   now,
+  resolved,
   typedFromEntries,
   typedKeys,
   withMinuteClockLabels,
@@ -318,13 +320,10 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   // The `@fetchDevices` decorator awaits a registry sync before this
-  // body runs; the body just exposes the now-fresh `this.data`. The
-  // `const data = await Promise.resolve(...)` shape is the only one
-  // that simultaneously satisfies `promise-function-async`,
-  // `require-await`, and `return-await`.
+  // body runs; the body just exposes the now-fresh `this.data`.
   @fetchDevices()
   public async fetch(): Promise<Readonly<ClassicListDeviceData<T>>> {
-    const data = await Promise.resolve(this.data)
+    const data = await resolved(this.data)
     return data
   }
 
@@ -377,8 +376,8 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   ): Promise<Result<ClassicEnergyData<T>>> {
     // The same per-type hook that empties `getEnergyReport` refuses the
     // raw read: `ClassicEnergyData<Erv>` is `never`, so no caller could
-    // use a success anyway, and the wire request it used to fire could
-    // only come back as an error dressed up as transport trouble.
+    // use a success anyway — a wire request here could only come back
+    // as an error dressed up as transport trouble.
     if (this.extractEnergyReport === null) {
       throw new TypeError('No energy report exists for this device type')
     }
@@ -401,22 +400,19 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
         locale: this.api.locale,
         window: { from, to },
       })
-      return getChartLineOptions(
-        {
-          Data: series.map(({ data: values }) => [...values]),
-          FromDate: from,
-          Labels: report.labels,
-          LabelType: report.labelType,
-          Points: labels.length,
-          Series: series.length,
-          ToDate: to,
-        },
-        {
-          legend: series.map(({ name }) => name),
-          locale: this.api.locale,
-          unit: ENERGY_REPORT_UNIT,
-        },
-      )
+      // The extract already IS the chart's substance: bucket names as
+      // the legend, bucket arrays as the series — no synthetic wire
+      // payload in between.
+      return {
+        from,
+        labels: formatLabels(report.labels, report.labelType, this.api.locale),
+        series: series.map(({ data: values, name }) => ({
+          data: [...values],
+          name,
+        })),
+        to,
+        unit: ENERGY_REPORT_UNIT,
+      }
     })
   }
 
@@ -437,8 +433,8 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   ): Promise<Result<ReportChartLineOptions>> {
     const postData = this.#buildReportPostData(query, true)
     // An empty legend marks a type the report does not exist for (the
-    // docs say ATW only): the wire call used to fire anyway and every
-    // series was masked away after — an expensive spelling of "nothing".
+    // docs say ATW only): answer the empty chart locally rather than
+    // paying a wire call whose every series would be masked away.
     if (this.internalTemperaturesLegend.length === 0) {
       return ok(emptyTemperatureChart(postData))
     }
