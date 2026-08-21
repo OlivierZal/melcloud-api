@@ -14,8 +14,10 @@ import { type HttpResponse, HttpError } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
 import {
   cast,
+  createHttpError,
   createLogger,
   createMockHttpClient,
+  createServerError,
   createSettingStore,
   defined,
   matchObject,
@@ -321,6 +323,18 @@ const httpUnauthorized = (url = '/context'): HttpError =>
     config: { url },
     response: { data: undefined, headers: {}, status: 401 },
   })
+
+// How the BFF answers an account that owns no MELCloud Home home: the
+// token was accepted (a rejected one answers 401), the account simply
+// has nothing to describe.
+const httpNotFound = (url = '/context'): HttpError =>
+  createHttpError({ message: 'Not Found', status: 404, url })
+
+const NO_HOME_LOG =
+  'This account has no MELCloud Home home: signed in, nothing to sync'
+
+const countTokenCalls = (): number =>
+  mockFetch.mock.calls.filter((call) => isTokenEndpointCall(call)).length
 
 describe('melcloud home API', () => {
   let melCloudHomeApi: { create: typeof HomeAPI.create }
@@ -665,6 +679,184 @@ describe('melcloud home API', () => {
       const buildings = await api.fetch()
 
       expect(buildings).toStrictEqual([])
+    })
+  })
+
+  // A 404 on `/context` says "this account has no MELCloud Home home",
+  // never "the session went stale": the token IS valid (a rejected one
+  // answers 401). Escalating it to a full re-login looped forever in
+  // the wild — 404 → reuse deemed failed → sign-in → Cognito login
+  // page → AuthenticationError → 15-minute backoff → repeat — and
+  // notified "session lost" to a user who has no Home account at all.
+  describe('account without a MELCloud Home home', () => {
+    it('answers an empty building list, empties the registry, and stays authenticated', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await createApi({ logger })
+      // Sync a real context first, so the emptying below is observable
+      // rather than vacuous.
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.fetch()
+
+      expect(api.registry.getById('device-1')).toBeDefined()
+
+      mockRequest.mockRejectedValueOnce(httpNotFound())
+      const buildings = await api.fetch()
+
+      expect(buildings).toStrictEqual([])
+      expect(api.registry.getDevices()).toHaveLength(0)
+      expect(api.context).toBeNull()
+      expect(api.isAuthenticated()).toBe(true)
+      expect(logger.log).toHaveBeenCalledWith('[Home]', NO_HOME_LOG)
+    })
+
+    it('states the situation once, not on every poll', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await createApi({ logger })
+      mockRequest.mockRejectedValueOnce(httpNotFound())
+      await api.fetch()
+      mockRequest.mockRejectedValueOnce(httpNotFound())
+      await api.fetch()
+      const noHomeLines = vi
+        .mocked(logger.log)
+        .mock.calls.filter(([, line]) => line === NO_HOME_LOG)
+
+      expect(noHomeLines).toHaveLength(1)
+    })
+
+    it('states it again after a home appears and goes away', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await createApi({ logger })
+      mockRequest.mockRejectedValueOnce(httpNotFound())
+      await api.fetch()
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.fetch()
+      mockRequest.mockRejectedValueOnce(httpNotFound())
+      await api.fetch()
+      const noHomeLines = vi
+        .mocked(logger.log)
+        .mock.calls.filter(([, line]) => line === NO_HOME_LOG)
+
+      expect(noHomeLines).toHaveLength(2)
+    })
+
+    it('reuses the persisted session instead of attempting a full sign-in', async () => {
+      const { settingManager } = persistedSessionStore()
+      const onAuthenticationLost = vi.fn<() => void>()
+      mockRequest.mockRejectedValueOnce(httpNotFound())
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        events: { onAuthenticationLost },
+        settingManager,
+        transport: mockHttpClient,
+      })
+
+      expect(api.isAuthenticated()).toBe(true)
+      expect(api.registry.getDevices()).toHaveLength(0)
+      // No OIDC round-trip at all — the token endpoint above all.
+      expect(mockFetch).not.toHaveBeenCalled()
+      expect(onAuthenticationLost).not.toHaveBeenCalled()
+    })
+
+    it('syncs normally once /context answers again', async () => {
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockRejectedValueOnce(httpNotFound())
+      const api = await createFromPersistedStore(settingManager)
+
+      // The marker is up: authenticated on the strength of the 404
+      // alone, with no identity behind it yet.
+      expect(api.isAuthenticated()).toBe(true)
+      expect(api.user).toBeNull()
+
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      const buildings = await api.fetch()
+
+      expect(buildings).toStrictEqual([mockBuilding])
+      expect(api.registry.getById('device-1')).toBeDefined()
+      expect(api.isAuthenticated()).toBe(true)
+      expect(api.user).not.toBeNull()
+    })
+
+    it('leaves a 404 from any other endpoint classified as a failure', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await createApi({ logger })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.fetch()
+      mockRequest.mockRejectedValueOnce(
+        httpNotFound('/telemetry/telemetry/energy/device-1'),
+      )
+      const result = await api.getEnergy('device-1', {
+        from: '2026-08-01T00:00:00Z',
+        interval: 'Day',
+        measure: 'consumed',
+        to: '2026-08-02T00:00:00Z',
+      })
+
+      expect(result.ok).toBe(false)
+      expect(api.isAuthenticated()).toBe(true)
+      expect(api.context).not.toBeNull()
+      expect(logger.log).not.toHaveBeenCalledWith('[Home]', NO_HOME_LOG)
+    })
+
+    it('reads unauthenticated after logging out', async () => {
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockRejectedValueOnce(httpNotFound())
+      const api = await createFromPersistedStore(settingManager)
+
+      expect(api.isAuthenticated()).toBe(true)
+
+      api.logOut()
+
+      expect(api.isAuthenticated()).toBe(false)
+      expect(api.registry.getDevices()).toHaveLength(0)
+    })
+
+    // The sibling behaviour must not have moved: only a 404 is a
+    // no-home verdict, everything else stays a plain failure that
+    // keeps the last good registry and says nothing about a home.
+    it.each([
+      ['a 500 HttpError', createServerError(500, '/context')],
+      ['a network error', new Error('network down')],
+    ])('leaves %s propagating untouched', async (_name, error: unknown) => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await createApi({ logger })
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      await api.fetch()
+      mockRequest.mockRejectedValueOnce(error)
+
+      const buildings = await api.fetch()
+
+      expect(buildings).toStrictEqual([])
+      expect(api.registry.getById('device-1')).toBeDefined()
+      expect(api.context).not.toBeNull()
+      expect(logger.log).not.toHaveBeenCalledWith('[Home]', NO_HOME_LOG)
+    })
+
+    it('still drives the reactive re-auth path on a 401', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await createApi({ logger })
+      const tokenCallsBeforeRefresh = countTokenCalls()
+      mockRequest.mockRejectedValueOnce(httpUnauthorized())
+      // The reactive handler refreshes first — one extra token call.
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse({
+          ...mockTokenResponse,
+          access_token: 'refreshed-after-401',
+        }),
+      )
+      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+
+      const buildings = await api.fetch()
+
+      expect(buildings).toStrictEqual([mockBuilding])
+      expect(countTokenCalls()).toBe(tokenCallsBeforeRefresh + 1)
+      expect(logger.log).not.toHaveBeenCalledWith('[Home]', NO_HOME_LOG)
     })
   })
 

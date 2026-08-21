@@ -131,7 +131,7 @@ Both clients keep their session alive without caller involvement:
 - **Persistence** — pass a `settingManager` (a simple `get`/`set` string store) to persist tokens and credentials across restarts; without one, everything stays in memory and a new instance signs in from scratch.
 
 > [!IMPORTANT]
-> The `SettingManager` receives the access/refresh tokens **and the account password** as plain strings. You are responsible for backing it with secure storage (encrypted settings store, OS keychain, …) — do not write it to a world-readable file. The SDK redacts credentials, tokens and cookies from its own log output.
+> The `SettingManager` receives the access/refresh tokens **and the account password** as plain strings. You are responsible for backing it with secure storage (encrypted settings store, OS keychain, …) — do not write it to a world-readable file. The SDK redacts credentials from everything it emits: its own log output, and the request/response snapshot carried by a thrown `HttpError` — bearer token, `X-MitsContextKey`, session cookie, sign-in body and query alike — so an error object handed to a host logger, or pasted into a diagnostic report, carries no secret.
 
 ```ts title="setting-manager"
 const settings = new Map<string, string>()
