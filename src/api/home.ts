@@ -49,6 +49,8 @@ import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
 const ATW_UNIT_PATH = '/monitor/atwunit'
+const CONTEXT_PATH = '/context'
+
 const FROST_PROTECTION_PATH = '/monitor/protection/frost'
 const HOLIDAY_MODE_PATH = '/monitor/holidaymode'
 const OVERHEAT_PROTECTION_PATH = '/monitor/protection/overheat'
@@ -218,8 +220,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Currently authenticated user, or `null` when unauthenticated.
-   * Derived from the most recent `/context` response.
+   * Currently authenticated user, derived from the most recent
+   * `/context` response. `null` when unauthenticated — and also when
+   * the signed-in account has no home, which answers `404` and so
+   * carries no identity to derive.
    * @returns The user, or `null`.
    */
   public get user(): HomeUser | null {
@@ -227,6 +231,15 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   #context: HomeContext | null = null
+
+  // A `404` on `/context` is how the BFF answers an account that has no
+  // MELCloud Home home: the token was accepted (a rejected one answers
+  // `401`), so the session is valid and simply has nothing to describe.
+  // Kept distinct from "not signed in" because the two demand opposite
+  // handling — retrying a sign-in can never conjure a home, and looping
+  // on it burns the login backoff and reports a session lost that never
+  // was.
+  #hasNoHome = false
 
   readonly #locale: string | undefined
 
@@ -289,6 +302,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   public async fetch(): Promise<HomeBuilding[]> {
     return this.runSyncCycle(async () => {
       const data = await this.#fetchContext()
+      if (data === null) {
+        this.#registry.syncDevices([])
+        return []
+      }
       this.#registry.syncDevices([
         // Guest entries first: the registry upsert is last-write-wins
         // per id, so a device duplicated across `buildings` and
@@ -490,16 +507,23 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     } catch {
       // Deliberately swallowed: the request pipeline logged the
       // failure and a real 401 has cleared the user state already.
+      // `#markNoHome` is the other, non-401 clearer: an account with
+      // no home has no identity to report, and answers `null` here
+      // without the failure ever surfacing.
     }
     return this.#user
   }
 
   /**
-   * Whether the BFF `/context` call has resolved a user identity.
-   * @returns `true` once authenticated.
+   * Whether the session is usable: `true` once `/context` resolved a
+   * user identity, and also for an account the BFF accepted but that
+   * has no MELCloud Home home — there {@link user} and {@link context}
+   * stay `null`, so an authenticated client is NOT a promise of an
+   * identity.
+   * @returns `true` while the session can serve requests.
    */
   public isAuthenticated(): boolean {
-    return this.#user !== null
+    return this.#user !== null || this.#hasNoHome
   }
 
   /**
@@ -533,6 +557,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   protected override clearPersistedSession(): void {
     this.#user = null
+    this.#hasNoHome = false
     // The context getter promises "cleared on session invalidation":
     // without this, a logged-out client keeps exposing the previous
     // account's buildings and devices.
@@ -599,6 +624,21 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     )
   }
 
+  // The `/context` `404` is this account's normal answer (see
+  // `#requestContext`), so the request pipeline must not file it as an
+  // API failure on every poll. Any other failure, including a `404`
+  // from any other endpoint, logs as before.
+  protected override logError(error: unknown): void {
+    if (
+      isHttpError(error) &&
+      error.response.status === HttpStatus.NotFound &&
+      error.config?.url === CONTEXT_PATH
+    ) {
+      return
+    }
+    super.logError(error)
+  }
+
   /**
    * Home considers a session in need of refresh when the access
    * token is within {@link SESSION_REFRESH_AHEAD_MS} of its real
@@ -650,11 +690,13 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * requires a parsed context on top of the identity: a `true` reuse
    * promises a verified registry, so an identity-only round-trip
    * (the salvage parse failed) must fall through to the full-auth
-   * path instead of claiming the reuse completed.
+   * path instead of claiming the reuse completed. An account with no
+   * home reuses too: its session is valid, there is simply nothing to
+   * verify against.
    * @returns `true` when persisted tokens verified against the BFF.
    */
   protected override reuseSucceeded(): boolean {
-    return this.isAuthenticated() && this.context !== null
+    return this.#hasNoHome || (this.isAuthenticated() && this.context !== null)
   }
 
   protected override async syncRegistry(): Promise<void> {
@@ -721,8 +763,11 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * that still validates per unit.
    * @returns The fetched home context.
    */
-  async #fetchContext(): Promise<HomeContext> {
-    const raw = await this.requestData('get', '/context')
+  async #fetchContext(): Promise<HomeContext | null> {
+    const raw = await this.#requestContext()
+    if (raw === null) {
+      return null
+    }
     this.#user = parseUser(
       parseOrThrow(HomeUserContextSchema, raw, 'GET /context'),
     )
@@ -814,6 +859,27 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     })
   }
 
+  // The state an account with no home settles into: no identity, no
+  // context, and the marker up — so the session reads valid and nothing
+  // ever tries to sign in again on its behalf.
+  #markNoHome(): void {
+    const wasKnown = this.#hasNoHome
+    this.#user = null
+    this.#context = null
+    this.#hasNoHome = true
+    // Emptied here rather than at one call site, so the state is the
+    // same whichever entry point observed the `404`.
+    this.#registry.syncDevices([])
+    // Once per episode, not once per sync cycle: the timer keeps
+    // polling so a home created later is picked up, and a settled
+    // state must not read as a minute-by-minute alarm.
+    if (!wasKnown) {
+      this.logger.log(
+        'This account has no MELCloud Home home: signed in, nothing to sync',
+      )
+    }
+  }
+
   // Per-unit endpoints differ by connection type; the registry is the
   // routing truth for an id the caller addresses blindly.
   #modelFor(id: string): HomeDevice {
@@ -863,6 +929,28 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     }
     this.#storeTokens(tokens)
     return true
+  }
+
+  // Sole owner of the no-home marker, in both directions: a `404` raises
+  // it, any answer at all clears it. Answers `null` for that one failure
+  // which is not a failure — an account with no home. Every other status
+  // propagates, so a real transport or authorization problem still
+  // reaches the retry and sign-in paths untouched.
+  async #requestContext(): Promise<unknown> {
+    try {
+      const raw = await this.requestData('get', CONTEXT_PATH)
+      this.#hasNoHome = false
+      return raw
+    } catch (error) {
+      if (
+        !isHttpError(error) ||
+        error.response.status !== HttpStatus.NotFound
+      ) {
+        throw error
+      }
+      this.#markNoHome()
+      return null
+    }
   }
 
   #storeTokens({

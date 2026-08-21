@@ -16,6 +16,11 @@ export const HttpStatus = {
    */
   GatewayTimeout: 504,
   /**
+   * HTTP 404 — the resource does not exist. On Home's `/context` it is
+   * the answer for an account with no home, not a failure.
+   */
+  NotFound: 404,
+  /**
    * HTTP 503 — transient service unavailability. Eligible for retry on GET.
    */
   ServiceUnavailable: 503,

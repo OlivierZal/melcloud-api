@@ -27,20 +27,43 @@ const logKeys = [
   'errorMessage',
 ]
 
-const REDACTED = '******'
+/**
+ * Placeholder written over any value whose key names a secret.
+ */
+export const REDACTED = '******'
 
+// Every key that names a credential on either wire, plus the OAuth
+// vocabulary the Home flow speaks. `owneremail` earns its place from
+// the Classic list payload, which carries the account's address on
+// EVERY device of EVERY successful sync — the one entry here that
+// blanks a routine 200 rather than a failure.
 const sensitiveKeys = new Set([
+  'access_token',
   'authorization',
+  'client_secret',
+  'code',
+  'code_verifier',
   'contextkey',
   'cookie',
   'email',
+  'id_token',
+  'owneremail',
   'password',
+  'refresh_token',
   'set-cookie',
+  'token',
   'username',
   'x-mitscontextkey',
 ])
 
-const isSensitive = (key: string): boolean =>
+/**
+ * Whether a header or payload key names a secret — the one vocabulary
+ * shared by the call loggers and the {@link HttpError} request
+ * snapshot, so a secret cannot reach a log through either route.
+ * @param key - Header or payload key, in any casing.
+ * @returns `true` when the value behind the key must be redacted.
+ */
+export const isSensitive = (key: string): boolean =>
   sensitiveKeys.has(key.toLowerCase())
 
 // Detect a string that looks like an `application/x-www-form-urlencoded`
@@ -71,7 +94,15 @@ const redactFormEncoded = (value: string): string | undefined => {
   return keysToRedact.length > 0 ? params.toString() : undefined
 }
 
-const redactValue = (value: unknown): unknown => {
+/**
+ * Redacts every value whose key names a secret, walking nested objects,
+ * arrays and form-encoded strings — the deep counterpart of
+ * {@link isSensitive}, shared with the {@link HttpError} snapshot so a
+ * request body cannot leak a credential the loggers would have hidden.
+ * @param value - Any payload: object, array, string or primitive.
+ * @returns The value with sensitive entries replaced by {@link REDACTED}.
+ */
+export const redactValue = (value: unknown): unknown => {
   if (typeof value === 'string') {
     return redactFormEncoded(value) ?? value
   }

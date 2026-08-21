@@ -116,6 +116,37 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   (Sunday = 0) unlike the 1-based ISO labels of `Report/*`. ATA Home
   daily energy buckets are watt-hours and idle days are omitted
   entirely; ATW buckets are kWh.
+- A `404` from Home's `/context` is not a failure: it is how the BFF
+  answers an account that has no MELCloud Home home. The token was
+  accepted (a rejected one answers `401`), so the session is valid and
+  simply has nothing to describe — `isAuthenticated()` reads `true`,
+  the registry stays empty, and no sign-in is attempted. Reading it as
+  a stale session is what looped a real user's app for hours: reuse
+  deemed failed → full sign-in → rejected at Cognito → 15-minute
+  backoff → repeat (observed 2026-08-21).
+- Secrets never travel inside a thrown error. `HttpError` redacts its
+  whole snapshot at construction — request headers, BODY and query
+  parameters, plus the response headers — because that object reaches
+  every host logger and lands verbatim in the diagnostic reports users
+  paste into issues; one leaked a live bearer token before the fix.
+  The body matters as much as the header: Classic's
+  `/Login/ClientLogin3` posts the account's password and email, so a
+  header-only redaction (the first attempt, caught in review) still
+  leaked the credential. Redaction sits in the constructor rather than
+  at the logging sites so no future call site can reintroduce the
+  leak; the sensitive-key vocabulary is shared with the call loggers
+  (`isSensitive`/`redactValue` in `src/observability/context.ts`),
+  never re-declared. The RESPONSE is redacted too, headers and body:
+  an upstream echoes the credential it just rejected (a Classic 500
+  returns `LoginData.ContextKey`, the OIDC token endpoint names the
+  refresh token in its error text), which is why `response.data` is
+  typed `unknown` — a failed body is a diagnostic payload, never a
+  contract. Two rounds of review were needed to reach that: the first
+  attempt redacted headers only, the second still left the response
+  body raw. When adding a wire field that names a credential, extend
+  the ONE vocabulary — `owneremail` is there because the Classic list
+  payload carries the account address on every device of every
+  successful sync, the single entry that blanks a routine 200.
 - Setpoint increments: both Home facades expose a derived
   `temperatureStep` (ATA from `hasHalfDegreeIncrements`, ATW from the
   FTC's own `temperatureIncrement` declaration — the direct field wins

@@ -50,11 +50,119 @@ describe('httpError', () => {
 
     expect(error.config).toBeUndefined()
   })
+
+  // Security regression guard (user report, 2026-08-21): the request
+  // snapshot rides inside the thrown error into every host logger and
+  // into the diagnostic reports users paste into issues, and it used to
+  // carry `Authorization: Bearer …` verbatim.
+  it('redacts secret-bearing request headers and leaves the others verbatim', () => {
+    const error = new HttpError('boom', {
+      config: {
+        headers: {
+          Authorization: 'Bearer secret',
+          'Content-Type': 'application/json',
+          'X-MitsContextKey': 'ctx',
+        },
+      },
+      response: { data: null, headers: {}, status: 401 },
+    })
+
+    expect(error.config?.headers).toStrictEqual({
+      Authorization: '******',
+      'Content-Type': 'application/json',
+      'X-MitsContextKey': '******',
+    })
+  })
+
+  it.each(['authorization', 'Authorization', 'AUTHORIZATION'])(
+    'redacts %s regardless of casing',
+    (key) => {
+      const error = new HttpError('boom', {
+        config: { headers: { [key]: 'Bearer secret' } },
+        response: { data: null, headers: {}, status: 401 },
+      })
+
+      expect(error.config?.headers?.[key]).toBe('******')
+    },
+  )
+
+  it('passes a config without headers through unchanged', () => {
+    const config = {
+      data: { id: 1 },
+      method: 'POST',
+      params: { verbose: true },
+      url: '/where',
+    }
+    const error = new HttpError('boom', {
+      config,
+      response: { data: null, headers: {}, status: 500 },
+    })
+
+    expect(error.config).toStrictEqual(config)
+    // No `headers` key conjured out of the absent one.
+    expect(error.config?.headers).toBeUndefined()
+  })
+
+  // What came back is redacted by the same vocabulary: a session cookie
+  // is a credential wherever it sits. Everything the retry policies read
+  // — `retry-after` above all — must survive untouched.
+  it('redacts the secrets the server sent back', () => {
+    const error = new HttpError('boom', {
+      config: { headers: { Authorization: 'Bearer secret' } },
+      response: {
+        data: null,
+        headers: {
+          authorization: 'Bearer echoed',
+          'retry-after': '30',
+          'set-cookie': ['session=1', 'flag=2'],
+          'x-trace': 'abc',
+        },
+        status: 500,
+      },
+    })
+
+    expect(error.config?.headers?.Authorization).toBe('******')
+    expect(error.response.headers.authorization).toBe('******')
+    expect(error.response.headers['set-cookie']).toBe('******')
+    expect(error.response.headers['retry-after']).toBe('30')
+    expect(error.response.headers['x-trace']).toBe('abc')
+  })
+
+  // The Classic sign-in carries the account's password in the BODY, and
+  // a credential can ride a query string too: the snapshot redacts every
+  // field, not just the obvious header.
+  it('redacts the credentials in the body and the query', () => {
+    const error = new HttpError('boom', {
+      config: {
+        data: {
+          AppVersion: '1.38.4.0',
+          Email: 'user@example.com',
+          Password: 'hunter2',
+          Persist: true,
+        },
+        method: 'post',
+        params: { password: 'in-query', trace: 'keep' },
+        url: '/Login/ClientLogin3',
+      },
+      response: { data: null, headers: {}, status: 500 },
+    })
+
+    expect(error.config?.data).toStrictEqual({
+      AppVersion: '1.38.4.0',
+      Email: '******',
+      Password: '******',
+      Persist: true,
+    })
+    expect(error.config?.params?.password).toBe('******')
+    expect(error.config?.params?.trace).toBe('keep')
+  })
 })
 
 describe(isHttpError, () => {
   it('narrows HttpError instances', () => {
-    const error = new HttpError('boom', {
+    // Typed `unknown`, which is where the guard earns its keep: the
+    // error arrives from a `catch`, not from a constructor call.
+    const error: unknown = new HttpError('boom', {
       response: { data: null, headers: {}, status: 500 },
     })
 
@@ -192,6 +300,38 @@ describe(HttpClient, () => {
         status: 429,
       },
     })
+  })
+
+  // The end-to-end clause that would have caught the leak: the error a
+  // real request throws must not carry the bearer token that request
+  // just sent — default headers and per-request headers alike.
+  it('redacts the credentials of the request that failed', async () => {
+    mockFetch.mockResolvedValueOnce(
+      mockFetchResponse({ err: 'denied' }, {}, 403),
+    )
+    const client = new HttpClient({
+      baseURL: BASE_URL,
+      headers: { 'X-MitsContextKey': 'ctx' },
+      timeout: 0,
+    })
+
+    const promise = client.request({
+      headers: { Authorization: 'Bearer secret', 'X-Trace': 'keep-me' },
+      url: '/guarded',
+    })
+
+    await expect(promise).rejects.toMatchObject({
+      config: {
+        headers: {
+          Authorization: '******',
+          'X-MitsContextKey': '******',
+          'X-Trace': 'keep-me',
+        },
+      },
+    })
+    // Redaction is a reporting concern, not a transport one: the wire
+    // still carried the real credential.
+    expect(extractHeaders().Authorization).toBe('Bearer secret')
   })
 
   it('returns text when the response is not JSON', async () => {
