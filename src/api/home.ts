@@ -303,7 +303,8 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     return this.runSyncCycle(async () => {
       const data = await this.#fetchContext()
       if (data === null) {
-        this.#registry.syncDevices([])
+        // `#markNoHome` already emptied the registry, on whichever
+        // entry point saw the 404.
         return []
       }
       this.#registry.syncDevices([
@@ -499,6 +500,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * reactive-401 path (`reauthenticate()`) is the single owner of
    * clearing the authentication state, so a definitive rejection has
    * already nulled the user by the time the failure surfaces here.
+   * A `404` is the one answer that is neither: the account has no
+   * home, so this settles the no-home state — `null` user, empty
+   * registry — rather than returning the last known one.
    * @returns The user or `null`.
    */
   public async getUser(): Promise<HomeUser | null> {
