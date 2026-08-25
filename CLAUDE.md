@@ -15,10 +15,12 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   TS6 JS API) for the tools that import it (typedoc, typescript-eslint),
   while `@typescript/native` is the native 7.x compiler running typecheck
   and build — until TS 7.1 ships its programmatic API. `@typescript/native`
-  installs no `.bin` shim at all, and both `.bin/tsc` and `.bin/tsc6`
-  resolve to the compat package's TypeScript 6, so a bare `tsc` in a
-  script would silently typecheck against TS 6. The explicit path is the
-  only route to the 7.x compiler; never shorten it.
+  does declare a `tsc` bin, but LOSES the `.bin/tsc` slot to
+  `@typescript/old` (the TS 6 the compat package depends on) under
+  npm's bin-conflict resolution — so the shim a bare `tsc` runs is
+  TypeScript 6, like `.bin/tsc6`, and a bare `tsc` in a script would
+  silently typecheck against TS 6. The explicit path is the only
+  reliable route to the 7.x compiler; never shorten it.
 - `npm run build` — purges `dist` before emitting, because `tsc` overwrites
   but never deletes: a module renamed or removed in `src` would otherwise
   survive in `dist`, and `files` ships that directory, so `prepare` would

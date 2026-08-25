@@ -1,4 +1,9 @@
-import { isSensitive, REDACTED, redactValue } from '../observability/context.ts'
+import {
+  isSensitive,
+  REDACTED,
+  redactUrl,
+  redactValue,
+} from '../observability/context.ts'
 
 // The snapshot travels inside a thrown error, so it reaches every
 // logger a host happens to run — including the diagnostic reports users
@@ -110,6 +115,10 @@ export class HttpError extends Error {
             ...(config.params !== undefined && {
               params: redactParams(config.params),
             }),
+            // A token can ride inline in the URL (`?code=…`) rather
+            // than in `params`; the query string is redacted like any
+            // other form-encoded carrier.
+            ...(config.url !== undefined && { url: redactUrl(config.url) }),
           }
   }
 }

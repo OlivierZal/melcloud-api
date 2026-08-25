@@ -58,14 +58,6 @@ updates:
         patterns:
           - '@vitest/*'
           - vitest
-    # TypeScript 7 has no stable typedoc: 0.28.x caps its peer at 6.0.x and
-    # only the 1.0.0-dev prereleases widen it. Taking the major would trade a
-    # blocked bump for a prerelease docs toolchain in a published package.
-    # Drop this once typedoc 1.0 ships stable.
-    ignore:
-      - dependency-name: typescript
-        update-types:
-          - version-update:semver-major
     package-ecosystem: npm
     registries:
       - npm-github

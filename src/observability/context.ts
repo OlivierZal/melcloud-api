@@ -94,17 +94,34 @@ const redactFormEncoded = (value: string): string | undefined => {
   return keysToRedact.length > 0 ? params.toString() : undefined
 }
 
+// JSON text is the other string-borne carrier of secrets: the OIDC
+// token endpoint answers a refusal as JSON TEXT (kept raw because a
+// failed body is a diagnostic payload, not a contract), and a
+// token-bearing field inside it would otherwise pass through verbatim —
+// the form-encoded branch alone cannot see it. `undefined` is a safe
+// failure marker: no JSON text parses to it.
+const parseJsonText = (value: string): unknown => {
+  try {
+    return JSON.parse(value) as unknown
+  } catch {
+    return undefined
+  }
+}
+
 /**
  * Redacts every value whose key names a secret, walking nested objects,
- * arrays and form-encoded strings — the deep counterpart of
- * {@link isSensitive}, shared with the {@link HttpError} snapshot so a
- * request body cannot leak a credential the loggers would have hidden.
+ * arrays, JSON-encoded and form-encoded strings — the deep counterpart
+ * of {@link isSensitive}, shared with the {@link HttpError} snapshot so
+ * a request body cannot leak a credential the loggers would have hidden.
  * @param value - Any payload: object, array, string or primitive.
  * @returns The value with sensitive entries replaced by {@link REDACTED}.
  */
 export const redactValue = (value: unknown): unknown => {
   if (typeof value === 'string') {
-    return redactFormEncoded(value) ?? value
+    const parsed = parseJsonText(value)
+    return parsed === undefined
+      ? (redactFormEncoded(value) ?? value)
+      : JSON.stringify(redactValue(parsed))
   }
   if (typeof value !== 'object' || value === null) {
     return value
@@ -118,6 +135,23 @@ export const redactValue = (value: unknown): unknown => {
       isSensitive(key) ? REDACTED : redactValue(property),
     ]),
   )
+}
+
+/**
+ * Redacts the query-string portion of a URL through the same
+ * form-encoded vocabulary as the bodies: a token can ride inline in the
+ * URL (`?code=…`) rather than in a separate `params` record, and the
+ * URL travels into every log line and thrown-error snapshot.
+ * @param url - Request URL, with or without a query string.
+ * @returns The URL with sensitive query values replaced by {@link REDACTED}.
+ */
+export const redactUrl = (url: string): string => {
+  const [path = '', ...querySegments] = url.split('?')
+  if (querySegments.length === 0) {
+    return url
+  }
+  const redacted = redactFormEncoded(querySegments.join('?'))
+  return redacted === undefined ? url : `${path}?${redacted}`
 }
 
 /**

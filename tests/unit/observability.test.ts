@@ -271,6 +271,39 @@ describe('sensitive data redaction', () => {
     expect(params.get('after')).toBe('kept')
   })
 
+  it('redacts token-bearing fields inside JSON-encoded string bodies', () => {
+    // The OIDC token endpoint answers a refusal as JSON TEXT (kept raw
+    // because a failed body is a diagnostic payload, not a contract);
+    // without a JSON attempt in the string branch, a token-bearing
+    // field inside that text would ride into every log line verbatim.
+    const config = createConfig({
+      data: '{"error":"invalid_grant","error_description":"expired","refresh_token":"tok-123"}',
+    })
+    const call = new APICallRequestData(config)
+    const parsed = parseRecord(parseRequestData(call.toString()))
+
+    expect(parsed.refresh_token).toBe('******')
+    expect(parsed.error).toBe('invalid_grant')
+    expect(parsed.error_description).toBe('expired')
+  })
+
+  it('redacts sensitive keys nested inside JSON-encoded string bodies', () => {
+    const config = createConfig({
+      data: '{"outer":{"password":"s3cret","safe":"ok"}}',
+    })
+    const call = new APICallRequestData(config)
+    const parsed = parseRecord(parseRequestData(call.toString()))
+
+    expect(parsed.outer).toStrictEqual({ password: '******', safe: 'ok' })
+  })
+
+  it('keeps the content of secret-free JSON-encoded strings', () => {
+    const config = createConfig({ data: '{"status":"ok"}' })
+    const call = new APICallRequestData(config)
+
+    expect(parseRequestData(call.toString())).toBe('{"status":"ok"}')
+  })
+
   it('passes through non-sensitive form-encoded strings unchanged', () => {
     const config = createConfig({ data: 'page=2&limit=50' })
     const call = new APICallRequestData(config)
