@@ -156,6 +156,46 @@ describe('httpError', () => {
     expect(error.config?.params?.password).toBe('******')
     expect(error.config?.params?.trace).toBe('keep')
   })
+
+  // The OIDC token endpoint answers a refusal as JSON TEXT and the
+  // failed body is kept raw — `refreshAccessToken` logs this exact
+  // error ("Refresh token exchange failed:"), so a token-bearing field
+  // inside the text must already read `******` when it gets there.
+  it('redacts token-bearing fields inside a raw JSON error text', () => {
+    const error = new HttpError('boom', {
+      config: { method: 'POST', url: '/connect/token' },
+      response: {
+        data: '{"error":"invalid_grant","refresh_token":"tok-123"}',
+        headers: {},
+        status: 400,
+      },
+    })
+
+    expect(error.response.data).toBe(
+      '{"error":"invalid_grant","refresh_token":"******"}',
+    )
+  })
+
+  // A token can ride inline in the URL (`?code=…`) rather than in the
+  // `params` record: the query string passes through the same
+  // form-encoded redaction as the bodies.
+  it('redacts the token-bearing query of the request URL', () => {
+    const error = new HttpError('boom', {
+      config: { method: 'GET', url: '/callback?code=auth-code&state=xyz' },
+      response: { data: null, headers: {}, status: 400 },
+    })
+
+    expect(error.config?.url).toBe('/callback?code=******&state=xyz')
+  })
+
+  it('leaves a URL whose query names no secret verbatim', () => {
+    const error = new HttpError('boom', {
+      config: { method: 'GET', url: '/Device/Get?id=42' },
+      response: { data: null, headers: {}, status: 404 },
+    })
+
+    expect(error.config?.url).toBe('/Device/Get?id=42')
+  })
 })
 
 describe(isHttpError, () => {

@@ -4,16 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [52.0.1] - 2026-08-25
+
+### Security
+
+- **The OIDC token endpoint's failure text is now actually redacted.** 52.0.0 overclaimed this: it stated the value the token endpoint echoes was covered ("every one of those values is now redacted"), but the endpoint's non-2xx body is kept as raw TEXT and the string redaction only understood form-encoded strings — JSON text such as `{"error":"invalid_grant","refresh_token":"…"}` passed through verbatim into the thrown `HttpError`, which the host then logs ("Refresh token exchange failed:"). The shared redaction vocabulary now attempts a JSON parse on every string: on success the parsed value is redacted recursively and re-serialized, so a token-bearing field inside JSON text reads `******` in the error snapshot and the call loggers alike; any other string keeps the form-encoded/raw behavior.
+- **The request URL's query string is redacted in the `HttpError` snapshot.** A token can ride inline in the URL (`?code=…`) rather than in the `params` record; the query portion now passes through the same form-encoded redaction as the bodies. Latent hardening — no SDK call site puts a credential there today.
+
 ## [52.0.0] - 2026-08-21
 
 ### Changed
 
 - **BREAKING — a thrown `HttpError` no longer carries a typed, verbatim payload.** `HttpError` loses its `T` type parameter and `response.data` is now `unknown`, because a failed response body is a DIAGNOSTIC payload rather than a contract: upstreams echo the credential they just rejected (a Classic 500 returns `LoginData.ContextKey`, a 401 can mirror the bearer, the OIDC token endpoint names the refresh token in its error text), and every one of those values is now redacted. Migration: an `HttpError<Foo>` annotation becomes `HttpError`, and code reading `error.response.data` narrows it itself — nothing in this SDK ever did.
 
-### Fixed
+### Security
 
 - **Credentials no longer travel inside a thrown `HttpError`.** The error carried a verbatim snapshot of the exchange that failed, and that object reaches every host logger — including the diagnostic reports users paste into issues, where a live bearer token was found on 2026-08-21. It leaked far more than that token: the Classic sign-in posts the account's **password and email in the request body**, the context key rides `X-MitsContextKey`, a session cookie comes back in the response headers, and the response BODY echoes secrets of its own. Every field naming a secret now reads `******` — request headers, body and query parameters, response headers and body alike — redacted in the constructor, so no call site can reintroduce the leak by forgetting to sanitize. What the retry policies read (`retry-after` and friends) passes through untouched. Verified by probe against `util.inspect`, `console.error`, `JSON.stringify(error)` and the `{ ...error }` spread.
 - **The account's email address no longer appears in a routine sync log.** `OwnerEmail` — which the Classic list payload carries on every device of every successful poll — was outside the redaction vocabulary, so a 200 response wrote it to the host log. It is now blanked like every other credential, along with the OAuth vocabulary (`access_token`, `refresh_token`, `id_token`, `token`, `code`, `code_verifier`, `client_secret`).
+
+### Fixed
+
 - **A `404` on Home's `/context` is an account with no home, not a stale session.** The BFF answers `404` when the signed-in account has no MELCloud Home home — the token was accepted, since a rejected one answers `401` — but the SDK read the missing context as a failed session reuse and escalated to a full sign-in, which then failed, armed the 15-minute login backoff and reported an authentication loss, indefinitely. Such an account now settles: `isAuthenticated()` reads `true`, `fetch()` answers `[]` with an empty registry, and no sign-in is attempted. The situation is stated once per episode, not once per poll, and the expected `404` is no longer filed as an API failure — a `404` from any other endpoint is classified exactly as before. Polling continues, so a home created later is picked up on its own.
 
 ### Added
@@ -603,6 +613,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[52.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v52.0.0...v52.0.1
 [52.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v51.0.1...v52.0.0
 [51.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v51.0.0...v51.0.1
 [51.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v50.0.0...v51.0.0
