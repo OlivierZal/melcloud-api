@@ -254,6 +254,28 @@ describe('protection read — level fallback', () => {
     expect(tableNamesOf(getFrostProtection)).toStrictEqual(['DeviceLocation'])
   })
 
+  it('caches the discovered level: a second read never retries the refused zone', async () => {
+    // The flag is rewritten on every SUCCESSFUL read (zone getter says
+    // true, device getter false), so the fallback runs once per facade
+    // lifetime — a transient failure flips nothing, only a success at
+    // the other level proves where the truth lives.
+    const getFrostProtection = vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockResolvedValueOnce(err({ kind: 'server', status: 401 }))
+      .mockResolvedValue(
+        ok(classicFrostProtectionResponse({ FPDefined: true })),
+      )
+    const facade = buildFallbackFacade(getFrostProtection)
+    await facade.getFrostProtection()
+    await facade.getFrostProtection()
+
+    expect(tableNamesOf(getFrostProtection)).toStrictEqual([
+      'ClassicBuilding',
+      'DeviceLocation',
+      'DeviceLocation',
+    ])
+  })
+
   it('surfaces the failure when both levels refuse', async () => {
     const getFrostProtection = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()
