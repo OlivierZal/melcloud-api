@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [53.1.1] - 2026-08-28
+
+### Fixed
+
+- **The level fallback of the protection and holiday reads is one-way again.** 52.0.2 restored the zone→device fallback but added a symmetric device→zone fallback for `FPDefined`/`HMDefined` `false` buildings that nothing motivated and that could actively lie: a zone-level answer for a building the flag excludes reads as "never configured" (`ok(null)`), so falling back there would mask a real device-level failure with a wrong answer. A `false` flag now reads the device level only, kernel-pinned alongside the restored direction. Caught in owner review of the 52.0.2 diff.
+
 ## [53.1.0] - 2026-08-27
 
 ### Changed
@@ -646,6 +652,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[53.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v53.1.0...v53.1.1
 [53.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v53.0.0...v53.1.0
 [53.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v52.0.2...v53.0.0
 [52.0.2]: https://github.com/OlivierZal/melcloud-api/compare/v52.0.1...v52.0.2

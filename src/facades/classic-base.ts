@@ -90,25 +90,27 @@ const toHolidayModeState = (
     : null
 
 // Settings can be defined at zone or device level, and the wire's
-// `FPDefined`/`HMDefined` are DECLARATIONS, not guarantees: a level
-// they promise can still refuse the read (measured on a shared
-// building, 2026-08-26 — zone-level `GetSettings` answers 401 while
-// the session is valid). So the flag only orders the attempts (an
-// unknown flag reads as zone-first), and a failed first read always
-// tries the other level once — the original 2024 try/catch design,
-// restored after a 2026-03 refactor had gated the fallback on the
-// flag and silently disabled it wherever the flag was known.
+// `FPDefined`/`HMDefined` are DECLARATIONS, not guarantees: a promised
+// zone level can still refuse the read (measured on a shared building,
+// 2026-08-26 — zone-level `GetSettings` answers 401 while the session
+// is valid). A `true` or unknown flag therefore reads zone-first with
+// a device-level fallback on failure — the original 2024 try/catch
+// design, restored after a 2026-03 refactor had gated it on the flag
+// being unknown. The `false` side carries NO mirror fallback, on two
+// grounds: no device-level refusal has ever been observed, and a zone
+// answer for a building the flag excludes reads as "never configured"
+// (`ok(null)`) — masking a real device-level failure with a wrong
+// answer is worse than surfacing it.
 const getWithZoneFallback = async <TResult>(
   isAtZoneLevel: boolean | null,
   zoneGetter: () => Promise<Result<TResult>>,
   deviceGetter: () => Promise<Result<TResult>>,
 ): Promise<Result<TResult>> => {
-  const [first, second] =
-    isAtZoneLevel === false
-      ? [deviceGetter, zoneGetter]
-      : [zoneGetter, deviceGetter]
-  const firstResult = await first()
-  return firstResult.ok ? firstResult : second()
+  if (isAtZoneLevel === false) {
+    return deviceGetter()
+  }
+  const zoneResult = await zoneGetter()
+  return zoneResult.ok ? zoneResult : deviceGetter()
 }
 
 // Mutation prep paths (`#getFrostProtectionLocation`,
