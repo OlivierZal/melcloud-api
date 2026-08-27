@@ -149,6 +149,16 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   the ONE vocabulary — `owneremail` is there because the Classic list
   payload carries the account address on every device of every
   successful sync, the single entry that blanks a routine 200.
+- `FPDefined`/`HMDefined` are DECLARATIONS, not guarantees: MELCloud
+  can refuse the read at the level the flag promises (measured
+  2026-08-26 — a shared building's zone-level `GetSettings` answers
+  `401` on a valid session). The protection/holiday reads therefore
+  treat the flag as an ORDER over the two levels, never as a gate on
+  the fallback: a failed first read tries the other level once. That
+  is the original 2024 design; a 2026-03 refactor silently gated the
+  fallback on the flag and shipped five months of dead fallback under
+  a comment claiming otherwise — both contract kernels now pin the
+  clause. Writes keep branching on the flag (the wire's own addressing).
 - Setpoint increments: both Home facades expose a derived
   `temperatureStep` (ATA from `hasHalfDegreeIncrements`, ATW from the
   FTC's own `temperatureIncrement` declaration — the direct field wins

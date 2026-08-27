@@ -5,7 +5,7 @@ import type { ProtectionState } from '../../src/protection.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
-import { ok } from '../../src/types/index.ts'
+import { err, ok } from '../../src/types/index.ts'
 import {
   classicAtaDevice,
   classicBuildingData,
@@ -174,5 +174,71 @@ describe('protectionState — Classic *Defined semantics', () => {
       ok: true,
       value: { isEnabled: false, max: 12, min: 6 },
     })
+  })
+})
+
+// The wire's `FPDefined` is a declaration, not a guarantee (measured
+// 2026-08-26: a shared building's zone-level GetSettings answers 401
+// while the session is valid). The flag ORDERS the two reads; a failed
+// first read tries the other level once — the clause a 2026-03
+// refactor silently dropped, restored and pinned here.
+const buildFallbackFacade = (
+  getFrostProtection: ClassicAPIAdapter['getFrostProtection'],
+): ClassicBuildingFacade => {
+  const registry = populatedClassicRegistry({
+    buildings: [classicBuildingData({ FPDefined: true })],
+    devices: [classicAtaDevice()],
+  })
+  return new ClassicBuildingFacade(
+    createMockClassicApi({ getFrostProtection }),
+    registry,
+    defined(registry.buildings.getById(1)),
+  )
+}
+
+const tableNamesOf = (
+  mocked: ReturnType<typeof vi.fn<ClassicAPIAdapter['getFrostProtection']>>,
+): string[] => mocked.mock.calls.map(([{ params }]) => params.tableName)
+
+describe('protection read — level fallback', () => {
+  it('falls back to the device level when the declared zone level refuses', async () => {
+    const getFrostProtection = vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockResolvedValueOnce(err({ kind: 'server', status: 401 }))
+      .mockResolvedValueOnce(
+        ok(classicFrostProtectionResponse({ FPDefined: true })),
+      )
+    const facade = buildFallbackFacade(getFrostProtection)
+
+    const result = await facade.getFrostProtection()
+
+    expect(result.ok).toBe(true)
+    expect(tableNamesOf(getFrostProtection)).toStrictEqual([
+      'ClassicBuilding',
+      'DeviceLocation',
+    ])
+  })
+
+  it('never issues a second read when the declared level answers', async () => {
+    const getFrostProtection = vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockResolvedValue(
+        ok(classicFrostProtectionResponse({ FPDefined: true })),
+      )
+    const facade = buildFallbackFacade(getFrostProtection)
+    await facade.getFrostProtection()
+
+    expect(tableNamesOf(getFrostProtection)).toStrictEqual(['ClassicBuilding'])
+  })
+
+  it('surfaces the failure when both levels refuse', async () => {
+    const getFrostProtection = vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockResolvedValue(err({ kind: 'server', status: 401 }))
+    const facade = buildFallbackFacade(getFrostProtection)
+
+    const result = await facade.getFrostProtection()
+
+    expect(result.ok).toBe(false)
   })
 })

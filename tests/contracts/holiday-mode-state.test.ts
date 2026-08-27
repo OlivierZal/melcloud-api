@@ -6,7 +6,7 @@ import type { HolidayModeState } from '../../src/holiday-mode.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
-import { ok } from '../../src/types/index.ts'
+import { err, ok } from '../../src/types/index.ts'
 import {
   classicAtaDevice,
   classicBuildingData,
@@ -208,5 +208,36 @@ describe('holidayModeState — Classic-only wire shapes', () => {
         startDate: '2026-06-01T09:00:00',
       },
     })
+  })
+})
+
+// Same clause as the protection kernel's, held on THIS method too: the
+// level fallback lives in one shared helper today, and it is exactly a
+// refactor splitting such helpers that dropped the fallback in 2026-03
+// — each read pins its own guard.
+describe('holiday read — level fallback', () => {
+  it('falls back to the device level when the declared zone level refuses', async () => {
+    const registry = populatedClassicRegistry({
+      buildings: [classicBuildingData({ HMDefined: true })],
+      devices: [classicAtaDevice()],
+    })
+    const getHolidayMode = vi
+      .fn<ClassicAPIAdapter['getHolidayMode']>()
+      .mockResolvedValueOnce(err({ kind: 'server', status: 401 }))
+      .mockResolvedValueOnce(
+        ok(classicHolidayModeResponse({ HMDefined: true })),
+      )
+    const facade = new ClassicBuildingFacade(
+      createMockClassicApi({ getHolidayMode }),
+      registry,
+      defined(registry.buildings.getById(1)),
+    )
+
+    const result = await facade.getHolidayMode()
+
+    expect(result.ok).toBe(true)
+    expect(
+      getHolidayMode.mock.calls.map(([{ params }]) => params.tableName),
+    ).toStrictEqual(['ClassicBuilding', 'DeviceLocation'])
   })
 })
