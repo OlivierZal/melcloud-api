@@ -1,25 +1,9 @@
-/**
- * Shared time unit constants. Single source of truth so callers don't
- * recompute (or worse, redefine with subtly different names like
- * `MILLISECONDS_IN_SECOND` vs `MILLISECONDS_PER_SECOND`).
- */
-
-/**
- * Number of milliseconds in one minute.
- */
-export const MS_PER_MINUTE = 60_000
-/**
- * Number of milliseconds in one day.
- */
-export const MS_PER_DAY = 86_400_000
-
-const SESSION_REFRESH_AHEAD_MINUTES = 5
-
-/**
- * Forward window applied by both Classic and Home `needsSessionRefresh`
- * hooks: trigger the session refresh when the persisted token is within
- * this many ms of its real expiry, so no request pays the full re-auth
- * round-trip on its critical path.
- */
-export const SESSION_REFRESH_AHEAD_MS: number =
-  SESSION_REFRESH_AHEAD_MINUTES * MS_PER_MINUTE
+// Thin re-export of @olivierzal/api-core (the constants formerly
+// duplicated here as heatzy-api's near-twin; the core carries the
+// union of both repos' sets).
+export {
+  MS_PER_DAY,
+  MS_PER_MINUTE,
+  MS_PER_SECOND,
+  SESSION_REFRESH_AHEAD_MS,
+} from '@olivierzal/api-core/time-units'

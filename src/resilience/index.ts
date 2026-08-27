@@ -1,5 +1,8 @@
 /**
- * Resilience primitives shared by both API clients.
+ * Resilience primitives — the mechanisms live in `@olivierzal/api-core`
+ * (shared with heatzy-api); this barrel re-exports them so internal
+ * import paths stay stable, and keeps the composition contract that is
+ * THIS SDK's:
  *
  * Composition contract (how these pieces interact inside
  * `BaseAPI.request`):

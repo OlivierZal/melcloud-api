@@ -20,10 +20,12 @@ jobs:
     uses: OlivierZal/configs/.github/workflows/reusable-claude-dependabot-fix.yml@dd730be20712cee23726f2f9da9403d9f79694e2 # v4.2.1
     with:
       repo-guidance: >-
-        Twin discipline: several source and test files here are
-        byte-identical twins of heatzy-api's. If your fix touches one,
-        say so in a PR comment so the sibling receives the same change —
-        the twins must never drift silently.
+        Mechanism boundary: the former heatzy-api twins now live in
+        @olivierzal/api-core (exact pin) and this repo only re-exports
+        them with its own vocabulary seated. Never patch a mechanism
+        locally — a fix belongs in api-core, released and adopted as a
+        pin bump; if your fix wants to touch a thin re-export module,
+        say so in a PR comment instead.
 
         Two channels, one version: when the bump is
         `@olivierzal/configs`, move the reusable-workflow refs under

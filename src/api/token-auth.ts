@@ -5,6 +5,7 @@ import { CookieJar } from 'tough-cookie'
 import type { HomeTokenResponse } from '../types/index.ts'
 import { AuthenticationError } from '../errors/index.ts'
 import { type HttpResponse, HttpError, readHeaders } from '../http/index.ts'
+import { redaction } from '../observability/context.ts'
 import {
   HomeParResponseSchema,
   HomeTokenResponseSchema,
@@ -94,6 +95,10 @@ const fetchPostForm = async ({
       `Request to ${url} failed with status ${String(response.status)}`,
       {
         config: { method: 'POST', url },
+        // The MELCloud vocabulary must be seated explicitly on a direct
+        // construction — the subclassed HttpClient seats it for its own
+        // throws, but this flow drives fetch() itself.
+        redaction,
         response: {
           data: text,
           headers: responseHeaders,
