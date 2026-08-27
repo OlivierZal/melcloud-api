@@ -231,6 +231,29 @@ describe('protection read — level fallback', () => {
     expect(tableNamesOf(getFrostProtection)).toStrictEqual(['ClassicBuilding'])
   })
 
+  it('never consults the zone level when the flag excludes it', async () => {
+    // A zone answer for a building the flag excludes reads as "never
+    // configured" — falling back there would mask a real device-level
+    // failure with a wrong null.
+    const registry = populatedClassicRegistry({
+      buildings: [classicBuildingData({ FPDefined: false })],
+      devices: [classicAtaDevice()],
+    })
+    const getFrostProtection = vi
+      .fn<ClassicAPIAdapter['getFrostProtection']>()
+      .mockResolvedValue(err({ kind: 'server', status: 401 }))
+    const facade = new ClassicBuildingFacade(
+      createMockClassicApi({ getFrostProtection }),
+      registry,
+      defined(registry.buildings.getById(1)),
+    )
+
+    const result = await facade.getFrostProtection()
+
+    expect(result.ok).toBe(false)
+    expect(tableNamesOf(getFrostProtection)).toStrictEqual(['DeviceLocation'])
+  })
+
   it('surfaces the failure when both levels refuse', async () => {
     const getFrostProtection = vi
       .fn<ClassicAPIAdapter['getFrostProtection']>()

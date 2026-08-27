@@ -150,15 +150,20 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   payload carries the account address on every device of every
   successful sync, the single entry that blanks a routine 200.
 - `FPDefined`/`HMDefined` are DECLARATIONS, not guarantees: MELCloud
-  can refuse the read at the level the flag promises (measured
+  can refuse the zone-level read the flag promises (measured
   2026-08-26 — a shared building's zone-level `GetSettings` answers
-  `401` on a valid session). The protection/holiday reads therefore
-  treat the flag as an ORDER over the two levels, never as a gate on
-  the fallback: a failed first read tries the other level once. That
-  is the original 2024 design; a 2026-03 refactor silently gated the
-  fallback on the flag and shipped five months of dead fallback under
-  a comment claiming otherwise — both contract kernels now pin the
-  clause. Writes keep branching on the flag (the wire's own addressing).
+  `401` on a valid session). The protection/holiday reads are
+  therefore zone-first with a device-level fallback on failure
+  whenever the flag is `true` or unknown — the original 2024 design; a
+  2026-03 refactor silently gated the fallback on the flag being
+  unknown and shipped five months of dead fallback under a comment
+  claiming otherwise. The fallback is deliberately ONE-WAY: a `false`
+  flag reads the device level only, because no device-level refusal
+  has ever been observed and a zone answer for a building the flag
+  excludes reads as "never configured" (`ok(null)`) — a wrong answer
+  masking a real failure (review catch, 2026-08-28). All three
+  clauses are kernel-pinned. Writes keep branching on the flag (the
+  wire's own addressing).
 - Timestamp normalization is library-owned: `ErrorLogEntry.atEpochMs`
   (+ its `clearedAtEpochMs` twin) and
   `AtwHotWaterState.lastLegionellaActivationEpochMs` carry the epoch
