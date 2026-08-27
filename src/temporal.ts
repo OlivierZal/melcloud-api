@@ -1,22 +1,7 @@
-// Byte-identical twin shared by melcloud-api and heatzy-api. The
-// deferred `api-core` extraction leaves no mechanism to link them:
-// the two repos have no dependency, so edit both or neither.
-// Re-export of `temporal-polyfill` as the single Temporal entry point
-// for the rest of the codebase. Node 22 (the minimum supported runtime)
-// does not yet ship native `Temporal`; the polyfill stays bundled
-// until Node 22 reaches EOL (April 2027), at which point this module
-// and the dependency can be replaced with `globalThis.Temporal`.
-// The polyfill's default entrypoint delegates to the native `Temporal`
-// when the runtime provides one, so newer runtimes get the native
-// implementation through this same import.
-//
-// The polyfill's `Intl` export is re-exported too: it is the
-// Temporal-aware `Intl.DateTimeFormat` that formats Temporal objects
-// (e.g. `PlainDate`) directly, which the runtime's own `Intl` cannot do
-// until it ships the ECMA-402 Temporal integration.
-//
-// Re-exporting via `export { ... }` preserves both the value and the
-// type namespace, so consumers can write `Temporal.Instant.from(...)`
-// and `function f(x: Temporal.Instant)` from a single import.
-
-export { Intl, Temporal } from 'temporal-polyfill'
+// Thin re-export of @olivierzal/api-core's temporal entry point
+// (formerly heatzy-api's byte-identical twin): the single Temporal
+// entry for the whole family, so exactly one polyfill copy is loaded
+// and core-built Temporal values are `instanceof`-compatible with this
+// SDK's. The subpath import (never the core's root barrel) keeps this
+// module browser-bundleable — it sits in the webview floor closure.
+export { Intl, Temporal } from '@olivierzal/api-core/temporal'

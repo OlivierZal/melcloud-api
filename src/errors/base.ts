@@ -1,29 +1,5 @@
-// Byte-identical twin shared by melcloud-api and heatzy-api. The
-// deferred `api-core` extraction leaves no mechanism to link them:
-// the two repos have no dependency, so edit both or neither.
-/**
- * Base class for all errors thrown by this SDK.
- * @category Errors
- */
-export abstract class APIError extends Error {
-  public override readonly name: string = 'APIError'
-
-  /**
-   * Builds an SDK error.
-   * @param message - Human-readable error description.
-   * @param options - Optional bag carrying the underlying cause.
-   * @param options.cause - Original error that triggered this one.
-   */
-  public constructor(message: string, options?: { cause?: unknown }) {
-    super(message, options)
-  }
-}
-
-/**
- * User-defined type guard for {@link APIError} and its subclasses.
- * @param error - The value to test.
- * @returns `true` if `error` is a {@link APIError} instance.
- * @category Errors
- */
-export const isAPIError = (error: unknown): error is APIError =>
-  error instanceof APIError
+// Thin re-export of @olivierzal/api-core's error base (formerly
+// heatzy-api's byte-identical twin): ONE `APIError` class family wide,
+// so `isAPIError` holds across this SDK's protocol errors and the
+// core's `RateLimitError` alike.
+export { APIError, isAPIError } from '@olivierzal/api-core'

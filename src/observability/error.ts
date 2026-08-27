@@ -1,36 +1,20 @@
-import { isHttpError } from '../http/index.ts'
-import type { APICallLogData } from './context.ts'
-import { APICallRequestData } from './request.ts'
-import { APICallResponseData } from './response.ts'
+// Thin binding over @olivierzal/api-core: same factory, the MELCloud
+// vocabulary seated once so no call site can forget it.
+import {
+  type APICallLogDataWithErrorMessage,
+  createAPICallErrorData as coreCreateAPICallErrorData,
+} from '@olivierzal/api-core'
+
+import { redaction } from './context.ts'
 
 /**
- * Log data extended with the error message from a failed API call.
- */
-interface APICallLogDataWithErrorMessage extends APICallLogData {
-  readonly errorMessage: string
-}
-
-const withErrorMessage = (
-  data: APICallLogData,
-  message: string,
-): APICallLogDataWithErrorMessage =>
-  Object.assign(data, { errorMessage: message })
-
-/**
- * Create structured error log data from a failed HTTP request.
- * Uses response data when the error carries one, otherwise falls back to
- * request-only data.
+ * Create structured error log data from a failed HTTP request,
+ * redacted through the MELCloud vocabulary. Uses response data when
+ * the error carries one, otherwise falls back to request-only data.
  * @param error - The error thrown by the HTTP client.
  * @returns Structured log data including the error message.
  */
 export const createAPICallErrorData = (
   error: Error,
-): APICallLogDataWithErrorMessage => {
-  if (isHttpError(error)) {
-    return withErrorMessage(
-      new APICallResponseData(error.response, error.config),
-      error.message,
-    )
-  }
-  return withErrorMessage(new APICallRequestData(), error.message)
-}
+): APICallLogDataWithErrorMessage =>
+  coreCreateAPICallErrorData(error, redaction)

@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [53.1.0] - 2026-08-27
+
+### Changed
+
+- **The API-client mechanisms are now imported from `@olivierzal/api-core` 1.0.0 (exact pin) instead of living here.** The HTTP client and `HttpError` (whole-snapshot redaction seated in the constructor), the redaction engine, the observability shells and `LifecycleEmitter`, the resilience primitives, `SyncManager`, the temporal entry point, the time units and the `APIError` base become thin re-exports of the shared package. These modules used to be heatzy-api's byte-identical twins ("edit both or neither"); the 2026-08-21 redaction fix took four days to cross to the twin, which expired that discipline — a mechanism now changes once, in api-core, and arrives everywhere as a pin bump. This repo keeps only its protocol layer: the MELCloud sensitive-key vocabulary (`src/observability/context.ts` builds the one bound redaction engine and injects it into every seat), the wire types, the schemas and the facades. Zero public-surface change: the export set is name-for-name identical before and after (283 = 283 symbols across the subpaths), so no consumer code changes.
+
+### Added
+
+- **`HttpStatus.BadRequest`** (400) — present in api-core's status vocabulary, now re-exported here.
+- **An optional `zone` parameter on `isSessionExpired`** — offset-less expiry strings can be interpreted in a supplied IANA timezone instead of the runtime's.
+- **`RetryGuard` implements `Disposable`** — usable with `using` for scope-bound release.
+
 ## [53.0.0] - 2026-08-27
 
 ### Changed
@@ -634,6 +646,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[53.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v53.0.0...v53.1.0
 [53.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v52.0.2...v53.0.0
 [52.0.2]: https://github.com/OlivierZal/melcloud-api/compare/v52.0.1...v52.0.2
 [52.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v52.0.0...v52.0.1

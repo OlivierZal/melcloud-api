@@ -1,21 +1,22 @@
-// Byte-identical twin shared by melcloud-api and heatzy-api. The
-// deferred `api-core` extraction leaves no mechanism to link them:
-// the two repos have no dependency, so edit both or neither.
-import { type LoggableRequestConfig, APICallLogData } from './context.ts'
+// Thin binding over @olivierzal/api-core: same class, the MELCloud
+// vocabulary seated once so no call site can forget it.
+import {
+  type LoggableRequestConfig,
+  APICallRequestData as CoreAPICallRequestData,
+} from '@olivierzal/api-core'
+
+import { redaction } from './context.ts'
 
 /**
- * Structured log data for an outgoing API request.
+ * Structured log data for an outgoing API request, redacted through
+ * the MELCloud vocabulary.
  */
-export class APICallRequestData extends APICallLogData {
-  public override readonly dataType = 'API request'
-
-  public readonly headers: unknown
-
-  public readonly requestData: unknown
-
+export class APICallRequestData extends CoreAPICallRequestData {
+  /**
+   * Captures an outgoing request into a loggable snapshot.
+   * @param config - Request configuration to snapshot.
+   */
   public constructor(config?: LoggableRequestConfig) {
-    super(config)
-    this.headers = config?.headers
-    this.requestData = config?.data
+    super(config, redaction)
   }
 }

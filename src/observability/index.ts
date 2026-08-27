@@ -1,6 +1,7 @@
-// Byte-identical twin shared by melcloud-api and heatzy-api. The
-// deferred `api-core` extraction leaves no mechanism to link them:
-// the two repos have no dependency, so edit both or neither.
+// Thin vocabulary layer over @olivierzal/api-core (which now owns the
+// mechanism this directory used to carry as heatzy-api's byte-identical
+// twin): the MELCloud sensitive-key set lives in `context.ts`, and the
+// shells re-exported here arrive pre-bound to it.
 export type { LoggableRequestConfig } from './context.ts'
 
 export { createAPICallErrorData } from './error.ts'

@@ -184,6 +184,28 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   step declaration — reading it as a step would be wrong, and its
   absence from the public surface remains a verdict, not a gap.
 
+## Mechanism boundary (@olivierzal/api-core)
+
+The API-client MECHANISMS live in `@olivierzal/api-core` (exact pin,
+production dependency): the HTTP client and `HttpError` (whole-snapshot
+redaction seated in the constructor), the redaction engine, the
+observability shells and `LifecycleEmitter`, the resilience primitives,
+`SyncManager`, the temporal entry point, the time units and the
+`APIError` base. Those modules used to be heatzy-api's byte-identical
+twins ("edit both or neither"); the 2026-08-21 leak — the redaction fix
+took four days to cross to the twin — expired that discipline, and the
+extraction replaced it. This repo keeps ONLY its protocol layer: the
+sensitive-key VOCABULARY (`src/observability/context.ts` builds the one
+bound `redaction` engine; every seat — the `HttpClient` subclass, the
+`APICall*` shells, token-auth's direct `HttpError` — receives it), the
+wire types, the schemas, the facades, and thin re-export modules that
+keep internal import paths stable. A mechanism change happens in
+api-core and arrives here as a release + exact-pin bump PR; never
+re-implement one locally. The moved mechanism test suites live in
+api-core too — this repo's `observability.test.ts`/`http-client.test.ts`
+are thin vocabulary/wiring suites pinning what is OURS: the key set and
+the fact that every shell arrives pre-bound to it.
+
 ## Tooling boundary (@olivierzal/configs)
 
 The shared tooling lives in `@olivierzal/configs` (exact pin): the
