@@ -1,5 +1,14 @@
 export type { AtwHotWaterState, AtwZoneState } from './atw-state.ts'
 export type {
+  EnergyReportTarget,
+  FullReportSurface,
+  HourlyTemperaturesReportTarget,
+  OperationModesReportTarget,
+  ReportSurface,
+  SignalStrengthReportTarget,
+  TemperaturesReportTarget,
+} from './report.ts'
+export type {
   ApiRequestError,
   ClassicAreaData,
   ClassicAreaDataAny,

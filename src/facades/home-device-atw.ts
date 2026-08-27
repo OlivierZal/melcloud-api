@@ -142,6 +142,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
       isEcoHotWater: null,
       isForcedMode: this.forcedHotWaterMode,
       isProhibited: this.prohibitHotWater,
+      lastLegionellaActivationEpochMs: null,
       maxTankTemperature: null,
       operationalState: this.hotWaterOperationalState,
       setTankWaterTemperature: this.setTankWaterTemperature,

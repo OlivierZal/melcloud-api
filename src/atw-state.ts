@@ -31,6 +31,19 @@ export interface AtwHotWaterState {
    */
   readonly isProhibited: boolean
   /**
+   * Instant of the last legionella-prevention cycle, in epoch
+   * milliseconds; `null` where the wire cannot say — Home has no
+   * counterpart in its `/context` settings, and Classic reads `null`
+   * when no cycle was ever recorded (the year-1 sentinel) or the wire
+   * value cannot be parsed. The Classic stamp is BUILDING-local wall
+   * clock anchored in the client's configured timezone
+   * (`ClassicAPIConfig.timezone`, the host's zone when unset): exact
+   * only insofar as that timezone is the building's — a building in
+   * another zone skews the instant by the zone delta, so day-scale
+   * reasoning stays safe where sub-hour reasoning does not.
+   */
+  readonly lastLegionellaActivationEpochMs: number | null
+  /**
    * Reported tank maximum, in °C; `null` where the wire cannot say
    * (Home only advertises the setpoint clamp bound, a different thing).
    */

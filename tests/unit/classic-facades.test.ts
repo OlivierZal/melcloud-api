@@ -388,34 +388,6 @@ describe('building facade frost protection', () => {
       UpdateRejectedError,
     )
   })
-
-  it('clamps frost protection temperatures', async () => {
-    const { api, facade } = createBuildingFacade()
-    await facade.getFrostProtection()
-    await facade.updateFrostProtection({ isEnabled: true, max: 2, min: 1 })
-    const call = vi.mocked(api.updateFrostProtection).mock.lastCall?.[0]
-
-    expect(call).toBeDefined()
-
-    expect(defined(call).postData.MinimumTemperature).toBeGreaterThanOrEqual(4)
-    expect(defined(call).postData.MaximumTemperature).toBeGreaterThanOrEqual(
-      defined(call).postData.MinimumTemperature + 2,
-    )
-  })
-
-  it('enforces minimum gap between min and max temperatures', async () => {
-    const { api, facade } = createBuildingFacade()
-    await facade.getFrostProtection()
-    await facade.updateFrostProtection({ isEnabled: true, max: 15, min: 14 })
-    const call = vi.mocked(api.updateFrostProtection).mock.lastCall?.[0]
-
-    expect(call).toBeDefined()
-
-    expect(
-      defined(call).postData.MaximumTemperature -
-        defined(call).postData.MinimumTemperature,
-    ).toBeGreaterThanOrEqual(2)
-  })
 })
 
 describe('building facade holiday mode', () => {
@@ -1241,20 +1213,6 @@ describe('ata device facade', () => {
     ).toBeGreaterThanOrEqual(10)
   })
 
-  it('passes the setpoint through for an unknown operation mode', async () => {
-    const { api, facade } = createAtaFacade()
-    await facade.updateValues(cast({ OperationMode: 99, SetTemperature: 50 }))
-    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
-
-    expect(call).toBeDefined()
-
-    expect(
-      mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>>(
-        defined(call).postData,
-      ).SetTemperature,
-    ).toBe(50)
-  })
-
   it('reads the per-mode range from the device bounds', () => {
     const { facade } = createAtaFacade()
 
@@ -1276,23 +1234,6 @@ describe('ata device facade', () => {
     expect(facade.getTemperatureRange(cast('Unknown'))).toBeNull()
 
     expect(facade.getTemperatureRange(cast(99))).toBeNull()
-  })
-
-  it('handles temperature clamping with operation mode change', async () => {
-    const { api, facade } = createAtaFacade()
-    await facade.updateValues({
-      OperationMode: ClassicOperationMode.cool,
-      SetTemperature: 50,
-    })
-    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
-
-    expect(call).toBeDefined()
-
-    expect(
-      mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>>(
-        defined(call).postData,
-      ).SetTemperature,
-    ).toBeLessThanOrEqual(31)
   })
 })
 

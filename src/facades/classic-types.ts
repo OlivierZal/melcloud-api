@@ -63,6 +63,18 @@ export interface ClassicDeviceAtaFacade extends ClassicDeviceFacade<
    */
   readonly getGroup: () => Promise<Result<ClassicGroupState>>
   /**
+   * Member operation modes in the one group vocabulary
+   * (Classic-numbered), treating the device as a group of one — no wire
+   * call.
+   * @param options - Member filter.
+   * @param options.poweredOnly - `true` answers empty when the unit is
+   * powered off.
+   * @returns The device's own mode, alone or absent.
+   */
+  readonly getMemberOperationModes: (options: {
+    poweredOnly: boolean
+  }) => ClassicOperationMode[]
+  /**
    * Setpoint bounds enforced for an operation mode — the cross-dialect
    * read: a caller needs no knowledge of which API backs the device.
    * @param mode - Operation mode to resolve; defaults to the active one.
@@ -283,6 +295,17 @@ export interface ClassicZoneFacade extends ClassicFacade {
    * Get the current group state for all ATA devices.
    */
   readonly getGroup: () => Promise<Result<ClassicGroupState>>
+  /**
+   * Member operation modes in the one group vocabulary
+   * (Classic-numbered), projected from the ATA members' synced states —
+   * no wire call.
+   * @param options - Member filter.
+   * @param options.poweredOnly - `true` keeps only powered-on members.
+   * @returns One mode per kept ATA member, in member order.
+   */
+  readonly getMemberOperationModes: (options: {
+    poweredOnly: boolean
+  }) => ClassicOperationMode[]
   /**
    * Update the group state for all ATA devices.
    */

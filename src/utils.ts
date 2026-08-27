@@ -130,6 +130,68 @@ export const toZonedWallClock = (utc: string, timeZone?: string): string => {
   }
 }
 
+// Both MELCloud wires stamp uninitialized datetimes with year 1, in
+// either date dialect: wall clock (`0001-01-01T00:00:00`), the instant
+// spelling (`0001-01-01T00:00:00Z`, live payload 2026-07-18) which
+// `PlainDateTime.from` rejects — hence the two-dialect parse — or an
+// offset spelling (`0001-01-01T00:00:00+01:00`) whose UTC conversion
+// lands in year 0.
+const UNINITIALIZED_YEAR = 1
+
+const instantOf = (iso: string): Temporal.Instant | null => {
+  try {
+    return Temporal.Instant.from(iso)
+  } catch {
+    return null
+  }
+}
+
+const plainDateTimeOf = (iso: string): Temporal.PlainDateTime | null => {
+  try {
+    return Temporal.PlainDateTime.from(iso)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Whether a wire datetime is MELCloud's year-1 "never happened" marker,
+ * in either date dialect and any offset spelling: the year is judged at
+ * or below 1 on the UTC conversion, because an offset-shifted year-1
+ * stamp lands in year 0 — a year no real MELCloud timestamp can reach.
+ * An unparseable value is NOT the marker — the caller decides what to
+ * do with garbage, this only recognizes the sentinel.
+ * @param iso - ISO 8601 datetime from the wire.
+ * @returns `true` for the year-1 sentinel, `false` otherwise.
+ */
+export const isUninitializedWireDate = (iso: string): boolean => {
+  const year =
+    instantOf(iso)?.toZonedDateTimeISO('UTC').year ?? plainDateTimeOf(iso)?.year
+  return year !== undefined && year <= UNINITIALIZED_YEAR
+}
+
+/**
+ * Projects a wire datetime onto its epoch instant, in milliseconds. An
+ * offset-carrying value (`Z`, `+HH:MM`) is the instant it already
+ * spells; a zoneless value is wall clock anchored in `timeZone`,
+ * resolved per Temporal's default `'compatible'` disambiguation when a
+ * DST transition skips or repeats it — a skipped wall clock moves
+ * forward by the gap, a repeated one takes the earlier offset. An
+ * unparseable value reads `null` — the library's "cannot say" marker,
+ * chosen over `NaN` because these instants cross JSON boundaries and
+ * `JSON.stringify` silently rewrites `NaN` to `null`; saying `null`
+ * ourselves keeps both sides of the boundary identical.
+ * @param value - ISO 8601 datetime from the wire.
+ * @param timeZone - IANA timezone anchoring a zoneless value; the
+ * host's zone when omitted.
+ * @returns The epoch instant in milliseconds, `null` when unparseable.
+ */
+export const toEpochMs = (value: string, timeZone?: string): number | null =>
+  instantOf(value)?.epochMilliseconds ??
+  plainDateTimeOf(value)?.toZonedDateTime(timeZone ?? Temporal.Now.timeZoneId())
+    .epochMilliseconds ??
+  null
+
 /**
  * Factory for a type guard that narrows a key to the own keys of `record`.
  * Uses `Object.hasOwn` so prototype-chain pollution cannot produce false positives.

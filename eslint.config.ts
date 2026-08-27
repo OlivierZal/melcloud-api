@@ -15,6 +15,7 @@ const WEBVIEW_FLOOR_FILES = [
   'src/error-log.ts',
   'src/holiday-mode.ts',
   'src/protection.ts',
+  'src/report.ts',
   'src/temperature-range.ts',
   'src/temporal.ts',
   'src/utils.ts',

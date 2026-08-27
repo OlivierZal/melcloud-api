@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "52.0.2",
+  "version": "53.0.0",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",
@@ -55,6 +55,10 @@
     "./protection": {
       "types": "./dist/protection.d.ts",
       "default": "./dist/protection.js"
+    },
+    "./report": {
+      "types": "./dist/report.d.ts",
+      "default": "./dist/report.js"
     },
     "./temperature-range": {
       "types": "./dist/temperature-range.d.ts",

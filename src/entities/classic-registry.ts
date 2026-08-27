@@ -1,4 +1,4 @@
-import type { ClassicDeviceType } from '../constants.ts'
+import { ClassicDeviceType } from '../constants.ts'
 import {
   type ClassicAreaDataAny,
   type ClassicAreaID,
@@ -130,6 +130,15 @@ const getDeviceLevel = (
   return areaId !== null || floorId !== null ? level.grandchild : level.child
 }
 
+// The zone node's device-type tag: the registry knows each device's
+// wire type, so the flat leaves carry it instead of making every
+// consumer resolve the model behind the id.
+const deviceZoneTypes = {
+  [ClassicDeviceType.Ata]: 'ata',
+  [ClassicDeviceType.Atw]: 'atw',
+  [ClassicDeviceType.Erv]: 'erv',
+} as const satisfies Record<ClassicDeviceType, ClassicDeviceZone['deviceType']>
+
 const buildDeviceZones = (
   devices: ClassicDeviceAny[],
   type?: ClassicDeviceType,
@@ -139,7 +148,8 @@ const buildDeviceZones = (
       ? devices
       : devices.filter(({ type: deviceType }) => deviceType === type)
   return filtered
-    .map(({ areaId, floorId, id, name }) => ({
+    .map(({ areaId, floorId, id, name, type: deviceType }) => ({
+      deviceType: deviceZoneTypes[deviceType],
       id,
       level: getDeviceLevel(areaId, floorId),
       model: 'devices' as const,

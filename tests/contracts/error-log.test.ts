@@ -6,6 +6,7 @@ import type { ErrorLogEntry } from '../../src/error-log.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
+import { Temporal } from '../../src/temporal.ts'
 import { type Result, ok } from '../../src/types/index.ts'
 import {
   classicAtaDevice,
@@ -21,25 +22,36 @@ import {
 } from '../home-fixtures.ts'
 
 // One neutral entry shape on every dialect: `at` and `deviceId` always,
-// `message` when the wire carries a text, `code`/`clearedAt` only where
-// the wire has them. The Classic page wrapper (chained window bounds —
-// pinned in classic-api.test.ts with the wire fixtures) and the Home
-// bare list are dialect mechanics, not the contract. The Classic leg
-// mocks its adapter at the same seam the sibling kernels do; the wire
-// projection behind it is classic-api.test.ts's job.
+// `atEpochMs` the normalized instant of `at` (each dialect anchors its
+// own wall-clock discipline at its boundary), `message` when the wire
+// carries a text, `code`/`clearedAt` only where the wire has them. The
+// Classic page wrapper (chained window bounds — pinned in
+// classic-api.test.ts with the wire fixtures) and the Home bare list
+// are dialect mechanics, not the contract. The Classic leg mocks its
+// adapter at the same seam the sibling kernels do; the wire projection
+// behind it (timezone anchoring included) is classic-api.test.ts's job.
+
+// The one instant every leg encodes in its own dialect: the Home legs
+// as the UTC wall clock the Home wire speaks, the Classic leg as the
+// adapter's already-projected pair.
+const AT_INSTANT_EPOCH_MS = Temporal.Instant.from(
+  '2026-03-01T06:00:00Z',
+).epochMilliseconds
+
 const describeErrorLogContract = (
   name: string,
   read: () => Promise<Result<readonly ErrorLogEntry[]>>,
 ): void => {
   describe(`errorLog — ${name}`, () => {
     it('answers neutral entries with a timestamp and a device id', async () => {
-      expect.assertions(3)
+      expect.assertions(4)
 
       const entries = okValue(await read())
       const [entry] = entries
 
       expect(entries.length).toBeGreaterThan(0)
       expect(entry?.at).not.toBe('')
+      expect(entry?.atEpochMs).toBe(AT_INSTANT_EPOCH_MS)
       expect(entry?.deviceId).toBeDefined()
     })
   })
@@ -58,6 +70,7 @@ describeErrorLogContract('Classic ATA device', async () => {
           entries: [
             {
               at: '2026-03-01T06:00:00',
+              atEpochMs: AT_INSTANT_EPOCH_MS,
               deviceId: 1000,
               message: 'Fan speed abnormality',
             },
@@ -108,3 +121,33 @@ const homeErrorApi = (): HomeAPIAdapter =>
         ]),
       ),
   })
+
+// Only Home has a cleared stamp, and it must not reopen the
+// re-derivation gap `atEpochMs` closed: wherever `clearedAt` appears,
+// its UTC-anchored instant appears beside it.
+describe('errorLog — Home cleared stamp', () => {
+  it('pairs clearedAt with its UTC-anchored instant', async () => {
+    const facade = new HomeDeviceAtaFacade(
+      createMockHomeApi({
+        getErrorLog: vi
+          .fn<HomeAPIAdapter['getErrorLog']>()
+          .mockResolvedValue(
+            ok([
+              {
+                clearedTimestamp: '2026-03-02T08:00:00Z',
+                errorCode: 'E202',
+                errorReason: null,
+                timestamp: '2026-03-01T06:00:00Z',
+              },
+            ]),
+          ),
+      }),
+      homeDevice({ id: 'contract-errors-cleared' }),
+    )
+    const [entry] = okValue(await facade.getErrorLog())
+
+    expect(entry?.clearedAtEpochMs).toBe(
+      Temporal.Instant.from('2026-03-02T08:00:00Z').epochMilliseconds,
+    )
+  })
+})

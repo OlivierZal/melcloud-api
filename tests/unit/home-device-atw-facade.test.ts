@@ -456,7 +456,11 @@ describe('home device atw facade', () => {
       expect(value).toStrictEqual([
         {
           at: '2026-03-01T06:00:00Z',
+          atEpochMs: Temporal.Instant.from('2026-03-01T06:00:00Z')
+            .epochMilliseconds,
           clearedAt: '2026-03-02T08:00:00Z',
+          clearedAtEpochMs: Temporal.Instant.from('2026-03-02T08:00:00Z')
+            .epochMilliseconds,
           code: 'E9',
           deviceId: 'atw-1',
         },

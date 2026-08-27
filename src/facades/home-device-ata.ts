@@ -30,7 +30,11 @@ import {
 } from '../types/index.ts'
 import { clampToRange, resolved } from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
-import { toClassicAtaGroupState, toHomeAtaValues } from './home-ata-group.ts'
+import {
+  homeGroupMemberModes,
+  toClassicAtaGroupState,
+  toHomeAtaValues,
+} from './home-ata-group.ts'
 import { HomeBaseDeviceFacade } from './home-base-device.ts'
 import {
   resolveHomeReportWindow,
@@ -185,6 +189,23 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   public async getGroup(): Promise<Result<ClassicGroupState>> {
     const source = await resolved(this)
     return ok(toClassicAtaGroupState(source))
+  }
+
+  /**
+   * Member operation modes in the one group vocabulary, treating the
+   * device as a group of one — the same read every zone facade answers,
+   * projected through the operation-mode bijection with no wire call.
+   * @param options - Member filter.
+   * @param options.poweredOnly - `true` answers empty when the unit is
+   * powered off.
+   * @returns The device's own mode (Classic-numbered), alone or absent.
+   */
+  public getMemberOperationModes({
+    poweredOnly: isPoweredOnly,
+  }: {
+    poweredOnly: boolean
+  }): ClassicOperationMode[] {
+    return homeGroupMemberModes([this], isPoweredOnly)
   }
 
   /**

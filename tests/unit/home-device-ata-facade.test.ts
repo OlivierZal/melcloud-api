@@ -493,6 +493,8 @@ describe('home device ata facade', () => {
       expect(value).toStrictEqual([
         {
           at: '2026-03-01T06:00:00Z',
+          atEpochMs: Temporal.Instant.from('2026-03-01T06:00:00Z')
+            .epochMilliseconds,
           code: 'E202',
           deviceId: 'device-1',
           message: 'Communication error',
