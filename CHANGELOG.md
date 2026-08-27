@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [52.0.2] - 2026-08-27
+
+### Fixed
+
+- **The zone→device level fallback of the Classic protection and holiday reads is restored.** The wire's `FPDefined`/`HMDefined` are declarations, not guarantees — a level they promise can still refuse the read (observed again 2026-08-26: a shared building's zone-level `GetSettings` answers `401` while the session is valid, `ListDevices` succeeding the second before). The original 2024 design read the declared level and fell back to the other on ANY failure; the 2026-03 module-architecture refactor (#1415) silently gated that fallback on the flag being _unknown_, which disabled it everywhere the flag was known — buildings included — while the helper's comment kept claiming the old semantics. The flag now orders the two attempts and a failed first read tries the other level once, exactly the 2024 behavior inside the `Result` world; both contract kernels pin the clause so a future refactor cannot drop it unnoticed a second time.
+
 ## [52.0.1] - 2026-08-25
 
 ### Security
@@ -613,6 +619,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[52.0.2]: https://github.com/OlivierZal/melcloud-api/compare/v52.0.1...v52.0.2
 [52.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v52.0.0...v52.0.1
 [52.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v51.0.1...v52.0.0
 [51.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v51.0.0...v51.0.1

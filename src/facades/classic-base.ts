@@ -89,18 +89,26 @@ const toHolidayModeState = (
       }
     : null
 
-// Settings can be defined at zone or device level. Try zone first;
-// if unsupported, fall back to device level and cache the result.
+// Settings can be defined at zone or device level, and the wire's
+// `FPDefined`/`HMDefined` are DECLARATIONS, not guarantees: a level
+// they promise can still refuse the read (measured on a shared
+// building, 2026-08-26 — zone-level `GetSettings` answers 401 while
+// the session is valid). So the flag only orders the attempts (an
+// unknown flag reads as zone-first), and a failed first read always
+// tries the other level once — the original 2024 try/catch design,
+// restored after a 2026-03 refactor had gated the fallback on the
+// flag and silently disabled it wherever the flag was known.
 const getWithZoneFallback = async <TResult>(
   isAtZoneLevel: boolean | null,
   zoneGetter: () => Promise<Result<TResult>>,
   deviceGetter: () => Promise<Result<TResult>>,
 ): Promise<Result<TResult>> => {
-  if (isAtZoneLevel === null) {
-    const zoneResult = await zoneGetter()
-    return zoneResult.ok ? zoneResult : deviceGetter()
-  }
-  return (isAtZoneLevel ? zoneGetter : deviceGetter)()
+  const [first, second] =
+    isAtZoneLevel === false
+      ? [deviceGetter, zoneGetter]
+      : [zoneGetter, deviceGetter]
+  const firstResult = await first()
+  return firstResult.ok ? firstResult : second()
 }
 
 // Mutation prep paths (`#getFrostProtectionLocation`,
