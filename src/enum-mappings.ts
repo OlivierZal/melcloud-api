@@ -180,6 +180,16 @@ export const operationModeToClassic: Record<
 }
 
 /**
+ * Type guard: `value` is a valid Home operation mode string. The Home
+ * facades deliberately pass unknown wire modes through, so any
+ * projection through {@link operationModeToClassic} guards with this
+ * first.
+ */
+export const isHomeOperationMode: (
+  key: PropertyKey,
+) => key is HomeOperationMode = isKeyOf(operationModeToClassic)
+
+/**
  * Mapping from Classic numeric vertical vane position to Home string value.
  * @category Mappings
  */

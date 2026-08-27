@@ -49,7 +49,7 @@ import {
   mapResult,
   ok,
 } from '../types/index.ts'
-import { isKeyOf } from '../utils.ts'
+import { isKeyOf, isUninitializedWireDate, toEpochMs } from '../utils.ts'
 import {
   ClassicBuildingListSchema,
   ClassicEnergyDataSchema,
@@ -77,33 +77,6 @@ const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 5
 
 const LOGIN_THROTTLE_ERROR_ID = 6
-
-// MELCloud uses year 1 for uninitialized error dates; filter these out as invalid
-const INVALID_YEAR = 1
-
-const instantYear = (iso: string): number | null => {
-  try {
-    return Temporal.Instant.from(iso).toZonedDateTimeISO('UTC').year
-  } catch {
-    return null
-  }
-}
-
-const plainDateYear = (iso: string): number | null => {
-  try {
-    return Temporal.PlainDate.from(iso).year
-  } catch {
-    return null
-  }
-}
-
-// Year extraction across both MELCloud date dialects — the sentinel
-// arrives as an instant too (`0001-01-01T00:00:00Z`, live payload
-// 2026-07-18), which `PlainDate.from` rejects. A bad input does NOT
-// short-circuit as "invalid year 1" — it falls through and the entry
-// is kept. Only the year-1 sentinel gets filtered.
-const safePlainDateYear = (iso: string): number =>
-  instantYear(iso) ?? plainDateYear(iso) ?? 0
 
 const isLanguage = isKeyOf(ClassicLanguage)
 
@@ -305,13 +278,26 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
               ErrorMessage: errorMessage,
               StartDate: startDate,
             }) => {
-              if (safePlainDateYear(startDate) === INVALID_YEAR) {
+              // Only the year-1 sentinel gets filtered; an unparseable
+              // date does NOT short-circuit — the entry is kept, its
+              // `atEpochMs` reading `null`.
+              if (isUninitializedWireDate(startDate)) {
                 return []
               }
               const message = errorMessage?.trim() ?? ''
               return message === ''
                 ? []
-                : [{ at: startDate, deviceId: errorDeviceId, message }]
+                : [
+                    {
+                      at: startDate,
+                      // Classic timestamps are building-local wall
+                      // clock; the client's configured timezone is the
+                      // anchor the facades already speak.
+                      atEpochMs: toEpochMs(startDate, this.#timezone),
+                      deviceId: errorDeviceId,
+                      message,
+                    },
+                  ]
             },
           )
           .toReversed(),

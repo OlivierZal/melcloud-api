@@ -2,8 +2,14 @@ import type { ClassicGroupState, HomeAtaValues } from '../types/index.ts'
 import {
   type ClassicFanSpeed as ClassicFanSpeedType,
   type ClassicNonSilentFanSpeed,
+  type ClassicOperationMode,
+  ClassicDeviceType,
   ClassicFanSpeed,
 } from '../constants.ts'
+import {
+  type ClassicDeviceAny,
+  isClassicDeviceOfType,
+} from '../entities/index.ts'
 import {
   type HomeFanSpeed,
   type HomeHorizontal,
@@ -13,6 +19,7 @@ import {
   fanSpeedToClassic,
   horizontalFromClassic,
   horizontalToClassic,
+  isHomeOperationMode,
   operationModeFromClassic,
   operationModeToClassic,
   verticalFromClassic,
@@ -92,6 +99,50 @@ export const aggregateClassicAtaGroupStates = (
     states.map((state) => state.VaneVerticalDirection ?? null),
   ),
 })
+
+/**
+ * Projects a Classic zone's ATA members onto the group vocabulary's
+ * member modes: `Power` and `OperationMode` straight off the synced
+ * list data, already Classic-numbered — the ONE group vocabulary,
+ * whatever API serves the members.
+ * @param devices - The zone's member devices (non-ATA members are
+ * dropped — the group contract covers ATA members only).
+ * @param isPoweredOnly - `true` keeps only powered-on members.
+ * @returns One mode per kept member, in member order.
+ */
+export const classicGroupMemberModes = (
+  devices: readonly ClassicDeviceAny[],
+  isPoweredOnly: boolean,
+): ClassicOperationMode[] =>
+  devices
+    .filter((device) => isClassicDeviceOfType(device, ClassicDeviceType.Ata))
+    .filter(({ data }) => !isPoweredOnly || data.Power)
+    .map(({ data }) => data.OperationMode)
+
+/**
+ * Projects Home ATA members onto the group vocabulary's member modes
+ * through the operation-mode bijection — the same Classic-numbered
+ * answer {@link classicGroupMemberModes} gives for Classic members.
+ * @param members - The members' facade slices (a device facade is a
+ * group of one); `operationMode` is taken as the raw wire string,
+ * because the facades pass unknown or absent modes through unchecked.
+ * A member whose mode the bijection cannot say is DROPPED like a
+ * non-ATA member — never projected as a hole in the array.
+ * @param isPoweredOnly - `true` keeps only powered-on members.
+ * @returns One mode per kept member, in member order.
+ */
+export const homeGroupMemberModes = (
+  members: readonly {
+    readonly operationMode: string
+    readonly power: boolean
+  }[],
+  isPoweredOnly: boolean,
+): ClassicOperationMode[] =>
+  members
+    .filter((member) => !isPoweredOnly || member.power)
+    .map(({ operationMode }) => operationMode)
+    .filter(isHomeOperationMode)
+    .map((mode) => operationModeToClassic[mode])
 
 /**
  * Translates a partial Classic group state into the Home update payload,

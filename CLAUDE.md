@@ -159,6 +159,22 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   fallback on the flag and shipped five months of dead fallback under
   a comment claiming otherwise — both contract kernels now pin the
   clause. Writes keep branching on the flag (the wire's own addressing).
+- Timestamp normalization is library-owned: `ErrorLogEntry.atEpochMs`
+  (+ its `clearedAtEpochMs` twin) and
+  `AtwHotWaterState.lastLegionellaActivationEpochMs` carry the epoch
+  instant, each dialect anchoring its own wall-clock discipline at its
+  boundary — Classic timestamps are building-local wall clock anchored
+  in the client's configured timezone (host zone when unset), Home
+  timestamps are UTC. The Classic instant is therefore exact only
+  insofar as the configured timezone IS the building's: a building in
+  another zone skews it by the zone delta (worldwide skew reaches
+  ±14 h), so day-scale reasoning stays safe where sub-hour does not.
+  Consumers never re-derive an epoch from the wall-clock `at`; the
+  cannot-parse marker is `null`, never `NaN` (these instants cross
+  JSON boundaries, where `JSON.stringify` silently rewrites `NaN` to
+  `null`), an unparseable Classic `at` keeps its entry, and the
+  legionella stamp's year-1 sentinel — any offset spelling, judged as
+  UTC year <= 1 — reads `null`.
 - Setpoint increments: both Home facades expose a derived
   `temperatureStep` (ATA from `hasHalfDegreeIncrements`, ATW from the
   FTC's own `temperatureIncrement` declaration — the direct field wins

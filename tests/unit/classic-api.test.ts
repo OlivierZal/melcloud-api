@@ -7,6 +7,7 @@ import type {
 } from '../../src/api/index.ts'
 import type { ClassicDeviceType } from '../../src/constants.ts'
 import { AuthenticationError } from '../../src/errors/index.ts'
+import { Temporal } from '../../src/temporal.ts'
 import {
   type ClassicSetDevicePostData,
   toClassicBuildingId,
@@ -22,6 +23,7 @@ import {
   createLogger,
   createMockHttpClient,
   createSettingStore,
+  defined,
   matchObject,
   mock,
   okValue,
@@ -669,6 +671,32 @@ describe('mELCloud Classic API', () => {
 
       expect(value.entries).toHaveLength(1)
       expect(value.entries[0]?.message).toBe('Some error')
+      // No configured timezone: the building-local StartDate anchors in
+      // the host's zone, the same fallback the holiday projection takes.
+      expect(value.entries[0]?.atEpochMs).toBe(
+        Temporal.PlainDateTime.from('2024-01-01T12:00:00').toZonedDateTime(
+          Temporal.Now.timeZoneId(),
+        ).epochMilliseconds,
+      )
+    })
+
+    it('anchors the building-local StartDate in the configured timezone', async () => {
+      mockLoginAndList()
+      const api = await createApi({
+        password: 'pass',
+        timezone: 'Europe/Paris',
+        username: 'user',
+      })
+      mockRequest.mockResolvedValue(
+        wrap([errorEntry({ StartDate: '2026-03-01T06:00:00' })]),
+      )
+      const result = await api.getErrorLog({}, [1])
+
+      // Paris winter wall clock (UTC+1): 06:00 locally is 05:00Z — a
+      // projection that drops the zone cannot pass.
+      expect(defined(okValue(result).entries[0]).atEpochMs).toBe(
+        Temporal.Instant.from('2026-03-01T05:00:00Z').epochMilliseconds,
+      )
     })
 
     it('filters out entries with invalid year', async () => {
@@ -705,6 +733,24 @@ describe('mELCloud Classic API', () => {
       expect(okValue(result).entries).toHaveLength(0)
     })
 
+    it('filters out an offset-shifted year-1 sentinel', async () => {
+      mockLoginAndList()
+      const api = await createApi({ password: 'pass', username: 'user' })
+      mockRequest.mockResolvedValue(
+        wrap([
+          errorEntry({
+            ErrorMessage: 'Unknown Error',
+            // Lands in UTC year 0 — still the sentinel, never an
+            // ancient instant.
+            StartDate: '0001-01-01T00:00:00+01:00',
+          }),
+        ]),
+      )
+      const result = await api.getErrorLog({}, [1])
+
+      expect(okValue(result).entries).toHaveLength(0)
+    })
+
     it('keeps entries with unparseable StartDate (no invalid-year sentinel)', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
@@ -717,6 +763,10 @@ describe('mELCloud Classic API', () => {
 
       expect(okValue(result).entries).toHaveLength(1)
       expect(okValue(result).entries[0]?.message).toBe('Mystery')
+      // The kept-garbage policy carries into the normalized instant:
+      // what cannot be parsed reads null — never a fabricated epoch,
+      // and never NaN, which JSON.stringify would silently rewrite.
+      expect(defined(okValue(result).entries[0]).atEpochMs).toBeNull()
     })
 
     it('returns validation failure when the API returns failure data', async () => {

@@ -9,10 +9,12 @@ import {
   hoursUpTo,
   isSetDeviceDataAtaInList,
   isSetDeviceDataAtaNotInList,
+  isUninitializedWireDate,
   isUpdateDeviceData,
   mergeHourlyChartResults,
   omitUndefined,
   padHourlyChartToMidnight,
+  toEpochMs,
   toUtcWallClock,
   toZonedWallClock,
   typedFromEntries,
@@ -273,5 +275,43 @@ describe('wall-clock projections', () => {
 
   it('passes a malformed read-side datetime through verbatim', () => {
     expect(toZonedWallClock('not-a-date', 'Europe/Paris')).toBe('not-a-date')
+  })
+})
+
+describe('epoch projections', () => {
+  it('takes an offset-carrying value as the instant it already spells', () => {
+    expect(toEpochMs('2026-03-01T06:00:00Z')).toBe(
+      Temporal.Instant.from('2026-03-01T06:00:00Z').epochMilliseconds,
+    )
+  })
+
+  it('resolves a DST-gap wall clock forward per compatible disambiguation', () => {
+    // 02:30 does not exist on 2026-03-29 in Paris (the clock jumps
+    // 02:00 -> 03:00): 'compatible' shifts forward to 03:30+02:00.
+    expect(toEpochMs('2026-03-29T02:30:00', 'Europe/Paris')).toBe(
+      Temporal.Instant.from('2026-03-29T01:30:00Z').epochMilliseconds,
+    )
+  })
+
+  it('resolves a DST-overlap wall clock to the earlier offset', () => {
+    // 02:30 happens twice on 2026-10-25 in Paris (the clock falls back
+    // 03:00 -> 02:00): 'compatible' keeps the first pass, +02:00.
+    expect(toEpochMs('2026-10-25T02:30:00', 'Europe/Paris')).toBe(
+      Temporal.Instant.from('2026-10-25T00:30:00Z').epochMilliseconds,
+    )
+  })
+
+  it('answers null for a value it cannot parse', () => {
+    expect(toEpochMs('not-a-date', 'Europe/Paris')).toBeNull()
+  })
+
+  it('recognizes the year-1 sentinel in every spelling', () => {
+    expect(isUninitializedWireDate('0001-01-01T00:00:00')).toBe(true)
+    expect(isUninitializedWireDate('0001-01-01T00:00:00Z')).toBe(true)
+    // The offset spelling lands in UTC year 0 — still the sentinel: no
+    // real MELCloud timestamp can reach a year at or below 1.
+    expect(isUninitializedWireDate('0001-01-01T00:00:00+01:00')).toBe(true)
+    expect(isUninitializedWireDate('2026-03-01T06:00:00')).toBe(false)
+    expect(isUninitializedWireDate('not-a-date')).toBe(false)
   })
 })

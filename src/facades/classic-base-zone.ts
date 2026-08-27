@@ -3,7 +3,7 @@ import type {
   ClassicBuilding,
   ClassicFloor,
 } from '../entities/index.ts'
-import { ClassicDeviceType } from '../constants.ts'
+import { type ClassicOperationMode, ClassicDeviceType } from '../constants.ts'
 import { classicUpdateDevices, syncDevices } from '../decorators/index.ts'
 import { assertUpdateAccepted } from '../errors/index.ts'
 import {
@@ -14,6 +14,7 @@ import {
 } from '../types/index.ts'
 import type { ClassicZoneFacade } from './classic-types.ts'
 import { ClassicBaseFacade } from './classic-base.ts'
+import { classicGroupMemberModes } from './home-ata-group.ts'
 
 /**
  * Abstract base for zone facades (building, floor, area) that support ATA group operations.
@@ -65,5 +66,22 @@ export abstract class BaseZoneFacade<
       }
     }
     return result
+  }
+
+  /**
+   * Member operation modes in the one group vocabulary
+   * (Classic-numbered), projected from the members' synced list data —
+   * no wire call. Non-ATA members are dropped, like on every other read
+   * of the ATA group contract.
+   * @param options - Member filter.
+   * @param options.poweredOnly - `true` keeps only powered-on members.
+   * @returns One mode per kept ATA member, in member order.
+   */
+  public getMemberOperationModes({
+    poweredOnly: isPoweredOnly,
+  }: {
+    poweredOnly: boolean
+  }): ClassicOperationMode[] {
+    return classicGroupMemberModes(this.devices, isPoweredOnly)
   }
 }

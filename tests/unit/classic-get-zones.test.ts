@@ -15,6 +15,7 @@ import {
   classicAtwDevice,
   classicAtwDeviceData,
   classicBuildingData,
+  classicErvDevice,
   classicFloorData,
   populatedClassicRegistry,
 } from '../classic-fixtures.ts'
@@ -219,6 +220,35 @@ describe('zone retrieval', () => {
     expect(models).toContainEqual({ model: 'floors', name: 'Ground floor' })
     expect(models).toContainEqual({ model: 'areas', name: 'Salon' })
     expect(models).toContainEqual({ model: 'devices', name: 'AC unit' })
+  })
+
+  it('stamps each device leaf with its device type', () => {
+    const deviceTypes = new Map(
+      createSyncedRegistry()
+        .getZones()
+        .filter((zone) => zone.model === 'devices')
+        .map((zone) => [zone.name, zone.deviceType]),
+    )
+
+    expect(deviceTypes.get('AC unit')).toBe('ata')
+    expect(deviceTypes.get('Heat pump')).toBe('atw')
+  })
+
+  it('stamps an ERV leaf as erv', () => {
+    const registry = populatedClassicRegistry({
+      buildings,
+      devices: [
+        classicErvDevice({
+          AreaID: null,
+          BuildingID: toClassicBuildingId(1),
+          DeviceName: 'Ventilation',
+        }),
+      ],
+    })
+
+    expect(
+      registry.getZones().find((zone) => zone.model === 'devices')?.deviceType,
+    ).toBe('erv')
   })
 
   it('stamps each zone with its owning building name', () => {

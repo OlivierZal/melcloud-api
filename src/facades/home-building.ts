@@ -1,4 +1,5 @@
 import type { HomeAPIAdapter } from '../api/index.ts'
+import type { ClassicOperationMode } from '../constants.ts'
 import type { HomeDevice } from '../entities/home-device.ts'
 import { tolerateNoChanges } from '../errors/index.ts'
 import {
@@ -22,6 +23,7 @@ import { resolved } from '../utils.ts'
 import type { HomeDeviceAtaFacade } from './home-device-ata.ts'
 import {
   aggregateClassicAtaGroupStates,
+  homeGroupMemberModes,
   toClassicAtaGroupState,
   toHomeAtaValues,
 } from './home-ata-group.ts'
@@ -186,6 +188,26 @@ export class HomeBuildingFacade {
           toHolidayModeState(data.holidayMode, this.#api.timezone),
         ),
       ),
+    )
+  }
+
+  /**
+   * Member operation modes in the one group vocabulary
+   * (Classic-numbered), the ATA members projected through the
+   * operation-mode bijection — the same read the Classic zone facades
+   * answer, from the synced `/context` states with no wire call.
+   * @param options - Member filter.
+   * @param options.poweredOnly - `true` keeps only powered-on members.
+   * @returns One mode per kept ATA member, in member order.
+   */
+  public getMemberOperationModes({
+    poweredOnly: isPoweredOnly,
+  }: {
+    poweredOnly: boolean
+  }): ClassicOperationMode[] {
+    return homeGroupMemberModes(
+      this.#ataDevices.map((device) => this.#getFacade(device)),
+      isPoweredOnly,
     )
   }
 

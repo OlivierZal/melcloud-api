@@ -26,7 +26,12 @@ import {
   mapResult,
   ok,
 } from '../types/index.ts'
-import { omitUndefined, resolved, toZonedWallClock } from '../utils.ts'
+import {
+  omitUndefined,
+  resolved,
+  toEpochMs,
+  toZonedWallClock,
+} from '../utils.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import {
   pushHomeFrostProtection,
@@ -311,7 +316,8 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * Fetches the error-log entries for this device, projected onto the
    * cross-dialect shape: `errorCode` maps to `code`, `errorReason` to
    * `message` when present, `clearedTimestamp` to `clearedAt` when
-   * cleared. The raw wire entries stay available on the API client.
+   * cleared — each wall-clock stamp paired with its UTC-anchored epoch
+   * instant. The raw wire entries stay available on the API client.
    * @returns The neutral entries (possibly empty), or a typed failure.
    */
   public async getErrorLog(): Promise<Result<ErrorLogEntry[]>> {
@@ -324,9 +330,15 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
           timestamp,
         }): ErrorLogEntry => ({
           at: timestamp,
+          // The Home wire speaks UTC wall clock everywhere (see
+          // CLAUDE.md, live-probed): both instants anchor in UTC.
+          atEpochMs: toEpochMs(timestamp, 'UTC'),
           code: errorCode,
           deviceId: this.id,
-          ...(clearedTimestamp !== null && { clearedAt: clearedTimestamp }),
+          ...(clearedTimestamp !== null && {
+            clearedAt: clearedTimestamp,
+            clearedAtEpochMs: toEpochMs(clearedTimestamp, 'UTC'),
+          }),
           ...(errorReason !== null && { message: errorReason }),
         }),
       ),

@@ -20,6 +20,19 @@ export interface ErrorLogEntry {
    */
   readonly at: string
   /**
+   * The instant of {@link at} normalized to epoch milliseconds — each
+   * dialect anchors its own wall-clock discipline at its boundary. Home
+   * `at` is UTC wall clock, so its instant is exact. Classic `at` is
+   * BUILDING-local wall clock anchored in the client's configured
+   * timezone (`ClassicAPIConfig.timezone`, the host's zone when unset):
+   * exact only insofar as that timezone is the building's — a building
+   * in another zone skews the instant by the zone delta, and the
+   * recorded worldwide skew reaches ±14 h, so day-scale reasoning
+   * stays safe where sub-hour reasoning does not. `null` when the
+   * wire's `at` cannot be parsed (such entries are deliberately kept).
+   */
+  readonly atEpochMs: number | null
+  /**
    * Identifier of the device that reported the error — numeric on
    * Classic, a GUID string on Home.
    */
@@ -28,6 +41,13 @@ export interface ErrorLogEntry {
    * When the error cleared (Home only, while uncleared it is absent).
    */
   readonly clearedAt?: string
+  /**
+   * The instant of {@link clearedAt} normalized to epoch milliseconds —
+   * present exactly where `clearedAt` is (Home, once cleared), anchored
+   * in UTC like the Home discipline of {@link atEpochMs}; `null` when
+   * the wire's stamp cannot be parsed.
+   */
+  readonly clearedAtEpochMs?: number | null
   /**
    * Wire error code (Home only — the Classic wire has none).
    */

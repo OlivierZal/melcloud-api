@@ -20,7 +20,7 @@ import { clampToRange, isValue, resolved } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import { BaseDeviceFacade, makeEnergyExtract } from './classic-base-device.ts'
 import { classicAtaFlags } from './classic-flags.ts'
-import { toGroupFanSpeed } from './home-ata-group.ts'
+import { classicGroupMemberModes, toGroupFanSpeed } from './home-ata-group.ts'
 
 // Group-state keys map onto the per-device update tags (`FanSpeed` →
 // `SetFanSpeed`, the vane directions lose their `Direction` suffix); the
@@ -111,6 +111,23 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
       VaneHorizontalDirection: data.VaneHorizontalDirection,
       VaneVerticalDirection: data.VaneVerticalDirection,
     })
+  }
+
+  /**
+   * Member operation modes in the one group vocabulary, treating the
+   * device as a group of one — the same read every zone facade answers,
+   * projected from the synced list data with no wire call.
+   * @param options - Member filter.
+   * @param options.poweredOnly - `true` answers empty when the unit is
+   * powered off.
+   * @returns The device's own mode, alone or absent.
+   */
+  public getMemberOperationModes({
+    poweredOnly: isPoweredOnly,
+  }: {
+    poweredOnly: boolean
+  }): ClassicOperationMode[] {
+    return classicGroupMemberModes(this.devices, isPoweredOnly)
   }
 
   /**

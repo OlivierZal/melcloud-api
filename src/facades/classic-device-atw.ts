@@ -19,7 +19,7 @@ import {
   type Result,
   mapResult,
 } from '../types/index.ts'
-import { clampToRange } from '../utils.ts'
+import { clampToRange, isUninitializedWireDate, toEpochMs } from '../utils.ts'
 import type { ClassicEnergyReportExtract } from './classic-types.ts'
 import type { ReportChartLineOptions, ReportQuery } from './report-types.ts'
 import { BaseDeviceFacade, makeEnergyExtract } from './classic-base-device.ts'
@@ -92,6 +92,17 @@ const zoneStateMap: Partial<
   [ClassicOperationModeState.heating]: ClassicOperationModeStateZone.heating,
 }
 
+// The wire's last-legionella stamp is building-local wall clock like
+// every Classic timestamp, so it anchors in the client's configured
+// timezone; the year-1 sentinel marks "never ran" and an unparseable
+// value has nothing to say — both read `null` (`toEpochMs` itself
+// answers `null` for garbage, so no other marker can leak through).
+const toLastLegionellaEpochMs = (
+  value: string,
+  timeZone?: string,
+): number | null =>
+  isUninitializedWireDate(value) ? null : toEpochMs(value, timeZone)
+
 const getHotWaterOperationalState = (
   data: ClassicListDeviceDataAtw,
 ): ClassicOperationModeStateHotWater => {
@@ -152,6 +163,10 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
       isEcoHotWater: data.EcoHotWater,
       isForcedMode: data.ForcedHotWaterMode,
       isProhibited: data.ProhibitHotWater,
+      lastLegionellaActivationEpochMs: toLastLegionellaEpochMs(
+        data.LastLegionellaActivationTime,
+        this.api.timezone,
+      ),
       maxTankTemperature: data.MaxTankTemperature,
       operationalState: getHotWaterOperationalState(data),
       setTankWaterTemperature: data.SetTankWaterTemperature,

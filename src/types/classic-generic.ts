@@ -195,6 +195,11 @@ export interface ClassicDevicePermissions {
  * @category Types
  */
 export interface ClassicDeviceZone extends BaseZone {
+  /**
+   * Device-type tag of the node, so a flat picker can filter the leaves
+   * without resolving the registry model behind each id.
+   */
+  readonly deviceType: 'ata' | 'atw' | 'erv'
   readonly model: 'devices'
 }
 

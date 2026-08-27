@@ -15,7 +15,7 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 ## Features
 
 - **Strongly typed** — full TypeScript types for both MELCloud Classic and MELCloud Home APIs, with 100% TSDoc coverage on the public surface.
-- **Two APIs, one client** — Classic and Home behind consistent ergonomics; pick what your account uses.
+- **Two APIs, one client** — Classic and Home behind consistent ergonomics; pick what your account uses. The cross-dialect surfaces (protection, holiday mode, error log, ATW state, the ATA group and the `/report` chart contract) answer one neutral vocabulary whichever API backs the target, each pinned by a contract kernel.
 - **Ata / Atw / Erv support** — air conditioners, heat pumps with hot water, and energy-recovery ventilation units.
 - **Resilient by default** — auto-retry on transient failures, rate-limit awareness, pre-emptive session refresh.
 - **Validated boundaries** — Zod schemas guard every consumed payload, so upstream shape drift surfaces as a typed `ValidationError` instead of a deep `undefined` crash.
@@ -180,7 +180,7 @@ import { FROST_PROTECTION_RANGE } from '@olivierzal/melcloud-api/protection'
 
 Available subpaths: `/classic`, `/home`, `/atw-state`, `/constants`,
 `/enum-mappings`, `/error-log`, `/holiday-mode`, `/protection`,
-`/temperature-range`, `/temporal`.
+`/report`, `/temperature-range`, `/temporal`.
 
 The flat subpaths (everything but `/classic` and `/home`) stay inside the
 browser-safe closure — none of them reaches the Node-only HTTP stack the
