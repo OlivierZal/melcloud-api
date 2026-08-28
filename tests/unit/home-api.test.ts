@@ -241,11 +241,11 @@ const { client: mockHttpClient, requestSpy: mockRequest } =
 const mockFetch = vi.fn<typeof fetch>()
 vi.stubGlobal('fetch', mockFetch)
 
-// Queue a scripted sequence of OIDC responses on top of the global
-// `fetch` mock. Order matches the runtime flow: PAR, redirect chain,
-// credential submission, callback resolution, token exchange. The
-// final `GET /context` goes through the BFF HttpClient mock.
-const setupSuccessfulLogin = (): void => {
+// Queue the scripted OIDC dance on top of the global `fetch` mock, up
+// to (and excluding) the token exchange. Order matches the runtime
+// flow: PAR, redirect chain, credential submission, callback
+// resolution. Each caller stages its own token-exchange outcome next.
+const setupLoginUntilTokenExchange = (): void => {
   const callbackUrl =
     'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz'
 
@@ -296,8 +296,16 @@ const setupSuccessfulLogin = (): void => {
         200,
       ),
     )
-    // 5. Token exchange
-    .mockResolvedValueOnce(mockFetchResponse(mockTokenResponse, {}, 200))
+}
+
+// The full successful sequence: the dance above, then the token
+// exchange. The final `GET /context` goes through the BFF HttpClient
+// mock.
+const setupSuccessfulLogin = (): void => {
+  setupLoginUntilTokenExchange()
+
+  // 5. Token exchange
+  mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse, {}, 200))
 
   // 6. GET /context via the HttpClient BFF instance
   mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
@@ -418,63 +426,8 @@ describe('melcloud home API', () => {
     // instead of a raw HttpError — mirroring the Classic
     // `LoginData: null → AuthenticationError` path.
     it('should wrap 401 from token exchange into AuthenticationError', async () => {
-      mockFetch
-        .mockResolvedValueOnce(
-          mockFetchResponse(
-            { request_uri: 'urn:ietf:params:oauth:request_uri:test' },
-            {},
-            200,
-          ),
-        )
-        .mockResolvedValueOnce(
-          mockFetchResponse(
-            '',
-            { location: `${AUTH_BASE}/connect/redirect` },
-            302,
-          ),
-        )
-        .mockResolvedValueOnce(
-          mockFetchResponse(
-            '',
-            { location: `${COGNITO}/oauth2/authorize?client_id=test` },
-            302,
-          ),
-        )
-        .mockResolvedValueOnce(
-          mockFetchResponse(
-            '',
-            { location: `${COGNITO}/login?client_id=test` },
-            302,
-          ),
-        )
-        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
-        .mockResolvedValueOnce(
-          mockFetchResponse(
-            '',
-            {
-              location:
-                'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz',
-            },
-            302,
-          ),
-        )
-        .mockResolvedValueOnce(
-          mockFetchResponse(
-            '',
-            {
-              location: 'https://auth.melcloudhome.com/ExternalLogin/Callback',
-            },
-            302,
-          ),
-        )
-        .mockResolvedValueOnce(
-          mockFetchResponse(
-            "<script>window.location='melcloudhome://?code=auth-code&amp;state=xyz'</script>",
-            {},
-            200,
-          ),
-        )
-        .mockRejectedValueOnce(httpUnauthorized('/connect/token'))
+      setupLoginUntilTokenExchange()
+      mockFetch.mockRejectedValueOnce(httpUnauthorized('/connect/token'))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         transport: mockHttpClient,
@@ -2025,83 +1978,74 @@ describe('melcloud home API', () => {
   })
 
   describe('form parsing', () => {
-    it('should classify a refused submission with the Cognito reason', async () => {
-      // PAR, redirect chain to the login page
-      mockFetch
-        .mockResolvedValueOnce(mockFetchResponse({ request_uri: 'urn:test' }))
-        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
-        // Credential POST: re-rendered login page, no redirect
-        .mockResolvedValueOnce(
-          mockFetchResponse(
-            '<p id="errorMessage" class="errorMessage">Incorrect username or password.</p>',
-            {},
-            200,
-          ),
-        )
-      const logger = createLogger()
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        logger,
-        password: 'pass',
-        transport: mockHttpClient,
-        username: 'user@test.com',
-      })
-
-      expect(api.isAuthenticated()).toBe(false)
-      expect(logger.error).toHaveBeenCalledWith(
-        '[Home]',
-        'Session resume failed:',
-        expect.objectContaining({
-          message:
-            'MELCloud Home rejected the sign-in: Incorrect username or password.',
-          name: 'AuthenticationError',
-        }),
-      )
-    })
-
-    it('should classify a code-less callback with its landing details', async () => {
-      mockFetch
-        .mockResolvedValueOnce(mockFetchResponse({ request_uri: 'urn:test' }))
-        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
-        // Credential POST → redirect to the callback
-        .mockResolvedValueOnce(
-          mockFetchResponse(
-            '',
-            {
+    // Same classification mechanism, different refusal shapes: each row
+    // stages what follows the credential POST and pins the resulting
+    // AuthenticationError message.
+    it.each([
+      {
+        message:
+          'MELCloud Home rejected the sign-in: Incorrect username or password.',
+        scenario: 'a refused submission with the Cognito reason',
+        submissionResponses: [
+          // Credential POST: re-rendered login page, no redirect
+          {
+            body: '<p id="errorMessage" class="errorMessage">Incorrect username or password.</p>',
+            headers: {},
+            status: 200,
+          },
+        ],
+      },
+      {
+        message:
+          'No authorization code in callback (landed on melcloudhome://; error=access_denied; Password attempts exceeded)',
+        scenario: 'a code-less callback with its landing details',
+        submissionResponses: [
+          // Credential POST → redirect to the callback
+          {
+            body: '',
+            headers: {
               location:
                 'https://auth.melcloudhome.com/signin-oidc-meu?state=xyz',
             },
-            302,
-          ),
-        )
-        // Callback chain ends without a code but with the OIDC error
-        .mockResolvedValueOnce(
-          mockFetchResponse(
-            "<script>window.location='melcloudhome://?error=access_denied&amp;error_description=Password attempts exceeded'</script>",
-            {},
-            200,
-          ),
-        )
-      const logger = createLogger()
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        logger,
-        password: 'pass',
-        transport: mockHttpClient,
-        username: 'user@test.com',
-      })
+            status: 302,
+          },
+          // Callback chain ends without a code but with the OIDC error
+          {
+            body: "<script>window.location='melcloudhome://?error=access_denied&amp;error_description=Password attempts exceeded'</script>",
+            headers: {},
+            status: 200,
+          },
+        ],
+      },
+    ])(
+      'should classify $scenario',
+      async ({ message, submissionResponses }) => {
+        // PAR, redirect chain to the login page
+        mockFetch
+          .mockResolvedValueOnce(mockFetchResponse({ request_uri: 'urn:test' }))
+          .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+        for (const { body, headers, status } of submissionResponses) {
+          mockFetch.mockResolvedValueOnce(
+            mockFetchResponse(body, headers, status),
+          )
+        }
+        const logger = createLogger()
+        const api = await melCloudHomeApi.create({
+          baseURL: BASE_URL,
+          logger,
+          password: 'pass',
+          transport: mockHttpClient,
+          username: 'user@test.com',
+        })
 
-      expect(api.isAuthenticated()).toBe(false)
-      expect(logger.error).toHaveBeenCalledWith(
-        '[Home]',
-        'Session resume failed:',
-        expect.objectContaining({
-          message:
-            'No authorization code in callback (landed on melcloudhome://; error=access_denied; Password attempts exceeded)',
-          name: 'AuthenticationError',
-        }),
-      )
-    })
+        expect(api.isAuthenticated()).toBe(false)
+        expect(logger.error).toHaveBeenCalledWith(
+          '[Home]',
+          'Session resume failed:',
+          expect.objectContaining({ message, name: 'AuthenticationError' }),
+        )
+      },
+    )
 
     it('should throw when form action is missing', async () => {
       // PAR succeeds
@@ -3073,63 +3017,10 @@ describe('melcloud home API', () => {
   })
 
   it('classifies HTTP 429 from the token exchange as a login throttle', async () => {
-    mockFetch
-      .mockResolvedValueOnce(
-        mockFetchResponse(
-          { request_uri: 'urn:ietf:params:oauth:request_uri:test' },
-          {},
-          200,
-        ),
-      )
-      .mockResolvedValueOnce(
-        mockFetchResponse(
-          '',
-          { location: `${AUTH_BASE}/connect/redirect` },
-          302,
-        ),
-      )
-      .mockResolvedValueOnce(
-        mockFetchResponse(
-          '',
-          { location: `${COGNITO}/oauth2/authorize?client_id=test` },
-          302,
-        ),
-      )
-      .mockResolvedValueOnce(
-        mockFetchResponse(
-          '',
-          { location: `${COGNITO}/login?client_id=test` },
-          302,
-        ),
-      )
-      .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
-      .mockResolvedValueOnce(
-        mockFetchResponse(
-          '',
-          {
-            location:
-              'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz',
-          },
-          302,
-        ),
-      )
-      .mockResolvedValueOnce(
-        mockFetchResponse(
-          '',
-          { location: 'https://auth.melcloudhome.com/ExternalLogin/Callback' },
-          302,
-        ),
-      )
-      .mockResolvedValueOnce(
-        mockFetchResponse(
-          "<script>window.location='melcloudhome://?code=auth-code&amp;state=xyz'</script>",
-          {},
-          200,
-        ),
-      )
-      // The token exchange answers a real 429 — fetchPostForm raises it
-      // as an HttpError, the shape doAuthenticate classifies.
-      .mockResolvedValueOnce(mockFetchResponse('rate limited', {}, 429))
+    setupLoginUntilTokenExchange()
+    // The token exchange answers a real 429 — fetchPostForm raises it
+    // as an HttpError, the shape doAuthenticate classifies.
+    mockFetch.mockResolvedValueOnce(mockFetchResponse('rate limited', {}, 429))
     const api = await melCloudHomeApi.create({
       baseURL: BASE_URL,
       transport: mockHttpClient,

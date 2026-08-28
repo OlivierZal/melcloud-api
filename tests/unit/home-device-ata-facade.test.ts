@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type {
+  ReportChartLineOptions,
+  ReportQuery,
+} from '../../src/facades/report-types.ts'
 import { ClassicOperationMode } from '../../src/constants.ts'
 import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
@@ -27,6 +31,26 @@ const createModel = (
     rssi,
     settings,
   })
+
+// Stage a consumption series behind `getEnergy` and chart it over
+// `range`: the mechanism the energy-report cases share, each pinning
+// its own bucket-policy assertions at the call site.
+const chartEnergyReport = async (
+  range: ReportQuery,
+  values: Parameters<typeof homeEnergyEnvelope>[1],
+  api: ReturnType<typeof createMockHomeApi> = createMockHomeApi(),
+): Promise<ReportChartLineOptions> => {
+  vi.mocked(api.getEnergy).mockResolvedValue(
+    ok(
+      homeEnergyEnvelope(
+        'cumulative_energy_consumed_since_last_upload',
+        values,
+      ),
+    ),
+  )
+  const facade = new HomeDeviceAtaFacade(api, createModel())
+  return okValue(await facade.getEnergyReport(range))
+}
 
 describe('home device ata facade', () => {
   beforeEach(resetHomeDevices)
@@ -557,20 +581,10 @@ describe('home device ata facade', () => {
 
     it('charts a multi-day energy report in local-day kWh buckets', async () => {
       const api = createMockHomeApi()
-      vi.mocked(api.getEnergy).mockResolvedValue(
-        ok(
-          homeEnergyEnvelope('cumulative_energy_consumed_since_last_upload', [
-            { time: '2026-03-01 00:00:00.000000000', value: '571.0' },
-          ]),
-        ),
-      )
-      const facade = new HomeDeviceAtaFacade(api, createModel())
-
-      const value = okValue(
-        await facade.getEnergyReport({
-          from: '2026-03-01T00:00:00Z',
-          to: '2026-03-03T00:00:00Z',
-        }),
+      const value = await chartEnergyReport(
+        { from: '2026-03-01T00:00:00Z', to: '2026-03-03T00:00:00Z' },
+        [{ time: '2026-03-01 00:00:00.000000000', value: '571.0' }],
+        api,
       )
 
       // Up to a month, day buckets aggregate hourly wire buckets per
@@ -586,63 +600,24 @@ describe('home device ata facade', () => {
     })
 
     it('lands evening UTC buckets on the next local calendar day', async () => {
-      // Pin the label locale: the runner's default is not ours.
-      const api = createMockHomeApi({
-        locale: 'fr-FR',
-        timezone: 'Europe/Paris',
-      })
-      vi.mocked(api.getEnergy).mockResolvedValue(
-        ok(
-          homeEnergyEnvelope('cumulative_energy_consumed_since_last_upload', [
-            // 23:30 UTC = 00:30 the next day in winter Paris time.
-            { time: '2026-03-01 23:30:00.000000000', value: '100.0' },
-          ]),
-        ),
-      )
-      const facade = new HomeDeviceAtaFacade(api, createModel())
-
-      const value = okValue(
-        await facade.getEnergyReport({
-          from: '2026-02-28T23:00:00Z',
-          to: '2026-03-02T22:00:00Z',
-        }),
+      const value = await chartEnergyReport(
+        { from: '2026-02-28T23:00:00Z', to: '2026-03-02T22:00:00Z' },
+        // 23:30 UTC = 00:30 the next day in winter Paris time.
+        [{ time: '2026-03-01 23:30:00.000000000', value: '100.0' }],
+        // Pin the label locale: the runner's default is not ours.
+        createMockHomeApi({ locale: 'fr-FR', timezone: 'Europe/Paris' }),
       )
 
       expect(value.labels).toStrictEqual(['1 mars', '2 mars'])
       expect(value.series[0]?.data).toStrictEqual([0, 0.1])
     })
 
-    it('keeps raw UTC day buckets beyond a month', async () => {
-      const api = createMockHomeApi()
-      vi.mocked(api.getEnergy).mockResolvedValue(ok({ measureData: [] }))
-      const facade = new HomeDeviceAtaFacade(api, createModel())
-
-      okValue(
-        await facade.getEnergyReport({
-          from: '2026-01-01T00:00:00Z',
-          to: '2026-03-01T00:00:00Z',
-        }),
-      )
-
-      expect(vi.mocked(api.getEnergy).mock.calls[0]?.[1]?.interval).toBe('Day')
-    })
-
     it('switches a one-day energy report to hourly buckets', async () => {
       const api = createMockHomeApi()
-      vi.mocked(api.getEnergy).mockResolvedValue(
-        ok(
-          homeEnergyEnvelope('cumulative_energy_consumed_since_last_upload', [
-            { time: '2026-03-01 09:00:00.000000000', value: '200.0' },
-          ]),
-        ),
-      )
-      const facade = new HomeDeviceAtaFacade(api, createModel())
-
-      const value = okValue(
-        await facade.getEnergyReport({
-          from: '2026-03-01T00:00:00Z',
-          to: '2026-03-02T00:00:00Z',
-        }),
+      const value = await chartEnergyReport(
+        { from: '2026-03-01T00:00:00Z', to: '2026-03-02T00:00:00Z' },
+        [{ time: '2026-03-01 09:00:00.000000000', value: '200.0' }],
+        api,
       )
 
       // One day: hourly wire buckets, matching the Classic report.
@@ -655,21 +630,35 @@ describe('home device ata facade', () => {
       expect(value.series[0]?.data[9]).toBeCloseTo(0.2)
     })
 
-    it('keeps hourly buckets when the one-day window drifts by ms', async () => {
-      const api = createMockHomeApi()
-      vi.mocked(api.getEnergy).mockResolvedValue(ok({ measureData: [] }))
-      const facade = new HomeDeviceAtaFacade(api, createModel())
+    // The wire interval tracks the window length; an empty measure set
+    // keeps the charted value out of the way of the pinned call shape.
+    it.each([
+      {
+        interval: 'Day',
+        range: { from: '2026-01-01T00:00:00Z', to: '2026-03-01T00:00:00Z' },
+        windowKind: 'a window beyond a month',
+      },
+      {
+        interval: 'Hour',
+        // The caller stamps `from` a beat before the library stamps
+        // `to`.
+        range: { from: '2026-03-01T00:00:00Z', to: '2026-03-02T00:00:00.250Z' },
+        windowKind: 'a one-day window drifting by ms',
+      },
+    ])(
+      'requests $interval wire buckets for $windowKind',
+      async ({ interval, range }) => {
+        const api = createMockHomeApi()
+        vi.mocked(api.getEnergy).mockResolvedValue(ok({ measureData: [] }))
+        const facade = new HomeDeviceAtaFacade(api, createModel())
 
-      // The caller stamps `from` a beat before the library stamps `to`.
-      okValue(
-        await facade.getEnergyReport({
-          from: '2026-03-01T00:00:00Z',
-          to: '2026-03-02T00:00:00.250Z',
-        }),
-      )
+        okValue(await facade.getEnergyReport(range))
 
-      expect(vi.mocked(api.getEnergy).mock.calls[0]?.[1]?.interval).toBe('Hour')
-    })
+        expect(vi.mocked(api.getEnergy).mock.calls[0]?.[1]?.interval).toBe(
+          interval,
+        )
+      },
+    )
   })
 
   describe('signal chart', () => {
