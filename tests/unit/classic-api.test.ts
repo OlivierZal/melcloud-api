@@ -52,10 +52,12 @@ const loginResponse = (
  * calls by discriminating on the `url` field in the request config.
  * @param contextKey - LoginData.ContextKey returned by the mocked login call.
  * @param expiry - LoginData.Expiry returned by the mocked login call.
+ * @param buildings - Buildings returned by the mocked list call.
  */
 const mockLoginAndList = (
   contextKey = 'ctx',
   expiry = '2030-12-31T00:00:00',
+  buildings: ReturnType<typeof classicBuildingWithStructure>[] = [],
 ): void => {
   mockRequest.mockImplementation(async (config) => {
     await Promise.resolve()
@@ -63,7 +65,7 @@ const mockLoginAndList = (
       return loginResponse(contextKey, expiry)
     }
     if (config.url === '/User/ListDevices') {
-      return wrap([])
+      return wrap(buildings)
     }
     return wrap({})
   })
@@ -100,6 +102,28 @@ describe('mELCloud Classic API', () => {
       transport: mockHttpClient,
       ...config,
     })
+
+  // One-device building behind the login + list mocks, then a real
+  // authenticate(): the shared starting state of the registry
+  // lifecycle cases (populate on login, empty on logOut).
+  const authenticateWithPopulatedRegistry = async (): Promise<
+    Awaited<ReturnType<typeof melCloudApi.create>>
+  > => {
+    mockLoginAndList('ctx', '2030-12-31T00:00:00', [
+      classicBuildingWithStructure({
+        Structure: {
+          Areas: [],
+          Devices: [
+            classicRawDevice({ DeviceID: 42, DeviceName: 'Populated' }),
+          ],
+          Floors: [],
+        },
+      }),
+    ])
+    const api = await createApi()
+    await api.authenticate({ password: 'pass', username: 'user' })
+    return api
+  }
 
   it('creates a ClassicAPI instance via static create()', async () => {
     const api = await createApi()
@@ -516,53 +540,13 @@ describe('mELCloud Classic API', () => {
     // after a successful login. Enforced by BaseAPI.authenticate's
     // template method (guard against OlivierZal/com.melcloud#1281-style regressions).
     it('populates the device registry during authenticate', async () => {
-      const building = classicBuildingWithStructure({
-        Structure: {
-          Areas: [],
-          Devices: [
-            classicRawDevice({ DeviceID: 42, DeviceName: 'Populated' }),
-          ],
-          Floors: [],
-        },
-      })
-      mockRequest.mockImplementation(async (config) => {
-        await Promise.resolve()
-        if (config.url === '/Login/ClientLogin3') {
-          return loginResponse()
-        }
-        if (config.url === '/User/ListDevices') {
-          return wrap([building])
-        }
-        return wrap({})
-      })
-      const api = await createApi()
-      await api.authenticate({ password: 'pass', username: 'user' })
+      const api = await authenticateWithPopulatedRegistry()
 
       expect(api.registry.devices.getById(42)?.name).toBe('Populated')
     })
 
     it('empties the device registry and de-authenticates on logOut', async () => {
-      const building = classicBuildingWithStructure({
-        Structure: {
-          Areas: [],
-          Devices: [
-            classicRawDevice({ DeviceID: 42, DeviceName: 'Populated' }),
-          ],
-          Floors: [],
-        },
-      })
-      mockRequest.mockImplementation(async (config) => {
-        await Promise.resolve()
-        if (config.url === '/Login/ClientLogin3') {
-          return loginResponse()
-        }
-        if (config.url === '/User/ListDevices') {
-          return wrap([building])
-        }
-        return wrap({})
-      })
-      const api = await createApi()
-      await api.authenticate({ password: 'pass', username: 'user' })
+      const api = await authenticateWithPopulatedRegistry()
 
       expect(api.isAuthenticated()).toBe(true)
 
@@ -699,53 +683,38 @@ describe('mELCloud Classic API', () => {
       )
     })
 
-    it('filters out entries with invalid year', async () => {
+    // One filtering mechanism, three year-1 sentinel spellings: each
+    // row is a wire shape the parser must read as "no instant".
+    it.each([
+      {
+        entry: {
+          EndDate: '0001-01-01',
+          ErrorMessage: 'Bad',
+          StartDate: '0001-01-01T00:00:00',
+        },
+        sentinel: 'entries with invalid year',
+      },
+      {
+        entry: {
+          EndDate: '2025-09-29T20:56:00+01:00',
+          ErrorMessage: 'Unknown Error',
+          StartDate: '0001-01-01T00:00:00Z',
+        },
+        sentinel: 'the instant-dialect sentinel (live payload 2026-07-18)',
+      },
+      {
+        entry: {
+          ErrorMessage: 'Unknown Error',
+          // Lands in UTC year 0 — still the sentinel, never an
+          // ancient instant.
+          StartDate: '0001-01-01T00:00:00+01:00',
+        },
+        sentinel: 'an offset-shifted year-1 sentinel',
+      },
+    ])('filters out $sentinel', async ({ entry }) => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockRequest.mockResolvedValue(
-        wrap([
-          errorEntry({
-            EndDate: '0001-01-01',
-            ErrorMessage: 'Bad',
-            StartDate: '0001-01-01T00:00:00',
-          }),
-        ]),
-      )
-      const result = await api.getErrorLog({}, [1])
-
-      expect(okValue(result).entries).toHaveLength(0)
-    })
-
-    it('filters out the instant-dialect sentinel (live payload 2026-07-18)', async () => {
-      mockLoginAndList()
-      const api = await createApi({ password: 'pass', username: 'user' })
-      mockRequest.mockResolvedValue(
-        wrap([
-          errorEntry({
-            EndDate: '2025-09-29T20:56:00+01:00',
-            ErrorMessage: 'Unknown Error',
-            StartDate: '0001-01-01T00:00:00Z',
-          }),
-        ]),
-      )
-      const result = await api.getErrorLog({}, [1])
-
-      expect(okValue(result).entries).toHaveLength(0)
-    })
-
-    it('filters out an offset-shifted year-1 sentinel', async () => {
-      mockLoginAndList()
-      const api = await createApi({ password: 'pass', username: 'user' })
-      mockRequest.mockResolvedValue(
-        wrap([
-          errorEntry({
-            ErrorMessage: 'Unknown Error',
-            // Lands in UTC year 0 — still the sentinel, never an
-            // ancient instant.
-            StartDate: '0001-01-01T00:00:00+01:00',
-          }),
-        ]),
-      )
+      mockRequest.mockResolvedValue(wrap([errorEntry(entry)]))
       const result = await api.getErrorLog({}, [1])
 
       expect(okValue(result).entries).toHaveLength(0)
