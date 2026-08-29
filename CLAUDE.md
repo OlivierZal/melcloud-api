@@ -222,6 +222,23 @@ proves nothing — and heatzy-api mirrors the same table on its own
 dialect. `base-api.test.ts` stays where the mechanism goes; the kernel
 does not.
 
+Byte-identical carries a PRECONDITION, recorded in the kernel's own
+header: `src/api/base.ts` and `src/api/types.ts` must SURVIVE the move
+as thin re-export shims, because every kernel import resolves through
+them — replacing either with a direct `@olivierzal/api-core` import
+forces an edit in the witness, and an edited witness proves nothing
+about the move it was meant to witness. The kernel also holds the two
+seams the extraction is most likely to blunt. The transport-resolution
+gate must keep binding THIS repo's `HttpClient`: bound to the core
+class instead, a bare core client would newly be ADOPTED rather than
+re-wrapped, shipping a transport with no MELCloud redaction
+vocabulary. And `SyncManager` still receives the RAW host logger where
+every other seat gets the labelled one, so a rejected auto-sync tick
+reports itself without naming the dialect — a latent bug pinned AS IT
+IS, deliberately: those strings land verbatim in user diagnostic
+reports, so it gets its own fix, never a silent tidy-up inside a
+neutrality-critical change.
+
 ## Tooling boundary (@olivierzal/configs)
 
 The shared tooling lives in `@olivierzal/configs` (exact pin): the
