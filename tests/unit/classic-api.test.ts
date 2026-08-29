@@ -14,8 +14,11 @@ import {
   toClassicDeviceId,
 } from '../../src/types/index.ts'
 import {
+  CLASSIC_LIST_PATH,
   classicBuildingWithStructure,
+  classicLoginResponse,
   classicRawDevice,
+  stageClassicWire,
 } from '../classic-fixtures.ts'
 import {
   cast,
@@ -40,13 +43,6 @@ const wrap = <T>(
   status: 200,
 })
 
-const loginResponse = (
-  contextKey = 'ctx',
-  expiry = '2030-12-31T00:00:00',
-): ReturnType<
-  typeof wrap<{ LoginData: { ContextKey: string; Expiry: string } }>
-> => wrap({ LoginData: { ContextKey: contextKey, Expiry: expiry } })
-
 /**
  * Configure `mockRequest` to handle login (POST) and list (GET)
  * calls by discriminating on the `url` field in the request config.
@@ -59,15 +55,10 @@ const mockLoginAndList = (
   expiry = '2030-12-31T00:00:00',
   buildings: ReturnType<typeof classicBuildingWithStructure>[] = [],
 ): void => {
-  mockRequest.mockImplementation(async (config) => {
-    await Promise.resolve()
-    if (config.url === '/Login/ClientLogin3') {
-      return loginResponse(contextKey, expiry)
-    }
-    if (config.url === '/User/ListDevices') {
-      return wrap(buildings)
-    }
-    return wrap({})
+  stageClassicWire(mockRequest, {
+    login: () => classicLoginResponse(contextKey, expiry),
+    rest: ({ url }) =>
+      wrap<unknown>(url === CLASSIC_LIST_PATH ? buildings : {}),
   })
 }
 
@@ -177,7 +168,7 @@ describe('mELCloud Classic API', () => {
     mockRequest.mockImplementation(async (config) => {
       await Promise.resolve()
       if (config.url === '/Login/ClientLogin3') {
-        return loginResponse('ctx', '2030-12-31T00:00:00')
+        return classicLoginResponse('ctx', '2030-12-31T00:00:00')
       }
       throw new Error('registry')
     })
@@ -856,7 +847,7 @@ describe('mELCloud Classic API', () => {
           return wrap([])
         }
         if (config.url === '/Login/ClientLogin3') {
-          return loginResponse()
+          return classicLoginResponse()
         }
         return wrap([])
       })
@@ -1078,7 +1069,7 @@ describe('mELCloud Classic API', () => {
       mockRequest.mockImplementation(async (config) => {
         await Promise.resolve()
         if (config.url === '/Login/ClientLogin3') {
-          return loginResponse('new-ctx', '2030-12-31T00:00:00')
+          return classicLoginResponse('new-ctx', '2030-12-31T00:00:00')
         }
         if (config.url === '/User/ListDevices') {
           return wrap([])

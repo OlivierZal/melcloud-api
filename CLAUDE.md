@@ -211,6 +211,17 @@ api-core too — this repo's `observability.test.ts`/`http-client.test.ts`
 are thin vocabulary/wiring suites pinning what is OURS: the key set and
 the fact that every shell arrives pre-bound to it.
 
+The next mechanism to cross that boundary is `src/api/base.ts` — the
+session lifecycle and the request pipeline. Its witness is
+`tests/contracts/session-lifecycle.test.ts`, a clause table run against
+BOTH real dialect legs (never a synthetic `BaseAPI` subclass: a suite
+whose hooks are `vi.fn`s proves the template calls its own hooks, not
+that ClassicAPI and HomeAPI still behave the same after the move). The
+kernel must cross byte-identical — a clause reworded during the move
+proves nothing — and heatzy-api mirrors the same table on its own
+dialect. `base-api.test.ts` stays where the mechanism goes; the kernel
+does not.
+
 ## Tooling boundary (@olivierzal/configs)
 
 The shared tooling lives in `@olivierzal/configs` (exact pin): the

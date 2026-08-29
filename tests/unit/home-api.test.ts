@@ -3,8 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { HomeAPI } from '../../src/api/home.ts'
 import type { HomeAPIConfig } from '../../src/api/index.ts'
 import type {
-  HomeBuilding,
-  HomeContext,
   HomeEnergyData,
   HomeErrorLogEntry,
   HomeReportData,
@@ -25,7 +23,16 @@ import {
   mockResponse,
   mockTemporalNowInstant,
 } from '../helpers.ts'
-import { homeReportPoint, typedHomeAtwDeviceData } from '../home-fixtures.ts'
+import {
+  homeCognitoLoginPage,
+  homeContextBuilding,
+  homeContextData,
+  homeReportPoint,
+  homeTokenResponse,
+  stageHomeOidcDance,
+  stageHomeTokenExchange,
+  typedHomeAtwDeviceData,
+} from '../home-fixtures.ts'
 
 const MS_PER_SECOND = 1000
 
@@ -33,137 +40,18 @@ const BASE_URL = 'https://melcloudhome.com'
 const COGNITO = 'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 const AUTH_BASE = 'https://auth.melcloudhome.com'
 
-const cognitoLoginPage = (
-  action = '/login?client_id=test&amp;state=abc',
-  csrf = 'csrf-token',
-): string =>
-  `<form action="${action}" method="POST">` +
-  `<input type="hidden" name="_csrf" value="${csrf}"/>` +
-  '<input type="hidden" name="cognitoAsfData" value=""/>' +
-  '</form>'
+const cognitoLoginPage = homeCognitoLoginPage
 
-const mockAtaCapabilities = {
-  hasAirDirection: true,
-  hasAutomaticFanSpeed: true,
-  hasAutoOperationMode: true,
-  hasCoolOperationMode: true,
-  hasDemandSideControl: true,
-  hasDryOperationMode: true,
-  hasEnergyConsumedMeter: true,
-  hasExtendedTemperatureRange: true,
-  hasHalfDegreeIncrements: false,
-  hasHeatOperationMode: true,
-  hasStandby: true,
-  hasSwing: true,
-  isLegacyDevice: false,
-  isMultiSplitSystem: false,
-  maxTempAutomatic: 30,
-  maxTempCoolDry: 30,
-  maxTempHeat: 30,
-  minTempAutomatic: 10,
-  minTempCoolDry: 10,
-  minTempHeat: 10,
-  numberOfFanSpeeds: 5,
-  supportsWideVane: false,
-}
+const mockBuilding = homeContextBuilding
 
-const mockAtwCapabilities = {
-  ftcModel: 3,
-  hasBoiler: true,
-  hasDemandSideControl: true,
-  hasDualRoomTemperature: false,
-  hasEstimatedEnergyConsumption: true,
-  hasEstimatedEnergyProduction: true,
-  hasHalfDegrees: true,
-  hasHeatZone1: true,
-  hasHeatZone2: false,
-  hasHotWater: false,
-  hasMeasuredEnergyConsumption: false,
-  hasMeasuredEnergyProduction: false,
-  hasThermostatZone1: true,
-  hasThermostatZone2: false,
-  hasWirelessRemote: true,
-  hasZone2: false,
-  immersionHeaterCapacity: 0,
-  maxHeatOutput: 0,
-  maxImportPower: 0,
-  maxSetTankTemperature: 60,
-  maxSetTemperature: 30,
-  minSetTankTemperature: 40,
-  minSetTemperature: 10,
-  refridgerentAddress: 0,
-  temperatureIncrement: 0.5,
-  temperatureIncrementOverride: '2',
-  temperatureUnit: '',
-}
-
-const commonDeviceFields = {
-  displayIcon: 'Office',
-  frostProtection: null,
-  holidayMode: null,
-  isConnected: true,
-  isInError: false,
-  overheatProtection: null,
-  schedule: [],
-  scheduleEnabled: false,
-  timeZone: 'Europe/Paris',
-} as const
-
-const mockBuilding: HomeBuilding = {
-  airToAirUnits: [
-    {
-      ...commonDeviceFields,
-      capabilities: mockAtaCapabilities,
-      connectedInterfaceIdentifier: 'FE0000060403388D3DFFFE000000000000',
-      connectedInterfaceType: 'fourthGenWifi',
-      givenDisplayName: 'Test ClassicDevice',
-      id: 'device-1',
-      rssi: -50,
-      settings: [{ name: 'Power', value: 'True' }],
-      systemId: null,
-      unitSettings: null,
-    },
-  ],
-  airToWaterUnits: [
-    {
-      ...commonDeviceFields,
-      capabilities: mockAtwCapabilities,
-      ftcModel: 'ftC6',
-      givenDisplayName: 'ATW ClassicDevice',
-      id: 'device-2',
-      macAddress: 'FE0000060403388D3DFFFE000000000001',
-      rssi: -55,
-      settings: [],
-    },
-  ],
-  id: 'building-1',
-  name: 'Home',
-  timezone: 'Europe/Paris',
-}
-
-const mockContext: HomeContext = {
-  buildings: [],
-  country: 'FR',
-  email: 'test@example.com',
-  firstname: 'Test',
-  guestBuildings: [mockBuilding],
-  id: 'user-1',
-  language: 'fr',
-  lastname: 'User',
-  numberOfBuildingsAllowed: 2,
-  numberOfDevicesAllowed: 10,
-  numberOfGuestDevicesAllowed: 10,
-  numberOfGuestUsersAllowedPerUnit: 5,
-  scenes: [],
-}
+const mockContext = homeContextData()
 
 // Same devices, but owned (in `buildings`) rather than shared — so the
 // registry tags them isOwner: true.
-const mockOwnedContext: HomeContext = {
-  ...mockContext,
-  buildings: [mockBuilding],
+const mockOwnedContext = homeContextData({
+  buildings: [homeContextBuilding],
   guestBuildings: [],
-}
+})
 
 const mockEnergyData: HomeEnergyData = {
   deviceId: 'device-1',
@@ -222,14 +110,7 @@ const mockSignalData: HomeEnergyData = {
   ],
 }
 
-const mockTokenResponse = {
-  access_token: 'test-access-token',
-  expires_in: 3600,
-  id_token: 'test-id-token',
-  refresh_token: 'test-refresh-token',
-  scope: 'openid profile email offline_access IdentityServerApi',
-  token_type: 'Bearer',
-}
+const mockTokenResponse = homeTokenResponse
 
 const { client: mockHttpClient, requestSpy: mockRequest } =
   createMockHttpClient(BASE_URL)
@@ -241,61 +122,8 @@ const { client: mockHttpClient, requestSpy: mockRequest } =
 const mockFetch = vi.fn<typeof fetch>()
 vi.stubGlobal('fetch', mockFetch)
 
-// Queue the scripted OIDC dance on top of the global `fetch` mock, up
-// to (and excluding) the token exchange. Order matches the runtime
-// flow: PAR, redirect chain, credential submission, callback
-// resolution. Each caller stages its own token-exchange outcome next.
 const setupLoginUntilTokenExchange = (): void => {
-  const callbackUrl =
-    'https://auth.melcloudhome.com/signin-oidc-meu?code=abc&state=xyz'
-
-  mockFetch
-    // 1. PAR
-    .mockResolvedValueOnce(
-      mockFetchResponse(
-        { request_uri: 'urn:ietf:params:oauth:request_uri:test' },
-        {},
-        200,
-      ),
-    )
-    // 2. Redirect chain to Cognito login page
-    .mockResolvedValueOnce(
-      mockFetchResponse('', { location: `${AUTH_BASE}/connect/redirect` }, 302),
-    )
-    .mockResolvedValueOnce(
-      mockFetchResponse(
-        '',
-        { location: `${COGNITO}/oauth2/authorize?client_id=test` },
-        302,
-      ),
-    )
-    .mockResolvedValueOnce(
-      mockFetchResponse(
-        '',
-        { location: `${COGNITO}/login?client_id=test` },
-        302,
-      ),
-    )
-    .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
-    // 3. Credential POST → 302 to callback
-    .mockResolvedValueOnce(
-      mockFetchResponse('', { location: callbackUrl }, 302),
-    )
-    // 4. Callback chain → JS redirect page → melcloudhome://?code=...
-    .mockResolvedValueOnce(
-      mockFetchResponse(
-        '',
-        { location: 'https://auth.melcloudhome.com/ExternalLogin/Callback' },
-        302,
-      ),
-    )
-    .mockResolvedValueOnce(
-      mockFetchResponse(
-        "<script>window.location='melcloudhome://?code=auth-code&amp;state=xyz'</script>",
-        {},
-        200,
-      ),
-    )
+  stageHomeOidcDance(mockFetch)
 }
 
 // The full successful sequence: the dance above, then the token
@@ -303,11 +131,7 @@ const setupLoginUntilTokenExchange = (): void => {
 // mock.
 const setupSuccessfulLogin = (): void => {
   setupLoginUntilTokenExchange()
-
-  // 5. Token exchange
-  mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse, {}, 200))
-
-  // 6. GET /context via the HttpClient BFF instance
+  stageHomeTokenExchange(mockFetch)
   mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 }
 
@@ -2502,16 +2326,9 @@ describe('melcloud home API', () => {
 
   describe('context drift resilience', () => {
     const validAtaUnit = {
-      ...commonDeviceFields,
-      capabilities: mockAtaCapabilities,
-      connectedInterfaceIdentifier: 'FE0000060403388D3DFFFE000000000000',
-      connectedInterfaceType: 'fourthGenWifi',
+      ...defined(homeContextBuilding.airToAirUnits[0]),
       givenDisplayName: 'Valid ATA unit',
-      id: 'device-1',
-      rssi: -50,
       settings: [],
-      systemId: null,
-      unitSettings: null,
     }
 
     // The captured production regression: power-off schedule entries

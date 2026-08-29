@@ -1,10 +1,15 @@
-import { vi } from 'vitest'
+import { type MockInstance, vi } from 'vitest'
 
 import type {
   ClassicAPIAdapter,
   ClassicErrorLog,
   SyncCallback,
 } from '../src/api/index.ts'
+import type {
+  HttpClient,
+  HttpRequestConfig,
+  HttpResponse,
+} from '../src/http/index.ts'
 import {
   ClassicDeviceType,
   ClassicLabelType,
@@ -482,4 +487,56 @@ export const populatedClassicRegistry = ({
   registry.syncAreas(areas)
   registry.syncDevices(devices)
   return registry
+}
+
+// ---------------------------------------------------------------------------
+// Wire staging — the two endpoints the Classic session lifecycle turns on:
+// the sign-in round-trip and the bulk registry cycle.
+// ---------------------------------------------------------------------------
+
+export const CLASSIC_LOGIN_PATH = '/Login/ClientLogin3'
+
+export const CLASSIC_LIST_PATH = '/User/ListDevices'
+
+/**
+ * The accepted `ClientLogin3` answer, in the transport's envelope.
+ * @param contextKey - Session key the server hands out.
+ * @param expiry - Session expiry, in the server's offset-less wall clock.
+ * @returns The wrapped login response.
+ */
+export const classicLoginResponse = (
+  contextKey = 'ctx',
+  expiry = '2030-12-31T00:00:00',
+): HttpResponse<{ LoginData: { ContextKey: string; Expiry: string } }> => ({
+  data: { LoginData: { ContextKey: contextKey, Expiry: expiry } },
+  headers: {},
+  status: 200,
+})
+
+/**
+ * Route the mocked transport by URL: the sign-in POST to one responder,
+ * every other call — the bulk registry cycle, any mutation — to the
+ * other. One implementation rather than a queue, so a scenario that
+ * signs in several times needs no re-staging. Responders are
+ * synchronous: a refusal is expressed by throwing, which the wrapping
+ * implementation turns into a rejected round-trip.
+ * @param requestSpy - Spy standing in for `HttpClient.request`.
+ * @param responders - What each half of the wire answers.
+ * @param responders.login - Answer for `/Login/ClientLogin3`.
+ * @param responders.rest - Answer for every other URL.
+ */
+export const stageClassicWire = (
+  requestSpy: MockInstance<HttpClient['request']>,
+  {
+    login,
+    rest,
+  }: {
+    login: () => HttpResponse
+    rest: (config: HttpRequestConfig) => HttpResponse
+  },
+): void => {
+  requestSpy.mockImplementation(async (config) => {
+    await Promise.resolve()
+    return config.url === CLASSIC_LOGIN_PATH ? login() : rest(config)
+  })
 }
