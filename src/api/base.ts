@@ -341,6 +341,13 @@ export abstract class BaseAPI implements Disposable {
     credentials: LoginCredentials,
   ): Promise<void>
 
+  /**
+   * Subclass hook: the same refresh with failures PROPAGATING, for the
+   * enforced post-auth sync. A permanent registry failure must not let
+   * a sign-in resolve over an empty registry.
+   */
+  protected abstract enforceRegistrySync(): Promise<void>
+
   protected abstract getAuthHeaders(): Record<string, string>
 
   /**
@@ -391,6 +398,10 @@ export abstract class BaseAPI implements Disposable {
    */
   protected abstract reuseSucceeded(): boolean
 
+  /**
+   * Subclass hook: refresh the registry BEST-EFFORT. Failures are
+   * logged and swallowed — {@link tryReuseSession} depends on it.
+   */
   protected abstract syncRegistry(): Promise<void>
 
   /**
@@ -450,11 +461,11 @@ export abstract class BaseAPI implements Disposable {
       return true
     }
     if (this.hasPersistedSession()) {
-      try {
-        await this.syncRegistry()
-      } catch (error) {
-        this.logger.error('Session probe failed:', error)
-      }
+      // No guard needed: `syncRegistry` is the BEST-EFFORT hook by
+      // contract — it logs and swallows, which is what keeps this probe
+      // non-destructive. The propagating path is `enforceRegistrySync`,
+      // and only the enforced post-auth sync calls it.
+      await this.syncRegistry()
       if (this.isAuthenticated()) {
         return true
       }
@@ -553,7 +564,13 @@ export abstract class BaseAPI implements Disposable {
       return true
     } catch (error) {
       this.logger.error('Session resume failed:', error)
-      return false
+      // Judge by the SESSION, not by the throw: a sign-in that the
+      // server accepted before its enforced registry sync failed IS
+      // authenticated, which is this method's documented meaning.
+      // Returning `false` there would have `initialize()` emit a
+      // spurious `onAuthenticationLost`, prompting the user to sign in
+      // again over credentials that had just worked.
+      return this.isAuthenticated()
     }
   }
 
@@ -722,22 +739,45 @@ export abstract class BaseAPI implements Disposable {
   }
 
   /**
+   * The heartbeat's guard around {@link runSyncCycle}: a flaky periodic
+   * refresh must not crash the host, so the failure is logged and the
+   * caller reads an empty list; the next cycle retries.
+   *
+   * The ENFORCED post-auth sync deliberately does not come through
+   * here. A permanent registry failure — a `ValidationError`, a device
+   * type this SDK predates — cannot be cleared by retrying, so
+   * swallowing it would let `authenticate()` resolve over an empty
+   * registry, which consumers read as "this account has no devices".
+   * @param cycle - The registry cycle to run best-effort.
+   * @returns The fetched entries, or an empty array on failure.
+   */
+  protected async runBestEffortSyncCycle<T>(
+    cycle: () => Promise<T[]>,
+  ): Promise<T[]> {
+    try {
+      return await cycle()
+    } catch (error) {
+      this.logger.error('Failed to fetch devices:', error)
+      return []
+    }
+  }
+
+  /**
    * Template for the registry-refresh heartbeat shared by Classic's
    * `fetch()` and Home's `list()`: pause the auto-sync timer, run the
    * subclass work, log + swallow failures (a flaky heartbeat must not
    * crash the host — the next cycle retries), and always reschedule
    * the next sync.
    * @param work - Subclass closure that fetches and syncs the registry.
-   * @returns The fetched entries, or an empty array on failure.
+   * @returns The fetched entries.
+   * @throws Whatever `work` raises — see
+   *   {@link runBestEffortSyncCycle} for the swallowing variant.
    */
   protected async runSyncCycle<T>(work: () => Promise<T[]>): Promise<T[]> {
     const epoch = this.#logOutEpoch
     this.clearSync()
     try {
       return await work()
-    } catch (error) {
-      this.logger.error('Failed to fetch devices:', error)
-      return []
     } finally {
       this.#settleSyncCycle(epoch)
     }
@@ -883,7 +923,7 @@ export abstract class BaseAPI implements Disposable {
       return
     }
     this.#setLoginBackoffUntil(null)
-    await this.syncRegistry()
+    await this.enforceRegistrySync()
   }
 
   // A loss is only a loss when there was something to restore — a

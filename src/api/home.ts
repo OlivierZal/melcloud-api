@@ -293,34 +293,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Fetch all buildings (owned + guest), sync the device registry,
-   * and schedule the next auto-sync — the same heartbeat contract as
-   * the Classic `fetch()`.
-   * @returns All buildings or an empty array on failure.
-   */
-  @syncDevices()
-  public async fetch(): Promise<HomeBuilding[]> {
-    return this.runSyncCycle(async () => {
-      const data = await this.#fetchContext()
-      if (data === null) {
-        // `#markNoHome` already emptied the registry, on whichever
-        // entry point saw the 404.
-        return []
-      }
-      this.#registry.syncDevices([
-        // Guest entries first: the registry upsert is last-write-wins
-        // per id, so a device duplicated across `buildings` and
-        // `guestBuildings` keeps its owned tag.
-        ...data.guestBuildings.flatMap((building) =>
-          toTypedDevices(building, false),
-        ),
-        ...data.buildings.flatMap((building) => toTypedDevices(building, true)),
-      ])
-      return [...data.buildings, ...data.guestBuildings]
-    })
-  }
-
-  /**
    * Batch frost-protection write for a set of devices (grouped by type in
    * `postData.units`), then refresh `/context`. One request scopes to a
    * single account's devices.
@@ -358,6 +330,16 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     postData: HomeOverheatProtectionPostData,
   ): Promise<void> {
     await this.requestData('post', OVERHEAT_PROTECTION_PATH, { data: postData })
+  }
+
+  /**
+   * Fetch all buildings (owned + guest), sync the device registry,
+   * and schedule the next auto-sync — the same heartbeat contract as
+   * the Classic `fetch()`.
+   * @returns All buildings or an empty array on failure.
+   */
+  public async fetch(): Promise<HomeBuilding[]> {
+    return this.runBestEffortSyncCycle(async () => this.#syncCycle())
   }
 
   /**
@@ -613,6 +595,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     }
   }
 
+  protected override async enforceRegistrySync(): Promise<void> {
+    await this.#syncCycle()
+  }
+
   protected getAuthHeaders(): Record<string, string> {
     return this.accessToken === ''
       ? {}
@@ -705,6 +691,31 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   protected override async syncRegistry(): Promise<void> {
     await this.fetch()
+  }
+
+  // The registry refresh both entry points share. It carries the sync
+  // notification, so a failed refresh never announces a completed sync
+  // — consumers would rewrite stale values as if they were fresh.
+  @syncDevices()
+  async #syncCycle(): Promise<HomeBuilding[]> {
+    return this.runSyncCycle(async () => {
+      const data = await this.#fetchContext()
+      if (data === null) {
+        // `#markNoHome` already emptied the registry, on whichever
+        // entry point saw the 404.
+        return []
+      }
+      this.#registry.syncDevices([
+        // Guest entries first: the registry upsert is last-write-wins
+        // per id, so a device duplicated across `buildings` and
+        // `guestBuildings` keeps its owned tag.
+        ...data.guestBuildings.flatMap((building) =>
+          toTypedDevices(building, false),
+        ),
+        ...data.buildings.flatMap((building) => toTypedDevices(building, true)),
+      ])
+      return [...data.buildings, ...data.guestBuildings]
+    })
   }
 
   /**

@@ -219,9 +219,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Fetch all buildings, sync the model registry, and schedule the next auto-sync.
    * @returns The list of fetched buildings.
    */
-  @syncDevices()
   public async fetch(): Promise<ClassicBuildingWithStructure[]> {
-    return this.runSyncCycle(async () => this.#fetch())
+    return this.runBestEffortSyncCycle(async () => this.#syncCycle())
   }
 
   public async getEnergy<T extends ClassicDeviceType>({
@@ -607,6 +606,10 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     this.expiry = loginData.Expiry
   }
 
+  protected override async enforceRegistrySync(): Promise<void> {
+    await this.#syncCycle()
+  }
+
   protected getAuthHeaders(): Record<string, string> {
     return this.contextKey === '' ? {} : { 'X-MitsContextKey': this.contextKey }
   }
@@ -695,6 +698,14 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
 
   protected override async syncRegistry(): Promise<void> {
     await this.fetch()
+  }
+
+  // The registry refresh both entry points share. It carries the
+  // sync notification, so a failed refresh never announces a completed
+  // sync — consumers would rewrite stale values as if they were fresh.
+  @syncDevices()
+  async #syncCycle(): Promise<ClassicBuildingWithStructure[]> {
+    return this.runSyncCycle(async () => this.#fetch())
   }
 
   async #fetch(): Promise<ClassicBuildingWithStructure[]> {

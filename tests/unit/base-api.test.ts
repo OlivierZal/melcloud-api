@@ -140,7 +140,16 @@ class TestAPI extends BaseAPI {
   }
 
   /**
-   * Expose the protected runSyncCycle for direct testing.
+   * Expose the protected best-effort wrapper for direct testing.
+   */
+  public async callRunBestEffortSyncCycle<T>(
+    work: () => Promise<T[]>,
+  ): Promise<T[]> {
+    return this.runBestEffortSyncCycle(async () => this.runSyncCycle(work))
+  }
+
+  /**
+   * Expose the protected strict runSyncCycle for direct testing.
    */
   public async callRunSyncCycle<T>(work: () => Promise<T[]>): Promise<T[]> {
     return this.runSyncCycle(work)
@@ -160,6 +169,10 @@ class TestAPI extends BaseAPI {
 
   protected override async doAuthenticate(): Promise<void> {
     return this.doAuthenticateMock()
+  }
+
+  protected override async enforceRegistrySync(): Promise<void> {
+    return this.syncRegistryMock()
   }
 
   protected override getAuthHeaders(): Record<string, string> {
@@ -186,8 +199,13 @@ class TestAPI extends BaseAPI {
     return this.reuseSucceededMock()
   }
 
+  // Mirrors the dialects: the probe path swallows (a boot-time blip
+  // must not destroy a valid session), the enforced path propagates.
   protected override async syncRegistry(): Promise<void> {
-    return this.syncRegistryMock()
+    await this.runBestEffortSyncCycle(async () => {
+      await this.syncRegistryMock()
+      return []
+    })
   }
 
   protected override async tryReuseSession(): Promise<boolean> {
@@ -613,6 +631,7 @@ describe('baseAPI shared request pipeline', () => {
     it('resumeSession() logs + returns false when sign-in fails', async () => {
       const logger = createLogger()
       api = apiWithPersistedCredentials({ logger })
+      api.isAuthenticatedMock.mockReturnValue(false)
       api.doAuthenticateMock.mockRejectedValueOnce(new Error('rejected'))
 
       const isResumed = await api.resumeSession()
@@ -623,6 +642,32 @@ describe('baseAPI shared request pipeline', () => {
         'Session resume failed:',
         expect.any(Error),
       )
+    })
+
+    // The documented guarantee — "successful return guarantees the
+    // registry reflects server state" — is only worth what it costs:
+    // a permanent registry failure (a ValidationError, a device type
+    // this SDK predates) cannot be retried away, so resolving here
+    // would report success over an empty registry, which consumers
+    // read as "this account has no devices".
+    it('authenticate() rejects when its enforced post-auth sync fails', async () => {
+      api = apiWithPersistedCredentials()
+      api.syncRegistryMock.mockRejectedValueOnce(new Error('registry'))
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('registry')
+    })
+
+    // The mirror clause: the sign-in itself was accepted, so the
+    // session stands and `resumeSession` says so — a `false` here had
+    // `initialize()` announce an authentication loss over credentials
+    // that had just worked.
+    it('resumeSession() reports the live session when the post-auth sync fails', async () => {
+      api = apiWithPersistedCredentials()
+      api.syncRegistryMock.mockRejectedValueOnce(new Error('registry'))
+
+      await expect(api.resumeSession()).resolves.toBe(true)
     })
 
     it('resumeSession() returns true and syncs registry on success', async () => {
@@ -799,8 +844,8 @@ describe('authentication-lost lifecycle', () => {
       })
       api.isAuthenticatedMock.mockReturnValue(false)
 
-      await api.callRunSyncCycle(failingWork)
-      await api.callRunSyncCycle(failingWork)
+      await api.callRunBestEffortSyncCycle(failingWork)
+      await api.callRunBestEffortSyncCycle(failingWork)
       await vi.advanceTimersByTimeAsync(120_000)
 
       expect(onAuthenticationLost).toHaveBeenCalledTimes(1)
@@ -820,7 +865,7 @@ describe('authentication-lost lifecycle', () => {
       })
       api.isAuthenticatedMock.mockReturnValue(false)
 
-      await api.callRunSyncCycle(failingWork)
+      await api.callRunBestEffortSyncCycle(failingWork)
       await vi.advanceTimersByTimeAsync(120_000)
 
       expect(onAuthenticationLost).not.toHaveBeenCalled()
@@ -839,7 +884,7 @@ describe('authentication-lost lifecycle', () => {
         syncIntervalMinutes: 1,
       })
 
-      await api.callRunSyncCycle(failingWork)
+      await api.callRunBestEffortSyncCycle(failingWork)
       await vi.advanceTimersByTimeAsync(60_000)
 
       expect(onAuthenticationLost).not.toHaveBeenCalled()
@@ -861,11 +906,11 @@ describe('authentication-lost lifecycle', () => {
       })
 
       api.isAuthenticatedMock.mockReturnValue(false)
-      await api.callRunSyncCycle(failingWork)
+      await api.callRunBestEffortSyncCycle(failingWork)
       api.isAuthenticatedMock.mockReturnValue(true)
       await api.callRunSyncCycle(successfulWork)
       api.isAuthenticatedMock.mockReturnValue(false)
-      await api.callRunSyncCycle(failingWork)
+      await api.callRunBestEffortSyncCycle(failingWork)
 
       expect(onAuthenticationLost).toHaveBeenCalledTimes(2)
     } finally {
@@ -893,7 +938,7 @@ describe('authentication-lost lifecycle', () => {
       expect(onAuthenticationRestored).not.toHaveBeenCalled()
 
       api.isAuthenticatedMock.mockReturnValue(false)
-      await api.callRunSyncCycle(failingWork)
+      await api.callRunBestEffortSyncCycle(failingWork)
       api.isAuthenticatedMock.mockReturnValue(true)
       await api.callRunSyncCycle(successfulWork)
       await api.callRunSyncCycle(successfulWork)
@@ -939,6 +984,8 @@ describe('automatic login backoff', () => {
         settingManager: createSettingStore({ password: 'p', username: 'u' })
           .settingManager,
       })
+      // No session stands: these sign-ins are being rejected.
+      api.isAuthenticatedMock.mockReturnValue(false)
       api.doAuthenticateMock.mockRejectedValue(new AuthenticationError('bad'))
 
       await expect(
@@ -964,6 +1011,8 @@ describe('automatic login backoff', () => {
         settingManager: createSettingStore({ password: 'p', username: 'u' })
           .settingManager,
       })
+      // No session stands: these sign-ins are being rejected.
+      api.isAuthenticatedMock.mockReturnValue(false)
       api.doAuthenticateMock.mockRejectedValue(
         new AuthenticationThrottledError('locked'),
       )
@@ -994,6 +1043,8 @@ describe('automatic login backoff', () => {
         settingManager: createSettingStore({ password: 'p', username: 'u' })
           .settingManager,
       })
+      // No session stands: these sign-ins are being rejected.
+      api.isAuthenticatedMock.mockReturnValue(false)
       api.doAuthenticateMock.mockRejectedValue(
         new AuthenticationThrottledError('locked', {
           retryAfter: Temporal.Duration.from({ minutes: 60 }),
@@ -1028,6 +1079,8 @@ describe('automatic login backoff', () => {
         settingManager: createSettingStore({ password: 'p', username: 'u' })
           .settingManager,
       })
+      // No session stands: these sign-ins are being rejected.
+      api.isAuthenticatedMock.mockReturnValue(false)
       api.doAuthenticateMock.mockRejectedValue(
         new AuthenticationThrottledError('locked', {
           retryAfter: Temporal.Duration.from({ hours: 48 }),
@@ -1052,6 +1105,8 @@ describe('automatic login backoff', () => {
       settingManager: createSettingStore({ password: 'p', username: 'u' })
         .settingManager,
     })
+    // No session stands: these sign-ins are being rejected.
+    api.isAuthenticatedMock.mockReturnValue(false)
     api.doAuthenticateMock.mockRejectedValue(new Error('socket hang up'))
 
     await expect(
@@ -1145,6 +1200,8 @@ describe('automatic login backoff', () => {
         settingManager: createSettingStore({ password: 'p', username: 'u' })
           .settingManager,
       })
+      // No session stands: these sign-ins are being rejected.
+      api.isAuthenticatedMock.mockReturnValue(false)
       api.doAuthenticateMock.mockRejectedValueOnce(
         new AuthenticationError('bad'),
       )
