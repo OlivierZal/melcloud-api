@@ -489,7 +489,30 @@ describe('melcloud home API', () => {
       expect(api.registry.getDevices().length).toBeGreaterThan(0)
     })
 
-    it('returns false + logs when persisted credentials are rejected', async () => {
+    // The Home half of the post-auth sync contract (the Classic suite
+    // asks the same of its own wiring): a registry refusal after an
+    // accepted credential surfaces instead of resolving over nothing.
+    it('rejects the sign-in when the enforced post-auth sync fails', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      // A second full OIDC dance whose credential check passes; only
+      // the `/context` refresh the sign-in enforces fails.
+      setupLoginUntilTokenExchange()
+      mockFetch.mockResolvedValueOnce(
+        mockFetchResponse(mockTokenResponse, {}, 200),
+      )
+      mockRequest.mockRejectedValueOnce(new Error('registry'))
+
+      await expect(
+        api.authenticate({ password: 'pass', username: 'user' }),
+      ).rejects.toThrow('registry')
+    })
+
+    // `resumeSession` answers "is there a usable session", not "did
+    // this attempt succeed": the live session the API already holds
+    // outranks the refused re-sign-in, and reporting `false` over it
+    // is what made `initialize()` emit a spurious authentication-lost.
+    it('reports the live session and logs when a re-sign-in is rejected', async () => {
       setupSuccessfulLogin()
       const logger = createLogger()
       const api = await createApi({ logger })
@@ -497,7 +520,8 @@ describe('melcloud home API', () => {
 
       const isResumed = await api.resumeSession()
 
-      expect(isResumed).toBe(false)
+      expect(isResumed).toBe(true)
+      expect(api.isAuthenticated()).toBe(true)
       expect(logger.error).toHaveBeenCalledWith(
         '[Home]',
         'Session resume failed:',
@@ -872,15 +896,20 @@ describe('melcloud home API', () => {
       expect(onSync).toHaveBeenCalledTimes(1)
     })
 
-    it('should call onSync even on failure for consistency with classic API', async () => {
+    // Announcing a completed sync over a registry that could not be
+    // refreshed had consumers rewrite stale values as if they were
+    // fresh. The swallow keeps the heartbeat alive; the notification
+    // belongs to the refresh that actually landed.
+    it('should stay silent when a sync cycle fails', async () => {
       setupSuccessfulLogin()
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ events: { onSyncComplete: onSync } })
       onSync.mockClear()
       mockRequest.mockRejectedValueOnce(new Error('network'))
-      await api.fetch()
 
-      expect(onSync).toHaveBeenCalledTimes(1)
+      await expect(api.fetch()).resolves.toStrictEqual([])
+
+      expect(onSync).not.toHaveBeenCalled()
     })
 
     it('should populate the registry during authenticate', async () => {

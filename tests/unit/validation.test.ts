@@ -10,6 +10,7 @@ import {
   HomeContextSchema,
   HomeTokenResponseSchema,
   HourSchema,
+  isModelledClassicDevice,
   parseOrThrow,
 } from '../../src/validation/index.ts'
 import {
@@ -370,15 +371,47 @@ describe('validation/schemas', () => {
       ).not.toThrow()
     })
 
+    // The listing is BULK — one call carries every building of the
+    // account — so the array must not reject the payload over one
+    // unmodelled entry: that would take every sibling device down, and
+    // since the post-auth sync propagates its failures it would read
+    // as "cannot sign in at all". The schema therefore ACCEPTS the
+    // entry and `isModelledClassicDevice` is what the listing boundary
+    // filters on — the registry builds a model per surviving entry
+    // with no runtime guard of its own.
     it.each([
       { label: 'numeric out-of-range', value: 999 },
       { label: 'object', value: { nested: 'v' } },
       { label: 'string', value: 'Ata' },
-    ])('rejects unsupported device Type ($label)', ({ value }) => {
-      expect(() =>
-        ClassicBuildingListSchema.parse(buildingWithDeviceType(value)),
-      ).toThrow(/Type/v)
-    })
+    ])(
+      'accepts a payload carrying an unmodelled device Type ($label)',
+      ({ value }) => {
+        expect(() =>
+          ClassicBuildingListSchema.parse(buildingWithDeviceType(value)),
+        ).not.toThrow()
+      },
+    )
+
+    it.each([
+      { label: 'numeric out-of-range', value: 999 },
+      { label: 'object', value: { nested: 'v' } },
+      { label: 'string', value: 'Ata' },
+    ])(
+      'reads an unmodelled device Type as unmodelled ($label)',
+      ({ value }) => {
+        expect(
+          isModelledClassicDevice({
+            AreaID: null,
+            BuildingID: 1,
+            Device: {},
+            DeviceID: 1,
+            DeviceName: 'D',
+            FloorID: null,
+            Type: value,
+          }),
+        ).toBe(false)
+      },
+    )
   })
 
   describe('classicEnergyDataSchemas', () => {

@@ -138,6 +138,67 @@ describe('mELCloud Classic API', () => {
     expect(api.isAuthenticated()).toBe(false)
   })
 
+  // The bulk listing is one call for the whole account, so a device
+  // type this SDK predates must degrade to "not listed" rather than
+  // invalidate every sibling — otherwise the enforced post-auth sync
+  // would turn one unknown model into "cannot sign in at all".
+  it('drops a device of an unmodelled type and keeps its siblings', async () => {
+    const known = classicRawDevice({ DeviceID: 1, DeviceName: 'Known' })
+    const building = classicBuildingWithStructure({
+      Structure: {
+        Areas: [],
+        Devices: [known, classicRawDevice({ DeviceID: 2, Type: 99 })],
+        Floors: [],
+      },
+    })
+    mockRequest.mockResolvedValue({
+      data: [building],
+      headers: {},
+      status: 200,
+    })
+    const api = await createApi()
+
+    const buildings = await api.fetch()
+
+    // The listing survives, carrying only the device this SDK models.
+    expect(buildings).toHaveLength(1)
+    expect(buildings[0]?.Structure.Devices).toHaveLength(1)
+  })
+
+  // The Classic half of the post-auth sync contract (the Home suite
+  // asks the same two questions of its own wiring): the enforced sync
+  // propagates, while the heartbeat's `fetch()` still swallows and,
+  // swallowing, announces nothing.
+  it('rejects the sign-in when the enforced post-auth sync fails', async () => {
+    mockLoginAndList()
+    const api = await createApi({ password: 'pass', username: 'user' })
+    // The credential check still passes; only the registry refresh
+    // that the sign-in enforces fails.
+    mockRequest.mockImplementation(async (config) => {
+      await Promise.resolve()
+      if (config.url === '/Login/ClientLogin3') {
+        return loginResponse('ctx', '2030-12-31T00:00:00')
+      }
+      throw new Error('registry')
+    })
+
+    await expect(
+      api.authenticate({ password: 'pass', username: 'user' }),
+    ).rejects.toThrow('registry')
+  })
+
+  it('stays silent when a sync cycle fails', async () => {
+    const onSyncComplete = vi.fn<SyncCallback>()
+    mockLoginAndList()
+    const api = await createApi({ events: { onSyncComplete } })
+    onSyncComplete.mockClear()
+    mockRequest.mockRejectedValueOnce(new Error('network'))
+
+    await expect(api.fetch()).resolves.toStrictEqual([])
+
+    expect(onSyncComplete).not.toHaveBeenCalled()
+  })
+
   it('accepts custom configuration', async () => {
     const onSyncComplete = vi.fn<SyncCallback>()
     const api = await createApi({
@@ -512,7 +573,11 @@ describe('mELCloud Classic API', () => {
     // credentials persisted" and "doAuthenticate rejects → logged +
     // false" cases are covered at the BaseAPI unit level
     // (base-api.test.ts → `authenticate() vs resumeSession() contract`).
-    it('resumeSession logs AuthenticationError when LoginData is null', async () => {
+    // The live session outranks the refused re-sign-in: `resumeSession`
+    // answers "is there a usable session", and reporting `false` over a
+    // working one is what had `initialize()` emit a spurious
+    // authentication-lost, prompting a user whose app was fine.
+    it('reports the live session and logs when LoginData is null', async () => {
       const logger = createLogger()
       mockLoginAndList()
       const api = await createApi({
@@ -524,7 +589,7 @@ describe('mELCloud Classic API', () => {
 
       const isResumed = await api.resumeSession()
 
-      expect(isResumed).toBe(false)
+      expect(isResumed).toBe(true)
       // The failed attempt leaves the live session standing: nothing
       // is cleared before the server verdict.
       expect(api.isAuthenticated()).toBe(true)

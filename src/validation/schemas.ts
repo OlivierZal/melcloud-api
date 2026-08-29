@@ -395,18 +395,40 @@ const ClassicMinimalDeviceSchema = z.looseObject({
   ]),
 })
 
+/**
+ * Whether a `/User/ListDevices` entry is a device this SDK models —
+ * the header fields are present and `Type` is one of the three known
+ * values.
+ *
+ * The listing is BULK: one call carries every building of the account,
+ * so validating entries INSIDE the array would let one unmodelled
+ * device invalidate every sibling — and since the enforced post-auth
+ * sync propagates its failures, that reads as "cannot sign in at all".
+ * The entries are therefore filtered at the boundary instead
+ * (`ClassicAPI`'s listing), which is also what the registry relies on:
+ * it builds a model per entry with no runtime guard of its own.
+ * @param device - One raw listing entry.
+ * @returns Whether the entry is safe to model.
+ */
+export const isModelledClassicDevice = (device: unknown): boolean =>
+  ClassicMinimalDeviceSchema.safeParse(device).success
+
+// Entries stay unvalidated INSIDE the array for the reason above; the
+// boundary filter re-establishes the guarantee for what survives.
+const ClassicDeviceListSchema = z.array(z.unknown())
+
 const ClassicMinimalAreaSchema = z.looseObject({
-  Devices: z.array(ClassicMinimalDeviceSchema),
+  Devices: ClassicDeviceListSchema,
 })
 
 const ClassicFloorSchema = z.looseObject({
   Areas: z.array(ClassicMinimalAreaSchema),
-  Devices: z.array(ClassicMinimalDeviceSchema),
+  Devices: ClassicDeviceListSchema,
 })
 
 const ClassicBuildingStructureSchema = z.looseObject({
   Areas: z.array(ClassicMinimalAreaSchema),
-  Devices: z.array(ClassicMinimalDeviceSchema),
+  Devices: ClassicDeviceListSchema,
   Floors: z.array(ClassicFloorSchema),
 })
 

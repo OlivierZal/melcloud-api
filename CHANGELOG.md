@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [54.0.0] - 2026-08-29
+
+### Breaking changes
+
+- **`authenticate()` now rejects when its enforced post-auth sync fails.** Its documented guarantee — "successful return guarantees the registry reflects server state" — was void: the enforced sync ran through `fetch()`, whose catch-all logs the failure and returns an empty list. A `ValidationError`, a device type this SDK predates or any registry error therefore resolved as a successful sign-in over an EMPTY registry, which consumers read as "this account has no devices". Callers that only handle `AuthenticationError` now see the real error instead; the credential check happened first, so the session is left signed in. The probe path is untouched — `tryReuseSession()` still swallows, because a boot-time network blip must not destroy a valid persisted session, and that split is now explicit: `syncRegistry()` is the best-effort hook, `enforceRegistrySync()` the propagating one.
+
+  heatzy-api shipped exactly this fix a month ago (its 11.0.0); it never crossed to this twin. Found by a cross-repo audit, 2026-08-29.
+
+- **A device type this SDK does not model no longer invalidates the whole account listing.** The Classic sync is BULK — one `/User/ListDevices` call carries every building — and the schema validated each entry's `Type` against a closed union inside an atomic array, so ONE unmodelled device made the whole payload fail. Swallowed, that reported an empty registry; propagating (above), it would have read as "cannot sign in at all" for every user owning a model newer than this SDK. Unmodelled entries are now dropped at the listing boundary (`isModelledClassicDevice`), which is also what the registry has always relied on — it builds a model per entry with no runtime guard of its own. The heatzy twin has no equivalent exposure: its sync is per-device.
+
+### Fixed
+
+- **`resumeSession()` judges the outcome by the session rather than by the throw.** A sign-in that the server accepted before its registry sync failed — or a refused re-sign-in over a session that is still live — is reported as authenticated, which is the method's documented meaning. Returning `false` there had `initialize()` emit a spurious `onAuthenticationLost`, prompting the user to sign in again over credentials that were working.
+- **A failed sync cycle no longer announces a completed sync.** Both dialects' `fetch()` carried the `@syncDevices` notification outside the swallow, so a refresh that failed still told consumers the registry was fresh — and they rewrote stale values as if they were. The notification now rides the cycle that actually landed.
+
 ## [53.1.1] - 2026-08-28
 
 ### Fixed
@@ -652,6 +667,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[54.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v53.1.1...v54.0.0
 [53.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v53.1.0...v53.1.1
 [53.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v53.0.0...v53.1.0
 [53.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v52.0.2...v53.0.0

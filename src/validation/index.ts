@@ -11,5 +11,6 @@ export {
   HomeTokenResponseSchema,
   HomeUserContextSchema,
   HourSchema,
+  isModelledClassicDevice,
   parseOrThrow,
 } from './schemas.ts'
