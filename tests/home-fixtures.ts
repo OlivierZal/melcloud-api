@@ -10,7 +10,9 @@ import type {
   HomeAtaDeviceData,
   HomeAtwDeviceCapabilities,
   HomeAtwDeviceData,
+  HomeBuilding,
   HomeBuildingRef,
+  HomeContext,
   HomeEnergyData,
   HomeEnergyPoint,
   HomeFrostProtection,
@@ -20,7 +22,7 @@ import type {
 } from '../src/types/index.ts'
 import { HomeDeviceType } from '../src/constants.ts'
 import { HomeDevice } from '../src/entities/home-device.ts'
-import { cast, mock } from './helpers.ts'
+import { cast, mock, mockFetchResponse } from './helpers.ts'
 
 // Mid-range RSSI so derived signal-quality assertions land in a
 // predictable band without special-casing weak/strong values.
@@ -298,3 +300,202 @@ export const createMockHomeApi = (
     updateValues: vi.fn<HomeAPIAdapter['updateValues']>().mockResolvedValue(),
     ...overrides,
   })
+
+// ---------------------------------------------------------------------------
+// `/context` wire fixtures — the payload the BFF answers, as opposed to the
+// entity-level doubles above. Shared by `home-api.test.ts` (which drives the
+// dialect end to end) and the cross-dialect session-lifecycle kernel.
+// ---------------------------------------------------------------------------
+
+// The context payload declares slightly different capabilities from the
+// entity defaults (whole-degree steps, a narrower automatic range, no hot
+// water): stated as deltas so the two fixtures cannot drift apart on the
+// two dozen fields they share.
+const contextAtaCapabilities: HomeAtaDeviceCapabilities = {
+  ...defaultHomeAtaCapabilities,
+  hasHalfDegreeIncrements: false,
+  maxTempAutomatic: 30,
+  maxTempCoolDry: 30,
+  maxTempHeat: 30,
+  minTempAutomatic: 10,
+  minTempCoolDry: 10,
+}
+
+const contextAtwCapabilities: HomeAtwDeviceCapabilities = {
+  ...defaultHomeAtwCapabilities,
+  hasHotWater: false,
+}
+
+// The fields the schema requires of every unit, whatever its type.
+const contextDeviceFields = {
+  displayIcon: 'Office',
+  frostProtection: null,
+  holidayMode: null,
+  isConnected: true,
+  isInError: false,
+  overheatProtection: null,
+  schedule: [],
+  scheduleEnabled: false,
+  timeZone: 'Europe/Paris',
+} as const
+
+export const homeContextBuilding: HomeBuilding = {
+  airToAirUnits: [
+    {
+      ...contextDeviceFields,
+      capabilities: contextAtaCapabilities,
+      connectedInterfaceIdentifier: 'FE0000060403388D3DFFFE000000000000',
+      connectedInterfaceType: 'fourthGenWifi',
+      givenDisplayName: 'Test ClassicDevice',
+      id: 'device-1',
+      rssi: -50,
+      settings: [{ name: 'Power', value: 'True' }],
+      systemId: null,
+      unitSettings: null,
+    },
+  ],
+  airToWaterUnits: [
+    {
+      ...contextDeviceFields,
+      capabilities: contextAtwCapabilities,
+      ftcModel: 'ftC6',
+      givenDisplayName: 'ATW ClassicDevice',
+      id: 'device-2',
+      macAddress: 'FE0000060403388D3DFFFE000000000001',
+      rssi: -55,
+      settings: [],
+    },
+  ],
+  id: 'building-1',
+  name: 'Home',
+  timezone: 'Europe/Paris',
+}
+
+/**
+ * The `/context` payload. Devices land in `guestBuildings` by default —
+ * the registry then tags them as shared; pass `buildings` to model an
+ * owned home.
+ * @param overrides - Fields to replace on the default payload.
+ * @returns The wire-shaped context.
+ */
+export const homeContextData = (
+  overrides: Partial<HomeContext> = {},
+): HomeContext => ({
+  buildings: [],
+  country: 'FR',
+  email: 'test@example.com',
+  firstname: 'Test',
+  guestBuildings: [homeContextBuilding],
+  id: 'user-1',
+  language: 'fr',
+  lastname: 'User',
+  numberOfBuildingsAllowed: 2,
+  numberOfDevicesAllowed: 10,
+  numberOfGuestDevicesAllowed: 10,
+  numberOfGuestUsersAllowedPerUnit: 5,
+  scenes: [],
+  ...overrides,
+})
+
+// ---------------------------------------------------------------------------
+// OIDC staging — the token-auth module speaks to the global `fetch`, not to
+// the BFF HttpClient, so the sign-in dance is scripted on a `fetch` double.
+// ---------------------------------------------------------------------------
+
+export const homeTokenResponse = {
+  access_token: 'test-access-token',
+  expires_in: 3600,
+  id_token: 'test-id-token',
+  refresh_token: 'test-refresh-token',
+  scope: 'openid profile email offline_access IdentityServerApi',
+  token_type: 'Bearer',
+}
+
+/**
+ * The Cognito credential form, as the hosted login page serves it.
+ * @param action - Form action the credential POST targets.
+ * @param csrf - Hidden `_csrf` token the form carries.
+ * @returns The HTML page body.
+ */
+export const homeCognitoLoginPage = (
+  action = '/login?client_id=test&amp;state=abc',
+  csrf = 'csrf-token',
+): string =>
+  `<form action="${action}" method="POST">` +
+  `<input type="hidden" name="_csrf" value="${csrf}"/>` +
+  '<input type="hidden" name="cognitoAsfData" value=""/>' +
+  '</form>'
+
+/**
+ * Queue the scripted OIDC dance on a `fetch` double, up to (and
+ * excluding) the token exchange. Order matches the runtime flow: PAR,
+ * redirect chain, credential submission, callback resolution. Each
+ * caller stages its own token-exchange outcome next — see
+ * {@link stageHomeTokenExchange} for the accepted one.
+ * @param fetchMock - The `fetch` double to queue the hops on.
+ */
+export const stageHomeOidcDance = (
+  fetchMock: ReturnType<typeof vi.fn<typeof fetch>>,
+): void => {
+  const cognito = 'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
+  const authBase = 'https://auth.melcloudhome.com'
+  const callbackUrl = `${authBase}/signin-oidc-meu?code=abc&state=xyz`
+
+  fetchMock
+    // 1. PAR
+    .mockResolvedValueOnce(
+      mockFetchResponse(
+        { request_uri: 'urn:ietf:params:oauth:request_uri:test' },
+        {},
+        200,
+      ),
+    )
+    // 2. Redirect chain to the Cognito login page
+    .mockResolvedValueOnce(
+      mockFetchResponse('', { location: `${authBase}/connect/redirect` }, 302),
+    )
+    .mockResolvedValueOnce(
+      mockFetchResponse(
+        '',
+        { location: `${cognito}/oauth2/authorize?client_id=test` },
+        302,
+      ),
+    )
+    .mockResolvedValueOnce(
+      mockFetchResponse(
+        '',
+        { location: `${cognito}/login?client_id=test` },
+        302,
+      ),
+    )
+    .mockResolvedValueOnce(mockFetchResponse(homeCognitoLoginPage(), {}, 200))
+    // 3. Credential POST → 302 to the callback
+    .mockResolvedValueOnce(
+      mockFetchResponse('', { location: callbackUrl }, 302),
+    )
+    // 4. Callback chain → JS redirect page → melcloudhome://?code=...
+    .mockResolvedValueOnce(
+      mockFetchResponse(
+        '',
+        { location: `${authBase}/ExternalLogin/Callback` },
+        302,
+      ),
+    )
+    .mockResolvedValueOnce(
+      mockFetchResponse(
+        "<script>window.location='melcloudhome://?code=auth-code&amp;state=xyz'</script>",
+        {},
+        200,
+      ),
+    )
+}
+
+/**
+ * Queue the accepted token exchange that closes the dance.
+ * @param fetchMock - The `fetch` double to queue the exchange on.
+ */
+export const stageHomeTokenExchange = (
+  fetchMock: ReturnType<typeof vi.fn<typeof fetch>>,
+): void => {
+  fetchMock.mockResolvedValueOnce(mockFetchResponse(homeTokenResponse, {}, 200))
+}
