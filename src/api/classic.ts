@@ -786,9 +786,11 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     // would substitute the narrower inferred type).
     parseOrThrow(ClassicBuildingListSchema, data, 'ListDevices')
     // Devices this SDK does not model are dropped HERE rather than
-    // rejected by the schema: the listing is bulk, so one unmodelled
-    // entry would otherwise invalidate every sibling — and the
-    // enforced post-auth sync would turn that into "cannot sign in".
+    // rejected by the schema: this listing is the BULK sync, so one
+    // unmodelled entry would otherwise invalidate every sibling — and
+    // the enforced post-auth sync would turn that into "cannot sign
+    // in". The per-device merge that follows a read or write response
+    // is a different mechanism and untouched by this filter.
     // The registry depends on what survives: it builds a model per
     // entry with no runtime guard of its own.
     return data.map((building) => ({

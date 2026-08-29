@@ -400,10 +400,14 @@ const ClassicMinimalDeviceSchema = z.looseObject({
  * the header fields are present and `Type` is one of the three known
  * values.
  *
- * The listing is BULK: one call carries every building of the account,
- * so validating entries INSIDE the array would let one unmodelled
- * device invalidate every sibling — and since the enforced post-auth
- * sync propagates its failures, that reads as "cannot sign in at all".
+ * The REGISTRY sync is bulk: one call carries every building of the
+ * account, so validating entries INSIDE the array would let one
+ * unmodelled device invalidate every sibling — and since the enforced
+ * post-auth sync propagates its failures, that reads as "cannot sign
+ * in at all". (The other sync kind — the per-device merge that follows
+ * a read or write response, `@classicUpdateDevice` and `getValues` —
+ * never comes through here: it takes its type from the facade of an
+ * already-modelled device and revisits no listing.)
  * The entries are therefore filtered at the boundary instead
  * (`ClassicAPI`'s listing), which is also what the registry relies on:
  * it builds a model per entry with no runtime guard of its own.
