@@ -975,6 +975,21 @@ describe('authentication-lost lifecycle', () => {
   })
 })
 
+// A cold API whose sign-ins the server throttles: the clauses below
+// differ only by the announced window and the clock they advance.
+const arrangeThrottledSignIn = (retryAfter: Temporal.Duration): TestAPI => {
+  const api = new TestAPI({
+    settingManager: createSettingStore({ password: 'p', username: 'u' })
+      .settingManager,
+  })
+  // No session stands: these sign-ins are being rejected.
+  api.isAuthenticatedMock.mockReturnValue(false)
+  api.doAuthenticateMock.mockRejectedValue(
+    new AuthenticationThrottledError('locked', { retryAfter }),
+  )
+  return api
+}
+
 describe('automatic login backoff', () => {
   it('pauses automatic re-logins after a rejected sign-in and retries past the window', async () => {
     vi.useFakeTimers()
@@ -1039,16 +1054,8 @@ describe('automatic login backoff', () => {
     vi.useFakeTimers()
     mockTemporalNowInstant()
     try {
-      const api = new TestAPI({
-        settingManager: createSettingStore({ password: 'p', username: 'u' })
-          .settingManager,
-      })
-      // No session stands: these sign-ins are being rejected.
-      api.isAuthenticatedMock.mockReturnValue(false)
-      api.doAuthenticateMock.mockRejectedValue(
-        new AuthenticationThrottledError('locked', {
-          retryAfter: Temporal.Duration.from({ minutes: 60 }),
-        }),
+      const api = arrangeThrottledSignIn(
+        Temporal.Duration.from({ minutes: 60 }),
       )
 
       await expect(
@@ -1075,17 +1082,7 @@ describe('automatic login backoff', () => {
     vi.useFakeTimers()
     mockTemporalNowInstant()
     try {
-      const api = new TestAPI({
-        settingManager: createSettingStore({ password: 'p', username: 'u' })
-          .settingManager,
-      })
-      // No session stands: these sign-ins are being rejected.
-      api.isAuthenticatedMock.mockReturnValue(false)
-      api.doAuthenticateMock.mockRejectedValue(
-        new AuthenticationThrottledError('locked', {
-          retryAfter: Temporal.Duration.from({ hours: 48 }),
-        }),
-      )
+      const api = arrangeThrottledSignIn(Temporal.Duration.from({ hours: 48 }))
 
       await expect(
         api.authenticate({ password: 'p', username: 'u' }),
