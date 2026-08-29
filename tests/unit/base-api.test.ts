@@ -659,6 +659,24 @@ describe('baseAPI shared request pipeline', () => {
       ).rejects.toThrow('registry')
     })
 
+    // The rejection must NOT be read as a refused credential: the
+    // login backoff arms on `doAuthenticate` alone, and pausing
+    // sign-ins for fifteen minutes over a registry hiccup would lock
+    // a user out of an account the server had just accepted.
+    it('does not arm the login backoff when only the post-auth sync failed', async () => {
+      api = apiWithPersistedCredentials()
+      api.syncRegistryMock.mockRejectedValueOnce(new Error('registry'))
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('registry')
+
+      // A second attempt is made straight away: the gate never armed.
+      await api.resumeSession()
+
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
+    })
+
     // The mirror clause: the sign-in itself was accepted, so the
     // session stands and `resumeSession` says so — a `false` here had
     // `initialize()` announce an authentication loss over credentials

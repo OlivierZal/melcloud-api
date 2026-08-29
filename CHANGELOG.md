@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
   heatzy-api shipped exactly this fix a month ago (its 11.0.0); it never crossed to this twin. Found by a cross-repo audit, 2026-08-29.
 
+- **A device type this SDK does not model no longer invalidates the whole account listing.** The Classic sync is BULK — one `/User/ListDevices` call carries every building — and the schema validated each entry's `Type` against a closed union inside an atomic array, so ONE unmodelled device made the whole payload fail. Swallowed, that reported an empty registry; propagating (above), it would have read as "cannot sign in at all" for every user owning a model newer than this SDK. Unmodelled entries are now dropped at the listing boundary (`isModelledClassicDevice`), which is also what the registry has always relied on — it builds a model per entry with no runtime guard of its own. The heatzy twin has no equivalent exposure: its sync is per-device.
+
 ### Fixed
 
 - **`resumeSession()` judges the outcome by the session rather than by the throw.** A sign-in that the server accepted before its registry sync failed — or a refused re-sign-in over a session that is still live — is reported as authenticated, which is the method's documented meaning. Returning `false` there had `initialize()` emit a spurious `onAuthenticationLost`, prompting the user to sign in again over credentials that were working.

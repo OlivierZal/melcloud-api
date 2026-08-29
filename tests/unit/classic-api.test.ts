@@ -138,6 +138,33 @@ describe('mELCloud Classic API', () => {
     expect(api.isAuthenticated()).toBe(false)
   })
 
+  // The bulk listing is one call for the whole account, so a device
+  // type this SDK predates must degrade to "not listed" rather than
+  // invalidate every sibling — otherwise the enforced post-auth sync
+  // would turn one unknown model into "cannot sign in at all".
+  it('drops a device of an unmodelled type and keeps its siblings', async () => {
+    const known = classicRawDevice({ DeviceID: 1, DeviceName: 'Known' })
+    const building = classicBuildingWithStructure({
+      Structure: {
+        Areas: [],
+        Devices: [known, classicRawDevice({ DeviceID: 2, Type: 99 })],
+        Floors: [],
+      },
+    })
+    mockRequest.mockResolvedValue({
+      data: [building],
+      headers: {},
+      status: 200,
+    })
+    const api = await createApi()
+
+    const buildings = await api.fetch()
+
+    // The listing survives, carrying only the device this SDK models.
+    expect(buildings).toHaveLength(1)
+    expect(buildings[0]?.Structure.Devices).toHaveLength(1)
+  })
+
   // The Classic half of the post-auth sync contract (the Home suite
   // asks the same two questions of its own wiring): the enforced sync
   // propagates, while the heartbeat's `fetch()` still swallows and,

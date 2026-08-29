@@ -54,6 +54,7 @@ import {
   ClassicBuildingListSchema,
   ClassicEnergyDataSchema,
   ClassicLoginDataSchema,
+  isModelledClassicDevice,
   parseOrThrow,
 } from '../validation/index.ts'
 import type {
@@ -118,6 +119,24 @@ const collectDevices = function* (
     }
   }
 }
+
+/**
+ * Keeps only the devices this SDK models in one listing container,
+ * leaving every other field of that container untouched.
+ * @template T - The container shape, preserved verbatim.
+ * @param container - A building, floor or area carrying `Devices`.
+ * @returns The same container, minus the unmodelled entries.
+ */
+const withModelledDevices = <
+  T extends { readonly Devices: readonly unknown[] },
+>(
+  container: T,
+): T => ({
+  ...container,
+  Devices: container.Devices.filter((device) =>
+    isModelledClassicDevice(device),
+  ),
+})
 
 /**
  * Main MELCloud Classic API client. Handles authentication, device syncing, and all
@@ -760,13 +779,33 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
       'get',
       '/User/ListDevices',
     )
-    // Zod validates the envelope + the minimal device header (Type,
-    // DeviceID, etc.); the per-device-type payload (Ata/Atw/Erv) keeps
-    // its compile-time contract. The schema's inferred type is a
-    // strict subset, so we run it as a side-effect check rather than
-    // through `requestData`'s schema option (which would substitute
-    // the narrower inferred type).
+    // Zod validates the envelope; the per-device-type payload
+    // (Ata/Atw/Erv) keeps its compile-time contract. The schema's
+    // inferred type is a strict subset, so it runs as a side-effect
+    // check rather than through `requestData`'s schema option (which
+    // would substitute the narrower inferred type).
     parseOrThrow(ClassicBuildingListSchema, data, 'ListDevices')
-    return data
+    // Devices this SDK does not model are dropped HERE rather than
+    // rejected by the schema: the listing is bulk, so one unmodelled
+    // entry would otherwise invalidate every sibling — and the
+    // enforced post-auth sync would turn that into "cannot sign in".
+    // The registry depends on what survives: it builds a model per
+    // entry with no runtime guard of its own.
+    return data.map((building) => ({
+      ...building,
+      Structure: {
+        ...building.Structure,
+        Areas: building.Structure.Areas.map((area) =>
+          withModelledDevices(area),
+        ),
+        Devices: building.Structure.Devices.filter((device) =>
+          isModelledClassicDevice(device),
+        ),
+        Floors: building.Structure.Floors.map((floor) => ({
+          ...withModelledDevices(floor),
+          Areas: floor.Areas.map((area) => withModelledDevices(area)),
+        })),
+      },
+    }))
   }
 }
