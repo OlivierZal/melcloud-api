@@ -419,6 +419,13 @@ export abstract class BaseAPI implements Disposable {
    * untouched (the backoff still arms and the error still surfaces).
    * @param credentials - Explicit username/password.
    * @throws {@link AuthenticationError} when the server refuses the credentials.
+   * @throws Whatever the enforced post-auth sync raises — a
+   * `ValidationError`, a transport failure, any registry error. The
+   * credential check happened FIRST, so the session is left signed in
+   * and the credentials persisted: this rejection says "signed in, but
+   * the registry could not be verified", never "sign-in refused".
+   * Callers that only handle `AuthenticationError` see it instead of
+   * the empty registry a swallowed failure used to report as success.
    */
   public async authenticate(credentials: LoginCredentials): Promise<void> {
     const epoch = this.#logOutEpoch
@@ -539,17 +546,22 @@ export abstract class BaseAPI implements Disposable {
    *
    * Reads `username`/`password` from the SettingManager and signs
    * in. Unlike {@link authenticate}, failures are **logged and
-   * swallowed** — the method never throws. Use this from lifecycle
-   * hooks (init, 401 retry, `ensureSession`) where a stale or
-   * missing persisted credential must not crash the caller.
+   * swallowed** — the method never throws. That covers the enforced
+   * post-auth sync too: `authenticate` propagates what
+   * `enforceRegistrySync` raises, and this method catches it like any
+   * other rejection, then judges by the SESSION rather than
+   * by the throw. Use it from lifecycle hooks (init, 401 retry,
+   * `ensureSession`) where a stale or missing persisted credential
+   * must not crash the caller.
    *
    * On success, the registry is populated (delegates to
    * {@link authenticate}).
-   * @returns `true` when a sign-in round-trip succeeded and the
-   * instance is now authenticated; `false` for "no persisted
-   * credentials" or "sign-in failed" (both indistinguishable by
-   * the return value alone — check the logger / `isAuthenticated`
-   * if the distinction matters).
+   * @returns `true` when a usable session stands afterwards — which
+   * includes a sign-in the server ACCEPTED whose enforced registry
+   * sync then failed; `false` when the login backoff is holding, when
+   * no credentials are persisted, and when the attempt left no session
+   * standing (indistinguishable by the return value alone — check the
+   * logger / `isAuthenticated` if the distinction matters).
    */
   public async resumeSession(): Promise<boolean> {
     if (this.#isLoginBackedOff()) {
