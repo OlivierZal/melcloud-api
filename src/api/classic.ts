@@ -759,7 +759,18 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * on this API, so the only recovery path is a best-effort
    * {@link resumeSession} from persisted credentials. On success the
    * shared {@link AuthRetryPolicy} replays the original request.
-   * @returns `true` when the session is authenticated afterwards.
+   *
+   * Unlike Home, this hook does NOT clear the persisted session first:
+   * a Classic `401` does not name the context key. MELCloud answers
+   * `401` to a zone-level `GetSettings` on a shared building while the
+   * same key keeps serving `/User/ListDevices`, so clearing here would
+   * destroy a working session over one endpoint's authorization
+   * verdict. That leaves a live-but-rejected key standing while the
+   * re-sign-in runs, which is exactly why `resumeSession` judges by
+   * the sign-in round-trip and not by the session: were it to answer
+   * `true` on the strength of the surviving key, the replay would
+   * re-send the credential MELCloud had just refused.
+   * @returns `true` when the re-sign-in was accepted.
    */
   protected override async reauthenticate(): Promise<boolean> {
     return this.resumeSession()

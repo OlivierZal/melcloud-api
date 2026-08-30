@@ -824,15 +824,26 @@ const describeSessionLifecycleContract = (
       expect(driver.registryCycleCount()).toBe(0)
     })
 
-    it('reports the standing session from resumeSession, not the throw', async () => {
+    // One of the two shapes `resumeSession` catches, and the one a
+    // session cannot judge: the server REFUSED the credentials while a
+    // session established before the attempt is still standing. A
+    // `true` there reports a re-sign-in that never happened, and the
+    // caller spends the credential MELCloud has just rejected — on
+    // Classic that caller is the reactive-401 path (see the replay
+    // clause below). The session itself is untouched: only the VERDICT
+    // is at stake, which is what makes the two shapes distinguishable
+    // by the sign-in round-trip alone.
+    it('reports a refused re-sign-in as a failed resume, standing session or not', async () => {
       const logger = createLogger()
       const { settingManager } = createSettingStore(CREDENTIALS)
       driver.stage({ login: 'accept', wire: 'ok' })
       const { api } = await driver.create({ logger, settingManager })
       driver.stage({ login: 'refuse', wire: 'ok' })
 
-      await expect(api.resumeSession()).resolves.toBe(true)
+      await expect(api.resumeSession()).resolves.toBe(false)
 
+      // The refusal left the previous session alone — this clause is
+      // about the verdict, never about clearing.
       expect(api.isAuthenticated()).toBe(true)
       expect(logger.error).toHaveBeenCalledWith(
         driver.logLabel,
@@ -841,10 +852,12 @@ const describeSessionLifecycleContract = (
       )
     })
 
-    // The other reachable form of `resumeSession`'s
-    // `return this.isAuthenticated()` — an ACCEPTED credential whose
-    // enforced registry cycle then threw, the shape release 54.0.0 was
-    // cut for. It was quarantined as Classic-only on the claim that
+    // The other shape `resumeSession` catches, and the one that must
+    // still answer `true` — an ACCEPTED credential whose enforced
+    // registry cycle then threw, the shape release 54.0.0 was cut for.
+    // Its session stands for a reason the refused shape above cannot
+    // claim: this sign-in round-trip really did happen. It was
+    // quarantined as Classic-only on the claim that
     // Home's `isAuthenticated()` reads `#user`, which only the failing
     // cycle hydrates. That claim was FALSE: `#fetchContext`
     // (home.ts:781-801) parses in two stages, `#user` is assigned at
@@ -1101,6 +1114,34 @@ const describeSessionLifecycleContract = (
       // re-login the reauth spends, and exactly one replay.
       expect(driver.registryCycleCount() - probed).toBe(3)
       expect(deviceCount()).toBeGreaterThan(0)
+    })
+
+    // The same rung when the recovery FAILS. `AuthRetryPolicy` replays
+    // on the strength of `reauthenticate()` alone, so a hook that
+    // answers `true` over a refused re-sign-in replays the request with
+    // the very credential the server just rejected — one guaranteed-401
+    // round-trip against an upstream that throttles, and the retry
+    // guard makes it exactly one, which is how it stayed invisible.
+    // Classic is where it bites: its `reauthenticate()` IS
+    // `resumeSession`, and it deliberately does not clear first (a
+    // Classic `401` can name an endpoint rather than the session), so
+    // the rejected context key is still standing when the verdict is
+    // taken.
+    it('never replays a 401 when the re-sign-in was refused', async () => {
+      const { settingManager } = createSettingStore({
+        ...CREDENTIALS,
+        ...driver.persistedSession(),
+      })
+      driver.stage({ wire: 'ok' })
+      const { api } = await driver.create({ settingManager })
+      const probed = driver.registryCycleCount()
+      driver.stage({ login: 'refuse', wire: 'unauthorized-once' })
+
+      await expect(api.fetch()).resolves.toStrictEqual([])
+
+      // The rejected cycle, and nothing after it.
+      expect(driver.registryCycleCount() - probed).toBe(1)
+      expect(driver.loginCount()).toBe(1)
     })
 
     it.each(TRANSIENT_RUNG_CASES)(

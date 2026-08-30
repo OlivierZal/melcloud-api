@@ -700,39 +700,12 @@ describe('mELCloud Classic API', () => {
       ).rejects.toThrow(AuthenticationError)
     })
 
-    // Pins the Classic-specific normalization path: MELCloud returns
-    // `HTTP 200 { LoginData: null }` for bad credentials (not a 401),
-    // so `doAuthenticate` throws AuthenticationError directly — which
-    // `resumeSession` then logs and swallows. The generic "no
-    // credentials persisted" and "doAuthenticate rejects → logged +
-    // false" cases are covered at the BaseAPI unit level
-    // (base-api.test.ts → `authenticate() vs resumeSession() contract`).
-    // The live session outranks the refused re-sign-in: `resumeSession`
-    // answers "is there a usable session", and reporting `false` over a
-    // working one is what had `initialize()` emit a spurious
-    // authentication-lost, prompting a user whose app was fine.
-    it('reports the live session and logs when LoginData is null', async () => {
-      const logger = createLogger()
-      mockLoginAndList()
-      const api = await createApi({
-        logger,
-        password: 'pass',
-        username: 'user',
-      })
-      mockRequest.mockResolvedValue(wrap({ LoginData: null }))
-
-      const isResumed = await api.resumeSession()
-
-      expect(isResumed).toBe(true)
-      // The failed attempt leaves the live session standing: nothing
-      // is cleared before the server verdict.
-      expect(api.isAuthenticated()).toBe(true)
-      expect(logger.error).toHaveBeenCalledWith(
-        '[Classic]',
-        'Session resume failed:',
-        expect.any(AuthenticationError),
-      )
-    })
+    // What a refused re-sign-in answers — verdict, log line and
+    // surviving session alike — is a CROSS-DIALECT clause and lives in
+    // `tests/contracts/session-lifecycle.test.ts`, which stages this
+    // dialect's `{ LoginData: null }` refusal on its own Classic leg.
+    // A copy here is how the same verdict came to be recorded in three
+    // places and corrected in one.
 
     // Post-condition contract: a successful authenticate() must leave
     // the registry populated so callers never see an empty device list

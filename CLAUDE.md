@@ -204,6 +204,45 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `CanSetTemperatureIncrementOverride`: a device PERMISSION, never a
   step declaration — reading it as a step would be wrong, and its
   absence from the public surface remains a verdict, not a gap.
+- `resumeSession()` judges by the SIGN-IN ROUND-TRIP, never by the
+  session — because two different failures both leave a live session
+  standing, and only the round-trip separates them. An ACCEPTED
+  sign-in whose enforced post-auth sync then threw IS a resume: the
+  session was established, and answering `false` there had
+  `initialize()` emit a spurious `onAuthenticationLost` over
+  credentials that had just worked (the shape 54.0.0 was cut for). A
+  REFUSED sign-in over a session that predates the attempt is not:
+  nothing was refreshed, so a `true` hands the caller the credential
+  the server has just rejected. 54.0.0 claimed BOTH shapes for the one
+  `isAuthenticated()` reading and shipped the second wrong. They are
+  distinguishable right there, with no heuristic: a counter bumped the
+  instant `doAuthenticate` resolves, compared across the call. What a
+  refusal must NOT do is clear — the verdict changes, the stored
+  session does not.
+- The reactive-401 recovery is per-dialect, and Classic's asymmetry is
+  deliberate. Home's `reauthenticate()` clears the persisted session
+  first, because a BFF `401` IS its access token being refused.
+  Classic's does not, because a Classic `401` does not name the
+  session: the zone-level `GetSettings` refusal above answers `401`
+  while the very same context key keeps serving `/User/ListDevices`,
+  so clearing there would destroy a working session over one
+  endpoint's authorization verdict. That leaves a rejected-but-live
+  context key standing while the re-sign-in runs — which is exactly
+  why the `resumeSession` verdict cannot be read off the session:
+  while it was, `AuthRetryPolicy` spent its one guarded replay
+  re-sending the key MELCloud had just refused, against an upstream
+  that throttles. Both halves are kernel-pinned on both legs.
+- `ensureAuthenticated()`'s middle rung calls `syncRegistry()`
+  UNGUARDED, by decision — 54.0.0 dropped the `try`/`catch`,
+  re-examined and upheld 2026-08-30. The hook's best-effort contract
+  is the guarantee, and it is PINNED rather than merely documented:
+  both shipped dialects reach it through `runBestEffortSyncCycle`, and
+  the kernel's non-destructive-probe clause fails on BOTH legs the
+  moment that swallow is removed. A defensive `catch` would also be
+  uncoverable at 100 %: the only harness that can make the hook throw
+  is `base-api.test.ts`'s synthetic subclass, whose `syncRegistry`
+  mirrors the dialects on purpose, so covering the branch would mean
+  making the harness lie about the contract it exists to mirror.
 
 ## Mechanism boundary (@olivierzal/api-core)
 
