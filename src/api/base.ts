@@ -549,19 +549,18 @@ export abstract class BaseAPI implements Disposable {
    * swallowed** — the method never throws. That covers the enforced
    * post-auth sync too: `authenticate` propagates what
    * `enforceRegistrySync` raises, and this method catches it like any
-   * other rejection, then judges by the SESSION rather than
-   * by the throw. Use it from lifecycle hooks (init, 401 retry,
+   * other rejection rather than letting a registry failure reach a
+   * lifecycle caller. Use it from lifecycle hooks (init, 401 retry,
    * `ensureSession`) where a stale or missing persisted credential
    * must not crash the caller.
    *
    * On success, the registry is populated (delegates to
    * {@link authenticate}).
-   * @returns `true` when a usable session stands afterwards — which
-   * includes a sign-in the server ACCEPTED whose enforced registry
-   * sync then failed; `false` when the login backoff is holding, when
-   * no credentials are persisted, and when the attempt left no session
-   * standing (indistinguishable by the return value alone — check the
-   * logger / `isAuthenticated` if the distinction matters).
+   * @returns `true` when a sign-in round-trip succeeded and the
+   * instance is now authenticated; `false` for "no persisted
+   * credentials", "sign-ins are backed off" or "sign-in failed"
+   * (indistinguishable by the return value alone — check the logger /
+   * `isAuthenticated` if the distinction matters).
    */
   public async resumeSession(): Promise<boolean> {
     if (this.#isLoginBackedOff()) {

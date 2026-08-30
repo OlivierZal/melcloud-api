@@ -190,11 +190,21 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   sync used to run through `fetch()`, whose catch-all logs and returns
   an empty list — so a registry failure resolved as a SUCCESSFUL
   sign-in over an empty registry, which consumers read as "this account
-  has no devices". `resumeSession()` still never throws: it catches the
-  propagated error and answers `isAuthenticated()`, so a sign-in the
-  server accepted before its sync failed reports as authenticated
-  rather than emitting a spurious `onAuthenticationLost`. Both sides
-  are kernel-pinned in `tests/contracts/session-lifecycle.test.ts`.
+  has no devices". `resumeSession()` still never throws: it catches
+  whatever the enforced sync propagated, so a registry failure never
+  reaches a lifecycle caller. What it then REPORTS is the SIGN-IN
+  ROUND-TRIP's verdict, not a re-reading of the session — an accepted
+  sign-in whose enforced sync then failed is a resume (answering `false`
+  there had `initialize()` emit a spurious `onAuthenticationLost` over
+  credentials that had just worked), while a REFUSED sign-in is not,
+  even when a live session predates the attempt and `isAuthenticated()`
+  still reads `true`. Do not restate that as "judge by the session":
+  54.0.0 collapsed the two shapes onto one `isAuthenticated()` reading
+  and this file repeated the shorthand, which is exactly how a refused
+  Classic sign-in came to be reported as a resume — handing the
+  reactive-401 path the context key the server had just refused. Both
+  sides of the hook split are kernel-pinned in
+  `tests/contracts/session-lifecycle.test.ts`.
 - The Classic `/User/ListDevices` boundary DROPS what it cannot model
   and must never do so silently. The drop exists because the REGISTRY
   sync is bulk — one call carries every device of the account — and the
