@@ -239,6 +239,13 @@ export abstract class BaseAPI implements Disposable {
     return this.#syncManager
   }
 
+  // Bumped the instant `doAuthenticate` resolves — the one moment at
+  // which the SIGN-IN ROUND-TRIP is known accepted, whatever the
+  // enforced post-auth sync goes on to do. `resumeSession` compares it
+  // across the call, which is what lets it tell an accepted sign-in
+  // from a refused one when BOTH leave a live session behind.
+  #acceptedSignIns = 0
+
   // Policy instances are created once in the constructor and reused
   // for every request. Stateless w.r.t. individual calls — the shared
   // state (rate-limit gate, retry guard) lives in the policy's
@@ -313,11 +320,19 @@ export abstract class BaseAPI implements Disposable {
    * deliberately narrow: {@link doAuthenticate} wipes on a SUCCESSFUL
    * explicit login just before storing the fresh artifacts (so a failed
    * attempt leaves the previous session untouched), the reactive-401
-   * path ({@link reauthenticate}) wipes after the server rejected the
+   * path ({@link reauthenticate}) MAY wipe once the server rejected the
    * credential, and {@link logOut} wipes on an explicit sign-out.
    * Nothing else may clear — in particular the {@link tryReuseSession}
    * probe, where a transient failure is indistinguishable from a
    * rejection and must leave the session untouched.
+   *
+   * The reactive-401 wipe is a per-dialect verdict, not a rule: Home
+   * takes it, because a `401` from the BFF IS its access token being
+   * refused. Classic does not, because a Classic `401` does not name
+   * the session — a zone-level `GetSettings` on a shared building
+   * answers `401` while the very same context key is serving
+   * `/User/ListDevices`, so wiping there would destroy a working
+   * session over an authorization verdict about one endpoint.
    */
   protected abstract clearPersistedSession(): void
 
@@ -435,6 +450,10 @@ export abstract class BaseAPI implements Disposable {
       this.#armLoginBackoff(error)
       throw error
     }
+    // The sign-in round-trip is ACCEPTED from here on, and nothing
+    // below can un-accept it: `#finishLogin` may still reject, but on
+    // the registry, never on the credential.
+    this.#acceptedSignIns += 1
     // Only a server-accepted pair reaches the settings store: writing
     // it earlier would let a mistyped attempt overwrite working
     // credentials. The session store needs no touch here — the
@@ -556,11 +575,12 @@ export abstract class BaseAPI implements Disposable {
    *
    * On success, the registry is populated (delegates to
    * {@link authenticate}).
-   * @returns `true` when a sign-in round-trip succeeded and the
-   * instance is now authenticated; `false` for "no persisted
-   * credentials", "sign-ins are backed off" or "sign-in failed"
-   * (indistinguishable by the return value alone — check the logger /
-   * `isAuthenticated` if the distinction matters).
+   * @returns `true` when the sign-in round-trip was ACCEPTED —
+   * including one whose enforced post-auth sync then failed, because
+   * the session it established stands; `false` for "no persisted
+   * credentials", "sign-ins are backed off" and "the server refused the
+   * credentials" (indistinguishable by the return value alone — check
+   * the logger / `isAuthenticated` if the distinction matters).
    */
   public async resumeSession(): Promise<boolean> {
     if (this.#isLoginBackedOff()) {
@@ -570,18 +590,12 @@ export abstract class BaseAPI implements Disposable {
     if (credentials === null) {
       return false
     }
+    const acceptedBefore = this.#acceptedSignIns
     try {
       await this.authenticate(credentials)
       return true
     } catch (error) {
-      this.logger.error('Session resume failed:', error)
-      // Judge by the SESSION, not by the throw: a sign-in that the
-      // server accepted before its enforced registry sync failed IS
-      // authenticated, which is this method's documented meaning.
-      // Returning `false` there would have `initialize()` emit a
-      // spurious `onAuthenticationLost`, prompting the user to sign in
-      // again over credentials that had just worked.
-      return this.isAuthenticated()
+      return this.#reportResumeFailure(error, acceptedBefore)
     }
   }
 
@@ -968,6 +982,25 @@ export abstract class BaseAPI implements Disposable {
 
     this.#hasEmittedAuthenticationLost = false
     this.events.emitAuthenticationRestored()
+  }
+
+  // The verdict `resumeSession` puts on a rejection it swallowed:
+  // judged by the SIGN-IN ROUND-TRIP — not by the throw, and not by
+  // the session either, because BOTH failures can leave a live session
+  // standing and only the round-trip separates them.
+  // - ACCEPTED, then the enforced registry sync threw: the session was
+  //   established, so a `false` here would have `initialize()` emit a
+  //   spurious `onAuthenticationLost`, prompting the user to sign in
+  //   again over credentials that had just worked.
+  // - REFUSED, over a session that predates the attempt: nothing was
+  //   refreshed, so a `true` here hands the caller the credential the
+  //   server has just rejected. On Classic that caller is the
+  //   reactive-401 path itself (`reauthenticate`), where the
+  //   `AuthRetryPolicy` replay spends its one guarded round-trip
+  //   re-sending the very context key MELCloud refused.
+  #reportResumeFailure(error: unknown, acceptedBefore: number): boolean {
+    this.logger.error('Session resume failed:', error)
+    return this.#acceptedSignIns !== acceptedBefore
   }
 
   async #runWithEvents<T>(

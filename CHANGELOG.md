@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [55.0.0] - 2026-08-30
+
+### Breaking changes
+
+- **`resumeSession()` no longer reports a REFUSED sign-in as a resumed session.** 54.0.0 made it judge by the session rather than by the throw and claimed two shapes for that one `isAuthenticated()` reading. The first is right and is unchanged here: a sign-in the server ACCEPTED whose enforced post-auth sync then failed IS a resume — the session was established, and answering `false` there had `initialize()` emit a spurious `onAuthenticationLost` over credentials that had just worked. The second — "a refused re-sign-in over a session that is still live" — is wrong: a refusal refreshes nothing, so reporting it as a resume hands the caller the credential the server has just rejected. The two are distinguishable exactly where they diverge, at whether the `doAuthenticate` round-trip resolved, so the method now judges by that and needs no heuristic.
+
+  Migration: a caller branching on the return value newly takes its failure branch when the stored credentials are refused while an older session still stands. Nothing else about that path changes — the refusal still clears nothing, `isAuthenticated()` still reads `true` over the surviving session, and the accepted-then-sync-failed shape still answers `true`. `initialize()` can newly emit `onAuthenticationLost` there, which is the honest report: the stored credentials really were refused.
+
+### Fixed
+
+- **Classic's reactive 401 no longer replays the request with the context key MELCloud just rejected.** `AuthRetryPolicy` replays on the strength of `reauthenticate()` alone, and Classic's `reauthenticate()` is `resumeSession()` — which, judging by the session, answered `true` over the very context key the 401 had just refused. The replay then spent a guaranteed-401 round-trip against an upstream that throttles; the retry guard capped it at exactly one per window, which is how it stayed invisible. Fixed by the verdict change above, at the one place both dialects share.
+
+  Classic deliberately does NOT clear the persisted session on a reactive 401, and that stays: a Classic `401` does not name the session — a shared building's zone-level `GetSettings` answers `401` while the same context key keeps serving `/User/ListDevices` (measured 2026-08-26) — so clearing there would destroy a working session over one endpoint's authorization verdict. Home clears, because a BFF `401` is its access token being refused. Both halves are now pinned in the cross-dialect session-lifecycle kernel, which also drops the two dialect-local copies of the old verdict: the same claim recorded in three places is how it came to be corrected in one.
+
 ## [54.1.0] - 2026-08-30
 
 ### Added
@@ -689,6 +703,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[55.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v54.1.0...v55.0.0
 [54.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v54.0.0...v54.1.0
 [54.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v53.1.1...v54.0.0
 [53.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v53.1.0...v53.1.1

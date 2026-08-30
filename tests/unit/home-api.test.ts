@@ -332,26 +332,10 @@ describe('melcloud home API', () => {
       ).rejects.toThrow('registry')
     })
 
-    // `resumeSession` answers "is there a usable session", not "did
-    // this attempt succeed": the live session the API already holds
-    // outranks the refused re-sign-in, and reporting `false` over it
-    // is what made `initialize()` emit a spurious authentication-lost.
-    it('reports the live session and logs when a re-sign-in is rejected', async () => {
-      setupSuccessfulLogin()
-      const logger = createLogger()
-      const api = await createApi({ logger })
-      mockFetch.mockRejectedValueOnce(httpUnauthorized('/connect/par'))
-
-      const isResumed = await api.resumeSession()
-
-      expect(isResumed).toBe(true)
-      expect(api.isAuthenticated()).toBe(true)
-      expect(logger.error).toHaveBeenCalledWith(
-        '[Home]',
-        'Session resume failed:',
-        expect.any(Error),
-      )
-    })
+    // What a refused re-sign-in answers is a CROSS-DIALECT clause and
+    // lives in `tests/contracts/session-lifecycle.test.ts`, which runs
+    // it against this dialect's own leg. A copy here is how the same
+    // verdict came to be recorded in three places and corrected in one.
   })
 
   describe('user retrieval', () => {

@@ -677,15 +677,32 @@ describe('baseAPI shared request pipeline', () => {
       expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
     })
 
-    // The mirror clause: the sign-in itself was accepted, so the
-    // session stands and `resumeSession` says so — a `false` here had
-    // `initialize()` announce an authentication loss over credentials
-    // that had just worked.
-    it('resumeSession() reports the live session when the post-auth sync fails', async () => {
+    // The mirror clause: the sign-in ROUND-TRIP was accepted, so
+    // `resumeSession` reports the resume it really performed — a
+    // `false` here had `initialize()` announce an authentication loss
+    // over credentials that had just worked.
+    it('resumeSession() reports the accepted sign-in when the post-auth sync fails', async () => {
       api = apiWithPersistedCredentials()
       api.syncRegistryMock.mockRejectedValueOnce(new Error('registry'))
 
       await expect(api.resumeSession()).resolves.toBe(true)
+    })
+
+    // And its twin, which the same `isAuthenticated()` reading cannot
+    // separate: the round-trip was REFUSED while a session established
+    // earlier is still live. The synthetic harness states it plainly —
+    // `isAuthenticated` is a hook here, so it can read `true` while
+    // `doAuthenticate` rejects, which is exactly the Classic shape (a
+    // context key survives its own refusal). Answering `true` there
+    // hands the caller a credential the server has just rejected.
+    it('resumeSession() reports a refused sign-in as failure even while a session stands', async () => {
+      api = apiWithPersistedCredentials()
+      api.isAuthenticatedMock.mockReturnValue(true)
+      api.doAuthenticateMock.mockRejectedValueOnce(
+        new AuthenticationError('refused'),
+      )
+
+      await expect(api.resumeSession()).resolves.toBe(false)
     })
 
     it('resumeSession() returns true and syncs registry on success', async () => {
