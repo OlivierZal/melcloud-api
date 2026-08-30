@@ -72,6 +72,15 @@ import {
 // (`/User/ListDevices` on Classic, `/context` on Home) that
 // `runSyncCycle` wraps. The per-device merge (`@classicUpdateDevice`,
 // `getValues`) never enters `runSyncCycle` and is out of scope here.
+//
+// CITATION RULE — the comments below cite the code by SYMBOL only:
+// a class, a method, a constant, a named clause. NEVER `base.ts:829`.
+// A line number is the one form of reference the move is guaranteed to
+// break, and it rots long before then: this file carried eighteen of
+// them until 2026-08-30, and `classic.ts:607-616`, cited for the
+// Classic throttle countdown, had already drifted onto `updatePower`.
+// A symbol name survives both a move and a refactor, or fails loudly
+// when the symbol is renamed — which is the behaviour a witness wants.
 
 const CLASSIC_BASE_URL = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
 const HOME_BASE_URL = 'https://melcloudhome.com'
@@ -99,7 +108,7 @@ const CLOCK_EPSILON_MS = 1
 const RETRY_AFTER_SECONDS = '120'
 const RETRY_AFTER_MS = 120_000
 
-// `LOGIN_BACKOFF_THROTTLE_MS` (base.ts:126): the pause a throttled
+// `BaseAPI`'s `LOGIN_BACKOFF_THROTTLE_MS`: the pause a throttled
 // sign-in earns when the server announced no window — and the cap on
 // the one it did announce.
 const THROTTLE_FALLBACK_MS = 7_200_000
@@ -110,9 +119,10 @@ const ANNOUNCED_THROTTLE_MINUTES = 60
 const ANNOUNCED_THROTTLE_MS = 3_600_000
 const ABSURD_THROTTLE_MINUTES = 2880
 
-// `LOGIN_THROTTLE_ERROR_ID` (classic.ts:80) — MELCloud Classic's login
-// throttle, reported inside an HTTP 200 like every other Classic
-// refusal.
+// `ClassicAPI`'s `LOGIN_THROTTLE_ERROR_ID` — MELCloud Classic's login
+// throttle, reported inside a success status like every other Classic
+// refusal (the refusal is a body SHAPE; the exact 2xx code is
+// unverified, see CLAUDE.md).
 const CLASSIC_THROTTLE_ERROR_ID = 6
 
 // The marker a refused registry cycle carries. Deliberately an
@@ -152,11 +162,12 @@ interface SessionApi extends BaseAPI {
 
 interface SessionLifecycleDriver {
   /**
-   * Whether this dialect's wire can ANNOUNCE a throttle window. Classic
-   * counts it down in `LoginMinutes` (classic.ts:607-616); Home's 429
-   * carries none this layer reads, so its
-   * `AuthenticationThrottledError` announces none by construction
-   * (home.ts:586-588) and only the fallback rung is stageable there.
+   * Whether this dialect's wire can ANNOUNCE a throttle window.
+   * `ClassicAPI.doAuthenticate` counts it down from the body's
+   * `LoginMinutes`; Home's 429 carries none this layer reads, so
+   * `HomeAPI.doAuthenticate` constructs its
+   * `AuthenticationThrottledError` with a null `retryAfter` and only
+   * the fallback rung is stageable there.
    */
   readonly announcesThrottleWindow: boolean
   /**
@@ -333,8 +344,9 @@ const readBack = (
 
 /**
  * Every key a persistence host was asked to touch, however it was
- * asked: `''` reaches `set` on a host without `unset`, and `unset` on
- * one that has it (setting.ts:34-36).
+ * asked: the `@setting` accessor's `set` routes the `''` cleared
+ * sentinel to `unset` on a host that provides one, and to `set` on a
+ * host that does not.
  * @param calls - Recorded calls of the store's spies, key first.
  * @returns The touched keys, deduplicated and sorted.
  */
@@ -415,9 +427,9 @@ const answerClassicLogin = (): HttpResponse => {
     throw createServerError(UNAVAILABLE_STATUS, CLASSIC_LOGIN_PATH)
   }
   if (classicWire.login === 'throttle') {
-    // The login throttle, window and all: `ErrorId 6` inside a 200,
-    // counting the lockout down in `LoginMinutes`. Omitting the window
-    // is how the endpoint says it announces none.
+    // The login throttle, window and all: `ErrorId 6` inside a success
+    // status, counting the lockout down in `LoginMinutes`. Omitting the
+    // window is how the endpoint says it announces none.
     return {
       data: {
         ErrorId: CLASSIC_THROTTLE_ERROR_ID,
@@ -428,9 +440,13 @@ const answerClassicLogin = (): HttpResponse => {
       status: OK_STATUS,
     }
   }
-  // A refused Classic sign-in is an HTTP 200 carrying `LoginData: null`,
-  // not a 401 — `doAuthenticate` turns that shape into the shared
-  // `AuthenticationError`.
+  // A refused Classic sign-in is a SUCCESS status carrying
+  // `LoginData: null`, not a 401 — `doAuthenticate` turns that SHAPE
+  // into the shared `AuthenticationError` without reading the status.
+  // `OK_STATUS` is this harness's staging choice, not a wire
+  // measurement: the exact 2xx code the endpoint answers is unverified
+  // (CLAUDE.md). Only "2xx" is load-bearing here — a non-2xx would
+  // throw inside the transport before the shape was inspected.
   return classicWire.login === 'accept'
     ? classicLoginResponse()
     : { data: { LoginData: null }, headers: {}, status: OK_STATUS }
@@ -579,9 +595,9 @@ const stageHome = ({
 
 const homeDriver: SessionLifecycleDriver = {
   // The BFF's 429 carries no window this layer reads, so
-  // `doAuthenticate` raises a throttle that announces none
-  // (home.ts:586-588) — `announcedThrottleMinutes` is unrepresentable
-  // here, and the staging above rightly ignores it.
+  // `HomeAPI.doAuthenticate` raises a throttle whose `retryAfter` is
+  // null by construction — `announcedThrottleMinutes` is
+  // unrepresentable here, and the staging above rightly ignores it.
   announcesThrottleWindow: false,
   logLabel: '[Home]',
   registryCycleCount: homeContextCount,
@@ -632,7 +648,7 @@ const homeDriver: SessionLifecycleDriver = {
 // The transient-retry rung is the innermost policy and is mounted for
 // GET only: replaying a POST that may have landed server-side is a
 // duplicate write in disguise. Both rows run against the same 503.
-// `throttleBackoffMs` (base.ts:139-148) reads the window the server
+// `BaseAPI`'s `throttleBackoffMs` reads the window the server
 // announced and holds sign-ins for it, with the two-hour constant as
 // BOTH the fallback and the cap. Every rung matters in the field: a
 // dropped branch turns an announced lockout into 15 minutes of
@@ -660,16 +676,17 @@ const THROTTLE_CASES = [
   },
 ] as const
 
-// The two persistence hosts a consumer can be: `setting.ts:34-36`
-// routes a `''` write to `unset` when the host provides one, so the
-// keys a session declares reach a different spy on each.
+// The two persistence hosts a consumer can be: the `@setting`
+// accessor's `set` routes a `''` write to `unset` when the host
+// provides one, so the keys a session declares reach a different spy on
+// each.
 const PERSISTENCE_HOSTS = [
   { hasUnset: false, label: 'a host that stores the cleared sentinel' },
   { hasUnset: true, label: 'a host that deletes the cleared key' },
 ] as const
 
-// The ladder `ensureAuthenticated` climbs (base.ts:459-475), in the
-// order its doc insists on. Rung 2 — probe a persisted session before
+// The ladder `BaseAPI.ensureAuthenticated` climbs, in the order its
+// doc insists on. Rung 2 — probe a persisted session before
 // spending a sign-in — is the one Classic cannot reach; it has its own
 // describe below, with the reason.
 const ENSURE_AUTHENTICATED_RUNGS = [
@@ -787,7 +804,9 @@ const describeSessionLifecycleContract = (
       expect(settingManager.get('loginBackoffUntil')).toBe('')
     })
 
-    // The gate's negative half (base.ts:837-842). A transport failure is
+    // The negative half of `BaseAPI`'s `#armLoginBackoff` gate: its
+    // `error instanceof AuthenticationError` guard, which returns
+    // without arming anything. A transport failure is
     // not a rejected credential: the retry paths own those, and pausing
     // sign-ins over a blip would lock a working account out for fifteen
     // minutes at a time.
@@ -859,16 +878,16 @@ const describeSessionLifecycleContract = (
     // claim: this sign-in round-trip really did happen. It was
     // quarantined as Classic-only on the claim that
     // Home's `isAuthenticated()` reads `#user`, which only the failing
-    // cycle hydrates. That claim was FALSE: `#fetchContext`
-    // (home.ts:781-801) parses in two stages, `#user` is assigned at
-    // :786-788, and the salvage `parseOrThrow` at :798 throws after it —
-    // so the 200 staged below leaves Home signed in, `user` non-null and
-    // `context` null (measured). Home has a second, independent
-    // counterexample the harness never needed: the `/context` 404
-    // (home.ts:880-896) raises `#hasNoHome`, which reads authenticated
-    // with `#user === null`. What the quarantine described was a
-    // limitation of what the harness could stage, never a property of
-    // the dialects.
+    // cycle hydrates. That claim was FALSE: `HomeAPI.#fetchContext`
+    // parses in TWO stages — `#user` is assigned from the identity
+    // slice first, and the salvage `parseOrThrow` throws after it — so
+    // the success status staged below leaves Home signed in, `user`
+    // non-null and `context` null (measured). Home has a second,
+    // independent counterexample the harness never needed:
+    // `HomeAPI.#markNoHome`, the `/context` 404 branch, raises
+    // `#hasNoHome`, which reads authenticated with `#user === null`.
+    // What the quarantine described was a limitation of what the
+    // harness could stage, never a property of the dialects.
     it('returns true from resumeSession when the session was established before the enforced cycle threw', async () => {
       const { settingManager } = createSettingStore()
       driver.stage({ login: 'accept', wire: 'drifted-registry' })
@@ -906,9 +925,9 @@ const describeSessionLifecycleContract = (
       expect(deviceCount()).toBeGreaterThan(0)
     })
 
-    // The probe is BEST-EFFORT by contract (base.ts:829-835): it runs
+    // The probe is BEST-EFFORT by contract — `tryReuseSession` runs
     // `syncRegistry`, never `enforceRegistrySync`. Nothing else pins
-    // that choice, yet `initialize()` has no try/catch (:496-503) and
+    // that choice, yet `initialize()` has no try/catch and
     // both `create()` factories await it — so the propagating hook would
     // turn a boot-time blip into a REJECTED `create()`, and a probe that
     // cleared on failure would destroy a session that was merely
@@ -1270,7 +1289,7 @@ const describeSessionLifecycleContract = (
       },
     )
 
-    // The per-request lifecycle (`#runWithEvents`, base.ts:962-984).
+    // The per-request lifecycle (`BaseAPI.#runWithEvents`).
     // `durationMs` is asserted by SHAPE and never by value: the
     // extraction moves this clock from `Date.now()` to
     // `performance.now()`, which no fake timer controls — but a
@@ -1310,8 +1329,9 @@ const describeSessionLifecycleContract = (
       ).toStrictEqual(durations)
     })
 
-    // The transport-resolution gate (base.ts:292-298) adopts a
-    // pre-built client only when it IS this repo's `HttpClient` — the
+    // The transport-resolution gate — the `transport instanceof
+    // HttpClient` ternary in the `BaseAPI` constructor — adopts a
+    // pre-built client only when it IS this repo's `HttpClient`, the
     // subclass that seats the MELCloud redaction vocabulary. Anything
     // else, the bare core client included, is re-wrapped. The
     // distinction survives the move only if the gate keeps binding the
@@ -1386,8 +1406,9 @@ const describeSessionLifecycleContract = (
     )
 
     // The auto-sync timer is the one collaborator `BaseAPI` hands the
-    // RAW host logger (base.ts:299-303) while everything else gets the
-    // labelled one (:287), so a rejected tick reports itself without
+    // RAW host logger — the `SyncManager` the constructor builds from
+    // the un-labelled `logger` argument, while every other seat gets
+    // `this.logger` — so a rejected tick reports itself without
     // saying which account it was about. That asymmetry is a LATENT BUG,
     // kept deliberately through the extraction: those strings land
     // verbatim in the diagnostic reports users paste into issues, so it
@@ -1469,16 +1490,17 @@ describeSessionLifecycleContract('HomeAPI', homeDriver)
 
 // A DIALECT divergence, not a harness one — and unlike the quarantine
 // this replaces, it is decidable by reading two expressions. The middle
-// rung of `ensureAuthenticated` (base.ts:463-472) fires when the client
-// is NOT authenticated yet still holds session material worth probing.
-// Classic cannot be in that state: `isAuthenticated()` (classic.ts:463-465)
-// and `hasPersistedSession()` (classic.ts:639-641) are the SAME
-// expression, `this.contextKey !== ''` — one cannot read false while the
-// other reads true. Home's are independent (`#user`/`#hasNoHome` versus
-// the token pair, home.ts:511-513 and :608-615), so a refresh token that
-// no cycle has exercised yet lands exactly there. Should Classic ever
-// split the two hooks, this clause belongs back in the cross-dialect
-// table.
+// rung of `BaseAPI.ensureAuthenticated` — its `hasPersistedSession()`
+// branch — fires when the client is NOT authenticated yet still holds
+// session material worth probing. Classic cannot be in that state:
+// `ClassicAPI.isAuthenticated` and `ClassicAPI.hasPersistedSession` are
+// the SAME expression, `this.contextKey !== ''` — one cannot read false
+// while the other reads true. Home's two are independent
+// (`HomeAPI.isAuthenticated` reads `#user`/`#hasNoHome`, while
+// `HomeAPI.hasPersistedSession` reads the token pair), so a refresh
+// token that no cycle has exercised yet lands exactly there. Should
+// Classic ever split the two hooks, this clause belongs back in the
+// cross-dialect table.
 describe('sessionLifecycle — Home-only: a session no cycle has exercised', () => {
   beforeEach(() => {
     vi.useFakeTimers()

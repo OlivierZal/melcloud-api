@@ -72,9 +72,17 @@ const syncDeviceModel = (
   }
 }
 
-// `ClassicBuildingListSchema` has already validated `device.Type` against
-// the literal union of `ClassicDeviceType`, so no runtime guard nor
-// per-variant switch is needed here.
+// No runtime guard nor per-variant switch here, because the LISTING
+// BOUNDARY has already filtered these entries. The guarantee is NOT
+// `ClassicBuildingListSchema`'s any more — 54.0.0 took the closed
+// `ClassicDeviceType` union out of that schema (its device entries are
+// `z.unknown()`, since one unmodelled device inside the atomic array
+// failed the whole account payload) and moved it to
+// `ClassicMinimalDeviceSchema`, which `ClassicAPI`'s listing applies per
+// entry through `inspectClassicListingEntry`. What survives that filter
+// is the WHOLE minimal header — `Type` among the three modelled values,
+// plus `DeviceID`, `DeviceName`, `BuildingID`, `AreaID`, `FloorID` and
+// `Device` — and it holds only for entries that came through it.
 const createDeviceModel = (device: ClassicListDeviceAny): ClassicDeviceAny =>
   new ClassicDevice(device)
 

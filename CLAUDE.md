@@ -33,11 +33,23 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 
 ## Domain gotchas
 
-- Classic auth failure is NOT a 401: `/Login/ClientLogin3` answers HTTP 201
-  with `{ LoginData: null }` on rejected credentials. `doAuthenticate`
-  throws `AuthenticationError` on that shape; the 401 wrapping in
-  `normalizeUnauthorized` exists for the Home API's OIDC/token-expiry flows. Never
-  assume all auth failures surface as 401 `HttpError`.
+- A refused Classic sign-in is a SHAPE, not a status:
+  `/Login/ClientLogin3` reports rejected credentials in its BODY, as
+  `{ LoginData: null }`, and `doAuthenticate` (`src/api/classic.ts`)
+  branches on `loginData === null` — it never reads the status. The
+  SDK is status-agnostic there, and that is the load-bearing fact: the
+  only status property the code depends on is that the refusal arrives
+  as a SUCCESS status at all, since `HttpClient` throws `HttpError` on
+  any non-2xx before the shape is ever inspected. The EXACT code is
+  UNVERIFIED. This file asserted `201` until 2026-08-30 and the test
+  fixtures stage `200`; neither is evidence of the wire — the fixtures
+  are our own staging, and no live probe of a refused sign-in is on
+  record. Do not restate a number here without one; if a probe is ever
+  run, record its date the way the Home entries below do. What must
+  never be assumed is that auth failures surface as a 401 `HttpError`:
+  the 401 wrapping in `normalizeUnauthorized` exists for the Home API's
+  OIDC/token-expiry flows, and Classic's own throttle refusal
+  (`ErrorId` 6) rides the same success-status body.
 - Wire-format types mirror the MELCloud APIs verbatim (PascalCase fields,
   one-letter report keys); do not rename them to satisfy style rules.
 - `EffectiveFlags` bitfields: `src/facades/classic-flags.ts` is the one
@@ -164,8 +176,46 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   masking a real failure (review catch, 2026-08-28). All three
   clauses are kernel-pinned. Writes keep branching on the flag (the
   wire's own addressing).
+- Two registry-sync hooks, and swapping them re-opens a shipped bug in
+  either direction (54.0.0). `syncRegistry()` is the BEST-EFFORT hook:
+  it logs and swallows, and only the non-destructive callers have it —
+  the `tryReuseSession` probe and the middle rung of
+  `ensureAuthenticated`. It must stay best-effort there because
+  `initialize()` has no try/catch and both `create()` factories await
+  it, so a propagating hook would turn a boot-time network blip into a
+  REJECTED `create()`, over a persisted session that was merely
+  unexercised. `enforceRegistrySync()` is the PROPAGATING hook and has
+  exactly one caller: the enforced post-auth sync in `authenticate()`'s
+  epilogue (`#finishLogin`). It must propagate because the enforced
+  sync used to run through `fetch()`, whose catch-all logs and returns
+  an empty list — so a registry failure resolved as a SUCCESSFUL
+  sign-in over an empty registry, which consumers read as "this account
+  has no devices". `resumeSession()` still never throws: it catches
+  whatever the enforced sync propagated, so a registry failure never
+  reaches a lifecycle caller. What it then REPORTS is the SIGN-IN
+  ROUND-TRIP's verdict, not a re-reading of the session — an accepted
+  sign-in whose enforced sync then failed is a resume (answering `false`
+  there had `initialize()` emit a spurious `onAuthenticationLost` over
+  credentials that had just worked), while a REFUSED sign-in is not,
+  even when a live session predates the attempt and `isAuthenticated()`
+  still reads `true`. Do not restate that as "judge by the session":
+  54.0.0 collapsed the two shapes onto one `isAuthenticated()` reading
+  and this file repeated the shorthand, which is exactly how a refused
+  Classic sign-in came to be reported as a resume — handing the
+  reactive-401 path the context key the server had just refused. Both
+  sides of the hook split are kernel-pinned in
+  `tests/contracts/session-lifecycle.test.ts`.
 - The Classic `/User/ListDevices` boundary DROPS what it cannot model
-  and must never do so silently. The predicate is the whole minimal
+  and must never do so silently. The drop exists because the REGISTRY
+  sync is bulk — one call carries every device of the account — and the
+  schema used to validate each entry's `Type` against a closed union
+  INSIDE an atomic array, so one unmodelled device failed the whole
+  payload; combined with the propagating hook above, that would have
+  read as "cannot sign in at all" for every user owning a model newer
+  than this release. The closed `Type` union therefore no longer lives
+  in `ClassicBuildingListSchema` (its device entries are `z.unknown()`)
+  but in `ClassicMinimalDeviceSchema`, applied per entry at the
+  boundary. The predicate is the whole minimal
   header (`ClassicMinimalDeviceSchema`), not the `Type` alone — a null
   `DeviceName` or a non-numeric `AreaID` drops its entry too — so the
   two verdicts are reported apart (`unmodelled device type` = a model
@@ -433,7 +483,10 @@ where even reads need auth).
   `COMMIT_OR_PR_TITLE`, a one-commit PR silently took its commit subject
   instead). It must follow Conventional Commits, which the required
   `PR title` check enforces (`.github/workflows/pr-title.yml`,
-  byte-identical in the five repos) — default type set, no scope
+  byte-identical in the SEVEN repos that call the family reusables —
+  every repo but `configs`, which hosts them and whose own copy
+  differs; md5-verified 2026-08-30, the count having gone stale at five
+  when `api-core` joined) — default type set, no scope
   allowlist, and no `subjectPattern`: subjects legitimately open on a
   proper noun. Dependabot's prefixes are pinned to `build(deps)` /
   `build(deps-dev)` rather than inferred, which is what had this repo

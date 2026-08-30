@@ -434,6 +434,13 @@ export abstract class BaseAPI implements Disposable {
    * untouched (the backoff still arms and the error still surfaces).
    * @param credentials - Explicit username/password.
    * @throws {@link AuthenticationError} when the server refuses the credentials.
+   * @throws Whatever the enforced post-auth sync raises — a
+   * `ValidationError`, a transport failure, any registry error. The
+   * credential check happened FIRST, so the session is left signed in
+   * and the credentials persisted: this rejection says "signed in, but
+   * the registry could not be verified", never "sign-in refused".
+   * Callers that only handle `AuthenticationError` see it instead of
+   * the empty registry a swallowed failure used to report as success.
    */
   public async authenticate(credentials: LoginCredentials): Promise<void> {
     const epoch = this.#logOutEpoch
@@ -558,9 +565,13 @@ export abstract class BaseAPI implements Disposable {
    *
    * Reads `username`/`password` from the SettingManager and signs
    * in. Unlike {@link authenticate}, failures are **logged and
-   * swallowed** — the method never throws. Use this from lifecycle
-   * hooks (init, 401 retry, `ensureSession`) where a stale or
-   * missing persisted credential must not crash the caller.
+   * swallowed** — the method never throws. That covers the enforced
+   * post-auth sync too: `authenticate` propagates what
+   * `enforceRegistrySync` raises, and this method catches it like any
+   * other rejection rather than letting a registry failure reach a
+   * lifecycle caller. Use it from lifecycle hooks (init, 401 retry,
+   * `ensureSession`) where a stale or missing persisted credential
+   * must not crash the caller.
    *
    * On success, the registry is populated (delegates to
    * {@link authenticate}).
