@@ -18,7 +18,7 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 - **Two APIs, one client** — Classic and Home behind consistent ergonomics; pick what your account uses. The cross-dialect surfaces (protection, holiday mode, error log, ATW state, the ATA group and the `/report` chart contract) answer one neutral vocabulary whichever API backs the target, each pinned by a contract kernel.
 - **Ata / Atw / Erv support** — air conditioners, heat pumps with hot water, and energy-recovery ventilation units.
 - **Resilient by default** — auto-retry on transient failures, rate-limit awareness, pre-emptive session refresh.
-- **Validated boundaries** — Zod schemas guard every consumed payload, so upstream shape drift surfaces as a typed `ValidationError` instead of a deep `undefined` crash.
+- **Validated boundaries** — Zod schemas guard every consumed payload, so upstream shape drift surfaces as a typed `ValidationError` instead of a deep `undefined` crash. The Classic bulk listing is the one deliberate exception: one unusable entry must not take a whole account down, so it is dropped and reported on the cycle's log line — with its id and whether its `Type` is unmodelled or its header malformed — instead of failing the payload.
 - **Typed failures** — telemetry, reports and error-log getters return `Result<T>` so callers branch on `network` / `unauthorized` / `rate-limited` / `validation` / `server` / `not-found` instead of catching generic exceptions.
 - **Tree-shakable** — `sideEffects: false` plus namespace-style subpath exports (`/classic`, `/home`) and one flat subpath per browser-safe contract module. The flat subpaths never reach the HTTP stack, so a browser bundle can import their values; the root barrel does and is Node-only.
 

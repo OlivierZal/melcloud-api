@@ -62,6 +62,22 @@ const mockLoginAndList = (
   })
 }
 
+// Raw listing pieces for the dropped-device clauses. `cast` is the
+// deliberate off-shape entry point: these model the wire BEFORE the
+// boundary filter, so they carry entries a typed factory rightly
+// refuses.
+const unmodelledDevice = (id: number): ReturnType<typeof classicRawDevice> =>
+  classicRawDevice({ DeviceID: id, Type: 99 })
+
+const areaWith = (id: number, devices: readonly unknown[]): never =>
+  cast({ Devices: devices, ID: id })
+
+const buildingWith = (devices: readonly unknown[]): unknown => [
+  classicBuildingWithStructure({
+    Structure: { Areas: [], Devices: cast(devices), Floors: [] },
+  }),
+]
+
 const errorEntry = (
   overrides: Record<string, unknown> = {},
 ): Record<string, unknown> => ({
@@ -93,6 +109,20 @@ describe('mELCloud Classic API', () => {
       transport: mockHttpClient,
       ...config,
     })
+
+  // Runs one listing cycle over a raw payload and hands back the
+  // logger it was given, so a clause reads the emitted strings — this
+  // SDK's primary evidence channel, quoted verbatim into the
+  // diagnostic reports users paste into issues.
+  const fetchWithLogger = async (
+    buildings: unknown,
+  ): Promise<ReturnType<typeof createLogger>> => {
+    const logger = createLogger()
+    mockRequest.mockResolvedValue(wrap(buildings))
+    const api = await createApi({ logger })
+    await api.fetch()
+    return logger
+  }
 
   // One-device building behind the login + list mocks, then a real
   // authenticate(): the shared starting state of the registry
@@ -154,6 +184,119 @@ describe('mELCloud Classic API', () => {
     // The listing survives, carrying only the device this SDK models.
     expect(buildings).toHaveLength(1)
     expect(buildings[0]?.Structure.Devices).toHaveLength(1)
+  })
+
+  // Dropping is the right degradation; dropping SILENTLY is not. The
+  // pruned device reaches the consumer as a warning over frozen values
+  // — present-looking but stale — with no trace of why, and a wire
+  // regression on one header field is indistinguishable from a
+  // genuinely new MELCloud model. The boundary therefore reports what
+  // it dropped, and keeps the two reasons apart: one calls for a
+  // release that adds the model, the other for an issue against the
+  // payload.
+  describe('the dropped-device report', () => {
+    it('names the id and the reason of an entry whose type is unmodelled', async () => {
+      const logger = await fetchWithLogger(
+        buildingWith([
+          classicRawDevice({ DeviceID: 1 }),
+          classicRawDevice({ DeviceID: 2, Type: 99 }),
+        ]),
+      )
+
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Classic]',
+        'Dropped 1 of 2 /User/ListDevices entries: device 2 (unmodelled device type)',
+      )
+    })
+
+    // The reason the CHANGELOG missed: the filter drops on ANY failure
+    // of the minimal header, not only on an unmodelled `Type`. A null
+    // `DeviceName` is a wire regression on a device this SDK models,
+    // and must never reach the report as a new model. (Which header
+    // fields carry that verdict is the classifier's clause table, in
+    // the validation suite; here it is the LINE that is pinned.)
+    it('names the id and the reason of an entry whose header is malformed', async () => {
+      const logger = await fetchWithLogger(
+        buildingWith([classicRawDevice({ DeviceID: 7, DeviceName: null })]),
+      )
+
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Classic]',
+        'Dropped 1 of 1 /User/ListDevices entries: device 7 (malformed header)',
+      )
+    })
+
+    // An entry too broken to name itself is still reported: the count
+    // is what tells the reader a device went missing at all.
+    it('reports an entry whose id the wire did not spell', async () => {
+      const logger = await fetchWithLogger(
+        buildingWith([classicRawDevice({ DeviceID: 'DEV-7' })]),
+      )
+
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Classic]',
+        'Dropped 1 of 1 /User/ListDevices entries: device unknown (malformed header)',
+      )
+    })
+
+    // The volume verdict, pinned: ONE line per cycle, never one per
+    // device. The listing carries every device of the account and runs
+    // on every sync cycle, and a wire regression takes the whole
+    // payload down at once — precisely when the report has to stay
+    // readable. The single line still names every id, which is what
+    // makes it actionable.
+    it('aggregates a whole regressed listing into one line naming every id', async () => {
+      const logger = await fetchWithLogger(
+        buildingWith(
+          [1, 2, 3, 4, 5].map((id) =>
+            classicRawDevice({ DeviceID: id, DeviceName: null }),
+          ),
+        ),
+      )
+
+      expect(logger.error).toHaveBeenCalledTimes(1)
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Classic]',
+        'Dropped 5 of 5 /User/ListDevices entries: device 1 (malformed header), device 2 (malformed header), device 3 (malformed header), device 4 (malformed header), device 5 (malformed header)',
+      )
+    })
+
+    // The filter runs at four nesting levels; a drop at any of them
+    // reaches the same one line, so no level can go quiet on its own.
+    it('reports the drops of all four nesting levels', async () => {
+      const floor = cast({
+        Areas: [areaWith(200, [unmodelledDevice(4)])],
+        Devices: [unmodelledDevice(3)],
+        ID: 10,
+      })
+      const building = classicBuildingWithStructure({
+        Structure: {
+          Areas: [areaWith(100, [unmodelledDevice(1)])],
+          Devices: [unmodelledDevice(2)],
+          Floors: [floor],
+        },
+      })
+
+      const logger = await fetchWithLogger([building])
+
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Classic]',
+        'Dropped 4 of 4 /User/ListDevices entries: device 1 (unmodelled device type), device 2 (unmodelled device type), device 3 (unmodelled device type), device 4 (unmodelled device type)',
+      )
+    })
+
+    // A report that fires on a healthy listing is noise, and noise is
+    // what gets filtered out of the channel this line depends on.
+    it('stays silent when every entry is modelled', async () => {
+      const logger = await fetchWithLogger(
+        buildingWith([
+          classicRawDevice({ DeviceID: 1 }),
+          classicRawDevice({ DeviceID: 2 }),
+        ]),
+      )
+
+      expect(logger.error).not.toHaveBeenCalled()
+    })
   })
 
   // The Classic half of the post-auth sync contract (the Home suite

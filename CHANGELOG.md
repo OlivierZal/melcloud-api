@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [54.1.0] - 2026-08-30
+
+### Added
+
+- **Every entry the Classic listing drops now says so, with its id and the reason.** 54.0.0 made the `/User/ListDevices` boundary drop entries the registry cannot model instead of failing the whole payload — the right degradation, and unchanged here — but it dropped them in SILENCE. Downstream the device is pruned from the registry and com.melcloud degrades it to a warning over frozen values: a unit that looks present and is stale, with nothing anywhere saying why. This SDK's logged strings are its primary evidence channel — they land verbatim in the diagnostic reports users paste into issues — so the boundary now reports what it dropped:
+
+  ```text title="one line per sync cycle"
+  [Classic] Dropped 1 of 12 /User/ListDevices entries: device 42 (unmodelled device type)
+  ```
+
+  The two reasons stay apart because they call for opposite responses, and until now nothing could tell them apart: `unmodelled device type` is a MELCloud model newer than this release, answered by a release that adds it; `malformed header` is a wire regression on a device this SDK already models, answered by an issue against the payload. An entry too broken to spell a numeric `DeviceID` is still reported, as `device unknown` — a device missing from the registry unmentioned is the failure this line exists to end, and being unnamed is the lesser half of it.
+
+  ONE aggregated line per sync cycle, never one per entry: the listing carries every device of the account and runs on every cycle, so a per-entry line would storm the host's logger — hardest exactly when a wire regression takes the whole payload down and the report most needs to stay readable. The single line still names every dropped id, which is what makes it actionable: the report has to say WHICH device went stale.
+
+  MINOR rather than patch: nothing existing changes shape — no signature, no type, no return value, no reworded string — and the drop behaviour itself is untouched, but the SDK emits an observable line it never emitted, on the surface this repo treats as contracted. Consumers' diagnostic reports and log assertions can newly depend on it.
+
+### Fixed
+
+- **The 54.0.0 entry below described the drop wrongly, on two counts; both are corrected there and recorded here.**
+  - It presented the filter as rejecting an unmodelled `Type`. The predicate is `ClassicMinimalDeviceSchema.safeParse(…).success` — the WHOLE minimal header — so a null `DeviceName`, a non-numeric `AreaID` or a missing `Device` object drops its entry too. Reading the entry as written, a wire regression on one field and a genuinely new MELCloud model were the same invisible event; the log line above is what separates them at runtime.
+  - It closed the twin question with "The heatzy twin has no equivalent exposure: its sync is per-device." That is false, and a sentence that closes a question wrongly is how the twin was left a month behind on the sign-in fix recorded in the very same release. heatzy-api validates `/bindings` atomically, fans `getValues` out through a `Promise.all` that one throwing member rejects whole, and resolves `product_key` through a `getProduct` that throws on an unknown one — which blocks sign-in outright for an account owning a just-released Heatzy product. The claim is withdrawn; closing that exposure is heatzy-api's, not this repo's.
+
 ## [54.0.0] - 2026-08-29
 
 ### Breaking changes
@@ -12,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
   heatzy-api shipped exactly this fix a month ago (its 11.0.0); it never crossed to this twin. Found by a cross-repo audit, 2026-08-29.
 
-- **A device type this SDK does not model no longer invalidates the whole account listing.** The Classic REGISTRY sync is bulk — one `/User/ListDevices` call carries every building — and the schema validated each entry's `Type` against a closed union inside an atomic array, so ONE unmodelled device made the whole payload fail. (The SDK's other sync kind, the per-device merge that follows a read or write response, takes its type from an already-modelled device and is unaffected.) Swallowed, that reported an empty registry; propagating (above), it would have read as "cannot sign in at all" for every user owning a model newer than this SDK. Unmodelled entries are now dropped at the listing boundary (`isModelledClassicDevice`), which is also what the registry has always relied on — it builds a model per entry with no runtime guard of its own. The heatzy twin has no equivalent exposure: its sync is per-device.
+- **A device type this SDK does not model no longer invalidates the whole account listing.** The Classic REGISTRY sync is bulk — one `/User/ListDevices` call carries every building — and the schema validated each entry's `Type` against a closed union inside an atomic array, so ONE unmodelled device made the whole payload fail. (The SDK's other sync kind, the per-device merge that follows a read or write response, takes its type from an already-modelled device and is unaffected.) Swallowed, that reported an empty registry; propagating (above), it would have read as "cannot sign in at all" for every user owning a model newer than this SDK. Entries the registry cannot model are now dropped at the listing boundary (`isModelledClassicDevice`), which is also what the registry has always relied on — it builds a model per entry with no runtime guard of its own. The guard is the whole minimal header, not the `Type` alone: a null `DeviceName`, a non-numeric `AreaID` or a missing `Device` object drops its entry just as surely — a wire regression rather than a new model. That, and the false claim this paragraph first made about the heatzy twin, are corrected in 54.1.0 below.
 
 ### Fixed
 
@@ -667,6 +689,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[54.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v54.0.0...v54.1.0
 [54.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v53.1.1...v54.0.0
 [53.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v53.1.0...v53.1.1
 [53.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v53.0.0...v53.1.0

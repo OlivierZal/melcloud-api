@@ -1,4 +1,6 @@
 export {
+  type ClassicDeviceDropReason,
+  type ClassicDroppedDevice,
   ClassicBuildingListSchema,
   ClassicEnergyDataSchema,
   ClassicLoginDataSchema,
@@ -11,6 +13,7 @@ export {
   HomeTokenResponseSchema,
   HomeUserContextSchema,
   HourSchema,
+  inspectClassicListingEntry,
   isModelledClassicDevice,
   parseOrThrow,
 } from './schemas.ts'
