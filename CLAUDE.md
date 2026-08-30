@@ -164,6 +164,22 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   masking a real failure (review catch, 2026-08-28). All three
   clauses are kernel-pinned. Writes keep branching on the flag (the
   wire's own addressing).
+- The Classic `/User/ListDevices` boundary DROPS what it cannot model
+  and must never do so silently. The predicate is the whole minimal
+  header (`ClassicMinimalDeviceSchema`), not the `Type` alone — a null
+  `DeviceName` or a non-numeric `AreaID` drops its entry too — so the
+  two verdicts are reported apart (`unmodelled device type` = a model
+  newer than this release; `malformed header` = a wire regression on a
+  device already modelled) because they call for opposite responses.
+  Reporting is ONE aggregated line per sync cycle naming every dropped
+  id, never one line per entry: the listing carries every device of
+  the account on every cycle, and a whole-payload regression is
+  exactly when the diagnostic report must stay readable. A dropped
+  entry that reaches the consumer unmentioned is the failure mode the
+  line exists to end — com.melcloud degrades a pruned device to a
+  warning over frozen values, so the report has to say which device
+  went stale and why. `inspectClassicListingEntry` owns the verdict;
+  `isModelledClassicDevice` stays its boolean face.
 - Timestamp normalization is library-owned: `ErrorLogEntry.atEpochMs`
   (+ its `clearedAtEpochMs` twin) and
   `AtwHotWaterState.lastLegionellaActivationEpochMs` carry the epoch

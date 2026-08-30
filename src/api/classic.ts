@@ -51,10 +51,12 @@ import {
 } from '../types/index.ts'
 import { isKeyOf, isUninitializedWireDate, toEpochMs } from '../utils.ts'
 import {
+  type ClassicDeviceDropReason,
+  type ClassicDroppedDevice,
   ClassicBuildingListSchema,
   ClassicEnergyDataSchema,
   ClassicLoginDataSchema,
-  isModelledClassicDevice,
+  inspectClassicListingEntry,
   parseOrThrow,
 } from '../validation/index.ts'
 import type {
@@ -121,21 +123,84 @@ const collectDevices = function* (
 }
 
 /**
+ * The one filter of a listing cycle: it keeps the devices this SDK
+ * models and remembers what it rejected, so the boundary can name the
+ * drops instead of performing them in silence.
+ */
+interface DroppedDeviceCollector {
+  /**
+   * Whether one raw listing entry survives the boundary. Rejections
+   * are recorded, never merely returned.
+   */
+  readonly shouldKeep: (device: unknown) => boolean
+  /**
+   * The cycle's one report line, or `null` when nothing was dropped.
+   */
+  readonly summarize: () => string | null
+}
+
+const DROP_REASON_LABELS = {
+  'malformed-header': 'malformed header',
+  'unmodelled-type': 'unmodelled device type',
+} satisfies Record<ClassicDeviceDropReason, string>
+
+const describeDroppedDevice = ({ id, reason }: ClassicDroppedDevice): string =>
+  `device ${id === null ? 'unknown' : String(id)} (${DROP_REASON_LABELS[reason]})`
+
+/**
+ * Opens a collector for ONE listing cycle.
+ *
+ * The volume verdict lives here: `/User/ListDevices` carries every
+ * device of the account and runs on every sync cycle, so a line per
+ * dropped entry would storm the host's logger — hardest exactly when a
+ * wire regression takes the whole payload down and the diagnostic
+ * report most needs to stay readable. The collector emits ONE
+ * aggregated line per cycle instead, bounded by the cycle rather than
+ * by the listing's size, and that line still names every dropped id
+ * with its reason: the ids are what makes it actionable, since a
+ * consumer degrades a pruned device to frozen values and the report
+ * has to say WHICH device went stale and why.
+ * @returns A collecting predicate plus the cycle's report line.
+ */
+const createDroppedDeviceCollector = (): DroppedDeviceCollector => {
+  const dropped: ClassicDroppedDevice[] = []
+  let total = 0
+  return {
+    shouldKeep: (device: unknown): boolean => {
+      total += 1
+      const drop = inspectClassicListingEntry(device)
+      if (drop === null) {
+        return true
+      }
+      dropped.push(drop)
+      return false
+    },
+    summarize: (): string | null =>
+      dropped.length === 0
+        ? null
+        : `Dropped ${String(dropped.length)} of ${String(total)} /User/ListDevices entries: ${dropped
+            .map((entry) => describeDroppedDevice(entry))
+            .join(', ')}`,
+  }
+}
+
+/**
  * Keeps only the devices this SDK models in one listing container,
  * leaving every other field of that container untouched.
  * @template T - The container shape, preserved verbatim.
  * @param container - A building, floor or area carrying `Devices`.
+ * @param shouldKeep - The cycle's collecting predicate, so an entry
+ * dropped at this nesting level is still reported by the boundary.
  * @returns The same container, minus the unmodelled entries.
  */
 const withModelledDevices = <
   T extends { readonly Devices: readonly unknown[] },
 >(
   container: T,
+  shouldKeep: (device: unknown) => boolean,
 ): T => ({
   ...container,
-  Devices: container.Devices.filter((device) =>
-    isModelledClassicDevice(device),
-  ),
+  Devices: container.Devices.filter((device) => shouldKeep(device)),
 })
 
 /**
@@ -793,21 +858,34 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     // is a different mechanism and untouched by this filter.
     // The registry depends on what survives: it builds a model per
     // entry with no runtime guard of its own.
-    return data.map((building) => ({
+    const { shouldKeep, summarize } = createDroppedDeviceCollector()
+    const listing = data.map((building) => ({
       ...building,
       Structure: {
         ...building.Structure,
         Areas: building.Structure.Areas.map((area) =>
-          withModelledDevices(area),
+          withModelledDevices(area, shouldKeep),
         ),
         Devices: building.Structure.Devices.filter((device) =>
-          isModelledClassicDevice(device),
+          shouldKeep(device),
         ),
         Floors: building.Structure.Floors.map((floor) => ({
-          ...withModelledDevices(floor),
-          Areas: floor.Areas.map((area) => withModelledDevices(area)),
+          ...withModelledDevices(floor, shouldKeep),
+          Areas: floor.Areas.map((area) =>
+            withModelledDevices(area, shouldKeep),
+          ),
         })),
       },
     }))
+    const summary = summarize()
+    if (summary !== null) {
+      // `error`, not `log`: a device the account owns has left the
+      // registry, and the consumer degrades it to a warning over
+      // frozen values without being told why. This line is the only
+      // trace of the drop, and it lands verbatim in the diagnostic
+      // report a user pastes into an issue.
+      this.logger.error(summary)
+    }
+    return listing
   }
 }

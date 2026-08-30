@@ -10,6 +10,7 @@ import {
   HomeContextSchema,
   HomeTokenResponseSchema,
   HourSchema,
+  inspectClassicListingEntry,
   isModelledClassicDevice,
   parseOrThrow,
 } from '../../src/validation/index.ts'
@@ -21,6 +22,21 @@ import {
   defaultHomeAtaCapabilities,
   defaultHomeAtwCapabilities,
 } from '../home-fixtures.ts'
+
+// A listing entry the boundary keeps, so an override names exactly the
+// one field under test.
+const modelledEntry = (
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> => ({
+  AreaID: null,
+  BuildingID: 1,
+  Device: {},
+  DeviceID: 42,
+  DeviceName: 'D',
+  FloorID: null,
+  Type: ClassicDeviceType.Ata,
+  ...overrides,
+})
 
 const buildingWithDeviceType = (type: unknown): unknown => [
   {
@@ -412,6 +428,62 @@ describe('validation/schemas', () => {
         ).toBe(false)
       },
     )
+  })
+
+  // The guard drops on ANY failure of the minimal header, not only on
+  // an unmodelled `Type` — so a wire regression and a MELCloud model
+  // newer than this release would be one indistinguishable "dropped"
+  // verdict unless the two are told apart HERE. They call for opposite
+  // responses: a release that adds the model, versus an issue against
+  // the payload.
+  describe(inspectClassicListingEntry, () => {
+    it('says nothing about an entry this SDK models', () => {
+      expect(inspectClassicListingEntry(modelledEntry())).toBeNull()
+    })
+
+    it.each([
+      { label: 'numeric out-of-range', value: 999 },
+      { label: 'object', value: { nested: 'v' } },
+      { label: 'string', value: 'Ata' },
+    ])(
+      'blames the type of a well-formed header carrying an unmodelled Type ($label)',
+      ({ value }) => {
+        expect(
+          inspectClassicListingEntry(modelledEntry({ Type: value })),
+        ).toStrictEqual({ id: 42, reason: 'unmodelled-type' })
+      },
+    )
+
+    it.each([
+      { field: 'AreaID', label: 'a non-numeric area', value: 'zone' },
+      { field: 'BuildingID', label: 'an absent building', value: undefined },
+      { field: 'Device', label: 'an absent payload', value: undefined },
+      { field: 'DeviceName', label: 'a null name', value: null },
+      { field: 'FloorID', label: 'a non-numeric floor', value: 'ground' },
+    ])('blames the header of an entry with $label', ({ field, value }) => {
+      expect(
+        inspectClassicListingEntry(modelledEntry({ [field]: value })),
+      ).toStrictEqual({ id: 42, reason: 'malformed-header' })
+    })
+
+    // A header broken ON the id still gets reported — unnamed rather
+    // than unmentioned, because a device silently missing from the
+    // registry is the failure mode this whole report exists to end.
+    it.each([
+      { label: 'a non-numeric id', value: 'DEV-42' },
+      { label: 'an absent id', value: undefined },
+    ])('reports an entry with $label without one', ({ value }) => {
+      expect(
+        inspectClassicListingEntry(modelledEntry({ DeviceID: value })),
+      ).toStrictEqual({ id: null, reason: 'malformed-header' })
+    })
+
+    it('reports an entry that is not an object at all', () => {
+      expect(inspectClassicListingEntry(null)).toStrictEqual({
+        id: null,
+        reason: 'malformed-header',
+      })
+    })
   })
 
   describe('classicEnergyDataSchemas', () => {

@@ -381,19 +381,61 @@ export const HourSchema: z.ZodType<Hour> = z.custom<Hour>(
 // envelope shape plus that minimal device header — the per-device-type
 // payload (Ata/Atw/Erv) stays on compile-time types because each schema
 // would otherwise duplicate 300 LOC of field definitions.
-const ClassicMinimalDeviceSchema = z.looseObject({
+// The header is split from `Type` so a rejected entry can say WHICH
+// half of it failed. The two halves carry opposite verdicts — an
+// unmodelled `Type` is a MELCloud model this SDK predates, answered by
+// a release that adds it; a broken header is a wire regression on a
+// device this SDK already models, answered by an issue against the
+// payload — and the listing boundary reports them apart so a reader of
+// a diagnostic report can tell which one happened.
+const ClassicDeviceHeaderSchema = z.looseObject({
   AreaID: z.number().nullable(),
   BuildingID: z.number(),
   Device: z.looseObject({}),
   DeviceID: z.number(),
   DeviceName: z.string(),
   FloorID: z.number().nullable(),
+})
+
+const ClassicMinimalDeviceSchema = ClassicDeviceHeaderSchema.extend({
   Type: z.union([
     z.literal(ClassicDeviceType.Ata),
     z.literal(ClassicDeviceType.Atw),
     z.literal(ClassicDeviceType.Erv),
   ]),
 })
+
+// A dropped entry names itself through its id, and a header that fails
+// somewhere else can still spell a usable `DeviceID` — the one field
+// worth salvaging from an entry the minimal schema rejects.
+const ClassicDeviceIdSchema = z.looseObject({ DeviceID: z.number() })
+
+/**
+ * Why the listing boundary dropped one `/User/ListDevices` entry.
+ *
+ * `unmodelled-type` — the header is well-formed and `Type` is none of
+ * the three values this SDK models: a MELCloud model newer than this
+ * release. `malformed-header` — a field the registry reads is absent
+ * or of the wrong type: a wire regression on a device this SDK does
+ * model. The two call for different responses, so they are never
+ * reported as one "dropped" verdict.
+ */
+export type ClassicDeviceDropReason = 'malformed-header' | 'unmodelled-type'
+
+/**
+ * One `/User/ListDevices` entry the listing boundary dropped.
+ */
+export interface ClassicDroppedDevice {
+  /**
+   * The entry's `DeviceID`, or `null` when the wire did not spell a
+   * numeric one — the entry is still reported, unnamed.
+   */
+  readonly id: number | null
+  /**
+   * Which half of the minimal header the entry failed.
+   */
+  readonly reason: ClassicDeviceDropReason
+}
 
 /**
  * Whether a `/User/ListDevices` entry is a device this SDK models —
@@ -416,6 +458,30 @@ const ClassicMinimalDeviceSchema = z.looseObject({
  */
 export const isModelledClassicDevice = (device: unknown): boolean =>
   ClassicMinimalDeviceSchema.safeParse(device).success
+
+/**
+ * Inspects one `/User/ListDevices` entry the same way
+ * {@link isModelledClassicDevice} judges it, and describes the drop
+ * when it fails. Dropping silently is what made a wire regression and
+ * a genuinely new MELCloud model indistinguishable downstream: both
+ * ended as a device pruned from the registry with no trace of why.
+ * @param device - One raw listing entry.
+ * @returns `null` when the entry is modelled, else its drop record.
+ */
+export const inspectClassicListingEntry = (
+  device: unknown,
+): ClassicDroppedDevice | null => {
+  if (isModelledClassicDevice(device)) {
+    return null
+  }
+  const id = ClassicDeviceIdSchema.safeParse(device)
+  return {
+    id: id.success ? id.data.DeviceID : null,
+    reason: ClassicDeviceHeaderSchema.safeParse(device).success
+      ? 'unmodelled-type'
+      : 'malformed-header',
+  }
+}
 
 // Entries stay unvalidated INSIDE the array for the reason above; the
 // boundary filter re-establishes the guarantee for what survives.
