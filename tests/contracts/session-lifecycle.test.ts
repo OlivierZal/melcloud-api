@@ -20,7 +20,10 @@ import type {
 import type { HttpResponse } from '../../src/http/index.ts'
 import { ClassicAPI } from '../../src/api/classic.ts'
 import { HomeAPI } from '../../src/api/home.ts'
-import { AuthenticationError } from '../../src/errors/index.ts'
+import {
+  AuthenticationError,
+  RegistrySyncError,
+} from '../../src/errors/index.ts'
 import { RetryGuard } from '../../src/resilience/index.ts'
 import { Temporal } from '../../src/temporal.ts'
 import {
@@ -786,10 +789,45 @@ const describeSessionLifecycleContract = (
       const { api } = await driver.create({ settingManager })
 
       await expect(api.authenticate(CREDENTIALS)).rejects.toThrow(
-        REGISTRY_REFUSED,
+        RegistrySyncError,
       )
 
       expect(driver.registryCycleCount()).toBe(1)
+    })
+
+    // The enforced-sync failure carries its own TYPE because consumers
+    // could not tell it from a refused credential without re-deriving
+    // the verdict from `isAuthenticated()` — the judge-by-the-session
+    // discriminator this repo already retired once, with a real false
+    // positive: a transport failure during a sign-in over a
+    // PRE-EXISTING live session (a user switching accounts) reads
+    // "signed in, stale list" while the new pair was never accepted.
+    it('wraps an enforced-sync failure in RegistrySyncError, the cycle failure preserved as its cause', async () => {
+      const { settingManager } = createSettingStore()
+      driver.stage({ login: 'accept', wire: 'refuse-registry' })
+      const { api } = await driver.create({ settingManager })
+
+      const signIn = api.authenticate(CREDENTIALS)
+
+      await expect(signIn).rejects.toBeInstanceOf(RegistrySyncError)
+      // The wrap adds the type without eating the evidence: the
+      // cycle's own failure stays readable on `cause`. What the
+      // established session goes on to answer is the drifted-registry
+      // clause's business, not this one's.
+      await expect(signIn).rejects.toMatchObject({
+        cause: new AuthenticationError(REGISTRY_REFUSED),
+      })
+    })
+
+    it('never wraps a refused credential in RegistrySyncError', async () => {
+      const { settingManager } = createSettingStore()
+      driver.stage({ login: 'refuse', wire: 'ok' })
+      const { api } = await driver.create({ settingManager })
+
+      const signIn = api.authenticate(CREDENTIALS)
+
+      await expect(signIn).rejects.toBeInstanceOf(AuthenticationError)
+      await expect(signIn).rejects.not.toBeInstanceOf(RegistrySyncError)
     })
 
     it('never arms the login backoff when only the registry cycle failed', async () => {
@@ -798,7 +836,7 @@ const describeSessionLifecycleContract = (
       const { api } = await driver.create({ settingManager })
 
       await expect(api.authenticate(CREDENTIALS)).rejects.toThrow(
-        REGISTRY_REFUSED,
+        RegistrySyncError,
       )
 
       expect(settingManager.get('loginBackoffUntil')).toBe('')
@@ -870,6 +908,109 @@ const describeSessionLifecycleContract = (
         expect.any(AuthenticationError),
       )
     })
+
+    // The refusal is RECORDED even though the stored session is not
+    // cleared (on Classic a refusal never wipes the context key):
+    // without the record, every loss-surfacing path keyed on
+    // `isAuthenticated()` alone, so a server-side password change left
+    // the host reading "signed in" over a dead account indefinitely —
+    // `onAuthenticationLost` could never fire while the stale key
+    // stood, and the settings page kept serving `true`.
+    it('stops serving a standing session once the stored credential was definitively refused', async () => {
+      const { settingManager } = createSettingStore(CREDENTIALS)
+      driver.stage({ login: 'accept', wire: 'ok' })
+      const { api } = await driver.create({ settingManager })
+      driver.stage({ login: 'refuse', wire: 'ok' })
+
+      await expect(api.resumeSession()).resolves.toBe(false)
+
+      // The session itself still stands — the verdict, not the store,
+      // changed.
+      expect(api.isAuthenticated()).toBe(true)
+      await expect(api.ensureAuthenticated()).resolves.toBe(false)
+      // The boot resume, the refused one — and nothing more: the rung
+      // that could spend a third sign-in is held by the backoff the
+      // refusal armed.
+      expect(driver.loginCount()).toBe(2)
+    })
+
+    it('surfaces onAuthenticationLost once per episode when a cycle settles on a refused credential over a standing session', async () => {
+      const onAuthenticationLost =
+        vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+      const { settingManager } = createSettingStore(CREDENTIALS)
+      driver.stage({ login: 'accept', wire: 'ok' })
+      const { api } = await driver.create({
+        events: { onAuthenticationLost },
+        settingManager,
+      })
+      driver.stage({ login: 'refuse', wire: 'ok' })
+
+      await expect(api.resumeSession()).resolves.toBe(false)
+      // The cycle epilogue owns the surfacing, so nothing has been
+      // announced yet.
+      expect(onAuthenticationLost).not.toHaveBeenCalled()
+
+      await api.fetch()
+      await api.fetch()
+
+      expect(api.isAuthenticated()).toBe(true)
+      expect(onAuthenticationLost).toHaveBeenCalledTimes(1)
+    })
+
+    it('serves the session again and announces the recovery once a sign-in is accepted after a refusal', async () => {
+      const onAuthenticationLost =
+        vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+      const onAuthenticationRestored =
+        vi.fn<NonNullable<LifecycleEvents['onAuthenticationRestored']>>()
+      const { settingManager } = createSettingStore(CREDENTIALS)
+      driver.stage({ login: 'accept', wire: 'ok' })
+      const { api } = await driver.create({
+        events: { onAuthenticationLost, onAuthenticationRestored },
+        settingManager,
+      })
+      driver.stage({ login: 'refuse', wire: 'ok' })
+
+      await expect(api.resumeSession()).resolves.toBe(false)
+
+      await api.fetch()
+      driver.stage({ login: 'accept', wire: 'ok' })
+
+      await api.authenticate(CREDENTIALS)
+
+      await expect(api.ensureAuthenticated()).resolves.toBe(true)
+      expect(onAuthenticationLost).toHaveBeenCalledTimes(1)
+      expect(onAuthenticationRestored).toHaveBeenCalledTimes(1)
+    })
+
+    // Neither shape is a verdict on the pair: a throttle refuses the
+    // ATTEMPT while saying nothing about the credentials (asking the
+    // user to re-log would keep the lockout alive), and a transport
+    // failure says nothing at all.
+    it.each([
+      { label: 'throttled', login: 'throttle' },
+      { label: 'failed at transport', login: 'unreachable' },
+    ] as const)(
+      'keeps serving the standing session when a re-sign-in merely $label',
+      async ({ login }) => {
+        const onAuthenticationLost =
+          vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+        const { settingManager } = createSettingStore(CREDENTIALS)
+        driver.stage({ login: 'accept', wire: 'ok' })
+        const { api } = await driver.create({
+          events: { onAuthenticationLost },
+          settingManager,
+        })
+        driver.stage({ login, wire: 'ok' })
+
+        await expect(api.resumeSession()).resolves.toBe(false)
+
+        await expect(api.ensureAuthenticated()).resolves.toBe(true)
+
+        await api.fetch()
+
+        expect(onAuthenticationLost).not.toHaveBeenCalled()
+      },
+    )
 
     // The other shape `resumeSession` catches, and the one that must
     // still answer `true` — an ACCEPTED credential whose enforced
@@ -1114,6 +1255,40 @@ const describeSessionLifecycleContract = (
       expect(cycles).toHaveLength(CONCURRENT_CALLERS)
       expect(driver.loginCount()).toBe(1)
     })
+
+    // `resumeSession` itself is single-flight, one lifecycle layer
+    // above the refresh handle: both consuming apps boot with
+    // `shouldResumeSessionInBackground`, so the background
+    // `initialize()` and the first request's `ensureSession` used to
+    // race it — two sign-ins could pass the backoff gate before either
+    // refusal armed it, against an upstream whose measured throttle
+    // threshold was four sign-ins in seventy seconds. Every caller's
+    // verdict describes the one shared attempt.
+    it.each([
+      { expectedCycles: 1, isResumed: true, login: 'accept' },
+      { expectedCycles: 0, isResumed: false, login: 'refuse' },
+    ] as const)(
+      'collapses concurrent resumeSession calls onto one sign-in round-trip (login: $login)',
+      async ({ expectedCycles, isResumed, login }) => {
+        const { settingManager } = createSettingStore()
+        driver.stage({ login, wire: 'ok' })
+        const { api } = await driver.create({ settingManager })
+        seedCredentials(settingManager)
+
+        const verdicts = await Promise.all([
+          api.resumeSession(),
+          api.resumeSession(),
+          api.resumeSession(),
+          api.resumeSession(),
+        ])
+
+        expect(verdicts).toStrictEqual(
+          Array.from({ length: CONCURRENT_CALLERS }, () => isResumed),
+        )
+        expect(driver.loginCount()).toBe(1)
+        expect(driver.registryCycleCount()).toBe(expectedCycles)
+      },
+    )
 
     it('runs one guarded reauth on a 401 and replays the request exactly once', async () => {
       const { settingManager } = createSettingStore({

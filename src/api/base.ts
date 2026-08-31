@@ -7,6 +7,7 @@ import {
   AuthenticationError,
   AuthenticationThrottledError,
   RateLimitError,
+  RegistrySyncError,
 } from '../errors/index.ts'
 import { fireAndForget } from '../fire-and-forget.ts'
 import {
@@ -256,6 +257,19 @@ export abstract class BaseAPI implements Disposable {
   // authenticated again (including the post-auth sync of a re-login).
   #hasEmittedAuthenticationLost = false
 
+  // Verdict recorded against the STORED credential: the server
+  // definitively refused it (a real rejection — never a throttle,
+  // whose lockout says nothing about the pair, and never a transport
+  // blip) and no sign-in has been accepted since. The stored session
+  // deliberately stays — a refusal changes the verdict, never the
+  // session — so this record is what lets `#settleSyncCycle` and
+  // `ensureAuthenticated` stop serving a context key whose account
+  // died server-side, where Classic's `isAuthenticated()` keeps
+  // reading `true` indefinitely. In-memory on purpose, like the loss
+  // episode marker above: a restart re-witnesses the refusal on its
+  // first gated sign-in.
+  #isCredentialRefused = false
+
   // Bumped by every logOut so async work that was in flight when the
   // user signed out (a background resume, a sync cycle) can detect the
   // sign-out on completion and discard what it stored — the explicit
@@ -270,6 +284,17 @@ export abstract class BaseAPI implements Disposable {
   // promise instead of each triggering their own round-trip — prevents
   // the thundering-herd pattern on token expiry.
   #refreshPromise: Promise<void> | null = null
+
+  // Baseline of `#acceptedSignIns` when the in-flight resume began:
+  // lets a caller joining the flight read the verdict the instant the
+  // sign-in round-trip is accepted, without awaiting the enforced
+  // registry sync still running behind it (see `resumeSession`).
+  #resumeAcceptedBefore = 0
+
+  // Single in-flight resume handle — the `#refreshPromise` pattern
+  // one lifecycle layer up: concurrent resume paths share ONE sign-in
+  // round-trip and read the shared attempt's verdict.
+  #resumePromise: Promise<boolean> | null = null
 
   readonly #syncManager: SyncManager
 
@@ -434,13 +459,16 @@ export abstract class BaseAPI implements Disposable {
    * untouched (the backoff still arms and the error still surfaces).
    * @param credentials - Explicit username/password.
    * @throws {@link AuthenticationError} when the server refuses the credentials.
-   * @throws Whatever the enforced post-auth sync raises — a
-   * `ValidationError`, a transport failure, any registry error. The
-   * credential check happened FIRST, so the session is left signed in
-   * and the credentials persisted: this rejection says "signed in, but
-   * the registry could not be verified", never "sign-in refused".
-   * Callers that only handle `AuthenticationError` see it instead of
-   * the empty registry a swallowed failure used to report as success.
+   * @throws {@link RegistrySyncError} when the enforced post-auth sync
+   * fails — the sync's own failure (a `ValidationError`, a transport
+   * failure, any registry error) rides its `cause`. The credential
+   * check happened FIRST, so the session is left signed in and the
+   * credentials persisted: this rejection says "signed in, but the
+   * registry could not be verified", never "sign-in refused". The
+   * dedicated type is what lets callers branch on that difference
+   * without re-deriving it from `isAuthenticated()` — a discriminator
+   * that misreads a transport blip during an account switch over a
+   * pre-existing live session as "signed in, stale list".
    */
   public async authenticate(credentials: LoginCredentials): Promise<void> {
     const epoch = this.#logOutEpoch
@@ -454,6 +482,9 @@ export abstract class BaseAPI implements Disposable {
     // below can un-accept it: `#finishLogin` may still reject, but on
     // the registry, never on the credential.
     this.#acceptedSignIns += 1
+    // An accepted pair also closes any recorded refusal episode: the
+    // stored credential is the one the server just took.
+    this.#isCredentialRefused = false
     // Only a server-accepted pair reaches the settings store: writing
     // it earlier would let a mistyped attempt overwrite working
     // credentials. The session store needs no touch here — the
@@ -480,10 +511,17 @@ export abstract class BaseAPI implements Disposable {
    * unexercised (a boot-time context fetch that lost the network reads
    * unauthenticated while a perfectly valid refresh token sits in
    * storage).
+   *
+   * Every rung reads the RECORDED verdict, not the bare session: a
+   * stored credential the server has definitively refused (see
+   * {@link resumeSession}) answers `false` here even while
+   * `isAuthenticated()` still reads `true` over a session the refusal
+   * deliberately did not clear — only an ACCEPTED sign-in restores the
+   * `true` answer.
    * @returns `true` when a session is usable afterwards.
    */
   public async ensureAuthenticated(): Promise<boolean> {
-    if (this.isAuthenticated()) {
+    if (this.#isSessionServable()) {
       return true
     }
     if (this.hasPersistedSession()) {
@@ -492,12 +530,12 @@ export abstract class BaseAPI implements Disposable {
       // non-destructive. The propagating path is `enforceRegistrySync`,
       // and only the enforced post-auth sync calls it.
       await this.syncRegistry()
-      if (this.isAuthenticated()) {
+      if (this.#isSessionServable()) {
         return true
       }
     }
     await this.resumeSession()
-    return this.isAuthenticated()
+    return this.#isSessionServable()
   }
 
   /**
@@ -566,12 +604,27 @@ export abstract class BaseAPI implements Disposable {
    * Reads `username`/`password` from the SettingManager and signs
    * in. Unlike {@link authenticate}, failures are **logged and
    * swallowed** — the method never throws. That covers the enforced
-   * post-auth sync too: `authenticate` propagates what
-   * `enforceRegistrySync` raises, and this method catches it like any
-   * other rejection rather than letting a registry failure reach a
-   * lifecycle caller. Use it from lifecycle hooks (init, 401 retry,
-   * `ensureSession`) where a stale or missing persisted credential
-   * must not crash the caller.
+   * post-auth sync too: `authenticate` surfaces what
+   * `enforceRegistrySync` raises as a {@link RegistrySyncError}, and
+   * this method catches it like any other rejection rather than
+   * letting a registry failure reach a lifecycle caller. Use it from
+   * lifecycle hooks (init, 401 retry, `ensureSession`) where a stale
+   * or missing persisted credential must not crash the caller.
+   *
+   * SINGLE-FLIGHT: concurrent calls share one attempt — the lifecycle
+   * paths that race at boot (a background `initialize`, the first
+   * request's `ensureSession`, a reactive 401) collapse onto ONE
+   * sign-in round-trip, and every caller's verdict describes that
+   * shared attempt. Without the memo, two callers could both pass the
+   * login-backoff gate before either refusal armed it, spending two
+   * sign-ins against an upstream whose measured throttle threshold was
+   * four in seventy seconds.
+   *
+   * A refusal it swallows is also RECORDED (a definitive rejection
+   * only — never a throttle or a transport failure): the stored
+   * session stays untouched, but `ensureAuthenticated` and the sync
+   * cycle epilogue stop reading it as signed-in until a sign-in is
+   * accepted again.
    *
    * On success, the registry is populated (delegates to
    * {@link authenticate}).
@@ -583,19 +636,25 @@ export abstract class BaseAPI implements Disposable {
    * the logger / `isAuthenticated` if the distinction matters).
    */
   public async resumeSession(): Promise<boolean> {
-    if (this.#isLoginBackedOff()) {
-      return false
+    if (this.#resumePromise !== null) {
+      // Joining a flight whose sign-in round-trip is ALREADY accepted
+      // (the counter moved past the flight's baseline): the verdict is
+      // determined — an accepted sign-in stays a resume whatever its
+      // enforced registry sync goes on to do — so answer it without
+      // awaiting. The one caller that arrives here DURING that sync is
+      // the reactive-401 path the sync itself triggered, and awaiting
+      // the shared promise would have it wait on its own caller.
+      if (this.#acceptedSignIns !== this.#resumeAcceptedBefore) {
+        return true
+      }
+      return this.#resumePromise
     }
-    const credentials = this.resolvePersistedCredentials()
-    if (credentials === null) {
-      return false
-    }
-    const acceptedBefore = this.#acceptedSignIns
+    this.#resumeAcceptedBefore = this.#acceptedSignIns
+    this.#resumePromise = this.#attemptResumeSession()
     try {
-      await this.authenticate(credentials)
-      return true
-    } catch (error) {
-      return this.#reportResumeFailure(error, acceptedBefore)
+      return await this.#resumePromise
+    } finally {
+      this.#resumePromise = null
     }
   }
 
@@ -790,11 +849,11 @@ export abstract class BaseAPI implements Disposable {
   /**
    * Template for the registry-refresh heartbeat shared by Classic's
    * `fetch()` and Home's `list()`: pause the auto-sync timer, run the
-   * subclass work, log + swallow failures (a flaky heartbeat must not
-   * crash the host — the next cycle retries), and always reschedule
-   * the next sync.
+   * subclass work, and always settle the cycle — rescheduling the next
+   * sync, re-applying a raced sign-out, or surfacing a lost session.
+   * @template T - Element type of the entries the cycle resolves.
    * @param work - Subclass closure that fetches and syncs the registry.
-   * @returns The fetched entries.
+   * @returns The work's resolved value.
    * @throws Whatever `work` raises — see
    *   {@link runBestEffortSyncCycle} for the swallowing variant.
    */
@@ -877,6 +936,26 @@ export abstract class BaseAPI implements Disposable {
     )
   }
 
+  // The resume attempt proper — `resumeSession` memoizes it so that
+  // concurrent lifecycle paths share one sign-in round-trip instead of
+  // racing the login-backoff gate.
+  async #attemptResumeSession(): Promise<boolean> {
+    if (this.#isLoginBackedOff()) {
+      return false
+    }
+    const credentials = this.resolvePersistedCredentials()
+    if (credentials === null) {
+      return false
+    }
+    const acceptedBefore = this.#acceptedSignIns
+    try {
+      await this.authenticate(credentials)
+      return true
+    } catch (error) {
+      return this.#reportResumeFailure(error, acceptedBefore)
+    }
+  }
+
   /**
    * Build the per-request resilience pipeline. Order matters — outer
    * policies see the attempt first: rate-limit guards the entry
@@ -948,7 +1027,20 @@ export abstract class BaseAPI implements Disposable {
       return
     }
     this.#setLoginBackoffUntil(null)
-    await this.enforceRegistrySync()
+    try {
+      await this.enforceRegistrySync()
+    } catch (error) {
+      // The credential check succeeded FIRST, so this rejection must
+      // stay distinguishable BY TYPE from a refused sign-in — the
+      // wrap is what spares consumers the judge-by-the-session
+      // fallback (`isAuthenticated()`), whose false positive is a
+      // transport blip during an account switch over a pre-existing
+      // live session.
+      throw new RegistrySyncError(
+        'Signed in, but the registry could not be verified',
+        { cause: error },
+      )
+    }
   }
 
   // A loss is only a loss when there was something to restore — a
@@ -971,6 +1063,16 @@ export abstract class BaseAPI implements Disposable {
     return (
       Number.isFinite(until) && Temporal.Now.instant().epochMilliseconds < until
     )
+  }
+
+  // The composite verdict every loss-surfacing path consults: a
+  // session only counts as signed-in while no definitive refusal
+  // stands against the stored credential. `isAuthenticated()` alone
+  // cannot say that on Classic, where a refusal deliberately leaves
+  // the context key in place — the key answers "a session stands",
+  // never "the credential does".
+  #isSessionServable(): boolean {
+    return this.isAuthenticated() && !this.#isCredentialRefused
   }
 
   // A live session marks any earlier loss episode as recovered —
@@ -1000,7 +1102,22 @@ export abstract class BaseAPI implements Disposable {
   //   re-sending the very context key MELCloud refused.
   #reportResumeFailure(error: unknown, acceptedBefore: number): boolean {
     this.logger.error('Session resume failed:', error)
-    return this.#acceptedSignIns !== acceptedBefore
+    if (this.#acceptedSignIns !== acceptedBefore) {
+      return true
+    }
+    // A DEFINITIVE refusal — not a throttle, whose lockout says
+    // nothing about the pair, and not a transport blip — is recorded
+    // as a verdict on the stored credential. The record is what lets
+    // the loss-surfacing paths see a dead credential behind a session
+    // the refusal deliberately did not clear; the next ACCEPTED
+    // sign-in lifts it.
+    if (
+      error instanceof AuthenticationError &&
+      !(error instanceof AuthenticationThrottledError)
+    ) {
+      this.#isCredentialRefused = true
+    }
+    return false
   }
 
   async #runWithEvents<T>(
@@ -1039,14 +1156,17 @@ export abstract class BaseAPI implements Disposable {
   // Home, the user/context) — re-run the wipe so the sign-out sticks,
   // and leave the timer disarmed. Unauthenticated with nothing to
   // recover from (e.g. the settings page probing a never-configured
-  // API) stays silent AND disarmed.
+  // API) stays silent AND disarmed. The signed-in read is the RECORDED
+  // verdict, not the bare session: a stored credential the server has
+  // definitively refused falls through to the loss branch even while a
+  // stale context key keeps `isAuthenticated()` reading `true`.
   #settleSyncCycle(epoch: number): void {
     if (this.#logOutEpoch !== epoch) {
       this.clearPersistedSession()
       this.clearRegistry()
       return
     }
-    if (this.isAuthenticated()) {
+    if (this.#isSessionServable()) {
       this.#markLossRecovered()
       this.syncManager.planNext()
       return

@@ -5,6 +5,7 @@ import {
   AuthenticationError,
   isAPIError,
   RateLimitError,
+  RegistrySyncError,
   ValidationError,
 } from '../../src/errors/index.ts'
 import { Temporal } from '../../src/temporal.ts'
@@ -50,6 +51,21 @@ describe.concurrent('apiError hierarchy', () => {
       unblockAt: null,
     })
 
+    expect(error.cause).toBe(cause)
+  })
+
+  it('registrySyncError preserves the enforced-sync failure as its cause and is no AuthenticationError', () => {
+    const cause = new Error('registry down')
+    const error = new RegistrySyncError('signed in, registry unverified', {
+      cause,
+    })
+
+    expect(error).toBeInstanceOf(RegistrySyncError)
+    expect(error).toBeInstanceOf(APIError)
+    // The whole point of the type: an enforced-sync failure must never
+    // classify as a refused credential.
+    expect(error).not.toBeInstanceOf(AuthenticationError)
+    expect(error.name).toBe('RegistrySyncError')
     expect(error.cause).toBe(cause)
   })
 

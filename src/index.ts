@@ -242,6 +242,7 @@ export {
   isAPIError,
   NoChangesError,
   RateLimitError,
+  RegistrySyncError,
   UpdateRejectedError,
   ValidationError,
 } from './errors/index.ts'

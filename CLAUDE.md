@@ -190,7 +190,14 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   sync used to run through `fetch()`, whose catch-all logs and returns
   an empty list — so a registry failure resolved as a SUCCESSFUL
   sign-in over an empty registry, which consumers read as "this account
-  has no devices". `resumeSession()` still never throws: it catches
+  has no devices". What `authenticate()` surfaces is the propagation
+  WRAPPED: `RegistrySyncError`, the sync's own failure on `cause`, so
+  consumers classify "signed in, stale list" BY TYPE instead of
+  re-deriving it from `isAuthenticated()` (false positive: a transport
+  blip during an account switch over a pre-existing live session). A
+  refused credential never wears that type — it stays
+  `AuthenticationError`; both halves are kernel-pinned on both legs.
+  `resumeSession()` still never throws: it catches
   whatever the enforced sync propagated, so a registry failure never
   reaches a lifecycle caller. What it then REPORTS is the SIGN-IN
   ROUND-TRIP's verdict, not a re-reading of the session — an accepted
@@ -269,6 +276,36 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   instant `doAuthenticate` resolves, compared across the call. What a
   refusal must NOT do is clear — the verdict changes, the stored
   session does not.
+- A refused stored credential is a RECORDED verdict, not a wiped
+  session. Three sound verdicts used to compose into "a permanently
+  dead Classic session is unreportable": Classic never wipes on a
+  refusal, the refusal changes only the verdict, and every
+  loss-surfacing path keyed on `isAuthenticated()` — which the
+  surviving context key answers `true` forever, so after a server-side
+  password change `onAuthenticationLost` could never fire.
+  `#reportResumeFailure` therefore records a DEFINITIVE refusal
+  (`#isCredentialRefused`; never a throttle — the pair may be valid,
+  and prompting a re-log keeps the lockout alive — and never a
+  transport blip), the next ACCEPTED sign-in lifts it, and
+  `#settleSyncCycle` + `ensureAuthenticated` consult
+  `isAuthenticated() && !refused` (`#isSessionServable`) so the loss
+  surfaces once per episode through the existing machinery while the
+  stored key deliberately stays. In-memory like the episode marker: a
+  restart re-witnesses the refusal on its first gated sign-in, the
+  persisted backoff keeping that sign-in honest. Kernel-pinned on both
+  legs, throttle and transport negatives included.
+- `resumeSession()` is single-flight (`#resumePromise`, the
+  `ensureSession` memo one lifecycle layer up): concurrent paths — a
+  background `initialize()`, the first request's `ensureSession`, a
+  reactive 401 — share one sign-in round-trip, and every caller's
+  verdict describes the shared attempt (N concurrent calls, one
+  `doAuthenticate`, kernel-pinned). One deliberate asymmetry: a caller
+  joining AFTER the shared sign-in was accepted, while the enforced
+  registry sync still runs, reads the already-determined verdict
+  WITHOUT awaiting the shared promise — the one real caller in that
+  window is the reactive-401 path the enforced sync itself triggered
+  (`reauthenticate` → `resumeSession`), and awaiting there would wait
+  on its own caller. Do not "simplify" that branch into an await.
 - The reactive-401 recovery is per-dialect, and Classic's asymmetry is
   deliberate. Home's `reauthenticate()` clears the persisted session
   first, because a BFF `401` IS its access token being refused.
