@@ -13,6 +13,7 @@ import {
   AuthenticationError,
   AuthenticationThrottledError,
   RateLimitError,
+  RegistrySyncError,
 } from '../../src/errors/index.ts'
 import { type HttpResponse, HttpError } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
@@ -650,13 +651,15 @@ describe('baseAPI shared request pipeline', () => {
     // this SDK predates) cannot be retried away, so resolving here
     // would report success over an empty registry, which consumers
     // read as "this account has no devices".
-    it('authenticate() rejects when its enforced post-auth sync fails', async () => {
+    it('authenticate() rejects when its enforced post-auth sync fails, wrapping the failure in RegistrySyncError', async () => {
       api = apiWithPersistedCredentials()
-      api.syncRegistryMock.mockRejectedValueOnce(new Error('registry'))
+      const failure = new Error('registry')
+      api.syncRegistryMock.mockRejectedValueOnce(failure)
 
-      await expect(
-        api.authenticate({ password: 'p', username: 'u' }),
-      ).rejects.toThrow('registry')
+      const signIn = api.authenticate({ password: 'p', username: 'u' })
+
+      await expect(signIn).rejects.toBeInstanceOf(RegistrySyncError)
+      await expect(signIn).rejects.toMatchObject({ cause: failure })
     })
 
     // The rejection must NOT be read as a refused credential: the
@@ -669,7 +672,7 @@ describe('baseAPI shared request pipeline', () => {
 
       await expect(
         api.authenticate({ password: 'p', username: 'u' }),
-      ).rejects.toThrow('registry')
+      ).rejects.toThrow(RegistrySyncError)
 
       // A second attempt is made straight away: the gate never armed.
       await api.resumeSession()
@@ -713,6 +716,55 @@ describe('baseAPI shared request pipeline', () => {
       expect(isResumed).toBe(true)
       expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
       expect(api.syncRegistryMock).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  // `resumeSession` is single-flight: the memoized in-flight handle
+  // (the `ensureSession` pattern one layer up) collapses concurrent
+  // lifecycle callers onto one sign-in round-trip. The synthetic
+  // harness pins the branch the kernel cannot stage cheaply: a caller
+  // joining AFTER the sign-in verdict, while the enforced registry
+  // sync still runs — it must read the determined verdict instead of
+  // awaiting the shared promise, because the one real caller in that
+  // window is the reactive-401 path the enforced sync itself
+  // triggered, and awaiting there would wait on its own caller.
+  describe('resumeSession() single-flight', () => {
+    it('shares one in-flight attempt across concurrent callers', async () => {
+      api = apiWithPersistedCredentials()
+
+      const verdicts = await Promise.all([
+        api.resumeSession(),
+        api.resumeSession(),
+      ])
+
+      expect(verdicts).toStrictEqual([true, true])
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('releases the in-flight slot after the attempt settles', async () => {
+      api = apiWithPersistedCredentials()
+
+      await api.resumeSession()
+      await api.resumeSession()
+
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(2)
+    })
+
+    it('answers a caller joining after the sign-in verdict without awaiting the enforced sync', async () => {
+      api = apiWithPersistedCredentials()
+      const syncGate: PromiseWithResolvers<void> = Promise.withResolvers()
+      api.syncRegistryMock.mockImplementationOnce(async () => syncGate.promise)
+      const sharedResume = api.resumeSession()
+      // Let the sign-in round-trip resolve and the enforced sync
+      // start; the flight is still open when the second caller joins.
+      await vi.advanceTimersByTimeAsync(0)
+
+      await expect(api.resumeSession()).resolves.toBe(true)
+
+      syncGate.resolve()
+
+      await expect(sharedResume).resolves.toBe(true)
+      expect(api.doAuthenticateMock).toHaveBeenCalledTimes(1)
     })
   })
 
