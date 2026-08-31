@@ -331,6 +331,39 @@ const seedCredentials = (settingManager: SettingManager): void => {
 }
 
 /**
+ * Opens the observation every loss/recovery clause shares: a store
+ * seeded with credentials, both lifecycle spies wired, and the client
+ * created under the given staging.
+ * @param driver - The dialect leg under test.
+ * @param stage - Wire staging active while the client boots.
+ * @returns The client and the two lifecycle spies.
+ */
+const createObservedSession = async (
+  driver: SessionLifecycleDriver,
+  stage: Parameters<SessionLifecycleDriver['stage']>[0],
+): Promise<{
+  api: SessionApi
+  onAuthenticationLost: ReturnType<
+    typeof vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>
+  >
+  onAuthenticationRestored: ReturnType<
+    typeof vi.fn<NonNullable<LifecycleEvents['onAuthenticationRestored']>>
+  >
+}> => {
+  const onAuthenticationLost =
+    vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+  const onAuthenticationRestored =
+    vi.fn<NonNullable<LifecycleEvents['onAuthenticationRestored']>>()
+  const { settingManager } = createSettingStore(CREDENTIALS)
+  driver.stage(stage)
+  const { api } = await driver.create({
+    events: { onAuthenticationLost, onAuthenticationRestored },
+    settingManager,
+  })
+  return { api, onAuthenticationLost, onAuthenticationRestored }
+}
+
+/**
  * Read back the keys a fixture wrote, so a clause can compare the whole
  * persisted session against what it seeded in one assertion.
  * @param settingManager - Store to read.
@@ -917,9 +950,10 @@ const describeSessionLifecycleContract = (
     // `onAuthenticationLost` could never fire while the stale key
     // stood, and the settings page kept serving `true`.
     it('stops serving a standing session once the stored credential was definitively refused', async () => {
-      const { settingManager } = createSettingStore(CREDENTIALS)
-      driver.stage({ login: 'accept', wire: 'ok' })
-      const { api } = await driver.create({ settingManager })
+      const { api } = await createObservedSession(driver, {
+        login: 'accept',
+        wire: 'ok',
+      })
       driver.stage({ login: 'refuse', wire: 'ok' })
 
       await expect(api.resumeSession()).resolves.toBe(false)
@@ -935,14 +969,10 @@ const describeSessionLifecycleContract = (
     })
 
     it('surfaces onAuthenticationLost once per episode when a cycle settles on a refused credential over a standing session', async () => {
-      const onAuthenticationLost =
-        vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
-      const { settingManager } = createSettingStore(CREDENTIALS)
-      driver.stage({ login: 'accept', wire: 'ok' })
-      const { api } = await driver.create({
-        events: { onAuthenticationLost },
-        settingManager,
-      })
+      const { api, onAuthenticationLost } = await createObservedSession(
+        driver,
+        { login: 'accept', wire: 'ok' },
+      )
       driver.stage({ login: 'refuse', wire: 'ok' })
 
       await expect(api.resumeSession()).resolves.toBe(false)
@@ -958,16 +988,8 @@ const describeSessionLifecycleContract = (
     })
 
     it('serves the session again and announces the recovery once a sign-in is accepted after a refusal', async () => {
-      const onAuthenticationLost =
-        vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
-      const onAuthenticationRestored =
-        vi.fn<NonNullable<LifecycleEvents['onAuthenticationRestored']>>()
-      const { settingManager } = createSettingStore(CREDENTIALS)
-      driver.stage({ login: 'accept', wire: 'ok' })
-      const { api } = await driver.create({
-        events: { onAuthenticationLost, onAuthenticationRestored },
-        settingManager,
-      })
+      const { api, onAuthenticationLost, onAuthenticationRestored } =
+        await createObservedSession(driver, { login: 'accept', wire: 'ok' })
       driver.stage({ login: 'refuse', wire: 'ok' })
 
       await expect(api.resumeSession()).resolves.toBe(false)
@@ -992,14 +1014,10 @@ const describeSessionLifecycleContract = (
     ] as const)(
       'keeps serving the standing session when a re-sign-in merely $label',
       async ({ login }) => {
-        const onAuthenticationLost =
-          vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
-        const { settingManager } = createSettingStore(CREDENTIALS)
-        driver.stage({ login: 'accept', wire: 'ok' })
-        const { api } = await driver.create({
-          events: { onAuthenticationLost },
-          settingManager,
-        })
+        const { api, onAuthenticationLost } = await createObservedSession(
+          driver,
+          { login: 'accept', wire: 'ok' },
+        )
         driver.stage({ login, wire: 'ok' })
 
         await expect(api.resumeSession()).resolves.toBe(false)
@@ -1105,14 +1123,10 @@ const describeSessionLifecycleContract = (
     })
 
     it('fires onAuthenticationLost exactly once per episode', async () => {
-      const onAuthenticationLost =
-        vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
-      const { settingManager } = createSettingStore(CREDENTIALS)
-      driver.stage({ login: 'refuse', wire: 'refuse-registry' })
-      const { api } = await driver.create({
-        events: { onAuthenticationLost },
-        settingManager,
-      })
+      const { api, onAuthenticationLost } = await createObservedSession(
+        driver,
+        { login: 'refuse', wire: 'refuse-registry' },
+      )
 
       await api.fetch()
       await api.fetch()
@@ -1121,16 +1135,11 @@ const describeSessionLifecycleContract = (
     })
 
     it('alternates onAuthenticationLost and onAuthenticationRestored, never repeating either', async () => {
-      const onAuthenticationLost =
-        vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
-      const onAuthenticationRestored =
-        vi.fn<NonNullable<LifecycleEvents['onAuthenticationRestored']>>()
-      const { settingManager } = createSettingStore(CREDENTIALS)
-      driver.stage({ login: 'refuse', wire: 'refuse-registry' })
-      const { api } = await driver.create({
-        events: { onAuthenticationLost, onAuthenticationRestored },
-        settingManager,
-      })
+      const { api, onAuthenticationLost, onAuthenticationRestored } =
+        await createObservedSession(driver, {
+          login: 'refuse',
+          wire: 'refuse-registry',
+        })
       driver.stage({ login: 'accept', wire: 'ok' })
 
       await api.authenticate(CREDENTIALS)
