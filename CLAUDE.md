@@ -286,11 +286,13 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `#reportResumeFailure` therefore records a DEFINITIVE refusal
   (`#isCredentialRefused`; never a throttle — the pair may be valid,
   and prompting a re-log keeps the lockout alive — and never a
-  transport blip), the next ACCEPTED sign-in lifts it, and
-  `#settleSyncCycle` + `ensureAuthenticated` consult
-  `isAuthenticated() && !refused` (`#isSessionServable`) so the loss
-  surfaces once per episode through the existing machinery while the
-  stored key deliberately stays. In-memory like the episode marker: a
+  transport blip), the next ACCEPTED sign-in lifts it, and the
+  sync-cycle epilogue + `ensureAuthenticated` consult
+  `isAuthenticated() && !refused` (the core's `isSessionServable()`,
+  protected exactly so this repo's `ensureAuthenticated` reads the
+  record instead of mirroring it — the record's writes stay the
+  core's) so the loss surfaces once per episode through the existing
+  machinery while the stored key deliberately stays. In-memory like the episode marker: a
   restart re-witnesses the refusal on its first gated sign-in, the
   persisted backoff keeping that sign-in honest. Kernel-pinned on both
   legs, throttle and transport negatives included.
@@ -334,51 +336,69 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 ## Mechanism boundary (@olivierzal/api-core)
 
 The API-client MECHANISMS live in `@olivierzal/api-core` (exact pin,
-production dependency): the HTTP client and `HttpError` (whole-snapshot
-redaction seated in the constructor), the redaction engine, the
-observability shells and `LifecycleEmitter`, the resilience primitives,
-`SyncManager`, the temporal entry point, the time units and the
-`APIError` base. Those modules used to be heatzy-api's byte-identical
-twins ("edit both or neither"); the 2026-08-21 leak — the redaction fix
-took four days to cross to the twin — expired that discipline, and the
-extraction replaced it. This repo keeps ONLY its protocol layer: the
-sensitive-key VOCABULARY (`src/observability/context.ts` builds the one
-bound `redaction` engine; every seat — the `HttpClient` subclass, the
-`APICall*` shells, token-auth's direct `HttpError` — receives it), the
-wire types, the schemas, the facades, and thin re-export modules that
-keep internal import paths stable. A mechanism change happens in
-api-core and arrives here as a release + exact-pin bump PR; never
-re-implement one locally. The moved mechanism test suites live in
-api-core too — this repo's `observability.test.ts`/`http-client.test.ts`
-are thin vocabulary/wiring suites pinning what is OURS: the key set and
-the fact that every shell arrives pre-bound to it.
+production dependency): the session lifecycle and the request pipeline
+(`SessionAPI` — the session errors, `LoginCredentials` and the
+`setting` decorator ride with it), the HTTP client and `HttpError`
+(whole-snapshot redaction seated in the constructor), the redaction
+engine, the observability shells and `LifecycleEmitter`, the resilience
+primitives, `SyncManager`, the temporal entry point, the time units and
+the `APIError` base. Those modules used to be heatzy-api's
+byte-identical twins ("edit both or neither"); the 2026-08-21 leak —
+the redaction fix took four days to cross to the twin — expired that
+discipline, and the extraction replaced it. This repo keeps ONLY its
+protocol layer: the sensitive-key VOCABULARY
+(`src/observability/context.ts` builds the one bound `redaction`
+engine; every seat — the `HttpClient` subclass, the `APICall*` shells,
+token-auth's direct `HttpError`, and `BaseAPI`'s super() options, which
+carry it into the core's own log lines — receives it), the wire types,
+the schemas, the facades, and thin re-export modules that keep internal
+import paths stable. A mechanism change happens in api-core and arrives
+here as a release + exact-pin bump PR; never re-implement one locally.
+The moved mechanism test suites live in api-core too — this repo's
+`observability.test.ts`/`http-client.test.ts`/`base-api.test.ts` are
+thin vocabulary/wiring suites pinning what is OURS: the key set, the
+fact that every shell arrives pre-bound to it, and the `BaseAPI` wiring
+listed below. Re-testing core behavior in them would let coverage be
+satisfied by the wrong suite.
 
-The next mechanism to cross that boundary is `src/api/base.ts` — the
-session lifecycle and the request pipeline. Its witness is
+`src/api/base.ts` crossed that boundary in 55.1.0: `BaseAPI` is a thin
+layer over the core's `SessionAPI`, keeping only this repo's verdicts —
+the zod/Result boundary (`requestData`/`safeRequest`/`classifyError`/
+`normalizeUnauthorized`; zod is refused entry to the core), the
+`ensureAuthenticated` and `isRateLimited` surfaces (kept off the shared
+class by decision; `ensureAuthenticated` reads the core's
+`protected isSessionServable()`, never a local mirror of the refusal
+record — the record's writes stay the core's alone), the transport
+RESOLUTION, and the `[Classic]`/`[Home]` labels (the core's `logLabel`
+option). The witness of the move is
 `tests/contracts/session-lifecycle.test.ts`, a clause table run against
 BOTH real dialect legs (never a synthetic `BaseAPI` subclass: a suite
 whose hooks are `vi.fn`s proves the template calls its own hooks, not
-that ClassicAPI and HomeAPI still behave the same after the move). The
-kernel must cross byte-identical — a clause reworded during the move
-proves nothing — and heatzy-api mirrors the same table on its own
-dialect. `base-api.test.ts` stays where the mechanism goes; the kernel
-does not.
+that ClassicAPI and HomeAPI still behave the same after the move). It
+crossed byte-identical — a clause reworded during the move proves
+nothing — and heatzy-api mirrors the same table on its own dialect.
 
-Byte-identical carries a PRECONDITION, recorded in the kernel's own
-header: `src/api/base.ts` and `src/api/types.ts` must SURVIVE the move
-as thin re-export shims, because every kernel import resolves through
-them — replacing either with a direct `@olivierzal/api-core` import
-forces an edit in the witness, and an edited witness proves nothing
-about the move it was meant to witness. The kernel also holds the two
-seams the extraction is most likely to blunt. The transport-resolution
-gate must keep binding THIS repo's `HttpClient`: bound to the core
-class instead, a bare core client would newly be ADOPTED rather than
+Byte-identical carries a STANDING precondition, recorded in the
+kernel's own header: `src/api/base.ts` and `src/api/types.ts` must
+survive as import-resolvable modules, because every kernel import
+resolves through them — replacing either with a direct
+`@olivierzal/api-core` import forces an edit in the witness, and an
+edited witness proves nothing about the move it was meant to witness.
+The kernel also holds the seams the extraction was most likely to
+blunt, which remain live constraints. The transport-resolution gate
+must keep binding THIS repo's `HttpClient`: bound to the core class
+instead, a bare core client would newly be ADOPTED rather than
 re-wrapped, shipping a transport with no MELCloud redaction
-vocabulary. And `SyncManager` still receives the RAW host logger where
-every other seat gets the labelled one, so a rejected auto-sync tick
-reports itself without naming the dialect — a latent bug pinned AS IT
-IS, deliberately: those strings land verbatim in user diagnostic
-reports, so it gets its own fix, never a silent tidy-up inside a
+vocabulary. The same leak class exists one seam over, at the core's
+own serialization of the dispatch/error log lines and the
+transient-retry URL: `BaseAPI`'s super() options must keep passing the
+bound `redaction` engine, pinned by `base-api.test.ts`'s wiring
+clauses, which fail on a key the base vocabulary does not know. And
+`SyncManager` still receives the RAW host logger where every other
+seat gets the labelled one, so a rejected auto-sync tick reports
+itself without naming the dialect — a latent bug pinned AS IT IS,
+deliberately: those strings land verbatim in user diagnostic reports,
+so it gets its own fix, never a silent tidy-up inside a
 neutrality-critical change.
 
 ## Tooling boundary (@olivierzal/configs)

@@ -10,6 +10,9 @@ const config = {
     '@olivierzal/api-core': {
       LifecycleEvents: 'https://olivierzal.github.io/api-core/',
       Redaction: 'https://olivierzal.github.io/api-core/',
+      // The `create()` docs link the post-construction template, which
+      // the SessionAPI extraction moved into the core.
+      'SessionAPI.initialize': 'https://olivierzal.github.io/api-core/',
       SyncCallback: 'https://olivierzal.github.io/api-core/',
     },
   },
