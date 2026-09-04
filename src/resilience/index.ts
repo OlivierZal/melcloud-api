@@ -1,51 +1,22 @@
 /**
  * Resilience primitives — the mechanisms live in `@olivierzal/api-core`
- * (shared with heatzy-api); this barrel re-exports them so internal
- * import paths stay stable, and keeps the composition contract that is
- * THIS SDK's:
+ * (shared with heatzy-api), and since 55.1.0 the pipeline that
+ * composes them (the rate-limit gate outermost, the guarded 401
+ * replay, the GET-only transient retry, with `ensureSession()` as the
+ * lifecycle entry ahead of them all) is assembled inside the core's
+ * `SessionAPI` around every request — no composition contract lives in
+ * this repo any more. This barrel re-exports only the primitives the
+ * MELCloud layer still names, keeping internal import paths stable:
  *
- * Composition contract (how these pieces interact inside
- * `BaseAPI.request`):
- *
- * 1. **`ensureSession()`** runs first. If the session is missing or
- *    expired (with pre-emptive threshold), the subclass
- *    re-authenticates before the request leaves the method. Not part
- *    of the resilience chain — it's the lifecycle entry that
- *    guarantees we have valid credentials to even try.
- * 2. **{@link ResiliencePolicy}** chain — assembled via
- *    {@link CompositePolicy} with outer → inner order:
- *    - {@link RateLimitPolicy} (outermost): short-circuits with
- *      {@link RateLimitError} if the gate is paused; records a 429
- *      response into the gate on the way out.
- *    - {@link AuthRetryPolicy} (middle): on 401, consume a
- *      {@link RetryGuard} token, reauthenticate via the
- *      subclass-provided hook, replay exactly once.
- *    - {@link TransientRetryPolicy} (innermost, GET-only): retries
- *      `502/503/504` via {@link withRetryBackoff} with exponential
- *      backoff.
- * 3. **`DisposableTimeout`** is orthogonal — a timer primitive used
- *    by `SyncManager` for auto-sync scheduling; it does not
- *    participate in the per-request pipeline.
- *
- * Each policy owns exactly one concern and propagates anything
- * outside it, so the composition is deterministic and each stage is
- * testable in isolation.
+ * - {@link RateLimitGate}: the type `BaseAPI` narrows its inherited
+ *   gate to for the `isRateLimited` surface.
+ * - {@link RetryGuard}: named by the session-lifecycle kernel's
+ *   guarded-replay clauses.
+ * - {@link isSessionExpired}: the pre-emptive expiry check both
+ *   dialect `ensureSession` hooks run (Classic threads
+ *   `ClassicAPIConfig.timezone` through its optional IANA `zone`
+ *   parameter).
  */
-export { AuthRetryPolicy } from './auth-retry-policy.ts'
-export { DisposableTimeout } from './disposable-timeout.ts'
-export { type ResiliencePolicy, CompositePolicy } from './policy.ts'
 export { RateLimitGate } from './rate-limit-gate.ts'
-export { RateLimitPolicy } from './rate-limit-policy.ts'
-export {
-  type RetryBackoffOptions,
-  DEFAULT_TRANSIENT_RETRY_OPTIONS,
-  isTransientServerError,
-  withRetryBackoff,
-} from './retry-backoff.ts'
 export { RetryGuard } from './retry-guard.ts'
 export { isSessionExpired } from './session-expiry.ts'
-export {
-  type RetryTelemetry,
-  TransientRetryPolicy,
-} from './transient-retry-policy.ts'
-export { toClassicDeviceId } from '../types/ids.ts'

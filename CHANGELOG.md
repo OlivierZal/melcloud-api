@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [55.1.1] - 2026-09-05
+
+### Changed
+
+- **The SessionAPI extraction's stranded shims are gone.** The 55.1.0 move left thirteen zero-importer re-export/binding modules behind; this sweeps them: six resilience shims (`disposable-timeout`, `retry-backoff`, `auth-retry-policy`, `policy`, `rate-limit-policy`, `transient-retry-policy` — the pipeline that composed them is `SessionAPI`'s own now), `src/api/sync-manager.ts` and `src/fire-and-forget.ts`, and the pre-bound `APICall*` shells plus the `LifecycleEmitter` shim and their barrel (`src/observability/{request,response,error,events-emitter,index}.ts` — the core constructs the shells itself, seated with the engine `BaseAPI` injects; heatzy-api deleted its twins the same way). `src/resilience/` keeps only what is still named — `RateLimitGate` (the `BaseAPI` narrowing), `RetryGuard` (the session-lifecycle kernel) and `isSessionExpired` (both dialects) — with its header comment retold around the core-owned pipeline; `formatDurationHuman`/`RateLimitDurationLike` forwards and the barrel's `toClassicDeviceId` detour (`ClassicAPI` now reaches it through `types/` like everything else, finishing #1677) are dropped with it, and two module-local consts (`resolveHomeDayWindow`, `homeTestRegistry`) lose their unused `export`. PATCH because nothing public moves: none of the deleted modules were reachable from the root barrel, any published subpath, or the `exports` map, and the export set is name-for-name identical before and after.
+
 ## [55.1.0] - 2026-09-04
 
 ### Changed
@@ -732,6 +738,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[55.1.1]: https://github.com/OlivierZal/melcloud-api/compare/v55.1.0...v55.1.1
 [55.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v55.0.0...v55.1.0
 [55.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v54.1.0...v55.0.0
 [54.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v54.0.0...v54.1.0
