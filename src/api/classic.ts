@@ -8,7 +8,7 @@ import {
   AuthenticationError,
   AuthenticationThrottledError,
 } from '../errors/index.ts'
-import { isSessionExpired, toClassicDeviceId } from '../resilience/index.ts'
+import { isSessionExpired } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
 import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
@@ -48,6 +48,7 @@ import {
   err,
   mapResult,
   ok,
+  toClassicDeviceId,
 } from '../types/index.ts'
 import { isKeyOf, isUninitializedWireDate, toEpochMs } from '../utils.ts'
 import {

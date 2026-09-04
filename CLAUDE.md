@@ -348,17 +348,18 @@ the redaction fix took four days to cross to the twin — expired that
 discipline, and the extraction replaced it. This repo keeps ONLY its
 protocol layer: the sensitive-key VOCABULARY
 (`src/observability/context.ts` builds the one bound `redaction`
-engine; every seat — the `HttpClient` subclass, the `APICall*` shells,
-token-auth's direct `HttpError`, and `BaseAPI`'s super() options, which
-carry it into the core's own log lines — receives it), the wire types,
+engine; every seat — the `HttpClient` subclass, token-auth's direct
+`HttpError`, and `BaseAPI`'s super() options, which carry it into the
+core's own log lines and the `APICall*` shells the core constructs
+itself — receives it), the wire types,
 the schemas, the facades, and thin re-export modules that keep internal
 import paths stable. A mechanism change happens in api-core and arrives
 here as a release + exact-pin bump PR; never re-implement one locally.
 The moved mechanism test suites live in api-core too — this repo's
 `observability.test.ts`/`http-client.test.ts`/`base-api.test.ts` are
 thin vocabulary/wiring suites pinning what is OURS: the key set, the
-fact that every shell arrives pre-bound to it, and the `BaseAPI` wiring
-listed below. Re-testing core behavior in them would let coverage be
+fact that the one bound engine carries it into the core's call shells,
+and the `BaseAPI` wiring listed below. Re-testing core behavior in them would let coverage be
 satisfied by the wrong suite.
 
 `src/api/base.ts` crossed that boundary in 55.1.0: `BaseAPI` is a thin
@@ -396,10 +397,12 @@ bound `redaction` engine, pinned by `base-api.test.ts`'s wiring
 clauses, which fail on a key the base vocabulary does not know. And
 `SyncManager` still receives the RAW host logger where every other
 seat gets the labelled one, so a rejected auto-sync tick reports
-itself without naming the dialect — a latent bug pinned AS IT IS,
-deliberately: those strings land verbatim in user diagnostic reports,
-so it gets its own fix, never a silent tidy-up inside a
-neutrality-critical change.
+itself without naming the dialect — a latent bug pinned AS IT IS. The
+seat crossed with the extraction (the core's `SessionAPI` constructs
+`SyncManager` itself), and the recorded deferral — fix after both
+adoptions land — has expired now that both have: the fix is DUE in
+api-core, and it arrives here as a release + pin bump, never a local
+re-implementation.
 
 ## Tooling boundary (@olivierzal/configs)
 

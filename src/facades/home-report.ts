@@ -432,7 +432,7 @@ export const toHomeEnergyInterval = (
  * @param timezone - IANA display timezone (UTC when unset).
  * @returns The full-day window and the cutoff.
  */
-export const resolveHomeDayWindow = (
+const resolveHomeDayWindow = (
   timezone: string,
 ): { cutoff: Temporal.ZonedDateTime; window: HomeChartWindow } => {
   const now = Temporal.Now.zonedDateTimeISO(timezone)

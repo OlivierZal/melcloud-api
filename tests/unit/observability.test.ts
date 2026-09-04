@@ -1,3 +1,8 @@
+import {
+  APICallRequestData,
+  APICallResponseData,
+  createAPICallErrorData,
+} from '@olivierzal/api-core'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
@@ -5,21 +10,21 @@ import { HttpError } from '../../src/http/index.ts'
 import {
   isSensitive,
   REDACTED,
+  redaction,
   redactUrl,
   redactValue,
 } from '../../src/observability/context.ts'
-import {
-  APICallRequestData,
-  APICallResponseData,
-  createAPICallErrorData,
-} from '../../src/observability/index.ts'
 import { defined } from '../helpers.ts'
 
 // Thin VOCABULARY suite: the redaction and log-shell MECHANISMS (and
-// their mutation-checked suites) live in @olivierzal/api-core. What
-// this file pins is the MELCloud layer's own obligation — its
-// sensitive-key vocabulary, and the fact that every shell this SDK
-// exports arrives pre-bound to it, with no call site passing anything.
+// their mutation-checked suites) live in @olivierzal/api-core, and
+// since the SessionAPI adoption the core constructs the shells itself,
+// seated with the engine `BaseAPI`'s super() options inject (the live
+// dispatch path is pinned by `base-api.test.ts`'s wiring clauses).
+// What this file pins is the MELCloud layer's own obligation — its
+// sensitive-key vocabulary, and that the one bound engine carries it
+// into the core's seats: each shell below is constructed the way the
+// core seats it, with the bound `redaction` engine.
 
 const jsonRecord = z.record(z.string(), z.unknown())
 
@@ -74,16 +79,19 @@ describe.concurrent('the MELCloud vocabulary', () => {
   })
 })
 
-describe.concurrent('the shells arrive pre-bound', () => {
-  it('aPICallRequestData redacts a protocol header with no engine passed', () => {
-    const call = new APICallRequestData({
-      headers: {
-        'Content-Type': 'application/json',
-        'X-MitsContextKey': 'abc123',
+describe.concurrent('the bound engine reaches the core shells', () => {
+  it('aPICallRequestData redacts a protocol header through the seated engine', () => {
+    const call = new APICallRequestData(
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-MitsContextKey': 'abc123',
+        },
+        method: 'post',
+        url: '/x',
       },
-      method: 'post',
-      url: '/x',
-    })
+      redaction,
+    )
     const headers = defined(parseLog(call.toString()).headers)
 
     expect(headers['X-MitsContextKey']).toBe(REDACTED)
@@ -91,11 +99,15 @@ describe.concurrent('the shells arrive pre-bound', () => {
   })
 
   it('aPICallResponseData redacts the account address the list echoes', () => {
-    const call = new APICallResponseData({
-      data: { Structure: { OwnerEmail: 'user@example.com', Zone: 'kept' } },
-      headers: {},
-      status: 200,
-    })
+    const call = new APICallResponseData(
+      {
+        data: { Structure: { OwnerEmail: 'user@example.com', Zone: 'kept' } },
+        headers: {},
+        status: 200,
+      },
+      undefined,
+      redaction,
+    )
     const raw: unknown = JSON.parse(call.toString())
     const { responseData } = z.object({ responseData: jsonRecord }).parse(raw)
 
@@ -108,8 +120,8 @@ describe.concurrent('the shells arrive pre-bound', () => {
   it('createAPICallErrorData redacts through the same vocabulary', () => {
     // The error below is built WITHOUT the MELCloud engine (only the
     // core base applies at construction), so the context key survives
-    // into the snapshot — the serialization pass through this SDK's
-    // bound factory must still blank it. Both locks carry the same
+    // into the snapshot — the serialization pass through the seated
+    // engine must still blank it. Both locks carry the same
     // vocabulary; this clause pins the second one.
     const error = new HttpError('boom', {
       config: { url: '/x' },
@@ -119,7 +131,7 @@ describe.concurrent('the shells arrive pre-bound', () => {
         status: 500,
       },
     })
-    const data = createAPICallErrorData(error)
+    const data = createAPICallErrorData(error, redaction)
     const headers = defined(parseLog(data.toString()).headers)
 
     expect(data.errorMessage).toBe('boom')
@@ -129,7 +141,7 @@ describe.concurrent('the shells arrive pre-bound', () => {
   })
 
   it('createAPICallErrorData falls back to request data on a plain Error', () => {
-    const data = createAPICallErrorData(new Error('Network Error'))
+    const data = createAPICallErrorData(new Error('Network Error'), redaction)
 
     expect(data.errorMessage).toBe('Network Error')
     expect(data.dataType).toBe('API request')

@@ -133,7 +133,7 @@ export const pruneHomeDevice = (id: string): boolean =>
 // test exercise (`getById`); the `cast` is this module's single
 // widening boundary to the adapter's `HomeRegistry` — extend the
 // double rather than widening a call site.
-export const homeTestRegistry: HomeRegistry = cast({
+const homeTestRegistry: HomeRegistry = cast({
   getById: (id: string): HomeDevice | undefined =>
     registeredHomeDevices.get(id),
 })
