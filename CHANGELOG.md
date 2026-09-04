@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [55.1.0] - 2026-09-04
+
+### Changed
+
+- **The session lifecycle and the request pipeline now come from `@olivierzal/api-core` 1.1.0.** `src/api/base.ts` — the mechanism the boundary section of CLAUDE.md had marked as next to cross — is now a thin layer over the core's `SessionAPI`: the persisted credentials, the login backoff, the logOut-epoch protocol, the single-flight `resumeSession`/`ensureSession`, the refusal record, the resilience pipeline around every request and the sync-cycle template all live in the core, at exactly melcloud's amended 55.0.0 level (the core carried this repo's verdicts before this repo adopted the core). What stays here is this SDK's own verdicts: the zod/Result boundary (`requestData`, `safeRequest`, `classifyError`, `normalizeUnauthorized` — zod is refused entry to the core), the `ensureAuthenticated` and `isRateLimited` surfaces (kept off the shared class by decision), the transport RESOLUTION (the `instanceof` gate keeps binding THIS repo's redaction-carrying `HttpClient`, so a bare core client is rebuilt rather than adopted), and the `[Classic]`/`[Home]` log labels (the core's optional `logLabel`). `AuthenticationError`, `AuthenticationThrottledError`, `RegistrySyncError`, `LoginCredentials` and the `setting` decorator are now re-exports of the core under their existing names and paths; `ClassicAPI` and `HomeAPI` are untouched.
+
+  The proof the contract is unchanged: the cross-dialect session-lifecycle kernel crossed byte-identical and green on both legs; the export set is name-for-name identical before/after (556 = 556 across the root barrel and every subpath); the emitted `.d.ts` public surface has a zero delta on public names (protected members reshaped — see below).
+
+  MINOR rather than patch because the move is observable at the edges without breaking anyone: the transient-retry log line now redacts sensitive query values from the URL it names; the request lifecycle events' `durationMs` is now measured on the monotonic clock (`performance.now()`), so a system-clock adjustment mid-request can no longer report a negative duration; and the protected (never public) class surface reshaped — `api`, `retryGuard` and the `syncManager` accessor left the emitted declarations with the mechanism, `username`/`password`/`loginBackoffUntil` became private, and the core's `protected isSessionServable()` arrived. The dialect classes are `private`-constructed, so no consumer can extend them and reach that surface.
+
+### Fixed
+
+- **The MELCloud redaction vocabulary is seated in the core's session log lines.** The core serializes the request/response/error log lines and the transient-retry URL; its `SessionAPIOptions.redaction` option now receives the ONE bound engine from `src/observability/context.ts`, so `contextkey`, the OAuth tokens and `owneremail` stay masked on every route — the 2026-08-21 leak's failure class, closed at the dispatch seam before it could reopen there. Pinned by wiring clauses that fail on a key the BASE vocabulary does not know.
+
 ## [55.0.0] - 2026-08-31
 
 ### Breaking changes
@@ -718,6 +732,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[55.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v55.0.0...v55.1.0
 [55.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v54.1.0...v55.0.0
 [54.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v54.0.0...v54.1.0
 [54.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v53.1.1...v54.0.0
