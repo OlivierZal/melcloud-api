@@ -85,7 +85,19 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `cumulative_energy_consumed_since_last_upload` is Wh, delivered as
   100 Wh quantum pulses (a `100.0` point, then a `0.0` reset marker the
   next minute). Hour/Day server aggregation sums those pulses correctly
-  on recent windows.
+  on recent windows. The READ half of that dialect is library-owned
+  since 55.2.0: `getEnergySeries` on both Home device facades resolves
+  every value to ONE documented unit — kWh, the ATA watt-hours DIVIDED
+  by 1000 (division, not `* 0.001`: it is the exact arithmetic and the
+  one consumers ran themselves, so adoption is bit-identical) — and
+  anchors each stamp as a UTC epoch-ms instant; a garbled sample
+  degrades field-by-field to `null` (never `NaN`, never a throw) and
+  keeps its entry, and the query's `interval` speaks the typed
+  `HomeEnergyInterval` vocabulary. `getEnergy` stays wire-verbatim by
+  decision — the escape hatch for consumers needing the raw
+  `measureData` envelope — and consumers must never re-decode the
+  dialect on top of it (timestamp format, interval grammar and
+  per-type units all live behind `getEnergySeries` now).
 - No instantaneous power exists anywhere on the Home API: not in
   `/context` settings (raw enumeration 2026-07-17: 11 ATA / 15 ATW
   names, none energy-bearing — no `CurrentEnergyConsumed/Produced`
@@ -238,8 +250,9 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   went stale and why. `inspectClassicListingEntry` owns the verdict;
   `isModelledClassicDevice` stays its boolean face.
 - Timestamp normalization is library-owned: `ErrorLogEntry.atEpochMs`
-  (+ its `clearedAtEpochMs` twin) and
-  `AtwHotWaterState.lastLegionellaActivationEpochMs` carry the epoch
+  (+ its `clearedAtEpochMs` twin),
+  `AtwHotWaterState.lastLegionellaActivationEpochMs` and
+  `HomeEnergySeriesPoint.atEpochMs` carry the epoch
   instant, each dialect anchoring its own wall-clock discipline at its
   boundary — Classic timestamps are building-local wall clock anchored
   in the client's configured timezone (host zone when unset), Home

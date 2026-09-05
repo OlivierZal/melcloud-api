@@ -35,7 +35,10 @@ export {
   toHomeAtaValues,
 } from './home-ata-group.ts'
 export {
+  type HomeEnergyInterval,
   type HomeEnergyQuery,
+  type HomeEnergySeriesPoint,
+  type HomeEnergySeriesQuery,
   HomeBaseDeviceFacade,
 } from './home-base-device.ts'
 export { HomeBuildingFacade } from './home-building.ts'

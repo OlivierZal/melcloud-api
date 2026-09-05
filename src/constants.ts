@@ -241,8 +241,10 @@ export type ClassicOperationModeStateZone =
   (typeof ClassicOperationModeStateZone)[keyof typeof ClassicOperationModeStateZone]
 
 /**
- * ATW top-level derived operational state (Home dialect): the FTC
- * `OperationMode` normalized to the Classic state vocabulary.
+ * ATW top-level derived operational state — the cross-dialect
+ * vocabulary both facades answer: the FTC `OperationMode` (Home's
+ * strings, Classic's numbers) normalized to one string set. The
+ * `Home` prefix is history, not a branch, like `ClassicGroupState`'s.
  * @category Constants
  */
 export const HomeAtwOperationalState = {

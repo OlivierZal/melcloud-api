@@ -53,6 +53,15 @@ import {
 export const TEMPERATURE_UNIT = '°C'
 
 /**
+ * Telemetry bucket granularity — the wire's .NET enum vocabulary,
+ * enumerable and closed (an unknown value answers a 500). `Minute`
+ * buckets are sparse and near-live; the coarser grains aggregate
+ * server-side.
+ * @category Facades
+ */
+export type HomeEnergyInterval = 'Day' | 'Hour' | 'Minute' | 'Month' | 'Week'
+
+/**
  * Per-type energy-telemetry query: the ATW interval measures split
  * consumed and produced (`measure` selects the direction, and only
  * exists there), while ATA has a single cumulative measure and no
@@ -72,6 +81,83 @@ export type HomeEnergyQuery<TData extends HomeDeviceData> =
         to: string
       }
     : { from: string; interval: string; to: string }
+
+/**
+ * One normalized energy sample: the bucket's instant as a UTC-anchored
+ * epoch-ms number and its energy in kilowatt-hours, whatever the
+ * device type. A sample the wire garbles degrades field-by-field to
+ * `null` — never `NaN`, which `JSON.stringify` silently rewrites —
+ * and keeps its entry.
+ * @category Facades
+ */
+export interface HomeEnergySeriesPoint {
+  readonly atEpochMs: number | null
+  readonly kilowattHours: number | null
+}
+
+/**
+ * {@link HomeEnergyQuery} with the `interval` narrowed to the wire's
+ * closed vocabulary — the query shape of the normalized
+ * {@link HomeBaseDeviceFacade.getEnergySeries | getEnergySeries} read.
+ * @template TData - Wire-format device payload variant selecting the
+ * query shape.
+ * @category Facades
+ */
+export type HomeEnergySeriesQuery<TData extends HomeDeviceData> =
+  TData extends HomeAtwDeviceData
+    ? {
+        from: string
+        interval: HomeEnergyInterval
+        measure: 'consumed' | 'produced'
+        to: string
+      }
+    : { from: string; interval: HomeEnergyInterval; to: string }
+
+/**
+ * Parses one wire energy value into kilowatt-hours; a value that is not
+ * a finite number — the empty string included (`Number('')` reads `0`,
+ * which would invent a measurement) — has nothing to say and reads
+ * `null`. The scale DIVIDES (a watt-hour reading over `1000`) rather
+ * than multiplying by its inverse: division is what consumers computed
+ * before this projection existed, and `571 / 1000` is exactly `0.571`
+ * where `571 * 0.001` is not.
+ * @param value - Wire value string.
+ * @param wireUnitsPerKilowattHour - Per-type wire units in one kWh.
+ * @returns The energy in kWh, or `null` when unparseable.
+ */
+const toKilowattHours = (
+  value: string,
+  wireUnitsPerKilowattHour: number,
+): number | null => {
+  const trimmed = value.trim()
+  const numeric = Number(trimmed)
+  return trimmed !== '' && Number.isFinite(numeric)
+    ? numeric / wireUnitsPerKilowattHour
+    : null
+}
+
+/**
+ * Projects a telemetry bundle onto the normalized series: every series
+ * flattened in wire order, each sample's nanosecond-padded UTC
+ * wall-clock stamp anchored as an epoch-ms instant and its value
+ * scaled to kWh.
+ * @param data - Wire telemetry bundle.
+ * @param wireUnitsPerKilowattHour - Per-type wire units in one kWh.
+ * @returns The normalized samples, in wire order.
+ */
+const toHomeEnergySeries = (
+  data: HomeEnergyData,
+  wireUnitsPerKilowattHour: number,
+): HomeEnergySeriesPoint[] =>
+  data.measureData
+    .flatMap((measure) => measure.values)
+    .map(({ time, value }) => ({
+      // The Home wire speaks UTC wall clock everywhere (see CLAUDE.md,
+      // live-probed); the space date-time separator is normalized to
+      // ISO so an offset-less stamp parses.
+      atEpochMs: toEpochMs(time.replace(' ', 'T'), 'UTC'),
+      kilowattHours: toKilowattHours(value, wireUnitsPerKilowattHour),
+    }))
 
 /**
  * Maps a Home `/context` protection descriptor onto the cross-dialect
@@ -134,6 +220,16 @@ export const toHolidayModeState = (
 export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
   implements AvailabilityAware, Identifiable<string>
 {
+  /**
+   * Per-type count of wire energy units in one kilowatt-hour: the ATW
+   * interval measures report kWh per bucket (`1`), the ATA cumulative
+   * measure reports watt-hours (`1000`) — live-probed facts, see
+   * CLAUDE.md. The one seat of that dialect knowledge:
+   * {@link getEnergySeries} and the subclasses' chart scaling both
+   * read it here.
+   */
+  protected abstract readonly wireUnitsPerKilowattHour: number
+
   /**
    * Connection-type discriminator, captured at construction (a physical
    * device never changes type) so it stays readable on a pruned id —
@@ -310,6 +406,28 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
     params: HomeEnergyQuery<TData>,
   ): Promise<Result<HomeEnergyData>> {
     return this.api.getEnergy(this.id, params)
+  }
+
+  /**
+   * Fetches energy telemetry as the normalized series — the projection
+   * of {@link getEnergy} that owns the wire dialect so consumers never
+   * decode it: each sample's UTC wall-clock stamp anchored as an
+   * epoch-ms instant, each value in kilowatt-hours whatever the device
+   * type (ATW interval buckets are kWh on the wire; the ATA cumulative
+   * measure is watt-hours, scaled here), samples in wire order. A
+   * garbled sample degrades field-by-field to `null` — never `NaN`,
+   * never a throw — and keeps its entry. The wire-verbatim bundle
+   * stays available on {@link getEnergy}.
+   * @param params - Query window and typed interval, plus the energy
+   * direction on ATW.
+   * @returns The normalized samples, or a typed failure.
+   */
+  public async getEnergySeries(
+    params: HomeEnergySeriesQuery<TData>,
+  ): Promise<Result<HomeEnergySeriesPoint[]>> {
+    return mapResult(await this.api.getEnergy(this.id, params), (data) =>
+      toHomeEnergySeries(data, this.wireUnitsPerKilowattHour),
+    )
   }
 
   /**

@@ -416,6 +416,37 @@ describe('home device atw facade', () => {
       expect(api.getEnergy).toHaveBeenCalledWith('atw-1', params)
     })
 
+    it('normalizes the energy series, kWh untouched, with the measure passthrough', async () => {
+      const api = createMockHomeApi()
+      vi.mocked(api.getEnergy).mockResolvedValue(
+        ok(
+          homeEnergyEnvelope('interval_energy_produced', [
+            { time: '2026-05-09 00:15:00.000000000', value: '1.25' },
+          ]),
+        ),
+      )
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+      const params = {
+        from: '2026-05-09T00:00:00Z',
+        interval: 'Minute' as const,
+        measure: 'produced' as const,
+        to: '2026-05-09T01:00:00Z',
+      }
+
+      const points = okValue(await facade.getEnergySeries(params))
+
+      expect(api.getEnergy).toHaveBeenCalledWith('atw-1', params)
+      // The wire's UTC wall clock anchors the instant, and the ATW
+      // interval buckets are already kWh: the value crosses unscaled.
+      expect(points).toStrictEqual([
+        {
+          atEpochMs: Temporal.Instant.from('2026-05-09T00:15:00Z')
+            .epochMilliseconds,
+          kilowattHours: 1.25,
+        },
+      ])
+    })
+
     it('delegates the protection writes with its own ATW unit bucket', async () => {
       const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())

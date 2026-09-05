@@ -4,11 +4,14 @@ import {
   ClassicFanSpeed,
   ClassicHorizontal,
   ClassicOperationMode,
+  ClassicOperationModeState,
   ClassicOperationModeZone,
   ClassicVertical,
+  HomeAtwOperationalState,
   HomeAtwZoneMode,
 } from '../../src/constants.ts'
 import {
+  atwOperationalStateFromClassic,
   atwZoneModeFromClassic,
   atwZoneModeToClassic,
   fanSpeedFromClassic,
@@ -24,6 +27,22 @@ import {
 } from '../../src/enum-mappings.ts'
 
 describe.concurrent('enum mappings between Classic and Home APIs', () => {
+  describe('atw operational state', () => {
+    it.each([
+      [ClassicOperationModeState.idle, HomeAtwOperationalState.idle],
+      [ClassicOperationModeState.dhw, HomeAtwOperationalState.dhw],
+      [ClassicOperationModeState.heating, HomeAtwOperationalState.heating],
+      [ClassicOperationModeState.cooling, HomeAtwOperationalState.cooling],
+      [ClassicOperationModeState.defrost, HomeAtwOperationalState.defrost],
+      [
+        ClassicOperationModeState.legionellaPrevention,
+        HomeAtwOperationalState.legionellaPrevention,
+      ],
+    ] as const)('maps Classic %i → %s', (classic, home) => {
+      expect(atwOperationalStateFromClassic[classic]).toBe(home)
+    })
+  })
+
   describe('atw zone mode', () => {
     it.each([
       [ClassicOperationModeZone.room, HomeAtwZoneMode.room],

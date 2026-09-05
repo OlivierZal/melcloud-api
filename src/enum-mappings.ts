@@ -3,8 +3,10 @@ import {
   ClassicFanSpeed,
   ClassicHorizontal,
   ClassicOperationMode,
+  ClassicOperationModeState,
   ClassicOperationModeZone,
   ClassicVertical,
+  HomeAtwOperationalState,
   HomeAtwZoneMode,
   HomeDeviceType,
 } from './constants.ts'
@@ -45,6 +47,26 @@ export type HomeOperationMode = 'Automatic' | 'Cool' | 'Dry' | 'Fan' | 'Heat'
  */
 export type HomeVertical =
   'Auto' | 'Five' | 'Four' | 'One' | 'Swing' | 'Three' | 'Two'
+
+/**
+ * Mapping from the Classic numeric ATW operation-mode state to the
+ * cross-dialect operational-state vocabulary — a total bijection: the
+ * two wires name the same six FTC states, Classic in numbers, Home in
+ * strings.
+ * @category Mappings
+ */
+export const atwOperationalStateFromClassic: Record<
+  ClassicOperationModeState,
+  HomeAtwOperationalState
+> = {
+  [ClassicOperationModeState.cooling]: HomeAtwOperationalState.cooling,
+  [ClassicOperationModeState.defrost]: HomeAtwOperationalState.defrost,
+  [ClassicOperationModeState.dhw]: HomeAtwOperationalState.dhw,
+  [ClassicOperationModeState.heating]: HomeAtwOperationalState.heating,
+  [ClassicOperationModeState.idle]: HomeAtwOperationalState.idle,
+  [ClassicOperationModeState.legionellaPrevention]:
+    HomeAtwOperationalState.legionellaPrevention,
+}
 
 /**
  * Mapping from Classic numeric ATW zone operation mode to the Home zone

@@ -46,7 +46,7 @@ import {
 
 // The ATA cumulative energy measure reports watt-hours (100 Wh pulses,
 // live-probed 2026-07-18: a daily bucket of `571.0` for ~0.57 kWh).
-const KILOWATT_HOURS_PER_WATT_HOUR = 0.001
+const WATT_HOURS_PER_KILOWATT_HOUR = 1000
 
 // Half-degree units advertise it; the rest step by a whole degree.
 const HALF_DEGREE_STEP = 0.5
@@ -150,6 +150,9 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
     return this.#enumSetting('VaneVerticalDirection')
   }
 
+  protected override readonly wireUnitsPerKilowattHour: number =
+    WATT_HOURS_PER_KILOWATT_HOUR
+
   /**
    * Fetches the energy report as line chart data on a daily grid — the
    * Home counterpart of the Classic `getEnergyReport` contract. The
@@ -173,7 +176,11 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
           bucketUnit,
           locale: this.api.locale,
           sources: [
-            { data, name: 'Consumed', scale: KILOWATT_HOURS_PER_WATT_HOUR },
+            {
+              data,
+              name: 'Consumed',
+              scale: 1 / this.wireUnitsPerKilowattHour,
+            },
           ],
           window,
         }),

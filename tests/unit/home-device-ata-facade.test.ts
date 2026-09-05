@@ -461,6 +461,108 @@ describe('home device ata facade', () => {
       expect(api.getEnergy).toHaveBeenCalledWith('device-1', params)
     })
 
+    it('normalizes the energy series to kWh from the ATA watt-hour wire', async () => {
+      const api = createMockHomeApi()
+      vi.mocked(api.getEnergy).mockResolvedValue(
+        ok(
+          homeEnergyEnvelope('cumulative_energy_consumed_since_last_upload', [
+            { time: '2026-07-18 07:00:00.000000000', value: '571.0' },
+          ]),
+        ),
+      )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+      const params = {
+        from: '2026-07-18T00:00:00Z',
+        interval: 'Day' as const,
+        to: '2026-07-19T00:00:00Z',
+      }
+
+      const points = okValue(await facade.getEnergySeries(params))
+
+      expect(api.getEnergy).toHaveBeenCalledWith('device-1', params)
+      // The live-probed daily bucket: `571.0` watt-hours is 0.571 kWh.
+      expect(points).toStrictEqual([
+        {
+          atEpochMs: Temporal.Instant.from('2026-07-18T07:00:00Z')
+            .epochMilliseconds,
+          kilowattHours: 0.571,
+        },
+      ])
+    })
+
+    it('flattens every measure series of the bundle in wire order', async () => {
+      const api = createMockHomeApi()
+      vi.mocked(api.getEnergy).mockResolvedValue(
+        ok({
+          measureData: [
+            {
+              type: 'cumulative_energy_consumed_since_last_upload',
+              values: [{ time: '2026-07-18 07:00:00.000000000', value: '100' }],
+            },
+            {
+              type: 'cumulative_energy_consumed_since_last_upload',
+              values: [{ time: '2026-07-18 06:00:00.000000000', value: '200' }],
+            },
+          ],
+        }),
+      )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      const points = okValue(
+        await facade.getEnergySeries({
+          from: '2026-07-18T00:00:00Z',
+          interval: 'Hour',
+          to: '2026-07-19T00:00:00Z',
+        }),
+      )
+
+      expect(points.map(({ kilowattHours }) => kilowattHours)).toStrictEqual([
+        0.1, 0.2,
+      ])
+    })
+
+    it.each([
+      {
+        nulledField: 'atEpochMs',
+        point: { time: 'not-a-date', value: '100' },
+        reason: 'a garbled stamp',
+      },
+      {
+        nulledField: 'kilowattHours',
+        point: { time: '2026-07-18 07:00:00.000000000', value: 'garbage' },
+        reason: 'a garbled value',
+      },
+      {
+        nulledField: 'kilowattHours',
+        point: { time: '2026-07-18 07:00:00.000000000', value: ' ' },
+        reason: 'an empty value',
+      },
+    ] as const)(
+      'degrades $reason to null and keeps the entry',
+      async ({ nulledField, point }) => {
+        const api = createMockHomeApi()
+        vi.mocked(api.getEnergy).mockResolvedValue(
+          ok(
+            homeEnergyEnvelope('cumulative_energy_consumed_since_last_upload', [
+              point,
+            ]),
+          ),
+        )
+        const facade = new HomeDeviceAtaFacade(api, createModel())
+
+        const points = okValue(
+          await facade.getEnergySeries({
+            from: '2026-07-18T00:00:00Z',
+            interval: 'Minute',
+            to: '2026-07-19T00:00:00Z',
+          }),
+        )
+
+        expect(points).toHaveLength(1)
+        expect(points[0]?.[nulledField]).toBeNull()
+      },
+    )
+
     it('delegates the protection writes with its own ATA unit bucket', async () => {
       const api = createMockHomeApi()
       const facade = new HomeDeviceAtaFacade(api, createModel())
