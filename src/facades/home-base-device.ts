@@ -153,9 +153,9 @@ const toHomeEnergySeries = (
     .flatMap((measure) => measure.values)
     .map(({ time, value }) => ({
       // The Home wire speaks UTC wall clock everywhere (see CLAUDE.md,
-      // live-probed); the space date-time separator is normalized to
-      // ISO so an offset-less stamp parses.
-      atEpochMs: toEpochMs(time.replace(' ', 'T'), 'UTC'),
+      // live-probed); its space date-time separator is in Temporal's
+      // own grammar, so the stamp parses as-is.
+      atEpochMs: toEpochMs(time, 'UTC'),
       kilowattHours: toKilowattHours(value, wireUnitsPerKilowattHour),
     }))
 
