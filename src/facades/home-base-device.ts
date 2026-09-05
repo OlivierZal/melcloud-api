@@ -119,8 +119,9 @@ export type HomeEnergySeriesQuery<TData extends HomeDeviceData> =
  * which would invent a measurement) — has nothing to say and reads
  * `null`. The scale DIVIDES (a watt-hour reading over `1000`) rather
  * than multiplying by its inverse: division is what consumers computed
- * before this projection existed, and `571 / 1000` is exactly `0.571`
- * where `571 * 0.001` is not.
+ * before this projection existed, and `571 / 1000` rounds to the same
+ * double the literal `0.571` denotes, where `571 * 0.001` lands one
+ * ulp off.
  * @param value - Wire value string.
  * @param wireUnitsPerKilowattHour - Per-type wire units in one kWh.
  * @returns The energy in kWh, or `null` when unparseable.
@@ -225,8 +226,9 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * interval measures report kWh per bucket (`1`), the ATA cumulative
    * measure reports watt-hours (`1000`) — live-probed facts, see
    * CLAUDE.md. The one seat of that dialect knowledge:
-   * {@link getEnergySeries} and the subclasses' chart scaling both
-   * read it here.
+   * {@link getEnergySeries} reads it on both types, and the ATA chart
+   * derives its multiplier from it (the ATW chart has nothing to
+   * scale — its wire unit IS the chart unit).
    */
   protected abstract readonly wireUnitsPerKilowattHour: number
 
