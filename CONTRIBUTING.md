@@ -32,7 +32,7 @@ The `prepublishOnly` script chains tests + typecheck + lint + format — publish
 
 ## Coverage
 
-Branches, functions, lines, and statements are all enforced at **100%** in [`vitest.config.ts`](vitest.config.ts). New code must come with the tests that keep these thresholds green; review will request changes otherwise.
+Branches, functions, lines, and statements are all enforced at **100%** — the family's `coverageDefaults` from `@olivierzal/configs`, spread into the coverage block of [`vitest.config.ts`](vitest.config.ts). New code must come with the tests that keep these thresholds green; review will request changes otherwise.
 
 ## Commits & pull requests
 

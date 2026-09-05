@@ -6,7 +6,7 @@ inputs:
     required: false
   install:
     default: 'true'
-    description: Whether to run `npm ci --ignore-scripts`. Set to 'false' for jobs that only need a Node/.npmrc setup (audit, publish).
+    description: Whether to run `npm ci --ignore-scripts`. Set to 'false' only for jobs that need neither dependencies nor a helper script from the package — a job resolving `node_modules/@olivierzal/configs/scripts/…` must install, or it silently falls through to a path that exists only in this repo.
     required: false
   node-version:
     default: lts/*
