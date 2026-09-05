@@ -408,14 +408,16 @@ own serialization of the dispatch/error log lines and the
 transient-retry URL: `BaseAPI`'s super() options must keep passing the
 bound `redaction` engine, pinned by `base-api.test.ts`'s wiring
 clauses, which fail on a key the base vocabulary does not know. And
-`SyncManager` still receives the RAW host logger where every other
-seat gets the labelled one, so a rejected auto-sync tick reports
-itself without naming the dialect — a latent bug pinned AS IT IS. The
-seat crossed with the extraction (the core's `SessionAPI` constructs
-`SyncManager` itself), and the recorded deferral — fix after both
-adoptions land — has expired now that both have: the fix is DUE in
-api-core, and it arrives here as a release + pin bump, never a local
-re-implementation.
+`SyncManager` is a labelled seat like every other since api-core
+1.2.0 (adopted with 55.2.0): the extraction crossed it on the RAW
+host logger — a latent bug pinned AS IT WAS, its fix deferred "after
+both adoptions land" — and once both adoptions landed (2026-09-04)
+the deferral expired and the fix arrived exactly as prescribed, an
+api-core release plus this repo's pin bump, never a local
+re-implementation. A rejected auto-sync tick now names its dialect
+(`[Classic]`/`[Home]` on `Auto-sync failed:`), and the kernel clause
+that pinned the asymmetry flipped with the adoption and pins the
+labelled line.
 
 ## Tooling boundary (@olivierzal/configs)
 
