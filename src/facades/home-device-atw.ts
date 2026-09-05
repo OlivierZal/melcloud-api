@@ -325,6 +325,11 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     return this.#whenZone2(() => this.#zoneState('Zone2'))
   }
 
+  // The ATW interval measures already report kWh per bucket
+  // (live-probed 2026-07-17, see CLAUDE.md): the wire unit IS the
+  // normalized one.
+  protected override readonly wireUnitsPerKilowattHour: number = 1
+
   /**
    * Fetches the energy report as line chart data on a daily grid — the
    * Home counterpart of the Classic `getEnergyReport` contract, with

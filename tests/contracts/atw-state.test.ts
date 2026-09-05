@@ -5,6 +5,7 @@ import {
   ClassicOperationModeState,
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
+  HomeAtwOperationalState,
   HomeAtwZoneMode,
 } from '../../src/constants.ts'
 import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
@@ -20,26 +21,31 @@ import {
 import { defined } from '../helpers.ts'
 import { createMockHomeApi, homeAtwDevice } from '../home-fixtures.ts'
 
-// One ATW state vocabulary on both dialects: the same zone1/zone2/
-// hotWater reads, the same string zone-mode vocabulary, the same
-// derived operational states. What differs is precision — the Classic
-// wire carries flag refinements the Home wire lacks — and that
-// difference is typed (`null` = this wire cannot say), quarantined in
-// the per-dialect describes below.
+// One ATW state vocabulary on both dialects: the same top-level
+// operational state, the same zone1/zone2/hotWater reads, the same
+// string zone-mode vocabulary, the same derived operational states.
+// What differs is precision — the Classic wire carries flag
+// refinements the Home wire lacks — and that difference is typed
+// (`null` = this wire cannot say), quarantined in the per-dialect
+// describes below.
 const describeAtwStateContract = (
   name: string,
   read: () => {
     hotWater: AtwHotWaterState
+    operationalState: HomeAtwOperationalState | null
     zone1: AtwZoneState
     zone2: AtwZoneState | null
   },
 ): void => {
   describe(`atwState — ${name}`, () => {
     it('answers the shared snapshots in the shared vocabulary', () => {
-      expect.assertions(5)
+      expect.assertions(6)
 
-      const { hotWater, zone1, zone2 } = read()
+      const { hotWater, operationalState, zone1, zone2 } = read()
 
+      // The device-level state both dialects derive from their own FTC
+      // `OperationMode` spelling (Classic's numbers, Home's strings).
+      expect(operationalState).toBe(HomeAtwOperationalState.heating)
       expect(zone1.operationMode).toBe(HomeAtwZoneMode.room)
       expect(zone1.operationalState).toBe(ClassicOperationModeStateZone.heating)
       expect(hotWater.operationalState).toBe(
@@ -72,7 +78,12 @@ describeAtwStateContract('Classic ATW device', () => {
     registry,
     defined(registry.devices.getById(1001)),
   )
-  return { hotWater: facade.hotWater, zone1: facade.zone1, zone2: facade.zone2 }
+  return {
+    hotWater: facade.hotWater,
+    operationalState: facade.operationalState,
+    zone1: facade.zone1,
+    zone2: facade.zone2,
+  }
 })
 
 describeAtwStateContract('Home ATW device', () => {
@@ -89,7 +100,12 @@ describeAtwStateContract('Home ATW device', () => {
       },
     }),
   )
-  return { hotWater: facade.hotWater, zone1: facade.zone1, zone2: facade.zone2 }
+  return {
+    hotWater: facade.hotWater,
+    operationalState: facade.operationalState,
+    zone1: facade.zone1,
+    zone2: facade.zone2,
+  }
 })
 
 // Only Classic can express these: the wire flag refinements.

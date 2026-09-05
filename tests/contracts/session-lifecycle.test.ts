@@ -1589,22 +1589,22 @@ const describeSessionLifecycleContract = (
       },
     )
 
-    // The auto-sync timer is the one collaborator `BaseAPI` hands the
-    // RAW host logger — the `SyncManager` the constructor builds from
-    // the un-labelled `logger` argument, while every other seat gets
-    // `this.logger` — so a rejected tick reports itself without
-    // saying which account it was about. That asymmetry is a LATENT BUG,
-    // kept deliberately through the extraction: those strings land
-    // verbatim in the diagnostic reports users paste into issues, so it
-    // gets fixed on its own, not silently inside a change whose whole
-    // purpose is behavioural neutrality. Pinned here as it IS, so a
-    // tidy-up during the move announces itself.
+    // The auto-sync timer is a labelled seat like every other since
+    // api-core 1.2.0: `SessionAPI` hands `SyncManager` `this.logger`,
+    // so a rejected tick names the dialect it was about. The former
+    // asymmetry — the RAW host logger, pinned here AS A LATENT BUG
+    // through the extraction's neutrality proof, deferred "after both
+    // adoptions land" — expired with that release; this clause flips
+    // with it and now holds the fix: those strings land verbatim in
+    // the diagnostic reports users paste into issues, and a host
+    // running both dialects must see which one an auto-sync line came
+    // from.
     //
     // Reaching the SyncManager's logger takes some doing: the dialects'
     // `fetch()` is best-effort and never rejects on its own, so the tick
     // is made to reject through the one thing that wrapper does not
     // guard — the failure line itself, on a host logger that throws.
-    it('reports a rejected auto-sync tick through the unlabelled host logger', async () => {
+    it('reports a rejected auto-sync tick through the labelled logger', async () => {
       const logger = createLogger()
       const { settingManager } = createSettingStore({
         ...CREDENTIALS,
@@ -1625,6 +1625,7 @@ const describeSessionLifecycleContract = (
       api[Symbol.dispose]()
 
       expect(logger.error).toHaveBeenLastCalledWith(
+        driver.logLabel,
         'Auto-sync failed:',
         expect.any(Error),
       )

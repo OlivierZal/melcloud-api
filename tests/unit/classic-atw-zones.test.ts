@@ -7,6 +7,7 @@ import {
   ClassicOperationModeStateHotWater,
   ClassicOperationModeStateZone,
   ClassicOperationModeZone,
+  HomeAtwOperationalState,
   HomeAtwZoneMode,
 } from '../../src/constants.ts'
 import { ClassicRegistry } from '../../src/entities/index.ts'
@@ -240,6 +241,32 @@ describe('atw device facade hot water', () => {
     expect(facade.hotWater.operationalState).toBe(
       ClassicOperationModeStateHotWater.idle,
     )
+  })
+})
+
+describe('atw device facade operational state', () => {
+  // The same projection the app displayed while deriving it locally:
+  // the six wire numbers map onto the cross-dialect vocabulary.
+  it.each([
+    [ClassicOperationModeState.cooling, HomeAtwOperationalState.cooling],
+    [ClassicOperationModeState.defrost, HomeAtwOperationalState.defrost],
+    [ClassicOperationModeState.dhw, HomeAtwOperationalState.dhw],
+    [ClassicOperationModeState.heating, HomeAtwOperationalState.heating],
+    [ClassicOperationModeState.idle, HomeAtwOperationalState.idle],
+    [
+      ClassicOperationModeState.legionellaPrevention,
+      HomeAtwOperationalState.legionellaPrevention,
+    ],
+  ] as const)('derives wire state %i as %s', (wire, expected) => {
+    const facade = createFacade(createAtwData({ OperationMode: wire }))
+
+    expect(facade.operationalState).toBe(expected)
+  })
+
+  it('reads null for an out-of-vocabulary wire number', () => {
+    const facade = createFacade(createAtwData({ OperationMode: cast(99) }))
+
+    expect(facade.operationalState).toBeNull()
   })
 })
 

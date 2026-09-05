@@ -30,6 +30,7 @@ import type {
 import {
   type ClassicLabelType,
   type ClassicOperationMode,
+  type HomeAtwOperationalState,
   ClassicDeviceType,
 } from '../constants.ts'
 import type {
@@ -100,6 +101,11 @@ export interface ClassicDeviceAtwFacade extends ClassicDeviceFacade<
    * Current hot water state.
    */
   readonly hotWater: ClassicHotWaterState
+  /**
+   * Top-level derived operational state in the cross-dialect
+   * vocabulary, or `null` for an out-of-vocabulary wire number.
+   */
+  readonly operationalState: HomeAtwOperationalState | null
   /**
    * Current zone 1 state.
    */

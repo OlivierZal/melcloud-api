@@ -1,4 +1,5 @@
 import {
+  type HomeAtwOperationalState,
   ClassicDeviceType,
   ClassicOperationModeState,
   ClassicOperationModeStateHotWater,
@@ -6,7 +7,10 @@ import {
   ClassicOperationModeZone,
   HomeAtwZoneMode,
 } from '../constants.ts'
-import { atwZoneModeFromClassic } from '../enum-mappings.ts'
+import {
+  atwOperationalStateFromClassic,
+  atwZoneModeFromClassic,
+} from '../enum-mappings.ts'
 import {
   type ClassicEnergyDataAtw,
   type ClassicHotWaterState,
@@ -34,6 +38,13 @@ const MIN_TANK_TEMPERATURE = 40
 // sync. The widened view is what makes the fallback expressible.
 const zoneModeFromWireNumber: Partial<Record<number, HomeAtwZoneMode>> =
   atwZoneModeFromClassic
+
+// Same widening for the top-level state: an out-of-vocabulary number
+// reads `null`, mirroring the Home facade's verdict on an unknown FTC
+// string.
+const operationalStateFromWireNumber: Partial<
+  Record<number, HomeAtwOperationalState>
+> = atwOperationalStateFromClassic
 
 // Operation modes follow a pattern: room (0) vs flow (1), with cool variants
 // offset by 3. These gaps let us auto-adjust zone 2 when zone 1 changes.
@@ -172,6 +183,19 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
       setTankWaterTemperature: data.SetTankWaterTemperature,
       tankWaterTemperature: data.TankWaterTemperature,
     }
+  }
+
+  /**
+   * Top-level derived operational state — the same cross-dialect read
+   * the Home ATW facade answers from its FTC strings, derived here
+   * from the wire's numeric `OperationMode` through the total
+   * bijection; an out-of-vocabulary number reads `null` like an
+   * unknown FTC string, so new wire vocabulary can never break a
+   * consumer's sync.
+   * @returns The derived state, or `null` when the mode is unknown.
+   */
+  public get operationalState(): HomeAtwOperationalState | null {
+    return operationalStateFromWireNumber[this.data.OperationMode] ?? null
   }
 
   /**
