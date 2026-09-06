@@ -9,8 +9,10 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 - `npm run lint` / `npm run lint:fix` — ESLint (runs with an 8 GB heap).
 - `npm test` / `npm run test:coverage` — vitest; coverage must stay at 100%.
 - `npm run typecheck` — the native TypeScript 7 compiler, reached by its
-  explicit path `node ./node_modules/@typescript/native/bin/tsc`; does
-  not cover `*.config.ts` (the lint does). Official 6/7 side-by-side
+  explicit path `node ./node_modules/@typescript/native/bin/tsc`; covers
+  `src`, `tests` and the `*.config.ts` files (tsconfig `include`) — only
+  `typedoc.config.js` stays outside it (JSDoc-typed under `@ts-check`;
+  the lint still covers it). Official 6/7 side-by-side
   layout: the `typescript` name aliases `@typescript/typescript6` (the
   TS6 JS API) for the tools that import it (typedoc, typescript-eslint),
   while `@typescript/native` is the native 7.x compiler running typecheck
@@ -160,9 +162,11 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   header-only redaction (the first attempt, caught in review) still
   leaked the credential. Redaction sits in the constructor rather than
   at the logging sites so no future call site can reintroduce the
-  leak; the sensitive-key vocabulary is shared with the call loggers
-  (`isSensitive`/`redactValue` in `src/observability/context.ts`),
-  never re-declared. The RESPONSE is redacted too, headers and body:
+  leak; the sensitive-key vocabulary is the ONE bound `redaction`
+  engine in `src/observability/context.ts`, seated into the core's
+  call shells and log lines through `BaseAPI`'s super() options —
+  never re-declared, never wrapped locally. The RESPONSE is redacted
+  too, headers and body:
   an upstream echoes the credential it just rejected (a Classic 500
   returns `LoginData.ContextKey`, the OIDC token endpoint names the
   refresh token in its error text), which is why `response.data` is
@@ -384,22 +388,26 @@ class by decision; `ensureAuthenticated` reads the core's
 `protected isSessionServable()`, never a local mirror of the refusal
 record — the record's writes stay the core's alone), the transport
 RESOLUTION, and the `[Classic]`/`[Home]` labels (the core's `logLabel`
-option). The witness of the move is
+option). The witness of the move was
 `tests/contracts/session-lifecycle.test.ts`, a clause table run against
 BOTH real dialect legs (never a synthetic `BaseAPI` subclass: a suite
 whose hooks are `vi.fn`s proves the template calls its own hooks, not
 that ClassicAPI and HomeAPI still behave the same after the move). It
-crossed byte-identical — a clause reworded during the move proves
-nothing — and heatzy-api mirrors the same table on its own dialect.
+crossed 55.1.0 byte-identical — a clause reworded during the move
+would have proved nothing — and heatzy-api mirrors the same table on
+its own dialect.
 
-Byte-identical carries a STANDING precondition, recorded in the
-kernel's own header: `src/api/base.ts` and `src/api/types.ts` must
-survive as import-resolvable modules, because every kernel import
-resolves through them — replacing either with a direct
-`@olivierzal/api-core` import forces an edit in the witness, and an
-edited witness proves nothing about the move it was meant to witness.
-The kernel also holds the seams the extraction was most likely to
-blunt, which remain live constraints. The transport-resolution gate
+Byte-identity was the move's proof, not a standing constraint: the
+move is complete, and the kernel is edited whenever a clause changes —
+55.2.0 flipped the SyncManager label clause with the api-core 1.2.0
+adoption (below). `src/api/base.ts` and `src/api/types.ts` stay on
+their own merit, not to keep the kernel's imports resolvable: `base.ts`
+holds the verdicts listed above, and `types.ts` holds this SDK's own
+adapter and configuration interfaces (`BaseAPIAdapter`,
+`BaseAPIConfig`, `BaseAPISettings`, `TransportConfig`) plus the
+`SyncParams` instantiation of the core's lifecycle generics — neither
+is a shim. The kernel also holds the seams the extraction was most
+likely to blunt, which remain live constraints. The transport-resolution gate
 must keep binding THIS repo's `HttpClient`: bound to the core class
 instead, a bare core client would newly be ADOPTED rather than
 re-wrapped, shipping a transport with no MELCloud redaction
@@ -428,21 +436,43 @@ package.json, no local file), the `tsconfig/library` base, `typedocBase`
 and the vitest fragments — `swcPlugin` and `coverageDefaults` (the
 `text`/`lcov` reporters and the four 100 % thresholds, spread into the
 coverage block since configs 4.5.0). The overlays keep ONLY per-repo
-verdicts: the lint ignores (`scripts/`), the `__brand`
-`wireNamingEntries` splice, the `classic-flags.ts` no-magic-numbers
-ledger, tsconfig `outDir`/`include`, the vitest coverage `include`
-(`src/**/*.ts`), and the typedoc identity (name, links,
-`intentionallyNotExported`). Do not re-declare family policy locally —
-a rule evaluation or version bump happens in configs, adoption is a
-reviewed pin bump. Never extend `tsconfig/library-build`: its
-`rootDir`/`include` resolve against the base file inside node_modules
-(same trap the configs README documents for `outDir`) — extend
-`tsconfig/library` and keep those keys local. The CI/audit/claude/zizmor
-workflows are stubs calling the family reusables in OlivierZal/configs,
-pinned `@<sha> # vX.Y.Z`; `publish.yml` and `docs.yml` stay local (no
-reusable exists), so the composite action stays too — and both installs
-pass `npm-token` (the configs dependency lives on GitHub Packages,
-where even reads need auth).
+verdicts, and this ledger names every one of them — re-count it
+whenever an overlay changes:
+
+- `eslint.config.ts`: the ignores (`coverage/`, `dist/`, `docs/`,
+  `scripts/`); three `wireNamingEntries` — the `__brand` phantom, the
+  PascalCase/UPPER_CASE wire fields, the snake_case OAuth/Home/Homey
+  vocabularies; `wireNamingFiles`, the ten globs of the layers that
+  speak to MELCloud (the strict core applies to the rest); the
+  `classic-flags.ts` no-magic-numbers ledger; `webviewFloorBlock` over
+  the ten-module browser-reachable closure; and the
+  `require-unicode-regexp` `u` pin over all of `src` (the last two are
+  argued under Lint doctrine below).
+- `vitest.config.ts`: the decorator transform pairing (`oxc: false` +
+  `plugins: [swcPlugin]`, the shape the configs README prescribes),
+  `clearMocks`, the coverage `include` (`src/**/*.ts`) and the test
+  `include` (`tests/**/*.test.ts`).
+- `tsconfig.json` `outDir`/`include`; `tsconfig.build.json`
+  `outDir`/`rootDir`/`include`.
+- `typedoc.config.js`: the identity (name, links, `hostedBaseUrl`,
+  `categoryOrder`, `intentionallyNotExported`) and the
+  `externalSymbolLinkMappings` pointing core symbols at the api-core
+  docs site.
+
+Do not re-declare family policy locally — a rule evaluation or version
+bump happens in configs, adoption is a reviewed pin bump. Never extend
+`tsconfig/library-build`: its `rootDir`/`include` resolve against the
+base file inside node_modules (same trap the configs README documents
+for `outDir`) — extend `tsconfig/library` and keep those keys local.
+Nine workflows are stubs calling the family reusables in
+OlivierZal/configs, pinned `@<sha> # vX.Y.Z`: `ci`, `claude`,
+`claude-code-review`, `claude-dependabot-fix`, `claude-issue-triage`,
+`dependabot`, `dependency-review`, `pr-title` and `zizmor` (the
+home-made `audit` workflow is gone — `dependency-review` replaced it
+with configs 3.1.0, 2026-08-10); `publish.yml` and `docs.yml` stay
+local (no reusable exists), so the composite action stays too — and
+both installs pass `npm-token` (the configs dependency lives on GitHub
+Packages, where even reads need auth).
 
 ## Lint doctrine
 

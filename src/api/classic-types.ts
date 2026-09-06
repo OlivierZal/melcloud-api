@@ -48,7 +48,7 @@ import type {
  *
  * Best-effort getters return `Result<T>` so callers can branch on the
  * typed failure shape (`network` / `unauthorized` / `rate-limited` /
- * `server`) instead of catching opaque exceptions.
+ * `validation` / `server`) instead of catching opaque exceptions.
  *
  * Mutations (`update*`, `login`) and sync (`fetch`) keep their
  * throw-on-failure contract — symmetric with Home's `updateValues`

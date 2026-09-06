@@ -85,6 +85,9 @@ export const mapResult = <T, TResult>(
  * - `validation`: Zod refused the response shape. Indicates API drift
  *   server-side; not retryable on its own — investigate.
  * - `server`: any other HTTP error from the transport.
+ * - `not-found`: the registry does not hold the addressed id. Home's
+ *   `Result`-returning reads answer it instead of throwing
+ *   `EntityNotFoundError`; Classic never produces it.
  *
  * Classic and Home share the same error space (same transport layer,
  * same resilience policies); both surfaces reference this single

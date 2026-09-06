@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **The redaction vocabulary module keeps only the bound engine.** The 55.2.0 shim sweep left three tests-only wrappers in `src/observability/context.ts` (`isSensitive`, `redactValue`, `redactUrl` — one-line forwards to the engine's own members) and three zero-importer re-exports of the core (`APICallLogData`, `REDACTED`, `LoggableRequestConfig`); they are gone, and the vocabulary suite calls the engine directly. Nothing public moves: the module was never reachable from the root barrel, any subpath or the `exports` map.
+
+### Fixed
+
+- **Two lagging `Result` kind lists in the rendered docs.** The `ApiRequestError` doc comment now names the sixth variant, `not-found` (Home's registry reads answer it instead of throwing), and the `ClassicAPIAdapter` comment now names `validation`, which every Classic best-effort getter can yield through the zod boundary (and the error-log read synthesises for a rejected query) — matching the README, which already carried all six.
+
 ## [55.2.0] - 2026-09-05
 
 Folds the unreleased 55.1.1 sweep (below) — no 55.1.1 was ever published.
@@ -746,6 +756,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v55.2.0...HEAD
 [55.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v55.1.0...v55.2.0
 [55.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v55.0.0...v55.1.0
 [55.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v54.1.0...v55.0.0
