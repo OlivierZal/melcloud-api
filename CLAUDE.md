@@ -405,8 +405,10 @@ their own merit, not to keep the kernel's imports resolvable: `base.ts`
 holds the verdicts listed above, and `types.ts` holds this SDK's own
 adapter and configuration interfaces (`BaseAPIAdapter`,
 `BaseAPIConfig`, `BaseAPISettings`, `TransportConfig`) plus the
-`SyncParams` instantiation of the core's lifecycle generics — neither
-is a shim. The kernel also holds the seams the extraction was most
+`SyncParams` instantiation of the core's lifecycle generics, and
+re-exports seven core types (`Logger`, `SettingManager`, the request
+lifecycle context and its four events) under this SDK's names —
+neither file is a shim. The kernel also holds the seams the extraction was most
 likely to blunt, which remain live constraints. The transport-resolution gate
 must keep binding THIS repo's `HttpClient`: bound to the core class
 instead, a bare core client would newly be ADOPTED rather than
@@ -460,10 +462,11 @@ whenever an overlay changes:
   docs site.
 
 Do not re-declare family policy locally — a rule evaluation or version
-bump happens in configs, adoption is a reviewed pin bump. Never extend
-`tsconfig/library-build`: its `rootDir`/`include` resolve against the
-base file inside node_modules (same trap the configs README documents
-for `outDir`) — extend `tsconfig/library` and keep those keys local.
+bump happens in configs, adoption is a reviewed pin bump.
+`tsconfig.json` extends `tsconfig/library` and keeps the path-bearing
+keys (`outDir`, `include`) local; the build config extends
+`./tsconfig.json` so the base is named once (the `-build` alias configs
+ships holds no option of its own).
 Nine workflows are stubs calling the family reusables in
 OlivierZal/configs, pinned `@<sha> # vX.Y.Z`: `ci`, `claude`,
 `claude-code-review`, `claude-dependabot-fix`, `claude-issue-triage`,
@@ -507,9 +510,8 @@ Packages, where even reads need auth).
 - The only tolerated exceptions are protocol- or rule-pair-imposed, each
   documented with a `-- reason`: bitfield operators, branded-type and
   parse-boundary casts, wire-imposed single-letter keys, namespace
-  merging over type-only packages, fire-and-forget `.catch()`
-  (`no-floating-promises` + `unicorn/prefer-await` leave no other form),
-  and synchronous mocks of async contracts
+  merging over type-only packages, and synchronous mocks of async
+  contracts
   (`promise-function-async` autofixes the `Promise.resolve` escape back
   to `async`, then `require-await` fires). The TC39 decorator
   protocol keeps the `files`-scoped exceptions in `src/decorators/**`:
@@ -634,7 +636,7 @@ Packages, where even reads need auth).
   Dependabot PRs auto-merge via `gh pr merge --auto`.
 - The docs site deploys only on release or `gh workflow run docs.yml`.
 - CI: `Test (Node latest)` is `continue-on-error` by design — keep it out
-  of required status checks. Sonar coverage runs on the `lts/*` leg only.
+  of required status checks. Sonar coverage runs on the `22` leg only.
 
 ## Releasing
 
