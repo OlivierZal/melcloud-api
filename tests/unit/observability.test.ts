@@ -2,18 +2,13 @@ import {
   APICallRequestData,
   APICallResponseData,
   createAPICallErrorData,
+  REDACTED,
 } from '@olivierzal/api-core'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
 import { HttpError } from '../../src/http/index.ts'
-import {
-  isSensitive,
-  REDACTED,
-  redaction,
-  redactUrl,
-  redactValue,
-} from '../../src/observability/context.ts'
+import { redaction } from '../../src/observability/context.ts'
 import { defined } from '../helpers.ts'
 
 // Thin VOCABULARY suite: the redaction and log-shell MECHANISMS (and
@@ -50,30 +45,30 @@ describe.concurrent('the MELCloud vocabulary', () => {
     'refresh_token',
     'x-mitscontextkey',
   ])('marks the protocol key %s sensitive in any casing', (key) => {
-    expect(isSensitive(key)).toBe(true)
-    expect(isSensitive(key.toUpperCase())).toBe(true)
+    expect(redaction.isSensitive(key)).toBe(true)
+    expect(redaction.isSensitive(key.toUpperCase())).toBe(true)
   })
 
   it.each(['authorization', 'cookie', 'password', 'token', 'username'])(
     'keeps the core base key %s sensitive',
     (key) => {
-      expect(isSensitive(key)).toBe(true)
+      expect(redaction.isSensitive(key)).toBe(true)
     },
   )
 
   it('leaves non-credential keys alone', () => {
-    expect(isSensitive('retry-after')).toBe(false)
-    expect(isSensitive('x-trace')).toBe(false)
+    expect(redaction.isSensitive('retry-after')).toBe(false)
+    expect(redaction.isSensitive('x-trace')).toBe(false)
   })
 
   it('deep-redacts protocol keys through the bound engine', () => {
     expect(
-      redactValue({ nested: { ContextKey: 'ctx', safe: 'ok' } }),
+      redaction.redactValue({ nested: { ContextKey: 'ctx', safe: 'ok' } }),
     ).toStrictEqual({ nested: { ContextKey: REDACTED, safe: 'ok' } })
   })
 
   it('redacts the OAuth code riding a URL query', () => {
-    expect(redactUrl('/callback?code=auth-code&state=xyz')).toBe(
+    expect(redaction.redactUrl('/callback?code=auth-code&state=xyz')).toBe(
       `/callback?code=${REDACTED}&state=xyz`,
     )
   })

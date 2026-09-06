@@ -56,20 +56,19 @@ import {
 // `TestAPI` whose hooks are `vi.fn`s — invaluable for branch coverage,
 // useless as an extraction witness: it proves the template calls its
 // own hooks, not that ClassicAPI and HomeAPI still behave the same
-// once the template moves into `@olivierzal/api-core`. This kernel is
-// that witness, so it must stay byte-identical across the move.
+// once the template moved into `@olivierzal/api-core`. This kernel was
+// that witness: it crossed the 55.1.0 move byte-identical (a clause
+// reworded during the move would have proved nothing), and it is
+// edited since whenever a clause changes — 55.2.0 flipped the
+// SyncManager label clause with the api-core 1.2.0 adoption.
 //
-// PORTABILITY PRECONDITION — the kernel STAYS while the mechanism
-// leaves, so it can only cross byte-identical while `src/api/base.ts`
-// and `src/api/types.ts` SURVIVE as thin re-export shims over
-// `@olivierzal/api-core` (the shape `src/http/`, `src/resilience/` and
-// `src/observability/` already took). Every import above resolves
-// through this repo's own paths; deleting either module in favour of a
-// direct `@olivierzal/api-core` import would force an edit here, and an
-// edited witness proves nothing about the move it was meant to witness.
-// The one deliberate exception is the core `HttpClient` imported above:
-// it is the FOREIGN class the transport-resolution clause needs, and
-// naming it here is the point of that clause.
+// Every import above resolves through this repo's own paths, and
+// `src/api/base.ts` / `src/api/types.ts` survive on their own verdicts
+// (the zod/Result boundary and the transport resolution; the local
+// adapter and configuration interfaces), not to keep this file stable.
+// The one FOREIGN import is the core `HttpClient` above: it is the
+// class the transport-resolution clause needs, and naming it here is
+// the point of that clause.
 //
 // Every clause is worded about THE REGISTRY CYCLE — the bulk sync
 // (`/User/ListDevices` on Classic, `/context` on Home) that

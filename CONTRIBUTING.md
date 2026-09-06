@@ -6,7 +6,7 @@ Thanks for considering a contribution. This document describes the local workflo
 
 - Node.js `>= 22` (matches `engines.node` in `package.json`)
 - npm 10+
-- A GitHub personal access token with the `read:packages` scope, exported as `GITHUB_TOKEN` (the `.npmrc` reads from this env var to fetch `@olivierzal` scoped dependencies)
+- A GitHub personal access token with the `read:packages` scope, exported as `NODE_AUTH_TOKEN` (the `.npmrc` reads from this env var to fetch `@olivierzal` scoped dependencies)
 
 ## Setup
 
@@ -28,7 +28,7 @@ npm test                # vitest run
 npm run test:coverage   # vitest run --coverage (must remain at 100%)
 ```
 
-The `prepublishOnly` script chains tests + typecheck + lint + format — publishing locally without these passing is impossible.
+The `prepublishOnly` script chains tests + typecheck + lint + format + docs — publishing locally without these passing is impossible.
 
 ## Coverage
 
@@ -36,7 +36,8 @@ Branches, functions, lines, and statements are all enforced at **100%** — the 
 
 ## Commits & pull requests
 
-- Commit messages: short, imperative, present tense (`Add HomeFacade error mapping`). No conventional-commits prefix is required.
+- Commit messages: short, imperative, present tense (`Add HomeFacade error mapping`). No conventional-commits prefix is required on individual commits — PRs are squash-merged, and the squash commit takes the PR title.
+- Pull-request titles must follow [Conventional Commits](https://www.conventionalcommits.org) (`feat: …`, `fix: …`, `docs: …`): the required `PR title` check enforces it, and the title becomes the commit that lands on `main`.
 - Keep PRs focused — a single concern per PR makes review and bisecting easier.
 - Update [`CHANGELOG.md`](CHANGELOG.md) under the `## [Unreleased]` heading describing user-visible changes.
 - Breaking changes: call them out explicitly in the PR description and the changelog entry.

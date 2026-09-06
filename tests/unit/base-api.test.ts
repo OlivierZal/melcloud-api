@@ -1,10 +1,10 @@
+import { REDACTED } from '@olivierzal/api-core'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { BaseAPIConfig } from '../../src/api/types.ts'
 import { BaseAPI, normalizeUnauthorized } from '../../src/api/base.ts'
 import { AuthenticationError } from '../../src/errors/index.ts'
 import { type HttpResponse, HttpError } from '../../src/http/index.ts'
-import { REDACTED } from '../../src/observability/context.ts'
 import { Temporal } from '../../src/temporal.ts'
 import {
   createLogger,
