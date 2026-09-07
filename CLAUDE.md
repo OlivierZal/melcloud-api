@@ -560,19 +560,40 @@ whenever an overlay changes:
 
 Do not re-declare family policy locally — a rule evaluation or version
 bump happens in configs, adoption is a reviewed pin bump.
-`tsconfig.json` extends `tsconfig/library` and keeps the path-bearing
-keys (`outDir`, `include`) local; the build config extends
-`./tsconfig.json` so the base is named once (the `-build` alias configs
-ships holds no option of its own).
-Nine workflows are stubs calling the family reusables in
+`tsconfig.json` and `tsconfig.build.json` both extend the plain
+`tsconfig/library` base and keep only the path-bearing keys local
+(`outDir`/`include`, plus `rootDir` on the build side): a base carrying
+paths would resolve them against `node_modules`. The `-build` alias
+bases configs used to ship were content-free `{ extends }` shells of
+the plain ones and left with configs 5.0.0 — nothing here ever
+extended them.
+Eleven workflows are stubs calling the family reusables in
 OlivierZal/configs, pinned `@<sha> # vX.Y.Z`: `ci`, `claude`,
 `claude-code-review`, `claude-dependabot-fix`, `claude-issue-triage`,
-`dependabot`, `dependency-review`, `pr-title` and `zizmor` (the
-home-made `audit` workflow is gone — `dependency-review` replaced it
-with configs 3.1.0, 2026-08-10); `publish.yml` and `docs.yml` stay
-local (no reusable exists), so the composite action stays too — and
-both installs pass `npm-token` (the configs dependency lives on GitHub
-Packages, where even reads need auth).
+`dependabot`, `dependency-review`, `pr-title`, `zizmor` (the home-made
+`audit` workflow is gone — `dependency-review` replaced it with configs
+3.1.0, 2026-08-10) and, since configs 5.0.0, `docs` and `publish` over
+`reusable-docs.yml` / `reusable-publish.yml`. The caller keeps the
+`release` trigger and the grants the called jobs need (docs: contents
+read, id-token write, packages read, pages write; publish:
+attestations write, contents read, id-token write, packages write —
+the `github-pages` and `npm` environments travel inside the
+reusables), and `docs` keeps a `workflow_dispatch` with a boolean
+`dry-run` input: the one rehearsal a release-only path gets, it runs
+the build half on the reusable and skips the deploy — dispatch it once
+after each configs adoption, before any release. The composite action
+`.github/actions/setup-node-and-install` stays local because the called
+jobs run the CALLER's copy (the reusables reference `./`), and it
+passes `npm-token` on both installs (the configs dependency lives on
+GitHub Packages, where even reads need auth). The zizmor
+`use-trusted-publishing` ignore that excused the local publish step
+left with the step — the reusable's ignore lives in configs.
+`.nvmrc` is the INSTALL floor, derived in configs from the tree it
+imposes on every consumer (22.22.2 today, from
+`eslint-plugin-package-json`'s `^22.22.2 || >=24.15.0`); it is not
+`engines`, which stays at the device floor (22.20 — what the code
+needs where it runs). It moves with a configs adoption that re-derives
+it, never by hand.
 
 ## Lint doctrine
 
@@ -744,7 +765,10 @@ Packages, where even reads need auth).
   `merge_group` trigger — an event that cannot fire needs no handling,
   and "inert but harmless" is not a reason to keep configuration.
   Dependabot PRs auto-merge via `gh pr merge --auto`.
-- The docs site deploys only on release or `gh workflow run docs.yml`.
+- The docs site deploys only on release or `gh workflow run docs.yml`;
+  `gh workflow run docs.yml -f dry-run=true` builds it on the reusable
+  without deploying (the rehearsal to run once after each configs
+  adoption).
 - CI: `Test (Node latest)` is `continue-on-error` by design — keep it out
   of required status checks. Sonar coverage runs on the `22` leg only.
 
@@ -759,8 +783,10 @@ Packages, where even reads need auth).
   published release") — nothing to bump there on release, and nothing
   that can drift.
 
-- Publishing is release-triggered (`publish.yml`): a **published GitHub
-  Release** packs the tarball and publishes it to GitHub Packages. A
+- Publishing is release-triggered (`publish.yml`, a stub over configs'
+  `reusable-publish.yml` since 5.0.0): a **published GitHub Release**
+  packs the tarball, attests its provenance and publishes it to GitHub
+  Packages. A
   release marked **prerelease** publishes under the `next` dist-tag; a
   normal one under `latest`. The version comes from
   `package.json` at the released commit, so bump it before tagging.
