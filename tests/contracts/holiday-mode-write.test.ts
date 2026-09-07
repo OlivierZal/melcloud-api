@@ -1,3 +1,4 @@
+import { defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
@@ -10,7 +11,6 @@ import {
   createMockClassicApi,
   populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined } from '../helpers.ts'
 import { createMockHomeApi, homeDevice } from '../home-fixtures.ts'
 
 // The write-side twin of the holiday-mode read contract: a DISABLED

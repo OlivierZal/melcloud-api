@@ -72,9 +72,7 @@ export {
   homeDeviceTypeFromClassic as deviceTypeFromClassic,
   homeDeviceTypeToClassic as deviceTypeToClassic,
   HomeFacadeManager as FacadeManager,
-  fetchDevices,
   isHomeAtaFacade as isAtaFacade,
   isHomeAtwFacade as isAtwFacade,
   HomeRegistry as Registry,
-  syncDevices,
 } from './index.ts'

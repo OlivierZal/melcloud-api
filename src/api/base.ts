@@ -50,26 +50,6 @@ export const classifyError = (error: unknown): ApiRequestError => {
   return { cause: error, kind: 'network' }
 }
 
-/**
- * Narrow a `401 Unauthorized` surfaced by the HTTP client into the
- * shared {@link AuthenticationError} domain type. Subclass
- * `doAuthenticate` implementations call this helper so callers of
- * {@link BaseAPI.authenticate} get a stable error shape regardless of
- * whether the underlying flow was cookie-based (Classic) or
- * bearer-token (Home); any other rejection yields `null` and the
- * caller rethrows its original error.
- * @param error - The error to inspect.
- * @returns An {@link AuthenticationError} for a 401 {@link HttpError}; `null` otherwise.
- */
-export const normalizeUnauthorized = (
-  error: unknown,
-): AuthenticationError | null =>
-  isHttpError(error) && error.response.status === HttpStatus.Unauthorized
-    ? new AuthenticationError('MELCloud rejected the credentials', {
-        cause: error,
-      })
-    : null
-
 const DEFAULT_TIMEOUT_MS = 30_000
 
 /**
@@ -120,8 +100,10 @@ type SyncParams = Exclude<Parameters<SyncCallback>[0], undefined>
  * own verdicts:
  *
  * - the zod/Result boundary ({@link requestData}, {@link safeRequest},
- *   {@link classifyError}, {@link normalizeUnauthorized}) — zod is
- *   refused entry to the core;
+ *   {@link classifyError}) — zod is refused entry to the core; the
+ *   sign-in normalization is the core's `toAuthFailure` since 1.3.0,
+ *   reading the `authFailureStatuses` vocabulary (the default `[401]`
+ *   here) the auth-retry rung already owns;
  * - {@link ensureAuthenticated} and {@link isRateLimited} — melcloud-only
  *   surfaces, kept off the shared class by decision;
  * - the transport RESOLUTION — deciding whether a host-supplied

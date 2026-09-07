@@ -1,4 +1,5 @@
 import { HttpClient as CoreHttpClient } from '@olivierzal/api-core'
+import { cast, mockFetchResponse } from '@olivierzal/api-core/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -8,7 +9,6 @@ import {
   isHttpError,
 } from '../../src/http/index.ts'
 import { redaction } from '../../src/observability/context.ts'
-import { cast, mockFetchResponse } from '../helpers.ts'
 
 // Thin WIRING suite: the transport MECHANISM (URL building, body
 // serialization, signals, parsing — and its full suite) lives in

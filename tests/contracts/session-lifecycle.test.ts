@@ -1,5 +1,14 @@
 import { HttpClient as CoreHttpClient } from '@olivierzal/api-core'
 import {
+  createHttpError,
+  createLogger,
+  createMockHttpClient,
+  createServerError,
+  createSettingStore,
+  createUnauthorizedError,
+  mockTemporalNowInstant,
+} from '@olivierzal/api-core/testing'
+import {
   type MockInstance,
   afterEach,
   beforeEach,
@@ -17,13 +26,13 @@ import type {
   SettingManager,
   SyncCallback,
 } from '../../src/api/types.ts'
-import type { HttpResponse } from '../../src/http/index.ts'
 import { ClassicAPI } from '../../src/api/classic.ts'
 import { HomeAPI } from '../../src/api/home.ts'
 import {
   AuthenticationError,
   RegistrySyncError,
 } from '../../src/errors/index.ts'
+import { type HttpResponse, HttpClient } from '../../src/http/index.ts'
 import { RetryGuard } from '../../src/resilience/index.ts'
 import { Temporal } from '../../src/temporal.ts'
 import {
@@ -34,16 +43,7 @@ import {
   classicRawDevice,
   stageClassicWire,
 } from '../classic-fixtures.ts'
-import {
-  createHttpError,
-  createLogger,
-  createMockHttpClient,
-  createServerError,
-  createSettingStore,
-  createUnauthorizedError,
-  mockResponse,
-  mockTemporalNowInstant,
-} from '../helpers.ts'
+import { mockResponse } from '../helpers.ts'
 import {
   homeContextData,
   stageHomeOidcDance,
@@ -427,7 +427,7 @@ const createForeignTransport = (
 // ---------------------------------------------------------------------------
 
 const { client: classicClient, requestSpy: classicRequest } =
-  createMockHttpClient(CLASSIC_BASE_URL)
+  createMockHttpClient(HttpClient, CLASSIC_BASE_URL)
 
 const classicWire: WireState = { baseline: 0, outcome: 'ok' }
 
@@ -549,8 +549,10 @@ const classicDriver: SessionLifecycleDriver = {
 // Home leg
 // ---------------------------------------------------------------------------
 
-const { client: homeClient, requestSpy: homeRequest } =
-  createMockHttpClient(HOME_BASE_URL)
+const { client: homeClient, requestSpy: homeRequest } = createMockHttpClient(
+  HttpClient,
+  HOME_BASE_URL,
+)
 
 // The OIDC module talks to the global `fetch`, not to the BFF client.
 const homeFetch = vi.fn<typeof fetch>()

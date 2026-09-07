@@ -1,3 +1,4 @@
+import { mock } from '@olivierzal/api-core/testing'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
@@ -21,7 +22,7 @@ import {
 } from '../../src/facades/home-ata-group.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { HomeFacadeManager } from '../../src/facades/home-manager.ts'
-import { mock, okValue } from '../helpers.ts'
+import { okValue } from '../helpers.ts'
 import {
   createMockHomeApi,
   homeBuildingRef,

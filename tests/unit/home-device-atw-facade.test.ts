@@ -1,3 +1,4 @@
+import { cast, mockTemporalNowZoned } from '@olivierzal/api-core/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
@@ -8,7 +9,7 @@ import {
   type Result,
   ok,
 } from '../../src/types/index.ts'
-import { cast, mockTemporalNowZoned, okValue } from '../helpers.ts'
+import { okValue } from '../helpers.ts'
 import {
   createMockHomeApi,
   homeAtwDevice,

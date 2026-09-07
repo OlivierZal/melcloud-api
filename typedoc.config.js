@@ -25,7 +25,6 @@ const config = {
       'Configuration',
       'Constants',
       'Mappings',
-      'Decorators',
       'HTTP',
       'Types',
     ],
@@ -39,11 +38,11 @@ const config = {
       'Brand',
       'DeviceDataMapping',
       // Parameters of SDK-internal wiring (facade construction, registry
-      // sync, the update decorator) that consumers never call; tagged
-      // `@internal` in source.
+      // sync) that consumers never call; tagged `@internal` in source.
+      // The decorators' own option types left with the decorators
+      // (56.0.0): nothing public references them any more.
       'HomeAtaFacadeResolver',
       'TypedHomeDeviceData',
-      'UpdatePatchKind',
       // The sync-params vocabulary this SDK instantiates the core's
       // lifecycle generics with; consumers name the aliases
       // (`LifecycleEvents`, `SyncCallback`), never the parameter shape.

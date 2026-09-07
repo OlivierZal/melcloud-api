@@ -1,3 +1,4 @@
+import { cast, defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
@@ -18,7 +19,7 @@ import {
   createMockClassicApi,
   populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { cast, defined, okValue } from '../helpers.ts'
+import { okValue } from '../helpers.ts'
 import {
   createMockHomeApi,
   homeAtwDevice,

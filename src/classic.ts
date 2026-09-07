@@ -108,7 +108,6 @@ export {
   ClassicFanSpeed as FanSpeed,
   CLASSIC_FLAG_UNCHANGED as FLAG_UNCHANGED,
   ClassicFloor as Floor,
-  fetchDevices,
   ClassicHorizontal as Horizontal,
   classicHeatModes as heatModes,
   isClassicAtaFacade as isAtaFacade,
@@ -124,10 +123,7 @@ export {
   ClassicOperationModeStateZone as OperationModeStateZone,
   ClassicOperationModeZone as OperationModeZone,
   ClassicRegistry as Registry,
-  syncDevices,
   ClassicTemperature as Temperature,
-  classicUpdateDevice as updateDevice,
-  classicUpdateDevices as updateDevices,
   ClassicVentilationMode as VentilationMode,
   ClassicVertical as Vertical,
 } from './index.ts'

@@ -1,3 +1,4 @@
+import { defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it } from 'vitest'
 
 import type { ClassicRegistry } from '../../src/entities/index.ts'
@@ -19,7 +20,6 @@ import {
   classicFloorData,
   populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined } from '../helpers.ts'
 
 const buildings = [
   classicBuildingData({

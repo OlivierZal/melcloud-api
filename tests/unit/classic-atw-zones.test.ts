@@ -1,3 +1,4 @@
+import { cast, defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it } from 'vitest'
 
 import type { ClassicListDeviceDataAtw } from '../../src/types/index.ts'
@@ -19,7 +20,6 @@ import {
   classicBuildingData,
   createMockClassicApi,
 } from '../classic-fixtures.ts'
-import { cast, defined } from '../helpers.ts'
 
 const createAtwData = (
   overrides: Partial<ClassicListDeviceDataAtw> = {},

@@ -1,47 +1,15 @@
-import { type MockInstance, expect, vi } from 'vitest'
+import { expect } from 'vitest'
 
-import type { Logger, SettingManager } from '../src/api/index.ts'
 import type { Result } from '../src/types/index.ts'
-import { HttpClient, HttpError } from '../src/http/index.ts'
-import { Temporal } from '../src/temporal.ts'
 
-// Deliberate type-breach boundary — and the suite's only one: call
-// sites hand over values the compiled types rightly refuse (wire
-// payloads carrying fields the schema forbids, partial doubles
-// standing in for rich wire records) because that refusal is the
-// behavior under test. Prefer an honest shape where one exists
-// (`mock`, a typed `vi.fn` signature, a zod parse); reach for `cast`
-// only when the type error is the point.
-export function cast(value: unknown): never
-export function cast(value: unknown): unknown {
-  return value
-}
-
-// `temporal-polyfill` v1 delegates to the native `Temporal` when the
-// runtime ships one (Node 26+). Native `Temporal.Now` reads the real
-// clock directly, bypassing `vi.setSystemTime` (which only patches
-// `Date`), so tests that freeze or advance time must also route
-// `Temporal.Now.instant()` through the mocked `Date.now()`. Under the
-// polyfilled implementation this spy is a behavioral no-op. Restore it
-// with `vi.mocked(Temporal.Now.instant).mockRestore()` next to
-// `vi.useRealTimers()`.
-export const mockTemporalNowInstant = (): void => {
-  vi.spyOn(Temporal.Now, 'instant').mockImplementation(() =>
-    Temporal.Instant.fromEpochMilliseconds(Date.now()),
-  )
-}
-
-// Same native-`Temporal` concern as `mockTemporalNowInstant`, for the
-// zoned variant the Home chart windows are anchored on. Restore with
-// `vi.mocked(Temporal.Now.zonedDateTimeISO).mockRestore()` next to
-// `vi.useRealTimers()`.
-export const mockTemporalNowZoned = (): void => {
-  vi.spyOn(Temporal.Now, 'zonedDateTimeISO').mockImplementation((timezone) =>
-    Temporal.Instant.fromEpochMilliseconds(Date.now()).toZonedDateTimeISO(
-      timezone ?? 'UTC',
-    ),
-  )
-}
+// What is OURS alone. Everything the SDK suites used to copy by hand —
+// `cast`, `defined`, `mock`, the logger/setting-store doubles, the
+// transport spy, the fetch `Response` mock, the `HttpError` factories,
+// the native-`Temporal` clock spies — comes from
+// `@olivierzal/api-core/testing` since 1.3.0, proven in the core's own
+// suite before a consumer inherits it. The three below name this SDK's
+// specifics: the `Result` type and the vitest matcher/envelope shapes
+// its suites assert on.
 
 // Wrap `expect.objectContaining` so call sites get a `never`-typed
 // matcher (assignable anywhere) instead of `any` — the latter trips
@@ -52,13 +20,6 @@ export function matchObject(shape: object): never
 export function matchObject(shape: object): unknown {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- vitest's `objectContaining` is typed `any`; this helper is the single boundary that scopes the concession
   return expect.objectContaining(shape)
-}
-
-export const defined = <T>(value: T | null | undefined): T => {
-  if (value === undefined || value === null) {
-    throw new Error('Expected value to be defined')
-  }
-  return value
 }
 
 /**
@@ -78,60 +39,6 @@ export const okValue = <T>(result: Result<T>): T => {
 
 const HTTP_OK = 200
 
-export function mock<T extends object>(value?: Partial<T>): T
-export function mock(value: unknown = {}): unknown {
-  return value
-}
-
-/**
- * Spin up an `HttpClient` instance and a Vitest spy on its `request`
- * method in one call. Centralises the four-file duplication of
- *
- *     const client = new HttpClient({ baseURL, timeout: 30_000 })
- *     const requestSpy = vi.spyOn(client, 'request')
- *
- * so tests can do `const { client, requestSpy } = createMockHttpClient(url)`.
- * @param baseURL - Base URL forwarded to the underlying HttpClient.
- * @returns The wired client + a spy on `request`.
- */
-export const createMockHttpClient = (
-  baseURL: string,
-): { client: HttpClient; requestSpy: MockInstance<HttpClient['request']> } => {
-  const client = new HttpClient({ baseURL, timeout: 30_000 })
-  return { client, requestSpy: vi.spyOn(client, 'request') }
-}
-
-export const createSettingStore = (
-  initial: Record<string, string> = {},
-  { hasUnset = false }: { hasUnset?: boolean } = {},
-): {
-  setSpy: ReturnType<typeof vi.fn<(key: string, value: string) => void>>
-  settingManager: SettingManager
-  unsetSpy: ReturnType<typeof vi.fn<(key: string) => void>>
-} => {
-  const store = new Map(Object.entries(initial))
-  const setSpy = vi.fn<(key: string, value: string) => void>((key, value) => {
-    store.set(key, value)
-  })
-  const unsetSpy = vi.fn<(key: string) => void>((key) => {
-    store.delete(key)
-  })
-  return {
-    setSpy,
-    settingManager: {
-      set: setSpy,
-      get: (key: string) => store.get(key) ?? null,
-      ...(hasUnset && { unset: unsetSpy }),
-    },
-    unsetSpy,
-  }
-}
-
-export const createLogger = (): Logger => ({
-  error: vi.fn<(...data: unknown[]) => void>(),
-  log: vi.fn<(...data: unknown[]) => void>(),
-})
-
 export const mockResponse = (
   data: unknown,
   headers: Record<string, string | string[]> = {},
@@ -141,85 +48,3 @@ export const mockResponse = (
   headers: Record<string, string | string[]>
   status: number
 } => ({ data, headers, status })
-
-// The Response constructor rejects a non-null body on the Fetch spec's
-// "null body" statuses; 204 is the only one the suite produces.
-const HTTP_NO_CONTENT = 204
-
-const buildMockHeaders = (
-  headers: Record<string, string | string[]>,
-): Headers => {
-  const result = new Headers()
-  for (const [key, value] of Object.entries(headers)) {
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        result.append(key, item)
-      }
-    } else {
-      result.set(key, value)
-    }
-  }
-  return result
-}
-
-const serializeBody = (body: unknown): string => {
-  if (typeof body === 'string') {
-    return body
-  }
-  return JSON.stringify(body)
-}
-
-/**
- * Build a fetch-compatible Response mock. The token-auth flow uses
- * `fetch()` directly (not the internal HttpClient) and relies on the
- * Response surface: `.status`, `.ok`, `.text()`, `.headers.get()`, and
- * `.headers.getSetCookie()`.
- * @param body - Response body; objects are JSON-serialised, strings pass
- *   through.
- * @param headers - Response headers; `set-cookie` may be an array.
- * @param status - Response status (defaults to 200).
- * @returns A minimal `Response` object sufficient for the token-auth
- *   flow tests.
- */
-export const mockFetchResponse = (
-  body: unknown,
-  headers: Record<string, string | string[]> = {},
-  status: number = HTTP_OK,
-): Response => {
-  const responseHeaders = buildMockHeaders(headers)
-  if (
-    typeof body === 'object' &&
-    body !== null &&
-    !responseHeaders.has('content-type')
-  ) {
-    responseHeaders.set('content-type', 'application/json')
-  }
-  return new Response(status === HTTP_NO_CONTENT ? null : serializeBody(body), {
-    headers: responseHeaders,
-    status,
-  })
-}
-
-export const createHttpError = ({
-  message,
-  method = 'get',
-  responseHeaders = {},
-  status,
-  url,
-}: {
-  message: string
-  status: number
-  url: string
-  method?: string
-  responseHeaders?: Record<string, string>
-}): HttpError =>
-  new HttpError(message, {
-    config: { method, url },
-    response: { data: {}, headers: responseHeaders, status },
-  })
-
-export const createServerError = (status: number, url = '/test'): HttpError =>
-  createHttpError({ message: `Status ${String(status)}`, status, url })
-
-export const createUnauthorizedError = (url = '/test'): HttpError =>
-  createHttpError({ message: 'Unauthorized', status: 401, url })

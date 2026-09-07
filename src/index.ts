@@ -188,12 +188,6 @@ export {
   HomeDeviceType,
 } from './constants.ts'
 export {
-  classicUpdateDevice,
-  classicUpdateDevices,
-  fetchDevices,
-  syncDevices,
-} from './decorators/index.ts'
-export {
   type AvailabilityAware,
   type ClassicDeviceAny,
   type ClassicModel,
@@ -244,6 +238,7 @@ export {
   NoChangesError,
   RateLimitError,
   RegistrySyncError,
+  StateReadError,
   UpdateRejectedError,
   ValidationError,
 } from './errors/index.ts'

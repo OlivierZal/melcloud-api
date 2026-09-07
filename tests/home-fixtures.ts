@@ -1,3 +1,4 @@
+import { cast, mock, mockFetchResponse } from '@olivierzal/api-core/testing'
 import { vi } from 'vitest'
 
 import type { HomeAPIAdapter } from '../src/api/home-types.ts'
@@ -22,7 +23,6 @@ import type {
 } from '../src/types/index.ts'
 import { HomeDeviceType } from '../src/constants.ts'
 import { HomeDevice } from '../src/entities/home-device.ts'
-import { cast, mock, mockFetchResponse } from './helpers.ts'
 
 // Mid-range RSSI so derived signal-quality assertions land in a
 // predictable band without special-casing weak/strong values.

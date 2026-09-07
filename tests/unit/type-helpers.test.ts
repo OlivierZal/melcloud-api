@@ -8,8 +8,6 @@ import {
   type HomeAtaValues,
   type HomeAtwDeviceData,
   type HomeAtwValues,
-  type Resolved,
-  type UndefinedTolerant,
   err,
   mapResult,
   ok,
@@ -56,28 +54,6 @@ describe.concurrent(mapResult, () => {
   })
 })
 
-interface Settings {
-  interval: number | null
-  label: string
-}
-
-// Ported from heatzy-api, whose twin of src/types/utility.ts carries the
-// same clauses: the two copies are byte-identical and these are the only
-// assertions either repo makes about them.
-describe('resolved', () => {
-  it('makes every property required and strips explicit undefined', () => {
-    expectTypeOf<
-      Resolved<{ interval?: number | undefined; label?: string | undefined }>
-    >().toEqualTypeOf<{ interval: number; label: string }>()
-  })
-
-  it('preserves null — a sentinel here, not an absence marker', () => {
-    expectTypeOf<
-      Resolved<{ interval?: number | null | undefined }>
-    >().toEqualTypeOf<{ interval: number | null }>()
-  })
-})
-
 // The conditional is the SOLE compile-time enforcement of the ATW
 // measure requirement (the adapter beneath takes `measure?` and defaults
 // it), and the bivariant subclass overrides are what keep the update
@@ -105,20 +81,5 @@ describe('home per-type facade contracts', () => {
     expectTypeOf<
       Parameters<HomeDeviceAtwFacade['updateValues']>[0]
     >().toEqualTypeOf<HomeAtwValues>()
-  })
-})
-
-describe('undefinedTolerant', () => {
-  it('widens every property into an optional, undefined-admitting one', () => {
-    expectTypeOf<UndefinedTolerant<Settings>>().toEqualTypeOf<{
-      interval?: number | null | undefined
-      label?: string | undefined
-    }>()
-  })
-
-  it('round-trips through Resolved back to the source shape', () => {
-    expectTypeOf<
-      Resolved<UndefinedTolerant<Settings>>
-    >().toEqualTypeOf<Settings>()
   })
 })

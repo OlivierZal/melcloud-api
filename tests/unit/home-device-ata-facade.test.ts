@@ -1,3 +1,4 @@
+import { cast, mockTemporalNowZoned } from '@olivierzal/api-core/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type {
@@ -9,7 +10,7 @@ import { EntityNotFoundError, NoChangesError } from '../../src/errors/index.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
 import { Temporal } from '../../src/temporal.ts'
 import { type HomeAtaDeviceCapabilities, ok } from '../../src/types/index.ts'
-import { cast, mockTemporalNowZoned, okValue } from '../helpers.ts'
+import { okValue } from '../helpers.ts'
 import {
   createMockHomeApi,
   homeDevice,
