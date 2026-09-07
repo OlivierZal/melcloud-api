@@ -4,7 +4,7 @@ Thanks for considering a contribution. This document describes the local workflo
 
 ## Prerequisites
 
-- Node.js `>= 22` (matches `engines.node` in `package.json`)
+- Node.js `>= 22.22.2` to install (`.nvmrc` — the family's install floor, derived in `@olivierzal/configs` from the dependency tree it imposes on every consumer); the package itself runs on `>= 22.20.0` (`engines.node` in `package.json`)
 - npm 10+
 - A GitHub personal access token with the `read:packages` scope, exported as `NODE_AUTH_TOKEN` (the `.npmrc` reads from this env var to fetch `@olivierzal` scoped dependencies)
 
@@ -44,4 +44,4 @@ Branches, functions, lines, and statements are all enforced at **100%** — the 
 
 ## Releases
 
-Releases are cut by the maintainer via GitHub Releases; the `publish.yml` workflow then publishes to GitHub Packages. The version follows [SemVer](https://semver.org).
+Releases are cut by the maintainer via GitHub Releases; the `publish.yml` workflow (a stub over the family's `reusable-publish.yml` in `@olivierzal/configs`) then packs, attests and publishes to GitHub Packages. The version follows [SemVer](https://semver.org).

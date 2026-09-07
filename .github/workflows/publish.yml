@@ -1,38 +1,13 @@
-concurrency:
-  cancel-in-progress: false
-  group: publish
+# Calls the family's reusable release pipeline (pack, attest the
+# tarball's provenance, publish to GitHub Packages) in OlivierZal/configs.
 jobs:
   publish:
-    environment: npm
-    name: Publish package to GitHub Packages
     permissions:
       attestations: write
       contents: read
       id-token: write
       packages: write
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup-node-and-install
-        with:
-          cache: none
-          # The install pulls @olivierzal/configs from GitHub Packages,
-          # which requires auth even for read.
-          npm-token: ${{ secrets.GITHUB_TOKEN }}
-          registry-url: https://npm.pkg.github.com
-          scope: '@olivierzal'
-      # Publish the exact tarball we attest.
-      - run: npm pack
-      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-path: '*.tgz'
-      - env:
-          IS_PRERELEASE: ${{ github.event.release.prerelease }}
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish *.tgz ${{ github.event.release.prerelease && '--tag next' || '' }}
-    timeout-minutes: 15
+    uses: OlivierZal/configs/.github/workflows/reusable-publish.yml@9656fb8009b6b4c344dbdda62c99b95ed64bfe8f # v5.0.0
 name: Publish package to GitHub Packages
 on:
   release:
