@@ -1,17 +1,16 @@
 import { REDACTED } from '@olivierzal/api-core'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-
-import type { BaseAPIConfig } from '../../src/api/types.ts'
-import { BaseAPI, normalizeUnauthorized } from '../../src/api/base.ts'
-import { AuthenticationError } from '../../src/errors/index.ts'
-import { type HttpResponse, HttpError } from '../../src/http/index.ts'
-import { Temporal } from '../../src/temporal.ts'
 import {
   createLogger,
   createMockHttpClient,
   createServerError,
   mockTemporalNowInstant,
-} from '../helpers.ts'
+} from '@olivierzal/api-core/testing'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import type { BaseAPIConfig } from '../../src/api/types.ts'
+import { BaseAPI } from '../../src/api/base.ts'
+import { type HttpResponse, HttpClient } from '../../src/http/index.ts'
+import { Temporal } from '../../src/temporal.ts'
 
 // WIRING suite, not a behavior suite: the session lifecycle and the
 // request pipeline live in `@olivierzal/api-core`'s `SessionAPI`, whose
@@ -20,9 +19,11 @@ import {
 // against it on both real legs. What this file covers is what stays
 // OURS in `src/api/base.ts`: the transport resolution, the bound
 // redaction vocabulary reaching the core's log lines, the
-// `isRateLimited` surface, `ensureAuthenticated`'s rungs, and the
-// `normalizeUnauthorized` boundary helper. Re-testing core behavior
-// here would let coverage be satisfied by the wrong suite.
+// `isRateLimited` surface and `ensureAuthenticated`'s rungs. The
+// sign-in normalization is the core's `toAuthFailure` since 1.3.0,
+// pinned there; Home's binding to it is pinned in `home-api.test.ts`.
+// Re-testing core behavior here would let coverage be satisfied by
+// the wrong suite.
 
 // Observes the auto-sync timer firing (planNext armed) — module-scoped
 // because an arrow referencing `this` inside super() arguments is
@@ -32,7 +33,7 @@ const syncCallbackMock = vi
   .mockResolvedValue(undefined)
 
 const { client: mockHttpClient, requestSpy: mockRequest } =
-  createMockHttpClient('https://test.api')
+  createMockHttpClient(HttpClient, 'https://test.api')
 
 /**
  * Minimal concrete subclass of BaseAPI used to test THIS repo's wiring
@@ -263,40 +264,6 @@ describe('baseAPI wiring over the core session template', () => {
 
       expect(api.isRateLimited).toBe(true)
     })
-  })
-})
-
-// `normalizeUnauthorized` is this repo's boundary helper: its only
-// other exercise is through `HomeAPI.doAuthenticate`, where the OIDC
-// mock stack can mask subtle branching. Pinning the contract here
-// keeps the three error classes (401 HttpError, non-401 HttpError,
-// non-HttpError) traceable in isolation.
-describe(normalizeUnauthorized, () => {
-  it('wraps a 401 HttpError into AuthenticationError with original as cause', () => {
-    const http = new HttpError('Unauthorized', {
-      config: { url: '/context' },
-      response: { data: undefined, headers: {}, status: 401 },
-    })
-
-    const result = normalizeUnauthorized(http)
-
-    expect(result).toBeInstanceOf(AuthenticationError)
-    expect(result).toMatchObject({ cause: http })
-  })
-
-  it('returns null for non-401 HttpErrors so callers rethrow the original', () => {
-    const http = new HttpError('Server error', {
-      config: { url: '/context' },
-      response: { data: undefined, headers: {}, status: 500 },
-    })
-
-    expect(normalizeUnauthorized(http)).toBeNull()
-  })
-
-  it('returns null for non-HttpError errors so callers rethrow the original', () => {
-    const native = new Error('network')
-
-    expect(normalizeUnauthorized(native)).toBeNull()
   })
 })
 

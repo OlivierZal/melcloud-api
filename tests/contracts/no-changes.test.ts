@@ -1,3 +1,4 @@
+import { cast, defined } from '@olivierzal/api-core/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
@@ -6,6 +7,7 @@ import { ClassicDeviceType } from '../../src/constants.ts'
 import { NoChangesError } from '../../src/errors/index.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
+import { ok } from '../../src/types/index.ts'
 import {
   assertClassicDeviceType,
   classicAreaData,
@@ -15,7 +17,6 @@ import {
   createMockClassicApi,
   populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { cast, defined } from '../helpers.ts'
 import {
   createMockHomeApi,
   homeDevice,
@@ -146,27 +147,61 @@ describeNoChangesContract('Home ATA device', (kind) => {
   }
 })
 
-// Classic alone can fold a write away by comparing it to the synced
+// Classic alone can fold a write away by comparing it to the unit's
 // state; Home has no such comparison, so this stays a dialect clause
-// rather than a contract one.
+// rather than a contract one. The state compared against is the LIVE
+// read the write takes first (the snapshot catches up with it), never
+// the snapshot alone — `tests/contracts/classic-write-freshness.test.ts`
+// pins the whole merge on the real leg.
+const classicFacade = (
+  live: Record<string, unknown>,
+): { api: ClassicAPIAdapter; facade: ClassicDeviceAtaFacade } => {
+  const registry = populatedClassicRegistry({
+    areas: [classicAreaData()],
+    buildings: [classicBuildingData()],
+    floors: [classicFloorData()],
+  })
+  const device = classicAtaDevice()
+  registry.syncDevices([device])
+  const instance = defined(registry.devices.getById(device.DeviceID))
+  assertClassicDeviceType(instance, ClassicDeviceType.Ata)
+  const api: ClassicAPIAdapter = createMockClassicApi({
+    getValues: vi
+      .fn<ClassicAPIAdapter['getValues']>()
+      .mockResolvedValue(ok(cast({ EffectiveFlags: 0, ...live }))),
+  })
+  return { api, facade: new ClassicDeviceAtaFacade(api, registry, instance) }
+}
+
 describe('updateValues — Classic state comparison', () => {
   it('refuses a value already in the synced state', async () => {
-    const registry = populatedClassicRegistry({
-      areas: [classicAreaData()],
-      buildings: [classicBuildingData()],
-      floors: [classicFloorData()],
-    })
-    const device = classicAtaDevice()
-    registry.syncDevices([device])
-    const instance = defined(registry.devices.getById(device.DeviceID))
-    assertClassicDeviceType(instance, ClassicDeviceType.Ata)
-    const api: ClassicAPIAdapter = createMockClassicApi()
-    const facade = new ClassicDeviceAtaFacade(api, registry, instance)
+    const { api, facade } = classicFacade({})
 
     await expect(facade.updateValues({ Power: true })).rejects.toThrow(
       NoChangesError,
     )
 
     expect(api.updateValues).not.toHaveBeenCalled()
+  })
+
+  // The fixture snapshot is powered on; the unit has been switched off
+  // since. Off is a no-op and on is the change — the snapshot alone
+  // would answer the opposite.
+  it('refuses a value the unit already holds, whatever the snapshot said', async () => {
+    const { api, facade } = classicFacade({ Power: false })
+
+    await expect(facade.updateValues({ Power: false })).rejects.toThrow(
+      NoChangesError,
+    )
+
+    expect(api.updateValues).not.toHaveBeenCalled()
+  })
+
+  it('sends a value the unit no longer holds, whatever the snapshot said', async () => {
+    const { api, facade } = classicFacade({ Power: false })
+
+    await facade.updateValues({ Power: true })
+
+    expect(api.updateValues).toHaveBeenCalledTimes(1)
   })
 })

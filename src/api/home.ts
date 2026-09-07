@@ -43,7 +43,7 @@ import {
   parseOrThrow,
 } from '../validation/index.ts'
 import type { HomeAPIAdapter, HomeAPIConfig } from './home-types.ts'
-import { BaseAPI, normalizeUnauthorized } from './base.ts'
+import { BaseAPI } from './base.ts'
 import { performTokenAuth, refreshAccessToken } from './token-auth.ts'
 
 const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
@@ -568,10 +568,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     try {
       await this.#exchangeAndStoreTokens(request)
     } catch (error) {
-      // Normalize transport-level `401 Unauthorized` from the BFF
+      // Normalize a transport-level `401 Unauthorized` from the BFF
       // into the shared {@link AuthenticationError} domain type so
       // callers of `authenticate()` get a stable error shape (mirror
-      // of the Classic `LoginData: null → AuthenticationError` path).
+      // of the Classic `LoginData: null → AuthenticationError` path) —
+      // the core's `toAuthFailure`, over the `authFailureStatuses`
+      // vocabulary this instance was built with (the default `[401]`).
       // Cognito refusals arrive already classified from token-auth;
       // the remaining non-401 errors (PAR failures, network timeouts)
       // propagate unchanged.
@@ -587,7 +589,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
           'MELCloud Home is temporarily blocking sign-ins (too many attempts)',
         )
       }
-      const authError = normalizeUnauthorized(error)
+      const authError = this.toAuthFailure(
+        error,
+        'MELCloud rejected the credentials',
+      )
       if (authError !== null) {
         throw authError
       }

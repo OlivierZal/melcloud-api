@@ -1,3 +1,14 @@
+import {
+  cast,
+  createHttpError,
+  createLogger,
+  createMockHttpClient,
+  createServerError,
+  createSettingStore,
+  defined,
+  mockFetchResponse,
+  mockTemporalNowInstant,
+} from '@olivierzal/api-core/testing'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { HomeAPI } from '../../src/api/home.ts'
@@ -8,21 +19,13 @@ import type {
   HomeReportData,
 } from '../../src/types/index.ts'
 import { EntityNotFoundError } from '../../src/errors/index.ts'
-import { type HttpResponse, HttpError } from '../../src/http/index.ts'
-import { Temporal } from '../../src/temporal.ts'
 import {
-  cast,
-  createHttpError,
-  createLogger,
-  createMockHttpClient,
-  createServerError,
-  createSettingStore,
-  defined,
-  matchObject,
-  mockFetchResponse,
-  mockResponse,
-  mockTemporalNowInstant,
-} from '../helpers.ts'
+  type HttpResponse,
+  HttpClient,
+  HttpError,
+} from '../../src/http/index.ts'
+import { Temporal } from '../../src/temporal.ts'
+import { matchObject, mockResponse } from '../helpers.ts'
 import {
   homeCognitoLoginPage,
   homeContextBuilding,
@@ -113,7 +116,7 @@ const mockSignalData: HomeEnergyData = {
 const mockTokenResponse = homeTokenResponse
 
 const { client: mockHttpClient, requestSpy: mockRequest } =
-  createMockHttpClient(BASE_URL)
+  createMockHttpClient(HttpClient, BASE_URL)
 
 // The OIDC token-auth module uses the global `fetch` directly for PAR,
 // the redirect chain, and the token exchange. We stub `fetch` globally
@@ -245,10 +248,12 @@ describe('melcloud home API', () => {
 
   describe('authentication', () => {
     // Contract: a 401 from the BFF token exchange is wrapped into
-    // AuthenticationError by `doAuthenticate` (via
-    // `normalizeUnauthorized`) so callers see a stable domain error
-    // instead of a raw HttpError — mirroring the Classic
-    // `LoginData: null → AuthenticationError` path.
+    // AuthenticationError by `doAuthenticate` (the core's
+    // `toAuthFailure`, over this instance's default `[401]`
+    // vocabulary) so callers see a stable domain error instead of a
+    // raw HttpError — mirroring the Classic
+    // `LoginData: null → AuthenticationError` path. The helper's own
+    // clauses are the core's; this pins the binding.
     it('should wrap 401 from token exchange into AuthenticationError', async () => {
       setupLoginUntilTokenExchange()
       mockFetch.mockRejectedValueOnce(httpUnauthorized('/connect/token'))

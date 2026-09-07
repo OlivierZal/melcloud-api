@@ -1,3 +1,4 @@
+import { defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it } from 'vitest'
 
 import { ClassicDeviceType } from '../../src/constants.ts'
@@ -10,7 +11,6 @@ import {
   classicFloorData,
   createMockClassicApi,
 } from '../classic-fixtures.ts'
-import { defined } from '../helpers.ts'
 
 const createManagerWithRegistry = (): {
   manager: ClassicFacadeManager

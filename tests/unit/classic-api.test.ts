@@ -1,3 +1,12 @@
+import {
+  cast,
+  createHttpError,
+  createLogger,
+  createMockHttpClient,
+  createSettingStore,
+  defined,
+  mock,
+} from '@olivierzal/api-core/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type {
@@ -7,6 +16,7 @@ import type {
 } from '../../src/api/index.ts'
 import type { ClassicDeviceType } from '../../src/constants.ts'
 import { AuthenticationError } from '../../src/errors/index.ts'
+import { HttpClient } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
 import {
   type ClassicSetDevicePostData,
@@ -20,20 +30,13 @@ import {
   classicRawDevice,
   stageClassicWire,
 } from '../classic-fixtures.ts'
-import {
-  cast,
-  createHttpError,
-  createLogger,
-  createMockHttpClient,
-  createSettingStore,
-  defined,
-  matchObject,
-  mock,
-  okValue,
-} from '../helpers.ts'
+import { matchObject, okValue } from '../helpers.ts'
 
 const { client: mockHttpClient, requestSpy: mockRequest } =
-  createMockHttpClient('https://app.melcloud.com/Mitsubishi.Wifi.Client')
+  createMockHttpClient(
+    HttpClient,
+    'https://app.melcloud.com/Mitsubishi.Wifi.Client',
+  )
 
 const wrap = <T>(
   data: T,

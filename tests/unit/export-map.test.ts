@@ -26,7 +26,6 @@ const MANIFEST_SUBPATH = './package.json'
 
 const DIRECTORY_REEXPORTS = [
   'api',
-  'decorators',
   'entities',
   'errors',
   'facades',

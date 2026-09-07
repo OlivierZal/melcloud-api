@@ -1,3 +1,4 @@
+import { cast, mock } from '@olivierzal/api-core/testing'
 import { type MockInstance, vi } from 'vitest'
 
 import type {
@@ -43,7 +44,6 @@ import {
   toClassicDeviceId,
   toClassicFloorId,
 } from '../src/types/index.ts'
-import { cast, mock } from './helpers.ts'
 
 // ---------------------------------------------------------------------------
 // Primitive model data factories

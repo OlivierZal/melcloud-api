@@ -1,3 +1,4 @@
+import { cast, defined, mock } from '@olivierzal/api-core/testing'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter, SyncCallback } from '../../src/api/index.ts'
@@ -21,7 +22,6 @@ import {
 } from '../../src/errors/index.ts'
 import { HttpError } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
-import { cast, defined, mock } from '../helpers.ts'
 
 const createMockFacade = (
   devices: { type: ClassicDeviceType; update: ReturnType<typeof vi.fn> }[] = [],
@@ -252,47 +252,6 @@ describe(fetchDevices, () => {
   })
 })
 
-describe(syncDevices, () => {
-  it('calls notifySync after the target method', async () => {
-    const notifySync = vi.fn<SyncCallback>().mockResolvedValue()
-    const target = vi
-      .fn<(...args: unknown[]) => Promise<unknown>>()
-      .mockResolvedValue('result')
-    const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
-    const context = { notifySync }
-    const result = await decorated.call(context)
-
-    expect(result).toBe('result')
-    expect(notifySync).toHaveBeenCalledWith({ type: undefined })
-  })
-
-  it('passes type to notifySync', async () => {
-    const notifySync = vi.fn<SyncCallback>().mockResolvedValue()
-    const target = vi
-      .fn<(...args: unknown[]) => Promise<unknown>>()
-      .mockResolvedValue('result')
-    const decorated = syncDevices({ type: ClassicDeviceType.Ata })(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
-    const context = { notifySync }
-    await decorated.call(context)
-
-    expect(notifySync).toHaveBeenCalledWith({ type: ClassicDeviceType.Ata })
-  })
-
-  it('works when notifySync is undefined', async () => {
-    const target = vi
-      .fn<(...args: unknown[]) => Promise<unknown>>()
-      .mockResolvedValue('result')
-    const decorated = syncDevices()(target, mock<ClassMethodDecoratorContext>())
-    const context = {}
-    const result = await decorated.call(context)
-
-    expect(result).toBe('result')
-  })
-})
-
 describe(classicUpdateDevices, () => {
   it('updates all devices with the arg data', async () => {
     const update = vi.fn<(data: unknown) => void>()
@@ -509,7 +468,10 @@ describe('decorator stacking order', () => {
 // The `type` filter in `@classicUpdateDevices` and `@syncDevices`
 // drives which devices receive a patch / which type label rides on
 // the notifySync payload. A regression here would silently broadcast
-// the patch to unrelated device types.
+// the patch to unrelated device types. `syncDevices` itself is the
+// core's since 1.3.0 (its order, forwarding and hook-less clauses are
+// pinned there); what stays here is this SDK's `{ type }` vocabulary
+// riding through it and the stacking above.
 describe('decorator type-filter forwarding', () => {
   it('@syncDevices forwards the configured type to notifySync', async () => {
     const notifySync = vi.fn<SyncCallback>().mockResolvedValue()

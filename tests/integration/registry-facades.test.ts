@@ -1,3 +1,4 @@
+import { defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it } from 'vitest'
 
 import { ClassicDeviceType } from '../../src/constants.ts'
@@ -22,7 +23,6 @@ import {
   createMockClassicApi,
   populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined } from '../helpers.ts'
 
 const ataData = classicAtaDeviceData({
   NumberOfFanSpeeds: 5,

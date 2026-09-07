@@ -4,12 +4,12 @@ import {
   createAPICallErrorData,
   REDACTED,
 } from '@olivierzal/api-core'
+import { defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
 import { HttpError } from '../../src/http/index.ts'
 import { redaction } from '../../src/observability/context.ts'
-import { defined } from '../helpers.ts'
 
 // Thin VOCABULARY suite: the redaction and log-shell MECHANISMS (and
 // their mutation-checked suites) live in @olivierzal/api-core, and

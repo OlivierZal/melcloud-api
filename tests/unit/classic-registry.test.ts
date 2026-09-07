@@ -1,3 +1,4 @@
+import { cast, defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it } from 'vitest'
 
 import { ClassicDeviceType } from '../../src/constants.ts'
@@ -20,7 +21,6 @@ import {
   classicFloorData,
   populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { cast, defined } from '../helpers.ts'
 
 const allBuildings = [
   classicBuildingData({ Name: 'ClassicBuilding 1' }),

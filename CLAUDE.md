@@ -49,9 +49,10 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   record. Do not restate a number here without one; if a probe is ever
   run, record its date the way the Home entries below do. What must
   never be assumed is that auth failures surface as a 401 `HttpError`:
-  the 401 wrapping in `normalizeUnauthorized` exists for the Home API's
-  OIDC/token-expiry flows, and Classic's own throttle refusal
-  (`ErrorId` 6) rides the same success-status body.
+  the 401 wrapping in Home's `doAuthenticate` (the core's
+  `toAuthFailure`, over this SDK's default `[401]` vocabulary) exists
+  for the Home API's OIDC/token-expiry flows, and Classic's own
+  throttle refusal (`ErrorId` 6) rides the same success-status body.
 - Wire-format types mirror the MELCloud APIs verbatim (PascalCase fields,
   one-letter report keys); do not rename them to satisfy style rules.
 - `EffectiveFlags` bitfields: `src/facades/classic-flags.ts` is the one
@@ -59,6 +60,38 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   off); the two bitfield operators live behind documented inline
   `no-bitwise` disables at their use sites (`classic-update-devices.ts`
   flag test, `classic-base-device.ts` flag accumulation).
+- `EffectiveFlags` is DECORATIVE on the Classic set endpoints, and a
+  partial body is not the remedy (live-probed 2026-09-05 on
+  `/Device/SetAta`, unit powered off, every value reverted): a POST
+  flagging `SetTemperature` alone still APPLIED the carried, unflagged
+  `VaneVertical` (3 → 0 reproduced) and `OperationMode` (3 → 1), and a
+  body omitting fields had them ZERO-FILLED (`OperationMode: 0`,
+  `VaneHorizontal: 0`). Full-state posting is mandatory, so the only
+  thing a write can get wrong is the state it merges the delta onto —
+  and until 56.0.0 that was the registry snapshot from the last sync
+  (default interval 5 min; `@syncDevices` refreshes only AFTER the
+  write), so any write re-imposed every field another writer had
+  changed since: the "vertical vane keeps resetting to Auto" report
+  (2026-09-04) and com.melcloud #1408 ("cooling reverts to 24° every
+  10 min", 2026-07-15, which dates the server behavior to ≤ July 2026)
+  are this one mechanism, on every Classic ATA and ATW field alike
+  (zone modes and flow setpoints ride the same `updateValues`). Since
+  56.0.0 `BaseDeviceFacade.updateValues` reads the unit live
+  (`/Device/Get`) immediately before posting, catches the registry
+  model up with the answer (the read answers `EffectiveFlags`
+  unchanged, so nothing is filtered away), and merges onto THAT — one
+  extra GET per write, N for a zone group write of N devices. Two
+  verdicts follow and are kernel-pinned on the real Classic leg, wire
+  to wire (`tests/contracts/classic-write-freshness.test.ts`): a read
+  that fails REFUSES the write with `StateReadError` (never a fallback
+  to the snapshot — a rollback is worse than a retry), and
+  `NoChangesError` is judged against the live state, not the snapshot.
+  A change set with nothing in it is still refused BEFORE the read, so
+  it spends no wire call. Home is unaffected: its PUT is a delta
+  (live-verified the same day: a vane write sticks across unrelated
+  writes, mode changes and power cycles). What this cannot fix is
+  IR-remote lag, the unit-to-MELCloud reporting delay. The probe
+  scripts were investigation artifacts kept out of the repo.
 - The Home ATW wire speaks two dialects: `/context` settings report zone
   modes in PascalCase (`HeatCurve`, `CoolFlowTemperature`) but the PUT
   endpoint only accepts camelCase and answers a bare 400 otherwise — the
@@ -359,7 +392,10 @@ production dependency): the session lifecycle and the request pipeline
 (whole-snapshot redaction seated in the constructor), the redaction
 engine, the observability shells and `LifecycleEmitter`, the resilience
 primitives, `SyncManager`, the temporal entry point, the time units and
-the `APIError` base. Those modules used to be heatzy-api's
+the `APIError` base — and, since 1.3.0, `ValidationError`, the
+`syncDevices` decorator factory, the sign-in normalization
+(`SessionAPI.toAuthFailure`) and the vitest-backed test helpers on the
+core's `./testing` subpath. Those modules used to be heatzy-api's
 byte-identical twins ("edit both or neither"); the 2026-08-21 leak —
 the redaction fix took four days to cross to the twin — expired that
 discipline, and the extraction replaced it. This repo keeps ONLY its
@@ -381,8 +417,8 @@ satisfied by the wrong suite.
 
 `src/api/base.ts` crossed that boundary in 55.1.0: `BaseAPI` is a thin
 layer over the core's `SessionAPI`, keeping only this repo's verdicts —
-the zod/Result boundary (`requestData`/`safeRequest`/`classifyError`/
-`normalizeUnauthorized`; zod is refused entry to the core), the
+the zod/Result boundary (`requestData`/`safeRequest`/`classifyError`;
+zod is refused entry to the core), the
 `ensureAuthenticated` and `isRateLimited` surfaces (kept off the shared
 class by decision; `ensureAuthenticated` reads the core's
 `protected isSessionServable()`, never a local mirror of the refusal
@@ -428,6 +464,61 @@ re-implementation. A rejected auto-sync tick now names its dialect
 (`[Classic]`/`[Home]` on `Auto-sync failed:`), and the kernel clause
 that pinned the asymmetry flipped with the adoption and pins the
 labelled line.
+
+api-core 1.3.0 (adopted with 56.0.0) crossed three more twins and one
+test seat, every one additive on the core's side:
+
+- `ValidationError` is the core's, re-exported like `RegistrySyncError`
+  (`src/errors/validation.ts`). The class imports nothing from zod, so
+  the zod coupling that keeps `parseOrThrow` here — the constructor of
+  every `ValidationError` this SDK throws — never applied to it. Local
+  class-level clauses moved out with it; the core pins them.
+- `syncDevices` is the core's decorator factory, re-exported
+  (`src/decorators/sync-devices.ts`), generic over this SDK's
+  `SyncParams`; the four call sites (`@syncDevices()`,
+  `@syncDevices({ type })`) are unchanged. One delta inside the SDK: a
+  bare `@syncDevices()` forwards `undefined` where the local copy
+  forwarded `{ type: undefined }` — a clause asserting the latter is
+  the adoption's to reword, never a reason to wrap the core's.
+- The sign-in normalization is the core's protected
+  `toAuthFailure(error, message)`, which narrows an `HttpError` whose
+  status is in the `authFailureStatuses` vocabulary this instance was
+  built with (the default `[401]`; the auth-retry rung already owned
+  it) into `AuthenticationError` with the original as `cause`, `null`
+  otherwise. `normalizeUnauthorized` is gone; Home's `doAuthenticate`
+  binds in TWO statements — `const authError = this.toAuthFailure(…)`,
+  then `if (authError !== null) throw authError`, then a bare
+  `throw error` — never `throw this.toAuthFailure(…) ?? error`: the
+  family's `only-throw-error` admits a catch variable rethrown bare
+  and refuses the `??` expression (typed `unknown`), and no disable is
+  added for it (probed under this repo's own overlay, 2026-09-07: one
+  error on the one-liner, clean on the two-statement form).
+  `base-api.test.ts` lost its table (the core pins the helper;
+  `home-api.test.ts` pins the binding).
+- `tests/helpers.ts` keeps only what is OURS — `okValue`,
+  `matchObject`, `mockResponse` (the `Result` type and the vitest
+  matcher/envelope shapes this suite asserts on). Everything the three
+  SDK suites carried as a hand-maintained twin comes from
+  `@olivierzal/api-core/testing`: `cast`, `defined`, `mock`,
+  `createLogger`, `createSettingStore`,
+  `createMockHttpClient(HttpClient, baseURL)` — THIS repo's transport
+  class first, so the spy-wrapped client is the redaction-seating one
+  the resolver accepts —, `mockFetchResponse` (nulls the body on 204,
+  205 and 304), the `HttpError` factories and the `Temporal` clock
+  spies (`mockTemporalNowInstant`/`mockTemporalNowZoned`, the Node 26
+  native-Temporal fake-timer trap — exactly the fix that had to reach
+  every copy). The subpath imports `vitest` from this repo's
+  devDependencies and declares none: keep `vitest` a devDependency
+  here (a missing one fails loudly at the import, in a dev context,
+  never on the device), and never re-export the subpath. The suite
+  blocks that re-ran the core's own clauses against re-exported
+  symbols went with the helpers: `errors.test.ts` and
+  `type-helpers.test.ts` keep only clauses naming SDK classes or
+  pinning the wiring (an SDK error extends the core's base and passes
+  the family guard; a re-exported class IS the core's — a local twin
+  would break `instanceof` across the seam), `decorators.test.ts`
+  keeps the stacking order and the `{ type }` vocabulary riding
+  through `syncDevices`, not the decorator's own clauses.
 
 ## Tooling boundary (@olivierzal/configs)
 
@@ -574,6 +665,19 @@ Packages, where even reads need auth).
   been needed from a browser — the test pins their set so a new one
   forces that decision. `./package.json` is published too: an `exports`
   map otherwise hides the manifest from the tooling that reads it.
+- The four SDK-internal decorators (`classicUpdateDevice`,
+  `classicUpdateDevices`, `fetchDevices`, `syncDevices`) are NOT
+  public since 56.0.0, by verdict: they bind to SDK internals
+  (`classicUpdateDevices` takes `this: ClassicZoneFacade`,
+  `fetchDevices` resolves a host over `ClassicAPIAdapter`), no repo in
+  the family ever applied one, and typedoc already hid their option
+  types (`UpdatePatchKind`) as wiring consumers never call.
+  `src/decorators/index.ts` stays the internal barrel; the root and
+  namespace barrels no longer re-export it, `export-map.test.ts` no
+  longer exempts it, and there is no `Decorators` docs category.
+  heatzy-api's twin export (`setting`/`syncDevices`/`updateDevice`)
+  crosses in the same wave — the removal had to cross both twins at
+  once.
 - Tests import vitest APIs explicitly (no globals) and use `it` inside
   `describe`, `.each` for tables, `describe(fn)` function titles.
   Boolean names take a semantic prefix (`is`, `has`, `should`…); `device`

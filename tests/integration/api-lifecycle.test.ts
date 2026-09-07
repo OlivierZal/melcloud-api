@@ -1,3 +1,10 @@
+import {
+  createMockHttpClient,
+  createSettingStore,
+  defined,
+  mock,
+  mockFetchResponse,
+} from '@olivierzal/api-core/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPI } from '../../src/api/classic.ts'
@@ -5,7 +12,11 @@ import type { HomeAPI } from '../../src/api/home.ts'
 import type { SyncCallback } from '../../src/api/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
-import { type HttpResponse, HttpError } from '../../src/http/index.ts'
+import {
+  type HttpResponse,
+  HttpClient,
+  HttpError,
+} from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
 import {
   type ClassicBuildingWithStructure,
@@ -20,13 +31,6 @@ import {
   classicAtaDeviceData,
   classicBuildingData,
 } from '../classic-fixtures.ts'
-import {
-  createMockHttpClient,
-  createSettingStore,
-  defined,
-  mock,
-  mockFetchResponse,
-} from '../helpers.ts'
 
 const transientError = (status: number): HttpError =>
   new HttpError(`Status ${String(status)}`, {
@@ -80,7 +84,10 @@ const buildingResponse: ClassicBuildingWithStructure[] = [
 ]
 
 const { client: mockHttpClient, requestSpy: mockRequest } =
-  createMockHttpClient('https://app.melcloud.com/Mitsubishi.Wifi.Client')
+  createMockHttpClient(
+    HttpClient,
+    'https://app.melcloud.com/Mitsubishi.Wifi.Client',
+  )
 
 // Lifecycle tests start from a persisted Classic session: the reuse
 // probe (and with it the create-time initial sync these tests rely

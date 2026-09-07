@@ -1,3 +1,4 @@
+import { defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it } from 'vitest'
 
 import type { AtwHotWaterState, AtwZoneState } from '../../src/atw-state.ts'
@@ -18,7 +19,6 @@ import {
   createMockClassicApi,
   populatedClassicRegistry,
 } from '../classic-fixtures.ts'
-import { defined } from '../helpers.ts'
 import { createMockHomeApi, homeAtwDevice } from '../home-fixtures.ts'
 
 // One ATW state vocabulary on both dialects: the same top-level

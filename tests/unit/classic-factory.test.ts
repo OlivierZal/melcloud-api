@@ -1,3 +1,4 @@
+import { defined, mock } from '@olivierzal/api-core/testing'
 import { describe, expect, it } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/index.ts'
@@ -12,7 +13,6 @@ import {
   classicErvDevice,
   classicFloorData,
 } from '../classic-fixtures.ts'
-import { defined, mock } from '../helpers.ts'
 
 const mockApi = mock<ClassicAPIAdapter>()
 
