@@ -80,14 +80,20 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   (`/Device/Get`) immediately before posting, catches the registry
   model up with the answer (the read answers `EffectiveFlags`
   unchanged, so nothing is filtered away), and merges onto THAT — one
-  extra GET per write, N for a zone group write of N devices. Two
+  extra GET per DEVICE write (a zone facade's `updateGroupState` posts
+  `/Group/SetAta` once and spends none; a per-member fan-out through
+  `ClassicDeviceAtaFacade.updateGroupState` spends one per member). Two
   verdicts follow and are kernel-pinned on the real Classic leg, wire
   to wire (`tests/contracts/classic-write-freshness.test.ts`): a read
   that fails REFUSES the write with `StateReadError` (never a fallback
   to the snapshot — a rollback is worse than a retry), and
   `NoChangesError` is judged against the live state, not the snapshot.
-  A change set with nothing in it is still refused BEFORE the read, so
-  it spends no wire call. Home is unaffected: its PUT is a delta
+  A write refused that way leaves the registry model caught up with
+  the read but announces no sync — the core's `syncDevices` notifies a
+  resolved write only — so the caught-up fields reach `onSyncComplete`
+  observers with the next tick or `getValues`, as before (review
+  verdict, 2026-09-07). A change set with nothing in it is still
+  refused BEFORE the read, so it spends no wire call. Home is unaffected: its PUT is a delta
   (live-verified the same day: a vane write sticks across unrelated
   writes, mode changes and power cycles). What this cannot fix is
   IR-remote lag, the unit-to-MELCloud reporting delay. The probe
