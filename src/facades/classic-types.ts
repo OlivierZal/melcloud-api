@@ -195,7 +195,8 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   ) => Promise<Result<ClassicTilesData<T>>>) &
     ((device?: false) => Promise<Result<ClassicTilesData<null>>>)
   /**
-   * Fetch current device values from the Classic API.
+   * Fetch current device values from the Classic API; on success the
+   * registry model catches up with the answer.
    */
   readonly getValues: () => Promise<Result<ClassicGetDeviceData<T>>>
   /**
