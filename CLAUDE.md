@@ -73,18 +73,30 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   against the registry snapshot, computes the flags from that diff, and
   posts `{ ...setData, ...delta }` with no read of its own — the shape
   that had worked for years.
-- Because the flags decide, what a stale snapshot costs is a WRONG
-  FLAG, not a wrong body field: a value the user has just changed on
-  the remote looks different from the snapshot, so it gets flagged and
-  is genuinely re-imposed. That is the mechanism behind the "vertical
-  vane keeps resetting to Auto" report (2026-09-04) and com.melcloud
-  #1408 ("cooling reverts to 24° every 10 min", 2026-07-15), and any
-  future fix must aim at WHICH FIELDS GET FLAGGED — validated by the
-  delayed re-read above, never by the POST response. Home is
-  unaffected: its PUT carries a real delta and has no flags
-  (live-verified 2026-09-05: a vane write sticks across unrelated
-  writes, mode changes and power cycles). The probe scripts were
-  investigation artifacts kept out of the repo.
+- Because the flags decide, the question is always WHICH FIELDS GET
+  FLAGGED — and `updateValues` filters the caller's change set against
+  the snapshot before computing them, so **the flag set is always a
+  subset of the fields the caller named**. A stale snapshot cannot
+  invent a flag for a field nobody asked about; it SUPPRESSES one. The
+  caller asks for a value the stale snapshot already holds, the field
+  is filtered out, `flags === 0`, `NoChangesError`, and the write never
+  leaves — so the unit keeps the value the user was trying to change
+  away from, and `#pushUpdate` in com.melcloud swallows that refusal
+  without a warning. That silent no-op window is up to one sync
+  interval wide (5 min default).
+- The write that DOES re-impose a field is one whose caller names it.
+  A form prefilled from the snapshot and applied later is the shape to
+  watch: if a sync moves the snapshot between the prefill and the
+  apply, fields the user never touched now differ from it, get flagged,
+  and are written back. `ClassicDeviceAtaFacade.updateGroupState`
+  sends a whole form that way. That is the first hypothesis to test for
+  the "vertical vane keeps resetting to Auto" report (2026-09-04) and
+  com.melcloud #1408 ("cooling reverts to 24° every 10 min",
+  2026-07-15) — measured by the delayed re-read above, never by the
+  POST response. Home is unaffected: its PUT carries a real delta and
+  has no flags (live-verified 2026-09-05: a vane write sticks across
+  unrelated writes, mode changes and power cycles). The probe scripts
+  were investigation artifacts kept out of the repo.
 - The Home ATW wire speaks two dialects: `/context` settings report zone
   modes in PascalCase (`HeatCurve`, `CoolFlowTemperature`) but the PUT
   endpoint only accepts camelCase and answers a bare 400 otherwise — the

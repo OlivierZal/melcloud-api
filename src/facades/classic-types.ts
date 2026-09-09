@@ -201,6 +201,8 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   readonly getValues: () => Promise<Result<ClassicGetDeviceData<T>>>
   /**
    * Send updated device values, clamping temperatures to valid ranges.
+   * A change set the synced state already holds is refused with
+   * `NoChangesError`, before any wire call.
    */
   readonly updateValues: (
     data: ClassicUpdateDeviceData<T>,

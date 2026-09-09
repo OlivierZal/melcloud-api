@@ -12,15 +12,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
   `BaseDeviceFacade.updateValues` therefore diffs the change set against the registry snapshot again, computes `EffectiveFlags` from that diff, and posts `{ ...setData, ...delta }` with no read of its own; `getValues` is once more a plain read that catches the model up. The pre-write `/Device/Get`, the live-state `NoChangesError` and the four private helpers 56.0.0 added are gone.
 
-  Migration: a Classic `updateValues` no longer throws `StateReadError` and no longer spends a second request; `NoChangesError` is judged against the last synced state, as it was through 55.x. A host that branched on `StateReadError` drops that branch.
+  Migration: a Classic `updateValues` no longer throws `StateReadError` and no longer spends a second request; `NoChangesError` is judged against the last synced state, as it was through 55.x. A host that branched on `StateReadError` drops that branch. Note the cost of that last clause, which 56.0.0 had closed: a write back to a value the stale snapshot still holds is folded away silently, so up to one sync interval after a change made elsewhere, a Homey command can do nothing without saying so.
 
 - **`StateReadError` leaves the surface.** It was introduced in 56.0.0 for the pre-write read that no longer exists, so it can never be thrown; keeping it exported would misdescribe the API. Removed from the root barrel and from `errors/`.
 
 ### Changed
 
-- **The `EffectiveFlags` verdict in `CLAUDE.md` is rewritten around the corrected mechanism**, with the method note that makes it falsifiable: judge a write by a delayed re-read, never by the POST's response. It also records what a stale snapshot really costs — a wrong FLAG rather than a wrong body field, since a value changed on the remote looks different from the snapshot and is therefore flagged and genuinely re-imposed. That is the mechanism the "vane resets to Auto" and "cooling reverts to 24°" reports (com.melcloud #1408) still need, and any future fix must aim at which fields get flagged.
+- **The `EffectiveFlags` verdict in `CLAUDE.md` is rewritten around the corrected mechanism**, with the method note that makes it falsifiable: judge a write by a delayed re-read, never by the POST's response. It also records what a stale snapshot really costs. Since the change set is filtered against the snapshot before the flags are computed, the flag set is always a subset of the fields the caller named: a stale snapshot cannot invent a flag, it SUPPRESSES one, and the write is folded away as `NoChangesError` while the unit keeps the value the user was trying to leave. The write that does re-impose a field is one whose caller names it — a form prefilled from the snapshot and applied after a sync moved it, which is the shape `updateGroupState` sends and the first hypothesis to test for the "vane resets to Auto" and "cooling reverts to 24°" reports (com.melcloud #1408).
 
 ## [56.0.0] - 2026-09-07
+
+> Superseded by 57.0.0: the premise below — that `EffectiveFlags` is decorative and that omitted fields are zero-filled — was read from the endpoint's immediate response and is wrong.
 
 ### Breaking changes
 

@@ -1175,7 +1175,7 @@ describe('ata device facade', () => {
   })
 
   it('updateValues throws when no data differs', async () => {
-    const { facade } = createAtaFacade()
+    const { api, facade } = createAtaFacade()
 
     await expect(
       facade.updateValues({
@@ -1184,6 +1184,10 @@ describe('ata device facade', () => {
         SetTemperature: 24,
       }),
     ).rejects.toThrow(new NoChangesError(1000))
+
+    // The write path reads nothing: 56.0.0's pre-write `/Device/Get`
+    // was reverted in 57.0.0 and must not come back unnoticed.
+    expect(api.getValues).not.toHaveBeenCalled()
   })
 
   it('updateValues raises no flag for an undefined-valued key', async () => {
