@@ -10,7 +10,6 @@ import {
   isAPIError,
   NoChangesError,
   RegistrySyncError,
-  StateReadError,
   UpdateRejectedError,
   ValidationError,
 } from '../../src/errors/index.ts'
@@ -32,7 +31,6 @@ describe.concurrent('sdk errors over the core hierarchy', () => {
       new EntityNotFoundError('DeviceLocation', { entityId: 1 }),
     ],
     ['NoChangesError', new NoChangesError(1)],
-    ['StateReadError', new StateReadError(1, { failure: { kind: 'network' } })],
     ['UpdateRejectedError', new UpdateRejectedError({ Power: ['declined'] })],
   ])('%s extends APIError and passes the family guard', (_name, error) => {
     expect(error).toBeInstanceOf(APIError)

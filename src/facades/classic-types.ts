@@ -195,17 +195,14 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   ) => Promise<Result<ClassicTilesData<T>>>) &
     ((device?: false) => Promise<Result<ClassicTilesData<null>>>)
   /**
-   * Fetch current device values from the Classic API; the registry
-   * model catches up with the answer.
+   * Fetch current device values from the Classic API; on success the
+   * registry model catches up with the answer.
    */
   readonly getValues: () => Promise<Result<ClassicGetDeviceData<T>>>
   /**
    * Send updated device values, clamping temperatures to valid ranges.
-   * The Classic set endpoints apply the whole body, so the full state
-   * is posted — merged onto a live read of the unit taken immediately
-   * before, never onto the last sync's snapshot; a failed read refuses
-   * the write with `StateReadError`, and a value the unit already
-   * holds refuses it with `NoChangesError`.
+   * A change set the synced state already holds is refused with
+   * `NoChangesError`, before any wire call.
    */
   readonly updateValues: (
     data: ClassicUpdateDeviceData<T>,

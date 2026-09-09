@@ -17,7 +17,6 @@ import {
 import {
   EntityNotFoundError,
   NoChangesError,
-  StateReadError,
   UpdateRejectedError,
 } from '../../src/errors/index.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
@@ -1159,6 +1158,10 @@ describe('ata device facade', () => {
     await facade.updateValues({ Power: false })
 
     expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
+    // A write that lands reads nothing first: 56.0.0's pre-write
+    // `/Device/Get` was reverted in 57.0.0 and must not come back
+    // unnoticed.
+    expect(api.getValues).not.toHaveBeenCalled()
   })
 
   it('getValues propagates failure without touching the device model', async () => {
@@ -1175,57 +1178,8 @@ describe('ata device facade', () => {
     expect(!result.ok && result.error.kind).toBe('network')
   })
 
-  it('updateValues merges onto the live read, not the synced snapshot', async () => {
-    // The snapshot holds the vane on auto; the unit has since been
-    // swung. A power write must carry the unit's vane, or the
-    // full-state body swings it back.
-    const { api, facade } = createAtaFacade({
-      getValues: vi
-        .fn<ClassicAPIAdapter['getValues']>()
-        .mockResolvedValue(
-          ok(cast({ EffectiveFlags: 0, VaneVertical: ClassicVertical.swing })),
-        ),
-    })
-    await facade.updateValues({ Power: false })
-    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
-
-    expect(api.getValues).toHaveBeenCalledTimes(1)
-    expect(
-      mock<ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>>(
-        defined(call).postData,
-      ).VaneVertical,
-    ).toBe(ClassicVertical.swing)
-    expect(facade.data.VaneVerticalDirection).toBe(ClassicVertical.swing)
-  })
-
-  it('updateValues refuses the write when the live read fails', async () => {
-    const { api, facade } = createAtaFacade({
-      getValues: vi
-        .fn<ClassicAPIAdapter['getValues']>()
-        .mockResolvedValue(
-          err({ cause: new Error('boom'), kind: 'network' as const }),
-        ),
-    })
-
-    await expect(facade.updateValues({ Power: false })).rejects.toThrow(
-      StateReadError,
-    )
-
-    expect(api.updateValues).not.toHaveBeenCalled()
-  })
-
-  it('updateValues spends no live read on an empty change set', async () => {
-    const { api, facade } = createAtaFacade()
-
-    await expect(facade.updateValues({})).rejects.toThrow(
-      new NoChangesError(1000),
-    )
-
-    expect(api.getValues).not.toHaveBeenCalled()
-  })
-
   it('updateValues throws when no data differs', async () => {
-    const { facade } = createAtaFacade()
+    const { api, facade } = createAtaFacade()
 
     await expect(
       facade.updateValues({
@@ -1234,6 +1188,9 @@ describe('ata device facade', () => {
         SetTemperature: 24,
       }),
     ).rejects.toThrow(new NoChangesError(1000))
+
+    // The refusal itself costs no wire call, read or write.
+    expect(api.getValues).not.toHaveBeenCalled()
   })
 
   it('updateValues raises no flag for an undefined-valued key', async () => {

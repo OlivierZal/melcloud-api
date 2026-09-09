@@ -15,7 +15,7 @@ import {
   isClassicDeviceOfType,
   STALE_COMMUNICATION_HOURS,
 } from '../entities/index.ts'
-import { NoChangesError, StateReadError } from '../errors/index.ts'
+import { NoChangesError } from '../errors/index.ts'
 import { Intl, Temporal } from '../temporal.ts'
 import {
   type ClassicDeviceID,
@@ -329,38 +329,43 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   @syncDevices()
   public async getValues(): Promise<Result<ClassicGetDeviceData<T>>> {
-    return this.#readValues()
+    const { api, device } = this
+    const result = await api.getValues<T>({
+      params: { buildingId: device.buildingId, id: device.id },
+    })
+    if (result.ok) {
+      device.update(convertToListDeviceData(this, result.value))
+    }
+    return result
   }
 
-  // The set endpoints apply the WHOLE body they receive:
-  // `EffectiveFlags` is decorative and an omitted field is zero-filled
-  // (live-probed 2026-09-05), so the body must be the full state — and
-  // merging the delta onto the last sync's snapshot re-imposed every
-  // field another writer had changed since (the vane-reset field
-  // report). The base is therefore the unit's LIVE state, read
-  // immediately before posting; a read that fails refuses the write
-  // rather than falling back to the snapshot, and a change set with
-  // nothing in it is refused before the read, spending no wire call.
   @syncDevices()
   @classicUpdateDevice()
   public async updateValues(
     data: Partial<ClassicUpdateDeviceData<T>>,
   ): Promise<ClassicSetDeviceData<T>> {
-    const { api, id, type } = this
-    if (!this.#isRequestingChange(data)) {
-      throw new NoChangesError(id)
-    }
-    await this.#refreshSnapshot()
-    const newData = this.#diffAgainstSnapshot(data)
-    const effectiveFlags = this.#computeFlags(typedKeys(newData))
-    if (effectiveFlags === 0) {
+    const { api, id, setData: currentSetData, type } = this
+    // A present-`undefined` key counts as absent (JS callers can send
+    // one); letting it through would raise a phantom `EffectiveFlags`
+    // bit and bypass the `NoChangesError` guard.
+    const newData = typedFromEntries<Partial<ClassicUpdateDeviceData<T>>>(
+      Object.entries(data).filter(
+        ([key, value]) =>
+          value !== undefined &&
+          isUpdateDeviceData(currentSetData, key) &&
+          currentSetData[key] !== value,
+      ),
+    )
+
+    const flags = this.#computeFlags(typedKeys(newData))
+    if (flags === 0) {
       throw new NoChangesError(id)
     }
     return api.updateValues({
       postData: {
         ...this.prepareUpdateData(newData),
         DeviceID: id,
-        EffectiveFlags: effectiveFlags,
+        EffectiveFlags: flags,
       },
       type,
     })
@@ -533,24 +538,6 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     )
   }
 
-  // The fields of the change set the (just refreshed) snapshot does not
-  // already hold. A present-`undefined` key counts as absent (JS
-  // callers can send one); letting it through would raise a phantom
-  // `EffectiveFlags` bit and bypass the `NoChangesError` guard.
-  #diffAgainstSnapshot(
-    data: Partial<ClassicUpdateDeviceData<T>>,
-  ): Partial<ClassicUpdateDeviceData<T>> {
-    const { setData: snapshot } = this
-    return typedFromEntries<Partial<ClassicUpdateDeviceData<T>>>(
-      Object.entries(data).filter(
-        ([key, value]) =>
-          value !== undefined &&
-          isUpdateDeviceData(snapshot, key) &&
-          snapshot[key] !== value,
-      ),
-    )
-  }
-
   async #fetchTemperaturesHour(
     hour: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
@@ -568,39 +555,5 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
           { hour, locale: this.api.locale },
         ),
     )
-  }
-
-  // Whether the change set names at least one updatable field with a
-  // value — the pre-wire question, asked of the flag vocabulary rather
-  // than the snapshot so it costs no read.
-  #isRequestingChange(data: Partial<ClassicUpdateDeviceData<T>>): boolean {
-    const { flags } = this
-    return Object.entries(data).some(
-      ([key, value]) => value !== undefined && isUpdateDeviceData(flags, key),
-    )
-  }
-
-  // One live `/Device/Get` read; on success the registry model catches
-  // up with it (the whole payload — the read answers `EffectiveFlags`
-  // unchanged, so nothing is filtered away), which is what makes the
-  // snapshot a trustworthy merge base for the write that follows.
-  async #readValues(): Promise<Result<ClassicGetDeviceData<T>>> {
-    const { api, device } = this
-    const result = await api.getValues<T>({
-      params: { buildingId: device.buildingId, id: device.id },
-    })
-    if (result.ok) {
-      device.update(convertToListDeviceData(this, result.value))
-    }
-    return result
-  }
-
-  // The live read a write merges onto: the snapshot catches up with
-  // the unit, or the write is refused — never sent from the snapshot.
-  async #refreshSnapshot(): Promise<void> {
-    const live = await this.#readValues()
-    if (!live.ok) {
-      throw new StateReadError(this.id, { failure: live.error })
-    }
   }
 }

@@ -19,7 +19,6 @@ A typed Node.js client for the [MELCloud](https://app.melcloud.com/) and [MELClo
 - **Ata / Atw / Erv support** — air conditioners, heat pumps with hot water, and energy-recovery ventilation units.
 - **Resilient by default** — auto-retry on transient failures, rate-limit awareness, pre-emptive session refresh.
 - **Validated boundaries** — Zod schemas guard every consumed payload, so upstream shape drift surfaces as a typed `ValidationError` instead of a deep `undefined` crash. The Classic bulk listing is the one deliberate exception: one unusable entry must not take a whole account down, so it is dropped and reported on the cycle's log line — with its id and whether its `Type` is unmodelled or its header malformed — instead of failing the payload.
-- **Fresh-state writes** — a Classic `updateValues` reads the unit live immediately before it posts: the Classic set endpoints apply the whole body (`EffectiveFlags` is decorative, an omitted field is zero-filled — live-probed 2026-09-05), so the full-state body is merged onto that read rather than onto the last sync's snapshot, which used to roll back whatever another writer had changed since. A failed read refuses the write with `StateReadError`; a value the unit already holds refuses it with `NoChangesError`. One extra `GET` per write; Home's delta `PUT` needs none.
 - **Typed failures** — telemetry, reports and error-log getters return `Result<T>` so callers branch on `network` / `unauthorized` / `rate-limited` / `validation` / `server` / `not-found` instead of catching generic exceptions.
 - **Normalized telemetry** — `getEnergySeries` on the Home device facades projects the energy history onto epoch-ms UTC instants and kilowatt-hours whatever the device type; the wire's timestamp dialect, interval grammar and per-type units stay inside the SDK, and a garbled sample degrades its fields to `null` (never `NaN`, never a throw) while keeping its entry. The wire-verbatim `getEnergy` remains for consumers that need the raw envelope.
 - **Tree-shakable** — `sideEffects: false` plus namespace-style subpath exports (`/classic`, `/home`) and one flat subpath per browser-safe contract module. The flat subpaths never reach the HTTP stack, so a browser bundle can import their values; the root barrel does and is Node-only.
@@ -103,7 +102,7 @@ if (device !== undefined) {
 
 ## Error handling
 
-Best-effort getters (telemetry, reports, error logs, settings reads) return a `Result<T>` so callers can branch on the failure class — `network`, `unauthorized`, `rate-limited`, `validation`, `server`, or `not-found`. Mutations (`update*`, `updatePower`) keep their throw-on-failure contract; a Classic `updateValues` whose pre-write live read fails throws `StateReadError`, carrying that read's classified failure as `failure` (and its underlying error as `cause`) so a caller can schedule the retry.
+Best-effort getters (telemetry, reports, error logs, settings reads) return a `Result<T>` so callers can branch on the failure class — `network`, `unauthorized`, `rate-limited`, `validation`, `server`, or `not-found`. Mutations (`update*`, `updatePower`) keep their throw-on-failure contract.
 
 ```ts title="result"
 const result = await facade.getEnergy({ from: '2024-01-01', to: '2024-12-31' })

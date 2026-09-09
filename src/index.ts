@@ -238,7 +238,6 @@ export {
   NoChangesError,
   RateLimitError,
   RegistrySyncError,
-  StateReadError,
   UpdateRejectedError,
   ValidationError,
 } from './errors/index.ts'
