@@ -24,6 +24,10 @@ import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
 import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
 import { ClassicDeviceErvFacade } from '../../src/facades/classic-device-erv.ts'
 import {
+  classicAtwFlags,
+  classicErvFlags,
+} from '../../src/facades/classic-flags.ts'
+import {
   type ClassicDeviceFacade,
   ClassicAreaFacade,
   ClassicFloorFacade,
@@ -1493,6 +1497,13 @@ describe('atw device facade with zone 2', () => {
 
     expect(postData.OperationModeZone1).toBe(ClassicOperationModeZone.flow)
     expect(postData.OperationModeZone2).toBe(ClassicOperationModeZone.room)
+    // The companion zone carries its own bit. Without it the unit
+    // applies zone 1 alone and drops the adjustment, leaving the pair
+    // in the state the official MELCloud app forbids.
+    expect(defined(call).postData.EffectiveFlags).toBe(
+      // eslint-disable-next-line no-bitwise -- `EffectiveFlags` is a bitfield; `|` is how a caller reads a two-field write
+      classicAtwFlags.OperationModeZone1 | classicAtwFlags.OperationModeZone2,
+    )
   })
 
   it('adjusts secondary zone when primary changes to cool mode', async () => {
@@ -1757,6 +1768,20 @@ describe('erv device facade', () => {
     const { facade } = createErvFacade()
 
     expect(facade.type).toBe(ClassicDeviceType.Erv)
+  })
+
+  // ERV derives nothing: the change set the caller named is the change
+  // set that is flagged and posted, unlike ATA's clamp and ATW's zone
+  // coupling.
+  it('flags and posts the change set as asked', async () => {
+    const { api, facade } = createErvFacade()
+
+    await facade.updateValues({ Power: false })
+    const call = vi.mocked(api.updateValues).mock.lastCall?.[0]
+    const { postData } = defined(call)
+
+    expect(postData.EffectiveFlags).toBe(classicErvFlags.Power)
+    expect(postData.Power).toBe(false)
   })
 
   it('resolves an empty energy report without a wire call', async () => {

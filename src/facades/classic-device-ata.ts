@@ -165,14 +165,12 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
 
   // Clamp SetTemperature to the valid range for the current or requested
   // operation mode before sending to the Classic API
-  protected override prepareUpdateData(
+  protected override readonly deriveUpdateData: (
     data: Partial<ClassicUpdateDeviceDataAta>,
-  ): Required<ClassicUpdateDeviceDataAta> {
-    return super.prepareUpdateData({
-      ...data,
-      ...this.#clampTargetTemperature(data),
-    })
-  }
+  ) => Partial<ClassicUpdateDeviceDataAta> = (data) => ({
+    ...data,
+    ...this.#clampTargetTemperature(data),
+  })
 
   #clampTargetTemperature(data: Partial<ClassicUpdateDeviceDataAta>): {
     SetTemperature?: number

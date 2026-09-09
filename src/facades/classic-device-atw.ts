@@ -314,15 +314,13 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
     }))
   }
 
-  protected override prepareUpdateData(
+  protected override readonly deriveUpdateData: (
     data: Partial<ClassicUpdateDeviceDataAtw>,
-  ): Required<ClassicUpdateDeviceDataAtw> {
-    return super.prepareUpdateData({
-      ...data,
-      ...this.#clampTargetTemperatures(data),
-      ...(this.data.HasZone2 && this.#coupleOperationModes(data)),
-    })
-  }
+  ) => Partial<ClassicUpdateDeviceDataAtw> = (data) => ({
+    ...data,
+    ...this.#clampTargetTemperatures(data),
+    ...(this.data.HasZone2 && this.#coupleOperationModes(data)),
+  })
 
   #clampTargetTemperatures(
     data: Partial<ClassicUpdateDeviceDataAtw>,
