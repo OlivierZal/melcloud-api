@@ -60,44 +60,31 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   off); the two bitfield operators live behind documented inline
   `no-bitwise` disables at their use sites (`classic-update-devices.ts`
   flag test, `classic-base-device.ts` flag accumulation).
-- `EffectiveFlags` is DECORATIVE on the Classic set endpoints, and a
-  partial body is not the remedy (live-probed 2026-09-05 on
-  `/Device/SetAta`, unit powered off, every value reverted): a POST
-  flagging `SetTemperature` alone still APPLIED the carried, unflagged
-  `VaneVertical` (3 → 0 reproduced) and `OperationMode` (3 → 1), and a
-  body omitting fields had them ZERO-FILLED (`OperationMode: 0`,
-  `VaneHorizontal: 0`). Full-state posting is mandatory, so the only
-  thing a write can get wrong is the state it merges the delta onto —
-  and until 56.0.0 that was the registry snapshot from the last sync
-  (default interval 5 min; `@syncDevices` refreshes only AFTER the
-  write), so any write re-imposed every field another writer had
-  changed since: the "vertical vane keeps resetting to Auto" report
-  (2026-09-04) and com.melcloud #1408 ("cooling reverts to 24° every
-  10 min", 2026-07-15, which dates the server behavior to ≤ July 2026)
-  are this one mechanism, on every Classic ATA and ATW field alike
-  (zone modes and flow setpoints ride the same `updateValues`). Since
-  56.0.0 `BaseDeviceFacade.updateValues` reads the unit live
-  (`/Device/Get`) immediately before posting, catches the registry
-  model up with the answer (the read answers `EffectiveFlags`
-  unchanged, so nothing is filtered away), and merges onto THAT — one
-  extra GET per DEVICE write (a zone facade's `updateGroupState` posts
-  `/Group/SetAta` once and spends none; a per-member fan-out through
-  `ClassicDeviceAtaFacade.updateGroupState` spends one per member). Two
-  verdicts follow and are kernel-pinned on the real Classic leg, wire
-  to wire (`tests/contracts/classic-write-freshness.test.ts`): a read
-  that fails REFUSES the write with `StateReadError` (never a fallback
-  to the snapshot — a rollback is worse than a retry), and
-  `NoChangesError` is judged against the live state, not the snapshot.
-  A write refused that way leaves the registry model caught up with
-  the read but announces no sync — the core's `syncDevices` notifies a
-  resolved write only — so the caught-up fields reach `onSyncComplete`
-  observers with the next tick or `getValues`, as before (review
-  verdict, 2026-09-07). A change set with nothing in it is still
-  refused BEFORE the read, so it spends no wire call. Home is unaffected: its PUT is a delta
-  (live-verified the same day: a vane write sticks across unrelated
-  writes, mode changes and power cycles). What this cannot fix is
-  IR-remote lag, the unit-to-MELCloud reporting delay. The probe
-  scripts were investigation artifacts kept out of the repo.
+- `EffectiveFlags` is AUTHORITATIVE on the Classic set endpoints: the
+  unit keeps the flagged fields and lets everything else in the body
+  fall back to its previous value a few seconds later. **Judge a
+  Classic write by re-reading the device seconds afterwards, never by
+  the POST's response** — the response is written before the unit has
+  settled and echoes the whole body it received. A probe on 2026-09-05
+  read that echo and concluded the opposite ("flags decorative, omitted
+  fields zero-filled"); 56.0.0 built a live-read-before-write path on
+  that premise and 57.0.0 reverted it (owner's five years of field
+  experience, 2026-09-08). `updateValues` therefore diffs the change set
+  against the registry snapshot, computes the flags from that diff, and
+  posts `{ ...setData, ...delta }` with no read of its own — the shape
+  that had worked for years.
+- Because the flags decide, what a stale snapshot costs is a WRONG
+  FLAG, not a wrong body field: a value the user has just changed on
+  the remote looks different from the snapshot, so it gets flagged and
+  is genuinely re-imposed. That is the mechanism behind the "vertical
+  vane keeps resetting to Auto" report (2026-09-04) and com.melcloud
+  #1408 ("cooling reverts to 24° every 10 min", 2026-07-15), and any
+  future fix must aim at WHICH FIELDS GET FLAGGED — validated by the
+  delayed re-read above, never by the POST response. Home is
+  unaffected: its PUT carries a real delta and has no flags
+  (live-verified 2026-09-05: a vane write sticks across unrelated
+  writes, mode changes and power cycles). The probe scripts were
+  investigation artifacts kept out of the repo.
 - The Home ATW wire speaks two dialects: `/context` settings report zone
   modes in PascalCase (`HeatCurve`, `CoolFlowTemperature`) but the PUT
   endpoint only accepts camelCase and answers a bare 400 otherwise — the
