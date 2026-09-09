@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [57.1.0] - 2026-09-09
+
+### Fixed
+
+- **The ATW zone coupling now carries its own flag, so it actually applies.** `ClassicDeviceAtwFacade` adjusts the companion zone when one zone's operation mode changes — the rule the official MELCloud app imposes: zone 2 follows zone 1's cool/heat status, and the two zones may not both sit in a room-based mode. That adjustment was made in `prepareUpdateData`, which runs AFTER `EffectiveFlags` is computed, so the companion zone was posted without a bit of its own and the unit dropped it. The rule therefore held only when the caller named both zones in one write, and silently failed in the case it was written for — one zone changed, the other left to follow.
+
+  The per-type rules move to a new `deriveUpdateData` step that runs BEFORE the flags are computed, so a field a rule derives is flagged with the ones the caller named. ATA and ERV are unaffected in behaviour: ATA's clamp only rewrites a field the caller already named, and ERV derives nothing.
+
+  Effect on a two-zone ATW: changing one zone's mode from Homey now really moves the companion zone, as the official app does. Installations where the pair had drifted apart will see the second zone follow on the next mode change.
+
+### Changed
+
+- **`prepareUpdateData` is no longer the per-type hook**; it assembles the body from the derived change set and is not overridden. `deriveUpdateData` is the seat a device type overrides. Both stay protected, so no published signature moves.
+
 ## [57.0.0] - 2026-09-09
 
 ### Breaking changes
@@ -789,6 +803,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[57.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.0.0...v57.1.0
 [57.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v56.0.0...v57.0.0
 [56.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v55.2.0...v56.0.0
 [55.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v55.1.0...v55.2.0

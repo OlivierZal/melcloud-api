@@ -270,6 +270,16 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return this.data.WifiSignalStrength
   }
 
+  // The per-type rules a change set goes through BEFORE its flags are
+  // computed: clamping a field the caller named, deriving a companion
+  // one. A derived field must be flagged like the named ones or the
+  // unit drops it, which is why this runs before `#computeFlags` while
+  // `prepareUpdateData` only assembles the body afterwards. Absent on a
+  // device type that derives nothing.
+  protected readonly deriveUpdateData?: (
+    data: Partial<ClassicUpdateDeviceData<T>>,
+  ) => Partial<ClassicUpdateDeviceData<T>>
+
   // `null` marks device types without an energy report (ERV):
   // `getEnergyReport` then resolves an empty chart without a wire call.
   protected readonly extractEnergyReport:
@@ -357,13 +367,18 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
       ),
     )
 
-    const flags = this.#computeFlags(typedKeys(newData))
+    // The flags are computed from the DERIVED change set, not the
+    // caller's: a field a per-type rule adds (the ATW zone coupling)
+    // must carry its own bit or the unit drops it, since only the
+    // flagged fields are applied.
+    const derivedData = this.deriveUpdateData?.(newData) ?? newData
+    const flags = this.#computeFlags(typedKeys(derivedData))
     if (flags === 0) {
       throw new NoChangesError(id)
     }
     return api.updateValues({
       postData: {
-        ...this.prepareUpdateData(newData),
+        ...this.prepareUpdateData(derivedData),
         DeviceID: id,
         EffectiveFlags: flags,
       },
