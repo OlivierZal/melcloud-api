@@ -1158,6 +1158,10 @@ describe('ata device facade', () => {
     await facade.updateValues({ Power: false })
 
     expect(api.updateValues).toHaveBeenCalledWith(expect.any(Object))
+    // A write that lands reads nothing first: 56.0.0's pre-write
+    // `/Device/Get` was reverted in 57.0.0 and must not come back
+    // unnoticed.
+    expect(api.getValues).not.toHaveBeenCalled()
   })
 
   it('getValues propagates failure without touching the device model', async () => {
@@ -1185,8 +1189,7 @@ describe('ata device facade', () => {
       }),
     ).rejects.toThrow(new NoChangesError(1000))
 
-    // The write path reads nothing: 56.0.0's pre-write `/Device/Get`
-    // was reverted in 57.0.0 and must not come back unnoticed.
+    // The refusal itself costs no wire call, read or write.
     expect(api.getValues).not.toHaveBeenCalled()
   })
 

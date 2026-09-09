@@ -84,6 +84,16 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   away from, and `#pushUpdate` in com.melcloud swallows that refusal
   without a warning. That silent no-op window is up to one sync
   interval wide (5 min default).
+- A consequence of the same rule, standing since well before 56.0.0 and
+  worth knowing before the next ATW fix: `prepareUpdateData` runs AFTER
+  the flags are computed, so a field it adds on its own is carried
+  unflagged and the unit therefore drops it.
+  `ClassicDeviceAtwFacade.#coupleOperationModes` is exactly that shape —
+  naming `OperationModeZone1` alone makes it adjust
+  `OperationModeZone2`, which no flag covers. Clamping is unaffected: it
+  only rewrites fields the caller named, which are already flagged.
+  Fixing the coupling means flagging a field the caller did not request,
+  so it needs its own verdict and a delayed re-read, not a quiet change.
 - The write that DOES re-impose a field is one whose caller names it.
   A form prefilled from the snapshot and applied later is the shape to
   watch: if a sync moves the snapshot between the prefill and the
