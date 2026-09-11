@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [57.2.0] - 2026-09-11
+
+### Changed
+
+- **The exact `@olivierzal/api-core` pin advances to 1.5.0: three session-lifecycle fixes, behaviour only.** No twin crosses and no surface moves, so the adoption is the pin. Each of the three was reproduced before it was fixed.
+
+- **A boot inside the login-backoff window no longer goes dormant for the life of the process.** The gate refused an automatic resume WITHOUT a wire call, so no sync cycle ran, so `planNext()` — the only thing that arms the auto-sync timer — was never reached. The client emitted `onAuthenticationLost` it could never retract and left nothing in the log to explain the silence. MELCloud's `ErrorId` 6 throttle is exactly what arms that window, for up to two hours, while saying nothing about the credential pair. The refusal now schedules one retry at the deadline it already knows.
+
+- **`ensureSession` can no longer await itself.** The enforced post-auth registry sync a refresh triggers re-entered the gate and joined the promise that was waiting on it, hanging every request on the client with no log line and no timeout. That is reachable from this dialect: `ClassicLoginDataSchema` types `Expiry` as `z.string()`, so the ASP.NET `DateTime.MinValue` sentinel passes validation and leaves the expiry predicate reading `true` forever, which closes the loop. The refresh now runs inside a per-instance async scope its own descendants are excluded by.
+
+- **A raced sign-in's epilogue can no longer destroy a newer session.** It was gated on the logOut epoch alone — which answers "did a sign-out land after me?" and was used to answer "is what I stored still current?". An account switch silently reverted to the previous pair, and with a sign-out in between, the stale flight deleted the session and both credentials a newer sign-in had just established, after that sign-in had reported success. The verdict is now gated on the most recent sign-in as well.
+
 ## [57.1.0] - 2026-09-09
 
 ### Fixed
@@ -803,6 +815,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[57.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.1.0...v57.2.0
 [57.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.0.0...v57.1.0
 [57.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v56.0.0...v57.0.0
 [56.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v55.2.0...v56.0.0
