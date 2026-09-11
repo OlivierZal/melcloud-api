@@ -479,6 +479,27 @@ re-implementation. A rejected auto-sync tick now names its dialect
 that pinned the asymmetry flipped with the adoption and pins the
 labelled line.
 
+api-core 1.5.0 (adopted with 57.2.0) crosses no new twin — it is three
+session-lifecycle fixes in the mechanism, behaviour only, so this repo's
+adoption is the pin and nothing else. Two of them change what a Classic
+consumer can observe and are worth knowing here. The login-backoff gate
+now schedules ONE retry at the deadline it refuses on, because the gate
+returned without a wire call and `planNext()` — the only arm of the
+auto-sync timer — lives in the cycle epilogue: a boot inside the window
+armed no heartbeat at all and stayed dormant for the life of the
+process, over a throttle (`ErrorId` 6) that says nothing about the
+credential pair. And `ensureSession`'s single flight now excludes the
+refresh's OWN traffic: the enforced post-auth sync the refresh triggers
+re-entered the gate and joined the promise waiting on it, which hung
+every request on the client — reachable here because
+`ClassicLoginDataSchema` types `Expiry` as `z.string()`, so the ASP.NET
+`0001-01-01` sentinel passes validation and leaves the expiry predicate
+reading `true` forever. The third, the sign-in epilogue gated on the
+most recent sign-in rather than on the sign-out alone, is invisible to
+this SDK's own code and matters to the apps: an account switch no
+longer reverts, and a raced sign-out no longer deletes a newer
+session's material.
+
 api-core 1.3.0 (adopted with 56.0.0) crossed three more twins and one
 test seat, every one additive on the core's side:
 
