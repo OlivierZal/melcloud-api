@@ -516,6 +516,28 @@ last sign-out claims the session, so a losing flight answered after a
 sign-out clears its own material instead of leaving a session standing
 behind it.
 
+api-core 1.7.1 (adopted with 57.3.0) parks the auto-sync tick around
+every non-GET request and for a 3-second settle window after it —
+heatzy-api's return to a 5-second cadence made a refresh overlapping a
+write the common case, and the fix is the core's because both SDKs
+share the seat. Here the tick is only ever DELAYED, never advanced: a
+Classic write still costs no extra `ListDevices`, the 5-minute cadence
+stays, and the ATW/ATA writes that `@fetchDevices({ when: 'after' })`
+already follow with a refresh are unchanged. 1.7.0's
+`HttpClientConfig.describeFailure` is NOT seated here: MELCloud's
+refusals (`ErrorId`, `LoginData: null`) are read at their own
+boundaries into `AuthenticationError`/`AuthenticationThrottledError`,
+and a non-2xx body says nothing the status line does not.
+
+`ClassicFacadeManager.get` keeps its eleven overloads (five required,
+`get(): null`, five optional `| null` mirrors) although the Home and
+heatzy managers ship the three-overload shape: dropping the four typed
+optional mirrors widens the return of a caller holding
+`ClassicDevice<T> | undefined` from `ClassicDeviceFacade<T> | null` to
+`ClassicFacade | null`, which this repo's CHANGELOG convention labels
+BREAKING even with no family consumer affected. Verdict 2026-09-14:
+scheduled for the next major, not cut alone.
+
 api-core 1.3.0 (adopted with 56.0.0) crossed three more twins and one
 test seat, every one additive on the core's side:
 
