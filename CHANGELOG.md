@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [57.3.0] - 2026-09-14
+
+### Changed
+
+- **The exact `@olivierzal/api-core` pin advances to 1.7.0: the auto-sync tick is parked around every mutation.** A refresh that overlapped a write read the pre-write state back into the registry — and through `onSync` into a Homey capability, which flipped back for one cycle — and one that followed the write too closely read a unit that had not applied it yet (a Classic unit keeps only the flagged fields a few seconds after the POST). The core now holds the tick for the duration of any non-GET request and for a 3-second settle window after it. The hold only ever delays the planned tick, never advances it: the 5-minute cadence stays a 5-minute cadence, and a write costs no extra refresh — which matters under MELCloud's rate limits. Reads hold nothing. The `HttpClientConfig.describeFailure` reader 1.7.0 also adds is not seated here: MELCloud's refusals carry no reason in their body that the status line does not already say.
+
 ## [57.2.1] - 2026-09-14
 
 ### Changed
@@ -826,6 +832,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[57.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.2.1...v57.3.0
 [57.2.1]: https://github.com/OlivierZal/melcloud-api/compare/v57.2.0...v57.2.1
 [57.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.1.0...v57.2.0
 [57.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.0.0...v57.1.0
