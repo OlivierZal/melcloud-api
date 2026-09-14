@@ -582,20 +582,13 @@ describe('mELCloud Classic API', () => {
     ])('calls $method via POST', async ({ args, method, path }) => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockRequest.mockResolvedValue(
-        wrap(
-          method === 'login'
-            ? {
-                LoginData: {
-                  ContextKey: 'ctx',
-                  Expiry: '2099-01-01T00:00:00Z',
-                },
-              }
-            : method === 'getEnergy'
-              ? ataEnergyResponse
-              : {},
-        ),
-      )
+      const responses: Partial<Record<typeof method, unknown>> = {
+        getEnergy: ataEnergyResponse,
+        login: {
+          LoginData: { ContextKey: 'ctx', Expiry: '2099-01-01T00:00:00Z' },
+        },
+      }
+      mockRequest.mockResolvedValue(wrap(responses[method] ?? {}))
       await api[method](cast(args))
 
       expect(mockRequest).toHaveBeenCalledWith(
