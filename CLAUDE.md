@@ -529,14 +529,15 @@ refusals (`ErrorId`, `LoginData: null`) are read at their own
 boundaries into `AuthenticationError`/`AuthenticationThrottledError`,
 and a non-2xx body says nothing the status line does not.
 
-`ClassicFacadeManager.get` keeps its eleven overloads (five required,
-`get(): null`, five optional `| null` mirrors) although the Home and
-heatzy managers ship the three-overload shape: dropping the four typed
-optional mirrors widens the return of a caller holding
-`ClassicDevice<T> | undefined` from `ClassicDeviceFacade<T> | null` to
-`ClassicFacade | null`, which this repo's CHANGELOG convention labels
-BREAKING even with no family consumer affected. Verdict 2026-09-14:
-scheduled for the next major, not cut alone.
+`ClassicFacadeManager.get` ships the same shape as the Home and heatzy
+managers since 58.0.0: the typed required overloads, `get(): null`, and
+ONE optional catch-all (`get(instance?: ClassicModel): ClassicFacade |
+null`). The four typed optional mirrors it carried until 57.3.0 were
+cut as a BREAKING change (a caller holding `ClassicDevice<T> |
+undefined` now reads `ClassicFacade | null` and narrows itself); no
+family consumer held one — com.melcloud resolves by id through
+`getById`. Owner's call 2026-09-14, cut alone rather than parked for a
+bundled major.
 
 api-core 1.3.0 (adopted with 56.0.0) crossed three more twins and one
 test seat, every one additive on the core's side:

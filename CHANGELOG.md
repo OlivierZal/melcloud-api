@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [58.0.0] - 2026-09-14
+
+### Changed
+
+- **BREAKING — `ClassicFacadeManager.get` drops its four typed optional mirrors.** The manager now ships the shape its Home and heatzy twins have always had: the typed required overloads (`ClassicDevice<T>`, area/floor, building, `ClassicDeviceAny`, `ClassicModel`), `get(): null`, and one optional catch-all `get(instance?: ClassicModel): ClassicFacade | null`. A caller passing a value that may be `undefined` used to get the matching typed facade `| null` back; it now gets `ClassicFacade | null` and narrows itself (the per-type guards `isClassicAtaFacade`, `isClassicAtwFacade` and `isClassicErvFacade`, or resolve the model first and call the required overload). Passing a defined model is unchanged, and so is `getById`, which is how com.melcloud resolves every facade. Nothing runs differently — the eleven overloads shared one implementation.
+
 ## [57.3.0] - 2026-09-14
 
 ### Changed
@@ -832,6 +838,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[58.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.3.0...v58.0.0
 [57.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.2.1...v57.3.0
 [57.2.1]: https://github.com/OlivierZal/melcloud-api/compare/v57.2.0...v57.2.1
 [57.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.1.0...v57.2.0

@@ -57,12 +57,6 @@ export class ClassicFacadeManager {
   public get(instance: ClassicDeviceAny): ClassicDeviceFacadeAny
   public get(instance: ClassicModel): ClassicFacade
   public get(): null
-  public get<T extends ClassicDeviceType>(
-    instance?: ClassicDevice<T>,
-  ): ClassicDeviceFacade<T> | null
-  public get(instance?: ClassicArea | ClassicFloor): ClassicZoneFacade | null
-  public get(instance?: ClassicBuilding): ClassicBuildingFacade | null
-  public get(instance?: ClassicDeviceAny): ClassicDeviceFacadeAny | null
   public get(instance?: ClassicModel): ClassicFacade | null
   public get(instance?: ClassicModel): ClassicFacade | null {
     if (instance === undefined) {
