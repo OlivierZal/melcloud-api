@@ -730,7 +730,8 @@ it, never by hand.
   `classicUpdateDevices`, `fetchDevices`, `syncDevices`) are NOT
   public since 56.0.0, by verdict: they bind to SDK internals
   (`classicUpdateDevices` takes `this: ClassicZoneFacade`,
-  `fetchDevices` resolves a host over `ClassicAPIAdapter`), no repo in
+  `fetchDevices` binds an explicit refresh callback typed against the
+  host class), no repo in
   the family ever applied one, and typedoc already hid their option
   types (`UpdatePatchKind`) as wiring consumers never call.
   `src/decorators/index.ts` stays the internal barrel; the root and

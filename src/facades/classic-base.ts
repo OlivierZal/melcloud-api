@@ -227,7 +227,7 @@ export abstract class ClassicBaseFacade<
     this.id = instance.id
   }
 
-  // Uses `@fetchDevices({ when: 'after' })` rather than `@syncDevices()`
+  // Uses `@fetchDevices({ refresh, when: 'after' })` rather than `@syncDevices()`
   // because the update response is a success/failure envelope with no
   // device payload — notifying onSync without a genuine registry
   // refresh would be a stale signal. The trade-off: onSync now fires
@@ -236,7 +236,10 @@ export abstract class ClassicBaseFacade<
   // Consumers listening to onSync should treat any call as "registry
   // changed, re-inspect" rather than keying on the payload. Same
   // applies to updateHolidayMode below.
-  @fetchDevices({ when: 'after' })
+  @fetchDevices({
+    when: 'after',
+    refresh: async (self: ClassicBaseFacade<T>) => self.api.fetch(),
+  })
   public async updateFrostProtection({
     isEnabled,
     max,
@@ -255,7 +258,10 @@ export abstract class ClassicBaseFacade<
     )
   }
 
-  @fetchDevices({ when: 'after' })
+  @fetchDevices({
+    when: 'after',
+    refresh: async (self: ClassicBaseFacade<T>) => self.api.fetch(),
+  })
   public async updateHolidayMode({
     endDate,
     isEnabled,

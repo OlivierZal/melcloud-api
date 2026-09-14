@@ -63,7 +63,9 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
    * current zone settings (frost-protection + holiday-mode flags).
    * @returns The building's zone settings.
    */
-  @fetchDevices()
+  @fetchDevices({
+    refresh: async (self: ClassicBuildingFacade) => self.api.fetch(),
+  })
   public async fetch(): Promise<ClassicZoneSettings> {
     const data = await resolved(this.data)
     return data
