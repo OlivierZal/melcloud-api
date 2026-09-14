@@ -505,16 +505,28 @@ this SDK's own code and matters to the apps: an account switch no
 longer reverts, and a raced sign-out no longer deletes a newer
 session's material.
 
+api-core 1.6.0 (adopted with 57.2.1) closes two gaps an independent
+re-verification found in that epilogue, again behaviour only: a pair
+the server has definitively refused is PARKED until the next accepted
+sign-in — 1.5.0 recorded the refusal and still deferred a retry, so a
+dead stored pair was replayed every 15-minute window for the life of
+the process — while a throttle (`ErrorId` 6, which says nothing about
+the pair) keeps its retry; and only a sign-in that BEGAN after the
+last sign-out claims the session, so a losing flight answered after a
+sign-out clears its own material instead of leaving a session standing
+behind it.
+
 api-core 1.3.0 (adopted with 56.0.0) crossed three more twins and one
 test seat, every one additive on the core's side:
 
-- `ValidationError` is the core's, re-exported like `RegistrySyncError`
-  (`src/errors/validation.ts`). The class imports nothing from zod, so
+- `ValidationError` is the core's, forwarded like `RegistrySyncError`
+  (by `src/errors/index.ts`, since 57.2.1 without a per-file shim). The
+  class imports nothing from zod, so
   the zod coupling that keeps `parseOrThrow` here — the constructor of
   every `ValidationError` this SDK throws — never applied to it. Local
   class-level clauses moved out with it; the core pins them.
-- `syncDevices` is the core's decorator factory, re-exported
-  (`src/decorators/sync-devices.ts`), generic over this SDK's
+- `syncDevices` is the core's decorator factory, forwarded by
+  `src/decorators/index.ts`, generic over this SDK's
   `SyncParams`; the four call sites (`@syncDevices()`,
   `@syncDevices({ type })`) are unchanged. One delta inside the SDK: a
   bare `@syncDevices()` forwards `undefined` where the local copy
