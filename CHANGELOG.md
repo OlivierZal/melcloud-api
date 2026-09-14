@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [57.2.1] - 2026-09-14
+
+### Changed
+
+- **The fifteen one-line re-export modules of `@olivierzal/api-core` are gone; the directory barrels forward the core's names directly.** Each shim was imported by its own barrel and by nothing else. The three local `APIError` subclasses now extend the core's class through the package specifier — never through the errors barrel, which would form an eval-time cycle under `class extends`. Public names, types and subpaths are unchanged; `export-map.test.ts` proves it.
+- **`classicUpdateDevice` is a bare method decorator, not a no-option factory.** The factory form was kept for "signature symmetry" with `classicUpdateDevices` and for options that never came; heatzy-api's twin `updateDevice` already had the bare shape. Internal since 56.0.0, so no consumer sees it.
+- **`isUpdateDeviceData` folds into `isKeyOf`.** It was `Object.hasOwn` restated under a second signature; both call sites now hoist `isKeyOf(record)` like the five other key guards the SDK derives from it.
+- **Two `.filter` predicate annotations the compiler infers are dropped** (`home-building.ts`): a `this is` method call and a `PromiseSettledResult` discriminant, both derived by TypeScript since 5.5. The predicates the native compiler does not derive keep theirs.
+
 ## [57.2.0] - 2026-09-11
 
 ### Changed
@@ -815,6 +824,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[57.2.1]: https://github.com/OlivierZal/melcloud-api/compare/v57.2.0...v57.2.1
 [57.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.1.0...v57.2.0
 [57.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.0.0...v57.1.0
 [57.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v56.0.0...v57.0.0

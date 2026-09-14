@@ -10,7 +10,6 @@ import {
   isSetDeviceDataAtaInList,
   isSetDeviceDataAtaNotInList,
   isUninitializedWireDate,
-  isUpdateDeviceData,
   mergeHourlyChartResults,
   omitUndefined,
   padHourlyChartToMidnight,
@@ -87,22 +86,6 @@ describe.concurrent(typedFromEntries, () => {
     ]
 
     expect(typedFromEntries(entries)).toStrictEqual({ key1: 1, key2: 2 })
-  })
-})
-
-describe.concurrent(isUpdateDeviceData, () => {
-  const data = { Power: 0, SetTemperature: 0 }
-
-  it('returns true for keys in the data record', () => {
-    const key = 'Power' as string
-
-    expect(isUpdateDeviceData(data, key)).toBe(true)
-  })
-
-  it('returns false for keys not in the data record', () => {
-    const key = 'NonExistent' as string
-
-    expect(isUpdateDeviceData(data, key)).toBe(false)
   })
 })
 

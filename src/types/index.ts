@@ -81,7 +81,6 @@ export type {
   ClassicZone,
   ClassicZoneSettings,
 } from './classic-generic.ts'
-export type { LoginCredentials } from './credentials.ts'
 export type { FlatZone } from './flat-zone.ts'
 export type {
   HomeAtaDeviceCapabilities,
@@ -126,7 +125,11 @@ export type {
   HomeUser,
   HomeUserContext,
 } from './home.ts'
-export type { Resolved, UndefinedTolerant } from './utility.ts'
+export type {
+  LoginCredentials,
+  Resolved,
+  UndefinedTolerant,
+} from '@olivierzal/api-core'
 
 export { type Hour, HOURS } from './hour.ts'
 export {

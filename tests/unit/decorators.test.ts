@@ -114,7 +114,7 @@ const callUpdateDevice = async (
   const target = vi
     .fn<(...args: unknown[]) => Promise<never>>()
     .mockResolvedValue(cast(setData))
-  const decorated = classicUpdateDevice()(
+  const decorated = classicUpdateDevice(
     target,
     mock<ClassMethodDecoratorContext>(),
   )

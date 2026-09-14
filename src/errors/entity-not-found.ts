@@ -1,5 +1,6 @@
+import { APIError } from '@olivierzal/api-core'
+
 import type { ClassicSettingsParams } from '../types/index.ts'
-import { APIError } from './base.ts'
 
 /**
  * Thrown when a facade attempts to resolve its underlying registry entity

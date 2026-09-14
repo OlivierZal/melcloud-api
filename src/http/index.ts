@@ -3,8 +3,11 @@ export type {
   HttpRequestConfig,
   HttpResponse,
 } from './client.ts'
-export type { HttpErrorRequestConfig } from './errors.ts'
 
 export { HttpClient, readHeaders } from './client.ts'
-export { HttpError, isHttpError } from './errors.ts'
-export { HttpStatus } from './status.ts'
+export {
+  type HttpErrorRequestConfig,
+  HttpError,
+  HttpStatus,
+  isHttpError,
+} from '@olivierzal/api-core'

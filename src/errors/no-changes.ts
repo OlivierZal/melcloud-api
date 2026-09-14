@@ -1,4 +1,4 @@
-import { APIError } from './base.ts'
+import { APIError } from '@olivierzal/api-core'
 
 /**
  * Thrown when an `update*` call is made with no data to apply — either

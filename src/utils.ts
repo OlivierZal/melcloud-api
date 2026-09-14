@@ -3,13 +3,12 @@ import type {
   ReportChartPieOptions,
   ReportQuery,
 } from './facades/index.ts'
-import { type ClassicDeviceType, ClassicLabelType } from './constants.ts'
+import { ClassicLabelType } from './constants.ts'
 import { Intl, Temporal } from './temporal.ts'
 import {
   type ClassicOperationModeLogData,
   type ClassicReportData,
   type ClassicSetDeviceDataAtaInList,
-  type ClassicUpdateDeviceData,
   type Hour,
   type KeyOfClassicSetDeviceDataAtaNotInList,
   type Resolved,
@@ -378,17 +377,6 @@ export function typedFromEntries(
 ): Record<string, unknown> {
   return Object.fromEntries(entries)
 }
-
-/**
- * Type guard checking whether a key belongs to the updatable device data fields.
- * @param data - The update data record to check against.
- * @param key - The key to verify.
- * @returns Whether the key is a valid updatable field.
- */
-export const isUpdateDeviceData = <T extends ClassicDeviceType>(
-  data: Record<keyof ClassicUpdateDeviceData<T>, unknown>,
-  key: string,
-): key is string & keyof ClassicUpdateDeviceData<T> => Object.hasOwn(data, key)
 
 const getChartLineSeries = ({
   data,

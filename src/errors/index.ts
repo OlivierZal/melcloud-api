@@ -1,9 +1,17 @@
-export { AuthenticationThrottledError } from './authentication-throttled.ts'
-export { AuthenticationError } from './authentication.ts'
-export { APIError, isAPIError } from './base.ts'
 export { EntityNotFoundError } from './entity-not-found.ts'
 export { NoChangesError, tolerateNoChanges } from './no-changes.ts'
-export { RateLimitError } from './rate-limit.ts'
-export { RegistrySyncError } from './registry-sync.ts'
 export { assertUpdateAccepted, UpdateRejectedError } from './update-rejected.ts'
-export { ValidationError } from './validation.ts'
+// The core's error family is forwarded under unchanged names so
+// `instanceof` holds across the SDK and the core alike; the classes
+// declared here are the protocol's own, and they extend `APIError`
+// through the package specifier — never through this barrel, which
+// would form an eval-time cycle under `class extends`.
+export {
+  APIError,
+  AuthenticationError,
+  AuthenticationThrottledError,
+  isAPIError,
+  RateLimitError,
+  RegistrySyncError,
+  ValidationError,
+} from '@olivierzal/api-core'
