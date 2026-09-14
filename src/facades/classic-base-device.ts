@@ -37,8 +37,8 @@ import {
   fromListToSetAta,
   getChartLineOptions,
   getChartPieOptions,
+  isKeyOf,
   isSetDeviceDataAtaInList,
-  isUpdateDeviceData,
   now,
   resolved,
   typedFromEntries,
@@ -350,11 +350,12 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   @syncDevices()
-  @classicUpdateDevice()
+  @classicUpdateDevice
   public async updateValues(
     data: Partial<ClassicUpdateDeviceData<T>>,
   ): Promise<ClassicSetDeviceData<T>> {
     const { api, id, setData: currentSetData, type } = this
+    const isKnownKey = isKeyOf(currentSetData)
     // A present-`undefined` key counts as absent (JS callers can send
     // one); letting it through would raise a phantom `EffectiveFlags`
     // bit and bypass the `NoChangesError` guard.
@@ -362,7 +363,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
       Object.entries(data).filter(
         ([key, value]) =>
           value !== undefined &&
-          isUpdateDeviceData(currentSetData, key) &&
+          isKnownKey(key) &&
           currentSetData[key] !== value,
       ),
     )

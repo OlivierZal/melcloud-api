@@ -5,8 +5,8 @@
  * replay, the GET-only transient retry, with `ensureSession()` as the
  * lifecycle entry ahead of them all) is assembled inside the core's
  * `SessionAPI` around every request — no composition contract lives in
- * this repo any more. This barrel re-exports only the primitives the
- * MELCloud layer still names, keeping internal import paths stable:
+ * this repo any more. This barrel forwards only the primitives the
+ * MELCloud layer still names:
  *
  * - {@link RateLimitGate}: the type `BaseAPI` narrows its inherited
  *   gate to for the `isRateLimited` surface.
@@ -17,6 +17,8 @@
  *   `ClassicAPIConfig.timezone` through its optional IANA `zone`
  *   parameter).
  */
-export { RateLimitGate } from './rate-limit-gate.ts'
-export { RetryGuard } from './retry-guard.ts'
-export { isSessionExpired } from './session-expiry.ts'
+export {
+  isSessionExpired,
+  RateLimitGate,
+  RetryGuard,
+} from '@olivierzal/api-core'

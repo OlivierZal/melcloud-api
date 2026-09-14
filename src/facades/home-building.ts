@@ -107,9 +107,7 @@ export class HomeBuildingFacade {
   #name: string
 
   get #ataDevices(): HomeDevice<HomeAtaDeviceData>[] {
-    return this.devices.filter(
-      (device): device is HomeDevice<HomeAtaDeviceData> => device.isAta(),
-    )
+    return this.devices.filter((device) => device.isAta())
   }
 
   get #memberUnits(): HomeProtectionUnits {
@@ -311,10 +309,7 @@ const settleMemberWrites = async (
 ): Promise<void> => {
   const outcomes = await Promise.allSettled(writes)
   const failures = outcomes
-    .filter(
-      (outcome): outcome is PromiseRejectedResult =>
-        outcome.status === 'rejected',
-    )
+    .filter((outcome) => outcome.status === 'rejected')
     .map(({ reason }) => toError(reason))
   const [firstFailure] = failures
   if (firstFailure !== undefined && failures.length === 1) {

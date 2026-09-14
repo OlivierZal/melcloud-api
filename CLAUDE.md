@@ -419,9 +419,14 @@ engine; every seat — the `HttpClient` subclass, token-auth's direct
 `HttpError`, and `BaseAPI`'s super() options, which carry it into the
 core's own log lines and the `APICall*` shells the core constructs
 itself — receives it), the wire types,
-the schemas, the facades, and thin re-export modules that keep internal
-import paths stable. A mechanism change happens in api-core and arrives
-here as a release + exact-pin bump PR; never re-implement one locally.
+the schemas and the facades; the directory barrels (`errors/`,
+`http/`, `resilience/`, `decorators/`, `types/`) forward the core's
+names directly — the one-line re-export shims that once sat between
+were folded in 57.2.1, and the three local `APIError` subclasses extend
+the core's class through the package specifier, never through the
+errors barrel (an eval-time cycle under `class extends`). A mechanism
+change happens in api-core and arrives here as a release + exact-pin
+bump PR; never re-implement one locally.
 The moved mechanism test suites live in api-core too — this repo's
 `observability.test.ts`/`http-client.test.ts`/`base-api.test.ts` are
 thin vocabulary/wiring suites pinning what is OURS: the key set, the

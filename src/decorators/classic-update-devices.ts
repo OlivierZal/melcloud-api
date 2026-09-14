@@ -10,8 +10,8 @@ import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import { NoChangesError } from '../errors/index.ts'
 import {
   fromSetToListAta,
+  isKeyOf,
   isSetDeviceDataAtaNotInList,
-  isUpdateDeviceData,
   typedFromEntries,
 } from '../utils.ts'
 
@@ -102,12 +102,13 @@ export const convertToListDeviceData = <T extends ClassicDeviceType>(
   const allEntries = Object.entries(newData)
   const effectiveFlagsBigInt =
     effectiveFlags === CLASSIC_FLAG_UNCHANGED ? null : BigInt(effectiveFlags)
+  const isFlagged = isKeyOf(flags)
   const entries =
     effectiveFlagsBigInt === null
       ? allEntries
       : allEntries.filter(
           ([key]) =>
-            isUpdateDeviceData(flags, key) &&
+            isFlagged(key) &&
             // eslint-disable-next-line no-bitwise -- `EffectiveFlags` is a bitfield; `&` tests flag membership
             Boolean(BigInt(flags[key]) & effectiveFlagsBigInt),
         )
@@ -126,7 +127,16 @@ export const convertToListDeviceData = <T extends ClassicDeviceType>(
 // `Result<...>` and applies its registry update inline on the success
 // branch — keeping the decorator's input shape homogeneously raw
 // preserves clean type narrowing here.
-const updateSingleDevice = <
+/**
+ * Method decorator that converts the API response back to list-data
+ * shape and updates the targeted device model, using `EffectiveFlags`
+ * to propagate only fields the device actually acknowledged.
+ * @param target - The raw-payload method being decorated.
+ * @param _context - The decorator context (unused).
+ * @returns The wrapped method.
+ * @category Decorators
+ */
+export const classicUpdateDevice = <
   T extends ClassicDeviceType,
   TArgs extends readonly unknown[],
   TData extends ClassicSetDeviceData<T>,
@@ -142,19 +152,3 @@ const updateSingleDevice = <
     }
     return data
   }
-
-/**
- * Method decorator factory that converts the API response back to
- * list-data shape and updates the targeted device model, using
- * `EffectiveFlags` to propagate only fields the device actually
- * acknowledged.
- *
- * Factory form (always invoked as `@classicUpdateDevice()`) for
- * signature symmetry with {@link classicUpdateDevices}; the decorator
- * takes no configuration today but the shape is stable for future
- * options without breaking call sites.
- * @returns A method decorator.
- * @category Decorators
- */
-export const classicUpdateDevice = (): typeof updateSingleDevice =>
-  updateSingleDevice

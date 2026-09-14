@@ -1,5 +1,6 @@
+import { APIError } from '@olivierzal/api-core'
+
 import type { ClassicFailureData, ClassicSuccessData } from '../types/index.ts'
-import { APIError } from './base.ts'
 
 /**
  * Thrown when MELCloud Classic accepts a mutation request but rejects its
