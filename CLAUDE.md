@@ -635,10 +635,12 @@ paths would resolve them against `node_modules`. The `-build` alias
 bases configs used to ship were content-free `{ extends }` shells of
 the plain ones and left with configs 5.0.0 — nothing here ever
 extended them.
-Eleven workflows are stubs calling the family reusables in
+Ten workflows are stubs calling the family reusables in
 OlivierZal/configs, pinned `@<sha> # vX.Y.Z`: `ci`, `claude`,
-`claude-code-review`, `claude-dependabot-fix`, `claude-issue-triage`,
-`dependabot`, `dependency-review`, `pr-title`, `zizmor` (the home-made
+`claude-code-review`, `claude-issue-triage`, `dependabot`,
+`dependency-review`, `pr-title`, `zizmor` (`claude-dependabot-fix` and
+`.github/zizmor.yml` went with configs 6.0.0, which retired that
+workflow; the home-made
 `audit` workflow is gone — `dependency-review` replaced it with configs
 3.1.0, 2026-08-10) and, since configs 5.0.0, `docs` and `publish` over
 `reusable-docs.yml` / `reusable-publish.yml`. The caller keeps the

@@ -172,11 +172,6 @@ const buildDeviceZones = (
  * @category Entities
  */
 export class ClassicRegistry {
-  // Pre-computed indexes for O(1) lookups by parent relationship.
-  // Public accessors expose readonly query interfaces over private maps,
-  // preventing callers from clearing or replacing entire collections.
-  readonly #areas = new Map<number, ClassicArea>()
-
   public readonly areas = {
     /**
      * Returns the area with the given id, or `undefined` when no such area is registered.
@@ -185,8 +180,6 @@ export class ClassicRegistry {
      */
     getById: (id: number): ClassicArea | undefined => this.#areas.get(id),
   }
-
-  readonly #buildings = new Map<number, ClassicBuilding>()
 
   public readonly buildings = {
     /**
@@ -198,8 +191,6 @@ export class ClassicRegistry {
       this.#buildings.get(id),
   }
 
-  readonly #devices = new Map<number, ClassicDeviceAny>()
-
   public readonly devices = {
     /**
      * Returns the device with the given id, or `undefined` when no such device is registered.
@@ -210,8 +201,6 @@ export class ClassicRegistry {
       this.#devices.get(id),
   }
 
-  readonly #floors = new Map<number, ClassicFloor>()
-
   public readonly floors = {
     /**
      * Returns the floor with the given id, or `undefined` when no such floor is registered.
@@ -221,15 +210,26 @@ export class ClassicRegistry {
     getById: (id: number): ClassicFloor | undefined => this.#floors.get(id),
   }
 
+  // Pre-computed indexes for O(1) lookups by parent relationship.
+  // Public accessors expose readonly query interfaces over private maps,
+  // preventing callers from clearing or replacing entire collections.
+  readonly #areas = new Map<number, ClassicArea>()
+
   #areasByBuildingId = new Map<number, ClassicArea[]>()
 
   #areasByFloorId = new Map<number, ClassicArea[]>()
+
+  readonly #buildings = new Map<number, ClassicBuilding>()
+
+  readonly #devices = new Map<number, ClassicDeviceAny>()
 
   #devicesByAreaId = new Map<number, ClassicDeviceAny[]>()
 
   #devicesByBuildingId = new Map<number, ClassicDeviceAny[]>()
 
   #devicesByFloorId = new Map<number, ClassicDeviceAny[]>()
+
+  readonly #floors = new Map<number, ClassicFloor>()
 
   #floorsByBuildingId = new Map<number, ClassicFloor[]>()
 
