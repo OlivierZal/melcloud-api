@@ -653,8 +653,11 @@ reusables), and `docs` keeps a `workflow_dispatch` with a boolean
 `dry-run` input: the one rehearsal a release-only path gets, it runs
 the build half on the reusable and skips the deploy — dispatch it once
 after each configs adoption, before any release. The composite action
-`.github/actions/setup-node-and-install` stays local because the called
-jobs run the CALLER's copy (the reusables reference `./`), and it
+`.github/actions/setup-node-and-install` is gone since the configs
+6.1.0 adoption: the called jobs reach configs' own copy through
+`$/`, GitHub's self-repository syntax (the repository that defines the
+workflow, at the running commit; GitHub.com only, runner 2.336.0 or
+newer), and it
 passes `npm-token` on both installs (the configs dependency lives on
 GitHub Packages, where even reads need auth). The zizmor
 `use-trusted-publishing` ignore that excused the local publish step
