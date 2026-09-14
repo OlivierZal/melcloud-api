@@ -523,7 +523,7 @@ write the common case, and the fix is the core's because both SDKs
 share the seat. Here the tick is only ever DELAYED, never advanced: a
 Classic write still costs no extra `ListDevices`, the 5-minute cadence
 stays, and the ATW/ATA writes that `@fetchDevices({ when: 'after' })`
-already follows with a refresh are unchanged. 1.7.0's
+already follow with a refresh are unchanged. 1.7.0's
 `HttpClientConfig.describeFailure` is NOT seated here: MELCloud's
 refusals (`ErrorId`, `LoginData: null`) are read at their own
 boundaries into `AuthenticationError`/`AuthenticationThrottledError`,
