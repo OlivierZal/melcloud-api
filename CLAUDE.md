@@ -516,7 +516,7 @@ last sign-out claims the session, so a losing flight answered after a
 sign-out clears its own material instead of leaving a session standing
 behind it.
 
-api-core 1.7.0 (adopted with 57.3.0) parks the auto-sync tick around
+api-core 1.7.1 (adopted with 57.3.0) parks the auto-sync tick around
 every non-GET request and for a 3-second settle window after it —
 heatzy-api's return to a 5-second cadence made a refresh overlapping a
 write the common case, and the fix is the core's because both SDKs
