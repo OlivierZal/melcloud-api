@@ -331,7 +331,9 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
 
   // The `@fetchDevices` decorator awaits a registry sync before this
   // body runs; the body just exposes the now-fresh `this.data`.
-  @fetchDevices()
+  @fetchDevices({
+    refresh: async (self: BaseDeviceFacade<T>) => self.api.fetch(),
+  })
   public async fetch(): Promise<Readonly<ClassicListDeviceData<T>>> {
     const data = await resolved(this.data)
     return data

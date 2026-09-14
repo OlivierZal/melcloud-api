@@ -1,7 +1,7 @@
 import { cast, defined, mock } from '@olivierzal/api-core/testing'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { ClassicAPIAdapter, SyncCallback } from '../../src/api/index.ts'
+import type { SyncCallback } from '../../src/api/index.ts'
 import type { ClassicSetDeviceDataAta } from '../../src/types/index.ts'
 import { classifyError } from '../../src/api/base.ts'
 import {
@@ -125,30 +125,42 @@ const resolveVoid = async (): Promise<void> => {
   await Promise.resolve()
 }
 
-const setupFetchDevices = (
-  options?: Parameters<typeof fetchDevices>[0],
-): {
-  fetchMock: ReturnType<typeof vi.fn<ClassicAPIAdapter['fetch']>>
+const setupFetchDevices = (options?: {
+  when?: 'after' | 'before'
+}): {
+  host: {
+    logger: { error: ReturnType<typeof vi.fn>; log: ReturnType<typeof vi.fn> }
+  }
+  refresh: ReturnType<typeof vi.fn<() => Promise<void>>>
   target: ReturnType<typeof vi.fn<(...args: unknown[]) => Promise<unknown>>>
   invoke: () => Promise<unknown>
 } => {
-  const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockResolvedValue([])
+  const refresh = vi.fn<() => Promise<void>>().mockResolvedValue()
   const target = vi
     .fn<(...args: unknown[]) => Promise<unknown>>()
     .mockResolvedValue('result')
-  const decorated = fetchDevices(options)(
+  const decorated = fetchDevices({ refresh, ...options })(
     target,
     mock<ClassMethodDecoratorContext>(),
   )
-  const context = { api: mock<ClassicAPIAdapter>({ fetch: fetchMock }) }
-  return { fetchMock, target, invoke: async () => decorated.call(context) }
+  const host = {
+    logger: {
+      error: vi.fn<(...args: unknown[]) => void>(),
+      log: vi.fn<(...args: unknown[]) => void>(),
+    },
+  }
+  return { host, refresh, target, invoke: async () => decorated.call(host) }
 }
 
 describe(fetchDevices, () => {
   it.each([
-    { first: 'fetch' as const, label: 'default (before)', options: undefined },
     {
-      first: 'fetch' as const,
+      first: 'refresh' as const,
+      label: 'default (before)',
+      options: undefined,
+    },
+    {
+      first: 'refresh' as const,
       label: 'when=before',
       options: { when: 'before' as const },
     },
@@ -158,94 +170,55 @@ describe(fetchDevices, () => {
       options: { when: 'after' as const },
     },
   ])(
-    'invokes api.fetch and target in the correct order: $label',
+    'invokes the refresh and the target in the correct order: $label',
     async ({ first, options }) => {
-      const { fetchMock, invoke, target } = setupFetchDevices(options)
+      const { invoke, refresh, target } = setupFetchDevices(options)
       await invoke()
 
       const orders = {
-        fetch: defined(fetchMock.mock.invocationCallOrder[0]),
+        refresh: defined(refresh.mock.invocationCallOrder[0]),
         target: defined(target.mock.invocationCallOrder[0]),
       }
 
-      expect(Math.min(orders.fetch, orders.target)).toBe(orders[first])
+      expect(Math.min(orders.refresh, orders.target)).toBe(orders[first])
     },
   )
 
-  it('prefers syncRegistry() over api.fetch() when both are exposed', async () => {
-    const syncRegistry = vi.fn<() => Promise<void>>().mockResolvedValue()
-    const fetchMock = vi.fn<ClassicAPIAdapter['fetch']>().mockResolvedValue([])
-    const target = vi
-      .fn<(...args: unknown[]) => Promise<unknown>>()
-      .mockResolvedValue('result')
-    const decorated = fetchDevices({ when: 'after' })(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
-    const context = {
-      api: mock<ClassicAPIAdapter>({ fetch: fetchMock }),
-      syncRegistry,
-    }
-    await decorated.call(context)
+  it('hands the host to the refresh', async () => {
+    const { host, invoke, refresh } = setupFetchDevices()
+    await invoke()
 
-    expect(syncRegistry).toHaveBeenCalledTimes(1)
-    expect(fetchMock).not.toHaveBeenCalled()
+    expect(refresh).toHaveBeenCalledExactlyOnceWith(host)
   })
 
-  it('throws TypeError when host exposes neither syncRegistry nor api.fetch (when=before)', async () => {
-    const target = vi
-      .fn<(...args: unknown[]) => Promise<unknown>>()
-      .mockResolvedValue('result')
-    const decorated = fetchDevices({ when: 'before' })(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
+  it('propagates a refresh failure before the call, leaving the target uncalled', async () => {
+    const { invoke, refresh, target } = setupFetchDevices()
+    refresh.mockRejectedValue(new Error('sync boom'))
 
-    await expect(decorated.call({})).rejects.toThrow(TypeError)
+    await expect(invoke()).rejects.toThrow('sync boom')
     expect(target).not.toHaveBeenCalled()
   })
 
-  it('logs and swallows when host exposes neither (when=after)', async () => {
-    const logError = vi.fn<(...args: unknown[]) => void>()
-    const target = vi
-      .fn<(...args: unknown[]) => Promise<unknown>>()
-      .mockResolvedValue('result')
-    const decorated = fetchDevices({ when: 'after' })(
-      target,
-      mock<ClassMethodDecoratorContext>(),
-    )
-
-    await expect(
-      decorated.call({
-        logger: { error: logError, log: vi.fn<(...args: unknown[]) => void>() },
-      }),
-    ).resolves.toBe('result')
-    expect(logError).toHaveBeenCalledWith(
-      'Failed to refresh registry after mutation:',
-      expect.any(TypeError),
-    )
-  })
-
-  it('logs via logger.error when when=after and sync throws', async () => {
-    const target = vi
-      .fn<(...args: unknown[]) => Promise<unknown>>()
-      .mockResolvedValue('result')
-    const syncRegistry = vi
+  it('swallows an after-refresh failure silently on a host with no logger', async () => {
+    const refresh = vi
       .fn<() => Promise<void>>()
       .mockRejectedValue(new Error('sync boom'))
-    const logger = {
-      error: vi.fn<(...args: unknown[]) => void>(),
-      log: vi.fn<(...args: unknown[]) => void>(),
-    }
-    const decorated = fetchDevices({ when: 'after' })(
-      target,
+    const decorated = fetchDevices({ refresh, when: 'after' })(
+      vi
+        .fn<(...args: unknown[]) => Promise<unknown>>()
+        .mockResolvedValue('result'),
       mock<ClassMethodDecoratorContext>(),
     )
 
-    await expect(decorated.call({ logger, syncRegistry })).resolves.toBe(
-      'result',
-    )
-    expect(logger.error).toHaveBeenCalledWith(
+    await expect(decorated.call({})).resolves.toBe('result')
+  })
+
+  it('logs via logger.error when when=after and the refresh throws', async () => {
+    const { host, invoke, refresh } = setupFetchDevices({ when: 'after' })
+    refresh.mockRejectedValue(new Error('sync boom'))
+
+    await expect(invoke()).resolves.toBe('result')
+    expect(host.logger.error).toHaveBeenCalledExactlyOnceWith(
       'Failed to refresh registry after mutation:',
       expect.any(Error),
     )

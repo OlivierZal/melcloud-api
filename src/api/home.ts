@@ -298,7 +298,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * single account's devices.
    * @param postData - Bounds, on/off flag, and target device ids.
    */
-  @fetchDevices({ when: 'after' })
+  @fetchDevices({
+    when: 'after',
+    refresh: async (self: HomeAPI) => self.syncRegistry(),
+  })
   public async updateFrostProtection(
     postData: HomeFrostProtectionPostData,
   ): Promise<void> {
@@ -311,7 +314,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * {@link updateFrostProtection}; only the window fields and path differ.
    * @param postData - Window bounds, on/off flag, and target device ids.
    */
-  @fetchDevices({ when: 'after' })
+  @fetchDevices({
+    when: 'after',
+    refresh: async (self: HomeAPI) => self.syncRegistry(),
+  })
   public async updateHolidayMode(
     postData: HomeHolidayModePostData,
   ): Promise<void> {
@@ -325,7 +331,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * posts `units.ATA` exclusively).
    * @param postData - Bounds, on/off flag, and target ATA device ids.
    */
-  @fetchDevices({ when: 'after' })
+  @fetchDevices({
+    when: 'after',
+    refresh: async (self: HomeAPI) => self.syncRegistry(),
+  })
   public async updateOverheatProtection(
     postData: HomeOverheatProtectionPostData,
   ): Promise<void> {
@@ -521,9 +530,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * server state is presumed unchanged, so a re-fetch would be wasted
    * work. The mutation + post-sync orchestration lives in
    * `#putAtaAndSync`/`#putAtwAndSync`, where
-   * `@fetchDevices({ when: 'after' })` applies the same
-   * post-mutation-refresh contract as Classic facades — just resolved
-   * via `syncRegistry()` instead of `api.fetch()`.
+   * `@fetchDevices({ refresh, when: 'after' })` applies the same
+   * post-mutation-refresh contract as Classic facades — the refresh
+   * here being `syncRegistry()` instead of `api.fetch()`.
    * @param id - Target device id.
    * @param values - Partial setpoint payload matching the unit's
    * connection type — the shape is the caller's contract: the BFF
@@ -726,7 +735,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   /**
    * Core of {@link updateValues}: perform the PUT and, on success,
    * trigger a post-mutation registry refresh via
-   * `@fetchDevices({ when: 'after' })`. Throws on PUT failure so the
+   * `@fetchDevices({ refresh, when: 'after' })`. Throws on PUT failure so the
    * decorator skips the sync (failed mutation → server state
    * unchanged → re-fetch wasted). Sync failures after a successful
    * PUT are logged and swallowed by the decorator itself, preserving
@@ -734,7 +743,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
    */
-  @fetchDevices({ when: 'after' })
+  @fetchDevices({
+    when: 'after',
+    refresh: async (self: HomeAPI) => self.syncRegistry(),
+  })
   private async putAtaAndSync(
     id: string,
     values: HomeAtaValues,
@@ -748,7 +760,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
    */
-  @fetchDevices({ when: 'after' })
+  @fetchDevices({
+    when: 'after',
+    refresh: async (self: HomeAPI) => self.syncRegistry(),
+  })
   private async putAtwAndSync(
     id: string,
     values: HomeAtwValues,
