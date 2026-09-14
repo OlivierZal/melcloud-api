@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- **BREAKING — `ClassicFacadeManager.get` drops its four typed optional mirrors.** The manager now ships the shape its Home and heatzy twins have always had: the typed required overloads (`ClassicDevice<T>`, area/floor, building, `ClassicDeviceAny`, `ClassicModel`), `get(): null`, and one optional catch-all `get(instance?: ClassicModel): ClassicFacade | null`. A caller passing a value that may be `undefined` used to get the matching typed facade `| null` back; it now gets `ClassicFacade | null` and narrows itself (`isClassicDeviceFacade`, or resolve the model first and call the required overload). Passing a defined model is unchanged, and so is `getById`, which is how com.melcloud resolves every facade. Nothing runs differently — the eleven overloads shared one implementation.
+- **BREAKING — `ClassicFacadeManager.get` drops its four typed optional mirrors.** The manager now ships the shape its Home and heatzy twins have always had: the typed required overloads (`ClassicDevice<T>`, area/floor, building, `ClassicDeviceAny`, `ClassicModel`), `get(): null`, and one optional catch-all `get(instance?: ClassicModel): ClassicFacade | null`. A caller passing a value that may be `undefined` used to get the matching typed facade `| null` back; it now gets `ClassicFacade | null` and narrows itself (the per-type guards `isClassicAtaFacade`, `isClassicAtwFacade` and `isClassicErvFacade`, or resolve the model first and call the required overload). Passing a defined model is unchanged, and so is `getById`, which is how com.melcloud resolves every facade. Nothing runs differently — the eleven overloads shared one implementation.
 
 ## [57.3.0] - 2026-09-14
 
