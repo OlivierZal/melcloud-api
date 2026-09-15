@@ -617,9 +617,10 @@ whenever an overlay changes:
   `require-unicode-regexp` `u` pin over all of `src` (the last two are
   argued under Lint doctrine below).
 - `vitest.config.ts`: the decorator transform pairing (`oxc: false` +
-  `plugins: [swcPlugin]`, the shape the configs README prescribes),
-  `clearMocks`, the coverage `include` (`src/**/*.ts`) and the test
-  `include` (`tests/**/*.test.ts`).
+  `plugins: [swcPlugin]`, the shape the configs README prescribes), the
+  coverage `include` (`src/**/*.ts`) and the test `include`
+  (`tests/**/*.test.ts`). `clearMocks` left the ledger with vitest 5,
+  which clears before every test by default.
 - `tsconfig.json` `outDir`/`include`; `tsconfig.build.json`
   `outDir`/`rootDir`/`include`.
 - `typedoc.config.js`: the identity (name, links, `hostedBaseUrl`,

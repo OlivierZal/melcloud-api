@@ -6,7 +6,6 @@ const config: ViteUserConfig = defineConfig({
   oxc: false,
   plugins: [swcPlugin],
   test: {
-    clearMocks: true,
     coverage: { ...coverageDefaults, include: ['src/**/*.ts'] },
     include: ['tests/**/*.test.ts'],
   },
