@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [59.0.0] - 2026-09-17
+
+### Changed
+
+- **BREAKING — `HomeDeviceConnectedInterfaceType` is an open `string`.** It was the closed union `'fourthGenWifi' | 'melCloudWiFi'`, and `HomeAtaDeviceDataSchema` refused any other value. Nothing in the SDK or in com.melcloud reads the field, yet a unit on the next adapter family would have failed the strict `/context` schema: the salvage parse pruned it from the registry, and the drift line was logged on every fetch for as long as the family stayed unknown. heatzy-api 19.0.0 fixed the same shape on its wire, where it had already broken every Glow, Onyx, Shine, calibrated Pro and V1 radiator: a read checks the wire's types, and new vocabulary never breaks a consumer's sync. The two known values stay documented on the type. A consumer that narrowed on the union now compares against the strings itself.
+
+### Fixed
+
+- **A refused payload prints its issues once.** `parseOrThrow` interpolated the ZodError's message, the JSON of every issue, into its own message while also attaching that ZodError as `cause`, so a logged `ValidationError` printed the issue list twice. The message now names the failing paths (`Invalid API response shape (GET /context): buildings.0.id`, `(root)` for the payload itself) and the issues stay in the `cause`. No received value is named: the login, token and `/context` payloads carry credentials and personal data.
+
 ## [58.0.0] - 2026-09-14
 
 ### Changed
@@ -838,6 +848,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[59.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v58.0.0...v59.0.0
 [58.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.3.0...v58.0.0
 [57.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.2.1...v57.3.0
 [57.2.1]: https://github.com/OlivierZal/melcloud-api/compare/v57.2.0...v57.2.1

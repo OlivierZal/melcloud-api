@@ -170,10 +170,10 @@ const HomeAtaDeviceDataSchema: z.ZodType<HomeAtaDeviceData> = z.looseObject({
   ...HomeDeviceCommonFields,
   capabilities: HomeAtaCapabilitiesSchema,
   connectedInterfaceIdentifier: z.string(),
-  connectedInterfaceType: z.union([
-    z.literal('fourthGenWifi'),
-    z.literal('melCloudWiFi'),
-  ]),
+  // A label, not a vocabulary: nothing reads it, and a closed literal
+  // made the next adapter family a strict-schema drift that salvaged
+  // the unit away and logged the drift on every /context fetch.
+  connectedInterfaceType: z.string(),
   systemId: z.string().nullable(),
   unitSettings: z.looseObject({}).nullable(),
 })
@@ -602,11 +602,17 @@ export const ClassicEnergyDataSchema: z.ZodType<
   ClassicEnergyDataAta | ClassicEnergyDataAtw
 > = z.union([ClassicEnergyDataAtaSchema, ClassicEnergyDataAtwSchema])
 
+const describeIssuePath = (path: readonly PropertyKey[]): string => {
+  const label = path.map(String).join('.')
+  return label === '' ? '(root)' : label
+}
+
 /**
  * Parse `data` against `schema`; throw {@link ValidationError} on
- * mismatch. The underlying ZodError is attached via `cause` so
- * downstream observers can inspect the field path breakdown without
- * re-parsing the message string.
+ * mismatch. The message names each failing path; the full issue list
+ * stays in the ZodError `cause`, so a logged error prints it once. No
+ * received value is named: the login, token and `/context` payloads
+ * carry credentials and personal data.
  * @param schema - Zod schema to validate against.
  * @param data - Untrusted data from an upstream API response.
  * @param context - Short label surfaced in the thrown error message.
@@ -620,8 +626,11 @@ export const parseOrThrow = <T>(
 ): T => {
   const result = schema.safeParse(data)
   if (!result.success) {
+    const paths = result.error.issues
+      .map(({ path }) => describeIssuePath(path))
+      .join(', ')
     throw new ValidationError(
-      `Invalid API response shape (${context}): ${result.error.message}`,
+      `Invalid API response shape (${context}): ${paths}`,
       { cause: result.error, context },
     )
   }

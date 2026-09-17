@@ -2435,6 +2435,38 @@ describe('melcloud home API', () => {
       expect(api.registry.getDevices()).toHaveLength(2)
     })
 
+    it('keeps a unit on an unseen adapter family without logging drift', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValueOnce(
+        mockResponse(
+          {
+            ...mockContext,
+            guestBuildings: [
+              {
+                ...mockBuilding,
+                airToAirUnits: [
+                  { ...validAtaUnit, connectedInterfaceType: 'fifthGenWifi' },
+                ],
+              },
+            ],
+          },
+          {},
+          200,
+        ),
+      )
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+
+      expect(api.registry.getById(validAtaUnit.id)).toBeDefined()
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
     it('keeps the full registry when only metadata drifts', async () => {
       const { settingManager } = persistedSessionStore()
       mockRequest.mockResolvedValueOnce(

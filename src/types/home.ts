@@ -276,12 +276,14 @@ export interface HomeDeviceCommonData {
 }
 
 /**
- * WiFi adapter family reported by the MELCloud Home BFF. `melCloudWiFi`
- * tags the MAC-addressed first-gen adapters; `fourthGenWifi` tags the
- * GUID-addressed fourth-generation adapters.
+ * WiFi adapter family reported by the MELCloud Home BFF. The values seen
+ * so far are `melCloudWiFi`, the MAC-addressed first-gen adapters, and
+ * `fourthGenWifi`, the GUID-addressed fourth-generation adapters. Typed
+ * as an open string: the next adapter family must read as a new label,
+ * never as a payload the SDK refuses.
  * @category Types
  */
-export type HomeDeviceConnectedInterfaceType = 'fourthGenWifi' | 'melCloudWiFi'
+export type HomeDeviceConnectedInterfaceType = string
 
 /**
  * Wire-format MELCloud Home device entry; either an ATA or ATW unit.
