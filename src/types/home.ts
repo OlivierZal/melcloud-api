@@ -45,7 +45,13 @@ export interface HomeAtaDeviceCapabilities {
 export interface HomeAtaDeviceData extends HomeDeviceCommonData {
   readonly capabilities: HomeAtaDeviceCapabilities
   readonly connectedInterfaceIdentifier: string
-  readonly connectedInterfaceType: HomeDeviceConnectedInterfaceType
+  /**
+   * WiFi adapter family. Seen so far: `melCloudWiFi` (MAC-addressed
+   * first-gen adapters) and `fourthGenWifi` (GUID-addressed
+   * fourth-generation adapters). An open string: the next family must
+   * read as a new label, never as a payload the SDK refuses.
+   */
+  readonly connectedInterfaceType: string
   readonly systemId: string | null
   readonly unitSettings: Readonly<Record<string, unknown>> | null
 }
@@ -274,16 +280,6 @@ export interface HomeDeviceCommonData {
   readonly settings: HomeDeviceSetting[]
   readonly timeZone: string
 }
-
-/**
- * WiFi adapter family reported by the MELCloud Home BFF. The values seen
- * so far are `melCloudWiFi`, the MAC-addressed first-gen adapters, and
- * `fourthGenWifi`, the GUID-addressed fourth-generation adapters. Typed
- * as an open string: the next adapter family must read as a new label,
- * never as a payload the SDK refuses.
- * @category Types
- */
-export type HomeDeviceConnectedInterfaceType = string
 
 /**
  * Wire-format MELCloud Home device entry; either an ATA or ATW unit.

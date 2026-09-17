@@ -196,6 +196,52 @@ describe('validation/schemas', () => {
       )
     })
 
+    it('names a path once when several checks fail on it', () => {
+      expect(() =>
+        parseOrThrow(
+          z.object({ hour: z.number().max(23).int() }),
+          { hour: 30.5 },
+          'ctx',
+        ),
+      ).toThrow(/^Invalid API response shape \(ctx\): hour$/v)
+    })
+
+    it('names where a refused union diverged, through its closest branch', () => {
+      const schema = z.object({
+        outer: z.union([
+          z.object({ first: z.number(), second: z.number() }),
+          z.object({ label: z.string(), value: z.string() }),
+        ]),
+      })
+
+      expect(() =>
+        parseOrThrow(schema, { outer: { label: 'x', value: 1 } }, 'ctx'),
+      ).toThrow(/^Invalid API response shape \(ctx\): outer\.value$/v)
+    })
+
+    it('names the first branch when the union branches are equally close', () => {
+      const schema = z.union([
+        z.object({ first: z.number() }),
+        z.object({ label: z.string() }),
+      ])
+
+      expect(() => parseOrThrow(schema, {}, 'ctx')).toThrow(
+        /^Invalid API response shape \(ctx\): first$/v,
+      )
+    })
+
+    it('names the refused field of an energy report', () => {
+      expect(() =>
+        parseOrThrow(
+          ClassicEnergyDataSchema,
+          { ...validClassicEnergyAta, LabelType: 5 },
+          'POST /EnergyCost/Report',
+        ),
+      ).toThrow(
+        /^Invalid API response shape \(POST \/EnergyCost\/Report\): LabelType$/v,
+      )
+    })
+
     it('names the root when the payload itself is refused', () => {
       expect(() => parseOrThrow(z.number(), 'x', 'ctx')).toThrow(
         'Invalid API response shape (ctx): (root)',

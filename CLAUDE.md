@@ -308,12 +308,16 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   It is a `string` now. heatzy-api shipped that exact shape for two
   months (its 19.0.0: closed literals on calibration and mode registers
   broke every radiator of three generations). A closed literal stays
-  legitimate where the value drives a branch: the Classic `Type`
-  discriminator, `LabelType`, the OAuth `token_type`. `parseOrThrow`
-  names the failing PATHS only, never the received values (the login,
-  token and `/context` payloads carry credentials and personal data),
-  and leaves the issues to the ZodError `cause`, so a logged error
-  prints them once.
+  legitimate where the SDK depends on the value: the Classic `Type`
+  discriminator, `LabelType` (the label formatters cannot render an
+  unknown one), and the OAuth `token_type` — nothing reads it, but it
+  guards the hard-coded `Bearer` authorization header against a server
+  that switched schemes. `parseOrThrow` names the failing PATHS only —
+  for a refused union, its closest branch's, since the union's own path
+  is `(root)` for the energy report — never the received values (the
+  login, token and `/context` payloads carry credentials and personal
+  data), and leaves the issues to the ZodError `cause`, so a logged
+  error prints them once.
 - Timestamp normalization is library-owned: `ErrorLogEntry.atEpochMs`
   (+ its `clearedAtEpochMs` twin),
   `AtwHotWaterState.lastLegionellaActivationEpochMs` and

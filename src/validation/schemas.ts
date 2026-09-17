@@ -607,10 +607,40 @@ const describeIssuePath = (path: readonly PropertyKey[]): string => {
   return label === '' ? '(root)' : label
 }
 
+// The branch with the fewest issues, the first on a tie: the one the
+// payload came closest to.
+const closestBranch = (
+  branches: readonly (readonly z.core.$ZodIssue[])[],
+): readonly z.core.$ZodIssue[] => {
+  let closest: readonly z.core.$ZodIssue[] = []
+  for (const branch of branches) {
+    if (closest.length === 0 || branch.length < closest.length) {
+      closest = branch
+    }
+  }
+  return closest
+}
+
+// A refused union holds one issue list per branch, and its own path
+// names only the container: `(root)` for the energy report, whose two
+// shapes are a top-level union. The closest branch's paths say where
+// the payload diverged.
+const collectIssuePaths = (
+  issues: readonly z.core.$ZodIssue[],
+  prefix: readonly PropertyKey[] = [],
+): (readonly PropertyKey[])[] =>
+  issues.flatMap((issue) => {
+    const path = [...prefix, ...issue.path]
+    const branch =
+      issue.code === 'invalid_union' ? closestBranch(issue.errors) : []
+    return branch.length === 0 ? [path] : collectIssuePaths(branch, path)
+  })
+
 /**
  * Parse `data` against `schema`; throw {@link ValidationError} on
- * mismatch. The message names each failing path; the full issue list
- * stays in the ZodError `cause`, so a logged error prints it once. No
+ * mismatch. The message names each failing path once — for a refused
+ * union, the paths of its closest branch; the full issue list stays in
+ * the ZodError `cause`, so a logged error prints it once. No
  * received value is named: the login, token and `/context` payloads
  * carry credentials and personal data.
  * @param schema - Zod schema to validate against.
@@ -626,9 +656,13 @@ export const parseOrThrow = <T>(
 ): T => {
   const result = schema.safeParse(data)
   if (!result.success) {
-    const paths = result.error.issues
-      .map(({ path }) => describeIssuePath(path))
-      .join(', ')
+    const paths = [
+      ...new Set(
+        collectIssuePaths(result.error.issues).map((path) =>
+          describeIssuePath(path),
+        ),
+      ),
+    ].join(', ')
     throw new ValidationError(
       `Invalid API response shape (${context}): ${paths}`,
       { cause: result.error, context },
