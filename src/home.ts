@@ -26,7 +26,6 @@ export {
   type HomeContext as Context,
   type HomeDeviceCapabilities as DeviceCapabilities,
   type HomeDeviceCommonData as DeviceCommonData,
-  type HomeDeviceConnectedInterfaceType as DeviceConnectedInterfaceType,
   type HomeDeviceData as DeviceData,
   type HomeDeviceFacadeAny as DeviceFacadeAny,
   type HomeDeviceScheduleEntry as DeviceScheduleEntry,

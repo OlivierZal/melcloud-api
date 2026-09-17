@@ -103,7 +103,6 @@ export type {
   HomeContext,
   HomeDeviceCapabilities,
   HomeDeviceCommonData,
-  HomeDeviceConnectedInterfaceType,
   HomeDeviceData,
   HomeDeviceScheduleEntry,
   HomeDeviceSetting,

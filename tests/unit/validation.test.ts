@@ -23,6 +23,18 @@ import {
   defaultHomeAtwCapabilities,
 } from '../home-fixtures.ts'
 
+const captureValidationError = (act: () => unknown): ValidationError => {
+  try {
+    act()
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return error
+    }
+    throw error
+  }
+  throw new Error('Expected a ValidationError')
+}
+
 // A listing entry the boundary keeps, so an override names exactly the
 // one field under test.
 const modelledEntry = (
@@ -166,13 +178,74 @@ describe('validation/schemas', () => {
       expect(result).toStrictEqual({ value: 1 })
     })
 
-    it('throws a ValidationError whose message interpolates the context', () => {
+    it('throws a ValidationError naming the failing paths once, with the issues in its cause', () => {
+      const schema = z.object({
+        nested: z.object({ label: z.string() }),
+        value: z.number(),
+      })
+      const data = { nested: { label: 7 }, value: 'secret' }
+
+      const error = captureValidationError(() =>
+        parseOrThrow(schema, data, 'ctx'),
+      )
+
+      expect(error.context).toBe('ctx')
+      expect(error.cause).toBeInstanceOf(z.ZodError)
+      expect(error.message).toBe(
+        'Invalid API response shape (ctx): nested.label, value',
+      )
+    })
+
+    it('names a path once when several checks fail on it', () => {
       expect(() =>
-        parseOrThrow(z.object({ value: z.number() }), { value: 'x' }, 'ctx'),
-      ).toThrow(ValidationError)
+        parseOrThrow(
+          z.object({ hour: z.number().max(23).int() }),
+          { hour: 30.5 },
+          'ctx',
+        ),
+      ).toThrow(/^Invalid API response shape \(ctx\): hour$/v)
+    })
+
+    it('names where a refused union diverged, through its closest branch', () => {
+      const schema = z.object({
+        outer: z.union([
+          z.object({ first: z.number(), second: z.number() }),
+          z.object({ label: z.string(), value: z.string() }),
+        ]),
+      })
+
       expect(() =>
-        parseOrThrow(z.object({ value: z.number() }), { value: 'x' }, 'ctx'),
-      ).toThrow(/Invalid API response shape \(ctx\)/v)
+        parseOrThrow(schema, { outer: { label: 'x', value: 1 } }, 'ctx'),
+      ).toThrow(/^Invalid API response shape \(ctx\): outer\.value$/v)
+    })
+
+    it('names the first branch when the union branches are equally close', () => {
+      const schema = z.union([
+        z.object({ first: z.number() }),
+        z.object({ label: z.string() }),
+      ])
+
+      expect(() => parseOrThrow(schema, {}, 'ctx')).toThrow(
+        /^Invalid API response shape \(ctx\): first$/v,
+      )
+    })
+
+    it('names the refused field of an energy report', () => {
+      expect(() =>
+        parseOrThrow(
+          ClassicEnergyDataSchema,
+          { ...validClassicEnergyAta, LabelType: 5 },
+          'POST /EnergyCost/Report',
+        ),
+      ).toThrow(
+        /^Invalid API response shape \(POST \/EnergyCost\/Report\): LabelType$/v,
+      )
+    })
+
+    it('names the root when the payload itself is refused', () => {
+      expect(() => parseOrThrow(z.number(), 'x', 'ctx')).toThrow(
+        'Invalid API response shape (ctx): (root)',
+      )
     })
   })
 
@@ -308,6 +381,29 @@ describe('validation/schemas', () => {
                       endDate: '2026-08-05T00:00:00',
                       startDate: '2026-08-01T00:00:00',
                     },
+                  },
+                ],
+              },
+            ],
+          }),
+        ),
+      ).not.toThrow()
+    })
+
+    // An adapter family is a label nothing reads: the next one must not
+    // turn the unit into strict-schema drift.
+    it('accepts an adapter family it has never seen', () => {
+      expect(() =>
+        HomeContextSchema.parse(
+          buildHomeContext({
+            buildings: [
+              {
+                ...baseHomeBuilding,
+                airToAirUnits: [
+                  {
+                    ...baseHomeAtaDevice,
+                    capabilities: defaultHomeAtaCapabilities,
+                    connectedInterfaceType: 'fifthGenWifi',
                   },
                 ],
               },

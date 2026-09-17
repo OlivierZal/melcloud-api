@@ -300,6 +300,24 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   warning over frozen values, so the report has to say which device
   went stale and why. `inspectClassicListingEntry` owns the verdict;
   `isModelledClassicDevice` stays its boolean face.
+- A READ closes a vocabulary only where the SDK CONSUMES it (59.0.0).
+  Home's `connectedInterfaceType` was the closed pair
+  `fourthGenWifi | melCloudWiFi` on a label nothing reads, so the next
+  adapter family would have failed the strict `/context` parse, been
+  salvaged out of the registry, and logged the drift on every fetch.
+  It is a `string` now. heatzy-api shipped that exact shape for two
+  months (its 19.0.0: closed literals on calibration and mode registers
+  broke every radiator of three generations). A closed literal stays
+  legitimate where the SDK depends on the value: the Classic `Type`
+  discriminator, `LabelType` (the label formatters cannot render an
+  unknown one), and the OAuth `token_type` — nothing reads it, but it
+  guards the hard-coded `Bearer` authorization header against a server
+  that switched schemes. `parseOrThrow` names the failing PATHS only —
+  for a refused union, its closest branch's, since the union's own path
+  is `(root)` for the energy report — never the received values (the
+  login, token and `/context` payloads carry credentials and personal
+  data), and leaves the issues to the ZodError `cause`, so a logged
+  error prints them once.
 - Timestamp normalization is library-owned: `ErrorLogEntry.atEpochMs`
   (+ its `clearedAtEpochMs` twin),
   `AtwHotWaterState.lastLegionellaActivationEpochMs` and
