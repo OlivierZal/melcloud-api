@@ -503,9 +503,11 @@ export abstract class ClassicBaseFacade<
         throwLocationError(result.error)
       }
     }
-    return this.isHolidayModeAtZoneLevel === true
-      ? [{ [this.holidayModeLocation]: [this.id] }]
-      : [{ Devices: this.#deviceIds }]
+    return [
+      this.isHolidayModeAtZoneLevel === true
+        ? { [this.holidayModeLocation]: [this.id] }
+        : { Devices: this.#deviceIds },
+    ]
   }
 
   async #getZoneFrostProtection(): Promise<Result<ClassicFrostProtectionData>> {

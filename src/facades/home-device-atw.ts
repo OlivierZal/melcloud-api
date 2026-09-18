@@ -475,24 +475,20 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     setTemperatureZone2?: number
   } {
     const zone = zoneRange(this.capabilities)
-    const result: {
-      setTankWaterTemperature?: number
-      setTemperatureZone1?: number
-      setTemperatureZone2?: number
-    } = {}
-    if (typeof zone1 === 'number') {
-      result.setTemperatureZone1 = clampToRange(zone1, zone)
+    return {
+      ...(typeof tank === 'number' && {
+        setTankWaterTemperature: clampToRange(
+          tank,
+          tankRange(this.capabilities),
+        ),
+      }),
+      ...(typeof zone1 === 'number' && {
+        setTemperatureZone1: clampToRange(zone1, zone),
+      }),
+      ...(typeof zone2 === 'number' && {
+        setTemperatureZone2: clampToRange(zone2, zone),
+      }),
     }
-    if (typeof zone2 === 'number') {
-      result.setTemperatureZone2 = clampToRange(zone2, zone)
-    }
-    if (typeof tank === 'number') {
-      result.setTankWaterTemperature = clampToRange(
-        tank,
-        tankRange(this.capabilities),
-      )
-    }
-    return result
   }
 
   // Shared pipeline of `getTemperatures` and `getHourlyTemperatures`:

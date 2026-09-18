@@ -955,13 +955,9 @@ describe('mELCloud Classic API', () => {
       mockLoginAndList()
       mockRequest.mockImplementation(async (config) => {
         await Promise.resolve()
-        if (config.url === '/Report/GetUnitErrorLog2') {
-          return wrap([])
-        }
-        if (config.url === '/Login/ClientLogin3') {
-          return classicLoginResponse()
-        }
-        return wrap([])
+        return config.url === '/Login/ClientLogin3'
+          ? classicLoginResponse()
+          : wrap([])
       })
       const result = await api.getErrorLog({})
 

@@ -34,10 +34,9 @@ const createDeviceFacade = (
   if (isClassicDeviceOfType(device, ClassicDeviceType.Ata)) {
     return new ClassicDeviceAtaFacade(api, registry, device)
   }
-  if (isClassicDeviceOfType(device, ClassicDeviceType.Atw)) {
-    return new ClassicDeviceAtwFacade(api, registry, device)
-  }
-  return new ClassicDeviceErvFacade(api, registry, device)
+  return isClassicDeviceOfType(device, ClassicDeviceType.Atw)
+    ? new ClassicDeviceAtwFacade(api, registry, device)
+    : new ClassicDeviceErvFacade(api, registry, device)
 }
 
 /**
