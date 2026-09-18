@@ -224,6 +224,27 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   the ONE vocabulary — `owneremail` is there because the Classic list
   payload carries the account address on every device of every
   successful sync, the single entry that blanks a routine 200.
+- **A unit's capability rides a FLAG in a uniform payload, never the
+  payload's shape — which is why heatzy-api's type-level fix does not
+  cross here.** Every Classic ATW answers the same keys: the Zone 2
+  fields are declared on all of them (`FlowTemperatureZone2`,
+  `RoomTemperatureZone2`, `SetTemperatureZone2`…) and `HasZone2` says
+  whether they mean anything, exactly as `CanCool`, `FPDefined` and
+  `HMDefined` do for their own features. So the capability is DATA read
+  per unit at runtime, and the honest expression is what this SDK
+  already does: a nullable read (`zone2` answers `null` on a
+  single-zone unit, `classic-device-atw.ts`) and runtime guards on the
+  write path. heatzy-api 20.0.0 could put the equivalent capability in
+  its TYPES — the presence derogation moved to `DeviceProFacade` alone —
+  because its wire is the opposite: the KEYS and the value encodings
+  differ per product generation (`cft_temp` against
+  `cft_tempH`/`cft_tempL`, a label against a number), over a product
+  identity resolved once at construction and already shaped as a facade
+  class hierarchy. Making `HasZone2` a type here would take a per-unit
+  generic over a single facade class — a far larger change than the one
+  it would mirror, and one nothing has asked for. Recorded so the twin
+  question is answered rather than re-opened: the fix does not cross,
+  and the reason is the wire's shape.
 - `FPDefined`/`HMDefined` are DECLARATIONS, not guarantees: MELCloud
   can refuse the zone-level read the flag promises (measured
   2026-08-26 — a shared building's zone-level `GetSettings` answers
