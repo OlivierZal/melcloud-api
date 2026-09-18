@@ -739,10 +739,11 @@ const sumModeDurations = (
       toEpochMilliseconds(annotation.xMax),
       window.to.epochMilliseconds,
     )
-    if (max > min) {
-      const mode = toModeName(annotation.label)
-      durations.set(mode, (durations.get(mode) ?? 0) + (max - min) / MS_PER_DAY)
+    if (max <= min) {
+      continue
     }
+    const mode = toModeName(annotation.label)
+    durations.set(mode, (durations.get(mode) ?? 0) + (max - min) / MS_PER_DAY)
   }
   return durations
 }

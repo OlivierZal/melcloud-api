@@ -590,10 +590,9 @@ const homeSignInRefusal = (login: Exclude<LoginOutcome, 'accept'>): unknown => {
       url: HOME_TOKEN_PATH,
     })
   }
-  if (login === 'unreachable') {
-    return createServerError(UNAVAILABLE_STATUS, HOME_TOKEN_PATH)
-  }
-  return createUnauthorizedError(HOME_TOKEN_PATH)
+  return login === 'unreachable'
+    ? createServerError(UNAVAILABLE_STATUS, HOME_TOKEN_PATH)
+    : createUnauthorizedError(HOME_TOKEN_PATH)
 }
 
 const stageHomeSignIn = (login: LoginOutcome | undefined): void => {

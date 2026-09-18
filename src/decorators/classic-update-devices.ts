@@ -114,11 +114,10 @@ export const convertToListDeviceData = <T extends ClassicDeviceType>(
         )
   return typedFromEntries<Partial<ClassicListDeviceData<T>>>(
     type === ClassicDeviceType.Ata
-      ? entries.map(([key, value]) =>
-          isSetDeviceDataAtaNotInList(key)
-            ? [fromSetToListAta[key], value]
-            : [key, value],
-        )
+      ? entries.map(([key, value]) => [
+          isSetDeviceDataAtaNotInList(key) ? fromSetToListAta[key] : key,
+          value,
+        ])
       : entries,
   )
 }

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [59.1.0] - 2026-09-18
+
+### Changed
+
+- **The exact `@olivierzal/api-core` pin advances to 1.8.0: a repeated failure is ONE event in the log.** A call that keeps failing and a registry cycle that keeps failing were each written once per attempt — at this SDK's five-minute cadence that is 288 cycle lines a day, and heatzy's five-second one turned the same shape into 34,560. The core now reports a failure when its streak opens, when its reason changes and at most every five minutes while it stands, then closes it with one line counting the episode. Home's `logError` override still silences the expected `/context` 404 — its error ENTRY; the recovery line follows the pipeline's own verdict, as api-core's README now states. Behaviour only, so the adoption is the pin.
+- **The exact `@olivierzal/configs` pin advances to 6.4.1** (unicorn 75, jsdoc 64.5, `prefer-ternary` bounded to single-line expressions). Seven sites adapt to the widened rules: an object built by conditional spreads rather than by immediate mutation, an early `continue`, and five ternaries.
+
 ## [59.0.0] - 2026-09-17
 
 ### Changed
@@ -848,6 +855,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[59.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.0.0...v59.1.0
 [59.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v58.0.0...v59.0.0
 [58.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.3.0...v58.0.0
 [57.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.2.1...v57.3.0
