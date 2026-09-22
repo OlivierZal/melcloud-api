@@ -637,6 +637,21 @@ const collectIssuePaths = (
   })
 
 /**
+ * The paths a payload was refused at, each once — for a refused union,
+ * the paths of its closest branch. No received value: this is what a
+ * message and a streak's identity may carry when the payload holds
+ * credentials or personal data.
+ * @param error - The refusal.
+ * @returns The failing paths, joined.
+ */
+export const describeRefusedPaths = (error: z.ZodError): string =>
+  [
+    ...new Set(
+      collectIssuePaths(error.issues).map((path) => describeIssuePath(path)),
+    ),
+  ].join(', ')
+
+/**
  * Parse `data` against `schema`; throw {@link ValidationError} on
  * mismatch. The message names each failing path once — for a refused
  * union, the paths of its closest branch; the full issue list stays in
@@ -656,15 +671,8 @@ export const parseOrThrow = <T>(
 ): T => {
   const result = schema.safeParse(data)
   if (!result.success) {
-    const paths = [
-      ...new Set(
-        collectIssuePaths(result.error.issues).map((path) =>
-          describeIssuePath(path),
-        ),
-      ),
-    ].join(', ')
     throw new ValidationError(
-      `Invalid API response shape (${context}): ${paths}`,
+      `Invalid API response shape (${context}): ${describeRefusedPaths(result.error)}`,
       { cause: result.error, context },
     )
   }

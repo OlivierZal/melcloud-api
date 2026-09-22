@@ -1,3 +1,4 @@
+import { FAILURE_REMINDER_INTERVAL_MS } from '@olivierzal/api-core'
 import {
   cast,
   createHttpError,
@@ -498,6 +499,9 @@ describe('melcloud home API', () => {
       expect(api.context).toBeNull()
       expect(api.isAuthenticated()).toBe(true)
       expect(logger.log).toHaveBeenCalledWith('[Home]', NO_HOME_LOG)
+      // The expected 404's error entry stays silent under the core's
+      // streaks; only the marker line above says anything.
+      expect(logger.error).not.toHaveBeenCalled()
     })
 
     it('states the situation once, not on every poll', async () => {
@@ -590,6 +594,10 @@ describe('melcloud home API', () => {
       expect(api.isAuthenticated()).toBe(true)
       expect(api.context).not.toBeNull()
       expect(logger.log).not.toHaveBeenCalledWith('[Home]', NO_HOME_LOG)
+      // Two lines, both owed: the pipeline's error entry, which the
+      // override lets through for any endpoint but `/context`, and
+      // `safeRequest`'s own line for the failed `Result`.
+      expect(logger.error).toHaveBeenCalledTimes(2)
     })
 
     it('reads unauthenticated after logging out', async () => {
@@ -2433,6 +2441,145 @@ describe('melcloud home API', () => {
       )
       expect(api.registry.getById('device-3')).toBeUndefined()
       expect(api.registry.getDevices()).toHaveLength(2)
+    })
+
+    // 1,440 fetches a day at Home's one-minute default cadence: a drift
+    // that lasts is one event, keyed on its refused paths, closed when
+    // the strict parse holds again. The window rides `performance.now()`;
+    // a jump past it stands in for the wait.
+    const driftingContext = (
+      unit: Record<string, unknown>,
+    ): ReturnType<typeof mockResponse> =>
+      mockResponse(
+        {
+          ...mockContext,
+          guestBuildings: [
+            {
+              ...mockBuilding,
+              airToAirUnits: [validAtaUnit, { ...validAtaUnit, ...unit }],
+            },
+          ],
+        },
+        {},
+        200,
+      )
+    const weakUnit = { id: 'device-3', rssi: 'weak' }
+
+    it('reports a lasting drift once per streak and closes it when the strict parse holds again', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+      await api.fetch()
+      await api.fetch()
+
+      expect(logger.error).toHaveBeenCalledTimes(1)
+
+      mockRequest.mockResolvedValue(mockResponse(mockContext, {}, 200))
+      await api.fetch()
+
+      expect(logger.log).toHaveBeenCalledWith(
+        '[Home]',
+        'Home context matches the strict schema again after 3 drifting fetches',
+      )
+      expect(api.registry.getById('device-3')).toBeUndefined()
+    })
+
+    it('counts a single drifting fetch in the singular', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+      mockRequest.mockResolvedValue(mockResponse(mockContext, {}, 200))
+      await api.fetch()
+
+      expect(logger.log).toHaveBeenCalledWith(
+        '[Home]',
+        'Home context matches the strict schema again after 1 drifting fetch',
+      )
+    })
+
+    it('reminds of a lasting drift once its window elapses', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+      await api.fetch()
+      const start = performance.now()
+      const clock = vi
+        .spyOn(performance, 'now')
+        .mockReturnValue(start + FAILURE_REMINDER_INTERVAL_MS)
+      await api.fetch()
+      clock.mockRestore()
+
+      expect(logger.error).toHaveBeenCalledTimes(2)
+    })
+
+    it('reports a drift again as soon as its refused paths change', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+      await api.fetch()
+      // The same refusal at another index is another path — a listing
+      // that reorders re-reports once, by design.
+      mockRequest.mockResolvedValue(
+        mockResponse(
+          {
+            ...mockContext,
+            guestBuildings: [
+              {
+                ...mockBuilding,
+                airToAirUnits: [{ ...validAtaUnit, ...weakUnit }, validAtaUnit],
+              },
+            ],
+          },
+          {},
+          200,
+        ),
+      )
+      await api.fetch()
+
+      expect(logger.error).toHaveBeenCalledTimes(2)
+    })
+
+    // A sign-out clears the streak with the registry: the next account's
+    // first drift is reported in full, not swallowed by the old window.
+    it('starts a new drift streak after a sign-out', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await createApi({ logger })
+      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      await api.fetch()
+
+      expect(logger.error).toHaveBeenCalledTimes(1)
+
+      api.logOut()
+      setupLoginUntilTokenExchange()
+      stageHomeTokenExchange(mockFetch)
+      await api.authenticate({ password: 'pass', username: 'user@test.com' })
+
+      expect(logger.error).toHaveBeenCalledTimes(2)
     })
 
     it('keeps a unit on an unseen adapter family without logging drift', async () => {

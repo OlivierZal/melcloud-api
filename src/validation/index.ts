@@ -4,6 +4,7 @@ export {
   ClassicBuildingListSchema,
   ClassicEnergyDataSchema,
   ClassicLoginDataSchema,
+  describeRefusedPaths,
   HomeContextSchema,
   HomeEnergyDataSchema,
   HomeErrorLogEntryListSchema,
