@@ -957,14 +957,16 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   // The drift streak's two moves: a strict parse that holds closes it
-  // with one line counting the salvaged fetches; a refusal reports it
-  // when it opens, when its paths change and once per reminder window.
+  // with one line counting the drifting fetches (a fetch whose salvage
+  // threw counts too — the drift is recorded before that parse, so the
+  // line survives it); a refusal reports it when it opens, when its
+  // paths change and once per reminder window.
   #recordDrift(strict: ReturnType<typeof HomeContextSchema.safeParse>): void {
     if (strict.success) {
       const fetches = this.#driftStreaks.close(CONTEXT_DRIFT_SUBJECT)
       if (fetches !== null) {
         this.logger.log(
-          `Home context matches the strict schema again after ${String(fetches)} salvaged fetches`,
+          `Home context matches the strict schema again after ${String(fetches)} drifting ${fetches === 1 ? 'fetch' : 'fetches'}`,
         )
       }
       return

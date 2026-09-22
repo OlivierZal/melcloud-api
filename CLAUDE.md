@@ -323,9 +323,9 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `isModelledClassicDevice` stays its boolean face.
 - The Home drift line is a STREAK, not a line per fetch (59.2.0).
   While `/context` drifts from the strict schema, every fetch salvages
-  the device entries — and used to log the drift each time, 288 lines
-  a day at the five-minute cadence, the figure 59.1.0 ended for the
-  cycle line. The drift is keyed on its refused paths through the
+  the device entries — and used to log the drift each time, 1,440
+  lines a day at Home's one-minute default cadence (five minutes is
+  Classic's), the kind of storm 59.1.0 ended for the cycle line. The drift is keyed on its refused paths through the
   core's `FailureStreaks` (subject `GET /context (strict)`, cleared
   with the registry): reported when it opens, when the paths change,
   at most every five minutes, and closed by one `log` line when the

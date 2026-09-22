@@ -1,3 +1,4 @@
+import { FAILURE_REMINDER_INTERVAL_MS } from '@olivierzal/api-core'
 import {
   cast,
   createHttpError,
@@ -2442,30 +2443,32 @@ describe('melcloud home API', () => {
       expect(api.registry.getDevices()).toHaveLength(2)
     })
 
-    // 288 fetches a day at the five-minute cadence: a drift that lasts
-    // is one event, keyed on its refused paths, closed when the strict
-    // parse holds again.
+    // 1,440 fetches a day at Home's one-minute default cadence: a drift
+    // that lasts is one event, keyed on its refused paths, closed when
+    // the strict parse holds again. The window rides `performance.now()`;
+    // a jump past it stands in for the wait.
+    const driftingContext = (
+      unit: Record<string, unknown>,
+    ): ReturnType<typeof mockResponse> =>
+      mockResponse(
+        {
+          ...mockContext,
+          guestBuildings: [
+            {
+              ...mockBuilding,
+              airToAirUnits: [validAtaUnit, { ...validAtaUnit, ...unit }],
+            },
+          ],
+        },
+        {},
+        200,
+      )
+    const weakUnit = { id: 'device-3', rssi: 'weak' }
+
     it('reports a lasting drift once per streak and closes it when the strict parse holds again', async () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
-      mockRequest.mockResolvedValue(
-        mockResponse(
-          {
-            ...mockContext,
-            guestBuildings: [
-              {
-                ...mockBuilding,
-                airToAirUnits: [
-                  validAtaUnit,
-                  { ...validAtaUnit, id: 'device-3', rssi: 'weak' },
-                ],
-              },
-            ],
-          },
-          {},
-          200,
-        ),
-      )
+      mockRequest.mockResolvedValue(driftingContext(weakUnit))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         logger,
@@ -2482,9 +2485,101 @@ describe('melcloud home API', () => {
 
       expect(logger.log).toHaveBeenCalledWith(
         '[Home]',
-        'Home context matches the strict schema again after 3 salvaged fetches',
+        'Home context matches the strict schema again after 3 drifting fetches',
       )
       expect(api.registry.getById('device-3')).toBeUndefined()
+    })
+
+    it('counts a single drifting fetch in the singular', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+      mockRequest.mockResolvedValue(mockResponse(mockContext, {}, 200))
+      await api.fetch()
+
+      expect(logger.log).toHaveBeenCalledWith(
+        '[Home]',
+        'Home context matches the strict schema again after 1 drifting fetch',
+      )
+    })
+
+    it('reminds of a lasting drift once its window elapses', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+      await api.fetch()
+      const start = performance.now()
+      const clock = vi
+        .spyOn(performance, 'now')
+        .mockReturnValue(start + FAILURE_REMINDER_INTERVAL_MS)
+      await api.fetch()
+      clock.mockRestore()
+
+      expect(logger.error).toHaveBeenCalledTimes(2)
+    })
+
+    it('reports a drift again as soon as its refused paths change', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+      await api.fetch()
+      // The same refusal at another index is another path — a listing
+      // that reorders re-reports once, by design.
+      mockRequest.mockResolvedValue(
+        mockResponse(
+          {
+            ...mockContext,
+            guestBuildings: [
+              {
+                ...mockBuilding,
+                airToAirUnits: [{ ...validAtaUnit, ...weakUnit }, validAtaUnit],
+              },
+            ],
+          },
+          {},
+          200,
+        ),
+      )
+      await api.fetch()
+
+      expect(logger.error).toHaveBeenCalledTimes(2)
+    })
+
+    // A sign-out clears the streak with the registry: the next account's
+    // first drift is reported in full, not swallowed by the old window.
+    it('starts a new drift streak after a sign-out', async () => {
+      setupSuccessfulLogin()
+      const logger = createLogger()
+      const api = await createApi({ logger })
+      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      await api.fetch()
+
+      expect(logger.error).toHaveBeenCalledTimes(1)
+
+      api.logOut()
+      setupLoginUntilTokenExchange()
+      stageHomeTokenExchange(mockFetch)
+      await api.authenticate({ password: 'pass', username: 'user@test.com' })
+
+      expect(logger.error).toHaveBeenCalledTimes(2)
     })
 
     it('keeps a unit on an unseen adapter family without logging drift', async () => {
