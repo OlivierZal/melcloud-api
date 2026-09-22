@@ -327,8 +327,9 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   adapter family would have failed the strict `/context` parse, been
   salvaged out of the registry, and logged the drift on every fetch.
   It is a `string` now. heatzy-api shipped that exact shape for two
-  months (its 19.0.0: closed literals on calibration and mode registers
-  broke every radiator of three generations). A closed literal stays
+  months (from its 10.0.0 rewrite until 19.0.0: closed literals on
+  calibration and mode registers broke every radiator of three
+  generations). A closed literal stays
   legitimate where the SDK depends on the value: the Classic `Type`
   discriminator, `LabelType` (the label formatters cannot render an
   unknown one), and the OAuth `token_type` — nothing reads it, but it
