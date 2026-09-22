@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [59.2.0] - 2026-09-22
+
+### Changed
+
+- **The Home `/context` drift is one event in the log, not one line per fetch.** While the strict schema refuses the payload, the salvage keeps every unit that still validates — and used to log the drift on every fetch, 288 lines a day at the five-minute cadence, each carrying the whole ZodError. The drift now rides `@olivierzal/api-core`'s `FailureStreaks` (public since 1.9.0; the exact pin advances to it), keyed on the refused paths: reported when it opens, when the paths change and at most every five minutes while it lasts, then closed by one line counting the salvaged fetches when the strict parse holds again. heatzy-api 20.1.0 streaks its device reads on the same class — the mechanism is shared, the subjects are each SDK's own. `describeRefusedPaths` is exported from the validation module for it (`parseOrThrow` already computed it inline).
+- Two assertions the 59.1.0 changelog stated without a test now pin them: the `/context` `404` of an account with no MELCloud Home home stays silent under the core's streaks, and a `404` from any other endpoint reaches the pipeline's error entry (beside `safeRequest`'s own line for the failed `Result`).
+
 ## [59.1.0] - 2026-09-18
 
 ### Changed
@@ -855,6 +862,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[59.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.1.0...v59.2.0
 [59.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.0.0...v59.1.0
 [59.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v58.0.0...v59.0.0
 [58.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v57.3.0...v58.0.0

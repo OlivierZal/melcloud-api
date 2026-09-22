@@ -321,6 +321,18 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   warning over frozen values, so the report has to say which device
   went stale and why. `inspectClassicListingEntry` owns the verdict;
   `isModelledClassicDevice` stays its boolean face.
+- The Home drift line is a STREAK, not a line per fetch (59.2.0).
+  While `/context` drifts from the strict schema, every fetch salvages
+  the device entries — and used to log the drift each time, 288 lines
+  a day at the five-minute cadence, the figure 59.1.0 ended for the
+  cycle line. The drift is keyed on its refused paths through the
+  core's `FailureStreaks` (subject `GET /context (strict)`, cleared
+  with the registry): reported when it opens, when the paths change,
+  at most every five minutes, and closed by one `log` line when the
+  strict parse holds again. This is heatzy-api's device streak's twin
+  on the SAME class rather than a copy — the twin question #1789
+  answered for capabilities, answered here for logging: the mechanism
+  crosses, each SDK names its own subjects.
 - A READ closes a vocabulary only where the SDK CONSUMES it (59.0.0).
   Home's `connectedInterfaceType` was the closed pair
   `fourthGenWifi | melCloudWiFi` on a label nothing reads, so the next

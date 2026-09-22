@@ -498,6 +498,9 @@ describe('melcloud home API', () => {
       expect(api.context).toBeNull()
       expect(api.isAuthenticated()).toBe(true)
       expect(logger.log).toHaveBeenCalledWith('[Home]', NO_HOME_LOG)
+      // The expected 404's error entry stays silent under the core's
+      // streaks; only the marker line above says anything.
+      expect(logger.error).not.toHaveBeenCalled()
     })
 
     it('states the situation once, not on every poll', async () => {
@@ -590,6 +593,10 @@ describe('melcloud home API', () => {
       expect(api.isAuthenticated()).toBe(true)
       expect(api.context).not.toBeNull()
       expect(logger.log).not.toHaveBeenCalledWith('[Home]', NO_HOME_LOG)
+      // Two lines, both owed: the pipeline's error entry, which the
+      // override lets through for any endpoint but `/context`, and
+      // `safeRequest`'s own line for the failed `Result`.
+      expect(logger.error).toHaveBeenCalledTimes(2)
     })
 
     it('reads unauthenticated after logging out', async () => {
@@ -2433,6 +2440,51 @@ describe('melcloud home API', () => {
       )
       expect(api.registry.getById('device-3')).toBeUndefined()
       expect(api.registry.getDevices()).toHaveLength(2)
+    })
+
+    // 288 fetches a day at the five-minute cadence: a drift that lasts
+    // is one event, keyed on its refused paths, closed when the strict
+    // parse holds again.
+    it('reports a lasting drift once per streak and closes it when the strict parse holds again', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValue(
+        mockResponse(
+          {
+            ...mockContext,
+            guestBuildings: [
+              {
+                ...mockBuilding,
+                airToAirUnits: [
+                  validAtaUnit,
+                  { ...validAtaUnit, id: 'device-3', rssi: 'weak' },
+                ],
+              },
+            ],
+          },
+          {},
+          200,
+        ),
+      )
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+      await api.fetch()
+      await api.fetch()
+
+      expect(logger.error).toHaveBeenCalledTimes(1)
+
+      mockRequest.mockResolvedValue(mockResponse(mockContext, {}, 200))
+      await api.fetch()
+
+      expect(logger.log).toHaveBeenCalledWith(
+        '[Home]',
+        'Home context matches the strict schema again after 3 salvaged fetches',
+      )
+      expect(api.registry.getById('device-3')).toBeUndefined()
     })
 
     it('keeps a unit on an unseen adapter family without logging drift', async () => {

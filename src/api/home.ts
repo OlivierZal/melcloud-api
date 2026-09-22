@@ -1,3 +1,5 @@
+import { FailureStreaks } from '@olivierzal/api-core'
+
 import type { HomeDevice } from '../entities/home-device.ts'
 import { type HomeAtwZoneMode, HomeDeviceType } from '../constants.ts'
 import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
@@ -34,6 +36,7 @@ import {
   ok,
 } from '../types/index.ts'
 import {
+  describeRefusedPaths,
   HomeContextSchema,
   HomeEnergyDataSchema,
   HomeErrorLogEntryListSchema,
@@ -50,6 +53,8 @@ const API_BASE_URL = 'https://mobile.bff.melcloudhome.com'
 const ATA_UNIT_PATH = '/monitor/ataunit'
 const ATW_UNIT_PATH = '/monitor/atwunit'
 const CONTEXT_PATH = '/context'
+// The strict-parse drift's streak subject, distinct from the request's.
+const CONTEXT_DRIFT_SUBJECT = 'GET /context (strict)'
 
 const FROST_PROTECTION_PATH = '/monitor/protection/frost'
 const HOLIDAY_MODE_PATH = '/monitor/holidaymode'
@@ -231,6 +236,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   #context: HomeContext | null = null
+
+  // The `/context` drift, one event while it lasts (see `#fetchContext`).
+  readonly #driftStreaks = new FailureStreaks()
 
   // A `404` on `/context` is how the BFF answers an account that has no
   // MELCloud Home home: the token was accepted (a rejected one answers
@@ -564,6 +572,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   protected override clearRegistry(): void {
     this.#registry.syncDevices([])
+    this.#driftStreaks.clear()
   }
 
   protected override async doAuthenticate({
@@ -793,9 +802,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * device-payload drift must degrade the registry, never the
    * authentication state (a strict-only parse used to read as
    * "unauthenticated" and re-open the settings login form). The full
-   * payload is then parsed strictly; on drift the failure is logged
-   * with its field paths and the salvage schema recovers everything
-   * that still validates per unit.
+   * payload is then parsed strictly; on drift the salvage schema
+   * recovers everything that still validates per unit, and the drift
+   * is ONE event while it lasts — a streak keyed on the refused paths,
+   * reported when it opens, when the paths change and at most every
+   * reminder window, closed by one line when the strict parse holds
+   * again — rather than a line per fetch.
    * @returns The fetched home context.
    */
   async #fetchContext(): Promise<HomeContext | null> {
@@ -807,12 +819,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       parseOrThrow(HomeUserContextSchema, raw, 'GET /context'),
     )
     const strict = HomeContextSchema.safeParse(raw)
-    if (!strict.success) {
-      this.logger.error(
-        'Home context drifted from the strict schema; salvaging device entries:',
-        strict.error,
-      )
-    }
+    this.#recordDrift(strict)
     const data = strict.success
       ? strict.data
       : parseOrThrow(HomeResilientContextSchema, raw, 'GET /context (salvage)')
@@ -947,6 +954,32 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     values: HomeAtaValues | HomeAtwWireValues,
   ): Promise<void> {
     await this.request('put', `${unitPath}/${id}`, { data: values })
+  }
+
+  // The drift streak's two moves: a strict parse that holds closes it
+  // with one line counting the salvaged fetches; a refusal reports it
+  // when it opens, when its paths change and once per reminder window.
+  #recordDrift(strict: ReturnType<typeof HomeContextSchema.safeParse>): void {
+    if (strict.success) {
+      const fetches = this.#driftStreaks.close(CONTEXT_DRIFT_SUBJECT)
+      if (fetches !== null) {
+        this.logger.log(
+          `Home context matches the strict schema again after ${String(fetches)} salvaged fetches`,
+        )
+      }
+      return
+    }
+    if (
+      this.#driftStreaks.shouldReport(
+        CONTEXT_DRIFT_SUBJECT,
+        describeRefusedPaths(strict.error),
+      )
+    ) {
+      this.logger.error(
+        'Home context drifted from the strict schema; salvaging device entries:',
+        strict.error,
+      )
+    }
   }
 
   /**
