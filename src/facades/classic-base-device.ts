@@ -437,13 +437,12 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public async getHourlyTemperatures(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
-    if (this.internalTemperaturesLegend.length === 0) {
-      return ok(emptyTemperatureChart(this.#buildReportPostData()))
-    }
-    return this.fetchHourlyDayChart(
-      async (hourOfDay) => this.#fetchTemperaturesHour(hourOfDay),
-      hour,
-    )
+    return this.internalTemperaturesLegend.length === 0
+      ? ok(emptyTemperatureChart(this.#buildReportPostData()))
+      : this.fetchHourlyDayChart(
+          async (hourOfDay) => this.#fetchTemperaturesHour(hourOfDay),
+          hour,
+        )
   }
 
   public async getInternalTemperatures(
@@ -512,13 +511,10 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   public override async getTiles(
     device: boolean | ClassicDeviceAny = false,
   ): Promise<Result<ClassicTilesData<T | null>>> {
-    if (
-      device === false ||
+    return device === false ||
       (device instanceof ClassicDevice && device.id !== this.id)
-    ) {
-      return super.getTiles()
-    }
-    return super.getTiles(this.device)
+      ? super.getTiles()
+      : super.getTiles(this.device)
   }
 
   protected prepareUpdateData(

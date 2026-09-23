@@ -840,14 +840,14 @@ const toEnergySlotKey = (
       .round({ roundingMode: 'floor', smallestUnit: 'hour' })
       .toString()
   }
-  if (bucketUnit === 'localDay') {
-    return time
-      .toZonedDateTime(WIRE_TIME_ZONE)
-      .withTimeZone(timezone)
-      .toPlainDate()
-      .toString()
-  }
-  return time.toPlainDate().toPlainDateTime().toString()
+  return (
+    bucketUnit === 'localDay'
+      ? time
+          .toZonedDateTime(WIRE_TIME_ZONE)
+          .withTimeZone(timezone)
+          .toPlainDate()
+      : time.toPlainDate().toPlainDateTime()
+  ).toString()
 }
 
 const sumEnergyBySlot = (
