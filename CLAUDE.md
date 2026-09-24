@@ -93,6 +93,18 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   held only when the caller named both zones and silently failed in the
   one-zone case it was written for. ATA's clamp is unaffected either
   way: it only rewrites a field the caller already named.
+- The snapshot is the write's BODY, so only a sync may write it. A
+  group READ (`/Group/Get`) answers MELCloud's state for the GROUP, not
+  what each member reports; until 59.2.1 `getGroup()` patched every
+  ATA member with it, mirroring the write decorator's propagation for
+  a read, and a member in Cool whose zone read Auto carried
+  `OperationMode: Auto` — unflagged, then echoed back into the
+  registry by the write's own decorator — on its next temperature
+  write. The widget calls that read on load and on every real-time
+  update, so the wrong snapshot was the normal state while a dashboard
+  showed it (field report 2026-09-24: "repeatedly changes the operating
+  mode from Cool back to Auto", no Flow involved). Only the registry
+  sync and a write's own echo may update a device model.
 - The write that DOES re-impose a field is one whose caller names it.
   A form prefilled from the snapshot and applied later is the shape to
   watch: if a sync moves the snapshot between the prefill and the

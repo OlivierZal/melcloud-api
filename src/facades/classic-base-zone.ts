@@ -42,30 +42,21 @@ export abstract class BaseZoneFacade<
     )
   }
 
+  // A READ of the group must leave the members' snapshots alone. The
+  // group state is what MELCloud holds for the GROUP, not what each
+  // member reports, and a member's snapshot is the body of its next
+  // write: a member in Cool patched with the group's Auto would carry
+  // that Auto — unflagged, then echoed back into the registry by the
+  // write's own decorator — on its next temperature write. Until 59.2.1
+  // this method did exactly that, mirroring the write decorator's
+  // propagation for a read.
   public async getGroup(): Promise<Result<ClassicGroupState>> {
-    const result = mapResult(
+    return mapResult(
       await this.api.getGroup({
         postData: { [this.groupSpecificationKey]: this.id },
       }),
       ({ Data: { Group: group } }) => group.State,
     )
-    if (result.ok) {
-      // Inline registry update — `@classicUpdateDevices` only supports raw
-      // payloads; getGroup now returns Result, so the patch propagation
-      // happens here on the success branch instead of via the decorator.
-      // Filter out null/undefined fields so caller-supplied "ignore"
-      // sentinels do not accidentally overwrite existing device state.
-      const patch = Object.fromEntries(
-        Object.entries(result.value).filter(([, value]) => value !== null),
-      )
-      const ataDevices = this.devices.filter(
-        ({ type }) => type === ClassicDeviceType.Ata,
-      )
-      for (const device of ataDevices) {
-        device.update(patch)
-      }
-    }
-    return result
   }
 
   /**
