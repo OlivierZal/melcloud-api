@@ -478,6 +478,37 @@ describe('building facade group', () => {
     expect(value).toHaveProperty('Power')
   })
 
+  // The group state is MELCloud's state for the GROUP, and a member's
+  // snapshot is the body of its next write: a read must not write the
+  // group's mode into a member that differs from it.
+  it('leaves the member snapshots alone', async () => {
+    const { facade, registry } = createBuildingFacade({
+      getGroup: vi
+        .fn<ClassicAPIAdapter['getGroup']>()
+        .mockResolvedValue(
+          ok(
+            cast({
+              Data: {
+                Group: {
+                  State: {
+                    OperationMode: ClassicOperationMode.auto,
+                    Power: true,
+                  },
+                },
+              },
+            }),
+          ),
+        ),
+    })
+    const device = mock<DeviceModelAta>(
+      cast(defined(registry.devices.getById(1000))),
+    )
+
+    await facade.getGroup()
+
+    expect(device.data.OperationMode).toBe(ClassicOperationMode.heat)
+  })
+
   it('calls updateGroupState', async () => {
     const { api, facade } = createBuildingFacade()
     await facade.updateGroupState({ Power: true })
