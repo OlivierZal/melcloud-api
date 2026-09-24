@@ -102,9 +102,12 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   registry by the write's own decorator — on its next temperature
   write. The widget calls that read on load and on every real-time
   update, so the wrong snapshot was the normal state while a dashboard
-  showed it (field report 2026-09-24: "repeatedly changes the operating
-  mode from Cool back to Auto", no Flow involved). Only the registry
-  sync and a write's own echo may update a device model.
+  showed it — consistent with the field report of 2026-09-24
+  ("repeatedly changes the operating mode from Cool back to Auto", no
+  Flow involved), unconfirmed against its log: a displayed Auto is
+  explained with certainty, a real mode change only if MELCloud applies
+  the unflagged fields of a body. Only the registry sync and a write's
+  own echo may update a device model.
 - The write that DOES re-impose a field is one whose caller names it.
   A form prefilled from the snapshot and applied later is the shape to
   watch: if a sync moves the snapshot between the prefill and the
