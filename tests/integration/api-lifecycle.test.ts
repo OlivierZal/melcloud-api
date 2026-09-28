@@ -27,6 +27,7 @@ import {
   toClassicDeviceId,
   toClassicFloorId,
 } from '../../src/types/index.ts'
+import { resolved } from '../../src/utils.ts'
 import {
   classicAtaDeviceData,
   classicBuildingData,
@@ -207,17 +208,16 @@ describe('api lifecycle', () => {
     expect(api.registry.getDevices()).toHaveLength(0)
 
     mockRequest.mockImplementation(async (config) => {
-      await Promise.resolve()
       if (config.url === '/Login/ClientLogin3') {
-        return {
+        return resolved({
           data: {
             LoginData: { ContextKey: 'ctx-123', Expiry: '2099-12-31T00:00:00' },
           },
           headers: {},
           status: 200,
-        }
+        })
       }
-      return { data: buildingResponse, headers: {}, status: 200 }
+      return resolved({ data: buildingResponse, headers: {}, status: 200 })
     })
 
     await api.authenticate({ password: 'pass', username: 'user@test.com' })
@@ -231,17 +231,16 @@ describe('api lifecycle', () => {
     const { setSpy, settingManager } = createSettingStore()
 
     mockRequest.mockImplementation(async (config) => {
-      await Promise.resolve()
       if (config.url === '/Login/ClientLogin3') {
-        return {
+        return resolved({
           data: {
             LoginData: { ContextKey: 'ctx-abc', Expiry: '2099-12-31T00:00:00' },
           },
           headers: {},
           status: 200,
-        }
+        })
       }
-      return { data: buildingResponse, headers: {}, status: 200 }
+      return resolved({ data: buildingResponse, headers: {}, status: 200 })
     })
 
     const api = await melCloudApi.create({
@@ -419,11 +418,10 @@ describe('api lifecycle', () => {
     it('propagates AbortSignal end-to-end to the HTTP client', async () => {
       const controller = new AbortController()
       mockRequest.mockImplementation(async (config) => {
-        await Promise.resolve()
         if (config.signal?.aborted === true) {
           throw new DOMException('The operation was aborted.', 'AbortError')
         }
-        return { data: buildingResponse, headers: {}, status: 200 }
+        return resolved({ data: buildingResponse, headers: {}, status: 200 })
       })
       const api = await melCloudApi.create({
         abortSignal: controller.signal,
@@ -553,7 +551,7 @@ describe('api lifecycle', () => {
       vi.useRealTimers()
       mockRequest.mockReset()
 
-      // ensureSession() sees the expired token, calls refreshAccessToken
+      // `ensureSession()` sees the expired token, calls refreshAccessToken
       // (via global fetch) which succeeds, stores the new tokens, and
       // then dispatches GET /context with the refreshed Bearer.
       mockFetch.mockResolvedValueOnce(

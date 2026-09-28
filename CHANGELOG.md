@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **The exact `@olivierzal/configs` pin advances to 7.0.0** (`@eslint-community/eslint-plugin-eslint-comments`, `eslint-plugin-es-x` and `eslint-plugin-regexp` join the preset, `capitalized-comments` is on). Fourteen findings adapt, the code every time: eight test comments opening on an identifier or a wire name (`ensureSession()`, `offset=2`, `comfort-graph`, `list()`, `timezone`…) take backticks around that name — the rule's fixer would have capitalised the identifiers, so those hunks were reverted and written by hand — and one plain word takes its capital; the four `eslint-enable` lines closing an `id-length` or `no-unsafe-type-assertion` block now say what they close; the `clause` group of the webview-floor import regex, never read, is no longer a capture.
+- **The install floor is Node 22.23.0** (`.nvmrc`, CONTRIBUTING): `eslint-plugin-es-x`'s `^22.23.0 || ^24.18.0 || >=26.4.0`, the range configs 7.0.0 declares as its own `engines`, supersedes `eslint-plugin-package-json`'s `^22.22.2`. `engines.node` stays at the device floor `>=22.20.0` — the floor of what the code needs where it runs, unchanged.
+- `package.json` declares `publishConfig.registry` (`https://npm.pkg.github.com`), the shape `@olivierzal/api-core` already carries, so the manifest states the registry it publishes to (`package-json/require-publishConfig`).
+- Ten fake awaits leave the tests: nine transport mocks and the `resolveVoid` decorator target used to open with `await Promise.resolve()` so that `require-await` would accept an `async` body answering synchronously available data. They now answer through `resolved()`, the SDK's own named escape for exactly that contract — the value is computed when the mock is called and delivered through the microtask queue, and the `require-await`/`promise-function-async` pair holds with no decoy. The non-async spelling (`(config) => resolved(…)`) was measured to trip `promise-function-async`, so the `async` one is the form. Behaviour of the suites is unchanged; the one observable difference is that a mock reading the call count (`homeContextCount()`) now reads it at call time, "this call included", which is what its documentation always said.
+
 ## [59.2.1] - 2026-09-24
 
 ### Fixed
@@ -868,6 +877,7 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.2.1...HEAD
 [59.2.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.2.0...v59.2.1
 [59.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.1.0...v59.2.0
 [59.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.0.0...v59.1.0

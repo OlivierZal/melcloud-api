@@ -584,7 +584,7 @@ const mergeTriggerSeeds = (
       if (value !== null && !seeds.has(measure)) {
         /* eslint-disable id-length -- match the wire point shape */
         seeds.set(measure, { x: trigger, y: value })
-        /* eslint-enable id-length */
+        /* eslint-enable id-length -- end of the wire point literal */
       }
     }
   }

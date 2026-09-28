@@ -23,6 +23,7 @@ import {
   toClassicBuildingId,
   toClassicDeviceId,
 } from '../../src/types/index.ts'
+import { resolved } from '../../src/utils.ts'
 import {
   CLASSIC_LIST_PATH,
   classicBuildingWithStructure,
@@ -312,9 +313,8 @@ describe('mELCloud Classic API', () => {
     // The credential check still passes; only the registry refresh
     // that the sign-in enforces fails.
     mockRequest.mockImplementation(async (config) => {
-      await Promise.resolve()
       if (config.url === '/Login/ClientLogin3') {
-        return classicLoginResponse('ctx', '2030-12-31T00:00:00')
+        return resolved(classicLoginResponse('ctx', '2030-12-31T00:00:00'))
       }
       throw new Error('registry')
     })
@@ -927,7 +927,7 @@ describe('mELCloud Classic API', () => {
         [1],
       )
 
-      // offset=2, period=5 → daysBack = 2 * (5 + 1) = 12
+      // `offset=2`, `period=5` → daysBack = 2 * (5 + 1) = 12
       // toDate = 2024-06-01 - 12d = 2024-05-20
       // fromDate = toDate - 5d = 2024-05-15
       expect(okValue(result)).toMatchObject({
@@ -953,12 +953,13 @@ describe('mELCloud Classic API', () => {
       const api = await createApi()
       await api.fetch()
       mockLoginAndList()
-      mockRequest.mockImplementation(async (config) => {
-        await Promise.resolve()
-        return config.url === '/Login/ClientLogin3'
-          ? classicLoginResponse()
-          : wrap([])
-      })
+      mockRequest.mockImplementation(async (config) =>
+        resolved(
+          config.url === '/Login/ClientLogin3'
+            ? classicLoginResponse()
+            : wrap([]),
+        ),
+      )
       const result = await api.getErrorLog({})
 
       expect(okValue(result)).toHaveProperty('entries')
@@ -1175,12 +1176,13 @@ describe('mELCloud Classic API', () => {
       // First call returns 401, re-auth succeeds, retry succeeds
       let callCount = 0
       mockRequest.mockImplementation(async (config) => {
-        await Promise.resolve()
         if (config.url === '/Login/ClientLogin3') {
-          return classicLoginResponse('new-ctx', '2030-12-31T00:00:00')
+          return resolved(
+            classicLoginResponse('new-ctx', '2030-12-31T00:00:00'),
+          )
         }
         if (config.url === '/User/ListDevices') {
-          return wrap([])
+          return resolved(wrap([]))
         }
         callCount++
         if (callCount === 1) {
@@ -1190,7 +1192,7 @@ describe('mELCloud Classic API', () => {
             url: '/Device/Get',
           })
         }
-        return wrap({ value: 'retried' })
+        return resolved(wrap({ value: 'retried' }))
       })
       const result = await api.getValues({ params: { buildingId: 1, id: 1 } })
 
@@ -1203,12 +1205,11 @@ describe('mELCloud Classic API', () => {
 
       // 401 on endpoint, re-auth throws AuthenticationError → decorator logs + returns false
       mockRequest.mockImplementation(async (config) => {
-        await Promise.resolve()
         if (config.url === '/Login/ClientLogin3') {
-          return wrap({ LoginData: null })
+          return resolved(wrap({ LoginData: null }))
         }
         if (config.url === '/User/ListDevices') {
-          return wrap([])
+          return resolved(wrap([]))
         }
         throw createHttpError({
           message: 'unauthorized',

@@ -264,7 +264,7 @@ export const homeReportPoint = (
   /* eslint-disable id-length -- match the wire point shape */
   x: time,
   y: value,
-  /* eslint-enable id-length */
+  /* eslint-enable id-length -- end of the wire point literal */
 })
 
 /**
