@@ -9,7 +9,7 @@ describe(resolveErrorLogWindow, () => {
   })
 
   it('stacks pages backwards from `to` in one-day-separated windows', () => {
-    // offset=2, period=5 → daysBack = 2 * (5 + 1) = 12:
+    // `offset=2`, `period=5` → daysBack = 2 * (5 + 1) = 12:
     // toDate = 2024-06-01 - 12d, fromDate = toDate - 5d.
     expect(
       resolveErrorLogWindow({ offset: 2, period: 5, to: '2024-06-01' }),

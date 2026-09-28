@@ -310,7 +310,7 @@ const HomeReportPointSchema = z.looseObject({
   /* eslint-disable id-length -- match the wire format produced by the BFF */
   x: z.string(),
   y: z.number(),
-  /* eslint-enable id-length */
+  /* eslint-enable id-length -- end of the BFF point shape */
 })
 
 const HomeReportDatasetSchema = z.looseObject({

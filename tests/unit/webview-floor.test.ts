@@ -22,7 +22,7 @@ const FLOOR_ENTRY = /'(?<file>[^']+)'/gv
 // lazy quantifier stops at the first, so statements never bleed into
 // each other even without semicolons.
 const IMPORT_STATEMENT =
-  /^import(?<typeOnly> type)? (?<clause>[\s\S]*?)from '(?<specifier>[^']+)'/gmv
+  /^import(?<typeOnly> type)? [\s\S]*?from '(?<specifier>[^']+)'/gmv
 
 const RELATIVE_FLAT = /^\.\/(?<module>[a-z\-]+)\.ts$/v
 

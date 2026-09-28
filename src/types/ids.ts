@@ -69,4 +69,4 @@ export const toClassicDeviceId = (id: number): ClassicDeviceID =>
  */
 export const toClassicFloorId = (id: number): ClassicFloorID =>
   id as ClassicFloorID
-/* eslint-enable @typescript-eslint/no-unsafe-type-assertion */
+/* eslint-enable @typescript-eslint/no-unsafe-type-assertion -- end of the branding helpers */

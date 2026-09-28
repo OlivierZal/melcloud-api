@@ -22,6 +22,7 @@ import {
 } from '../../src/errors/index.ts'
 import { HttpError } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
+import { resolved } from '../../src/utils.ts'
 
 const createMockFacade = (
   devices: { type: ClassicDeviceType; update: ReturnType<typeof vi.fn> }[] = [],
@@ -121,9 +122,7 @@ const callUpdateDevice = async (
   return decorated.call(facade)
 }
 
-const resolveVoid = async (): Promise<void> => {
-  await Promise.resolve()
-}
+const resolveVoid = async (): Promise<void> => resolved(undefined)
 
 const setupFetchDevices = (options?: {
   when?: 'after' | 'before'

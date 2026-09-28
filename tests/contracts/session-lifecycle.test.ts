@@ -35,6 +35,7 @@ import {
 import { type HttpResponse, HttpClient } from '../../src/http/index.ts'
 import { RetryGuard } from '../../src/resilience/index.ts'
 import { Temporal } from '../../src/temporal.ts'
+import { resolved } from '../../src/utils.ts'
 import {
   CLASSIC_LIST_PATH,
   CLASSIC_LOGIN_PATH,
@@ -617,15 +618,16 @@ const stageHome = ({
 }): void => {
   homeWire.baseline = homeContextCount()
   homeWire.outcome = wire
-  homeRequest.mockImplementation(async ({ url }) => {
-    await Promise.resolve()
-    return answerWire(homeWire, {
-      cycleCount: homeContextCount(),
-      driftedPayload: homeDriftedPayload,
-      path: url ?? HOME_CONTEXT_PATH,
-      payload: homePayload,
-    })
-  })
+  homeRequest.mockImplementation(async ({ url }) =>
+    resolved(
+      answerWire(homeWire, {
+        cycleCount: homeContextCount(),
+        driftedPayload: homeDriftedPayload,
+        path: url ?? HOME_CONTEXT_PATH,
+        payload: homePayload,
+      }),
+    ),
+  )
   stageHomeSignIn(login)
 }
 

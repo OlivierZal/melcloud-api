@@ -95,7 +95,7 @@ const mockReportData: HomeReportData[] = [
   },
 ]
 
-// comfort-graph returns reportPeriod as a number, unlike the string that
+// `comfort-graph` returns reportPeriod as a number, unlike the string that
 // internaltemperatures/trendsummary return — both must validate.
 const mockNumericReportData: HomeReportData[] = [
   { datasets: [], reportPeriod: 0 },
@@ -695,7 +695,7 @@ describe('melcloud home API', () => {
       const onSync = vi.fn<() => Promise<void>>()
       const api = await createApi({ events: { onSyncComplete: onSync } })
 
-      // authenticate triggers list() internally — reset so the assertion
+      // `authenticate` triggers list() internally — reset so the assertion
       // only covers the explicit list() below.
       onSync.mockClear()
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
@@ -1760,7 +1760,7 @@ describe('melcloud home API', () => {
       // A login chain that never resolves: create() must not depend on it.
       mockFetch.mockReturnValue(
         new Promise<never>(() => {
-          // pending forever
+          // Pending forever
         }),
       )
       const api = await melCloudHomeApi.create({
@@ -2298,7 +2298,7 @@ describe('melcloud home API', () => {
         refreshToken: 'old-refresh',
         username: 'user@test.com',
       })
-      // list() succeeds with existing token — no OIDC needed for create
+      // `list()` succeeds with existing token — no OIDC needed for create
       mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
@@ -2649,7 +2649,7 @@ describe('melcloud home API', () => {
                 airToWaterUnits: [],
                 id: 'building-1',
                 name: 'Home',
-                // timezone missing — the building envelope stays
+                // `timezone` missing — the building envelope stays
                 // strict on purpose, so the salvage parse fails too.
               },
             ],

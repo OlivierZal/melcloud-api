@@ -44,6 +44,7 @@ import {
   toClassicDeviceId,
   toClassicFloorId,
 } from '../src/types/index.ts'
+import { resolved } from '../src/utils.ts'
 
 // ---------------------------------------------------------------------------
 // Primitive model data factories
@@ -535,8 +536,7 @@ export const stageClassicWire = (
     rest: (config: HttpRequestConfig) => HttpResponse
   },
 ): void => {
-  requestSpy.mockImplementation(async (config) => {
-    await Promise.resolve()
-    return config.url === CLASSIC_LOGIN_PATH ? login() : rest(config)
-  })
+  requestSpy.mockImplementation(async (config) =>
+    resolved(config.url === CLASSIC_LOGIN_PATH ? login() : rest(config)),
+  )
 }

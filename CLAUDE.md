@@ -731,11 +731,13 @@ GitHub Packages, where even reads need auth). The zizmor
 `use-trusted-publishing` ignore that excused the local publish step
 left with the step — the reusable's ignore lives in configs.
 `.nvmrc` is the INSTALL floor, derived in configs from the tree it
-imposes on every consumer (22.22.2 today, from
-`eslint-plugin-package-json`'s `^22.22.2 || >=24.15.0`); it is not
-`engines`, which stays at the device floor (22.20 — what the code
-needs where it runs). It moves with a configs adoption that re-derives
-it, never by hand.
+imposes on every consumer (22.23.0 today, from `eslint-plugin-es-x`'s
+`^22.23.0 || ^24.18.0 || >=26.4.0` — configs 7.0.0 declares the same
+range as its own `engines`; `eslint-plugin-package-json`'s
+`^22.22.2 || >=24.15.0`, the previous binding floor, is now the looser
+one); it is not `engines`, which stays at the device floor (22.20 —
+what the code needs where it runs). It moves with a configs adoption
+that re-derives it, never by hand.
 
 ## Lint doctrine
 
