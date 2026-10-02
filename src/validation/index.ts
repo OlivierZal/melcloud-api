@@ -1,9 +1,11 @@
 export {
   type ClassicDeviceDropReason,
   type ClassicDroppedDevice,
+  type HomeDroppedUnit,
   ClassicBuildingListSchema,
   ClassicEnergyDataSchema,
   ClassicLoginDataSchema,
+  collectDroppedHomeUnits,
   describeRefusedPaths,
   HomeContextSchema,
   HomeEnergyDataSchema,

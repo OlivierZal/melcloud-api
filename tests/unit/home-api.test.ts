@@ -10,7 +10,15 @@ import {
   mockFetchResponse,
   mockTemporalNowInstant,
 } from '@olivierzal/api-core/testing'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  type MockInstance,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 
 import type { HomeAPI } from '../../src/api/home.ts'
 import type { HomeAPIConfig } from '../../src/api/index.ts'
@@ -19,6 +27,7 @@ import type {
   HomeErrorLogEntry,
   HomeReportData,
 } from '../../src/types/index.ts'
+import { STALE_COMMUNICATION_HOURS } from '../../src/entities/types.ts'
 import { EntityNotFoundError } from '../../src/errors/index.ts'
 import {
   type HttpResponse,
@@ -171,6 +180,22 @@ const NO_HOME_LOG =
 
 const countTokenCalls = (): number =>
   mockFetch.mock.calls.filter((call) => isTokenEndpointCall(call)).length
+
+// The messages the client wrote to one logger level: the dialect label
+// is the first argument, the message the second. The core's own entries
+// (request and response data) are objects and fall out of the filter.
+const loggedMessages = (sink: Console['log']): string[] =>
+  vi
+    .mocked(sink)
+    .mock.calls.map((call: readonly unknown[]) => call[1])
+    .filter((message) => typeof message === 'string')
+
+// The connectivity lines, whichever level they were written at.
+const unitLines = (logger: ReturnType<typeof createLogger>): string[] =>
+  [...loggedMessages(logger.log), ...loggedMessages(logger.error)].filter(
+    (message) =>
+      message.startsWith('ATA unit ') || message.startsWith('ATW unit '),
+  )
 
 describe('melcloud home API', () => {
   let melCloudHomeApi: { create: typeof HomeAPI.create }
@@ -2436,11 +2461,140 @@ describe('melcloud home API', () => {
       expect(api.isAuthenticated()).toBe(true)
       expect(logger.error).toHaveBeenCalledWith(
         '[Home]',
-        'Home context drifted from the strict schema; salvaging device entries:',
+        'Home context drifted from the strict schema; salvaging device entries: dropped ATA unit device-3 (rssi)',
         expect.anything(),
       )
       expect(api.registry.getById('device-3')).toBeUndefined()
       expect(api.registry.getDevices()).toHaveLength(2)
+    })
+
+    // The report must say WHICH unit went stale: the line names the pruned
+    // unit by type and id with the refused paths cut to its entry, never
+    // its display name and never a received value.
+    it('names the pruned ATW unit with its entry-relative paths while the ATA beside it stays', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      const atwUnit = defined(mockBuilding.airToWaterUnits[0])
+      mockRequest.mockResolvedValueOnce(
+        mockResponse(
+          {
+            ...mockContext,
+            guestBuildings: [
+              {
+                ...mockBuilding,
+                airToWaterUnits: [
+                  {
+                    ...atwUnit,
+                    capabilities: {
+                      ...atwUnit.capabilities,
+                      immersionHeaterCapacity: 'big',
+                    },
+                    macAddress: null,
+                  },
+                ],
+              },
+            ],
+          },
+          {},
+          200,
+        ),
+      )
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+
+      expect(api.registry.getById('device-1')).toBeDefined()
+      expect(api.registry.getById('device-2')).toBeUndefined()
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
+        'Home context drifted from the strict schema; salvaging device entries: dropped ATW unit device-2 (capabilities.immersionHeaterCapacity, macAddress)',
+        expect.anything(),
+      )
+      expect(loggedMessages(logger.error).join('\n')).not.toContain(
+        atwUnit.givenDisplayName,
+      )
+    })
+
+    it('names a pruned unit whose id the wire did not spell as unknown', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValueOnce(
+        mockResponse(
+          {
+            ...mockContext,
+            guestBuildings: [
+              {
+                ...mockBuilding,
+                airToAirUnits: [validAtaUnit, { ...validAtaUnit, id: 42 }],
+              },
+            ],
+          },
+          {},
+          200,
+        ),
+      )
+
+      await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
+        'Home context drifted from the strict schema; salvaging device entries: dropped ATA unit unknown (id)',
+        expect.anything(),
+      )
+    })
+
+    it('names every pruned unit, one segment each, in payload order', async () => {
+      const logger = createLogger()
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValueOnce(
+        mockResponse(
+          {
+            ...mockContext,
+            guestBuildings: [
+              {
+                ...mockBuilding,
+                airToAirUnits: [
+                  validAtaUnit,
+                  { ...validAtaUnit, id: 'device-3', rssi: 'weak' },
+                ],
+                airToWaterUnits: [
+                  {
+                    ...defined(mockBuilding.airToWaterUnits[0]),
+                    macAddress: null,
+                  },
+                ],
+              },
+            ],
+          },
+          {},
+          200,
+        ),
+      )
+
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+
+      expect(api.registry.getDevices().map(({ id }) => id)).toStrictEqual([
+        'device-1',
+      ])
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
+        'Home context drifted from the strict schema; salvaging device entries: dropped ATA unit device-3 (rssi), ATW unit device-2 (macAddress)',
+        expect.anything(),
+      )
     })
 
     // 1,440 fetches a day at Home's one-minute default cadence: a drift
@@ -2615,16 +2769,28 @@ describe('melcloud home API', () => {
     })
 
     it('keeps the full registry when only metadata drifts', async () => {
+      const logger = createLogger()
       const { settingManager } = persistedSessionStore()
       mockRequest.mockResolvedValueOnce(
         mockResponse({ ...mockContext, language: 123 }, {}, 200),
       )
 
-      const api = await createFromPersistedStore(settingManager)
+      const api = await melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
 
       expect(api.isAuthenticated()).toBe(true)
       expect(api.registry.getDevices()).toHaveLength(2)
       expect(api.context?.language).toBe('')
+      // Nothing was pruned, so the line names nothing.
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
+        'Home context drifted from the strict schema; salvaging device entries:',
+        expect.anything(),
+      )
     })
 
     // Identity-only success: the user parses but even the salvage
@@ -2683,6 +2849,132 @@ describe('melcloud home API', () => {
       expect(api.isAuthenticated()).toBe(false)
       // Not a 401 — the persisted session must survive for later syncs.
       expect(setSpy).not.toHaveBeenCalledWith('accessToken', '')
+    })
+  })
+
+  // The three connectivity lines are EDGES of a unit's `isConnected`
+  // streak, logged by the sync cycle and naming the unit by type and id
+  // only. The clock is pinned so the streak start, the stale instant and
+  // the durations are exact.
+  describe('connectivity lines', () => {
+    const start = Temporal.PlainDateTime.from('2026-10-02T10:00:00')
+    const atwUnit = defined(mockBuilding.airToWaterUnits[0])
+    let clock: MockInstance<typeof Temporal.Now.plainDateTimeISO>
+
+    beforeEach(() => {
+      clock = vi.spyOn(Temporal.Now, 'plainDateTimeISO').mockReturnValue(start)
+    })
+
+    afterEach(() => {
+      clock.mockRestore()
+    })
+
+    // The ATW is the unit under test; the ATA beside it stays connected,
+    // so any line about it would be a false positive.
+    const contextReadingAtw = (
+      isConnected: boolean,
+    ): ReturnType<typeof mockResponse> =>
+      mockResponse(
+        homeContextData({
+          guestBuildings: [
+            { ...mockBuilding, airToWaterUnits: [{ ...atwUnit, isConnected }] },
+          ],
+        }),
+        {},
+        200,
+      )
+
+    const createReadingAtw = async (
+      logger: ReturnType<typeof createLogger>,
+      isConnected: boolean,
+    ): ReturnType<typeof melCloudHomeApi.create> => {
+      const { settingManager } = persistedSessionStore()
+      mockRequest.mockResolvedValueOnce(contextReadingAtw(isConnected))
+      return melCloudHomeApi.create({
+        baseURL: BASE_URL,
+        logger,
+        settingManager,
+        transport: mockHttpClient,
+      })
+    }
+
+    const fetchReadingAtw = async (
+      api: HomeAPI,
+      isConnected: boolean,
+    ): Promise<void> => {
+      mockRequest.mockResolvedValueOnce(contextReadingAtw(isConnected))
+      await api.fetch()
+    }
+
+    it('logs nothing for a unit that reads connected throughout', async () => {
+      const logger = createLogger()
+      const api = await createReadingAtw(logger, true)
+      await fetchReadingAtw(api, true)
+
+      expect(unitLines(logger)).toStrictEqual([])
+    })
+
+    it('opens a streak with one disconnected line, naming the unit by type and id only', async () => {
+      const logger = createLogger()
+      const api = await createReadingAtw(logger, false)
+      await fetchReadingAtw(api, false)
+
+      expect(logger.log).toHaveBeenCalledWith(
+        '[Home]',
+        'ATW unit device-2 reads disconnected (isConnected: false); it reads unavailable after 24 h of continuous disconnection',
+      )
+      expect(unitLines(logger)).toHaveLength(1)
+      expect(unitLines(logger).join('\n')).not.toContain(
+        atwUnit.givenDisplayName,
+      )
+    })
+
+    it('reports the stale threshold once, as an error dating the streak in UTC', async () => {
+      const logger = createLogger()
+      const api = await createReadingAtw(logger, false)
+      clock.mockReturnValue(
+        start.add({ hours: STALE_COMMUNICATION_HOURS, minutes: 1 }),
+      )
+      await fetchReadingAtw(api, false)
+      await fetchReadingAtw(api, false)
+
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Home]',
+        'ATW unit device-2 has read disconnected for 24 h since 2026-10-02T10:00:00Z; it now reads unavailable',
+      )
+      expect(logger.error).toHaveBeenCalledTimes(1)
+    })
+
+    it.each([
+      { after: { hours: 26, minutes: 12 }, label: '26 h 12 min' },
+      { after: { minutes: 12 }, label: '12 min' },
+      { after: { seconds: 30 }, label: 'under a minute' },
+    ])(
+      'closes the streak with the reconnected line after $label',
+      async ({ after, label }) => {
+        const logger = createLogger()
+        const api = await createReadingAtw(logger, false)
+        clock.mockReturnValue(start.add(after))
+        await fetchReadingAtw(api, true)
+
+        expect(logger.log).toHaveBeenCalledWith(
+          '[Home]',
+          `ATW unit device-2 reads connected again after ${label} (1 disconnected sync)`,
+        )
+      },
+    )
+
+    it('counts the disconnected syncs of the streak it closes', async () => {
+      const logger = createLogger()
+      const api = await createReadingAtw(logger, false)
+      await fetchReadingAtw(api, false)
+      clock.mockReturnValue(start.add({ hours: 1 }))
+      await fetchReadingAtw(api, true)
+
+      expect(logger.log).toHaveBeenCalledWith(
+        '[Home]',
+        'ATW unit device-2 reads connected again after 1 h 0 min (2 disconnected syncs)',
+      )
     })
   })
 

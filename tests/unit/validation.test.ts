@@ -4,9 +4,11 @@ import { z } from 'zod'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ValidationError } from '../../src/errors/index.ts'
 import {
+  type HomeDroppedUnit,
   ClassicBuildingListSchema,
   ClassicEnergyDataSchema,
   ClassicLoginDataSchema,
+  collectDroppedHomeUnits,
   HomeContextSchema,
   HomeTokenResponseSchema,
   HourSchema,
@@ -21,7 +23,18 @@ import {
 import {
   defaultHomeAtaCapabilities,
   defaultHomeAtwCapabilities,
+  homeContextBuilding,
+  homeContextData,
 } from '../home-fixtures.ts'
+
+// The units the salvage prunes, read off the strict refusal of `context`.
+const droppedUnits = (context: unknown): HomeDroppedUnit[] => {
+  const strict = HomeContextSchema.safeParse(context)
+  if (strict.success) {
+    throw new Error('Expected the strict schema to refuse the payload')
+  }
+  return collectDroppedHomeUnits(context, strict.error)
+}
 
 const captureValidationError = (act: () => unknown): ValidationError => {
   try {
@@ -681,6 +694,73 @@ describe('validation/schemas', () => {
       expect(
         ClassicEnergyDataSchema.safeParse({ Unrelated: true }).success,
       ).toBe(false)
+    })
+  })
+
+  // The realistic shapes (one unit drifting beside a valid one, several
+  // units, metadata-only drift) are pinned where the line is logged, in
+  // `home-api.test.ts`; these are the degraded entries the collector must
+  // still name without crashing or printing a value.
+  describe(collectDroppedHomeUnits, () => {
+    it('names an entry whose id the wire did not spell as `null`', () => {
+      const [ataUnit] = homeContextBuilding.airToAirUnits
+
+      expect(
+        droppedUnits({
+          ...homeContextData(),
+          buildings: [
+            { ...homeContextBuilding, airToAirUnits: [{ ...ataUnit, id: 42 }] },
+          ],
+          guestBuildings: [],
+        }),
+      ).toStrictEqual([{ id: null, paths: ['id'], type: 'airToAir' }])
+    })
+
+    it('labels a refusal of the whole entry rather than printing the root marker', () => {
+      expect(
+        droppedUnits({
+          ...homeContextData(),
+          guestBuildings: [{ ...homeContextBuilding, airToWaterUnits: [null] }],
+        }),
+      ).toStrictEqual([{ id: null, paths: ['(entry)'], type: 'airToWater' }])
+    })
+
+    it('ignores drift outside the unit entries, whatever shape it takes', () => {
+      expect(
+        droppedUnits({
+          ...homeContextData(),
+          buildings: [null, { ...homeContextBuilding, airToAirUnits: 'none' }],
+          guestBuildings: 'none',
+          language: 1,
+        }),
+      ).toStrictEqual([])
+    })
+
+    // The collector is TOTAL: it runs on whatever the strict schema
+    // refused, so a payload that is not even an object answers the empty
+    // set rather than throwing inside the drift line.
+    it.each([[null], ['drifted'], [42], [[]]])(
+      'answers no unit, without throwing, when the payload is %o',
+      (raw) => {
+        expect(droppedUnits(raw)).toStrictEqual([])
+      },
+    )
+
+    it('still names a pruned unit when the payload spells no `guestBuildings`', () => {
+      const [ataUnit] = homeContextBuilding.airToAirUnits
+
+      expect(
+        droppedUnits({
+          buildings: [
+            {
+              ...homeContextBuilding,
+              airToAirUnits: [{ ...ataUnit, isConnected: 'yes' }],
+            },
+          ],
+        }),
+      ).toStrictEqual([
+        { id: 'device-1', paths: ['isConnected'], type: 'airToAir' },
+      ])
     })
   })
 })

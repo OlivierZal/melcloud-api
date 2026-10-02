@@ -6,6 +6,30 @@ import type {
 } from '../types/index.ts'
 import { HomeDeviceType } from '../constants.ts'
 import { Temporal } from '../temporal.ts'
+import { hasOutlivedStaleWindow } from './types.ts'
+
+/**
+ * One edge of a Home unit's `isConnected` streak, as a sync reports it.
+ * `disconnected` opens the streak (the first `false`, a constructing
+ * payload included); `stale` fires ONCE per streak, on the first sync
+ * whose streak age exceeds {@link STALE_COMMUNICATION_HOURS} — the same
+ * predicate the facade's `isAvailable` reads, evaluated here at sync
+ * time where the facade evaluates it at read time, so the edge follows
+ * the flip at the next sync (up to one sync interval later) — and
+ * carries the streak's start; `reconnected` closes it with that start
+ * and the number of disconnected syncs it spanned. A steady state
+ * either way is `null`, not a member: these are edges, so a flag that
+ * flaps is reported as the open/close pairs it produces.
+ * @category Entities
+ */
+export type HomeConnectivityTransition =
+  | { readonly kind: 'disconnected' }
+  | {
+      readonly kind: 'reconnected'
+      readonly since: Temporal.PlainDateTime
+      readonly syncs: number
+    }
+  | { readonly kind: 'stale'; readonly since: Temporal.PlainDateTime }
 
 /**
  * Mutable wrapper around a {@link HomeDeviceData}, preserving object identity across syncs.
@@ -18,6 +42,14 @@ import { Temporal } from '../temporal.ts'
  * @category Entities
  */
 export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
+  /**
+   * The transition the constructing payload opened: `disconnected` when
+   * it read `isConnected: false`, `null` otherwise. Registry-internal
+   * like {@link HomeDevice.sync}: the registry reads it on upsert so a
+   * unit that JOINS disconnected is reported like one that flips.
+   */
+  public readonly initialTransition: HomeConnectivityTransition | null
+
   public readonly type: HomeDeviceType
 
   /**
@@ -83,6 +115,15 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
 
   #disconnectedSince: Temporal.PlainDateTime | null = null
 
+  // Disconnected syncs of the current streak, so the closing line can
+  // say how many cycles the unit read `false` — and whether a streak
+  // was one flap or a day of them.
+  #disconnectedSyncs = 0
+
+  // The `stale` edge fires once per streak: set when it does, cleared
+  // when the streak closes.
+  #hasReadStale = false
+
   #isOwner: boolean
 
   /**
@@ -107,7 +148,7 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
     this.#data = entry.device
     this.#isOwner = entry.isOwner
     this.type = entry.type
-    this.#trackConnectivity()
+    this.initialTransition = this.#trackConnectivity()
   }
 
   /**
@@ -139,25 +180,59 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
    * @param device - Fresh wire-format device payload.
    * @param isOwner - Ownership origin from the current sync.
    * @param building - Building identity from the current sync.
+   * @returns The connectivity edge this sync crossed, `null` for a
+   * steady state either way.
    */
   public sync(
     device: TData,
     isOwner: boolean,
     building: HomeBuildingRef,
-  ): void {
+  ): HomeConnectivityTransition | null {
     this.#building = building
     this.#data = device
     this.#isOwner = isOwner
-    this.#trackConnectivity()
+    return this.#trackConnectivity()
+  }
+
+  // Closing a streak yields `reconnected` with its start and length; a
+  // connected read over no streak is the steady state.
+  #closeStreak(): HomeConnectivityTransition | null {
+    const since = this.#disconnectedSince
+    if (since === null) {
+      return null
+    }
+    const syncs = this.#disconnectedSyncs
+    this.#disconnectedSince = null
+    this.#disconnectedSyncs = 0
+    this.#hasReadStale = false
+    return { kind: 'reconnected', since, syncs }
+  }
+
+  // Opening a streak yields `disconnected`; the first extension past
+  // the stale window yields `stale`, once — the facade's `isAvailable`
+  // flips on the same predicate, read at read time, so the edge is the
+  // next sync's reading of it, at most one sync interval behind the
+  // flip; every other extension is the steady state.
+  #extendStreak(): HomeConnectivityTransition | null {
+    this.#disconnectedSyncs += 1
+    if (this.#disconnectedSince === null) {
+      this.#disconnectedSince = Temporal.Now.plainDateTimeISO('UTC')
+      return { kind: 'disconnected' }
+    }
+    if (
+      this.#hasReadStale ||
+      !hasOutlivedStaleWindow(this.#disconnectedSince)
+    ) {
+      return null
+    }
+    this.#hasReadStale = true
+    return { kind: 'stale', since: this.#disconnectedSince }
   }
 
   // A connected sync resets the streak; a disconnected one only stamps
   // its start, so the timestamp marks the oldest uninterrupted `false`.
-  #trackConnectivity(): void {
-    if (this.#data.isConnected) {
-      this.#disconnectedSince = null
-    } else {
-      this.#disconnectedSince ??= Temporal.Now.plainDateTimeISO('UTC')
-    }
+  // The result is the EDGE the sync crossed, `null` for a steady state.
+  #trackConnectivity(): HomeConnectivityTransition | null {
+    return this.#data.isConnected ? this.#closeStreak() : this.#extendStreak()
   }
 }
