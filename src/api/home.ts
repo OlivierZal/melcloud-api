@@ -1030,8 +1030,13 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       ({ id, paths, type }) =>
         `${describeUnit(type, id)} (${paths.join(', ')})`,
     )
+    // Built in two steps: Sonar refuses a template literal nested in
+    // another (S4624), and the suffix is empty when only building-level
+    // fields drifted.
+    const droppedSuffix =
+      dropped.length === 0 ? '' : ` dropped ${dropped.join(', ')}`
     this.logger.error(
-      `Home context drifted from the strict schema; salvaging device entries:${dropped.length === 0 ? '' : ` dropped ${dropped.join(', ')}`}`,
+      `Home context drifted from the strict schema; salvaging device entries:${droppedSuffix}`,
       strict.error,
     )
   }
