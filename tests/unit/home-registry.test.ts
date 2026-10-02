@@ -1,10 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import { defined } from '@olivierzal/api-core/testing'
+import { describe, expect, it, vi } from 'vitest'
 
 import { HomeDeviceType } from '../../src/constants.ts'
 import {
   type TypedHomeDeviceData,
   HomeRegistry,
 } from '../../src/entities/home-registry.ts'
+import { STALE_COMMUNICATION_HOURS } from '../../src/entities/types.ts'
+import { Temporal } from '../../src/temporal.ts'
 import {
   homeBuildingRef,
   typedHomeAtwDeviceData,
@@ -15,6 +18,14 @@ const createDevice = (
   id: string,
   name = 'ClassicDevice',
 ): TypedHomeDeviceData => typedHomeDeviceData({ id, name })
+
+const atwReading = (isConnected: boolean): TypedHomeDeviceData =>
+  typedHomeAtwDeviceData({ id: 'atw-1', isConnected })
+
+const pastStaleWindow = (
+  since: Temporal.PlainDateTime,
+): Temporal.PlainDateTime =>
+  since.add({ hours: STALE_COMMUNICATION_HOURS, minutes: 1 })
 
 describe('home device registry', () => {
   it('should sync new devices', () => {
@@ -139,5 +150,86 @@ describe('home device registry', () => {
 
     expect(registry.getDevicesByType(HomeDeviceType.Ata)).toHaveLength(2)
     expect(registry.getDevicesByType(HomeDeviceType.Atw)).toHaveLength(1)
+  })
+
+  // The sync answers the EDGES a unit's `isConnected` streak crosses, and
+  // only those: the API client logs each one, so a steady state — connected
+  // or a day into a disconnection — must stay silent, while a flag that
+  // flaps is reported as the open/close pairs it produces.
+  describe('connectivity transitions', () => {
+    it('opens a streak with one `disconnected`, the constructing payload included', () => {
+      const registry = new HomeRegistry()
+      const events = registry.syncDevices([atwReading(false)])
+
+      expect(events).toStrictEqual([
+        {
+          transition: { kind: 'disconnected' },
+          unit: registry.getById('atw-1'),
+        },
+      ])
+      expect(registry.syncDevices([atwReading(false)])).toStrictEqual([])
+    })
+
+    it('closes the streak with `reconnected`, carrying its start and its disconnected sync count', () => {
+      const registry = new HomeRegistry()
+      registry.syncDevices([atwReading(false)])
+      const unit = defined(registry.getById('atw-1'))
+      const since = defined(unit.disconnectedSince)
+      registry.syncDevices([atwReading(false)])
+
+      expect(registry.syncDevices([atwReading(true)])).toStrictEqual([
+        { transition: { kind: 'reconnected', since, syncs: 2 }, unit },
+      ])
+      expect(unit.disconnectedSince).toBeNull()
+    })
+
+    it('reports `stale` exactly once per streak, on the first sync past the stale window', () => {
+      const registry = new HomeRegistry()
+      registry.syncDevices([atwReading(false)])
+      const unit = defined(registry.getById('atw-1'))
+      const since = defined(unit.disconnectedSince)
+      const clock = vi
+        .spyOn(Temporal.Now, 'plainDateTimeISO')
+        .mockReturnValue(pastStaleWindow(since))
+      try {
+        expect(registry.syncDevices([atwReading(false)])).toStrictEqual([
+          { transition: { kind: 'stale', since }, unit },
+        ])
+        expect(registry.syncDevices([atwReading(false)])).toStrictEqual([])
+      } finally {
+        clock.mockRestore()
+      }
+    })
+
+    it('arms `stale` again for the next streak', () => {
+      const registry = new HomeRegistry()
+      registry.syncDevices([atwReading(false)])
+      const unit = defined(registry.getById('atw-1'))
+      const clock = vi.spyOn(Temporal.Now, 'plainDateTimeISO')
+      const kinds = (isConnected: boolean): string[] =>
+        registry
+          .syncDevices([atwReading(isConnected)])
+          .map(({ transition }) => transition.kind)
+      try {
+        clock.mockReturnValue(pastStaleWindow(defined(unit.disconnectedSince)))
+
+        expect(kinds(false)).toStrictEqual(['stale'])
+        expect(kinds(true)).toStrictEqual(['reconnected'])
+        expect(kinds(false)).toStrictEqual(['disconnected'])
+
+        clock.mockReturnValue(pastStaleWindow(defined(unit.disconnectedSince)))
+
+        expect(kinds(false)).toStrictEqual(['stale'])
+      } finally {
+        clock.mockRestore()
+      }
+    })
+
+    it('reports nothing for a unit that stays connected', () => {
+      const registry = new HomeRegistry()
+
+      expect(registry.syncDevices([atwReading(true)])).toStrictEqual([])
+      expect(registry.syncDevices([atwReading(true)])).toStrictEqual([])
+    })
   })
 })

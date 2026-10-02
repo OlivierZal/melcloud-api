@@ -7,7 +7,7 @@ import type {
   HomeDeviceZone,
   HomeFlatZone,
 } from '../types/index.ts'
-import { HomeDevice } from './home-device.ts'
+import { type HomeConnectivityTransition, HomeDevice } from './home-device.ts'
 
 /**
  * Devices of one `/context` building sharing a connection type — the
@@ -21,6 +21,17 @@ export interface HomeBuildingDevices {
 }
 
 /**
+ * One connectivity edge a sync crossed, with the unit that crossed it —
+ * what {@link HomeRegistry.syncDevices} hands back for the API client
+ * to log.
+ * @category Entities
+ */
+export interface HomeConnectivityEvent {
+  readonly transition: HomeConnectivityTransition
+  readonly unit: HomeDevice
+}
+
+/**
  * Home device with its type, ownership origin and source building, as extracted from building units.
  * @internal
  */
@@ -30,6 +41,12 @@ export interface TypedHomeDeviceData {
   readonly isOwner: boolean
   readonly type: HomeDeviceType
 }
+
+const toConnectivityEvent = (
+  unit: HomeDevice,
+  transition: HomeConnectivityTransition | null,
+): HomeConnectivityEvent | null =>
+  transition === null ? null : { transition, unit }
 
 /**
  * Lightweight device registry for the Home API.
@@ -159,13 +176,27 @@ export class HomeRegistry {
    * Upserts the device registry from a flat list of typed device payloads;
    * entries absent from `devices` are pruned.
    * @param devices - Fresh typed device payloads.
+   * @returns The connectivity edges this sync crossed, in payload order
+   * — a newly upserted wrapper's opening `disconnected` included; a
+   * steady unit reports nothing.
    */
-  public syncDevices(devices: TypedHomeDeviceData[]): void {
+  public syncDevices(
+    devices: TypedHomeDeviceData[],
+  ): readonly HomeConnectivityEvent[] {
     const activeIds = new Set<string>()
+    const events: HomeConnectivityEvent[] = []
     for (const entry of devices) {
       activeIds.add(entry.device.id)
-      this.#upsert(entry)
+      const event = this.#upsert(entry)
+      if (event !== null) {
+        events.push(event)
+      }
     }
+    this.#prune(activeIds)
+    return events
+  }
+
+  #prune(activeIds: ReadonlySet<string>): void {
     for (const id of this.#devices.keys()) {
       if (!activeIds.has(id)) {
         this.#devices.delete(id)
@@ -173,12 +204,16 @@ export class HomeRegistry {
     }
   }
 
-  #upsert(entry: TypedHomeDeviceData): void {
+  #upsert(entry: TypedHomeDeviceData): HomeConnectivityEvent | null {
     const existing = this.#devices.get(entry.device.id)
     if (existing === undefined) {
-      this.#devices.set(entry.device.id, new HomeDevice(entry))
-      return
+      const unit = new HomeDevice(entry)
+      this.#devices.set(entry.device.id, unit)
+      return toConnectivityEvent(unit, unit.initialTransition)
     }
-    existing.sync(entry.device, entry.isOwner, entry.building)
+    return toConnectivityEvent(
+      existing,
+      existing.sync(entry.device, entry.isOwner, entry.building),
+    )
   }
 }

@@ -17,7 +17,11 @@ import type {
   HomeUserContext,
   Hour,
 } from '../types/index.ts'
-import { ClassicDeviceType, ClassicLabelType } from '../constants.ts'
+import {
+  ClassicDeviceType,
+  ClassicLabelType,
+  HomeDeviceType,
+} from '../constants.ts'
 import { ValidationError } from '../errors/index.ts'
 
 // Runtime schemas for API boundaries where silent shape drift would hide
@@ -252,6 +256,153 @@ const HomeResilientBuildingSchema: z.ZodType<HomeBuilding> = z.looseObject({
   name: z.string(),
   timezone: z.string(),
 })
+
+// A dropped entry names itself through its id, and an entry the
+// per-type schema refuses somewhere else can still spell a usable `id` —
+// the Home twin of `ClassicDeviceIdSchema`.
+const HomeDeviceIdSchema = z.looseObject({ id: z.string() })
+
+// The raw payload's unit entries by position, whatever else drifted: a
+// list or a building that is not what the skeleton expects reads empty
+// rather than failing the lookup, so a drifting container never hides
+// the units of the others.
+const HomeUnitListSkeletonSchema = z.array(z.unknown()).catch([])
+const HomeBuildingSkeletonSchema = z
+  .looseObject({
+    airToAirUnits: HomeUnitListSkeletonSchema,
+    airToWaterUnits: HomeUnitListSkeletonSchema,
+  })
+  .catch({ airToAirUnits: [], airToWaterUnits: [] })
+const HomeContextSkeletonSchema = z.looseObject({
+  buildings: z.array(HomeBuildingSkeletonSchema).catch([]),
+  guestBuildings: z.array(HomeBuildingSkeletonSchema).catch([]),
+})
+
+const HOME_UNIT_LIST_TYPES = {
+  airToAirUnits: HomeDeviceType.Ata,
+  airToWaterUnits: HomeDeviceType.Atw,
+} as const
+
+type HomeBuildingListKey = 'buildings' | 'guestBuildings'
+
+type HomeUnitListKey = keyof typeof HOME_UNIT_LIST_TYPES
+
+interface HomeUnitLocation {
+  readonly building: number
+  readonly container: HomeBuildingListKey
+  readonly index: number
+  readonly list: HomeUnitListKey
+}
+
+/**
+ * One `/context` unit the salvage parse prunes, read off the STRICT
+ * refusal: `id` is salvaged loosely from the raw entry (`null` when the
+ * wire did not spell one), `paths` are the refused paths RELATIVE to
+ * the entry — the failing fields, never their values.
+ */
+export interface HomeDroppedUnit {
+  readonly id: string | null
+  readonly paths: readonly string[]
+  readonly type: HomeDeviceType
+}
+
+const isHomeBuildingListKey = (
+  key: PropertyKey | undefined,
+): key is HomeBuildingListKey => key === 'buildings' || key === 'guestBuildings'
+
+const isHomeUnitListKey = (
+  key: PropertyKey | undefined,
+): key is HomeUnitListKey =>
+  typeof key === 'string' && Object.hasOwn(HOME_UNIT_LIST_TYPES, key)
+
+// `buildings.<b>.airToAirUnits.<u>.<rest>`: the first four segments
+// locate a unit, the rest is the entry-relative path.
+const locateHomeUnit = (
+  path: readonly PropertyKey[],
+): { location: HomeUnitLocation; rest: readonly PropertyKey[] } | null => {
+  const [container, building, list, index, ...rest] = path
+  return typeof building !== 'number' ||
+    typeof index !== 'number' ||
+    !isHomeBuildingListKey(container) ||
+    !isHomeUnitListKey(list)
+    ? null
+    : { location: { building, container, index, list }, rest }
+}
+
+// A refusal of the whole entry (it is not an object) has no field to
+// name; the label says so instead of printing the root marker.
+const describeEntryPath = (path: readonly PropertyKey[]): string =>
+  path.length === 0 ? '(entry)' : path.map(String).join('.')
+
+interface RefusedHomeUnit {
+  readonly location: HomeUnitLocation
+  readonly paths: Set<string>
+}
+
+const homeUnitKey = ({
+  building,
+  container,
+  index,
+  list,
+}: HomeUnitLocation): string =>
+  `${container}.${String(building)}.${list}.${String(index)}`
+
+// The refused paths that fall under a unit entry, grouped by the entry
+// they fall under and made relative to it, in payload order.
+const groupRefusedHomeUnits = (error: z.ZodError): RefusedHomeUnit[] => {
+  const units = new Map<string, RefusedHomeUnit>()
+  for (const path of collectIssuePaths(error.issues)) {
+    const located = locateHomeUnit(path)
+    if (located === null) {
+      continue
+    }
+    const key = homeUnitKey(located.location)
+    const unit = units.get(key) ?? {
+      location: located.location,
+      paths: new Set<string>(),
+    }
+    unit.paths.add(describeEntryPath(located.rest))
+    units.set(key, unit)
+  }
+  return units.values().toArray()
+}
+
+const salvageHomeUnitId = (
+  skeleton: z.infer<typeof HomeContextSkeletonSchema>,
+  { building, container, index, list }: HomeUnitLocation,
+): string | null => {
+  const entry = HomeDeviceIdSchema.safeParse(
+    skeleton[container][building]?.[list][index],
+  )
+  return entry.success ? entry.data.id : null
+}
+
+/**
+ * The `/context` units the salvage parse prunes, derived from the STRICT
+ * refusal: both parses validate each unit against the same per-type
+ * schema, so an entry refused under a unit path is exactly one the
+ * salvage drops — read off the refusal rather than diffed against the
+ * salvage's output, so the drift line is right even when the salvage
+ * itself throws (building envelope drift), which the streak records too.
+ * Each unit is named by the id salvaged loosely from its raw entry and
+ * by its refused paths relative to the entry, each once; no received
+ * value, like every other refusal message (the payload carries personal
+ * data).
+ * @param raw - The raw `/context` payload the strict schema refused.
+ * @param error - The strict refusal.
+ * @returns One entry per pruned unit, in payload order.
+ */
+export const collectDroppedHomeUnits = (
+  raw: unknown,
+  error: z.ZodError,
+): HomeDroppedUnit[] => {
+  const skeleton = HomeContextSkeletonSchema.parse(raw)
+  return groupRefusedHomeUnits(error).map(({ location, paths }) => ({
+    id: salvageHomeUnitId(skeleton, location),
+    paths: [...paths],
+    type: HOME_UNIT_LIST_TYPES[location.list],
+  }))
+}
 
 /**
  * Salvage variant of {@link HomeContextSchema}, applied only after the

@@ -13,6 +13,10 @@ export {
   isClassicDeviceOfType,
 } from './classic-types.ts'
 export { ClassicFloor } from './floor.ts'
-export { HomeDevice } from './home-device.ts'
-export { type HomeBuildingDevices, HomeRegistry } from './home-registry.ts'
+export { type HomeConnectivityTransition, HomeDevice } from './home-device.ts'
+export {
+  type HomeBuildingDevices,
+  type HomeConnectivityEvent,
+  HomeRegistry,
+} from './home-registry.ts'
 export { STALE_COMMUNICATION_HOURS } from './types.ts'

@@ -56,6 +56,22 @@ const chartEnergyReport = async (
 describe('home device ata facade', () => {
   beforeEach(resetHomeDevices)
 
+  // The raw wire flag, for comparison with the official app — never the
+  // availability contract, which only flips after a day of `false`.
+  describe('raw connectivity flag', () => {
+    it('reads the wire flag verbatim, independently of availability', () => {
+      const device = homeDevice({ id: 'device-1', isConnected: false })
+      const facade = new HomeDeviceAtaFacade(createMockHomeApi(), device)
+
+      expect(facade.isConnected).toBe(false)
+      expect(facade.isAvailable).toBe(true)
+
+      device.sync({ ...device.data, isConnected: true }, true, device.building)
+
+      expect(facade.isConnected).toBe(true)
+    })
+  })
+
   describe('protection accessors', () => {
     it('keeps a freshly disconnected unit available within the persistence window', () => {
       const facade = new HomeDeviceAtaFacade(

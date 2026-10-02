@@ -7,10 +7,9 @@ import { HomeDeviceType } from '../constants.ts'
 import {
   type AvailabilityAware,
   type Identifiable,
-  STALE_COMMUNICATION_HOURS,
+  hasOutlivedStaleWindow,
 } from '../entities/types.ts'
 import { EntityNotFoundError, NoChangesError } from '../errors/index.ts'
-import { Temporal } from '../temporal.ts'
 import {
   type HomeAtwDeviceData,
   type HomeDeviceData,
@@ -288,11 +287,24 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
   public get isAvailable(): boolean {
     const { disconnectedSince } = this.model
     return (
-      disconnectedSince === null ||
-      Temporal.Now.plainDateTimeISO('UTC')
-        .since(disconnectedSince)
-        .total('hours') <= STALE_COMMUNICATION_HOURS
+      disconnectedSince === null || !hasOutlivedStaleWindow(disconnectedSince)
     )
+  }
+
+  /**
+   * The RAW `/context` `isConnected` flag, as the wire read it on the
+   * latest sync — exposed for comparison with what the official app
+   * shows, never as availability. Its positive side is live-probed
+   * (12/12 `true` on healthy units); its negative side is unproven, and
+   * a flag that flapped would grey a tile on every flap, which is why
+   * {@link isAvailable} — the contract consumers must act on — only
+   * flips after a day of continuous `false`. Independent of the streak:
+   * a unit one minute into a disconnection reads `isConnected: false`
+   * and `isAvailable: true` at once.
+   * @returns The wire flag, verbatim.
+   */
+  public get isConnected(): boolean {
+    return this.model.data.isConnected
   }
 
   /**

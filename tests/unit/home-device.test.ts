@@ -55,5 +55,27 @@ describe('home device entity', () => {
     const device = homeDevice({ id: 'ata-2' })
 
     expect(device.disconnectedSince).toBeNull()
+    expect(device.initialTransition).toBeNull()
+  })
+
+  it('answers the edge each payload crosses, the constructing one included', () => {
+    const device = homeDevice({ id: 'ata-1', isConnected: false })
+    const since = device.disconnectedSince
+
+    expect(device.initialTransition).toStrictEqual({ kind: 'disconnected' })
+    expect(
+      device.sync(
+        { ...device.data, isConnected: false },
+        true,
+        homeBuildingRef(),
+      ),
+    ).toBeNull()
+    expect(
+      device.sync(
+        { ...device.data, isConnected: true },
+        true,
+        homeBuildingRef(),
+      ),
+    ).toStrictEqual({ kind: 'reconnected', since, syncs: 2 })
   })
 })

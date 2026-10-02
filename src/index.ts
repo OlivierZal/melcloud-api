@@ -191,6 +191,8 @@ export {
   type ClassicDeviceAny,
   type ClassicModel,
   type HomeBuildingDevices,
+  type HomeConnectivityEvent,
+  type HomeConnectivityTransition,
   type Identifiable,
   ClassicArea,
   ClassicBuilding,

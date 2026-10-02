@@ -4,9 +4,11 @@ import type { HomeDevice } from '../entities/home-device.ts'
 import { type HomeAtwZoneMode, HomeDeviceType } from '../constants.ts'
 import { fetchDevices, setting, syncDevices } from '../decorators/index.ts'
 import {
+  type HomeConnectivityEvent,
   type TypedHomeDeviceData,
   HomeRegistry,
 } from '../entities/home-registry.ts'
+import { STALE_COMMUNICATION_HOURS } from '../entities/types.ts'
 import {
   AuthenticationThrottledError,
   EntityNotFoundError,
@@ -36,6 +38,7 @@ import {
   ok,
 } from '../types/index.ts'
 import {
+  collectDroppedHomeUnits,
   describeRefusedPaths,
   HomeContextSchema,
   HomeEnergyDataSchema,
@@ -55,6 +58,39 @@ const ATW_UNIT_PATH = '/monitor/atwunit'
 const CONTEXT_PATH = '/context'
 // The strict-parse drift's streak subject, distinct from the request's.
 const CONTEXT_DRIFT_SUBJECT = 'GET /context (strict)'
+// The stale window as the connectivity lines spell it, from the one
+// constant the facade's `isAvailable` reads.
+const STALE_WINDOW = `${String(STALE_COMMUNICATION_HOURS)} h`
+
+// A unit is named by TYPE and ID only, on every line: the display name
+// is user-entered personal data and never reaches a log.
+const UNIT_TYPE_LABELS = {
+  airToAir: 'ATA',
+  airToWater: 'ATW',
+} satisfies Record<HomeDeviceType, string>
+
+const describeUnit = (type: HomeDeviceType, id: string | null): string =>
+  `${UNIT_TYPE_LABELS[type]} unit ${id ?? 'unknown'}`
+
+// The age of a disconnection streak as the closing line spells it —
+// `26 h 12 min`, `12 min`, `under a minute` — truncated, since a
+// reconnection is only ever read at sync granularity.
+const formatStreakAge = (since: Temporal.PlainDateTime): string => {
+  const { hours, minutes } = Temporal.Now.plainDateTimeISO('UTC').since(since, {
+    largestUnit: 'hours',
+    roundingMode: 'trunc',
+    smallestUnit: 'minutes',
+  })
+  if (hours > 0) {
+    return `${String(hours)} h ${String(minutes)} min`
+  }
+  return minutes > 0 ? `${String(minutes)} min` : 'under a minute'
+}
+
+// The streak start is UTC wall clock by construction; the line says so
+// with the instant's own `Z`.
+const toUtcInstantString = (since: Temporal.PlainDateTime): string =>
+  since.toZonedDateTime('UTC').toInstant().toString({ smallestUnit: 'second' })
 
 const FROST_PROTECTION_PATH = '/monitor/protection/frost'
 const HOLIDAY_MODE_PATH = '/monitor/holidaymode'
@@ -728,7 +764,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
         // entry point saw the 404.
         return []
       }
-      this.#registry.syncDevices([
+      const events = this.#registry.syncDevices([
         // Guest entries first: the registry upsert is last-write-wins
         // per id, so a device duplicated across `buildings` and
         // `guestBuildings` keeps its owned tag.
@@ -737,6 +773,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
         ),
         ...data.buildings.flatMap((building) => toTypedDevices(building, true)),
       ])
+      for (const event of events) {
+        this.#reportConnectivity(event)
+      }
       return [...data.buildings, ...data.guestBuildings]
     })
   }
@@ -819,7 +858,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       parseOrThrow(HomeUserContextSchema, raw, 'GET /context'),
     )
     const strict = HomeContextSchema.safeParse(raw)
-    this.#recordDrift(strict)
+    this.#recordDrift(strict, raw)
     const data = strict.success
       ? strict.data
       : parseOrThrow(HomeResilientContextSchema, raw, 'GET /context (salvage)')
@@ -960,8 +999,16 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   // with one line counting the drifting fetches (a fetch whose salvage
   // threw counts too — the drift is recorded before that parse, so the
   // line survives it); a refusal reports it when it opens, when its
-  // paths change and once per reminder window.
-  #recordDrift(strict: ReturnType<typeof HomeContextSchema.safeParse>): void {
+  // paths change and once per reminder window. The streak is keyed on
+  // the refused paths alone; the pruned units are the MESSAGE, named
+  // so the report says which unit went stale (com.melcloud degrades a
+  // pruned device to a warning over frozen values), with the paths
+  // relative to each entry — and received values never appear, the
+  // ZodError `cause` carrying types only.
+  #recordDrift(
+    strict: ReturnType<typeof HomeContextSchema.safeParse>,
+    raw: unknown,
+  ): void {
     if (strict.success) {
       const fetches = this.#driftStreaks.close(CONTEXT_DRIFT_SUBJECT)
       if (fetches !== null) {
@@ -972,16 +1019,21 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       return
     }
     if (
-      this.#driftStreaks.shouldReport(
+      !this.#driftStreaks.shouldReport(
         CONTEXT_DRIFT_SUBJECT,
         describeRefusedPaths(strict.error),
       )
     ) {
-      this.logger.error(
-        'Home context drifted from the strict schema; salvaging device entries:',
-        strict.error,
-      )
+      return
     }
+    const dropped = collectDroppedHomeUnits(raw, strict.error).map(
+      ({ id, paths, type }) =>
+        `${describeUnit(type, id)} (${paths.join(', ')})`,
+    )
+    this.logger.error(
+      `Home context drifted from the strict schema; salvaging device entries:${dropped.length === 0 ? '' : ` dropped ${dropped.join(', ')}`}`,
+      strict.error,
+    )
   }
 
   /**
@@ -999,6 +1051,40 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     }
     this.#storeTokens(tokens)
     return true
+  }
+
+  // Edge-triggered and deliberately unthrottled: one line when a unit's
+  // `isConnected` streak opens, one (an error) when it outlives the
+  // stale window — the instant the facade's `isAvailable` flips, so a
+  // diagnostic report can DATE a greyed tile — and one when it closes.
+  // No reminder and no coalescing by design: the flag's negative side
+  // is unproven (live-probed 12/12 `true` on healthy units; a `false`
+  // has never been witnessed on one), so if it flaps minute to minute
+  // the open/close pairs ARE the finding a report must show, and at
+  // Home's one-minute cadence that is still two lines per flap, never a
+  // line per fetch (the 59.1.0/59.2.0 storms were lines per fetch).
+  #reportConnectivity({ transition, unit }: HomeConnectivityEvent): void {
+    const subject = describeUnit(unit.type, unit.id)
+    switch (transition.kind) {
+      case 'disconnected': {
+        this.logger.log(
+          `${subject} reads disconnected (isConnected: false); it reads unavailable after ${STALE_WINDOW} of continuous disconnection`,
+        )
+        break
+      }
+      case 'reconnected': {
+        this.logger.log(
+          `${subject} reads connected again after ${formatStreakAge(transition.since)} (${String(transition.syncs)} disconnected ${transition.syncs === 1 ? 'sync' : 'syncs'})`,
+        )
+        break
+      }
+      case 'stale': {
+        this.logger.error(
+          `${subject} has read disconnected for ${STALE_WINDOW} since ${toUtcInstantString(transition.since)}; it now reads unavailable`,
+        )
+        break
+      }
+    }
   }
 
   // Sole owner of the no-home marker, in both directions: a `404` raises

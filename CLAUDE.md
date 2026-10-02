@@ -348,6 +348,35 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   on the SAME class rather than a copy — the twin question #1789
   answered for capabilities, answered here for logging: the mechanism
   crosses, each SDK names its own subjects.
+- Home connectivity lines are EDGES, unthrottled by design (59.3.0). The
+  only availability signal a Home unit has is the `/context`
+  `isConnected` boolean, tracked as an in-memory streak that
+  `isAvailable` reads against `STALE_COMMUNICATION_HOURS`; until 59.3.0
+  nothing wrote a line when the flag flipped or the window closed, so a
+  report could not date a Homey "unavailable". `HomeDevice.sync` answers
+  the edge a sync crosses (`disconnected` on the first `false`, `stale`
+  once per streak on the first sync past the window — the instant the
+  tile greys, logged as an error so the report dates it —
+  `reconnected` with the streak's start and sync count), the registry
+  collects them and the sync cycle logs each one. No reminder and no
+  coalescing, unlike the drift streak above: the flag's negative side
+  is unproven (live-probed 12/12 `true` on healthy units; a `false` has
+  never been witnessed on one), so if it flaps the open/close pairs ARE
+  the finding a report must show, and at the one-minute cadence that is
+  two lines per flap, never a line per fetch. The unit is named by TYPE
+  and ID only — `givenDisplayName` and every other user-entered string
+  are personal data and never reach a log line — and the drift line
+  names the pruned unit the same way (id salvaged loosely from the raw
+  entry, paths relative to the entry, never values).
+  `HomeBaseDeviceFacade.isConnected` is the RAW flag, back after 44.0.0
+  removed it, for comparison with the official app and never for
+  availability: `isAvailable` stays the contract. The motivating report
+  (2026-10-02): an Ecodan ATW on Home reads "offline for hours" while
+  the ATA on the same account never does; the availability code is
+  identical for both, so the asymmetry can only come from the per-unit
+  flag, from the wider ATW strict schema (a drifting ATW entry is
+  salvaged out of the registry — pruned, not offline — which the named
+  drift line now tells apart) or from the Homey itself.
 - A READ closes a vocabulary only where the SDK CONSUMES it (59.0.0).
   Home's `connectedInterfaceType` was the closed pair
   `fourthGenWifi | melCloudWiFi` on a label nothing reads, so the next

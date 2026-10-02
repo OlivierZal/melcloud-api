@@ -23,6 +23,8 @@ export {
   type HomeBuildingRef as BuildingRef,
   type HomeBuildingZone as BuildingZone,
   type HomeClaim as Claim,
+  type HomeConnectivityEvent as ConnectivityEvent,
+  type HomeConnectivityTransition as ConnectivityTransition,
   type HomeContext as Context,
   type HomeDeviceCapabilities as DeviceCapabilities,
   type HomeDeviceCommonData as DeviceCommonData,
