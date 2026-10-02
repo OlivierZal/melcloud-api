@@ -263,9 +263,10 @@ const HomeResilientBuildingSchema: z.ZodType<HomeBuilding> = z.looseObject({
 const HomeDeviceIdSchema = z.looseObject({ id: z.string() })
 
 // The raw payload's unit entries by position, whatever else drifted: a
-// list or a building that is not what the skeleton expects reads empty
-// rather than failing the lookup, so a drifting container never hides
-// the units of the others.
+// list, a building or the payload itself that is not what the skeleton
+// expects reads empty rather than failing the lookup, so a drifting
+// container never hides the units of the others and the parse is TOTAL
+// (the root `catch` is what lets `collectDroppedHomeUnits` never throw).
 const HomeUnitListSkeletonSchema = z.array(z.unknown()).catch([])
 const HomeBuildingSkeletonSchema = z
   .looseObject({
@@ -273,10 +274,12 @@ const HomeBuildingSkeletonSchema = z
     airToWaterUnits: HomeUnitListSkeletonSchema,
   })
   .catch({ airToAirUnits: [], airToWaterUnits: [] })
-const HomeContextSkeletonSchema = z.looseObject({
-  buildings: z.array(HomeBuildingSkeletonSchema).catch([]),
-  guestBuildings: z.array(HomeBuildingSkeletonSchema).catch([]),
-})
+const HomeContextSkeletonSchema = z
+  .looseObject({
+    buildings: z.array(HomeBuildingSkeletonSchema).catch([]),
+    guestBuildings: z.array(HomeBuildingSkeletonSchema).catch([]),
+  })
+  .catch({ buildings: [], guestBuildings: [] })
 
 const HOME_UNIT_LIST_TYPES = {
   airToAirUnits: HomeDeviceType.Ata,
@@ -387,7 +390,9 @@ const salvageHomeUnitId = (
  * Each unit is named by the id salvaged loosely from its raw entry and
  * by its refused paths relative to the entry, each once; no received
  * value, like every other refusal message (the payload carries personal
- * data).
+ * data). Total: it never throws — the skeleton reads a payload that is
+ * not even an object, or spells no building list, as having no entries,
+ * so the drift line is written whatever shape the refusal took.
  * @param raw - The raw `/context` payload the strict schema refused.
  * @param error - The strict refusal.
  * @returns One entry per pruned unit, in payload order.

@@ -1055,7 +1055,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   // Edge-triggered and deliberately unthrottled: one line when a unit's
   // `isConnected` streak opens, one (an error) when it outlives the
-  // stale window — the instant the facade's `isAvailable` flips, so a
+  // stale window — the predicate the facade's `isAvailable` flips on,
+  // read at the next sync, so the line trails the flip by at most one
+  // sync interval (about a minute at Home's default cadence) and a
   // diagnostic report can DATE a greyed tile — and one when it closes.
   // No reminder and no coalescing by design: the flag's negative side
   // is unproven (live-probed 12/12 `true` on healthy units; a `false`

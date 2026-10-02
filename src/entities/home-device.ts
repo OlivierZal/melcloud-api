@@ -12,12 +12,14 @@ import { hasOutlivedStaleWindow } from './types.ts'
  * One edge of a Home unit's `isConnected` streak, as a sync reports it.
  * `disconnected` opens the streak (the first `false`, a constructing
  * payload included); `stale` fires ONCE per streak, on the first sync
- * whose streak age exceeds {@link STALE_COMMUNICATION_HOURS} — the
- * instant the facade's `isAvailable` flips — and carries the streak's
- * start; `reconnected` closes it with that start and the number of
- * disconnected syncs it spanned. A steady state either way is `null`,
- * not a member: these are edges, so a flag that flaps is reported as
- * the open/close pairs it produces.
+ * whose streak age exceeds {@link STALE_COMMUNICATION_HOURS} — the same
+ * predicate the facade's `isAvailable` reads, evaluated here at sync
+ * time where the facade evaluates it at read time, so the edge follows
+ * the flip at the next sync (up to one sync interval later) — and
+ * carries the streak's start; `reconnected` closes it with that start
+ * and the number of disconnected syncs it spanned. A steady state
+ * either way is `null`, not a member: these are edges, so a flag that
+ * flaps is reported as the open/close pairs it produces.
  * @category Entities
  */
 export type HomeConnectivityTransition =
@@ -208,8 +210,9 @@ export class HomeDevice<TData extends HomeDeviceData = HomeDeviceData> {
 
   // Opening a streak yields `disconnected`; the first extension past
   // the stale window yields `stale`, once — the facade's `isAvailable`
-  // flips on the same predicate at the same instant; every other
-  // extension is the steady state.
+  // flips on the same predicate, read at read time, so the edge is the
+  // next sync's reading of it, at most one sync interval behind the
+  // flip; every other extension is the steady state.
   #extendStreak(): HomeConnectivityTransition | null {
     this.#disconnectedSyncs += 1
     if (this.#disconnectedSince === null) {

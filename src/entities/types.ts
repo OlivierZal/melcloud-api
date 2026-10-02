@@ -16,8 +16,9 @@ export const STALE_COMMUNICATION_HOURS = 24
  * Whether a disconnection streak that opened at `since` has outlived
  * {@link STALE_COMMUNICATION_HOURS}: the ONE predicate behind Home's
  * `isAvailable` and its `stale` connectivity transition, so the facade
- * and the entity read the same clock against the same threshold and the
- * transition is logged at the instant the tile greys.
+ * and the entity read the same clock against the same threshold: the
+ * facade on every read, the entity on every sync, so the transition
+ * follows a greyed tile at the next sync.
  * @param since - Start of the streak, UTC wall clock.
  * @returns `true` once the streak is older than the stale window.
  */

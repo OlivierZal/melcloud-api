@@ -355,8 +355,10 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   nothing wrote a line when the flag flipped or the window closed, so a
   report could not date a Homey "unavailable". `HomeDevice.sync` answers
   the edge a sync crosses (`disconnected` on the first `false`, `stale`
-  once per streak on the first sync past the window — the instant the
-  tile greys, logged as an error so the report dates it —
+  once per streak on the first sync past the window — the same
+  predicate `isAvailable` reads, so the line follows the greyed tile at
+  the next sync, up to a minute late, logged as an error so the report
+  dates it —
   `reconnected` with the streak's start and sync count), the registry
   collects them and the sync cycle logs each one. No reminder and no
   coalescing, unlike the drift streak above: the flag's negative side

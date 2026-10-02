@@ -735,5 +735,32 @@ describe('validation/schemas', () => {
         }),
       ).toStrictEqual([])
     })
+
+    // The collector is TOTAL: it runs on whatever the strict schema
+    // refused, so a payload that is not even an object answers the empty
+    // set rather than throwing inside the drift line.
+    it.each([[null], ['drifted'], [42], [[]]])(
+      'answers no unit, without throwing, when the payload is %o',
+      (raw) => {
+        expect(droppedUnits(raw)).toStrictEqual([])
+      },
+    )
+
+    it('still names a pruned unit when the payload spells no `guestBuildings`', () => {
+      const [ataUnit] = homeContextBuilding.airToAirUnits
+
+      expect(
+        droppedUnits({
+          buildings: [
+            {
+              ...homeContextBuilding,
+              airToAirUnits: [{ ...ataUnit, isConnected: 'yes' }],
+            },
+          ],
+        }),
+      ).toStrictEqual([
+        { id: 'device-1', paths: ['isConnected'], type: 'airToAir' },
+      ])
+    })
   })
 })
