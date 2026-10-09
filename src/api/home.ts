@@ -172,6 +172,32 @@ const toTypedDevices = (
     })),
   ]
 }
+
+/**
+ * Collapse the flat entry list to ONE entry per unit id, the LAST entry
+ * winning. MELCloud may list a unit under both `buildings` and
+ * `guestBuildings`; the caller orders the guest entries first, so the
+ * owned entry is the one kept and the unit keeps its owned tag — that
+ * order is load-bearing, never "just drop repeats". Until 59.3.1 both
+ * entries reached the registry and the unit was synced twice per cycle,
+ * which doubled every per-sync count — the `reconnected` line's
+ * disconnected sync count read passes, not cycles (#1804, 2026-10-09).
+ * A `Map` keeps a key's FIRST position and its LAST value, so the
+ * result stays in payload order while the owned payload wins.
+ * @param entries - Typed device entries, guest ones first.
+ * @returns One entry per unit id, in first-appearance order.
+ */
+const collapseByUnitId = (
+  entries: TypedHomeDeviceData[],
+): TypedHomeDeviceData[] => {
+  const byId = new Map(
+    entries.map((entry): [string, TypedHomeDeviceData] => [
+      entry.device.id,
+      entry,
+    ]),
+  )
+  return byId.values().toArray()
+}
 const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 1
 
@@ -764,15 +790,21 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
         // entry point saw the 404.
         return []
       }
-      const events = this.#registry.syncDevices([
-        // Guest entries first: the registry upsert is last-write-wins
-        // per id, so a device duplicated across `buildings` and
-        // `guestBuildings` keeps its owned tag.
-        ...data.guestBuildings.flatMap((building) =>
-          toTypedDevices(building, false),
-        ),
-        ...data.buildings.flatMap((building) => toTypedDevices(building, true)),
-      ])
+      const events = this.#registry.syncDevices(
+        // Guest entries first: the collapse keeps the LAST entry per
+        // id, so a device duplicated across `buildings` and
+        // `guestBuildings` keeps its owned tag and reaches the registry
+        // once — a second pass would count twice in every per-sync
+        // tally (#1804).
+        collapseByUnitId([
+          ...data.guestBuildings.flatMap((building) =>
+            toTypedDevices(building, false),
+          ),
+          ...data.buildings.flatMap((building) =>
+            toTypedDevices(building, true),
+          ),
+        ]),
+      )
       for (const event of events) {
         this.#reportConnectivity(event)
       }
