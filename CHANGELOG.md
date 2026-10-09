@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [59.3.1] - 2026-10-09
+
+### Fixed
+
+- **A unit listed under both `buildings` and `guestBuildings` is synced once per cycle, so the reconnected line counts cycles.** `/context` may list the same unit under the account's own buildings and again among the guest ones. The sync cycle handed the registry one flat list, guest entries first, and relied on the upsert's last-write-wins per id to keep the owned tag — so such a unit went through `HomeDevice.sync` twice per `/context` cycle. Invisible until 59.3.0 (the streak start is stamped once and a connected read clears it however many passes land, and `isAvailable` reads the timestamp, not a count), the second pass doubled the per-sync count 59.3.0 introduced: `ATW unit <id> reads connected again after 1 h 0 min (4 disconnected syncs)` over two disconnected cycles — right about when, wrong about how many. The cycle now collapses the list through a `Map` keyed by unit id in the same guest-then-owned order, so the LAST — owned — entry is the one the registry sees: the owned tag survives (the ordering stays load-bearing, never "drop repeats"), each unit is synced once per cycle, and `(N disconnected syncs)` keeps its wording, now exact — N is the number of cycles the unit read `false`, which is what the line always meant. The buildings `fetch()` returns are unchanged: a cross-listed unit still appears under both of its buildings there, as the wire reports it (#1804).
+
 ## [59.3.0] - 2026-10-03
 
 ### Added
@@ -885,7 +891,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.1...HEAD
+[59.3.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.0...v59.3.1
 [59.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.2.1...v59.3.0
 [59.2.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.2.0...v59.2.1
 [59.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.1.0...v59.2.0

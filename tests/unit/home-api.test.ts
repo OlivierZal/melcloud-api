@@ -712,6 +712,32 @@ describe('melcloud home API', () => {
 
       expect(api.registry.getById('device-1')?.isOwner).toBe(true)
     })
+
+    // The owned tag above used to come from the registry's last-write-wins
+    // over TWO entries for the same id, so such a unit went through
+    // `HomeDevice.sync` twice per cycle (#1804). The cycle now collapses
+    // the guest-then-owned list before the registry sees it: one entry
+    // per id, the owned one.
+    it('hands the registry one entry per unit, the owned one, for a unit listed under both arrays', async () => {
+      setupSuccessfulLogin()
+      const api = await createApi()
+      const syncDevices = vi.spyOn(api.registry, 'syncDevices')
+      mockRequest.mockResolvedValueOnce(
+        mockResponse({ ...mockContext, buildings: [mockBuilding] }, {}, 200),
+      )
+      await api.fetch()
+
+      expect(syncDevices).toHaveBeenCalledTimes(1)
+      expect(
+        defined(syncDevices.mock.calls[0]?.[0]).map(({ device, isOwner }) => [
+          device.id,
+          isOwner,
+        ]),
+      ).toStrictEqual([
+        ['device-1', true],
+        ['device-2', true],
+      ])
+    })
   })
 
   describe('sync callback', () => {
@@ -2884,12 +2910,31 @@ describe('melcloud home API', () => {
         200,
       )
 
+    // The same reading under BOTH arrays: MELCloud may list a unit the
+    // account owns among the guest buildings too, and until 59.3.1 the
+    // registry synced such a unit twice per cycle, so the closing line
+    // counted passes rather than cycles (#1804).
+    const contextListingAtwTwice = (
+      isConnected: boolean,
+    ): ReturnType<typeof mockResponse> => {
+      const building = {
+        ...mockBuilding,
+        airToWaterUnits: [{ ...atwUnit, isConnected }],
+      }
+      return mockResponse(
+        homeContextData({ buildings: [building], guestBuildings: [building] }),
+        {},
+        200,
+      )
+    }
+
     const createReadingAtw = async (
       logger: ReturnType<typeof createLogger>,
       isConnected: boolean,
+      toContext = contextReadingAtw,
     ): ReturnType<typeof melCloudHomeApi.create> => {
       const { settingManager } = persistedSessionStore()
-      mockRequest.mockResolvedValueOnce(contextReadingAtw(isConnected))
+      mockRequest.mockResolvedValueOnce(toContext(isConnected))
       return melCloudHomeApi.create({
         baseURL: BASE_URL,
         logger,
@@ -2901,8 +2946,9 @@ describe('melcloud home API', () => {
     const fetchReadingAtw = async (
       api: HomeAPI,
       isConnected: boolean,
+      toContext = contextReadingAtw,
     ): Promise<void> => {
-      mockRequest.mockResolvedValueOnce(contextReadingAtw(isConnected))
+      mockRequest.mockResolvedValueOnce(toContext(isConnected))
       await api.fetch()
     }
 
@@ -2975,6 +3021,24 @@ describe('melcloud home API', () => {
         '[Home]',
         'ATW unit device-2 reads connected again after 1 h 0 min (2 disconnected syncs)',
       )
+    })
+
+    // Two disconnected cycles are two syncs, not four: the unit is
+    // listed under both arrays, and the count must read cycles. The
+    // owned tag still wins the collapse, and no line doubles with it.
+    it('counts each cycle once for a unit listed under both buildings and guestBuildings', async () => {
+      const logger = createLogger()
+      const api = await createReadingAtw(logger, false, contextListingAtwTwice)
+      await fetchReadingAtw(api, false, contextListingAtwTwice)
+      clock.mockReturnValue(start.add({ hours: 1 }))
+      await fetchReadingAtw(api, true, contextListingAtwTwice)
+
+      expect(logger.log).toHaveBeenCalledWith(
+        '[Home]',
+        'ATW unit device-2 reads connected again after 1 h 0 min (2 disconnected syncs)',
+      )
+      expect(unitLines(logger)).toHaveLength(2)
+      expect(api.registry.getById('device-2')?.isOwner).toBe(true)
     })
   })
 

@@ -360,7 +360,17 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   the next sync, up to a minute late, logged as an error so the report
   dates it —
   `reconnected` with the streak's start and sync count), the registry
-  collects them and the sync cycle logs each one. No reminder and no
+  collects them and the sync cycle logs each one. That count is CYCLES,
+  which holds only because the cycle hands the registry ONE entry per
+  unit id (59.3.1): `/context` may list a unit under both `buildings`
+  and `guestBuildings`, and the flat guest-then-owned list used to
+  reach the registry as is — the upsert's last-write-wins kept the
+  owned tag, at the price of two `sync()` passes per cycle, invisible
+  until 59.3.0 started counting and then doubling its count. The list
+  is collapsed through a `Map` in the same order, so the owned entry
+  still wins (the order is load-bearing — never "drop repeats") and the
+  unit is synced once; the buildings `fetch()` returns stay
+  wire-verbatim, a cross-listed unit under both. No reminder and no
   coalescing, unlike the drift streak above: the flag's negative side
   is unproven (live-probed 12/12 `true` on healthy units; a `false` has
   never been witnessed on one), so if it flaps the open/close pairs ARE
