@@ -44,6 +44,10 @@ const EXTRA_SENSITIVE_KEYS = [
 //   (the account holder), and the building's postal address and
 //   position (`ClassicBuildingData`): `AddressLine1`, `AddressLine2`,
 //   `City`, `District`, `Postcode`, `Latitude`, `Longitude`.
+// The match is case-insensitive (the core lower-cases its one set), so
+// the same keys also blank the id token's `firstName`/`lastName`
+// (`HomeUser`) and the quantised `Latitude`/`Longitude` nested under
+// each Classic building (`ClassicQuantizedCoordinates`).
 // EXCLUDED, by decision:
 // - The bare `name` key. On Home it carries the building name
 //   (`HomeBuilding.name`) — but ALSO every device setting's name
