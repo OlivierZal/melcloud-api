@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [59.4.0] - 2026-10-10
+
+### Changed
+
+- **The diagnostic dumps blank the personal data the two wires carry: device display names, account holder names and postal addresses.** The exact `@olivierzal/api-core` pin advances to 1.10.0, which adds a second redaction tier, declared apart from the credential keys because it answers a different rule — a credential must never reach a log because it opens an account; a user-entered string must never reach one because the user typed it, and a diagnostic report pasted into a public issue reproduces it — and blanked the same way (`******`) wherever the one bound engine reaches: the request/response dumps, the log lines and the `HttpError` snapshot. This SDK declares seventeen keys, matched in any casing: Home `/context`'s `givenDisplayName`, `firstname` and `lastname`; Classic `/User/ListDevices`'s `DeviceName`, `BuildingName`, `AreaName`, `FloorName`, `Zone1Name`, `Zone2Name`, `OwnerName`, `AddressLine1`, `AddressLine2`, `City`, `District`, `Postcode`, `Latitude` and `Longitude`. Two exclusions, by decision: the bare `name` key, which on Home carries the building name but also every device setting's name (`Power`, `OperationModeZone1`…) that a diagnosis needs to read — a key is blanked wherever it rides, so Home building names and the Classic building/floor/area `Name` entries stay in the dump, a known trade; and the hardware identifiers (`MacAddress`, `SerialNumber`, `LocalIPAddress`, Home's `macAddress`), which are not user-entered and are how a report names a unit. `OwnerEmail` and `email` were already the credential tier's. Nothing the SDK returns changes: redaction is a reporting concern, and the parsed payloads, the thrown statuses and the registry are untouched.
+
 ## [59.3.1] - 2026-10-09
 
 ### Fixed
@@ -891,7 +897,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.1...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.4.0...HEAD
+[59.4.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.1...v59.4.0
 [59.3.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.0...v59.3.1
 [59.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.2.1...v59.3.0
 [59.2.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.2.0...v59.2.1

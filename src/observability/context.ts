@@ -23,11 +23,73 @@ const EXTRA_SENSITIVE_KEYS = [
   'x-mitscontextkey',
 ]
 
+// The personal-data tier (api-core 1.10.0), declared apart from the
+// credential keys because it answers a different rule: a credential
+// must never reach a log because it opens an account; a user-entered
+// string must never reach one because the user typed it, and a
+// diagnostic report pasted into a public issue reproduces it. The
+// engine blanks both tiers the same way (`******`) wherever it reaches
+// — the request/response dumps, the log lines and the `HttpError`
+// snapshot — and matches keys case-insensitively (one lower-cased
+// set), so each key is spelled once, the way its wire spells it. The
+// parsed payloads are untouched: redaction is a reporting concern.
+// DECLARED (2026-10-10), the user-entered strings this SDK's own types
+// evidence:
+// - Home `/context`: `givenDisplayName` (the unit's display name,
+//   `HomeDeviceCommonData`) and `firstname`/`lastname` (the account
+//   holder, on the identity slice of every `/context` round-trip).
+// - Classic `/User/ListDevices`: `DeviceName`, `BuildingName`,
+//   `AreaName`, `FloorName`, `Zone1Name`, `Zone2Name` (the names the
+//   user typed into MELCloud, `ClassicBaseListDevice`), `OwnerName`
+//   (the account holder), and the building's postal address and
+//   position (`ClassicBuildingData`): `AddressLine1`, `AddressLine2`,
+//   `City`, `District`, `Postcode`, `Latitude`, `Longitude`.
+// The match is case-insensitive (the core lower-cases its one set), so
+// the same keys also blank the id token's `firstName`/`lastName`
+// (`HomeUser`) and the quantised `Latitude`/`Longitude` nested under
+// each Classic building (`ClassicQuantizedCoordinates`).
+// EXCLUDED, by decision:
+// - The bare `name` key. On Home it carries the building name
+//   (`HomeBuilding.name`) — but ALSO every device setting's name
+//   (`HomeDeviceSetting.name`: `Power`, `OperationModeZone1`…, the key
+//   `setting()` in `home-base-device.ts` reads), and a key is blanked
+//   wherever it rides, so declaring it would hide the setting names
+//   from the very dump a diagnosis needs. Home building names and the
+//   Classic building/floor/area `Name` entries therefore STAY in the
+//   dump: a known trade.
+// - `MacAddress`, `SerialNumber`, `LocalIPAddress` and Home's
+//   `macAddress`: identifiers, not user-entered. The rule is "type and
+//   id only", and ids are how a report names a unit.
+// - `OwnerEmail` and `email`: already the credential tier's (above,
+//   and the core's base vocabulary).
+const PERSONAL_DATA_KEYS = [
+  'AddressLine1',
+  'AddressLine2',
+  'AreaName',
+  'BuildingName',
+  'City',
+  'DeviceName',
+  'District',
+  'firstname',
+  'FloorName',
+  'givenDisplayName',
+  'lastname',
+  'Latitude',
+  'Longitude',
+  'OwnerName',
+  'Postcode',
+  'Zone1Name',
+  'Zone2Name',
+]
+
 /**
  * The redaction engine bound to the MELCloud vocabulary — the ONE
  * engine shared by the call loggers, the `HttpClient` transport and
- * the `HttpError` snapshot, so a secret cannot reach a log through
- * any route. Its `isSensitive`/`redactValue`/`redactUrl` members are
- * the core's own; nothing in this SDK wraps them.
+ * the `HttpError` snapshot, so neither a secret nor a user-entered
+ * string can reach a log through any route. Its
+ * `isSensitive`/`redactValue`/`redactUrl` members are the core's own;
+ * nothing in this SDK wraps them.
  */
-export const redaction: Redaction = createRedaction(EXTRA_SENSITIVE_KEYS)
+export const redaction: Redaction = createRedaction(EXTRA_SENSITIVE_KEYS, {
+  personalDataKeys: PERSONAL_DATA_KEYS,
+})

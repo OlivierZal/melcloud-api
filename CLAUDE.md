@@ -239,6 +239,33 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   the ONE vocabulary — `owneremail` is there because the Classic list
   payload carries the account address on every device of every
   successful sync, the single entry that blanks a routine 200.
+- Personal data is the vocabulary's SECOND tier, declared apart from
+  the credentials (api-core 1.10.0, adopted with 59.4.0) because it
+  answers a different rule: a credential never reaches a log because
+  it opens an account; a user-entered string never reaches one because
+  the user typed it, and a diagnostic report pasted into a public
+  issue reproduces it — the "type and id only" rule the connectivity
+  lines below follow, applied to the dumps that print whole bodies on
+  purpose. The engine blanks both tiers the same way,
+  case-insensitively, through every seat the one bound engine reaches.
+  `PERSONAL_DATA_KEYS` in `src/observability/context.ts` declares
+  seventeen keys: Home `/context`'s `givenDisplayName`, `firstname`,
+  `lastname`; Classic `/User/ListDevices`'s `DeviceName`,
+  `BuildingName`, `AreaName`, `FloorName`, `Zone1Name`, `Zone2Name`,
+  `OwnerName`, `AddressLine1`, `AddressLine2`, `City`, `District`,
+  `Postcode`, `Latitude`, `Longitude`. The bare `name` key is EXCLUDED
+  by decision: on Home it carries the building name but ALSO every
+  device setting's name (`HomeDeviceSetting.name`, the key `setting()`
+  in `home-base-device.ts` reads), a key is blanked wherever it rides,
+  and blanking it would hide the setting names from the very dump a
+  diagnosis needs — so Home building names and the Classic
+  building/floor/area `Name` entries stay in the dump, a known trade.
+  The hardware identifiers (`MacAddress`, `SerialNumber`,
+  `LocalIPAddress`, Home `macAddress`) stay too: ids are how a report
+  names a unit. `OwnerEmail`/`email` were already the credential
+  tier's. When a wire field the user types is added, extend THAT list,
+  never a log-site filter; `observability.test.ts` pins the list key
+  by key and the exclusions by name.
 - **A unit's capability rides a FLAG in a uniform payload, never the
   payload's shape — which is why heatzy-api's type-level fix does not
   cross here.** Every Classic ATW answers the same keys: the Zone 2
