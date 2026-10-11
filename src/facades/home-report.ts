@@ -658,13 +658,11 @@ const toBands = (
       if (max < fromMs || min > toMs) {
         return []
       }
-      return [
-        {
-          from: floorGridIndex(grid, Math.max(min, fromMs)),
-          label: toModeName(annotation.label),
-          to: floorGridIndex(grid, Math.min(max, toMs)),
-        },
-      ]
+      return {
+        from: floorGridIndex(grid, Math.max(min, fromMs)),
+        label: toModeName(annotation.label),
+        to: floorGridIndex(grid, Math.min(max, toMs)),
+      }
     })
 }
 

@@ -148,16 +148,13 @@ const setupSuccessfulLogin = (): void => {
   mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
 }
 
-const persistedSessionStore = (
-  overrides: Record<string, string> = {},
-): ReturnType<typeof createSettingStore> =>
+const persistedSessionStore = (): ReturnType<typeof createSettingStore> =>
   createSettingStore({
     accessToken: 'persisted-token',
     expiry: Temporal.Now.instant().add({ hours: 1 }).toString(),
     password: 'pass',
     refreshToken: 'persisted-refresh',
     username: 'user@test.com',
-    ...overrides,
   })
 
 const isTokenEndpointCall = ([url]: Parameters<typeof fetch>): boolean =>
@@ -2627,28 +2624,26 @@ describe('melcloud home API', () => {
     // that lasts is one event, keyed on its refused paths, closed when
     // the strict parse holds again. The window rides `performance.now()`;
     // a jump past it stands in for the wait.
-    const driftingContext = (
-      unit: Record<string, unknown>,
-    ): ReturnType<typeof mockResponse> =>
+    const weakUnit = { id: 'device-3', rssi: 'weak' }
+    const driftingContext = (): ReturnType<typeof mockResponse> =>
       mockResponse(
         {
           ...mockContext,
           guestBuildings: [
             {
               ...mockBuilding,
-              airToAirUnits: [validAtaUnit, { ...validAtaUnit, ...unit }],
+              airToAirUnits: [validAtaUnit, { ...validAtaUnit, ...weakUnit }],
             },
           ],
         },
         {},
         200,
       )
-    const weakUnit = { id: 'device-3', rssi: 'weak' }
 
     it('reports a lasting drift once per streak and closes it when the strict parse holds again', async () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
-      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      mockRequest.mockResolvedValue(driftingContext())
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         logger,
@@ -2673,7 +2668,7 @@ describe('melcloud home API', () => {
     it('counts a single drifting fetch in the singular', async () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
-      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      mockRequest.mockResolvedValue(driftingContext())
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         logger,
@@ -2692,7 +2687,7 @@ describe('melcloud home API', () => {
     it('reminds of a lasting drift once its window elapses', async () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
-      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      mockRequest.mockResolvedValue(driftingContext())
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         logger,
@@ -2713,7 +2708,7 @@ describe('melcloud home API', () => {
     it('reports a drift again as soon as its refused paths change', async () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
-      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      mockRequest.mockResolvedValue(driftingContext())
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         logger,
@@ -2749,7 +2744,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const logger = createLogger()
       const api = await createApi({ logger })
-      mockRequest.mockResolvedValue(driftingContext(weakUnit))
+      mockRequest.mockResolvedValue(driftingContext())
       await api.fetch()
 
       expect(logger.error).toHaveBeenCalledTimes(1)

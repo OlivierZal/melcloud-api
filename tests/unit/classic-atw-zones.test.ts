@@ -62,8 +62,7 @@ const createZone2Facade = (
 
 describe('atw device facade zone 1', () => {
   it('returns zone1 state', () => {
-    const facade = createFacade()
-    const { zone1 } = facade
+    const { zone1 } = createFacade()
 
     expect(zone1.operationMode).toBe(HomeAtwZoneMode.room)
     expect(zone1.roomTemperature).toBe(21)
@@ -163,8 +162,7 @@ describe('atw device facade zone 1', () => {
 
 describe('atw device facade hot water', () => {
   it('returns hot water state', () => {
-    const facade = createFacade()
-    const { hotWater } = facade
+    const { hotWater } = createFacade()
 
     expect(hotWater.tankWaterTemperature).toBe(48)
     expect(hotWater.setTankWaterTemperature).toBe(50)
