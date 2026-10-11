@@ -21,9 +21,14 @@ import {
 const createModel = (
   settings: Record<string, string> = {},
   capabilities: Partial<HomeAtwDeviceCapabilities> = {},
-  rssi = -50,
 ): ReturnType<typeof homeAtwDevice> =>
-  homeAtwDevice({ capabilities, id: 'atw-1', name: 'Test ATW', rssi, settings })
+  homeAtwDevice({
+    capabilities,
+    id: 'atw-1',
+    name: 'Test ATW',
+    rssi: -50,
+    settings,
+  })
 
 // One pinned-time bucket per response: the consumed/produced split is
 // carried by the request's `measure` param, not the envelope.

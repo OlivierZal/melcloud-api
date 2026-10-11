@@ -117,13 +117,9 @@ const createBuildingFacade = (
     apiOverrides,
   )
 
-const createFloorFacade = (
-  apiOverrides?: Partial<ClassicAPIAdapter>,
-): FacadeContext<ClassicFloorFacade> =>
-  buildFacade(
-    ClassicFloorFacade,
-    (registry) => defined(registry.floors.getById(10)),
-    apiOverrides,
+const createFloorFacade = (): FacadeContext<ClassicFloorFacade> =>
+  buildFacade(ClassicFloorFacade, (registry) =>
+    defined(registry.floors.getById(10)),
   )
 
 const createAreaFacade = (

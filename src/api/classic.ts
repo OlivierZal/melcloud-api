@@ -371,17 +371,15 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
               const message = errorMessage?.trim() ?? ''
               return message === ''
                 ? []
-                : [
-                    {
-                      at: startDate,
-                      // Classic timestamps are building-local wall
-                      // clock; the client's configured timezone is the
-                      // anchor the facades already speak.
-                      atEpochMs: toEpochMs(startDate, this.#timezone),
-                      deviceId: errorDeviceId,
-                      message,
-                    },
-                  ]
+                : {
+                    at: startDate,
+                    // Classic timestamps are building-local wall
+                    // clock; the client's configured timezone is the
+                    // anchor the facades already speak.
+                    atEpochMs: toEpochMs(startDate, this.#timezone),
+                    deviceId: errorDeviceId,
+                    message,
+                  }
             },
           )
           .toReversed(),

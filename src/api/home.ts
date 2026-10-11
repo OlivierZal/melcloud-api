@@ -69,6 +69,7 @@ const UNIT_TYPE_LABELS = {
   airToWater: 'ATW',
 } satisfies Record<HomeDeviceType, string>
 
+// eslint-disable-next-line unicorn/prefer-default-parameters -- `id` is `null`-bearing: `#recordDrift` passes `HomeDroppedUnit.id`, `null` when the wire spelled no id, and a default parameter fills `undefined` only.
 const describeUnit = (type: HomeDeviceType, id: string | null): string =>
   `${UNIT_TYPE_LABELS[type]} unit ${id ?? 'unknown'}`
 
@@ -473,12 +474,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     if (!model.ok) {
       return model
     }
-    const { measure, ...window } = params
+    const { measure = 'consumed', ...window } = params
     return this.#fetchEnergy(id, {
       ...window,
       measure: model.value.isAta()
         ? 'cumulative_energy_consumed_since_last_upload'
-        : ATW_ENERGY_MEASURE[measure ?? 'consumed'],
+        : ATW_ENERGY_MEASURE[measure],
     })
   }
 
