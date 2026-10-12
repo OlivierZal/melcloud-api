@@ -50,11 +50,17 @@ const EXTRA_SENSITIVE_KEYS = [
 // each Classic building (`ClassicQuantizedCoordinates`).
 // - The network identifiers: Classic `MacAddress` and `LocalIPAddress`
 //   (and Home's `macAddress`, through the same case-insensitive match).
-//   An IP address is personal data under the GDPR (Recital 30's "online
-//   identifiers"; CJEU C-582/14 Breyer, dynamic addresses included) and
-//   the EDPB reads a MAC address the same way (a unique device
-//   identifier). Neither serves a diagnosis: the app and every
-//   SDK-authored line name a unit by `DeviceID`/`id`.
+//   GDPR Recital 30 lists IP addresses among the online identifiers a
+//   person may be associated with (CJEU C-582/14 Breyer, under the
+//   1995 directive, held a dynamic PUBLIC address personal data where
+//   legal means to identify the holder exist); a MAC address is a
+//   unique device identifier the Article 29 Working Party treated as
+//   personal data (Opinion 13/2011, WP185). `LocalIPAddress` is the
+//   adapter's LAN address, which identifies no one on its own — it goes
+//   with them because it maps the owner's home network beside the
+//   account's data and, like the MAC, serves no diagnosis: the app and
+//   every SDK-authored line name a unit by `DeviceID`/`id`. Data
+//   minimisation decides, not a ruling.
 // EXCLUDED, by decision:
 // - The bare `name` key. On Home it carries the building name
 //   (`HomeBuilding.name`) — but ALSO every device setting's name
@@ -64,11 +70,11 @@ const EXTRA_SENSITIVE_KEYS = [
 //   from the very dump a diagnosis needs. Home building names and the
 //   Classic building/floor/area `Name` entries therefore STAY in the
 //   dump: a known trade.
-// - `SerialNumber`: the hardware serial of the adapter and of each unit
-//   (`Units[].SerialNumber`). Not a network identifier, linked to a
-//   person only through the manufacturer's registration records, and
-//   the one figure an owner quotes to the manufacturer — it stays, with
-//   `DeviceID`, as how a report names a unit.
+// - `SerialNumber`: a unique device identifier too, kept as a trade,
+//   like `name` above — it is not observable on the network, and it is
+//   the figure a report and the owner name the unit by (the serial the
+//   owner quotes to the manufacturer). Blanking it is one line here if
+//   the trade changes.
 // - `OwnerEmail` and `email`: already the credential tier's (above,
 //   and the core's base vocabulary).
 const PERSONAL_DATA_KEYS = [
