@@ -106,7 +106,9 @@ describe.concurrent('the personal-data tier', () => {
     'givenDisplayName',
     'lastname',
     'Latitude',
+    'LocalIPAddress',
     'Longitude',
+    'MacAddress',
     'OwnerName',
     'Postcode',
     'Zone1Name',
@@ -117,23 +119,22 @@ describe.concurrent('the personal-data tier', () => {
     expect(redaction.isSensitive(key.toUpperCase())).toBe(true)
   })
 
+  // Home spells the MAC address in camel case; the one declaration
+  // covers it because the engine matches keys in any casing.
+  it("blanks Home's macAddress through the Classic declaration", () => {
+    expect(redaction.isSensitive('macAddress')).toBe(true)
+  })
+
   // The exclusions are verdicts, pinned so a future "blank everything
   // that looks personal" sweep has to argue with them: `name` is a
-  // Home setting's key before it is a building's, and the hardware
-  // identifiers are how a report names a unit.
-  it.each([
-    'name',
-    'Name',
-    'MacAddress',
-    'macAddress',
-    'SerialNumber',
-    'LocalIPAddress',
-    'TimeZoneCity',
-    'DeviceID',
-    'id',
-  ])('leaves the setting or identifier key %s alone', (key) => {
-    expect(redaction.isSensitive(key)).toBe(false)
-  })
+  // Home setting's key before it is a building's, and the serial and
+  // the vendor ids are how a report names a unit.
+  it.each(['name', 'Name', 'SerialNumber', 'TimeZoneCity', 'DeviceID', 'id'])(
+    'leaves the setting or identifier key %s alone',
+    (key) => {
+      expect(redaction.isSensitive(key)).toBe(false)
+    },
+  )
 
   it('blanks the display names and the account holder in a Home /context dump, never a setting name', () => {
     const call = new APICallResponseData(
@@ -164,7 +165,7 @@ describe.concurrent('the personal-data tier', () => {
             {
               givenDisplayName: REDACTED,
               id: 'device-2',
-              macAddress: 'FE0000060403388D3DFFFE000000000001',
+              macAddress: REDACTED,
             },
           ],
           id: 'building-1',
@@ -241,11 +242,12 @@ describe.concurrent('the personal-data tier', () => {
               DeviceID: 1,
               DeviceName: REDACTED,
               FloorName: REDACTED,
-              LocalIPAddress: '192.168.1.20',
-              MacAddress: 'aa:bb:cc:dd:ee:ff',
+              LocalIPAddress: REDACTED,
+              MacAddress: REDACTED,
               // The credential tier's, since before this tier existed.
               OwnerEmail: REDACTED,
               OwnerName: REDACTED,
+              // The serial stays: how a report names the unit.
               SerialNumber: 'SN-1',
               Type: ClassicDeviceType.Ata,
               Zone1Name: REDACTED,

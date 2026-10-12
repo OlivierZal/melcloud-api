@@ -1035,6 +1035,17 @@ describe('mELCloud Classic API', () => {
       )
     })
 
+    // The refusal is a 200 with `LoginData: null`: no HttpError cause
+    // reaches the log, so the message carries MELCloud's reason code.
+    it('names the ErrorId MELCloud sends beside a refused login', async () => {
+      const api = await createApi()
+      mockRequest.mockResolvedValue(wrap({ ErrorId: 1, LoginData: null }))
+
+      await expect(
+        api.authenticate({ password: 'p', username: 'u' }),
+      ).rejects.toThrow('MELCloud Classic rejected the credentials (ErrorId 1)')
+    })
+
     it('re-authenticates when session is expired', async () => {
       const { settingManager } = createSettingStore({
         password: 'pass',

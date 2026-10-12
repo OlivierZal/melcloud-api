@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [59.5.0] - 2026-10-12
+
+### Changed
+
+- **The diagnostic dumps blank the network identifiers: Classic `MacAddress` and `LocalIPAddress`, and Home's `macAddress` through the same case-insensitive match.** An IP address is personal data under the GDPR (Recital 30's "online identifiers"; CJEU C-582/14 _Breyer_, dynamic addresses included), the EDPB reads a MAC address the same way (a unique device identifier), and neither serves a diagnosis: the app and every SDK-authored line name a unit by `DeviceID`/`id`. `SerialNumber` stays, by decision — not a network identifier, linked to a person only through the manufacturer's registration records, and the one figure an owner quotes to the manufacturer. Consumer effect: a report no longer shows these three fields; nothing else in the dump moves. `observability.test.ts` pins the two declarations, the Home spelling and the serial's exclusion.
+- **A refused Classic sign-in names MELCloud's reason code: `MELCloud Classic rejected the credentials (ErrorId 1)`.** A refusal is a 200 with `LoginData: null`, so the thrown `AuthenticationError` has no `HttpError` cause for the "Session resume failed:" line to print, and without the code a wrong password and a server-side refusal read alike — the com.melcloud #1708 report held seven such lines and no way to tell. The throttle (`ErrorId` 6) keeps its own `AuthenticationThrottledError` and message; a refusal without a numeric `ErrorId` keeps the bare message. Log-only in the apps, which show their own localized text.
+- **The exact `@olivierzal/api-core` pin advances to 1.11.0: one request/response record per line.** Homey keeps about the last hundred lines of an app's stdout for a diagnostic report, and one indented `/User/ListDevices` body filled that window alone, hiding every other line. Compact JSON keeps every byte of the dump; a call now costs two lines.
+
 ## [59.4.0] - 2026-10-10
 
 ### Changed
@@ -897,7 +905,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.4.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.5.0...HEAD
+[59.5.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.4.0...v59.5.0
 [59.4.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.1...v59.4.0
 [59.3.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.0...v59.3.1
 [59.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.2.1...v59.3.0

@@ -48,6 +48,13 @@ const EXTRA_SENSITIVE_KEYS = [
 // the same keys also blank the id token's `firstName`/`lastName`
 // (`HomeUser`) and the quantised `Latitude`/`Longitude` nested under
 // each Classic building (`ClassicQuantizedCoordinates`).
+// - The network identifiers: Classic `MacAddress` and `LocalIPAddress`
+//   (and Home's `macAddress`, through the same case-insensitive match).
+//   An IP address is personal data under the GDPR (Recital 30's "online
+//   identifiers"; CJEU C-582/14 Breyer, dynamic addresses included) and
+//   the EDPB reads a MAC address the same way (a unique device
+//   identifier). Neither serves a diagnosis: the app and every
+//   SDK-authored line name a unit by `DeviceID`/`id`.
 // EXCLUDED, by decision:
 // - The bare `name` key. On Home it carries the building name
 //   (`HomeBuilding.name`) — but ALSO every device setting's name
@@ -57,9 +64,11 @@ const EXTRA_SENSITIVE_KEYS = [
 //   from the very dump a diagnosis needs. Home building names and the
 //   Classic building/floor/area `Name` entries therefore STAY in the
 //   dump: a known trade.
-// - `MacAddress`, `SerialNumber`, `LocalIPAddress` and Home's
-//   `macAddress`: identifiers, not user-entered. The rule is "type and
-//   id only", and ids are how a report names a unit.
+// - `SerialNumber`: the hardware serial of the adapter and of each unit
+//   (`Units[].SerialNumber`). Not a network identifier, linked to a
+//   person only through the manufacturer's registration records, and
+//   the one figure an owner quotes to the manufacturer — it stays, with
+//   `DeviceID`, as how a report names a unit.
 // - `OwnerEmail` and `email`: already the credential tier's (above,
 //   and the core's base vocabulary).
 const PERSONAL_DATA_KEYS = [
@@ -75,7 +84,9 @@ const PERSONAL_DATA_KEYS = [
   'givenDisplayName',
   'lastname',
   'Latitude',
+  'LocalIPAddress',
   'Longitude',
+  'MacAddress',
   'OwnerName',
   'Postcode',
   'Zone1Name',
