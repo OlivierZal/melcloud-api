@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [59.5.0] - 2026-10-12
+
+### Changed
+
+- **The diagnostic dumps blank the network identifiers: Classic `MacAddress` and `LocalIPAddress`, and Home's `macAddress` through the same case-insensitive match.** GDPR Recital 30 lists IP addresses among the online identifiers a person may be associated with (CJEU C-582/14 _Breyer_, under the 1995 directive, held a dynamic public address personal data where legal means to identify the holder exist), and the Article 29 Working Party treated a MAC address — a unique device identifier — as personal data (Opinion 13/2011). `LocalIPAddress` is the adapter's LAN address, which identifies no one on its own; it goes with them because it maps the owner's home network beside the account's data and, like the MAC, serves no diagnosis — a unit is named by `DeviceID`/`id`. `SerialNumber` stays, as a trade: a unique device identifier too, but not observable on the network, and the figure a report and the owner name the unit by. Consumer effect: a report no longer shows these three fields; nothing else in the dump moves. `observability.test.ts` pins the two declarations, the Home spelling and the serial's exclusion.
+- **A refused Classic sign-in names MELCloud's reason code: `MELCloud Classic rejected the credentials (ErrorId 1)`.** A refusal is a 200 with `LoginData: null`, so the thrown `AuthenticationError` has no `HttpError` cause for the "Session resume failed:" line to print, and without the code a wrong password and a server-side refusal read alike — the com.melcloud #1708 report held seven refusals and no way to tell. The throttle (`ErrorId` 6) keeps its own `AuthenticationThrottledError` and message; a refusal without a numeric `ErrorId` keeps the bare message. Log-only in the apps, which show their own localized text; nothing in the family decides on the text.
+- **The exact `@olivierzal/api-core` pin advances to 1.12.0: one request/response record per line, bodies bounded at 4 KiB.** A Homey diagnostic report keeps about the last hundred lines of an app's stdout (measured on a com.melcloud report), and one indented `/User/ListDevices` body filled that window alone, hiding every other line. A record is now one line, and a body above 4 KiB is omitted whole and counted, so a hundred records also fit the report's upload (Athom's tracker holds a report refused with 413). The `/User/ListDevices` and `/context` bodies are therefore no longer in a report; the SDK-authored lines name what they hold.
+
 ## [59.4.0] - 2026-10-10
 
 ### Changed
@@ -897,7 +905,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.4.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.5.0...HEAD
+[59.5.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.4.0...v59.5.0
 [59.4.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.1...v59.4.0
 [59.3.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.0...v59.3.1
 [59.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.2.1...v59.3.0

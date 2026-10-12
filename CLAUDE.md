@@ -245,25 +245,32 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   it opens an account; a user-entered string never reaches one because
   the user typed it, and a diagnostic report pasted into a public
   issue reproduces it — the "type and id only" rule the connectivity
-  lines below follow, applied to the dumps that print whole bodies on
-  purpose. The engine blanks both tiers the same way,
+  lines below follow, applied to the dumps that print bodies up to the
+  core's 4 KiB bound (api-core 1.12.0). The engine blanks both tiers the same way,
   case-insensitively, through every seat the one bound engine reaches.
   `PERSONAL_DATA_KEYS` in `src/observability/context.ts` declares
-  seventeen keys: Home `/context`'s `givenDisplayName`, `firstname`,
+  nineteen keys: Home `/context`'s `givenDisplayName`, `firstname`,
   `lastname`; Classic `/User/ListDevices`'s `DeviceName`,
   `BuildingName`, `AreaName`, `FloorName`, `Zone1Name`, `Zone2Name`,
   `OwnerName`, `AddressLine1`, `AddressLine2`, `City`, `District`,
-  `Postcode`, `Latitude`, `Longitude`. The bare `name` key is EXCLUDED
+  `Postcode`, `Latitude`, `Longitude`; and, since 59.5.0, the network
+  identifiers `MacAddress` and `LocalIPAddress` (Home's `macAddress`
+  rides the same match) — Recital 30 lists IP addresses among the
+  online identifiers (CJEU C-582/14 _Breyer_, for a dynamic public
+  address), the Article 29 Working Party treated a MAC address as
+  personal data (Opinion 13/2011), the LAN address maps the owner's
+  home network, and none of the three serves a diagnosis. The bare
+  `name` key is EXCLUDED
   by decision: on Home it carries the building name but ALSO every
   device setting's name (`HomeDeviceSetting.name`, the key `setting()`
   in `home-base-device.ts` reads), a key is blanked wherever it rides,
   and blanking it would hide the setting names from the very dump a
   diagnosis needs — so Home building names and the Classic
   building/floor/area `Name` entries stay in the dump, a known trade.
-  The hardware identifiers (`MacAddress`, `SerialNumber`,
-  `LocalIPAddress`, Home `macAddress`) stay too: ids are how a report
-  names a unit. `OwnerEmail`/`email` were already the credential
-  tier's. When a wire field the user types is added, extend THAT list,
+  `SerialNumber` stays too, as a trade like `name`: a unique device
+  identifier, but not observable on the network, and the figure a
+  report and the owner name the unit by. `OwnerEmail`/`email` were
+  already the credential tier's. When a wire field the user types is added, extend THAT list,
   never a log-site filter; `observability.test.ts` pins the list key
   by key and the exclusions by name.
 - **A unit's capability rides a FLAG in a uniform payload, never the

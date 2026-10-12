@@ -82,6 +82,16 @@ const DEFAULT_SYNC_INTERVAL_MINUTES = 5
 
 const LOGIN_THROTTLE_ERROR_ID = 6
 
+// MELCloud's own reason code for a refused ClientLogin3, carried by the
+// message because nothing else carries it: a refusal is a 200 with
+// `LoginData: null`, so there is no HttpError cause for the "Session
+// resume failed:" line to print, and without the code a wrong password
+// and a server-side refusal read alike.
+const describeRefusal = (errorId: number | null | undefined): string =>
+  typeof errorId === 'number'
+    ? `MELCloud Classic rejected the credentials (ErrorId ${String(errorId)})`
+    : 'MELCloud Classic rejected the credentials'
+
 const isLanguage = isKeyOf(ClassicLanguage)
 
 const formatErrors = (errors: Record<string, readonly string[]>): string =>
@@ -678,7 +688,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
                   : null,
             },
           )
-        : new AuthenticationError('MELCloud Classic rejected the credentials')
+        : new AuthenticationError(describeRefusal(errorId))
     }
     // Wholesale session replacement (the `doAuthenticate` contract):
     // wipe before storing so no artifact of a previous session

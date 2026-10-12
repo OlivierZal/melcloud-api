@@ -48,6 +48,19 @@ const EXTRA_SENSITIVE_KEYS = [
 // the same keys also blank the id token's `firstName`/`lastName`
 // (`HomeUser`) and the quantised `Latitude`/`Longitude` nested under
 // each Classic building (`ClassicQuantizedCoordinates`).
+// - The network identifiers: Classic `MacAddress` and `LocalIPAddress`
+//   (and Home's `macAddress`, through the same case-insensitive match).
+//   GDPR Recital 30 lists IP addresses among the online identifiers a
+//   person may be associated with (CJEU C-582/14 Breyer, under the
+//   1995 directive, held a dynamic PUBLIC address personal data where
+//   legal means to identify the holder exist); a MAC address is a
+//   unique device identifier the Article 29 Working Party treated as
+//   personal data (Opinion 13/2011, WP185). `LocalIPAddress` is the
+//   adapter's LAN address, which identifies no one on its own — it goes
+//   with them because it maps the owner's home network beside the
+//   account's data and, like the MAC, serves no diagnosis: the app and
+//   every SDK-authored line name a unit by `DeviceID`/`id`. Data
+//   minimisation decides, not a ruling.
 // EXCLUDED, by decision:
 // - The bare `name` key. On Home it carries the building name
 //   (`HomeBuilding.name`) — but ALSO every device setting's name
@@ -57,9 +70,11 @@ const EXTRA_SENSITIVE_KEYS = [
 //   from the very dump a diagnosis needs. Home building names and the
 //   Classic building/floor/area `Name` entries therefore STAY in the
 //   dump: a known trade.
-// - `MacAddress`, `SerialNumber`, `LocalIPAddress` and Home's
-//   `macAddress`: identifiers, not user-entered. The rule is "type and
-//   id only", and ids are how a report names a unit.
+// - `SerialNumber`: a unique device identifier too, kept as a trade,
+//   like `name` above — it is not observable on the network, and it is
+//   the figure a report and the owner name the unit by (the serial the
+//   owner quotes to the manufacturer). Blanking it is one line here if
+//   the trade changes.
 // - `OwnerEmail` and `email`: already the credential tier's (above,
 //   and the core's base vocabulary).
 const PERSONAL_DATA_KEYS = [
@@ -75,7 +90,9 @@ const PERSONAL_DATA_KEYS = [
   'givenDisplayName',
   'lastname',
   'Latitude',
+  'LocalIPAddress',
   'Longitude',
+  'MacAddress',
   'OwnerName',
   'Postcode',
   'Zone1Name',
