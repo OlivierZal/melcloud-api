@@ -17,6 +17,5 @@ export {
   HomeUserContextSchema,
   HourSchema,
   inspectClassicListingEntry,
-  isModelledClassicDevice,
   parseOrThrow,
 } from './schemas.ts'

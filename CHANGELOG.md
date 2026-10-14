@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [59.7.1] - 2026-10-14
+
+### Changed
+
+- **Internal**: `isModelledClassicDevice` is folded into `inspectClassicListingEntry`, its only reader since the listing boundary moved to the inspector. Unreachable from the package's exports; no API change.
+- **Docs**: the README documents `transport` — a pre-built `HttpClient`, or `{ timeoutMs }` to change the 30 s per-request timeout.
+
 ## [59.7.0] - 2026-10-14
 
 ### Changed
@@ -920,7 +927,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.7.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.7.1...HEAD
+[59.7.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.7.0...v59.7.1
 [59.7.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.6.0...v59.7.0
 [59.6.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.5.0...v59.6.0
 [59.5.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.4.0...v59.5.0

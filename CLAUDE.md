@@ -368,8 +368,10 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   entry that reaches the consumer unmentioned is the failure mode the
   line exists to end — com.melcloud degrades a pruned device to a
   warning over frozen values, so the report has to say which device
-  went stale and why. `inspectClassicListingEntry` owns the verdict;
-  `isModelledClassicDevice` stays its boolean face.
+  went stale and why. `inspectClassicListingEntry` owns the verdict
+  and, since 59.7.1, is the predicate's only reader: the boolean face
+  `isModelledClassicDevice` went once the boundary had moved to the
+  inspector and nothing read the boolean any more.
 - The Home drift line is a STREAK, not a line per fetch (59.2.0).
   While `/context` drifts from the strict schema, every fetch salvages
   the device entries — and used to log the drift each time, 1,440
@@ -1003,6 +1005,52 @@ that re-derives it, never by hand.
   adoption).
 - CI: `Test (Node latest)` is `continue-on-error` by design — keep it out
   of required status checks. Sonar coverage runs on the `22` leg only.
+
+## Next major (60.0.0) — verified 2026-10-14, parked
+
+Each item below was confirmed on `main` by an independent reading
+(consumer grep over the eight repositories, behaviour trace, recorded
+decisions): zero production hits outside this package, no runtime path
+changes, and each is a semver major because it narrows or removes a
+published type or option. None justifies a 60.0.0 on its own — a major
+for nothing is the cost this ledger refuses — so they ride the next
+major together. The lead item is the one with a reason of its own.
+
+- **`ClassicAPIConfig.shouldVerifySSL` goes, and `undici` with it**
+  (lead). A TLS kill switch leaves a library that handles account
+  credentials, and `undici` leaves the whole dependency tree (api-core
+  does not carry it). Added deliberately in 5dd3293 (2024-05), never
+  asserted, never passed by a consumer; the sanctioned seam for a
+  self-signed proxy is `transport: new HttpClient({ dispatcher })`. The
+  next undici Dependabot alert is the natural trigger.
+- **Branded ids, step 2**: `ClassicAreaID`/`ClassicBuildingID`/
+  `ClassicDeviceID`/`ClassicFloorID` become `number`; the
+  `toClassic*Id` helpers, their `no-unsafe-type-assertion` block, the
+  `__brand` lint exemption, the four `declare` lines and 94 test wraps
+  go. Step 1 (the six registry lookups take `number`) shipped in 59.7.0,
+  where "the wire types keep their brands" drew the line this item
+  redraws: every brand is stamped by a fresh cast at its source, so no
+  sink is ever reached by a branded value it did not cast itself.
+- **`getTiles` flat shapes**: `ClassicTilesData`/`ClassicTilesPostData`
+  lose their type parameter and the three overload ladders collapse
+  (0 callers in the family; the narrowed `SelectedDevice` is already
+  unsound in the not-in-zone branch).
+- **`rangeForClassicMode` deleted**: the Classic ATA facade calls
+  `rangeForHomeMode(bounds, operationModeFromClassic[mode])` as the
+  Home facade does (checked for the four input classes — known or
+  unknown, number or string — same result).
+- **`HomeBaseDeviceFacade.clampValues` abstract**: both Home types
+  implement it; the 49.2.0 "type with no bounds to enforce" was the
+  ERV, a Classic type.
+- **`ClassicArea` without its phantom `T`** (and `syncArea`): no
+  member reads it; `ClassicFloor` already has the target shape.
+- **`HomeFacadeManager.get(): null` rung** goes with heatzy-api's
+  `FacadeManager.get` ladder in the same release pair: the only
+  production caller null-checks the registry lookup before calling.
+- **Kept, not removed**: `TransportConfig`'s `{ timeoutMs }` arm. It is
+  the deliberate successor of `requestTimeout` (PR #1477), and its
+  removal would leave no public way to tune the timeout, the base URL
+  being module-private. Documented in the README instead (59.7.1).
 
 ## Releasing
 
