@@ -60,29 +60,29 @@ import {
   classicHolidayModeResponse,
   classicReportData,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
 import { matchObject, okValue } from '../helpers.ts'
 
 type DeviceModelAta = ClassicDevice<typeof ClassicDeviceType.Ata>
 
-const createRegistry = (): ClassicRegistry => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData({ HMDefined: true })])
-  registry.syncFloors([classicFloorData()])
-  registry.syncAreas([classicAreaData()])
-  registry.syncDevices([
-    classicAtaDevice({
-      Device: classicAtaDeviceData({
-        OperationMode: ClassicOperationMode.heat,
+const createRegistry = (): ClassicRegistry =>
+  populatedClassicRegistry({
+    areas: [classicAreaData()],
+    buildings: [classicBuildingData({ HMDefined: true })],
+    devices: [
+      classicAtaDevice({
+        Device: classicAtaDeviceData({
+          OperationMode: ClassicOperationMode.heat,
+        }),
       }),
-    }),
-    classicAtwDevice({
-      Device: classicAtwDeviceData({ SetTemperatureZone2: 22 }),
-    }),
-    classicErvDevice(),
-  ])
-  return registry
-}
+      classicAtwDevice({
+        Device: classicAtwDeviceData({ SetTemperatureZone2: 22 }),
+      }),
+      classicErvDevice(),
+    ],
+    floors: [classicFloorData()],
+  })
 
 interface FacadeContext<T> {
   api: ClassicAPIAdapter
@@ -91,21 +91,13 @@ interface FacadeContext<T> {
 }
 
 const buildFacade = <TFacade, TInstance>(
-  ctor: new (
-    api: ClassicAPIAdapter,
-    registry: ClassicRegistry,
-    instance: TInstance,
-  ) => TFacade,
+  ctor: new (api: ClassicAPIAdapter, instance: TInstance) => TFacade,
   resolveInstance: (registry: ClassicRegistry) => TInstance,
   apiOverrides?: Partial<ClassicAPIAdapter>,
 ): FacadeContext<TFacade> => {
   const registry = createRegistry()
-  const api = createMockClassicApi(apiOverrides)
-  return {
-    api,
-    facade: new ctor(api, registry, resolveInstance(registry)),
-    registry,
-  }
+  const api = createMockClassicApi({ ...apiOverrides, registry })
+  return { api, facade: new ctor(api, resolveInstance(registry)), registry }
 }
 
 const createBuildingFacade = (
@@ -149,16 +141,18 @@ const createAtaFacade = (
 const buildAtaFacade = (
   overrides: Partial<ClassicListDeviceDataAta>,
 ): ClassicDeviceAtaFacade => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData({ HMDefined: true })])
-  registry.syncFloors([classicFloorData()])
-  registry.syncAreas([classicAreaData()])
-  registry.syncDevices([
-    classicAtaDevice({ Device: classicAtaDeviceData(overrides) }),
-  ])
+  const registry = populatedClassicRegistry({
+    areas: [classicAreaData()],
+    buildings: [classicBuildingData({ HMDefined: true })],
+    devices: [classicAtaDevice({ Device: classicAtaDeviceData(overrides) })],
+    floors: [classicFloorData()],
+  })
   const instance = defined(registry.devices.getById(1000))
   assertClassicDeviceType(instance, ClassicDeviceType.Ata)
-  return new ClassicDeviceAtaFacade(createMockClassicApi(), registry, instance)
+  return new ClassicDeviceAtaFacade(
+    createMockClassicApi({ registry }),
+    instance,
+  )
 }
 
 const createAtwFacade = (
@@ -225,23 +219,20 @@ const createZone2Facade = (
   facade: ClassicDeviceAtwFacade
   registry: ClassicRegistry
 } => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData({ HMDefined: true })])
-  registry.syncFloors([classicFloorData()])
-  registry.syncAreas([classicAreaData()])
-  registry.syncDevices([
-    classicAtwDevice({
-      Device: classicAtwDeviceData({ HasZone2: true, ...deviceOverrides }),
-    }),
-  ])
-  const api = createMockClassicApi(apiOverrides)
+  const registry = populatedClassicRegistry({
+    areas: [classicAreaData()],
+    buildings: [classicBuildingData({ HMDefined: true })],
+    devices: [
+      classicAtwDevice({
+        Device: classicAtwDeviceData({ HasZone2: true, ...deviceOverrides }),
+      }),
+    ],
+    floors: [classicFloorData()],
+  })
+  const api = createMockClassicApi({ ...apiOverrides, registry })
   const instance = defined(registry.devices.getById(1001))
   assertClassicDeviceType(instance, ClassicDeviceType.Atw)
-  return {
-    api,
-    facade: new ClassicDeviceAtwFacade(api, registry, instance),
-    registry,
-  }
+  return { api, facade: new ClassicDeviceAtwFacade(api, instance), registry }
 }
 
 describe('building facade', () => {
@@ -741,10 +732,10 @@ describe('base facade holiday mode with device fallback', () => {
 describe('base device facade type mismatch', () => {
   it('throws when device type does not match facade type', () => {
     const registry = createRegistry()
-    const api = createMockClassicApi()
+    const api = createMockClassicApi({ registry })
     const instance = defined(registry.devices.getById(1001))
     assertClassicDeviceType(instance, ClassicDeviceType.Atw)
-    const facade = new ClassicDeviceAtaFacade(api, registry, cast(instance))
+    const facade = new ClassicDeviceAtaFacade(api, cast(instance))
 
     expect(() => facade.data).toThrow('ClassicDevice type mismatch')
   })
@@ -782,8 +773,8 @@ describe('base facade instance error', () => {
       .mockResolvedValueOnce(
         err({ cause: new Error('zone not found'), kind: 'network' as const }),
       )
-    const api = createMockClassicApi({ getFrostProtection: fpMock })
     const registry = createRegistry()
+    const api = createMockClassicApi({ getFrostProtection: fpMock, registry })
     registry.syncAreas([
       {
         BuildingId: toClassicBuildingId(1),
@@ -793,7 +784,7 @@ describe('base facade instance error', () => {
       },
     ])
     const instance = defined(registry.areas.getById(200))
-    const facade = new ClassicAreaFacade(api, registry, instance)
+    const facade = new ClassicAreaFacade(api, instance)
 
     await expect(facade.getFrostProtection()).rejects.toThrow(
       'No device found for',
@@ -1614,15 +1605,15 @@ describe('atw device facade with zone 2', () => {
         }),
       }),
     ])
-    const api = createMockClassicApi(
-      atwSetValuesResponse({
+    const api = createMockClassicApi({
+      ...atwSetValuesResponse({
         EffectiveFlags: 0x8,
         OperationModeZone1: ClassicOperationModeZone.room,
       }),
-    )
+      registry,
+    })
     const facade = new ClassicDeviceAtwFacade(
       api,
-      registry,
       defined(registry.devices.getById(1001)),
     )
     await facade.updateValues({

@@ -64,7 +64,7 @@ export class ClassicFacadeManager {
     }
     let facade = this.#facades.get(instance)
     if (facade === undefined) {
-      facade = createFacade(this.#api, this.#registry, instance)
+      facade = createFacade(this.#api, instance)
       this.#facades.set(instance, facade)
     }
     return facade

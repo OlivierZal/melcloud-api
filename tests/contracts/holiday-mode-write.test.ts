@@ -35,12 +35,12 @@ describe('holidayMode write — disabled window', () => {
       .fn<ClassicAPIAdapter['updateHolidayMode']>()
       .mockResolvedValue({ AttributeErrors: null, Success: true })
     const api = createMockClassicApi({
+      registry,
       timezone: 'Europe/Paris',
       updateHolidayMode,
     })
     const facade = new ClassicBuildingFacade(
       api,
-      registry,
       defined(registry.buildings.getById(1)),
     )
 

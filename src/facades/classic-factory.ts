@@ -3,7 +3,6 @@ import { ClassicDeviceType } from '../constants.ts'
 import {
   type ClassicDeviceAny,
   type ClassicModel,
-  type ClassicRegistry,
   isClassicDeviceOfType,
 } from '../entities/index.ts'
 import type { ClassicDeviceFacadeAny, ClassicFacade } from './classic-types.ts'
@@ -15,10 +14,10 @@ import { ClassicDeviceErvFacade } from './classic-device-erv.ts'
 import { ClassicFloorFacade } from './classic-floor.ts'
 
 const getDeviceFromRegistry = (
-  registry: ClassicRegistry,
+  api: ClassicAPIAdapter,
   id: number,
 ): ClassicDeviceAny => {
-  const device = registry.devices.getById(id)
+  const device = api.registry.devices.getById(id)
   if (device === undefined) {
     throw new Error('ClassicDevice not found in registry')
   }
@@ -27,43 +26,41 @@ const getDeviceFromRegistry = (
 
 const createDeviceFacade = (
   api: ClassicAPIAdapter,
-  registry: ClassicRegistry,
   instance: ClassicModel,
 ): ClassicDeviceFacadeAny => {
-  const device = getDeviceFromRegistry(registry, instance.id)
+  const device = getDeviceFromRegistry(api, instance.id)
   if (isClassicDeviceOfType(device, ClassicDeviceType.Ata)) {
-    return new ClassicDeviceAtaFacade(api, registry, device)
+    return new ClassicDeviceAtaFacade(api, device)
   }
   return isClassicDeviceOfType(device, ClassicDeviceType.Atw)
-    ? new ClassicDeviceAtwFacade(api, registry, device)
-    : new ClassicDeviceErvFacade(api, registry, device)
+    ? new ClassicDeviceAtwFacade(api, device)
+    : new ClassicDeviceErvFacade(api, device)
 }
 
 /**
  * Create the appropriate facade for a model instance based on its `modelKind` discriminant.
- * @param api - The API adapter for making requests.
- * @param registry - The model registry containing all synced models.
+ * @param api - The API adapter for making requests; its registry is the
+ * one every facade reads.
  * @param instance - The model instance to create a facade for.
  * @returns The facade matching the model's kind.
  * @category Facades
  */
 export const createFacade = (
   api: ClassicAPIAdapter,
-  registry: ClassicRegistry,
   instance: ClassicModel,
 ): ClassicFacade => {
   switch (instance.modelKind) {
     case 'area': {
-      return new ClassicAreaFacade(api, registry, instance)
+      return new ClassicAreaFacade(api, instance)
     }
     case 'building': {
-      return new ClassicBuildingFacade(api, registry, instance)
+      return new ClassicBuildingFacade(api, instance)
     }
     case 'device': {
-      return createDeviceFacade(api, registry, instance)
+      return createDeviceFacade(api, instance)
     }
     case 'floor': {
-      return new ClassicFloorFacade(api, registry, instance)
+      return new ClassicFloorFacade(api, instance)
     }
   }
 }

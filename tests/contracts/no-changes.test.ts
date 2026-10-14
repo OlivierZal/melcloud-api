@@ -116,8 +116,8 @@ describeNoChangesContract('Classic ATA device', (kind) => {
   registry.syncDevices([device])
   const instance = defined(registry.devices.getById(device.DeviceID))
   assertClassicDeviceType(instance, ClassicDeviceType.Ata)
-  const api = createMockClassicApi()
-  const facade = new ClassicDeviceAtaFacade(api, registry, instance)
+  const api = createMockClassicApi({ registry })
+  const facade = new ClassicDeviceAtaFacade(api, instance)
   return {
     wireCalls: (): number => vi.mocked(api.updateValues).mock.calls.length,
     write: async (): Promise<unknown> =>
@@ -162,8 +162,8 @@ const classicFacade = (): {
   registry.syncDevices([device])
   const instance = defined(registry.devices.getById(device.DeviceID))
   assertClassicDeviceType(instance, ClassicDeviceType.Ata)
-  const api: ClassicAPIAdapter = createMockClassicApi()
-  return { api, facade: new ClassicDeviceAtaFacade(api, registry, instance) }
+  const api: ClassicAPIAdapter = createMockClassicApi({ registry })
+  return { api, facade: new ClassicDeviceAtaFacade(api, instance) }
 }
 
 describe('updateValues — Classic state comparison', () => {

@@ -42,7 +42,7 @@ const classicRegistry = (): ClassicRegistry => {
 // One response body satisfying BOTH Classic extractors: the ATA buckets
 // (Heating/Cooling/Auto/Dry/Fan/Other) and the ATW stack
 // (Heating/Cooling/HotWater/Produced*) simply coexist as keys.
-const classicEnergyApi = (): ClassicAPIAdapter =>
+const classicEnergyApi = (registry: ClassicRegistry): ClassicAPIAdapter =>
   createMockClassicApi({
     getEnergy: vi
       .fn<ClassicAPIAdapter['getEnergy']>()
@@ -64,6 +64,7 @@ const classicEnergyApi = (): ClassicAPIAdapter =>
           }),
         ),
       ),
+    registry,
   })
 
 // One energy-report contract for every dialect and type that has an
@@ -90,8 +91,7 @@ const describeEnergyReportContract = (
 describeEnergyReportContract('Classic ATA device', async () => {
   const registry = classicRegistry()
   const facade = new ClassicDeviceAtaFacade(
-    classicEnergyApi(),
-    registry,
+    classicEnergyApi(registry),
     defined(registry.devices.getById(1000)),
   )
   return facade.getEnergyReport(WINDOW)
@@ -100,8 +100,7 @@ describeEnergyReportContract('Classic ATA device', async () => {
 describeEnergyReportContract('Classic ATW device', async () => {
   const registry = classicRegistry()
   const facade = new ClassicDeviceAtwFacade(
-    classicEnergyApi(),
-    registry,
+    classicEnergyApi(registry),
     defined(registry.devices.getById(1001)),
   )
   return facade.getEnergyReport(WINDOW)
@@ -155,11 +154,10 @@ describeEnergyReportContract('Home ATW device', async () => {
 // read refusing before any I/O.
 describe('energyReport — Classic ERV (no energy wire)', () => {
   it('resolves an empty chart without touching the wire', async () => {
-    const api = classicEnergyApi()
     const registry = classicRegistry()
+    const api = classicEnergyApi(registry)
     const facade = new ClassicDeviceErvFacade(
       api,
-      registry,
       defined(registry.devices.getById(1002)),
     )
     const value = okValue(await facade.getEnergyReport(WINDOW))
@@ -170,11 +168,10 @@ describe('energyReport — Classic ERV (no energy wire)', () => {
   })
 
   it('refuses the raw energy read before any I/O', async () => {
-    const api = classicEnergyApi()
     const registry = classicRegistry()
+    const api = classicEnergyApi(registry)
     const facade = new ClassicDeviceErvFacade(
       api,
-      registry,
       defined(registry.devices.getById(1002)),
     )
 

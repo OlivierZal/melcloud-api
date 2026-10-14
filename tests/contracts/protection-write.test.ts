@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
+import type { ClassicRegistry } from '../../src/entities/index.ts'
 import type { ProtectionUpdate } from '../../src/protection.ts'
 import {
   type TypedHomeDeviceData,
@@ -103,6 +104,7 @@ const describeProtectionWriteContract = (
 }
 
 const classicFrostWrite = async (
+  registry: ClassicRegistry,
   buildFacade: (
     api: ClassicAPIAdapter,
   ) => ClassicBuildingFacade | ClassicDeviceAtaFacade,
@@ -111,7 +113,9 @@ const classicFrostWrite = async (
   const updateFrostProtection = vi
     .fn<ClassicAPIAdapter['updateFrostProtection']>()
     .mockResolvedValue({ AttributeErrors: null, Success: true })
-  const facade = buildFacade(createMockClassicApi({ updateFrostProtection }))
+  const facade = buildFacade(
+    createMockClassicApi({ registry, updateFrostProtection }),
+  )
   await facade.updateFrostProtection(update)
   const { postData } = defined(updateFrostProtection.mock.lastCall?.[0])
   return {
@@ -134,35 +138,38 @@ const decodeHomeProtectionWrite = (wireBody: {
 describeProtectionWriteContract(
   'frostProtectionWrite — Classic building',
   FROST_CASES,
-  async (update) =>
-    classicFrostWrite((api) => {
-      const registry = populatedClassicRegistry({
-        buildings: [classicBuildingData()],
-        devices: [classicAtaDevice()],
-      })
-      return new ClassicBuildingFacade(
-        api,
-        registry,
-        defined(registry.buildings.getById(1)),
-      )
-    }, update),
+  async (update) => {
+    const registry = populatedClassicRegistry({
+      buildings: [classicBuildingData()],
+      devices: [classicAtaDevice()],
+    })
+    return classicFrostWrite(
+      registry,
+      (api) =>
+        new ClassicBuildingFacade(api, defined(registry.buildings.getById(1))),
+      update,
+    )
+  },
 )
 
 describeProtectionWriteContract(
   'frostProtectionWrite — Classic ATA device',
   FROST_CASES,
-  async (update) =>
-    classicFrostWrite((api) => {
-      const registry = populatedClassicRegistry({
-        buildings: [classicBuildingData()],
-        devices: [classicAtaDevice()],
-      })
-      return new ClassicDeviceAtaFacade(
-        api,
-        registry,
-        defined(registry.devices.getById(1000)),
-      )
-    }, update),
+  async (update) => {
+    const registry = populatedClassicRegistry({
+      buildings: [classicBuildingData()],
+      devices: [classicAtaDevice()],
+    })
+    return classicFrostWrite(
+      registry,
+      (api) =>
+        new ClassicDeviceAtaFacade(
+          api,
+          defined(registry.devices.getById(1000)),
+        ),
+      update,
+    )
+  },
 )
 
 describeProtectionWriteContract(

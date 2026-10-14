@@ -3,7 +3,6 @@ import type {
   ClassicBuilding,
   ClassicDeviceAny,
   ClassicModel,
-  ClassicRegistry,
 } from '../entities/index.ts'
 import type { ClassicBuildingID, ClassicZoneSettings } from '../types/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
@@ -47,12 +46,8 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
     return this.registry.buildings
   }
 
-  public constructor(
-    api: ClassicAPIAdapter,
-    registry: ClassicRegistry,
-    instance: ClassicModel,
-  ) {
-    super(api, registry, instance)
+  public constructor(api: ClassicAPIAdapter, instance: ClassicModel) {
+    super(api, instance)
     const { data } = this
     this.isFrostProtectionAtZoneLevel = data.FPDefined
     this.isHolidayModeAtZoneLevel = data.HMDefined

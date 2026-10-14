@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [59.7.0] - 2026-10-14
+
+### Changed
+
+- **The Classic facades read the registry from their adapter.** `ClassicBaseFacade`/`ClassicBuildingFacade` constructors and `createFacade`/`createDeviceFacade` take `(api, instance)`; `protected get registry()` answers `api.registry`, the way the Home facades already did, and the door `ClassicFacadeManager`'s doc said was closed — pairing a facade with a foreign registry — is closed. Internal (`createFacade` and the facade classes are exported from `facades/index.ts` only); the production path (`ClassicFacadeManager.get`) already passed `api.registry`, so no runtime change. Test doubles hand the registry to `createMockClassicApi({ registry })`.
+- **The six `ClassicRegistry` lookups take `number`** (`getAreasByBuildingId`, `getAreasByFloorId`, `getDevicesByAreaId`, `getDevicesByBuildingId`, `getDevicesByFloorId`, `getFloorsByBuildingId`): every internal caller re-branded a plain `number` at the call, so the brand verified nothing there; the parameters accept a superset, so every existing call compiles. The wire types keep their brands.
+- **Test helpers**: the five hand-rolled `new ClassicRegistry()` + four `sync*` chains use `populatedClassicRegistry`, whose doc promised exactly that; `createZone2Facade` (a twin of `createFacade` differing by its default) is gone.
+
 ## [59.6.0] - 2026-10-14
 
 ### Changed
@@ -912,7 +920,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.6.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.7.0...HEAD
+[59.7.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.6.0...v59.7.0
 [59.6.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.5.0...v59.6.0
 [59.5.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.4.0...v59.5.0
 [59.4.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.1...v59.4.0

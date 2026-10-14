@@ -11,7 +11,6 @@ import {
   HomeAtwOperationalState,
   HomeAtwZoneMode,
 } from '../../src/constants.ts'
-import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
 import {
   assertClassicDeviceType,
@@ -19,6 +18,7 @@ import {
   classicAtwDeviceData,
   classicBuildingData,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
 
 const createAtwData = (
@@ -29,35 +29,18 @@ const createAtwData = (
     ...overrides,
   })
 
-const mockApi = createMockClassicApi()
-
-const createAtwRegistry = (data: ClassicListDeviceDataAtw): ClassicRegistry => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([
-    classicBuildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
-  ])
-  registry.syncDevices([
-    classicAtwDevice({ AreaID: null, Device: data, FloorID: null }),
-  ])
-  return registry
-}
-
 const createFacade = (
   data: ClassicListDeviceDataAtw = createAtwData(),
 ): ClassicDeviceAtwFacade => {
-  const registry = createAtwRegistry(data)
+  const registry = populatedClassicRegistry({
+    buildings: [
+      classicBuildingData({ HMDefined: true, Location: 0, TimeZone: 1 }),
+    ],
+    devices: [classicAtwDevice({ AreaID: null, Device: data, FloorID: null })],
+  })
   const device = registry.devices.getById(1001)
   assertClassicDeviceType(device, ClassicDeviceType.Atw)
-  return new ClassicDeviceAtwFacade(mockApi, registry, device)
-}
-
-const createZone2Facade = (
-  data: ClassicListDeviceDataAtw = createAtwData({ HasZone2: true }),
-): ClassicDeviceAtwFacade => {
-  const registry = createAtwRegistry(data)
-  const device = registry.devices.getById(1001)
-  assertClassicDeviceType(device, ClassicDeviceType.Atw)
-  return new ClassicDeviceAtwFacade(mockApi, registry, device)
+  return new ClassicDeviceAtwFacade(createMockClassicApi({ registry }), device)
 }
 
 describe('atw device facade zone 1', () => {
@@ -270,7 +253,7 @@ describe('atw device facade operational state', () => {
 
 describe('atw zone-mode projection', () => {
   it('projects every wire number onto its string twin, per zone', () => {
-    const facade = createZone2Facade(
+    const facade = createFacade(
       createAtwData({
         HasZone2: true,
         OperationModeZone1: ClassicOperationModeZone.flow_cool,
@@ -291,7 +274,7 @@ describe('atw zone-mode projection', () => {
 
 describe('atw device facade zone 2', () => {
   it('returns zone2 state', () => {
-    const facade = createZone2Facade()
+    const facade = createFacade(createAtwData({ HasZone2: true }))
     const zone2 = defined(facade.zone2)
 
     expect(zone2.operationMode).toBe(HomeAtwZoneMode.room)
@@ -300,7 +283,7 @@ describe('atw device facade zone 2', () => {
   })
 
   it('returns heating when device is heating and zone2 is not idle', () => {
-    const facade = createZone2Facade(
+    const facade = createFacade(
       createAtwData({
         HasZone2: true,
         OperationMode: ClassicOperationModeState.heating,
@@ -314,7 +297,7 @@ describe('atw device facade zone 2', () => {
   })
 
   it('returns prohibited when zone2 heating is prohibited', () => {
-    const facade = createZone2Facade(
+    const facade = createFacade(
       createAtwData({
         HasZone2: true,
         OperationMode: ClassicOperationModeState.heating,

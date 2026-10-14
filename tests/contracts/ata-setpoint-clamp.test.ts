@@ -88,10 +88,9 @@ const classicClampWrite = async (
     buildings: [classicBuildingData()],
     devices: [classicAtaDevice()],
   })
-  const api = createMockClassicApi()
+  const api = createMockClassicApi({ registry })
   const facade = new ClassicDeviceAtaFacade(
     api,
-    registry,
     defined(registry.devices.getById(1000)),
   )
   await facade.updateValues(values)

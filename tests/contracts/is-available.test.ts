@@ -90,7 +90,10 @@ const classicFacade = (
   registry.syncDevices([device])
   const instance = defined(registry.devices.getById(device.DeviceID))
   assertClassicDeviceType(instance, ClassicDeviceType.Ata)
-  return new ClassicDeviceAtaFacade(createMockClassicApi(), registry, instance)
+  return new ClassicDeviceAtaFacade(
+    createMockClassicApi({ registry }),
+    instance,
+  )
 }
 
 describeIsAvailableContract(
