@@ -167,13 +167,6 @@ const buildDeviceZones = (
 }
 
 /**
- * Central in-memory registry of all MELCloud models (buildings, floors, areas, devices).
- * Synced from the Classic API response and queryable by ID or parent relationship.
- * @param devices
- * @param type
- * @category Entities
- */
-/**
  * Whether a zone holds a device — of the given type when one is asked —
  * judged on the very list the zone's `devices` entry is built from.
  * @param devices - The zone's devices, from the registry's index.
@@ -188,6 +181,13 @@ const hasDevices = (
     ? devices.length > 0
     : devices.some(({ type: deviceType }) => deviceType === type)
 
+/**
+ * Central in-memory registry of all MELCloud models (buildings, floors, areas, devices).
+ * Synced from the Classic API response and queryable by ID or parent relationship.
+ * @param devices
+ * @param type
+ * @category Entities
+ */
 export class ClassicRegistry {
   public readonly areas = {
     /**
