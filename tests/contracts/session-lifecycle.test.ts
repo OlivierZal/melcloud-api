@@ -6,6 +6,7 @@ import {
   createServerError,
   createSettingStore,
   createUnauthorizedError,
+  mockHttpResponse,
   mockTemporalNowInstant,
 } from '@olivierzal/api-core/testing'
 import {
@@ -44,7 +45,6 @@ import {
   classicRawDevice,
   stageClassicWire,
 } from '../classic-fixtures.ts'
-import { mockResponse } from '../helpers.ts'
 import {
   homeContextData,
   stageHomeOidcDance,
@@ -309,7 +309,7 @@ const answerWire = (
   ) {
     throw createUnauthorizedError(path)
   }
-  return mockResponse(
+  return mockHttpResponse(
     state.outcome === 'drifted-registry' ? driftedPayload : payload,
     {},
     OK_STATUS,
@@ -419,7 +419,7 @@ const createForeignTransport = (
     client,
     requestSpy: vi
       .spyOn(client, 'request')
-      .mockResolvedValue(mockResponse(payload, {}, OK_STATUS)),
+      .mockResolvedValue(mockHttpResponse(payload, {}, OK_STATUS)),
   }
 }
 

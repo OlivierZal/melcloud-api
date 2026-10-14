@@ -54,13 +54,6 @@ export const defaultHomeAtaCapabilities: HomeAtaDeviceCapabilities = {
   supportsWideVane: false,
 }
 
-const homeDeviceCapabilities = (
-  overrides: Partial<HomeAtaDeviceCapabilities> = {},
-): HomeAtaDeviceCapabilities => ({
-  ...defaultHomeAtaCapabilities,
-  ...overrides,
-})
-
 // Convert a `Record<string, string>` to the BFF's `{ name, value }[]`
 // shape so call sites can express settings as plain string maps.
 const buildSettings = (
@@ -84,7 +77,7 @@ const homeDeviceData = (
   overrides: HomeDeviceDataOverrides = {},
 ): HomeAtaDeviceData =>
   mock<HomeAtaDeviceData>({
-    capabilities: homeDeviceCapabilities(overrides.capabilities),
+    capabilities: { ...defaultHomeAtaCapabilities, ...overrides.capabilities },
     frostProtection: overrides.frostProtection ?? null,
     givenDisplayName: overrides.name ?? 'Home device',
     holidayMode: overrides.holidayMode ?? null,
@@ -104,7 +97,6 @@ export const homeBuildingRef = (
 
 interface HomeDeviceFixtureOptions {
   building?: HomeBuildingRef
-  isOwner?: boolean
 }
 
 // Facades resolve their model by id through `api.registry` on every
@@ -147,13 +139,12 @@ const registerHomeDevice = <T extends HomeDevice>(device: T): T => {
 // come from the dedicated creators below so fixtures stay representative.
 export const homeDevice = (
   overrides: HomeDeviceDataOverrides = {},
-  options: HomeDeviceFixtureOptions = {},
 ): HomeDevice<HomeAtaDeviceData> =>
   registerHomeDevice(
     new HomeDevice({
-      building: options.building ?? homeBuildingRef(),
+      building: homeBuildingRef(),
       device: homeDeviceData(overrides),
-      isOwner: options.isOwner ?? true,
+      isOwner: true,
       type: HomeDeviceType.Ata,
     }),
   )
@@ -164,7 +155,7 @@ export const typedHomeDeviceData = (
 ): TypedHomeDeviceData => ({
   building: options.building ?? homeBuildingRef(),
   device: homeDeviceData(overrides),
-  isOwner: options.isOwner ?? true,
+  isOwner: true,
   type: HomeDeviceType.Ata,
 })
 
@@ -230,11 +221,10 @@ export const homeAtwDeviceData = (
 export const homeAtwDevice = (
   overrides: HomeAtwDeviceDataOverrides = {},
   isOwner = true,
-  building: HomeBuildingRef = homeBuildingRef(),
 ): HomeDevice<HomeAtwDeviceData> =>
   registerHomeDevice(
     new HomeDevice({
-      building,
+      building: homeBuildingRef(),
       device: homeAtwDeviceData(overrides),
       isOwner,
       type: HomeDeviceType.Atw,
@@ -247,7 +237,7 @@ export const typedHomeAtwDeviceData = (
 ): TypedHomeDeviceData => ({
   building: options.building ?? homeBuildingRef(),
   device: homeAtwDeviceData(overrides),
-  isOwner: options.isOwner ?? true,
+  isOwner: true,
   type: HomeDeviceType.Atw,
 })
 
@@ -414,15 +404,13 @@ export const homeTokenResponse = {
 /**
  * The Cognito credential form, as the hosted login page serves it.
  * @param action - Form action the credential POST targets.
- * @param csrf - Hidden `_csrf` token the form carries.
  * @returns The HTML page body.
  */
 export const homeCognitoLoginPage = (
   action = '/login?client_id=test&amp;state=abc',
-  csrf = 'csrf-token',
 ): string =>
   `<form action="${action}" method="POST">` +
-  `<input type="hidden" name="_csrf" value="${csrf}"/>` +
+  '<input type="hidden" name="_csrf" value="csrf-token"/>' +
   '<input type="hidden" name="cognitoAsfData" value=""/>' +
   '</form>'
 
