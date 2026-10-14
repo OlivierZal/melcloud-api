@@ -68,7 +68,6 @@ const UNIT_TYPE_LABELS = {
   airToWater: 'ATW',
 } satisfies Record<HomeDeviceType, string>
 
-// eslint-disable-next-line unicorn/prefer-default-parameters -- `id` is `null`-bearing: `#recordDrift` passes `HomeDroppedUnit.id`, `null` when the wire spelled no id, and a default parameter fills `undefined` only.
 const describeUnit = (type: HomeDeviceType, id: string | null): string =>
   `${UNIT_TYPE_LABELS[type]} unit ${id ?? 'unknown'}`
 
