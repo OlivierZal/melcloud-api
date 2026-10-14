@@ -1023,14 +1023,21 @@ major together. The lead item is the one with a reason of its own.
   asserted, never passed by a consumer; the sanctioned seam for a
   self-signed proxy is `transport: new HttpClient({ dispatcher })`. The
   next undici Dependabot alert is the natural trigger.
-- **Branded ids, step 2**: `ClassicAreaID`/`ClassicBuildingID`/
-  `ClassicDeviceID`/`ClassicFloorID` become `number`; the
-  `toClassic*Id` helpers, their `no-unsafe-type-assertion` block, the
-  `__brand` lint exemption, the four `declare` lines and 94 test wraps
-  go. Step 1 (the six registry lookups take `number`) shipped in 59.7.0,
-  where "the wire types keep their brands" drew the line this item
-  redraws: every brand is stamped by a fresh cast at its source, so no
-  sink is ever reached by a branded value it did not cast itself.
+- **Branded ids, made real** (direction set by the owner, 2026-10-14: a
+  brand is TypeScript's strength when it verifies something). Today the
+  four brands verify nothing — the zod schemas parse plain `z.number()`,
+  the models only `declare` branded ids, and every sink stamps the brand
+  itself with a `toClassic*Id` cast on a plain number, so a floor id
+  handed to a building lookup compiles. 60.0.0 mints each brand ONCE,
+  where the number enters: `.brand<'BuildingID'>()` (and the three
+  others) on the wire schemas, `ClassicBuildingID` and its siblings
+  derived from the schema, models and registry lookups carrying them,
+  zero cast in the sources, and the fixture factories branding through
+  the schema so the 94 test wraps go with the `toClassic*Id` helpers,
+  their `no-unsafe-type-assertion` block and the `__brand` lint
+  exemption. Step 1 (59.7.0: the six lookups accept `number`) is
+  compatible with this end state and is re-tightened then. Major
+  because the wire types change for anyone building them by hand.
 - **`getTiles` flat shapes**: `ClassicTilesData`/`ClassicTilesPostData`
   lose their type parameter and the three overload ladders collapse
   (0 callers in the family; the narrowed `SelectedDevice` is already
