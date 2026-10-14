@@ -10,16 +10,6 @@ import type { HttpClient } from '../http/index.ts'
 import type { LoginCredentials, UndefinedTolerant } from '../types/index.ts'
 
 /**
- * Parameters carried by this SDK's sync notification: the device-type
- * filter and any ids the cascade was scoped to.
- * @category Configuration
- */
-interface SyncParams {
-  ids?: (number | string)[] | undefined
-  type?: DeviceType | undefined
-}
-
-/**
  * Session and infrastructure surface shared by both dialects' API
  * adapters — the cross-dialect base a consumer can program against
  * without knowing which wire it talks to.
@@ -169,6 +159,16 @@ export type LifecycleEvents = CoreLifecycleEvents<SyncParams>
  * @category Configuration
  */
 export type SyncCallback = CoreSyncCallback<SyncParams>
+
+/**
+ * Parameters carried by this SDK's sync notification: the device-type
+ * filter and any ids the cascade was scoped to.
+ * @category Configuration
+ */
+export interface SyncParams {
+  ids?: (number | string)[] | undefined
+  type?: DeviceType | undefined
+}
 
 /**
  * Transport configuration. Discriminated by presence of an

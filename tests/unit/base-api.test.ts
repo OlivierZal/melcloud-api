@@ -25,13 +25,6 @@ import { Temporal } from '../../src/temporal.ts'
 // Re-testing core behavior here would let coverage be satisfied by
 // the wrong suite.
 
-// Observes the auto-sync timer firing (planNext armed) — module-scoped
-// because an arrow referencing `this` inside super() arguments is
-// rejected before super binds it.
-const syncCallbackMock = vi
-  .fn<() => Promise<void>>()
-  .mockResolvedValue(undefined)
-
 const { client: mockHttpClient, requestSpy: mockRequest } =
   createMockHttpClient(HttpClient, 'https://test.api')
 
@@ -45,6 +38,8 @@ class TestAPI extends BaseAPI {
   public readonly clearRegistryMock = vi.fn<() => void>()
 
   public readonly doAuthenticateMock = vi.fn<() => Promise<void>>()
+
+  public readonly fetchMock = vi.fn<() => Promise<void>>()
 
   public readonly getAuthHeadersMock = vi.fn<() => Record<string, string>>()
 
@@ -76,8 +71,6 @@ class TestAPI extends BaseAPI {
         defaultSyncIntervalMinutes: false,
         httpConfig: { baseURL: 'https://test.api' },
         logLabel: '[Test]',
-        rateLimitHours: 2,
-        syncCallback: syncCallbackMock,
       },
     )
     this.getAuthHeadersMock.mockReturnValue({})
@@ -111,6 +104,11 @@ class TestAPI extends BaseAPI {
     config: Record<string, unknown> = {},
   ): Promise<HttpResponse<T>> {
     return this.request<T>(method, url, config)
+  }
+
+  public override async fetch(): Promise<readonly unknown[]> {
+    await this.fetchMock()
+    return []
   }
 
   public override isAuthenticated(): boolean {

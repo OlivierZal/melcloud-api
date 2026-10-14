@@ -39,7 +39,6 @@ import {
   getChartPieOptions,
   isKeyOf,
   isSetDeviceDataAtaInList,
-  now,
   resolved,
   typedFromEntries,
   typedKeys,
@@ -527,7 +526,12 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     query: ReportQuery = {},
     shouldUseExactRange = false,
   ): ClassicReportPostData {
-    const { from = DEFAULT_YEAR, to = now(this.api.timezone) } = query
+    const {
+      from = DEFAULT_YEAR,
+      to = Temporal.Now.plainDateTimeISO(this.api.timezone).toString({
+        smallestUnit: 'millisecond',
+      }),
+    } = query
     const fromDate = toWallClock(from, this.api.timezone)
     const toDate = toWallClock(to, this.api.timezone)
     return {

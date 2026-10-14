@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [59.6.0] - 2026-10-14
+
+### Changed
+
+- **The simplification wave, first part: no behaviour change, every log line and wire body byte-identical.** `BaseAPI` owns what both dialects answered identically — the two-hour rate-limit window (`RATE_LIMIT_HOURS`), the auto-sync runner (`async () => this.fetch()`) and `syncRegistry()` — behind a `public abstract fetch()`; `BaseAPIConstructorOptions` keeps only `defaultSyncIntervalMinutes`, `httpConfig`, `logLabel`. `SyncParams` is exported from `src/api/types.ts` (module-level, not from the package) instead of being recomputed from the `SyncCallback` alias. In `home.ts`, `#fetchEnergy` and `#fetchErrorLog` (one caller each since the 45.0.0 collapse) are inlined, and the write path is one decorated `putAndSync(isAta, id, values)` instead of `putAtaAndSync`/`putAtwAndSync`/`#putDeviceValues`. In `token-auth.ts`, `authRequest` is one flat function (`body`, `headers`) with `fetchRaw` and the nested `config` bag gone. In `classic.ts`, the dropped-device collector (interface + closure factory) is a loop inside `#list`. In the facades, the four private protection/holiday wrappers inline at the two `getWithZoneFallback` compositions, `#hasDevices`/`#getDevicesByZone` become a predicate over the list the adjacent `.map` reads, `now()` inlines at its one caller, the per-locale `Intl.DateTimeFormat` cache (a mutable `Map` shipped into the webviews) gives way to the per-read allocation the file's other label helpers use, the ATW facade uses the repo's `TemperatureRange`, and `bucketUnit`/`gridUnit` are required where every production caller passes them. `src/time-units.ts`, a re-export shim with three importers, is gone.
+- **The exact `@olivierzal/api-core` pin advances to 1.13.0** (`mockHttpResponse` on `./testing`, in-package twins ended, a dead streak field removed).
+
 ## [59.5.0] - 2026-10-12
 
 ### Changed
@@ -905,7 +912,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.5.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v59.6.0...HEAD
+[59.6.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.5.0...v59.6.0
 [59.5.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.4.0...v59.5.0
 [59.4.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.1...v59.4.0
 [59.3.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.3.0...v59.3.1

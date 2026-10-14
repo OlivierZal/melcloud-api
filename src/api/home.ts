@@ -1,4 +1,5 @@
 import { FailureStreaks } from '@olivierzal/api-core'
+import { SESSION_REFRESH_AHEAD_MS } from '@olivierzal/api-core/time-units'
 
 import type { HomeDevice } from '../entities/home-device.ts'
 import { type HomeAtwZoneMode, HomeDeviceType } from '../constants.ts'
@@ -16,9 +17,7 @@ import {
 import { HttpStatus, isHttpError } from '../http/index.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
-import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
-  type HomeAtaValues,
   type HomeAtwValues,
   type HomeBuilding,
   type HomeContext,
@@ -199,7 +198,6 @@ const collapseByUnitId = (
   )
   return byId.values().toArray()
 }
-const DEFAULT_RATE_LIMIT_FALLBACK_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 1
 
 const parseUser = (data: HomeUserContext): HomeUser => ({
@@ -338,8 +336,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       defaultSyncIntervalMinutes: DEFAULT_SYNC_INTERVAL_MINUTES,
       httpConfig: { baseURL },
       logLabel: '[Home]',
-      rateLimitHours: DEFAULT_RATE_LIMIT_FALLBACK_HOURS,
-      syncCallback: async () => this.fetch(),
     })
     this.#locale = locale
     this.#timezone = timezone
@@ -418,7 +414,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * the Classic `fetch()`.
    * @returns All buildings or an empty array on failure.
    */
-  public async fetch(): Promise<HomeBuilding[]> {
+  public override async fetch(): Promise<HomeBuilding[]> {
     return this.runBestEffortSyncCycle(async () => this.#syncCycle())
   }
 
@@ -475,11 +471,16 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       return model
     }
     const { measure = 'consumed', ...window } = params
-    return this.#fetchEnergy(id, {
-      ...window,
-      measure: model.value.isAta()
-        ? 'cumulative_energy_consumed_since_last_upload'
-        : ATW_ENERGY_MEASURE[measure],
+    return this.safeRequest('get', `/telemetry/telemetry/energy/${id}`, {
+      params: {
+        from: toTelemetryDate(window.from),
+        interval: window.interval,
+        measure: model.value.isAta()
+          ? 'cumulative_energy_consumed_since_last_upload'
+          : ATW_ENERGY_MEASURE[measure],
+        to: toTelemetryDate(window.to),
+      },
+      schema: HomeEnergyDataSchema,
     })
   }
 
@@ -496,9 +497,10 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     if (!model.ok) {
       return model
     }
-    return this.#fetchErrorLog(
-      model.value.isAta() ? ATA_UNIT_PATH : ATW_UNIT_PATH,
-      id,
+    return this.safeRequest(
+      'get',
+      `${model.value.isAta() ? ATA_UNIT_PATH : ATW_UNIT_PATH}/${id}/errorlog`,
+      { schema: HomeErrorLogEntryListSchema },
     )
   }
 
@@ -600,10 +602,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * typed transport error propagates and the sync is skipped — the
    * server state is presumed unchanged, so a re-fetch would be wasted
    * work. The mutation + post-sync orchestration lives in
-   * `#putAtaAndSync`/`#putAtwAndSync`, where
-   * `@fetchDevices({ refresh, when: 'after' })` applies the same
-   * post-mutation-refresh contract as Classic facades — the refresh
-   * here being `syncRegistry()` instead of `api.fetch()`.
+   * `putAndSync`, where `@fetchDevices({ refresh, when: 'after' })`
+   * applies the same post-mutation-refresh contract as Classic facades
+   * — the refresh here being `syncRegistry()` instead of `api.fetch()`.
    * @param id - Target device id.
    * @param values - Partial setpoint payload matching the unit's
    * connection type — the shape is the caller's contract: the BFF
@@ -614,11 +615,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     id: string,
     values: HomeDeviceValues,
   ): Promise<void> {
-    if (this.#modelFor(id).isAta()) {
-      await this.putAtaAndSync(id, values)
-      return
-    }
-    await this.putAtwAndSync(id, values)
+    await this.putAndSync(this.#modelFor(id).isAta(), id, values)
   }
 
   protected override clearPersistedSession(): void {
@@ -775,10 +772,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     return this.#hasNoHome || (this.isAuthenticated() && this.context !== null)
   }
 
-  protected override async syncRegistry(): Promise<void> {
-    await this.fetch()
-  }
-
   // The registry refresh both entry points share. It carries the sync
   // notification, so a failed refresh never announces a completed sync
   // — consumers would rewrite stale values as if they were fresh.
@@ -814,13 +807,17 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Core of {@link updateValues}: perform the PUT and, on success,
-   * trigger a post-mutation registry refresh via
-   * `@fetchDevices({ refresh, when: 'after' })`. Throws on PUT failure so the
-   * decorator skips the sync (failed mutation → server state
-   * unchanged → re-fetch wasted). Sync failures after a successful
-   * PUT are logged and swallowed by the decorator itself, preserving
-   * the "mutation landed" truth even when the post-refresh flakes.
+   * Core of {@link updateValues}: perform the PUT on the unit path the
+   * connection type selects and, on success, trigger a post-mutation
+   * registry refresh via `@fetchDevices({ refresh, when: 'after' })`.
+   * Throws on PUT failure so the decorator skips the sync (failed
+   * mutation → server state unchanged → re-fetch wasted). Sync failures
+   * after a successful PUT are logged and swallowed by the decorator
+   * itself, preserving the "mutation landed" truth even when the
+   * post-refresh flakes. The ATW payload is translated to its wire form
+   * before the request, so an out-of-vocabulary zone mode still aborts
+   * before anything is sent.
+   * @param isAta - Whether the unit is air-to-air (else air-to-water).
    * @param id - Target device id.
    * @param values - Partial setpoint payload.
    */
@@ -828,28 +825,16 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     when: 'after',
     refresh: async (self: HomeAPI) => self.syncRegistry(),
   })
-  private async putAtaAndSync(
+  private async putAndSync(
+    isAta: boolean,
     id: string,
-    values: HomeAtaValues,
+    values: HomeDeviceValues,
   ): Promise<void> {
-    await this.#putDeviceValues(ATA_UNIT_PATH, id, values)
-  }
-
-  /**
-   * ATW counterpart to {@link putAtaAndSync}. Same post-mutation-refresh
-   * contract; only the URL prefix and payload type differ.
-   * @param id - Target device id.
-   * @param values - Partial setpoint payload.
-   */
-  @fetchDevices({
-    when: 'after',
-    refresh: async (self: HomeAPI) => self.syncRegistry(),
-  })
-  private async putAtwAndSync(
-    id: string,
-    values: HomeAtwValues,
-  ): Promise<void> {
-    await this.#putDeviceValues(ATW_UNIT_PATH, id, toAtwWireValues(values))
+    await this.request(
+      'put',
+      `${isAta ? ATA_UNIT_PATH : ATW_UNIT_PATH}/${id}`,
+      { data: isAta ? values : toAtwWireValues(values) },
+    )
   }
 
   async #exchangeAndStoreTokens(
@@ -897,51 +882,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
       : parseOrThrow(HomeResilientContextSchema, raw, 'GET /context (salvage)')
     this.#context = data
     return data
-  }
-
-  /**
-   * Issue an energy-telemetry GET to the BFF. The two public energy
-   * variants (ATA cumulative, ATW interval consumed/produced) only
-   * differ in their `measure` query parameter; this helper centralises
-   * the URL, date-format normalisation, and schema binding.
-   * @param id - Device id.
-   * @param params - Query window plus the resolved BFF measure name.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (e.g. `Hour`, `Day`).
-   * @param params.measure - Resolved BFF measure name (e.g. `interval_energy_consumed`).
-   * @param params.to - ISO end timestamp (exclusive).
-   * @returns Success with the telemetry bundle, or a typed failure.
-   */
-  async #fetchEnergy(
-    id: string,
-    params: { from: string; interval: string; measure: string; to: string },
-  ): Promise<Result<HomeEnergyData>> {
-    return this.safeRequest('get', `/telemetry/telemetry/energy/${id}`, {
-      params: {
-        from: toTelemetryDate(params.from),
-        interval: params.interval,
-        measure: params.measure,
-        to: toTelemetryDate(params.to),
-      },
-      schema: HomeEnergyDataSchema,
-    })
-  }
-
-  /**
-   * Issue an error-log GET against either the ATA or ATW unit path.
-   * Both endpoints share the response schema; only the URL prefix
-   * differs.
-   * @param unitPath - URL prefix (`/monitor/ataunit` or `/monitor/atwunit`).
-   * @param id - Device id.
-   * @returns Success with the entries (possibly empty), or a typed failure.
-   */
-  async #fetchErrorLog(
-    unitPath: string,
-    id: string,
-  ): Promise<Result<HomeErrorLogEntry[]>> {
-    return this.safeRequest('get', `${unitPath}/${id}/errorlog`, {
-      schema: HomeErrorLogEntryListSchema,
-    })
   }
 
   /**
@@ -1011,21 +951,6 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
     return model === undefined
       ? err({ entityId: id, kind: 'not-found' })
       : ok(model)
-  }
-
-  /**
-   * Issue a device-values PUT. Centralises the URL shape (`{unitPath}/{id}`)
-   * shared by the ATA and ATW mutation paths.
-   * @param unitPath - URL prefix (`/monitor/ataunit` or `/monitor/atwunit`).
-   * @param id - Target device id.
-   * @param values - Partial setpoint payload.
-   */
-  async #putDeviceValues(
-    unitPath: string,
-    id: string,
-    values: HomeAtaValues | HomeAtwWireValues,
-  ): Promise<void> {
-    await this.request('put', `${unitPath}/${id}`, { data: values })
   }
 
   // The drift streak's two moves: a strict parse that holds closes it

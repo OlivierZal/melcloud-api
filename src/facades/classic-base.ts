@@ -318,8 +318,16 @@ export abstract class ClassicBaseFacade<
     return mapResult(
       await getWithZoneFallback(
         this.isFrostProtectionAtZoneLevel,
-        async () => this.#getZoneFrostProtection(),
-        async () => this.#getDevicesFrostProtection(),
+        async () =>
+          this.#getBaseFrostProtection({
+            id: this.id,
+            tableName: this.tableName,
+          }),
+        async () =>
+          this.#getBaseFrostProtection(
+            { id: this.#anyDeviceId, tableName: 'DeviceLocation' },
+            false,
+          ),
       ),
       toProtectionState,
     )
@@ -329,8 +337,13 @@ export abstract class ClassicBaseFacade<
     return mapResult(
       await getWithZoneFallback(
         this.isHolidayModeAtZoneLevel,
-        async () => this.#getZoneHolidayMode(),
-        async () => this.#getDevicesHolidayMode(),
+        async () =>
+          this.#getBaseHolidayMode({ id: this.id, tableName: this.tableName }),
+        async () =>
+          this.#getBaseHolidayMode(
+            { id: this.#anyDeviceId, tableName: 'DeviceLocation' },
+            false,
+          ),
       ),
       (data) => toHolidayModeState(data, this.api.timezone),
     )
@@ -467,22 +480,6 @@ export abstract class ClassicBaseFacade<
     return result
   }
 
-  async #getDevicesFrostProtection(): Promise<
-    Result<ClassicFrostProtectionData>
-  > {
-    return this.#getBaseFrostProtection(
-      { id: this.#anyDeviceId, tableName: 'DeviceLocation' },
-      false,
-    )
-  }
-
-  async #getDevicesHolidayMode(): Promise<Result<ClassicHolidayModeData>> {
-    return this.#getBaseHolidayMode(
-      { id: this.#anyDeviceId, tableName: 'DeviceLocation' },
-      false,
-    )
-  }
-
   async #getFrostProtectionLocation(): Promise<ClassicFrostProtectionLocation> {
     if (this.isFrostProtectionAtZoneLevel === null) {
       // Mutations need a concrete location; surface fetch failure as throw.
@@ -508,16 +505,5 @@ export abstract class ClassicBaseFacade<
         ? { [this.holidayModeLocation]: [this.id] }
         : { Devices: this.#deviceIds },
     ]
-  }
-
-  async #getZoneFrostProtection(): Promise<Result<ClassicFrostProtectionData>> {
-    return this.#getBaseFrostProtection({
-      id: this.id,
-      tableName: this.tableName,
-    })
-  }
-
-  async #getZoneHolidayMode(): Promise<Result<ClassicHolidayModeData>> {
-    return this.#getBaseHolidayMode({ id: this.id, tableName: this.tableName })
   }
 }

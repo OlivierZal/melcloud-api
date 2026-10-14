@@ -1,4 +1,5 @@
 import type { AtwHotWaterState, AtwZoneState } from '../atw-state.ts'
+import type { TemperatureRange } from '../temperature-range.ts'
 import type { Temporal } from '../temporal.ts'
 import {
   type HomeDeviceType,
@@ -38,11 +39,6 @@ import {
   toHomeOperationModeOptions,
   toHomeWireWindow,
 } from './home-report.ts'
-
-interface TemperatureRange {
-  max: number
-  min: number
-}
 
 // Mirrors the Classic hot-water derivation: the FTC operation mode marks
 // active DHW production or a legionella cycle; every other mode reads idle.

@@ -12,7 +12,7 @@ import {
 import { redaction } from '../observability/context.ts'
 import { type ApiRequestError, type Result, err, ok } from '../types/index.ts'
 import { parseOrThrow } from '../validation/index.ts'
-import type { BaseAPIConfig, SyncCallback } from './types.ts'
+import type { BaseAPIConfig, SyncParams } from './types.ts'
 
 /**
  * Classify any thrown error into the discriminated {@link ApiRequestError}
@@ -56,8 +56,9 @@ const DEFAULT_TIMEOUT_MS = 30_000
  * Subclass-internal options injected into the {@link BaseAPI}
  * constructor. Distinct from {@link BaseAPIConfig} (the user-facing
  * surface) — these capture **what the subclass knows** that the user
- * doesn't pick (baseURL, rate-limit window, default sync cadence,
- * the sync runner closure).
+ * doesn't pick (baseURL, default sync cadence, log label). What both
+ * dialects answered identically — the two-hour rate-limit window and a
+ * timer that runs `fetch()` — is this class's, not an option.
  */
 interface BaseAPIConstructorOptions {
   /**
@@ -75,20 +76,11 @@ interface BaseAPIConstructorOptions {
    * could not tell which account a diagnostics report was about.
    */
   logLabel: string
-  /**
-   * Sliding-window length the rate-limit gate observes.
-   */
-  rateLimitHours: number
-  /**
-   * Sync runner the auto-timer drives.
-   */
-  syncCallback: () => Promise<unknown>
 }
 
-// The sync-params vocabulary this SDK instantiates the core's session
-// generic with, derived from the published `SyncCallback` alias so the
-// unexported `SyncParams` interface in `./types.ts` stays unexported.
-type SyncParams = Exclude<Parameters<SyncCallback>[0], undefined>
+// Sliding-window length the rate-limit gate observes, the same on both
+// wires (each dialect used to pass `2` under a constant of its own).
+const RATE_LIMIT_HOURS = 2
 
 /**
  * Shared infrastructure for MELCloud API clients — the thin layer over
@@ -115,10 +107,10 @@ type SyncParams = Exclude<Parameters<SyncCallback>[0], undefined>
  */
 export abstract class BaseAPI extends SessionAPI<SyncParams> {
   // Narrowing redeclaration, erased at runtime: the core's rate-limit
-  // rung is optional (`RateLimitGate | undefined`), but every
-  // construction path in this repo passes `rateLimitHours`
-  // (`BaseAPIConstructorOptions` requires it), so the gate always
-  // exists here and `isRateLimited` needs no unreachable branch.
+  // rung is optional (`RateLimitGate | undefined`), but this constructor
+  // passes `RATE_LIMIT_HOURS` itself on every construction path, so the
+  // gate always exists here and `isRateLimited` needs no unreachable
+  // branch.
   declare protected readonly rateLimitGate: RateLimitGate
 
   /**
@@ -136,22 +128,19 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
       defaultSyncIntervalMinutes,
       httpConfig,
       logLabel,
-      rateLimitHours,
-      syncCallback,
     }: BaseAPIConstructorOptions,
   ) {
     const { transport } = config
     super(config, {
       defaultSyncIntervalMinutes,
       logLabel,
-      rateLimitHours,
+      rateLimitHours: RATE_LIMIT_HOURS,
       // The ONE bound engine every redaction seat in this SDK shares
       // (`src/observability/context.ts`): without it the core's log
       // lines fall back to the base vocabulary, and the MELCloud keys
       // (`contextkey`, `access_token`, `owneremail`…) travel in clear —
       // the 2026-08-21 leak's failure class, at the dispatch seam.
       redaction,
-      syncCallback,
       // The transport RESOLUTION stays in this repo on purpose (the
       // core takes the client ALREADY BUILT): `instanceof` reads THIS
       // repo's `HttpClient`, the subclass seating the MELCloud
@@ -164,8 +153,19 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
               ...httpConfig,
               timeout: transport?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
             }),
+      // The timer and the probe run the same refresh: the dialect's
+      // `fetch()`, a best-effort cycle that never rejects.
+      syncCallback: async () => this.fetch(),
     })
   }
+
+  /**
+   * The dialect's registry refresh: fetch every building, sync the
+   * registry, notify. Best-effort — it never rejects — so it is also
+   * what the auto-sync timer and the session probe run.
+   * @returns The fetched buildings, or an empty array on failure.
+   */
+  public abstract fetch(): Promise<readonly unknown[]>
 
   /**
    * Sync check first; when it reads `false`, a NON-DESTRUCTIVE probe —
@@ -265,5 +265,9 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
       )
       return err(classifyError(error))
     }
+  }
+
+  protected override async syncRegistry(): Promise<void> {
+    await this.fetch()
   }
 }
