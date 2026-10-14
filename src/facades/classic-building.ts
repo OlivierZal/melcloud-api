@@ -1,10 +1,6 @@
 import type { ClassicAPIAdapter } from '../api/index.ts'
-import type {
-  ClassicBuilding,
-  ClassicDeviceAny,
-  ClassicModel,
-} from '../entities/index.ts'
-import type { ClassicBuildingID, ClassicZoneSettings } from '../types/index.ts'
+import type { ClassicBuilding, ClassicDeviceAny } from '../entities/index.ts'
+import type { ClassicZoneSettings } from '../types/index.ts'
 import { fetchDevices } from '../decorators/index.ts'
 import { resolved } from '../utils.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
@@ -14,8 +10,6 @@ import { BaseZoneFacade } from './classic-base-zone.ts'
  * @category Facades
  */
 export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
-  declare public readonly id: ClassicBuildingID
-
   /**
    * Frost-protection and holiday-mode flags for this building.
    * @returns The building's zone settings.
@@ -46,7 +40,7 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
     return this.registry.buildings
   }
 
-  public constructor(api: ClassicAPIAdapter, instance: ClassicModel) {
+  public constructor(api: ClassicAPIAdapter, instance: ClassicBuilding) {
     super(api, instance)
     const { data } = this
     this.isFrostProtectionAtZoneLevel = data.FPDefined

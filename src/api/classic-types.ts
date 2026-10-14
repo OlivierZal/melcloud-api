@@ -166,16 +166,11 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
   /**
    * Fetch tile data for device overview.
    */
-  readonly getTiles: (({
+  readonly getTiles: ({
     postData,
   }: {
-    postData: ClassicTilesPostData<null>
-  }) => Promise<Result<ClassicTilesData<null>>>) &
-    (<T extends ClassicDeviceType>({
-      postData,
-    }: {
-      postData: ClassicTilesPostData<T>
-    }) => Promise<Result<ClassicTilesData<T>>>)
+    postData: ClassicTilesPostData
+  }) => Promise<Result<ClassicTilesData>>
   /**
    * Fetch current device data by device and building ID.
    */
@@ -244,10 +239,6 @@ export interface ClassicAPIConfig extends BaseAPIConfig {
    * locally. Defaults to the runtime locale when unset.
    */
   readonly locale?: string | undefined
-  /**
-   * Whether to verify SSL certificates. Defaults to `true`.
-   */
-  readonly shouldVerifySSL?: boolean | undefined
   /**
    * IANA timezone identifier (e.g. `'Europe/Paris'`).
    */

@@ -1,12 +1,16 @@
-import type { ClassicFloorData } from '../types/index.ts'
+import type {
+  ClassicBuildingID,
+  ClassicFloorData,
+  ClassicFloorID,
+} from '../types/index.ts'
 import { BaseModel } from './base.ts'
 
 /**
  * ClassicFloor model representing a level within a building.
  * @category Entities
  */
-export class ClassicFloor extends BaseModel {
-  public buildingId: number
+export class ClassicFloor extends BaseModel<ClassicFloorID> {
+  public buildingId: ClassicBuildingID
 
   public readonly modelKind = 'floor'
 

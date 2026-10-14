@@ -1,5 +1,4 @@
 import type { ClassicDeviceAny, ClassicFloor } from '../entities/index.ts'
-import type { ClassicFloorID } from '../types/index.ts'
 import { BaseZoneFacade } from './classic-base-zone.ts'
 
 /**
@@ -7,8 +6,6 @@ import { BaseZoneFacade } from './classic-base-zone.ts'
  * @category Facades
  */
 export class ClassicFloorFacade extends BaseZoneFacade<ClassicFloor> {
-  declare public readonly id: ClassicFloorID
-
   public override get devices(): ClassicDeviceAny[] {
     return this.registry.getDevicesByFloorId(this.id)
   }

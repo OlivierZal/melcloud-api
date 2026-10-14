@@ -1,8 +1,9 @@
 import type { ClassicDeviceType } from '../constants.ts'
 import type { ClassicListDeviceData } from '../types/index.ts'
-import type { BaseModel } from './base.ts'
+import type { ClassicArea } from './area.ts'
 import type { ClassicBuilding } from './building.ts'
 import type { ClassicDevice } from './classic-device.ts'
+import type { ClassicFloor } from './floor.ts'
 
 /**
  * Base building model providing zone settings (frost protection, holiday mode).
@@ -20,10 +21,12 @@ export interface ClassicBaseDevice<T extends ClassicDeviceType> {
 }
 
 /**
- * Base type for all model classes.
+ * Any Classic registry model, discriminated by `modelKind`; each member
+ * carries the branded id of its own domain.
  * @category Entities
  */
-export type ClassicModel = BaseModel
+export type ClassicModel =
+  ClassicArea | ClassicBuilding | ClassicDeviceAny | ClassicFloor
 
 /**
  * Type guard that narrows a {@link ClassicDeviceAny} to a specific {@link ClassicDevice} variant.

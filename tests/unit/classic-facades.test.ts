@@ -44,7 +44,6 @@ import {
   type ClassicSetDevicePostData,
   err,
   ok,
-  toClassicBuildingId,
 } from '../../src/types/index.ts'
 import {
   assertClassicDeviceType,
@@ -53,6 +52,7 @@ import {
   classicAtaDeviceData,
   classicAtwDevice,
   classicAtwDeviceData,
+  classicBuildingAreaData,
   classicBuildingData,
   classicErvDevice,
   classicFloorData,
@@ -776,12 +776,7 @@ describe('base facade instance error', () => {
     const registry = createRegistry()
     const api = createMockClassicApi({ getFrostProtection: fpMock, registry })
     registry.syncAreas([
-      {
-        BuildingId: toClassicBuildingId(1),
-        FloorId: null,
-        ID: 200,
-        Name: 'Empty ClassicArea',
-      },
+      classicBuildingAreaData({ ID: 200, Name: 'Empty ClassicArea' }),
     ])
     const instance = defined(registry.areas.getById(200))
     const facade = new ClassicAreaFacade(api, instance)

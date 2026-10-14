@@ -26,7 +26,7 @@ const getDeviceFromRegistry = (
 
 const createDeviceFacade = (
   api: ClassicAPIAdapter,
-  instance: ClassicModel,
+  instance: ClassicDeviceAny,
 ): ClassicDeviceFacadeAny => {
   const device = getDeviceFromRegistry(api, instance.id)
   if (isClassicDeviceOfType(device, ClassicDeviceType.Ata)) {

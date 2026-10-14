@@ -16,18 +16,18 @@ import type {
   SyncCallback,
 } from '../../src/api/index.ts'
 import type { ClassicDeviceType } from '../../src/constants.ts'
+import type { ClassicSetDevicePostData } from '../../src/types/index.ts'
 import { AuthenticationError } from '../../src/errors/index.ts'
 import { HttpClient } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
-import {
-  type ClassicSetDevicePostData,
-  toClassicBuildingId,
-  toClassicDeviceId,
-} from '../../src/types/index.ts'
 import { resolved } from '../../src/utils.ts'
 import {
   CLASSIC_LIST_PATH,
+  classicAreaData,
+  classicBuildingAreaData,
   classicBuildingWithStructure,
+  classicDeviceId,
+  classicFloorData,
   classicLoginResponse,
   classicRawDevice,
   stageClassicWire,
@@ -66,8 +66,10 @@ const mockLoginAndList = (
 const unmodelledDevice = (id: number): ReturnType<typeof classicRawDevice> =>
   classicRawDevice({ DeviceID: id, Type: 99 })
 
+// Raw wire shapes, like `classicRawDevice`: the ids are plain numbers
+// the listing schema brands as it reads them.
 const areaWith = (id: number, devices: readonly unknown[]): never =>
-  cast({ Devices: devices, ID: id })
+  cast({ BuildingId: 1, Devices: devices, FloorId: null, ID: id, Name: 'A' })
 
 const buildingWith = (devices: readonly unknown[]): unknown => [
   classicBuildingWithStructure({
@@ -263,8 +265,10 @@ describe('mELCloud Classic API', () => {
     it('reports the drops of all four nesting levels', async () => {
       const floor = cast({
         Areas: [areaWith(200, [unmodelledDevice(4)])],
+        BuildingId: 1,
         Devices: [unmodelledDevice(3)],
         ID: 10,
+        Name: 'F',
       })
       const building = classicBuildingWithStructure({
         Structure: {
@@ -336,7 +340,6 @@ describe('mELCloud Classic API', () => {
       language: 'fr',
       locale: 'fr-FR',
       logger: createLogger(),
-      shouldVerifySSL: false,
       timezone: 'Europe/Paris',
     })
 
@@ -661,7 +664,7 @@ describe('mELCloud Classic API', () => {
         await api.updateValues({
           postData: mock<
             ClassicSetDevicePostData<typeof ClassicDeviceType.Ata>
-          >({ DeviceID: toClassicDeviceId(1), EffectiveFlags: 1 }),
+          >({ DeviceID: classicDeviceId(1), EffectiveFlags: 1 }),
           type,
         })
 
@@ -1262,7 +1265,7 @@ describe('mELCloud Classic API', () => {
         Structure: {
           Areas: [
             {
-              BuildingId: toClassicBuildingId(1),
+              ...classicBuildingAreaData({ ID: 100, Name: 'A1' }),
               Devices: [
                 classicRawDevice({
                   AreaID: 100,
@@ -1270,9 +1273,6 @@ describe('mELCloud Classic API', () => {
                   DeviceName: 'ClassicArea ClassicDevice',
                 }),
               ],
-              FloorId: null,
-              ID: 100,
-              Name: 'A1',
             },
           ],
           Devices: [
@@ -1283,9 +1283,10 @@ describe('mELCloud Classic API', () => {
           ],
           Floors: [
             {
+              ...classicFloorData({ ID: 10, Name: 'F1' }),
               Areas: [
                 {
-                  BuildingId: toClassicBuildingId(1),
+                  ...classicAreaData({ FloorId: 10, ID: 200, Name: 'FA1' }),
                   Devices: [
                     classicRawDevice({
                       AreaID: 200,
@@ -1294,12 +1295,8 @@ describe('mELCloud Classic API', () => {
                       FloorID: 10,
                     }),
                   ],
-                  FloorId: 10,
-                  ID: 200,
-                  Name: 'FA1',
                 },
               ],
-              BuildingId: toClassicBuildingId(1),
               Devices: [
                 classicRawDevice({
                   DeviceID: 4000,
@@ -1307,8 +1304,6 @@ describe('mELCloud Classic API', () => {
                   FloorID: 10,
                 }),
               ],
-              ID: 10,
-              Name: 'F1',
             },
           ],
         },

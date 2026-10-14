@@ -1,72 +1,48 @@
-/**
- * Branded (nominal) types for the four entity ID domains in the
- * MELCloud data model. At runtime these are plain `number` values --
- * the brand field never exists and adds zero overhead. At compile
- * time, TypeScript treats each one as a distinct type, so passing a
- * `ClassicBuildingID` where a `ClassicFloorID` is expected is a type error.
- */
+import type { z } from 'zod'
+
+import type {
+  ClassicAreaIdSchema,
+  ClassicBuildingIdSchema,
+  ClassicDeviceIdSchema,
+  ClassicFloorIdSchema,
+} from '../validation/schemas.ts'
 
 /**
- * Nominal-typing helper: a `number` tagged with a phantom brand field.
- * @template T - String literal naming the ID domain the brand distinguishes.
- * @internal
+ * Branded (nominal) types for the four entity id domains of the MELCloud
+ * Classic data model. At runtime each one is a plain `number`; at compile
+ * time TypeScript treats them as distinct types, so a `ClassicFloorID`
+ * handed to a building lookup is a type error.
+ *
+ * A brand is minted in ONE place: the zod schema that reads the id off
+ * the wire (`ClassicAreaIdSchema` and its siblings in
+ * `validation/schemas.ts`, seated in the `/User/ListDevices` schemas).
+ * The types below are inferred from those schemas, the wire types and
+ * the models carry them, and nothing in this package casts a plain
+ * number into one. A host holding a plain number (a Homey device stores
+ * one) reaches an entity through the `number`-typed `getById` lookups
+ * and reads the branded id off the model.
  */
-type Brand<T extends string> = number & { readonly __brand: T }
 
 /**
  * Unique identifier for a MELCloud area.
  * @category Types
  */
-export type ClassicAreaID = Brand<'AreaID'>
+export type ClassicAreaID = z.infer<typeof ClassicAreaIdSchema>
 
 /**
  * Unique identifier for a MELCloud building.
  * @category Types
  */
-export type ClassicBuildingID = Brand<'BuildingID'>
+export type ClassicBuildingID = z.infer<typeof ClassicBuildingIdSchema>
 
 /**
  * Unique identifier for a MELCloud device.
  * @category Types
  */
-export type ClassicDeviceID = Brand<'DeviceID'>
+export type ClassicDeviceID = z.infer<typeof ClassicDeviceIdSchema>
 
 /**
  * Unique identifier for a MELCloud floor.
  * @category Types
  */
-export type ClassicFloorID = Brand<'FloorID'>
-
-/* eslint-disable @typescript-eslint/no-unsafe-type-assertion -- branding helpers: the only place raw `as` casts to branded IDs are allowed */
-/**
- * Brand a plain number as an {@link ClassicAreaID}.
- * @param id - The raw numeric area identifier.
- * @returns The branded {@link ClassicAreaID}.
- */
-export const toClassicAreaId = (id: number): ClassicAreaID =>
-  id as ClassicAreaID
-
-/**
- * Brand a plain number as a {@link ClassicBuildingID}.
- * @param id - The raw numeric building identifier.
- * @returns The branded {@link ClassicBuildingID}.
- */
-export const toClassicBuildingId = (id: number): ClassicBuildingID =>
-  id as ClassicBuildingID
-
-/**
- * Brand a plain number as a {@link ClassicDeviceID}.
- * @param id - The raw numeric device identifier.
- * @returns The branded {@link ClassicDeviceID}.
- */
-export const toClassicDeviceId = (id: number): ClassicDeviceID =>
-  id as ClassicDeviceID
-
-/**
- * Brand a plain number as a {@link ClassicFloorID}.
- * @param id - The raw numeric floor identifier.
- * @returns The branded {@link ClassicFloorID}.
- */
-export const toClassicFloorId = (id: number): ClassicFloorID =>
-  id as ClassicFloorID
-/* eslint-enable @typescript-eslint/no-unsafe-type-assertion -- end of the branding helpers */
+export type ClassicFloorID = z.infer<typeof ClassicFloorIdSchema>

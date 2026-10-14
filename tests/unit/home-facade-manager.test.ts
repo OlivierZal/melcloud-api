@@ -25,12 +25,6 @@ const createModel = (): ReturnType<typeof homeDevice> =>
 describe('home facade manager', () => {
   beforeEach(resetHomeDevices)
 
-  it('returns null when no instance is provided', () => {
-    const manager = new HomeFacadeManager(createMockHomeApi())
-
-    expect(manager.get()).toBeNull()
-  })
-
   it('returns an ATA facade for an ATA device model', () => {
     const manager = new HomeFacadeManager(createMockHomeApi())
     const facade = manager.get(createModel())

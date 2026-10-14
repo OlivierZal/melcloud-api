@@ -2,7 +2,6 @@ import type {
   ClassicErrorLog,
   ClassicErrorLogQuery,
 } from '../api/classic-types.ts'
-import type { ClassicDevice } from '../entities/classic-device.ts'
 import type {
   ClassicBaseBuilding,
   ClassicBaseDevice,
@@ -190,10 +189,9 @@ export interface ClassicDeviceFacade<T extends ClassicDeviceType>
   /**
    * Fetch tile overview data, optionally selecting a specific device.
    */
-  readonly getTiles: ((
-    device: true | ClassicDeviceAny,
-  ) => Promise<Result<ClassicTilesData<T>>>) &
-    ((device?: false) => Promise<Result<ClassicTilesData<null>>>)
+  readonly getTiles: (
+    device?: boolean | ClassicDeviceAny,
+  ) => Promise<Result<ClassicTilesData>>
   /**
    * Fetch current device values from the Classic API; on success the
    * registry model catches up with the answer.
@@ -269,12 +267,9 @@ export interface ClassicFacade extends Identifiable {
   /**
    * Fetch tile overview data, optionally selecting a specific device.
    */
-  readonly getTiles: ((
-    device?: false,
-  ) => Promise<Result<ClassicTilesData<null>>>) &
-    (<T extends ClassicDeviceType>(
-      device: ClassicDevice<T>,
-    ) => Promise<Result<ClassicTilesData<T>>>)
+  readonly getTiles: (
+    device?: false | ClassicDeviceAny,
+  ) => Promise<Result<ClassicTilesData>>
   /**
    * Trigger a sync callback for downstream consumers.
    */

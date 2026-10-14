@@ -1,5 +1,9 @@
 import type { ClassicDeviceType } from '../constants.ts'
 import type {
+  ClassicAreaID,
+  ClassicBuildingID,
+  ClassicDeviceID,
+  ClassicFloorID,
   ClassicListDevice,
   ClassicListDeviceAny,
   ClassicListDeviceData,
@@ -13,12 +17,14 @@ import { BaseModel } from './base.ts'
  * device-type-specific shape.
  * @category Entities
  */
-export class ClassicDevice<T extends ClassicDeviceType> extends BaseModel {
-  public areaId: number | null = null
+export class ClassicDevice<
+  T extends ClassicDeviceType,
+> extends BaseModel<ClassicDeviceID> {
+  public areaId: ClassicAreaID | null = null
 
-  public buildingId: number
+  public buildingId: ClassicBuildingID
 
-  public floorId: number | null = null
+  public floorId: ClassicFloorID | null = null
 
   public readonly modelKind = 'device'
 

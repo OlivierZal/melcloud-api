@@ -125,22 +125,18 @@ export type {
   HomeUserContext,
 } from './home.ts'
 export type {
+  ClassicAreaID,
+  ClassicBuildingID,
+  ClassicDeviceID,
+  ClassicFloorID,
+} from './ids.ts'
+export type {
   LoginCredentials,
   Resolved,
   UndefinedTolerant,
 } from '@olivierzal/api-core'
 
 export { type Hour, HOURS } from './hour.ts'
-export {
-  type ClassicAreaID,
-  type ClassicBuildingID,
-  type ClassicDeviceID,
-  type ClassicFloorID,
-  toClassicAreaId,
-  toClassicBuildingId,
-  toClassicDeviceId,
-  toClassicFloorId,
-} from './ids.ts'
 export {
   type ApiRequestError,
   type Failure,

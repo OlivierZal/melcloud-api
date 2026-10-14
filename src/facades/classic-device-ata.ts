@@ -1,13 +1,13 @@
 import { type ClassicOperationMode, ClassicDeviceType } from '../constants.ts'
 import {
   type HomeOperationMode,
-  operationModeToClassic,
+  operationModeFromClassic,
 } from '../enum-mappings.ts'
 import { tolerateNoChanges } from '../errors/index.ts'
 import {
   type AtaTemperatureBounds,
   type TemperatureRange,
-  rangeForClassicMode,
+  rangeForHomeMode,
 } from '../temperature-range.ts'
 import {
   type ClassicEnergyDataAta,
@@ -140,9 +140,9 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
   public getTemperatureRange(
     mode: ClassicOperationMode | HomeOperationMode = this.setData.OperationMode,
   ): TemperatureRange | null {
-    return rangeForClassicMode(
+    return rangeForHomeMode(
       this.#bounds,
-      typeof mode === 'number' ? mode : operationModeToClassic[mode],
+      typeof mode === 'number' ? operationModeFromClassic[mode] : mode,
     )
   }
 

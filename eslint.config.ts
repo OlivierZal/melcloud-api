@@ -1,5 +1,4 @@
-import { webviewFloorBlock } from '@olivierzal/configs/eslint'
-import { library } from '@olivierzal/configs/eslint/library'
+import { library, webviewFloorBlock } from '@olivierzal/configs/eslint'
 import { type Config, defineConfig } from 'eslint/config'
 
 // The browser-reachable closure: the flat subpath modules of the
@@ -29,13 +28,6 @@ const config: Config[] = defineConfig([
   },
   ...library({
     wireNamingEntries: [
-      // Branded types use __brand as a phantom sentinel — universal TS
-      // convention.
-      {
-        filter: { match: true, regex: '^__brand$' },
-        format: null,
-        selector: 'typeProperty',
-      },
       // MELCloud Classic names every field in PascalCase, and the Home
       // report keys its series in UPPER_SNAKE (`HOT_WATER`); both are
       // read and written verbatim. Header names carry hyphens and stay

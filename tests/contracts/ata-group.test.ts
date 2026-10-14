@@ -32,7 +32,6 @@ import {
   type ClassicSetDevicePostData,
   type HomeAtaValues,
   ok,
-  toClassicDeviceId,
 } from '../../src/types/index.ts'
 import {
   classicAtaDevice,
@@ -619,7 +618,7 @@ describeMultiMemberModesContract('Classic zone', (isPoweredOnly) => {
       }),
       classicAtaDevice({
         Device: classicAtaDeviceData({ OperationMode: 3, Power: false }),
-        DeviceID: toClassicDeviceId(1003),
+        DeviceID: 1003,
       }),
       classicAtwDevice(),
     ],

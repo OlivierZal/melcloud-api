@@ -5,7 +5,6 @@ import type {
 } from '../api/index.ts'
 import type { ClassicDeviceType } from '../constants.ts'
 import type {
-  ClassicDevice,
   ClassicDeviceAny,
   ClassicModel,
   ClassicRegistry,
@@ -30,6 +29,7 @@ import { Temporal } from '../temporal.ts'
 import {
   type ApiRequestError,
   type ClassicDateTimeComponents,
+  type ClassicDeviceID,
   type ClassicFrostProtectionData,
   type ClassicFrostProtectionLocation,
   type ClassicHolidayModeData,
@@ -40,7 +40,6 @@ import {
   type Hour,
   type Result,
   mapResult,
-  toClassicDeviceId,
 } from '../types/index.ts'
 import {
   getChartLineOptions,
@@ -160,7 +159,7 @@ export abstract class ClassicBaseFacade<
 
   public abstract get devices(): ClassicDeviceAny[]
 
-  public readonly id: number
+  public readonly id: T['id']
 
   /**
    * Whether the underlying entity still exists in the registry.
@@ -203,7 +202,7 @@ export abstract class ClassicBaseFacade<
   }
 
   // Zone-level settings are shared across devices, so any device id samples the zone's state.
-  get #anyDeviceId(): number {
+  get #anyDeviceId(): ClassicDeviceID {
     const [id] = this.#deviceIds
     if (id === undefined) {
       throw new Error(
@@ -213,7 +212,7 @@ export abstract class ClassicBaseFacade<
     return id
   }
 
-  get #deviceIds(): number[] {
+  get #deviceIds(): ClassicDeviceID[] {
     return this.devices.map(({ id }) => id)
   }
 
@@ -221,7 +220,7 @@ export abstract class ClassicBaseFacade<
     return this.devices.map(({ name }) => name)
   }
 
-  public constructor(api: ClassicAPIAdapter, instance: ClassicModel) {
+  public constructor(api: ClassicAPIAdapter, instance: T) {
     this.api = api
     this.id = instance.id
   }
@@ -295,10 +294,7 @@ export abstract class ClassicBaseFacade<
     // rejection contract as every other mutation.
     if (
       !(await this.api.updatePower({
-        postData: {
-          DeviceIds: this.#deviceIds.map((id) => toClassicDeviceId(id)),
-          Power: isOn,
-        },
+        postData: { DeviceIds: this.#deviceIds, Power: isOn },
       }))
     ) {
       throw new UpdateRejectedError({
@@ -358,34 +354,25 @@ export abstract class ClassicBaseFacade<
   }
 
   /**
-   * Fetches dashboard tile data for the zone's devices; passing a specific
-   * device pins the response to its full `SelectedDevice` payload.
+   * Fetches dashboard tile data for the zone's devices; passing one of
+   * them pins the response to its full `SelectedDevice` payload.
    * @param device - Optional device to pin as `SelectedDevice`.
    * @returns The tile data, or a typed failure.
    */
-  public async getTiles(device?: false): Promise<Result<ClassicTilesData<null>>>
-  public async getTiles<TDeviceType extends ClassicDeviceType>(
-    device: ClassicDevice<TDeviceType>,
-  ): Promise<Result<ClassicTilesData<TDeviceType>>>
-  public async getTiles<TDeviceType extends ClassicDeviceType>(
-    device: false | ClassicDevice<TDeviceType> = false,
-  ): Promise<Result<ClassicTilesData<TDeviceType | null>>> {
-    const postData = {
-      DeviceIDs: this.#deviceIds.map((id) => toClassicDeviceId(id)),
-    }
-    if (device === false || !this.#deviceIds.includes(device.id)) {
-      return this.api.getTiles({ postData })
-    }
-    return mapResult(
-      await this.api.getTiles({
-        postData: {
-          ...postData,
-          SelectedBuilding: device.buildingId,
-          SelectedDevice: device.id,
-        },
-      }),
-      (data) => data as ClassicTilesData<TDeviceType>,
-    )
+  public async getTiles(
+    device: false | ClassicDeviceAny = false,
+  ): Promise<Result<ClassicTilesData>> {
+    const deviceIds = this.#deviceIds
+    return this.api.getTiles({
+      postData:
+        device === false || !deviceIds.includes(device.id)
+          ? { DeviceIDs: deviceIds }
+          : {
+              DeviceIDs: deviceIds,
+              SelectedBuilding: device.buildingId,
+              SelectedDevice: device.id,
+            },
+    })
   }
 
   public async notifySync({

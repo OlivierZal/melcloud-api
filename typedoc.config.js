@@ -31,12 +31,16 @@ const config = {
     hostedBaseUrl: 'https://olivierzal.github.io/melcloud-api/',
     intentionallyNotExported: [
       // Type-level machinery behind published aliases — consumers name
-      // the alias (`ClassicModel`, the branded ids, the per-type data
-      // aliases), never the helper; the id brand stays unnameable so ids
-      // cannot be minted outside the SDK.
-      'BaseModel',
-      'Brand',
+      // the alias (the per-type data aliases), never the helper.
       'DeviceDataMapping',
+      // The four id brands are inferred from the zod schemas that read
+      // them off the wire; the schemas stay out of the package exports
+      // so ids cannot be minted outside the SDK, and the alias names
+      // their origin.
+      'ClassicAreaIdSchema',
+      'ClassicBuildingIdSchema',
+      'ClassicDeviceIdSchema',
+      'ClassicFloorIdSchema',
       // Parameters of SDK-internal wiring (facade construction, registry
       // sync) that consumers never call; tagged `@internal` in source.
       // The decorators' own option types left with the decorators

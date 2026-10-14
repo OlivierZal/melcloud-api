@@ -1,8 +1,4 @@
-import type { ClassicOperationMode } from './constants.ts'
-import {
-  type HomeOperationMode,
-  operationModeFromClassic,
-} from './enum-mappings.ts'
+import type { HomeOperationMode } from './enum-mappings.ts'
 
 // Per-mode ATA setpoint bounds: the cross-dialect surface both APIs
 // advertise under different spellings, and the single place where the
@@ -77,21 +73,4 @@ export const rangeForHomeMode = (
 ): TemperatureRange | null => {
   const key = BOUNDS_KEY_BY_MODE[mode] as keyof AtaTemperatureBounds | undefined
   return key === undefined ? null : bounds[key]
-}
-
-/**
- * Resolves the bounds enforced for a Classic operation mode, through
- * the same table the Home side uses.
- * @param bounds - The unit's three advertised intervals.
- * @param mode - The Classic operation mode to resolve.
- * @returns The interval for that mode, or `null` when the mode is
- * outside the known vocabulary.
- */
-export const rangeForClassicMode = (
-  bounds: AtaTemperatureBounds,
-  mode: ClassicOperationMode,
-): TemperatureRange | null => {
-  const homeMode = operationModeFromClassic[mode] as
-    HomeOperationMode | undefined
-  return homeMode === undefined ? null : rangeForHomeMode(bounds, homeMode)
 }

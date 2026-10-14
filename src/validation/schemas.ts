@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import type {
+  ClassicBuildingID,
   ClassicEnergyDataAta,
   ClassicEnergyDataAtw,
   ClassicLoginData,
@@ -531,6 +532,45 @@ export const HourSchema: z.ZodType<Hour> = z.custom<Hour>(
     value <= MAX_HOUR,
 )
 
+// The four Classic entity id brands are minted HERE, where the number
+// enters from the wire, and nowhere else: a parsed id carries its brand
+// through the wire types, the models and the registry indexes, so a
+// floor id handed to a building lookup is a type error and no source
+// ever stamps a brand on a plain number.
+
+/**
+ * A Classic area id as the wire spells it; parsing it mints the
+ * {@link ClassicAreaID} brand.
+ */
+export const ClassicAreaIdSchema: z.core.$ZodBranded<z.ZodNumber, 'AreaID'> = z
+  .number()
+  .brand<'AreaID'>()
+
+/**
+ * A Classic building id as the wire spells it; parsing it mints the
+ * {@link ClassicBuildingID} brand.
+ */
+export const ClassicBuildingIdSchema: z.core.$ZodBranded<
+  z.ZodNumber,
+  'BuildingID'
+> = z.number().brand<'BuildingID'>()
+
+/**
+ * A Classic device id as the wire spells it; parsing it mints the
+ * {@link ClassicDeviceID} brand.
+ */
+export const ClassicDeviceIdSchema: z.core.$ZodBranded<
+  z.ZodNumber,
+  'DeviceID'
+> = z.number().brand<'DeviceID'>()
+
+/**
+ * A Classic floor id as the wire spells it; parsing it mints the
+ * {@link ClassicFloorID} brand.
+ */
+export const ClassicFloorIdSchema: z.core.$ZodBranded<z.ZodNumber, 'FloorID'> =
+  z.number().brand<'FloorID'>()
+
 // Classic /User/ListDevices returns an array of building-with-structure
 // envelopes. The registry iterates structure.Devices and expects every
 // entry to carry a Type/DeviceID/DeviceName/Device triple. Validate the
@@ -545,12 +585,12 @@ export const HourSchema: z.ZodType<Hour> = z.custom<Hour>(
 // payload — and the listing boundary reports them apart so a reader of
 // a diagnostic report can tell which one happened.
 const ClassicDeviceHeaderSchema = z.looseObject({
-  AreaID: z.number().nullable(),
-  BuildingID: z.number(),
+  AreaID: ClassicAreaIdSchema.nullable(),
+  BuildingID: ClassicBuildingIdSchema,
   Device: z.looseObject({}),
-  DeviceID: z.number(),
+  DeviceID: ClassicDeviceIdSchema,
   DeviceName: z.string(),
-  FloorID: z.number().nullable(),
+  FloorID: ClassicFloorIdSchema.nullable(),
 })
 
 const ClassicMinimalDeviceSchema = ClassicDeviceHeaderSchema.extend({
@@ -564,7 +604,9 @@ const ClassicMinimalDeviceSchema = ClassicDeviceHeaderSchema.extend({
 // A dropped entry names itself through its id, and a header that fails
 // somewhere else can still spell a usable `DeviceID` — the one field
 // worth salvaging from an entry the minimal schema rejects.
-const ClassicDeviceIdSchema = z.looseObject({ DeviceID: z.number() })
+const ClassicSalvagedDeviceIdSchema = z.looseObject({
+  DeviceID: ClassicDeviceIdSchema,
+})
 
 /**
  * Why the listing boundary dropped one `/User/ListDevices` entry.
@@ -621,7 +663,7 @@ export const inspectClassicListingEntry = (
   if (ClassicMinimalDeviceSchema.safeParse(device).success) {
     return null
   }
-  const id = ClassicDeviceIdSchema.safeParse(device)
+  const id = ClassicSalvagedDeviceIdSchema.safeParse(device)
   return {
     id: id.success ? id.data.DeviceID : null,
     reason: ClassicDeviceHeaderSchema.safeParse(device).success
@@ -635,12 +677,17 @@ export const inspectClassicListingEntry = (
 const ClassicDeviceListSchema = z.array(z.unknown())
 
 const ClassicMinimalAreaSchema = z.looseObject({
+  BuildingId: ClassicBuildingIdSchema,
   Devices: ClassicDeviceListSchema,
+  FloorId: ClassicFloorIdSchema.nullable(),
+  ID: ClassicAreaIdSchema,
 })
 
 const ClassicFloorSchema = z.looseObject({
   Areas: z.array(ClassicMinimalAreaSchema),
+  BuildingId: ClassicBuildingIdSchema,
   Devices: ClassicDeviceListSchema,
+  ID: ClassicFloorIdSchema,
 })
 
 const ClassicBuildingStructureSchema = z.looseObject({
@@ -653,7 +700,7 @@ const ClassicBuildingStructureSchema = z.looseObject({
  * Minimal shape the {@link ClassicBuildingListSchema} guarantees on success.
  */
 interface ClassicBuildingListEntry {
-  readonly ID: number
+  readonly ID: ClassicBuildingID
   readonly Name: string
   readonly Structure: unknown
 }
@@ -661,13 +708,15 @@ interface ClassicBuildingListEntry {
 /**
  * Classic `/User/ListDevices` response envelope. Narrower than the full
  * `ClassicBuildingWithStructure` compile-time contract — only the fields the
- * registry actually reads are validated (`ID`, `Name`, `Structure.{Areas,
- * Devices, Floors}`). Callers still bind the compile-time type at the use site.
+ * registry actually reads are validated: `ID`, `Name` and
+ * `Structure.{Areas, Devices, Floors}` on the building, the id fields and
+ * `Name` of every floor and area (where their brands are minted). Callers
+ * still bind the compile-time type at the use site.
  */
 export const ClassicBuildingListSchema: z.ZodType<ClassicBuildingListEntry[]> =
   z.array(
     z.looseObject({
-      ID: z.number(),
+      ID: ClassicBuildingIdSchema,
       Name: z.string(),
       Structure: ClassicBuildingStructureSchema,
     }),
