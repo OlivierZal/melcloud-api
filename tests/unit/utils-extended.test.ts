@@ -5,22 +5,7 @@ import type {
   ClassicReportData,
 } from '../../src/types/index.ts'
 import { ClassicLabelType } from '../../src/constants.ts'
-import { Temporal } from '../../src/temporal.ts'
-import {
-  getChartLineOptions,
-  getChartPieOptions,
-  now,
-} from '../../src/utils.ts'
-
-describe.concurrent(now, () => {
-  it('returns an ISO string without offset', () => {
-    const result = now()
-
-    expect(result).not.toContain('+')
-    expect(result).not.toContain('Z')
-    expect(() => Temporal.PlainDateTime.from(result)).not.toThrow()
-  })
-})
+import { getChartLineOptions, getChartPieOptions } from '../../src/utils.ts'
 
 describe.concurrent('formatLabels (via getChartLineOptions)', () => {
   const baseReportData: ClassicReportData = {

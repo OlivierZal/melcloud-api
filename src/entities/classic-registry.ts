@@ -169,8 +169,25 @@ const buildDeviceZones = (
 /**
  * Central in-memory registry of all MELCloud models (buildings, floors, areas, devices).
  * Synced from the Classic API response and queryable by ID or parent relationship.
+ * @param devices
+ * @param type
  * @category Entities
  */
+/**
+ * Whether a zone holds a device — of the given type when one is asked —
+ * judged on the very list the zone's `devices` entry is built from.
+ * @param devices - The zone's devices, from the registry's index.
+ * @param type - The device type the zone tree is filtered to, if any.
+ * @returns `true` when at least one device (of that type) is present.
+ */
+const hasDevices = (
+  devices: readonly ClassicDeviceAny[],
+  type?: ClassicDeviceType,
+): boolean =>
+  type === undefined
+    ? devices.length > 0
+    : devices.some(({ type: deviceType }) => deviceType === type)
+
 export class ClassicRegistry {
   public readonly areas = {
     /**
@@ -262,7 +279,12 @@ export class ClassicRegistry {
   }: { type?: ClassicDeviceType | undefined } = {}): ClassicBuildingZone[] {
     return this.#buildings
       .values()
-      .filter((building) => this.#hasDevices(building.id, 'building', type))
+      .filter((building) =>
+        hasDevices(
+          this.getDevicesByBuildingId(toClassicBuildingId(building.id)),
+          type,
+        ),
+      )
       .map((building) => ({
         areas: this.#buildAreaZones(
           this.getAreasByBuildingId(toClassicBuildingId(building.id)).filter(
@@ -457,7 +479,9 @@ export class ClassicRegistry {
     type?: ClassicDeviceType,
   ): ClassicAreaZone[] {
     return areas
-      .filter((area) => this.#hasDevices(area.id, 'area', type))
+      .filter((area) =>
+        hasDevices(this.getDevicesByAreaId(toClassicAreaId(area.id)), type),
+      )
       .map((area) => ({
         devices: buildDeviceZones(
           this.getDevicesByAreaId(toClassicAreaId(area.id)),
@@ -476,7 +500,9 @@ export class ClassicRegistry {
     type?: ClassicDeviceType,
   ): ClassicFloorZone[] {
     return floors
-      .filter((floor) => this.#hasDevices(floor.id, 'floor', type))
+      .filter((floor) =>
+        hasDevices(this.getDevicesByFloorId(toClassicFloorId(floor.id)), type),
+      )
       .map((floor) => ({
         areas: this.#buildAreaZones(
           this.getAreasByFloorId(toClassicFloorId(floor.id)),
@@ -495,28 +521,5 @@ export class ClassicRegistry {
         name: floor.name,
       }))
       .toSorted(compareNames)
-  }
-
-  #getDevicesByZone(
-    id: number,
-    zone: 'area' | 'building' | 'floor',
-  ): ClassicDeviceAny[] {
-    if (zone === 'area') {
-      return this.getDevicesByAreaId(toClassicAreaId(id))
-    }
-    return zone === 'building'
-      ? this.getDevicesByBuildingId(toClassicBuildingId(id))
-      : this.getDevicesByFloorId(toClassicFloorId(id))
-  }
-
-  #hasDevices(
-    id: number,
-    zone: 'area' | 'building' | 'floor',
-    type?: ClassicDeviceType,
-  ): boolean {
-    const devices = this.#getDevicesByZone(id, zone)
-    return type === undefined
-      ? devices.length > 0
-      : devices.some(({ type: deviceType }) => deviceType === type)
   }
 }

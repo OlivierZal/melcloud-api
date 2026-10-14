@@ -1,5 +1,6 @@
+import { MS_PER_DAY } from '@olivierzal/api-core/time-units'
+
 import { Intl, Temporal } from '../temporal.ts'
-import { MS_PER_DAY } from '../time-units.ts'
 import {
   type HomeEnergyData,
   type HomeReportAnnotation,
@@ -902,8 +903,8 @@ const energyGridBuilders: Record<
  * chart options on a daily grid: one series per source, missing days
  * as `0` (the wire omits idle buckets entirely).
  * @param options - Conversion inputs.
- * @param options.bucketUnit - Display bucket granularity (UTC days by
- * default; `localDay` sums hourly wire buckets per calendar day of the
+ * @param options.bucketUnit - Display bucket granularity (`day` is UTC
+ * days; `localDay` sums hourly wire buckets per calendar day of the
  * display timezone; `hour` matches the Classic one-day report).
  * @param options.locale - BCP-47 locale tag for axis labels.
  * @param options.sources - One entry per charted series; `scale`
@@ -912,18 +913,18 @@ const energyGridBuilders: Record<
  * @returns Structured line chart options (`kWh`).
  */
 export const toHomeEnergyOptions = ({
-  bucketUnit = 'day',
+  bucketUnit,
   locale,
   sources,
   window,
 }: {
+  bucketUnit: HomeEnergyBucketUnit
   sources: readonly {
     readonly data: HomeEnergyData
     readonly name: string
     readonly scale?: number
   }[]
   window: HomeChartWindow
-  bucketUnit?: HomeEnergyBucketUnit | undefined
   locale?: string | undefined
 }): ReportChartLineOptions => {
   const timezone = window.from.timeZoneId
@@ -955,7 +956,7 @@ export const toHomeEnergyOptions = ({
  * @param options.cutoff - Instant after which grid slots stay blank
  * (the not-yet-elapsed remainder of a full-day window).
  * @param options.data - Telemetry payload (`rssi` samples).
- * @param options.gridUnit - Grid resolution (minute by default).
+ * @param options.gridUnit - Grid resolution.
  * @param options.locale - BCP-47 locale tag for axis labels.
  * @param options.name - Series name (the device display name, matching
  * the Classic signal legend).
@@ -965,16 +966,16 @@ export const toHomeEnergyOptions = ({
 export const toHomeSignalOptions = ({
   cutoff,
   data,
-  gridUnit = 'minute',
+  gridUnit,
   locale,
   name,
   window,
 }: {
   data: HomeEnergyData
+  gridUnit: HomeChartGridUnit
   name: string
   window: HomeChartWindow
   cutoff?: Temporal.ZonedDateTime | undefined
-  gridUnit?: HomeChartGridUnit | undefined
   locale?: string | undefined
 }): ReportChartLineOptions => {
   const samples = data.measureData

@@ -636,6 +636,7 @@ describe.concurrent(toHomeOperationModeOptions, () => {
 describe.concurrent(toHomeEnergyOptions, () => {
   it('densifies sparse buckets to zero and applies the scale', () => {
     const options = toHomeEnergyOptions({
+      bucketUnit: 'day',
       sources: [
         {
           data: homeEnergyEnvelope(
@@ -671,6 +672,7 @@ describe.concurrent(toHomeEnergyOptions, () => {
   it('charts one series per source', () => {
     const bucket = { time: '2026-07-17 00:00:00.000000000', value: '2.5' }
     const options = toHomeEnergyOptions({
+      bucketUnit: 'day',
       sources: [
         {
           data: homeEnergyEnvelope('consumed', [bucket]),
@@ -704,6 +706,7 @@ describe.concurrent(toHomeSignalOptions, () => {
         { time: '2026-07-17 08:58:00.000000000', value: '-70' },
         { time: '2026-07-17 09:30:30.000000000', value: '-66' },
       ]),
+      gridUnit: 'minute',
       name: 'Garage',
       window: { from: window.from, to: window.to },
     })

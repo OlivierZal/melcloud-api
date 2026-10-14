@@ -24,36 +24,6 @@ const YEAR_MONTH_DIVISOR = 100
 const DAY_OF_WEEK_BASE_YEAR = 2024
 const MONTH_NAME_BASE_YEAR = 2024
 
-interface LabelFormatterCache {
-  readonly dayOfWeek: Intl.DateTimeFormat
-  readonly month: Intl.DateTimeFormat
-}
-
-// Per-locale `Intl.DateTimeFormat` cache. Keyed on the locale string
-// (or `''` for the runtime default) so repeat calls with the same
-// locale reuse the same formatter pair without re-allocating on each
-// chart-options call. The formatters come from the polyfill's
-// Temporal-aware `Intl` and consume `Temporal.PlainDate` values
-// directly; plain types format their own calendar fields, so no
-// `timeZone` option is involved.
-const formatterCacheByLocale = new Map<string, LabelFormatterCache>()
-
-const getLabelFormatters = (
-  locale: string | undefined,
-): LabelFormatterCache => {
-  const key = locale ?? ''
-  const cached = formatterCacheByLocale.get(key)
-  if (cached !== undefined) {
-    return cached
-  }
-  const cache: LabelFormatterCache = {
-    dayOfWeek: new Intl.DateTimeFormat(locale, { weekday: 'short' }),
-    month: new Intl.DateTimeFormat(locale, { month: 'short' }),
-  }
-  formatterCacheByLocale.set(key, cache)
-  return cache
-}
-
 /**
  * Clamp a numeric value into the inclusive `[min, max]` range.
  *
@@ -70,20 +40,6 @@ export const clampToRange = (
   value: number,
   range: { max: number; min: number },
 ): number => Math.min(Math.max(value, range.min), range.max)
-
-/**
- * Get the current date/time as an ISO 8601 string without timezone offset.
- *
- * When a timezone is supplied, the wall-clock time is taken in that
- * zone; otherwise the runtime's system zone is used. The returned
- * string is the local `PlainDateTime` ISO form (no `Z`, no `+HH:MM`).
- * @param timeZone - IANA timezone identifier, or omitted for system zone.
- * @returns The current date/time as an ISO string.
- */
-export const now = (timeZone?: string): string =>
-  Temporal.Now.plainDateTimeISO(timeZone).toString({
-    smallestUnit: 'millisecond',
-  })
 
 /**
  * Projects a caller-local wall-clock datetime onto the UTC wall clock
@@ -264,12 +220,17 @@ export const isSetDeviceDataAtaInList: (
 
 // Strategy map: transform raw API label formats into human-readable strings
 // based on report granularity (day of week, month name, year-month, etc.)
-// The closure receives the resolved per-call locale so repeat calls with
-// different locales stay isolated and the cache stays consistent.
 const buildLabelFormatters = (
   locale: string | undefined,
 ): Record<ClassicLabelType, (label: string) => string> => {
-  const formatters = getLabelFormatters(locale)
+  // Two formatters per chart read, allocated like the file's other label
+  // helpers do: the polyfill's Temporal-aware `Intl` consumes
+  // `Temporal.PlainDate` values directly, plain types format their own
+  // calendar fields, so no `timeZone` option is involved.
+  const formatters = {
+    dayOfWeek: new Intl.DateTimeFormat(locale, { weekday: 'short' }),
+    month: new Intl.DateTimeFormat(locale, { month: 'short' }),
+  }
   return {
     [ClassicLabelType.dayOfWeek]: (label) =>
       formatters.dayOfWeek.format(

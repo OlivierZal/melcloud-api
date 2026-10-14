@@ -1,4 +1,5 @@
 import { FailureStreaks } from '@olivierzal/api-core'
+import { SESSION_REFRESH_AHEAD_MS } from '@olivierzal/api-core/time-units'
 
 import type { HomeDevice } from '../entities/home-device.ts'
 import { type HomeAtwZoneMode, HomeDeviceType } from '../constants.ts'
@@ -16,7 +17,6 @@ import {
 import { HttpStatus, isHttpError } from '../http/index.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
-import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
   type HomeAtaValues,
   type HomeAtwValues,

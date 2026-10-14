@@ -1,3 +1,4 @@
+import { SESSION_REFRESH_AHEAD_MS } from '@olivierzal/api-core/time-units'
 import { Agent } from 'undici'
 
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
@@ -10,7 +11,6 @@ import {
 } from '../errors/index.ts'
 import { isSessionExpired } from '../resilience/index.ts'
 import { Temporal } from '../temporal.ts'
-import { SESSION_REFRESH_AHEAD_MS } from '../time-units.ts'
 import {
   type ClassicAreaDataAny,
   type ClassicBuildingWithStructure,
