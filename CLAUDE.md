@@ -673,11 +673,15 @@ refusals (`ErrorId`, `LoginData: null`) are read at their own
 boundaries into `AuthenticationError`/`AuthenticationThrottledError`,
 and a non-2xx body says nothing the status line does not.
 
-`ClassicFacadeManager.get` ships the same shape as the Home and heatzy
-managers since 58.0.0: the typed required overloads, `get(): null`, and
-ONE optional catch-all (`get(instance?: ClassicModel): ClassicFacade |
-null`). The four typed optional mirrors it carried until 57.3.0 were
-cut as a BREAKING change (a caller holding `ClassicDevice<T> |
+`ClassicFacadeManager.get` ships the typed required overloads,
+`get(): null`, and ONE optional catch-all (`get(instance?: ClassicModel):
+ClassicFacade | null`) — the shape the Home and heatzy managers had too
+until 60.0.0 and heatzy-api's paired major dropped their `get(): null`
+rung (one model class each, and their only production caller
+null-checks the registry lookup first); the Classic manager keeps its
+rung because its own `getById` feeds `get` the registry lookup's
+`undefined`. The four typed optional mirrors it carried until 57.3.0
+were cut as a BREAKING change (a caller holding `ClassicDevice<T> |
 undefined` now reads `ClassicFacade | null` and narrows itself); no
 family consumer held one — com.melcloud resolves by id through
 `getById`. Owner's call 2026-09-14, cut alone rather than parked for a
@@ -755,9 +759,9 @@ verdicts, and this ledger names every one of them — re-count it
 whenever an overlay changes:
 
 - `eslint.config.ts`: the ignores (`coverage/`, `dist/`, `docs/`,
-  `scripts/`); three `wireNamingEntries` — the `__brand` phantom, the
-  PascalCase/UPPER_CASE wire fields, the snake_case OAuth/Home/Homey
-  vocabularies; `wireNamingFiles`, the ten globs of the layers that
+  `scripts/`); two `wireNamingEntries` — the PascalCase/UPPER_CASE wire
+  fields, the snake_case OAuth/Home/Homey vocabularies;
+  `wireNamingFiles`, the ten globs of the layers that
   speak to MELCloud (the strict core applies to the rest); the
   `classic-flags.ts` no-magic-numbers ledger; `webviewFloorBlock` over
   the ten-module browser-reachable closure; and the
@@ -850,8 +854,8 @@ that re-derives it, never by hand.
   the seam). Existing disables are debt: remove them when touching the
   code they guard, never replicate them.
 - The only tolerated exceptions are protocol- or rule-pair-imposed, each
-  documented with a `-- reason`: bitfield operators, branded-type and
-  parse-boundary casts, wire-imposed single-letter keys, namespace
+  documented with a `-- reason`: bitfield operators, parse-boundary
+  casts, wire-imposed single-letter keys, namespace
   merging over type-only packages, and synchronous mocks of async
   contracts
   (`promise-function-async` autofixes the `Promise.resolve` escape back
@@ -1006,54 +1010,64 @@ that re-derives it, never by hand.
 - CI: `Test (Node latest)` is `continue-on-error` by design — keep it out
   of required status checks. Sonar coverage runs on the `22` leg only.
 
-## Next major (60.0.0) — verified 2026-10-14, parked
+## 60.0.0 — shipped 2026-10-14
 
 Each item below was confirmed on `main` by an independent reading
 (consumer grep over the eight repositories, behaviour trace, recorded
-decisions): zero production hits outside this package, no runtime path
-changes, and each is a semver major because it narrows or removes a
-published type or option. None justifies a 60.0.0 on its own — a major
-for nothing is the cost this ledger refuses — so they ride the next
-major together. The lead item is the one with a reason of its own.
+decisions): zero production hits outside this package, and each is a
+semver major because it narrows or removes a published type or option.
+None justified a 60.0.0 on its own — a major for nothing is the cost
+this ledger refuses — so they rode the major together. The verdicts:
 
-- **`ClassicAPIConfig.shouldVerifySSL` goes, and `undici` with it**
-  (lead). A TLS kill switch leaves a library that handles account
-  credentials, and `undici` leaves the whole dependency tree (api-core
-  does not carry it). Added deliberately in 5dd3293 (2024-05), never
-  asserted, never passed by a consumer; the sanctioned seam for a
-  self-signed proxy is `transport: new HttpClient({ dispatcher })`. The
-  next undici Dependabot alert is the natural trigger.
-- **Branded ids, made real** (direction set by the owner, 2026-10-14: a
-  brand is TypeScript's strength when it verifies something). Today the
-  four brands verify nothing — the zod schemas parse plain `z.number()`,
-  the models only `declare` branded ids, and every sink stamps the brand
-  itself with a `toClassic*Id` cast on a plain number, so a floor id
-  handed to a building lookup compiles. 60.0.0 mints each brand ONCE,
-  where the number enters: `.brand<'BuildingID'>()` (and the three
-  others) on the wire schemas, `ClassicBuildingID` and its siblings
-  derived from the schema, models and registry lookups carrying them,
-  zero cast in the sources, and the fixture factories branding through
-  the schema so the 94 test wraps go with the `toClassic*Id` helpers,
-  their `no-unsafe-type-assertion` block and the `__brand` lint
-  exemption. Step 1 (59.7.0: the six lookups accept `number`) is
-  compatible with this end state and is re-tightened then. Major
-  because the wire types change for anyone building them by hand.
-- **`getTiles` flat shapes**: `ClassicTilesData`/`ClassicTilesPostData`
-  lose their type parameter and the three overload ladders collapse
-  (0 callers in the family; the narrowed `SelectedDevice` is already
-  unsound in the not-in-zone branch).
-- **`rangeForClassicMode` deleted**: the Classic ATA facade calls
-  `rangeForHomeMode(bounds, operationModeFromClassic[mode])` as the
-  Home facade does (checked for the four input classes — known or
-  unknown, number or string — same result).
-- **`HomeBaseDeviceFacade.clampValues` abstract**: both Home types
-  implement it; the 49.2.0 "type with no bounds to enforce" was the
-  ERV, a Classic type.
-- **`ClassicArea` without its phantom `T`** (and `syncArea`): no
-  member reads it; `ClassicFloor` already has the target shape.
-- **`HomeFacadeManager.get(): null` rung** goes with heatzy-api's
-  `FacadeManager.get` ladder in the same release pair: the only
-  production caller null-checks the registry lookup before calling.
+- **`ClassicAPIConfig.shouldVerifySSL` and `undici` — shipped in
+  60.0.0** (the lead item). A TLS kill switch left a library that
+  handles account credentials, and `undici` left the whole dependency
+  tree (api-core does not carry it). Added deliberately in 5dd3293
+  (2024-05), never asserted, never passed by a consumer; the sanctioned
+  seam for a self-signed proxy is `transport: new HttpClient({
+dispatcher })`.
+- **Branded ids, made real — shipped in 60.0.0** (direction set by the
+  owner, 2026-10-14: a brand is TypeScript's strength when it verifies
+  something). A brand is minted in ONE place, the zod schema that reads
+  the id off the wire: `ClassicAreaIdSchema` and its three siblings in
+  `validation/schemas.ts` (`z.number().brand<'AreaID'>()`), seated in
+  the `/User/ListDevices` schema's device header, building, floor and
+  area entries — so the listing now validates the floor and area id
+  fields and `Name` it reads, where it validated only the building's.
+  `ClassicAreaID`/`ClassicBuildingID`/`ClassicDeviceID`/`ClassicFloorID`
+  are `z.infer` of those schemas; the wire types, the models
+  (`BaseModel<TId>`, `ClassicModel` the discriminated union), the
+  facades (`id: T['id']`) and the registry's relationship indexes carry
+  them, and the six lookups take them again (59.7.0's widening to
+  `number` was the compatible step). Zero cast in `src` and `tests`: the
+  `toClassic*Id` helpers, their `no-unsafe-type-assertion` block and
+  the `__brand` lint exemption are gone; the fixture factories take
+  plain numbers and mint through the schemas (`classicBuildingId(1)` is
+  `ClassicBuildingIdSchema.parse(1)`). HOST-FACING lookups stay
+  `number` — `getById` on the four collections, the manager's
+  `getById`, `getErrorLog(query, deviceIds)` (so
+  `ClassicErrorLogPostData.DeviceIDs` is `number`),
+  `ClassicGetDeviceDataParams` — because a Homey device stores a plain
+  number and a branded id is assignable to `number`; a host that holds
+  a number reaches the entity by id and reads the brand off the model.
+  The schemas stay out of the package exports (typedoc lists them as
+  intentionally not exported) so no id can be minted outside the SDK.
+- **`getTiles` flat shapes — shipped in 60.0.0**: one signature per
+  layer, `ClassicTilesData`/`ClassicTilesPostData` non-generic, the
+  `as` and its `mapResult` gone (0 callers in the family; the narrowed
+  `SelectedDevice` was unsound in the not-in-zone branch).
+- **`rangeForClassicMode` deleted — shipped in 60.0.0**: the Classic
+  ATA facade calls `rangeForHomeMode(bounds, operationModeFromClassic[mode])`
+  as the Home facade does (same result for the four input classes).
+- **`HomeBaseDeviceFacade.clampValues` abstract — shipped in 60.0.0**:
+  both Home types implement it; the 49.2.0 "type with no bounds to
+  enforce" was the ERV, a Classic type.
+- **`ClassicArea` without its phantom `T` — shipped in 60.0.0** (and
+  `syncArea`; `ClassicAreaData` no longer extends `ClassicFloorData`,
+  whose `ID` is a floor id).
+- **`HomeFacadeManager.get(): null` rung — shipped in 60.0.0**, with
+  heatzy-api's `FacadeManager.get` ladder in the paired release: the
+  only production caller null-checks the registry lookup before calling.
 - **Kept, not removed**: `TransportConfig`'s `{ timeoutMs }` arm. It is
   the deliberate successor of `requestTimeout` (PR #1477), and its
   removal would leave no public way to tune the timeout, the base URL

@@ -10,6 +10,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClassicAPI } from '../../src/api/classic.ts'
 import type { HomeAPI } from '../../src/api/home.ts'
 import type { SyncCallback } from '../../src/api/index.ts'
+import type {
+  ClassicBuildingWithStructure,
+  HomeContext,
+} from '../../src/types/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import {
@@ -18,19 +22,16 @@ import {
   HttpError,
 } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
-import {
-  type ClassicBuildingWithStructure,
-  type ClassicListDevice,
-  type HomeContext,
-  toClassicAreaId,
-  toClassicBuildingId,
-  toClassicDeviceId,
-  toClassicFloorId,
-} from '../../src/types/index.ts'
 import { resolved } from '../../src/utils.ts'
 import {
+  classicAreaData,
+  classicAreaId,
+  classicAtaDevice,
   classicAtaDeviceData,
   classicBuildingData,
+  classicBuildingId,
+  classicFloorData,
+  classicFloorId,
 } from '../classic-fixtures.ts'
 
 const transientError = (status: number): HttpError =>
@@ -52,32 +53,23 @@ const buildingResponse: ClassicBuildingWithStructure[] = [
       Devices: [],
       Floors: [
         {
+          ...classicFloorData({ ID: 10, Name: 'Ground floor' }),
           Areas: [
             {
-              BuildingId: toClassicBuildingId(1),
+              ...classicAreaData({ FloorId: 10, ID: 100, Name: 'Living room' }),
               Devices: [
-                mock<ClassicListDevice<typeof ClassicDeviceType.Ata>>({
-                  AreaID: toClassicAreaId(100),
-                  BuildingID: toClassicBuildingId(1),
+                classicAtaDevice({
                   Device: classicAtaDeviceData({
                     NumberOfFanSpeeds: 5,
                     SetTemperature: 23,
                   }),
-                  DeviceID: toClassicDeviceId(1001),
+                  DeviceID: 1001,
                   DeviceName: 'AC unit',
-                  FloorID: toClassicFloorId(10),
-                  Type: ClassicDeviceType.Ata,
                 }),
               ],
-              FloorId: 10,
-              ID: 100,
-              Name: 'Living room',
             },
           ],
-          BuildingId: toClassicBuildingId(1),
           Devices: [],
-          ID: 10,
-          Name: 'Ground floor',
         },
       ],
     },
@@ -128,15 +120,13 @@ describe('api lifecycle', () => {
 
     expect(api.registry.getDevices()).toHaveLength(1)
     expect(
-      api.registry.getDevicesByBuildingId(toClassicBuildingId(1)),
+      api.registry.getDevicesByBuildingId(classicBuildingId(1)),
     ).toHaveLength(1)
     expect(
-      api.registry.getFloorsByBuildingId(toClassicBuildingId(1)),
+      api.registry.getFloorsByBuildingId(classicBuildingId(1)),
     ).toHaveLength(1)
-    expect(api.registry.getAreasByFloorId(toClassicFloorId(10))).toHaveLength(1)
-    expect(api.registry.getDevicesByAreaId(toClassicAreaId(100))).toHaveLength(
-      1,
-    )
+    expect(api.registry.getAreasByFloorId(classicFloorId(10))).toHaveLength(1)
+    expect(api.registry.getDevicesByAreaId(classicAreaId(100))).toHaveLength(1)
 
     const device = api.registry.devices.getById(1001)
 
@@ -272,7 +262,7 @@ describe('api lifecycle', () => {
 
     expect(api.registry.getDevices()).toHaveLength(0)
     expect(
-      api.registry.getFloorsByBuildingId(toClassicBuildingId(1)),
+      api.registry.getFloorsByBuildingId(classicBuildingId(1)),
     ).toHaveLength(0)
   })
 

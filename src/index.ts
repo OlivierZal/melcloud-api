@@ -302,7 +302,6 @@ export {
 export {
   type AtaTemperatureBounds,
   type TemperatureRange,
-  rangeForClassicMode,
   rangeForHomeMode,
 } from './temperature-range.ts'
 export { Temporal } from './temporal.ts'

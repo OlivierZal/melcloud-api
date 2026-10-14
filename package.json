@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "59.7.1",
+  "version": "60.0.0",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",
@@ -93,7 +93,6 @@
   "dependencies": {
     "@olivierzal/api-core": "1.13.0",
     "tough-cookie": "^6.0.2",
-    "undici": "^8.9.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

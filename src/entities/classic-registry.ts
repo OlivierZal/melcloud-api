@@ -1,11 +1,14 @@
 import type {
   ClassicAreaDataAny,
+  ClassicAreaID,
   ClassicAreaZone,
   ClassicBuildingData,
+  ClassicBuildingID,
   ClassicBuildingZone,
   ClassicDeviceZone,
   ClassicFlatZone,
   ClassicFloorData,
+  ClassicFloorID,
   ClassicFloorZone,
   ClassicListDeviceAny,
 } from '../types/index.ts'
@@ -222,32 +225,35 @@ export class ClassicRegistry {
   // Pre-computed indexes for O(1) lookups by parent relationship.
   // Public accessors expose readonly query interfaces over private maps,
   // preventing callers from clearing or replacing entire collections.
+  // The by-id maps are keyed by plain `number` because `getById` is the
+  // host-facing entry (a Homey device stores a plain number); the
+  // relationship indexes are keyed by the branded ids the models carry.
   readonly #areas = new Map<number, ClassicArea>()
 
-  #areasByBuildingId = new Map<number, ClassicArea[]>()
+  #areasByBuildingId = new Map<ClassicBuildingID, ClassicArea[]>()
 
-  #areasByFloorId = new Map<number, ClassicArea[]>()
+  #areasByFloorId = new Map<ClassicFloorID, ClassicArea[]>()
 
   readonly #buildings = new Map<number, ClassicBuilding>()
 
   readonly #devices = new Map<number, ClassicDeviceAny>()
 
-  #devicesByAreaId = new Map<number, ClassicDeviceAny[]>()
+  #devicesByAreaId = new Map<ClassicAreaID, ClassicDeviceAny[]>()
 
-  #devicesByBuildingId = new Map<number, ClassicDeviceAny[]>()
+  #devicesByBuildingId = new Map<ClassicBuildingID, ClassicDeviceAny[]>()
 
-  #devicesByFloorId = new Map<number, ClassicDeviceAny[]>()
+  #devicesByFloorId = new Map<ClassicFloorID, ClassicDeviceAny[]>()
 
   readonly #floors = new Map<number, ClassicFloor>()
 
-  #floorsByBuildingId = new Map<number, ClassicFloor[]>()
+  #floorsByBuildingId = new Map<ClassicBuildingID, ClassicFloor[]>()
 
   /**
    * Get all areas within a specific building.
    * @param id - The building ID to look up areas for.
    * @returns The areas belonging to the specified building.
    */
-  public getAreasByBuildingId(id: number): ClassicArea[] {
+  public getAreasByBuildingId(id: ClassicBuildingID): ClassicArea[] {
     return this.#areasByBuildingId.get(id) ?? []
   }
 
@@ -256,7 +262,7 @@ export class ClassicRegistry {
    * @param id - Floor identifier.
    * @returns The areas under that floor.
    */
-  public getAreasByFloorId(id: number): ClassicArea[] {
+  public getAreasByFloorId(id: ClassicFloorID): ClassicArea[] {
     return this.#areasByFloorId.get(id) ?? []
   }
 
@@ -314,7 +320,7 @@ export class ClassicRegistry {
    * @param id - Area identifier.
    * @returns The devices in that area.
    */
-  public getDevicesByAreaId(id: number): ClassicDeviceAny[] {
+  public getDevicesByAreaId(id: ClassicAreaID): ClassicDeviceAny[] {
     return this.#devicesByAreaId.get(id) ?? []
   }
 
@@ -323,7 +329,7 @@ export class ClassicRegistry {
    * @param id - Building identifier.
    * @returns The devices under that building.
    */
-  public getDevicesByBuildingId(id: number): ClassicDeviceAny[] {
+  public getDevicesByBuildingId(id: ClassicBuildingID): ClassicDeviceAny[] {
     return this.#devicesByBuildingId.get(id) ?? []
   }
 
@@ -332,7 +338,7 @@ export class ClassicRegistry {
    * @param id - Floor identifier.
    * @returns The devices under that floor.
    */
-  public getDevicesByFloorId(id: number): ClassicDeviceAny[] {
+  public getDevicesByFloorId(id: ClassicFloorID): ClassicDeviceAny[] {
     return this.#devicesByFloorId.get(id) ?? []
   }
 
@@ -353,7 +359,7 @@ export class ClassicRegistry {
    * @param id - Building identifier.
    * @returns The floors under that building.
    */
-  public getFloorsByBuildingId(id: number): ClassicFloor[] {
+  public getFloorsByBuildingId(id: ClassicBuildingID): ClassicFloor[] {
     return this.#floorsByBuildingId.get(id) ?? []
   }
 
@@ -391,7 +397,7 @@ export class ClassicRegistry {
     )
     this.#areasByFloorId = Map.groupBy(
       models.filter(
-        (model): model is ClassicArea & { floorId: number } =>
+        (model): model is ClassicArea & { floorId: ClassicFloorID } =>
           model.floorId !== null,
       ),
       ({ floorId }) => floorId,
@@ -429,14 +435,14 @@ export class ClassicRegistry {
     )
     this.#devicesByFloorId = Map.groupBy(
       models.filter(
-        (model): model is ClassicDeviceAny & { floorId: number } =>
+        (model): model is ClassicDeviceAny & { floorId: ClassicFloorID } =>
           model.floorId !== null,
       ),
       ({ floorId }) => floorId,
     )
     this.#devicesByAreaId = Map.groupBy(
       models.filter(
-        (model): model is ClassicDeviceAny & { areaId: number } =>
+        (model): model is ClassicDeviceAny & { areaId: ClassicAreaID } =>
           model.areaId !== null,
       ),
       ({ areaId }) => areaId,

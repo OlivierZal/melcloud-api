@@ -1,18 +1,19 @@
-import type { ClassicAreaData, ClassicAreaDataAny } from '../types/index.ts'
+import type {
+  ClassicAreaData,
+  ClassicAreaID,
+  ClassicBuildingID,
+  ClassicFloorID,
+} from '../types/index.ts'
 import { BaseModel } from './base.ts'
 
 /**
  * ClassicArea model representing a zone within a building or floor.
- * @template T - Type of the area's `floorId`: a floor id (`number`) when the
- * area belongs to a floor, or `null` when it sits directly under the building.
  * @category Entities
  */
-export class ClassicArea<
-  T extends number | null = number | null,
-> extends BaseModel {
-  public buildingId: number
+export class ClassicArea extends BaseModel<ClassicAreaID> {
+  public buildingId: ClassicBuildingID
 
-  public floorId: number | null
+  public floorId: ClassicFloorID | null
 
   public readonly modelKind = 'area'
 
@@ -29,7 +30,7 @@ export class ClassicArea<
     FloorId: floorId,
     ID: id,
     Name: name,
-  }: ClassicAreaData<T> | ClassicAreaDataAny) {
+  }: ClassicAreaData<ClassicFloorID | null>) {
     super({ id, name })
     this.buildingId = buildingId
     this.floorId = floorId
@@ -48,13 +49,13 @@ export class ClassicArea<
  * @param data.FloorId - Owning floor identifier (or `null` if directly under the building).
  * @param data.Name - Updated area display name.
  */
-export const syncArea = <T extends number | null>(
-  model: ClassicArea<T>,
+export const syncArea = (
+  model: ClassicArea,
   {
     BuildingId: buildingId,
     FloorId: floorId,
     Name: name,
-  }: ClassicAreaData<T> | ClassicAreaDataAny,
+  }: ClassicAreaData<ClassicFloorID | null>,
 ): void => {
   model.name = name
   model.buildingId = buildingId

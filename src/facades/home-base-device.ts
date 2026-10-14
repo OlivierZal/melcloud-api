@@ -407,6 +407,16 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
   }
 
   /**
+   * Per-type setpoint clamp: maps the defined setpoint fields of an
+   * update onto their clamped values, leaving every other field alone.
+   * @param changes - Defined update fields.
+   * @returns The clamped setpoint fields to overlay on the update.
+   */
+  protected abstract clampValues(
+    changes: HomeDeviceValues,
+  ): Partial<HomeDeviceValues>
+
+  /**
    * Fetches energy telemetry for this device over the given time
    * window — cumulative consumption on ATA units, one interval-measure
    * direction on ATW units (`measure` selects consumed or produced
@@ -615,20 +625,9 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
     }
     await this.api.updateValues(this.id, {
       ...changes,
-      ...this.clampValues?.(changes),
+      ...this.clampValues(changes),
     })
   }
-
-  /**
-   * Per-type setpoint clamp: maps the defined setpoint fields of an
-   * update onto their clamped values, leaving every other field alone.
-   * Left undeclared by a type with no bounds to enforce — the pipeline
-   * then forwards the changes untouched (the optional-hook mirror of
-   * the Classic side's `extractEnergyReport` null hook).
-   * @param changes - Defined update fields.
-   * @returns The clamped setpoint fields to overlay on the update.
-   */
-  protected clampValues?(changes: HomeDeviceValues): Partial<HomeDeviceValues>
 
   /**
    * Shared single-source chart pipeline: resolves the query window,

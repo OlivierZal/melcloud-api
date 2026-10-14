@@ -1,5 +1,4 @@
 import { SESSION_REFRESH_AHEAD_MS } from '@olivierzal/api-core/time-units'
-import { Agent } from 'undici'
 
 import { ClassicDeviceType, ClassicLanguage } from '../constants.ts'
 import { setting, syncDevices } from '../decorators/index.ts'
@@ -48,7 +47,6 @@ import {
   err,
   mapResult,
   ok,
-  toClassicDeviceId,
 } from '../types/index.ts'
 import { isKeyOf, isUninitializedWireDate, toEpochMs } from '../utils.ts'
 import {
@@ -207,26 +205,10 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   private accessor contextKey = ''
 
   private constructor(config: ClassicAPIConfig = {}) {
-    const {
-      language,
-      locale,
-      password,
-      shouldVerifySSL = true,
-      timezone,
-      username,
-    } = config
+    const { language, locale, password, timezone, username } = config
     super(config, {
       defaultSyncIntervalMinutes: DEFAULT_SYNC_INTERVAL_MINUTES,
-      httpConfig: {
-        baseURL: API_BASE_URL,
-
-        // Self-signed-friendly dispatcher when the caller opts out of
-        // verification (shouldVerifySSL=false). `undefined` falls back
-        // to the global agent so verified TLS remains the default.
-        ...(!shouldVerifySSL && {
-          dispatcher: new Agent({ connect: { rejectUnauthorized: false } }),
-        }),
-      },
+      httpConfig: { baseURL: API_BASE_URL },
       logLabel: '[Classic]',
     })
     this.#locale = locale
@@ -440,19 +422,9 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   public async getTiles({
     postData,
   }: {
-    postData: ClassicTilesPostData<null>
-  }): Promise<Result<ClassicTilesData<null>>>
-  public async getTiles<T extends ClassicDeviceType>({
-    postData,
-  }: {
-    postData: ClassicTilesPostData<T>
-  }): Promise<Result<ClassicTilesData<T>>>
-  public async getTiles<T extends ClassicDeviceType | null>({
-    postData,
-  }: {
-    postData: ClassicTilesPostData<T>
-  }): Promise<Result<ClassicTilesData<T>>> {
-    return this.safeRequest<ClassicTilesData<T>>('post', '/Tile/Get2', {
+    postData: ClassicTilesPostData
+  }): Promise<Result<ClassicTilesData>> {
+    return this.safeRequest<ClassicTilesData>('post', '/Tile/Get2', {
       data: postData,
     })
   }
@@ -769,7 +741,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   ): Promise<Result<ClassicErrorLogData[]>> {
     const result = await this.getErrorEntries({
       postData: {
-        DeviceIDs: deviceIds.map((id) => toClassicDeviceId(id)),
+        DeviceIDs: deviceIds,
         FromDate: fromDate.toString(),
         ToDate: toDate.toString(),
       },

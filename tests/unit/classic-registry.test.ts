@@ -1,24 +1,23 @@
 import { cast, defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it } from 'vitest'
 
+import type { ClassicListDeviceAny } from '../../src/types/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import {
   ClassicRegistry,
   isClassicDeviceOfType,
 } from '../../src/entities/index.ts'
 import {
-  type ClassicListDeviceAny,
-  toClassicAreaId,
-  toClassicBuildingId,
-  toClassicFloorId,
-} from '../../src/types/index.ts'
-import {
   classicAreaData,
+  classicAreaId,
   classicAtaDevice,
   classicAtwDevice,
+  classicBuildingAreaData,
   classicBuildingData,
+  classicBuildingId,
   classicErvDevice,
   classicFloorData,
+  classicFloorId,
   populatedClassicRegistry,
 } from '../classic-fixtures.ts'
 
@@ -26,7 +25,7 @@ const allBuildings = [
   classicBuildingData({ Name: 'ClassicBuilding 1' }),
   classicBuildingData({
     FPDefined: false,
-    ID: toClassicBuildingId(2),
+    ID: 2,
     Location: 20,
     Name: 'ClassicBuilding 2',
   }),
@@ -35,18 +34,14 @@ const allBuildings = [
 const allFloors = [
   classicFloorData({ Name: 'ClassicFloor 1' }),
   classicFloorData({ ID: 11, Name: 'ClassicFloor 2' }),
-  classicFloorData({
-    BuildingId: toClassicBuildingId(2),
-    ID: 12,
-    Name: 'ClassicFloor 3',
-  }),
+  classicFloorData({ BuildingId: 2, ID: 12, Name: 'ClassicFloor 3' }),
 ]
 
 const allAreas = [
   classicAreaData({ Name: 'ClassicArea 1' }),
-  classicAreaData({ FloorId: null, ID: 101, Name: 'ClassicArea 2' }),
+  classicBuildingAreaData({ ID: 101, Name: 'ClassicArea 2' }),
   classicAreaData({
-    BuildingId: toClassicBuildingId(2),
+    BuildingId: 2,
     FloorId: 12,
     ID: 102,
     Name: 'ClassicArea 3',
@@ -56,10 +51,10 @@ const allAreas = [
 const allDevices: ClassicListDeviceAny[] = [
   classicAtaDevice({ DeviceName: 'ClassicDevice ATA' }),
   classicAtwDevice({
-    AreaID: toClassicAreaId(102),
-    BuildingID: toClassicBuildingId(2),
+    AreaID: 102,
+    BuildingID: 2,
     DeviceName: 'ClassicDevice ATW',
-    FloorID: toClassicFloorId(12),
+    FloorID: 12,
   }),
   classicErvDevice({ AreaID: null, DeviceName: 'ClassicDevice ERV' }),
 ]
@@ -133,10 +128,10 @@ describe('model registry', () => {
       registry.syncDevices([
         classicAtaDevice({ DeviceName: 'Updated ATA' }),
         classicAtwDevice({
-          AreaID: toClassicAreaId(102),
-          BuildingID: toClassicBuildingId(2),
+          AreaID: 102,
+          BuildingID: 2,
           DeviceName: 'Updated ATW',
-          FloorID: toClassicFloorId(12),
+          FloorID: 12,
         }),
         classicErvDevice({ AreaID: null, DeviceName: 'Updated ERV' }),
       ])
@@ -204,7 +199,7 @@ describe('model registry', () => {
   describe('cross-references', () => {
     it('getFloorsByBuildingId returns floors belonging to a building', () => {
       const registry = populatedClassicRegistry(allFixtures)
-      const floors = registry.getFloorsByBuildingId(toClassicBuildingId(1))
+      const floors = registry.getFloorsByBuildingId(classicBuildingId(1))
 
       expect(floors).toHaveLength(2)
       expect(floors.map(({ name }) => name)).toStrictEqual([
@@ -215,7 +210,7 @@ describe('model registry', () => {
 
     it('getAreasByBuildingId returns areas belonging to a building', () => {
       const registry = populatedClassicRegistry(allFixtures)
-      const areas = registry.getAreasByBuildingId(toClassicBuildingId(1))
+      const areas = registry.getAreasByBuildingId(classicBuildingId(1))
 
       expect(areas).toHaveLength(2)
     })
@@ -223,46 +218,46 @@ describe('model registry', () => {
     it('getAreasByFloorId returns areas belonging to a floor', () => {
       const registry = populatedClassicRegistry(allFixtures)
 
-      expect(registry.getAreasByFloorId(toClassicFloorId(10))).toHaveLength(1)
-      expect(registry.getAreasByFloorId(toClassicFloorId(11))).toHaveLength(0)
+      expect(registry.getAreasByFloorId(classicFloorId(10))).toHaveLength(1)
+      expect(registry.getAreasByFloorId(classicFloorId(11))).toHaveLength(0)
     })
 
     it('getDevicesByBuildingId returns devices belonging to a building', () => {
       const registry = populatedClassicRegistry(allFixtures)
 
       expect(
-        registry.getDevicesByBuildingId(toClassicBuildingId(1)),
+        registry.getDevicesByBuildingId(classicBuildingId(1)),
       ).toHaveLength(2)
       expect(
-        registry.getDevicesByBuildingId(toClassicBuildingId(2)),
+        registry.getDevicesByBuildingId(classicBuildingId(2)),
       ).toHaveLength(1)
     })
 
     it('getDevicesByFloorId returns devices belonging to a floor', () => {
       const registry = populatedClassicRegistry(allFixtures)
 
-      expect(registry.getDevicesByFloorId(toClassicFloorId(10))).toHaveLength(1)
-      expect(registry.getDevicesByFloorId(toClassicFloorId(11))).toHaveLength(0)
+      expect(registry.getDevicesByFloorId(classicFloorId(10))).toHaveLength(1)
+      expect(registry.getDevicesByFloorId(classicFloorId(11))).toHaveLength(0)
     })
 
     it('getDevicesByAreaId returns devices belonging to an area', () => {
       const registry = populatedClassicRegistry(allFixtures)
 
-      expect(registry.getDevicesByAreaId(toClassicAreaId(100))).toHaveLength(1)
-      expect(registry.getDevicesByAreaId(toClassicAreaId(101))).toHaveLength(0)
+      expect(registry.getDevicesByAreaId(classicAreaId(100))).toHaveLength(1)
+      expect(registry.getDevicesByAreaId(classicAreaId(101))).toHaveLength(0)
     })
 
     it('returns empty arrays for unknown building id', () => {
       const registry = populatedClassicRegistry(allFixtures)
 
       expect(
-        registry.getFloorsByBuildingId(toClassicBuildingId(999)),
+        registry.getFloorsByBuildingId(classicBuildingId(999)),
       ).toHaveLength(0)
       expect(
-        registry.getAreasByBuildingId(toClassicBuildingId(999)),
+        registry.getAreasByBuildingId(classicBuildingId(999)),
       ).toHaveLength(0)
       expect(
-        registry.getDevicesByBuildingId(toClassicBuildingId(999)),
+        registry.getDevicesByBuildingId(classicBuildingId(999)),
       ).toHaveLength(0)
     })
   })

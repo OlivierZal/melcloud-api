@@ -1,5 +1,6 @@
 import type {
   ClassicBuildingData,
+  ClassicBuildingID,
   ClassicZoneSettings,
 } from '../types/index.ts'
 import { BaseModel } from './base.ts'
@@ -8,7 +9,7 @@ import { BaseModel } from './base.ts'
  * ClassicBuilding model holding zone settings and geographic location.
  * @category Entities
  */
-export class ClassicBuilding extends BaseModel {
+export class ClassicBuilding extends BaseModel<ClassicBuildingID> {
   public data: ClassicZoneSettings
 
   public location: number

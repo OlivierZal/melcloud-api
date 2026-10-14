@@ -21,7 +21,12 @@ import type {
   ClassicSetDeviceDataErv,
   ClassicUpdateDeviceDataErv,
 } from './classic-erv.ts'
-import type { ClassicBuildingID, ClassicDeviceID } from './ids.ts'
+import type {
+  ClassicAreaID,
+  ClassicBuildingID,
+  ClassicDeviceID,
+  ClassicFloorID,
+} from './ids.ts'
 
 /**
  * Common shape shared by every Classic zone variant returned from the registry — id, hierarchy depth, display name.
@@ -61,22 +66,23 @@ interface DeviceDataMapping {
 
 /**
  * Wire-format area entry from `ListDevices`; `FloorId` is `null` when the area sits directly under the building, or a floor id otherwise.
- * @template T - Type of the `FloorId` field: a floor id (`number`) when the
- * area belongs to a floor, or `null` when it sits directly under the
- * building.
+ * @template T - Type of the `FloorId` field: a floor id when the area
+ * belongs to a floor, or `null` when it sits directly under the building.
  * @category Types
  */
-export interface ClassicAreaData<
-  T extends number | null,
-> extends ClassicFloorData {
+export interface ClassicAreaData<T extends ClassicFloorID | null> {
+  readonly BuildingId: ClassicBuildingID
   readonly FloorId: T
+  readonly ID: ClassicAreaID
+  readonly Name: string
 }
 
 /**
  * Either floor-bound or directly under-building variant of {@link ClassicAreaData}.
  * @category Types
  */
-export type ClassicAreaDataAny = ClassicAreaData<null> | ClassicAreaData<number>
+export type ClassicAreaDataAny =
+  ClassicAreaData<ClassicFloorID> | ClassicAreaData<null>
 
 /**
  * Registry zone for an area, listing the devices it contains.
@@ -144,7 +150,7 @@ export interface ClassicBuildingWithStructure extends ClassicBuildingData {
     })[]
     readonly Devices: readonly ClassicListDeviceAny[]
     readonly Floors: readonly (ClassicFloorData & {
-      readonly Areas: readonly (ClassicAreaData<number> & {
+      readonly Areas: readonly (ClassicAreaData<ClassicFloorID> & {
         readonly Devices: readonly ClassicListDeviceAny[]
       })[]
       readonly Devices: readonly ClassicListDeviceAny[]
@@ -238,7 +244,10 @@ export interface ClassicErrorLogData {
  * @category Types
  */
 export interface ClassicErrorLogPostData {
-  readonly DeviceIDs: ClassicDeviceID | readonly ClassicDeviceID[]
+  // Plain numbers: the error log is the one read a host addresses by
+  // device id itself (`getErrorLog(query, deviceIds)`), so the body
+  // takes what the host holds; the wire accepts any numeric id.
+  readonly DeviceIDs: number | readonly number[]
   // Number of days up to now, replaces `FromDate` and `ToDate` if strictly positive
   readonly Duration?: number
   readonly FromDate?: string
@@ -269,7 +278,7 @@ export type ClassicFlatZone = ClassicZone & { readonly buildingName: string }
  */
 export interface ClassicFloorData {
   readonly BuildingId: ClassicBuildingID
-  readonly ID: number
+  readonly ID: ClassicFloorID
   readonly Name: string
 }
 
@@ -539,15 +548,11 @@ export interface ClassicTemperatureLogPostData extends ClassicReportPostData {
 }
 
 /**
- * Wire-format response from `Tile/Get2`; the optional `SelectedDevice` carries full device data when a device id was specified.
- * @template T - Type of the selected device, or `null` when no device id was
- * specified and `SelectedDevice` is `null`.
+ * Wire-format response from `Tile/Get2`; `SelectedDevice` carries the full device data when a device id was specified, `null` otherwise.
  * @category Types
  */
-export interface ClassicTilesData<T extends ClassicDeviceType | null> {
-  readonly SelectedDevice: T extends ClassicDeviceType
-    ? ClassicGetDeviceData<T>
-    : null
+export interface ClassicTilesData {
+  readonly SelectedDevice: ClassicGetDeviceData<ClassicDeviceType> | null
   readonly Tiles: readonly {
     readonly Device: number
     readonly Offline: boolean
@@ -559,16 +564,14 @@ export interface ClassicTilesData<T extends ClassicDeviceType | null> {
 }
 
 /**
- * POST body for `Tile/Get2`; conditionally requires `SelectedBuilding` + `SelectedDevice` when scoped to a single device.
- * @template T - Type of the selected device, or `null` when the request is
- * not scoped to a single device.
+ * POST body for `Tile/Get2`; `SelectedBuilding` + `SelectedDevice` scope the response to a single device.
  * @category Types
  */
-export type ClassicTilesPostData<T extends ClassicDeviceType | null> = {
-  readonly DeviceIDs: number | readonly number[]
-} & (T extends ClassicDeviceType
-  ? { readonly SelectedBuilding: number; readonly SelectedDevice: number }
-  : { readonly SelectedBuilding?: null; readonly SelectedDevice?: null })
+export interface ClassicTilesPostData {
+  readonly DeviceIDs: ClassicDeviceID | readonly ClassicDeviceID[]
+  readonly SelectedBuilding?: ClassicBuildingID | null
+  readonly SelectedDevice?: ClassicDeviceID | null
+}
 
 /**
  * Mutable fields for a `Device/Set{Ata,Atw,Erv}` payload, narrowed by device type.

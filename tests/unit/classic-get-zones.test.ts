@@ -4,17 +4,12 @@ import { describe, expect, it } from 'vitest'
 import type { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import {
-  toClassicAreaId,
-  toClassicBuildingId,
-  toClassicDeviceId,
-  toClassicFloorId,
-} from '../../src/types/index.ts'
-import {
   classicAreaData,
   classicAtaDevice,
   classicAtaDeviceData,
   classicAtwDevice,
   classicAtwDeviceData,
+  classicBuildingAreaData,
   classicBuildingData,
   classicErvDevice,
   classicFloorData,
@@ -24,7 +19,7 @@ import {
 const buildings = [
   classicBuildingData({
     HMDefined: false,
-    ID: toClassicBuildingId(1),
+    ID: 1,
     Location: 0,
     Name: 'Bravo',
     TimeZone: 1,
@@ -32,7 +27,7 @@ const buildings = [
   classicBuildingData({
     FPDefined: false,
     HMDefined: false,
-    ID: toClassicBuildingId(2),
+    ID: 2,
     Location: 0,
     Name: 'Alpha',
     TimeZone: 1,
@@ -40,50 +35,36 @@ const buildings = [
 ]
 
 const floors = [
-  classicFloorData({
-    BuildingId: toClassicBuildingId(1),
-    ID: 10,
-    Name: 'Ground floor',
-  }),
+  classicFloorData({ BuildingId: 1, ID: 10, Name: 'Ground floor' }),
 ]
 
 const areas = [
-  classicAreaData({
-    BuildingId: toClassicBuildingId(1),
-    FloorId: 10,
-    ID: 100,
-    Name: 'Salon',
-  }),
-  classicAreaData({
-    BuildingId: toClassicBuildingId(2),
-    FloorId: null,
-    ID: 200,
-    Name: 'Studio',
-  }),
+  classicAreaData({ BuildingId: 1, FloorId: 10, ID: 100, Name: 'Salon' }),
+  classicBuildingAreaData({ BuildingId: 2, ID: 200, Name: 'Studio' }),
 ]
 
 const devices = [
   classicAtaDevice({
-    AreaID: toClassicAreaId(100),
-    BuildingID: toClassicBuildingId(1),
+    AreaID: 100,
+    BuildingID: 1,
     Device: classicAtaDeviceData(),
-    DeviceID: toClassicDeviceId(1001),
+    DeviceID: 1001,
     DeviceName: 'AC unit',
-    FloorID: toClassicFloorId(10),
+    FloorID: 10,
   }),
   classicAtwDevice({
     AreaID: null,
-    BuildingID: toClassicBuildingId(1),
+    BuildingID: 1,
     Device: classicAtwDeviceData({ HasZone2: false }),
-    DeviceID: toClassicDeviceId(1002),
+    DeviceID: 1002,
     DeviceName: 'Heat pump',
     FloorID: null,
   }),
   classicAtaDevice({
-    AreaID: toClassicAreaId(200),
-    BuildingID: toClassicBuildingId(2),
+    AreaID: 200,
+    BuildingID: 2,
     Device: classicAtaDeviceData(),
-    DeviceID: toClassicDeviceId(2001),
+    DeviceID: 2001,
     DeviceName: 'Studio AC',
     FloorID: null,
   }),
@@ -240,7 +221,7 @@ describe('zone retrieval', () => {
       devices: [
         classicErvDevice({
           AreaID: null,
-          BuildingID: toClassicBuildingId(1),
+          BuildingID: 1,
           DeviceName: 'Ventilation',
         }),
       ],

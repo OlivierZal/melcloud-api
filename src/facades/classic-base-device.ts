@@ -18,7 +18,6 @@ import {
 import { NoChangesError } from '../errors/index.ts'
 import { Intl, Temporal } from '../temporal.ts'
 import {
-  type ClassicDeviceID,
   type ClassicEnergyData,
   type ClassicGetDeviceData,
   type ClassicListDeviceData,
@@ -191,8 +190,6 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   extends ClassicBaseFacade<ClassicDeviceAny>
   implements ClassicDeviceFacade<T>
 {
-  declare public readonly id: ClassicDeviceID
-
   public abstract readonly flags: Record<
     keyof ClassicUpdateDeviceData<T>,
     number
@@ -502,14 +499,8 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
    * @returns The tile data, or a typed failure.
    */
   public override async getTiles(
-    device?: false,
-  ): Promise<Result<ClassicTilesData<null>>>
-  public override async getTiles(
-    device: true | ClassicDeviceAny,
-  ): Promise<Result<ClassicTilesData<T>>>
-  public override async getTiles(
     device: boolean | ClassicDeviceAny = false,
-  ): Promise<Result<ClassicTilesData<T | null>>> {
+  ): Promise<Result<ClassicTilesData>> {
     return device === false ||
       (device instanceof ClassicDevice && device.id !== this.id)
       ? super.getTiles()

@@ -5,21 +5,19 @@ import { ClassicDeviceType } from '../../src/constants.ts'
 import { ClassicRegistry } from '../../src/entities/index.ts'
 import { ClassicFacadeManager } from '../../src/facades/classic-manager.ts'
 import {
-  toClassicAreaId,
-  toClassicBuildingId,
-  toClassicDeviceId,
-  toClassicFloorId,
-} from '../../src/types/index.ts'
-import {
   classicAreaData,
+  classicAreaId,
   classicAtaDevice,
   classicAtaDeviceData,
   classicAtwDevice,
   classicAtwDeviceData,
+  classicBuildingAreaData,
   classicBuildingData,
+  classicBuildingId,
   classicErvDevice,
   classicErvDeviceData,
   classicFloorData,
+  classicFloorId,
   createMockClassicApi,
   populatedClassicRegistry,
 } from '../classic-fixtures.ts'
@@ -58,7 +56,7 @@ const buildings = [
   classicBuildingData({
     FPDefined: false,
     HMDefined: false,
-    ID: toClassicBuildingId(2),
+    ID: 2,
     Location: 0,
     Name: 'Guest house',
     TimeZone: 1,
@@ -74,39 +72,34 @@ const areas = [
   classicAreaData({ Name: 'Living room' }),
   classicAreaData({ ID: 101, Name: 'Kitchen' }),
   classicAreaData({ FloorId: 11, ID: 102, Name: 'Bedroom' }),
-  classicAreaData({
-    BuildingId: toClassicBuildingId(2),
-    FloorId: null,
-    ID: 200,
-    Name: 'Studio',
-  }),
+  classicBuildingAreaData({ BuildingId: 2, ID: 200, Name: 'Studio' }),
 ]
 
 const devices = [
   classicAtaDevice({
     Device: ataData,
-    DeviceID: toClassicDeviceId(1001),
+    DeviceID: 1001,
     DeviceName: 'Living room AC',
   }),
   classicAtwDevice({
-    AreaID: toClassicAreaId(101),
+    AreaID: 101,
     Device: atwData,
-    DeviceID: toClassicDeviceId(1002),
+    DeviceID: 1002,
     DeviceName: 'Kitchen heat pump',
   }),
   classicErvDevice({
-    AreaID: toClassicAreaId(102),
-    BuildingID: toClassicBuildingId(1),
+    AreaID: 102,
+    BuildingID: 1,
     Device: ervData,
-    DeviceID: toClassicDeviceId(1003),
+    DeviceID: 1003,
     DeviceName: 'Bedroom ERV',
-    FloorID: toClassicFloorId(11),
+    FloorID: 11,
   }),
   classicAtaDevice({
-    AreaID: toClassicAreaId(200),
-    BuildingID: toClassicBuildingId(2),
+    AreaID: 200,
+    BuildingID: 2,
     Device: classicAtaDeviceData({ ...ataData, Power: false }),
-    DeviceID: toClassicDeviceId(2001),
+    DeviceID: 2001,
     DeviceName: 'Studio AC',
     FloorID: null,
   }),
@@ -132,27 +125,21 @@ describe('registry + facade manager integration', () => {
   it('syncs a full building hierarchy and resolves cross-references', () => {
     const { registry } = createContext()
 
-    expect(
-      registry.getDevicesByBuildingId(toClassicBuildingId(1)),
-    ).toHaveLength(3)
-    expect(
-      registry.getDevicesByBuildingId(toClassicBuildingId(2)),
-    ).toHaveLength(1)
-    expect(registry.getFloorsByBuildingId(toClassicBuildingId(1))).toHaveLength(
-      2,
+    expect(registry.getDevicesByBuildingId(classicBuildingId(1))).toHaveLength(
+      3,
     )
-    expect(registry.getFloorsByBuildingId(toClassicBuildingId(2))).toHaveLength(
-      0,
-    )
-    expect(registry.getAreasByFloorId(toClassicFloorId(10))).toHaveLength(2)
-    expect(registry.getAreasByFloorId(toClassicFloorId(11))).toHaveLength(1)
-    expect(registry.getAreasByBuildingId(toClassicBuildingId(2))).toHaveLength(
+    expect(registry.getDevicesByBuildingId(classicBuildingId(2))).toHaveLength(
       1,
     )
-    expect(registry.getDevicesByFloorId(toClassicFloorId(10))).toHaveLength(2)
-    expect(registry.getDevicesByFloorId(toClassicFloorId(11))).toHaveLength(1)
-    expect(registry.getDevicesByAreaId(toClassicAreaId(100))).toHaveLength(1)
-    expect(registry.getDevicesByAreaId(toClassicAreaId(200))).toHaveLength(1)
+    expect(registry.getFloorsByBuildingId(classicBuildingId(1))).toHaveLength(2)
+    expect(registry.getFloorsByBuildingId(classicBuildingId(2))).toHaveLength(0)
+    expect(registry.getAreasByFloorId(classicFloorId(10))).toHaveLength(2)
+    expect(registry.getAreasByFloorId(classicFloorId(11))).toHaveLength(1)
+    expect(registry.getAreasByBuildingId(classicBuildingId(2))).toHaveLength(1)
+    expect(registry.getDevicesByFloorId(classicFloorId(10))).toHaveLength(2)
+    expect(registry.getDevicesByFloorId(classicFloorId(11))).toHaveLength(1)
+    expect(registry.getDevicesByAreaId(classicAreaId(100))).toHaveLength(1)
+    expect(registry.getDevicesByAreaId(classicAreaId(200))).toHaveLength(1)
   })
 
   // Inline snapshot capturing the zone tree shape returned by
@@ -279,10 +266,10 @@ describe('registry + facade manager integration', () => {
     registry.syncDevices([
       ...devices,
       classicAtaDevice({
-        AreaID: toClassicAreaId(200),
-        BuildingID: toClassicBuildingId(2),
+        AreaID: 200,
+        BuildingID: 2,
         Device: ataData,
-        DeviceID: toClassicDeviceId(2002),
+        DeviceID: 2002,
         DeviceName: 'Studio AC 2',
         FloorID: null,
       }),
@@ -316,12 +303,7 @@ describe('registry + facade manager integration', () => {
     registry.syncBuildings([defined(buildings[1])])
     registry.syncFloors([])
     registry.syncAreas([
-      classicAreaData({
-        BuildingId: toClassicBuildingId(2),
-        FloorId: null,
-        ID: 200,
-        Name: 'Studio',
-      }),
+      classicBuildingAreaData({ BuildingId: 2, ID: 200, Name: 'Studio' }),
     ])
     registry.syncDevices([defined(devices[3])])
 
@@ -329,11 +311,7 @@ describe('registry + facade manager integration', () => {
     const facade = manager.get(defined(registry.buildings.getById(2)))
 
     expect(facade.devices).toHaveLength(1)
-    expect(registry.getFloorsByBuildingId(toClassicBuildingId(2))).toHaveLength(
-      0,
-    )
-    expect(registry.getAreasByBuildingId(toClassicBuildingId(2))).toHaveLength(
-      1,
-    )
+    expect(registry.getFloorsByBuildingId(classicBuildingId(2))).toHaveLength(0)
+    expect(registry.getAreasByBuildingId(classicBuildingId(2))).toHaveLength(1)
   })
 })

@@ -46,21 +46,15 @@ export class HomeFacadeManager {
    * one on first access. The overloads preserve type-narrowing: callers
    * who already discriminated `instance` via `isAta()`/`isAtw()` get the
    * matching facade type back without runtime checks.
-   * @param instance - Registry device to wrap, or `undefined`.
-   * @returns The facade, or `null` when no instance was supplied.
+   * @param instance - Registry device to wrap.
+   * @returns The device facade, the same instance on every call for the
+   * same model.
    */
   public get(instance: HomeDevice<HomeAtaDeviceData>): HomeDeviceAtaFacade
   public get(instance: HomeDevice<HomeAtwDeviceData>): HomeDeviceAtwFacade
-  public get(): null
   public get(
-    instance?: HomeDevice<HomeAtaDeviceData> | HomeDevice<HomeAtwDeviceData>,
-  ): HomeDeviceFacadeAny | null
-  public get(
-    instance?: HomeDevice<HomeAtaDeviceData> | HomeDevice<HomeAtwDeviceData>,
-  ): HomeDeviceFacadeAny | null {
-    if (instance === undefined) {
-      return null
-    }
+    instance: HomeDevice<HomeAtaDeviceData> | HomeDevice<HomeAtwDeviceData>,
+  ): HomeDeviceFacadeAny {
     const cached = this.#facades.get(instance)
     if (cached !== undefined) {
       return cached

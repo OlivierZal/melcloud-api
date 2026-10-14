@@ -66,9 +66,9 @@ interface BaseAPIConstructorOptions {
    */
   defaultSyncIntervalMinutes: number | false
   /**
-   * Subclass-fixed HTTP defaults (baseURL, optional dispatcher).
+   * Subclass-fixed HTTP default: the dialect's base URL.
    */
-  httpConfig: Omit<HttpClientConfig, 'timeout'>
+  httpConfig: Pick<HttpClientConfig, 'baseURL'>
   /**
    * Label prefixed to every log line (e.g. `[Classic]`): the two
    * clients emit identically-worded lifecycle logs ("Session resume

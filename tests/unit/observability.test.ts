@@ -8,15 +8,14 @@ import { defined } from '@olivierzal/api-core/testing'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
+import type {
+  ClassicBaseListDevice,
+  ClassicBuildingData,
+} from '../../src/types/index.ts'
 import { ClassicDeviceType } from '../../src/constants.ts'
 import { HttpError } from '../../src/http/index.ts'
 import { redaction } from '../../src/observability/context.ts'
-import {
-  type ClassicBaseListDevice,
-  type ClassicBuildingData,
-  toClassicBuildingId,
-  toClassicDeviceId,
-} from '../../src/types/index.ts'
+import { classicBuildingId, classicDeviceId } from '../classic-fixtures.ts'
 import { homeContextBuilding, homeContextData } from '../home-fixtures.ts'
 
 // Thin VOCABULARY suite: the redaction and log-shell MECHANISMS (and
@@ -184,7 +183,7 @@ describe.concurrent('the personal-data tier', () => {
     const device = {
       AreaName: 'Upstairs',
       BuildingName: 'Chalet',
-      DeviceID: toClassicDeviceId(1),
+      DeviceID: classicDeviceId(1),
       DeviceName: 'Living room',
       FloorName: 'Ground',
       LocalIPAddress: '192.168.1.20',
@@ -201,7 +200,7 @@ describe.concurrent('the personal-data tier', () => {
       AddressLine2: null,
       City: 'Paris',
       District: null,
-      ID: toClassicBuildingId(1),
+      ID: classicBuildingId(1),
       Latitude: 48.87,
       Longitude: 2.33,
       Name: 'Chalet',
