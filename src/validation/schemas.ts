@@ -594,9 +594,12 @@ export interface ClassicDroppedDevice {
 }
 
 /**
- * Whether a `/User/ListDevices` entry is a device this SDK models —
- * the header fields are present and `Type` is one of the three known
- * values.
+ * Inspects one `/User/ListDevices` entry — is it a device this SDK
+ * models, with the header fields present and `Type` one of the three
+ * known values? — and describes the drop when it is not. Dropping
+ * silently is what made a wire regression and a genuinely new MELCloud
+ * model indistinguishable downstream: both ended as a device pruned
+ * from the registry with no trace of why.
  *
  * The REGISTRY sync is bulk: one call carries every building of the
  * account, so validating entries INSIDE the array would let one
@@ -610,24 +613,12 @@ export interface ClassicDroppedDevice {
  * (`ClassicAPI`'s listing), which is also what the registry relies on:
  * it builds a model per entry with no runtime guard of its own.
  * @param device - One raw listing entry.
- * @returns Whether the entry is safe to model.
- */
-export const isModelledClassicDevice = (device: unknown): boolean =>
-  ClassicMinimalDeviceSchema.safeParse(device).success
-
-/**
- * Inspects one `/User/ListDevices` entry the same way
- * {@link isModelledClassicDevice} judges it, and describes the drop
- * when it fails. Dropping silently is what made a wire regression and
- * a genuinely new MELCloud model indistinguishable downstream: both
- * ended as a device pruned from the registry with no trace of why.
- * @param device - One raw listing entry.
  * @returns `null` when the entry is modelled, else its drop record.
  */
 export const inspectClassicListingEntry = (
   device: unknown,
 ): ClassicDroppedDevice | null => {
-  if (isModelledClassicDevice(device)) {
+  if (ClassicMinimalDeviceSchema.safeParse(device).success) {
     return null
   }
   const id = ClassicDeviceIdSchema.safeParse(device)

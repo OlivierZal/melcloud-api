@@ -152,6 +152,8 @@ The request pipeline applies three policies, outermost first:
 2. **Auth retry (HTTP 401)** — a single re-authentication + replay, as described above.
 3. **Transient retry (GET only)** — 502/503/504 responses are retried up to 4 times with exponential backoff and jitter (1 s initial delay, 16 s cap). Mutations (`POST`/`PUT`) are **never** retried automatically: a write that may have landed server-side must not be silently duplicated. Each retry is observable through the `onRequestRetry` lifecycle event.
 
+The transport itself is configurable through `transport` on both clients: pass a pre-built `HttpClient` (the seam the test suites use to script responses), or `{ timeoutMs }` to change the 30 s per-request timeout (`0` disables it — not recommended). Omit it for the fetch-backed default.
+
 ## Imports
 
 Exports follow a `Classic*` / `Home*` prefix convention so the target API is obvious at the call site. The `./classic` and `./home` subpaths re-export everything with the prefix stripped — a modern alternative to TypeScript's deprecated `namespace` keyword.

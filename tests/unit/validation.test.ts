@@ -13,7 +13,6 @@ import {
   HomeTokenResponseSchema,
   HourSchema,
   inspectClassicListingEntry,
-  isModelledClassicDevice,
   parseOrThrow,
 } from '../../src/validation/index.ts'
 import {
@@ -501,9 +500,9 @@ describe('validation/schemas', () => {
     // unmodelled entry: that would take every sibling device down, and
     // since the post-auth sync propagates its failures it would read
     // as "cannot sign in at all". The schema therefore ACCEPTS the
-    // entry and `isModelledClassicDevice` is what the listing boundary
-    // filters on — the registry builds a model per surviving entry
-    // with no runtime guard of its own.
+    // entry and `inspectClassicListingEntry` is what the listing
+    // boundary filters on — the registry builds a model per surviving
+    // entry with no runtime guard of its own.
     it.each([
       { label: 'numeric out-of-range', value: 999 },
       { label: 'object', value: { nested: 'v' } },
@@ -525,7 +524,7 @@ describe('validation/schemas', () => {
       'reads an unmodelled device Type as unmodelled ($label)',
       ({ value }) => {
         expect(
-          isModelledClassicDevice({
+          inspectClassicListingEntry({
             AreaID: null,
             BuildingID: 1,
             Device: {},
@@ -534,7 +533,7 @@ describe('validation/schemas', () => {
             FloorID: null,
             Type: value,
           }),
-        ).toBe(false)
+        ).not.toBeNull()
       },
     )
   })
