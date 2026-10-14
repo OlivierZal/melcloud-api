@@ -132,7 +132,7 @@ const getDeviceLevel = (
   if (areaId !== null && floorId !== null) {
     return level.greatGrandchild
   }
-  return areaId !== null || floorId !== null ? level.grandchild : level.child
+  return areaId === null && floorId === null ? level.child : level.grandchild
 }
 
 // The zone node's device-type tag: the registry knows each device's

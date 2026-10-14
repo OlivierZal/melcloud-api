@@ -175,12 +175,12 @@ export const resolveErrorLogWindow = (
   // separated by a one-day boundary so a day is never returned twice —
   // hence the `* (period + 1)` step.
   const fromDateOverride =
-    from !== undefined && from !== '' ? parsePlainDate(from) : null
+    from === undefined || from === '' ? null : parsePlainDate(from)
   const daysBack = fromDateOverride === null ? offset * (period + 1) : 0
   const toDate = (
-    to !== undefined && to !== ''
-      ? parsePlainDate(to)
-      : Temporal.Now.plainDateISO(timeZone)
+    to === undefined || to === ''
+      ? Temporal.Now.plainDateISO(timeZone)
+      : parsePlainDate(to)
   ).subtract({ days: daysBack })
   const fromDate = fromDateOverride ?? toDate.subtract({ days: period })
   const nextToDate = fromDate.subtract({ days: 1 })

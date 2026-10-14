@@ -325,12 +325,12 @@ const locateHomeUnit = (
   path: readonly PropertyKey[],
 ): { location: HomeUnitLocation; rest: readonly PropertyKey[] } | null => {
   const [container, building, list, index, ...rest] = path
-  return typeof building !== 'number' ||
-    typeof index !== 'number' ||
-    !isHomeBuildingListKey(container) ||
-    !isHomeUnitListKey(list)
-    ? null
-    : { location: { building, container, index, list }, rest }
+  return typeof building === 'number' &&
+    typeof index === 'number' &&
+    isHomeBuildingListKey(container) &&
+    isHomeUnitListKey(list)
+    ? { location: { building, container, index, list }, rest }
+    : null
 }
 
 // A refusal of the whole entry (it is not an object) has no field to
