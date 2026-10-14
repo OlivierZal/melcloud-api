@@ -184,8 +184,6 @@ const hasDevices = (
 /**
  * Central in-memory registry of all MELCloud models (buildings, floors, areas, devices).
  * Synced from the Classic API response and queryable by ID or parent relationship.
- * @param devices
- * @param type
  * @category Entities
  */
 export class ClassicRegistry {
