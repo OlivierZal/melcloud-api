@@ -10,17 +10,19 @@ import {
   classicBuildingData,
   classicFloorData,
   createMockClassicApi,
+  populatedClassicRegistry,
 } from '../classic-fixtures.ts'
 
 const createManagerWithRegistry = (): {
   manager: ClassicFacadeManager
   registry: ClassicRegistry
 } => {
-  const registry = new ClassicRegistry()
-  registry.syncBuildings([classicBuildingData()])
-  registry.syncFloors([classicFloorData()])
-  registry.syncAreas([classicAreaData()])
-  registry.syncDevices([classicAtaDevice()])
+  const registry = populatedClassicRegistry({
+    areas: [classicAreaData()],
+    buildings: [classicBuildingData()],
+    devices: [classicAtaDevice()],
+    floors: [classicFloorData()],
+  })
   const manager = new ClassicFacadeManager(createMockClassicApi({ registry }))
   return { manager, registry }
 }

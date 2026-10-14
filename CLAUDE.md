@@ -713,10 +713,13 @@ test seat, every one additive on the core's side:
   `base-api.test.ts` lost its table (the core pins the helper;
   `home-api.test.ts` pins the binding).
 - `tests/helpers.ts` keeps only what is OURS — `okValue`,
-  `matchObject`, `mockResponse` (the `Result` type and the vitest
-  matcher/envelope shapes this suite asserts on). Everything the three
-  SDK suites carried as a hand-maintained twin comes from
-  `@olivierzal/api-core/testing`: `cast`, `defined`, `mock`,
+  `matchObject` (the `Result` type and the vitest matcher shape this
+  suite asserts on). Everything the three SDK suites carried as a
+  hand-maintained twin comes from `@olivierzal/api-core/testing`:
+  `cast`, `defined`, `mock`, `mockHttpResponse` (the `HttpResponse`
+  envelope the transport spy answers with — 1.13.0; the local
+  `mockResponse` twin and `classic-api.test.ts`'s `wrap` third copy
+  went with 59.7.0),
   `createLogger`, `createSettingStore`,
   `createMockHttpClient(HttpClient, baseURL)` — THIS repo's transport
   class first, so the spy-wrapped client is the redaction-seating one

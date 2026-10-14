@@ -81,10 +81,10 @@ describeErrorLogContract('Classic ATA device', async () => {
           nextToDate: '2026-02-28',
         }),
       ),
+    registry,
   })
   const facade = new ClassicDeviceAtaFacade(
     api,
-    registry,
     defined(registry.devices.getById(1000)),
   )
   const page = await facade.getErrorLog({ to: '2026-03-02' })

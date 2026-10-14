@@ -115,13 +115,10 @@ const classicFacade = (
     getHolidayMode: vi
       .fn<ClassicAPIAdapter['getHolidayMode']>()
       .mockResolvedValue(ok(classicHolidayModeResponse(data))),
+    registry,
     timezone: CONTRACT_TIMEZONE,
   })
-  return new ClassicBuildingFacade(
-    api,
-    registry,
-    defined(registry.buildings.getById(1)),
-  )
+  return new ClassicBuildingFacade(api, defined(registry.buildings.getById(1)))
 }
 
 describeHolidayModeStateContract('Classic zone', async (wire) =>
@@ -229,8 +226,7 @@ describe('holiday read — level fallback', () => {
         ok(classicHolidayModeResponse({ HMDefined: true })),
       )
     const facade = new ClassicBuildingFacade(
-      createMockClassicApi({ getHolidayMode }),
-      registry,
+      createMockClassicApi({ getHolidayMode, registry }),
       defined(registry.buildings.getById(1)),
     )
 

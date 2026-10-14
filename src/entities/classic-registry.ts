@@ -1,21 +1,15 @@
-import { ClassicDeviceType } from '../constants.ts'
-import {
-  type ClassicAreaDataAny,
-  type ClassicAreaID,
-  type ClassicAreaZone,
-  type ClassicBuildingData,
-  type ClassicBuildingID,
-  type ClassicBuildingZone,
-  type ClassicDeviceZone,
-  type ClassicFlatZone,
-  type ClassicFloorData,
-  type ClassicFloorID,
-  type ClassicFloorZone,
-  type ClassicListDeviceAny,
-  toClassicAreaId,
-  toClassicBuildingId,
-  toClassicFloorId,
+import type {
+  ClassicAreaDataAny,
+  ClassicAreaZone,
+  ClassicBuildingData,
+  ClassicBuildingZone,
+  ClassicDeviceZone,
+  ClassicFlatZone,
+  ClassicFloorData,
+  ClassicFloorZone,
+  ClassicListDeviceAny,
 } from '../types/index.ts'
+import { ClassicDeviceType } from '../constants.ts'
 import type { ClassicDeviceAny } from './classic-types.ts'
 import { ClassicArea, syncArea } from './area.ts'
 import { ClassicBuilding, syncBuilding } from './building.ts'
@@ -253,7 +247,7 @@ export class ClassicRegistry {
    * @param id - The building ID to look up areas for.
    * @returns The areas belonging to the specified building.
    */
-  public getAreasByBuildingId(id: ClassicBuildingID): ClassicArea[] {
+  public getAreasByBuildingId(id: number): ClassicArea[] {
     return this.#areasByBuildingId.get(id) ?? []
   }
 
@@ -262,7 +256,7 @@ export class ClassicRegistry {
    * @param id - Floor identifier.
    * @returns The areas under that floor.
    */
-  public getAreasByFloorId(id: ClassicFloorID): ClassicArea[] {
+  public getAreasByFloorId(id: number): ClassicArea[] {
     return this.#areasByFloorId.get(id) ?? []
   }
 
@@ -278,27 +272,24 @@ export class ClassicRegistry {
     return this.#buildings
       .values()
       .filter((building) =>
-        hasDevices(
-          this.getDevicesByBuildingId(toClassicBuildingId(building.id)),
-          type,
-        ),
+        hasDevices(this.getDevicesByBuildingId(building.id), type),
       )
       .map((building) => ({
         areas: this.#buildAreaZones(
-          this.getAreasByBuildingId(toClassicBuildingId(building.id)).filter(
+          this.getAreasByBuildingId(building.id).filter(
             ({ floorId }) => floorId === null,
           ),
           level.child,
           type,
         ),
         devices: buildDeviceZones(
-          this.getDevicesByBuildingId(toClassicBuildingId(building.id)).filter(
+          this.getDevicesByBuildingId(building.id).filter(
             ({ areaId, floorId }) => areaId === null && floorId === null,
           ),
           type,
         ),
         floors: this.#buildFloorZones(
-          this.getFloorsByBuildingId(toClassicBuildingId(building.id)),
+          this.getFloorsByBuildingId(building.id),
           type,
         ),
         id: building.id,
@@ -323,7 +314,7 @@ export class ClassicRegistry {
    * @param id - Area identifier.
    * @returns The devices in that area.
    */
-  public getDevicesByAreaId(id: ClassicAreaID): ClassicDeviceAny[] {
+  public getDevicesByAreaId(id: number): ClassicDeviceAny[] {
     return this.#devicesByAreaId.get(id) ?? []
   }
 
@@ -332,7 +323,7 @@ export class ClassicRegistry {
    * @param id - Building identifier.
    * @returns The devices under that building.
    */
-  public getDevicesByBuildingId(id: ClassicBuildingID): ClassicDeviceAny[] {
+  public getDevicesByBuildingId(id: number): ClassicDeviceAny[] {
     return this.#devicesByBuildingId.get(id) ?? []
   }
 
@@ -341,7 +332,7 @@ export class ClassicRegistry {
    * @param id - Floor identifier.
    * @returns The devices under that floor.
    */
-  public getDevicesByFloorId(id: ClassicFloorID): ClassicDeviceAny[] {
+  public getDevicesByFloorId(id: number): ClassicDeviceAny[] {
     return this.#devicesByFloorId.get(id) ?? []
   }
 
@@ -362,7 +353,7 @@ export class ClassicRegistry {
    * @param id - Building identifier.
    * @returns The floors under that building.
    */
-  public getFloorsByBuildingId(id: ClassicBuildingID): ClassicFloor[] {
+  public getFloorsByBuildingId(id: number): ClassicFloor[] {
     return this.#floorsByBuildingId.get(id) ?? []
   }
 
@@ -477,14 +468,9 @@ export class ClassicRegistry {
     type?: ClassicDeviceType,
   ): ClassicAreaZone[] {
     return areas
-      .filter((area) =>
-        hasDevices(this.getDevicesByAreaId(toClassicAreaId(area.id)), type),
-      )
+      .filter((area) => hasDevices(this.getDevicesByAreaId(area.id), type))
       .map((area) => ({
-        devices: buildDeviceZones(
-          this.getDevicesByAreaId(toClassicAreaId(area.id)),
-          type,
-        ),
+        devices: buildDeviceZones(this.getDevicesByAreaId(area.id), type),
         id: area.id,
         level: areaLevel,
         model: 'areas' as const,
@@ -498,17 +484,15 @@ export class ClassicRegistry {
     type?: ClassicDeviceType,
   ): ClassicFloorZone[] {
     return floors
-      .filter((floor) =>
-        hasDevices(this.getDevicesByFloorId(toClassicFloorId(floor.id)), type),
-      )
+      .filter((floor) => hasDevices(this.getDevicesByFloorId(floor.id), type))
       .map((floor) => ({
         areas: this.#buildAreaZones(
-          this.getAreasByFloorId(toClassicFloorId(floor.id)),
+          this.getAreasByFloorId(floor.id),
           level.grandchild,
           type,
         ),
         devices: buildDeviceZones(
-          this.getDevicesByFloorId(toClassicFloorId(floor.id)).filter(
+          this.getDevicesByFloorId(floor.id).filter(
             ({ areaId }) => areaId === null,
           ),
           type,

@@ -74,8 +74,7 @@ describeAtwStateContract('Classic ATW device', () => {
     ],
   })
   const facade = new ClassicDeviceAtwFacade(
-    createMockClassicApi(),
-    registry,
+    createMockClassicApi({ registry }),
     defined(registry.devices.getById(1001)),
   )
   return {
@@ -124,8 +123,7 @@ describe('atwState — Classic flag precision', () => {
       ],
     })
     const facade = new ClassicDeviceAtwFacade(
-      createMockClassicApi(),
-      registry,
+      createMockClassicApi({ registry }),
       defined(registry.devices.getById(1001)),
     )
 
@@ -170,8 +168,7 @@ const facadeWithLegionellaStamp = (
     ],
   })
   return new ClassicDeviceAtwFacade(
-    createMockClassicApi({ timezone: 'Europe/Paris' }),
-    registry,
+    createMockClassicApi({ registry, timezone: 'Europe/Paris' }),
     defined(registry.devices.getById(1001)),
   )
 }

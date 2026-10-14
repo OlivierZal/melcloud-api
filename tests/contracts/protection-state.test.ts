@@ -79,10 +79,10 @@ describeProtectionStateContract('Classic zone', async (state) => {
           ),
         ),
       ),
+    registry,
   })
   const facade = new ClassicBuildingFacade(
     api,
-    registry,
     defined(registry.buildings.getById(1)),
   )
   return okValue(await facade.getFrostProtection())
@@ -164,10 +164,10 @@ describe('protectionState — Classic *Defined semantics', () => {
             }),
           ),
         ),
+      registry,
     })
     const facade = new ClassicBuildingFacade(
       api,
-      registry,
       defined(registry.buildings.getById(1)),
     )
 
@@ -191,8 +191,7 @@ const buildFallbackFacade = (
     devices: [classicAtaDevice()],
   })
   return new ClassicBuildingFacade(
-    createMockClassicApi({ getFrostProtection }),
-    registry,
+    createMockClassicApi({ getFrostProtection, registry }),
     defined(registry.buildings.getById(1)),
   )
 }
@@ -244,8 +243,7 @@ describe('protection read — level fallback', () => {
       .fn<ClassicAPIAdapter['getFrostProtection']>()
       .mockResolvedValue(err({ kind: 'server', status: 401 }))
     const facade = new ClassicBuildingFacade(
-      createMockClassicApi({ getFrostProtection }),
-      registry,
+      createMockClassicApi({ getFrostProtection, registry }),
       defined(registry.buildings.getById(1)),
     )
 

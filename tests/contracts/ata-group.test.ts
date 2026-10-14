@@ -186,10 +186,10 @@ describeAtaGroupReadContract('Classic zone', async (snapshot) => {
     getGroup: vi
       .fn<ClassicAPIAdapter['getGroup']>()
       .mockResolvedValue(wireResponse),
+    registry,
   })
   const facade = new ClassicBuildingFacade(
     api,
-    registry,
     defined(registry.buildings.getById(1)),
   )
   return okValue(await facade.getGroup())
@@ -198,8 +198,7 @@ describeAtaGroupReadContract('Classic zone', async (snapshot) => {
 describeAtaGroupReadContract('Classic ATA device', async (snapshot) => {
   const registry = classicSnapshotRegistry(snapshot)
   const facade = new ClassicDeviceAtaFacade(
-    createMockClassicApi(),
-    registry,
+    createMockClassicApi({ registry }),
     defined(registry.devices.getById(1000)),
   )
   return okValue(await facade.getGroup())
@@ -278,8 +277,7 @@ describeAtaGroupWriteContract('Classic zone', async (state) => {
     .fn<ClassicAPIAdapter['updateGroupState']>()
     .mockResolvedValue({ AttributeErrors: null, Success: true })
   const facade = new ClassicBuildingFacade(
-    createMockClassicApi({ updateGroupState }),
-    registry,
+    createMockClassicApi({ registry, updateGroupState }),
     defined(registry.buildings.getById(1)),
   )
   await facade.updateGroupState(state)
@@ -295,10 +293,9 @@ describeAtaGroupWriteContract('Classic zone', async (state) => {
 
 describeAtaGroupWriteContract('Classic ATA device', async (state) => {
   const registry = classicSnapshotRegistry(defined(READ_CASES[0]).snapshot)
-  const api = createMockClassicApi()
+  const api = createMockClassicApi({ registry })
   const facade = new ClassicDeviceAtaFacade(
     api,
-    registry,
     defined(registry.devices.getById(1000)),
   )
   await facade.updateGroupState(state)
@@ -378,8 +375,8 @@ describe('ataGroup — a divergent field reads as the null mixed marker', () => 
         getGroup: vi
           .fn<ClassicAPIAdapter['getGroup']>()
           .mockResolvedValue(wireResponse),
+        registry,
       }),
-      registry,
       defined(registry.buildings.getById(1)),
     )
 
@@ -434,10 +431,9 @@ describe('ataGroup — an all-null delta never reaches an emulated wire', () => 
 
   it('classic ATA device resolves without a wire call', async () => {
     const registry = classicSnapshotRegistry(defined(READ_CASES[0]).snapshot)
-    const api = createMockClassicApi()
+    const api = createMockClassicApi({ registry })
     const facade = new ClassicDeviceAtaFacade(
       api,
-      registry,
       defined(registry.devices.getById(1000)),
     )
     await facade.updateGroupState(ALL_NULL)
@@ -480,8 +476,7 @@ describe('ataGroup — the native zone write speaks null on the wire', () => {
       .fn<ClassicAPIAdapter['updateGroupState']>()
       .mockResolvedValue({ AttributeErrors: null, Success: true })
     const facade = new ClassicBuildingFacade(
-      createMockClassicApi({ updateGroupState }),
-      registry,
+      createMockClassicApi({ registry, updateGroupState }),
       defined(registry.buildings.getById(1)),
     )
     await facade.updateGroupState(ALL_NULL)
@@ -558,8 +553,7 @@ const memberSnapshot = (member: GroupMember): GroupSnapshot => ({
 describeMemberModesContract('Classic zone', (member, isPoweredOnly) => {
   const registry = classicSnapshotRegistry(memberSnapshot(member))
   const facade = new ClassicBuildingFacade(
-    createMockClassicApi(),
-    registry,
+    createMockClassicApi({ registry }),
     defined(registry.buildings.getById(1)),
   )
   return facade.getMemberOperationModes({ poweredOnly: isPoweredOnly })
@@ -568,8 +562,7 @@ describeMemberModesContract('Classic zone', (member, isPoweredOnly) => {
 describeMemberModesContract('Classic ATA device', (member, isPoweredOnly) => {
   const registry = classicSnapshotRegistry(memberSnapshot(member))
   const facade = new ClassicDeviceAtaFacade(
-    createMockClassicApi(),
-    registry,
+    createMockClassicApi({ registry }),
     defined(registry.devices.getById(1000)),
   )
   return facade.getMemberOperationModes({ poweredOnly: isPoweredOnly })
@@ -632,8 +625,7 @@ describeMultiMemberModesContract('Classic zone', (isPoweredOnly) => {
     ],
   })
   const facade = new ClassicBuildingFacade(
-    createMockClassicApi(),
-    registry,
+    createMockClassicApi({ registry }),
     defined(registry.buildings.getById(1)),
   )
   return facade.getMemberOperationModes({ poweredOnly: isPoweredOnly })
@@ -724,8 +716,7 @@ describe('ataGroup memberModes — out-of-vocabulary member modes', () => {
       ],
     })
     const facade = new ClassicBuildingFacade(
-      createMockClassicApi(),
-      registry,
+      createMockClassicApi({ registry }),
       defined(registry.buildings.getById(1)),
     )
 

@@ -188,14 +188,18 @@ export abstract class ClassicBaseFacade<
 
   protected isHolidayModeAtZoneLevel: boolean | null = null
 
-  protected readonly registry: ClassicRegistry
-
   protected get instance(): T {
     const instance = this.model.getById(this.id)
     if (instance === undefined) {
       throw new EntityNotFoundError(this.tableName, { entityId: this.id })
     }
     return instance
+  }
+
+  // The adapter's own registry: a facade reads the one its client syncs,
+  // as the Home facades do, so no caller can pair it with a foreign one.
+  protected get registry(): ClassicRegistry {
+    return this.api.registry
   }
 
   // Zone-level settings are shared across devices, so any device id samples the zone's state.
@@ -217,13 +221,8 @@ export abstract class ClassicBaseFacade<
     return this.devices.map(({ name }) => name)
   }
 
-  public constructor(
-    api: ClassicAPIAdapter,
-    registry: ClassicRegistry,
-    instance: ClassicModel,
-  ) {
+  public constructor(api: ClassicAPIAdapter, instance: ClassicModel) {
     this.api = api
-    this.registry = registry
     this.id = instance.id
   }
 

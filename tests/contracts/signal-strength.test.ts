@@ -35,12 +35,9 @@ const classicSignalFacade = (): ClassicBuildingFacade => {
     getSignal: vi
       .fn<ClassicAPIAdapter['getSignal']>()
       .mockResolvedValue(ok(classicReportData({ Data: [[-66]] }))),
-  })
-  return new ClassicBuildingFacade(
-    api,
     registry,
-    defined(registry.buildings.getById(1)),
-  )
+  })
+  return new ClassicBuildingFacade(api, defined(registry.buildings.getById(1)))
 }
 
 const homeSignalFacade = (): HomeDeviceAtaFacade => {

@@ -6,8 +6,10 @@ import {
   createMockHttpClient,
   createServerError,
   createSettingStore,
+  createUnauthorizedError,
   defined,
   mockFetchResponse,
+  mockHttpResponse,
   mockTemporalNowInstant,
 } from '@olivierzal/api-core/testing'
 import {
@@ -35,7 +37,7 @@ import {
   HttpError,
 } from '../../src/http/index.ts'
 import { Temporal } from '../../src/temporal.ts'
-import { matchObject, mockResponse } from '../helpers.ts'
+import { matchObject } from '../helpers.ts'
 import {
   homeCognitoLoginPage,
   homeContextBuilding,
@@ -52,10 +54,6 @@ const MS_PER_SECOND = 1000
 const BASE_URL = 'https://melcloudhome.com'
 const COGNITO = 'https://live-melcloudhome.auth.eu-west-1.amazoncognito.com'
 const AUTH_BASE = 'https://auth.melcloudhome.com'
-
-const cognitoLoginPage = homeCognitoLoginPage
-
-const mockBuilding = homeContextBuilding
 
 const mockContext = homeContextData()
 
@@ -123,8 +121,6 @@ const mockSignalData: HomeEnergyData = {
   ],
 }
 
-const mockTokenResponse = homeTokenResponse
-
 const { client: mockHttpClient, requestSpy: mockRequest } =
   createMockHttpClient(HttpClient, BASE_URL)
 
@@ -145,7 +141,7 @@ const setupLoginUntilTokenExchange = (): void => {
 const setupSuccessfulLogin = (): void => {
   setupLoginUntilTokenExchange()
   stageHomeTokenExchange(mockFetch)
-  mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+  mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 }
 
 const persistedSessionStore = (): ReturnType<typeof createSettingStore> =>
@@ -161,10 +157,7 @@ const isTokenEndpointCall = ([url]: Parameters<typeof fetch>): boolean =>
   typeof url === 'string' && url.includes('/connect/token')
 
 const httpUnauthorized = (url = '/context'): HttpError =>
-  new HttpError('Unauthorized', {
-    config: { url },
-    response: { data: undefined, headers: {}, status: 401 },
-  })
+  createUnauthorizedError(url)
 
 // How the BFF answers an account that owns no MELCloud Home home: the
 // token was accepted (a rejected one answers 401), the account simply
@@ -351,7 +344,7 @@ describe('melcloud home API', () => {
       // the `/context` refresh the sign-in enforces fails.
       setupLoginUntilTokenExchange()
       mockFetch.mockResolvedValueOnce(
-        mockFetchResponse(mockTokenResponse, {}, 200),
+        mockFetchResponse(homeTokenResponse, {}, 200),
       )
       mockRequest.mockRejectedValueOnce(new Error('registry'))
 
@@ -372,7 +365,7 @@ describe('melcloud home API', () => {
     it('should send no bearer header before any session exists', async () => {
       const { settingManager } = createSettingStore({})
       const api = await createFromPersistedStore(settingManager)
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       await api.getUser()
 
@@ -384,7 +377,7 @@ describe('melcloud home API', () => {
     it('should return the user on success', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       const user = await api.getUser()
 
       expect(user).toStrictEqual({
@@ -425,16 +418,16 @@ describe('melcloud home API', () => {
     it('should return merged buildings on success', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       const buildings = await api.fetch()
 
-      expect(buildings).toStrictEqual([mockBuilding])
+      expect(buildings).toStrictEqual([homeContextBuilding])
     })
 
     it('should sync device registry and expose context on list', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
 
       expect(api.registry.getById('device-1')).toBeDefined()
@@ -444,7 +437,7 @@ describe('melcloud home API', () => {
     it('empties the device registry and de-authenticates on logOut', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
 
       expect(api.registry.getById('device-1')).toBeDefined()
@@ -475,7 +468,7 @@ describe('melcloud home API', () => {
       const listPromise = api.fetch()
       await inFlightGate.promise
       api.logOut()
-      contextGate.resolve(mockResponse(mockContext, {}, 200))
+      contextGate.resolve(mockHttpResponse(mockContext, {}, 200))
       await listPromise
 
       // The completing cycle repopulated user/context/registry with the
@@ -508,7 +501,7 @@ describe('melcloud home API', () => {
       const api = await createApi({ logger })
       // Sync a real context first, so the emptying below is observable
       // rather than vacuous.
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
 
       expect(api.registry.getById('device-1')).toBeDefined()
@@ -547,7 +540,7 @@ describe('melcloud home API', () => {
       const api = await createApi({ logger })
       mockRequest.mockRejectedValueOnce(httpNotFound())
       await api.fetch()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
       mockRequest.mockRejectedValueOnce(httpNotFound())
       await api.fetch()
@@ -587,10 +580,10 @@ describe('melcloud home API', () => {
       expect(api.isAuthenticated()).toBe(true)
       expect(api.user).toBeNull()
 
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       const buildings = await api.fetch()
 
-      expect(buildings).toStrictEqual([mockBuilding])
+      expect(buildings).toStrictEqual([homeContextBuilding])
       expect(api.registry.getById('device-1')).toBeDefined()
       expect(api.isAuthenticated()).toBe(true)
       expect(api.user).not.toBeNull()
@@ -600,7 +593,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const logger = createLogger()
       const api = await createApi({ logger })
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
       mockRequest.mockRejectedValueOnce(
         httpNotFound('/telemetry/telemetry/energy/device-1'),
@@ -645,7 +638,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const logger = createLogger()
       const api = await createApi({ logger })
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
       mockRequest.mockRejectedValueOnce(error)
 
@@ -666,15 +659,15 @@ describe('melcloud home API', () => {
       // The reactive handler refreshes first — one extra token call.
       mockFetch.mockResolvedValueOnce(
         mockFetchResponse({
-          ...mockTokenResponse,
+          ...homeTokenResponse,
           access_token: 'refreshed-after-401',
         }),
       )
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       const buildings = await api.fetch()
 
-      expect(buildings).toStrictEqual([mockBuilding])
+      expect(buildings).toStrictEqual([homeContextBuilding])
       expect(countTokenCalls()).toBe(tokenCallsBeforeRefresh + 1)
       expect(logger.log).not.toHaveBeenCalledWith('[Home]', NO_HOME_LOG)
     })
@@ -684,7 +677,7 @@ describe('melcloud home API', () => {
     it('tags devices from guestBuildings as not owned', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
 
       expect(api.registry.getById('device-1')?.isOwner).toBe(false)
@@ -693,7 +686,9 @@ describe('melcloud home API', () => {
     it('tags devices from owned buildings as owned', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockOwnedContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(
+        mockHttpResponse(mockOwnedContext, {}, 200),
+      )
       await api.fetch()
 
       expect(api.registry.getById('device-1')?.isOwner).toBe(true)
@@ -703,7 +698,11 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest.mockResolvedValueOnce(
-        mockResponse({ ...mockContext, buildings: [mockBuilding] }, {}, 200),
+        mockHttpResponse(
+          { ...mockContext, buildings: [homeContextBuilding] },
+          {},
+          200,
+        ),
       )
       await api.fetch()
 
@@ -720,7 +719,11 @@ describe('melcloud home API', () => {
       const api = await createApi()
       const syncDevices = vi.spyOn(api.registry, 'syncDevices')
       mockRequest.mockResolvedValueOnce(
-        mockResponse({ ...mockContext, buildings: [mockBuilding] }, {}, 200),
+        mockHttpResponse(
+          { ...mockContext, buildings: [homeContextBuilding] },
+          {},
+          200,
+        ),
       )
       await api.fetch()
 
@@ -746,7 +749,7 @@ describe('melcloud home API', () => {
       // `authenticate` triggers list() internally — reset so the assertion
       // only covers the explicit list() below.
       onSync.mockClear()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
 
       expect(onSync).toHaveBeenCalledTimes(1)
@@ -758,8 +761,8 @@ describe('melcloud home API', () => {
       const api = await createApi({ events: { onSyncComplete: onSync } })
       onSync.mockClear()
       mockRequest
-        .mockResolvedValueOnce(mockResponse('', {}, 200))
-        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse('', {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.updateValues('device-1', { power: true })
 
       expect(onSync).toHaveBeenCalledTimes(1)
@@ -787,7 +790,7 @@ describe('melcloud home API', () => {
 
       expect(
         api.registry.getDevices().map(({ id }: { id: string }) => id),
-      ).toContain(mockBuilding.airToAirUnits[0]?.id)
+      ).toContain(homeContextBuilding.airToAirUnits[0]?.id)
     })
   })
 
@@ -796,8 +799,8 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest
-        .mockResolvedValueOnce(mockResponse('', {}, 200))
-        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse('', {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.updateValues('device-1', { operationMode: 'Heat', power: true })
 
       expect(mockRequest).toHaveBeenCalledWith(
@@ -813,8 +816,8 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest
-        .mockResolvedValueOnce(mockResponse('', {}, 200))
-        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse('', {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.updateFrostProtection({
         enabled: true,
         max: 12,
@@ -840,8 +843,8 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest
-        .mockResolvedValueOnce(mockResponse('', {}, 200))
-        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse('', {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.updateOverheatProtection({
         enabled: true,
         max: 37,
@@ -867,8 +870,8 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       mockRequest
-        .mockResolvedValueOnce(mockResponse('', {}, 200))
-        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse('', {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.updateHolidayMode({
         enabled: false,
         endDate: '2026-08-05T00:00:00',
@@ -929,8 +932,8 @@ describe('melcloud home API', () => {
       const api = await createApi({ events: { onSyncComplete: onSync } })
       onSync.mockClear()
       mockRequest
-        .mockResolvedValueOnce(mockResponse('', {}, 200))
-        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse('', {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.updateValues('device-1', { power: false })
 
       expect(onSync).toHaveBeenCalledWith(expect.objectContaining({}))
@@ -946,8 +949,8 @@ describe('melcloud home API', () => {
       })
       onSync.mockRejectedValueOnce(new Error('sync exploded'))
       mockRequest
-        .mockResolvedValueOnce(mockResponse('', {}, 200))
-        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse('', {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.updateValues('device-1', { power: false })
 
       expect(logger.error).toHaveBeenCalledWith(
@@ -962,7 +965,7 @@ describe('melcloud home API', () => {
     it('should fetch device error log', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockErrorLog, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockErrorLog, {}, 200))
       const result = await api.getErrorLog('device-1')
 
       expect(result).toStrictEqual({ ok: true, value: mockErrorLog })
@@ -985,7 +988,9 @@ describe('melcloud home API', () => {
     it('should fetch temperature trend summary', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
+      mockRequest.mockResolvedValueOnce(
+        mockHttpResponse(mockReportData, {}, 200),
+      )
       const result = await api.getTemperatures('device-1', {
         from: '2026-03-01',
         period: 'Hourly',
@@ -1024,7 +1029,9 @@ describe('melcloud home API', () => {
     it('should fetch energy data with cumulative measure', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
+      mockRequest.mockResolvedValueOnce(
+        mockHttpResponse(mockEnergyData, {}, 200),
+      )
       const result = await api.getEnergy('device-1', {
         from: '2026-03-01',
         interval: 'Hour',
@@ -1063,7 +1070,9 @@ describe('melcloud home API', () => {
     it('should fetch RSSI signal data', async () => {
       setupSuccessfulLogin()
       const api = await createApi()
-      mockRequest.mockResolvedValueOnce(mockResponse(mockSignalData, {}, 200))
+      mockRequest.mockResolvedValueOnce(
+        mockHttpResponse(mockSignalData, {}, 200),
+      )
       const result = await api.getSignal('device-1', {
         from: '2026-03-01',
         to: '2026-03-02',
@@ -1148,8 +1157,8 @@ describe('melcloud home API', () => {
       const api = await createApi()
       api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
       mockRequest
-        .mockResolvedValueOnce(mockResponse('', {}, 200))
-        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse('', {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.updateValues('atw-1', { power: false, setTemperatureZone1: 20 })
 
       expect(mockRequest).toHaveBeenCalledWith(
@@ -1177,8 +1186,8 @@ describe('melcloud home API', () => {
       const api = await createApi()
       api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
       mockRequest
-        .mockResolvedValueOnce(mockResponse('', {}, 200))
-        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse('', {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.updateValues('atw-1', {
         operationModeZone1: 'curve',
         operationModeZone2: 'flow_cool',
@@ -1213,8 +1222,8 @@ describe('melcloud home API', () => {
       const api = await createApi()
       api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
       mockRequest
-        .mockResolvedValueOnce(mockResponse('', {}, 200))
-        .mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse('', {}, 200))
+        .mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.updateValues('atw-1', { operationModeZone2: null, power: true })
 
       expect(mockRequest).toHaveBeenCalledWith(
@@ -1235,7 +1244,9 @@ describe('melcloud home API', () => {
         setupSuccessfulLogin()
         const api = await createApi()
         api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
-        mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
+        mockRequest.mockResolvedValueOnce(
+          mockHttpResponse(mockEnergyData, {}, 200),
+        )
         await api.getEnergy('atw-1', {
           from: '2026-05-01',
           interval: 'Hour',
@@ -1261,7 +1272,9 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
-      mockRequest.mockResolvedValueOnce(mockResponse(mockEnergyData, {}, 200))
+      mockRequest.mockResolvedValueOnce(
+        mockHttpResponse(mockEnergyData, {}, 200),
+      )
       await api.getEnergy('atw-1', {
         from: '2026-05-01',
         interval: 'Hour',
@@ -1284,7 +1297,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
-      mockRequest.mockResolvedValueOnce(mockResponse(mockErrorLog, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockErrorLog, {}, 200))
       await api.getErrorLog('atw-1')
 
       expect(mockRequest).toHaveBeenLastCalledWith(
@@ -1296,7 +1309,9 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
-      mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
+      mockRequest.mockResolvedValueOnce(
+        mockHttpResponse(mockReportData, {}, 200),
+      )
       await api.getTemperatures('atw-1', {
         from: '2026-05-01',
         period: 'Daily',
@@ -1320,7 +1335,9 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
-      mockRequest.mockResolvedValueOnce(mockResponse(mockReportData, {}, 200))
+      mockRequest.mockResolvedValueOnce(
+        mockHttpResponse(mockReportData, {}, 200),
+      )
       await api.getAtwInternalTemperatures('atw-1', {
         from: '2026-05-01',
         period: 'Hourly',
@@ -1337,7 +1354,7 @@ describe('melcloud home API', () => {
       const api = await createApi()
       api.registry.syncDevices([typedHomeAtwDeviceData({ id: 'atw-1' })])
       mockRequest.mockResolvedValueOnce(
-        mockResponse(mockNumericReportData, {}, 200),
+        mockHttpResponse(mockNumericReportData, {}, 200),
       )
       const result = await api.getTemperatures('atw-1', {
         from: '2026-05-01',
@@ -1393,11 +1410,15 @@ describe('melcloud home API', () => {
         setupSuccessfulLogin()
         const api = await createApi({ syncIntervalMinutes: 1 })
 
-        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        mockRequest.mockResolvedValueOnce(
+          mockHttpResponse(mockContext, {}, 200),
+        )
         await api.fetch()
 
         // Advance past the 1-minute auto-sync interval
-        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        mockRequest.mockResolvedValueOnce(
+          mockHttpResponse(mockContext, {}, 200),
+        )
         await vi.advanceTimersByTimeAsync(60_001)
 
         expect(mockRequest).toHaveBeenLastCalledWith(
@@ -1429,15 +1450,17 @@ describe('melcloud home API', () => {
         // Refresh token call succeeds via axios.post to token endpoint.
         mockFetch.mockResolvedValueOnce(
           mockFetchResponse({
-            ...mockTokenResponse,
+            ...homeTokenResponse,
             access_token: 'refreshed-token',
           }),
         )
         // List → #fetchContext → GET /context
-        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        mockRequest.mockResolvedValueOnce(
+          mockHttpResponse(mockContext, {}, 200),
+        )
         const buildings = await api.fetch()
 
-        expect(buildings).toStrictEqual([mockBuilding])
+        expect(buildings).toStrictEqual([homeContextBuilding])
       } finally {
         vi.useRealTimers()
       }
@@ -1447,7 +1470,7 @@ describe('melcloud home API', () => {
       setupSuccessfulLogin()
       const api = await createApi()
       const callCountAfterLogin = mockRequest.mock.calls.length
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
 
       expect(mockRequest).toHaveBeenCalledTimes(callCountAfterLogin + 1)
@@ -1470,12 +1493,12 @@ describe('melcloud home API', () => {
       // Refresh token succeeds
       mockFetch.mockResolvedValueOnce(
         mockFetchResponse({
-          ...mockTokenResponse,
+          ...homeTokenResponse,
           access_token: 'refreshed-token',
         }),
       )
       // GET /context succeeds
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
@@ -1499,15 +1522,15 @@ describe('melcloud home API', () => {
       // Refresh succeeds
       mockFetch.mockResolvedValueOnce(
         mockFetchResponse({
-          ...mockTokenResponse,
+          ...homeTokenResponse,
           access_token: 'refreshed-after-401',
         }),
       )
       // Retry dispatch
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       const buildings = await api.fetch()
 
-      expect(buildings).toStrictEqual([mockBuilding])
+      expect(buildings).toStrictEqual([homeContextBuilding])
     })
 
     it('should fall back to full re-auth when refresh fails on 401', async () => {
@@ -1523,10 +1546,10 @@ describe('melcloud home API', () => {
       // Full re-auth succeeds
       setupSuccessfulLogin()
       // Retry dispatch after re-auth
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       const buildings = await api.fetch()
 
-      expect(buildings).toStrictEqual([mockBuilding])
+      expect(buildings).toStrictEqual([homeContextBuilding])
     })
 
     it('should not retry when the retry budget is already consumed', async () => {
@@ -1539,12 +1562,12 @@ describe('melcloud home API', () => {
       // Refresh succeeds
       mockFetch.mockResolvedValueOnce(
         mockFetchResponse({
-          ...mockTokenResponse,
+          ...homeTokenResponse,
           access_token: 'refreshed-after-401',
         }),
       )
       // Retry dispatch
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
 
       mockRequest.mockRejectedValueOnce(httpUnauthorized())
@@ -1714,7 +1737,7 @@ describe('melcloud home API', () => {
         )
         .mockResolvedValueOnce(
           mockFetchResponse(
-            cognitoLoginPage(`${COGNITO}/login?client_id=test`),
+            homeCognitoLoginPage(`${COGNITO}/login?client_id=test`),
             {},
             200,
           ),
@@ -1739,9 +1762,9 @@ describe('melcloud home API', () => {
           ),
         )
       // Token exchange
-      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(homeTokenResponse))
       // GET /context
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       const api = await createApi()
 
@@ -1758,7 +1781,9 @@ describe('melcloud home API', () => {
         mockFetchResponse({ request_uri: 'urn:test' }),
       )
       mockFetch
-        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+        .mockResolvedValueOnce(
+          mockFetchResponse(homeCognitoLoginPage(), {}, 200),
+        )
         // Credential POST
         .mockResolvedValueOnce(
           mockFetchResponse(
@@ -1791,9 +1816,9 @@ describe('melcloud home API', () => {
           ),
         )
       // Token exchange
-      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(homeTokenResponse))
       // GET /context
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       const api = await createApi()
 
@@ -1921,7 +1946,9 @@ describe('melcloud home API', () => {
         // PAR, redirect chain to the login page
         mockFetch
           .mockResolvedValueOnce(mockFetchResponse({ request_uri: 'urn:test' }))
-          .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+          .mockResolvedValueOnce(
+            mockFetchResponse(homeCognitoLoginPage(), {}, 200),
+          )
         for (const { body, headers, status } of submissionResponses) {
           mockFetch.mockResolvedValueOnce(
             mockFetchResponse(body, headers, status),
@@ -1980,7 +2007,7 @@ describe('melcloud home API', () => {
       mockFetch
         .mockResolvedValueOnce(
           mockFetchResponse(
-            cognitoLoginPage('/login?client_id=test&amp;state=abc'),
+            homeCognitoLoginPage('/login?client_id=test&amp;state=abc'),
             {},
             200,
           ),
@@ -2005,9 +2032,9 @@ describe('melcloud home API', () => {
           ),
         )
       // Token exchange
-      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(homeTokenResponse))
       // GET /context
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       await createApi()
 
@@ -2050,9 +2077,9 @@ describe('melcloud home API', () => {
           ),
         )
       // Token exchange
-      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(homeTokenResponse))
       // GET /context
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       const api = await createApi()
 
@@ -2067,7 +2094,7 @@ describe('melcloud home API', () => {
       )
       mockFetch
         .mockResolvedValueOnce(
-          mockFetchResponse(cognitoLoginPage(absoluteAction), {}, 200),
+          mockFetchResponse(homeCognitoLoginPage(absoluteAction), {}, 200),
         )
         // Credential POST
         .mockResolvedValueOnce(
@@ -2089,9 +2116,9 @@ describe('melcloud home API', () => {
           ),
         )
       // Token exchange
-      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(homeTokenResponse))
       // GET /context
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       await createApi()
 
@@ -2104,7 +2131,9 @@ describe('melcloud home API', () => {
         mockFetchResponse({ request_uri: 'urn:test' }),
       )
       mockFetch
-        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+        .mockResolvedValueOnce(
+          mockFetchResponse(homeCognitoLoginPage(), {}, 200),
+        )
         // Credential POST -> no location header
         .mockResolvedValueOnce(mockFetchResponse('', {}, 302))
 
@@ -2131,7 +2160,9 @@ describe('melcloud home API', () => {
         mockFetchResponse({ request_uri: 'urn:test' }),
       )
       mockFetch
-        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+        .mockResolvedValueOnce(
+          mockFetchResponse(homeCognitoLoginPage(), {}, 200),
+        )
         // Credential POST -> callback without code param
         .mockResolvedValueOnce(
           mockFetchResponse('', { location: 'melcloudhome://?state=abc' }, 302),
@@ -2159,7 +2190,9 @@ describe('melcloud home API', () => {
     describe('valid persisted session', () => {
       it('reuses the session and hits /context exactly once', async () => {
         const { settingManager } = persistedSessionStore()
-        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        mockRequest.mockResolvedValueOnce(
+          mockHttpResponse(mockContext, {}, 200),
+        )
 
         const api = await createFromPersistedStore(settingManager)
 
@@ -2178,7 +2211,9 @@ describe('melcloud home API', () => {
       // in a single /context request.
       it('populates the device registry on the persisted-session path', async () => {
         const { settingManager } = persistedSessionStore()
-        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        mockRequest.mockResolvedValueOnce(
+          mockHttpResponse(mockContext, {}, 200),
+        )
 
         const api = await createFromPersistedStore(settingManager)
 
@@ -2251,7 +2286,7 @@ describe('melcloud home API', () => {
 
       expect(api.isAuthenticated()).toBe(false)
 
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
 
       expect(api.isAuthenticated()).toBe(true)
@@ -2292,7 +2327,7 @@ describe('melcloud home API', () => {
 
       // Refresh token attempt — #hasPersistedSession returns true
       // since refreshToken is set, getUser is tried.
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
@@ -2347,7 +2382,7 @@ describe('melcloud home API', () => {
         username: 'user@test.com',
       })
       // `list()` succeeds with existing token — no OIDC needed for create
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       const api = await melCloudHomeApi.create({
         baseURL: BASE_URL,
         settingManager,
@@ -2385,12 +2420,12 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
       mockRequest.mockResolvedValueOnce(
-        mockResponse(
+        mockHttpResponse(
           {
             ...mockContext,
             guestBuildings: [
               {
-                ...mockBuilding,
+                ...homeContextBuilding,
                 airToAirUnits: [
                   {
                     ...validAtaUnit,
@@ -2412,7 +2447,7 @@ describe('melcloud home API', () => {
                 ],
                 airToWaterUnits: [
                   {
-                    ...mockBuilding.airToWaterUnits[0],
+                    ...homeContextBuilding.airToWaterUnits[0],
                     schedule: [
                       {
                         days: ['saturday'],
@@ -2456,12 +2491,12 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
       mockRequest.mockResolvedValueOnce(
-        mockResponse(
+        mockHttpResponse(
           {
             ...mockContext,
             guestBuildings: [
               {
-                ...mockBuilding,
+                ...homeContextBuilding,
                 airToAirUnits: [
                   validAtaUnit,
                   { ...validAtaUnit, id: 'device-3', rssi: 'weak' },
@@ -2497,14 +2532,14 @@ describe('melcloud home API', () => {
     it('names the pruned ATW unit with its entry-relative paths while the ATA beside it stays', async () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
-      const atwUnit = defined(mockBuilding.airToWaterUnits[0])
+      const atwUnit = defined(homeContextBuilding.airToWaterUnits[0])
       mockRequest.mockResolvedValueOnce(
-        mockResponse(
+        mockHttpResponse(
           {
             ...mockContext,
             guestBuildings: [
               {
-                ...mockBuilding,
+                ...homeContextBuilding,
                 airToWaterUnits: [
                   {
                     ...atwUnit,
@@ -2546,12 +2581,12 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
       mockRequest.mockResolvedValueOnce(
-        mockResponse(
+        mockHttpResponse(
           {
             ...mockContext,
             guestBuildings: [
               {
-                ...mockBuilding,
+                ...homeContextBuilding,
                 airToAirUnits: [validAtaUnit, { ...validAtaUnit, id: 42 }],
               },
             ],
@@ -2579,19 +2614,19 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
       mockRequest.mockResolvedValueOnce(
-        mockResponse(
+        mockHttpResponse(
           {
             ...mockContext,
             guestBuildings: [
               {
-                ...mockBuilding,
+                ...homeContextBuilding,
                 airToAirUnits: [
                   validAtaUnit,
                   { ...validAtaUnit, id: 'device-3', rssi: 'weak' },
                 ],
                 airToWaterUnits: [
                   {
-                    ...defined(mockBuilding.airToWaterUnits[0]),
+                    ...defined(homeContextBuilding.airToWaterUnits[0]),
                     macAddress: null,
                   },
                 ],
@@ -2625,13 +2660,13 @@ describe('melcloud home API', () => {
     // the strict parse holds again. The window rides `performance.now()`;
     // a jump past it stands in for the wait.
     const weakUnit = { id: 'device-3', rssi: 'weak' }
-    const driftingContext = (): ReturnType<typeof mockResponse> =>
-      mockResponse(
+    const driftingContext = (): HttpResponse =>
+      mockHttpResponse(
         {
           ...mockContext,
           guestBuildings: [
             {
-              ...mockBuilding,
+              ...homeContextBuilding,
               airToAirUnits: [validAtaUnit, { ...validAtaUnit, ...weakUnit }],
             },
           ],
@@ -2655,7 +2690,7 @@ describe('melcloud home API', () => {
 
       expect(logger.error).toHaveBeenCalledTimes(1)
 
-      mockRequest.mockResolvedValue(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValue(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
 
       expect(logger.log).toHaveBeenCalledWith(
@@ -2675,7 +2710,7 @@ describe('melcloud home API', () => {
         settingManager,
         transport: mockHttpClient,
       })
-      mockRequest.mockResolvedValue(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValue(mockHttpResponse(mockContext, {}, 200))
       await api.fetch()
 
       expect(logger.log).toHaveBeenCalledWith(
@@ -2719,12 +2754,12 @@ describe('melcloud home API', () => {
       // The same refusal at another index is another path — a listing
       // that reorders re-reports once, by design.
       mockRequest.mockResolvedValue(
-        mockResponse(
+        mockHttpResponse(
           {
             ...mockContext,
             guestBuildings: [
               {
-                ...mockBuilding,
+                ...homeContextBuilding,
                 airToAirUnits: [{ ...validAtaUnit, ...weakUnit }, validAtaUnit],
               },
             ],
@@ -2761,12 +2796,12 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
       mockRequest.mockResolvedValueOnce(
-        mockResponse(
+        mockHttpResponse(
           {
             ...mockContext,
             guestBuildings: [
               {
-                ...mockBuilding,
+                ...homeContextBuilding,
                 airToAirUnits: [
                   { ...validAtaUnit, connectedInterfaceType: 'fifthGenWifi' },
                 ],
@@ -2793,7 +2828,7 @@ describe('melcloud home API', () => {
       const logger = createLogger()
       const { settingManager } = persistedSessionStore()
       mockRequest.mockResolvedValueOnce(
-        mockResponse({ ...mockContext, language: 123 }, {}, 200),
+        mockHttpResponse({ ...mockContext, language: 123 }, {}, 200),
       )
 
       const api = await melCloudHomeApi.create({
@@ -2827,7 +2862,7 @@ describe('melcloud home API', () => {
         refreshToken: 'persisted-refresh',
       })
       mockRequest.mockResolvedValue(
-        mockResponse(
+        mockHttpResponse(
           {
             ...mockContext,
             guestBuildings: [
@@ -2862,7 +2897,7 @@ describe('melcloud home API', () => {
         refreshToken: 'persisted-refresh',
       })
       mockRequest.mockResolvedValueOnce(
-        mockResponse({ ...mockContext, id: undefined }, {}, 200),
+        mockHttpResponse({ ...mockContext, id: undefined }, {}, 200),
       )
 
       const api = await createFromPersistedStore(settingManager)
@@ -2879,7 +2914,7 @@ describe('melcloud home API', () => {
   // the durations are exact.
   describe('connectivity lines', () => {
     const start = Temporal.PlainDateTime.from('2026-10-02T10:00:00')
-    const atwUnit = defined(mockBuilding.airToWaterUnits[0])
+    const atwUnit = defined(homeContextBuilding.airToWaterUnits[0])
     let clock: MockInstance<typeof Temporal.Now.plainDateTimeISO>
 
     beforeEach(() => {
@@ -2892,13 +2927,14 @@ describe('melcloud home API', () => {
 
     // The ATW is the unit under test; the ATA beside it stays connected,
     // so any line about it would be a false positive.
-    const contextReadingAtw = (
-      isConnected: boolean,
-    ): ReturnType<typeof mockResponse> =>
-      mockResponse(
+    const contextReadingAtw = (isConnected: boolean): HttpResponse =>
+      mockHttpResponse(
         homeContextData({
           guestBuildings: [
-            { ...mockBuilding, airToWaterUnits: [{ ...atwUnit, isConnected }] },
+            {
+              ...homeContextBuilding,
+              airToWaterUnits: [{ ...atwUnit, isConnected }],
+            },
           ],
         }),
         {},
@@ -2909,14 +2945,12 @@ describe('melcloud home API', () => {
     // account owns among the guest buildings too, and until 59.3.1 the
     // registry synced such a unit twice per cycle, so the closing line
     // counted passes rather than cycles (#1804).
-    const contextListingAtwTwice = (
-      isConnected: boolean,
-    ): ReturnType<typeof mockResponse> => {
+    const contextListingAtwTwice = (isConnected: boolean): HttpResponse => {
       const building = {
-        ...mockBuilding,
+        ...homeContextBuilding,
         airToWaterUnits: [{ ...atwUnit, isConnected }],
       }
-      return mockResponse(
+      return mockHttpResponse(
         homeContextData({ buildings: [building], guestBuildings: [building] }),
         {},
         200,
@@ -3051,14 +3085,16 @@ describe('melcloud home API', () => {
         // Refresh token request succeeds
         mockFetch.mockResolvedValueOnce(
           mockFetchResponse({
-            ...mockTokenResponse,
+            ...homeTokenResponse,
             access_token: 'refreshed-token',
           }),
         )
-        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        mockRequest.mockResolvedValueOnce(
+          mockHttpResponse(mockContext, {}, 200),
+        )
         const buildings = await api.fetch()
 
-        expect(buildings).toStrictEqual([mockBuilding])
+        expect(buildings).toStrictEqual([homeContextBuilding])
 
         // Should have used refresh, not full OIDC (no other fetch calls for redirects)
         expect(mockFetch).toHaveBeenLastCalledWith(
@@ -3086,11 +3122,13 @@ describe('melcloud home API', () => {
 
         mockFetch.mockResolvedValueOnce(
           mockFetchResponse({
-            ...mockTokenResponse,
+            ...homeTokenResponse,
             access_token: 'refreshed-token',
           }),
         )
-        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        mockRequest.mockResolvedValueOnce(
+          mockHttpResponse(mockContext, {}, 200),
+        )
         await api.fetch()
 
         // Refresh token POST should include the signal
@@ -3120,10 +3158,12 @@ describe('melcloud home API', () => {
         mockFetch.mockRejectedValueOnce(new Error('refresh failed'))
         // Full re-auth succeeds
         setupSuccessfulLogin()
-        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        mockRequest.mockResolvedValueOnce(
+          mockHttpResponse(mockContext, {}, 200),
+        )
         const buildings = await api.fetch()
 
-        expect(buildings).toStrictEqual([mockBuilding])
+        expect(buildings).toStrictEqual([homeContextBuilding])
       } finally {
         vi.useRealTimers()
       }
@@ -3138,15 +3178,15 @@ describe('melcloud home API', () => {
       // Refresh succeeds
       mockFetch.mockResolvedValueOnce(
         mockFetchResponse({
-          ...mockTokenResponse,
+          ...homeTokenResponse,
           access_token: 'refreshed-after-401',
         }),
       )
       // Retry after refresh succeeds
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
       const buildings = await api.fetch()
 
-      expect(buildings).toStrictEqual([mockBuilding])
+      expect(buildings).toStrictEqual([homeContextBuilding])
     })
   })
 
@@ -3166,14 +3206,16 @@ describe('melcloud home API', () => {
           mockFetchResponse({
             access_token: 'refreshed-no-rt',
             expires_in: 3600,
-            scope: mockTokenResponse.scope,
+            scope: homeTokenResponse.scope,
             token_type: 'Bearer',
           }),
         )
-        mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+        mockRequest.mockResolvedValueOnce(
+          mockHttpResponse(mockContext, {}, 200),
+        )
         const buildings = await api.fetch()
 
-        expect(buildings).toStrictEqual([mockBuilding])
+        expect(buildings).toStrictEqual([homeContextBuilding])
       } finally {
         vi.mocked(Temporal.Now.instant).mockRestore()
         vi.useRealTimers()
@@ -3209,7 +3251,9 @@ describe('melcloud home API', () => {
       )
       // Redirect chain to login page
       mockFetch
-        .mockResolvedValueOnce(mockFetchResponse(cognitoLoginPage(), {}, 200))
+        .mockResolvedValueOnce(
+          mockFetchResponse(homeCognitoLoginPage(), {}, 200),
+        )
         // Credential POST
         .mockResolvedValueOnce(
           mockFetchResponse(
@@ -3265,7 +3309,7 @@ describe('melcloud home API', () => {
         )
         .mockResolvedValueOnce(
           mockFetchResponse(
-            cognitoLoginPage(`${COGNITO}/login?id=test`),
+            homeCognitoLoginPage(`${COGNITO}/login?id=test`),
             {},
             200,
           ),
@@ -3290,9 +3334,9 @@ describe('melcloud home API', () => {
           ),
         )
       // Token exchange
-      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(homeTokenResponse))
       // GET /context
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       const api = await createApi()
 
@@ -3307,7 +3351,7 @@ describe('melcloud home API', () => {
       mockFetch
         .mockResolvedValueOnce(
           mockFetchResponse(
-            cognitoLoginPage(`${COGNITO}/login?id=test`),
+            homeCognitoLoginPage(`${COGNITO}/login?id=test`),
             { 'set-cookie': [''] },
             200,
           ),
@@ -3332,9 +3376,9 @@ describe('melcloud home API', () => {
           ),
         )
       // Token exchange
-      mockFetch.mockResolvedValueOnce(mockFetchResponse(mockTokenResponse))
+      mockFetch.mockResolvedValueOnce(mockFetchResponse(homeTokenResponse))
       // GET /context
-      mockRequest.mockResolvedValueOnce(mockResponse(mockContext, {}, 200))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse(mockContext, {}, 200))
 
       await expect(createApi()).resolves.toBeDefined()
     })

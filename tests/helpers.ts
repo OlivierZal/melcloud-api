@@ -5,11 +5,11 @@ import type { Result } from '../src/types/index.ts'
 // What is OURS alone. Everything the SDK suites used to copy by hand —
 // `cast`, `defined`, `mock`, the logger/setting-store doubles, the
 // transport spy, the fetch `Response` mock, the `HttpError` factories,
-// the native-`Temporal` clock spies — comes from
-// `@olivierzal/api-core/testing` since 1.3.0, proven in the core's own
-// suite before a consumer inherits it. The three below name this SDK's
-// specifics: the `Result` type and the vitest matcher/envelope shapes
-// its suites assert on.
+// the native-`Temporal` clock spies, the `HttpResponse` envelope — comes
+// from `@olivierzal/api-core/testing` since 1.3.0 (1.13.0 for the
+// envelope), proven in the core's own suite before a consumer inherits
+// it. The two below name this SDK's specifics: the `Result` type and
+// the vitest matcher shape its suites assert on.
 
 // Wrap `expect.objectContaining` so call sites get a `never`-typed
 // matcher (assignable anywhere) instead of `any` — the latter trips
@@ -36,15 +36,3 @@ export const okValue = <T>(result: Result<T>): T => {
   }
   return result.value
 }
-
-const HTTP_OK = 200
-
-export const mockResponse = (
-  data: unknown,
-  headers: Record<string, string | string[]> = {},
-  status: number = HTTP_OK,
-): {
-  data: unknown
-  headers: Record<string, string | string[]>
-  status: number
-} => ({ data, headers, status })

@@ -6,6 +6,7 @@ import {
   createSettingStore,
   defined,
   mock,
+  mockHttpResponse,
 } from '@olivierzal/api-core/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -39,14 +40,6 @@ const { client: mockHttpClient, requestSpy: mockRequest } =
     'https://app.melcloud.com/Mitsubishi.Wifi.Client',
   )
 
-const wrap = <T>(
-  data: T,
-): { data: T; headers: Record<string, never>; status: number } => ({
-  data,
-  headers: {},
-  status: 200,
-})
-
 /**
  * Configure `mockRequest` to handle login (POST) and list (GET)
  * calls by discriminating on the `url` field in the request config.
@@ -62,7 +55,7 @@ const mockLoginAndList = (
   stageClassicWire(mockRequest, {
     login: () => classicLoginResponse(contextKey, expiry),
     rest: ({ url }) =>
-      wrap<unknown>(url === CLASSIC_LIST_PATH ? buildings : {}),
+      mockHttpResponse(url === CLASSIC_LIST_PATH ? buildings : {}),
   })
 }
 
@@ -122,7 +115,7 @@ describe('mELCloud Classic API', () => {
     buildings: unknown,
   ): Promise<ReturnType<typeof createLogger>> => {
     const logger = createLogger()
-    mockRequest.mockResolvedValue(wrap(buildings))
+    mockRequest.mockResolvedValue(mockHttpResponse(buildings))
     const api = await createApi({ logger })
     await api.fetch()
     return logger
@@ -588,7 +581,7 @@ describe('mELCloud Classic API', () => {
           LoginData: { ContextKey: 'ctx', Expiry: '2099-01-01T00:00:00Z' },
         },
       }
-      mockRequest.mockResolvedValue(wrap(responses[method] ?? {}))
+      mockRequest.mockResolvedValue(mockHttpResponse(responses[method] ?? {}))
       await api[method](cast(args))
 
       expect(mockRequest).toHaveBeenCalledWith(
@@ -599,7 +592,7 @@ describe('mELCloud Classic API', () => {
     it('returns validated energy data for a well-formed ATA payload', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockRequest.mockResolvedValue(wrap(ataEnergyResponse))
+      mockRequest.mockResolvedValue(mockHttpResponse(ataEnergyResponse))
       const result = await api.getEnergy({ postData: cast(reportPostData) })
 
       expect(okValue(result)).toStrictEqual(ataEnergyResponse)
@@ -608,7 +601,9 @@ describe('mELCloud Classic API', () => {
     it('returns a validation failure when the energy payload is malformed', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockRequest.mockResolvedValue(wrap({ TotalHeatingConsumed: 'oops' }))
+      mockRequest.mockResolvedValue(
+        mockHttpResponse({ TotalHeatingConsumed: 'oops' }),
+      )
       const result = await api.getEnergy({ postData: cast(reportPostData) })
 
       expect(result.ok).toBe(false)
@@ -689,7 +684,7 @@ describe('mELCloud Classic API', () => {
 
     it('throws AuthenticationError when login data is null with explicit credentials', async () => {
       const api = await createApi()
-      mockRequest.mockResolvedValue(wrap({ LoginData: null }))
+      mockRequest.mockResolvedValue(mockHttpResponse({ LoginData: null }))
 
       await expect(
         api.authenticate({ password: 'pass', username: 'user' }),
@@ -813,7 +808,7 @@ describe('mELCloud Classic API', () => {
     it('returns parsed error log', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockRequest.mockResolvedValue(wrap([errorEntry()]))
+      mockRequest.mockResolvedValue(mockHttpResponse([errorEntry()]))
       const result = await api.getErrorLog(
         { from: '2024-01-01', to: '2024-01-02' },
         [1],
@@ -840,7 +835,7 @@ describe('mELCloud Classic API', () => {
         username: 'user',
       })
       mockRequest.mockResolvedValue(
-        wrap([errorEntry({ StartDate: '2026-03-01T06:00:00' })]),
+        mockHttpResponse([errorEntry({ StartDate: '2026-03-01T06:00:00' })]),
       )
       const result = await api.getErrorLog({}, [1])
 
@@ -882,7 +877,7 @@ describe('mELCloud Classic API', () => {
     ])('filters out $sentinel', async ({ entry }) => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockRequest.mockResolvedValue(wrap([errorEntry(entry)]))
+      mockRequest.mockResolvedValue(mockHttpResponse([errorEntry(entry)]))
       const result = await api.getErrorLog({}, [1])
 
       expect(okValue(result).entries).toHaveLength(0)
@@ -892,7 +887,7 @@ describe('mELCloud Classic API', () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
       mockRequest.mockResolvedValue(
-        wrap([
+        mockHttpResponse([
           errorEntry({ ErrorMessage: 'Mystery', StartDate: 'not-a-real-date' }),
         ]),
       )
@@ -910,7 +905,10 @@ describe('mELCloud Classic API', () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
       mockRequest.mockResolvedValue(
-        wrap({ AttributeErrors: { field: ['error'] }, Success: false }),
+        mockHttpResponse({
+          AttributeErrors: { field: ['error'] },
+          Success: false,
+        }),
       )
       const result = await api.getErrorLog({}, [1])
 
@@ -957,7 +955,7 @@ describe('mELCloud Classic API', () => {
         resolved(
           config.url === '/Login/ClientLogin3'
             ? classicLoginResponse()
-            : wrap([]),
+            : mockHttpResponse([]),
         ),
       )
       const result = await api.getErrorLog({})
@@ -974,7 +972,9 @@ describe('mELCloud Classic API', () => {
     it('filters null/empty error messages', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
-      mockRequest.mockResolvedValue(wrap([errorEntry({ ErrorMessage: null })]))
+      mockRequest.mockResolvedValue(
+        mockHttpResponse([errorEntry({ ErrorMessage: null })]),
+      )
       const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
 
       expect(okValue(result).entries).toHaveLength(0)
@@ -1023,7 +1023,7 @@ describe('mELCloud Classic API', () => {
 
     it('does not set context key header for login path', async () => {
       const api = await createApi()
-      mockRequest.mockResolvedValue(wrap({ LoginData: null }))
+      mockRequest.mockResolvedValue(mockHttpResponse({ LoginData: null }))
 
       await expect(
         api.authenticate({ password: 'p', username: 'u' }),
@@ -1039,7 +1039,9 @@ describe('mELCloud Classic API', () => {
     // reaches the log, so the message carries MELCloud's reason code.
     it('names the ErrorId MELCloud sends beside a refused login', async () => {
       const api = await createApi()
-      mockRequest.mockResolvedValue(wrap({ ErrorId: 1, LoginData: null }))
+      mockRequest.mockResolvedValue(
+        mockHttpResponse({ ErrorId: 1, LoginData: null }),
+      )
 
       await expect(
         api.authenticate({ password: 'p', username: 'u' }),
@@ -1148,7 +1150,7 @@ describe('mELCloud Classic API', () => {
       mockLoginAndList()
       const api = await createApi({ settingManager })
       setSpy.mockClear()
-      mockRequest.mockResolvedValueOnce(wrap({ LoginData: null }))
+      mockRequest.mockResolvedValueOnce(mockHttpResponse({ LoginData: null }))
 
       await expect(
         api.authenticate({ password: 'wrong', username: 'typo-user' }),
@@ -1193,7 +1195,7 @@ describe('mELCloud Classic API', () => {
           )
         }
         if (config.url === '/User/ListDevices') {
-          return resolved(wrap([]))
+          return resolved(mockHttpResponse([]))
         }
         callCount++
         if (callCount === 1) {
@@ -1203,7 +1205,7 @@ describe('mELCloud Classic API', () => {
             url: '/Device/Get',
           })
         }
-        return resolved(wrap({ value: 'retried' }))
+        return resolved(mockHttpResponse({ value: 'retried' }))
       })
       const result = await api.getValues({ params: { buildingId: 1, id: 1 } })
 
@@ -1217,10 +1219,10 @@ describe('mELCloud Classic API', () => {
       // 401 on endpoint, re-auth throws AuthenticationError → decorator logs + returns false
       mockRequest.mockImplementation(async (config) => {
         if (config.url === '/Login/ClientLogin3') {
-          return resolved(wrap({ LoginData: null }))
+          return resolved(mockHttpResponse({ LoginData: null }))
         }
         if (config.url === '/User/ListDevices') {
-          return resolved(wrap([]))
+          return resolved(mockHttpResponse([]))
         }
         throw createHttpError({
           message: 'unauthorized',
@@ -1342,7 +1344,9 @@ describe('mELCloud Classic API', () => {
   it('classifies ErrorId 6 as a login throttle, not bad credentials', async () => {
     const { AuthenticationThrottledError } =
       await import('../../src/errors/index.ts')
-    mockRequest.mockResolvedValue(wrap({ ErrorId: 6, LoginData: null }))
+    mockRequest.mockResolvedValue(
+      mockHttpResponse({ ErrorId: 6, LoginData: null }),
+    )
     const api = await createApi()
 
     await expect(
@@ -1352,7 +1356,7 @@ describe('mELCloud Classic API', () => {
 
   it('carries the announced lockout from LoginMinutes', async () => {
     mockRequest.mockResolvedValue(
-      wrap({ ErrorId: 6, LoginData: null, LoginMinutes: 60 }),
+      mockHttpResponse({ ErrorId: 6, LoginData: null, LoginMinutes: 60 }),
     )
     const api = await createApi()
 
@@ -1373,7 +1377,11 @@ describe('mELCloud Classic API', () => {
     'announces no window when LoginMinutes is $label',
     async ({ announced }) => {
       mockRequest.mockResolvedValue(
-        wrap({ ErrorId: 6, LoginData: null, LoginMinutes: announced }),
+        mockHttpResponse({
+          ErrorId: 6,
+          LoginData: null,
+          LoginMinutes: announced,
+        }),
       )
       const api = await createApi()
 
