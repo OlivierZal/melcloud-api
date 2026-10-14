@@ -32,11 +32,12 @@ const REDIRECT_STATUS_MAX = 400
  * Options for {@link authRequest}.
  */
 interface AuthRequestOptions {
-  config: { headers: Record<string, string>; data?: string }
   jar: CookieJar
   method: string
   url: string
   abortSignal?: AbortSignal
+  body?: string
+  headers?: Record<string, string>
 }
 
 /**
@@ -114,25 +115,6 @@ const fetchPostForm = async ({
   }
 }
 
-// Low-level fetch helper for the auth redirect chain. Uses
-// `redirect: 'manual'` so this module can inspect each 3xx response
-// explicitly and drive the OIDC flow step-by-step; non-2xx statuses
-// therefore do not throw.
-const fetchRaw = async (
-  options: AuthRequestOptions,
-): Promise<HttpResponse<string>> => {
-  const response = await fetch(options.url, {
-    headers: options.config.headers,
-    method: options.method.toUpperCase(),
-    redirect: 'manual',
-    ...(options.config.data !== undefined && { body: options.config.data }),
-    ...(options.abortSignal !== undefined && { signal: options.abortSignal }),
-  })
-  const headers = readHeaders(response.headers)
-  const data = await response.text()
-  return { data, headers, status: response.status }
-}
-
 /**
  * Store any `Set-Cookie` headers from an OIDC response into a CookieJar.
  * @param jar - The cookie jar to populate.
@@ -157,10 +139,14 @@ const storeCookies = async (
 /**
  * Low-level request for the OIDC auth flow. Uses a transient
  * CookieJar (not the API instance) since the multi-domain redirect
- * chain (IS <-> Cognito) requires cross-domain cookie management.
+ * chain (IS <-> Cognito) requires cross-domain cookie management, and
+ * `redirect: 'manual'` so this module can inspect each 3xx response
+ * explicitly and drive the flow step-by-step — non-2xx statuses
+ * therefore do not throw.
  * @param options - Request target plus cookie-jar and abort plumbing.
  * @param options.abortSignal - Optional abort signal.
- * @param options.config - Request config with optional headers and body.
+ * @param options.body - Request body, when the step posts a form.
+ * @param options.headers - Request headers beside the jar's cookies.
  * @param options.jar - CookieJar for cross-domain cookie management.
  * @param options.method - HTTP method.
  * @param options.url - Target URL.
@@ -168,28 +154,30 @@ const storeCookies = async (
  */
 const authRequest = async ({
   abortSignal,
-  config,
+  body,
+  headers = {},
   jar,
   method,
   url,
 }: AuthRequestOptions): Promise<HttpResponse<string>> => {
   const cookieHeader = await jar.getCookieString(url)
-  const mergedHeaders: Record<string, string> = {
-    ...config.headers,
-    ...(cookieHeader !== '' && { Cookie: cookieHeader }),
-  }
-  const response = await fetchRaw({
-    config: {
-      headers: mergedHeaders,
-      ...(config.data !== undefined && { data: config.data }),
+  const response = await fetch(url, {
+    headers: {
+      ...headers,
+      ...(cookieHeader !== '' && { Cookie: cookieHeader }),
     },
-    jar,
-    method,
-    url,
-    ...(abortSignal !== undefined && { abortSignal }),
+    method: method.toUpperCase(),
+    redirect: 'manual',
+    ...(body !== undefined && { body }),
+    ...(abortSignal !== undefined && { signal: abortSignal }),
   })
-  await storeCookies(jar, response, url)
-  return response
+  const result = {
+    data: await response.text(),
+    headers: readHeaders(response.headers),
+    status: response.status,
+  }
+  await storeCookies(jar, result, url)
+  return result
 }
 
 /**
@@ -328,7 +316,6 @@ const authFollowRedirects = async ({
     return { data: '', url }
   }
   const response = await authRequest({
-    config: { headers: {} },
     jar,
     method: 'get',
     url,
@@ -425,10 +412,8 @@ const submitCredentials = async ({
     username: credentials.username,
   })
   const submitResponse = await authRequest({
-    config: {
-      data: form.toString(),
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    },
+    body: form.toString(),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     jar,
     method: 'post',
     url: action,

@@ -77,7 +77,6 @@ const deviceTypeNames = {
 const API_BASE_URL = 'https://app.melcloud.com/Mitsubishi.Wifi.Client'
 const APP_VERSION = '1.38.4.0'
 
-const DEFAULT_RETRY_HOURS = 2
 const DEFAULT_SYNC_INTERVAL_MINUTES = 5
 
 const LOGIN_THROTTLE_ERROR_ID = 6
@@ -133,23 +132,6 @@ const collectDevices = function* (
   }
 }
 
-/**
- * The one filter of a listing cycle: it keeps the devices this SDK
- * models and remembers what it rejected, so the boundary can name the
- * drops instead of performing them in silence.
- */
-interface DroppedDeviceCollector {
-  /**
-   * Whether one raw listing entry survives the boundary. Rejections
-   * are recorded, never merely returned.
-   */
-  readonly shouldKeep: (device: unknown) => boolean
-  /**
-   * The cycle's one report line, or `null` when nothing was dropped.
-   */
-  readonly summarize: () => string | null
-}
-
 const DROP_REASON_LABELS = {
   'malformed-header': 'malformed header',
   'unmodelled-type': 'unmodelled device type',
@@ -157,43 +139,6 @@ const DROP_REASON_LABELS = {
 
 const describeDroppedDevice = ({ id, reason }: ClassicDroppedDevice): string =>
   `device ${id === null ? 'unknown' : String(id)} (${DROP_REASON_LABELS[reason]})`
-
-/**
- * Opens a collector for ONE listing cycle.
- *
- * The volume verdict lives here: `/User/ListDevices` carries every
- * device of the account and runs on every sync cycle, so a line per
- * dropped entry would storm the host's logger — hardest exactly when a
- * wire regression takes the whole payload down and the diagnostic
- * report most needs to stay readable. The collector emits ONE
- * aggregated line per cycle instead, bounded by the cycle rather than
- * by the listing's size, and that line still names every dropped id
- * with its reason: the ids are what makes it actionable, since a
- * consumer degrades a pruned device to frozen values and the report
- * has to say WHICH device went stale and why.
- * @returns A collecting predicate plus the cycle's report line.
- */
-const createDroppedDeviceCollector = (): DroppedDeviceCollector => {
-  const dropped: ClassicDroppedDevice[] = []
-  let total = 0
-  return {
-    shouldKeep: (device: unknown): boolean => {
-      total += 1
-      const drop = inspectClassicListingEntry(device)
-      if (drop === null) {
-        return true
-      }
-      dropped.push(drop)
-      return false
-    },
-    summarize: (): string | null =>
-      dropped.length === 0
-        ? null
-        : `Dropped ${String(dropped.length)} of ${String(total)} /User/ListDevices entries: ${dropped
-            .map((entry) => describeDroppedDevice(entry))
-            .join(', ')}`,
-  }
-}
 
 /**
  * Keeps only the devices this SDK models in one listing container,
@@ -283,8 +228,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
         }),
       },
       logLabel: '[Classic]',
-      rateLimitHours: DEFAULT_RETRY_HOURS,
-      syncCallback: async () => this.fetch(),
     })
     this.#locale = locale
     this.#timezone = timezone
@@ -314,7 +257,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Fetch all buildings, sync the model registry, and schedule the next auto-sync.
    * @returns The list of fetched buildings.
    */
-  public async fetch(): Promise<ClassicBuildingWithStructure[]> {
+  public override async fetch(): Promise<ClassicBuildingWithStructure[]> {
     return this.runBestEffortSyncCycle(async () => this.#syncCycle())
   }
 
@@ -800,10 +743,6 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.isAuthenticated()
   }
 
-  protected override async syncRegistry(): Promise<void> {
-    await this.fetch()
-  }
-
   // The registry refresh both entry points share. It carries the
   // sync notification, so a failed refresh never announces a completed
   // sync — consumers would rewrite stale values as if they were fresh.
@@ -857,6 +796,24 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Fetches the raw `ListDevices` payload (validated against the
    * envelope schema) without touching the registry — internal to the
    * fetch cycle: `fetch()` is the public heartbeat on both dialects.
+   *
+   * Devices this SDK does not model are dropped HERE rather than
+   * rejected by the schema: this listing is the BULK sync, so one
+   * unmodelled entry would otherwise invalidate every sibling — and the
+   * enforced post-auth sync would turn that into "cannot sign in". The
+   * per-device merge that follows a read or write response is a
+   * different mechanism and untouched by this filter. The registry
+   * depends on what survives: it builds a model per entry with no
+   * runtime guard of its own.
+   *
+   * The drops are reported as ONE aggregated `error` line per cycle,
+   * bounded by the cycle rather than by the listing's size:
+   * `/User/ListDevices` runs on every sync, so a line per entry would
+   * storm the host's logger exactly when a wire regression takes the
+   * whole payload down and the report most needs to stay readable. A
+   * device the account owns has left the registry, and the consumer
+   * degrades it to a warning over frozen values without being told why
+   * — the ids named in the line are what makes it actionable.
    * @returns The full building hierarchy.
    */
   async #list(): Promise<ClassicBuildingWithStructure[]> {
@@ -870,15 +827,17 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     // check rather than through `requestData`'s schema option (which
     // would substitute the narrower inferred type).
     parseOrThrow(ClassicBuildingListSchema, data, 'ListDevices')
-    // Devices this SDK does not model are dropped HERE rather than
-    // rejected by the schema: this listing is the BULK sync, so one
-    // unmodelled entry would otherwise invalidate every sibling — and
-    // the enforced post-auth sync would turn that into "cannot sign
-    // in". The per-device merge that follows a read or write response
-    // is a different mechanism and untouched by this filter.
-    // The registry depends on what survives: it builds a model per
-    // entry with no runtime guard of its own.
-    const { shouldKeep, summarize } = createDroppedDeviceCollector()
+    const dropped: ClassicDroppedDevice[] = []
+    let total = 0
+    const shouldKeep = (device: unknown): boolean => {
+      total += 1
+      const drop = inspectClassicListingEntry(device)
+      if (drop === null) {
+        return true
+      }
+      dropped.push(drop)
+      return false
+    }
     const listing = data.map((building) => ({
       ...building,
       Structure: {
@@ -897,14 +856,12 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
         })),
       },
     }))
-    const summary = summarize()
-    if (summary !== null) {
-      // `error`, not `log`: a device the account owns has left the
-      // registry, and the consumer degrades it to a warning over
-      // frozen values without being told why. This line is the only
-      // trace of the drop, and it lands verbatim in the diagnostic
-      // report a user pastes into an issue.
-      this.logger.error(summary)
+    if (dropped.length > 0) {
+      this.logger.error(
+        `Dropped ${String(dropped.length)} of ${String(total)} /User/ListDevices entries: ${dropped
+          .map((entry) => describeDroppedDevice(entry))
+          .join(', ')}`,
+      )
     }
     return listing
   }
