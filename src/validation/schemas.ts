@@ -681,7 +681,6 @@ const ClassicMinimalAreaSchema = z.looseObject({
   Devices: ClassicDeviceListSchema,
   FloorId: ClassicFloorIdSchema.nullable(),
   ID: ClassicAreaIdSchema,
-  Name: z.string(),
 })
 
 const ClassicFloorSchema = z.looseObject({
@@ -689,7 +688,6 @@ const ClassicFloorSchema = z.looseObject({
   BuildingId: ClassicBuildingIdSchema,
   Devices: ClassicDeviceListSchema,
   ID: ClassicFloorIdSchema,
-  Name: z.string(),
 })
 
 const ClassicBuildingStructureSchema = z.looseObject({

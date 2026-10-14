@@ -1,5 +1,4 @@
-import { webviewFloorBlock } from '@olivierzal/configs/eslint'
-import { library } from '@olivierzal/configs/eslint/library'
+import { library, webviewFloorBlock } from '@olivierzal/configs/eslint'
 import { type Config, defineConfig } from 'eslint/config'
 
 // The browser-reachable closure: the flat subpath modules of the

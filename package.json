@@ -91,12 +91,12 @@
   },
   "prettier": "@olivierzal/configs/prettier",
   "dependencies": {
-    "@olivierzal/api-core": "1.13.0",
+    "@olivierzal/api-core": "2.0.0",
     "tough-cookie": "^6.0.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@olivierzal/configs": "7.2.0",
+    "@olivierzal/configs": "8.0.0",
     "@types/node": "^26.1.2",
     "@typescript/native": "npm:typescript@^7.0.2",
     "@vitest/coverage-v8": "^5.0.0",

@@ -153,9 +153,6 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
               ...httpConfig,
               timeout: transport?.timeoutMs ?? DEFAULT_TIMEOUT_MS,
             }),
-      // The timer and the probe run the same refresh: the dialect's
-      // `fetch()`, a best-effort cycle that never rejects.
-      syncCallback: async () => this.fetch(),
     })
   }
 
