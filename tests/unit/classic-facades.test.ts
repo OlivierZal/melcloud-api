@@ -23,6 +23,7 @@ import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
 import { ClassicDeviceAtwFacade } from '../../src/facades/classic-device-atw.ts'
 import { ClassicDeviceErvFacade } from '../../src/facades/classic-device-erv.ts'
+import { combineFlags } from '../../src/facades/classic-flag-bits.ts'
 import {
   classicAtwFlags,
   classicErvFlags,
@@ -1514,8 +1515,10 @@ describe('atw device facade with zone 2', () => {
     // applies zone 1 alone and drops the adjustment, leaving the pair
     // in the state the official MELCloud app forbids.
     expect(defined(call).postData.EffectiveFlags).toBe(
-      // eslint-disable-next-line no-bitwise -- `EffectiveFlags` is a bitfield; `|` is how a caller reads a two-field write
-      classicAtwFlags.OperationModeZone1 | classicAtwFlags.OperationModeZone2,
+      combineFlags([
+        classicAtwFlags.OperationModeZone1,
+        classicAtwFlags.OperationModeZone2,
+      ]),
     )
   })
 

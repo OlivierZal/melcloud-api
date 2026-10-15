@@ -1,8 +1,4 @@
-import {
-  CLASSIC_FLAG_UNCHANGED,
-  ClassicDeviceType,
-  ClassicLabelType,
-} from '../constants.ts'
+import { ClassicDeviceType, ClassicLabelType } from '../constants.ts'
 import {
   classicUpdateDevice,
   convertToListDeviceData,
@@ -53,6 +49,7 @@ import type {
   ReportQuery,
 } from './report-types.ts'
 import { ClassicBaseFacade } from './classic-base.ts'
+import { combineFlags } from './classic-flag-bits.ts'
 
 // Unix epoch as fallback for open-ended report queries
 const DEFAULT_YEAR = '1970-01-01'
@@ -538,13 +535,7 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   // Combine individual field flags via bitwise OR to tell the Classic API
   // which device settings were actually changed
   #computeFlags(keys: (keyof ClassicUpdateDeviceData<T>)[]): number {
-    return Number(
-      keys.reduce(
-        // eslint-disable-next-line no-bitwise -- `EffectiveFlags` is a bitfield; `|` accumulates flags
-        (flag, key) => flag | BigInt(this.flags[key]),
-        BigInt(CLASSIC_FLAG_UNCHANGED),
-      ),
-    )
+    return combineFlags(keys.map((key) => this.flags[key]))
   }
 
   async #fetchTemperaturesHour(
