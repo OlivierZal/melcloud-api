@@ -18,8 +18,10 @@ import type { Result } from '../src/types/index.ts'
 // boundary instead of scattered across every test file.
 export function matchObject(shape: object): never
 export function matchObject(shape: object): unknown {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return -- vitest's `objectContaining` is typed `any`; this helper is the single boundary that scopes the concession
-  return expect.objectContaining(shape)
+  // Vitest types `objectContaining` as `any`; funnelled through `unknown`
+  // here, the one boundary, so no call site meets the `any`.
+  const matcher: unknown = expect.objectContaining(shape)
+  return matcher
 }
 
 /**

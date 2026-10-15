@@ -57,9 +57,7 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   one-letter report keys); do not rename them to satisfy style rules.
 - `EffectiveFlags` bitfields: `src/facades/classic-flags.ts` is the one
   sanctioned home of hex magic numbers (files-scoped `no-magic-numbers`
-  off); the two bitfield operators live behind documented inline
-  `no-bitwise` disables at their use sites (`classic-update-devices.ts`
-  flag test, `classic-base-device.ts` flag accumulation).
+  off); the two bitfield operators live in one module, `src/facades/classic-flag-bits.ts` (`combineFlags`, `hasFlag`), behind the family's two documented `no-bitwise` disables; their call sites (the `classic-update-devices.ts` flag test, the `classic-base-device.ts` flag accumulation, one facade test) name the operation instead of spelling it (2026-10-15).
 - `EffectiveFlags` is AUTHORITATIVE on the Classic set endpoints: the
   unit keeps the flagged fields and lets everything else in the body
   fall back to its previous value a few seconds later. **Judge a

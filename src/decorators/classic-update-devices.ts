@@ -8,6 +8,7 @@ import type {
 } from '../types/index.ts'
 import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import { NoChangesError } from '../errors/index.ts'
+import { hasFlag } from '../facades/classic-flag-bits.ts'
 import {
   fromSetToListAta,
   isKeyOf,
@@ -108,9 +109,7 @@ export const convertToListDeviceData = <T extends ClassicDeviceType>(
       ? allEntries
       : allEntries.filter(
           ([key]) =>
-            isFlagged(key) &&
-            // eslint-disable-next-line no-bitwise -- `EffectiveFlags` is a bitfield; `&` tests flag membership
-            Boolean(BigInt(flags[key]) & effectiveFlagsBigInt),
+            isFlagged(key) && hasFlag(effectiveFlagsBigInt, flags[key]),
         )
   return typedFromEntries<Partial<ClassicListDeviceData<T>>>(
     type === ClassicDeviceType.Ata

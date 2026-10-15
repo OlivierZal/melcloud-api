@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **Internal**: the two `EffectiveFlags` bit operations live in one module (`combineFlags`, `hasFlag`), named at their three call sites instead of spelled; `matchObject` funnels vitest's `any` through `unknown`; one integration mock uses the suite's `resolved` helper. From the 2026-10-15 audit of the family's `eslint-disable` directives; no API or behaviour change.
+
 ## [60.0.0] - 2026-10-14
 
 ### Changed

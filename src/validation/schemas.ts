@@ -709,9 +709,11 @@ interface ClassicBuildingListEntry {
  * Classic `/User/ListDevices` response envelope. Narrower than the full
  * `ClassicBuildingWithStructure` compile-time contract — only the fields the
  * registry actually reads are validated: `ID`, `Name` and
- * `Structure.{Areas, Devices, Floors}` on the building, the id fields and
- * `Name` of every floor and area (where their brands are minted). Callers
- * still bind the compile-time type at the use site.
+ * `Structure.{Areas, Devices, Floors}` on the building, and the id fields
+ * of every floor and area, where their brands are minted — their `Name`
+ * stays an unchecked passthrough, so a label oddity cannot refuse an
+ * account's listing. Callers still bind the compile-time type at the use
+ * site.
  */
 export const ClassicBuildingListSchema: z.ZodType<ClassicBuildingListEntry[]> =
   z.array(
