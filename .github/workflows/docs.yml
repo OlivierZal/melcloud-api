@@ -9,7 +9,7 @@ jobs:
       id-token: write
       packages: read
       pages: write
-    uses: OlivierZal/configs/.github/workflows/reusable-docs.yml@2c0fa6ef42cb50088099135d35faf4eedd633b5a # v8.3.0
+    uses: OlivierZal/configs/.github/workflows/reusable-docs.yml@0452a89407991c62512a64381eda175b96dbd272 # v8.3.1
     with:
       dry-run: ${{ inputs.dry-run || false }}
 name: Generate & deploy docs
