@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [60.1.0] - 2026-10-21
+
+### Fixed
+
+- **Classic reads over POST are retried on a transient failure.** The Classic wire serves its reports, logs, tiles and group reads over POST (`/EnergyCost/Report`, the six `/Report/*` endpoints, `/Group/Get`, `/Tile/Get2`); declared `idempotent` to api-core 2.1.0, they get the transient retry a GET gets (500, 502, 503, 504 — four retries, a second to sixteen with jitter) and hold no sync tick, while the writes stay single-shot. Measured 2026-10-21 on a Homey: the hourly and nightly report bursts drew empty-bodied 500s and 502s from MELCloud for some devices, and a report that fails once an hour or once a night is what the host's "energy reports failing" warning counts.
+- **api-core 2.1.0 adopted**: a 500 on a read is transient like 502/503/504, and a POST can be declared an idempotent read.
 
 ### Changed
 

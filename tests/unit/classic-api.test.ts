@@ -87,6 +87,10 @@ const errorEntry = (
   ...overrides,
 })
 
+// The api-core transient budget: four retries, a second to sixteen, plus
+// a quarter of jitter.
+const RETRY_BUDGET_MS = 40_000
+
 describe('mELCloud Classic API', () => {
   let melCloudApi: typeof ClassicAPI
 
@@ -459,6 +463,9 @@ describe('mELCloud Classic API', () => {
   })
 
   describe('api endpoints', () => {
+    // Covers api-core's first retry delay (a second, plus jitter).
+    const RETRY_WINDOW_MS = 5000
+
     const reportPostData = {
       DeviceID: 1,
       FromDate: '2024-01-01',
@@ -590,6 +597,48 @@ describe('mELCloud Classic API', () => {
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ method: 'post', url: path }),
       )
+    })
+
+    // Classic serves its reports over POST: declared idempotent, a read
+    // gets api-core's transient retry like a GET, while a write does
+    // not. The backoff's first delay is a second and a quarter at most.
+    it('retries a read over POST on a transient failure', async () => {
+      mockLoginAndList()
+      const api = await createApi({ password: 'pass', username: 'user' })
+      mockRequest
+        .mockRejectedValueOnce(
+          createHttpError({
+            message: 'Request failed with status code 502',
+            status: 502,
+            url: '/EnergyCost/Report',
+          }),
+        )
+        .mockResolvedValueOnce(mockHttpResponse(ataEnergyResponse))
+
+      const pending = api.getEnergy({ postData: cast(reportPostData) })
+      await vi.advanceTimersByTimeAsync(RETRY_WINDOW_MS)
+
+      expect(okValue(await pending)).toStrictEqual(ataEnergyResponse)
+      // Sign-in, listing, the refused read and its retry.
+      expect(mockRequest).toHaveBeenCalledTimes(4)
+    })
+
+    it('never retries a write on a transient failure', async () => {
+      mockLoginAndList()
+      const api = await createApi({ password: 'pass', username: 'user' })
+      mockRequest.mockRejectedValueOnce(
+        createHttpError({
+          message: 'Request failed with status code 502',
+          status: 502,
+          url: '/Device/Power',
+        }),
+      )
+
+      await expect(
+        api.updatePower({ postData: cast({ DeviceIds: [1], Power: true }) }),
+      ).rejects.toThrow('status code 502')
+      // Sign-in, listing, the one refused write.
+      expect(mockRequest).toHaveBeenCalledTimes(3)
     })
 
     it('returns validated energy data for a well-formed ATA payload', async () => {
@@ -993,6 +1042,9 @@ describe('mELCloud Classic API', () => {
       )
     })
 
+    // A 500 on a read is retried (api-core 2.1.0): a persistent one
+    // propagates once the backoff budget is spent, which the timers
+    // below cover (four retries, a second to sixteen plus jitter).
     it('propagates transport failure from getErrorEntries', async () => {
       mockLoginAndList()
       const api = await createApi({ password: 'pass', username: 'user' })
@@ -1003,7 +1055,9 @@ describe('mELCloud Classic API', () => {
           url: '/Report/GetUnitErrorLog2',
         }),
       )
-      const result = await api.getErrorLog({ from: '2024-01-01' }, [1])
+      const pending = api.getErrorLog({ from: '2024-01-01' }, [1])
+      await vi.advanceTimersByTimeAsync(RETRY_BUDGET_MS)
+      const result = await pending
 
       expect(result.ok).toBe(false)
       expect(!result.ok && result.error.kind).toBe('server')
