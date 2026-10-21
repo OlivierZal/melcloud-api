@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [60.2.0] - 2026-10-22
+
+### Fixed
+
+- **A read whose transport failed is retried.** api-core 2.2.0 adopted: `TypeError: fetch failed` (DNS, connect timeout, reset, TLS) and the client's own 30 s `TimeoutError` are transient on a read, like a 500/502/503/504, so the Classic reports and the Home telemetry get four retries with backoff when the connection itself fails. Measured 2026-10-22 at 01:05 on a Homey: the 23 `EnergyCost/Report` reads fired within half a second drew 14 connect timeouts and 9 request timeouts — no HTTP status at all — while the same burst passed thirty seconds later from a second host on the same public IP.
+- **The log line of a failed request spells out its `cause` chain** (`— caused by ConnectTimeoutError: Connect Timeout Error (UND_ERR_CONNECT_TIMEOUT)`): a host logger prints an error as its message, and `TypeError: fetch failed` on its own named nothing in the diagnostic reports.
+
 ## [60.1.0] - 2026-10-21
 
 ### Fixed
@@ -958,7 +965,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.1.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.2.0...HEAD
+[60.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.1.0...v60.2.0
 [60.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.0.0...v60.1.0
 [60.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.7.1...v60.0.0
 [59.7.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.7.0...v59.7.1

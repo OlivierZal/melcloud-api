@@ -52,6 +52,27 @@ export const classifyError = (error: unknown): ApiRequestError => {
 
 const DEFAULT_TIMEOUT_MS = 30_000
 
+// A host logger prints an error as its message, and Node's fetch keeps
+// the detail of a network failure on `cause` (`TypeError: fetch failed`
+// says nothing; the connect timeout, the reset or the DNS answer is one
+// level down): the chain is spelled out, cycle-guarded, so a diagnostic
+// report names the failure.
+const describeCauses = (error: unknown): string => {
+  const seen = new Set<object>()
+  const parts: string[] = []
+  let current: unknown = error instanceof Error ? error.cause : undefined
+  while (current instanceof Error && !seen.has(current)) {
+    seen.add(current)
+    const code =
+      'code' in current && typeof current.code === 'string'
+        ? ` (${current.code})`
+        : ''
+    parts.push(`${current.name}: ${current.message}${code}`)
+    current = current.cause
+  }
+  return parts.length === 0 ? '' : ` — caused by ${parts.join(' — caused by ')}`
+}
+
 /**
  * Subclass-internal options injected into the {@link BaseAPI}
  * constructor. Distinct from {@link BaseAPIConfig} (the user-facing
@@ -259,6 +280,7 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
       this.logger.error(
         `[${method.toUpperCase()} ${url}] request or validation failed:`,
         error,
+        describeCauses(error),
       )
       return err(classifyError(error))
     }

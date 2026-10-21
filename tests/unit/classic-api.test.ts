@@ -91,6 +91,19 @@ const errorEntry = (
 // a quarter of jitter.
 const RETRY_BUDGET_MS = 40_000
 
+// The shape undici hangs on `TypeError: fetch failed` when the connect
+// phase times out, and an error whose cause is itself: the chain walk
+// must stop after one.
+const connectTimeout = (): Error =>
+  Object.assign(new Error('Connect Timeout Error'), {
+    code: 'UND_ERR_CONNECT_TIMEOUT',
+  })
+const loopingError = (): Error => {
+  const loop = new Error('loop')
+  Object.defineProperty(loop, 'cause', { value: loop })
+  return loop
+}
+
 describe('mELCloud Classic API', () => {
   let melCloudApi: typeof ClassicAPI
 
@@ -1039,6 +1052,57 @@ describe('mELCloud Classic API', () => {
 
       await expect(api.getErrorLog({ to: 'not-a-date' }, [1])).rejects.toThrow(
         'Invalid DateTime',
+      )
+    })
+
+    // A host logger prints an error as its message, so the chain under
+    // `cause` — where Node's fetch keeps the detail of a network
+    // failure — is spelled out on the same line. The failure is
+    // transient to api-core 2.2.0, hence the budget's worth of timers.
+    it.each([
+      {
+        described:
+          ' — caused by Error: Connect Timeout Error (UND_ERR_CONNECT_TIMEOUT)',
+        rejection: new TypeError('fetch failed', { cause: connectTimeout() }),
+        what: 'a coded cause',
+      },
+      {
+        described: ' — caused by Error: socket hang up',
+        rejection: new TypeError('fetch failed', {
+          cause: new Error('socket hang up'),
+        }),
+        what: 'a cause without a code',
+      },
+      {
+        described: ' — caused by Error: loop',
+        rejection: new TypeError('fetch failed', { cause: loopingError() }),
+        what: 'a cyclic cause chain, once',
+      },
+      {
+        described: '',
+        rejection: 'boom',
+        what: 'a rejection that is not an error',
+      },
+    ])('spells out $what in the log line', async ({ described, rejection }) => {
+      const logger = createLogger()
+      mockLoginAndList()
+      const api = await createApi({
+        logger,
+        password: 'pass',
+        username: 'user',
+      })
+      mockRequest.mockRejectedValue(rejection)
+
+      const pending = api.getValues({ params: { buildingId: 1, id: 1 } })
+      await vi.advanceTimersByTimeAsync(RETRY_BUDGET_MS)
+      const result = await pending
+
+      expect(result.ok).toBe(false)
+      expect(logger.error).toHaveBeenCalledWith(
+        '[Classic]',
+        '[GET /Device/Get] request or validation failed:',
+        rejection,
+        described,
       )
     })
 

@@ -206,6 +206,16 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   empty-bodied 500s and 502s from MELCloud on some devices every hour;
   without the retry, three consecutive misses on one device hold the
   host's "energy reports failing" warning. A write never gets the flag.
+- The nightly Classic failure was never an HTTP status: at 01:05 the 23
+  `EnergyCost/Report` reads a Homey fires within half a second drew 14
+  `TypeError: fetch failed` at undici's 10 s connect timeout and 9
+  `TimeoutError` at the client's 30 s budget (2026-10-22), while the
+  same burst passed 30 s later from a second host on the same public
+  IP. api-core 2.2.0 retries a read on those too (`isTransientFailure`);
+  the log line now spells out the `cause` chain, since a host logger
+  prints only the message. If a night still fails under the retry, the
+  next lever is the burst itself (one connection pool per origin, or
+  staggered report timers), not a longer timeout.
 - Classic `/EnergyCost/Report` returns per-bucket arrays for BOTH types
   (ATA per-mode consumption; ATW consumed + produced per category) with
   numeric `Labels`/`LabelType` — day-of-week labels are .NET 0-based
