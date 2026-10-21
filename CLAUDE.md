@@ -198,6 +198,14 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   the cross-dialect `isAvailable` contract (Classic: 24 h staleness;
   Home: the `/context` `isConnected` flag) — consumers must never map
   the raw `Offline` flag to anything (com.melcloud #1479/#1481).
+- Classic serves its reads over POST (`/EnergyCost/Report`, `/Report/*`,
+  `/Group/Get`, `/Tile/Get2`): each passes `...READ_OVER_POST`
+  (`idempotent: true`) so api-core retries it like a GET on a 500/502/
+  503/504 and holds no sync tick for it. Measured 2026-10-21 on a Homey:
+  the :05 bursts (sixteen Home reads, thirteen Classic reports) draw
+  empty-bodied 500s and 502s from MELCloud on some devices every hour;
+  without the retry, three consecutive misses on one device hold the
+  host's "energy reports failing" warning. A write never gets the flag.
 - Classic `/EnergyCost/Report` returns per-bucket arrays for BOTH types
   (ATA per-mode consumption; ATW consumed + produced per category) with
   numeric `Labels`/`LabelType` — day-of-week labels are .NET 0-based

@@ -162,6 +162,13 @@ const withModelledDevices = <
  * ClassicAPI endpoint calls. Uses a private constructor — create instances via {@link ClassicAPI.create}.
  * @category API Clients
  */
+// Classic serves its reports, logs, tiles and group reads over POST.
+// Declared idempotent, they are reads to api-core: retried on a
+// transient failure like a GET, and holding no sync tick. The writes
+// below stay plain POSTs — a retry re-sends a read, never a write.
+// The nightly `EnergyCost/Report` burst motivated it (2026-10).
+const READ_OVER_POST = { idempotent: true } as const
+
 export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   /**
    * BCP-47 locale supplied via {@link ClassicAPIConfig.locale}, or
@@ -254,7 +261,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.safeRequest<ClassicEnergyData<T>>(
       'post',
       '/EnergyCost/Report',
-      { data: postData, schema: ClassicEnergyDataSchema },
+      { ...READ_OVER_POST, data: postData, schema: ClassicEnergyDataSchema },
     )
   }
 
@@ -266,7 +273,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.safeRequest<ClassicErrorLogData[] | ClassicFailureData>(
       'post',
       '/Report/GetUnitErrorLog2',
-      { data: postData },
+      { ...READ_OVER_POST, data: postData },
     )
   }
 
@@ -343,6 +350,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData: ClassicGetGroupPostData
   }): Promise<Result<ClassicGetGroupData>> {
     return this.safeRequest<ClassicGetGroupData>('post', '/Group/Get', {
+      ...READ_OVER_POST,
       data: postData,
     })
   }
@@ -367,7 +375,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.safeRequest<ClassicReportData>(
       'post',
       '/Report/GetHourlyTemperature',
-      { data: postData },
+      { ...READ_OVER_POST, data: postData },
     )
   }
 
@@ -379,7 +387,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.safeRequest<ClassicReportData>(
       'post',
       '/Report/GetInternalTemperatures2',
-      { data: postData },
+      { ...READ_OVER_POST, data: postData },
     )
   }
 
@@ -391,7 +399,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.safeRequest<ClassicOperationModeLogData>(
       'post',
       '/Report/GetOperationModeLog2',
-      { data: postData },
+      { ...READ_OVER_POST, data: postData },
     )
   }
 
@@ -403,7 +411,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.safeRequest<ClassicReportData>(
       'post',
       '/Report/GetSignalStrength',
-      { data: postData },
+      { ...READ_OVER_POST, data: postData },
     )
   }
 
@@ -415,7 +423,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     return this.safeRequest<ClassicReportData>(
       'post',
       '/Report/GetTemperatureLog2',
-      { data: postData },
+      { ...READ_OVER_POST, data: postData },
     )
   }
 
@@ -425,6 +433,7 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
     postData: ClassicTilesPostData
   }): Promise<Result<ClassicTilesData>> {
     return this.safeRequest<ClassicTilesData>('post', '/Tile/Get2', {
+      ...READ_OVER_POST,
       data: postData,
     })
   }

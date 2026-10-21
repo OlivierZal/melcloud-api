@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [60.1.0] - 2026-10-21
+
+### Fixed
+
+- **Classic reads over POST are retried on a transient failure.** The Classic wire serves its reports, logs, tiles and group reads over POST (`/EnergyCost/Report`, the six `/Report/*` endpoints, `/Group/Get`, `/Tile/Get2`); declared `idempotent` to api-core 2.1.0, they get the transient retry a GET gets (500, 502, 503, 504 — four retries, a second to sixteen with jitter) and hold no sync tick, while the writes stay single-shot. Measured 2026-10-21 on a Homey: the hourly and nightly report bursts drew empty-bodied 500s and 502s from MELCloud for some devices, and a report that fails once an hour or once a night is what the host's "energy reports failing" warning counts.
+- **api-core 2.1.0 adopted**: a 500 on a read is transient like 502/503/504, and a POST can be declared an idempotent read.
+
 ### Changed
 
 - **Internal**: the two `EffectiveFlags` bit operations live in one module (`combineFlags`, `hasFlag`), named at their three call sites instead of spelled; `matchObject` funnels vitest's `any` through `unknown`; one integration mock uses the suite's `resolved` helper. From the 2026-10-15 audit of the family's `eslint-disable` directives; no API or behaviour change.
@@ -951,7 +958,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.0.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.1.0...HEAD
+[60.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.0.0...v60.1.0
 [60.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.7.1...v60.0.0
 [59.7.1]: https://github.com/OlivierZal/melcloud-api/compare/v59.7.0...v59.7.1
 [59.7.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.6.0...v59.7.0
