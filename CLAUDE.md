@@ -807,9 +807,11 @@ extended them.
 Ten workflows are stubs calling the family reusables in
 OlivierZal/configs, pinned `@<sha> # vX.Y.Z`: `ci`, `claude`,
 `claude-code-review`, `claude-issue-triage`, `dependabot`,
-`dependency-review`, `pr-title`, `zizmor` (`claude-dependabot-fix` and
-`.github/zizmor.yml` went with configs 6.0.0, which retired that
-workflow; the home-made
+`dependency-review`, `pr-title`, `zizmor` (`claude-dependabot-fix` went
+with configs 6.0.0, which retired that workflow and the
+`.github/zizmor.yml` ignore that existed only for it — the file is back
+since zizmor 1.31 for one line-scoped entry, the `claude` stub's
+owner-gated `issue_comment`; the home-made
 `audit` workflow is gone — `dependency-review` replaced it with configs
 3.1.0, 2026-08-10) and, since configs 5.0.0, `docs` and `publish` over
 `reusable-docs.yml` / `reusable-publish.yml`. The caller keeps the
