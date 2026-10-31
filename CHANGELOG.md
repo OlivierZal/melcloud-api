@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [60.3.0] - 2026-10-31
+
+### Changed
+
+- **A failure the SDK has a class for is logged as ONE line naming its cause chain, with no stack.** api-core 2.3.0 adopted: an `HttpError`, one of the `APIError` family (`AuthenticationError`, `ValidationError`, …) or a transport failure (`fetch failed`, the client's `TimeoutError`, a caller's abort), anywhere in the `cause` chain, is an expected condition of the wire, and its stack names only the transport and the library — ten frames that read as a crash in a diagnostic report (measured by the core on a com.melcloud report of 2026-10-31: MELCloud's nightly window printed one `TimeoutError` over ten transport frames, under a transient the streak had already reduced to one line per episode). The sync cycle's `Failed to fetch devices:` and the session resume's `Session resume failed:` lines are the core's and change with the pin: `Session resume failed: AuthenticationError: MELCloud rejected the credentials — caused by HttpError: Unauthorized` on Home, `Session resume failed: AuthenticationError: MELCloud Classic rejected the credentials (ErrorId 1)` on Classic. This SDK's three own seats go through the core's `logFailure` the same way: `safeRequest`'s line — `[GET /Device/Get] request or validation failed: TypeError: fetch failed — caused by Error: Connect Timeout Error (UND_ERR_CONNECT_TIMEOUT)` —, the Home refresh-token exchange's — `Refresh token exchange failed: HttpError: Request to https://auth.melcloudhome.com/connect/token failed with status 400` — and the after-write registry refresh's `Failed to refresh registry after mutation:`. A programming error — anything the core has no class for — keeps its error object, so the host prints the stack that locates it; a `RegistrySyncError` is judged by what it wraps; a validator's multi-line issue list folds onto the one line.
+- **Internal**: `describeCauses`, the 60.2.0 hand copy that spelled the chain beside the error object on `safeRequest`'s line, is gone — module-private to `src/api/base.ts` and never exported, so nothing in the package's surface changes. `refreshAccessToken` (internal to the Home sign-in) takes the `Logger` it is always handed instead of an optional `{ error }` sink.
+
 ## [60.2.0] - 2026-10-22
 
 ### Fixed
@@ -965,7 +972,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.2.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.3.0...HEAD
+[60.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.2.0...v60.3.0
 [60.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.1.0...v60.2.0
 [60.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.0.0...v60.1.0
 [60.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v59.7.1...v60.0.0

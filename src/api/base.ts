@@ -1,5 +1,5 @@
 import type { z } from 'zod'
-import { SessionAPI } from '@olivierzal/api-core'
+import { logFailure, SessionAPI } from '@olivierzal/api-core'
 
 import type { RateLimitGate } from '../resilience/index.ts'
 import { AuthenticationError, RateLimitError } from '../errors/index.ts'
@@ -51,27 +51,6 @@ export const classifyError = (error: unknown): ApiRequestError => {
 }
 
 const DEFAULT_TIMEOUT_MS = 30_000
-
-// A host logger prints an error as its message, and Node's fetch keeps
-// the detail of a network failure on `cause` (`TypeError: fetch failed`
-// says nothing; the connect timeout, the reset or the DNS answer is one
-// level down): the chain is spelled out, cycle-guarded, so a diagnostic
-// report names the failure.
-const describeCauses = (error: unknown): string => {
-  const seen = new Set<object>()
-  const parts: string[] = []
-  let current: unknown = error instanceof Error ? error.cause : undefined
-  while (current instanceof Error && !seen.has(current)) {
-    seen.add(current)
-    const code =
-      'code' in current && typeof current.code === 'string'
-        ? ` (${current.code})`
-        : ''
-    parts.push(`${current.name}: ${current.message}${code}`)
-    current = current.cause
-  }
-  return parts.length === 0 ? '' : ` — caused by ${parts.join(' — caused by ')}`
-}
 
 /**
  * Subclass-internal options injected into the {@link BaseAPI}
@@ -277,10 +256,16 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
     try {
       return ok(await this.requestData<T>(method, url, options))
     } catch (error) {
-      this.logger.error(
+      // A failure the core has a class for — an `HttpError`, the
+      // `APIError` family, a transport failure, anywhere in the `cause`
+      // chain — is ONE line naming that chain: a host logger prints an
+      // error as its message, and a transient's transport frames read as
+      // a crash in a diagnostic report. Anything else keeps its error
+      // object, whose stack is what locates a bug.
+      logFailure(
+        this.logger,
         `[${method.toUpperCase()} ${url}] request or validation failed:`,
         error,
-        describeCauses(error),
       )
       return err(classifyError(error))
     }

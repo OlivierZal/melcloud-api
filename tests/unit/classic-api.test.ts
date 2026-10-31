@@ -210,6 +210,23 @@ describe('mELCloud Classic API', () => {
   // it dropped, and keeps the two reasons apart: one calls for a
   // release that adds the model, the other for an issue against the
   // payload.
+  // One failed `getValues` through `safeRequest`, the transient-retry
+  // budget spent (a non-transient rejection makes the advance a no-op).
+  const failGetValues = async (
+    rejection: unknown,
+  ): Promise<{
+    logger: ReturnType<typeof createLogger>
+    result: Awaited<ReturnType<ClassicAPI['getValues']>>
+  }> => {
+    const logger = createLogger()
+    mockLoginAndList()
+    const api = await createApi({ logger, password: 'pass', username: 'user' })
+    mockRequest.mockRejectedValue(rejection)
+    const pending = api.getValues({ params: { buildingId: 1, id: 1 } })
+    await vi.advanceTimersByTimeAsync(RETRY_BUDGET_MS)
+    return { logger, result: await pending }
+  }
+
   describe('the dropped-device report', () => {
     it('names the id and the reason of an entry whose type is unmodelled', async () => {
       const logger = await fetchWithLogger(
@@ -1055,54 +1072,67 @@ describe('mELCloud Classic API', () => {
       )
     })
 
-    // A host logger prints an error as its message, so the chain under
-    // `cause` — where Node's fetch keeps the detail of a network
-    // failure — is spelled out on the same line. The failure is
-    // transient to api-core 2.2.0, hence the budget's worth of timers.
+    // The line follows the core's rule (`logFailure`): a failure it has a
+    // class for — a transport failure, an `HttpError` — is ONE line
+    // naming its cause chain, outermost first, with no error object: a
+    // host logger prints an error as its message, `fetch failed` on its
+    // own names nothing, and a transient's transport frames read as a
+    // crash in a report. The chain walk visits a cycle once.
     it.each([
       {
-        described:
-          ' — caused by Error: Connect Timeout Error (UND_ERR_CONNECT_TIMEOUT)',
+        chain:
+          'TypeError: fetch failed — caused by Error: Connect Timeout Error (UND_ERR_CONNECT_TIMEOUT)',
         rejection: new TypeError('fetch failed', { cause: connectTimeout() }),
         what: 'a coded cause',
       },
       {
-        described: ' — caused by Error: socket hang up',
+        chain: 'TypeError: fetch failed — caused by Error: socket hang up',
         rejection: new TypeError('fetch failed', {
           cause: new Error('socket hang up'),
         }),
         what: 'a cause without a code',
       },
       {
-        described: ' — caused by Error: loop',
+        chain: 'TypeError: fetch failed — caused by Error: loop',
         rejection: new TypeError('fetch failed', { cause: loopingError() }),
         what: 'a cyclic cause chain, once',
       },
       {
-        described: '',
-        rejection: 'boom',
-        what: 'a rejection that is not an error',
+        chain: 'HttpError: Status 500',
+        rejection: createHttpError({
+          message: 'Status 500',
+          status: 500,
+          url: '/Device/Get',
+        }),
+        what: 'a persistent server error',
       },
-    ])('spells out $what in the log line', async ({ described, rejection }) => {
-      const logger = createLogger()
-      mockLoginAndList()
-      const api = await createApi({
-        logger,
-        password: 'pass',
-        username: 'user',
-      })
-      mockRequest.mockRejectedValue(rejection)
+    ])(
+      'logs a known failure with $what as one line naming its cause chain',
+      async ({ chain, rejection }) => {
+        const { logger, result } = await failGetValues(rejection)
 
-      const pending = api.getValues({ params: { buildingId: 1, id: 1 } })
-      await vi.advanceTimersByTimeAsync(RETRY_BUDGET_MS)
-      const result = await pending
+        expect(result.ok).toBe(false)
+        expect(logger.error).toHaveBeenCalledWith(
+          '[Classic]',
+          `[GET /Device/Get] request or validation failed: ${chain}`,
+        )
+      },
+    )
+
+    // Anything the core has no class for keeps its error object: a
+    // programming error's stack is what locates it, and a thrown
+    // primitive has no chain to spell.
+    it.each([
+      { rejection: new RangeError('bug'), what: 'a programming error' },
+      { rejection: 'boom', what: 'a rejection that is not an error' },
+    ])('logs $what with its error object', async ({ rejection }) => {
+      const { logger, result } = await failGetValues(rejection)
 
       expect(result.ok).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
         '[Classic]',
         '[GET /Device/Get] request or validation failed:',
         rejection,
-        described,
       )
     })
 
