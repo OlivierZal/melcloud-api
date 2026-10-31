@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 
+import { logFailure } from '@olivierzal/api-core'
 import { CookieJar } from 'tough-cookie'
 
 import type { HomeTokenResponse } from '../types/index.ts'
@@ -11,6 +12,7 @@ import {
   HomeTokenResponseSchema,
   parseOrThrow,
 } from '../validation/index.ts'
+import type { Logger } from './types.ts'
 
 const CLIENT_ID = 'homemobile'
 const REDIRECT_URI = 'melcloudhome://'
@@ -542,14 +544,15 @@ export const performTokenAuth = async ({
 /**
  * Exchange a refresh token for a fresh access token. Returns `null`
  * on **any** failure so the caller can fall through to a full re-auth
- * without threading an exception up the stack — but logs the error
- * reason via the optional logger so the failure mode (expired refresh
- * token vs. transient network flake vs. 5xx) stays observable.
+ * without threading an exception up the stack — and logs the failure
+ * so its mode stays observable: a failure the core has a class for (a
+ * refused or expired grant is a 4xx `HttpError`, a network blip a
+ * `fetch failed`) as ONE line naming its cause chain, anything else
+ * with its error object, whose stack is what locates a bug.
  * @param options - Refresh token plus logging and abort plumbing.
  * @param options.refreshToken - The user's refresh token.
  * @param options.abortSignal - Optional signal to abort the refresh.
- * @param options.logger - Optional logger; defaults to no-op.
- * @param options.logger.error - Error-level sink used for the diagnostic.
+ * @param options.logger - Sink the failure line is written to.
  * @returns The new token response, or `null` if refresh failed.
  */
 export const refreshAccessToken = async ({
@@ -557,9 +560,9 @@ export const refreshAccessToken = async ({
   logger,
   refreshToken,
 }: {
+  logger: Logger
   refreshToken: string
   abortSignal?: AbortSignal
-  logger?: { readonly error: (...args: unknown[]) => void }
 }): Promise<HomeTokenResponse | null> => {
   const request = {
     params: {
@@ -572,7 +575,7 @@ export const refreshAccessToken = async ({
   try {
     return await tokenRequest(request)
   } catch (error) {
-    logger?.error('Refresh token exchange failed:', error)
+    logFailure(logger, 'Refresh token exchange failed:', error)
     return null
   }
 }

@@ -178,6 +178,14 @@ interface SessionLifecycleDriver {
    */
   readonly logLabel: string
   /**
+   * The cause chain a refused sign-in's `AuthenticationError` spells
+   * on this dialect — what the core's `logFailure` writes after the
+   * label. Classic's refusal rides the body (`LoginData: null`), so
+   * the chain is the one link; Home's is a narrowed `401`, so the
+   * refused `HttpError` follows as its cause.
+   */
+  readonly refusedSignInChain: string
+  /**
    * Payload a successful registry cycle answers. Exposed so a clause
    * can hand it to a transport of its own making.
    */
@@ -516,6 +524,8 @@ const stageClassic = ({
 const classicDriver: SessionLifecycleDriver = {
   announcesThrottleWindow: true,
   logLabel: '[Classic]',
+  refusedSignInChain:
+    'AuthenticationError: MELCloud Classic rejected the credentials',
   registryPayload: classicPayload,
   sessionKeys: ['contextKey'],
   stage: stageClassic,
@@ -638,6 +648,8 @@ const homeDriver: SessionLifecycleDriver = {
   // unrepresentable here, and the staging above rightly ignores it.
   announcesThrottleWindow: false,
   logLabel: '[Home]',
+  refusedSignInChain:
+    'AuthenticationError: MELCloud rejected the credentials — caused by HttpError: Unauthorized',
   registryCycleCount: homeContextCount,
   registryPayload: homePayload,
   sessionKeys: ['accessToken', 'refreshToken'],
@@ -924,7 +936,10 @@ const describeSessionLifecycleContract = (
     // Classic that caller is the reactive-401 path (see the replay
     // clause below). The session itself is untouched: only the VERDICT
     // is at stake, which is what makes the two shapes distinguishable
-    // by the sign-in round-trip alone.
+    // by the sign-in round-trip alone. The refusal is a failure the core
+    // has a class for, so its line names the cause chain and carries no
+    // error object: a report reads one line where a stack read as a
+    // crash.
     it('reports a refused re-sign-in as a failed resume, standing session or not', async () => {
       const logger = createLogger()
       const { settingManager } = createSettingStore(CREDENTIALS)
@@ -939,8 +954,7 @@ const describeSessionLifecycleContract = (
       expect(api.isAuthenticated()).toBe(true)
       expect(logger.error).toHaveBeenCalledWith(
         driver.logLabel,
-        'Session resume failed:',
-        expect.any(AuthenticationError),
+        `Session resume failed: ${driver.refusedSignInChain}`,
       )
     })
 
@@ -1224,10 +1238,11 @@ const describeSessionLifecycleContract = (
 
       await expect(api.fetch()).resolves.toStrictEqual([])
 
+      // A refused cycle is a known failure: one line, its cause chain,
+      // no error object.
       expect(logger.error).toHaveBeenCalledWith(
         driver.logLabel,
-        'Failed to fetch devices:',
-        expect.any(AuthenticationError),
+        `Failed to fetch devices: AuthenticationError: ${REGISTRY_REFUSED}`,
       )
     })
 

@@ -211,9 +211,19 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `TypeError: fetch failed` at undici's 10 s connect timeout and 9
   `TimeoutError` at the client's 30 s budget (2026-10-22), while the
   same burst passed 30 s later from a second host on the same public
-  IP. api-core 2.2.0 retries a read on those too (`isTransientFailure`);
-  the log line now spells out the `cause` chain, since a host logger
-  prints only the message. If a night still fails under the retry, the
+  IP. api-core 2.2.0 retries a read on those too (`isTransientFailure`),
+  and every failure line the SDK writes goes through the core's
+  `logFailure` (api-core 2.3.0, adopted with 60.3.0): a failure the core
+  has a class for — an `HttpError`, the `APIError` family, a transport
+  failure, anywhere in the `cause` chain — is ONE line naming that
+  chain and carries no error object, because a host logger prints only
+  the message and a transient's ten transport frames read as a crash in
+  a report; anything else keeps the object and its stack. The seats
+  here are `safeRequest`, the refresh-token exchange and the after-write
+  refresh of `fetchDevices`; the cycle and resume lines are the core's
+  own. Never spell a chain locally again (60.2.0's `describeCauses` went
+  with the adoption) and never log a classified failure as
+  `(label, error)`. If a night still fails under the retry, the
   next lever is the burst itself (one connection pool per origin, or
   staggered report timers), not a longer timeout.
 - Classic `/EnergyCost/Report` returns per-bucket arrays for BOTH types
@@ -688,6 +698,24 @@ already follow with a refresh are unchanged. 1.7.0's
 refusals (`ErrorId`, `LoginData: null`) are read at their own
 boundaries into `AuthenticationError`/`AuthenticationThrottledError`,
 and a non-2xx body says nothing the status line does not.
+
+api-core 2.3.0 (adopted with 60.3.0) crosses one small twin:
+`logFailure(logger, label, error)`, with `isKnownFailure` and
+`failureCauseChain` beside it. The core's two lines (`Failed to fetch
+devices:`, `Session resume failed:`) ride it with the pin; this repo's
+three seats call it directly — `safeRequest` (`src/api/base.ts`, whose
+60.2.0 `describeCauses` copy went with it), `refreshAccessToken`
+(`src/api/token-auth.ts`, whose `logger` is the core's `Logger`,
+required: its one caller always hands it) and the after-write refresh
+of `fetchDevices`. A known failure is one line, label then chain, with
+no error object; anything else is `(label, error)`, so a bug keeps its
+stack; a `RegistrySyncError` is judged by what it wraps. The kernel pins
+the one-line form per leg through the driver's `refusedSignInChain` —
+Classic's refusal rides the body (`LoginData: null`) and is one link,
+Home's is a narrowed 401 and names its `HttpError` cause — and the
+object form stays pinned where a plain `Error` is staged (home-api's
+redirect-limit, missing-form, PAR and token-exchange clauses). Both
+shapes are pinned at each of the three seats.
 
 `ClassicFacadeManager.get` ships the typed required overloads,
 `get(): null`, and ONE optional catch-all (`get(instance?: ClassicModel):

@@ -1,4 +1,9 @@
-import { cast, defined, mock } from '@olivierzal/api-core/testing'
+import {
+  cast,
+  createUnauthorizedError,
+  defined,
+  mock,
+} from '@olivierzal/api-core/testing'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { SyncCallback } from '../../src/api/index.ts'
@@ -215,14 +220,30 @@ describe(fetchDevices, () => {
     await expect(decorated.call({})).resolves.toBe('result')
   })
 
+  // The line follows the core's rule: a failure it has no class for
+  // keeps its error object, so a bug keeps the stack that locates it.
   it('logs via logger.error when when=after and the refresh throws', async () => {
     const { host, invoke, refresh } = setupFetchDevices({ when: 'after' })
-    refresh.mockRejectedValue(new Error('sync boom'))
+    const failure = new Error('sync boom')
+    refresh.mockRejectedValue(failure)
 
     await expect(invoke()).resolves.toBe('result')
     expect(host.logger.error).toHaveBeenCalledExactlyOnceWith(
       'Failed to refresh registry after mutation:',
-      expect.any(Error),
+      failure,
+    )
+  })
+
+  // A failure the core has a class for is ONE line naming its cause
+  // chain, with no error object: a report reads the refusal, not a
+  // stack.
+  it('logs a known after-refresh failure as one line naming its cause chain', async () => {
+    const { host, invoke, refresh } = setupFetchDevices({ when: 'after' })
+    refresh.mockRejectedValue(createUnauthorizedError('/context'))
+
+    await expect(invoke()).resolves.toBe('result')
+    expect(host.logger.error).toHaveBeenCalledExactlyOnceWith(
+      'Failed to refresh registry after mutation: HttpError: Unauthorized',
     )
   })
 })

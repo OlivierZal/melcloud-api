@@ -1579,6 +1579,9 @@ describe('melcloud home API', () => {
     it('should not trigger reactive retry during the OIDC flow', async () => {
       // PAR request fails with a 401. `resumeSession()` (called from
       // `initialize()`) catches and logs it; no session is established.
+      // The refusal is a known failure, so the line names its cause
+      // chain — the narrowed `AuthenticationError`, then the refused
+      // `HttpError` — and carries no error object.
       const logger = createLogger()
       mockFetch.mockRejectedValueOnce(httpUnauthorized())
       const api = await melCloudHomeApi.create({
@@ -1592,8 +1595,7 @@ describe('melcloud home API', () => {
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
         '[Home]',
-        'Session resume failed:',
-        expect.any(Error),
+        'Session resume failed: AuthenticationError: MELCloud rejected the credentials — caused by HttpError: Unauthorized',
       )
     })
 
@@ -1964,10 +1966,11 @@ describe('melcloud home API', () => {
         })
 
         expect(api.isAuthenticated()).toBe(false)
+        // A classified refusal is one line: label, class, message — no
+        // error object, no stack.
         expect(logger.error).toHaveBeenCalledWith(
           '[Home]',
-          'Session resume failed:',
-          expect.objectContaining({ message, name: 'AuthenticationError' }),
+          `Session resume failed: AuthenticationError: ${message}`,
         )
       },
     )
@@ -2149,8 +2152,7 @@ describe('melcloud home API', () => {
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
         '[Home]',
-        'Session resume failed:',
-        expect.any(Error),
+        'Session resume failed: AuthenticationError: Credential submission was not redirected',
       )
     })
 
@@ -2180,8 +2182,7 @@ describe('melcloud home API', () => {
       expect(api.isAuthenticated()).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
         '[Home]',
-        'Session resume failed:',
-        expect.any(Error),
+        'Session resume failed: AuthenticationError: No authorization code in callback (landed on melcloudhome://)',
       )
     })
   })
@@ -3144,30 +3145,62 @@ describe('melcloud home API', () => {
       }
     })
 
-    it('should fall back to full OIDC when token refresh fails', async () => {
-      vi.useFakeTimers()
-      mockTemporalNowInstant()
-      try {
-        setupSuccessfulLogin()
-        const api = await createApi({ syncIntervalMinutes: false })
+    const refreshFailed = new Error('refresh failed')
 
-        // Advance past token expiry
-        vi.advanceTimersByTime(3601 * MS_PER_SECOND)
+    // The refresh's failure line follows the core's rule (`logFailure`):
+    // a failure it has a class for — the token endpoint refusing the
+    // grant is an `HttpError` — is ONE line naming its cause chain, so a
+    // report reads the status and not a stack; anything else keeps its
+    // error object, whose stack is what locates a bug. Either way the
+    // flow falls back to a full OIDC sign-in.
+    it.each([
+      {
+        logged: [
+          'Refresh token exchange failed: HttpError: Request to https://auth.melcloudhome.com/connect/token failed with status 400',
+        ],
+        what: 'a refused grant as one line naming its cause chain',
+        stage: (): void => {
+          mockFetch.mockResolvedValueOnce(
+            mockFetchResponse({ error: 'invalid_grant' }, {}, 400),
+          )
+        },
+      },
+      {
+        logged: ['Refresh token exchange failed:', refreshFailed],
+        what: 'an unclassified failure with its error object',
+        stage: (): void => {
+          mockFetch.mockRejectedValueOnce(refreshFailed)
+        },
+      },
+    ])(
+      'should fall back to full OIDC when token refresh fails, logging $what',
+      async ({ logged, stage }) => {
+        vi.useFakeTimers()
+        mockTemporalNowInstant()
+        try {
+          const logger = createLogger()
+          setupSuccessfulLogin()
+          const api = await createApi({ logger, syncIntervalMinutes: false })
 
-        // Refresh fails
-        mockFetch.mockRejectedValueOnce(new Error('refresh failed'))
-        // Full re-auth succeeds
-        setupSuccessfulLogin()
-        mockRequest.mockResolvedValueOnce(
-          mockHttpResponse(mockContext, {}, 200),
-        )
-        const buildings = await api.fetch()
+          // Advance past token expiry
+          vi.advanceTimersByTime(3601 * MS_PER_SECOND)
 
-        expect(buildings).toStrictEqual([homeContextBuilding])
-      } finally {
-        vi.useRealTimers()
-      }
-    })
+          stage()
+          // Full re-auth succeeds
+          setupSuccessfulLogin()
+          mockRequest.mockResolvedValueOnce(
+            mockHttpResponse(mockContext, {}, 200),
+          )
+          const buildings = await api.fetch()
+
+          expect(buildings).toStrictEqual([homeContextBuilding])
+          expect(logger.error).toHaveBeenCalledWith('[Home]', ...logged)
+        } finally {
+          vi.mocked(Temporal.Now.instant).mockRestore()
+          vi.useRealTimers()
+        }
+      },
+    )
 
     it('should try token refresh on 401 before full re-auth', async () => {
       setupSuccessfulLogin()

@@ -1,3 +1,5 @@
+import { logFailure } from '@olivierzal/api-core'
+
 import type { Logger } from '../api/index.ts'
 
 // The hosts either carry the SDK logger under `logger` (`HomeAPI`,
@@ -15,7 +17,9 @@ const hasLogger = (host: object): host is { readonly logger: Logger } =>
  * - `when: 'after'`: the refresh runs post-method to capture server-side
  *   mutations whose response carries no device fields (Classic
  *   frost/holiday envelopes, Home setpoint PUTs). Fail-soft — refresh
- *   failures are logged through the host's `logger`, when it has one,
+ *   failures are logged through the host's `logger`, when it has one
+ *   (the core's `logFailure`: one line naming the cause chain of a
+ *   failure it has a class for, the error object for anything else),
  *   and swallowed so a stale-registry error cannot mask the landed
  *   mutation.
  *
@@ -52,7 +56,8 @@ export const fetchDevices =
           await refresh(this)
         } catch (error) {
           if (hasLogger(this)) {
-            this.logger.error(
+            logFailure(
+              this.logger,
               'Failed to refresh registry after mutation:',
               error,
             )
