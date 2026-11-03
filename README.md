@@ -123,6 +123,18 @@ if (!result.ok) {
 const energy = result.value
 ```
 
+A failure a host catches is logged the way the SDK logs its own: `logFailure(logger, label, error)` writes ONE line — the label, then the error's cause chain (`Write failed: TypeError: fetch failed — caused by ConnectTimeoutError: Connect Timeout Error (UND_ERR_CONNECT_TIMEOUT)`) — for a failure the SDK has a class for (`HttpError`, the `APIError` family, a transport failure, anywhere in the `cause` chain), whose stack would only name the transport; and the label followed by the error object for anything else, so a programming error keeps the stack that locates it. `isKnownFailure` and `failureCauseChain` are the two halves, for a host that writes the line itself. The three are `@olivierzal/api-core`'s, re-exported under their own names like the error classes, so a host pins this SDK alone; `logger` is any `Logger` (`error` and `log`, the console shape).
+
+```ts title="log-failure"
+import { logFailure } from '@olivierzal/melcloud-api'
+
+try {
+  await facade.updateValues({ power: false })
+} catch (error) {
+  logFailure(logger, 'Write failed:', error)
+}
+```
+
 ## Session management
 
 Both clients keep their session alive without caller involvement:

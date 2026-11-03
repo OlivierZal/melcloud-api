@@ -223,9 +223,15 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   refresh of `fetchDevices`; the cycle and resume lines are the core's
   own. Never spell a chain locally again (60.2.0's `describeCauses` went
   with the adoption) and never log a classified failure as
-  `(label, error)`. If a night still fails under the retry, the
-  next lever is the burst itself (one connection pool per origin, or
-  staggered report timers), not a longer timeout.
+  `(label, error)`. The apps reach the same three helpers through the
+  root barrel (60.4.0: `src/errors/index.ts` forwards `logFailure`,
+  `isKnownFailure` and `failureCauseChain` beside the core's error
+  family), so their own lines — com.melcloud's
+  `Energy report fetch failed:` — take the one-line form without a
+  direct api-core pin: the SDK stays the apps' only API boundary. If a
+  night still fails under the retry, the next lever is the burst itself
+  (one connection pool per origin, or staggered report timers), not a
+  longer timeout.
 - Classic `/EnergyCost/Report` returns per-bucket arrays for BOTH types
   (ATA per-mode consumption; ATW consumed + produced per category) with
   numeric `Labels`/`LabelType` — day-of-week labels are .NET 0-based
@@ -715,7 +721,13 @@ Classic's refusal rides the body (`LoginData: null`) and is one link,
 Home's is a narrowed 401 and names its `HttpError` cause — and the
 object form stays pinned where a plain `Error` is staged (home-api's
 redirect-limit, missing-form, PAR and token-exchange clauses). Both
-shapes are pinned at each of the three seats.
+shapes are pinned at each of the three seats. Since 60.4.0 the errors
+barrel forwards the three helpers to the apps under the core's names,
+the way it forwards `AuthenticationError` and `RegistrySyncError`, so a
+host's own failure line takes the same form through this SDK's pin
+(`errors.test.ts` pins each as the core's own binding, read from the
+package root); the rest of 2.3.0's surface — `failureReason`, the streak
+class, the reminder interval — stays the core's and this SDK's.
 
 `ClassicFacadeManager.get` ships the typed required overloads,
 `get(): null`, and ONE optional catch-all (`get(instance?: ClassicModel):
