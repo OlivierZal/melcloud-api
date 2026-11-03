@@ -31,7 +31,14 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 - `npm run format` / `npm run format:fix` — prettier.
 - `npm run docs` — typedoc. The config is `typedoc.config.js` (JSDoc-typed
   with `@ts-check`: typedoc cannot load `.ts` configs and silently ignores
-  them); validation warnings fail the build.
+  them); validation warnings fail the build. A symbol forwarded from the
+  core renders under the core's own comment, so a `{@link}` in it that
+  names a symbol this package does not export fails the gate here, and
+  nothing local can patch it: `externalSymbolLinkMappings` is consulted
+  only for TypeScript-resolved or `{@link !name}` references, and a JSDoc
+  block on the export specifier is read only when the symbol has no
+  comment of its own — the comment is fixed in api-core (2.3.1 did, for
+  `failureCauseChain`), never worked around here.
 
 ## Domain gotchas
 
@@ -727,7 +734,11 @@ the way it forwards `AuthenticationError` and `RegistrySyncError`, so a
 host's own failure line takes the same form through this SDK's pin
 (`errors.test.ts` pins each as the core's own binding, read from the
 package root); the rest of 2.3.0's surface — `failureReason`, the streak
-class, the reminder interval — stays the core's and this SDK's.
+class, the reminder interval — stays the core's and this SDK's. 60.4.0
+pins 2.3.1, whose only change is the three helpers' JSDoc (`@category
+Errors`, and `failureCauseChain` names `failureReason` in code font, no
+longer as a `{@link}` this package cannot resolve — the docs gotcha
+under `npm run docs`).
 
 `ClassicFacadeManager.get` ships the typed required overloads,
 `get(): null`, and ONE optional catch-all (`get(instance?: ClassicModel):
