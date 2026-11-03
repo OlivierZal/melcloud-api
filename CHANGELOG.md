@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [60.4.0] - 2026-11-03
+
+### Added
+
+- **The root barrel re-exports api-core's `logFailure`, `isKnownFailure` and `failureCauseChain`, so the apps log their own cloud failures as one line without a direct api-core dependency.** 60.3.0 gave this SDK's own seats the one-line form, but a host's lines — com.melcloud's `Energy report fetch failed:` — still printed the error object for every failure, ten transport frames for the transient the SDK's lines had reduced to one, because the helpers lived in api-core alone and the SDK is the apps' only API boundary (one exact pin for the family). The three ride the errors barrel beside `AuthenticationError` and `RegistrySyncError`, under the core's names: `logFailure(logger, 'Energy report fetch failed:', error)` writes the label and the cause chain for a failure the core has a class for (an `HttpError`, the `APIError` family, a transport failure, anywhere in the `cause` chain), the label and the error object for anything else, so a programming error keeps the stack that locates it; `isKnownFailure` and `failureCauseChain` are its two halves, for a host that writes the line itself. The `Logger` type the first argument takes was already exported. Nothing else of api-core's surface is forwarded. api-core 2.3.1 pinned — its only change is the helpers' JSDoc: `failureCauseChain`'s `{@link failureReason}`, a symbol a consumer forwarding only the helper cannot resolve, is now code font, and the three carry `@category Errors` — which is what lets the bare forward pass the docs build, since typedoc renders a forwarded symbol under the core's own comment.
+
 ## [60.3.0] - 2026-10-31
 
 ### Changed
@@ -972,7 +978,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.3.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.4.0...HEAD
+[60.4.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.3.0...v60.4.0
 [60.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.2.0...v60.3.0
 [60.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.1.0...v60.2.0
 [60.1.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.0.0...v60.1.0

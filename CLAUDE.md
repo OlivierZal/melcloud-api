@@ -31,7 +31,14 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 - `npm run format` / `npm run format:fix` — prettier.
 - `npm run docs` — typedoc. The config is `typedoc.config.js` (JSDoc-typed
   with `@ts-check`: typedoc cannot load `.ts` configs and silently ignores
-  them); validation warnings fail the build.
+  them); validation warnings fail the build. A symbol forwarded from the
+  core renders under the core's own comment, so a `{@link}` in it that
+  names a symbol this package does not export fails the gate here, and
+  nothing local can patch it: `externalSymbolLinkMappings` is consulted
+  only for TypeScript-resolved or `{@link !name}` references, and a JSDoc
+  block on the export specifier is read only when the symbol has no
+  comment of its own — the comment is fixed in api-core (2.3.1 did, for
+  `failureCauseChain`), never worked around here.
 
 ## Domain gotchas
 
@@ -223,9 +230,15 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   refresh of `fetchDevices`; the cycle and resume lines are the core's
   own. Never spell a chain locally again (60.2.0's `describeCauses` went
   with the adoption) and never log a classified failure as
-  `(label, error)`. If a night still fails under the retry, the
-  next lever is the burst itself (one connection pool per origin, or
-  staggered report timers), not a longer timeout.
+  `(label, error)`. The apps reach the same three helpers through the
+  root barrel (60.4.0: `src/errors/index.ts` forwards `logFailure`,
+  `isKnownFailure` and `failureCauseChain` beside the core's error
+  family), so their own lines — com.melcloud's
+  `Energy report fetch failed:` — take the one-line form without a
+  direct api-core pin: the SDK stays the apps' only API boundary. If a
+  night still fails under the retry, the next lever is the burst itself
+  (one connection pool per origin, or staggered report timers), not a
+  longer timeout.
 - Classic `/EnergyCost/Report` returns per-bucket arrays for BOTH types
   (ATA per-mode consumption; ATW consumed + produced per category) with
   numeric `Labels`/`LabelType` — day-of-week labels are .NET 0-based
@@ -715,7 +728,17 @@ Classic's refusal rides the body (`LoginData: null`) and is one link,
 Home's is a narrowed 401 and names its `HttpError` cause — and the
 object form stays pinned where a plain `Error` is staged (home-api's
 redirect-limit, missing-form, PAR and token-exchange clauses). Both
-shapes are pinned at each of the three seats.
+shapes are pinned at each of the three seats. Since 60.4.0 the errors
+barrel forwards the three helpers to the apps under the core's names,
+the way it forwards `AuthenticationError` and `RegistrySyncError`, so a
+host's own failure line takes the same form through this SDK's pin
+(`errors.test.ts` pins each as the core's own binding, read from the
+package root); the rest of 2.3.0's surface — `failureReason`, the streak
+class, the reminder interval — stays the core's and this SDK's. 60.4.0
+pins 2.3.1, whose only change is the three helpers' JSDoc (`@category
+Errors`, and `failureCauseChain` names `failureReason` in code font, no
+longer as a `{@link}` this package cannot resolve — the docs gotcha
+under `npm run docs`).
 
 `ClassicFacadeManager.get` ships the typed required overloads,
 `get(): null`, and ONE optional catch-all (`get(instance?: ClassicModel):
