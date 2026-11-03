@@ -131,7 +131,7 @@ import { logFailure } from '@olivierzal/melcloud-api'
 try {
   await facade.updateValues({ power: false })
 } catch (error) {
-  logFailure(logger, 'Write failed:', error)
+  logFailure(console, 'Write failed:', error)
 }
 ```
 
