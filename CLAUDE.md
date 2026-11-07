@@ -543,13 +543,15 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `#reportResumeFailure` therefore records a DEFINITIVE refusal
   (`#isCredentialRefused`; never a throttle — the pair may be valid,
   and prompting a re-log keeps the lockout alive — and never a
-  transport blip), the next ACCEPTED sign-in lifts it, and the
+  transport blip, which api-core 2.4.0 retries a minute later
+  instead), the next ACCEPTED sign-in lifts it, and the
   sync-cycle epilogue + `ensureAuthenticated` consult
   `isAuthenticated() && !refused` (the core's `isSessionServable()`,
   protected exactly so this repo's `ensureAuthenticated` reads the
   record instead of mirroring it — the record's writes stay the
-  core's) so the loss surfaces once per episode through the existing
-  machinery while the stored key deliberately stays. In-memory like the episode marker: a
+  core's) so the loss surfaces once per episode — announced the moment
+  the refusal is recorded since api-core 2.4.0 — while the stored key
+  deliberately stays. In-memory like the episode marker: a
   restart re-witnesses the refusal on its first gated sign-in, the
   persisted backoff keeping that sign-in honest. Kernel-pinned on both
   legs, throttle and transport negatives included.
@@ -737,7 +739,8 @@ the one-line form per leg through the driver's `refusedSignInChain` —
 Classic's refusal rides the body (`LoginData: null`) and is one link,
 Home's is a narrowed 401 and names its `HttpError` cause — and the
 object form stays pinned where a plain `Error` is staged (home-api's
-redirect-limit, missing-form, PAR and token-exchange clauses). Both
+redirect-limit, missing-form, PAR and token-exchange clauses, under the
+transient label since 2.4.0). Both
 shapes are pinned at each of the three seats. Since 60.4.0 the errors
 barrel forwards the three helpers to the apps under the core's names,
 the way it forwards `AuthenticationError` and `RegistrySyncError`, so a
@@ -749,6 +752,29 @@ pins 2.3.1, whose only change is the three helpers' JSDoc (`@category
 Errors`, and `failureCauseChain` names `failureReason` in code font, no
 longer as a `{@link}` this package cannot resolve — the docs gotcha
 under `npm run docs`).
+
+api-core 2.4.0 (adopted with 60.6.0) is behaviour only. A failed
+AUTOMATIC resume that is not an `AuthenticationError` — a transport
+blip, a 5xx, and on Home every OIDC flow fault that is not a refusal (a
+redirect loop, a missing login form, a PAR or token-exchange failure) —
+is retried a minute later (`loginBackoffUntil` armed for 60 s,
+automatic sign-ins waiting for that retry, one `Session resume failed,
+retried every minute:` line per streak) instead of arming nothing and
+letting the next cycle announce a loss and disarm for good; an explicit
+`authenticate()` failing at transport still arms nothing.
+`onAuthenticationLost` fires only for a DEFINITIVE loss — the stored
+credential refused, announced the moment the refusal is recorded (still
+once per episode), or a persisted session dead with no credential
+behind it. A cycle that ends unauthenticated over credentials nobody
+refused announces nothing and stays armed: the scheduled retry owns the
+recovery, or the heartbeat does when nothing was attempted — reachable
+on Home only, whose refresh predicate lets a cycle with no recorded
+expiry out without a sign-in, while every unauthenticated Classic cycle
+signs in first. Cognito's own refusals stay definitive because
+token-auth throws `AuthenticationError` for them (a re-rendered login
+page, a chain that lands without a code). The kernel pins the three
+branches; the additive surface (`isAuthFailure`,
+`dispatch(…, { authenticated: false })`) is not seated here.
 
 `ClassicFacadeManager.get` ships the typed required overloads,
 `get(): null`, and ONE optional catch-all (`get(instance?: ClassicModel):

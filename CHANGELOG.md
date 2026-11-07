@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [60.6.0] - 2026-11-07
+
+### Fixed
+
+- **A sign-in that failed without a refusal is retried every minute instead of leaving the client dormant.** api-core 2.4.0 adopted: when an automatic session restore fails and the server did not refuse the credentials — a transport blip, a 5xx, and on Home an OIDC flow fault (a redirect loop, a missing login form, a PAR or token-exchange failure) — automatic sign-ins pause for one minute (`loginBackoffUntil`, persisted) and one retry is scheduled at its end; the log reads `Session resume failed, retried every minute:` once per streak and `Signed in again after N failed attempts` when it recovers. Until now such a failure armed nothing, and the sync cycle after it announced `onAuthenticationLost` and disarmed the auto-sync for the life of the process, telling the user to sign in again over credentials a restart would have accepted (field report of 2026-11-07, on the Heatzy SDK sharing the same core). An explicit `authenticate()` that fails at transport still rejects without pausing anything.
+
+### Changed
+
+- **`onAuthenticationLost` fires only for a definitive loss**: the stored credential was refused (Classic `LoginData: null`, a Home `401`, a Cognito refusal), or a persisted session died with no credential to sign back in with. A refusal announces itself the moment it is recorded instead of at the end of the next sync cycle — still once per episode, still answered by `onAuthenticationRestored` once a sign-in is accepted. A sync cycle that ends signed out over credentials nobody refused announces nothing and keeps the client trying — the scheduled retry, or the auto-sync when nothing was attempted — so no `onAuthenticationRestored` follows it either. A host that prompts "sign in again" on `onAuthenticationLost` now prompts only when signing in again is the fix.
+- The exact `@olivierzal/api-core` pin advances from 2.3.1 to 2.4.1 — 2.4.0's behaviour, with the `LifecycleEvents` docs this package forwards rewritten to match it.
+
 ## [60.5.0] - 2026-11-07
 
 ### Added
@@ -984,7 +995,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.5.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.6.0...HEAD
+[60.6.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.5.0...v60.6.0
 [60.5.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.4.0...v60.5.0
 [60.4.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.3.0...v60.4.0
 [60.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.2.0...v60.3.0
