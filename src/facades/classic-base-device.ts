@@ -216,6 +216,18 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   /**
+   * The unit's own fault as MELCloud words it, in the account's
+   * language — `E6 : …` on an indoor/outdoor communication error — or
+   * `null` while the unit reports none. Read from the listing's
+   * `ErrorMessages`, which is `''` on a healthy unit.
+   * @returns The trimmed fault text, or `null`.
+   */
+  public get errorMessage(): string | null {
+    const message = this.data.ErrorMessages.trim()
+    return message === '' ? null : message
+  }
+
+  /**
    * Whether MELCloud can still deliver writes to the unit: it
    * communicated within roughly the last day. The `Offline` flag is not
    * usable (a ~2-4 min staleness boolean that flaps on healthy units)
@@ -243,6 +255,17 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     } catch {
       return true
     }
+  }
+
+  /**
+   * Whether the unit itself reports a fault — the listing's `HasError`,
+   * which MELCloud relays from the unit and which a reachable unit
+   * carries while still answering writes (live-read 2026-11-06 on a unit
+   * in `E6`: every write echoed `200` with the fault attached).
+   * @returns `true` while the unit reports a fault of its own.
+   */
+  public get isInError(): boolean {
+    return this.data.HasError
   }
 
   /**

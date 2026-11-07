@@ -7,7 +7,11 @@ import type {
   ClassicBaseDevice,
   ClassicDeviceAny,
 } from '../entities/classic-types.ts'
-import type { AvailabilityAware, Identifiable } from '../entities/types.ts'
+import type {
+  AvailabilityAware,
+  FaultAware,
+  Identifiable,
+} from '../entities/types.ts'
 import type { HomeOperationMode } from '../enum-mappings.ts'
 import type { HolidayModeState, HolidayModeUpdate } from '../holiday-mode.ts'
 import type { ProtectionState, ProtectionUpdate } from '../protection.ts'
@@ -132,7 +136,7 @@ export type ClassicDeviceErvFacade = ClassicDeviceFacade<
  * @category Facades
  */
 export interface ClassicDeviceFacade<T extends ClassicDeviceType>
-  extends AvailabilityAware, ClassicBaseDevice<T>, ClassicFacade {
+  extends AvailabilityAware, ClassicBaseDevice<T>, ClassicFacade, FaultAware {
   /**
    * Bitfield flags mapping each updatable property to its effective flag value.
    */

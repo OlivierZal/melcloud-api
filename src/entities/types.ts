@@ -36,6 +36,27 @@ export interface AvailabilityAware {
 }
 
 /**
+ * Cross-dialect fault contract: what the unit ITSELF reports — a fault
+ * MELCloud relays (an indoor/outdoor communication error, a sensor
+ * failure), never one the cloud or this SDK raised. Orthogonal to
+ * {@link AvailabilityAware}: a faulted unit usually stays reachable and
+ * keeps answering writes, which is exactly why a consumer must say so.
+ */
+export interface FaultAware {
+  /**
+   * The fault as MELCloud words it, in the account's language, when the
+   * dialect carries a text on the unit (Classic `ErrorMessages`); `null`
+   * on a dialect that only flags it (Home) and while there is no fault.
+   */
+  readonly errorMessage: string | null
+  /**
+   * `true` while the unit reports a fault of its own (Classic `HasError`,
+   * Home `isInError`).
+   */
+  readonly isInError: boolean
+}
+
+/**
  * Base identifiable contract: an id (numeric on Classic, GUID string on
  * Home) and a display name.
  * @template TId - Identifier type; defaults to Classic's numeric ids.
