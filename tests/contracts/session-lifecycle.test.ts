@@ -9,6 +9,7 @@ import {
   mockHttpResponse,
   mockTemporalNowInstant,
 } from '@olivierzal/api-core/testing'
+import { MS_PER_MINUTE } from '@olivierzal/api-core/time-units'
 import {
   type MockInstance,
   afterEach,
@@ -889,26 +890,51 @@ const describeSessionLifecycleContract = (
       expect(settingManager.get('loginBackoffUntil')).toBe('')
     })
 
-    // The negative half of `BaseAPI`'s `#armLoginBackoff` gate: its
-    // `error instanceof AuthenticationError` guard, which returns
-    // without arming anything. A transport failure is
-    // not a rejected credential: the retry paths own those, and pausing
-    // sign-ins over a blip would lock a working account out for fifteen
-    // minutes at a time.
-    it('never arms the login backoff when the sign-in round-trip failed at transport', async () => {
-      const { settingManager } = createSettingStore(CREDENTIALS)
+    // The gate's negative half (`#armLoginBackoff`'s
+    // `instanceof AuthenticationError` guard). A transport failure
+    // is not a rejected credential: pausing an EXPLICIT sign-in over a
+    // blip would lock a working account out for fifteen minutes at a
+    // time.
+    it('never arms the login backoff when an explicit sign-in failed at transport', async () => {
+      const { settingManager } = createSettingStore()
       driver.stage({ login: 'unreachable', wire: 'ok' })
       const { api } = await driver.create({ settingManager })
-      const attempted = driver.loginCount()
+
+      await expect(api.authenticate(CREDENTIALS)).rejects.toThrow(
+        `Status ${String(UNAVAILABLE_STATUS)}`,
+      )
+
+      expect(settingManager.get('loginBackoffUntil') ?? '').toBe('')
+    })
+
+    // The AUTOMATIC half (api-core 2.4.0): a resume that failed at
+    // transport is retried a minute later — never parked, never
+    // announced as a loss — and automatic sign-ins wait for that retry,
+    // so a heartbeat cannot turn an outage into a sign-in per tick.
+    // Until 2.4.0 it scheduled nothing, and the cycle after it
+    // announced a loss and disarmed for good (field report
+    // 2026-11-07).
+    it('retries an automatic sign-in that failed at transport a minute later, announcing nothing', async () => {
+      const onAuthenticationLost =
+        vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+      const { settingManager } = createSettingStore(CREDENTIALS)
       driver.stage({ login: 'unreachable', wire: 'ok' })
+      const before = Date.now()
+      const { api } = await driver.create({
+        events: { onAuthenticationLost },
+        settingManager,
+      })
 
       await expect(api.resumeSession()).resolves.toBe(false)
 
-      expect(attempted).toBe(1)
-      // The gate stayed open: the next automatic resume tried again
-      // instead of being refused locally.
-      expect(driver.loginCount()).toBe(2)
-      expect(settingManager.get('loginBackoffUntil') ?? '').toBe('')
+      const retryAt = Number(settingManager.get('loginBackoffUntil'))
+
+      // The boot resume tried once; the one after it waited for the
+      // retry instead of spending another sign-in.
+      expect(driver.loginCount()).toBe(1)
+      expect(retryAt).toBeGreaterThan(before)
+      expect(retryAt).toBeLessThanOrEqual(Date.now() + MS_PER_MINUTE)
+      expect(onAuthenticationLost).not.toHaveBeenCalled()
     })
 
     it('lets a racing logOut win the sign-in epoch', async () => {
@@ -984,7 +1010,7 @@ const describeSessionLifecycleContract = (
       expect(driver.loginCount()).toBe(2)
     })
 
-    it('surfaces onAuthenticationLost once per episode when a cycle settles on a refused credential over a standing session', async () => {
+    it('surfaces onAuthenticationLost once per episode on a refused credential over a standing session', async () => {
       const { api, onAuthenticationLost } = await createObservedSession(
         driver,
         { login: 'accept', wire: 'ok' },
@@ -992,9 +1018,9 @@ const describeSessionLifecycleContract = (
       driver.stage({ login: 'refuse', wire: 'ok' })
 
       await expect(api.resumeSession()).resolves.toBe(false)
-      // The cycle epilogue owns the surfacing, so nothing has been
-      // announced yet.
-      expect(onAuthenticationLost).not.toHaveBeenCalled()
+      // The refusal announces itself (api-core 2.4.0): one a deferred
+      // retry finds has no cycle after it to settle on.
+      expect(onAuthenticationLost).toHaveBeenCalledTimes(1)
 
       await api.fetch()
       await api.fetch()
@@ -1202,10 +1228,18 @@ const describeSessionLifecycleContract = (
       expect(ticked).toBeGreaterThan(settled)
     })
 
-    it('disarms the timer and reports the loss when a cycle ends unauthenticated with recoverable state', async () => {
+    // A cycle that ends unauthenticated is settled by
+    // `#isLossDefinitive` (api-core 2.4.0), and only a DEFINITIVE loss —
+    // here, the stored credential refused — disarms the heartbeat and
+    // announces itself: rescheduling would replay a doomed sign-in every
+    // cycle. The stale session is what sends BOTH legs through a sign-in
+    // inside the cycle: Classic refreshes on a missing context key alone,
+    // Home only on a recorded expiry — with none, its cycle goes out
+    // without signing in (the Home-only describe below).
+    it('disarms the timer and reports the loss when a cycle ends on a refused credential', async () => {
       const onAuthenticationLost =
         vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
-      const { settingManager } = createSettingStore()
+      const { settingManager } = createSettingStore(driver.staleSession())
       driver.stage({ login: 'refuse', wire: 'refuse-registry' })
       const { api } = await driver.create({
         events: { onAuthenticationLost },
@@ -1213,7 +1247,8 @@ const describeSessionLifecycleContract = (
         syncIntervalMinutes: SYNC_INTERVAL_MINUTES,
       })
       // Credentials arrive AFTER construction, so the boot-time restore
-      // emitted nothing: the loss below is the cycle epilogue's own.
+      // emitted nothing: the loss below is the refusal the cycle's own
+      // sign-in met.
       seedCredentials(settingManager)
 
       await api.fetch()
@@ -1222,8 +1257,50 @@ const describeSessionLifecycleContract = (
       const ticked = driver.registryCycleCount()
       api[Symbol.dispose]()
 
+      expect(driver.loginCount()).toBe(1)
       expect(onAuthenticationLost).toHaveBeenCalledTimes(1)
       expect(ticked).toBe(settled)
+    })
+
+    // The same cycle over credentials nobody refused (api-core 2.4.0):
+    // nothing is announced — so no recovery either — and the client
+    // never goes dormant. The cycle's failed sign-in scheduled a retry,
+    // which owns the recovery instead of a heartbeat stacked on it and
+    // re-arms the heartbeat once it signs in. Until 2.4.0 this cycle
+    // disarmed and announced a loss: one blip left the client dormant
+    // for the life of the process.
+    it('never goes dormant when a cycle ends unauthenticated over credentials nobody refused', async () => {
+      const onAuthenticationLost =
+        vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+      const onAuthenticationRestored =
+        vi.fn<NonNullable<LifecycleEvents['onAuthenticationRestored']>>()
+      const { settingManager } = createSettingStore(driver.staleSession())
+      driver.stage({ login: 'unreachable', wire: 'refuse-registry' })
+      const { api } = await driver.create({
+        events: { onAuthenticationLost, onAuthenticationRestored },
+        settingManager,
+        syncIntervalMinutes: SYNC_INTERVAL_MINUTES,
+      })
+      // After construction, as above: the sign-in that fails is the
+      // cycle's own.
+      seedCredentials(settingManager)
+
+      await api.fetch()
+      const settled = driver.registryCycleCount()
+      driver.stage({ login: 'accept', wire: 'ok' })
+      await vi.advanceTimersByTimeAsync(MS_PER_MINUTE)
+      const retried = driver.registryCycleCount()
+      await vi.advanceTimersByTimeAsync(SYNC_TICK_MS)
+      const ticked = driver.registryCycleCount()
+      api[Symbol.dispose]()
+
+      // The cycle's sign-in, then the retry's; the retry's enforced
+      // cycle, then the heartbeat it re-armed.
+      expect(driver.loginCount()).toBe(2)
+      expect(retried - settled).toBe(1)
+      expect(ticked - retried).toBe(1)
+      expect(onAuthenticationLost).not.toHaveBeenCalled()
+      expect(onAuthenticationRestored).not.toHaveBeenCalled()
     })
 
     it('logs the failure and answers an empty list when a best-effort cycle fails', async () => {
@@ -1728,5 +1805,57 @@ describe('sessionLifecycle — Home-only: a session no cycle has exercised', () 
 
     expect(homeDriver.loginCount()).toBe(0)
     expect(homeDriver.registryCycleCount()).toBe(1)
+  })
+})
+
+// The same kind of divergence, decidable the same way: a cycle can end
+// unauthenticated with no sign-in attempted — hence no retry scheduled —
+// only on a dialect whose refresh predicate lets an unauthenticated
+// cycle out. `ClassicAPI.needsSessionRefresh` reads a missing context
+// key as stale, so every unauthenticated Classic cycle signs in first,
+// and that sign-in is either refused or retried — the refused-credential
+// and nobody-refused clauses of the cross-dialect table.
+// `HomeAPI.needsSessionRefresh` keys off a RECORDED
+// expiry, and an empty one reads as "nothing recorded yet", so a Home
+// cycle with nothing recorded goes out as it is.
+describe('sessionLifecycle — Home-only: a cycle no sign-in preceded', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    mockTemporalNowInstant()
+    homeDriver.reset()
+  })
+
+  afterEach(() => {
+    vi.mocked(Temporal.Now.instant).mockRestore()
+    vi.useRealTimers()
+  })
+
+  // Nothing tried, nothing refused, nothing scheduled (api-core 2.4.0):
+  // the heartbeat is what makes the next attempt, so it stays armed and
+  // nothing is announced. Until 2.4.0 this cycle disarmed and announced
+  // a loss over credentials no server had answered.
+  it('keeps the heartbeat and announces nothing when a cycle ends unauthenticated over credentials nobody refused', async () => {
+    const onAuthenticationLost =
+      vi.fn<NonNullable<LifecycleEvents['onAuthenticationLost']>>()
+    const { settingManager } = createSettingStore()
+    homeDriver.stage({ wire: 'refuse-registry' })
+    const { api } = await homeDriver.create({
+      events: { onAuthenticationLost },
+      settingManager,
+      syncIntervalMinutes: SYNC_INTERVAL_MINUTES,
+    })
+    // After construction, so the boot-time restore had nothing to
+    // restore and the cycle below is the first to run.
+    seedCredentials(settingManager)
+
+    await api.fetch()
+    const settled = homeDriver.registryCycleCount()
+    await vi.advanceTimersByTimeAsync(SYNC_TICK_MS)
+    const ticked = homeDriver.registryCycleCount()
+    api[Symbol.dispose]()
+
+    expect(homeDriver.loginCount()).toBe(0)
+    expect(ticked - settled).toBe(1)
+    expect(onAuthenticationLost).not.toHaveBeenCalled()
   })
 })

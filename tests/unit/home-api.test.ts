@@ -1667,22 +1667,21 @@ describe('melcloud home API', () => {
         ),
       )
       const logger = createLogger()
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        logger,
-        password: 'pass',
-        transport: mockHttpClient,
-        username: 'user@test.com',
-      })
+      const onAuthenticationLost = vi.fn<() => void>()
+      const api = await createApi({ events: { onAuthenticationLost }, logger })
 
       expect(api.isAuthenticated()).toBe(false)
+      // The loop ran before the credential POST, so nothing was refused:
+      // the resume is retried a minute later and no loss is announced
+      // (api-core 2.4.0).
       expect(logger.error).toHaveBeenCalledWith(
         '[Home]',
-        'Session resume failed:',
+        'Session resume failed, retried every minute:',
         matchObject({
           message: cast(expect.stringContaining('Too many redirects')),
         }),
       )
+      expect(onAuthenticationLost).not.toHaveBeenCalled()
     })
 
     it('should treat a 302 with no location header as an empty redirect', async () => {
@@ -1985,20 +1984,19 @@ describe('melcloud home API', () => {
         mockFetchResponse('<html>no form here</html>', {}, 200),
       )
       const logger = createLogger()
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        logger,
-        password: 'pass',
-        transport: mockHttpClient,
-        username: 'user@test.com',
-      })
+      const onAuthenticationLost = vi.fn<() => void>()
+      const api = await createApi({ events: { onAuthenticationLost }, logger })
 
       expect(api.isAuthenticated()).toBe(false)
+      // The page came before the credential POST — an outage page or a
+      // changed login page, never a verdict on the pair: retried a minute
+      // later, no loss announced.
       expect(logger.error).toHaveBeenCalledWith(
         '[Home]',
-        'Session resume failed:',
+        'Session resume failed, retried every minute:',
         expect.any(Error),
       )
+      expect(onAuthenticationLost).not.toHaveBeenCalled()
     })
 
     it('should prefix relative form action with Cognito authority', async () => {
@@ -3259,25 +3257,24 @@ describe('melcloud home API', () => {
   describe('par and token exchange failures', () => {
     it('should handle PAR failure gracefully', async () => {
       const logger = createLogger()
+      const onAuthenticationLost = vi.fn<() => void>()
       mockFetch.mockRejectedValueOnce(new Error('PAR endpoint down'))
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        logger,
-        password: 'pass',
-        transport: mockHttpClient,
-        username: 'user@test.com',
-      })
+      const api = await createApi({ events: { onAuthenticationLost }, logger })
 
       expect(api.isAuthenticated()).toBe(false)
+      // PAR carries the app's public client id, never the user's pair: a
+      // transport fault, retried a minute later with no loss announced.
       expect(logger.error).toHaveBeenCalledWith(
         '[Home]',
-        'Session resume failed:',
+        'Session resume failed, retried every minute:',
         expect.any(Error),
       )
+      expect(onAuthenticationLost).not.toHaveBeenCalled()
     })
 
     it('should handle token exchange failure gracefully', async () => {
       const logger = createLogger()
+      const onAuthenticationLost = vi.fn<() => void>()
       // PAR succeeds
       mockFetch.mockResolvedValueOnce(
         mockFetchResponse({ request_uri: 'urn:test' }),
@@ -3306,20 +3303,17 @@ describe('melcloud home API', () => {
       // Token exchange fails
       mockFetch.mockRejectedValueOnce(new Error('token exchange failed'))
 
-      const api = await melCloudHomeApi.create({
-        baseURL: BASE_URL,
-        logger,
-        password: 'pass',
-        transport: mockHttpClient,
-        username: 'user@test.com',
-      })
+      const api = await createApi({ events: { onAuthenticationLost }, logger })
 
       expect(api.isAuthenticated()).toBe(false)
+      // Cognito granted a code, so the pair was ACCEPTED: the exchange's
+      // transport fault is retried a minute later, no loss announced.
       expect(logger.error).toHaveBeenCalledWith(
         '[Home]',
-        'Session resume failed:',
+        'Session resume failed, retried every minute:',
         expect.any(Error),
       )
+      expect(onAuthenticationLost).not.toHaveBeenCalled()
     })
   })
 
