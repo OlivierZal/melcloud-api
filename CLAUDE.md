@@ -205,6 +205,16 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   the cross-dialect `isAvailable` contract (Classic: 24 h staleness;
   Home: the `/context` `isConnected` flag) — consumers must never map
   the raw `Offline` flag to anything (com.melcloud #1479/#1481).
+- A unit's OWN fault is a second contract, `FaultAware` (60.5.0):
+  `isInError` (Classic `HasError`, Home `isInError`) and `errorMessage`
+  (Classic `ErrorMessages`, trimmed; `null` on Home, which only flags
+  it). Orthogonal to availability by measurement: a unit in `E6` (the
+  indoor/outdoor communication fault) stayed `Offline: false` and echoed
+  every `SetAta` with `200`, the fault attached (diagnostic report of
+  2026-11-06), so nothing but the flag says the unit is faulted — and the
+  listing has always carried the three fields (live-probed 2026-11-07 on
+  the three device types). `tests/contracts/is-in-error.test.ts` pins the
+  contract on both dialects as `is-available` does.
 - Classic serves its reads over POST (`/EnergyCost/Report`, `/Report/*`,
   `/Group/Get`, `/Tile/Get2`): each passes `...READ_OVER_POST`
   (`idempotent: true`) so api-core retries it like a GET on a 500/502/

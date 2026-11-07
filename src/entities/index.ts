@@ -1,4 +1,4 @@
-export type { AvailabilityAware, Identifiable } from './types.ts'
+export type { AvailabilityAware, FaultAware, Identifiable } from './types.ts'
 
 export { ClassicArea } from './area.ts'
 export { ClassicBuilding } from './building.ts'

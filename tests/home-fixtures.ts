@@ -67,26 +67,59 @@ export interface HomeDeviceDataOverrides {
   readonly holidayMode?: HomeHolidayMode | null
   readonly id?: string
   readonly isConnected?: boolean
+  readonly isInError?: boolean
   readonly name?: string
   readonly overheatProtection?: HomeOverheatProtection | null
   readonly rssi?: number
   readonly settings?: Record<string, string>
 }
 
+// Defaults land by spread rather than by one `??` per field: the override
+// types admit no explicit `undefined` (exactOptionalPropertyTypes), so a
+// spread cannot blank a default, and the builders stay flat as the wire
+// gains fields.
+const HOME_ATA_DEFAULTS: Required<
+  Omit<HomeDeviceDataOverrides, 'capabilities'>
+> = {
+  frostProtection: null,
+  holidayMode: null,
+  id: 'home-device-1',
+  isConnected: true,
+  isInError: false,
+  name: 'Home device',
+  overheatProtection: null,
+  rssi: DEFAULT_RSSI_DBM,
+  settings: {},
+}
+
 const homeDeviceData = (
   overrides: HomeDeviceDataOverrides = {},
-): HomeAtaDeviceData =>
-  mock<HomeAtaDeviceData>({
-    capabilities: { ...defaultHomeAtaCapabilities, ...overrides.capabilities },
-    frostProtection: overrides.frostProtection ?? null,
-    givenDisplayName: overrides.name ?? 'Home device',
-    holidayMode: overrides.holidayMode ?? null,
-    id: overrides.id ?? 'home-device-1',
-    isConnected: overrides.isConnected ?? true,
-    overheatProtection: overrides.overheatProtection ?? null,
-    rssi: overrides.rssi ?? DEFAULT_RSSI_DBM,
-    settings: buildSettings(overrides.settings ?? {}),
+): HomeAtaDeviceData => {
+  const {
+    capabilities,
+    frostProtection,
+    holidayMode,
+    id,
+    isConnected,
+    isInError,
+    name,
+    overheatProtection,
+    rssi,
+    settings,
+  } = { ...HOME_ATA_DEFAULTS, ...overrides }
+  return mock<HomeAtaDeviceData>({
+    capabilities: { ...defaultHomeAtaCapabilities, ...capabilities },
+    frostProtection,
+    givenDisplayName: name,
+    holidayMode,
+    id,
+    isConnected,
+    isInError,
+    overheatProtection,
+    rssi,
+    settings: buildSettings(settings),
   })
+}
 
 export const homeBuildingRef = (
   overrides: Partial<HomeBuildingRef> = {},
@@ -195,28 +228,55 @@ export interface HomeAtwDeviceDataOverrides {
   readonly holidayMode?: HomeHolidayMode | null
   readonly id?: string
   readonly isConnected?: boolean
+  readonly isInError?: boolean
   readonly name?: string
   readonly rssi?: number
   readonly settings?: Record<string, string>
 }
 
+const HOME_ATW_DEFAULTS: Required<
+  Omit<HomeAtwDeviceDataOverrides, 'capabilities'>
+> = {
+  frostProtection: null,
+  holidayMode: null,
+  id: 'home-atw-1',
+  isConnected: true,
+  isInError: false,
+  name: 'Home ATW device',
+  rssi: DEFAULT_RSSI_DBM,
+  settings: {},
+}
+
 export const homeAtwDeviceData = (
   overrides: HomeAtwDeviceDataOverrides = {},
-): HomeAtwDeviceData =>
-  mock<HomeAtwDeviceData>({
-    capabilities: { ...defaultHomeAtwCapabilities, ...overrides.capabilities },
+): HomeAtwDeviceData => {
+  const {
+    capabilities,
+    frostProtection,
+    holidayMode,
+    id,
+    isConnected,
+    isInError,
+    name,
+    rssi,
+    settings,
+  } = { ...HOME_ATW_DEFAULTS, ...overrides }
+  return mock<HomeAtwDeviceData>({
+    capabilities: { ...defaultHomeAtwCapabilities, ...capabilities },
     // The wire always carries these keys (the schema requires them,
     // nullable but present), so the fixture must too: an absent key is a
     // shape the BFF cannot produce and the salvage pass would drop.
-    frostProtection: overrides.frostProtection ?? null,
-    givenDisplayName: overrides.name ?? 'Home ATW device',
-    holidayMode: overrides.holidayMode ?? null,
-    id: overrides.id ?? 'home-atw-1',
-    isConnected: overrides.isConnected ?? true,
+    frostProtection,
+    givenDisplayName: name,
+    holidayMode,
+    id,
+    isConnected,
+    isInError,
     overheatProtection: null,
-    rssi: overrides.rssi ?? DEFAULT_RSSI_DBM,
-    settings: buildSettings(overrides.settings ?? {}),
+    rssi,
+    settings: buildSettings(settings),
   })
+}
 
 export const homeAtwDevice = (
   overrides: HomeAtwDeviceDataOverrides = {},

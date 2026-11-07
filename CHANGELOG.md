@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [60.5.0] - 2026-11-07
+
+### Added
+
+- `FaultAware`, the cross-dialect fault contract every device facade now implements: `isInError` (the unit's own fault flag — Classic `HasError`, Home `isInError`, which MELCloud relays from the unit) and `errorMessage` (the fault as MELCloud words it, from Classic's `ErrorMessages`; `null` on Home, which only flags it, and while there is none). A faulted unit stays reachable and keeps answering writes — live-read on a unit in `E6` — so a consumer has to read the flag on its own to say so. `ClassicBaseListDeviceData` gains the `HasError`, `ErrorCode` and `ErrorMessages` fields the listing has always carried (live-probed on the three device types).
+
 ## [60.4.0] - 2026-11-03
 
 ### Added
@@ -978,7 +984,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.4.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.5.0...HEAD
+[60.5.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.4.0...v60.5.0
 [60.4.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.3.0...v60.4.0
 [60.3.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.2.0...v60.3.0
 [60.2.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.1.0...v60.2.0

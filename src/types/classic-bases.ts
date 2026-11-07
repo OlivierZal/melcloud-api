@@ -92,6 +92,21 @@ export interface ClassicBaseListDeviceData extends Omit<
   ClassicBaseGetDeviceData,
   keyof ClassicTransientDeviceData
 > {
+  /**
+   * `8000` while the unit reports no fault; the unit's own code otherwise
+   * (live-probed 2026-11-07 on the three device types).
+   */
+  readonly ErrorCode: number
+  /**
+   * The fault as MELCloud words it in the account's language, `''` while
+   * there is none.
+   */
+  readonly ErrorMessages: string
+  /**
+   * `true` while the unit itself reports a fault — an `E6` indoor/outdoor
+   * communication error, for instance.
+   */
+  readonly HasError: boolean
   readonly LastTimeStamp: string
   readonly WifiSignalStrength: number
 }
