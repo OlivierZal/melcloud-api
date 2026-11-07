@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - **`onAuthenticationLost` fires only for a definitive loss**: the stored credential was refused (Classic `LoginData: null`, a Home `401`, a Cognito refusal), or a persisted session died with no credential to sign back in with. A refusal announces itself the moment it is recorded instead of at the end of the next sync cycle — still once per episode, still answered by `onAuthenticationRestored` once a sign-in is accepted. A sync cycle that ends signed out over credentials nobody refused announces nothing and keeps the client trying — the scheduled retry, or the auto-sync when nothing was attempted — so no `onAuthenticationRestored` follows it either. A host that prompts "sign in again" on `onAuthenticationLost` now prompts only when signing in again is the fix.
+- The exact `@olivierzal/api-core` pin advances from 2.3.1 to 2.4.1 — 2.4.0's behaviour, with the `LifecycleEvents` docs this package forwards rewritten to match it.
 
 ## [60.5.0] - 2026-11-07
 
