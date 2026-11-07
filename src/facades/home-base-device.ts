@@ -6,6 +6,7 @@ import type { ProtectionState, ProtectionUpdate } from '../protection.ts'
 import { HomeDeviceType } from '../constants.ts'
 import {
   type AvailabilityAware,
+  type FaultAware,
   type Identifiable,
   hasOutlivedStaleWindow,
 } from '../entities/types.ts'
@@ -218,7 +219,7 @@ export const toHolidayModeState = (
  * @category Facades
  */
 export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
-  implements AvailabilityAware, Identifiable<string>
+  implements AvailabilityAware, FaultAware, Identifiable<string>
 {
   /**
    * Per-type count of wire energy units in one kilowatt-hour: the ATW
@@ -230,6 +231,13 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * scale — its wire unit IS the chart unit).
    */
   protected abstract readonly wireUnitsPerKilowattHour: number
+
+  /**
+   * Home's `/context` flags a faulted unit (`isInError`) but carries no
+   * text for it — the wording lives in the unit's error log, a separate
+   * read — so the contract's message is `null` on this dialect.
+   */
+  public readonly errorMessage: null = null
 
   /**
    * Connection-type discriminator, captured at construction (a physical
@@ -305,6 +313,15 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    */
   public get isConnected(): boolean {
     return this.model.data.isConnected
+  }
+
+  /**
+   * Whether the unit itself reports a fault — the `/context` `isInError`
+   * flag, which MELCloud relays from the unit.
+   * @returns `true` while the unit reports a fault of its own.
+   */
+  public get isInError(): boolean {
+    return this.model.data.isInError
   }
 
   /**

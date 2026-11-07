@@ -190,6 +190,7 @@ export {
   type AvailabilityAware,
   type ClassicDeviceAny,
   type ClassicModel,
+  type FaultAware,
   type HomeBuildingDevices,
   type HomeConnectivityEvent,
   type HomeConnectivityTransition,
