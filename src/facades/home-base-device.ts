@@ -233,17 +233,17 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
   protected abstract readonly wireUnitsPerKilowattHour: number
 
   /**
-   * Connection-type discriminator, captured at construction (a physical
-   * device never changes type) so it stays readable on a pruned id —
-   * the Home counterpart of the Classic facades' `type`.
-   */
-  /**
    * Home's `/context` flags a faulted unit (`isInError`) but carries no
    * text for it — the wording lives in the unit's error log, a separate
    * read — so the contract's message is `null` on this dialect.
    */
   public readonly errorMessage: null = null
 
+  /**
+   * Connection-type discriminator, captured at construction (a physical
+   * device never changes type) so it stays readable on a pruned id —
+   * the Home counterpart of the Classic facades' `type`.
+   */
   public readonly type: HomeDeviceType
 
   /**
