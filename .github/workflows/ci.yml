@@ -6,7 +6,7 @@ jobs:
       packages: read
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    uses: OlivierZal/configs/.github/workflows/reusable-ci.yml@eb3af974655875cb5b993cf8e7bb65f38b0f95d5 # v8.6.0
+    uses: OlivierZal/configs/.github/workflows/reusable-ci.yml@83677ba411dc01903f5cfe02ae8f7b2eacc0a81f # v8.8.0
     with:
       run-docs: true
       run-lint-package: true

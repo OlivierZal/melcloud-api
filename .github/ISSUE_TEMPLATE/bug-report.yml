@@ -1,7 +1,9 @@
 body:
   - attributes:
-      value: |
-        Thanks for taking the time to file a bug report. Please fill in as much of the template as you can — minimal reproduction steps make the report several times easier to fix.
+      value: >-
+        Thanks for taking the time to file a bug report. Please fill in as
+        much of the template as you can — minimal reproduction steps make
+        the report several times easier to fix.
     type: markdown
   - attributes:
       description: The version of `@olivierzal/melcloud-api` you are running.
@@ -37,7 +39,9 @@ body:
     validations:
       required: true
   - attributes:
-      description: A small code snippet or repository link that reproduces the issue. Please redact any credentials.
+      description: >-
+        A small code snippet or repository link that reproduces the issue.
+        Please redact any credentials.
       label: Minimal reproduction
       render: ts
     id: reproduction
@@ -45,7 +49,8 @@ body:
     validations:
       required: true
   - attributes:
-      description: Any error or unexpected log output. Trim it to the relevant lines.
+      description: >-
+        Any error or unexpected log output. Trim it to the relevant lines.
       label: Relevant logs
       render: shell
     id: logs
