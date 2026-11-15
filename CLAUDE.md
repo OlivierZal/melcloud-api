@@ -245,10 +245,18 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `isKnownFailure` and `failureCauseChain` beside the core's error
   family), so their own lines — com.melcloud's
   `Energy report fetch failed:` — take the one-line form without a
-  direct api-core pin: the SDK stays the apps' only API boundary. If a
-  night still fails under the retry, the next lever is the burst itself
-  (one connection pool per origin, or staggered report timers), not a
-  longer timeout.
+  direct api-core pin: the SDK stays the apps' only API boundary. The
+  nights did still fail under the retry, and com.melcloud 46.16.1
+  pulled the next lever, the burst itself: each device takes its own
+  instant in a report's slot, the Classic nightly reads left 01:05, and
+  a failed report run is retried by the host a quarter of an hour
+  later. A connection pool per origin is NOT that lever: in diagnostic
+  report 2acb0764 (2026-11) a Homey firing only two `EnergyCost/Report`
+  reads at 00:05:00Z had both spend their five 30 s attempts, about
+  165 s, on three nights running, and its device listing timed out
+  until about 00:10Z — the silence is not one host's burst. Whether it
+  is MELCloud's own or the doing of the app's installs firing together
+  is not known. A longer timeout stays the wrong lever either way.
 - Classic `/EnergyCost/Report` returns per-bucket arrays for BOTH types
   (ATA per-mode consumption; ATW consumed + produced per category) with
   numeric `Labels`/`LabelType` — day-of-week labels are .NET 0-based
