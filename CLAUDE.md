@@ -167,6 +167,19 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `measureData` envelope — and consumers must never re-decode the
   dialect on top of it (timestamp format, interval grammar and
   per-type units all live behind `getEnergySeries` now).
+- The Classic listing's `CurrentEnergyConsumed` is two things under
+  one name. On an air-to-water unit it is the instantaneous power in
+  kW, with `CurrentEnergyProduced` (typed, and what com.melcloud's
+  `measure_power` reads since 2023). On an air-to-air unit, where this
+  SDK does not type it, public clients read it as a counter in Wh
+  behind `HasEnergyConsumedMeter` (pymelcloud, and Home Assistant's
+  energy sensor through it); the untyped field survives into
+  `ClassicDevice.data`, the listed payload being kept whole. Nothing of
+  the air-to-air counter was measured here, and it is NOT a source for
+  a meter: the public record has it reading 0 at times, moving 3.3 to
+  7.7 times less than `/EnergyCost/Report` where MELCloud's energy
+  correction is active, and no lifetime figure (com.melcloud's
+  CLAUDE.md, the cures weighed and left).
 - No instantaneous power exists anywhere on the Home API: not in
   `/context` settings (raw enumeration 2026-07-17: 11 ATA / 15 ATW
   names, none energy-bearing — no `CurrentEnergyConsumed/Produced`
@@ -228,7 +241,16 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `TypeError: fetch failed` at undici's 10 s connect timeout and 9
   `TimeoutError` at the client's 30 s budget (2026-10-22), while the
   same burst passed 30 s later from a second host on the same public
-  IP. api-core 2.2.0 retries a read on those too (`isTransientFailure`),
+  IP. Those two limits are also where the nights began to be lost.
+  Until 24.0.0 (2026-04-12) the client waited without limit, and a
+  slow answer after 01:05 was a late write: on the owner's Homey,
+  January to April 2026, up to 190 s late with no read provably lost.
+  Since then it is a lost read, from 2026-04-25 on, before the host's
+  wall-clock anchoring of July made the loss near total (com.melcloud's
+  CLAUDE.md dates both onsets). The limits stay all the same: a read
+  never answered would otherwise stop its report until the host
+  restarts.
+  api-core 2.2.0 retries a read on those too (`isTransientFailure`),
   and every failure line the SDK writes goes through the core's
   `logFailure` (api-core 2.3.0, adopted with 60.3.0): a failure the core
   has a class for — an `HttpError`, the `APIError` family, a transport
@@ -256,7 +278,10 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   165 s, on three nights running, and its device listing timed out
   until about 00:10Z — the silence is not one host's burst. Whether it
   is MELCloud's own or the doing of the app's installs firing together
-  is not known. A longer timeout stays the wrong lever either way.
+  is not known. A longer timeout stays the wrong lever either way: it
+  would have saved the slow nights of spring 2026 and not these, silent
+  for five minutes and more, which the host's own instant and retry
+  answer.
 - Classic `/EnergyCost/Report` returns per-bucket arrays for BOTH types
   (ATA per-mode consumption; ATW consumed + produced per category) with
   numeric `Labels`/`LabelType` — day-of-week labels are .NET 0-based
