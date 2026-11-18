@@ -250,9 +250,10 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
   /**
    * Apply a Classic group state to this device: the delta is translated to
    * the Home vocabulary and pushed through the native per-device update
-   * path. Group writes are no-op tolerant: an all-null delta translates to
-   * nothing and resolves without a wire call, and a device already matching
-   * the delta (a `NoChangesError` from its update) counts as success.
+   * path. An all-null delta translates to nothing and resolves without a
+   * wire call; any other delta is PUT, even one the device already holds —
+   * Home's update refuses only a payload with no defined value, and that
+   * `NoChangesError` counts as success.
    * @param state - Partial Classic group state to push to the device.
    * @returns The zone-shaped success outcome once the write completes.
    */

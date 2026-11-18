@@ -126,6 +126,35 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   has no flags (live-verified 2026-09-05: a vane write sticks across
   unrelated writes, mode changes and power cycles). The probe scripts
   were investigation artifacts kept out of the repo.
+- Combining ATA groups is the SDK's, deciding which groups belong
+  together is the host's (60.8.0). `combineAtaGroups` takes any
+  `AtaGroup` — the Classic zone facades, both dialects' ATA device
+  facades, the Home building facade — and answers the same contract:
+  com.melcloud's merged building, a Classic building and a Home
+  building of one name, is the use it was cut for, and it knows no
+  name. Its read FAILS CLOSED: the groups are read at once and the first
+  failed `Result` in group order comes back unchanged, never a fold of
+  the groups that answered — half a house shown as the whole is a wrong
+  answer, not a degraded one. Otherwise it folds through
+  `aggregateClassicAtaGroupStates`, the Home building's own member
+  fold, which carries six fields: the Classic wire's swing flags
+  (`VaneHorizontalSwing`, `VaneVerticalSwing`) never reach a combined
+  read, and no family consumer reads them. A write sends the same delta
+  to every group at once, tolerates each group's `NoChangesError` (a
+  Classic zone refuses an empty delta with it) and settles through the
+  policy the Home building's member writes use
+  (`src/facades/settle-writes.ts`): one failure rethrown as itself,
+  several as one `AggregateError` in group order. There is no rollback —
+  a group that accepted the delta keeps it when another refuses, so a
+  rejected combined write may have landed in part.
+- Home has no client-side no-change check. `updateValues` refuses only
+  a payload with no defined value (`NoChangesError`), never one the
+  unit already holds, so a Home group write PUTs every ATA member — and
+  pays the `/context` sync that follows each PUT — even when the member
+  already matches; the `NoChangesError` tolerance of the Home group
+  writes only ever meets a delta whose every field failed to translate.
+  Classic is the opposite: `updateValues` diffs against the snapshot and
+  refuses a change set the unit already holds before any wire call.
 - The Home ATW wire speaks two dialects: `/context` settings report zone
   modes in PascalCase (`HeatCurve`, `CoolFlowTemperature`) but the PUT
   endpoint only accepts camelCase and answers a bare 400 otherwise — the

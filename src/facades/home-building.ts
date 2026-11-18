@@ -37,11 +37,7 @@ import {
   pushHomeOverheatProtection,
   toHomeProtectionUnits,
 } from './home-protection.ts'
-
-// `allSettled` reasons are `unknown`; non-Error rejections (possible
-// from plain-JS callers) wrap so the throw sites stay Error-typed.
-const toError = (reason: unknown): Error =>
-  reason instanceof Error ? reason : new Error(JSON.stringify(reason))
+import { settleWrites } from './settle-writes.ts'
 
 /**
  * Resolves the cached ATA device facade for a registry model — supplied by
@@ -239,9 +235,11 @@ export class HomeBuildingFacade {
 
   /**
    * Apply a Classic group state to every ATA member device. The delta is
-   * translated to the Home vocabulary once, then fanned out; members
-   * already matching it (a tolerated `NoChangesError` from their
-   * update) are fine by definition and do not fail the group write.
+   * translated to the Home vocabulary once, then fanned out, and every
+   * member gets the PUT — one already holding the values included: Home's
+   * update refuses only a payload with no defined value (a tolerated
+   * `NoChangesError`), never one the member matches. An all-null delta
+   * translates to nothing and resolves without a wire call.
    * @param state - Partial Classic group state to push to the members.
    * @throws The single member failure, or an `AggregateError` bundling
    * every member failure when more than one PUT rejects.
@@ -251,7 +249,7 @@ export class HomeBuildingFacade {
     if (Object.keys(values).length === 0) {
       return
     }
-    await settleMemberWrites(
+    await settleWrites(
       this.#ataDevices.map(async (device) =>
         tolerateNoChanges(async () =>
           this.#getFacade(device).updateValues(values),
@@ -291,31 +289,11 @@ export class HomeBuildingFacade {
    * every member failure when more than one PUT rejects.
    */
   public async updatePower(isOn = true): Promise<void> {
-    await settleMemberWrites(
+    await settleWrites(
       this.devices.map(async ({ id }) =>
         this.#api.updateValues(id, { power: isOn }),
       ),
       'Power update failed on members',
     )
-  }
-}
-
-// The fan-out failure policy shared by the member writes: settle every
-// member, then surface the single failure as itself and several as one
-// AggregateError — the thrown error is the write's only outcome channel.
-const settleMemberWrites = async (
-  writes: readonly Promise<void>[],
-  failureMessage: string,
-): Promise<void> => {
-  const outcomes = await Promise.allSettled(writes)
-  const failures = outcomes
-    .filter((outcome) => outcome.status === 'rejected')
-    .map(({ reason }) => toError(reason))
-  const [firstFailure] = failures
-  if (firstFailure !== undefined && failures.length === 1) {
-    throw firstFailure
-  }
-  if (failures.length > 1) {
-    throw new AggregateError(failures, failureMessage)
   }
 }
