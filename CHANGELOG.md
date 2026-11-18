@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [60.7.0] - 2026-11-18
+
+### Fixed
+
+- **A MELCloud Home unit words its fault: `errorMessage` reads the code `/context` carries.** The Home device facades returned `null` for `errorMessage` on the claim that Home flags a fault without words, which sent consumers to the unit's error log for a wording. A unit in `E6` read on 2026-11-18 shows the listing gives it: its `/context` settings array carries `IsInError: True` and `ErrorCode: E6`. `errorMessage` now returns that `ErrorCode` value, trimmed, while the unit reports a fault (`isInError`), and `null` otherwise — whatever the setting reads on a healthy unit — or when the setting is empty or absent. Home gives the code alone where Classic's `ErrorMessages` adds a sentence (`E6 : …`). A host that rendered a dialect-neutral sentence for a Home fault now gets the code to show.
+
 ## [60.6.0] - 2026-11-07
 
 ### Fixed
@@ -995,7 +1001,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.6.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.7.0...HEAD
+[60.7.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.6.0...v60.7.0
 [60.6.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.5.0...v60.6.0
 [60.5.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.4.0...v60.5.0
 [60.4.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.3.0...v60.4.0

@@ -44,9 +44,10 @@ export interface AvailabilityAware {
  */
 export interface FaultAware {
   /**
-   * The fault as MELCloud words it, in the account's language, when the
-   * dialect carries a text on the unit (Classic `ErrorMessages`); `null`
-   * on a dialect that only flags it (Home) and while there is no fault.
+   * The fault as the dialect words it on the read: Classic's
+   * `ErrorMessages`, a sentence in the account's language (`E6 : …`);
+   * Home's `ErrorCode` setting, the code alone (`E6`). `null` while there
+   * is no fault, or when the read gives no wording.
    */
   readonly errorMessage: string | null
   /**

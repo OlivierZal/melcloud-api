@@ -233,13 +233,6 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
   protected abstract readonly wireUnitsPerKilowattHour: number
 
   /**
-   * Home's `/context` flags a faulted unit (`isInError`) but carries no
-   * text for it — the wording lives in the unit's error log, a separate
-   * read — so the contract's message is `null` on this dialect.
-   */
-  public readonly errorMessage: null = null
-
-  /**
    * Connection-type discriminator, captured at construction (a physical
    * device never changes type) so it stays readable on a pruned id —
    * the Home counterpart of the Classic facades' `type`.
@@ -253,6 +246,20 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    */
   public get capabilities(): TData['capabilities'] {
     return this.model.data.capabilities
+  }
+
+  /**
+   * The unit's own fault as `/context` words it: the code its `ErrorCode`
+   * setting carries (`E6`) while the unit reports one — Home gives the
+   * code alone, where Classic's `ErrorMessages` adds a sentence — and
+   * `null` while there is none, whatever that setting reads then
+   * (live-read 2026-11-18 on a unit in `E6`: the settings array carried
+   * `IsInError: True` and `ErrorCode: E6`).
+   * @returns The trimmed fault code, or `null`.
+   */
+  public get errorMessage(): string | null {
+    const code = this.isInError ? this.setting('ErrorCode').trim() : ''
+    return code === '' ? null : code
   }
 
   /**
