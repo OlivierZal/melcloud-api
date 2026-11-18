@@ -6,11 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [60.8.0] - 2026-11-18
+
+### Added
+
+- **`combineAtaGroups(groups)` reads and writes several ATA groups as one, so a host can join one house's buildings across the two MELCloud accounts.** It takes any `AtaGroup` — the group contract the Classic building, floor and area facades, the ATA device facades of both dialects and the Home building facade already answer (`getGroup`, `getMemberOperationModes`, `updateGroupState`), now a published type — and returns one that answers the same contract. The groups are read at once, and the read fails closed: the first failed `Result`, in group order, comes back unchanged, never a fold of the groups that did answer, which would show part of the house as the whole; otherwise the states fold field by field with the fold the Home building applies to its members, a field the groups disagree on reading `null`, the mixed marker. The member modes concatenate in group order, each group read with the same filter. A write sends the same delta to every group at once: a group's `NoChangesError` counts as success, as on the members of one group, a failed group never stops the others, and the outcomes settle the way the Home building's member writes do — one failure rethrown as itself, several bundled into one `AggregateError` in group order. The combination holds no client, makes no wire call of its own and knows nothing about names: which groups belong together is the host's call.
+
+### Changed
+
+- **Internal**: the fan-out failure policy of the Home building's member writes — every write runs to its end, one failure is rethrown as itself, several are bundled into an `AggregateError` — leaves `src/facades/home-building.ts` for a module of its own, which `combineAtaGroups` shares. Nothing in the package's surface changes.
+
+### Fixed
+
+- **The Home group writes no longer document a no-change check they do not make.** `HomeBuildingFacade.updateGroupState` and `HomeDeviceAtaFacade.updateGroupState` said a member already matching the delta was skipped through a tolerated `NoChangesError`; Home's update refuses only a payload with no defined value, so every ATA member gets the PUT, one already holding the values included. An all-null delta still resolves without a wire call. The behaviour is unchanged; the doc comments now say what it is.
+
 ## [60.7.0] - 2026-11-18
 
 ### Fixed
 
 - **A MELCloud Home unit words its fault: `errorMessage` reads the code `/context` carries.** The Home device facades returned `null` for `errorMessage` on the claim that Home flags a fault without words, which sent consumers to the unit's error log for a wording. A unit in `E6` read on 2026-11-18 shows the listing gives it: its `/context` settings array carries `IsInError: True` and `ErrorCode: E6`. `errorMessage` now returns that `ErrorCode` value, trimmed, while the unit reports a fault (`isInError`), and `null` otherwise — whatever the setting reads on a healthy unit — or when the setting is empty or absent. Home gives the code alone where Classic's `ErrorMessages` adds a sentence (`E6 : …`). A host that rendered a dialect-neutral sentence for a Home fault now gets the code to show.
+  ||||||| parent of 9d5c2694 (wip: combineAtaGroups)
 
 ## [60.6.0] - 2026-11-07
 
@@ -1001,7 +1016,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.7.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.8.0...HEAD
+[60.8.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.7.0...v60.8.0
 [60.7.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.6.0...v60.7.0
 [60.6.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.5.0...v60.6.0
 [60.5.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.4.0...v60.5.0

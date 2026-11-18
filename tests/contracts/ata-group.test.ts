@@ -1,5 +1,5 @@
 import { cast, defined, mock } from '@olivierzal/api-core/testing'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ClassicAPIAdapter } from '../../src/api/classic-types.ts'
 import type { HomeAPIAdapter } from '../../src/api/home-types.ts'
@@ -23,6 +23,7 @@ import {
   operationModeToClassic,
   verticalFromClassic,
 } from '../../src/enum-mappings.ts'
+import { combineAtaGroups } from '../../src/facades/ata-group-union.ts'
 import { ClassicBuildingFacade } from '../../src/facades/classic-building.ts'
 import { ClassicDeviceAtaFacade } from '../../src/facades/classic-device-ata.ts'
 import { HomeDeviceAtaFacade } from '../../src/facades/home-device-ata.ts'
@@ -56,8 +57,10 @@ import {
 // Classic-numbered whatever API served it, `null` the shared
 // leave-unchanged/mixed sentinel. The mechanics differ and are not the
 // contract: Classic zones ride the native group endpoints, the Home
-// building aggregates and fans out over its members, and each device
-// facade emulates a group of one over its own state.
+// building aggregates and fans out over its members, each device facade
+// emulates a group of one over its own state, and the combination folds
+// and fans out over whole groups — a Classic zone and a Home building
+// here, the two accounts of one house.
 
 // The neutral snapshot every leg encodes into its own wire: all fields
 // set (a group of one can never be mixed), values asymmetric so a field
@@ -176,7 +179,11 @@ const describeAtaGroupReadContract = (
   })
 }
 
-describeAtaGroupReadContract('Classic zone', async (snapshot) => {
+// A Classic building zone whose native group endpoint answers the
+// snapshot.
+const classicZoneAnswering = (
+  snapshot: GroupSnapshot,
+): ClassicBuildingFacade => {
   const registry = classicSnapshotRegistry(snapshot)
   const wireResponse = ok(
     cast({ Data: { Group: { State: toGroupState(snapshot) } } }),
@@ -187,12 +194,25 @@ describeAtaGroupReadContract('Classic zone', async (snapshot) => {
       .mockResolvedValue(wireResponse),
     registry,
   })
-  const facade = new ClassicBuildingFacade(
-    api,
-    defined(registry.buildings.getById(1)),
-  )
-  return okValue(await facade.getGroup())
-})
+  return new ClassicBuildingFacade(api, defined(registry.buildings.getById(1)))
+}
+
+// A Home building whose two members both hold the snapshot.
+const homeBuildingHolding = (snapshot: GroupSnapshot): HomeBuildingFacade =>
+  homeBuildingOf([
+    typedHomeDeviceData(
+      { id: 'group-read-1', settings: toHomeSettings(snapshot) },
+      { building: homeBuildingRef() },
+    ),
+    typedHomeDeviceData(
+      { id: 'group-read-2', settings: toHomeSettings(snapshot) },
+      { building: homeBuildingRef() },
+    ),
+  ])
+
+describeAtaGroupReadContract('Classic zone', async (snapshot) =>
+  okValue(await classicZoneAnswering(snapshot).getGroup()),
+)
 
 describeAtaGroupReadContract('Classic ATA device', async (snapshot) => {
   const registry = classicSnapshotRegistry(snapshot)
@@ -214,19 +234,18 @@ describeAtaGroupReadContract('Home ATA device', async (snapshot) => {
   return okValue(await facade.getGroup())
 })
 
-describeAtaGroupReadContract('Home building', async (snapshot) => {
-  const facade = homeBuildingOf([
-    typedHomeDeviceData(
-      { id: 'group-read-1', settings: toHomeSettings(snapshot) },
-      { building: homeBuildingRef() },
-    ),
-    typedHomeDeviceData(
-      { id: 'group-read-2', settings: toHomeSettings(snapshot) },
-      { building: homeBuildingRef() },
-    ),
-  ])
-  return okValue(await facade.getGroup())
-})
+describeAtaGroupReadContract('Home building', async (snapshot) =>
+  okValue(await homeBuildingHolding(snapshot).getGroup()),
+)
+
+describeAtaGroupReadContract('combined groups', async (snapshot) =>
+  okValue(
+    await combineAtaGroups([
+      classicZoneAnswering(snapshot),
+      homeBuildingHolding(snapshot),
+    ]).getGroup(),
+  ),
+)
 
 // The write side of the same vocabulary: a Classic-numbered delta in,
 // its fields delivered to that implementation's own wire. What each leg
@@ -270,16 +289,28 @@ const describeAtaGroupWriteContract = (
   })
 }
 
-describeAtaGroupWriteContract('Classic zone', async (state) => {
+// A Classic building zone over the native group endpoint, with the
+// endpoint spy that captures what reached the wire.
+const classicZoneWriting = (): {
+  readonly facade: ClassicBuildingFacade
+  readonly updateGroupState: Mock<ClassicAPIAdapter['updateGroupState']>
+} => {
   const registry = classicSnapshotRegistry(defined(READ_CASES[0]).snapshot)
   const updateGroupState = vi
     .fn<ClassicAPIAdapter['updateGroupState']>()
     .mockResolvedValue({ AttributeErrors: null, Success: true })
-  const facade = new ClassicBuildingFacade(
-    createMockClassicApi({ registry, updateGroupState }),
-    defined(registry.buildings.getById(1)),
-  )
-  await facade.updateGroupState(state)
+  return {
+    facade: new ClassicBuildingFacade(
+      createMockClassicApi({ registry, updateGroupState }),
+      defined(registry.buildings.getById(1)),
+    ),
+    updateGroupState,
+  }
+}
+
+const decodeClassicZoneWrite = (
+  updateGroupState: Mock<ClassicAPIAdapter['updateGroupState']>,
+): DeliveredWrite => {
   const { State: delivered } = defined(
     updateGroupState.mock.lastCall?.[0],
   ).postData
@@ -288,6 +319,12 @@ describeAtaGroupWriteContract('Classic zone', async (state) => {
     mode: defined(delivered.OperationMode),
     setTemperature: defined(delivered.SetTemperature),
   }
+}
+
+describeAtaGroupWriteContract('Classic zone', async (state) => {
+  const zone = classicZoneWriting()
+  await zone.facade.updateGroupState(state)
+  return decodeClassicZoneWrite(zone.updateGroupState)
 })
 
 describeAtaGroupWriteContract('Classic ATA device', async (state) => {
@@ -321,6 +358,9 @@ const decodeHomeWrite = (
   }
 }
 
+const decodeHomeApiWrite = (api: HomeAPIAdapter): DeliveredWrite =>
+  decodeHomeWrite(defined(vi.mocked(api.updateValues).mock.lastCall?.[1]))
+
 describeAtaGroupWriteContract('Home ATA device', async (state) => {
   const api = createMockHomeApi()
   const facade = new HomeDeviceAtaFacade(
@@ -331,36 +371,76 @@ describeAtaGroupWriteContract('Home ATA device', async (state) => {
     }),
   )
   await facade.updateGroupState(state)
-  return decodeHomeWrite(
-    defined(vi.mocked(api.updateValues).mock.lastCall?.[1]),
-  )
+  return decodeHomeApiWrite(api)
 })
+
+// A Home building of one ATA member, over its own api double.
+const homeBuildingWriting = (): {
+  readonly api: HomeAPIAdapter
+  readonly facade: HomeBuildingFacade
+} => {
+  const api = createMockHomeApi({ registry: new HomeRegistry() })
+  return {
+    api,
+    facade: homeBuildingOf(
+      [
+        typedHomeDeviceData(
+          {
+            id: 'group-write-member',
+            settings: toHomeSettings(defined(READ_CASES[0]).snapshot),
+          },
+          { building: homeBuildingRef() },
+        ),
+      ],
+      api,
+    ),
+  }
+}
 
 describeAtaGroupWriteContract('Home building', async (state) => {
-  const api = createMockHomeApi({ registry: new HomeRegistry() })
-  const facade = homeBuildingOf(
-    [
-      typedHomeDeviceData(
-        {
-          id: 'group-write-member',
-          settings: toHomeSettings(defined(READ_CASES[0]).snapshot),
-        },
-        { building: homeBuildingRef() },
-      ),
-    ],
-    api,
-  )
-  await facade.updateGroupState(state)
-  return decodeHomeWrite(
-    defined(vi.mocked(api.updateValues).mock.lastCall?.[1]),
-  )
+  const building = homeBuildingWriting()
+  await building.facade.updateGroupState(state)
+  return decodeHomeApiWrite(building.api)
 })
 
-// Two implementations can answer "the members disagree", and both spell
+// The combination delivers the delta to every group's wire, so the
+// clause runs once per wire, each run over its own combined write.
+const writeCombined = async (
+  state: ClassicGroupState,
+): Promise<{
+  readonly classic: DeliveredWrite
+  readonly home: DeliveredWrite
+}> => {
+  const zone = classicZoneWriting()
+  const building = homeBuildingWriting()
+  await combineAtaGroups([zone.facade, building.facade]).updateGroupState(state)
+  return {
+    classic: decodeClassicZoneWrite(zone.updateGroupState),
+    home: decodeHomeApiWrite(building.api),
+  }
+}
+
+describeAtaGroupWriteContract(
+  'combined groups, on the Classic wire',
+  async (state) => {
+    const { classic } = await writeCombined(state)
+    return classic
+  },
+)
+
+describeAtaGroupWriteContract(
+  'combined groups, on the Home wire',
+  async (state) => {
+    const { home } = await writeCombined(state)
+    return home
+  },
+)
+
+// Three implementations can answer "the members disagree", and all spell
 // it the same way: `null`, the group vocabulary's mixed marker — the
 // Classic zone passes the wire's own fold through, the Home building
-// folds its members itself. A group of one can never be mixed, so the
-// device legs stay out by construction.
+// folds its members itself, the combination folds its groups. A group of
+// one can never be mixed, so the device legs stay out by construction.
 describe('ataGroup — a divergent field reads as the null mixed marker', () => {
   it('classic zone passes the wire fold through untouched', async () => {
     const registry = classicSnapshotRegistry(defined(READ_CASES[0]).snapshot)
@@ -407,6 +487,19 @@ describe('ataGroup — a divergent field reads as the null mixed marker', () => 
 
     expect(state.OperationMode).toBeNull()
     expect(state.Power).toBeNull()
+    expect(state.SetTemperature).toBe(shared.setTemperature)
+  })
+
+  it('combined groups fold a field their groups disagree on to null', async () => {
+    const shared = defined(READ_CASES[0]).snapshot
+    const combined = combineAtaGroups([
+      classicZoneAnswering(shared),
+      homeBuildingHolding({ ...shared, mode: ClassicOperationMode.dry }),
+    ])
+    const state = okValue(await combined.getGroup())
+
+    expect(state.OperationMode).toBeNull()
+    expect(state.Power).toBe(shared.isOn)
     expect(state.SetTemperature).toBe(shared.setTemperature)
   })
 })
@@ -486,6 +579,25 @@ describe('ataGroup — the native zone write speaks null on the wire', () => {
   })
 })
 
+// The combination counts a group's no-change answer as success, the way
+// a group counts its members': an empty delta — which the native zone
+// write refuses with `NoChangesError` and the Home building skips —
+// resolves without reaching either wire.
+describe('ataGroup — an empty delta resolves on combined groups', () => {
+  beforeEach(resetHomeDevices)
+
+  it('reaches neither the Classic nor the Home wire', async () => {
+    const zone = classicZoneWriting()
+    const building = homeBuildingWriting()
+
+    await expect(
+      combineAtaGroups([zone.facade, building.facade]).updateGroupState({}),
+    ).resolves.toBeUndefined()
+    expect(zone.updateGroupState).not.toHaveBeenCalled()
+    expect(building.api.updateValues).not.toHaveBeenCalled()
+  })
+})
+
 // The member-modes read of the same contract: every implementation
 // answering getGroup answers its members' operation modes in the one
 // group vocabulary (Classic-numbered), `poweredOnly` keeping only the
@@ -549,14 +661,18 @@ const memberSnapshot = (member: GroupMember): GroupSnapshot => ({
   mode: member.mode,
 })
 
-describeMemberModesContract('Classic zone', (member, isPoweredOnly) => {
+// A Classic building zone over the one member.
+const memberZone = (member: GroupMember): ClassicBuildingFacade => {
   const registry = classicSnapshotRegistry(memberSnapshot(member))
-  const facade = new ClassicBuildingFacade(
+  return new ClassicBuildingFacade(
     createMockClassicApi({ registry }),
     defined(registry.buildings.getById(1)),
   )
-  return facade.getMemberOperationModes({ poweredOnly: isPoweredOnly })
-})
+}
+
+describeMemberModesContract('Classic zone', (member, isPoweredOnly) =>
+  memberZone(member).getMemberOperationModes({ poweredOnly: isPoweredOnly }),
+)
 
 describeMemberModesContract('Classic ATA device', (member, isPoweredOnly) => {
   const registry = classicSnapshotRegistry(memberSnapshot(member))
@@ -590,6 +706,12 @@ describeMemberModesContract('Home building', (member, isPoweredOnly) => {
   ])
   return facade.getMemberOperationModes({ poweredOnly: isPoweredOnly })
 })
+
+describeMemberModesContract('combined groups', (member, isPoweredOnly) =>
+  combineAtaGroups([memberZone(member)]).getMemberOperationModes({
+    poweredOnly: isPoweredOnly,
+  }),
+)
 
 // The multi-member implementations share two more clauses a group of
 // one cannot host: member order is preserved, and non-ATA members never
@@ -654,6 +776,44 @@ describeMultiMemberModesContract('Home building', (isPoweredOnly) => {
     ),
   ])
   return facade.getMemberOperationModes({ poweredOnly: isPoweredOnly })
+})
+
+// The combination's members are its groups' members, group after group:
+// a heating Classic member, then a stopped cooling Home member, each
+// group also holding an ATW unit, which contributes no mode.
+describeMultiMemberModesContract('combined groups', (isPoweredOnly) => {
+  const registry = populatedClassicRegistry({
+    buildings: [classicBuildingData()],
+    devices: [
+      classicAtaDevice({
+        Device: classicAtaDeviceData({
+          OperationMode: ClassicOperationMode.heat,
+          Power: true,
+        }),
+      }),
+      classicAtwDevice(),
+    ],
+  })
+  const cooling = memberSnapshot({
+    isOn: false,
+    mode: ClassicOperationMode.cool,
+  })
+  return combineAtaGroups([
+    new ClassicBuildingFacade(
+      createMockClassicApi({ registry }),
+      defined(registry.buildings.getById(1)),
+    ),
+    homeBuildingOf([
+      typedHomeDeviceData(
+        { id: 'combined-modes-ata', settings: toHomeSettings(cooling) },
+        { building: homeBuildingRef() },
+      ),
+      typedHomeAtwDeviceData(
+        { id: 'combined-modes-atw' },
+        { building: homeBuildingRef() },
+      ),
+    ]),
+  ]).getMemberOperationModes({ poweredOnly: isPoweredOnly })
 })
 
 // A member mode outside the known vocabulary is where the dialects

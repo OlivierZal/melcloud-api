@@ -5,6 +5,7 @@ export type {
   ReportQuery,
 } from './report-types.ts'
 
+export { type AtaGroup, combineAtaGroups } from './ata-group-union.ts'
 export { ClassicAreaFacade } from './classic-area.ts'
 export { createFacade } from './classic-factory.ts'
 export { ClassicFloorFacade } from './classic-floor.ts'

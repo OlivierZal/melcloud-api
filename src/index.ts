@@ -247,6 +247,7 @@ export {
   ValidationError,
 } from './errors/index.ts'
 export {
+  type AtaGroup,
   type ClassicBuildingFacade,
   type ClassicDeviceAtaFacade,
   type ClassicDeviceAtwFacade,
@@ -265,6 +266,7 @@ export {
   type ReportChartPieOptions,
   type ReportQuery,
   ClassicFacadeManager,
+  combineAtaGroups,
   HomeBaseDeviceFacade,
   HomeBuildingFacade,
   HomeDeviceAtaFacade,
