@@ -23,33 +23,35 @@ import {
 } from '../home-fixtures.ts'
 
 // A unit's own fault reaches the two dialects differently — Classic lists
-// a flag AND the wording MELCloud gives it, Home flags it alone — and the
-// contract is what a consumer may act on either way: the flag is the
-// unit's, never the cloud's or this SDK's, and the text is there when the
-// dialect carries one. A faulted unit stays reachable (`isAvailable`) and
-// keeps answering writes (live-read 2026-11-06 on a unit in `E6`), which
-// is why the flag has to be read on its own.
+// a flag AND the sentence MELCloud gives it, Home a flag and the code
+// alone (its `ErrorCode` setting) — and the contract is what a consumer
+// may act on either way: the flag is the unit's, never the cloud's or this
+// SDK's, and the wording is the dialect's own. A faulted unit stays
+// reachable (`isAvailable`) and keeps answering writes (live-read
+// 2026-11-06 on a unit in `E6`), which is why the flag has to be read on
+// its own.
 const FAULT = 'E6 : Elektrisk / kommunikasjons feil (E6) '
 
+const CODE = 'E6'
+
 const CASES: readonly {
-  readonly errorMessage: string | null
   readonly isInError: boolean
   readonly label: string
 }[] = [
-  { errorMessage: null, isInError: false, label: 'a healthy unit' },
-  { errorMessage: FAULT.trim(), isInError: true, label: 'a faulted unit' },
+  { isInError: false, label: 'a healthy unit' },
+  { isInError: true, label: 'a faulted unit' },
 ]
 
 /**
  * Runs the fault contract against one dialect.
  * @param name - Implementation label used in the test titles.
  * @param read - Builds a facade over a unit in the given fault state.
- * @param hasWording - Whether the dialect carries the fault text.
+ * @param wording - What the dialect words a fault as.
  */
 const describeFaultContract = (
   name: string,
   read: (isInError: boolean) => FaultAware,
-  hasWording: boolean,
+  wording: string,
 ): void => {
   describe(`isInError — ${name}`, () => {
     beforeEach(resetHomeDevices)
@@ -58,14 +60,9 @@ const describeFaultContract = (
       expect(read(isInError).isInError).toBe(isInError)
     })
 
-    it.each(CASES)(
-      'words $label as the dialect does',
-      ({ errorMessage, isInError }) => {
-        expect(read(isInError).errorMessage).toBe(
-          hasWording ? errorMessage : null,
-        )
-      },
-    )
+    it.each(CASES)('words $label as the dialect does', ({ isInError }) => {
+      expect(read(isInError).errorMessage).toBe(isInError ? wording : null)
+    })
   })
 }
 
@@ -97,15 +94,33 @@ describeFaultContract(
       instance,
     )
   },
-  true,
+  FAULT.trim(),
 )
 
+// The healthy unit's setting is not trusted to be empty: the flag decides.
 describeFaultContract(
   'Home device',
   (isInError) =>
     new HomeDeviceAtaFacade(
       createMockHomeApi(),
-      homeDevice({ id: `contract-fault-${String(isInError)}`, isInError }),
+      homeDevice({
+        id: `contract-fault-${String(isInError)}`,
+        isInError,
+        settings: { ErrorCode: ` ${CODE} `, IsInError: String(isInError) },
+      }),
     ),
-  false,
+  CODE,
 )
+
+describe('errorMessage — Home device without a code', () => {
+  beforeEach(resetHomeDevices)
+
+  it('reads a faulted unit with no code as unworded', () => {
+    const facade = new HomeDeviceAtaFacade(
+      createMockHomeApi(),
+      homeDevice({ id: 'contract-fault-uncoded', isInError: true }),
+    )
+
+    expect(facade.errorMessage).toBeNull()
+  })
+})

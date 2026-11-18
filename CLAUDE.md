@@ -220,8 +220,14 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   the raw `Offline` flag to anything (com.melcloud #1479/#1481).
 - A unit's OWN fault is a second contract, `FaultAware` (60.5.0):
   `isInError` (Classic `HasError`, Home `isInError`) and `errorMessage`
-  (Classic `ErrorMessages`, trimmed; `null` on Home, which only flags
-  it). Orthogonal to availability by measurement: a unit in `E6` (the
+  (Classic `ErrorMessages`, trimmed; Home the `ErrorCode` entry of the
+  unit's `/context` settings array, the code alone, gated on the flag —
+  60.7.0). Home was read as flag-only until a unit in `E6` was read on
+  2026-11-18: its settings array carried `IsInError: True` and
+  `ErrorCode: E6` beside the top-level `isInError` — the `/context`
+  device schemas are loose, so the entry was in the registry all along,
+  and 60.5.0 had pointed consumers at the error log for a wording the
+  listing already gave. Orthogonal to availability by measurement: a unit in `E6` (the
   indoor/outdoor communication fault) stayed `Offline: false` and echoed
   every `SetAta` with `200`, the fault attached (diagnostic report of
   2026-11-06), so nothing but the flag says the unit is faulted — and the
