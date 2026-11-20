@@ -29,7 +29,8 @@ import type {
 } from './ids.ts'
 
 /**
- * Common shape shared by every Classic zone variant returned from the registry — id, hierarchy depth, display name.
+ * Common shape shared by every Classic zone variant returned from the registry
+ * — id, hierarchy depth, display name.
  */
 interface BaseZone {
   readonly id: number
@@ -65,7 +66,8 @@ interface DeviceDataMapping {
 }
 
 /**
- * Wire-format area entry from `ListDevices`; `FloorId` is `null` when the area sits directly under the building, or a floor id otherwise.
+ * Wire-format area entry from `ListDevices`; `FloorId` is `null` when the area
+ * sits directly under the building, or a floor id otherwise.
  * @template T - Type of the `FloorId` field: a floor id when the area
  * belongs to a floor, or `null` when it sits directly under the building.
  * @category Types
@@ -78,7 +80,8 @@ export interface ClassicAreaData<T extends ClassicFloorID | null> {
 }
 
 /**
- * Either floor-bound or directly under-building variant of {@link ClassicAreaData}.
+ * Either floor-bound or directly under-building variant of
+ * {@link ClassicAreaData}.
  * @category Types
  */
 export type ClassicAreaDataAny =
@@ -94,8 +97,9 @@ export interface ClassicAreaZone extends BaseZone {
 }
 
 /**
- * Wire-format building entry from `ListDevices` (without the nested `Structure`).
- * Inherits frost-protection + holiday-mode flags from {@link ClassicZoneSettings}.
+ * Wire-format building entry from `ListDevices` (without the nested
+ * `Structure`). Inherits frost-protection + holiday-mode flags from
+ * {@link ClassicZoneSettings}.
  * @category Types
  */
 export interface ClassicBuildingData extends ClassicZoneSettings {
@@ -140,7 +144,8 @@ export interface ClassicBuildingData extends ClassicZoneSettings {
 export type ClassicBuildingOwner = Readonly<Record<string, unknown>>
 
 /**
- * Full wire-format building from `ListDevices`, including the nested floor / area / device hierarchy.
+ * Full wire-format building from `ListDevices`, including the nested floor /
+ * area / device hierarchy.
  * @category Types
  */
 export interface ClassicBuildingWithStructure extends ClassicBuildingData {
@@ -170,7 +175,8 @@ export interface ClassicBuildingZone extends BaseZone {
 }
 
 /**
- * MELCloud's date-time-as-components encoding used on holiday-mode payloads; `null` when the date is unset.
+ * MELCloud's date-time-as-components encoding used on holiday-mode payloads;
+ * `null` when the date is unset.
  * @category Types
  */
 export type ClassicDateTimeComponents = {
@@ -210,7 +216,8 @@ export interface ClassicDeviceZone extends BaseZone {
 }
 
 /**
- * Wire-format energy report payload narrowed by the device's `Type` (Ata or Atw — Erv has no energy data).
+ * Wire-format energy report payload narrowed by the device's `Type` (Ata or Atw
+ * — Erv has no energy data).
  * @template T - Device type selecting the energy payload shape; resolves to
  * `never` for Erv, which reports no energy data.
  * @category Types
@@ -240,7 +247,8 @@ export interface ClassicErrorLogData {
 }
 
 /**
- * POST body for `Report/GetUnitErrorLog2`; either an explicit date range or a rolling `Duration` window.
+ * POST body for `Report/GetUnitErrorLog2`; either an explicit date range or a
+ * rolling `Duration` window.
  * @category Types
  */
 export interface ClassicErrorLogPostData {
@@ -248,14 +256,16 @@ export interface ClassicErrorLogPostData {
   // device id itself (`getErrorLog(query, deviceIds)`), so the body
   // takes what the host holds; the wire accepts any numeric id.
   readonly DeviceIDs: number | readonly number[]
-  // Number of days up to now, replaces `FromDate` and `ToDate` if strictly positive
+  // Number of days up to now, replaces `FromDate` and `ToDate` if strictly
+  // positive
   readonly Duration?: number
   readonly FromDate?: string
   readonly ToDate?: string
 }
 
 /**
- * Failure half of the discriminated mutation response — `Success: false` plus per-attribute rejection messages.
+ * Failure half of the discriminated mutation response — `Success: false` plus
+ * per-attribute rejection messages.
  * @category Types
  */
 export interface ClassicFailureData {
@@ -304,7 +314,8 @@ export interface ClassicFrostProtectionData {
 }
 
 /**
- * Identifier bundle scoping a frost-protection update to one or more buildings, floors, areas, or devices.
+ * Identifier bundle scoping a frost-protection update to one or more buildings,
+ * floors, areas, or devices.
  * @category Types
  */
 export interface ClassicFrostProtectionLocation {
@@ -315,7 +326,8 @@ export interface ClassicFrostProtectionLocation {
 }
 
 /**
- * POST body for `FrostProtection/Update` — scope plus the new bounds and on/off flag.
+ * POST body for `FrostProtection/Update` — scope plus the new bounds and on/off
+ * flag.
  * @category Types
  */
 export interface ClassicFrostProtectionPostData extends ClassicFrostProtectionLocation {
@@ -357,7 +369,8 @@ export interface ClassicHolidayModeData {
 }
 
 /**
- * Identifier bundle scoping a holiday-mode update to one or more buildings, floors, areas, or devices.
+ * Identifier bundle scoping a holiday-mode update to one or more buildings,
+ * floors, areas, or devices.
  * @category Types
  */
 export interface ClassicHolidayModeLocation {
@@ -368,7 +381,8 @@ export interface ClassicHolidayModeLocation {
 }
 
 /**
- * POST body for `HolidayMode/Update` — start/end dates plus per-time-zone scope entries.
+ * POST body for `HolidayMode/Update` — start/end dates plus per-time-zone scope
+ * entries.
  * @category Types
  */
 export interface ClassicHolidayModePostData {
@@ -387,7 +401,8 @@ export interface ClassicHolidayModeTimeZone extends ClassicHolidayModeLocation {
 }
 
 /**
- * Wire-format `ListDevices` device entry: header (id, name, parents) plus the typed `Device` payload.
+ * Wire-format `ListDevices` device entry: header (id, name, parents) plus the
+ * typed `Device` payload.
  * @template T - Device type discriminating both the header's `Type` field and
  * the shape of the nested `Device` payload.
  * @category Types
@@ -422,7 +437,8 @@ export type ClassicListDeviceData<T extends ClassicDeviceType> =
 export type ClassicListDeviceDataAny = ClassicListDeviceData<ClassicDeviceType>
 
 /**
- * Wire-format response from `Login/ClientLogin3`; `LoginData` is `null` when credentials are rejected.
+ * Wire-format response from `Login/ClientLogin3`; `LoginData` is `null` when
+ * credentials are rejected.
  * @category Types
  */
 export interface ClassicLoginData {
@@ -453,7 +469,8 @@ export interface ClassicLoginPostData {
 }
 
 /**
- * Operation-mode breakdown returned by `Report/GetOperationModeLog2` — one `{Key,Value}` entry per mode.
+ * Operation-mode breakdown returned by `Report/GetOperationModeLog2` — one
+ * `{Key,Value}` entry per mode.
  * @category Types
  */
 export type ClassicOperationModeLogData = { Key: string; Value: number }[]
@@ -470,7 +487,8 @@ export interface ClassicQuantizedCoordinates {
 }
 
 /**
- * Generic report payload (temperatures, signal, etc.) returned by the various `Report/*` endpoints.
+ * Generic report payload (temperatures, signal, etc.) returned by the various
+ * `Report/*` endpoints.
  * @category Types
  */
 export interface ClassicReportData {
@@ -484,7 +502,8 @@ export interface ClassicReportData {
 }
 
 /**
- * Common POST body for the `Report/*` endpoints — single device, ISO date range, optional rolling `Duration`.
+ * Common POST body for the `Report/*` endpoints — single device, ISO date
+ * range, optional rolling `Duration`.
  * @category Types
  */
 export interface ClassicReportPostData {
@@ -503,7 +522,8 @@ export type ClassicSetDeviceData<T extends ClassicDeviceType> =
   DeviceDataMapping[T]['set']
 
 /**
- * POST body for `Device/Set{Ata,Atw,Erv}` — base header plus every required field for the device type.
+ * POST body for `Device/Set{Ata,Atw,Erv}` — base header plus every required
+ * field for the device type.
  * @template T - Device type whose mutable fields, made required, form the
  * body alongside the base header.
  * @category Types
@@ -521,7 +541,8 @@ export interface ClassicSetPowerPostData {
 }
 
 /**
- * Query-string parameters identifying a zone settings target (used by `FrostProtection/GetSettings`, `HolidayMode/GetSettings`).
+ * Query-string parameters identifying a zone settings target (used by
+ * `FrostProtection/GetSettings`, `HolidayMode/GetSettings`).
  * @category Types
  */
 export interface ClassicSettingsParams {
@@ -531,7 +552,8 @@ export interface ClassicSettingsParams {
 }
 
 /**
- * Success half of the discriminated mutation response — `Success: true` and no attribute errors.
+ * Success half of the discriminated mutation response — `Success: true` and no
+ * attribute errors.
  * @category Types
  */
 export interface ClassicSuccessData {
@@ -540,7 +562,8 @@ export interface ClassicSuccessData {
 }
 
 /**
- * POST body for `Report/GetTemperatureLog2`; extends the generic report body with an optional `Location` selector.
+ * POST body for `Report/GetTemperatureLog2`; extends the generic report body
+ * with an optional `Location` selector.
  * @category Types
  */
 export interface ClassicTemperatureLogPostData extends ClassicReportPostData {
@@ -548,7 +571,8 @@ export interface ClassicTemperatureLogPostData extends ClassicReportPostData {
 }
 
 /**
- * Wire-format response from `Tile/Get2`; `SelectedDevice` carries the full device data when a device id was specified, `null` otherwise.
+ * Wire-format response from `Tile/Get2`; `SelectedDevice` carries the full
+ * device data when a device id was specified, `null` otherwise.
  * @category Types
  */
 export interface ClassicTilesData {
@@ -564,7 +588,8 @@ export interface ClassicTilesData {
 }
 
 /**
- * POST body for `Tile/Get2`; `SelectedBuilding` + `SelectedDevice` scope the response to a single device.
+ * POST body for `Tile/Get2`; `SelectedBuilding` + `SelectedDevice` scope the
+ * response to a single device.
  * @category Types
  */
 export interface ClassicTilesPostData {
@@ -574,7 +599,8 @@ export interface ClassicTilesPostData {
 }
 
 /**
- * Mutable fields for a `Device/Set{Ata,Atw,Erv}` payload, narrowed by device type.
+ * Mutable fields for a `Device/Set{Ata,Atw,Erv}` payload, narrowed by device
+ * type.
  * @template T - Device type selecting which fields may be mutated.
  * @category Types
  */
@@ -582,14 +608,16 @@ export type ClassicUpdateDeviceData<T extends ClassicDeviceType> =
   DeviceDataMapping[T]['update']
 
 /**
- * Discriminated union of every registry zone shape (building / floor / area / device).
+ * Discriminated union of every registry zone shape (building / floor / area /
+ * device).
  * @category Types
  */
 export type ClassicZone =
   ClassicAreaZone | ClassicBuildingZone | ClassicDeviceZone | ClassicFloorZone
 
 /**
- * Inherited frost-protection + holiday-mode flags carried on every building, floor, and area record.
+ * Inherited frost-protection + holiday-mode flags carried on every building,
+ * floor, and area record.
  * @category Types
  */
 export interface ClassicZoneSettings

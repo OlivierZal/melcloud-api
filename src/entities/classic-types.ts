@@ -29,7 +29,8 @@ export type ClassicModel =
   ClassicArea | ClassicBuilding | ClassicDeviceAny | ClassicFloor
 
 /**
- * Type guard that narrows a {@link ClassicDeviceAny} to a specific {@link ClassicDevice} variant.
+ * Type guard that narrows a {@link ClassicDeviceAny} to a specific
+ * {@link ClassicDevice} variant.
  * @param device - The device model to narrow.
  * @param type - The expected device type literal.
  * @returns Whether the device matches the given type.

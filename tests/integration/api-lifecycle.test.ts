@@ -382,13 +382,15 @@ describe('api lifecycle', () => {
         transport: mockHttpClient,
       })
 
-      // First fetch swallows the 429 (graceful degradation) and records the gate.
+      // First fetch swallows the 429 (graceful degradation) and records the
+      // gate.
       expect(api.registry.getDevices()).toHaveLength(0)
       expect(api.isRateLimited).toBe(true)
 
       mockRequest.mockClear()
 
-      // Second fetch short-circuits via the rate-limit gate: no HTTP call is made.
+      // Second fetch short-circuits via the rate-limit gate: no HTTP call is
+      // made.
       const buildings = await api.fetch()
 
       expect(buildings).toStrictEqual([])

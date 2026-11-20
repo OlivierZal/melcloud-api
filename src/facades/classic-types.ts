@@ -43,7 +43,8 @@ import type {
 } from './report-types.ts'
 
 /**
- * Facade for a MELCloud building, combining zone settings with super device operations.
+ * Facade for a MELCloud building, combining zone settings with super device
+ * operations.
  */
 export interface ClassicBuildingFacade
   extends ClassicBaseBuilding, ClassicZoneFacade {
@@ -130,7 +131,8 @@ export type ClassicDeviceErvFacade = ClassicDeviceFacade<
 >
 
 /**
- * Facade for an individual MELCloud device with type-safe data access and control.
+ * Facade for an individual MELCloud device with type-safe data access and
+ * control.
  * @template T - Device type discriminator narrowing device data, update
  * payloads, and report shapes.
  * @category Facades
@@ -234,7 +236,8 @@ export interface ClassicEnergyReportExtract {
 }
 
 /**
- * Base facade contract shared by all facade types (building, floor, area, device).
+ * Base facade contract shared by all facade types (building, floor, area,
+ * device).
  * @category Facades
  */
 export interface ClassicFacade extends Identifiable {
@@ -295,7 +298,8 @@ export interface ClassicFacade extends Identifiable {
 }
 
 /**
- * Facade for zones (building, floor, area) that contain multiple ATA devices supporting group operations.
+ * Facade for zones (building, floor, area) that contain multiple ATA devices
+ * supporting group operations.
  * @category Facades
  */
 export interface ClassicZoneFacade extends ClassicFacade {
@@ -331,8 +335,8 @@ export const isClassicAtaFacade = (
 ): facade is ClassicDeviceAtaFacade => facade.type === ClassicDeviceType.Ata
 
 /**
- * Type guard that narrows a device facade to the ATW variant.
- * Allows consumers to safely access `hotWater` and `zone1` without type assertions.
+ * Type guard that narrows a device facade to the ATW variant. Allows consumers
+ * to safely access `hotWater` and `zone1` without type assertions.
  * @param facade - The device facade to check.
  * @returns Whether the facade is an ATW facade.
  * @category Facades

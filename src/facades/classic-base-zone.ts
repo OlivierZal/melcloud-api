@@ -17,7 +17,8 @@ import { ClassicBaseFacade } from './classic-base.ts'
 import { classicGroupMemberModes } from './home-ata-group.ts'
 
 /**
- * Abstract base for zone facades (building, floor, area) that support ATA group operations.
+ * Abstract base for zone facades (building, floor, area) that support ATA group
+ * operations.
  * @template T - Zone model class (area, building, or floor) backing this
  * facade in the registry.
  */

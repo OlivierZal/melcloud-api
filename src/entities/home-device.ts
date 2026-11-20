@@ -32,10 +32,11 @@ export type HomeConnectivityTransition =
   | { readonly kind: 'stale'; readonly since: Temporal.PlainDateTime }
 
 /**
- * Mutable wrapper around a {@link HomeDeviceData}, preserving object identity across syncs.
- * `TData` narrows the wrapped payload to a specific connection-type variant
- * (e.g. {@link HomeAtaDeviceData}) when callers have already discriminated on
- * {@link HomeDevice.type}; defaults to the full union for the registry.
+ * Mutable wrapper around a {@link HomeDeviceData}, preserving object identity
+ * across syncs. `TData` narrows the wrapped payload to a specific
+ * connection-type variant (e.g. {@link HomeAtaDeviceData}) when callers have
+ * already discriminated on {@link HomeDevice.type}; defaults to the full union
+ * for the registry.
  * @template TData - Wrapped wire-format payload variant: a connection-type
  * specific shape once discriminated, or the full {@link HomeDeviceData} union
  * by default.

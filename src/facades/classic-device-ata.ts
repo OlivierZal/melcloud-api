@@ -54,7 +54,8 @@ const energyReportBuckets = [
 ] as const
 
 /**
- * Facade for Air-to-Air (ATA) devices with per-operation-mode temperature clamping.
+ * Facade for Air-to-Air (ATA) devices with per-operation-mode temperature
+ * clamping.
  * @category Facades
  */
 export class ClassicDeviceAtaFacade extends BaseDeviceFacade<

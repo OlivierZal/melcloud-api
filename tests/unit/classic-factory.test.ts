@@ -102,5 +102,6 @@ describe(createFacade, () => {
     ).toThrow('ClassicDevice not found in registry')
   })
 
-  // Unsupported model types are a compile-time error via exhaustive modelKind switch
+  // Unsupported model types are a compile-time error via exhaustive modelKind
+  // switch
 })

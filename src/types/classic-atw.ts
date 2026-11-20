@@ -14,9 +14,10 @@ import type {
 import type { ClassicGetDeviceData } from './classic-generic.ts'
 
 /**
- * Energy report payload for an ATW (air-to-water) device returned by `EnergyCost/Report`.
- * The consumed/produced arrays are energy buckets aligned with `Labels`;
- * `Labels` is numeric on this endpoint (live payload, 2026-07-18).
+ * Energy report payload for an ATW (air-to-water) device returned by
+ * `EnergyCost/Report`. The consumed/produced arrays are energy buckets aligned
+ * with `Labels`; `Labels` is numeric on this endpoint (live payload,
+ * 2026-07-18).
  * @category Types
  */
 export interface ClassicEnergyDataAtw {
@@ -125,7 +126,8 @@ export interface ClassicSetDeviceDataAtw
 }
 
 /**
- * Per-zone target temperatures on an ATW update payload (heating / cooling flow temps, tank water, room set-points).
+ * Per-zone target temperatures on an ATW update payload (heating / cooling flow
+ * temps, tank water, room set-points).
  * @category Types
  */
 export interface ClassicTemperatureDataAtw {
@@ -139,7 +141,8 @@ export interface ClassicTemperatureDataAtw {
 }
 
 /**
- * Mutable subset of an ATW device's data; combines per-zone operation modes, target temperatures, and the hot-water override.
+ * Mutable subset of an ATW device's data; combines per-zone operation modes,
+ * target temperatures, and the hot-water override.
  * @category Types
  */
 export interface ClassicUpdateDeviceDataAtw

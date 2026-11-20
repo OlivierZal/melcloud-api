@@ -152,9 +152,12 @@ export const homeGroupMemberModes = (
  * @param state.FanSpeed - Fan-speed setpoint; absent or `null` skips it.
  * @param state.OperationMode - Operation mode; absent or `null` skips it.
  * @param state.Power - Power flag; absent or `null` skips it.
- * @param state.SetTemperature - Temperature setpoint; absent or `null` skips it.
- * @param state.VaneHorizontalDirection - Horizontal vane position; absent or `null` skips it.
- * @param state.VaneVerticalDirection - Vertical vane position; absent or `null` skips it.
+ * @param state.SetTemperature - Temperature setpoint; absent or `null` skips
+ * it.
+ * @param state.VaneHorizontalDirection - Horizontal vane position; absent or
+ * `null` skips it.
+ * @param state.VaneVerticalDirection - Vertical vane position; absent or `null`
+ * skips it.
  * @returns The equivalent Home ATA update payload.
  */
 export const toHomeAtaValues = (state: ClassicGroupState): HomeAtaValues => ({

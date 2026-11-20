@@ -445,7 +445,8 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (`Minute`, `Hour`, `Day`, `Week` or `Month`).
+   * @param params.interval - Aggregation interval (`Minute`, `Hour`, `Day`,
+   * `Week` or `Month`).
    * @param params.measure - Energy direction (`'consumed'` or
    * `'produced'`); ATW only, where it defaults to `'consumed'` — the
    * ATA counter is consumption by definition.

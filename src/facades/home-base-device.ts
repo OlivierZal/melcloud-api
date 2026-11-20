@@ -401,7 +401,9 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
     if (model === undefined) {
       throw new EntityNotFoundError('Device', { entityId: this.#id })
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- the id was minted from a TData-shaped model and a physical device never changes type
+    /* eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion --
+       the id was minted from a TData-shaped model and a physical device never
+       changes type */
     return model as HomeDevice<TData>
   }
 

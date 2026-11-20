@@ -51,18 +51,21 @@ export interface HomeAPIAdapter extends BaseAPIAdapter {
    */
   readonly user: HomeUser | null
   /**
-   * Fetch all buildings and sync the device registry — the heartbeat, mirroring Classic `fetch()`.
+   * Fetch all buildings and sync the device registry — the heartbeat, mirroring
+   * Classic `fetch()`.
    */
   readonly fetch: () => Promise<HomeBuilding[]>
   /**
-   * Fetch the internal-temperatures report (flow/return/tank/zone) for an ATW unit.
+   * Fetch the internal-temperatures report (flow/return/tank/zone) for an ATW
+   * unit.
    */
   readonly getAtwInternalTemperatures: (
     id: string,
     params: { from: string; period: string; to: string },
   ) => Promise<Result<HomeReportData[]>>
   /**
-   * Fetch energy telemetry for a unit; the registry's connection type selects the measure family.
+   * Fetch energy telemetry for a unit; the registry's connection type selects
+   * the measure family.
    */
   readonly getEnergy: (
     id: string,
@@ -74,7 +77,8 @@ export interface HomeAPIAdapter extends BaseAPIAdapter {
     },
   ) => Promise<Result<HomeEnergyData>>
   /**
-   * Fetch the error log for a unit; the registry's connection type selects the unit path.
+   * Fetch the error log for a unit; the registry's connection type selects the
+   * unit path.
    */
   readonly getErrorLog: (id: string) => Promise<Result<HomeErrorLogEntry[]>>
   /**
@@ -85,7 +89,8 @@ export interface HomeAPIAdapter extends BaseAPIAdapter {
     params: { from: string; to: string },
   ) => Promise<Result<HomeEnergyData>>
   /**
-   * Fetch the temperature report for a unit; the registry's connection type selects the endpoint.
+   * Fetch the temperature report for a unit; the registry's connection type
+   * selects the endpoint.
    */
   readonly getTemperatures: (
     id: string,
@@ -114,7 +119,8 @@ export interface HomeAPIAdapter extends BaseAPIAdapter {
     postData: HomeOverheatProtectionPostData,
   ) => Promise<void>
   /**
-   * Push a setpoint update (wire path from the registry's connection type), then refresh.
+   * Push a setpoint update (wire path from the registry's connection type),
+   * then refresh.
    */
   readonly updateValues: (id: string, values: HomeDeviceValues) => Promise<void>
 }

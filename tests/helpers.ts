@@ -30,7 +30,8 @@ export function matchObject(shape: object): unknown {
  * boilerplate at every call site (`result.ok && result.value.X`).
  * @param result - The {@link Result} to unwrap.
  * @returns The success value.
- * @throws An `Error` summarising the failure variant when `result.ok` is `false`.
+ * @throws An `Error` summarising the failure variant when `result.ok` is
+ * `false`.
  */
 export const okValue = <T>(result: Result<T>): T => {
   if (!result.ok) {

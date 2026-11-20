@@ -148,7 +148,8 @@ describe('model registry', () => {
       const registry = new ClassicRegistry()
       registry.syncDevices(allDevices)
 
-      // Re-sync each device ID with a mismatched Type to cover all false branches
+      // Re-sync each device ID with a mismatched Type to cover all false
+      // branches
       registry.syncDevices([
         cast({
           ...classicAtaDevice(),

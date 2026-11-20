@@ -21,7 +21,8 @@ export class ClassicArea extends BaseModel<ClassicAreaID> {
    * Builds an area model from a wire-format {@link ClassicAreaData} entry.
    * @param root0 - Wire-format area data.
    * @param root0.BuildingId - Owning building identifier.
-   * @param root0.FloorId - Owning floor identifier (or `null` if directly under the building).
+   * @param root0.FloorId - Owning floor identifier (or `null` if directly under
+   * the building).
    * @param root0.ID - Area identifier.
    * @param root0.Name - Area display name.
    */
@@ -46,7 +47,8 @@ export class ClassicArea extends BaseModel<ClassicAreaID> {
  * @param model - The model to mutate in-place.
  * @param data - The fresh area data from the upstream API.
  * @param data.BuildingId - Owning building identifier.
- * @param data.FloorId - Owning floor identifier (or `null` if directly under the building).
+ * @param data.FloorId - Owning floor identifier (or `null` if directly under
+ * the building).
  * @param data.Name - Updated area display name.
  */
 export const syncArea = (

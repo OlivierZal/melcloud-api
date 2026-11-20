@@ -3095,7 +3095,8 @@ describe('melcloud home API', () => {
 
         expect(buildings).toStrictEqual([homeContextBuilding])
 
-        // Should have used refresh, not full OIDC (no other fetch calls for redirects)
+        // Should have used refresh, not full OIDC (no other fetch calls for
+        // redirects)
         expect(mockFetch).toHaveBeenLastCalledWith(
           expect.stringContaining('/connect/token'),
           expect.any(Object),

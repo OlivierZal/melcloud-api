@@ -152,7 +152,8 @@ const mergeSeries = (
 }
 
 /**
- * Facade for Air-to-Water (ATW) devices with per-zone temperature clamping and merged temperature reports.
+ * Facade for Air-to-Water (ATW) devices with per-zone temperature clamping and
+ * merged temperature reports.
  * @category Facades
  */
 export class ClassicDeviceAtwFacade extends BaseDeviceFacade<

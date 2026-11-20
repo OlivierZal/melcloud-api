@@ -140,9 +140,10 @@ const getDateTimeComponents = (
       }
 
 /**
- * Abstract base for all facades. Provides common functionality for frost protection,
- * holiday mode, power control, signal strength, tiles, and error log retrieval.
- * Settings resolution falls back from zone level to device level when needed.
+ * Abstract base for all facades. Provides common functionality for frost
+ * protection, holiday mode, power control, signal strength, tiles, and error
+ * log retrieval. Settings resolution falls back from zone level to device level
+ * when needed.
  * @template T - Model class backing this facade, resolved from the registry
  * by id.
  */
@@ -201,7 +202,8 @@ export abstract class ClassicBaseFacade<
     return this.api.registry
   }
 
-  // Zone-level settings are shared across devices, so any device id samples the zone's state.
+  // Zone-level settings are shared across devices, so any device id samples the
+  // zone's state.
   get #anyDeviceId(): ClassicDeviceID {
     const [id] = this.#deviceIds
     if (id === undefined) {
@@ -225,15 +227,14 @@ export abstract class ClassicBaseFacade<
     this.id = instance.id
   }
 
-  // Uses `@fetchDevices({ refresh, when: 'after' })` rather than `@syncDevices()`
-  // because the update response is a success/failure envelope with no
-  // device payload — notifying onSync without a genuine registry
-  // refresh would be a stale signal. The trade-off: onSync now fires
-  // from `api.fetch()` at the API level, carrying `{ type }` only —
-  // not the facade's `{ ids, type }` shape with specific device ids.
-  // Consumers listening to onSync should treat any call as "registry
-  // changed, re-inspect" rather than keying on the payload. Same
-  // applies to updateHolidayMode below.
+  // Uses `@fetchDevices({ refresh, when: 'after' })` rather than
+  // `@syncDevices()` because the update response is a success/failure envelope
+  // with no device payload — notifying onSync without a genuine registry
+  // refresh would be a stale signal. The trade-off: onSync now fires from
+  // `api.fetch()` at the API level, carrying `{ type }` only — not the facade's
+  // `{ ids, type }` shape with specific device ids. Consumers listening to
+  // onSync should treat any call as "registry changed, re-inspect" rather than
+  // keying on the payload. Same applies to updateHolidayMode below.
   @fetchDevices({
     when: 'after',
     refresh: async (self: ClassicBaseFacade<T>) => self.api.fetch(),

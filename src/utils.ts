@@ -20,7 +20,8 @@ import {
 // API encodes year-month as YYYYMM integer (e.g., 202306 for June 2023)
 const YEAR_MONTH_DIVISOR = 100
 
-// 2024-01-01 was a Monday (ISO weekday 1), so UTC day N of Jan 2024 maps cleanly to weekday N.
+// 2024-01-01 was a Monday (ISO weekday 1), so UTC day N of Jan 2024 maps
+// cleanly to weekday N.
 const DAY_OF_WEEK_BASE_YEAR = 2024
 const MONTH_NAME_BASE_YEAR = 2024
 
@@ -148,8 +149,8 @@ export const toEpochMs = (value: string, timeZone?: string): number | null =>
   null
 
 /**
- * Factory for a type guard that narrows a key to the own keys of `record`.
- * Uses `Object.hasOwn` so prototype-chain pollution cannot produce false positives.
+ * Factory for a type guard that narrows a key to the own keys of `record`. Uses
+ * `Object.hasOwn` so prototype-chain pollution cannot produce false positives.
  * @param record - The record whose keys the returned guard recognises.
  * @returns A type guard checking own-key membership on `record`.
  */
@@ -245,7 +246,8 @@ const buildLabelFormatters = (
       const month = Number(label) % YEAR_MONTH_DIVISOR
 
       // Format month and year separately to preserve the "MMM yyyy" ordering
-      // across locales; `Intl.DateTimeFormat` with both fields reorders (e.g. ja → "yyyy年M月").
+      // across locales; `Intl.DateTimeFormat` with both fields reorders (e.g.
+      // ja → "yyyy年M月").
       const monthName = formatters.month.format(
         new Temporal.PlainDate(year, month, 1),
       )
@@ -282,7 +284,10 @@ export const typedKeys = <T extends Record<string, unknown>>(
  * @param value - The synchronously available value.
  * @returns The value, once resolved.
  */
-// eslint-disable-next-line @typescript-eslint/promise-function-async -- the async spelling would then trip require-await (no await inside): the rule pair leaves no disable-free form, and this one named escape spares one at every call site
+/* eslint-disable-next-line @typescript-eslint/promise-function-async -- the
+   async spelling would then trip require-await (no await inside): the rule pair
+   leaves no disable-free form, and this one named escape spares one at every
+   call site */
 export const resolved = <T>(value: T): Promise<T> => Promise.resolve(value)
 
 /**
@@ -386,12 +391,14 @@ interface ChartLineFormatOptions {
  * @param root0 - The raw report data from the Classic API.
  * @param root0.Data - The data series arrays.
  * @param root0.FromDate - The start date of the report period.
- * @param root0.LabelType - The label format type determining how labels are parsed.
+ * @param root0.LabelType - The label format type determining how labels are
+ * parsed.
  * @param root0.Labels - The raw label strings from the Classic API.
  * @param root0.ToDate - The end date of the report period.
  * @param options - Legend, unit, and locale for label formatting.
  * @param options.legend - Legend entries for each data series.
- * @param options.locale - BCP-47 locale tag; defaults to the runtime locale when omitted.
+ * @param options.locale - BCP-47 locale tag; defaults to the runtime locale
+ * when omitted.
  * @param options.unit - Unit of measurement for the data.
  * @returns Structured line chart options.
  */

@@ -178,8 +178,9 @@ const toWallClock = (iso: string, timezone = 'UTC'): string => {
 }
 
 /**
- * Abstract base for device-specific facades. Handles device data access, report generation,
- * value updates with effective flags, and ATA key conversion between set/list formats.
+ * Abstract base for device-specific facades. Handles device data access, report
+ * generation, value updates with effective flags, and ATA key conversion
+ * between set/list formats.
  * @template T - Device type discriminator narrowing device data, update
  * payloads, and effective flags to the device-type-specific shapes.
  */
@@ -329,9 +330,9 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
     return this.registry.devices
   }
 
-  // For ATA devices, ClassicAPI list responses use different property names than set
-  // requests (e.g., "FanSpeed" in list vs "SetFanSpeed" in set). Convert keys
-  // to set format, then keep only the fields tracked by flags.
+  // For ATA devices, ClassicAPI list responses use different property names
+  // than set requests (e.g., "FanSpeed" in list vs "SetFanSpeed" in set).
+  // Convert keys to set format, then keep only the fields tracked by flags.
   protected get setData(): Required<ClassicUpdateDeviceData<T>> {
     const dataEntries = Object.entries(this.data)
     const entries = (

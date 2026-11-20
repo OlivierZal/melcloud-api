@@ -8,7 +8,8 @@ import type {
 } from './ids.ts'
 
 /**
- * Common header fields for any `Device/Set*` POST body: target id and the bitfield identifying which mutated fields should be applied.
+ * Common header fields for any `Device/Set*` POST body: target id and the
+ * bitfield identifying which mutated fields should be applied.
  * @category Types
  */
 export interface ClassicBaseDevicePostData {
@@ -17,7 +18,9 @@ export interface ClassicBaseDevicePostData {
 }
 
 /**
- * Shape returned by `Device/Get` for any device type — same body as a set-device payload but with `EffectiveFlags` pinned to the unchanged sentinel.
+ * Shape returned by `Device/Get` for any device type — same body as a
+ * set-device payload but with `EffectiveFlags` pinned to the unchanged
+ * sentinel.
  * @category Types
  */
 export interface ClassicBaseGetDeviceData extends ClassicBaseSetDeviceData {

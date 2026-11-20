@@ -17,9 +17,9 @@ import type { ClassicGetDeviceData } from './classic-generic.ts'
 import type { ClassicAreaID, ClassicBuildingID, ClassicFloorID } from './ids.ts'
 
 /**
- * Energy report payload for an ATA (air-to-air) device returned by `EnergyCost/Report`.
- * The per-mode arrays are consumption buckets aligned with `Labels`;
- * `Labels` is numeric on this endpoint (day-of-week entries are .NET
+ * Energy report payload for an ATA (air-to-air) device returned by
+ * `EnergyCost/Report`. The per-mode arrays are consumption buckets aligned with
+ * `Labels`; `Labels` is numeric on this endpoint (day-of-week entries are .NET
  * 0-based, Sunday = 0, unlike the 1-based ISO labels of `Report/*`).
  * @category Types
  */
@@ -42,7 +42,8 @@ export interface ClassicEnergyDataAta {
 }
 
 /**
- * Wire-format response from `Group/Get` — current ATA group specification and applied state.
+ * Wire-format response from `Group/Get` — current ATA group specification and
+ * applied state.
  * @category Types
  */
 export interface ClassicGetGroupData {
@@ -55,7 +56,8 @@ export interface ClassicGetGroupData {
 }
 
 /**
- * POST body for `Group/Get` — identifies which zone (building, floor, or area) the group covers.
+ * POST body for `Group/Get` — identifies which zone (building, floor, or area)
+ * the group covers.
  * @category Types
  */
 export interface ClassicGetGroupPostData {
@@ -114,7 +116,8 @@ export interface ClassicSetDeviceDataAta
 }
 
 /**
- * ATA properties that use different names in list responses vs set requests (e.g., `ClassicFanSpeed` in list, `SetFanSpeed` in set).
+ * ATA properties that use different names in list responses vs set requests
+ * (e.g., `ClassicFanSpeed` in list, `SetFanSpeed` in set).
  * @category Types
  */
 export interface ClassicSetDeviceDataAtaInList {
@@ -124,7 +127,8 @@ export interface ClassicSetDeviceDataAtaInList {
 }
 
 /**
- * POST body for `Group/SetAta` — zone selector plus the state fields to push to every device in the group.
+ * POST body for `Group/SetAta` — zone selector plus the state fields to push to
+ * every device in the group.
  * @category Types
  */
 export interface ClassicSetGroupPostData {
@@ -133,7 +137,8 @@ export interface ClassicSetGroupPostData {
 }
 
 /**
- * Mutable subset of an ATA device's data; every field is optional so callers can push partial updates.
+ * Mutable subset of an ATA device's data; every field is optional so callers
+ * can push partial updates.
  * @category Types
  */
 export interface ClassicUpdateDeviceDataAta extends ClassicBaseUpdateDeviceData {
@@ -145,7 +150,8 @@ export interface ClassicUpdateDeviceDataAta extends ClassicBaseUpdateDeviceData 
 }
 
 /**
- * Set-request property names that have no direct counterpart in list responses (they map to `ClassicSetDeviceDataAtaInList` names instead).
+ * Set-request property names that have no direct counterpart in list responses
+ * (they map to `ClassicSetDeviceDataAtaInList` names instead).
  * @category Types
  */
 export type KeyOfClassicSetDeviceDataAtaNotInList =
