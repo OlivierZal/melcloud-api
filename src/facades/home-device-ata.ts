@@ -255,7 +255,6 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * Home's update refuses only a payload with no defined value, and that
    * `NoChangesError` counts as success.
    * @param state - Partial Classic group state to push to the device.
-   * @returns The zone-shaped success outcome once the write completes.
    */
   public async updateGroupState(state: ClassicGroupState): Promise<void> {
     const values = toHomeAtaValues(state)

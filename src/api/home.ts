@@ -149,7 +149,7 @@ const ATW_ENERGY_MEASURE = {
  * tagging each with the caller-supplied ownership origin.
  * @param building - Source building from `/context`.
  * @param isOwner - `true` for a `buildings` entry, `false` for a guest one.
- * @returns Typed device entries ready for {@link HomeRegistry.sync}.
+ * @returns Typed device entries ready for {@link HomeRegistry.syncDevices}.
  */
 const toTypedDevices = (
   building: HomeBuilding,

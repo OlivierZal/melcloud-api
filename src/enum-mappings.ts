@@ -129,13 +129,13 @@ export const fanSpeedToClassic: Record<HomeFanSpeed, ClassicFanSpeed> = {
 }
 
 /**
- * Type guard: `value` is a valid Classic fan speed numeric value.
+ * Type guard: `key` is a valid Classic fan speed numeric value.
  */
 export const isClassicFanSpeed: (key: PropertyKey) => key is ClassicFanSpeed =
   isKeyOf(fanSpeedFromClassic)
 
 /**
- * Type guard: `value` is a valid Home fan speed string.
+ * Type guard: `key` is a valid Home fan speed string.
  */
 export const isHomeFanSpeed: (key: PropertyKey) => key is HomeFanSpeed =
   isKeyOf(fanSpeedToClassic)
@@ -202,7 +202,7 @@ export const operationModeToClassic: Record<
 }
 
 /**
- * Type guard: `value` is a valid Home operation mode string. The Home
+ * Type guard: `key` is a valid Home operation mode string. The Home
  * facades deliberately pass unknown wire modes through, so any
  * projection through {@link operationModeToClassic} guards with this
  * first.

@@ -187,7 +187,7 @@ export const fromSetToListAta: {
 
 /**
  * Type guard for ATA set-command keys that differ from list-data keys.
- * @param value - The key to check.
+ * @param key - The key to check.
  * @returns Whether the key is a set-command key not present in list data.
  */
 export const isSetDeviceDataAtaNotInList: (
@@ -212,7 +212,7 @@ export const fromListToSetAta: {
 
 /**
  * Type guard for ATA list-data keys that map to different set-command keys.
- * @param value - The key to check.
+ * @param key - The key to check.
  * @returns Whether the key is a list-data key with a different set-command key.
  */
 export const isSetDeviceDataAtaInList: (

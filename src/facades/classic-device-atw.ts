@@ -296,8 +296,6 @@ export class ClassicDeviceAtwFacade extends BaseDeviceFacade<
    * @param query - Optional report time window.
    * @returns The merged chart options, or a typed failure.
    */
-  // ATW reports both external (building) and internal (tank/boiler)
-  // temperatures — merge them into a single chart
   public override async getTemperatures(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {

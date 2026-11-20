@@ -155,7 +155,6 @@ export class ClassicDeviceAtaFacade extends BaseDeviceFacade<
    * state (a tolerated `NoChangesError` from its update) counts as
    * success.
    * @param state - Group state to push to the device.
-   * @returns The zone-shaped success outcome once the write completes.
    */
   public async updateGroupState(state: ClassicGroupState): Promise<void> {
     const values = toUpdateData(state)
