@@ -240,7 +240,8 @@ export const verticalToClassic: Record<HomeVertical, ClassicVertical> = {
 }
 
 /**
- * Mapping from Classic numeric device type to Home string value (ATA/ATW only — ERV is Classic-only).
+ * Mapping from Classic numeric device type to Home string value (ATA/ATW only —
+ * ERV is Classic-only).
  * @category Mappings
  */
 export const homeDeviceTypeFromClassic: Record<

@@ -452,11 +452,11 @@ const HomeEnergyMeasureSchema = z.looseObject({
 })
 
 /**
- * Home `/telemetry/telemetry/energy/{id}` and `/telemetry/telemetry/actual/{id}`
- * response shape. The energy endpoint carries `deviceId` at the top level, the
- * actual endpoint only on each measure entry — both layouts share the same
- * `measureData` format, so `deviceId` is optional at either level rather than
- * maintaining two parallel schemas.
+ * Home `/telemetry/telemetry/energy/{id}` and
+ * `/telemetry/telemetry/actual/{id}` response shape. The energy endpoint
+ * carries `deviceId` at the top level, the actual endpoint only on each measure
+ * entry — both layouts share the same `measureData` format, so `deviceId` is
+ * optional at either level rather than maintaining two parallel schemas.
  */
 export const HomeEnergyDataSchema: z.ZodType<HomeEnergyData> = z.looseObject({
   deviceId: z.string().optional(),

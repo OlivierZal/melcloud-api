@@ -158,8 +158,9 @@ const withModelledDevices = <
 })
 
 /**
- * Main MELCloud Classic API client. Handles authentication, device syncing, and all
- * ClassicAPI endpoint calls. Uses a private constructor — create instances via {@link ClassicAPI.create}.
+ * Main MELCloud Classic API client. Handles authentication, device syncing, and
+ * all ClassicAPI endpoint calls. Uses a private constructor — create instances
+ * via {@link ClassicAPI.create}.
  * @category API Clients
  */
 // Classic serves its reports, logs, tiles and group reads over POST.
@@ -243,7 +244,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   /**
-   * Fetch all buildings, sync the model registry, and schedule the next auto-sync.
+   * Fetch all buildings, sync the model registry, and schedule the next
+   * auto-sync.
    * @returns The list of fetched buildings.
    */
   public override async fetch(): Promise<ClassicBuildingWithStructure[]> {
@@ -281,7 +283,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
    * Retrieve a parsed, paginated error log for the specified devices.
    * Filters out entries with invalid dates or empty messages.
    * @param query - The error log query parameters (date range, pagination).
-   * @param deviceIds - ClassicDevice IDs to fetch errors for; defaults to all devices.
+   * @param deviceIds - ClassicDevice IDs to fetch errors for; defaults to all
+   * devices.
    * @returns Parsed error log with pagination metadata, or a typed failure.
    */
   public async getErrorLog(
@@ -515,7 +518,8 @@ export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   }
 
   /**
-   * Update the user's language on the server if it differs from the current locale.
+   * Update the user's language on the server if it differs from the current
+   * locale.
    * @param language - The language code to set.
    */
   public async updateLanguage(language: string): Promise<void> {

@@ -12,7 +12,8 @@ import type {
 import { BaseModel } from './base.ts'
 
 /**
- * Concrete device model holding mutable device data that can be partially updated after API calls.
+ * Concrete device model holding mutable device data that can be partially
+ * updated after API calls.
  * @template T - Device type discriminator narrowing the `data` payload to its
  * device-type-specific shape.
  * @category Entities
@@ -89,7 +90,8 @@ export class ClassicDevice<
  * generic is checked at the call site (`model.type === source.Type`).
  * @param model - The model to mutate in-place.
  * @param source - The fresh list-device entry from the upstream API.
- * @param source.AreaID - Owning area identifier (or `null` if directly under the building).
+ * @param source.AreaID - Owning area identifier (or `null` if directly under
+ * the building).
  * @param source.BuildingID - Owning building identifier.
  * @param source.Device - Mutable device payload merged onto the existing data.
  * @param source.DeviceName - Updated device display name.

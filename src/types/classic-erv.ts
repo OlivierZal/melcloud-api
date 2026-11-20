@@ -12,7 +12,8 @@ import type {
 import type { ClassicGetDeviceData } from './classic-generic.ts'
 
 /**
- * Wire-format `Device` payload for an ERV (energy-recovery ventilation) unit in `ListDevices`.
+ * Wire-format `Device` payload for an ERV (energy-recovery ventilation) unit in
+ * `ListDevices`.
  * @category Types
  */
 export interface ClassicListDeviceDataErv
@@ -42,7 +43,8 @@ export interface ClassicSetDeviceDataErv
 }
 
 /**
- * Mutable subset of an ERV device's data; every field is optional so callers can push partial updates.
+ * Mutable subset of an ERV device's data; every field is optional so callers
+ * can push partial updates.
  * @category Types
  */
 export interface ClassicUpdateDeviceDataErv extends ClassicBaseUpdateDeviceData {

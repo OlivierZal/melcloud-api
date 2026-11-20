@@ -69,7 +69,8 @@ export type ClassicNonSilentFanSpeed = Exclude<
 >
 
 /**
- * Effective flags value indicating no specific fields were changed; all data should be included.
+ * Effective flags value indicating no specific fields were changed; all data
+ * should be included.
  * @category Constants
  */
 export const CLASSIC_FLAG_UNCHANGED = 0x0
@@ -194,7 +195,8 @@ export const ClassicOperationModeState = {
   heating: 2,
   idle: 0,
   /**
-   * Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank.
+   * Legionella prevention cycle — a periodic high-temperature sanitisation of
+   * the hot water tank.
    */
   legionellaPrevention: 6,
 } as const
@@ -212,11 +214,13 @@ export const ClassicOperationModeStateHotWater = {
   dhw: 'dhw',
   idle: 'idle',
   /**
-   * Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank.
+   * Legionella prevention cycle — a periodic high-temperature sanitisation of
+   * the hot water tank.
    */
   legionellaPrevention: 'legionella',
   /**
-   * Hot water production is disabled (e.g. prohibit flag set or holiday mode active).
+   * Hot water production is disabled (e.g. prohibit flag set or holiday mode
+   * active).
    */
   prohibited: 'prohibited',
 } as const
@@ -233,7 +237,8 @@ export const ClassicOperationModeStateZone = {
   heating: 'heating',
   idle: 'idle',
   /**
-   * Zone regulation is disabled (e.g. prohibit flag set or holiday mode active).
+   * Zone regulation is disabled (e.g. prohibit flag set or holiday mode
+   * active).
    */
   prohibited: 'prohibited',
 } as const
@@ -257,7 +262,8 @@ export const HomeAtwOperationalState = {
   heating: 'heating',
   idle: 'idle',
   /**
-   * Legionella prevention cycle — a periodic high-temperature sanitisation of the hot water tank.
+   * Legionella prevention cycle — a periodic high-temperature sanitisation of
+   * the hot water tank.
    */
   legionellaPrevention: 'legionella',
 } as const
@@ -337,11 +343,13 @@ export type ClassicTemperature =
 export const ClassicVentilationMode = {
   auto: 2,
   /**
-   * Outside air flows straight through without passing the heat exchanger (free-cooling).
+   * Outside air flows straight through without passing the heat exchanger
+   * (free-cooling).
    */
   bypass: 1,
   /**
-   * Outside air passes through the heat exchanger to recover energy from extract air.
+   * Outside air passes through the heat exchanger to recover energy from
+   * extract air.
    */
   recovery: 0,
 } as const

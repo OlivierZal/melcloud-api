@@ -780,10 +780,10 @@ describe('mELCloud Classic API', () => {
     // A copy here is how the same verdict came to be recorded in three
     // places and corrected in one.
 
-    // Post-condition contract: a successful authenticate() must leave
-    // the registry populated so callers never see an empty device list
-    // after a successful login. Enforced by BaseAPI.authenticate's
-    // template method (guard against OlivierZal/com.melcloud#1281-style regressions).
+    // Post-condition contract: a successful authenticate() must leave the
+    // registry populated so callers never see an empty device list after a
+    // successful login. Enforced by BaseAPI.authenticate's template method
+    // (guard against OlivierZal/com.melcloud#1281-style regressions).
     it('populates the device registry during authenticate', async () => {
       const api = await authenticateWithPopulatedRegistry()
 
@@ -1180,7 +1180,8 @@ describe('mELCloud Classic API', () => {
         api.authenticate({ password: 'p', username: 'u' }),
       ).rejects.toThrow('MELCloud Classic rejected the credentials')
 
-      // Login goes through #dispatch which sends empty headers when contextKey is ''
+      // Login goes through #dispatch which sends empty headers when contextKey
+      // is ''
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ headers: {}, url: '/Login/ClientLogin3' }),
       )
@@ -1367,7 +1368,8 @@ describe('mELCloud Classic API', () => {
       mockLoginAndList('ctx', '2030-12-31T00:00:00')
       const api = await createApi({ password: 'pass', username: 'user' })
 
-      // 401 on endpoint, re-auth throws AuthenticationError → decorator logs + returns false
+      // 401 on endpoint, re-auth throws AuthenticationError → decorator logs +
+      // returns false
       mockRequest.mockImplementation(async (config) => {
         if (config.url === '/Login/ClientLogin3') {
           return resolved(mockHttpResponse({ LoginData: null }))

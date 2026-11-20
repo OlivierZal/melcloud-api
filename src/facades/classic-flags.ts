@@ -14,7 +14,8 @@ import type { ClassicUpdateDeviceData } from '../types/index.ts'
 // flag without a field) fails to type-check.
 
 /**
- * `EffectiveFlags` bitfield values for ATA update payloads — one bit per updatable field.
+ * `EffectiveFlags` bitfield values for ATA update payloads — one bit per
+ * updatable field.
  */
 export const classicAtaFlags: {
   readonly OperationMode: 0x2
@@ -72,7 +73,8 @@ export const classicAtwFlags: {
 >
 
 /**
- * `EffectiveFlags` bitfield values for ERV update payloads — one bit per updatable field.
+ * `EffectiveFlags` bitfield values for ERV update payloads — one bit per
+ * updatable field.
  */
 export const classicErvFlags: {
   readonly Power: 0x1

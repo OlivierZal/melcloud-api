@@ -179,14 +179,16 @@ const hasDevices = (
     : devices.some(({ type: deviceType }) => deviceType === type)
 
 /**
- * Central in-memory registry of all MELCloud models (buildings, floors, areas, devices).
- * Synced from the Classic API response and queryable by ID or parent relationship.
+ * Central in-memory registry of all MELCloud models (buildings, floors, areas,
+ * devices). Synced from the Classic API response and queryable by ID or parent
+ * relationship.
  * @category Entities
  */
 export class ClassicRegistry {
   public readonly areas = {
     /**
-     * Returns the area with the given id, or `undefined` when no such area is registered.
+     * Returns the area with the given id, or `undefined` when no such area is
+     * registered.
      * @param id - Area identifier.
      * @returns The area, or `undefined`.
      */
@@ -195,7 +197,8 @@ export class ClassicRegistry {
 
   public readonly buildings = {
     /**
-     * Returns the building with the given id, or `undefined` when no such building is registered.
+     * Returns the building with the given id, or `undefined` when no such
+     * building is registered.
      * @param id - Building identifier.
      * @returns The building, or `undefined`.
      */
@@ -205,7 +208,8 @@ export class ClassicRegistry {
 
   public readonly devices = {
     /**
-     * Returns the device with the given id, or `undefined` when no such device is registered.
+     * Returns the device with the given id, or `undefined` when no such device
+     * is registered.
      * @param id - Device identifier.
      * @returns The device, or `undefined`.
      */
@@ -215,7 +219,8 @@ export class ClassicRegistry {
 
   public readonly floors = {
     /**
-     * Returns the floor with the given id, or `undefined` when no such floor is registered.
+     * Returns the floor with the given id, or `undefined` when no such floor is
+     * registered.
      * @param id - Floor identifier.
      * @returns The floor, or `undefined`.
      */
@@ -258,7 +263,8 @@ export class ClassicRegistry {
   }
 
   /**
-   * Returns the areas attached to the given floor (excluding building-level areas).
+   * Returns the areas attached to the given floor (excluding building-level
+   * areas).
    * @param id - Floor identifier.
    * @returns The areas under that floor.
    */
@@ -267,7 +273,8 @@ export class ClassicRegistry {
   }
 
   /**
-   * Build a hierarchical zone structure from the registry, optionally filtered by device type.
+   * Build a hierarchical zone structure from the registry, optionally filtered
+   * by device type.
    * @param root0 - Options object.
    * @param root0.type - Optional device type to filter the zone structure.
    * @returns The hierarchical building zone structure.
@@ -325,7 +332,8 @@ export class ClassicRegistry {
   }
 
   /**
-   * Returns every device under the given building (regardless of floor or area placement).
+   * Returns every device under the given building (regardless of floor or area
+   * placement).
    * @param id - Building identifier.
    * @returns The devices under that building.
    */

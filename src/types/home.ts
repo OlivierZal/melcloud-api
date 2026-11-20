@@ -7,7 +7,8 @@ import type {
 } from '../enum-mappings.ts'
 
 /**
- * Static capability flags and per-mode temperature bounds advertised by a MELCloud Home ATA device.
+ * Static capability flags and per-mode temperature bounds advertised by a
+ * MELCloud Home ATA device.
  * @category Types
  */
 export interface HomeAtaDeviceCapabilities {
@@ -57,7 +58,8 @@ export interface HomeAtaDeviceData extends HomeDeviceCommonData {
 }
 
 /**
- * Mutable ATA device state accepted by the MELCloud Home device-update endpoint; every field is optional and `null` clears it.
+ * Mutable ATA device state accepted by the MELCloud Home device-update
+ * endpoint; every field is optional and `null` clears it.
  * @category Types
  */
 export interface HomeAtaValues {
@@ -153,7 +155,8 @@ export type HomeAtwOperationModeZone =
   | 'HeatThermostat'
 
 /**
- * Mutable ATW device state accepted by the MELCloud Home device-update endpoint; every field is optional and `null` clears it.
+ * Mutable ATW device state accepted by the MELCloud Home device-update
+ * endpoint; every field is optional and `null` clears it.
  * @category Types
  */
 export interface HomeAtwValues {
@@ -174,7 +177,8 @@ export interface HomeAtwValues {
 }
 
 /**
- * Wire-format MELCloud Home building entry, splitting devices by their connection type (ATA vs ATW).
+ * Wire-format MELCloud Home building entry, splitting devices by their
+ * connection type (ATA vs ATW).
  * @category Types
  */
 export interface HomeBuilding {
@@ -232,7 +236,8 @@ export interface HomeClaim {
 }
 
 /**
- * Wire-format response from the MELCloud Home `/context` endpoint — the authenticated user plus their owned and guest buildings.
+ * Wire-format response from the MELCloud Home `/context` endpoint — the
+ * authenticated user plus their owned and guest buildings.
  * @category Types
  */
 export interface HomeContext {
@@ -252,7 +257,8 @@ export interface HomeContext {
 }
 
 /**
- * Capability descriptor advertised by any MELCloud Home device — disjoint between ATA and ATW shapes.
+ * Capability descriptor advertised by any MELCloud Home device — disjoint
+ * between ATA and ATW shapes.
  * @category Types
  */
 export type HomeDeviceCapabilities =
@@ -329,7 +335,8 @@ export interface HomeDeviceZone {
 }
 
 /**
- * Wire-format energy response from MELCloud Home — one or more measure series per device.
+ * Wire-format energy response from MELCloud Home — one or more measure series
+ * per device.
  * @category Types
  */
 export interface HomeEnergyData {
@@ -338,7 +345,8 @@ export interface HomeEnergyData {
 }
 
 /**
- * A single energy measure series (e.g. heating, cooling) and its time-series values.
+ * A single energy measure series (e.g. heating, cooling) and its time-series
+ * values.
  * @category Types
  */
 export interface HomeEnergyMeasure {
@@ -481,7 +489,8 @@ export interface HomeReportAnnotation {
 }
 
 /**
- * Wire-format temperature/signal report from MELCloud Home — one dataset per series, each holding `(x,y)` samples.
+ * Wire-format temperature/signal report from MELCloud Home — one dataset per
+ * series, each holding `(x,y)` samples.
  * @category Types
  */
 export interface HomeReportData {
@@ -539,7 +548,8 @@ export interface HomeTokenResponse {
 }
 
 /**
- * Authenticated MELCloud Home user identity decoded from the bearer token's id-token claims.
+ * Authenticated MELCloud Home user identity decoded from the bearer token's
+ * id-token claims.
  * @category Types
  */
 export interface HomeUser {

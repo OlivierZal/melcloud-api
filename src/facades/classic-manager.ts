@@ -20,8 +20,9 @@ import type {
 import { createFacade } from './classic-factory.ts'
 
 /**
- * Lazily creates and caches facade instances using a WeakMap keyed by model reference.
- * Ensures each model instance maps to exactly one facade throughout its lifetime.
+ * Lazily creates and caches facade instances using a WeakMap keyed by model
+ * reference. Ensures each model instance maps to exactly one facade throughout
+ * its lifetime.
  * @category Facades
  */
 export class ClassicFacadeManager {

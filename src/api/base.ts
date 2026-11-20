@@ -18,11 +18,12 @@ import type { BaseAPIConfig, SyncParams } from './types.ts'
  * Classify any thrown error into the discriminated {@link ApiRequestError}
  * union surfaced by {@link BaseAPI.safeRequest}.
  *
- * Order matters: domain errors ({@link AuthenticationError}, {@link RateLimitError})
- * are checked before transport errors so a credential rejection isn't
- * misclassified as a `server` failure. Zod parse failures bubble up as
- * `Error` with `name === 'ValidationError'` from {@link parseOrThrow},
- * which is detected here and reported as the `validation` variant.
+ * Order matters: domain errors ({@link AuthenticationError},
+ * {@link RateLimitError}) are checked before transport errors so a credential
+ * rejection isn't misclassified as a `server` failure. Zod parse failures
+ * bubble up as `Error` with `name === 'ValidationError'` from
+ * {@link parseOrThrow}, which is detected here and reported as the `validation`
+ * variant.
  * @param error - The thrown value to classify.
  * @returns A typed {@link ApiRequestError}.
  */

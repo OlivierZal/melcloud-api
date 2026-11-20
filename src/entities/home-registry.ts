@@ -32,7 +32,8 @@ export interface HomeConnectivityEvent {
 }
 
 /**
- * Home device with its type, ownership origin and source building, as extracted from building units.
+ * Home device with its type, ownership origin and source building, as extracted
+ * from building units.
  * @internal
  */
 export interface TypedHomeDeviceData {
@@ -86,7 +87,8 @@ export class HomeRegistry {
   }
 
   /**
-   * Returns the device with the given id, or `undefined` when no such device is registered.
+   * Returns the device with the given id, or `undefined` when no such device is
+   * registered.
    * @param id - Device identifier.
    * @returns The device, or `undefined`.
    */

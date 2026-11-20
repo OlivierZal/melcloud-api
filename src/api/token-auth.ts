@@ -122,7 +122,8 @@ const fetchPostForm = async ({
  * @param jar - The cookie jar to populate.
  * @param response - The response containing potential Set-Cookie headers.
  * @param response.headers - Headers whose `set-cookie` entries get persisted.
- * @param url - Request URL the cookies were received from; scopes them in the jar.
+ * @param url - Request URL the cookies were received from; scopes them in the
+ * jar.
  */
 const storeCookies = async (
   jar: CookieJar,
@@ -183,7 +184,8 @@ const authRequest = async ({
 }
 
 /**
- * Extract the `action` attribute from the first `<form>` element in an HTML string.
+ * Extract the `action` attribute from the first `<form>` element in an HTML
+ * string.
  * @param html - Raw HTML string from the login page.
  * @returns The resolved form action URL, or `null` if not found.
  */
@@ -436,8 +438,10 @@ const submitCredentials = async ({
  * @param callbackUrl - Cognito-issued URL that starts the redirect hops.
  * @param jar - Carries the session cookies across the redirect hops.
  * @param abortSignal - Cancels the redirect chain mid-flight when triggered.
- * @returns The one-time `code` query value from the final IdentityServer redirect.
- * @throws {@link AuthenticationError} when the callback carries no authorization code.
+ * @returns The one-time `code` query value from the final IdentityServer
+ * redirect.
+ * @throws {@link AuthenticationError} when the callback carries no
+ * authorization code.
  */
 const extractAuthorizationCode = async (
   callbackUrl: string,
