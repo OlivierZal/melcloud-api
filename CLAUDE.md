@@ -62,6 +62,16 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   throttle refusal (`ErrorId` 6) rides the same success-status body.
 - Wire-format types mirror the MELCloud APIs verbatim (PascalCase fields,
   one-letter report keys); do not rename them to satisfy style rules.
+  That covers VALUES as much as keys, and a rename of this SDK's own
+  names must never reach a string the wire reads: the 30.0.0 rename
+  that prefixed every Classic export (2026-04-16) also prefixed the
+  three zone literals of `ClassicSettingsParams['tableName']`, and for
+  seven months every zone-level frost-protection and holiday-mode read
+  asked MELCloud for `ClassicBuilding`, `ClassicFloor` or `ClassicArea`,
+  tables it does not have (restored in 61.0.0; found by reading the
+  rename's diff, the tests having been renamed with the code). A test
+  that pins a wire value says so (`settings-table-names.test.ts`), and
+  a rename's diff is read for string literals before it lands.
 - `EffectiveFlags` bitfields: `src/facades/classic-flags.ts` is the one
   sanctioned home of hex magic numbers (files-scoped `no-magic-numbers`
   off); the two bitfield operators live in one module, `src/facades/classic-flag-bits.ts` (`combineFlags`, `hasFlag`), behind the family's two documented `no-bitwise` disables; their call sites (the `classic-update-devices.ts` flag test, the `classic-base-device.ts` flag accumulation, one facade test) name the operation instead of spelling it (2026-10-15).
@@ -414,7 +424,10 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
 - `FPDefined`/`HMDefined` are DECLARATIONS, not guarantees: MELCloud
   can refuse the zone-level read the flag promises (measured
   2026-08-26 — a shared building's zone-level `GetSettings` answers
-  `401` on a valid session). The protection/holiday reads are
+  `401` on a valid session; that read went out under the prefixed
+  table name of 30.0.0 to 60.9.0, above, so whether the building being
+  shared caused it is no longer established, and the 2024 fallback it
+  was written for stays either way). The protection/holiday reads are
   therefore zone-first with a device-level fallback on failure
   whenever the flag is `true` or unknown — the original 2024 design; a
   2026-03 refactor silently gated the fallback on the flag being

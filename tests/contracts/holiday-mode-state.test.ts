@@ -235,6 +235,6 @@ describe('holiday read — level fallback', () => {
     expect(result.ok).toBe(true)
     expect(
       getHolidayMode.mock.calls.map(([{ params }]) => params.tableName),
-    ).toStrictEqual(['ClassicBuilding', 'DeviceLocation'])
+    ).toStrictEqual(['Building', 'DeviceLocation'])
   })
 })

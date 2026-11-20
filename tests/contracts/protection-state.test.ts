@@ -214,7 +214,7 @@ describe('protection read — level fallback', () => {
 
     expect(result.ok).toBe(true)
     expect(tableNamesOf(getFrostProtection)).toStrictEqual([
-      'ClassicBuilding',
+      'Building',
       'DeviceLocation',
     ])
   })
@@ -228,7 +228,7 @@ describe('protection read — level fallback', () => {
     const facade = buildFallbackFacade(getFrostProtection)
     await facade.getFrostProtection()
 
-    expect(tableNamesOf(getFrostProtection)).toStrictEqual(['ClassicBuilding'])
+    expect(tableNamesOf(getFrostProtection)).toStrictEqual(['Building'])
   })
 
   it('never consults the zone level when the flag excludes it', async () => {
@@ -269,7 +269,7 @@ describe('protection read — level fallback', () => {
     await facade.getFrostProtection()
 
     expect(tableNamesOf(getFrostProtection)).toStrictEqual([
-      'ClassicBuilding',
+      'Building',
       'DeviceLocation',
       'DeviceLocation',
     ])

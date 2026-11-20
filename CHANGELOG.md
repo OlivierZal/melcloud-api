@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [61.0.0] - 2026-11-20
+
+### Fixed
+
+- **A zone-level frost-protection or holiday-mode read names MELCloud's table again: `Building`, `Floor` or `Area`.** `tableName` is a value of the wire, the table MELCloud reads the settings from, and the rename that prefixed every Classic export in 30.0.0 (2026-04-16) had prefixed these three literals with it: every read at a building, a floor or an area has since asked for `ClassicBuilding`, `ClassicFloor` or `ClassicArea`, tables MELCloud does not have. Such a read then fell back to the device level (it simply failed until 52.0.2 restored that fallback), so a zone answered the settings of one of its units, and its next write addressed every unit of the zone (`DeviceIds`, `Devices`) in place of the zone (`BuildingIds`, `Buildings` and their floor and area twins): a definition held at the building's level, made in the MELCloud app or through this SDK before April, could be neither read, changed nor lifted from here. The three names are back as they stood from 2024 to 30.0.0, a contract test pins the table each facade kind reads, and the fallback stays for the refusals MELCloud does make. Not probed against the live API: what MELCloud answers an unknown table is not on record, and the `401` measured on 2026-08-26 went out under a prefixed name, so its attribution to a shared building is no longer established.
+
+### Changed
+
+- **BREAKING**: `ClassicSettingsParams['tableName']` is `'Area' | 'Building' | 'DeviceLocation' | 'Floor'` again, and `EntityNotFoundError#tableName`, which is typed from it, follows: an unresolved Classic zone reads `Building with id 1 not found`. A caller passing one of the three prefixed literals no longer compiles; none of them ever named a table.
+
 ## [60.9.0] - 2026-11-20
 
 ### Added
@@ -1021,7 +1031,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.9.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v61.0.0...HEAD
+[61.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.9.0...v61.0.0
 [60.9.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.8.0...v60.9.0
 [60.8.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.7.0...v60.8.0
 [60.7.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.6.0...v60.7.0

@@ -32,7 +32,7 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
 
   protected readonly holidayModeLocation = 'Buildings'
 
-  protected readonly tableName = 'ClassicBuilding'
+  protected readonly tableName = 'Building'
 
   protected get model(): {
     getById: (id: number) => ClassicBuilding | undefined
