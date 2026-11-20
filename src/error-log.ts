@@ -144,7 +144,8 @@ export interface ErrorLogWindow {
 
 /**
  * The bounds {@link isWithinErrorLogWindow} judges an entry against:
- * the page's resolved start and the end its query carried.
+ * the page's resolved start and, on every page but the newest, its
+ * resolved end.
  * @category Facades
  */
 export interface ErrorLogWindowBounds {
@@ -155,9 +156,12 @@ export interface ErrorLogWindowBounds {
    */
   readonly fromDate: string
   /**
-   * ISO date the page ends on, as the query carried it
-   * ({@link ErrorLogQuery.to}): unset or empty for the newest page,
-   * which has no end.
+   * ISO date the page ends on — a chained page's
+   * {@link ErrorLogQuery.to}, an offset page's
+   * {@link ErrorLogWindow.toDate} — left unset or empty for the newest
+   * page alone (a query with neither `to` nor an `offset`), which has
+   * no end. An offset page's query carries no `to`, so its own end must
+   * be passed: left unset, it would read as the newest page.
    */
   readonly to?: string | undefined
 }
@@ -225,10 +229,11 @@ export const resolveErrorLogWindow = (
  * `null`), so that entry shows exactly once.
  * @param entry - The entry; only its instant is read.
  * @param entry.atEpochMs - The entry's instant, `null` when unparseable.
- * @param bounds - The page's resolved start and its query's end.
+ * @param bounds - The page's resolved start and, unless it is the
+ * newest page, its resolved end.
  * @param bounds.fromDate - ISO date the page starts on.
  * @param bounds.to - ISO date the page ends on, unset or empty for the
- * newest page.
+ * newest page only.
  * @param timeZone - IANA timezone the entry's day is read in; the host's
  * zone when omitted.
  * @returns Whether the page holds the entry.

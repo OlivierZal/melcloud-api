@@ -276,6 +276,10 @@ export const typedKeys = <T extends Record<string, unknown>>(
   object: T,
 ): (string & keyof T)[] => Object.keys(object)
 
+/* eslint-disable @typescript-eslint/promise-function-async -- the async
+   spelling would then trip require-await (no await inside): the rule pair
+   leaves no disable-free form, and this one named escape spares one at
+   every call site */
 /**
  * Identity through the microtask queue — the await target that lets a
  * method answer an async cross-dialect contract from synchronously
@@ -284,11 +288,9 @@ export const typedKeys = <T extends Record<string, unknown>>(
  * @param value - The synchronously available value.
  * @returns The value, once resolved.
  */
-/* eslint-disable-next-line @typescript-eslint/promise-function-async -- the
-   async spelling would then trip require-await (no await inside): the rule pair
-   leaves no disable-free form, and this one named escape spares one at every
-   call site */
 export const resolved = <T>(value: T): Promise<T> => Promise.resolve(value)
+/* eslint-enable @typescript-eslint/promise-function-async -- end of
+   `resolved` */
 
 /**
  * The first value when every entry strictly equals it, `null` otherwise
