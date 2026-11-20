@@ -229,6 +229,8 @@ export {
   type ErrorLogPage,
   type ErrorLogQuery,
   type ErrorLogWindow,
+  type ErrorLogWindowBounds,
+  isWithinErrorLogWindow,
   resolveErrorLogWindow,
 } from './error-log.ts'
 export {

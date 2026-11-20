@@ -1,6 +1,6 @@
 {
   "name": "@olivierzal/melcloud-api",
-  "version": "60.8.0",
+  "version": "60.9.0",
   "description": "MELCloud API for Node.js",
   "keywords": [
     "melcloud",

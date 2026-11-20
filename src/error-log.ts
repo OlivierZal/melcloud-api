@@ -3,7 +3,8 @@
  * dialects project onto, the Classic page wrapper, and the pure window
  * arithmetic a consumer needs to tile identical pages without a wire
  * call (a Home-only account pages the same windows the Classic API
- * would have answered).
+ * would have answered) and to file into them the Home entries, which
+ * the Home wire answers as one log.
  */
 import { Temporal } from './temporal.ts'
 
@@ -63,7 +64,8 @@ export interface ErrorLogEntry {
  * One Classic error-log page: the neutral entries plus the chained
  * window bounds driving the next page (feed `nextFromDate` and
  * `nextToDate` back as `from` and `to`). The Home wire has no window —
- * Home reads answer bare entries.
+ * Home reads answer bare entries, which {@link isWithinErrorLogWindow}
+ * files into a page.
  * @category Facades
  */
 export interface ErrorLogPage {
@@ -140,6 +142,26 @@ export interface ErrorLogWindow {
   readonly toDate: string
 }
 
+/**
+ * The bounds {@link isWithinErrorLogWindow} judges an entry against:
+ * the page's resolved start and the end its query carried.
+ * @category Facades
+ */
+export interface ErrorLogWindowBounds {
+  /**
+   * ISO date the page starts on: {@link ErrorLogPage.fromDate}, or
+   * {@link ErrorLogWindow.fromDate} when paging without a Classic
+   * session.
+   */
+  readonly fromDate: string
+  /**
+   * ISO date the page ends on, as the query carried it
+   * ({@link ErrorLogQuery.to}): unset or empty for the newest page,
+   * which has no end.
+   */
+  readonly to?: string | undefined
+}
+
 // Re-thrown with the historical "Invalid DateTime" prefix so the
 // public failure surface for `{ to: 'not-a-date' }` stays stable.
 const parsePlainDate = (iso: string): Temporal.PlainDate => {
@@ -190,4 +212,44 @@ export const resolveErrorLogWindow = (
     nextToDate: nextToDate.toString(),
     toDate: toDate.toString(),
   }
+}
+
+/**
+ * Whether an error-log entry belongs to a page — the rule the Classic
+ * wire applies server-side, published for the Home entries, which the
+ * Home wire answers as one log with no window. An entry belongs when
+ * the day of its instant, read in `timeZone`, falls on or after
+ * `fromDate` and, on an older page, on or before `to`. The newest page
+ * has no end, so an entry dated after today is never lost, and it alone
+ * holds an entry whose instant could not be parsed (`atEpochMs` is
+ * `null`), so that entry shows exactly once.
+ * @param entry - The entry; only its instant is read.
+ * @param entry.atEpochMs - The entry's instant, `null` when unparseable.
+ * @param bounds - The page's resolved start and its query's end.
+ * @param bounds.fromDate - ISO date the page starts on.
+ * @param bounds.to - ISO date the page ends on, unset or empty for the
+ * newest page.
+ * @param timeZone - IANA timezone the entry's day is read in; the host's
+ * zone when omitted.
+ * @returns Whether the page holds the entry.
+ * @throws Error with the `Invalid DateTime` prefix on an unparseable
+ * bound.
+ */
+export const isWithinErrorLogWindow = (
+  { atEpochMs }: Pick<ErrorLogEntry, 'atEpochMs'>,
+  { fromDate, to }: ErrorLogWindowBounds,
+  timeZone?: string,
+): boolean => {
+  const start = parsePlainDate(fromDate)
+  const end = to === undefined || to === '' ? null : parsePlainDate(to)
+  if (atEpochMs === null) {
+    return end === null
+  }
+  const day = Temporal.Instant.fromEpochMilliseconds(atEpochMs)
+    .toZonedDateTimeISO(timeZone ?? Temporal.Now.timeZoneId())
+    .toPlainDate()
+  return (
+    Temporal.PlainDate.compare(day, start) >= 0 &&
+    (end === null || Temporal.PlainDate.compare(day, end) <= 0)
+  )
 }

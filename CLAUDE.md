@@ -578,6 +578,14 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   `null`), an unparseable Classic `at` keeps its entry, and the
   legionella stamp's year-1 sentinel — any offset spelling, judged as
   UTC year <= 1 — reads `null`.
+- The error-log page window is library-owned on BOTH sides (60.9.0):
+  `resolveErrorLogWindow` tiles the pages, `isWithinErrorLogWindow`
+  files an entry into one — the rule the Classic wire applies
+  server-side, needed for the Home entries, which the Home wire answers
+  as one unwindowed log. Days are read in the host's timezone and both
+  bounds are inclusive; the newest page (no `to`) has no end and alone
+  holds an entry with no instant, so such an entry shows once. A
+  consumer merging the two dialects never re-derives the membership.
 - Setpoint increments: both Home facades expose a derived
   `temperatureStep` (ATA from `hasHalfDegreeIncrements`, ATW from the
   FTC's own `temperatureIncrement` declaration — the direct field wins

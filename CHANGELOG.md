@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [60.9.0] - 2026-11-20
+
+### Added
+
+- **`isWithinErrorLogWindow(entry, bounds, timeZone?)` files an error-log entry into a page, so a host merging the Home entries into the Classic pages applies the window rule the Classic wire applies server-side.** The Home wire answers each unit's whole log with no window; until now a host paging both dialects re-derived the membership itself. An entry belongs to a page when the day of its instant (`atEpochMs`), read in `timeZone` (the host's zone when omitted), falls on or after `bounds.fromDate` — the page's resolved start, `ErrorLogPage.fromDate` or `resolveErrorLogWindow(…).fromDate` — and, on an older page, on or before `bounds.to`, the end its query carried. The newest page (`to` unset or empty) has no end, so an entry dated after today is never lost, and it alone holds an entry whose instant could not be parsed, so that entry shows exactly once. Both bounds are days, inclusive; an unparseable bound throws with the `Invalid DateTime` prefix `resolveErrorLogWindow` uses. Exported with its bounds type, `ErrorLogWindowBounds`, from the root barrel and the `/error-log` subpath, which stays browser-bundleable.
+
 ## [60.8.0] - 2026-11-18
 
 ### Added
@@ -25,7 +31,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 
 - **A MELCloud Home unit words its fault: `errorMessage` reads the code `/context` carries.** The Home device facades returned `null` for `errorMessage` on the claim that Home flags a fault without words, which sent consumers to the unit's error log for a wording. A unit in `E6` read on 2026-11-18 shows the listing gives it: its `/context` settings array carries `IsInError: True` and `ErrorCode: E6`. `errorMessage` now returns that `ErrorCode` value, trimmed, while the unit reports a fault (`isInError`), and `null` otherwise — whatever the setting reads on a healthy unit — or when the setting is empty or absent. Home gives the code alone where Classic's `ErrorMessages` adds a sentence (`E6 : …`). A host that rendered a dialect-neutral sentence for a Home fault now gets the code to show.
-  ||||||| parent of 9d5c2694 (wip: combineAtaGroups)
 
 ## [60.6.0] - 2026-11-07
 
@@ -1016,7 +1021,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.8.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v60.9.0...HEAD
+[60.9.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.8.0...v60.9.0
 [60.8.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.7.0...v60.8.0
 [60.7.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.6.0...v60.7.0
 [60.6.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.5.0...v60.6.0
