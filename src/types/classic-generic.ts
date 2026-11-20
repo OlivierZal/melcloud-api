@@ -542,13 +542,14 @@ export interface ClassicSetPowerPostData {
 
 /**
  * Query-string parameters identifying a zone settings target (used by
- * `FrostProtection/GetSettings`, `HolidayMode/GetSettings`).
+ * `FrostProtection/GetSettings`, `HolidayMode/GetSettings`). `tableName`
+ * is MELCloud's own table vocabulary, sent verbatim: the `Classic`
+ * prefix of this SDK's exports never applies to it.
  * @category Types
  */
 export interface ClassicSettingsParams {
   readonly id: number
-  readonly tableName:
-    'ClassicArea' | 'ClassicBuilding' | 'ClassicFloor' | 'DeviceLocation'
+  readonly tableName: 'Area' | 'Building' | 'DeviceLocation' | 'Floor'
 }
 
 /**

@@ -14,14 +14,14 @@ describe.concurrent('entityNotFoundError', () => {
   })
 
   it('exposes tableName and entityId for programmatic handling', () => {
-    const error = new EntityNotFoundError('ClassicArea', { entityId: 7 })
+    const error = new EntityNotFoundError('Area', { entityId: 7 })
 
-    expect(error.tableName).toBe('ClassicArea')
+    expect(error.tableName).toBe('Area')
     expect(error.entityId).toBe(7)
   })
 
   it('is an instance of Error, APIError, and EntityNotFoundError', () => {
-    const error = new EntityNotFoundError('ClassicBuilding', { entityId: 1 })
+    const error = new EntityNotFoundError('Building', { entityId: 1 })
 
     expect(error).toBeInstanceOf(Error)
     expect(error).toBeInstanceOf(APIError)
@@ -29,14 +29,14 @@ describe.concurrent('entityNotFoundError', () => {
   })
 
   it('is detected by the isAPIError type guard', () => {
-    const error = new EntityNotFoundError('ClassicFloor', { entityId: 3 })
+    const error = new EntityNotFoundError('Floor', { entityId: 3 })
 
     expect(isAPIError(error)).toBe(true)
   })
 
   it('preserves the original rejection as `cause`', () => {
     const cause = new Error('upstream')
-    const error = new EntityNotFoundError('ClassicArea', { cause, entityId: 9 })
+    const error = new EntityNotFoundError('Area', { cause, entityId: 9 })
 
     expect(error.cause).toBe(cause)
   })

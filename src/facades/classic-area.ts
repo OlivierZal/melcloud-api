@@ -16,7 +16,7 @@ export class ClassicAreaFacade extends BaseZoneFacade<ClassicArea> {
 
   protected readonly holidayModeLocation = 'Areas'
 
-  protected readonly tableName = 'ClassicArea'
+  protected readonly tableName = 'Area'
 
   protected get model(): { getById: (id: number) => ClassicArea | undefined } {
     return this.registry.areas

@@ -755,7 +755,7 @@ describe('base facade instance error', () => {
     registry.syncAreas([])
 
     expect(() => facade.name).toThrow(EntityNotFoundError)
-    expect(() => facade.name).toThrow('ClassicArea with id 100 not found')
+    expect(() => facade.name).toThrow('Area with id 100 not found')
   })
 
   it('exists returns true before eviction and false afterwards', () => {

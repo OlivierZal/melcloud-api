@@ -400,7 +400,7 @@ describe('api lifecycle', () => {
       // Result instead of throwing — the rate-limited variant proves
       // the gate is closed.
       const result = await api.getHolidayMode({
-        params: { id: 1, tableName: 'ClassicBuilding' },
+        params: { id: 1, tableName: 'Building' },
       })
 
       expect(result.ok).toBe(false)
@@ -448,7 +448,7 @@ describe('api lifecycle', () => {
       // `network` failure preserving the original DOMException as
       // `cause` — the /abort/i name check is exercised end-to-end.
       const abortResult = await api.getHolidayMode({
-        params: { id: 1, tableName: 'ClassicBuilding' },
+        params: { id: 1, tableName: 'Building' },
       })
 
       expect(abortResult.ok).toBe(false)

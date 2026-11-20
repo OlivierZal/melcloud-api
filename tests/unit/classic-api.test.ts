@@ -694,12 +694,12 @@ describe('mELCloud Classic API', () => {
 
     it.each([
       {
-        args: { params: { id: 1, tableName: 'ClassicBuilding' } },
+        args: { params: { id: 1, tableName: 'Building' } },
         method: 'getFrostProtection' as const,
         path: '/FrostProtection/GetSettings',
       },
       {
-        args: { params: { id: 1, tableName: 'ClassicBuilding' } },
+        args: { params: { id: 1, tableName: 'Building' } },
         method: 'getHolidayMode' as const,
         path: '/HolidayMode/GetSettings',
       },
