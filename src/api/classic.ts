@@ -157,12 +157,6 @@ const withModelledDevices = <
   Devices: container.Devices.filter((device) => shouldKeep(device)),
 })
 
-/**
- * Main MELCloud Classic API client. Handles authentication, device syncing, and
- * all ClassicAPI endpoint calls. Uses a private constructor — create instances
- * via {@link ClassicAPI.create}.
- * @category API Clients
- */
 // Classic serves its reports, logs, tiles and group reads over POST.
 // Declared idempotent, they are reads to api-core: retried on a
 // transient failure like a GET, and holding no sync tick. The writes
@@ -170,6 +164,12 @@ const withModelledDevices = <
 // The nightly `EnergyCost/Report` burst motivated it (2026-10).
 const READ_OVER_POST = { idempotent: true } as const
 
+/**
+ * Main MELCloud Classic API client. Handles authentication, device syncing, and
+ * all ClassicAPI endpoint calls. Uses a private constructor — create instances
+ * via {@link ClassicAPI.create}.
+ * @category API Clients
+ */
 export class ClassicAPI extends BaseAPI implements ClassicAPIAdapter {
   /**
    * BCP-47 locale supplied via {@link ClassicAPIConfig.locale}, or
