@@ -124,6 +124,40 @@ describe(isWithinErrorLogWindow, () => {
     )
   })
 
+  // Offset pages carry no `to` of their own: each passes its resolved
+  // end, the newest alone none, and every entry lands on exactly one
+  // page, an undated one on the newest.
+  it('files each entry on exactly one offset page', () => {
+    vi.spyOn(Temporal.Now, 'plainDateISO').mockReturnValue(
+      Temporal.PlainDate.from('2026-11-20'),
+    )
+    const pages = [0, 1, 2].map((offset) => {
+      const { fromDate, toDate } = resolveErrorLogWindow(
+        { offset, period: 29 },
+        'UTC',
+      )
+      return offset === 0 ? { fromDate } : { fromDate, to: toDate }
+    })
+    const entries = [
+      '2099-01-01T00:00:00Z',
+      '2026-11-15T12:00:00Z',
+      '2026-10-01T12:00:00Z',
+      '2026-08-30T12:00:00Z',
+    ].map((at) => ({ atEpochMs: toEpochMs(at) }))
+
+    expect(
+      [...entries, { atEpochMs: null }].map((entry) =>
+        pages.map((page) => isWithinErrorLogWindow(entry, page, 'UTC')),
+      ),
+    ).toStrictEqual([
+      [true, false, false],
+      [true, false, false],
+      [false, true, false],
+      [false, false, true],
+      [true, false, false],
+    ])
+  })
+
   // 23:30 UTC on 1 March is 00:30 on 2 March in Paris.
   it('reads the entry day in the given timezone', () => {
     const entry = { atEpochMs: toEpochMs('2026-03-01T23:30:00Z') }

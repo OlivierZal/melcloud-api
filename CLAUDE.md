@@ -584,7 +584,10 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   server-side, needed for the Home entries, which the Home wire answers
   as one unwindowed log. Days are read in the host's timezone and both
   bounds are inclusive; the newest page (no `to`) has no end and alone
-  holds an entry with no instant, so such an entry shows once. A
+  holds an entry with no instant, so such an entry shows once. Every
+  other page passes its resolved end: a chained page's `to`, an offset
+  page's `toDate` (its query carries no `to`, so left unset it would
+  read as the newest page and file newer and undated entries again). A
   consumer merging the two dialects never re-derives the membership.
 - Setpoint increments: both Home facades expose a derived
   `temperatureStep` (ATA from `hasHalfDegreeIncrements`, ATW from the
