@@ -95,15 +95,18 @@ export interface HolidayModeUpdate {
  * Folds per-member holiday-mode states into the aggregate a
  * multi-device target answers: a never-configured member reads as
  * disabled with unset bounds, and any per-field divergence folds to
- * `null` (the mixed marker).
- * @param states - One state (or `null`) per member.
+ * `null` (the mixed marker). A member that is a fold itself, one
+ * account's building beside the other's, keeps its mixed fields mixed.
+ * @param states - One state, one fold or `null` per member.
  * @returns The aggregated state.
  * @category Facades
  */
 export const aggregateHolidayModeStates = (
-  states: readonly (HolidayModeState | null)[],
+  states: readonly (AggregatedHolidayModeState | HolidayModeState | null)[],
 ): AggregatedHolidayModeState => ({
   endDate: allEqual(states.map((state) => state?.endDate ?? null)),
-  isEnabled: allEqual(states.map((state) => state?.isEnabled ?? false)),
+  isEnabled: allEqual(
+    states.map((state) => (state === null ? false : state.isEnabled)),
+  ),
   startDate: allEqual(states.map((state) => state?.startDate ?? null)),
 })

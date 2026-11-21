@@ -1,7 +1,8 @@
 import { tolerateNoChanges } from '../errors/index.ts'
-import { type ClassicGroupState, type Result, ok } from '../types/index.ts'
+import { mapResult } from '../types/index.ts'
 import type { ClassicZoneFacade } from './classic-types.ts'
 import { aggregateClassicAtaGroupStates } from './home-ata-group.ts'
+import { settleReads } from './settle-reads.ts'
 import { settleWrites } from './settle-writes.ts'
 
 /**
@@ -16,24 +17,6 @@ export type AtaGroup = Pick<
   ClassicZoneFacade,
   'getGroup' | 'getMemberOperationModes' | 'updateGroupState'
 >
-
-// Fail closed: one group that cannot answer fails the whole read, so the
-// groups that did answer are never shown as the whole union.
-const readGroups = async (
-  groups: readonly AtaGroup[],
-): Promise<Result<ClassicGroupState>> => {
-  const results = await Promise.all(
-    groups.map(async (group) => group.getGroup()),
-  )
-  const states: ClassicGroupState[] = []
-  for (const result of results) {
-    if (!result.ok) {
-      return result
-    }
-    states.push(result.value)
-  }
-  return ok(aggregateClassicAtaGroupStates(states))
-}
 
 /**
  * Combines several ATA groups into one that answers the same contract:
@@ -55,7 +38,11 @@ const readGroups = async (
  * @category Facades
  */
 export const combineAtaGroups = (groups: readonly AtaGroup[]): AtaGroup => ({
-  getGroup: async () => readGroups(groups),
+  getGroup: async () =>
+    mapResult(
+      await settleReads(groups.map(async (group) => group.getGroup())),
+      aggregateClassicAtaGroupStates,
+    ),
   getMemberOperationModes: (options) =>
     groups.flatMap((group) => group.getMemberOperationModes(options)),
   updateGroupState: async (state) =>

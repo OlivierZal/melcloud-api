@@ -52,3 +52,7 @@ export {
   isHomeAtaFacade,
   isHomeAtwFacade,
 } from './home-types.ts'
+export {
+  type SettingsTarget,
+  combineSettingsTargets,
+} from './settings-union.ts'

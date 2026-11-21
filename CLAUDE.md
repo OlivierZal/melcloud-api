@@ -165,6 +165,23 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   several as one `AggregateError` in group order. There is no rollback —
   a group that accepted the delta keeps it when another refuses, so a
   rejected combined write may have landed in part.
+- The settings follow the same rule (62.1.0): `combineSettingsTargets`
+  takes any `SettingsTarget`, the frost-protection and holiday-mode
+  contract every Classic facade, both dialects' device facades and the
+  Home building facade answer, and returns one. Same read policy, in a
+  module of its own now (`src/facades/settle-reads.ts`, which
+  `combineAtaGroups` shares): at once, fail closed. Same write policy:
+  every target at once, no rollback. The fold is the Home building's own
+  (`aggregateProtectionStates`, `aggregateHolidayModeStates`), which
+  takes a fold among its members since then: a field one target already
+  reads as mixed stays mixed, where the member fold would have read its
+  `null` as off and answered a house that is off everywhere. What a
+  Classic building answers is still a SAMPLE of its units when its
+  settings live at device level (the settings-levels entry below): the
+  combination folds answers, it does not deepen them. Overheat
+  protection is outside the contract, Home alone having it: a host
+  addresses the Home building for it. And a holiday window reaches each
+  wire on that wire's clock, the two writes being each dialect's own.
 - Home has no client-side no-change check. `updateValues` refuses only
   a payload with no defined value (`NoChangesError`), never one the
   unit already holds, so a Home group write PUTs every ATA member — and
