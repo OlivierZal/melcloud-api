@@ -13,6 +13,7 @@ export {
   describeRefusedPaths,
   HomeContextSchema,
   HomeEnergyDataSchema,
+  HomeEnergyReportDataSchema,
   HomeErrorLogEntryListSchema,
   HomeParResponseSchema,
   HomeReportDataSchema,

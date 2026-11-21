@@ -3,6 +3,7 @@ import type {
   HomeBuilding,
   HomeDeviceValues,
   HomeEnergyData,
+  HomeEnergyReportData,
   HomeErrorLogEntry,
   HomeFrostProtectionPostData,
   HomeHolidayModePostData,
@@ -30,10 +31,12 @@ import type {
  * binding.
  *
  * Per-unit endpoints share one verb per concept (`updateValues`,
- * `getEnergy`, `getErrorLog`, `getTemperatures`); the registry model's
- * connection type routes the wire path, so callers never pick an
- * ATA/ATW variant — `getAtwInternalTemperatures` is the one
- * deliberate exception (no ATA counterpart exists).
+ * `getErrorLog`, `getTemperatures`); the registry model's connection
+ * type routes the wire path, so callers never pick an ATA/ATW variant.
+ * Two concepts are named by type instead, because one verb cannot
+ * answer them: `getAtwInternalTemperatures` (no ATA counterpart
+ * exists) and energy, which the two types read from different
+ * endpoints in different envelopes (`getAtaEnergy`, `getAtwEnergy`).
  * @category Configuration
  */
 export interface HomeAPIAdapter extends BaseAPIAdapter {
@@ -56,6 +59,22 @@ export interface HomeAPIAdapter extends BaseAPIAdapter {
    */
   readonly fetch: () => Promise<HomeBuilding[]>
   /**
+   * Fetch energy telemetry (the cumulative consumption counter, in Wh) for an
+   * ATA unit.
+   */
+  readonly getAtaEnergy: (
+    id: string,
+    params: { from: string; interval: string; to: string },
+  ) => Promise<Result<HomeEnergyData>>
+  /**
+   * Fetch the combined-energy report (consumed and produced, in kWh) for an
+   * ATW unit.
+   */
+  readonly getAtwEnergy: (
+    id: string,
+    params: { from: string; period: string; to: string },
+  ) => Promise<Result<HomeEnergyReportData[]>>
+  /**
    * Fetch the internal-temperatures report (flow/return/tank/zone) for an ATW
    * unit.
    */
@@ -63,19 +82,6 @@ export interface HomeAPIAdapter extends BaseAPIAdapter {
     id: string,
     params: { from: string; period: string; to: string },
   ) => Promise<Result<HomeReportData[]>>
-  /**
-   * Fetch energy telemetry for a unit; the registry's connection type selects
-   * the measure family.
-   */
-  readonly getEnergy: (
-    id: string,
-    params: {
-      from: string
-      interval: string
-      to: string
-      measure?: 'consumed' | 'produced'
-    },
-  ) => Promise<Result<HomeEnergyData>>
   /**
    * Fetch the error log for a unit; the registry's connection type selects the
    * unit path.

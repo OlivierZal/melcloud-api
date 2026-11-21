@@ -365,6 +365,39 @@ export interface HomeEnergyPoint {
 }
 
 /**
+ * Wire-format `/report/v1/combined-energy` report — the energy source of
+ * the air-to-water units, one report per request. Only the datasets the
+ * SDK reads are typed: the period totals, the SCOP and the echoed window
+ * the wire also carries are left out, the totals counting the point the
+ * wire repeats at each period boundary of a longer window.
+ * @category Types
+ */
+export interface HomeEnergyReportData {
+  readonly datasets: HomeEnergyReportDataset[]
+}
+
+/**
+ * One named series of a {@link HomeEnergyReportData}:
+ * `interval_energy_consumed` and `interval_energy_produced` in kWh,
+ * beside an outdoor-temperature series the SDK does not read.
+ * @category Types
+ */
+export interface HomeEnergyReportDataset {
+  readonly data: HomeEnergyReportPoint[]
+  readonly id: string
+}
+
+/**
+ * Single `(x,y)` sample of a {@link HomeEnergyReportDataset}: `x` is the
+ * bucket's start on the unit's own wall clock, no zone attached.
+ * @category Types
+ */
+export interface HomeEnergyReportPoint {
+  readonly x: string
+  readonly y: number | null
+}
+
+/**
  * Single error-log entry returned by the MELCloud Home error-history
  * endpoint. `errorReason` is `null` when the BFF sends no reason string
  * for the code, and `clearedTimestamp` stays `null` while the error is

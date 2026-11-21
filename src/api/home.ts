@@ -23,6 +23,7 @@ import {
   type HomeContext,
   type HomeDeviceValues,
   type HomeEnergyData,
+  type HomeEnergyReportData,
   type HomeErrorLogEntry,
   type HomeFrostProtectionPostData,
   type HomeHolidayModePostData,
@@ -41,6 +42,7 @@ import {
   describeRefusedPaths,
   HomeContextSchema,
   HomeEnergyDataSchema,
+  HomeEnergyReportDataSchema,
   HomeErrorLogEntryListSchema,
   HomeReportDataSchema,
   HomeResilientContextSchema,
@@ -139,11 +141,6 @@ const toAtwWireValues = (values: HomeAtwValues): HomeAtwWireValues => ({
     operationModeZone2: toWireZoneMode(values.operationModeZone2),
   }),
 })
-const ATW_ENERGY_MEASURE = {
-  consumed: 'interval_energy_consumed',
-  produced: 'interval_energy_produced',
-} as const
-
 /**
  * Flatten a building's ATA + ATW units into typed registry entries,
  * tagging each with the caller-supplied ownership origin.
@@ -222,6 +219,12 @@ const toReportDate = (iso: string): string =>
   parseUTCPlainDateTime(iso)
     .round({ roundingMode: 'trunc', smallestUnit: 'second' })
     .toString({ fractionalSecondDigits: 7 })
+
+// `/report/v1/combined-energy` reads a zoneless bound as the unit's OWN
+// wall clock, where the three reports above read UTC (live-probed
+// 2026-11-21: a zoneless UTC day came back shifted by the unit's
+// offset). The trailing `Z` pins the instant.
+const toReportInstant = (iso: string): string => `${toReportDate(iso)}Z`
 
 // `/telemetry/telemetry/{energy,actual}` expect `YYYY-MM-DD HH:MM` with a
 // space and no seconds. Seconds or an ISO `T` separator produce an empty
@@ -418,8 +421,77 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
+   * Fetch energy telemetry for an air-to-air unit: its one measure, the
+   * cumulative consumption counter, in watt-hours. The endpoint serves
+   * `Hour` and `Day` buckets and nothing finer or coarser since
+   * 2026-11-20 (`Minute`, `Week` and `Month` answer `400`), and it cuts
+   * a response short: the 24 hour buckets that follow `from` at `Hour`
+   * (live-probed 2026-11-21), so a longer window is the caller's to
+   * chunk — the facades do. An air-to-water unit has no telemetry
+   * energy any more, see {@link getAtwEnergy}. Returns a {@link Result}
+   * so callers can branch on the failure class (`validation` for shape
+   * drift, `server` for 4xx/5xx, `unauthorized` for token rejection,
+   * `rate-limited`, `network`).
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp; the bucket holding it is
+   * answered.
+   * @param params.interval - Bucket grain (`Hour` or `Day`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the telemetry bundle, or a typed failure.
+   */
+  public async getAtaEnergy(
+    id: string,
+    params: { from: string; interval: string; to: string },
+  ): Promise<Result<HomeEnergyData>> {
+    return this.safeRequest('get', `/telemetry/telemetry/energy/${id}`, {
+      params: {
+        from: toTelemetryDate(params.from),
+        interval: params.interval,
+        measure: 'cumulative_energy_consumed_since_last_upload',
+        to: toTelemetryDate(params.to),
+      },
+      schema: HomeEnergyDataSchema,
+    })
+  }
+
+  /**
+   * Fetch the combined-energy report of an air-to-water unit: consumed
+   * and produced energy in kWh, the source the MELCloud Home apps read
+   * themselves. `Daily` answers hour buckets, `Weekly` and `Monthly`
+   * day buckets, each labelled on the unit's own wall clock; the hour
+   * in progress is there and grows. A window longer than one period —
+   * a day, seven days, a month — comes back with a repeated point at
+   * each period boundary, counted in the report's own totals
+   * (live-probed 2026-11-21), so the facades ask one period at a time.
+   * Same {@link Result} contract as {@link getAtaEnergy}.
+   * @param id - Device id.
+   * @param params - Query window.
+   * @param params.from - ISO start timestamp (inclusive).
+   * @param params.period - Report period (`Daily`, `Weekly` or
+   * `Monthly`).
+   * @param params.to - ISO end timestamp (exclusive).
+   * @returns Success with the reports (one per request), or a typed
+   * failure.
+   */
+  public async getAtwEnergy(
+    id: string,
+    params: { from: string; period: string; to: string },
+  ): Promise<Result<HomeEnergyReportData[]>> {
+    return this.safeRequest('get', '/report/v1/combined-energy', {
+      params: {
+        from: toReportInstant(params.from),
+        period: params.period,
+        to: toReportInstant(params.to),
+        unitId: id,
+      },
+      schema: HomeEnergyReportDataSchema.array(),
+    })
+  }
+
+  /**
    * Fetch the internal-temperatures report (flow/return/tank/zone)
-   * for an ATW unit. Same {@link Result} contract as {@link getEnergy}.
+   * for an ATW unit. Same {@link Result} contract as {@link getAtaEnergy}.
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
@@ -435,59 +507,9 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * Fetch energy telemetry for a unit; the registry model's connection
-   * type selects the measure family — ATA's single cumulative
-   * consumption counter, or ATW's interval consumed/produced measures
-   * (kWh per bucket, live-probed 2026-07-17). Returns a {@link Result}
-   * so callers can branch on the failure class (`validation` for shape
-   * drift, `server` for 4xx/5xx, `unauthorized` for token rejection,
-   * `rate-limited`, `network`).
-   * @param id - Device id.
-   * @param params - Query window.
-   * @param params.from - ISO start timestamp (inclusive).
-   * @param params.interval - Aggregation interval (`Minute`, `Hour`, `Day`,
-   * `Week` or `Month`).
-   * @param params.measure - Energy direction (`'consumed'` or
-   * `'produced'`); ATW only, where it defaults to `'consumed'` — the
-   * ATA counter is consumption by definition.
-   * @param params.to - ISO end timestamp (exclusive).
-   * A `measure` passed for an ATA id is ignored — the ATA counter is
-   * consumption by definition. An id the registry does not hold folds
-   * into the `not-found` Result variant (the Result contract never
-   * throws for it — a cold open may query before the first fetch).
-   * @returns Success with the telemetry bundle, or a typed failure.
-   */
-  public async getEnergy(
-    id: string,
-    params: {
-      from: string
-      interval: string
-      to: string
-      measure?: 'consumed' | 'produced'
-    },
-  ): Promise<Result<HomeEnergyData>> {
-    const model = this.#modelResultFor(id)
-    if (!model.ok) {
-      return model
-    }
-    const { measure = 'consumed', ...window } = params
-    return this.safeRequest('get', `/telemetry/telemetry/energy/${id}`, {
-      params: {
-        from: toTelemetryDate(window.from),
-        interval: window.interval,
-        measure: model.value.isAta()
-          ? 'cumulative_energy_consumed_since_last_upload'
-          : ATW_ENERGY_MEASURE[measure],
-        to: toTelemetryDate(window.to),
-      },
-      schema: HomeEnergyDataSchema,
-    })
-  }
-
-  /**
    * Fetch the error-log entries for a unit; the registry model's
    * connection type selects the unit path. Same {@link Result} contract
-   * as {@link getEnergy}.
+   * as {@link getAtaEnergy}.
    * @param id - Device id.
    * An unknown id folds into the `not-found` Result variant.
    * @returns Success with the entries (possibly empty), or a typed failure.
@@ -506,7 +528,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
 
   /**
    * Fetch RSSI telemetry for a device (ATA or ATW). Same {@link Result}
-   * contract as {@link getEnergy}.
+   * contract as {@link getAtaEnergy}.
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).
@@ -531,7 +553,7 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * Fetch the temperature report for a unit; the registry model's
    * connection type selects the endpoint — ATA's trend summary or
    * ATW's comfort graph (outside / room / set temperature). Same
-   * {@link Result} contract as {@link getEnergy}.
+   * {@link Result} contract as {@link getAtaEnergy}.
    * @param id - Device id.
    * @param params - Query window.
    * @param params.from - ISO start timestamp (inclusive).

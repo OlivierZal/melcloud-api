@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [62.0.0] - 2026-11-21
+
+### Fixed
+
+- **The energy of a MELCloud Home unit reads again, in hour buckets, an air-to-water unit's from the report the MELCloud Home apps read themselves.** On 2026-11-20 around noon UTC (the last read on record that passed is of 11:08, the first that failed of 12:08) MELCloud's energy telemetry stopped answering requests it had served for months, with a `400` and an empty body: an air-to-water read at any interval, an air-to-air one at `Minute`, the grain com.melcloud read. Live-probed on 2026-11-21: on an air-to-air unit the `Minute` interval is refused whatever the window, `Week` and `Month` too, and `Hour` and `Day` still answer; on an air-to-water unit the two interval measures (`interval_energy_consumed`, `interval_energy_produced`) are refused at every interval. `getEnergySeries` is rebuilt on what the wire serves:
+  - an air-to-air unit keeps the telemetry endpoint, at `Hour`. A response stops 24 buckets after `from`, so a window is read in 24-hour chunks counted on the UTC clock from the hour that holds `from`;
+  - an air-to-water unit reads `/report/v1/combined-energy`, consumed and produced energy in one request, in kWh, labelled on the unit's own wall clock (its `/context` `timeZone`) and with the hour in progress, which grows. Past one period (a day at `Daily`, a month at `Monthly`) the wire repeats the previous point at each period boundary, under a label of its own wherever the real bucket is idle, and counts it in the report's own totals; a window is therefore read one day of the unit at a time, midnight to midnight on its clock, a 23- or 25-hour day included.
+- **The Home energy charts show their whole window again.** `getEnergyReport` asked an air-to-air unit's hour buckets in one request for any window up to a month, of which the wire answers the first 24 hours: every day after the first charted as idle (how long the wire has cut its responses is not known). It is read in chunks now: hour buckets up to a week, summed per calendar day of the display timezone past one day, then the wire's UTC day buckets in 30-day chunks (31 days answered whole and 92 days empty for a unit active on its last three, live-probed 2026-11-21), a day two chunks both answer being charted once. An air-to-water unit's chart, which failed with the telemetry measures, reads the report: hour buckets on a one-day span, the unit's own day buckets beyond, 28 days per request.
+
+### Changed
+
+- **BREAKING**: `getEnergySeries` takes `{ from, to }` and answers hour buckets, the finest grain the wire still serves, per direction: `{ consumed }` on `HomeDeviceAtaFacade` (`HomeEnergySeries`), `{ consumed, produced }` on `HomeDeviceAtwFacade` (`HomeAtwEnergySeries`), where it took an `interval` (and a `measure` on air-to-water units) and answered a flat list. Every bucket the window touches is answered, the one that holds `from` and the one in progress included; the window is clamped to the wire's retention span like every Home report window, and costs one request per day it covers. `HomeEnergySeriesQuery` is no longer generic, and `HomeEnergyInterval` is gone with the three intervals the wire refuses.
+- **BREAKING**: the Home API client names its two energy reads by type, because one verb can no longer answer both: `getAtaEnergy(id, { from, interval, to })` is the telemetry read `getEnergy` was for an air-to-air unit, and `getAtwEnergy(id, { from, period, to })` the combined-energy report (`HomeEnergyReportData[]`), whose bounds are sent as instants: that endpoint reads a zoneless bound as the unit's own wall clock. Neither routes on the registry any more, so an id the registry does not hold goes to the wire instead of answering `not-found`. `HomeAPI.getEnergy` and its `measure` option are gone.
+- **BREAKING**: the raw `getEnergy` of the device facades is `HomeDeviceAtaFacade`'s alone, the telemetry endpoint serving no air-to-water energy any more, and `HomeEnergyQuery` is no longer generic. The protected `wireUnitsPerKilowattHour` leaves `HomeBaseDeviceFacade`: only the telemetry read has a unit to scale.
+- An air-to-air energy chart sums hour buckets per calendar day of the display timezone up to a week, where it did up to a month: past a week a month of hour buckets would be thirty requests, and the wire's UTC day buckets are charted as they are.
+
+### Added
+
+- `HomeEnergyReportData`, `HomeEnergyReportDataset` and `HomeEnergyReportPoint` type the combined-energy report as far as the SDK reads it: the datasets, a `null` sample admitted. The period totals, the SCOP and the echoed window the wire also carries are left untyped.
+
 ## [61.0.0] - 2026-11-20
 
 ### Fixed
@@ -1032,7 +1052,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v61.0.0...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.0...HEAD
+[62.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v61.0.0...v62.0.0
 [61.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.9.0...v61.0.0
 [60.9.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.8.0...v60.9.0
 [60.8.0]: https://github.com/OlivierZal/melcloud-api/compare/v60.7.0...v60.8.0

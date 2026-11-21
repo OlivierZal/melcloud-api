@@ -17,13 +17,19 @@ import {
   mapResult,
   ok,
 } from '../types/index.ts'
-import { clampToRange } from '../utils.ts'
+import { clampToRange, resolved } from '../utils.ts'
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
   ReportQuery,
 } from './report-types.ts'
 import { HomeBaseDeviceFacade, TEMPERATURE_UNIT } from './home-base-device.ts'
+import {
+  type HomeAtwEnergySeries,
+  type HomeEnergySeriesQuery,
+  getHomeAtwEnergyReport,
+  getHomeAtwEnergySeries,
+} from './home-energy.ts'
 import {
   type HomeChartGridUnit,
   type HomeChartWindow,
@@ -32,12 +38,8 @@ import {
   resolveHomeFineWindow,
   resolveHomeReportWindow,
   shouldChartHomeBands,
-  toHomeEnergyBucketUnit,
-  toHomeEnergyInterval,
-  toHomeEnergyOptions,
   toHomeLineOptions,
   toHomeOperationModeOptions,
-  toHomeWireWindow,
 } from './home-report.ts'
 
 // Mirrors the Classic hot-water derivation: the FTC operation mode marks
@@ -321,49 +323,45 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
     return this.#whenZone2(() => this.#zoneState('Zone2'))
   }
 
-  // The ATW interval measures already report kWh per bucket
-  // (live-probed 2026-07-17, see CLAUDE.md): the wire unit IS the
-  // normalized one.
-  protected override readonly wireUnitsPerKilowattHour: number = 1
-
   /**
-   * Fetches the energy report as line chart data on a daily grid — the
-   * Home counterpart of the Classic `getEnergyReport` contract, with
-   * one consumed and one produced series (the ATW interval measures
-   * report `kWh` per bucket); days the wire omits (idle) chart as `0`.
+   * Fetches the energy report as line chart data — the Home counterpart
+   * of the Classic `getEnergyReport` contract, with one consumed and
+   * one produced series in `kWh`: hour buckets on a one-day span, the
+   * unit's own calendar days beyond; a bucket the wire omits (idle)
+   * charts as `0`.
    * @param query - Optional ISO date range.
    * @returns Structured line chart options (`kWh`), or a typed failure.
+   * @throws EntityNotFoundError when the registry no longer holds the id.
    */
   public async getEnergyReport(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
-    const window = resolveHomeReportWindow(query, this.chartTimezone)
-    const bucketUnit = toHomeEnergyBucketUnit(window)
-    const params = {
-      ...toHomeWireWindow(window),
-      interval: toHomeEnergyInterval(bucketUnit),
-    }
-    const [consumed, produced] = await Promise.all([
-      this.api.getEnergy(this.id, { ...params, measure: 'consumed' }),
-      this.api.getEnergy(this.id, { ...params, measure: 'produced' }),
-    ])
-    if (!consumed.ok) {
-      return consumed
-    }
-    if (!produced.ok) {
-      return produced
-    }
-    return ok(
-      toHomeEnergyOptions({
-        bucketUnit,
-        locale: this.api.locale,
-        sources: [
-          { data: consumed.value, name: 'Consumed' },
-          { data: produced.value, name: 'Produced' },
-        ],
-        window,
-      }),
-    )
+    const { data } = await resolved(this.model)
+    return getHomeAtwEnergyReport(this.api, this.id, {
+      window: resolveHomeReportWindow(query, this.chartTimezone),
+      zone: data.timeZone,
+    })
+  }
+
+  /**
+   * Fetches the hourly energy of this device as the normalized series,
+   * one per direction: each bucket's start as an epoch-ms instant, its
+   * energy in kilowatt-hours, oldest first. Hour buckets are the finest
+   * grain the wire serves, on the unit's own clock, and the hour in
+   * progress is there and grows. A garbled sample degrades
+   * field-by-field to `null` — never `NaN` — and keeps its entry.
+   * @param query - Read window.
+   * @returns The normalized series per direction, or a typed failure.
+   * @throws EntityNotFoundError when the registry no longer holds the id.
+   */
+  public async getEnergySeries(
+    query: HomeEnergySeriesQuery,
+  ): Promise<Result<HomeAtwEnergySeries>> {
+    const { data } = await resolved(this.model)
+    return getHomeAtwEnergySeries(this.api, this.id, {
+      query,
+      zone: data.timeZone,
+    })
   }
 
   /**

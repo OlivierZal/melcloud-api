@@ -7,7 +7,6 @@ import {
   resolveHomeHourWindow,
   resolveHomeReportWindow,
   splitHomeReportWindow,
-  toHomeEnergyOptions,
   toHomeLineOptions,
   toHomeOperationModeOptions,
   toHomeReportPeriod,
@@ -630,68 +629,6 @@ describe.concurrent(toHomeOperationModeOptions, () => {
 
     expect(options.labels.at(-1)).toBe('FrostProtection')
     expect(options.series.at(-1)).toBe(0.5)
-  })
-})
-
-describe.concurrent(toHomeEnergyOptions, () => {
-  it('densifies sparse buckets to zero and applies the scale', () => {
-    const options = toHomeEnergyOptions({
-      bucketUnit: 'day',
-      sources: [
-        {
-          data: homeEnergyEnvelope(
-            'cumulative_energy_consumed_since_last_upload',
-            [
-              { time: '2026-07-15 00:00:00.000000000', value: '0.0' },
-              { time: '2026-07-17 00:00:00.000000000', value: '571.0' },
-            ],
-          ),
-          name: 'Consumed',
-          scale: 0.001,
-        },
-      ],
-      window: resolveHomeReportWindow(
-        { from: '2026-07-14T00:00:00', to: '2026-07-18T00:00:00' },
-        'UTC',
-      ),
-    })
-
-    expect(options.unit).toBe('kWh')
-    expect(options.labels).toHaveLength(5)
-
-    const [consumed] = options.series
-
-    // Scale in watt-hours to sidestep the 571 × 0.001 float artifact.
-    expect(
-      consumed?.data.map((value) =>
-        value === null ? value : Math.round(value * 1000),
-      ),
-    ).toStrictEqual([0, 0, 0, 571, 0])
-  })
-
-  it('charts one series per source', () => {
-    const bucket = { time: '2026-07-17 00:00:00.000000000', value: '2.5' }
-    const options = toHomeEnergyOptions({
-      bucketUnit: 'day',
-      sources: [
-        {
-          data: homeEnergyEnvelope('consumed', [bucket]),
-          name: 'Consumed',
-          scale: 1,
-        },
-        {
-          data: homeEnergyEnvelope('produced', [bucket]),
-          name: 'Produced',
-          scale: 1,
-        },
-      ],
-      window: utcDayWindow,
-    })
-
-    expect(options.series.map(({ name }) => name)).toStrictEqual([
-      'Consumed',
-      'Produced',
-    ])
   })
 })
 

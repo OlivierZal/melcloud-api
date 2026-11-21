@@ -8,6 +8,7 @@ import {
   type HomeReportPoint,
   type Hour,
   type Result,
+  mapResult,
   ok,
 } from '../types/index.ts'
 import type {
@@ -61,7 +62,13 @@ export const MAX_ANNOTATION_CHUNK_DAYS = 7
 // Weekly samples without annotations instead.
 const MAX_BAND_WINDOW_DAYS = 7
 
-const windowDaysOf = (window: HomeChartWindow): number =>
+/**
+ * Span of a window in days of its own timezone (a clock-change day
+ * counts for one, whatever its hours).
+ * @param window - Resolved chart window.
+ * @returns The span, fractional.
+ */
+export const windowDaysOf = (window: HomeChartWindow): number =>
   window.from.until(window.to).total({ relativeTo: window.from, unit: 'days' })
 
 /**
@@ -178,10 +185,10 @@ export const mergeHomeReportChunks = (
 // failed batch short-circuits the remainder.
 const MAX_PARALLEL_CHUNKS = 16
 
-const fetchChunkBatches = async (
-  fetch: (chunk: HomeChartWindow) => Promise<Result<HomeReportData[]>>,
+const fetchChunkBatches = async <T>(
+  fetch: (chunk: HomeChartWindow) => Promise<Result<T>>,
   chunks: readonly HomeChartWindow[],
-): Promise<Result<HomeReportData[]>[]> => {
+): Promise<Result<T>[]> => {
   if (chunks.length === 0) {
     return []
   }
@@ -195,6 +202,30 @@ const fetchChunkBatches = async (
     ...batch,
     ...(await fetchChunkBatches(fetch, chunks.slice(MAX_PARALLEL_CHUNKS))),
   ]
+}
+
+/**
+ * Run one request per chunk, batched in parallel, and gather the
+ * answers in chunk order — the shape every chunked Home read shares,
+ * whatever the endpoint.
+ * @template T - Payload of one chunk's answer.
+ * @param fetch - One request (endpoint bound by the caller).
+ * @param chunks - Chunk windows, oldest first.
+ * @returns Every chunk's payload, or the first chunk failure.
+ */
+export const fetchHomeChunks = async <T>(
+  fetch: (chunk: HomeChartWindow) => Promise<Result<T>>,
+  chunks: readonly HomeChartWindow[],
+): Promise<Result<T[]>> => {
+  const results = await fetchChunkBatches(fetch, chunks)
+  const values: T[] = []
+  for (const result of results) {
+    if (!result.ok) {
+      return result
+    }
+    values.push(result.value)
+  }
+  return ok(values)
 }
 
 /**
@@ -217,21 +248,18 @@ export const fetchHomeReportChunks = async (
   }) => Promise<Result<HomeReportData[]>>,
   window: HomeChartWindow,
   chunkDays?: number,
-): Promise<Result<HomeReportData[]>> => {
-  const results = await fetchChunkBatches(
-    async (chunk) =>
-      fetch({ ...toHomeWireWindow(chunk), period: toHomeReportPeriod(chunk) }),
-    splitHomeReportWindow(window, chunkDays),
+): Promise<Result<HomeReportData[]>> =>
+  mapResult(
+    await fetchHomeChunks(
+      async (chunk) =>
+        fetch({
+          ...toHomeWireWindow(chunk),
+          period: toHomeReportPeriod(chunk),
+        }),
+      splitHomeReportWindow(window, chunkDays),
+    ),
+    mergeHomeReportChunks,
   )
-  const values: HomeReportData[][] = []
-  for (const result of results) {
-    if (!result.ok) {
-      return result
-    }
-    values.push([...result.value])
-  }
-  return ok(mergeHomeReportChunks(values))
-}
 
 // The Home wire speaks UTC wall-clock on queries and samples alike
 // (live-probed 2026-07-18: the freshest sample equals "now" in UTC).
@@ -243,16 +271,6 @@ const MAX_HOURLY_GRID_DAYS = 7
 // Observed BFF retention is ~75-91 days: clamp open-ended queries so a
 // Classic-style epoch default cannot produce a multi-year grid.
 const MAX_REPORT_SPAN_DAYS = 92
-
-// A "one day" query resolves a hair over 1.0 days (the caller stamps
-// `from` a few milliseconds before the library stamps `to`), so the
-// hourly-bucket cutoff sits halfway to the next whole-day option.
-const MAX_HOURLY_ENERGY_DAYS = 1.5
-
-// Up to a month, energy day buckets aggregate hourly wire buckets per
-// calendar day of the display timezone; beyond, the wire's UTC day
-// buckets are charted as-is.
-const MAX_LOCAL_DAY_ENERGY_DAYS = 31
 
 const MODE_OVERLAY_PREFIX = 'REPORT.COMFORT_GRAPH.OVERLAY_KEY.'
 
@@ -384,47 +402,6 @@ export const resolveHomeHourWindow = (
   })
   return { from, to: from.add({ hours: 1 }) }
 }
-
-/**
- * Display bucket granularity of the Home energy charts.
- */
-type HomeEnergyBucketUnit = 'day' | 'hour' | 'localDay'
-
-/**
- * Display bucket granularity for an energy-report window: hourly on a
- * one-day span — matching the Classic one-day report — calendar days
- * of the display timezone up to a month (aggregated from hourly wire
- * buckets: the wire's own day buckets are UTC days, which smear
- * evening usage onto the next bar in UTC+ zones), raw UTC wire days
- * beyond (an hourly pull over a year is unproven and the shift is
- * invisible at that zoom).
- * @param window - Resolved chart window.
- * @returns The display bucket unit.
- */
-export const toHomeEnergyBucketUnit = (
-  window: HomeChartWindow,
-): HomeEnergyBucketUnit => {
-  const days = windowDaysOf(window)
-  if (days <= MAX_HOURLY_ENERGY_DAYS) {
-    return 'hour'
-  }
-  return days <= MAX_LOCAL_DAY_ENERGY_DAYS ? 'localDay' : 'day'
-}
-
-// Local-day buckets are aggregated client-side from hourly wire
-// buckets, so they request `Hour` too.
-const ENERGY_INTERVALS = { day: 'Day', hour: 'Hour', localDay: 'Hour' } as const
-
-/**
- * Wire `interval` value for a display bucket unit — the request-side
- * companion of {@link toHomeEnergyBucketUnit}.
- * @param bucketUnit - Display bucket unit.
- * @returns The telemetry `interval` to request.
- */
-export const toHomeEnergyInterval = (
-  bucketUnit: HomeEnergyBucketUnit,
-): (typeof ENERGY_INTERVALS)[HomeEnergyBucketUnit] =>
-  ENERGY_INTERVALS[bucketUnit]
 
 /**
  * Resolve today's full-day window in the display timezone — what the
@@ -773,179 +750,6 @@ export const toHomeOperationModeOptions = (
     labels,
     series: labels.map((mode) => durations.get(mode) ?? 0),
     to: window.to.toPlainDateTime().toString(),
-  }
-}
-
-const enumerateDays = (
-  first: Temporal.PlainDate,
-  last: Temporal.PlainDate,
-): Temporal.PlainDate[] => {
-  const days: Temporal.PlainDate[] = []
-  for (
-    let day = first;
-    Temporal.PlainDate.compare(day, last) <= 0;
-    day = day.add({ days: 1 })
-  ) {
-    days.push(day)
-  }
-  return days
-}
-
-// Energy buckets are UTC calendar days (or hours) on the wire:
-// enumerate them by their literal timestamps instead of shifting them
-// into the display timezone.
-const buildUtcDayGrid = (window: HomeChartWindow): string[] =>
-  enumerateDays(
-    window.from.withTimeZone(WIRE_TIME_ZONE).toPlainDate(),
-    window.to.withTimeZone(WIRE_TIME_ZONE).toPlainDate(),
-  ).map((day) => day.toPlainDateTime().toString())
-
-// Local-day buckets enumerate the calendar days of the display
-// timezone the window spans (its bounds already live in that zone).
-const buildLocalDayGrid = (window: HomeChartWindow): string[] =>
-  enumerateDays(window.from.toPlainDate(), window.to.toPlainDate()).map((day) =>
-    day.toString(),
-  )
-
-const toWireHour = (bound: Temporal.ZonedDateTime): Temporal.PlainDateTime =>
-  bound
-    .withTimeZone(WIRE_TIME_ZONE)
-    .toPlainDateTime()
-    .round({ roundingMode: 'floor', smallestUnit: 'hour' })
-
-const buildUtcHourGrid = (window: HomeChartWindow): string[] => {
-  const last = toWireHour(window.to)
-  const hours: string[] = []
-  for (
-    let hour = toWireHour(window.from);
-    Temporal.PlainDateTime.compare(hour, last) <= 0;
-    hour = hour.add({ hours: 1 })
-  ) {
-    hours.push(hour.toString())
-  }
-  return hours
-}
-
-// Slot key of one wire bucket timestamp (UTC wall-clock): the floored
-// hour, the local calendar day in the display timezone, or the UTC
-// calendar day — matching the grid the unit builds.
-const toEnergySlotKey = (
-  time: Temporal.PlainDateTime,
-  bucketUnit: HomeEnergyBucketUnit,
-  timezone: string,
-): string => {
-  if (bucketUnit === 'hour') {
-    return time
-      .round({ roundingMode: 'floor', smallestUnit: 'hour' })
-      .toString()
-  }
-  return (
-    bucketUnit === 'localDay'
-      ? time
-          .toZonedDateTime(WIRE_TIME_ZONE)
-          .withTimeZone(timezone)
-          .toPlainDate()
-      : time.toPlainDate().toPlainDateTime()
-  ).toString()
-}
-
-const sumEnergyBySlot = (
-  data: HomeEnergyData,
-  {
-    bucketUnit,
-    scale,
-    timezone,
-  }: { bucketUnit: HomeEnergyBucketUnit; scale: number; timezone: string },
-): Map<string, number> => {
-  const bySlot = new Map<string, number>()
-  const points = data.measureData.flatMap((measure) => measure.values)
-  for (const point of points) {
-    const slot = toEnergySlotKey(
-      parseWireDateTime(point.time),
-      bucketUnit,
-      timezone,
-    )
-    bySlot.set(slot, (bySlot.get(slot) ?? 0) + Number(point.value) * scale)
-  }
-  return bySlot
-}
-
-// Hour buckets render on the display clock (a 23:00 UTC bucket is the
-// user's 01:00); local-day buckets are already display dates; UTC day
-// buckets keep their calendar date.
-const toEnergySlotLabel = (
-  slot: string,
-  bucketUnit: HomeEnergyBucketUnit,
-  timezone: string,
-): Temporal.PlainDate | Temporal.PlainDateTime => {
-  if (bucketUnit === 'hour') {
-    return Temporal.PlainDateTime.from(slot)
-      .toZonedDateTime(WIRE_TIME_ZONE)
-      .withTimeZone(timezone)
-      .toPlainDateTime()
-  }
-  return (
-    bucketUnit === 'localDay' ? Temporal.PlainDate : Temporal.PlainDateTime
-  ).from(slot)
-}
-
-const energyGridBuilders: Record<
-  HomeEnergyBucketUnit,
-  (window: HomeChartWindow) => string[]
-> = {
-  day: buildUtcDayGrid,
-  hour: buildUtcHourGrid,
-  localDay: buildLocalDayGrid,
-}
-
-/**
- * Rebuild sparse energy telemetry buckets into Classic-shaped line
- * chart options on a daily grid: one series per source, missing days
- * as `0` (the wire omits idle buckets entirely).
- * @param options - Conversion inputs.
- * @param options.bucketUnit - Display bucket granularity (`day` is UTC
- * days; `localDay` sums hourly wire buckets per calendar day of the
- * display timezone; `hour` matches the Classic one-day report).
- * @param options.locale - BCP-47 locale tag for axis labels.
- * @param options.sources - One entry per charted series; `scale`
- * converts wire units to kWh and defaults to `1` (already kWh).
- * @param options.window - Resolved chart window (in the display timezone).
- * @returns Structured line chart options (`kWh`).
- */
-export const toHomeEnergyOptions = ({
-  bucketUnit,
-  locale,
-  sources,
-  window,
-}: {
-  bucketUnit: HomeEnergyBucketUnit
-  sources: readonly {
-    readonly data: HomeEnergyData
-    readonly name: string
-    readonly scale?: number
-  }[]
-  window: HomeChartWindow
-  locale?: string | undefined
-}): ReportChartLineOptions => {
-  const timezone = window.from.timeZoneId
-  const slots = energyGridBuilders[bucketUnit](window)
-  const formatter = new Intl.DateTimeFormat(
-    locale,
-    bucketUnit === 'hour'
-      ? { hour: '2-digit', minute: '2-digit' }
-      : { day: 'numeric', month: 'short' },
-  )
-  return {
-    from: window.from.toPlainDateTime().toString(),
-    labels: slots.map((slot) =>
-      formatter.format(toEnergySlotLabel(slot, bucketUnit, timezone)),
-    ),
-    series: sources.map(({ data, name, scale = 1 }) => {
-      const bySlot = sumEnergyBySlot(data, { bucketUnit, scale, timezone })
-      return { data: slots.map((slot) => bySlot.get(slot) ?? 0), name }
-    }),
-    to: window.to.toPlainDateTime().toString(),
-    unit: 'kWh',
   }
 }
 
