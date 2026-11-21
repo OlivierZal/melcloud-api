@@ -10,7 +10,7 @@ import {
   HomeAtwZoneMode,
   HomeDeviceType,
 } from './constants.ts'
-import { isKeyOf } from './utils.ts'
+import { createKeyGuard } from './utils.ts'
 
 // Bidirectional mapping tables between classic API numeric enums
 // and Home API string values.
@@ -132,13 +132,13 @@ export const fanSpeedToClassic: Record<HomeFanSpeed, ClassicFanSpeed> = {
  * Type guard: `key` is a valid Classic fan speed numeric value.
  */
 export const isClassicFanSpeed: (key: PropertyKey) => key is ClassicFanSpeed =
-  isKeyOf(fanSpeedFromClassic)
+  createKeyGuard(fanSpeedFromClassic)
 
 /**
  * Type guard: `key` is a valid Home fan speed string.
  */
 export const isHomeFanSpeed: (key: PropertyKey) => key is HomeFanSpeed =
-  isKeyOf(fanSpeedToClassic)
+  createKeyGuard(fanSpeedToClassic)
 
 /**
  * Mapping from Classic numeric horizontal vane position to Home string value.
@@ -209,7 +209,7 @@ export const operationModeToClassic: Record<
  */
 export const isHomeOperationMode: (
   key: PropertyKey,
-) => key is HomeOperationMode = isKeyOf(operationModeToClassic)
+) => key is HomeOperationMode = createKeyGuard(operationModeToClassic)
 
 /**
  * Mapping from Classic numeric vertical vane position to Home string value.

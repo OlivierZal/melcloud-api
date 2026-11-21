@@ -10,8 +10,8 @@ import { CLASSIC_FLAG_UNCHANGED, ClassicDeviceType } from '../constants.ts'
 import { NoChangesError } from '../errors/index.ts'
 import { hasFlag } from '../facades/classic-flag-bits.ts'
 import {
+  createKeyGuard,
   fromSetToListAta,
-  isKeyOf,
   isSetDeviceDataAtaNotInList,
   typedFromEntries,
 } from '../utils.ts'
@@ -35,12 +35,12 @@ type UpdatePatchKind = 'payload' | 'power'
  * device type; the patch-computation strategy is explicit via
  * the `kind` option (`'payload'` or `'power'`) rather than inferred
  * from the method name.
- * @param root0 - Options object.
- * @param root0.kind - Patch-computation strategy (default `'payload'`).
- * @param root0.type - Optional device type to filter which devices
+ * @param options - How the patch is computed and which devices take it.
+ * @param options.kind - Patch-computation strategy (default `'payload'`).
+ * @param options.type - Optional device type to filter which devices
  * are updated. When omitted, every device in the facade is patched.
  * @returns A method decorator that updates device models after execution.
- * @throws {@link NoChangesError} from the wrapped method when it is called
+ * @throws A {@link NoChangesError} from the wrapped method when it is called
  * with an empty-object payload carrying no fields to apply.
  * @category Decorators
  */
@@ -90,6 +90,8 @@ export const classicUpdateDevices =
  * (e.g., `SetFanSpeed` → `FanSpeed`). Exported for facade methods that
  * return Result and apply the registry update inline (e.g.,
  * `BaseDeviceFacade.getValues`).
+ * @template T - Device type of the facade, which selects the payload
+ * shapes on both sides of the conversion.
  * @param facade - The facade whose registry device should be patched.
  * @param data - The Classic API set/get device payload.
  * @returns A list-data partial ready to feed `device.update(...)`.
@@ -103,7 +105,7 @@ export const convertToListDeviceData = <T extends ClassicDeviceType>(
   const allEntries = Object.entries(newData)
   const effectiveFlagsBigInt =
     effectiveFlags === CLASSIC_FLAG_UNCHANGED ? null : BigInt(effectiveFlags)
-  const isFlagged = isKeyOf(flags)
+  const isFlagged = createKeyGuard(flags)
   const entries =
     effectiveFlagsBigInt === null
       ? allEntries
@@ -129,6 +131,11 @@ export const convertToListDeviceData = <T extends ClassicDeviceType>(
  * Method decorator that converts the API response back to list-data
  * shape and updates the targeted device model, using `EffectiveFlags`
  * to propagate only fields the device actually acknowledged.
+ * @template T - Device type of the facade the method belongs to.
+ * @template TArgs - Argument list of the decorated method, passed
+ * through untouched.
+ * @template TData - Set-device payload the decorated method resolves
+ * with, returned as is once the model is updated.
  * @param target - The raw-payload method being decorated.
  * @param _context - The decorator context (unused).
  * @returns The wrapped method.

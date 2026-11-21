@@ -276,7 +276,8 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * a pinned reference froze `isConnected` and kept a healed unit
    * unavailable forever).
    * @returns The current model for this facade's id.
-   * @throws EntityNotFoundError when the registry no longer holds the id.
+   * @throws An {@link EntityNotFoundError} when the registry no longer
+   * holds the id.
    */
   protected get model(): HomeDevice<TData> {
     const model = this.api.registry.getById(this.#id)
@@ -487,7 +488,7 @@ export abstract class HomeBaseDeviceFacade<TData extends HomeDeviceData>
    * clamped setpoints and forwards. Each subclass narrows the payload
    * to its device-type shape.
    * @param values - Partial update payload.
-   * @throws NoChangesError when `values` carries no defined value.
+   * @throws A {@link NoChangesError} when `values` carries no defined value.
    */
   public async updateValues(values: HomeDeviceValues): Promise<void> {
     const changes = omitUndefined(values)

@@ -1,14 +1,13 @@
-/**
- * Protection temperature bounds — frost (Classic and Home) and overheat
- * (Home ATA only), each enforced identically by the official UIs.
- * Clamping lives here so a direct SDK/flow call cannot escape the bounds
- * the UIs guarantee.
- */
+// Protection temperature bounds — frost (Classic and Home) and overheat
+// (Home ATA only), each enforced identically by the official UIs.
+// Clamping lives here so a direct SDK/flow call cannot escape the bounds
+// the UIs guarantee.
 
 import { allEqual } from './utils.ts'
 
 /**
  * Minimum gap required between min and max, in °C (both features).
+ * @category Facades
  */
 export const PROTECTION_GAP = 2
 
@@ -85,11 +84,13 @@ export interface ProtectionUpdate {
 
 /**
  * Absolute frost-protection min/max the units accept, in °C.
+ * @category Facades
  */
 export const FROST_PROTECTION_RANGE = { max: 16, min: 4 }
 
 /**
  * Absolute overheat-protection min/max the units accept, in °C.
+ * @category Facades
  */
 export const OVERHEAT_PROTECTION_RANGE = { max: 40, min: 31 }
 
@@ -121,6 +122,7 @@ const clampProtection = (
  * @param min - Requested lower bound, in °C.
  * @param max - Requested upper bound, in °C.
  * @returns The clamped `{ min, max }` pair.
+ * @category Facades
  */
 export const clampFrostProtection = (
   min: number,
@@ -134,6 +136,7 @@ export const clampFrostProtection = (
  * @param min - Requested lower bound, in °C.
  * @param max - Requested upper bound, in °C.
  * @returns The clamped `{ min, max }` pair.
+ * @category Facades
  */
 export const clampOverheatProtection = (
   min: number,
@@ -147,6 +150,7 @@ export const clampOverheatProtection = (
  * per-field divergence folds to `null` (the mixed marker).
  * @param states - One state (or `null`) per member.
  * @returns The aggregated state.
+ * @category Facades
  */
 export const aggregateProtectionStates = (
   states: readonly (ProtectionState | null)[],

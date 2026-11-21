@@ -275,8 +275,8 @@ export class ClassicRegistry {
   /**
    * Build a hierarchical zone structure from the registry, optionally filtered
    * by device type.
-   * @param root0 - Options object.
-   * @param root0.type - Optional device type to filter the zone structure.
+   * @param filter - What to restrict the structure to.
+   * @param filter.type - Optional device type to filter the zone structure.
    * @returns The hierarchical building zone structure.
    */
   public getBuildings({
@@ -352,6 +352,8 @@ export class ClassicRegistry {
 
   /**
    * Returns every device whose `Type` matches the given device type.
+   * @template T - Device type to keep, which narrows the returned
+   * models.
    * @param type - Ata, Atw, or Erv discriminator.
    * @returns The matching devices.
    */
@@ -374,8 +376,8 @@ export class ClassicRegistry {
   /**
    * Flattens the hierarchical zone tree returned by {@link getBuildings}
    * into a single, name-sorted list.
-   * @param root0 - Optional filter.
-   * @param root0.type - Restrict to a single device type.
+   * @param filter - What to restrict the list to.
+   * @param filter.type - Restrict to a single device type.
    * @returns Every zone (buildings, floors, areas, devices), sorted by name.
    */
   public getZones({

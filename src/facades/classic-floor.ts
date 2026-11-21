@@ -6,6 +6,11 @@ import { BaseZoneFacade } from './classic-base-zone.ts'
  * @category Facades
  */
 export class ClassicFloorFacade extends BaseZoneFacade<ClassicFloor> {
+  /**
+   * All devices currently registered under this floor, directly or in
+   * one of its areas.
+   * @returns The flat list of devices.
+   */
   public override get devices(): ClassicDeviceAny[] {
     return this.registry.getDevicesByFloorId(this.id)
   }

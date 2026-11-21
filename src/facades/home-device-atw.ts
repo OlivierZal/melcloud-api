@@ -446,7 +446,7 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * `[minSetTemperature, maxSetTemperature]` and the tank setpoint to
    * `[minSetTankTemperature, maxSetTankTemperature]`.
    * @param values - Partial setpoint payload.
-   * @throws NoChangesError when `values` carries no defined value.
+   * @throws A {@link NoChangesError} when `values` carries no defined value.
    */
   public override async updateValues(values: HomeAtwValues): Promise<void> {
     await super.updateValues(values)

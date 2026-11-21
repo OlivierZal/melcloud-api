@@ -40,6 +40,15 @@ export class ClassicBuildingFacade extends BaseZoneFacade<ClassicBuilding> {
     return this.registry.buildings
   }
 
+  /**
+   * Binds the facade like any zone facade, then seeds the level its
+   * frost-protection and holiday-mode settings live at from the
+   * building's own `FPDefined` and `HMDefined` flags: a `false` flag
+   * sends reads and writes to the devices at once, and a write never
+   * has to read the level first.
+   * @param api - Classic API client the facade calls through.
+   * @param instance - Building model the facade stands for.
+   */
   public constructor(api: ClassicAPIAdapter, instance: ClassicBuilding) {
     super(api, instance)
     const { data } = this

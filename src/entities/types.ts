@@ -9,6 +9,7 @@ import { Temporal } from '../temporal.ts'
  * a live-probed positive side but an unproven negative one — a
  * persistence window this wide turns any Classic-style tight-threshold
  * boolean harmless.
+ * @category Entities
  */
 export const STALE_COMMUNICATION_HOURS = 24
 
@@ -31,6 +32,7 @@ export const hasOutlivedStaleWindow = (
 /**
  * Cross-dialect reachability contract: `true` while MELCloud can deliver writes
  * to the unit.
+ * @category Entities
  */
 export interface AvailabilityAware {
   readonly isAvailable: boolean
@@ -42,6 +44,7 @@ export interface AvailabilityAware {
  * failure), never one the cloud or this SDK raised. Orthogonal to
  * {@link AvailabilityAware}: a faulted unit usually stays reachable and
  * keeps answering writes, which is exactly why a consumer must say so.
+ * @category Entities
  */
 export interface FaultAware {
   /**
@@ -62,6 +65,7 @@ export interface FaultAware {
  * Base identifiable contract: an id (numeric on Classic, GUID string on
  * Home) and a display name.
  * @template TId - Identifier type; defaults to Classic's numeric ids.
+ * @category Entities
  */
 export interface Identifiable<TId extends number | string = number> {
   readonly id: TId

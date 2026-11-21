@@ -28,9 +28,11 @@ const hasLogger = (host: object): host is { readonly logger: Logger } =>
  * Classic facade) is written where the decorator is applied and checked
  * by the compiler. Annotate `self` at the site: the host type is bound
  * at the factory call, before the target is seen.
- * @param root0 - Options object.
- * @param root0.refresh - The registry refresh, handed the host.
- * @param root0.when - Whether to refresh before or after the call.
+ * @template THost - Class of the object the decorated method belongs
+ * to, which the refresh callback is typed against.
+ * @param options - The refresh and when it runs.
+ * @param options.refresh - The registry refresh, handed the host.
+ * @param options.when - Whether to refresh before or after the call.
  * @returns A method decorator.
  * @category Decorators
  */

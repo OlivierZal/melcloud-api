@@ -160,10 +160,11 @@ export const toEpochMs = (
 /**
  * Factory for a type guard that narrows a key to the own keys of `record`. Uses
  * `Object.hasOwn` so prototype-chain pollution cannot produce false positives.
+ * @template T - Type of the record, whose keys the guard narrows to.
  * @param record - The record whose keys the returned guard recognises.
  * @returns A type guard checking own-key membership on `record`.
  */
-export const isKeyOf =
+export const createKeyGuard =
   <T extends object>(record: T) =>
   (key: PropertyKey): key is keyof T =>
     Object.hasOwn(record, key)
@@ -201,7 +202,8 @@ export const fromSetToListAta: {
  */
 export const isSetDeviceDataAtaNotInList: (
   key: PropertyKey,
-) => key is KeyOfClassicSetDeviceDataAtaNotInList = isKeyOf(fromSetToListAta)
+) => key is KeyOfClassicSetDeviceDataAtaNotInList =
+  createKeyGuard(fromSetToListAta)
 
 /**
  * Maps ATA list-data keys to their corresponding set-command keys.
@@ -226,7 +228,8 @@ export const fromListToSetAta: {
  */
 export const isSetDeviceDataAtaInList: (
   key: PropertyKey,
-) => key is keyof ClassicSetDeviceDataAtaInList = isKeyOf(fromListToSetAta)
+) => key is keyof ClassicSetDeviceDataAtaInList =
+  createKeyGuard(fromListToSetAta)
 
 // Strategy map: transform raw API label formats into human-readable strings
 // based on report granularity (day of week, month name, year-month, etc.)
@@ -267,6 +270,18 @@ const buildLabelFormatters = (
   }
 }
 
+/**
+ * Format the raw axis labels of a Classic report for display, each
+ * according to the report's label type: a day-of-week or month number
+ * becomes its short name in `locale`, a `YYYYMM` integer reads
+ * `MMM yyyy`, and raw and time labels pass through.
+ * @param labels - Raw labels from the wire.
+ * @param labelType - Label type of the report, which selects the
+ * format.
+ * @param locale - BCP-47 locale tag; the runtime locale when
+ * `undefined`.
+ * @returns The formatted labels, in the same order.
+ */
 export const formatLabels = (
   labels: readonly string[],
   labelType: ClassicLabelType,
@@ -278,6 +293,7 @@ export const formatLabels = (
 
 /**
  * Type-safe `Object.keys` that preserves the key type of the input object.
+ * @template T - Type of the object, whose string keys the result keeps.
  * @param object - The object to extract keys from.
  * @returns The object's keys with their type preserved.
  */
@@ -399,13 +415,13 @@ interface ChartLineFormatOptions {
 /**
  * Transform raw API report data into structured line chart options
  * with formatted labels.
- * @param root0 - The raw report data from the Classic API.
- * @param root0.Data - The data series arrays.
- * @param root0.FromDate - The start date of the report period.
- * @param root0.LabelType - The label format type determining how labels are
+ * @param report - The raw report data from the Classic API.
+ * @param report.Data - The data series arrays.
+ * @param report.FromDate - The start date of the report period.
+ * @param report.LabelType - The label format type determining how labels are
  * parsed.
- * @param root0.Labels - The raw label strings from the Classic API.
- * @param root0.ToDate - The end date of the report period.
+ * @param report.Labels - The raw label strings from the Classic API.
+ * @param report.ToDate - The end date of the report period.
  * @param options - Legend, unit, and locale for label formatting.
  * @param options.legend - Legend entries for each data series.
  * @param options.locale - BCP-47 locale tag; defaults to the runtime locale
@@ -550,9 +566,9 @@ export const padHourlyChartToMidnight = (
 /**
  * Transform operation mode log data into structured pie chart options.
  * @param data - The operation mode log entries.
- * @param root0 - The resolved report date range (defaults applied).
- * @param root0.from - The start date of the report period.
- * @param root0.to - The end date of the report period.
+ * @param range - The resolved report date range (defaults applied).
+ * @param range.from - The start date of the report period.
+ * @param range.to - The end date of the report period.
  * @returns Structured pie chart options.
  */
 export const getChartPieOptions = (

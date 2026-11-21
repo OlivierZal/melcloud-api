@@ -217,6 +217,8 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
    *   mutations and required sync paths.
    * - {@link safeRequest} strips the envelope and Result-wraps failure
    *   — for best-effort getters.
+   * @template T - Type of the response body: the caller's word for it
+   * without a schema, what the schema parses otherwise.
    * @param method - HTTP method (`get`, `post`, …).
    * @param url - Request URL relative to the API base.
    * @param options - Request config plus an optional `schema` peer key.
@@ -243,6 +245,9 @@ export abstract class BaseAPI extends SessionAPI<SyncParams> {
    *
    * See {@link requestData} for the throw-on-failure companion that
    * shares the same shape.
+   * @template T - Type of the response body the success branch
+   * carries: the caller's word for it without a schema, what the
+   * schema parses otherwise.
    * @param method - HTTP method (`get`, `post`, …).
    * @param url - Request URL relative to the API base.
    * @param options - Request config plus an optional `schema` peer key.

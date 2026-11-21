@@ -35,6 +35,7 @@ export interface Success<T> {
 
 /**
  * Construct a {@link Success}.
+ * @template T - Type of the wrapped payload.
  * @param value - The parsed payload to wrap.
  * @returns A `{ ok: true, value }` success outcome.
  * @category Types
@@ -55,6 +56,8 @@ export const err = (error: ApiRequestError): Failure => ({ error, ok: false })
  * Result-returning calls with synchronous transforms (e.g.
  * `mapResult(await api.getEnergy(...), getChartLineOptions)`) without
  * unwrapping then re-wrapping by hand.
+ * @template T - Type of the value the incoming result carries.
+ * @template TResult - Type of the value `fn` turns it into.
  * @param result - The {@link Result} to transform.
  * @param fn - Pure function applied to the success value.
  * @returns A new {@link Result} with the transformed value (success

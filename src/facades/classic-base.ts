@@ -222,6 +222,14 @@ export abstract class ClassicBaseFacade<
     return this.devices.map(({ name }) => name)
   }
 
+  /**
+   * Binds the facade to the client it reads and writes through, and
+   * keeps the model's id rather than the model: each access resolves
+   * the model again from the registry, so the facade follows it across
+   * syncs and notices when it is gone.
+   * @param api - Classic API client the facade calls through.
+   * @param instance - Registry model the facade stands for.
+   */
   public constructor(api: ClassicAPIAdapter, instance: T) {
     this.api = api
     this.id = instance.id
@@ -235,6 +243,21 @@ export abstract class ClassicBaseFacade<
   // `{ ids, type }` shape with specific device ids. Consumers listening to
   // onSync should treat any call as "registry changed, re-inspect" rather than
   // keying on the payload. Same applies to updateHolidayMode below.
+  /**
+   * Updates the frost-protection settings of everything this facade
+   * covers. The bounds are first clamped into the range the units
+   * accept, the gap they require kept between them; the write then
+   * addresses the level the settings live at: the facade's own, or
+   * its devices. A level not known yet is read first, and that read's
+   * failure is thrown. The registry is refreshed once MELCloud has
+   * accepted the update.
+   * @param update - Settings to apply.
+   * @param update.isEnabled - Whether the protection is on.
+   * @param update.max - Requested upper bound, in °C.
+   * @param update.min - Requested lower bound, in °C.
+   * @throws An {@link UpdateRejectedError} when MELCloud refuses the
+   * settings.
+   */
   @fetchDevices({
     when: 'after',
     refresh: async (self: ClassicBaseFacade<T>) => self.api.fetch(),
@@ -257,6 +280,24 @@ export abstract class ClassicBaseFacade<
     )
   }
 
+  /**
+   * Turns holiday mode on over a window, or off, for everything this
+   * facade covers. The window is given on the caller's wall clock
+   * (`api.timezone`, the host's zone when unset) and projected onto
+   * the UTC wall clock the wire stores — before any request, so a
+   * malformed date throws without one; turning the mode off clears
+   * both dates. The write addresses the level the settings live at,
+   * read first when not yet known, and the registry is refreshed once
+   * MELCloud has accepted the update.
+   * @param update - Window to apply.
+   * @param update.endDate - Window end; unused when turning the mode
+   * off.
+   * @param update.isEnabled - Whether holiday mode is on.
+   * @param update.startDate - Window start; unused when turning the
+   * mode off.
+   * @throws An {@link UpdateRejectedError} when MELCloud refuses the
+   * window.
+   */
   @fetchDevices({
     when: 'after',
     refresh: async (self: ClassicBaseFacade<T>) => self.api.fetch(),
@@ -287,6 +328,15 @@ export abstract class ClassicBaseFacade<
     )
   }
 
+  /**
+   * Turns every device this facade covers on or off. Once MELCloud
+   * has acknowledged the command, the registry models take the new
+   * power state and the sync notification fires.
+   * @param isOn - `true` to power on, `false` to power off.
+   * @throws An {@link UpdateRejectedError} when MELCloud declines the
+   * command: its bare `false` is folded into the rejection every
+   * other mutation raises.
+   */
   @syncDevices()
   @classicUpdateDevices({ kind: 'power' })
   public async updatePower(isOn = true): Promise<void> {
@@ -304,12 +354,29 @@ export abstract class ClassicBaseFacade<
     }
   }
 
+  /**
+   * Reads one page of the error log of the devices this facade
+   * covers.
+   * @param query - Page window: its dates, period and offset.
+   * @returns The parsed page, or a typed failure.
+   */
   public async getErrorLog(
     query: ClassicErrorLogQuery,
   ): Promise<Result<ClassicErrorLog>> {
     return this.api.getErrorLog(query, this.#deviceIds)
   }
 
+  /**
+   * Reads the frost-protection settings. They are asked at the
+   * facade's own level first, then through one of its devices when
+   * that read fails; a facade whose level is known to hold none reads
+   * through a device only. The level that answers is remembered, and
+   * is the one a write then addresses.
+   * @returns The settings, `null` when never configured, or a typed
+   * failure.
+   * @throws An `Error` when the read has to go through a device and
+   * the facade covers none.
+   */
   public async getFrostProtection(): Promise<Result<ProtectionState | null>> {
     return mapResult(
       await getWithZoneFallback(
@@ -329,6 +396,16 @@ export abstract class ClassicBaseFacade<
     )
   }
 
+  /**
+   * Reads the holiday-mode window, level by level like
+   * {@link getFrostProtection}. Both bounds come back projected from
+   * the UTC wall clock the wire stores onto the caller's
+   * (`api.timezone`, the host's zone when unset).
+   * @returns The window, `null` when never configured, or a typed
+   * failure.
+   * @throws An `Error` when the read has to go through a device and
+   * the facade covers none.
+   */
   public async getHolidayMode(): Promise<Result<HolidayModeState | null>> {
     return mapResult(
       await getWithZoneFallback(
@@ -345,6 +422,14 @@ export abstract class ClassicBaseFacade<
     )
   }
 
+  /**
+   * Charts the Wi-Fi signal strength of the devices this facade
+   * covers, in dBm, one series per device: the given hour of today,
+   * or every hour of today so far when none is given — the hours
+   * still to come padded blank, so the axis spans the whole day.
+   * @param hour - Hour of today to chart alone.
+   * @returns The line chart options, or a typed failure.
+   */
   public async getSignalStrength(
     hour?: Hour,
   ): Promise<Result<ReportChartLineOptions>> {
@@ -376,6 +461,15 @@ export abstract class ClassicBaseFacade<
     })
   }
 
+  /**
+   * Forwards a sync notification to the client's `onSyncComplete`
+   * observer, adding the ids of the devices this facade covers. The
+   * `@syncDevices` decorator calls it once the method it wraps has
+   * resolved.
+   * @param params - What the sync was scoped to.
+   * @param params.type - Device type the sync was restricted to, if
+   * any.
+   */
   public async notifySync({
     type,
   }: { type?: ClassicDeviceType | undefined } = {}): Promise<void> {

@@ -236,6 +236,7 @@ export const HomeUserContextSchema: z.ZodType<HomeUserContext> = z.looseObject({
  * failing the whole payload. Used by the salvage pass on `/context`:
  * one drifted device must degrade the registry by one unit, not hide
  * every building.
+ * @template T - Type of an entry the element schema accepts.
  * @param schema - Element schema applied to each entry.
  * @returns Schema producing only the entries that validated.
  */
@@ -874,6 +875,7 @@ export const describeRefusedPaths = (error: z.ZodError): string =>
  * the ZodError `cause`, so a logged error prints it once. No
  * received value is named: the login, token and `/context` payloads
  * carry credentials and personal data.
+ * @template T - Type the schema parses the data into.
  * @param schema - Zod schema to validate against.
  * @param data - Untrusted data from an upstream API response.
  * @param context - Short label surfaced in the thrown error message.

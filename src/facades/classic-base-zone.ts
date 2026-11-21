@@ -30,6 +30,18 @@ export abstract class BaseZoneFacade<
 {
   protected abstract readonly groupSpecificationKey: keyof ClassicSetGroupPostData['Specification']
 
+  /**
+   * Applies a state to the zone's ATA devices in one group write; a
+   * `null` or absent field leaves that setting as it is. Once MELCloud
+   * has accepted the write, the zone's ATA models take the fields
+   * that carry a value, and the sync notification fires for the ATA
+   * type.
+   * @param state - Group state to apply.
+   * @throws A {@link NoChangesError} when `state` is an empty object:
+   * nothing is sent.
+   * @throws An {@link UpdateRejectedError} when MELCloud refuses the
+   * state.
+   */
   @syncDevices({ type: ClassicDeviceType.Ata })
   @classicUpdateDevices({ type: ClassicDeviceType.Ata })
   public async updateGroupState(state: ClassicGroupState): Promise<void> {
@@ -51,6 +63,12 @@ export abstract class BaseZoneFacade<
   // write's own decorator — on its next temperature write. Until 59.2.1
   // this method did exactly that, mirroring the write decorator's
   // propagation for a read.
+  /**
+   * Reads the state MELCloud holds for the zone's ATA group: the
+   * group's own state, not what each member reports. The members'
+   * registry models are left as they are.
+   * @returns The group state, or a typed failure.
+   */
   public async getGroup(): Promise<Result<ClassicGroupState>> {
     return mapResult(
       await this.api.getGroup({

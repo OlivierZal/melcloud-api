@@ -31,6 +31,7 @@ export type ClassicModel =
 /**
  * Type guard that narrows a {@link ClassicDeviceAny} to a specific
  * {@link ClassicDevice} variant.
+ * @template T - Device type to narrow the model to.
  * @param device - The device model to narrow.
  * @param type - The expected device type literal.
  * @returns Whether the device matches the given type.

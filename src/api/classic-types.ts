@@ -77,6 +77,8 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
   readonly fetch: () => Promise<ClassicBuildingWithStructure[]>
   /**
    * Fetch energy consumption report. Supported by ATA and ATW devices.
+   * @template T - Device type of the target, named by the caller to
+   * narrow the payload type.
    */
   readonly getEnergy: <T extends ClassicDeviceType>({
     postData,
@@ -173,6 +175,8 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
   }) => Promise<Result<ClassicTilesData>>
   /**
    * Fetch current device data by device and building ID.
+   * @template T - Device type of the target, named by the caller to
+   * narrow the payload type.
    */
   readonly getValues: <T extends ClassicDeviceType>({
     params,
@@ -213,6 +217,8 @@ export interface ClassicAPIAdapter extends BaseAPIAdapter {
   }) => Promise<boolean>
   /**
    * Send updated device values to the Classic API.
+   * @template T - Device type of the target: it selects the endpoint
+   * and the shapes of the body and of the answer.
    */
   readonly updateValues: <T extends ClassicDeviceType>({
     postData,

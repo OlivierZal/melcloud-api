@@ -47,6 +47,8 @@ export class ClassicFacadeManager {
   /**
    * Returns the cached facade for the given model, lazily creating one
    * on first access; passing `undefined` returns `null`.
+   * @template T - Device type of the model, which the returned facade
+   * is narrowed to.
    * @param instance - Registry model to wrap, or `undefined`.
    * @returns The facade, or `null` when no instance was supplied.
    */

@@ -280,7 +280,7 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * to the ATA payload, with `setTemperature` clamped to the active
    * mode's bounds.
    * @param values - Partial setpoint payload.
-   * @throws NoChangesError when `values` carries no defined value.
+   * @throws A {@link NoChangesError} when `values` carries no defined value.
    */
   public override async updateValues(values: HomeAtaValues): Promise<void> {
     await super.updateValues(values)

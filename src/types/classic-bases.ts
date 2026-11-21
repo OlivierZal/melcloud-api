@@ -91,6 +91,13 @@ export interface ClassicBaseListDevice<
   readonly Zone2Name: string | null
 }
 
+/**
+ * Fields the `Device` payload of a `ListDevices` entry carries whatever
+ * the device type: the `Device/Get` base without its communication
+ * stamps, plus the unit's own fault report, its `LastTimeStamp` and
+ * its Wi-Fi signal strength.
+ * @category Types
+ */
 export interface ClassicBaseListDeviceData extends Omit<
   ClassicBaseGetDeviceData,
   keyof ClassicTransientDeviceData
@@ -114,16 +121,32 @@ export interface ClassicBaseListDeviceData extends Omit<
   readonly WifiSignalStrength: number
 }
 
+/**
+ * Fields a `Device/Set*` response carries whatever the device type:
+ * the communication stamps, the power state, the `EffectiveFlags`
+ * bitfield of the fields it flags and the `Offline` flag.
+ * @category Types
+ */
 export interface ClassicBaseSetDeviceData
   extends ClassicTransientDeviceData, Required<ClassicBaseUpdateDeviceData> {
   readonly EffectiveFlags: number
   readonly Offline: boolean
 }
 
+/**
+ * Fields a caller may change on a device of any type: the power state
+ * alone. Each per-type update shape extends it with its own.
+ * @category Types
+ */
 export interface ClassicBaseUpdateDeviceData {
   readonly Power?: boolean
 }
 
+/**
+ * Communication stamps of a `Device/Get` or `Device/Set*` response,
+ * set apart because the `ListDevices` device shapes leave them out.
+ * @category Types
+ */
 export interface ClassicTransientDeviceData {
   readonly LastCommunication: string
   readonly NextCommunication: string
