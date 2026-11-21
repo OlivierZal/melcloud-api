@@ -36,6 +36,16 @@ const createModel = (
 const epochMs = (instant: string): number =>
   Temporal.Instant.from(instant).epochMilliseconds
 
+// The combined-energy requests a read made, one `[from, to, period]`
+// per request in call order: where the requests fall on the unit's
+// calendar is what the cases pin.
+const requestedPeriods = (
+  api: ReturnType<typeof createMockHomeApi>,
+): string[][] =>
+  vi
+    .mocked(api.getAtwEnergy)
+    .mock.calls.map(([, { from, period, to }]) => [from, to, period])
+
 describe('home device atw facade', () => {
   beforeEach(resetHomeDevices)
 
@@ -483,23 +493,9 @@ describe('home device atw facade', () => {
         }),
       )
 
-      expect(vi.mocked(api.getAtwEnergy).mock.calls).toStrictEqual([
-        [
-          'atw-1',
-          {
-            from: '2026-11-19T23:00:00Z',
-            period: 'Daily',
-            to: '2026-11-20T23:00:00Z',
-          },
-        ],
-        [
-          'atw-1',
-          {
-            from: '2026-11-20T23:00:00Z',
-            period: 'Daily',
-            to: '2026-11-21T23:00:00Z',
-          },
-        ],
+      expect(requestedPeriods(api)).toStrictEqual([
+        ['2026-11-19T23:00:00Z', '2026-11-20T23:00:00Z', 'Daily'],
+        ['2026-11-20T23:00:00Z', '2026-11-21T23:00:00Z', 'Daily'],
       ])
       expect(consumed.map(({ kilowattHours }) => kilowattHours)).toStrictEqual([
         0.5, 0.25,
@@ -978,23 +974,9 @@ describe('home device atw facade', () => {
         }),
       )
 
-      expect(vi.mocked(api.getAtwEnergy).mock.calls).toStrictEqual([
-        [
-          'atw-1',
-          {
-            from: '2026-10-22T22:00:00Z',
-            period: 'Monthly',
-            to: '2026-11-19T23:00:00Z',
-          },
-        ],
-        [
-          'atw-1',
-          {
-            from: '2026-11-19T23:00:00Z',
-            period: 'Monthly',
-            to: '2026-11-21T23:00:00Z',
-          },
-        ],
+      expect(requestedPeriods(api)).toStrictEqual([
+        ['2026-10-22T22:00:00Z', '2026-11-19T23:00:00Z', 'Monthly'],
+        ['2026-11-19T23:00:00Z', '2026-11-21T23:00:00Z', 'Monthly'],
       ])
 
       const [consumedByLabel, producedByLabel] = value.series.map(({ data }) =>

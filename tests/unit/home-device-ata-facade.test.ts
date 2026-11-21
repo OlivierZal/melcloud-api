@@ -58,6 +58,16 @@ const chartEnergyReport = async (
   return okValue(await facade.getEnergyReport(range))
 }
 
+// The telemetry requests a read made, one `[from, to, interval]` per
+// request in call order: a window is read chunk by chunk, and where the
+// chunks fall is what the cases pin.
+const requestedChunks = (
+  api: ReturnType<typeof createMockHomeApi>,
+): string[][] =>
+  vi
+    .mocked(api.getAtaEnergy)
+    .mock.calls.map(([, { from, interval, to }]) => [from, to, interval])
+
 describe('home device ata facade', () => {
   beforeEach(resetHomeDevices)
 
@@ -547,23 +557,9 @@ describe('home device ata facade', () => {
         }),
       )
 
-      expect(vi.mocked(api.getAtaEnergy).mock.calls).toStrictEqual([
-        [
-          'device-1',
-          {
-            from: '2026-07-18T06:00:00Z',
-            interval: 'Hour',
-            to: '2026-07-19T06:00:00Z',
-          },
-        ],
-        [
-          'device-1',
-          {
-            from: '2026-07-19T06:00:00Z',
-            interval: 'Hour',
-            to: '2026-07-19T08:00:00Z',
-          },
-        ],
+      expect(requestedChunks(api)).toStrictEqual([
+        ['2026-07-18T06:00:00Z', '2026-07-19T06:00:00Z', 'Hour'],
+        ['2026-07-19T06:00:00Z', '2026-07-19T08:00:00Z', 'Hour'],
       ])
       expect(consumed.map(({ kilowattHours }) => kilowattHours)).toStrictEqual([
         0.1, 0.2,
@@ -785,23 +781,9 @@ describe('home device ata facade', () => {
 
       // Up to a week, day buckets aggregate hourly wire buckets per
       // display-timezone calendar day, read one day per request.
-      expect(vi.mocked(api.getAtaEnergy).mock.calls).toStrictEqual([
-        [
-          'device-1',
-          {
-            from: '2026-03-01T00:00:00Z',
-            interval: 'Hour',
-            to: '2026-03-02T00:00:00Z',
-          },
-        ],
-        [
-          'device-1',
-          {
-            from: '2026-03-02T00:00:00Z',
-            interval: 'Hour',
-            to: '2026-03-03T00:00:00Z',
-          },
-        ],
+      expect(requestedChunks(api)).toStrictEqual([
+        ['2026-03-01T00:00:00Z', '2026-03-02T00:00:00Z', 'Hour'],
+        ['2026-03-02T00:00:00Z', '2026-03-03T00:00:00Z', 'Hour'],
       ])
       expect(value.unit).toBe('kWh')
       expect(value.series[0]?.name).toBe('Consumed')
@@ -863,23 +845,9 @@ describe('home device ata facade', () => {
         api,
       )
 
-      expect(vi.mocked(api.getAtaEnergy).mock.calls).toStrictEqual([
-        [
-          'device-1',
-          {
-            from: '2026-01-01T00:00:00Z',
-            interval: 'Day',
-            to: '2026-01-31T00:00:00Z',
-          },
-        ],
-        [
-          'device-1',
-          {
-            from: '2026-01-31T00:00:00Z',
-            interval: 'Day',
-            to: '2026-03-01T00:00:00Z',
-          },
-        ],
+      expect(requestedChunks(api)).toStrictEqual([
+        ['2026-01-01T00:00:00Z', '2026-01-31T00:00:00Z', 'Day'],
+        ['2026-01-31T00:00:00Z', '2026-03-01T00:00:00Z', 'Day'],
       ])
       expect(value.labels).toHaveLength(60)
       expect(value.series[0]?.data.slice(0, 3)).toStrictEqual([0, 1.5, 0])
@@ -939,13 +907,9 @@ describe('home device ata facade', () => {
         }),
       )
 
-      expect(
-        vi
-          .mocked(api.getAtaEnergy)
-          .mock.calls.map(([, { from, interval }]) => [from, interval]),
-      ).toStrictEqual([
-        ['2026-03-01T00:00:00Z', 'Hour'],
-        ['2026-03-02T00:00:00Z', 'Hour'],
+      expect(requestedChunks(api)).toStrictEqual([
+        ['2026-03-01T00:00:00Z', '2026-03-02T00:00:00Z', 'Hour'],
+        ['2026-03-02T00:00:00Z', '2026-03-02T00:00:00.25Z', 'Hour'],
       ])
     })
   })
