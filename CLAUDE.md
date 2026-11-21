@@ -196,18 +196,26 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   the casing or the date format, where the grammar was a
   case-insensitive .NET enum of the five (anything else → 500,
   missing → 400; the `PT1H` ISO style never worked). Buckets are UTC
-  hours and UTC days, sparse (only active periods return points); the
-  bucket that holds `from` is answered, and so is the hour in
-  progress, which mostly fills once it has closed. A response stops
-  short of its window. At `Hour`, 24 buckets after `from`: a 25-hour
-  and a 30-hour window from a round hour both came back with 24
-  buckets, and `to` is exclusive. At `Day`, between 31 and 92 days:
-  31 answered whole, 92 came back empty for a unit active on its last
-  three; and `to` closes on the bucket that holds it, so the day two
-  adjacent windows meet on is answered by both. `fetchAtaEnergy`
+  hours and UTC days, sparse (only active periods return points), and
+  the hour in progress is answered, moving in the counter's 100 Wh
+  steps.
+  `to` is NOT APPLIED: a response runs from `from` for a span of its
+  own, or to now. At `Hour` the span is 24 buckets: a one-hour and a
+  three-hour window, a day old, each came back with the 24 buckets
+  that follow their `from`, and a 30-hour window with those 24 and no
+  more. At `Day` it is 31 days: a 30-day window answered the 31st day
+  too (charted double before it was caught), a month came back whole,
+  and three months empty for a unit active on its last three days. A
+  `from` inside a bucket does not answer that bucket whole: at 03:30
+  and at 03:59 the 03:00 bucket was not answered at all, while a read
+  from 06:38 did carry a 06:00 one. `fetchAtaEnergy`
   (`src/facades/home-energy.ts`) owns all of it: chunks of 24 hours or
-  30 days, counted on the UTC clock from a bucket boundary, a bucket
-  answered twice kept once.
+  30 days counted on the UTC clock from a bucket boundary, a bucket
+  answered twice kept once, and the hour buckets cut back to the
+  window they were asked for. It sends `to` on the next bucket
+  boundary all the same: the wire applied `to` before it was narrowed,
+  and should it again, a bound cut to the minute would leave out the
+  bucket that starts on it (found in review, by simulation).
 - An air-to-water unit's energy is `/report/v1/combined-energy`
   (`getAtwEnergy`), the endpoint the MELCloud Home apps read
   themselves (public record: andrew-blake/melcloudhome, ADR-027),
@@ -232,6 +240,31 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   totals equal a single request's minus exactly the repeated points.
   The oldest chunk, at the edge of the ~91-day retention, answered 500
   twice before passing: the core's retry of a read is what carries it.
+  The requests are built from calendar DATES of the unit
+  (`toPeriodWindows`), each bound the start of a date: where a clock
+  change skips midnight (the Azores, Chile, Egypt, Lebanon, Cuba) the
+  day opens at 01:00, and spans counted from that instant opened every
+  later request at 01:00 too (found in review, by simulation). The day
+  the clocks go back was probed, 2026-10-25 on a unit of the EU: its
+  25 hours came back whole from one request, no point repeated, and
+  the two passes of the hour the clock reads twice carry ONE label —
+  `02:00` twice in the produced dataset, once in the consumed one, the
+  report's totals counting each. Which pass a lone label is cannot be
+  told, so `toAtwEnergySeries` reads every such label on its LATER
+  instant: read on the earlier one, a pass still in progress would
+  pass for an hour that has closed, and a consumer counting closed
+  hours would count it while it grows and never the rest.
+- A bucket is FINAL once it has closed, on both endpoints. Watched
+  around one close on 2026-11-21 (07:58Z to 08:15Z, ten reads): an
+  air-to-air bucket and an air-to-water one read the same from 45 s
+  before their close to 15 min after it, while the air-to-water hour
+  in progress went on growing. The public record has the same for an
+  air-to-water unit over a day-long soak (andrew-blake/melcloudhome,
+  ADR-027: every completed hour equal to its final value from the
+  first fetch after the close, 806 responses). One close and one
+  account here: com.melcloud's lifetime meters count a closed hour on
+  that footing, and a report showing a meter short of the MELCloud
+  app's own figures is where to look first.
 - Energy units and the series: the air-to-water datasets are kWh per
   bucket; the ATA `cumulative_energy_consumed_since_last_upload` is
   Wh, in 100 Wh quanta. The READ half of both dialects is

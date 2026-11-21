@@ -528,9 +528,90 @@ describe('home device ata facade', () => {
       })
     })
 
-    // The wire stops an hourly response 24 buckets after `from`
-    // (live-probed 2026-11-21): a longer window is read chunk by
-    // chunk, from the hour that holds `from` so no bucket comes twice.
+    // The wire no longer applies `to` (live-probed 2026-11-21): a
+    // one-hour window a day old came back with the 24 buckets that
+    // follow its `from`. The series stops where its window does.
+    it('drops the buckets the wire answers past the window', async () => {
+      const api = createMockHomeApi()
+      vi.mocked(api.getAtaEnergy).mockResolvedValue(
+        ok(
+          homeEnergyEnvelope(
+            'cumulative_energy_consumed_since_last_upload',
+            ['05', '06', '07', '08'].map((hour) => ({
+              time: `2026-07-18 ${hour}:00:00.000000000`,
+              value: '100.0',
+            })),
+          ),
+        ),
+      )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      const { consumed } = okValue(
+        await facade.getEnergySeries({
+          from: '2026-07-18T05:20:00Z',
+          to: '2026-07-18T07:00:00Z',
+        }),
+      )
+
+      // The 05:00 bucket holds the start; the 07:00 one starts on the
+      // end, which is exclusive.
+      expect(consumed.map(({ atEpochMs }) => atEpochMs)).toStrictEqual(
+        ['2026-07-18T05:00:00Z', '2026-07-18T06:00:00Z'].map(
+          (instant) => Temporal.Instant.from(instant).epochMilliseconds,
+        ),
+      )
+    })
+
+    // The wire does not apply `to` today. It did before it was
+    // narrowed, to the minute, and may again: a window that ends inside
+    // a bucket is asked up to the end of that bucket, where a bound cut
+    // to the minute would leave out the bucket that starts on it.
+    it('asks up to the end of the bucket that holds the end of the window', async () => {
+      const api = createMockHomeApi()
+      vi.mocked(api.getAtaEnergy).mockResolvedValue(
+        ok(
+          homeEnergyEnvelope('cumulative_energy_consumed_since_last_upload', [
+            { time: '2026-07-18 17:00:00.000000000', value: '900.0' },
+            { time: '2026-07-18 18:00:00.000000000', value: '100.0' },
+          ]),
+        ),
+      )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      const { consumed } = okValue(
+        await facade.getEnergySeries({
+          from: '2026-07-18T16:00:00Z',
+          to: '2026-07-18T17:00:05Z',
+        }),
+      )
+
+      expect(requestedChunks(api)).toStrictEqual([
+        ['2026-07-18T16:00:00Z', '2026-07-18T18:00:00Z', 'Hour'],
+      ])
+      // The 17:00 bucket started five seconds before the end and is the
+      // window's; the 18:00 one, which the widened bound lets in, is not.
+      expect(consumed.map(({ kilowattHours }) => kilowattHours)).toStrictEqual([
+        0.9,
+      ])
+    })
+
+    it.each([
+      { shape: 'an empty', to: '2026-07-18T10:30:00Z' },
+      { shape: 'an inverted', to: '2026-07-18T09:00:00Z' },
+    ])('answers $shape window without a request', async ({ to }) => {
+      const api = createMockHomeApi()
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      await expect(
+        facade.getEnergySeries({ from: '2026-07-18T10:30:00Z', to }),
+      ).resolves.toStrictEqual(ok({ consumed: [] }))
+      expect(api.getAtaEnergy).not.toHaveBeenCalled()
+    })
+
+    // An hourly response carries the 24 buckets that follow `from` and
+    // no more (live-probed 2026-11-21): a longer window is read chunk
+    // by chunk, from the hour that holds `from` — a start inside an hour
+    // does not answer that hour whole.
     it('reads a window longer than a day in 24-hour chunks, oldest first', async () => {
       const api = createMockHomeApi()
       vi.mocked(api.getAtaEnergy)
@@ -803,6 +884,33 @@ describe('home device ata facade', () => {
       expect(value.series[0]?.data).toStrictEqual([0, 0.1])
     })
 
+    // The hour buckets a response carries past `to` are not the
+    // window's: summed into days, they would fill the last bar with
+    // hours nobody asked for.
+    it('sums into a day only the hours its window holds', async () => {
+      const api = createMockHomeApi()
+      vi.mocked(api.getAtaEnergy)
+        .mockResolvedValueOnce(ok({ measureData: [] }))
+        .mockResolvedValueOnce(
+          ok(
+            homeEnergyEnvelope('cumulative_energy_consumed_since_last_upload', [
+              { time: '2026-03-02 10:00:00.000000000', value: '500.0' },
+              { time: '2026-03-02 20:00:00.000000000', value: '250.0' },
+            ]),
+          ),
+        )
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+
+      const value = okValue(
+        await facade.getEnergyReport({
+          from: '2026-03-01T00:00:00Z',
+          to: '2026-03-02T18:00:00Z',
+        }),
+      )
+
+      expect(value.series[0]?.data).toStrictEqual([0, 0.5])
+    })
+
     it('switches a one-day energy report to hourly buckets', async () => {
       const api = createMockHomeApi()
       const value = await chartEnergyReport(
@@ -853,9 +961,9 @@ describe('home device ata facade', () => {
       expect(value.series[0]?.data.slice(0, 3)).toStrictEqual([0, 1.5, 0])
     })
 
-    // At `Day` the wire closes a window on the bucket that holds `to`
-    // (live-probed 2026-11-21): the day two chunks meet on is answered
-    // by both, and charted once.
+    // A `Day` response runs 31 days from `from` whatever `to` says
+    // (live-probed 2026-11-21): the day two 30-day chunks meet on is
+    // answered by both, and charted once.
     it('charts once a bucket two chunks both answer', async () => {
       const api = createMockHomeApi()
       const boundaryDay = {
@@ -894,7 +1002,7 @@ describe('home device ata facade', () => {
 
     // The caller stamps `from` a beat before the library stamps `to`:
     // the window stays on hour buckets, and the hour `to` falls in is
-    // the second chunk's.
+    // the second chunk's, asked whole.
     it('keeps a one-day window drifting by milliseconds on hour buckets', async () => {
       const api = createMockHomeApi()
       vi.mocked(api.getAtaEnergy).mockResolvedValue(ok({ measureData: [] }))
@@ -909,7 +1017,7 @@ describe('home device ata facade', () => {
 
       expect(requestedChunks(api)).toStrictEqual([
         ['2026-03-01T00:00:00Z', '2026-03-02T00:00:00Z', 'Hour'],
-        ['2026-03-02T00:00:00Z', '2026-03-02T00:00:00.25Z', 'Hour'],
+        ['2026-03-02T00:00:00Z', '2026-03-02T01:00:00Z', 'Hour'],
       ])
     })
   })

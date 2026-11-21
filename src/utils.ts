@@ -132,7 +132,8 @@ export const isUninitializedWireDate = (iso: string): boolean => {
  * spells; a zoneless value is wall clock anchored in `timeZone`,
  * resolved per Temporal's default `'compatible'` disambiguation when a
  * DST transition skips or repeats it — a skipped wall clock moves
- * forward by the gap, a repeated one takes the earlier offset. An
+ * forward by the gap, a repeated one takes the earlier offset, or the
+ * later one when `disambiguation` says so. An
  * unparseable value reads `null` — the library's "cannot say" marker,
  * chosen over `NaN` because these instants cross JSON boundaries and
  * `JSON.stringify` silently rewrites `NaN` to `null`; saying `null`
@@ -140,12 +141,20 @@ export const isUninitializedWireDate = (iso: string): boolean => {
  * @param value - ISO 8601 datetime from the wire.
  * @param timeZone - IANA timezone anchoring a zoneless value; the
  * host's zone when omitted.
+ * @param disambiguation - Which instant a repeated wall clock reads:
+ * the earlier one by default, the later one with `'later'`.
  * @returns The epoch instant in milliseconds, `null` when unparseable.
  */
-export const toEpochMs = (value: string, timeZone?: string): number | null =>
+export const toEpochMs = (
+  value: string,
+  timeZone?: string,
+  disambiguation: 'compatible' | 'later' = 'compatible',
+): number | null =>
   instantOf(value)?.epochMilliseconds ??
-  plainDateTimeOf(value)?.toZonedDateTime(timeZone ?? Temporal.Now.timeZoneId())
-    .epochMilliseconds ??
+  plainDateTimeOf(value)?.toZonedDateTime(
+    timeZone ?? Temporal.Now.timeZoneId(),
+    { disambiguation },
+  ).epochMilliseconds ??
   null
 
 /**

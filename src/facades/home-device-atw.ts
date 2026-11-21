@@ -14,10 +14,11 @@ import {
   type HomeAtwValues,
   type Hour,
   type Result,
+  err,
   mapResult,
   ok,
 } from '../types/index.ts'
-import { clampToRange, resolved } from '../utils.ts'
+import { clampToRange } from '../utils.ts'
 import type {
   ReportChartLineOptions,
   ReportChartPieOptions,
@@ -330,17 +331,18 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * unit's own calendar days beyond; a bucket the wire omits (idle)
    * charts as `0`.
    * @param query - Optional ISO date range.
-   * @returns Structured line chart options (`kWh`), or a typed failure.
-   * @throws EntityNotFoundError when the registry no longer holds the id.
+   * @returns Structured line chart options (`kWh`), or a typed failure:
+   * `not-found` when the registry no longer holds the id.
    */
   public async getEnergyReport(
     query?: ReportQuery,
   ): Promise<Result<ReportChartLineOptions>> {
-    const { data } = await resolved(this.model)
-    return getHomeAtwEnergyReport(this.api, this.id, {
-      window: resolveHomeReportWindow(query, this.chartTimezone),
-      zone: data.timeZone,
-    })
+    return this.#onUnitClock(async (zone) =>
+      getHomeAtwEnergyReport(this.api, this.id, {
+        window: resolveHomeReportWindow(query, this.chartTimezone),
+        zone,
+      }),
+    )
   }
 
   /**
@@ -351,17 +353,15 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
    * progress is there and grows. A garbled sample degrades
    * field-by-field to `null` — never `NaN` — and keeps its entry.
    * @param query - Read window.
-   * @returns The normalized series per direction, or a typed failure.
-   * @throws EntityNotFoundError when the registry no longer holds the id.
+   * @returns The normalized series per direction, or a typed failure:
+   * `not-found` when the registry no longer holds the id.
    */
   public async getEnergySeries(
     query: HomeEnergySeriesQuery,
   ): Promise<Result<HomeAtwEnergySeries>> {
-    const { data } = await resolved(this.model)
-    return getHomeAtwEnergySeries(this.api, this.id, {
-      query,
-      zone: data.timeZone,
-    })
+    return this.#onUnitClock(async (zone) =>
+      getHomeAtwEnergySeries(this.api, this.id, { query, zone }),
+    )
   }
 
   /**
@@ -528,6 +528,18 @@ export class HomeDeviceAtwFacade extends HomeBaseDeviceFacade<HomeAtwDeviceData>
         window,
       }),
     )
+  }
+
+  // The combined-energy report speaks the unit's own clock, which only
+  // the registry's model tells. A read of it answers `not-found` for an
+  // id the registry no longer holds, like the reads the API client
+  // routes on the registry, where an accessor throws.
+  async #onUnitClock<T>(
+    read: (zone: string) => Promise<Result<T>>,
+  ): Promise<Result<T>> {
+    return this.exists
+      ? read(this.model.data.timeZone)
+      : err({ entityId: this.id, kind: 'not-found' })
   }
 
   // Zone-2 accessors share the single-zone null: the capability flag is

@@ -424,20 +424,23 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
    * Fetch energy telemetry for an air-to-air unit: its one measure, the
    * cumulative consumption counter, in watt-hours. The endpoint serves
    * `Hour` and `Day` buckets and nothing finer or coarser since
-   * 2026-11-20 (`Minute`, `Week` and `Month` answer `400`), and it cuts
-   * a response short: the 24 hour buckets that follow `from` at `Hour`
-   * (live-probed 2026-11-21), so a longer window is the caller's to
-   * chunk — the facades do. An air-to-water unit has no telemetry
-   * energy any more, see {@link getAtwEnergy}. Returns a {@link Result}
-   * so callers can branch on the failure class (`validation` for shape
-   * drift, `server` for 4xx/5xx, `unauthorized` for token rejection,
-   * `rate-limited`, `network`).
+   * 2026-11-20 (`Minute`, `Week` and `Month` answer `400`), and a
+   * response runs from `from` for a span of its own, 24 buckets at
+   * `Hour` and 31 days at `Day`, whatever `to` says (live-probed
+   * 2026-11-21): a longer window is the caller's to chunk, and what a
+   * response carries past `to` the caller's to drop — the facades do
+   * both. An air-to-water unit has no telemetry energy any more, see
+   * {@link getAtwEnergy}. Returns a {@link Result} so callers can
+   * branch on the failure class (`validation` for shape drift, `server`
+   * for 4xx/5xx, `unauthorized` for token rejection, `rate-limited`,
+   * `network`).
    * @param id - Device id.
    * @param params - Query window.
-   * @param params.from - ISO start timestamp; the bucket holding it is
-   * answered.
+   * @param params.from - ISO start timestamp, on a bucket boundary: a
+   * start inside a bucket does not answer that bucket whole.
    * @param params.interval - Bucket grain (`Hour` or `Day`).
-   * @param params.to - ISO end timestamp (exclusive).
+   * @param params.to - ISO end timestamp. Sent, and not applied by the
+   * wire.
    * @returns Success with the telemetry bundle, or a typed failure.
    */
   public async getAtaEnergy(

@@ -151,8 +151,9 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * Fetches the raw energy telemetry of this device — the cumulative
    * consumption counter, in watt-hours, one request, wire-verbatim.
    * The escape hatch beside {@link getEnergySeries}, which owns the
-   * dialect: the wire stops a response 24 hour buckets after `from`,
-   * and a window longer than that is the caller's to chunk here.
+   * dialect: the wire answers 24 hour buckets from `from` whatever `to`
+   * says, so here a longer window is the caller's to chunk and a
+   * shorter one the caller's to cut.
    * @param params - Query window and bucket grain.
    * @returns The telemetry bundle, or a typed failure.
    */
@@ -186,9 +187,9 @@ export class HomeDeviceAtaFacade extends HomeBaseDeviceFacade<HomeAtaDeviceData>
    * each bucket's start as an epoch-ms instant, its consumption in
    * kilowatt-hours (the wire's watt-hours, scaled here), oldest first.
    * Hour buckets are the finest grain the wire serves, on the UTC
-   * clock, and the hour in progress mostly fills once it has closed. A
-   * garbled sample degrades field-by-field to `null` — never `NaN`,
-   * never a throw — and keeps its entry.
+   * clock; the hour in progress is there and moves in the counter's
+   * 100 Wh steps. A garbled sample degrades field-by-field to `null` —
+   * never `NaN`, never a throw — and keeps its entry.
    * @param query - Read window.
    * @returns The normalized series, or a typed failure.
    */

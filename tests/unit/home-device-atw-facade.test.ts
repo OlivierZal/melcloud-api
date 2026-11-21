@@ -1,7 +1,6 @@
 import { cast, mockTemporalNowZoned } from '@olivierzal/api-core/testing'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { EntityNotFoundError } from '../../src/errors/index.ts'
 import { HomeDeviceAtwFacade } from '../../src/facades/home-device-atw.ts'
 import { Temporal } from '../../src/temporal.ts'
 import { type HomeAtwDeviceCapabilities, ok } from '../../src/types/index.ts'
@@ -23,6 +22,7 @@ const BRUSSELS = 'Europe/Brussels'
 const createModel = (
   settings: Record<string, string> = {},
   capabilities: Partial<HomeAtwDeviceCapabilities> = {},
+  timeZone = BRUSSELS,
 ): ReturnType<typeof homeAtwDevice> =>
   homeAtwDevice({
     capabilities,
@@ -30,7 +30,7 @@ const createModel = (
     name: 'Test ATW',
     rssi: -50,
     settings,
-    timeZone: BRUSSELS,
+    timeZone,
   })
 
 const epochMs = (instant: string): number =>
@@ -528,6 +528,92 @@ describe('home device atw facade', () => {
       })
     })
 
+    // Where a clock change skips midnight the day opens at 01:00 (the
+    // Azores, 2026-03-29). Each request still opens on the start of a
+    // date of the unit: counted as a span from that 01:00, the next one
+    // would open at 01:00 too, an hour into its own day.
+    it('opens each day on its own start where the clocks skip midnight', async () => {
+      const api = createMockHomeApi()
+      vi.mocked(api.getAtwEnergy).mockResolvedValue(ok([homeEnergyReport({})]))
+      const facade = new HomeDeviceAtwFacade(
+        api,
+        createModel({}, {}, 'Atlantic/Azores'),
+      )
+
+      okValue(
+        await facade.getEnergySeries({
+          from: '2026-03-29T23:30:00Z',
+          to: '2026-03-30T01:30:00Z',
+        }),
+      )
+
+      expect(requestedPeriods(api)).toStrictEqual([
+        ['2026-03-29T01:00:00Z', '2026-03-30T00:00:00Z', 'Daily'],
+        ['2026-03-30T00:00:00Z', '2026-03-31T00:00:00Z', 'Daily'],
+      ])
+    })
+
+    // The wire's own answer for the day the clocks went back
+    // (live-probed 2026-11-21 for 2026-10-25): the two passes of 02:00
+    // under one label where both ran, a single label where one did,
+    // which one being untold. Every such label reads the later pass,
+    // 01:00Z here: on the earlier one, a pass still running would read
+    // as an hour that closed at 01:00Z.
+    it('reads the hour the clocks repeat on its later pass', async () => {
+      const api = createMockHomeApi()
+      vi.mocked(api.getAtwEnergy).mockResolvedValue(
+        ok([
+          homeEnergyReport({
+            interval_energy_consumed: [
+              ['2026-10-25T02:00:00', 0.067],
+              ['2026-10-25T03:00:00', 1.067],
+            ],
+            interval_energy_produced: [
+              ['2026-10-25T01:00:00', 0.9],
+              ['2026-10-25T02:00:00', 1.3],
+              ['2026-10-25T02:00:00', 0.733],
+              ['2026-10-25T03:00:00', 3.4],
+            ],
+          }),
+        ]),
+      )
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+
+      const { consumed, produced } = okValue(
+        await facade.getEnergySeries({
+          from: '2026-10-24T22:00:00Z',
+          to: '2026-10-25T04:00:00Z',
+        }),
+      )
+
+      expect(consumed.map(({ atEpochMs }) => atEpochMs)).toStrictEqual(
+        ['2026-10-25T01:00:00Z', '2026-10-25T02:00:00Z'].map((instant) =>
+          epochMs(instant),
+        ),
+      )
+      expect(produced.map(({ atEpochMs }) => atEpochMs)).toStrictEqual(
+        [
+          '2026-10-24T23:00:00Z',
+          '2026-10-25T01:00:00Z',
+          '2026-10-25T01:00:00Z',
+          '2026-10-25T02:00:00Z',
+        ].map((instant) => epochMs(instant)),
+      )
+    })
+
+    it('answers an empty window without a request', async () => {
+      const api = createMockHomeApi()
+      const facade = new HomeDeviceAtwFacade(api, createModel())
+
+      await expect(
+        facade.getEnergySeries({
+          from: '2026-11-21T08:00:00Z',
+          to: '2026-11-21T08:00:00Z',
+        }),
+      ).resolves.toStrictEqual(ok({ consumed: [], produced: [] }))
+      expect(api.getAtwEnergy).not.toHaveBeenCalled()
+    })
+
     it('degrades a gap to a null energy and a garbled label to a null instant', async () => {
       const api = createMockHomeApi()
       vi.mocked(api.getAtwEnergy).mockResolvedValue(
@@ -570,21 +656,25 @@ describe('home device atw facade', () => {
     })
 
     // The unit's zone lives on its registry model: an id the registry
-    // dropped has no clock to read the labels on.
-    it('rejects an energy read of an id the registry no longer holds', async () => {
+    // dropped has no clock to read the labels on, and both reads answer
+    // `not-found` without a request, like the reads the client routes
+    // on the registry.
+    it('answers not-found for an energy read of an id the registry no longer holds', async () => {
       const api = createMockHomeApi()
       const facade = new HomeDeviceAtwFacade(api, createModel())
       pruneHomeDevice('atw-1')
+      const notFound = {
+        error: { entityId: 'atw-1', kind: 'not-found' },
+        ok: false,
+      }
 
       await expect(
         facade.getEnergySeries({
           from: '2026-11-21T00:00:00Z',
           to: '2026-11-21T08:00:00Z',
         }),
-      ).rejects.toThrow(EntityNotFoundError)
-      await expect(facade.getEnergyReport()).rejects.toThrow(
-        EntityNotFoundError,
-      )
+      ).resolves.toStrictEqual(notFound)
+      await expect(facade.getEnergyReport()).resolves.toStrictEqual(notFound)
       expect(api.getAtwEnergy).not.toHaveBeenCalled()
     })
 
@@ -937,6 +1027,69 @@ describe('home device atw facade', () => {
       expect(value.labels[7]).toBe('07:00')
       expect(value.series[0]?.data[7]).toBe(2.5)
       expect(value.series[1]?.data[7]).toBe(13.5)
+    })
+
+    // An hour bucket of the unit starts on a half hour of the UTC clock
+    // in Kolkata: the grid is built on the unit's own hours, so each
+    // bucket charts under its own label.
+    it('charts an hour bucket under its own hour in a half-hour zone', async () => {
+      const api = createMockHomeApi({
+        locale: 'fr-FR',
+        timezone: 'Asia/Kolkata',
+      })
+      vi.mocked(api.getAtwEnergy).mockResolvedValue(
+        ok([
+          homeEnergyReport({
+            interval_energy_consumed: [
+              ['2026-11-21T00:00:00', 0.5],
+              ['2026-11-21T07:00:00', 2.5],
+            ],
+          }),
+        ]),
+      )
+      const facade = new HomeDeviceAtwFacade(
+        api,
+        createModel({}, {}, 'Asia/Kolkata'),
+      )
+
+      const value = okValue(
+        await facade.getEnergyReport({
+          from: '2026-11-20T18:30:00Z',
+          to: '2026-11-21T18:30:00Z',
+        }),
+      )
+
+      expect(value.labels.slice(0, 2)).toStrictEqual(['00:00', '01:00'])
+      expect(value.series[0]?.data[0]).toBe(0.5)
+      expect(value.labels[7]).toBe('07:00')
+      expect(value.series[0]?.data[7]).toBe(2.5)
+    })
+
+    // A 28-day request crossing the Azores' skipped midnight still
+    // opens the next one on the start of its day.
+    it('keeps the 28-day requests on the starts of days past a skipped midnight', async () => {
+      const api = createMockHomeApi({
+        locale: 'fr-FR',
+        timezone: 'Atlantic/Azores',
+      })
+      vi.mocked(api.getAtwEnergy).mockResolvedValue(ok([homeEnergyReport({})]))
+      const facade = new HomeDeviceAtwFacade(
+        api,
+        createModel({}, {}, 'Atlantic/Azores'),
+      )
+
+      okValue(
+        await facade.getEnergyReport({
+          from: '2026-03-01T12:00:00Z',
+          to: '2026-04-30T12:00:00Z',
+        }),
+      )
+
+      expect(requestedPeriods(api)).toStrictEqual([
+        ['2026-03-01T01:00:00Z', '2026-03-29T01:00:00Z', 'Monthly'],
+        ['2026-03-29T01:00:00Z', '2026-04-26T00:00:00Z', 'Monthly'],
+        ['2026-04-26T00:00:00Z', '2026-05-01T00:00:00Z', 'Monthly'],
+      ])
     })
 
     // Beyond a day the wire's own day buckets are charted, asked 28 days

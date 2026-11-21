@@ -82,12 +82,14 @@ const UTC = 'UTC'
 // live-probed 2026-07-18: a daily bucket of `571.0` for ~0.57 kWh).
 const WATT_HOURS_PER_KILOWATT_HOUR = 1000
 
-// A telemetry response stops short of its window (live-probed
-// 2026-11-21). At `Hour` it carries the 24 buckets that follow `from`:
-// a 25-hour and a 30-hour window both came back cut there. At `Day` it
-// carries a month at least: 31 days answered whole, 92 days came back
-// empty for a unit active on its last three. Each grain is therefore
-// asked in chunks its cap is known to hold.
+// The telemetry endpoint no longer applies `to` (live-probed
+// 2026-11-21): a response runs from `from` for a span of its own, or to
+// now. At `Hour` that span is 24 buckets — a one-hour window a day old
+// came back with all 24, a 30-hour one cut after them. At `Day` it is
+// 31 days: a month answered whole, three months came back empty for a
+// unit active on its last three days. Each grain is therefore asked in
+// chunks its span is known to hold, and what a response carries beyond
+// its chunk is sifted out afterwards.
 const ATA_ENERGY_GRAINS = {
   Day: { chunkDays: 30, smallestUnit: 'day' },
   Hour: { chunkDays: 1, smallestUnit: 'hour' },
@@ -174,7 +176,12 @@ const toAtaEnergySeries = (data: HomeEnergyData): HomeEnergySeriesPoint[] =>
 /**
  * Projects the points of one combined-energy dataset onto the
  * normalized series: each zoneless label anchored as an epoch-ms
- * instant on the clock of `zone`, each value already kWh.
+ * instant on the clock of `zone`, each value already kWh. The hour the
+ * clocks go back, the wire gives its two passes one label (live-probed
+ * on the 25-hour day of 2026-10-25: `02:00` twice in one dataset, once
+ * in the other, which pass being untold). Both read the LATER instant:
+ * on the earlier one, a pass still in progress would read as an hour
+ * that has closed.
  * @param points - Dataset points, in wire order.
  * @param zone - IANA timezone the labels are read in.
  * @returns The normalized samples, in wire order.
@@ -184,14 +191,14 @@ const toAtwEnergySeries = (
   zone: string,
 ): HomeEnergySeriesPoint[] =>
   points.map((point) => ({
-    atEpochMs: toEpochMs(point.x, zone),
+    atEpochMs: toEpochMs(point.x, zone, 'later'),
     kilowattHours: point.y,
   }))
 
-// At `Day` the wire closes a window on the bucket that holds `to`, so
-// the day two chunks meet on is answered by both (live-probed
-// 2026-11-21: that day charted double). Whatever the grain, a bucket an
-// earlier chunk answered is dropped from the later ones.
+// A `Day` response runs a day past its 30-day chunk, so the day two
+// chunks meet on is answered by both (live-probed 2026-11-21: that day
+// charted double). Whatever the grain, a bucket an earlier chunk
+// answered is dropped from the later ones.
 const mergeAtaEnergyChunks = (
   chunks: readonly HomeEnergyData[],
 ): HomeEnergyData => {
@@ -211,11 +218,41 @@ const mergeAtaEnergyChunks = (
   }
 }
 
+// A window that ends where it starts, or before, holds no bucket: it
+// is answered without a request.
+const isEmptyWindow = ({ from, to }: HomeChartWindow): boolean =>
+  Temporal.ZonedDateTime.compare(from, to) >= 0
+
+// The request windows of a telemetry read: chunks of the grain's span
+// counted on the UTC clock — it has no clock change to stretch a day
+// past the span — between two bucket boundaries. A `from` inside a
+// bucket does not answer that bucket whole, and a wire that applied
+// `to` again must not stop short of the bucket that holds it.
+const toAtaChunks = (
+  window: HomeChartWindow,
+  {
+    chunkDays,
+    smallestUnit,
+  }: (typeof ATA_ENERGY_GRAINS)[keyof typeof ATA_ENERGY_GRAINS],
+): HomeChartWindow[] => {
+  if (isEmptyWindow(window)) {
+    return []
+  }
+  const from = window.from.withTimeZone(UTC)
+  const to = window.to.withTimeZone(UTC)
+  return splitHomeReportWindow(
+    {
+      from: from.round({ roundingMode: 'floor', smallestUnit }),
+      to: to.round({ roundingMode: 'ceil', smallestUnit }),
+    },
+    chunkDays,
+  )
+}
+
 /**
  * Fetch air-to-air energy telemetry over a window of any length: one
- * request per chunk the grain's cap holds, merged into one bundle.
- * Chunks are counted on the UTC clock — it has no clock change to
- * stretch a day past the cap — from a bucket boundary.
+ * request per chunk the grain's span holds, merged into one bundle.
+ * The bundle may run past the window's end, the wire not applying `to`.
  * @param api - Home API client.
  * @param id - Device id.
  * @param options - Read inputs.
@@ -230,39 +267,52 @@ const fetchAtaEnergy = async (
     interval,
     window,
   }: { interval: keyof typeof ATA_ENERGY_GRAINS; window: HomeChartWindow },
-): Promise<Result<HomeEnergyData>> => {
-  const { chunkDays, smallestUnit } = ATA_ENERGY_GRAINS[interval]
-  const from = window.from
-    .withTimeZone(UTC)
-    .round({ roundingMode: 'floor', smallestUnit })
-  return mapResult(
+): Promise<Result<HomeEnergyData>> =>
+  mapResult(
     await fetchHomeChunks(
       async (chunk) =>
         api.getAtaEnergy(id, { ...toHomeWireWindow(chunk), interval }),
-      splitHomeReportWindow({ from, to: window.to }, chunkDays),
+      toAtaChunks(window, ATA_ENERGY_GRAINS[interval]),
     ),
     mergeAtaEnergyChunks,
   )
+
+// The date whose start closes a window: the day after the one `to`
+// falls in, or that very day when `to` is its first instant.
+const toClosingDate = (
+  to: Temporal.ZonedDateTime,
+  zone: string,
+): Temporal.PlainDate => {
+  const end = to.withTimeZone(zone)
+  const day = end.toPlainDate()
+  return Temporal.ZonedDateTime.compare(end.startOfDay(), end) < 0
+    ? day.add({ days: 1 })
+    : day
 }
 
 // The request windows of a combined-energy read: consecutive spans of
-// `days` days on the unit's own calendar, from the midnight that opens
-// the window's first day to the one that closes its last.
+// `days` calendar days of the unit, from the midnight that opens the
+// window's first day to the one that closes its last. Each bound is the
+// start of a DATE: where a clock change skips midnight (the Azores,
+// Chile, Egypt, Lebanon, Cuba) that day opens at 01:00, and a span
+// counted from that instant would open every later one at 01:00 too.
 const toPeriodWindows = (
-  { from, to }: HomeChartWindow,
+  window: HomeChartWindow,
   { days, zone }: { days: number; zone: string },
 ): HomeChartWindow[] => {
-  const end = to.withTimeZone(zone)
-  const midnight = end.startOfDay()
-  return splitHomeReportWindow(
-    {
-      from: from.withTimeZone(zone).startOfDay(),
-      to:
-        Temporal.ZonedDateTime.compare(midnight, end) < 0
-          ? midnight.add({ days: 1 })
-          : midnight,
+  if (isEmptyWindow(window)) {
+    return []
+  }
+  const opening = window.from.withTimeZone(zone).toPlainDate()
+  const closing = toClosingDate(window.to, zone)
+  return Array.from(
+    { length: Math.ceil(opening.until(closing).days / days) },
+    (_unused, index) => {
+      const from = opening.add({ days: index * days })
+      const next = from.add({ days })
+      const to = Temporal.PlainDate.compare(next, closing) < 0 ? next : closing
+      return { from: from.toZonedDateTime(zone), to: to.toZonedDateTime(zone) }
     },
-    days,
   )
 }
 
@@ -314,8 +364,9 @@ const fetchAtwEnergy = async (
 
 // An hourly read answers the buckets its window touches: one started
 // less than an hour before `from` still holds it, and `to` is
-// exclusive. A sample without an instant cannot be placed and keeps its
-// entry.
+// exclusive. Neither wire stops there by itself — the telemetry one
+// ignores `to`, the report one answers whole days. A sample without an
+// instant cannot be placed and keeps its entry.
 const keepTouchedBuckets = (
   points: readonly HomeEnergySeriesPoint[],
   { from, to }: HomeChartWindow,
@@ -340,20 +391,19 @@ export const getHomeAtaEnergySeries = async (
   api: HomeAPIAdapter,
   id: string,
   query: HomeEnergySeriesQuery,
-): Promise<Result<HomeEnergySeries>> =>
-  mapResult(
-    await fetchAtaEnergy(api, id, {
-      interval: 'Hour',
-      window: resolveHomeReportWindow(query, UTC),
+): Promise<Result<HomeEnergySeries>> => {
+  const window = resolveHomeReportWindow(query, UTC)
+  return mapResult(
+    await fetchAtaEnergy(api, id, { interval: 'Hour', window }),
+    (data) => ({
+      consumed: keepTouchedBuckets(toAtaEnergySeries(data), window),
     }),
-    (data) => ({ consumed: toAtaEnergySeries(data) }),
   )
+}
 
 /**
  * Read the hourly energy of an air-to-water unit — the body of
- * `HomeDeviceAtwFacade.getEnergySeries`. The wire answers whole days
- * of the unit, so the series is cut back to the buckets the window
- * touches.
+ * `HomeDeviceAtwFacade.getEnergySeries`.
  * @param api - Home API client.
  * @param id - Device id.
  * @param options - Read inputs.
@@ -408,37 +458,54 @@ const buildLocalDayGrid = (window: HomeChartWindow): string[] =>
     day.toString(),
   )
 
-const toUtcHour = (bound: Temporal.ZonedDateTime): Temporal.PlainDateTime =>
+// The two clocks of a chart: the one its hour buckets start on — UTC
+// for the telemetry ones, the unit's own for the report ones, where an
+// hour is not a round UTC hour everywhere — and the display timezone,
+// which the day buckets and every label are read in.
+interface EnergyChartClocks {
+  readonly bucketZone: string
+  readonly timezone: string
+}
+
+// Start of the hour that holds `bound` on the buckets' clock, as an
+// instant.
+const toBucketHour = (
+  bound: Temporal.ZonedDateTime,
+  bucketZone: string,
+): Temporal.ZonedDateTime =>
   bound
-    .withTimeZone(UTC)
-    .toPlainDateTime()
+    .withTimeZone(bucketZone)
     .round({ roundingMode: 'floor', smallestUnit: 'hour' })
 
-const buildUtcHourGrid = (window: HomeChartWindow): string[] => {
-  const last = toUtcHour(window.to)
+const buildHourGrid = (
+  window: HomeChartWindow,
+  bucketZone: string,
+): string[] => {
+  const last = toBucketHour(window.to, bucketZone)
   const hours: string[] = []
   for (
-    let hour = toUtcHour(window.from);
-    Temporal.PlainDateTime.compare(hour, last) <= 0;
+    let hour = toBucketHour(window.from, bucketZone);
+    Temporal.ZonedDateTime.compare(hour, last) <= 0;
     hour = hour.add({ hours: 1 })
   ) {
-    hours.push(hour.toString())
+    hours.push(hour.toInstant().toString())
   }
   return hours
 }
 
-// Slot key of one bucket instant: its floored UTC hour, the calendar
-// day it falls on in the display timezone, or its UTC calendar day —
-// matching the grid the unit builds.
+// Slot key of one bucket instant: the hour that holds it on the
+// buckets' clock, the calendar day it falls on in the display
+// timezone, or its UTC calendar day — matching the grid the unit
+// builds.
 const toEnergySlotKey = (
   epochMs: number,
   bucketUnit: HomeEnergyBucketUnit,
-  timezone: string,
+  { bucketZone, timezone }: EnergyChartClocks,
 ): string => {
   const utc =
     Temporal.Instant.fromEpochMilliseconds(epochMs).toZonedDateTimeISO(UTC)
   if (bucketUnit === 'hour') {
-    return toUtcHour(utc).toString()
+    return toBucketHour(utc, bucketZone).toInstant().toString()
   }
   return (
     bucketUnit === 'localDay'
@@ -451,15 +518,15 @@ const sumEnergyBySlot = (
   points: readonly HomeEnergySeriesPoint[],
   {
     bucketUnit,
-    timezone,
-  }: { bucketUnit: HomeEnergyBucketUnit; timezone: string },
+    clocks,
+  }: { bucketUnit: HomeEnergyBucketUnit; clocks: EnergyChartClocks },
 ): Map<string, number> => {
   const bySlot = new Map<string, number>()
   for (const { atEpochMs, kilowattHours } of points) {
     if (atEpochMs === null) {
       continue
     }
-    const slot = toEnergySlotKey(atEpochMs, bucketUnit, timezone)
+    const slot = toEnergySlotKey(atEpochMs, bucketUnit, clocks)
     bySlot.set(slot, (bySlot.get(slot) ?? 0) + (kilowattHours ?? 0))
   }
   return bySlot
@@ -474,9 +541,8 @@ const toEnergySlotLabel = (
   timezone: string,
 ): Temporal.PlainDate | Temporal.PlainDateTime => {
   if (bucketUnit === 'hour') {
-    return Temporal.PlainDateTime.from(slot)
-      .toZonedDateTime(UTC)
-      .withTimeZone(timezone)
+    return Temporal.Instant.from(slot)
+      .toZonedDateTimeISO(timezone)
       .toPlainDateTime()
   }
   return (
@@ -486,12 +552,8 @@ const toEnergySlotLabel = (
 
 const energyGridBuilders: Record<
   HomeEnergyBucketUnit,
-  (window: HomeChartWindow) => string[]
-> = {
-  day: buildUtcDayGrid,
-  hour: buildUtcHourGrid,
-  localDay: buildLocalDayGrid,
-}
+  (window: HomeChartWindow, bucketZone: string) => string[]
+> = { day: buildUtcDayGrid, hour: buildHourGrid, localDay: buildLocalDayGrid }
 
 /**
  * Rebuild sparse energy buckets into Classic-shaped line chart options
@@ -501,6 +563,7 @@ const energyGridBuilders: Record<
  * @param options.bucketUnit - Display bucket granularity (`hour`
  * matches the Classic one-day report; `localDay` sums the buckets of
  * one calendar day of the display timezone; `day` is UTC days).
+ * @param options.bucketZone - IANA timezone the hour buckets start on.
  * @param options.locale - BCP-47 locale tag for axis labels.
  * @param options.sources - One entry per charted series, already in
  * kWh.
@@ -509,11 +572,13 @@ const energyGridBuilders: Record<
  */
 const toHomeEnergyOptions = ({
   bucketUnit,
+  bucketZone,
   locale,
   sources,
   window,
 }: {
   bucketUnit: HomeEnergyBucketUnit
+  bucketZone: string
   sources: readonly {
     readonly name: string
     readonly points: readonly HomeEnergySeriesPoint[]
@@ -522,7 +587,8 @@ const toHomeEnergyOptions = ({
   locale?: string | undefined
 }): ReportChartLineOptions => {
   const timezone = window.from.timeZoneId
-  const slots = energyGridBuilders[bucketUnit](window)
+  const clocks = { bucketZone, timezone }
+  const slots = energyGridBuilders[bucketUnit](window, bucketZone)
   const formatter = new Intl.DateTimeFormat(
     locale,
     bucketUnit === 'hour'
@@ -535,7 +601,7 @@ const toHomeEnergyOptions = ({
       formatter.format(toEnergySlotLabel(slot, bucketUnit, timezone)),
     ),
     series: sources.map(({ name, points }) => {
-      const bySlot = sumEnergyBySlot(points, { bucketUnit, timezone })
+      const bySlot = sumEnergyBySlot(points, { bucketUnit, clocks })
       return { data: slots.map((slot) => bySlot.get(slot) ?? 0), name }
     }),
     to: window.to.toPlainDateTime().toString(),
@@ -577,13 +643,27 @@ export const getHomeAtaEnergyReport = async (
       interval: bucketUnit === 'day' ? 'Day' : 'Hour',
       window,
     }),
-    (data) =>
-      toHomeEnergyOptions({
+    (data) => {
+      const points = toAtaEnergySeries(data)
+      return toHomeEnergyOptions({
         bucketUnit,
+        bucketZone: UTC,
         locale: api.locale,
-        sources: [{ name: 'Consumed', points: toAtaEnergySeries(data) }],
+        // Hour buckets summed into days must stop where the window
+        // does; a day bucket is charted whole, and the grid alone
+        // bounds it.
+        sources: [
+          {
+            name: 'Consumed',
+            points:
+              bucketUnit === 'day'
+                ? points
+                : keepTouchedBuckets(points, window),
+          },
+        ],
         window,
-      }),
+      })
+    },
   )
 }
 
@@ -617,6 +697,7 @@ export const getHomeAtwEnergyReport = async (
     ({ consumed, produced }) =>
       toHomeEnergyOptions({
         bucketUnit: isHourly ? 'hour' : 'localDay',
+        bucketZone: zone,
         locale: api.locale,
         sources: [
           { name: 'Consumed', points: toAtwEnergySeries(consumed, labelZone) },

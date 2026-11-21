@@ -284,6 +284,17 @@ describe('epoch projections', () => {
     )
   })
 
+  it('resolves a DST-overlap wall clock to the later offset on demand', () => {
+    // The second pass of that 02:30, +01:00; a wall clock the day reads
+    // once is the same instant either way.
+    expect(toEpochMs('2026-10-25T02:30:00', 'Europe/Paris', 'later')).toBe(
+      Temporal.Instant.from('2026-10-25T01:30:00Z').epochMilliseconds,
+    )
+    expect(toEpochMs('2026-10-25T04:30:00', 'Europe/Paris', 'later')).toBe(
+      toEpochMs('2026-10-25T04:30:00', 'Europe/Paris'),
+    )
+  })
+
   it('answers null for a value it cannot parse', () => {
     expect(toEpochMs('not-a-date', 'Europe/Paris')).toBeNull()
   })
