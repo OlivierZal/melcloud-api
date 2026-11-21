@@ -362,15 +362,73 @@ is on: no runtime enums, no parameter properties, no runtime namespaces.
   its newest hours and showed the rest shifted by the unit's offset.
   Every report read goes through the base facade's `onUnitClock`,
   which hands it the unit's `timeZone` and answers `not-found` for an
-  id the registry no longer holds. NOT MEASURED APART, and still read
-  as UTC on the 2026-07-18 note alone: the `/monitor/*/errorlog`
-  stamps, and the `/context` holiday-mode bounds, where a stored
-  window echoes whatever was sent, so a round trip says nothing of the
-  clock that ARMS it. An error entry or a holiday window off by the
-  unit's offset would be this, and telling needs an event whose time
-  is known, or a write.
+  id the registry no longer holds. The holiday window is on the unit's
+  clock too (the next entry). NOT MEASURED APART, and still read as
+  UTC on the 2026-07-18 note alone: the `/monitor/*/errorlog` stamps.
+  An error entry off by the unit's offset would be this, and telling
+  needs an event whose time is known: the three units read on
+  2026-11-21 held no entry at all.
   `HomeAPIConfig.timezone` anchors chart label rendering and day/hour
-  windows in the facades, and nothing on the wire.
+  windows in the facades, is the clock a holiday window is given and
+  read back on (the host's zone when unset), and reads nothing on the
+  wire.
+- The Home holiday window (`POST /monitor/holidaymode`, `holidayMode`
+  in `/context`), measured by writes on ONE unit on 2026-11-21 (the
+  owner's go, a UTC+1 unit, every window disabled afterwards). Four
+  facts, and what 62.0.3 does with each.
+  (1) Both bounds are read on the UNIT's wall clock. A window written
+  with its start three minutes ahead on that clock answered 200 and
+  was `active`, the unit off (`Power` `False`), within two seconds of
+  its start; the same window written in UTC wall clock, so an hour
+  earlier on the unit's, answered 404 and did not arm. A full cycle
+  (start 30 s ahead, 90 s long) was active at its start and, one
+  second after its end, inactive with the unit back on by itself: the
+  end is read on the same clock. So an enabled window goes out as the
+  caller's instants on each unit's clock (`pushHomeHolidayMode`, one
+  write per clock the units sit on, a building's or a batch's units
+  being free to differ), and a read projects each unit's bounds from
+  its own clock (`toHolidayModeState`).
+  (2) The wire arms a window AT its start and takes none that has
+  begun. An enabling write whose start is not ahead of the unit's
+  clock (now, ten minutes earlier, about an hour earlier) answers 404
+  with an empty body, and the window is STORED all the same, enabled,
+  without arming (each watched 75 s at the least, close to five
+  minutes at the most). Starts 20 s, 30 s and 3 min ahead answered 200
+  and were found armed at the first read after their start, zero to
+  ten seconds past it. So a start
+  that is not a minute ahead of now is sent a minute ahead
+  (`HOLIDAY_START_LEAD`): "from now" is what the consumer's flow
+  cards ask, and the minute is what a slow request needs to arrive
+  before the start it carries.
+  (3) The wire does not check the order of the bounds: a window
+  ending two minutes before its start answered 200 and was stored
+  enabled (disabled before its start; what it would have done at it
+  is not known). So a window that ends before the start it would be
+  sent with is refused before any request, a `RangeError`.
+  (4) `enabled` says a window is set, `active` that it is in effect:
+  `enabled` was still `true` 102 s after the window had closed. A
+  disabling write answers 200 whatever is stored; after one that cut
+  an ACTIVE window short the unit was back on 8 s later once and
+  still off 8 s later the other time (re-applied by hand).
+  THE LIMIT of all four: one unit, an hour ahead of UTC, its
+  `timeZone` the same as its building's `timezone`. "The unit's
+  clock" cannot be told there from a fixed UTC+1, nor from the
+  building's or the account's zone; the unit's is taken, as for the
+  reports, which rest on the same kind of unit.
+  THE HISTORY: 42.6.0 (2026-07-23) sent the caller's wall clock as
+  given, which the wire of today takes right wherever caller and unit
+  share a zone, "from now" apart. 49.0.0 (2026-08-18) projected BOTH
+  wires onto UTC, on com.melcloud#1593 (a window an hour late in the
+  MELCloud UI and an hour early back, the offsets of a wire that
+  stores UTC, which the Classic path had projected for until 2024),
+  and this file then recorded the Home half as not measured. From
+  49.0.0 to 62.0.2 a
+  Home window therefore started and ended early by the unit's UTC
+  offset (an hour in winter and two in summer in Central Europe),
+  read back as typed, the read undoing the write's projection, which
+  hid it, while a window set in the MELCloud Home app read back late
+  by that offset; and "from now" answered an error and left a stored
+  window that did not arm, on the wall clock given as on UTC.
 - Home report semantics (comfort-graph / internaltemperatures /
   trendsummary): the BFF rounds the window down to full days of the
   unit (the clocks entry above);

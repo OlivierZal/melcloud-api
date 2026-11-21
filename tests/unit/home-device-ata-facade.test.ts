@@ -771,6 +771,66 @@ describe('home device ata facade', () => {
       expect(facade.supportsOverheat).toBe(true)
     })
 
+    // A window of the far future needs no clock: nothing about it
+    // depends on when the suite runs.
+    it("writes an enabled holiday window on the unit's own clock", async () => {
+      const api = createMockHomeApi({ timezone: 'Europe/Paris' })
+      const facade = new HomeDeviceAtaFacade(
+        api,
+        homeDevice({ id: 'device-1', timeZone: 'Europe/London' }),
+      )
+
+      await facade.updateHolidayMode({
+        endDate: '2099-08-05T00:00:00',
+        isEnabled: true,
+        startDate: '2099-08-01T00:00:00',
+      })
+
+      // Midnight in Paris is 23:00 the day before in London.
+      expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
+        enabled: true,
+        endDate: '2099-08-04T23:00:00',
+        startDate: '2099-07-31T23:00:00',
+        units: { ATA: ['device-1'] },
+      })
+    })
+
+    it('refuses to enable holiday mode on a unit the registry no longer holds', async () => {
+      const api = createMockHomeApi({ timezone: 'Europe/Paris' })
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+      pruneHomeDevice('device-1')
+
+      // The window is written on the unit's clock, which only the
+      // registry's model tells.
+      await expect(
+        facade.updateHolidayMode({
+          endDate: '2099-08-05T00:00:00',
+          isEnabled: true,
+          startDate: '2099-08-01T00:00:00',
+        }),
+      ).rejects.toThrow(EntityNotFoundError)
+      expect(api.updateHolidayMode).not.toHaveBeenCalled()
+    })
+
+    it('still disables holiday mode on a unit the registry no longer holds', async () => {
+      const api = createMockHomeApi({ timezone: 'Europe/Paris' })
+      const facade = new HomeDeviceAtaFacade(api, createModel())
+      pruneHomeDevice('device-1')
+
+      await facade.updateHolidayMode({
+        endDate: '2099-08-05T00:00:00',
+        isEnabled: false,
+        startDate: '2099-08-01T00:00:00',
+      })
+
+      expect(api.updateHolidayMode).toHaveBeenCalledExactlyOnceWith({
+        enabled: false,
+        endDate: '2099-08-05T00:00:00',
+        startDate: '2099-08-01T00:00:00',
+        units: { ATA: ['device-1'] },
+      })
+    })
+
     it('should delegate getErrorLog and project the neutral entries', async () => {
       const api = createMockHomeApi()
       vi.mocked(api.getErrorLog).mockResolvedValue(

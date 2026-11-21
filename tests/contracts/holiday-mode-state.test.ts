@@ -31,50 +31,69 @@ interface BoundedWindow extends HolidayModeState {
   readonly startDate: string
 }
 
-// Both wires store UTC wall clock while the contract speaks the
-// caller's (`api.timezone`, pinned here so no host zone can leak in).
+// The contract speaks the caller's clock (`api.timezone`, pinned here so
+// no host zone can leak in); each wire has a clock of its own. Classic
+// stores UTC wall clock. Home reads a window on its UNIT's wall clock
+// (live-probed, 2026-11-21), and the units below sit in a zone that is
+// neither the caller's nor UTC, so a read on either of those two has to
+// change the result.
 const CONTRACT_TIMEZONE = 'Europe/Paris'
+const HOME_UNIT_TIMEZONE = 'America/New_York'
 
 // The neutral holiday state is the same contract on both dialects, so
 // the clauses live here once and every implementation answers them.
-// Each case is a wire/state PAIR: the wire side is what the API
-// serves (UTC), the state side the same instants on the caller's
-// clock. The windows straddle the DST switch — a winter bound (+1) and
-// a summer bound (+2) in one case — so a projection that hardcodes
-// either offset has to change the result; start and end stay far apart
-// and ordered, so a swap has to as well.
+// Each case is ONE window said three ways: the state is its instants on
+// the caller's clock, `classicWire` the same instants in UTC,
+// `homeWire` the same again on the unit's clock. The enabled window
+// opens in the weeks New York has changed its clocks and Paris has not
+// (five hours apart instead of six) and closes after both have, and
+// its Paris bounds sit on either side of that switch too (+1, then
+// +2): a projection that hardcodes any one offset has to change the
+// result. Start and end stay far apart and ordered, so a swap has to
+// as well.
 const CASES: readonly {
+  readonly classicWire: BoundedWindow | null
+  readonly homeWire: BoundedWindow | null
   readonly label: string
   readonly state: BoundedWindow | null
-  readonly wire: BoundedWindow | null
 }[] = [
   {
-    label: 'enabled window straddling the DST switch',
+    classicWire: {
+      endDate: '2026-04-10T18:30:00',
+      isEnabled: true,
+      startDate: '2026-03-15T08:15:00',
+    },
+    homeWire: {
+      endDate: '2026-04-10T14:30:00',
+      isEnabled: true,
+      startDate: '2026-03-15T04:15:00',
+    },
+    label: 'an enabled window straddling both clock changes',
     state: {
       endDate: '2026-04-10T20:30:00',
       isEnabled: true,
-      startDate: '2026-03-01T09:15:00',
-    },
-    wire: {
-      endDate: '2026-04-10T18:30:00',
-      isEnabled: true,
-      startDate: '2026-03-01T08:15:00',
+      startDate: '2026-03-15T09:15:00',
     },
   },
   {
-    label: 'disabled window',
+    classicWire: {
+      endDate: '2026-11-20T21:45:00',
+      isEnabled: false,
+      startDate: '2026-07-05T06:20:00',
+    },
+    homeWire: {
+      endDate: '2026-11-20T16:45:00',
+      isEnabled: false,
+      startDate: '2026-07-05T02:20:00',
+    },
+    label: 'a disabled window',
     state: {
       endDate: '2026-11-20T22:45:00',
       isEnabled: false,
       startDate: '2026-07-05T08:20:00',
     },
-    wire: {
-      endDate: '2026-11-20T21:45:00',
-      isEnabled: false,
-      startDate: '2026-07-05T06:20:00',
-    },
   },
-  { label: 'never configured', state: null, wire: null },
+  { classicWire: null, homeWire: null, label: 'no window at all', state: null },
 ]
 
 /**
@@ -83,11 +102,14 @@ const CASES: readonly {
  * serves it from the synced `/context`, Classic fetches) and is not part
  * of the contract under test.
  * @param name - Implementation label used in the test titles.
- * @param read - Encodes the neutral state into that dialect's wire shape
- * and reads it back through the real facade.
+ * @param wireOf - Picks, in a case, the window as that dialect's wire
+ * holds it.
+ * @param read - Encodes that window into the dialect's wire shape and
+ * reads it back through the real facade.
  */
 const describeHolidayModeStateContract = (
   name: string,
+  wireOf: (wires: (typeof CASES)[number]) => BoundedWindow | null,
   read: (
     wire: BoundedWindow | null,
   ) => HolidayModeState | Promise<HolidayModeState | null> | null,
@@ -96,9 +118,11 @@ const describeHolidayModeStateContract = (
     beforeEach(resetHomeDevices)
 
     it.each(CASES)(
-      "projects a $label from the wire's UTC onto the caller's clock",
-      async ({ state, wire }) => {
-        await expect(Promise.resolve(read(wire))).resolves.toStrictEqual(state)
+      "projects $label from the wire's own clock onto the caller's",
+      async (wires) => {
+        await expect(
+          Promise.resolve(read(wireOf(wires))),
+        ).resolves.toStrictEqual(wires.state)
       },
     )
   })
@@ -121,19 +145,22 @@ const classicFacade = (
   return new ClassicBuildingFacade(api, defined(registry.buildings.getById(1)))
 }
 
-describeHolidayModeStateContract('Classic zone', async (wire) =>
-  okValue(
-    await classicFacade(
-      wire === null
-        ? { HMDefined: false }
-        : {
-            HMDefined: true,
-            HMEnabled: wire.isEnabled,
-            HMEndDate: wire.endDate,
-            HMStartDate: wire.startDate,
-          },
-    ).getHolidayMode(),
-  ),
+describeHolidayModeStateContract(
+  'Classic zone',
+  ({ classicWire }) => classicWire,
+  async (wire) =>
+    okValue(
+      await classicFacade(
+        wire === null
+          ? { HMDefined: false }
+          : {
+              HMDefined: true,
+              HMEnabled: wire.isEnabled,
+              HMEndDate: wire.endDate,
+              HMStartDate: wire.startDate,
+            },
+      ).getHolidayMode(),
+    ),
 )
 
 const homeApi = (): HomeAPIAdapter =>
@@ -150,23 +177,39 @@ const toHomeWire = (
         startDate: wire.startDate,
       }
 
-describeHolidayModeStateContract('Home ATA device', async (wire) => {
-  const facade = new HomeDeviceAtaFacade(
-    homeApi(),
-    homeDevice({ holidayMode: toHomeWire(wire), id: 'contract-ata' }),
-  )
-  return okValue(await facade.getHolidayMode())
-})
+describeHolidayModeStateContract(
+  'Home ATA device',
+  ({ homeWire }) => homeWire,
+  async (wire) => {
+    const facade = new HomeDeviceAtaFacade(
+      homeApi(),
+      homeDevice({
+        holidayMode: toHomeWire(wire),
+        id: 'contract-ata',
+        timeZone: HOME_UNIT_TIMEZONE,
+      }),
+    )
+    return okValue(await facade.getHolidayMode())
+  },
+)
 
 // The ATW facade inherits the method; asserting it here keeps the pair
 // from drifting apart the way the protection getter once could.
-describeHolidayModeStateContract('Home ATW device', async (wire) => {
-  const facade = new HomeDeviceAtwFacade(
-    homeApi(),
-    homeAtwDevice({ holidayMode: toHomeWire(wire), id: 'contract-atw' }),
-  )
-  return okValue(await facade.getHolidayMode())
-})
+describeHolidayModeStateContract(
+  'Home ATW device',
+  ({ homeWire }) => homeWire,
+  async (wire) => {
+    const facade = new HomeDeviceAtwFacade(
+      homeApi(),
+      homeAtwDevice({
+        holidayMode: toHomeWire(wire),
+        id: 'contract-atw',
+        timeZone: HOME_UNIT_TIMEZONE,
+      }),
+    )
+    return okValue(await facade.getHolidayMode())
+  },
+)
 
 // Only Classic can express these: its `HM*` bounds are independently
 // nullable, while the Home wire types both dates as required and uses a

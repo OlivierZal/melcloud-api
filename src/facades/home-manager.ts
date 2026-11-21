@@ -160,10 +160,16 @@ export class HomeFacadeManager {
 
   /**
    * Batch holiday-mode update for the given Home devices: groups them by
-   * type and issues one API write. Mirror of {@link updateFrostProtection}
-   * for the holiday window. All ids must belong to this manager's account.
+   * type and, for an enabled window, by the clock they sit on, and
+   * issues one API write per clock. Mirror of
+   * {@link updateFrostProtection} for the holiday window. All ids must
+   * belong to this manager's account.
    * @param deviceIds - Target device ids.
    * @param update - The new holiday-mode window.
+   * @throws A {@link RangeError}, before any request, when an enabled
+   * window is malformed or ends before it can start; the single failed
+   * write, or an `AggregateError` bundling every failure when more than
+   * one rejects.
    */
   public async updateHolidayMode(
     deviceIds: readonly string[],

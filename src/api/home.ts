@@ -275,11 +275,12 @@ export class HomeAPI extends BaseAPI implements HomeAPIAdapter {
   }
 
   /**
-   * IANA timezone supplied via {@link HomeAPIConfig.timezone},
-   * or `undefined` to fall back to UTC. Nothing on the wire is read
-   * with it, each endpoint family having a clock of its own; this
-   * timezone only anchors chart windows and label rendering in the
-   * device facades.
+   * IANA timezone supplied via {@link HomeAPIConfig.timezone}, or
+   * `undefined`: the caller's clock. It anchors chart windows and label
+   * rendering in the device facades (UTC when unset) and is the clock a
+   * holiday-mode window is given and read back on (the host's zone when
+   * unset). Nothing on the wire is read with it, each endpoint family
+   * having a clock of its own.
    * @returns The configured IANA timezone identifier, or `undefined`.
    */
   public get timezone(): string | undefined {

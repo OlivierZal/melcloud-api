@@ -4,11 +4,14 @@
  *
  * Every datetime crossing this contract is a zoneless ISO 8601 wall
  * clock in the CALLER's timezone — the `timezone` both API configs
- * take, falling back to the host's zone. Both wires store UTC; the
- * facades project at the boundary, in both directions. Naming the zone
- * is the point: the unnamed contract is how a projection got lost once
- * and stranded every window by the caller's UTC offset (the ±1 h of
- * com.melcloud#1593).
+ * take, falling back to the host's zone. Each wire has a clock of its
+ * own — Classic stores UTC wall clock, Home reads a window on its
+ * unit's — and the facades project at the boundary, in both
+ * directions. Naming the zone is the point: the unnamed contract is
+ * how a projection got lost once and stranded every Classic window by
+ * the caller's UTC offset (the ±1 h of com.melcloud#1593), and "both
+ * wires store UTC", said of Home without a measure, is how the Home
+ * windows then took that offset the other way, from 49.0.0 to 62.0.2.
  */
 import { allEqual } from './utils.ts'
 
@@ -60,9 +63,14 @@ export interface HolidayModeState {
 /**
  * A holiday-mode window to apply. `startDate`/`endDate` are ISO 8601
  * wall-clock strings in the caller's timezone; both are ignored when
- * `isEnabled` is `false`. The start is always explicit (the Home API
- * carries no timezone context to anchor a "now" default), so callers
- * pass the full window.
+ * `isEnabled` is `false`. The start is always explicit: callers pass
+ * the full window, and say "from now" with a start of now. Classic
+ * sends that start as given; Home sends any start that is not a minute
+ * ahead of now a minute ahead, its wire arming a window at its start
+ * and taking none that has begun. On Home an enabled window that ends
+ * before it can start is refused before any request (a `RangeError`),
+ * the wire storing one without a word; on Classic MELCloud is the
+ * judge.
  * @category Facades
  */
 export interface HolidayModeUpdate {

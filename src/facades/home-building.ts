@@ -169,9 +169,9 @@ export class HomeBuildingFacade {
   }
 
   /**
-   * Reads the members' aggregated holiday-mode window, both bounds
-   * projected onto the caller's clock. Same fold as
-   * {@link getFrostProtection}; no wire call.
+   * Reads the members' aggregated holiday-mode window, each member's
+   * bounds projected from its own clock onto the caller's before the
+   * fold. Same fold as {@link getFrostProtection}; no wire call.
    * @returns A success result wrapping the aggregated state.
    */
   public async getHolidayMode(): Promise<Result<AggregatedHolidayModeState>> {
@@ -179,7 +179,10 @@ export class HomeBuildingFacade {
     return ok(
       aggregateHolidayModeStates(
         members.map(({ data }) =>
-          toHolidayModeState(data.holidayMode, this.#api.timezone),
+          toHolidayModeState(data.holidayMode, {
+            from: data.timeZone,
+            to: this.#api.timezone,
+          }),
         ),
       ),
     )
@@ -260,10 +263,14 @@ export class HomeBuildingFacade {
   }
 
   /**
-   * Updates every member's holiday-mode window in one batch write; an
-   * enabled window's bounds are projected from the caller's clock onto
-   * the wire's UTC.
+   * Updates every member's holiday-mode window; an enabled window goes
+   * out on the members' own clock, one batch write per clock they sit
+   * on.
    * @param update - The new holiday-mode window.
+   * @throws A {@link RangeError}, before any request, when an enabled
+   * window is malformed or ends before it can start; the single failed
+   * write, or an `AggregateError` bundling every failure when more than
+   * one rejects.
    */
   public async updateHolidayMode(update: HolidayModeUpdate): Promise<void> {
     await pushHomeHolidayMode(this.#api, this.#memberUnits, update)

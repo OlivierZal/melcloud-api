@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [62.0.3] - 2026-11-21
+
+### Fixed
+
+- **A MELCloud Home holiday window is written and read on the unit's own clock.** The Home wire reads both bounds of a holiday window on the unit's wall clock, arms the window at its start and closes it at its end (live-probed 2026-11-21 by writes on one UTC+1 unit: a window written three minutes ahead on that clock was active, the unit off, within two seconds of its start; another was inactive, the unit back on by itself, a second after its end; the same window written in UTC wall clock was refused). Since 49.0.0 the SDK wrote both bounds in UTC wall clock and read them back as UTC: the projection the Classic wire needs (com.melcloud#1593), given to both wires, the Home one unmeasured. A Home window therefore started and ended early by the unit's UTC offset, an hour in a UTC+1 winter and two in a UTC+2 summer. It read back as typed, the read undoing the write's projection, which hid the shift, while a window set in the MELCloud Home app read back late by that offset. `updateHolidayMode` (device facade, building facade, `HomeFacadeManager`) now sends an enabled window as the caller's instants on each unit's `/context` `timeZone`, to the second, in one write per clock where the units sit on several, and `getHolidayMode` reads each unit's bounds on its own clock before a building folds them. Classic is unchanged: its wire stores UTC. What one unit cannot tell: its clock from a fixed UTC+1, or from its building's or its account's zone.
+- **"From now" arms a MELCloud Home holiday window.** The wire takes no window that has begun: an enabling write whose start is not ahead of the unit's clock answers `404` and stores the window all the same, enabled, without arming it (measured the same day for a start of now, of ten minutes and of about an hour before, each watched 75 s at the least; starts 20 s, 30 s and 3 min ahead were found armed at the first read after their start). A start of now is what a host stamps for "from now", and the SDK sent it as it came: the write failed on the `404` and left a window that read as enabled and did nothing. A start that is not a minute ahead of now is now sent a minute ahead.
+- **A Home holiday window that ends before it can start is refused before any request**, with a `RangeError`. The wire stores such a window without a word (a `200`, the window enabled as sent, measured the same day), so nothing downstream would have said so.
+
+### Changed
+
+- Enabling holiday mode through a Home device facade whose unit the registry no longer holds throws `EntityNotFoundError` before any request, as the facade's accessors do: the window is written on the unit's clock, which only the registry's model tells. Disabling still goes out, its dates being ignored.
+
 ## [62.0.2] - 2026-11-21
 
 ### Fixed
@@ -1075,7 +1087,8 @@ Note: `HomeDevice`'s constructor now takes the typed entry bag (`{ building, dev
 
 For releases up to and including `37.2.1`, see the [GitHub releases page](https://github.com/OlivierZal/melcloud-api/releases) — entries were not tracked in this file before.
 
-[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.2...HEAD
+[Unreleased]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.3...HEAD
+[62.0.3]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.2...v62.0.3
 [62.0.2]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.1...v62.0.2
 [62.0.1]: https://github.com/OlivierZal/melcloud-api/compare/v62.0.0...v62.0.1
 [62.0.0]: https://github.com/OlivierZal/melcloud-api/compare/v61.0.0...v62.0.0

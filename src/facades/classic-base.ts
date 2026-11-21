@@ -79,12 +79,12 @@ const toHolidayModeState = (
         endDate:
           data.HMEndDate === null
             ? null
-            : toZonedWallClock(data.HMEndDate, timeZone),
+            : toZonedWallClock(data.HMEndDate, { from: 'UTC', to: timeZone }),
         isEnabled: data.HMEnabled,
         startDate:
           data.HMStartDate === null
             ? null
-            : toZonedWallClock(data.HMStartDate, timeZone),
+            : toZonedWallClock(data.HMStartDate, { from: 'UTC', to: timeZone }),
       }
     : null
 
