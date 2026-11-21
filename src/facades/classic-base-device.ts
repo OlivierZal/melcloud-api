@@ -364,26 +364,6 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
   }
 
   /**
-   * Reads the device's current values from MELCloud. On success the
-   * answer is merged into the registry model, under its list-data
-   * keys; a failure is returned as is and leaves the model alone. The
-   * sync notification follows in both cases.
-   * @returns The device data as MELCloud answered it, or a typed
-   * failure.
-   */
-  @syncDevices()
-  public async getValues(): Promise<Result<ClassicGetDeviceData<T>>> {
-    const { api, device } = this
-    const result = await api.getValues<T>({
-      params: { buildingId: device.buildingId, id: device.id },
-    })
-    if (result.ok) {
-      device.update(convertToListDeviceData(this, result.value))
-    }
-    return result
-  }
-
-  /**
    * Writes a change set to the device. The set is first reduced to
    * the fields that differ from the last synced state — a key that is
    * `undefined`, or unknown to the device type, counts as absent —
@@ -603,6 +583,28 @@ export abstract class BaseDeviceFacade<T extends ClassicDeviceType>
       (device instanceof ClassicDevice && device.id !== this.id)
       ? super.getTiles()
       : super.getTiles(this.device)
+  }
+
+  // No `@syncDevices()` here: the decorator fires once the method has
+  // resolved, and a `Result` resolves on a failure too.
+  /**
+   * Reads the device's current values from MELCloud. On success the
+   * answer is merged into the registry model, under its list-data
+   * keys, and the sync notification fires. A failure is returned as
+   * is: it leaves the model alone and announces nothing.
+   * @returns The device data as MELCloud answered it, or a typed
+   * failure.
+   */
+  public async getValues(): Promise<Result<ClassicGetDeviceData<T>>> {
+    const { api, device } = this
+    const result = await api.getValues<T>({
+      params: { buildingId: device.buildingId, id: device.id },
+    })
+    if (result.ok) {
+      device.update(convertToListDeviceData(this, result.value))
+      await this.notifySync()
+    }
+    return result
   }
 
   protected prepareUpdateData(

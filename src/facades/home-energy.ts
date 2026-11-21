@@ -122,10 +122,17 @@ type AtwEnergyPoints = Record<
  */
 type HomeEnergyBucketUnit = 'day' | 'hour' | 'localDay'
 
-// A "one day" query resolves a hair over 1.0 days (the caller stamps
-// `from` a few milliseconds before the library stamps `to`), so the
-// hourly-bucket cutoff sits halfway to the next whole-day option.
-const MAX_HOURLY_ENERGY_DAYS = 1.5
+// Hour buckets up to one day of window, day buckets beyond: the grain
+// follows the span asked for, so one choice of a host's picker charts
+// one way at any time of day, and the way the Classic report does,
+// whose wire answers hours for a one-day report alone. The minute is
+// for a rolling one-day window, whose `from` the caller stamps a beat
+// before the library stamps `to`. Until 62.0.2 the cutoff sat at a day
+// and a half, "halfway to the next whole-day option", which holds for
+// whole days counted back from now: com.melcloud anchors "N days" on
+// local midnight, so its "2 days" spans one to two days and charted
+// hours before noon, days after.
+const MAX_HOURLY_ENERGY_WINDOW: Temporal.DurationLike = { days: 1, minutes: 1 }
 
 // Up to a week, an air-to-air day bucket sums the hour buckets of one
 // calendar day of the display timezone, at one request per day of
@@ -609,8 +616,8 @@ const toHomeEnergyOptions = ({
   }
 }
 
-const isHourlyEnergyWindow = (window: HomeChartWindow): boolean =>
-  windowDaysOf(window) <= MAX_HOURLY_ENERGY_DAYS
+const isHourlyEnergyWindow = ({ from, to }: HomeChartWindow): boolean =>
+  Temporal.ZonedDateTime.compare(to, from.add(MAX_HOURLY_ENERGY_WINDOW)) <= 0
 
 // Display bucket of an air-to-air chart: hourly on a one-day span —
 // matching the Classic one-day report — calendar days of the display
