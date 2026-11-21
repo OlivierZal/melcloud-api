@@ -127,7 +127,7 @@ type HomeEnergyBucketUnit = 'day' | 'hour' | 'localDay'
 // one way at any time of day, and the way the Classic report does,
 // whose wire answers hours for a one-day report alone. The minute is
 // for a rolling one-day window, whose `from` the caller stamps a beat
-// before the library stamps `to`. Until 62.1.0 the cutoff sat at a day
+// before the library stamps `to`. Until 62.0.2 the cutoff sat at a day
 // and a half, "halfway to the next whole-day option", which holds for
 // whole days counted back from now: com.melcloud anchors "N days" on
 // local midnight, so its "2 days" spans one to two days and charted
